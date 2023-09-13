@@ -9,7 +9,7 @@ with Files("**"):
 
 if CONFIG["ENABLE_TESTS"]:
     MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-    MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+    MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
     BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 
 EXPORTS += [

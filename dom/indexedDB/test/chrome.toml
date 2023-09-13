@@ -1,0 +1,6 @@
+[DEFAULT]
+support-files = ["chromeHelpers.js"]
+
+["test_globalObjects_chrome.xhtml"]
+
+["test_wrappedArray.xhtml"]

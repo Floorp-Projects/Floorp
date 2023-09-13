@@ -1,0 +1,55 @@
+[DEFAULT]
+support-files = [
+  "chrome_cleanup_script.js",
+  "head.js",
+  "head_cookies.js",
+  "file_image_good.png",
+  "file_image_great.png",
+  "file_sample.html",
+  "file_with_images.html",
+  "webrequest_chromeworker.js",
+  "webrequest_test.sys.mjs",
+]
+prefs = ["security.mixed_content.upgrade_display_content=false"]
+tags = "webextensions in-process-webextensions"
+
+# NO NEW TESTS.  mochitest-chrome does not run under e10s, avoid adding new
+# tests here unless absolutely necessary.
+
+["test_chrome_ext_contentscript_data_uri.html"]
+
+["test_chrome_ext_contentscript_telemetry.html"]
+
+["test_chrome_ext_contentscript_unrecognizedprop_warning.html"]
+
+["test_chrome_ext_downloads_open.html"]
+
+["test_chrome_ext_downloads_saveAs.html"]
+skip-if = [
+  "verify && !debug && os == 'win'",
+  "os == 'android'",
+  "win10_2009", # Bug 1695612
+]
+
+["test_chrome_ext_downloads_uniquify.html"]
+skip-if = ["win10_2009"] # Bug 1695612
+
+["test_chrome_ext_permissions.html"]
+skip-if = ["os == 'android'"] # Bug 1350559
+
+["test_chrome_ext_svg_context_fill.html"]
+
+["test_chrome_ext_trackingprotection.html"]
+
+["test_chrome_ext_webnavigation_resolved_urls.html"]
+
+["test_chrome_ext_webrequest_background_events.html"]
+
+["test_chrome_ext_webrequest_host_permissions.html"]
+skip-if = ["verify"]
+
+["test_chrome_ext_webrequest_mozextension.html"]
+skip-if = ["true"] # Bug 1404172
+
+["test_chrome_native_messaging_paths.html"]
+skip-if = ["os != 'mac' && os != 'linux'"]

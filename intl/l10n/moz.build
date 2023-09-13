@@ -50,7 +50,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 
 SPHINX_TREES["/l10n"] = "docs"
 

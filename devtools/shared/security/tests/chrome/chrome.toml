@@ -1,0 +1,4 @@
+[DEFAULT]
+tags = "devtools"
+
+["test_websocket-transport.html"]

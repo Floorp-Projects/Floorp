@@ -20,7 +20,7 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "tests/chrome.ini",
+    "tests/chrome.toml",
 ]
 
 MOCHITEST_MANIFESTS += [

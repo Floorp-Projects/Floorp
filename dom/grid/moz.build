@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 EXPORTS.mozilla.dom += [
     "Grid.h",

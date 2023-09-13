@@ -1,0 +1,24 @@
+[DEFAULT]
+support-files = ["dummy_page.html"]
+
+["test_custom_element_ensure_custom_element.html"]
+
+["test_custom_element_htmlconstructor_chrome.html"]
+support-files = [
+  "htmlconstructor_autonomous_tests.js",
+  "htmlconstructor_builtin_tests.js",
+]
+
+["test_custom_element_namespace.html"]
+
+["test_custom_element_namespace.xhtml"]
+
+["test_custom_element_upgrade_chrome.html"]
+support-files = [
+  "test_upgrade_page.html",
+  "upgrade_tests.js",
+]
+
+["test_xul_custom_element.xhtml"]
+
+["test_xul_shadowdom_accesskey.xhtml"]

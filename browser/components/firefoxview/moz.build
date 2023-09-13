@@ -22,4 +22,4 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/firefoxview-next/browser.ini",
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]

@@ -1,0 +1,28 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "file_bug514732_window.xhtml",
+  "frame_selection_underline-ref.xhtml",
+  "frame_selection_underline.css",
+  "frame_selection_underline.xhtml",
+]
+
+["test_backspace_delete.xhtml"]
+skip-if = ["true"] # Bug 1163311
+
+["test_bug469613.xhtml"]
+
+["test_bug469774.xhtml"]
+
+["test_bug508115.xhtml"]
+
+["test_bug514732-2.xhtml"]
+
+["test_bug632379.xhtml"]
+skip-if = [
+  "verify && os == 'win'",  # Bug 1207914
+  "os == 'linux'",  # Bug 1207914
+  "os == 'win'",  # Bug 1765788
+]
+
+["test_selection_underline.html"]

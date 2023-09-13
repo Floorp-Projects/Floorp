@@ -1,0 +1,15 @@
+[DEFAULT]
+
+["chrome/test_flex_axis_directions.html"]
+
+["chrome/test_flex_item_clamp.html"]
+
+["chrome/test_flex_item_rect.html"]
+
+["chrome/test_flex_items.html"]
+
+["chrome/test_flex_lines.html"]
+
+["chrome/test_flex_object.html"]
+
+["chrome/test_flex_parent.html"]

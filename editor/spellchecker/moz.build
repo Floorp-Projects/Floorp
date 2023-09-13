@@ -6,7 +6,7 @@
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 
 XPIDL_SOURCES += [
     "nsIInlineSpellChecker.idl",

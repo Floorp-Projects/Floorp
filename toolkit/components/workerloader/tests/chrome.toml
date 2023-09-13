@@ -1,0 +1,18 @@
+[DEFAULT]
+support-files = [
+  "moduleA-depends.js",
+  "moduleB-dependency.js",
+  "moduleC-circular.js",
+  "moduleD-circular.js",
+  "moduleE-throws-during-require.js",
+  "moduleF-syntax-error.js",
+  "moduleG-throws-later.js",
+  "moduleH-module-dot-exports.js",
+  "moduleI-depends.js",
+  "moduleJ-dependency.js",
+  "utils_mainthread.js",
+  "utils_worker.js",
+  "worker_test_loading.js",
+]
+
+["test_loading.xhtml"]

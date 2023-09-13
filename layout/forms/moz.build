@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Layout: Form Controls")
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 EXPORTS += [
     "nsIFormControlFrame.h",

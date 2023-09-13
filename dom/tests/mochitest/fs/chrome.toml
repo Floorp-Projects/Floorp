@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = "page_blank.html"
+
+["test_privateWin.html"]

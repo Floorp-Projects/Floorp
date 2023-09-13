@@ -266,7 +266,7 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/JSWindowActor/browser.ini",
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 

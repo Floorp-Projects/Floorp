@@ -1,0 +1,28 @@
+[DEFAULT]
+support-files = [
+  "!/dom/bindings/test/file_bug775543.html",
+  "!/dom/bindings/test/file_document_location_set_via_xray.html",
+  "!/dom/bindings/test/file_dom_xrays.html",
+  "!/dom/bindings/test/file_proxies_via_xray.html",
+]
+
+["test_bug1123516_maplikesetlikechrome.xhtml"]
+skip-if = ["!debug"] # TestFunctions is only available in debug builds
+
+["test_bug1287912.html"]
+
+["test_bug1457051.html"]
+
+["test_bug775543.html"]
+
+["test_document_location_set_via_xray.html"]
+
+["test_document_location_via_xray_cached.html"]
+
+["test_dom_xrays.html"]
+skip-if = ["debug == false"] # TestFunctions is only available in debug builds
+
+["test_interfaceLength_chrome.html"]
+skip-if = ["debug == false"] # TestFunctions is only available in debug builds
+
+["test_proxies_via_xray.html"]

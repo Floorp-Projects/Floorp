@@ -1,0 +1,220 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "bug503926.xhtml",
+  "file_bug484459.html",
+  "file_bug618176.xhtml",
+  "file_bug996069.html",
+  "file_bug1281071.html",
+  "file_discardSystemSource.html",
+  "file_empty.html",
+  "file_evalInSandbox.html",
+  "file_expandosharing.jsm",
+  "outoflinexulscript.js",
+  "subscript.js",
+  "utf8_subscript.js",
+  "worker_discardSystemSource.js",
+  "!/js/xpconnect/tests/mochitest/bug500931_helper.html",
+  "!/js/xpconnect/tests/mochitest/bug571849_helper.html",
+  "!/js/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
+  "!/js/xpconnect/tests/mochitest/file_bug706301.html",
+  "!/js/xpconnect/tests/mochitest/file_bug738244.html",
+  "!/js/xpconnect/tests/mochitest/file_bug760131.html",
+  "!/js/xpconnect/tests/mochitest/file_bug795275.html",
+  "!/js/xpconnect/tests/mochitest/file_bug799348.html",
+  "!/js/xpconnect/tests/mochitest/file_bug860494.html",
+  "!/js/xpconnect/tests/mochitest/file_documentdomain.html",
+  "!/js/xpconnect/tests/mochitest/file_doublewrappedcompartments.html",
+  "!/js/xpconnect/tests/mochitest/file_empty.html",
+  "!/js/xpconnect/tests/mochitest/file_exnstack.html",
+  "!/js/xpconnect/tests/mochitest/file_expandosharing.html",
+  "!/js/xpconnect/tests/mochitest/file_nodelists.html",
+  "!/js/xpconnect/tests/mochitest/file_evalInSandbox.html",
+  "!/js/xpconnect/tests/mochitest/file_xrayic.html",
+]
+prefs = ["javascript.options.large_arraybuffers=true"]
+
+["test_APIExposer.xhtml"]
+
+["test_bug1041626.xhtml"]
+
+["test_bug1042436.xhtml"]
+
+["test_bug1065185.html"]
+
+["test_bug1074863.html"]
+
+["test_bug1092477.xhtml"]
+
+["test_bug1124898.html"]
+
+["test_bug1126911.html"]
+
+["test_bug1281071.xhtml"]
+
+["test_bug1390159.xhtml"]
+
+["test_bug1430164.html"]
+
+["test_bug1516237.html"]
+
+["test_bug1530146.html"]
+support-files = [
+  "file_bug1530146.html",
+  "file_bug1530146_inner.html",
+]
+
+["test_bug361111.xhtml"]
+
+["test_bug448587.xhtml"]
+
+["test_bug484459.xhtml"]
+skip-if = [
+  "os == 'win'",
+  "os == 'mac'",
+  "os == 'linux' && !debug",
+] # bug 1131110, 1255284
+
+["test_bug500931.xhtml"]
+
+["test_bug503926.xhtml"]
+
+["test_bug533596.xhtml"]
+
+["test_bug571849.xhtml"]
+
+["test_bug610390.xhtml"]
+
+["test_bug614757.xhtml"]
+
+["test_bug616992.xhtml"]
+
+["test_bug618176.xhtml"]
+
+["test_bug654370.xhtml"]
+
+["test_bug658560.xhtml"]
+
+["test_bug658909.xhtml"]
+
+["test_bug664689.xhtml"]
+
+["test_bug679861.xhtml"]
+
+["test_bug706301.xhtml"]
+
+["test_bug726949.xhtml"]
+
+["test_bug732665.xhtml"]
+
+["test_bug738244.xhtml"]
+
+["test_bug743843.xhtml"]
+
+["test_bug760076.xhtml"]
+
+["test_bug760131.html"]
+
+["test_bug763343.xhtml"]
+
+["test_bug771429.xhtml"]
+
+["test_bug773962.xhtml"]
+
+["test_bug792280.xhtml"]
+
+["test_bug793433.xhtml"]
+
+["test_bug795275.xhtml"]
+
+["test_bug799348.xhtml"]
+
+["test_bug801241.xhtml"]
+
+["test_bug812415.xhtml"]
+
+["test_bug853283.xhtml"]
+
+["test_bug853571.xhtml"]
+
+["test_bug858101.xhtml"]
+
+["test_bug860494.xhtml"]
+
+["test_bug865948.xhtml"]
+
+["test_bug866823.xhtml"]
+
+["test_bug895340.xhtml"]
+
+["test_bug932906.xhtml"]
+allow_xul_xbl = true
+
+["test_bug996069.xhtml"]
+
+["test_chrometoSource.xhtml"]
+
+["test_cloneInto.xhtml"]
+
+["test_cows.xhtml"]
+
+["test_discardSystemSource.xhtml"]
+
+["test_documentdomain.xhtml"]
+
+["test_doublewrappedcompartments.xhtml"]
+
+["test_envChain_event_handler.html"]
+
+["test_evalInSandbox.xhtml"]
+
+["test_evalInWindow.xhtml"]
+
+["test_exnstack.xhtml"]
+
+["test_expandosharing.xhtml"]
+
+["test_exposeInDerived.xhtml"]
+
+["test_inlineScripts.html"]
+
+["test_localstorage_with_nsEp.xhtml"]
+
+["test_matches.xhtml"]
+
+["test_nodelists.xhtml"]
+
+["test_nsScriptErrorWithStack.html"]
+
+["test_onGarbageCollection.html"]
+
+["test_precisegc.xhtml"]
+
+["test_private_field_cows.xhtml"]
+
+["test_sandboxImport.xhtml"]
+
+["test_scriptSettings.xhtml"]
+
+["test_scripterror.html"]
+
+["test_secureContexts.html"]
+
+["test_sharedChromeCompartment.html"]
+
+["test_weakmap_keys_preserved.xhtml"]
+
+["test_weakmap_keys_preserved2.xhtml"]
+
+["test_weakref.xhtml"]
+
+["test_windowProxyDeadWrapper.html"]
+
+["test_wrappers.xhtml"]
+
+["test_xrayLargeTypedArray.html"]
+skip-if = ["bits == 32"] # Large ArrayBuffers not supported on 32-bit.
+
+["test_xrayToJS.xhtml"]
+
+["test_xrayic.xhtml"]

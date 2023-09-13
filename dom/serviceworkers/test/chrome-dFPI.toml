@@ -1,0 +1,6 @@
+[DEFAULT]
+# Enable dFPI(cookieBehavior 5) for service worker tests.
+prefs = ["network.cookie.cookieBehavior=5"]
+dupe-manifest = true
+
+["include:chrome-common.toml"]

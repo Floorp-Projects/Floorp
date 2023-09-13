@@ -1,0 +1,10 @@
+[DEFAULT]
+tags = "openwindow"
+
+["test_alwaysOnTop_windows.html"]
+skip-if = ["os != 'win'"]
+
+["test_dialog_arguments.html"]
+support-files = ["file_test_dialog.html"]
+
+["test_modal_windows.html"]

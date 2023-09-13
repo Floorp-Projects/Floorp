@@ -1,0 +1,7 @@
+[DEFAULT]
+tags = "devtools devtools-memory"
+skip-if = ["os == 'android'"]
+
+["test_DominatorTree_01.html"]
+
+["test_SaveHeapSnapshot.html"]

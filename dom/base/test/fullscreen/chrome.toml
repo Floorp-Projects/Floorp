@@ -1,0 +1,11 @@
+[DEFAULT]
+tags = "fullscreen"
+
+["test_MozDomFullscreen_event.xhtml"]
+support-files = [
+  "fullscreen.xhtml",
+  "MozDomFullscreen_chrome.xhtml",
+]
+
+["test_fullscreen.xhtml"]
+support-files = "file_MozDomFullscreen.html"

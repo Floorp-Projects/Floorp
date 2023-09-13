@@ -1,0 +1,10 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "xpcshellTestHarnessAdaptor.js",
+  "ctypes_worker.js",
+  "../unit/test_jsctypes.js",
+]
+
+["test_ctypes.xhtml"]
+skip-if = ["verify"]

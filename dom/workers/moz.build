@@ -104,7 +104,7 @@ MOCHITEST_MANIFESTS += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "test/chrome.ini",
+    "test/chrome.toml",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

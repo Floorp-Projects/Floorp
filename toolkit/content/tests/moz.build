@@ -12,8 +12,8 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "chrome/chrome.ini",
-    "widgets/chrome.ini",
+    "chrome/chrome.toml",
+    "widgets/chrome.toml",
 ]
 
 MOCHITEST_MANIFESTS += [

@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = ["window_persistence.xhtml"]
+
+["test_persistence.xhtml"]

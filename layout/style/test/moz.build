@@ -25,7 +25,7 @@ MOCHITEST_MANIFESTS += [
     "mochitest.ini",
 ]
 BROWSER_CHROME_MANIFESTS += ["browser.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.toml"]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [
     "chrome/display_mode_reflow_iframe.html",

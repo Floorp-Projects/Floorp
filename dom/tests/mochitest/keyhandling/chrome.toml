@@ -1,0 +1,22 @@
+[DEFAULT]
+# test_input.html and test_textarea.html are also used as mochitests, hence
+# we have to flip the skip assertion flag for the chrome tests here.
+prefs = ["dom.security.skip_remote_script_assertion_in_system_priv_context=true"]
+
+# nsIWidget::SynthesizeNativeKeyEvent() required (Bug 1410525 for headless)
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'",
+  "headless",
+]
+
+["test_browser.xhtml"]
+support-files = ["browsertest.html"]
+
+["test_editor.xhtml"]
+
+["test_windowed.xhtml"]
+support-files = [
+  "test_input.html",
+  "test_textarea.html",
+]

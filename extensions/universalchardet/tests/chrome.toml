@@ -1,0 +1,72 @@
+[DEFAULT]
+support-files = [
+  "CharsetDetectionTests.js",
+  "bug306272_text.html",
+  "bug426271_text-euc-jp.html",
+  "bug426271_text-utf-8.html",
+  "bug431054_text.html",
+  "bug631751be_text.html",
+  "bug631751le_text.html",
+  "bug638318_text.html",
+  "bug811363-1.text",
+  "bug811363-2.text",
+  "bug811363-3.text",
+  "bug811363-4.text",
+  "bug811363-5.text",
+  "bug811363-6.text",
+  "bug811363-7.text",
+  "bug811363-8.text",
+  "bug811363-9.text",
+  "bug811363-invalid-1.text",
+  "bug811363-invalid-5.text",
+  "bug1071816-1_text.html",
+  "bug1071816-2_text.html",
+  "bug1071816-3_text.html",
+  "bug1071816-4_text.html",
+]
+
+["test_bug1071816-1.html"]
+
+["test_bug1071816-2.html"]
+
+["test_bug1071816-3.html"]
+
+["test_bug1071816-4.html"]
+
+["test_bug306272.html"]
+
+["test_bug426271-euc-jp.html"]
+
+["test_bug426271-utf-8.html"]
+
+["test_bug431054-japanese.html"]
+
+["test_bug431054.html"]
+
+["test_bug631751be.html"]
+
+["test_bug631751le.html"]
+
+["test_bug638318.html"]
+
+["test_bug811363-1-1.html"]
+
+["test_bug811363-1-5.html"]
+
+["test_bug811363-2-1.html"]
+
+["test_bug811363-2-2.html"]
+
+["test_bug811363-2-3.html"]
+
+["test_bug811363-2-4.html"]
+
+["test_bug811363-2-5.html"]
+
+["test_bug811363-2-6.html"]
+
+["test_bug811363-2-7.html"]
+
+["test_bug811363-2-8.html"]
+
+["test_bug811363-2-9.html"]

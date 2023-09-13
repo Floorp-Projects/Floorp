@@ -1,0 +1,13 @@
+[DEFAULT]
+scheme = "https"
+
+["test_adjustCertInformation.html"]
+support-files = ["parseOutput.mjs"]
+
+["test_certDecoder.html"]
+
+["test_certDecoderFields.html"]
+support-files = ["CSoutput.mjs"]
+
+["test_kebabCaseInAdjustCertInformation.html"]
+support-files = ["parseOutput.mjs"]

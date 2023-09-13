@@ -1,0 +1,10 @@
+[DEFAULT]
+tags = "devtools"
+skip-if = ["os == 'android'"]
+
+["test_css-logic-findCssSelector.html"]
+
+["test_css-logic-getCssPath.html"]
+
+["test_css-logic-getXPath.html"]
+skip-if = ["os == 'linux' && debug"] # Bug 1205739

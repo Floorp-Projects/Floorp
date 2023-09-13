@@ -1,0 +1,6 @@
+[DEFAULT]
+
+support-files = ["test_disabled_chrome_iframe.html"]
+prefs = ["mathml.disabled=true"]
+
+["test_disabled_chrome.html"]

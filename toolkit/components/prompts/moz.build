@@ -19,6 +19,6 @@ TESTING_JS_MODULES += [
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]

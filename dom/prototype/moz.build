@@ -20,6 +20,6 @@ LOCAL_INCLUDES += [
     "/dom/xul",
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 
 FINAL_LIBRARY = "xul"

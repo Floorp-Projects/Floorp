@@ -1,0 +1,6 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+
+["test_bug415761.html"]
+skip-if = ["os != 'win'"]
+support-files = ["bug415761.ico"]

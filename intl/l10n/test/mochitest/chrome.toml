@@ -1,0 +1,10 @@
+[DEFAULT]
+
+["localization/test_formatMessages.html"]
+skip-if = ["debug"] # Intentionally triggers a debug assert for missing Fluent arguments.
+
+["localization/test_formatValue.html"]
+skip-if = ["debug"] # Intentionally triggers a debug assert for missing Fluent arguments.
+
+["localization/test_formatValues.html"]
+skip-if = ["debug"] # Intentionally triggers a debug assert for missing Fluent arguments.
