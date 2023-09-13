@@ -28,10 +28,6 @@ struct TemporaryStorageInitializedResponse
   bool initialized;
 };
 
-struct InitResponse
-{
-};
-
 struct InitTemporaryStorageResponse
 {
 };
@@ -89,7 +85,6 @@ union RequestResponse
   StorageNameResponse;
   StorageInitializedResponse;
   TemporaryStorageInitializedResponse;
-  InitResponse;
   InitTemporaryStorageResponse;
   InitializePersistentOriginResponse;
   InitializeTemporaryOriginResponse;

@@ -53,7 +53,7 @@ RefPtr<QuotaRequestBase> CreateStorageInitializedOp();
 
 RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp();
 
-RefPtr<QuotaRequestBase> CreateInitOp();
+RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp();
 
 RefPtr<QuotaRequestBase> CreateInitTemporaryStorageOp();
 
