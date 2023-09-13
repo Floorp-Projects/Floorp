@@ -81,7 +81,7 @@ firefoxview-tabpickup-password-locked-primarybutton = Enter Primary Password
 firefoxview-syncedtab-password-locked-link = <a data-l10n-name="syncedtab-password-locked-link">Learn more</a>
 
 firefoxview-tabpickup-signed-out-header = Sign in to reconnect
-firefoxview-tabpickup-signed-out-description = To reconnect and grab your tabs, sign in to your { -fxaccount-brand-name }.
+firefoxview-tabpickup-signed-out-description2 = To reconnect and grab your tabs, sign in to your account.
 firefoxview-tabpickup-signed-out-primarybutton = Sign in
 
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.

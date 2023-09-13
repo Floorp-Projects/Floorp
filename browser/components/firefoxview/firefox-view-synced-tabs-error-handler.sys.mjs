@@ -180,7 +180,7 @@ export const SyncedTabsErrorHandler = {
     },
     [ErrorType.SIGNED_OUT]: {
       header: "firefoxview-tabpickup-signed-out-header",
-      description: "firefoxview-tabpickup-signed-out-description",
+      description: "firefoxview-tabpickup-signed-out-description2",
       buttonLabel: "firefoxview-tabpickup-signed-out-primarybutton",
     },
   },
