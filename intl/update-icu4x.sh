@@ -53,6 +53,10 @@ log "Change the directory to the cloned repo"
 log ${tmpclonedir}
 cd ${tmpclonedir}
 
+log "Patching line segmenter data to fix https://github.com/unicode-org/icu4x/issues/3811."
+# This manually patch can be removed once we upgrade to ICU4X 1.3 in bug 1851323.
+wget --unlink -q -O ${tmpclonedir}/provider/datagen/data/segmenter/line.toml https://raw.githubusercontent.com/unicode-org/icu4x/fd62de5e232ea1f0cb81e88dc6eb0cf9c86f85ca/provider/datagen/src/transform/segmenter/rules/line.toml
+
 log "Run the icu4x-datagen tool to regenerate the data."
 log "Saving the data into: ${data_dir}"
 
