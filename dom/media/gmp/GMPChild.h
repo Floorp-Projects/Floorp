@@ -80,6 +80,8 @@ class GMPChild : public PGMPChild {
 
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
 
+  mozilla::ipc::IPCResult RecvShutdown(ShutdownResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
 

@@ -7,6 +7,7 @@
 
 #include "CDMStorageIdProvider.h"
 #include "ChromiumCDMAdapter.h"
+#include "GeckoProfiler.h"
 #include "GMPContentParent.h"
 #include "GMPLog.h"
 #include "GMPTimerParent.h"
@@ -484,8 +485,13 @@ void GMPParent::Shutdown() {
   }
 
   MOZ_ASSERT(!IsUsed());
-  if (mState == GMPState::NotLoaded || mState == GMPState::Closing) {
-    return;
+  switch (mState) {
+    case GMPState::NotLoaded:
+    case GMPState::Closing:
+    case GMPState::Closed:
+      return;
+    default:
+      break;
   }
 
   RefPtr<GMPParent> self(this);
@@ -497,7 +503,7 @@ void GMPParent::Shutdown() {
     // Destroy ourselves and rise from the fire to save memory
     mService->ReAddOnGMPThread(self);
   }  // else we've been asked to die and stay dead
-  MOZ_ASSERT(mState == GMPState::NotLoaded);
+  MOZ_ASSERT(mState == GMPState::NotLoaded || mState == GMPState::Closing);
 }
 
 class NotifyGMPShutdownTask : public Runnable {
@@ -539,14 +545,59 @@ void GMPParent::ChildTerminated() {
 
 void GMPParent::DeleteProcess() {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
-  GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
 
-  if (mState != GMPState::Closing) {
-    // Don't Close() twice!
-    // Probably remove when bug 1043671 is resolved
-    mState = GMPState::Closing;
-    Close();
+  switch (mState) {
+    case GMPState::Closed:
+      // Closing has finished, we can proceed to destroy the process.
+      break;
+    case GMPState::Closing:
+      // Closing in progress, just waiting for the shutdown response.
+      GMP_PARENT_LOG_DEBUG("%s: Shutdown handshake in progress.", __FUNCTION__);
+      return;
+    default: {
+      // Don't Close() twice!
+      // Probably remove when bug 1043671 is resolved
+      GMP_PARENT_LOG_DEBUG("%s: Shutdown handshake starting.", __FUNCTION__);
+
+      RefPtr<GMPParent> self = this;
+      nsCOMPtr<nsISerialEventTarget> gmpEventTarget = GMPEventTarget();
+      mState = GMPState::Closing;
+      // Let's attempt to get the profile from the child process if we can
+      // before we destroy it. This is particularly important for the GMP
+      // process because we aggressively shut it down when not in active use, so
+      // it is easy to miss the recordings during profiling.
+      SendShutdown()->Then(
+          gmpEventTarget, __func__,
+          [self](nsCString&& aProfile) {
+            GMP_LOG_DEBUG(
+                "GMPParent[%p|childPid=%d] DeleteProcess: Shutdown handshake "
+                "success, profileLen=%zu.",
+                self.get(), self->mChildPid, aProfile.Length());
+            if (!aProfile.IsEmpty()) {
+              NS_DispatchToMainThread(NS_NewRunnableFunction(
+                  "GMPParent::DeleteProcess",
+                  [profile = std::move(aProfile)]() {
+                    profiler_received_exit_profile(profile);
+                  }));
+            }
+            self->mState = GMPState::Closed;
+            self->Close();
+            self->DeleteProcess();
+          },
+          [self](const ipc::ResponseRejectReason&) {
+            GMP_LOG_DEBUG(
+                "GMPParent[%p|childPid=%d] DeleteProcess: Shutdown handshake "
+                "error.",
+                self.get(), self->mChildPid);
+            self->mState = GMPState::Closed;
+            self->Close();
+            self->DeleteProcess();
+          });
+      return;
+    }
   }
+
+  GMP_PARENT_LOG_DEBUG("%s: Shutting down process.", __FUNCTION__);
   mProcess->Delete(NewRunnableMethod("gmp::GMPParent::ChildTerminated", this,
                                      &GMPParent::ChildTerminated));
   GMP_PARENT_LOG_DEBUG("%s: Shut down process", __FUNCTION__);
@@ -642,6 +693,7 @@ bool GMPParent::EnsureProcessLoaded() {
       return true;
     case GMPState::Unloading:
     case GMPState::Closing:
+    case GMPState::Closed:
       return false;
   }
 
@@ -709,7 +761,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   // warn us off trying to close again
-  mState = GMPState::Closing;
+  mState = GMPState::Closed;
   mAbnormalShutdownInProgress = true;
   CloseActive(false);
 
@@ -718,7 +770,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     RefPtr<GMPParent> self(this);
     // Must not call Close() again in DeleteProcess(), as we'll recurse
     // infinitely if we do.
-    MOZ_ASSERT(mState == GMPState::Closing);
+    MOZ_ASSERT(mState == GMPState::Closed);
     DeleteProcess();
     // Note: final destruction will be Dispatched to ourself
     mService->ReAddOnGMPThread(self);

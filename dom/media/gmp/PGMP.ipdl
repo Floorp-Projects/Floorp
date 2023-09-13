@@ -55,6 +55,9 @@ child:
   // Asks the GMP process to trigger test-only instrumentation.
   // The unused returned value is to have a promise we can await.
   async TestTriggerMetrics() returns (bool unused);
+
+  // Attempt a graceful shutdown and collect a profile if available.
+  async Shutdown() returns (nsCString profile);
 };
 
 } // namespace gmp
