@@ -158,6 +158,7 @@ language-name-ro = Romanian
 language-name-ru = Russian
 language-name-rw = Kinyarwanda
 language-name-sa = Sanskrit
+language-name-sat = Santali
 language-name-sc = Sardinian
 language-name-sco = Scots
 language-name-sd = Sindhi
