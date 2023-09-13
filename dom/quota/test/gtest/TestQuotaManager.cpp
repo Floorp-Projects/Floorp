@@ -21,6 +21,107 @@ class TestQuotaManager : public QuotaManagerDependencyFixture {
   static void TearDownTestCase() { ASSERT_NO_FATAL_FAILURE(ShutdownFixture()); }
 };
 
+// Test OpenClientDirctory when an opening of a client directory is already
+// ongoing and storage shutdown is scheduled after that.
+TEST_F(TestQuotaManager,
+       DISABLED_OpenClientDirectory_OngoingWithScheduledShutdown) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    RefPtr<ClientDirectoryLock> directoryLock;
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    promises.AppendElement(
+        quotaManager->OpenClientDirectory(GetTestClientMetadata())
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [&directoryLock](
+                    ClientDirectoryLockPromise::ResolveOrRejectValue&& aValue) {
+                  if (aValue.IsReject()) {
+                    return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                        __func__);
+                  }
+
+                  directoryLock = std::move(aValue.ResolveValue());
+
+                  return BoolPromise::CreateAndResolve(true, __func__);
+                })
+            ->Then(quotaManager->IOThread(), __func__,
+                   [](const BoolPromise::ResolveOrRejectValue& aValue) {
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     []() {
+                       QuotaManager* quotaManager = QuotaManager::Get();
+                       ASSERT_TRUE(quotaManager);
+
+                       ASSERT_TRUE(
+                           quotaManager->IsStorageInitializedInternal());
+                     }();
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   })
+            ->Then(GetCurrentSerialEventTarget(), __func__,
+                   [&directoryLock](
+                       const BoolPromise::ResolveOrRejectValue& aValue) {
+                     directoryLock = nullptr;
+
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   }));
+    promises.AppendElement(quotaManager->ShutdownStorage());
+    promises.AppendElement(
+        quotaManager->OpenClientDirectory(GetTestClientMetadata())
+            ->Then(GetCurrentSerialEventTarget(), __func__,
+                   [](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                          aValue) {
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   }));
+
+    bool done = false;
+
+    BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](const CopyableTArray<bool>& aResolveValues) {
+              QuotaManager* quotaManager = QuotaManager::Get();
+              ASSERT_TRUE(quotaManager);
+
+              ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+              done = true;
+            },
+            [&done](nsresult aRejectValue) {
+              ASSERT_TRUE(false);
+
+              done = true;
+            });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
 // Test simple InitializeStorage.
 TEST_F(TestQuotaManager, InitializeStorage_Simple) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
