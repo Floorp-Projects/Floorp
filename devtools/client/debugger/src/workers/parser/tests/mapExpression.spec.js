@@ -624,6 +624,37 @@ describe("mapExpression", () => {
       },
     },
     {
+      name: "await (if condition)",
+      expression: "if (await true) console.log(1);",
+      newExpression: formatAwait("if (await true) console.log(1);"),
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false,
+      },
+    },
+    {
+      name: "await (non-expression final statement: bug 1851759)",
+      expression: `j = { "foo": 1, "bar": 2 }; await 42; for (var k in j) { console.log(k); }`,
+      newExpression: formatAwait(`
+        j = {
+          foo: 1,
+          bar: 2,
+        };
+        await 42;
+
+        for (var k in j) {
+          console.log(k);
+        }`),
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false,
+      },
+    },
+    {
       name: "simple",
       expression: "a",
       newExpression: "a",

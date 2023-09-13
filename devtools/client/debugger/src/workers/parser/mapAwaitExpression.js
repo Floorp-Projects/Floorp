@@ -34,8 +34,8 @@ function translateDeclarationIntoAssignment(node) {
 }
 
 /**
- * Given an AST, compute its last statement and replace it with a
- * return statement.
+ * Given an AST, modify it to return the last evaluated statement's expression value if possible.
+ * This is to preserve existing console behavior of displaying the last executed expression value.
  */
 function addReturnNode(ast) {
   const statements = ast.program.body;
@@ -47,7 +47,16 @@ function addReturnNode(ast) {
   if (t.isAwaitExpression(lastStatement.expression)) {
     lastStatement.expression = lastStatement.expression.argument;
   }
-  statements.push(t.returnStatement(lastStatement.expression));
+
+  // NOTE: For more complicated cases such as an if/for statement, the last evaluated
+  // expression value probably can not be displayed, unless doing hacky workarounds such
+  // as returning the `eval` of the final statement (won't always work due to CSP issues?)
+  // or SpiderMonkey support (See Bug 1839588) at which point this entire module can be removed.
+  statements.push(
+    t.isExpressionStatement(lastStatement)
+      ? t.returnStatement(lastStatement.expression)
+      : lastStatement
+  );
   return statements;
 }
 
