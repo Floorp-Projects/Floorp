@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-09-05T11:25:41.469505'
+updated_at: '2023-09-12T17:27:25.112116'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -363,6 +363,10 @@ people:
     bmo_id: 417288
     name: Nathan Froyd
     nick: froydnj
+  - &gabriel
+    bmo_id: 697145
+    name: Gabriel Bustamante
+    nick: gabriel
   - &gbrown
     bmo_id: 411471
     name: Geoff Brown
@@ -1198,6 +1202,7 @@ modules:
     peers:
       - *hneiva
       - *bhearsum
+      - *gabriel
     machine_name: core_build_and_release_tools
 
   - name: 'Core: Build Config'
@@ -4165,5 +4170,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d3802db3090939a68e067bb69977e7b9ec588ec6
-  export: f69b8f91dc83de42362f0f784a9f7cf927840253
+  config: b3a3e5b0f7a9103c3b94e31d4ad7920a66789df2
+  export: 98ee1308e0a2c5ec27e6a448c5a8d0fda7c6bfa7
