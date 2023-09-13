@@ -130,7 +130,7 @@ bool SVGPathDataParser::ParseMoveto() {
     return false;
   }
 
-  if (!SkipWsp() || IsAlpha(*mIter)) {
+  if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
     // End of data, or start of a new command
     return true;
   }
@@ -163,7 +163,7 @@ bool SVGPathDataParser::ParseLineto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -187,7 +187,7 @@ bool SVGPathDataParser::ParseHorizontalLineto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -211,7 +211,7 @@ bool SVGPathDataParser::ParseVerticalLineto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -236,7 +236,7 @@ bool SVGPathDataParser::ParseCurveto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -260,7 +260,7 @@ bool SVGPathDataParser::ParseSmoothCurveto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -284,7 +284,7 @@ bool SVGPathDataParser::ParseQuadBezierCurveto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // Start of a new command
       return true;
     }
@@ -308,7 +308,7 @@ bool SVGPathDataParser::ParseSmoothQuadBezierCurveto(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
@@ -339,7 +339,7 @@ bool SVGPathDataParser::ParseEllipticalArc(bool aAbsCoords) {
       return false;
     }
 
-    if (!SkipWsp() || IsAlpha(*mIter)) {
+    if (!SkipWsp() || IsAsciiAlpha(*mIter)) {
       // End of data, or start of a new command
       return true;
     }
