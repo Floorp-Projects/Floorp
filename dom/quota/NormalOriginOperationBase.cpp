@@ -6,7 +6,6 @@
 
 #include "NormalOriginOperationBase.h"
 
-#include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
 namespace mozilla::dom::quota {
@@ -24,13 +23,7 @@ NormalOriginOperationBase::~NormalOriginOperationBase() {
 RefPtr<BoolPromise> NormalOriginOperationBase::Open() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = CreateDirectoryLock();
-
-  if (mDirectoryLock) {
-    return mDirectoryLock->Acquire();
-  }
-
-  return BoolPromise::CreateAndResolve(true, __func__);
+  return OpenDirectory();
 }
 
 void NormalOriginOperationBase::UnblockOpen() {
@@ -38,9 +31,7 @@ void NormalOriginOperationBase::UnblockOpen() {
 
   SendResults();
 
-  if (mDirectoryLock) {
-    mDirectoryLock = nullptr;
-  }
+  CloseDirectory();
 
   mQuotaManager->UnregisterNormalOriginOp(*this);
 }

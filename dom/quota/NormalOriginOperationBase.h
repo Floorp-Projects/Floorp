@@ -9,18 +9,14 @@
 
 #include "OriginOperationBase.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 
 namespace mozilla::dom::quota {
-
-class DirectoryLock;
 
 class NormalOriginOperationBase
     : public OriginOperationBase,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  protected:
-  RefPtr<DirectoryLock> mDirectoryLock;
   mozilla::Atomic<bool> mCanceled;
 
   // If we want to only forward declare DirectoryLock which is referenced by
@@ -34,15 +30,17 @@ class NormalOriginOperationBase
 
   ~NormalOriginOperationBase();
 
-  virtual RefPtr<DirectoryLock> CreateDirectoryLock() = 0;
+  virtual RefPtr<BoolPromise> OpenDirectory() = 0;
+
+  // Used to send results before unblocking open.
+  virtual void SendResults() = 0;
+
+  virtual void CloseDirectory() = 0;
 
  private:
   virtual RefPtr<BoolPromise> Open() override;
 
   virtual void UnblockOpen() override;
-
-  // Used to send results before unblocking open.
-  virtual void SendResults() = 0;
 };
 
 }  // namespace mozilla::dom::quota
