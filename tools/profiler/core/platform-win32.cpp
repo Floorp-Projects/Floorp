@@ -481,7 +481,7 @@ static void PlatformInit(PSLockRef aLock) {}
     PopulateRegsFromContext(regs, &context);
 #endif
 
-#if defined(GP_PLAT_amd64_windows)
+#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
 
 // Use InitializeWin64ProfilerHooks from the base profiler.
 
@@ -493,4 +493,4 @@ MFBT_API void InitializeWin64ProfilerHooks();
 
 using mozilla::baseprofiler::InitializeWin64ProfilerHooks;
 
-#endif  // defined(GP_PLAT_amd64_windows)
+#endif  // defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)

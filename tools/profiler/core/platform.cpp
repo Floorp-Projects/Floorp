@@ -5821,7 +5821,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     baseprofiler::profiler_stop();
   }
 
-#if defined(GP_PLAT_amd64_windows)
+#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
   InitializeWin64ProfilerHooks();
 #endif
 
