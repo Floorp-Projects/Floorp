@@ -35,7 +35,7 @@
   }
 
   function getRowsForCard(card) {
-    return card.shadowRoot.querySelector("fxview-tab-list").rowEls;
+    return card.tabList.rowEls;
   }
 
   add_setup(async function () {

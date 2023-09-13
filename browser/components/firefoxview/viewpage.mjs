@@ -121,17 +121,33 @@ export class ViewPage extends MozLitElement {
       null,
       Ci.nsIClipboard.kGlobalClipboard
     );
+    this.recordContextMenuTelemetry("copy-link", e);
   }
 
   openInNewWindow(e) {
     this.getWindow().openTrustedLinkIn(this.triggerNode.url, "window", {
       private: false,
     });
+    this.recordContextMenuTelemetry("open-in-new-window", e);
   }
 
   openInNewPrivateWindow(e) {
     this.getWindow().openTrustedLinkIn(this.triggerNode.url, "window", {
       private: true,
     });
+    this.recordContextMenuTelemetry("open-in-private-window", e);
+  }
+
+  recordContextMenuTelemetry(menuAction, event) {
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "context_menu",
+      "tabs",
+      null,
+      {
+        menu_action: menuAction,
+        data_type: event.target.panel.dataset.tabType,
+      }
+    );
   }
 }
