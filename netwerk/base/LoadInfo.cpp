@@ -266,11 +266,12 @@ LoadInfo::LoadInfo(
     }
 
     if (nsMixedContentBlocker::IsUpgradableContentType(
-            mInternalContentPolicyType)) {
+            mInternalContentPolicyType, /* aConsiderPrefs */ false)) {
       // Check the load is within a secure context but ignore loopback URLs
       if (mLoadingPrincipal->GetIsOriginPotentiallyTrustworthy() &&
           !mLoadingPrincipal->GetIsLoopbackHost()) {
-        if (StaticPrefs::security_mixed_content_upgrade_display_content()) {
+        if (nsMixedContentBlocker::IsUpgradableContentType(
+                mInternalContentPolicyType, /* aConsiderPrefs */ true)) {
           mBrowserUpgradeInsecureRequests = true;
         } else {
           mBrowserWouldUpgradeInsecureRequests = true;

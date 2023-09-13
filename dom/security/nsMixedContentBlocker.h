@@ -61,8 +61,13 @@ class nsMixedContentBlocker : public nsIContentPolicy,
   /**
    * Returns true if the provided content policy type is subject to the
    * mixed content level 2 upgrading mechanism (audio, video, image).
+   *
+   * @param aConsiderPrefs A boolean that indicates whether the result of this
+   * functions takes the `security.mixed_content.upgrade_display_content`
+   * preferences into account.
    */
-  static bool IsUpgradableContentType(nsContentPolicyType aType);
+  static bool IsUpgradableContentType(nsContentPolicyType aType,
+                                      bool aConsiderPrefs);
 
   /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
    * logic.  Called from non-static ShouldLoad().
