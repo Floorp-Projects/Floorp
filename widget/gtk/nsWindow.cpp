@@ -6139,7 +6139,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     LOG("    Is undecorated Window\n");
     gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
     gtk_window_set_decorated(GTK_WINDOW(mShell), false);
-  } else if (mWindowType == WindowType::TopLevel) {
+  } else if (mWindowType == WindowType::TopLevel && !mParent) {
+    // Disabling system titlebar for visible GtkWindow is complicated
+    // as gtk_window_set_titlebar() works on unrealized widgets only.
+    //
+    // So hide system titlebar early if there's good expectation
+    // for it (a standalone toplevel window).
     SetDrawsInTitlebar(LookAndFeel::DrawInTitlebar());
   }
 
