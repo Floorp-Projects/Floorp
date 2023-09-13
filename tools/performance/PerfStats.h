@@ -53,7 +53,9 @@
   MACRO(JSBC_IO_Write)                            \
   MACRO(MinorGC)                                  \
   MACRO(MajorGC)                                  \
-  MACRO(NonIdleMajorGC)
+  MACRO(NonIdleMajorGC)                           \
+  MACRO(A11Y_DoInitialUpdate)                     \
+  MACRO(A11Y_ProcessQueuedCacheUpdate)
 
 namespace mozilla {
 
