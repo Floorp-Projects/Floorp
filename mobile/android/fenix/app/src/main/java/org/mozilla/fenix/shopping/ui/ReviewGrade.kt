@@ -34,16 +34,16 @@ import org.mozilla.fenix.theme.FirefoxTheme
 
 private val height = 24.dp
 private val borderColor = Color(0x26000000)
-private val reviewGradeAColor = Color(0xFF10AD56)
-private val reviewGradeBColor = Color(0xFF007DEC)
-private val reviewGradeCColor = Color(0xFFF4A902)
-private val reviewGradeDColor = Color(0xFFF27313)
-private val reviewGradeFColor = Color(0xFFD51235)
-private val reviewGradeAColorExpanded = Color(0xFFDBF3E6)
-private val reviewGradeBColorExpanded = Color(0xFFD9ECFC)
-private val reviewGradeCColorExpanded = Color(0xFFFDF2D9)
-private val reviewGradeDColorExpanded = Color(0xFFFDEADC)
-private val reviewGradeFColorExpanded = Color(0xFFF9DBE1)
+private val reviewGradeAColor = PhotonColors.Green20
+private val reviewGradeBColor = PhotonColors.Blue10
+private val reviewGradeCColor = PhotonColors.Yellow20
+private val reviewGradeDColor = PhotonColors.Orange20
+private val reviewGradeFColor = PhotonColors.Red30
+private val reviewGradeAColorExpanded = Color(0xFFEEFFF9)
+private val reviewGradeBColorExpanded = Color(0xFFDEFAFF)
+private val reviewGradeCColorExpanded = Color(0xFFFFF9DA)
+private val reviewGradeDColorExpanded = Color(0xFFFDEEE2)
+private val reviewGradeFColorExpanded = Color(0xFFFFEFF0)
 
 /**
  * Review Grade of the product - A being the best and F being the worst.
@@ -169,7 +169,7 @@ private fun ReviewGradeLetter(
     ) {
         Text(
             text = reviewGrade.name,
-            color = PhotonColors.LightGrey05,
+            color = PhotonColors.Black,
             style = FirefoxTheme.typography.subtitle2,
         )
     }
