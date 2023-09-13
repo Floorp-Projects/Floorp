@@ -63,6 +63,14 @@ void TrapSiteVectorArray::shrinkStorageToFit() {
   }
 }
 
+size_t TrapSiteVectorArray::sumOfLengths() const {
+  size_t ret = 0;
+  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+    ret += (*this)[trap].length();
+  }
+  return ret;
+}
+
 size_t TrapSiteVectorArray::sizeOfExcludingThis(
     MallocSizeOf mallocSizeOf) const {
   size_t ret = 0;

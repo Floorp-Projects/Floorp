@@ -162,6 +162,7 @@ struct TrapSiteVectorArray
   void swap(TrapSiteVectorArray& rhs);
   void shrinkStorageToFit();
 
+  size_t sumOfLengths() const;
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
