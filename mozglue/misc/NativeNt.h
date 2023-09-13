@@ -93,6 +93,11 @@ VOID NTAPI RtlAcquireSRWLockShared(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 VOID NTAPI RtlReleaseSRWLockShared(PSRWLOCK aLock);
 
+NTSTATUS NTAPI RtlSleepConditionVariableSRW(
+    PCONDITION_VARIABLE aConditionVariable, PSRWLOCK aSRWLock,
+    PLARGE_INTEGER aTimeOut, ULONG aFlags);
+VOID NTAPI RtlWakeAllConditionVariable(PCONDITION_VARIABLE aConditionVariable);
+
 ULONG NTAPI RtlNtStatusToDosError(NTSTATUS aStatus);
 VOID NTAPI RtlSetLastWin32Error(DWORD aError);
 DWORD NTAPI RtlGetLastWin32Error();
