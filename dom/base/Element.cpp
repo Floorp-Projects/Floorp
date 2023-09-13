@@ -2620,7 +2620,7 @@ nsresult Element::SetAttrAndNotify(
       nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNamespaceID, ns);
 
       LifecycleCallbackArgs args;
-      aName->ToString(args.mName);
+      args.mName = aName;
       if (aModType == MutationEvent_Binding::ADDITION) {
         args.mOldValue = VoidString();
       } else {
@@ -2806,7 +2806,7 @@ void Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
 
       nsAutoString value(aValue.String());
       LifecycleCallbackArgs args;
-      aName->ToString(args.mName);
+      args.mName = aName;
       args.mOldValue = value;
       args.mNewValue = value;
       args.mNamespaceURI = ns.IsEmpty() ? VoidString() : ns;
@@ -2921,7 +2921,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
       nsAutoString ns;
       nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNameSpaceID, ns);
       LifecycleCallbackArgs args;
-      aName->ToString(args.mName);
+      args.mName = aName;
       oldValue.ToString(args.mOldValue);
       args.mNewValue = VoidString();
       args.mNamespaceURI = ns.IsEmpty() ? VoidString() : ns;

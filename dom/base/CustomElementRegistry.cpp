@@ -125,8 +125,7 @@ class CustomElementCallbackReaction final : public CustomElementReaction {
 
 size_t LifecycleCallbackArgs::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {
-  size_t n = mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += mOldValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  size_t n = mOldValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   n += mNewValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   n += mNamespaceURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   return n;
@@ -229,8 +228,8 @@ void CustomElementCallback::Call() {
       break;
     case ElementCallbackType::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback*>(mCallback.get())
-          ->Call(mThisObject, mArgs.mName, mArgs.mOldValue, mArgs.mNewValue,
-                 mArgs.mNamespaceURI);
+          ->Call(mThisObject, nsDependentAtomString(mArgs.mName),
+                 mArgs.mOldValue, mArgs.mNewValue, mArgs.mNamespaceURI);
       break;
     case ElementCallbackType::eFormAssociated:
       static_cast<LifecycleFormAssociatedCallback*>(mCallback.get())
@@ -628,9 +627,7 @@ void CustomElementRegistry::EnqueueLifecycleCallback(
   }
 
   if (aType == ElementCallbackType::eAttributeChanged) {
-    RefPtr<nsAtom> attrName = NS_Atomize(aArgs.mName);
-    if (definition->mObservedAttributes.IsEmpty() ||
-        !definition->mObservedAttributes.Contains(attrName)) {
+    if (!definition->mObservedAttributes.Contains(aArgs.mName)) {
       return;
     }
   }
@@ -1330,7 +1327,7 @@ void CustomElementRegistry::Upgrade(Element* aElement,
                                                            namespaceURI);
 
         LifecycleCallbackArgs args;
-        args.mName = nsDependentAtomString(attrName);
+        args.mName = attrName;
         args.mOldValue = VoidString();
         args.mNewValue = attrValue;
         args.mNamespaceURI =
