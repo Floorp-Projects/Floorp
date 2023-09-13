@@ -324,6 +324,10 @@ class StackMaps {
 
     return nullptr;
   }
+
+  size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+    return mapping_.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 // Supporting code for creation of stackmaps.

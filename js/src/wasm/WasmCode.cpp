@@ -374,6 +374,7 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          callSites.sizeOfExcludingThis(mallocSizeOf) +
          tryNotes.sizeOfExcludingThis(mallocSizeOf) +
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
+         stackMaps.sizeOfExcludingThis(mallocSizeOf) +
          funcImports.sizeOfExcludingThis(mallocSizeOf) +
          funcExports.sizeOfExcludingThis(mallocSizeOf);
 }
