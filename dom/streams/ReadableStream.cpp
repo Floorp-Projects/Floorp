@@ -1345,8 +1345,8 @@ already_AddRefed<ReadableStream> ReadableStream::CreateByteNative(
 
 // https://streams.spec.whatwg.org/#readablestream-close
 void ReadableStream::CloseNative(JSContext* aCx, ErrorResult& aRv) {
-  MOZ_ASSERT(mController->GetAlgorithms()->IsNative());
-
+  MOZ_ASSERT_IF(mController->GetAlgorithms(),
+                mController->GetAlgorithms()->IsNative());
   // Step 1: If stream.[[controller]] implements ReadableByteStreamController,
   if (mController->IsByte()) {
     RefPtr<ReadableByteStreamController> controller = mController->AsByte();
