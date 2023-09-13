@@ -4966,6 +4966,38 @@ nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
       "dom::quota::FirstInitializationAttempt::Storage"_ns, innerFunc);
 }
 
+RefPtr<ClientDirectoryLockPromise> QuotaManager::OpenClientDirectory(
+    const ClientMetadata& aClientMetadata) {
+  AssertIsOnOwningThread();
+
+  return InitializeStorage()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr(this), clientMetadata = aClientMetadata](
+          const BoolPromise::ResolveOrRejectValue& aValue)
+          -> RefPtr<ClientDirectoryLockPromise> {
+        if (aValue.IsReject()) {
+          return ClientDirectoryLockPromise::CreateAndReject(
+              aValue.RejectValue(), __func__);
+        }
+
+        RefPtr<ClientDirectoryLock> directoryLock =
+            self->CreateDirectoryLock(clientMetadata, /* aExclusive */ false);
+
+        return directoryLock->Acquire()->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [directoryLock = directoryLock](
+                const BoolPromise::ResolveOrRejectValue& aValue) mutable {
+              if (aValue.IsReject()) {
+                return ClientDirectoryLockPromise::CreateAndReject(
+                    aValue.RejectValue(), __func__);
+              }
+
+              return ClientDirectoryLockPromise::CreateAndResolve(
+                  std::move(directoryLock), __func__);
+            });
+      });
+}
+
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
     const ClientMetadata& aClientMetadata, bool aExclusive) {
   AssertIsOnOwningThread();
