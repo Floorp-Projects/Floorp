@@ -8901,11 +8901,8 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
       !gtk_widget_get_realized(mShell)) {
     LOG("    Using CSD shortcut\n");
     MOZ_ASSERT(!mCreated);
-    if (aState) {
-      gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
-    } else {
-      gtk_window_set_titlebar(GTK_WINDOW(mShell), nullptr);
-    }
+    gtk_window_set_titlebar(GTK_WINDOW(mShell),
+                            aState ? gtk_fixed_new() : nullptr);
     return;
   }
 
@@ -8938,15 +8935,12 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     gtk_widget_reparent(GTK_WIDGET(mContainer), tmpWindow);
     gtk_widget_unrealize(GTK_WIDGET(mShell));
 
-    if (aState) {
-      // Add a hidden titlebar widget to trigger CSD, but disable the default
-      // titlebar.  GtkFixed is a somewhat random choice for a simple unused
-      // widget. gtk_window_set_titlebar() takes ownership of the titlebar
-      // widget.
-      gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
-    } else {
-      gtk_window_set_titlebar(GTK_WINDOW(mShell), nullptr);
-    }
+    // Add a hidden titlebar widget to trigger CSD, but disable the default
+    // titlebar.  GtkFixed is a somewhat random choice for a simple unused
+    // widget. gtk_window_set_titlebar() takes ownership of the titlebar
+    // widget.
+    gtk_window_set_titlebar(GTK_WINDOW(mShell),
+                            aState ? gtk_fixed_new() : nullptr);
 
     /* A workaround for https://bugzilla.gnome.org/show_bug.cgi?id=791081
      * gtk_widget_realize() throws:
