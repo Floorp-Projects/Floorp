@@ -268,7 +268,8 @@ Prefs are not synced on mobile.
 
 ### Rust
 Static prefs mirror variables can be accessed from Rust code via the
-`static_prefs::pref!` macro. Other prefs currently cannot be accessed. Parts
+`static_prefs::pref!` macro, for prefs which opt into this using
+`rust: true`. Other prefs currently cannot be accessed. Parts
 of libpref's C++ API could be made accessible to Rust code fairly
 straightforwardly via C bindings, either hand-made or generated.
 
