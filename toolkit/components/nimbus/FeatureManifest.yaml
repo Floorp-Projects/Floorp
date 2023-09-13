@@ -1524,10 +1524,22 @@ mixedContentUpgrading:
   owner: fbraun@mozilla.com
   hasExposure: false
   variables:
-    boolean:
+    enabled:
       description: True if the mixed content upgrading pref is enabled
       type: boolean
       setPref: security.mixed_content.upgrade_display_content
+    image:
+      description: True if the mixed content upgrading is enabled for images
+      type: boolean
+      setPref: security.mixed_content.upgrade_display_content.image
+    audio:
+      description: True if the mixed content upgrading is enabled for audio
+      type: boolean
+      setPref: security.mixed_content.upgrade_display_content.audio
+    video:
+      description: True if the mixed content upgrading is enabled for videos
+      type: boolean
+      setPref: security.mixed_content.upgrade_display_content.video
 
 jsParallelParsing:
   description: Pref to toggle JS parallel parsing.

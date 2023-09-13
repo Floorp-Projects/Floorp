@@ -9,7 +9,10 @@ const TEST_TOPLEVEL_URI = TEST_PATH + "auto_upgrading_identity.html";
 // auto upgrading mixed content should not indicate passive mixed content loaded
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [["security.mixed_content.upgrade_display_content", true]],
+    set: [
+      ["security.mixed_content.upgrade_display_content", true],
+      ["security.mixed_content.upgrade_display_content.image", true],
+    ],
   });
   await BrowserTestUtils.withNewTab(
     TEST_TOPLEVEL_URI,
