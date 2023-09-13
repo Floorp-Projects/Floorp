@@ -98,10 +98,11 @@ internal class LinkingMiddleware(
             }
 
             performLoadOnMainThread(
-                engineSession,
-                tab.content.url,
-                parentEngineSession,
+                engineSession = engineSession,
+                url = tab.content.url,
+                parent = parentEngineSession,
                 loadFlags = tab.engineState.initialLoadFlags,
+                additionalHeaders = tab.engineState.initialAdditionalHeaders,
             )
         }
 
@@ -113,8 +114,14 @@ internal class LinkingMiddleware(
         url: String,
         parent: EngineSession? = null,
         loadFlags: EngineSession.LoadUrlFlags,
+        additionalHeaders: Map<String, String>? = null,
     ) = scope.launch {
-        engineSession.loadUrl(url, parent = parent, flags = loadFlags)
+        engineSession.loadUrl(
+            url = url,
+            parent = parent,
+            flags = loadFlags,
+            additionalHeaders = additionalHeaders,
+        )
     }
 
     private fun unlink(

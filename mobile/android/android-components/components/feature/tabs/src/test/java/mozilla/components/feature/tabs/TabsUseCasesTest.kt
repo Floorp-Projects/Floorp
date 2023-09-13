@@ -265,6 +265,36 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `GIVEN a search is performed with load URL flags and additional headers WHEN adding a new tab THEN the resulting tab is loaded as a search result with the correct load flags and headers`() {
+        val url = "https://www.mozilla.org"
+        val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_ADDITIONAL_HEADERS)
+        val additionalHeaders = mapOf("X-Extra-Header" to "true")
+
+        tabsUseCases.addTab.invoke(
+            url = url,
+            flags = flags,
+            isSearch = true,
+            additionalHeaders = additionalHeaders,
+        )
+
+        store.waitUntilIdle()
+
+        assertEquals(1, store.state.tabs.size)
+        assertTrue(store.state.tabs.single().content.isSearch)
+        assertEquals(flags, store.state.tabs.single().engineState.initialLoadFlags)
+        assertEquals(
+            additionalHeaders,
+            store.state.tabs.single().engineState.initialAdditionalHeaders,
+        )
+
+        verify(engineSession, times(1)).loadUrl(
+            url = url,
+            flags = flags,
+            additionalHeaders = additionalHeaders,
+        )
+    }
+
+    @Test
     fun `RemoveAllTabsUseCase will remove all sessions`() {
         val tab = createTab("https://mozilla.org")
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()

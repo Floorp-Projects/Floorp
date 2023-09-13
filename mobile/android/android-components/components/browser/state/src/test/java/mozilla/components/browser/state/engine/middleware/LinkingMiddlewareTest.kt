@@ -51,6 +51,35 @@ class LinkingMiddlewareTest {
     }
 
     @Test
+    fun `loads URL with load URL flags and additional headers after linking`() {
+        val middleware = LinkingMiddleware(scope)
+
+        val loadFlags = EngineSession.LoadUrlFlags.external()
+        val additionalHeaders = mapOf("X-Extra-Header" to "true")
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            id = "1",
+            initialLoadFlags = loadFlags,
+            initialAdditionalHeaders = additionalHeaders,
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab)),
+            middleware = listOf(middleware),
+        )
+
+        val engineSession: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
+
+        dispatcher.scheduler.advanceUntilIdle()
+
+        verify(engineSession).loadUrl(
+            url = tab.content.url,
+            flags = loadFlags,
+            additionalHeaders = additionalHeaders,
+        )
+    }
+
+    @Test
     fun `loads URL with parent after linking`() {
         val middleware = LinkingMiddleware(scope)
 

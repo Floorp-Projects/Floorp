@@ -12,6 +12,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
@@ -61,11 +62,15 @@ class SearchUseCases(
          * @param sessionId the ID of the session/tab to use, or null if the currently selected tab
          * should be used.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
+         * @param flags Flags that will be used when loading the URL.
+         * @param additionalHeaders The extra headers to use when loading the URL.
          */
         operator fun invoke(
             searchTerms: String,
             sessionId: String? = store.state.selectedTabId,
             searchEngine: SearchEngine? = null,
+            flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+            additionalHeaders: Map<String, String>? = null,
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -80,15 +85,24 @@ class SearchUseCases(
                 // If no `sessionId` was passed in then create a new tab
                 tabsUseCases.addTab(
                     url = searchUrl,
+                    flags = flags,
                     isSearch = true,
                     searchEngineName = searchEngine?.name,
+                    additionalHeaders = additionalHeaders,
                 )
             } else {
                 // If we got a `sessionId` then try to find the tab and load the search URL in it
                 val existingTab = store.state.findTabOrCustomTab(sessionId)
                 if (existingTab != null) {
                     store.dispatch(ContentAction.UpdateIsSearchAction(existingTab.id, true, searchEngine?.name))
-                    store.dispatch(EngineAction.LoadUrlAction(existingTab.id, searchUrl))
+                    store.dispatch(
+                        EngineAction.LoadUrlAction(
+                            tabId = existingTab.id,
+                            url = searchUrl,
+                            flags = flags,
+                            additionalHeaders = additionalHeaders,
+                        ),
+                    )
                     existingTab.id
                 } else {
                     // If the tab with the provided id was not found then create a new tab
@@ -96,6 +110,8 @@ class SearchUseCases(
                         url = searchUrl,
                         isSearch = true,
                         searchEngineName = searchEngine?.name,
+                        flags = flags,
+                        additionalHeaders = additionalHeaders,
                     )
                 }
             }
@@ -133,6 +149,8 @@ class SearchUseCases(
          * @param source the source of the new session.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
          * @param parentSessionId optional parent session to attach this new search session to
+         * @param flags Flags that will be used when loading the URL.
+         * @param additionalHeaders The extra headers to use when loading the URL.
          */
         @Suppress("LongParameterList")
         operator fun invoke(
@@ -141,6 +159,8 @@ class SearchUseCases(
             selected: Boolean = true,
             searchEngine: SearchEngine? = null,
             parentSessionId: String? = null,
+            flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+            additionalHeaders: Map<String, String>? = null,
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
@@ -152,12 +172,14 @@ class SearchUseCases(
             }
 
             val id = tabsUseCases.addTab(
-                searchUrl,
+                url = searchUrl,
                 parentId = parentSessionId,
+                flags = flags,
                 source = source,
                 selectTab = selected,
                 private = isPrivate,
                 isSearch = true,
+                additionalHeaders = additionalHeaders,
             )
 
             store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))

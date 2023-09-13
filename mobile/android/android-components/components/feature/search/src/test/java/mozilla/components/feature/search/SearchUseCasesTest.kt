@@ -18,6 +18,7 @@ import mozilla.components.browser.state.state.availableSearchEngines
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
@@ -169,6 +170,47 @@ class SearchUseCasesTest {
     }
 
     @Test
+    fun `GIVEN additional headers and a load url flag WHEN NewTabSearchUseCase creates a new tab THEN addTab is called`() {
+        val source = SessionState.Source.Internal.UserEntered
+        val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+        val additionalHeaders = mapOf("X-Extra-Header" to "true")
+        val sessionId = "2342"
+
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(
+            newTabUseCase(
+                url = searchUrl,
+                isSearch = true,
+                flags = flags,
+                source = source,
+                additionalHeaders = additionalHeaders,
+            ),
+        ).thenReturn(sessionId)
+
+        useCases.newTabSearch(
+            searchTerms = searchTerms,
+            source = source,
+            flags = flags,
+            additionalHeaders = additionalHeaders,
+        )
+        store.waitUntilIdle()
+
+        verify(newTabUseCase).invoke(
+            url = searchUrl,
+            flags = flags,
+            source = source,
+            isSearch = true,
+            additionalHeaders = additionalHeaders,
+        )
+
+        val searchTermsAction =
+            middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals(sessionId, searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
+    }
+
+    @Test
     fun `DefaultSearchUseCase creates new tab if no session is selected`() {
         val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
         whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
@@ -187,6 +229,45 @@ class SearchUseCasesTest {
 
         val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
         assertEquals("2342", searchTermsAction.sessionId)
+        assertEquals(searchTerms, searchTermsAction.searchTerms)
+    }
+
+    @Test
+    fun `GIVEN additional headers and a load url flag WHEN DefaultSearchUseCase creates new tab THEN addTab is called`() {
+        val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+        val additionalHeaders = mapOf("X-Extra-Header" to "true")
+        val sessionId = "2342"
+
+        val newTabUseCase: TabsUseCases.AddNewTabUseCase = mock()
+        whenever(tabsUseCases.addTab).thenReturn(newTabUseCase)
+        whenever(
+            newTabUseCase(
+                url = searchUrl,
+                flags = flags,
+                isSearch = true,
+                searchEngineName = searchEngineName,
+                additionalHeaders = additionalHeaders,
+            ),
+        ).thenReturn(sessionId)
+
+        useCases.defaultSearch(
+            searchTerms = searchTerms,
+            searchEngine = searchEngine,
+            flags = flags,
+            additionalHeaders = additionalHeaders,
+        )
+        store.waitUntilIdle()
+
+        verify(newTabUseCase).invoke(
+            url = searchUrl,
+            flags = flags,
+            isSearch = true,
+            searchEngineName = searchEngineName,
+            additionalHeaders = additionalHeaders,
+        )
+
+        val searchTermsAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals(sessionId, searchTermsAction.sessionId)
         assertEquals(searchTerms, searchTermsAction.searchTerms)
     }
 

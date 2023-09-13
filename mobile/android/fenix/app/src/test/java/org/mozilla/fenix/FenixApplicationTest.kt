@@ -144,6 +144,7 @@ class FenixApplicationTest {
         every { settings.showContileFeature } returns true
         every { application.reportHomeScreenMetrics(settings) } just Runs
         every { settings.inactiveTabsAreEnabled } returns true
+        every { application.isDeviceRamAboveThreshold } returns true
 
         assertTrue(settings.contileContextId.isEmpty())
         assertNull(TopSites.contextId.testGetValue())
@@ -153,7 +154,6 @@ class FenixApplicationTest {
             settings = settings,
             browsersCache = browsersCache,
             mozillaProductDetector = mozillaProductDetector,
-            isDeviceRamAboveThreshold = true,
         )
 
         // Verify that browser defaults metrics are set.

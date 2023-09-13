@@ -149,6 +149,7 @@ class TabsUseCases(
          * was opened from history.
          * @param isSearch whether or not the provided URL is the result of a search.
          * @param searchEngineName The search engine name.
+         * @param additionalHeaders The extra headers to use when loading the provided URL.
          * @return The ID of the created tab.
          */
         @Suppress("LongParameterList")
@@ -166,6 +167,7 @@ class TabsUseCases(
             historyMetadata: HistoryMetadataKey? = null,
             isSearch: Boolean = false,
             searchEngineName: String? = null,
+            additionalHeaders: Map<String, String>? = null,
         ): String {
             val tab = createTab(
                 url = url,
@@ -176,6 +178,7 @@ class TabsUseCases(
                 engineSession = engineSession,
                 searchTerms = searchTerms,
                 initialLoadFlags = flags,
+                initialAdditionalHeaders = additionalHeaders,
                 historyMetadata = historyMetadata,
             )
 
@@ -188,9 +191,10 @@ class TabsUseCases(
             if (startLoading && engineSession == null) {
                 store.dispatch(
                     EngineAction.LoadUrlAction(
-                        tab.id,
-                        url,
-                        flags,
+                        tabId = tab.id,
+                        url = url,
+                        flags = flags,
+                        additionalHeaders = additionalHeaders,
                     ),
                 )
             }
