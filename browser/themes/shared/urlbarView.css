@@ -102,6 +102,8 @@
 }
 
 .urlbarView-row {
+  --urlbarView-second-line-indent: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-icon-margin-end) + var(--urlbarView-favicon-width));
+
   display: flex;
   align-items: center;
   fill: currentColor;
@@ -176,46 +178,61 @@
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
    window is also short, because fewer results will be shown. */
 @media screen and (min-height: 600px) {
-  .urlbarView-results[wrap] > .urlbarView-row:where(:not([rich-suggestion])) > .urlbarView-row-inner {
-    flex-wrap: wrap;
-  }
-  .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap {
-    max-width: 100% !important;
-    flex-basis: 100%;
-  }
-  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url,
-  .urlbarView-results[wrap] > .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
-    margin-top: 2px;
-  }
-  /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
-  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
-    margin-left: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-icon-margin-end) + var(--urlbarView-favicon-width));
-  }
-  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
-    margin-right: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-icon-margin-end) + var(--urlbarView-favicon-width));
-  }
-  /* Note: switchtab entries show the url only in override mode,
-     remotetab and sponsored ones only when selected or :hover. */
-  .urlbarView[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab], [sponsored]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
-    display: none;
-  }
-  .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap {
-    flex-wrap: wrap;
-  }
-  .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-    flex-basis: 100%;
-    margin-inline-start: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-icon-margin-end) + var(--urlbarView-favicon-width));
-  }
+  .urlbarView-results[wrap] > .urlbarView-row {
+    &:where(:not([rich-suggestion])) > .urlbarView-row-inner {
+      flex-wrap: wrap;
 
-  .urlbarView-results[wrap] > .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
-    flex-wrap: wrap;
-  }
-  .urlbarView-results[wrap] > .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
-    flex-basis: 100%;
+      > .urlbarView-no-wrap {
+        max-width: 100% !important;
+        flex-basis: 100%;
+      }
+    }
+
+    &[has-url] > .urlbarView-row-inner > .urlbarView-url {
+      margin-top: 2px;
+
+      /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on
+         the browser's directionality. */
+      &:-moz-locale-dir(ltr) {
+        margin-left: var(--urlbarView-second-line-indent);
+      }
+      &:-moz-locale-dir(rtl) {
+        margin-right: var(--urlbarView-second-line-indent);
+      }
+    }
+
+    /* Note: switchtab entries show the url only in override mode,
+       remotetab and sponsored ones only when selected or :hover. */
+    .urlbarView[actionoverride] &[has-url],
+    &[has-url]:not([type$=tab], [sponsored]),
+    &[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]),
+    &[type=tabtosearch] {
+      /* This targets both rich and non-rich results, so not using the child selector here. */
+      .urlbarView-title-separator {
+        display: none;
+      }
+    }
+
+    &[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap {
+      flex-wrap: wrap;
+
+      > .urlbarView-action {
+        flex-basis: 100%;
+        margin-inline-start: var(--urlbarView-second-line-indent);
+      }
+    }
+
+    &[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
+      flex-wrap: wrap;
+
+      > .urlbarView-row-body-top-no-wrap {
+        flex-basis: 100%;
+      }
+
+      > .urlbarView-url {
+        margin-top: 2px;
+      }
+    }
   }
 }
 
