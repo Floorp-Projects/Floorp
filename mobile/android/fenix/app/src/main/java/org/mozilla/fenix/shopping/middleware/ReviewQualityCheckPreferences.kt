@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -18,9 +19,10 @@ interface ReviewQualityCheckPreferences {
     suspend fun enabled(): Boolean
 
     /**
-     * Returns true if the user has enabled product recommendations.
+     * Returns true if the user has turned on product recommendations, false if turned off by the
+     * user, null if the product recommendations feature is disabled.
      */
-    suspend fun productRecommendationsEnabled(): Boolean
+    suspend fun productRecommendationsEnabled(): Boolean?
 
     /**
      * Sets whether the user has opted in to the review quality check feature.
@@ -28,7 +30,7 @@ interface ReviewQualityCheckPreferences {
     suspend fun setEnabled(isEnabled: Boolean)
 
     /**
-     * Sets whether the user has enabled product recommendations.
+     * Sets user preference to turn on/off product recommendations.
      */
     suspend fun setProductRecommendationsEnabled(isEnabled: Boolean)
 
@@ -52,8 +54,12 @@ class ReviewQualityCheckPreferencesImpl(
         settings.isReviewQualityCheckEnabled
     }
 
-    override suspend fun productRecommendationsEnabled(): Boolean = withContext(Dispatchers.IO) {
-        settings.isReviewQualityCheckProductRecommendationsEnabled
+    override suspend fun productRecommendationsEnabled(): Boolean? = withContext(Dispatchers.IO) {
+        if (FxNimbus.features.shoppingExperience.value().productRecommendations) {
+            settings.isReviewQualityCheckProductRecommendationsEnabled
+        } else {
+            null
+        }
     }
 
     override suspend fun setEnabled(isEnabled: Boolean) {

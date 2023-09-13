@@ -29,7 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @Composable
 fun ProductAnalysisError(
-    productRecommendationsEnabled: Boolean,
+    productRecommendationsEnabled: Boolean?,
     onReviewGradeLearnMoreClick: (String) -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,

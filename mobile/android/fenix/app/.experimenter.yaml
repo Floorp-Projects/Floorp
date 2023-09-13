@@ -199,6 +199,9 @@ shopping-experience:
     enabled:
       type: boolean
       description: "if true, the shopping experience feature is shown to the user."
+    product-recommendations:
+      type: boolean
+      description: "if true, recommended products feature is enabled to be shown to the user based on their preference."
 splash-screen:
   description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
   hasExposure: true

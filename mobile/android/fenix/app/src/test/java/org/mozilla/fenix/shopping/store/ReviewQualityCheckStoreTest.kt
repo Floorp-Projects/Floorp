@@ -91,6 +91,30 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
+    fun `GIVEN the user has opted in the feature and product recommendations feature is disabled THEN state should reflect that`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                        isEnabled = true,
+                        isProductRecommendationsEnabled = null,
+                    ),
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = null)
+            assertEquals(expected, tested.state)
+
+            // Even if toggle action is dispatched, state is not changed
+            tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+            tested.waitUntilIdle()
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
     fun `GIVEN the user has opted in the feature and product recommendations are off WHEN the user turns on product recommendations THEN state should reflect that`() =
         runTest {
             val tested = ReviewQualityCheckStore(
@@ -213,12 +237,12 @@ class ReviewQualityCheckStoreTest {
 
 private class FakeReviewQualityCheckPreferences(
     private val isEnabled: Boolean = false,
-    private val isProductRecommendationsEnabled: Boolean = false,
+    private val isProductRecommendationsEnabled: Boolean? = false,
     private val updateCFRCallback: () -> Unit = { },
 ) : ReviewQualityCheckPreferences {
     override suspend fun enabled(): Boolean = isEnabled
 
-    override suspend fun productRecommendationsEnabled(): Boolean = isProductRecommendationsEnabled
+    override suspend fun productRecommendationsEnabled(): Boolean? = isProductRecommendationsEnabled
 
     override suspend fun setEnabled(isEnabled: Boolean) {
     }

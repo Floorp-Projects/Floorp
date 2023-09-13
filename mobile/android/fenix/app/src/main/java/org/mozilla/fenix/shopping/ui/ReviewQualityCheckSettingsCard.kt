@@ -33,7 +33,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @Composable
 fun ReviewQualityCheckSettingsCard(
-    productRecommendationsEnabled: Boolean,
+    productRecommendationsEnabled: Boolean?,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onTurnOffReviewQualityCheckClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -53,7 +53,7 @@ fun ReviewQualityCheckSettingsCard(
 
 @Composable
 private fun SettingsContent(
-    productRecommendationsEnabled: Boolean,
+    productRecommendationsEnabled: Boolean?,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onTurnOffReviewQualityCheckClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -61,13 +61,15 @@ private fun SettingsContent(
     Column(modifier = modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        SwitchWithLabel(
-            checked = productRecommendationsEnabled,
-            onCheckedChange = onProductRecommendationsEnabledStateChange,
-            label = stringResource(R.string.review_quality_check_settings_recommended_products),
-        )
+        if (productRecommendationsEnabled != null) {
+            SwitchWithLabel(
+                checked = productRecommendationsEnabled,
+                onCheckedChange = onProductRecommendationsEnabledStateChange,
+                label = stringResource(R.string.review_quality_check_settings_recommended_products),
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         SecondaryButton(
             text = stringResource(R.string.review_quality_check_settings_turn_off),

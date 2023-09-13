@@ -346,6 +346,10 @@ features:
         description: if true, the shopping experience feature is shown to the user.
         type: Boolean
         default: false
+      product-recommendations:
+        description: if true, recommended products feature is enabled to be shown to the user based on their preference.
+        type: Boolean
+        default: false
     defaults:
       - channel: developer
         value:

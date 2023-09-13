@@ -58,7 +58,7 @@ private fun mapStateForUpdateAction(
         }
 
         ReviewQualityCheckAction.ToggleProductRecommendation -> {
-            if (state is ReviewQualityCheckState.OptedIn) {
+            if (state is ReviewQualityCheckState.OptedIn && state.productRecommendationsPreference != null) {
                 state.copy(productRecommendationsPreference = !state.productRecommendationsPreference)
             } else {
                 state

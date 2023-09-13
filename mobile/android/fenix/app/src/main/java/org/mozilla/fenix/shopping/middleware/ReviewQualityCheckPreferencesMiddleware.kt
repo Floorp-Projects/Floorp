@@ -86,9 +86,13 @@ class ReviewQualityCheckPreferencesMiddleware(
 
             ReviewQualityCheckAction.ToggleProductRecommendation -> {
                 scope.launch {
-                    reviewQualityCheckPreferences.setProductRecommendationsEnabled(
-                        !reviewQualityCheckPreferences.productRecommendationsEnabled(),
-                    )
+                    val productRecommendationsEnabled =
+                        reviewQualityCheckPreferences.productRecommendationsEnabled()
+                    if (productRecommendationsEnabled != null) {
+                        reviewQualityCheckPreferences.setProductRecommendationsEnabled(
+                            !productRecommendationsEnabled,
+                        )
+                    }
                 }
             }
         }

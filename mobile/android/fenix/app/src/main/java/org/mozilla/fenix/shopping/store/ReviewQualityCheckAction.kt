@@ -54,10 +54,14 @@ sealed interface ReviewQualityCheckAction : Action {
 
     /**
      * Triggered as a result of a [PreferencesMiddlewareAction] to update the state.
+     *
+     * @property hasUserOptedIn True when user has opted in for shopping experience.
+     * @property isProductRecommendationsEnabled Reflects the user preference update to display
+     * recommended product. Null when product recommendations feature is disabled.
      */
     data class UpdateUserPreferences(
         val hasUserOptedIn: Boolean,
-        val isProductRecommendationsEnabled: Boolean,
+        val isProductRecommendationsEnabled: Boolean?,
     ) : UpdateAction
 
     /**
