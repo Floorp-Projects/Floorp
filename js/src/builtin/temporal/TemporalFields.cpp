@@ -175,6 +175,20 @@ static mozilla::Maybe<TemporalField> ToTemporalField(JSContext* cx,
   return mozilla::Nothing();
 }
 
+static JSString* ToPrimitiveAndRequireString(JSContext* cx,
+                                             Handle<Value> value) {
+  Rooted<Value> primitive(cx, value);
+  if (!ToPrimitive(cx, JSTYPE_STRING, &primitive)) {
+    return nullptr;
+  }
+  if (!primitive.isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, primitive,
+                     nullptr, "not a string");
+    return nullptr;
+  }
+  return primitive.toString();
+}
+
 static Value TemporalFieldDefaultValue(TemporalField field) {
   switch (field) {
     case TemporalField::Year:
@@ -230,7 +244,7 @@ static bool TemporalFieldConvertValue(JSContext* cx, TemporalField field,
     case TemporalField::MonthCode:
     case TemporalField::Offset:
     case TemporalField::Era: {
-      JSString* str = JS::ToString(cx, value);
+      JSString* str = ToPrimitiveAndRequireString(cx, value);
       if (!str) {
         return false;
       }
@@ -377,7 +391,7 @@ bool js::temporal::PrepareTemporalFields(
           }
           break;
         case TemporalField::MonthCode: {
-          JSString* str = JS::ToString(cx, value);
+          JSString* str = ToPrimitiveAndRequireString(cx, value);
           if (!str) {
             return false;
           }
@@ -423,7 +437,7 @@ bool js::temporal::PrepareTemporalFields(
           }
           break;
         case TemporalField::Offset: {
-          JSString* str = JS::ToString(cx, value);
+          JSString* str = ToPrimitiveAndRequireString(cx, value);
           if (!str) {
             return false;
           }
@@ -431,7 +445,7 @@ bool js::temporal::PrepareTemporalFields(
           break;
         }
         case TemporalField::Era: {
-          JSString* str = JS::ToString(cx, value);
+          JSString* str = ToPrimitiveAndRequireString(cx, value);
           if (!str) {
             return false;
           }

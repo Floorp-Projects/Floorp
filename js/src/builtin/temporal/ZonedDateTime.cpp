@@ -345,10 +345,12 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     }
   } else {
     // Step 6.a.
-    Rooted<JSString*> string(cx, JS::ToString(cx, item));
-    if (!string) {
+    if (!item.isString()) {
+      ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, item,
+                       nullptr, "not a string");
       return nullptr;
     }
+    Rooted<JSString*> string(cx, item.toString());
 
     // Case 1: 19700101Z[+02:00]
     // { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: "+02:00" }
