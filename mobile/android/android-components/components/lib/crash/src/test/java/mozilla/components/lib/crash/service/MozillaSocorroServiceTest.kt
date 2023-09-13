@@ -153,7 +153,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$FATAL_NATIVE_CRASH_TYPE"))
             assert(request.contains("name=CrashTime\r\n\r\n123"))
-            assert(request.contains("name=useragent_locale\r\n\r\nen_US"))
+            assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
 
             verify(service).report(crash)
             verify(service).sendReport(123456, null, "dump.path", "extras.path", true, true, crash.breadcrumbs)
@@ -345,7 +345,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=BuildID\r\n\r\ntest build id"))
             assert(request.contains("name=Version\r\n\r\n1.0.1"))
             assert(request.contains("name=ApplicationBuildID\r\n\r\n1000"))
-            assert(request.contains("name=useragent_locale\r\n\r\nen_US"))
+            assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
             assert(request.contains("name=DistributionID\r\n\r\ntest distribution id"))
 
             verify(service).report(crash)
@@ -403,7 +403,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$NON_FATAL_NATIVE_CRASH_TYPE"))
             assert(request.contains("name=CrashTime\r\n\r\n123"))
-            assert(request.contains("name=useragent_locale\r\n\r\nen_US"))
+            assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
 
             verify(service).report(crash)
             verify(service).sendReport(123456, null, "dump.path", "extras.path", true, false, crash.breadcrumbs)
@@ -454,7 +454,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$UNCAUGHT_EXCEPTION_TYPE"))
             assert(request.contains("name=CrashTime\r\n\r\n123"))
-            assert(request.contains("name=useragent_locale\r\n\r\nen_US"))
+            assert(request.contains("name=useragent_locale\r\n\r\nen-US"))
 
             verify(service).report(crash)
             verify(service).sendReport(123456, crash.throwable, null, null, false, true, crash.breadcrumbs)

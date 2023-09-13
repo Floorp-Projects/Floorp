@@ -268,7 +268,7 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "BuildID", buildId, nameSet)
         sendPart(gzipOs, boundary, "Vendor", vendor, nameSet)
         sendPart(gzipOs, boundary, "Breadcrumbs", breadcrumbs, nameSet)
-        sendPart(gzipOs, boundary, "useragent_locale", Locale.getDefault().toString(), nameSet)
+        sendPart(gzipOs, boundary, "useragent_locale", Locale.getDefault().toLanguageTag(), nameSet)
         sendPart(gzipOs, boundary, "DistributionID", distributionId, nameSet)
 
         extrasFilePath?.let {
