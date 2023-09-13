@@ -3907,27 +3907,25 @@ static JSString* TemporalDurationToString(JSContext* cx,
  */
 static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
                                      MutableHandle<JSObject*> result) {
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
+  // Step 1.
   Rooted<Value> value(cx);
   if (!GetProperty(cx, options, options, cx->names().relativeTo, &value)) {
     return false;
   }
 
-  // Step 3.
+  // Step 2.
   if (value.isUndefined()) {
     result.set(nullptr);
     return true;
   }
 
-  // Step 4.
+  // Step 3.
   auto offsetBehaviour = OffsetBehaviour::Option;
 
-  // Step 5.
+  // Step 4.
   auto matchBehaviour = MatchBehaviour::MatchExactly;
 
-  // Steps 6-7.
+  // Steps 5-6.
   PlainDateTime dateTime;
   Rooted<CalendarValue> calendar(cx);
   Rooted<TimeZoneValue> timeZone(cx);
@@ -3935,7 +3933,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
   if (value.isObject()) {
     Rooted<JSObject*> obj(cx, &value.toObject());
 
-    // Step 6.a.
+    // Step 5.a.
     if (obj->canUnwrapAs<PlainDateObject>()) {
       result.set(obj);
       return true;
@@ -3945,7 +3943,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       return true;
     }
 
-    // Step 6.b.
+    // Step 5.b.
     if (auto* dateTime = obj->maybeUnwrapIf<PlainDateTimeObject>()) {
       auto plainDateTime = ToPlainDate(dateTime);
 
@@ -3963,12 +3961,12 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       return true;
     }
 
-    // Step 6.c.
+    // Step 5.c.
     if (!GetTemporalCalendarWithISODefault(cx, obj, &calendar)) {
       return false;
     }
 
-    // Step 6.d.
+    // Step 5.d.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Hour,
@@ -3980,90 +3978,90 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       return false;
     }
 
-    // Steps 6.e-f.
+    // Steps 5.e-f.
     if (!AppendSorted(cx, fieldNames.get(),
                       {TemporalField::Offset, TemporalField::TimeZone})) {
       return false;
     }
 
-    // Step 6.g.
+    // Step 5.g.
     Rooted<PlainObject*> fields(cx, PrepareTemporalFields(cx, obj, fieldNames));
     if (!fields) {
       return false;
     }
 
-    // Step 6.h.
+    // Step 5.h.
     Rooted<JSObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!dateOptions) {
       return false;
     }
 
-    // Step 6.i.
+    // Step 5.i.
     Rooted<Value> overflow(cx, StringValue(cx->names().constrain));
     if (!DefineDataProperty(cx, dateOptions, cx->names().overflow, overflow)) {
       return false;
     }
 
-    // Step 6.j.
+    // Step 5.j.
     if (!InterpretTemporalDateTimeFields(cx, calendar, fields, dateOptions,
                                          &dateTime)) {
       return false;
     }
 
-    // Step 6.k.
+    // Step 5.k.
     Rooted<Value> offset(cx);
     if (!GetProperty(cx, fields, fields, cx->names().offset, &offset)) {
       return false;
     }
 
-    // Step 6.l.
+    // Step 5.l.
     Rooted<Value> timeZoneValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().timeZone,
                      &timeZoneValue)) {
       return false;
     }
 
-    // Step 6.m.
+    // Step 5.m.
     if (!timeZoneValue.isUndefined()) {
       if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
         return false;
       }
     }
 
-    // Step 6.n.
+    // Step 5.n.
     if (offset.isUndefined()) {
       offsetBehaviour = OffsetBehaviour::Wall;
     }
 
-    // Steps 9-10.
+    // Steps 8-9.
     if (timeZone) {
       if (offsetBehaviour == OffsetBehaviour::Option) {
         MOZ_ASSERT(!offset.isUndefined());
         MOZ_ASSERT(offset.isString());
 
-        // Step 9.a.
+        // Step 8.a.
         Rooted<JSString*> offsetString(cx, offset.toString());
         if (!offsetString) {
           return false;
         }
 
-        // Step 9.b.
+        // Step 8.b.
         if (!ParseTimeZoneOffsetString(cx, offsetString, &offsetNs)) {
           return false;
         }
       } else {
-        // Step 10.
+        // Step 9.
         offsetNs = 0;
       }
     }
   } else {
-    // Step 7.a.
+    // Step 6.a.
     Rooted<JSString*> string(cx, JS::ToString(cx, value));
     if (!string) {
       return false;
     }
 
-    // Step 7.b.
+    // Step 6.b.
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
@@ -4075,29 +4073,29 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       return false;
     }
 
-    // Step 7.c. (Not applicable in our implementation.)
+    // Step 6.c. (Not applicable in our implementation.)
 
-    // Steps 7.e-f.
+    // Steps 6.e-f.
     if (timeZoneName) {
-      // Step 7.f.i.
+      // Step 6.f.i.
       if (!ToTemporalTimeZone(cx, timeZoneName, &timeZone)) {
         return false;
       }
 
-      // Steps 7.f.ii-iii.
+      // Steps 6.f.ii-iii.
       if (isUTC) {
         offsetBehaviour = OffsetBehaviour::Exact;
       } else if (!hasOffset) {
         offsetBehaviour = OffsetBehaviour::Wall;
       }
 
-      // Step 7.f.iv.
+      // Step 6.f.iv.
       matchBehaviour = MatchBehaviour::MatchMinutes;
     } else {
       MOZ_ASSERT(!timeZone);
     }
 
-    // Steps 7.g-j.
+    // Steps 6.g-j.
     if (calendarString) {
       if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
         return false;
@@ -4106,21 +4104,21 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       calendar.set(CalendarValue(cx->names().iso8601));
     }
 
-    // Steps 9-10.
+    // Steps 8-9.
     if (timeZone) {
       if (offsetBehaviour == OffsetBehaviour::Option) {
         MOZ_ASSERT(hasOffset);
 
-        // Steps 9.a-b.
+        // Steps 8.a-b.
         offsetNs = timeZoneOffset;
       } else {
-        // Step 10.
+        // Step 9.
         offsetNs = 0;
       }
     }
   }
 
-  // Step 8.
+  // Step 7.
   if (!timeZone) {
     auto* obj = CreateTemporalDate(cx, dateTime.date, calendar);
     if (!obj) {
@@ -4131,9 +4129,9 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
     return true;
   }
 
-  // Steps 9-10. (Moved above)
+  // Steps 8-9. (Moved above)
 
-  // Step 11.
+  // Step 10.
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(cx, dateTime, offsetBehaviour, offsetNs,
                                   timeZone, TemporalDisambiguation::Compatible,
@@ -4143,7 +4141,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
   }
   MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
 
-  // Step 12.
+  // Step 11.
   auto* obj =
       CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
   if (!obj) {
