@@ -45,7 +45,13 @@ class GMPCapability {
                        const nsACString& aAPI, const nsCString& aTag);
 };
 
-enum class GMPState : uint32_t { NotLoaded, Loaded, Unloading, Closing };
+enum class GMPState : uint32_t {
+  NotLoaded,
+  Loaded,
+  Unloading,
+  Closing,
+  Closed
+};
 
 class GMPContentParent;
 

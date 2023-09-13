@@ -717,6 +717,45 @@ mozilla::ipc::IPCResult GMPChild::RecvPreferenceUpdate(const Pref& aPref) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
+  if (!mProfilerController) {
+    aResolver(""_ns);
+    return IPC_OK();
+  }
+
+  const bool isProfiling = profiler_is_active();
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling ? "Profiling - GrabShutdownProfileAndShutdown"_ns
+                  : "Not profiling - GrabShutdownProfileAndShutdown"_ns);
+  ProfileAndAdditionalInformation shutdownProfileAndAdditionalInformation =
+      mProfilerController->GrabShutdownProfileAndShutdown();
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling ? "Profiling - Destroying ChildProfilerController"_ns
+                  : "Not profiling - Destroying ChildProfilerController"_ns);
+  mProfilerController = nullptr;
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling ? "Profiling - SendShutdownProfile (resovling)"_ns
+                  : "Not profiling - SendShutdownProfile (resolving)"_ns);
+  if (const size_t len = shutdownProfileAndAdditionalInformation.SizeOf();
+      len >= size_t(IPC::Channel::kMaximumMessageSize)) {
+    shutdownProfileAndAdditionalInformation.mProfile =
+        nsPrintfCString("*Profile from pid %u bigger (%zu) than IPC max (%zu)",
+                        unsigned(profiler_current_process_id().ToNumber()), len,
+                        size_t(IPC::Channel::kMaximumMessageSize));
+  }
+  // Send the shutdown profile to the parent process through our own
+  // message channel, which we know will survive for long enough.
+  aResolver(shutdownProfileAndAdditionalInformation.mProfile);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling ? "Profiling - SendShutdownProfile (resolved)"_ns
+                  : "Not profiling - SendShutdownProfile (resolved)"_ns);
+  return IPC_OK();
+}
+
 }  // namespace gmp
 }  // namespace mozilla
 
