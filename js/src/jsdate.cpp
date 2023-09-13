@@ -24,7 +24,6 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
-#include <cstring>
 #include <iterator>
 #include <math.h>
 #include <string.h>
@@ -1453,14 +1452,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
           return false;
         }
       } else if (index < length && c != ',' && c > ' ' && c != '-' &&
-                 c != '(' &&
-                 // Allow '.' after day of month i.e. DD.Mon.YYYY/Mon.DD.YYYY,
-                 // or after year/month in YYYY/MM/DD
-                 (c != '.' || mday != -1) &&
-                 // Allow month or AM/PM directly after a number
-                 (!IsAsciiAlpha(c) ||
-                  (mon != -1 && !(strchr("AaPp", c) && index < length - 1 &&
-                                  strchr("Mm", s[index + 1]))))) {
+                 c != '(') {
         return false;
       } else if (seenPlusMinus && n < 60) { /* handle GMT-3:30 */
         if (tzOffset < 0) {
