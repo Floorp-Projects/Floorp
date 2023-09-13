@@ -352,7 +352,7 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       heapType = "eq";
       break;
     case RefType::I31:
-      heapType = "eq";
+      heapType = "i31";
       break;
     case RefType::Struct:
       heapType = "struct";

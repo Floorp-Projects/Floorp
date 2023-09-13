@@ -5671,17 +5671,26 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
     return;
   }
 
-  if (destType.isI31()) {
+  // 'type' is now 'eq' or lower, which currently will either be a gc object or
+  // an i31.
+
+  // Check first for i31 values, and get them out of the way. i31 values are
+  // valid when casting to i31 or eq, and invalid otherwise.
+  if (destType.isI31() || destType.isEq()) {
     branchWasmAnyRefIsI31(true, ref, successLabel);
-    jump(failLabel);
-    bind(&fallthrough);
-    return;
+
+    if (destType.isI31()) {
+      // No further checks for 'i31'
+      jump(failLabel);
+      bind(&fallthrough);
+      return;
+    }
   }
 
-  // 'type' is now 'eq' or lower, which currently will always be a gc object.
-  // Test for non-gc objects.
+  // Then check for any kind of gc object.
   MOZ_ASSERT(scratch1 != Register::Invalid());
-  if (!wasm::RefType::isSubTypeOf(sourceType, wasm::RefType::eq())) {
+  if (!wasm::RefType::isSubTypeOf(sourceType, wasm::RefType::struct_()) &&
+      !wasm::RefType::isSubTypeOf(sourceType, wasm::RefType::array())) {
     branchWasmAnyRefIsObjectOrNull(false, ref, failLabel);
     branchObjectIsWasmGcObject(false, ref, scratch1, failLabel);
   }
@@ -5693,8 +5702,8 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
     return;
   }
 
-  // 'type' is now 'struct', 'array', or a concrete type. (Bottom types were
-  // handled above.)
+  // 'type' is now 'struct', 'array', or a concrete type. (Bottom types and i31
+  // were handled above.)
   //
   // Casting to a concrete type only requires a simple check on the
   // object's superTypeVector. Casting to an abstract type (struct, array)
