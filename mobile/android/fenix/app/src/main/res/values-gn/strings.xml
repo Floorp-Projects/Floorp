@@ -230,7 +230,7 @@
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ñe’ẽ poravopyre</string>
     <!-- Text for default locale item -->
-    <string name="default_locale_text">Eipuru mba’e’oka ñe’ẽ</string>
+    <string name="default_locale_text">Eiporu mba’e’oka ñe’ẽ</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Eheka ñe’ẽ</string>
 
@@ -296,7 +296,7 @@
     <string name="onboarding_home_enable_notifications_title">Marandu’i ne pytyvõta ejapovéta %s ndive</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Embojuehe tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre, ehendu ñemoñe’ẽ mba’éichapa eipuruporãta %s rekorosã ñemigua ha ambue.</string>
+    <string name="onboarding_home_enable_notifications_description">Embojuehe tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre, ehendu ñemoñe’ẽ mba’éichapa eiporuporãta %s rekorosã ñemigua ha ambue.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Ku’ejey</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -340,10 +340,10 @@
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Marandu’i ne pytyvõta ejapove hag̃ua Firefox ndive</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua %s.</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eiporu porã hag̃ua %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua Firefox.</string>
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eiporu porã hag̃ua Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Emyandy marandu’i</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1507,7 +1507,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporavo ne téma</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Eipuru’ive batería ha emombytu’u nde resa iñypytũvévape.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporu’ive batería ha emombytu’u nde resa iñypytũvévape.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ijeheguietéva</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1534,7 +1534,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Eñepyrũ tembiapo ne ra’ãngamýi ndive</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Eipuru ñandutiveve</string>
+    <string name="sign_in_with_email">Eiporu ñandutiveve</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[¿Ndererekói mba’ete? <u>Emoheñói</u> embojuehe hag̃ua Firefox mba’e’oka ndive.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1721,7 +1721,7 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Emyenyhẽjey %1$s-pe</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ñanduti rendápe eipuru aja %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ñanduti rendápe eiporu aja %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Emyanyhẽjey ambue apps-pe</string>
 
@@ -1885,7 +1885,7 @@
     <string name="credit_cards_biometric_prompt_message_pin">Embojuruja ne mba’e’oka</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Embojuruja eipuru hag̃ua kuatia’atã ñemurã marandu mbyatypyre</string>
+    <string name="credit_cards_biometric_prompt_unlock_message">Embojuruja eiporu hag̃ua kuatia’atã ñemurã marandu mbyatypyre</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Embojuaju kundaharape</string>
@@ -1961,7 +1961,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Jehekaha juajuha eipurútava</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2">URL eipurukuaáva eheka hag̃ua</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL eiporukuaáva eheka hag̃ua</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Emoambue porandu “%s” ndive. Techapyrã:https://www.google.com/search?q=%s</string>
 

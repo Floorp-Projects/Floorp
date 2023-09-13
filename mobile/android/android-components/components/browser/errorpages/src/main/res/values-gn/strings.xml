@@ -197,7 +197,7 @@
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
         <li>Ñanduti kundaharape ojehai jepi kóicha: <strong>http://www.example.com/</strong></li>
-        <li>Ema’ẽjey eipuru porãpa barra ojero’áva tenonde gotyo (i.e. <strong>/</strong>).</li>
+        <li>Ema’ẽjey eiporu porãpa barra ojero’áva tenonde gotyo (i.e. <strong>/</strong>).</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
@@ -270,7 +270,7 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Ndaipóri tenda hekorosãva</string>
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
-    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Emyandyhína HTTPS ayvu añoitéva hekorosãve hag̃ua ha ndaipóri HTTPS rehegua <em>%1$s</em> reipurukuaáva.]]></string>
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Emyandyhína HTTPS ayvu añoitéva hekorosãve hag̃ua ha ndaipóri HTTPS rehegua <em>%1$s</em> reiporukuaáva.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Epyta ko HTTP rendápe</string>
 </resources>
