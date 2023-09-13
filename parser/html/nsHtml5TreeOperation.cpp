@@ -416,18 +416,9 @@ void nsHtml5TreeOperation::SetHTMLElementAttributes(
       nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
       nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
       int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
-
       nsString value;  // Not Auto, because using it to hold nsStringBuffer*
       val.ToString(value);
-      if (nsGkAtoms::a == aName && nsGkAtoms::name == localName) {
-        // This is an HTML5-incompliant Geckoism.
-        // Remove when fixing bug 582361
-        NS_ConvertUTF16toUTF8 cname(value);
-        NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
-        aElement->SetAttr(nsuri, localName, prefix, uv, false);
-      } else {
-        aElement->SetAttr(nsuri, localName, prefix, value, false);
-      }
+      aElement->SetAttr(nsuri, localName, prefix, value, false);
     }
   }
 }
