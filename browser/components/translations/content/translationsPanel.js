@@ -738,8 +738,8 @@ var TranslationsPanel = new (class {
    * pertain to languages.
    */
   async #updateSettingsMenuLanguageCheckboxStates() {
-    const { docLangTag, isDocLangTagSupported } =
-      await this.#getCachedDetectedLanguages();
+    const langTags = await this.#getCachedDetectedLanguages();
+    const { docLangTag, isDocLangTagSupported } = langTags;
 
     const { panel } = this.elements;
     const alwaysTranslateMenuItems = panel.ownerDocument.querySelectorAll(
@@ -756,7 +756,7 @@ var TranslationsPanel = new (class {
     const alwaysOfferTranslations =
       TranslationsParent.shouldAlwaysOfferTranslations();
     const alwaysTranslateLanguage =
-      TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
+      TranslationsParent.shouldAlwaysTranslateLanguage(langTags);
     const neverTranslateLanguage =
       TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
     const shouldDisable =
@@ -1354,14 +1354,15 @@ var TranslationsPanel = new (class {
    * If auto-translate is currently inactive for the doc language, activates it.
    */
   async onAlwaysTranslateLanguage() {
-    const { docLangTag } = await this.#getCachedDetectedLanguages();
+    const langTags = await this.#getCachedDetectedLanguages();
+    const { docLangTag } = langTags;
     if (!docLangTag) {
       throw new Error("Expected to have a document language tag.");
     }
     const pageAction =
       this.getCheckboxPageActionFor().alwaysTranslateLanguage();
     const toggledOn =
-      TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
+      TranslationsParent.toggleAlwaysTranslateLanguagePref(langTags);
     TranslationsParent.telemetry()
       .panel()
       .onAlwaysTranslateLanguage(docLangTag, toggledOn);
