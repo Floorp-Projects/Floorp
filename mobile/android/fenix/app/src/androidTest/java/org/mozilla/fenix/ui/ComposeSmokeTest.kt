@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -265,7 +264,6 @@ class ComposeSmokeTest {
         }
     }
 
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1846941")
     @Test
     fun tabMediaControlButtonTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)

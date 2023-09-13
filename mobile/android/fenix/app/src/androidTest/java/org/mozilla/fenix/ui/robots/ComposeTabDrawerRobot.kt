@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasAnyChild
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -272,7 +273,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
     /**
      * Verifies a tab's media button matches [action] when there is only one tab with media.
      */
+    @OptIn(ExperimentalTestApi::class)
     fun verifyTabMediaControlButtonState(action: String) {
+        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
         composeTestRule.tabMediaControlButton(action)
             .assertExists()
     }
@@ -280,7 +283,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
     /**
      * Clicks a tab's media button when there is only one tab with media.
      */
+    @OptIn(ExperimentalTestApi::class)
     fun clickTabMediaControlButton(action: String) {
+        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(action), waitingTime)
         composeTestRule.tabMediaControlButton(action)
             .performClick()
     }
