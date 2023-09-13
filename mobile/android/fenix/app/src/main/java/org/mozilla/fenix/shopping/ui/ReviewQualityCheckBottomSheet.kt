@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -105,7 +106,13 @@ private fun ProductReview(
             }
 
             is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
-                // Bug 1840113
+                ProductAnalysisError(
+                    productRecommendationsEnabled = state.productRecommendationsPreference,
+                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                    onOptOutClick = onOptOutClick,
+                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
 
             is ReviewQualityCheckState.OptedIn.ProductReviewState.Loading -> {
