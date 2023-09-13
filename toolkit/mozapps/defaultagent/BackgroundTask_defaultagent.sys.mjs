@@ -96,26 +96,6 @@ export async function runBackgroundTask(commandLine) {
       defaultAgent.doTask(aumid, force);
       return EXIT_CODE.SUCCESS;
     }
-    // Bug 1850631 - this should eventually be removed.
-    case "set-default-browser-user-choice": {
-      let aumid = commandLine.getArgument(1);
-      const extraFileExtensions = [];
-      for (let i = 2; i < commandLine.length; i++) {
-        extraFileExtensions.push(commandLine.getArgument(i));
-      }
-      defaultAgent.setDefaultBrowserUserChoice(aumid, extraFileExtensions);
-      return EXIT_CODE.SUCCESS;
-    }
-    // Bug 1850631 - this should eventually be removed.
-    case "set-default-extension-handlers-user-choice": {
-      let aumid = commandLine.getArgument(1);
-      const fileExtensions = [];
-      for (let i = 2; i < commandLine.length; i++) {
-        fileExtensions.push(commandLine.getArgument(i));
-      }
-      defaultAgent.setDefaultExtensionHandlersUserChoice(aumid, fileExtensions);
-      return EXIT_CODE.SUCCESS;
-    }
   }
 
   return EXIT_CODE.INVALID_ARGUMENT;

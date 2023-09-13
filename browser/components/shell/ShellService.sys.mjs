@@ -9,9 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -126,20 +124,6 @@ let ShellServiceInternal = {
       return this.shellService.isDefaultBrowser(forAllTypes);
     }
     return false;
-  },
-
-  /*
-   * Invoke the Windows Default Browser agent with the given options.
-   *
-   * Separated for easy stubbing in tests.
-   */
-  _callExternalDefaultBrowserAgent(options = {}) {
-    const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
-    wdba.leafName = "default-browser-agent.exe";
-    return lazy.Subprocess.call({
-      ...options,
-      command: options.command || wdba.path,
-    });
   },
 
   /*
@@ -267,13 +251,6 @@ let ShellServiceInternal = {
 
     lazy.log.info("Setting Firefox as default using UserChoice");
 
-    // We launch the WDBA to handle the registry writes, see
-    // SetDefaultBrowserUserChoice() in
-    // toolkit/mozapps/defaultagent/SetDefaultBrowser.cpp.
-    // This is external in case an overzealous antimalware product decides to
-    // quarrantine any program that writes UserChoice, though this has not
-    // occurred during extensive testing.
-
     let telemetryResult = "ErrOther";
 
     try {
@@ -289,22 +266,26 @@ let ShellServiceInternal = {
       const aumi = lazy.XreDirProvider.getInstallHash();
 
       telemetryResult = "ErrLaunchExe";
-      const exeArgs = ["set-default-browser-user-choice", aumi];
+      const extraFileExtensions = [];
       if (
         lazy.NimbusFeatures.shellService.getVariable("setDefaultPDFHandler")
       ) {
         if (this._shouldSetDefaultPDFHandler()) {
           lazy.log.info("Setting Firefox as default PDF handler");
-          exeArgs.push(".pdf", "FirefoxPDF");
+          extraFileExtensions.push(".pdf", "FirefoxPDF");
         } else {
           lazy.log.info("Not setting Firefox as default PDF handler");
         }
       }
-      const exeProcess = await this._callExternalDefaultBrowserAgent({
-        arguments: exeArgs,
-      });
-      telemetryResult = "ErrOther";
-      await this._handleWDBAResult(exeProcess);
+      try {
+        this.defaultAgent.setDefaultBrowserUserChoice(
+          aumi,
+          extraFileExtensions
+        );
+      } catch (err) {
+        telemetryResult = "ErrOther";
+        this._handleWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
+      }
       telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
@@ -327,22 +308,19 @@ let ShellServiceInternal = {
       throw new Error("Windows-only");
     }
 
-    // See comment in setAsDefaultUserChoice for an explanation of why we shell
-    // out to WDBA.
     let telemetryResult = "ErrOther";
 
     try {
       const aumi = lazy.XreDirProvider.getInstallHash();
-      const exeProcess = await this._callExternalDefaultBrowserAgent({
-        arguments: [
-          "set-default-extension-handlers-user-choice",
-          aumi,
+      try {
+        this.defaultAgent.setDefaultExtensionHandlersUserChoice(aumi, [
           ".pdf",
           "FirefoxPDF",
-        ],
-      });
-      telemetryResult = "ErrOther";
-      await this._handleWDBAResult(exeProcess);
+        ]);
+      } catch (err) {
+        telemetryResult = "ErrOther";
+        this._handleWDBAResult(err.result || Cr.NS_ERROR_FAILURE);
+      }
       telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
@@ -505,23 +483,10 @@ let ShellServiceInternal = {
     }
   },
 
-  async _handleWDBAResult(exeProcess, exeWaitTimeoutMs = 2000) {
-    const STILL_ACTIVE = 0x103;
-
-    const exeWaitPromise = exeProcess.wait();
-    const timeoutPromise = new Promise(function (resolve) {
-      lazy.setTimeout(
-        () => resolve({ exitCode: STILL_ACTIVE }),
-        exeWaitTimeoutMs
-      );
-    });
-
-    const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
-
+  _handleWDBAResult(exitCode) {
     if (exitCode != Cr.NS_OK) {
       const telemetryResult =
         new Map([
-          [STILL_ACTIVE, "ErrExeTimeout"],
           [Cr.NS_ERROR_WDBA_NO_PROGID, "ErrExeProgID"],
           [Cr.NS_ERROR_WDBA_HASH_CHECK, "ErrExeHash"],
           [Cr.NS_ERROR_WDBA_REJECTED, "ErrExeRejected"],
@@ -534,6 +499,7 @@ let ShellServiceInternal = {
 };
 
 XPCOMUtils.defineLazyServiceGetters(ShellServiceInternal, {
+  defaultAgent: ["@mozilla.org/default-agent;1", "nsIDefaultAgent"],
   shellService: ["@mozilla.org/browser/shell-service;1", "nsIShellService"],
   macDockSupport: ["@mozilla.org/widget/macdocksupport;1", "nsIMacDockSupport"],
 });
