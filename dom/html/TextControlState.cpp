@@ -1175,9 +1175,10 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     if (!mParent && mTextControlStateDestroyed) {
       mTextControlState.DeleteOrCacheForReuse();
     }
-    if (!mTextControlStateDestroyed && mPreareEditorLater) {
+    if (!mTextControlStateDestroyed && mPrepareEditorLater) {
       MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-      mTextControlState.PrepareEditor();
+      MOZ_ASSERT(Is(TextControlAction::SetValue));
+      mTextControlState.PrepareEditor(&mSettingValue);
     }
   }
 
@@ -1204,7 +1205,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
         settingValue = handlingSomething;
       }
     }
-    settingValue->mPreareEditorLater = true;
+    settingValue->mPrepareEditorLater = true;
   }
 
   /**
@@ -1321,7 +1322,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     if (mTextControlAction == aTextControlAction) {
       return true;
     }
-    return mParent ? mParent->IsHandling(aTextControlAction) : false;
+    return mParent && mParent->IsHandling(aTextControlAction);
   }
   TextControlElement* GetTextControlElement() const { return mTextCtrlElement; }
   TextInputListener* GetTextInputListener() const { return mTextInputListener; }
@@ -1377,7 +1378,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   TextControlAction const mTextControlAction;
   bool mTextControlStateDestroyed = false;
   bool mEditActionHandled = false;
-  bool mPreareEditorLater = false;
+  bool mPrepareEditorLater = false;
   bool mBeforeInputEventHasBeenDispatched = false;
 };
 
