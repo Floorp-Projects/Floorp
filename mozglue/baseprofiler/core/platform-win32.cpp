@@ -32,9 +32,6 @@
 #include <mmsystem.h>
 #include <process.h>
 
-#include "nsWindowsDllInterceptor.h"
-#include "mozilla/StackWalk_windows.h"
-
 namespace mozilla {
 namespace baseprofiler {
 
@@ -292,53 +289,6 @@ static void PlatformInit(PSLockRef aLock) {}
     RtlCaptureContext(&context);        \
     PopulateRegsFromContext(regs, &context);
 #endif
-
-#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
-static WindowsDllInterceptor NtDllIntercept;
-
-typedef NTSTATUS(NTAPI* LdrUnloadDll_func)(HMODULE module);
-static WindowsDllInterceptor::FuncHookType<LdrUnloadDll_func> stub_LdrUnloadDll;
-
-static NTSTATUS NTAPI patched_LdrUnloadDll(HMODULE module) {
-  // Prevent the stack walker from suspending this thread when LdrUnloadDll
-  // holds the RtlLookupFunctionEntry lock.
-  AutoSuppressStackWalking suppress;
-  return stub_LdrUnloadDll(module);
-}
-
-// These pointers are disguised as PVOID to avoid pulling in obscure headers
-typedef PVOID(WINAPI* LdrResolveDelayLoadedAPI_func)(
-    PVOID ParentModuleBase, PVOID DelayloadDescriptor, PVOID FailureDllHook,
-    PVOID FailureSystemHook, PVOID ThunkAddress, ULONG Flags);
-static WindowsDllInterceptor::FuncHookType<LdrResolveDelayLoadedAPI_func>
-    stub_LdrResolveDelayLoadedAPI;
-
-static PVOID WINAPI patched_LdrResolveDelayLoadedAPI(
-    PVOID ParentModuleBase, PVOID DelayloadDescriptor, PVOID FailureDllHook,
-    PVOID FailureSystemHook, PVOID ThunkAddress, ULONG Flags) {
-  // Prevent the stack walker from suspending this thread when
-  // LdrResolveDelayLoadAPI holds the RtlLookupFunctionEntry lock.
-  AutoSuppressStackWalking suppress;
-  return stub_LdrResolveDelayLoadedAPI(ParentModuleBase, DelayloadDescriptor,
-                                       FailureDllHook, FailureSystemHook,
-                                       ThunkAddress, Flags);
-}
-
-MFBT_API void InitializeWin64ProfilerHooks() {
-  // This function could be called by both profilers, but we only want to run
-  // it once.
-  static bool ran = false;
-  if (ran) {
-    return;
-  }
-  ran = true;
-
-  NtDllIntercept.Init("ntdll.dll");
-  stub_LdrUnloadDll.Set(NtDllIntercept, "LdrUnloadDll", &patched_LdrUnloadDll);
-  stub_LdrResolveDelayLoadedAPI.Set(NtDllIntercept, "LdrResolveDelayLoadedAPI",
-                                    &patched_LdrResolveDelayLoadedAPI);
-}
-#endif  // defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
 
 }  // namespace baseprofiler
 }  // namespace mozilla
