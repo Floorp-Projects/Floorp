@@ -446,7 +446,7 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
   MInstruction* shapeList = objectStubField(shapesOffset);
 
   auto* ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
-  if (builder_->isMonomorphicInlined()) {
+  if (builder_->info().inlineScriptTree()->hasSharedICScript()) {
     ins->setBailoutKind(BailoutKind::MonomorphicInlinedStubFolding);
   }
   add(ins);

@@ -46,8 +46,7 @@ WarpScriptSnapshot::WarpScriptSnapshot(JSScript* script,
       environment_(env),
       opSnapshots_(std::move(opSnapshots)),
       moduleObject_(moduleObject),
-      isArrowFunction_(script->isFunction() && script->function()->isArrow()),
-      isMonomorphicInlined_(false) {}
+      isArrowFunction_(script->isFunction() && script->function()->isArrow()) {}
 
 #ifdef JS_JITSPEW
 void WarpSnapshot::dump() const {

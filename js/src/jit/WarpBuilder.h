@@ -204,7 +204,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   WarpCompilation* warpCompilation() const { return warpCompilation_; }
   MIRGraph& graph() { return graph_; }
-  const CompileInfo& info() const { return info_; }
   const WarpScriptSnapshot* scriptSnapshot() const { return scriptSnapshot_; }
 
   uint32_t loopDepth() const { return warpCompilation_->loopDepth(); }
@@ -314,10 +313,8 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   [[nodiscard]] bool build();
   [[nodiscard]] bool buildInline();
 
+  const CompileInfo& info() const { return info_; }
   CallInfo* inlineCallInfo() const { return inlineCallInfo_; }
-  bool isMonomorphicInlined() const {
-    return scriptSnapshot_->isMonomorphicInlined();
-  }
 };
 
 }  // namespace jit
