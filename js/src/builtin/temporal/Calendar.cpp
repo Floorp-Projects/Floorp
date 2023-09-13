@@ -504,9 +504,11 @@ static bool IsISO8601Calendar(JSLinearString* id) {
   return StringEqualsLiteral(id, "iso8601");
 }
 
+#ifdef DEBUG
 static bool IsISO8601Calendar(CalendarObject* calendar) {
-  return StringEqualsLiteral(calendar->identifier(), "iso8601");
+  return IsISO8601Calendar(calendar->identifier());
 }
+#endif
 
 static bool IsISO8601Calendar(JSContext* cx, JSString* id, bool* result) {
   JSLinearString* linear = id->ensureLinear(cx);
