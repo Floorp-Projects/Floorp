@@ -36,7 +36,11 @@ class WinEventHub final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WinEventHub)
 
  public:
-  static void Ensure();
+  // Returns true if the singleton exists (or was created). Will return
+  // false if the singleton couldn't be created, in which case a call
+  // to Get() will return a nullptr. It is safe to call this function
+  // repeatedly.
+  static bool Ensure();
   static RefPtr<WinEventHub> Get() { return sInstance; }
 
   void AddObserver(WinEventObserver* aObserver);
