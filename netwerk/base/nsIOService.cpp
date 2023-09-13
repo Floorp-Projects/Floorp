@@ -427,6 +427,13 @@ nsresult nsIOService::InitializeCaptivePortalService() {
 nsresult nsIOService::InitializeSocketTransportService() {
   nsresult rv = NS_OK;
 
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    LOG(
+        ("nsIOService aborting InitializeSocketTransportService because of app "
+         "shutdown"));
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   if (!mSocketTransportService) {
     mSocketTransportService =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
