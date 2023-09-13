@@ -1578,10 +1578,11 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
     const Value& trapVal = trapHolder->getSlot(trapSlot);
     JSObject* trapObj = &trapVal.toObject();
     JSFunction* trapFn = &trapObj->as<JSFunction>();
-    EmitReadSlotGuard(writer, nHandlerObj, trapHolder, handlerObjId);
+    ObjOperandId trapHolderId =
+        EmitReadSlotGuard(writer, nHandlerObj, trapHolder, handlerObjId);
 
     ValOperandId fnValId =
-        EmitLoadSlot(writer, trapHolder, handlerObjId, trapSlot);
+        EmitLoadSlot(writer, trapHolder, trapHolderId, trapSlot);
     ObjOperandId fnObjId = writer.guardToObject(fnValId);
     writer.guardSpecificFunction(fnObjId, trapFn);
     ValOperandId targetValId = writer.boxObject(targetObjId);
