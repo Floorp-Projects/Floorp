@@ -289,7 +289,7 @@ class TemporaryStorageInitializedOp final : public InitializedRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class InitOp final : public QuotaRequestBase {
+class InitOp final : public ResolvableNormalOriginOp<bool> {
  public:
   InitOp();
 
@@ -298,7 +298,7 @@ class InitOp final : public QuotaRequestBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void GetResponse(RequestResponse& aResponse) override;
+  bool GetResolveValue() override;
 };
 
 class InitTemporaryStorageOp final : public QuotaRequestBase {
@@ -571,7 +571,9 @@ RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp() {
   return MakeRefPtr<TemporaryStorageInitializedOp>();
 }
 
-RefPtr<QuotaRequestBase> CreateInitOp() { return MakeRefPtr<InitOp>(); }
+RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp() {
+  return MakeRefPtr<InitOp>();
+}
 
 RefPtr<QuotaRequestBase> CreateInitTemporaryStorageOp() {
   return MakeRefPtr<InitTemporaryStorageOp>();
@@ -1102,7 +1104,10 @@ void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
 }
 
 InitOp::InitOp()
-    : QuotaRequestBase("dom::quota::InitOp", /* aExclusive */ false) {
+    : ResolvableNormalOriginOp(
+          "dom::quota::InitOp", Nullable<PersistenceType>(),
+          OriginScope::FromNull(), Nullable<Client::Type>(),
+          /* aExclusive */ false) {
   AssertIsOnOwningThread();
 }
 
@@ -1116,11 +1121,7 @@ nsresult InitOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   return NS_OK;
 }
 
-void InitOp::GetResponse(RequestResponse& aResponse) {
-  AssertIsOnOwningThread();
-
-  aResponse = InitResponse();
-}
+bool InitOp::GetResolveValue() { return true; }
 
 InitTemporaryStorageOp::InitTemporaryStorageOp()
     : QuotaRequestBase("dom::quota::InitTemporaryStorageOp",

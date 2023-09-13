@@ -300,6 +300,14 @@ class QuotaManager final : public BackgroundThreadObject {
   template <typename P>
   void CollectPendingOriginsForListing(P aPredicate);
 
+  RefPtr<BoolPromise> InitializeStorage();
+
+  bool IsStorageInitialized() const {
+    AssertIsOnOwningThread();
+
+    return mStorageInitialized;
+  }
+
   bool IsStorageInitializedInternal() const {
     AssertIsOnIOThread();
     return static_cast<bool>(mStorageConnection);
@@ -709,6 +717,8 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   int64_t mNextDirectoryLockId;
+  uint64_t mShutdownStorageOpCount;
+  bool mStorageInitialized;
   bool mTemporaryStorageInitialized;
   bool mCacheUsable;
 };

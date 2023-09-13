@@ -49,10 +49,6 @@ struct TemporaryStorageInitializedParams
 {
 };
 
-struct InitParams
-{
-};
-
 struct InitTemporaryStorageParams
 {
 };
@@ -140,7 +136,6 @@ union RequestParams
   StorageNameParams;
   StorageInitializedParams;
   TemporaryStorageInitializedParams;
-  InitParams;
   InitTemporaryStorageParams;
   InitializePersistentOriginParams;
   InitializeTemporaryOriginParams;
@@ -168,6 +163,9 @@ parent:
   async PQuotaUsageRequest(UsageRequestParams params);
 
   async PQuotaRequest(RequestParams params);
+
+  async InitializeStorage()
+      returns(BoolResponse response);
 
   async ClearStoragesForPrivateBrowsing()
       returns(BoolResponse response);
