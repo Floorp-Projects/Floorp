@@ -24,21 +24,10 @@ NormalOriginOperationBase::~NormalOriginOperationBase() {
 RefPtr<BoolPromise> NormalOriginOperationBase::Open() {
   AssertIsOnOwningThread();
 
-  RefPtr<DirectoryLock> directoryLock = CreateDirectoryLock();
+  mDirectoryLock = CreateDirectoryLock();
 
-  if (directoryLock) {
-    return directoryLock->Acquire()->Then(
-        GetCurrentSerialEventTarget(), __func__,
-        [self = RefPtr(this), directoryLock = directoryLock](
-            const BoolPromise::ResolveOrRejectValue& aValue) mutable {
-          if (aValue.IsReject()) {
-            return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
-          }
-
-          self->mDirectoryLock = std::move(directoryLock);
-
-          return BoolPromise::CreateAndResolve(true, __func__);
-        });
+  if (mDirectoryLock) {
+    return mDirectoryLock->Acquire();
   }
 
   return BoolPromise::CreateAndResolve(true, __func__);
