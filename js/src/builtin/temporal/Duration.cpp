@@ -7592,7 +7592,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     MOZ_ASSERT(duration.date() == unbalanceResult.toDuration());
   }
 
-  // Step 24.
+  // Steps 24-25.
   Duration roundInput = {
       unbalanceResult.years, unbalanceResult.months, unbalanceResult.weeks,
       unbalanceResult.days,  duration.hours,         duration.minutes,
@@ -7620,10 +7620,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   // FIXME: spec issue - `relativeTo` can be undefined, in which case it's not
   // valid to test for the presence of internal slots.
 
-  // Steps 25-26.
+  // Steps 26-27.
   TimeDuration balanceResult;
   if (zonedRelativeTo) {
-    // Step 25.a.
+    // Step 26.a.
     Duration adjustResult;
     if (!AdjustRoundedDurationDays(cx, roundResult, roundingIncrement,
                                    smallestUnit, roundingMode, zonedRelativeTo,
@@ -7632,19 +7632,19 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
     roundResult = adjustResult;
 
-    // Step 25.b.
+    // Step 26.b.
     if (!BalanceTimeDurationRelative(cx, roundResult, largestUnit,
                                      zonedRelativeTo, &balanceResult)) {
       return false;
     }
   } else {
-    // Step 26.a.
+    // Step 27.a.
     if (!BalanceTimeDuration(cx, roundResult, largestUnit, &balanceResult)) {
       return false;
     }
   }
 
-  // Step 27.
+  // Step 28.
   Duration balanceInput = {
       roundResult.years,
       roundResult.months,
@@ -7657,7 +7657,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 28.
+  // Step 29.
   auto* obj = CreateTemporalDuration(cx, {
                                              result.years,
                                              result.months,
@@ -7911,7 +7911,7 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
     precision = ToSecondsStringPrecision(smallestUnit, digits);
   }
 
-  // Step 10.
+  // Steps 10-11.
   auto* duration = &args.thisv().toObject().as<DurationObject>();
   Duration rounded;
   if (!temporal::RoundDuration(cx, ToDuration(duration), precision.increment,
@@ -7919,7 +7919,7 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   JSString* str = TemporalDurationToString(cx, rounded, precision.precision);
   if (!str) {
     return false;
