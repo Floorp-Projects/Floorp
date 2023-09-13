@@ -947,8 +947,8 @@ static bool NanosecondsToDaysSlow(
     return false;
   }
 
-  result.initialize(days, ToInstantSpan(nanos),
-                    InstantSpan::fromNanoseconds(dayLengthNs));
+  result.set(temporal::NanosecondsAndDays::from(
+      days, ToInstantSpan(nanos), InstantSpan::fromNanoseconds(dayLengthNs)));
   return true;
 }
 
@@ -961,10 +961,10 @@ static bool NanosecondsToDays(
   if (auto total = TotalDurationNanoseconds(duration.time(), 0)) {
     auto nanosAndDays = ::NanosecondsToDays(*total);
 
-    result.initialize(
+    result.set(temporal::NanosecondsAndDays::from(
         nanosAndDays.days,
         InstantSpan::fromNanoseconds(nanosAndDays.nanoseconds),
-        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
+        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day))));
     return true;
   }
 

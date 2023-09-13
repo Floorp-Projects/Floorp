@@ -636,14 +636,14 @@ bool js::temporal::AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                             nullptr, result);
 }
 
-double NanosecondsAndDays::daysNumber() const {
+double js::temporal::NanosecondsAndDays::daysNumber() const {
   if (days) {
     return BigInt::numberValue(days);
   }
   return double(daysInt);
 }
 
-void NanosecondsAndDays::trace(JSTracer* trc) {
+void js::temporal::NanosecondsAndDays::trace(JSTracer* trc) {
   if (days) {
     TraceRoot(trc, &days, "NanosecondsAndDays::days");
   }
@@ -660,9 +660,9 @@ bool js::temporal::NanosecondsToDays(
 
   // Step 1.
   if (nanoseconds == InstantSpan{}) {
-    result.initialize(
+    result.set(NanosecondsAndDays::from(
         int64_t(0), InstantSpan{},
-        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
+        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day))));
     return true;
   }
 
@@ -916,7 +916,8 @@ bool js::temporal::NanosecondsToDays(
   if (mozilla::NumberEqualsInt64(days, &daysInt)) {
     auto daysChecked = mozilla::CheckedInt64(daysInt) + daysToAdd;
     if (daysChecked.isValid()) {
-      result.initialize(daysChecked.value(), ns, dayLengthNs.abs());
+      result.set(
+          NanosecondsAndDays::from(daysChecked.value(), ns, dayLengthNs.abs()));
       return true;
     }
   }
@@ -938,7 +939,7 @@ bool js::temporal::NanosecondsToDays(
     return false;
   }
 
-  result.initialize(daysBigInt, ns, dayLengthNs.abs());
+  result.set(NanosecondsAndDays::from(daysBigInt, ns, dayLengthNs.abs()));
   return true;
 }
 
