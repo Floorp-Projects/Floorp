@@ -1,23 +1,7 @@
-commit 016e4bf8e84c36d1653c6bd53e74c93580d8b1ff
-Author: Guillaume Emont <guijemont@igalia.com>
-Date:   Mon Jul 17 16:55:34 2023 +0200
+commit 21c3097f92b244bfa2ae54ee9cf745839567b79a
+Author: André Bargull <andre.bargull@gmail.com>
+Date:   Thu Jan 12 14:22:34 2023 +0100
 
-    Temporal Issue 2532 (#3858)
+    Update tests for PR "Read date-time options only once when creating DateTimeFormat objects"
     
-    * Add tests for the new PrepareTemporalFields behavior for all direct callers
-    
-    See https://github.com/tc39/proposal-temporal/pull/2570
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalDate
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalDateTime
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalZonedDateTime
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalYearMonth
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToTemporalMonthDay
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through ToRelativeTemporalObject
-    
-    * Add tests for the new PrepareTemporalFields behavior for indirect callers through AddDurationToOrSubtractDurationFromPlainYearMonth
+    Update tests for PR tc39/ecma402#709.

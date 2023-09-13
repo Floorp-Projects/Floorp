@@ -8,7 +8,7 @@ description: Throws when the calendar argument is undefined
 features: [Temporal]
 ---*/
 
-assert.throws(RangeError, () => Temporal.Now.zonedDateTime(), "implicit");
-assert.throws(RangeError, () => Temporal.Now.zonedDateTime(undefined), "implicit");
+assert.throws(TypeError, () => Temporal.Now.zonedDateTime(), "implicit");
+assert.throws(TypeError, () => Temporal.Now.zonedDateTime(undefined), "implicit");
 
 reportCompare(0, 0);
