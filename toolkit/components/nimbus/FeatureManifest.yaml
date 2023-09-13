@@ -1804,3 +1804,7 @@ cookieBannerHandling:
         When set to true, cookie banners are detected and detection events are
         dispatched, but they will not be handled.
         This pref applies to both normal and private browsing windows.
+    enableFirefoxDesktopUI:
+      type: boolean
+      setPref: cookiebanners.ui.desktop.enabled
+      description: Enables the cookie banner desktop UI.
