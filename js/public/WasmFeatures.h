@@ -240,7 +240,18 @@ enum class WasmFeatureStage {
     /* flag force enable  */ false,                                     \
     /* flag fuzz enable   */ false,                                     \
     /* shell flag         */ "final-types",                             \
-    /* preference name    */ "final_types")
+    /* preference name    */ "final_types")                             \
+  FEATURE(                                                              \
+    /* capitalized name   */ TestMetadata,                              \
+    /* lower case name    */ testMetadata,                              \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ 1,                                         \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* flag fuzz enable   */ false,                                     \
+    /* shell flag         */ "test-metadata",                           \
+    /* preference name    */ "test_metadata")
 
 // clang-format on
 

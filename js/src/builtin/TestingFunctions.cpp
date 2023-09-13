@@ -53,6 +53,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Promise.h"
 #include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
+#include "ds/IdValuePair.h"          // js::IdValuePair
 #include "frontend/BytecodeCompiler.h"  // frontend::{CompileGlobalScriptToExtensibleStencil,ParseModuleToExtensibleStencil}
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/FrontendContext.h"     // AutoReportFrontendContext
@@ -1960,6 +1961,62 @@ static bool WasmReturnFlag(JSContext* cx, unsigned argc, Value* vp, Flag flag) {
   args.rval().set(BooleanValue(b));
   return true;
 }
+
+#if defined(DEBUG)
+static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorASCII(cx, "argument is not an object");
+    return false;
+  }
+
+  if (!cx->options().wasmTestMetadata()) {
+    return false;
+  }
+
+  if (args[0].toObject().is<WasmModuleObject>()) {
+    HashMap<const char*, uint32_t, mozilla::CStringHasher, SystemAllocPolicy>
+        hashmap = args[0]
+                      .toObject()
+                      .as<WasmModuleObject>()
+                      .module()
+                      .code()
+                      .metadataAnalysis(cx);
+    if (hashmap.empty()) {
+      JS_ReportErrorASCII(cx, "Metadata analysis has failed");
+    }
+
+    // metadataAnalysis returned a map of {key, value} with various statistics
+    // convert it into a dictionary to be used by JS
+    Rooted<IdValueVector> props(cx, IdValueVector(cx));
+
+    for (auto iter = hashmap.iter(); !iter.done(); iter.next()) {
+      const auto* key = iter.get().key();
+      auto value = iter.get().value();
+
+      JSString* string = JS_NewStringCopyZ(cx, key);
+      if (!props.append(
+              IdValuePair(NameToId(string->asLinear().toPropertyName(cx)),
+                          NumberValue(value)))) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+    }
+
+    JSObject* results =
+        NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+    args.rval().setObject(*results);
+
+    return true;
+  }
+
+  JS_ReportErrorASCII(
+      cx, "argument is not an exported wasm function or a wasm module");
+
+  return false;
+}
+#endif
 
 static bool WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc,
                                              Value* vp) {
@@ -9419,6 +9476,12 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "  (like a shape or a scope chain element). The destination of the i'th array\n"
 "  element's edge is the node of the i+1'th array element; the destination of\n"
 "  the last array element is implicitly |target|.\n"),
+
+#if defined(DEBUG)
+    JS_FN_HELP("wasmMetadataAnalysis", wasmMetadataAnalysis, 1, 0,
+"wasmMetadataAnalysis(wasmObject)",
+"  Prints an analysis of the size of metadata on this wasm object.\n"),
+#endif
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,

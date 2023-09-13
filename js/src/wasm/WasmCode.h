@@ -760,6 +760,8 @@ class JumpTables {
 
 using SharedCode = RefPtr<const Code>;
 using MutableCode = RefPtr<Code>;
+using MetadataAnalysisHashMap =
+    HashMap<const char*, uint32_t, mozilla::CStringHasher, SystemAllocPolicy>;
 
 class Code : public ShareableBase<Code> {
   UniqueCodeTier tier1_;
@@ -856,6 +858,9 @@ class Code : public ShareableBase<Code> {
 
   void disassemble(JSContext* cx, Tier tier, int kindSelection,
                    PrintCallback printString) const;
+
+  // Wasm metadata size analysis
+  MetadataAnalysisHashMap metadataAnalysis(JSContext* cx) const;
 
   // about:memory reporting:
 

@@ -1241,6 +1241,75 @@ void Code::disassemble(JSContext* cx, Tier tier, int kindSelection,
   }
 }
 
+// Return a map with names and associated statistics
+MetadataAnalysisHashMap Code::metadataAnalysis(JSContext* cx) const {
+  MetadataAnalysisHashMap hashmap;
+  if (!hashmap.reserve(15)) {
+    return hashmap;
+  }
+
+  for (auto t : tiers()) {
+    size_t length = metadata(t).funcToCodeRange.length();
+    length += metadata(t).codeRanges.length();
+    length += metadata(t).callSites.length();
+    length += metadata(t).trapSites.sumOfLengths();
+    length += metadata(t).funcImports.length();
+    length += metadata(t).funcExports.length();
+    length += metadata(t).stackMaps.length();
+    length += metadata(t).tryNotes.length();
+
+    hashmap.putNewInfallible("metadata length", length);
+
+    // Iterate over the Code Ranges and accumulate all pieces of code.
+    size_t code_size = 0;
+    for (const CodeRange& codeRange : metadata(stableTier()).codeRanges) {
+      if (!codeRange.isFunction()) {
+        continue;
+      }
+      code_size += codeRange.end() - codeRange.begin();
+    }
+
+    hashmap.putNewInfallible("stackmaps number",
+                             this->metadata(t).stackMaps.length());
+    hashmap.putNewInfallible("trapSites number",
+                             this->metadata(t).trapSites.sumOfLengths());
+    hashmap.putNewInfallible("codeRange size in bytes", code_size);
+    hashmap.putNewInfallible("code segment length",
+                             this->codeTier(t).segment().length());
+
+    auto mallocSizeOf = cx->runtime()->debuggerMallocSizeOf;
+
+    hashmap.putNewInfallible("metadata total size",
+                             metadata(t).sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "funcToCodeRange size",
+        metadata(t).funcToCodeRange.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "codeRanges size",
+        metadata(t).codeRanges.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "callSites size",
+        metadata(t).callSites.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "tryNotes size",
+        metadata(t).tryNotes.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "trapSites size",
+        metadata(t).trapSites.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "stackMaps size",
+        metadata(t).stackMaps.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "funcImports size",
+        metadata(t).funcImports.sizeOfExcludingThis(mallocSizeOf));
+    hashmap.putNewInfallible(
+        "funcExports size",
+        metadata(t).funcExports.sizeOfExcludingThis(mallocSizeOf));
+  }
+
+  return hashmap;
+}
+
 void wasm::PatchDebugSymbolicAccesses(uint8_t* codeBase, MacroAssembler& masm) {
 #ifdef WASM_CODEGEN_DEBUG
   for (auto& access : masm.symbolicAccesses()) {
