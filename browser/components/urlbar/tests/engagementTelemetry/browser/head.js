@@ -35,6 +35,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+  return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  ).wrappedJSObject;
+});
+
 async function addTopSites(url) {
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits(url);

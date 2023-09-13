@@ -420,6 +420,7 @@ add_task(async function includingProtocol() {
   await PlacesTestUtils.clearInputHistory();
 
   await PlacesTestUtils.addVisits(["https://example.com/"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // If the url is autofilled, the protocol should be included in the copied
   // value.

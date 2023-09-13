@@ -62,7 +62,6 @@ async function addPlace(
           }
         )
       )[0].getResultByIndex(0);
-      await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 
       if (aFavicon) {
         await db.executeCached(
@@ -2565,84 +2564,6 @@ tests.push({
           throw new Error(`Unexpected row for bookmark ${guid}`);
       }
     }
-  },
-});
-
-// ------------------------------------------------------------------------------
-
-tests.push({
-  name: "T.1",
-  desc: "history.recalculateOriginFrecencyStats() is called",
-
-  async setup() {
-    let urls = [
-      "http://example1.com/",
-      "http://example2.com/",
-      "http://example3.com/",
-    ];
-    await PlacesTestUtils.addVisits(urls.map(u => ({ uri: u })));
-
-    this._frecencies = [];
-    for (let url of urls) {
-      this._frecencies.push(
-        await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
-          url,
-        })
-      );
-    }
-
-    let stats = await this._promiseStats();
-    Assert.equal(stats.count, this._frecencies.length, "Sanity check");
-    Assert.equal(stats.sum, this._sum(this._frecencies), "Sanity check");
-    Assert.equal(
-      stats.squares,
-      this._squares(this._frecencies),
-      "Sanity check"
-    );
-
-    await PlacesUtils.withConnectionWrapper("T.1", db =>
-      db.execute(`
-        INSERT OR REPLACE INTO moz_meta VALUES
-        ('origin_frecency_count', 99),
-        ('origin_frecency_sum', 99999),
-        ('origin_frecency_sum_of_squares', 99999 * 99999);
-      `)
-    );
-
-    stats = await this._promiseStats();
-    Assert.equal(stats.count, 99);
-    Assert.equal(stats.sum, 99999);
-    Assert.equal(stats.squares, 99999 * 99999);
-  },
-
-  async check() {
-    let stats = await this._promiseStats();
-    Assert.equal(stats.count, this._frecencies.length);
-    Assert.equal(stats.sum, this._sum(this._frecencies));
-    Assert.equal(stats.squares, this._squares(this._frecencies));
-  },
-
-  _sum(frecs) {
-    return frecs.reduce((memo, f) => memo + f, 0);
-  },
-
-  _squares(frecs) {
-    return frecs.reduce((memo, f) => memo + f * f, 0);
-  },
-
-  async _promiseStats() {
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.execute(`
-      SELECT
-        IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_count'), 0),
-        IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum'), 0),
-        IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares'), 0)
-    `);
-    return {
-      count: rows[0].getResultByIndex(0),
-      sum: rows[0].getResultByIndex(1),
-      squares: rows[0].getResultByIndex(2),
-    };
   },
 });
 

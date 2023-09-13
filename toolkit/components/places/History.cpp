@@ -990,26 +990,6 @@ class InsertVisitedURIs final : public Runnable {
       }
     }
 
-    {
-      // Trigger insertions for all the new origins of the places we inserted.
-      nsAutoCString query("DELETE FROM moz_updateoriginsinsert_temp");
-      nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(query);
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-      nsresult rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    {
-      // Trigger frecency updates for all those origins.
-      nsAutoCString query("DELETE FROM moz_updateoriginsupdate_temp");
-      nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(query);
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-      nsresult rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 

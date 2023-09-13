@@ -80,6 +80,7 @@ add_task(async function move_tab_into_new_window_and_open_new_tab() {
   );
   let newWindow = gBrowser.replaceTabWithWindow(tab);
   await swapDocShellPromise;
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Type in the urlbar to open it and see an autofill suggestion.");
   await UrlbarTestUtils.promisePopupOpen(newWindow, async () => {

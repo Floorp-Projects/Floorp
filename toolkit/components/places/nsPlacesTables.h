@@ -199,48 +199,20 @@
       ", PRIMARY KEY (url, userContextId)"     \
       ")")
 
-// This table is used, along with moz_places_afterinsert_trigger, to update
-// origins after places removals. During an INSERT into moz_places, origins are
-// accumulated in this table, then a DELETE FROM moz_updateoriginsinsert_temp
-// will take care of updating the moz_origins table for every new origin. See
-// CREATE_PLACES_AFTERINSERT_TRIGGER in nsPlacestriggers.h for details.
-#define CREATE_UPDATEORIGINSINSERT_TEMP                   \
-  nsLiteralCString(                                       \
-      "CREATE TEMP TABLE moz_updateoriginsinsert_temp ( " \
-      "place_id INTEGER PRIMARY KEY, "                    \
-      "prefix TEXT NOT NULL, "                            \
-      "host TEXT NOT NULL, "                              \
-      "frecency INTEGER NOT NULL "                        \
-      ") ")
-
-// This table is used in a similar way to moz_updateoriginsinsert_temp, but for
-// deletes, and triggered via moz_places_afterdelete_trigger.
-//
-// When rows are added to this table, moz_places.origin_id may be null.  That's
-// why this table uses prefix + host as its primary key, not origin_id.
+// This table is used to remove orphan origins after pages are removed from
+// moz_places. Insertions are made by moz_places_afterdelete_trigger.
+// This allows for more performant handling of batch removals, since we'll look
+// for orphan origins only once, instead of doing it for each page removal.
+// The downside of this approach is that after the removal is complete the
+// consumer must remember to also delete from this table, and a trigger will
+// take care of orphans.
 #define CREATE_UPDATEORIGINSDELETE_TEMP                   \
   nsLiteralCString(                                       \
       "CREATE TEMP TABLE moz_updateoriginsdelete_temp ( " \
-      "prefix TEXT NOT NULL, "                            \
-      "host TEXT NOT NULL, "                              \
-      "frecency_delta INTEGER NOT NULL, "                 \
-      "PRIMARY KEY (prefix, host) "                       \
-      ") WITHOUT ROWID ")
-
-// This table is used in a similar way to moz_updateoriginsinsert_temp, but for
-// updates to places' frecencies, and triggered via
-// moz_places_afterupdate_frecency_trigger.
-//
-// When rows are added to this table, moz_places.origin_id may be null.  That's
-// why this table uses prefix + host as its primary key, not origin_id.
-#define CREATE_UPDATEORIGINSUPDATE_TEMP                   \
-  nsLiteralCString(                                       \
-      "CREATE TEMP TABLE moz_updateoriginsupdate_temp ( " \
-      "prefix TEXT NOT NULL, "                            \
-      "host TEXT NOT NULL, "                              \
-      "frecency_delta INTEGER NOT NULL, "                 \
-      "PRIMARY KEY (prefix, host) "                       \
-      ") WITHOUT ROWID ")
+      "  prefix TEXT NOT NULL, "                          \
+      "  host TEXT NOT NULL, "                            \
+      "  PRIMARY KEY (prefix, host) "                     \
+      ") WITHOUT ROWID")
 
 // This table would not be strictly needed for functionality since it's just
 // mimicking moz_places, though it's great for database portability.
@@ -297,12 +269,6 @@
       "key TEXT PRIMARY KEY, "  \
       "value NOT NULL"          \
       ") WITHOUT ROWID ")
-
-// Keys in the moz_meta table.
-#define MOZ_META_KEY_ORIGIN_FRECENCY_COUNT "origin_frecency_count"
-#define MOZ_META_KEY_ORIGIN_FRECENCY_SUM "origin_frecency_sum"
-#define MOZ_META_KEY_ORIGIN_FRECENCY_SUM_OF_SQUARES \
-  "origin_frecency_sum_of_squares"
 
 // This table holds history interactions that will be used to achieve improved
 // history recalls.

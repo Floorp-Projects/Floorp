@@ -395,14 +395,6 @@ nsresult nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI, int64_t* _pageId,
     *_pageId = sLastInsertedPlaceId;
   }
 
-  {
-    // Trigger the updates to the moz_origins tables
-    nsCOMPtr<mozIStorageStatement> stmt =
-        mDB->GetStatement("DELETE FROM moz_updateoriginsinsert_temp");
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-  }
-
   return NS_OK;
 }
 
@@ -450,33 +442,6 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
   if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
     InvalidateDaysOfHistory();
   }
-}
-
-NS_IMETHODIMP
-nsNavHistory::RecalculateOriginFrecencyStats(nsIObserver* aCallback) {
-  RefPtr<nsNavHistory> self(this);
-  nsMainThreadPtrHandle<nsIObserver> callback(
-      !aCallback ? nullptr
-                 : new nsMainThreadPtrHolder<nsIObserver>(
-                       "nsNavHistory::RecalculateOriginFrecencyStats callback",
-                       aCallback));
-
-  nsCOMPtr<nsIEventTarget> target(do_GetInterface(mDB->MainConn()));
-  NS_ENSURE_STATE(target);
-  nsresult rv = target->Dispatch(NS_NewRunnableFunction(
-      "nsNavHistory::RecalculateOriginFrecencyStats", [self, callback] {
-        Unused << self->mDB->RecalculateOriginFrecencyStatsInternal();
-        Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "nsNavHistory::RecalculateOriginFrecencyStats callback",
-            [callback] {
-              if (callback) {
-                Unused << callback->Observe(nullptr, "", nullptr);
-              }
-            }));
-      }));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
 }
 
 Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);

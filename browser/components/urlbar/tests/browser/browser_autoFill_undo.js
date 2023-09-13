@@ -10,6 +10,7 @@ add_task(async function test() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits(["http://example.com/"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Search for "ex".  It should autofill to example.com/.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

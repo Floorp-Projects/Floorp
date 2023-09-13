@@ -10,6 +10,7 @@ add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits(["http://example.com/"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Disable placeholder completion.  The point of this test is to make sure the
   // first result is autofilled (or not) correctly.  Autofilling the placeholder

@@ -3,10 +3,6 @@
 
 // Tests that recalc_frecency in the moz_origins table works is consistent.
 
-// This test does not completely cover origins frecency recalculation because
-// the current system uses temp tables and triggers to make the recalculation,
-// but it's likely that will change in the future and then we can add to this.
-
 add_task(async function test() {
   // test recalc_frecency is set to 1 when frecency of a page changes.
   // Add a couple visits, then remove one of them.
@@ -27,8 +23,8 @@ add_task(async function test() {
     await PlacesTestUtils.getDatabaseValue("moz_origins", "recalc_frecency", {
       host,
     }),
-    0,
-    "Should have been calculated already"
+    1,
+    "Frecency should be calculated"
   );
   Assert.equal(
     await PlacesTestUtils.getDatabaseValue(
@@ -39,7 +35,7 @@ add_task(async function test() {
       }
     ),
     1,
-    "Should have been calculated already"
+    "Alt frecency should be calculated"
   );
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   let alt_frecency = await PlacesTestUtils.getDatabaseValue(
@@ -94,14 +90,12 @@ add_task(async function test() {
   await PlacesTestUtils.addVisits(url2);
   // Remove the first page.
   await PlacesUtils.history.remove(url);
-  // Note common frecency is currently calculated by a trigger, this will change
-  // in the future to use a delayed recalc.
   Assert.equal(
     await PlacesTestUtils.getDatabaseValue("moz_origins", "recalc_frecency", {
       host,
     }),
-    0,
-    "Should have been recalculated"
+    1,
+    "Frecency should be calculated"
   );
   Assert.equal(
     await PlacesTestUtils.getDatabaseValue(
@@ -110,6 +104,6 @@ add_task(async function test() {
       { host }
     ),
     1,
-    "Should request recalculation"
+    "Alt frecency should be calculated"
   );
 });

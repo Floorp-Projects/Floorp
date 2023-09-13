@@ -109,6 +109,7 @@ add_task(async function test() {
     for (let i = 0; i < 3; i++) {
       await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
     }
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -196,6 +197,7 @@ async function impressions_test(isOnboarding) {
       await PlacesTestUtils.addVisits([`https://${firstEngineHost}-2.com`]);
       await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
     }
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
     // First do multiple searches for substrings of firstEngineHost. The view
     // should show the same tab-to-search onboarding result the entire time, so

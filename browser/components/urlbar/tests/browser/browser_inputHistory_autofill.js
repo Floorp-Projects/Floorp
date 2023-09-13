@@ -52,6 +52,7 @@ add_task(async function bumped() {
     info("Running subtest: " + JSON.stringify({ url, searchString }));
 
     await PlacesTestUtils.addVisits(url);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarUtils.addToInputHistory(url, input);
     addToInputHistorySpy.resetHistory();
 
@@ -100,6 +101,7 @@ add_task(async function notBumped_origin() {
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits(url);
   }
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await triggerAutofillAndPickResult("exam", "example.com/");
 
@@ -120,6 +122,7 @@ add_task(async function notBumped_origin() {
 add_task(async function notBumped_url() {
   let url = "http://example.com/test";
   await PlacesTestUtils.addVisits(url);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await triggerAutofillAndPickResult("example.com/t", "example.com/test");
 

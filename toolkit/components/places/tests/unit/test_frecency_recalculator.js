@@ -49,7 +49,6 @@ async function addVisitsAndSetRecalc(urls) {
          )`,
         urls
       );
-      await db.executeCached(`DELETE FROM moz_updateoriginsupdate_temp`);
       await db.executeCached(
         `UPDATE moz_places
          SET recalc_frecency = (CASE WHEN url in (
@@ -92,7 +91,10 @@ add_task(async function test() {
     PlacesFrecencyRecalculator.isRecalculationPending,
     "Recalculation should be pending"
   );
-  await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 2 });
+  // Recalculating uri1 will set its origin to recalc, that means there's 2
+  // origins to recalc now. Passing chunkSize: 2 here would then retrigger the
+  // recalc, thinking we saturated the chunk, thus we use 3.
+  await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 3 });
   Assert.ok(
     !PlacesFrecencyRecalculator.isRecalculationPending,
     "Recalculation should not be pending"

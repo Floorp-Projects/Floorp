@@ -366,6 +366,7 @@ const tests = [
     info("Type an autofilled string, Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
       value: "exa",
@@ -837,6 +838,7 @@ const tests = [
     win.gURLBar.value = "example.org";
     win.gURLBar.setPageProxyState("invalid");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
@@ -866,6 +868,7 @@ const tests = [
     win.gURLBar.value = "example.com";
     win.gURLBar.setPageProxyState("invalid");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });

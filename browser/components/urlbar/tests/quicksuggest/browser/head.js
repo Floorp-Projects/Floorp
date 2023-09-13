@@ -35,6 +35,12 @@ ChromeUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
   return module;
 });
 
+ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
+  return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  ).wrappedJSObject;
+});
+
 registerCleanupFunction(async () => {
   // Ensure the popup is always closed at the end of each test to avoid
   // interfering with the next test.
