@@ -256,6 +256,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    viki: {
+      "https://*.viki.com/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
+    },
+
     voot: {
       "https://*.voot.com/*": {
         videoWrapperScriptPath: "video-wrappers/voot.js",
