@@ -831,8 +831,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
 // because it gets invalidated while it's still pending which causes that any
 // directory locks that were blocked by the shared client directory lock become
 // unblocked.
-TEST_F(TestQuotaManager,
-       DISABLED_ShutdownStorage_OngoingWithClientDirectoryLock) {
+TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithClientDirectoryLock) {
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
