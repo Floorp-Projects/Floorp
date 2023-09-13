@@ -131,7 +131,6 @@
     <ID>UndocumentedPublicClass:SystemEngineView.kt$SystemEngineView$ImageHandler : Handler</ID>
     <ID>UndocumentedPublicClass:TabCounter.kt$TabCounter : RelativeLayout</ID>
     <ID>UndocumentedPublicClass:TabThumbnailView.kt$TabThumbnailView : AppCompatImageView</ID>
-    <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$AddNewPrivateTabUseCase : LoadUrlUseCase</ID>
     <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$AddNewTabUseCase : LoadUrlUseCase</ID>
     <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$DefaultSelectTabUseCase : SelectTabUseCase</ID>
     <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$RemoveAllTabsUseCase</ID>
