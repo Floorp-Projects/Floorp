@@ -340,7 +340,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
 
     // Step 8.
     if (offsetBehaviour == OffsetBehaviour::Option) {
-      if (!ParseTimeZoneOffsetString(cx, offsetString, &offsetNanoseconds)) {
+      if (!ParseDateTimeUTCOffset(cx, offsetString, &offsetNanoseconds)) {
         return nullptr;
       }
     }
@@ -375,7 +375,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
-    Rooted<JSString*> timeZoneString(cx);
+    Rooted<ParsedTimeZone> timeZoneString(cx);
     Rooted<JSString*> calendarString(cx);
     if (!ParseTemporalZonedDateTimeString(cx, string, &dateTime, &isUTC,
                                           &hasOffset, &timeZoneOffset,
@@ -2507,7 +2507,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   // Steps 19-21.
   Rooted<JSString*> offsetStr(cx, offsetString.toString());
   int64_t offsetNanoseconds;
-  if (!ParseTimeZoneOffsetString(cx, offsetStr, &offsetNanoseconds)) {
+  if (!ParseDateTimeUTCOffset(cx, offsetStr, &offsetNanoseconds)) {
     return false;
   }
 

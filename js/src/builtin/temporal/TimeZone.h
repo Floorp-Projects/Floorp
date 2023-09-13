@@ -34,7 +34,7 @@ namespace js::temporal {
 class TimeZoneObjectMaybeBuiltin : public NativeObject {
  public:
   static constexpr uint32_t IDENTIFIER_SLOT = 0;
-  static constexpr uint32_t OFFSET_NANOSECONDS_SLOT = 1;
+  static constexpr uint32_t OFFSET_MINUTES_SLOT = 1;
   static constexpr uint32_t INTL_TIMEZONE_SLOT = 2;
   static constexpr uint32_t SLOT_COUNT = 3;
 
@@ -45,8 +45,8 @@ class TimeZoneObjectMaybeBuiltin : public NativeObject {
     return getFixedSlot(IDENTIFIER_SLOT).toString();
   }
 
-  const auto& offsetNanoseconds() const {
-    return getFixedSlot(OFFSET_NANOSECONDS_SLOT);
+  const auto& offsetMinutes() const {
+    return getFixedSlot(OFFSET_MINUTES_SLOT);
   }
 
   mozilla::intl::TimeZone* getTimeZone() const {
@@ -93,15 +93,14 @@ class BuiltinTimeZoneObject : public TimeZoneObjectMaybeBuiltin {
  * - "UTC"
  * - "America/New_York"
  * - "+00:00"
- * - "+00:00:00.000000001"
  *
  * Examples of invalid Temporal time zones:
  * - Number values
  * - "utc" (wrong case)
  * - "Etc/UTC" (canonical name is "UTC")
  * - "+00" (missing minutes part)
- * - "+00:00:00" (extra seconds part)
- * - "+00:00:00.000000010" (trailing zero)
+ * - "+00:00:00" (sub-minute precision)
+ * - "+00:00:01" (sub-minute precision)
  * - "-00:00" (wrong sign for zero offset)
  *
  * String-valued Temporal time zones are an optimization to avoid allocating
@@ -121,7 +120,7 @@ class BuiltinTimeZoneObject : public TimeZoneObjectMaybeBuiltin {
  *    creating new `mozilla::intl::TimeZone` for time zone operations. Offset
  *    string time zones have to be special cased, because they don't use
  *    `mozilla::intl::TimeZone`. Either detect offset strings by checking the
- *    time zone identifier or store offset strings as the offset in nanoseconds
+ *    time zone identifier or store offset strings as the offset in minutes
  *    value to avoid reparsing the offset string again and again.
  * 2. Represent string-valued time zones as `Temporal.TimeZone`-like objects.
  *    These internal `Temporal.TimeZone`-like objects must not be exposed to
@@ -220,6 +219,7 @@ class TimeZoneValue final {
 };
 
 struct Instant;
+struct ParsedTimeZone;
 struct PlainDateTime;
 class CalendarValue;
 class InstantObject;
@@ -268,7 +268,7 @@ bool ToTemporalTimeZone(JSContext* cx,
 /**
  * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
  */
-bool ToTemporalTimeZone(JSContext* cx, JS::Handle<JSString*> string,
+bool ToTemporalTimeZone(JSContext* cx, JS::Handle<ParsedTimeZone> string,
                         JS::MutableHandle<TimeZoneValue> result);
 
 /**
@@ -349,11 +349,6 @@ Wrapped<InstantObject*> DisambiguatePossibleInstants(
     JS::Handle<TimeZoneValue> timeZone,
     JS::Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
     TemporalDisambiguation disambiguation);
-
-/**
- * FormatTimeZoneOffsetString ( offsetNanoseconds )
- */
-JSString* FormatTimeZoneOffsetString(JSContext* cx, int64_t offsetNanoseconds);
 
 // Helper for MutableWrappedPtrOperations.
 bool WrapTimeZoneValueObject(JSContext* cx,

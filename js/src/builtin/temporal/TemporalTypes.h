@@ -326,6 +326,13 @@ struct InstantSpan final {
   }
 
   /**
+   * Create an instant span from a minutes value.
+   */
+  static constexpr InstantSpan fromMinutes(int64_t minutes) {
+    return {minutes * 60, 0};
+  }
+
+  /**
    * Create an instant span from a milliseconds value.
    */
   static constexpr InstantSpan fromMilliseconds(int64_t milliseconds) {

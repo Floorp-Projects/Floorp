@@ -7,8 +7,11 @@
 #ifndef builtin_temporal_TemporalParser_h
 #define builtin_temporal_TemporalParser_h
 
+#include <cstdlib>
 #include <stdint.h>
 
+#include "builtin/temporal/TemporalUnit.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
 class JSLinearString;
@@ -20,6 +23,27 @@ struct PlainDate;
 struct PlainDateTime;
 struct PlainTime;
 
+struct ParsedTimeZone {
+  JSLinearString* name = nullptr;
+  int32_t offset = INT32_MIN;
+
+  void trace(JSTracer* trc);
+
+  static ParsedTimeZone fromName(JSLinearString* name) {
+    MOZ_ASSERT(name);
+    return {name, 0};
+  }
+
+  static ParsedTimeZone fromOffset(int32_t offset) {
+    MOZ_ASSERT(std::abs(offset) < UnitsPerDay(TemporalUnit::Minute));
+    return {nullptr, offset};
+  }
+
+  explicit operator bool() const {
+    return name != nullptr || offset != INT32_MIN;
+  }
+};
+
 /**
  * ParseTemporalInstantString ( isoString )
  */
@@ -27,17 +51,22 @@ bool ParseTemporalInstantString(JSContext* cx, JS::Handle<JSString*> str,
                                 PlainDateTime* result, int64_t* offset);
 
 /**
- * ParseTemporalTimeZoneString ( isoString )
+ * ParseTemporalTimeZoneString ( timeZoneString )
  */
 bool ParseTemporalTimeZoneString(JSContext* cx, JS::Handle<JSString*> str,
-                                 JS::MutableHandle<JSString*> timeZoneName,
-                                 int64_t* offsetNanoseconds);
+                                 JS::MutableHandle<ParsedTimeZone> result);
 
 /**
  * ParseTimeZoneOffsetString ( isoString )
  */
 bool ParseTimeZoneOffsetString(JSContext* cx, JS::Handle<JSString*> str,
-                               int64_t* result);
+                               int32_t* result);
+
+/**
+ * ParseDateTimeUTCOffset ( offsetString )
+ */
+bool ParseDateTimeUTCOffset(JSContext* cx, JS::Handle<JSString*> str,
+                            int64_t* result);
 
 /**
  * ParseTemporalDurationString ( isoString )
@@ -88,21 +117,41 @@ bool ParseTemporalDateTimeString(JSContext* cx, JS::Handle<JSString*> str,
 /**
  * ParseTemporalZonedDateTimeString ( isoString )
  */
-bool ParseTemporalZonedDateTimeString(JSContext* cx, JS::Handle<JSString*> str,
-                                      PlainDateTime* dateTime, bool* isUTC,
-                                      bool* hasOffset, int64_t* timeZoneOffset,
-                                      JS::MutableHandle<JSString*> timeZoneName,
-                                      JS::MutableHandle<JSString*> calendar);
+bool ParseTemporalZonedDateTimeString(
+    JSContext* cx, JS::Handle<JSString*> str, PlainDateTime* dateTime,
+    bool* isUTC, bool* hasOffset, int64_t* timeZoneOffset,
+    JS::MutableHandle<ParsedTimeZone> timeZoneName,
+    JS::MutableHandle<JSString*> calendar);
 
 /**
  * ParseTemporalRelativeToString ( isoString )
  */
-bool ParseTemporalRelativeToString(JSContext* cx, JS::Handle<JSString*> str,
-                                   PlainDateTime* dateTime, bool* isUTC,
-                                   bool* hasOffset, int64_t* timeZoneOffset,
-                                   JS::MutableHandle<JSString*> timeZoneName,
-                                   JS::MutableHandle<JSString*> calendar);
+bool ParseTemporalRelativeToString(
+    JSContext* cx, JS::Handle<JSString*> str, PlainDateTime* dateTime,
+    bool* isUTC, bool* hasOffset, int64_t* timeZoneOffset,
+    JS::MutableHandle<ParsedTimeZone> timeZoneName,
+    JS::MutableHandle<JSString*> calendar);
 
 } /* namespace js::temporal */
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::ParsedTimeZone, Wrapper> {
+  const auto& object() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  JS::Handle<JSLinearString*> name() const {
+    return JS::Handle<JSLinearString*>::fromMarkedLocation(&object().name);
+  }
+
+  int32_t offset() const { return object().offset; }
+
+  explicit operator bool() const { return bool(object()); }
+};
+
+} /* namespace js */
 
 #endif /* builtin_temporal_TemporalParser_h */

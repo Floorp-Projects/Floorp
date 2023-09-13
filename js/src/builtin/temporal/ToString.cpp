@@ -240,7 +240,7 @@ static void FormatDateTimeString(TemporalStringBuilder& result,
  */
 static void FormatOffsetTimeZoneIdentifier(TemporalStringBuilder& result,
                                            int32_t offsetMinutes) {
-  MOZ_ASSERT(std::abs(offsetMinutes) < 24 * 60,
+  MOZ_ASSERT(std::abs(offsetMinutes) < UnitsPerDay(TemporalUnit::Minute),
              "time zone offset mustn't exceed 24-hours");
 
   // Step 1.

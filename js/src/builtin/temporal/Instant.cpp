@@ -578,7 +578,7 @@ static bool ParseTemporalInstant(JSContext* cx, Handle<JSString*> isoString,
 
   // Step 4. (Not applicable in our implementation.)
 
-  // Step 6. (Reordered)
+  // Step 8. (Reordered)
   if (!ISODateTimeWithinLimits(dateTime)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INSTANT_INVALID);
@@ -587,6 +587,9 @@ static bool ParseTemporalInstant(JSContext* cx, Handle<JSString*> isoString,
 
   // Step 5.
   auto utc = GetUTCEpochNanoseconds(dateTime);
+
+  // FIXME: spec bug - ParseDateTimeUTCOffset is infallible
+  // https://github.com/tc39/proposal-temporal/issues/2637
 
   // Step 6.
   auto offsetNanoseconds = InstantSpan::fromNanoseconds(offset);
