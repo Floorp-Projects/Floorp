@@ -51,7 +51,7 @@ enum class ElementCallbackType {
 
 struct LifecycleCallbackArgs {
   // Used by the attribute changed callback.
-  nsString mName;
+  RefPtr<nsAtom> mName;
   nsString mOldValue;
   nsString mNewValue;
   nsString mNamespaceURI;
