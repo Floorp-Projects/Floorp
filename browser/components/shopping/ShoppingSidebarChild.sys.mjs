@@ -246,9 +246,18 @@ export class ShoppingSidebarChild extends RemotePageChild {
         );
       }
 
+      if (!this.canFetchAndShowAd || !this.userHasAdsEnabled) {
+        return;
+      }
+
       this.#product.requestRecommendations().then(recommendationData => {
         // Check if the product URI or opt in changed while we waited.
-        if (uri != this.#productURI || !this.canFetchAndShowData) {
+        if (
+          uri != this.#productURI ||
+          !this.canFetchAndShowData ||
+          !this.canFetchAndShowAd ||
+          !this.userHasAdsEnabled
+        ) {
           return;
         }
 
