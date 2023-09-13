@@ -199,50 +199,12 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #previousDetectedLanguages = null;
 
-  /**
-   * Used to determine if we should schedule a sync from RemoteSettings.
-   * This is done once per TranslationsParent process, and is handled
-   * during requestIdleCallback.
-   */
-  static #shouldSyncRemoteSettings = true;
-
-  /**
-   * Schedules a requestIdleCallback to sync from Remote Settings
-   * the first time this function is called, and does nothing on
-   * all subsequent calls.
-   */
-  #maybeScheduleRemoteSettingsSync() {
-    // Never schedule a sync if we are running tests: Remote Settings isn't available.
-    if (
-      TranslationsParent.isInAutomation() ||
-      TranslationsParent.#isTranslationsEngineMocked
-    ) {
-      return;
-    }
-
-    if (TranslationsParent.#shouldSyncRemoteSettings) {
-      // Only do this once per TranslationsParent process.
-      TranslationsParent.#shouldSyncRemoteSettings = false;
-      this.browsingContext.top.currentWindowGlobal.requestIdleCallback(
-        async () => {
-          await Promise.all([
-            TranslationsParent.#getLanguageIdModelRemoteClient().sync(),
-            TranslationsParent.#getTranslationsWasmRemoteClient().sync(),
-            TranslationsParent.#getTranslationModelsRemoteClient().sync(),
-          ]);
-        }
-      );
-    }
-  }
-
   actorCreated() {
     this.languageState = new TranslationsLanguageState(
       this,
       TranslationsParent.#previousDetectedLanguages
     );
     TranslationsParent.#previousDetectedLanguages = null;
-
-    this.#maybeScheduleRemoteSettingsSync();
 
     if (TranslationsParent.#translateOnPageReload) {
       // The actor was recreated after a page reload, start the translation.
