@@ -305,6 +305,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   RefPtr<BoolPromise> InitializeStorage();
 
+  RefPtr<BoolPromise> InitializeStorage(
+      RefPtr<UniversalDirectoryLock> aDirectoryLock);
+
   bool IsStorageInitialized() const {
     AssertIsOnOwningThread();
 

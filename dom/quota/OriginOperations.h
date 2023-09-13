@@ -33,6 +33,7 @@ class QuotaUsageRequestBase;
 class RequestParams;
 template <typename T>
 class ResolvableNormalOriginOp;
+class UniversalDirectoryLock;
 class UsageRequestParams;
 
 RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
@@ -67,7 +68,8 @@ RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
 
 RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    RefPtr<UniversalDirectoryLock> aDirectoryLock);
 
 RefPtr<QuotaRequestBase> CreateInitTemporaryStorageOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);

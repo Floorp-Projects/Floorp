@@ -4860,7 +4860,34 @@ RefPtr<BoolPromise> QuotaManager::InitializeStorage() {
     return BoolPromise::CreateAndResolve(true, __func__);
   }
 
-  auto initializeStorageOp = CreateInitOp(WrapMovingNotNullUnchecked(this));
+  RefPtr<UniversalDirectoryLock> directoryLock = CreateDirectoryLockInternal(
+      Nullable<PersistenceType>(), OriginScope::FromNull(),
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
+
+  return directoryLock->Acquire()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr(this),
+       directoryLock](const BoolPromise::ResolveOrRejectValue& aValue) mutable {
+        if (aValue.IsReject()) {
+          return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
+        }
+
+        return self->InitializeStorage(std::move(directoryLock));
+      });
+}
+
+RefPtr<BoolPromise> QuotaManager::InitializeStorage(
+    RefPtr<UniversalDirectoryLock> aDirectoryLock) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDirectoryLock);
+
+  if (mStorageInitialized && !mShutdownStorageOpCount) {
+    return BoolPromise::CreateAndResolve(true, __func__);
+  }
+
+  auto initializeStorageOp =
+      CreateInitOp(WrapMovingNotNullUnchecked(this), std::move(aDirectoryLock));
 
   RegisterNormalOriginOp(*initializeStorageOp);
 
@@ -4970,32 +4997,48 @@ RefPtr<ClientDirectoryLockPromise> QuotaManager::OpenClientDirectory(
     const ClientMetadata& aClientMetadata) {
   AssertIsOnOwningThread();
 
-  return InitializeStorage()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr(this), clientMetadata = aClientMetadata](
-          const BoolPromise::ResolveOrRejectValue& aValue)
-          -> RefPtr<ClientDirectoryLockPromise> {
-        if (aValue.IsReject()) {
-          return ClientDirectoryLockPromise::CreateAndReject(
-              aValue.RejectValue(), __func__);
-        }
+  nsTArray<RefPtr<BoolPromise>> promises;
 
-        RefPtr<ClientDirectoryLock> directoryLock =
-            self->CreateDirectoryLock(clientMetadata, /* aExclusive */ false);
+  RefPtr<UniversalDirectoryLock> storageDirectoryLock;
 
-        return directoryLock->Acquire()->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [directoryLock = directoryLock](
-                const BoolPromise::ResolveOrRejectValue& aValue) mutable {
-              if (aValue.IsReject()) {
-                return ClientDirectoryLockPromise::CreateAndReject(
-                    aValue.RejectValue(), __func__);
-              }
+  if (!mStorageInitialized || mShutdownStorageOpCount) {
+    storageDirectoryLock = CreateDirectoryLockInternal(
+        Nullable<PersistenceType>(), OriginScope::FromNull(),
+        Nullable<Client::Type>(),
+        /* aExclusive */ false);
+    promises.AppendElement(storageDirectoryLock->Acquire());
+  }
 
-              return ClientDirectoryLockPromise::CreateAndResolve(
-                  std::move(directoryLock), __func__);
-            });
-      });
+  RefPtr<ClientDirectoryLock> clientDirectoryLock =
+      CreateDirectoryLock(aClientMetadata, /* aExclusive */ false);
+
+  promises.AppendElement(clientDirectoryLock->Acquire());
+
+  return BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this),
+           storageDirectoryLock = std::move(storageDirectoryLock)](
+              const CopyableTArray<bool>& aResolveValues) mutable {
+            if (!storageDirectoryLock) {
+              return BoolPromise::CreateAndResolve(true, __func__);
+            }
+
+            return self->InitializeStorage(std::move(storageDirectoryLock));
+          },
+          [](nsresult aRejectValue) {
+            return BoolPromise::CreateAndReject(aRejectValue, __func__);
+          })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [clientDirectoryLock = std::move(clientDirectoryLock)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) mutable {
+               if (aValue.IsReject()) {
+                 return ClientDirectoryLockPromise::CreateAndReject(
+                     aValue.RejectValue(), __func__);
+               }
+               return ClientDirectoryLockPromise::CreateAndResolve(
+                   std::move(clientDirectoryLock), __func__);
+             });
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
