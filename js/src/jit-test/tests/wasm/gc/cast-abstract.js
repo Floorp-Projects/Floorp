@@ -75,6 +75,7 @@ const a2 = {
   ],
   top: 'anyref',
 };
+const i31 = { name: 'i31', make: '(i31.new (i32.const 123))', top: 'anyref' };
 const none = { name: 'none', none: true, top: 'anyref' };
 
 const func = { name: 'func', top: 'funcref' };
@@ -91,7 +92,9 @@ const typeSets = [
   [any, eq, struct, s1, s2, none],
   [any, eq, array, a1, a2, none],
   [any, eq, s1, s2, a1, a2, none],
-  // i31 eventually
+  [any, eq, i31, none],
+  [any, eq, i31, s1, none],
+  [any, eq, i31, a1, none],
 
   [func, ft1, ft2, nofunc],
   [func, ft3, ft4, nofunc],
@@ -190,6 +193,10 @@ for (const typeSet of typeSets) {
             }
             if (start.top !== 'anyref' || middle.top !== 'anyref' || end.top !== 'anyref') {
               // v5 instructions only support gc types
+              doV5 = false;
+            }
+            if (!start.makeV5 || !middle.makeV5 || !end.makeV5) {
+              // finally, some types just never made it into v5
               doV5 = false;
             }
 

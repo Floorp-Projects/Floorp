@@ -7530,7 +7530,8 @@ bool BaseCompiler::emitArrayCopy() {
 
 bool BaseCompiler::emitI31New() {
   Nothing value;
-  if (!iter_.readConversion(ValType::I32, ValType(RefType::i31()), &value)) {
+  if (!iter_.readConversion(ValType::I32,
+                            ValType(RefType::i31().asNonNullable()), &value)) {
     return false;
   }
 

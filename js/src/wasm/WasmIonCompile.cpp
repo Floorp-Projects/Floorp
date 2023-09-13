@@ -7416,7 +7416,8 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
 
 static bool EmitI31New(FunctionCompiler& f) {
   MDefinition* input;
-  if (!f.iter().readConversion(ValType::I32, ValType(RefType::i31()), &input)) {
+  if (!f.iter().readConversion(
+          ValType::I32, ValType(RefType::i31().asNonNullable()), &input)) {
     return false;
   }
 

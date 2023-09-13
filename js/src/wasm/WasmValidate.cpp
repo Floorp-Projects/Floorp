@@ -668,7 +668,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                      &nothing, &nothing, &nothing, &nothing));
           }
           case uint32_t(GcOp::I31New): {
-            CHECK(iter.readConversion(ValType::I32, ValType(RefType::i31()),
+            CHECK(iter.readConversion(ValType::I32,
+                                      ValType(RefType::i31().asNonNullable()),
                                       &nothing));
           }
           case uint32_t(GcOp::I31GetS): {
