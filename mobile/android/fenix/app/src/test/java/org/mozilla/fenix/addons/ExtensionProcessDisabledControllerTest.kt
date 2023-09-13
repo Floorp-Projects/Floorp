@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.addons
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface.OnClickListener
+import androidx.appcompat.app.AlertDialog
 import mozilla.components.browser.state.action.ExtensionProcessDisabledPopupAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
