@@ -28,7 +28,7 @@ use super::{Context, Length, Percentage, ToComputedValue};
 use crate::gecko_bindings::structs::GeckoFontMetrics;
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
-use crate::values::generics::calc::CalcUnits;
+use crate::values::generics::calc::{CalcUnits, PositivePercentageBasis};
 use crate::values::generics::{calc, NonNegative};
 use crate::values::specified::length::FontBaseSize;
 use crate::values::{specified, CSSFloat};
@@ -638,18 +638,6 @@ impl CalcLengthPercentageLeaf {
     }
 }
 
-impl PartialOrd for CalcLengthPercentageLeaf {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        use self::CalcLengthPercentageLeaf::*;
-        // NOTE: Percentages can't be compared reasonably here because the
-        // percentage basis might be negative, see bug 1709018.
-        match (self, other) {
-            (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
-            _ => None,
-        }
-    }
-}
-
 impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
     fn unit(&self) -> CalcUnits {
         match self {
@@ -675,6 +663,20 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
         match *self {
             Self::Length(_) | Self::Percentage(_) => None,
             Self::Number(value) => Some(value),
+        }
+    }
+
+    fn compare(&self, other: &Self, basis: PositivePercentageBasis) -> Option<std::cmp::Ordering> {
+        use self::CalcLengthPercentageLeaf::*;
+        match (self, other) {
+            (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
+            (&Percentage(ref one), &Percentage(ref other)) => {
+                match basis {
+                    PositivePercentageBasis::Yes => one.partial_cmp(other),
+                    PositivePercentageBasis::Unknown => None,
+                }
+            }
+            _ => None,
         }
     }
 
