@@ -599,7 +599,22 @@ TimeIntervals MP4TrackDemuxer::GetBuffered() {
     return TimeIntervals();
   }
 
-  return mIndex->ConvertByteRangesToTimeRanges(byteRanges);
+  TimeIntervals timeRanges = mIndex->ConvertByteRangesToTimeRanges(byteRanges);
+  if (AudioInfo* info = mInfo->GetAsAudioInfo(); info) {
+    // Trim as in GetNextSample().
+    TimeUnit totalMediaDurationIncludingTrimming =
+        info->mDuration - info->mMediaTime;
+    auto end = TimeUnit::FromInfinity();
+    if (mType == kAAC && totalMediaDurationIncludingTrimming.IsPositive()) {
+      end = info->mDuration;
+    }
+    if (timeRanges.GetStart().IsNegative() || timeRanges.GetEnd() > end) {
+      TimeInterval trimming(TimeUnit::Zero(timeRanges.GetStart()), end);
+      timeRanges = timeRanges.Intersection(trimming);
+    }
+  }
+
+  return timeRanges;
 }
 
 void MP4TrackDemuxer::NotifyDataArrived() { mNeedReIndex = true; }

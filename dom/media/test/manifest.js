@@ -951,6 +951,11 @@ var gSeekTests = [
   { name: "split.webm", type: "video/webm", duration: 1.967 },
   { name: "detodos.opus", type: "audio/ogg; codecs=opus", duration: 2.9135 },
   { name: "gizmo.mp4", type: "video/mp4", duration: 5.56 },
+  {
+    name: "/tests/dom/media/webaudio/test/half-a-second-1ch-44100-aac-afconvert.mp4",
+    type: 'audio/mp4; codecs="mp4a.40.2"',
+    duration: 0.5,
+  },
   { name: "owl.mp3", type: "audio/mpeg", duration: 3.343 },
   { name: "bogus.duh", type: "bogus/duh", duration: 123 },
 
