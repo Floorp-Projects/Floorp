@@ -13,7 +13,10 @@ var SIS = CC(
 function test_char(code) {
   dump("test_char(0x" + code.toString(16) + ")\n");
   var original = String.fromCharCode(code);
-  var nativeStream = converter.convertToInputStream(original);
+  var nativeStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
+  nativeStream.setUTF8Data(original);
   var stream = new SIS(nativeStream);
   var utf8Result = stream.read(stream.available());
   stream.close();

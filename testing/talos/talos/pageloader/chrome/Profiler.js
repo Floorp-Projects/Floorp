@@ -142,13 +142,10 @@ var Profiler;
 
             var ostream = FileUtils.openSafeFileOutputStream(file);
 
-            var converter = Cc[
-              "@mozilla.org/intl/scriptableunicodeconverter"
-            ].createInstance(Ci.nsIScriptableUnicodeConverter);
-            converter.charset = "UTF-8";
-            var istream = converter.convertToInputStream(
-              JSON.stringify(profile)
-            );
+            let istream = Cc[
+              "@mozilla.org/io/string-input-stream;1"
+            ].createInstance(Ci.nsIStringInputStream);
+            istream.setUTF8Data(JSON.stringify(profile));
 
             // The last argument (the callback) is optional.
             NetUtil.asyncCopy(istream, ostream, function (status) {
