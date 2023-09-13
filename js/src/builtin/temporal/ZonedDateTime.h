@@ -107,6 +107,17 @@ struct NanosecondsAndDays final {
   double daysNumber() const;
 
   void trace(JSTracer* trc);
+
+  static NanosecondsAndDays from(int64_t days, const InstantSpan& nanoseconds,
+                                 const InstantSpan& dayLength) {
+    return {nullptr, days, nanoseconds, dayLength};
+  }
+
+  static NanosecondsAndDays from(JS::BigInt* days,
+                                 const InstantSpan& nanoseconds,
+                                 const InstantSpan& dayLength) {
+    return {days, 0, nanoseconds, dayLength};
+  }
 };
 
 /**
@@ -156,27 +167,6 @@ class WrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper> {
   temporal::InstantSpan nanoseconds() const { return object().nanoseconds; }
 
   temporal::InstantSpan dayLength() const { return object().dayLength; }
-};
-
-template <typename Wrapper>
-class MutableWrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper>
-    : public WrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper> {
-  auto& object() { return static_cast<Wrapper*>(this)->get(); }
-
- public:
-  void initialize(int64_t days, const temporal::InstantSpan& nanoseconds,
-                  const temporal::InstantSpan& dayLength) {
-    object().daysInt = days;
-    object().nanoseconds = nanoseconds;
-    object().dayLength = dayLength;
-  }
-
-  void initialize(JS::BigInt* days, const temporal::InstantSpan& nanoseconds,
-                  const temporal::InstantSpan& dayLength) {
-    object().days = days;
-    object().nanoseconds = nanoseconds;
-    object().dayLength = dayLength;
-  }
 };
 
 } /* namespace js */
