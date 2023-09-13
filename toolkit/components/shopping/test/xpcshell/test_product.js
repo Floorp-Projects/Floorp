@@ -26,6 +26,10 @@ const {
   RECOMMENDATIONS_REQUEST_SCHEMA,
   ATTRIBUTION_RESPONSE_SCHEMA,
   ATTRIBUTION_REQUEST_SCHEMA,
+  ANALYZE_RESPONSE_SCHEMA,
+  ANALYZE_REQUEST_SCHEMA,
+  ANALYSIS_STATUS_RESPONSE_SCHEMA,
+  ANALYSIS_STATUS_REQUEST_SCHEMA,
 } = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ProductConfig.mjs"
 );
@@ -47,9 +51,10 @@ const API_ERROR_BAD_REQUEST = "http://example.com/errors/bad_request.json";
 const API_ERROR_UNPROCESSABLE =
   "http://example.com/errors/unprocessable_entity.json";
 const API_POLL = "http://example.com/poll/poll_analysis_response.json";
-const API_NEEDS_ANALYSIS =
-  "http://example.com/poll/needs_analysis_response.json";
+const API_ANALYSIS_IN_PROGRESS =
+  "http://example.com/poll/analysis_in_progress.json";
 const REPORTING_API_MOCK = "http://example.com/api/report_response.json";
+const ANALYZE_API_MOCK = "http://example.com/api/analyze_pending.json";
 
 const TEST_AID =
   "1ALhiNLkZ2yR4al5lcP1Npbtlpl5toDfKRgJOATjeieAL6i5Dul99l9+ZTiIWyybUzGysChAdrOA6BWrMqr0EvjoymiH3veZ++XuOvJnC0y1NB/IQQtUzlYEO028XqVUJWJeJte47nPhnK2pSm2QhbdeKbxEnauKAty1cFQeEaBUP7LkvUgxh1GDzflwcVfuKcgMr7hOM3NzjYR2RN3vhmT385Ps4wUj--cv2ucc+1nozldFrl--i9GYyjuHYFFi+EgXXZ3ZsA==";
@@ -125,20 +130,24 @@ server.registerPathHandler(
 let pollingTries = 0;
 server.registerPathHandler(new URL(API_POLL).pathname, (request, response) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8", false);
-  if (pollingTries < 2) {
+  if (pollingTries == 0) {
     response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(readFile("/data/needs_analysis_response.json"));
+    response.write(readFile("/data/analysis_status_pending_response.json"));
+    pollingTries++;
+  } else if (pollingTries == 1) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(readFile("/data/analysis_status_in_progress_response.json"));
     pollingTries++;
   } else {
     response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(readFile("/data/analysis_response.json"));
+    response.write(readFile("/data/analysis_status_completed_response.json"));
     pollingTries = 0;
   }
 });
 
 // Path to test API call that will always need analysis.
 server.registerPathHandler(
-  new URL(API_NEEDS_ANALYSIS).pathname,
+  new URL(API_ANALYSIS_IN_PROGRESS).pathname,
   (request, response) => {
     response.setHeader(
       "Content-Type",
@@ -146,7 +155,7 @@ server.registerPathHandler(
       false
     );
     response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(readFile("/data/needs_analysis_response.json"));
+    response.write(readFile("/data/analysis_status_in_progress_response.json"));
   }
 );
 
@@ -624,28 +633,29 @@ add_task(async function test_product_requestAnalysis_poll() {
   let startTime = Cu.now();
   const INITIAL_TIMEOUT = 100;
   const TIMEOUT = 50;
-  const TRIES = 3;
-  let totalTime = INITIAL_TIMEOUT + TIMEOUT * Math.pow(2, TRIES - 1);
+  const TRIES = 10;
+  let totalTime = INITIAL_TIMEOUT + TIMEOUT;
 
   pollingTries = 0;
   if (!product.isProduct()) {
     return;
   }
-  let analysis = await product.pollForAnalysisCompleted(undefined, {
+  let analysis = await product.pollForAnalysisCompleted({
     url: API_POLL,
-    requestSchema: ANALYSIS_REQUEST_SCHEMA,
-    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    requestSchema: ANALYSIS_STATUS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_STATUS_RESPONSE_SCHEMA,
     pollInitialWait: INITIAL_TIMEOUT,
     pollTimeout: TIMEOUT,
     pollAttempts: TRIES,
   });
 
-  Assert.equal(spy.callCount, TRIES, "Request is done processing");
+  Assert.equal(spy.callCount, 3, "Request is done processing");
   Assert.ok(
     typeof analysis == "object",
     "Analysis object is loaded from JSON and validated"
   );
-  Assert.equal(analysis.needs_analysis, false, "Analysis is done");
+  Assert.equal(analysis.status, "completed", "Analysis is completed");
+  Assert.equal(analysis.progress, 100.0, "Progress is 100%");
   Assert.ok(
     Cu.now() - startTime >= totalTime,
     `Waited for at least ${totalTime}ms`
@@ -661,16 +671,16 @@ add_task(async function test_product_requestAnalysis_poll_max() {
   const INITIAL_TIMEOUT = 100;
   const TIMEOUT = 50;
   const TRIES = 4;
-  let totalTime = INITIAL_TIMEOUT + TIMEOUT * Math.pow(2, TRIES - 1);
+  let totalTime = INITIAL_TIMEOUT + TIMEOUT * 3;
 
   pollingTries = 0;
   if (!product.isProduct()) {
     return;
   }
-  let analysis = await product.pollForAnalysisCompleted(undefined, {
-    url: API_NEEDS_ANALYSIS,
-    requestSchema: ANALYSIS_REQUEST_SCHEMA,
-    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+  let analysis = await product.pollForAnalysisCompleted({
+    url: API_ANALYSIS_IN_PROGRESS,
+    requestSchema: ANALYSIS_STATUS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_STATUS_RESPONSE_SCHEMA,
     pollInitialWait: INITIAL_TIMEOUT,
     pollTimeout: TIMEOUT,
     pollAttempts: TRIES,
@@ -681,11 +691,48 @@ add_task(async function test_product_requestAnalysis_poll_max() {
     typeof analysis == "object",
     "Analysis object is loaded from JSON and validated"
   );
-  Assert.equal(analysis.needs_analysis, true, "Analysis not done");
+  Assert.equal(analysis.status, "in_progress", "Analysis not done");
   Assert.ok(
     Cu.now() - startTime >= totalTime,
     `Waited for at least ${totalTime}ms`
   );
+});
+
+add_task(async function test_product_requestAnalysisCreationStatus() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  if (!product.isProduct()) {
+    return;
+  }
+  let analysis = await product.requestAnalysisCreationStatus(undefined, {
+    url: API_ANALYSIS_IN_PROGRESS,
+    requestSchema: ANALYSIS_STATUS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_STATUS_RESPONSE_SCHEMA,
+  });
+  Assert.ok(
+    typeof analysis == "object",
+    "Analysis object is loaded from JSON and validated"
+  );
+  Assert.equal(analysis.status, "in_progress", "Analysis is in progress");
+  Assert.equal(analysis.progress, 50.0, "Progress is 50%");
+});
+
+add_task(async function test_product_requestCreateAnalysis() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  if (!product.isProduct()) {
+    return;
+  }
+  let analysis = await product.requestCreateAnalysis(undefined, {
+    url: ANALYZE_API_MOCK,
+    requestSchema: ANALYZE_REQUEST_SCHEMA,
+    responseSchema: ANALYZE_RESPONSE_SCHEMA,
+  });
+  Assert.ok(
+    typeof analysis == "object",
+    "Analyze object is loaded from JSON and validated"
+  );
+  Assert.equal(analysis.status, "pending", "Analysis is pending");
 });
 
 add_task(async function test_product_sendReport() {

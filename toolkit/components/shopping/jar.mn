@@ -14,3 +14,7 @@ toolkit.jar:
   content/global/shopping/attribution_request.schema.json (schemas/attribution_request.schema.json)
   content/global/shopping/reporting_response.schema.json (schemas/reporting_response.schema.json)
   content/global/shopping/reporting_request.schema.json (schemas/reporting_request.schema.json)
+  content/global/shopping/analysis_status_request.schema.json (schemas/analysis_status_request.schema.json)
+  content/global/shopping/analysis_status_response.schema.json (schemas/analysis_status_response.schema.json)
+  content/global/shopping/analyze_request.schema.json (schemas/analyze_request.schema.json)
+  content/global/shopping/analyze_response.schema.json (schemas/analyze_response.schema.json)
