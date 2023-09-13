@@ -323,17 +323,16 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
     return nullptr;
   }
 
-  QM_TRY(QuotaManager::EnsureCreated(), nullptr);
-
-  MOZ_ASSERT(QuotaManager::Get());
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(), nullptr);
 
   auto actor = [&]() -> RefPtr<QuotaUsageRequestBase> {
     switch (aParams.type()) {
       case UsageRequestParams::TAllUsageParams:
-        return CreateGetUsageOp(aParams);
+        return CreateGetUsageOp(quotaManager, aParams);
 
       case UsageRequestParams::TOriginUsageParams:
-        return CreateGetOriginUsageOp(aParams);
+        return CreateGetOriginUsageOp(quotaManager, aParams);
 
       default:
         MOZ_CRASH("Should never get here!");
@@ -342,7 +341,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   MOZ_ASSERT(actor);
 
-  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
+  quotaManager->RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -392,54 +391,53 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
     return nullptr;
   }
 
-  QM_TRY(QuotaManager::EnsureCreated(), nullptr);
-
-  MOZ_ASSERT(QuotaManager::Get());
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(), nullptr);
 
   auto actor = [&]() -> RefPtr<QuotaRequestBase> {
     switch (aParams.type()) {
       case RequestParams::TStorageNameParams:
-        return CreateStorageNameOp();
+        return CreateStorageNameOp(quotaManager);
 
       case RequestParams::TStorageInitializedParams:
-        return CreateStorageInitializedOp();
+        return CreateStorageInitializedOp(quotaManager);
 
       case RequestParams::TTemporaryStorageInitializedParams:
-        return CreateTemporaryStorageInitializedOp();
+        return CreateTemporaryStorageInitializedOp(quotaManager);
 
       case RequestParams::TInitTemporaryStorageParams:
-        return CreateInitTemporaryStorageOp();
+        return CreateInitTemporaryStorageOp(quotaManager);
 
       case RequestParams::TInitializePersistentOriginParams:
-        return CreateInitializePersistentOriginOp(aParams);
+        return CreateInitializePersistentOriginOp(quotaManager, aParams);
 
       case RequestParams::TInitializeTemporaryOriginParams:
-        return CreateInitializeTemporaryOriginOp(aParams);
+        return CreateInitializeTemporaryOriginOp(quotaManager, aParams);
 
       case RequestParams::TGetFullOriginMetadataParams:
         return CreateGetFullOriginMetadataOp(
-            aParams.get_GetFullOriginMetadataParams());
+            quotaManager, aParams.get_GetFullOriginMetadataParams());
 
       case RequestParams::TClearOriginParams:
-        return CreateClearOriginOp(aParams);
+        return CreateClearOriginOp(quotaManager, aParams);
 
       case RequestParams::TResetOriginParams:
-        return CreateResetOriginOp(aParams);
+        return CreateResetOriginOp(quotaManager, aParams);
 
       case RequestParams::TClearDataParams:
-        return CreateClearDataOp(aParams);
+        return CreateClearDataOp(quotaManager, aParams);
 
       case RequestParams::TPersistedParams:
-        return CreatePersistedOp(aParams);
+        return CreatePersistedOp(quotaManager, aParams);
 
       case RequestParams::TPersistParams:
-        return CreatePersistOp(aParams);
+        return CreatePersistOp(quotaManager, aParams);
 
       case RequestParams::TEstimateParams:
-        return CreateEstimateOp(aParams.get_EstimateParams());
+        return CreateEstimateOp(quotaManager, aParams.get_EstimateParams());
 
       case RequestParams::TListOriginsParams:
-        return CreateListOriginsOp();
+        return CreateListOriginsOp(quotaManager);
 
       default:
         MOZ_CRASH("Should never get here!");
@@ -448,7 +446,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
   MOZ_ASSERT(actor);
 
-  QuotaManager::Get()->RegisterNormalOriginOp(*actor);
+  quotaManager->RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
