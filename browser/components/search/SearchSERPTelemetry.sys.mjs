@@ -427,7 +427,7 @@ class TelemetryHandler {
         adsReported: false,
         adImpressionsReported: false,
         impressionId,
-        hrefToComponentMap: null,
+        urlToComponentMap: null,
         impressionInfo,
         searchBoxSubmitted: false,
       });
@@ -440,7 +440,7 @@ class TelemetryHandler {
           adsReported: false,
           adImpressionsReported: false,
           impressionId,
-          hrefToComponentMap: null,
+          urlToComponentMap: null,
           impressionInfo,
           searchBoxSubmitted: false,
         }),
@@ -483,6 +483,71 @@ class TelemetryHandler {
   }
 
   /**
+   * Calculate how close two urls are in equality.
+   *
+   * The scoring system:
+   * - If the URLs look exactly the same, including the ordering of query
+   *   parameters, the score is Infinity.
+   * - If the origin is the same, the score is increased by 1. Otherwise the
+   *   score is 0.
+   * - If the path is the same, the score is increased by 1.
+   * - For each query parameter, if the key exists the score is increased by 1.
+   *   Likewise if the query parameter values match.
+   * - If the hash is the same, the score is increased by 1. This includes if
+   *   the hash is missing in both URLs.
+   *
+   * @param {URL} url1
+   *   Url to compare.
+   * @param {URL} url2
+   *   Other url to compare. Ordering shouldn't matter.
+   * @param {object} [matchOptions]
+   *   Options for checking equality.
+   * @param {boolean} [matchOptions.path]
+   *   Whether the path must match. Default to false.
+   * @param {boolean} [matchOptions.paramValues]
+   *   Whether the values of the query parameters must match if the query
+   *   parameter key exists in the other. Defaults to false.
+   * @returns {number}
+   *   A score of how closely the two URLs match. Returns 0 if there is no
+   *   match or the equality check failed for an enabled match option.
+   */
+  compareUrls(url1, url2, matchOptions = {}) {
+    // In case of an exact match, well, that's an obvious winner.
+    if (url1.href == url2.href) {
+      return Infinity;
+    }
+
+    // Each step we get closer to the two URLs being the same, we increase the
+    // score. The consumer of this method will use these scores to see which
+    // of the URLs is the best match.
+    let score = 0;
+    if (url1.origin == url2.origin) {
+      ++score;
+      if (url1.pathname == url2.pathname) {
+        ++score;
+        for (let [key1, value1] of url1.searchParams) {
+          // Let's not fuss about the ordering of search params, since the
+          // score effect will solve that.
+          if (url2.searchParams.has(key1)) {
+            ++score;
+            if (url2.searchParams.get(key1) == value1) {
+              ++score;
+            } else if (matchOptions.paramValues) {
+              return 0;
+            }
+          }
+        }
+        if (url1.hash == url2.hash) {
+          ++score;
+        }
+      } else if (matchOptions.path) {
+        return 0;
+      }
+    }
+    return score;
+  }
+
+  /**
    * Parts of the URL, like search params and hashes, may be mutated by scripts
    * on a page we're tracking. Since we don't want to keep track of that
    * ourselves in order to keep the list of browser objects a weak-referenced
@@ -506,38 +571,6 @@ class TelemetryHandler {
       return null;
     }
 
-    const compareURLs = (url1, url2) => {
-      // In case of an exact match, well, that's an obvious winner.
-      if (url1.href == url2.href) {
-        return Infinity;
-      }
-
-      // Each step we get closer to the two URLs being the same, we increase the
-      // score. The consumer of this method will use these scores to see which
-      // of the URLs is the best match.
-      let score = 0;
-      if (url1.hostname == url2.hostname) {
-        ++score;
-        if (url1.pathname == url2.pathname) {
-          ++score;
-          for (let [key1, value1] of url1.searchParams) {
-            // Let's not fuss about the ordering of search params, since the
-            // score effect will solve that.
-            if (url2.searchParams.has(key1)) {
-              ++score;
-              if (url2.searchParams.get(key1) == value1) {
-                ++score;
-              }
-            }
-          }
-          if (url1.hash == url2.hash) {
-            ++score;
-          }
-        }
-      }
-      return score;
-    };
-
     let item;
     let currentBestMatch = 0;
     for (let [trackingURL, candidateItem] of this._browserInfoByURL) {
@@ -553,7 +586,7 @@ class TelemetryHandler {
       } catch (ex) {
         continue;
       }
-      let score = compareURLs(url, trackingURL);
+      let score = this.compareUrls(url, trackingURL);
       if (score > currentBestMatch) {
         item = candidateItem;
         currentBestMatch = score;
@@ -949,7 +982,7 @@ class ContentHandler {
         return;
       }
 
-      let URL = wrappedChannel.finalURL;
+      let url = wrappedChannel.finalURL;
 
       let providerInfo = item.info.provider;
       let info = this._searchProviderInfo.find(provider => {
@@ -984,7 +1017,7 @@ class ContentHandler {
         lazy.serpEventsEnabled &&
         channel.isDocument &&
         (channel.loadInfo.isTopLevelLoad ||
-          info.nonAdsLinkRegexps.some(r => r.test(URL)))
+          info.nonAdsLinkRegexps.some(r => r.test(url)))
       ) {
         let browser = wrappedChannel.browserElement;
         // If the load is from history, don't record an event.
@@ -1033,22 +1066,34 @@ class ContentHandler {
             isSerp = true;
           }
 
-          // Determine the "type" of the link.
-          let type = telemetryState.hrefToComponentMap?.get(URL);
-          // The SERP provider may have modified the url with different query
-          // parameters, so try checking all the recorded hrefs to see if any
-          // look similar.
-          if (!type) {
-            for (let [
-              href,
-              componentType,
-            ] of telemetryState.hrefToComponentMap.entries()) {
-              if (URL.startsWith(href)) {
-                type = componentType;
-                break;
-              }
+          let startFindComponent = Cu.now();
+          let parsedUrl = new URL(url);
+          // Determine the component type of the link.
+          let type;
+          for (let [
+            storedUrl,
+            componentType,
+          ] of telemetryState.urlToComponentMap.entries()) {
+            // The URL we're navigating to may have more query parameters if
+            // the provider adds query parameters when the user clicks on a link.
+            // On the other hand, the URL we are navigating to may have have
+            // fewer query parameters because of query param stripping.
+            // Thus, if a query parameter is missing, a match can still be made
+            // provided keys that exist in both URLs contain equal values.
+            let score = SearchSERPTelemetry.compareUrls(storedUrl, parsedUrl, {
+              paramValues: true,
+              path: true,
+            });
+            if (score) {
+              type = componentType;
+              break;
             }
           }
+          ChromeUtils.addProfilerMarker(
+            "SearchSERPTelemetry._observeActivity",
+            startFindComponent,
+            "Find component for URL"
+          );
 
           // Default value for URLs that don't match any components categorized
           // on the page.
@@ -1082,7 +1127,7 @@ class ContentHandler {
           lazy.logConsole.debug("Counting click:", {
             impressionId: telemetryState.impressionId,
             type,
-            URL,
+            URL: url,
           });
           // Prevent re-directed channels from being examined more than once.
           wrappedChannel._recordedClick = true;
@@ -1094,7 +1139,7 @@ class ContentHandler {
         );
       }
 
-      if (!info.extraAdServersRegexps?.some(regex => regex.test(URL))) {
+      if (!info.extraAdServersRegexps?.some(regex => regex.test(url))) {
         return;
       }
 
@@ -1118,7 +1163,7 @@ class ContentHandler {
         lazy.logConsole.debug("Counting ad click in page for:", {
           source: item.source,
           originURL,
-          URL,
+          URL: url,
         });
       } catch (e) {
         console.error(e);
@@ -1226,7 +1271,13 @@ class ContentHandler {
           ads_hidden: data.adsHidden,
         });
       }
-      telemetryState.hrefToComponentMap = info.hrefToComponentMap;
+      // Convert hrefToComponentMap to a urlToComponentMap in order to cache
+      // the query parameters of the href.
+      let urlToComponentMap = new Map();
+      for (let [href, adType] of info.hrefToComponentMap) {
+        urlToComponentMap.set(new URL(href), adType);
+      }
+      telemetryState.urlToComponentMap = urlToComponentMap;
       telemetryState.adImpressionsReported = true;
       Services.obs.notifyObservers(null, "reported-page-with-ad-impressions");
     }
