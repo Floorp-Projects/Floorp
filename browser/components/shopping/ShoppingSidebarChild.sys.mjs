@@ -211,31 +211,12 @@ export class ShoppingSidebarChild extends RemotePageChild {
         isPolledRequestDone = true;
       }
       try {
-        let analysisStatus;
-        if (isPolledRequest) {
-          // Request a new analysis.
-          let { status } = await this.#product.requestCreateAnalysis();
-          analysisStatus = status;
+        if (!isPolledRequest) {
+          data = await this.#product.requestAnalysis();
         } else {
-          // Check if there is an analysis in progress.
-          let { status } = await this.#product.requestAnalysisCreationStatus();
-          analysisStatus = status;
-        }
-
-        if (
-          analysisStatus &&
-          (analysisStatus == "pending" || analysisStatus == "in_progress")
-        ) {
-          // TODO: Send content update to show analysis in progress message,
-          // if not already shown (Bug 1851629).
-
-          await this.#product.pollForAnalysisCompleted({
-            pollInitialWait: analysisStatus == "in_progress" ? 0 : undefined,
-          });
+          data = await this.#product.pollForAnalysisCompleted();
           isPolledRequestDone = true;
         }
-
-        data = await this.#product.requestAnalysis();
       } catch (err) {
         console.error("Failed to fetch product analysis data", err);
         data = { error: err };
@@ -244,7 +225,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
       if (!canContinue(uri)) {
         return;
       }
-
       this.sendToContent("Update", {
         showOnboarding: false,
         data,
@@ -252,7 +232,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         isPolledRequestDone,
       });
 
-      if (!data || data.error) {
+      if (data.error) {
         return;
       }
 

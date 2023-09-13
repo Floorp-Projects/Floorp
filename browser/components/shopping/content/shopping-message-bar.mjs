@@ -71,7 +71,11 @@ class ShoppingMessageBar extends MozLitElement {
         ></span>
         <a
           id="message-bar-reanalysis-link"
+          target="_blank"
           data-l10n-id="shopping-message-bar-warning-stale-analysis-link"
+          href="https://fakespot.com/analyze?url=${encodeURIComponent(
+            this.productUrl
+          )}"
           @click=${this.onClickAnalysisLink}
         ></a>
       </article>
