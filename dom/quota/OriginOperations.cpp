@@ -113,6 +113,8 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
  private:
   ~SaveOriginAccessTimeOp() = default;
 
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
+
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   virtual void SendResults() override;
@@ -132,6 +134,8 @@ class ClearPrivateRepositoryOp : public ResolvableNormalOriginOp<bool> {
 
  private:
   ~ClearPrivateRepositoryOp() = default;
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -155,6 +159,8 @@ class ShutdownStorageOp : public ResolvableNormalOriginOp<bool> {
 #ifdef DEBUG
   nsresult DirectoryOpen() override;
 #endif
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -204,6 +210,8 @@ class GetUsageOp final : public QuotaUsageRequestBase,
                              const nsACString& aOrigin,
                              const int64_t aTimestamp, const bool aPersisted,
                              const uint64_t aUsage);
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -306,6 +314,8 @@ class InitOp final : public ResolvableNormalOriginOp<bool> {
  private:
   ~InitOp() = default;
 
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
+
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   bool GetResolveValue() override;
@@ -318,6 +328,8 @@ class InitTemporaryStorageOp final : public QuotaRequestBase {
 
  private:
   ~InitTemporaryStorageOp() = default;
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -339,6 +351,9 @@ class InitializeOriginRequestBase : public QuotaRequestBase {
                               const PrincipalInfo& aPrincipalInfo);
 
   nsresult DoInit(QuotaManager& aQuotaManager) override;
+
+ private:
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 };
 
 class InitializePersistentOriginOp final : public InitializeOriginRequestBase {
@@ -399,6 +414,8 @@ class ClearStorageOp final : public ResolvableNormalOriginOp<bool> {
 
   void DeleteStorageFile(QuotaManager& aQuotaManager);
 
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
+
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   bool GetResolveValue() override;
@@ -422,6 +439,8 @@ class ClearRequestBase : public QuotaRequestBase {
 
   void DeleteFiles(QuotaManager& aQuotaManager,
                    PersistenceType aPersistenceType);
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 };
@@ -461,6 +480,8 @@ class ResetOriginOp final : public QuotaRequestBase {
  private:
   ~ResetOriginOp() = default;
 
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
+
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   void GetResponse(RequestResponse& aResponse) override;
@@ -480,6 +501,9 @@ class PersistRequestBase : public QuotaRequestBase {
                      const PrincipalInfo& aPrincipalInfo);
 
   nsresult DoInit(QuotaManager& aQuotaManager) override;
+
+ private:
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 };
 
 class PersistedOp final : public PersistRequestBase {
@@ -541,6 +565,8 @@ class ListOriginsOp final : public QuotaRequestBase,
 
  private:
   ~ListOriginsOp() = default;
+
+  RefPtr<DirectoryLock> CreateDirectoryLock() override;
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -712,6 +738,13 @@ void FinalizeOriginEvictionOp::UnblockOpen() {
   mLocks.Clear();
 }
 
+RefPtr<DirectoryLock> SaveOriginAccessTimeOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mPersistenceType.IsNull());
@@ -745,6 +778,13 @@ void SaveOriginAccessTimeOp::SendResults() {
 #endif
 }
 
+RefPtr<DirectoryLock> ClearPrivateRepositoryOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult ClearPrivateRepositoryOp::DoDirectoryWork(
     QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
@@ -771,6 +811,13 @@ nsresult ClearPrivateRepositoryOp::DoDirectoryWork(
   aQuotaManager.RepositoryClearCompleted(mPersistenceType.Value());
 
   return NS_OK;
+}
+
+RefPtr<DirectoryLock> ShutdownStorageOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 #ifdef DEBUG
@@ -937,6 +984,13 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
   return NS_OK;
 }
 
+RefPtr<DirectoryLock> GetUsageOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult GetUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
@@ -1012,11 +1066,14 @@ nsresult GetOriginUsageOp::DoInit(QuotaManager& aQuotaManager) {
 }
 
 RefPtr<DirectoryLock> GetOriginUsageOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
   if (mFromMemory) {
     return nullptr;
   }
 
-  return QuotaUsageRequestBase::CreateDirectoryLock();
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1085,7 +1142,11 @@ StorageNameOp::StorageNameOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
   AssertIsOnOwningThread();
 }
 
-RefPtr<DirectoryLock> StorageNameOp::CreateDirectoryLock() { return nullptr; }
+RefPtr<DirectoryLock> StorageNameOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return nullptr;
+}
 
 nsresult StorageNameOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
@@ -1115,6 +1176,8 @@ InitializedRequestBase::InitializedRequestBase(
 }
 
 RefPtr<DirectoryLock> InitializedRequestBase::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
   return nullptr;
 }
 
@@ -1168,6 +1231,13 @@ InitOp::InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
   AssertIsOnOwningThread();
 }
 
+RefPtr<DirectoryLock> InitOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult InitOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
@@ -1186,6 +1256,13 @@ InitTemporaryStorageOp::InitTemporaryStorageOp(
                        "dom::quota::InitTemporaryStorageOp",
                        /* aExclusive */ false) {
   AssertIsOnOwningThread();
+}
+
+RefPtr<DirectoryLock> InitTemporaryStorageOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1236,6 +1313,13 @@ nsresult InitializeOriginRequestBase::DoInit(QuotaManager& aQuotaManager) {
   mIsPrivate = principalMetadata.mIsPrivate;
 
   return NS_OK;
+}
+
+RefPtr<DirectoryLock> InitializeOriginRequestBase::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 InitializePersistentOriginOp::InitializePersistentOriginOp(
@@ -1345,6 +1429,8 @@ nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
 }
 
 RefPtr<DirectoryLock> GetFullOriginMetadataOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
   return nullptr;
 }
 
@@ -1427,6 +1513,13 @@ void ClearStorageOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
     // correctly...
     MOZ_ASSERT(false, "Failed to remove storage file!");
   }
+}
+
+RefPtr<DirectoryLock> ClearStorageOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 nsresult ClearStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1668,6 +1761,13 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
       "ClearRequestBase: Completed deleting files"_ns);
 }
 
+RefPtr<DirectoryLock> ClearRequestBase::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
@@ -1760,6 +1860,13 @@ ResetOriginOp::ResetOriginOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
   }
 }
 
+RefPtr<DirectoryLock> ResetOriginOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
+}
+
 nsresult ResetOriginOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
@@ -1808,6 +1915,13 @@ nsresult PersistRequestBase::DoInit(QuotaManager& aQuotaManager) {
   mIsPrivate = principalMetadata.mIsPrivate;
 
   return NS_OK;
+}
+
+RefPtr<DirectoryLock> PersistRequestBase::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 PersistedOp::PersistedOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -1976,7 +2090,11 @@ nsresult EstimateOp::DoInit(QuotaManager& aQuotaManager) {
   return NS_OK;
 }
 
-RefPtr<DirectoryLock> EstimateOp::CreateDirectoryLock() { return nullptr; }
+RefPtr<DirectoryLock> EstimateOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return nullptr;
+}
 
 nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
@@ -2013,6 +2131,13 @@ ListOriginsOp::ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
                        /* aExclusive */ false),
       TraverseRepositoryHelper() {
   AssertIsOnOwningThread();
+}
+
+RefPtr<DirectoryLock> ListOriginsOp::CreateDirectoryLock() {
+  AssertIsOnOwningThread();
+
+  return mQuotaManager->CreateDirectoryLockInternal(
+      mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 nsresult ListOriginsOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
