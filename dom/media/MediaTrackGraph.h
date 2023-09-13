@@ -652,17 +652,7 @@ class SourceMediaTrack : public MediaTrack {
    */
   void End();
 
-  // Overriding allows us to hold the mMutex lock while changing the track
-  // enable status
   void SetDisabledTrackModeImpl(DisabledTrackMode aMode) override;
-
-  // Overriding allows us to ensure mMutex is locked while changing the track
-  // enable status
-  void ApplyTrackDisabling(MediaSegment* aSegment,
-                           MediaSegment* aRawSegment = nullptr) override {
-    mMutex.AssertCurrentThreadOwns();
-    MediaTrack::ApplyTrackDisabling(aSegment, aRawSegment);
-  }
 
   uint32_t NumberOfChannels() const override;
 
@@ -742,6 +732,11 @@ class SourceMediaTrack : public MediaTrack {
   // protected by mMutex
   float mVolume MOZ_GUARDED_BY(mMutex) = 1.0;
   UniquePtr<TrackData> mUpdateTrack MOZ_GUARDED_BY(mMutex);
+  // This track's associated disabled mode for uses on the producing thread.
+  // It can either by disabled by frames being replaced by black, or by
+  // retaining the previous frame.
+  DisabledTrackMode mDirectDisabledMode MOZ_GUARDED_BY(mMutex) =
+      DisabledTrackMode::ENABLED;
   nsTArray<RefPtr<DirectMediaTrackListener>> mDirectTrackListeners
       MOZ_GUARDED_BY(mMutex);
 };
