@@ -148,6 +148,11 @@ export class MigrationWizardChild extends JSWindowActorChild {
         }
         break;
       }
+
+      case "MigrationWizard:OpenAboutAddons": {
+        this.sendAsyncMessage("OpenAboutAddons");
+        break;
+      }
     }
   }
 
