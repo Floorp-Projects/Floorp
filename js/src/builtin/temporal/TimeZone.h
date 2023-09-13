@@ -7,6 +7,8 @@
 #ifndef builtin_temporal_TimeZone_h
 #define builtin_temporal_TimeZone_h
 
+#include "mozilla/Assertions.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -15,6 +17,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
+#include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 
 class JSLinearString;

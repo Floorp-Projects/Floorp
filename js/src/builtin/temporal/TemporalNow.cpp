@@ -7,11 +7,9 @@
 #include "builtin/temporal/TemporalNow.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Result.h"
 
-#include <cmath>
 #include <cstdlib>
 #include <stdint.h>
 #include <string_view>
@@ -33,17 +31,17 @@
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/ZonedDateTime.h"
-#include "gc/Allocator.h"
 #include "gc/Barrier.h"
+#include "gc/GCEnum.h"
 #include "js/AllocPolicy.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"
+#include "js/Date.h"
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "js/ValueArray.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtomState.h"

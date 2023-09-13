@@ -8,8 +8,8 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/intl/TimeZone.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/Result.h"
@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <initializer_list>
+#include <iterator>
 #include <utility>
 
 #include "jsnum.h"
@@ -31,7 +32,6 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/temporal/Calendar.h"
-#include "builtin/temporal/Duration.h"
 #include "builtin/temporal/Instant.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
@@ -42,15 +42,15 @@
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
-#include "gc/Allocator.h"
 #include "gc/AllocKind.h"
 #include "gc/Barrier.h"
 #include "gc/GCContext.h"
+#include "gc/GCEnum.h"
+#include "gc/Tracer.h"
 #include "js/AllocPolicy.h"
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
-#include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/ErrorReport.h"
 #include "js/ForOfIterator.h"
@@ -60,9 +60,6 @@
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
-#include "js/TracingAPI.h"
-#include "js/TypeDecls.h"
-#include "js/Utility.h"
 #include "threading/ProtectedData.h"
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"

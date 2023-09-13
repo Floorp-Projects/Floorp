@@ -7,6 +7,8 @@
 #ifndef builtin_temporal_ZonedDateTime_h
 #define builtin_temporal_ZonedDateTime_h
 
+#include "mozilla/Assertions.h"
+
 #include <stdint.h>
 
 #include "builtin/temporal/Calendar.h"

@@ -7,6 +7,8 @@
 #ifndef builtin_temporal_Calendar_h
 #define builtin_temporal_Calendar_h
 
+#include "mozilla/Assertions.h"
+
 #include <initializer_list>
 #include <stdint.h>
 
@@ -58,7 +60,7 @@ class CalendarValue final {
   /**
    * Default initialize this CalendarValue.
    */
-  explicit CalendarValue(const Value& value) : value_(value) {
+  explicit CalendarValue(const JS::Value& value) : value_(value) {
     MOZ_ASSERT(value.isString() || value.isObject());
     MOZ_ASSERT_IF(value.isString(), value.toString()->isLinear());
   }
