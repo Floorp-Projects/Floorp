@@ -23,6 +23,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Unused.h"
+#if defined(XP_WIN)
+#  include "mozilla/WindowsStackWalkInitialization.h"
+#endif  // XP_WIN
 #include "mozilla/dom/RemoteType.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserver.h"
@@ -597,6 +600,12 @@ void BackgroundHangMonitor::Startup() {
     BackgroundHangManager::sDisabled = true;
     return;
   }
+
+#  if defined(MOZ_GECKO_PROFILER) && defined(XP_WIN)
+#    if defined(_M_AMD64) || defined(_M_ARM64)
+  mozilla::WindowsStackWalkInitialization();
+#    endif  // _M_AMD64 || _M_ARM64
+#  endif    // MOZ_GECKO_PROFILER && XP_WIN
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();

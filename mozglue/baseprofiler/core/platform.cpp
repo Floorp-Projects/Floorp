@@ -52,6 +52,7 @@
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
 #  include "mozilla/StackWalkThread.h"
+#  include "mozilla/WindowsStackWalkInitialization.h"
 #endif
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -3072,7 +3073,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
 
 #if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
-  InitializeWin64ProfilerHooks();
+  mozilla::WindowsStackWalkInitialization();
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.

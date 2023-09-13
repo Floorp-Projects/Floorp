@@ -32,8 +32,6 @@
 #include <mmsystem.h>
 #include <process.h>
 
-#include "nsWindowsDllInterceptor.h"
-#include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
 #include <type_traits>
@@ -480,17 +478,3 @@ static void PlatformInit(PSLockRef aLock) {}
     RtlCaptureContext(&context);        \
     PopulateRegsFromContext(regs, &context);
 #endif
-
-#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
-
-// Use InitializeWin64ProfilerHooks from the base profiler.
-
-namespace mozilla {
-namespace baseprofiler {
-MFBT_API void InitializeWin64ProfilerHooks();
-}  // namespace baseprofiler
-}  // namespace mozilla
-
-using mozilla::baseprofiler::InitializeWin64ProfilerHooks;
-
-#endif  // defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
