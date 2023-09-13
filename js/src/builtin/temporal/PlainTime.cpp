@@ -1753,7 +1753,7 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
   // Step 5.
   auto diff = DifferenceTime(temporalTime, other);
 
-  // Step 6.
+  // Steps 6-7.
   Duration roundedDuration;
   if (!RoundDuration(cx, diff.toDuration().time(), settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1761,11 +1761,11 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
     return false;
   }
 
-  // Step 7.
+  // Step 8.
   auto balancedDuration =
       BalanceTimeDuration(roundedDuration, settings.largestUnit);
 
-  // Step 8.
+  // Step 9.
   if (operation == TemporalDifference::Since) {
     balancedDuration = balancedDuration.negate();
   }

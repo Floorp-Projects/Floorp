@@ -527,6 +527,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   // Step 16.
   if (settings.smallestUnit != TemporalUnit::Month ||
       settings.roundingIncrement != Increment{1}) {
+    // Steps 16.a-b.
     Duration rounded;
     if (!RoundDuration(cx, duration, settings.roundingIncrement,
                        settings.smallestUnit, settings.roundingMode, thisDate,

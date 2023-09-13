@@ -1057,7 +1057,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 8.
+  // Steps 8-9.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1065,13 +1065,13 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 9.
+  // Step 10.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   Duration duration = {
       roundResult.years,  roundResult.months,  roundResult.weeks,
       result.days,        result.hours,        result.minutes,

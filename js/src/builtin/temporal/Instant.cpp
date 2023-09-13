@@ -903,17 +903,17 @@ bool js::temporal::DifferenceInstant(JSContext* cx, const Instant& ns1,
   };
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Step 6.
+  // Steps 6-7.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, duration, roundingIncrement, smallestUnit,
                                roundingMode, &roundResult)) {
     return false;
   }
 
-  // Step 7.
+  // Step 8.
   MOZ_ASSERT(roundResult.days == 0);
 
-  // Step 8.
+  // Step 9.
   TimeDuration balanced;
   if (!BalanceTimeDuration(cx, roundResult, largestUnit, &balanced)) {
     return false;

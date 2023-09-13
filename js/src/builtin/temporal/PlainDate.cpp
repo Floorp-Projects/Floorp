@@ -1247,7 +1247,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
   // Step 8.
   if (settings.smallestUnit != TemporalUnit::Day ||
       settings.roundingIncrement != Increment{1}) {
-    // Step 8.a.
+    // Steps 8.a-b.
     if (!temporal::RoundDuration(cx, duration.date(),
                                  settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
