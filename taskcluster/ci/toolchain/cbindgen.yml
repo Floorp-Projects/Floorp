@@ -16,7 +16,7 @@ job-defaults:
         fetch:
             # If you update this, make sure to update the minimum version in
             # build/moz.configure/bindgen.configure as well.
-            - cbindgen-0.24.3
+            - cbindgen-0.26.0
 
 linux64-cbindgen:
     treeherder:
