@@ -1,5 +1,5 @@
-// https://tc39.es/proposal-weakrefs/#sec-keepduringjob
-// When the abstract operation KeepDuringJob is called with a target object
+// https://tc39.es/ecma262/#sec-addtokeptobjects
+// When the abstract operation AddToKeptObjects is called with a target object
 // reference, it adds the target to an identity Set that will point strongly at
 // the target until the end of the current Job.
 //

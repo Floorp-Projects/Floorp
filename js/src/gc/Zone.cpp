@@ -964,7 +964,7 @@ void Zone::finishRoots() {
 
 void Zone::traceKeptObjects(JSTracer* trc) { keptObjects.ref().trace(trc); }
 
-bool Zone::keepDuringJob(HandleObject target) {
+bool Zone::addToKeptObjects(HandleObject target) {
   return keptObjects.ref().put(target);
 }
 
