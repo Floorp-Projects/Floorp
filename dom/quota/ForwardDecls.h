@@ -13,6 +13,8 @@
 #include "mozilla/dom/quota/Config.h"
 
 enum class nsresult : uint32_t;
+template <class T>
+class RefPtr;
 
 namespace mozilla {
 
@@ -44,6 +46,15 @@ using BoolResponsePromise =
 using BoolResponseResolver = std::function<void(const BoolResponse&)>;
 
 }  // namespace ipc
+
+namespace dom::quota {
+
+class ClientDirectoryLock;
+
+using ClientDirectoryLockPromise =
+    MozPromise<RefPtr<ClientDirectoryLock>, nsresult, true>;
+
+}  // namespace dom::quota
 
 }  // namespace mozilla
 
