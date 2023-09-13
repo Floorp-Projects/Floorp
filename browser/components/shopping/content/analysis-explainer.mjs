@@ -139,7 +139,7 @@ class AnalysisExplainer extends MozLitElement {
             >
               <a
                 is="moz-support-link"
-                support-page="todo"
+                support-page="review-checker-review-quality"
                 data-l10n-name="review-quality-url"
               ></a>
             </p>
