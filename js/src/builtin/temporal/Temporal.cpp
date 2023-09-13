@@ -7,7 +7,6 @@
 #include "builtin/temporal/Temporal.h"
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 
@@ -17,13 +16,13 @@
 #include <initializer_list>
 #include <iterator>
 #include <stdint.h>
-#include <string>
 #include <string_view>
 #include <utility>
 
 #include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jspubtd.h"
+#include "NamespaceImports.h"
 
 #include "builtin/temporal/Instant.h"
 #include "builtin/temporal/PlainDate.h"
@@ -47,14 +46,12 @@
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/String.h"
-#include "js/Utility.h"
 #include "js/Value.h"
-#include "util/StringBuffer.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtomState.h"
-#include "vm/JSAtomUtils.h"  // ClassName
+#include "vm/JSAtomUtils.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ObjectOperations.h"

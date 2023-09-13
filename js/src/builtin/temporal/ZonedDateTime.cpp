@@ -9,10 +9,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Likely.h"
 
 #include <cstdlib>
-#include <initializer_list>
 #include <utility>
 
 #include "jspubtd.h"
@@ -43,7 +41,6 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 #include "js/ComparisonOperators.h"
-#include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/GCVector.h"
@@ -53,15 +50,14 @@
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
-#include "js/TypeDecls.h"
-#include "js/Utility.h"
 #include "js/Value.h"
-#include "util/StringBuffer.h"
 #include "vm/BigIntType.h"
-#include "vm/Compartment.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtomState.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/ObjectOperations.h"
 #include "vm/PlainObject.h"
 #include "vm/StringType.h"
 

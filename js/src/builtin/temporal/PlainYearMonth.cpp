@@ -8,9 +8,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include <cstdlib>
-#include <initializer_list>
-#include <stddef.h>
 #include <type_traits>
 #include <utility>
 
@@ -36,7 +33,6 @@
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
-#include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/GCVector.h"
@@ -46,8 +42,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "util/StringBuffer.h"
-#include "vm/Compartment.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"

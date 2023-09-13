@@ -7,6 +7,8 @@
 #ifndef builtin_temporal_TemporalParser_h
 #define builtin_temporal_TemporalParser_h
 
+#include "mozilla/Assertions.h"
+
 #include <cstdlib>
 #include <stdint.h>
 

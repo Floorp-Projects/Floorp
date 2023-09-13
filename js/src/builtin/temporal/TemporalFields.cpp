@@ -7,19 +7,19 @@
 #include "builtin/temporal/TemporalFields.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 
 #include <algorithm>
-#include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <stdint.h>
 #include <utility>
 
+#include "jsnum.h"
+#include "jspubtd.h"
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Temporal.h"
@@ -28,22 +28,27 @@
 #include "gc/Tracer.h"
 #include "js/AllocPolicy.h"
 #include "js/ComparisonOperators.h"
-#include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"
+#include "js/GCAPI.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
 #include "js/Printer.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "js/Value.h"
+#include "util/Text.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/PlainObject.h"
 #include "vm/StringType.h"
+#include "vm/SymbolType.h"
 
-#include "vm/JSAtomUtils-inl.h"  // BackfillIndexInCharBuffer
+#include "vm/JSAtomUtils-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 

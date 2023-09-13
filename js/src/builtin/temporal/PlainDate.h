@@ -60,7 +60,6 @@ inline PlainDate ToPlainDate(const PlainDateObject* date) {
   return {date->isoYear(), date->isoMonth(), date->isoDay()};
 }
 
-enum class CalendarField;
 enum class TemporalOverflow;
 enum class TemporalUnit;
 

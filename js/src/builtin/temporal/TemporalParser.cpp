@@ -15,19 +15,16 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
-#include <cmath>
 #include <cstdlib>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
-#include <stddef.h>
 #include <stdint.h>
 #include <string_view>
 #include <type_traits>
 #include <utility>
 
 #include "jsnum.h"
-#include "jstypes.h"
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Duration.h"
@@ -35,8 +32,8 @@
 #include "builtin/temporal/PlainTime.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
-#include "builtin/temporal/TimeZone.h"
 #include "gc/Barrier.h"
+#include "gc/Tracer.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/GCAPI.h"
