@@ -58,7 +58,7 @@ struct OriginMetadata : public PrincipalMetadata {
                           aIsPrivate),
         mPersistenceType(aPersistenceType) {}
 
-  OriginMetadata(PrincipalMetadata&& aPrincipalMetadata,
+  OriginMetadata(PrincipalMetadata aPrincipalMetadata,
                  PersistenceType aPersistenceType)
       : PrincipalMetadata(std::move(aPrincipalMetadata)),
         mPersistenceType(aPersistenceType) {}
