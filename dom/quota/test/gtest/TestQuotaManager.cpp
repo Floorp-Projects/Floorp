@@ -825,4 +825,48 @@ TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
 
+// Test ShutdownStorage when a storage shutdown is already ongoing and a shared
+// client directory lock is requested after that.
+// The shared client directory lock doesn't have to be explicitly released
+// because it gets invalidated while it's still pending which causes that any
+// directory locks that were blocked by the shared client directory lock become
+// unblocked.
+TEST_F(TestQuotaManager,
+       DISABLED_ShutdownStorage_OngoingWithClientDirectoryLock) {
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    RefPtr<ClientDirectoryLock> directoryLock =
+        quotaManager->CreateDirectoryLock(GetTestClientMetadata(),
+                                          /* aExclusive */ false);
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    // This creates an exclusive directory lock internally.
+    promises.AppendElement(quotaManager->ShutdownStorage());
+
+    // This directory lock can't be acquired yet because a storage shutdown
+    // (which uses an exclusive diretory lock internall) is ongoing.
+    promises.AppendElement(directoryLock->Acquire());
+
+    // This second ShutdownStorage invalidates the directoryLock, so that
+    // directory lock can't ever be successfully acquired, the promise for it
+    // will be rejected when the first ShutdownStorage is finished (it releases
+    // its exclusive directory lock);
+    promises.AppendElement(quotaManager->ShutdownStorage());
+
+    bool done = false;
+
+    BoolPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](
+                const BoolPromise::AllSettledPromiseType::ResolveOrRejectValue&
+                    aValues) { done = true; });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+}
+
 }  // namespace mozilla::dom::quota::test
