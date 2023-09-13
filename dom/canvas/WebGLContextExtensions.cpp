@@ -17,15 +17,10 @@
 namespace mozilla {
 
 const char* GetExtensionName(const WebGLExtensionID ext) {
-  static EnumeratedArray<WebGLExtensionID, WebGLExtensionID::Max, const char*>
-      sExtensionNamesEnumeratedArray;
-  static bool initialized = false;
-
-  if (!initialized) {
-    initialized = true;
-
+  switch (ext) {
 #define WEBGL_EXTENSION_IDENTIFIER(x) \
-  sExtensionNamesEnumeratedArray[WebGLExtensionID::x] = #x;
+  case WebGLExtensionID::x:           \
+    return #x;
 
     WEBGL_EXTENSION_IDENTIFIER(ANGLE_instanced_arrays)
     WEBGL_EXTENSION_IDENTIFIER(EXT_blend_minmax)
@@ -67,9 +62,11 @@ const char* GetExtensionName(const WebGLExtensionID ext) {
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_provoking_vertex)
 
 #undef WEBGL_EXTENSION_IDENTIFIER
-  }
 
-  return sExtensionNamesEnumeratedArray[ext];
+    case WebGLExtensionID::Max:
+      break;
+  }
+  MOZ_CRASH("bad WebGLExtensionID");
 }
 
 // ----------------------------
