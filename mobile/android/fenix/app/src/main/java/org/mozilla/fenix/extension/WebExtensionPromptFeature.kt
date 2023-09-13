@@ -123,7 +123,7 @@ class WebExtensionPromptFeature(
         var title = context.getString(R.string.mozac_feature_addons_failed_to_install, "")
         val message = when (exception) {
             is WebExtensionInstallException.Blocklisted -> {
-                context.getString(R.string.mozac_feature_addons_blocklisted, addonName)
+                context.getString(R.string.mozac_feature_addons_blocklisted_1, addonName)
             }
 
             is WebExtensionInstallException.UserCancelled -> {

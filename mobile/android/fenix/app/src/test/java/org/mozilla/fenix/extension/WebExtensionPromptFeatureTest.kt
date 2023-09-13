@@ -95,7 +95,7 @@ class WebExtensionPromptFeatureTest {
             throwable = Exception(),
         )
         val expectedMessage =
-            testContext.getString(R.string.mozac_feature_addons_blocklisted, extensionName)
+            testContext.getString(R.string.mozac_feature_addons_blocklisted_1, extensionName)
 
         webExtensionPromptFeature.handleInstallationFailedRequest(
             exception = exception,

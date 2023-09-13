@@ -34,7 +34,7 @@ class AddonsManagementFragmentTest {
         every { fragment.showErrorSnackBar(any()) } returns Unit
         every { fragment.getString(R.string.addon_not_supported_error) } returns addonNotSupportedErrorMessage
         every { fragment.getString(R.string.addon_already_installed) } returns addonAlreadyInstalledErrorMessage
-        every { fragment.getString(R.string.mozac_feature_addons_blocklisted) } returns addonAlreadyInstalledErrorMessage
+        every { fragment.getString(R.string.mozac_feature_addons_blocklisted_1) } returns addonAlreadyInstalledErrorMessage
     }
 
     @Test
