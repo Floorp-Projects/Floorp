@@ -44,6 +44,7 @@ add_task(async function () {
     url: "http://example.com/",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await SearchTestUtils.installSearchExtension(
     {

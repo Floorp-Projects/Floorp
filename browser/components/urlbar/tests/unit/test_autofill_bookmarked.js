@@ -30,6 +30,7 @@ add_task(async function () {
   }
 
   async function check_autofill() {
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let threshold = await getOriginAutofillThreshold();
     let httpOriginFrecency = await getOriginFrecency("http://", host);
     Assert.less(

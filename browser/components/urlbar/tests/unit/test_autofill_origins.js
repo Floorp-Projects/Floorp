@@ -1025,7 +1025,7 @@ async function doTitleTest({ visits, input, expected }) {
           url: uri,
         }
       );
-      await db.executeCached("DELETE FROM moz_updateoriginsupdate_temp");
+      await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     });
   }
 

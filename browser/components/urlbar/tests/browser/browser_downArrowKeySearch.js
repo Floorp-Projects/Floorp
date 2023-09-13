@@ -23,6 +23,7 @@ add_setup(async function () {
 
 add_task(async function url() {
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     gURLBar.focus();
     gURLBar.selectionEnd = gURLBar.untrimmedValue.length;
     gURLBar.selectionStart = gURLBar.untrimmedValue.length;

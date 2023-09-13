@@ -1612,12 +1612,6 @@ nsresult Database::InitTempEntities() {
   rv = mMainConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Add the triggers that update the moz_origins table as necessary.
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSINSERT_TEMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_UPDATEORIGINSINSERT_AFTERDELETE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSDELETE_TEMP);
@@ -1635,15 +1629,15 @@ nsresult Database::InitTempEntities() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSUPDATE_TEMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_UPDATEORIGINSUPDATE_AFTERDELETE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(
       CREATE_PLACES_AFTERUPDATE_RECALC_FRECENCY_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(
+      CREATE_ORIGINS_AFTERUPDATE_RECALC_FRECENCY_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_ORIGINS_AFTERUPDATE_FRECENCY_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mMainConn->ExecuteSimpleSQL(
@@ -1887,7 +1881,17 @@ nsresult Database::MigrateV70Up() {
       "WHERE frecency < -1) AS places "
       "WHERE moz_origins.id = places.origin_id"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = RecalculateOriginFrecencyStatsInternal();
+  rv = mMainConn->ExecuteSimpleSQL(
+      "INSERT OR REPLACE INTO moz_meta(key, value) VALUES "
+      "('origin_frecency_count', "
+      "(SELECT COUNT(*) FROM moz_origins WHERE frecency > 0) "
+      "), "
+      "('origin_frecency_sum', "
+      "(SELECT TOTAL(frecency) FROM moz_origins WHERE frecency > 0) "
+      "), "
+      "('origin_frecency_sum_of_squares', "
+      "(SELECT TOTAL(frecency * frecency) FROM moz_origins WHERE frecency > 0) "
+      ") "_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now set recalc_frecency = 1 and positive frecency to any page having a
@@ -2008,26 +2012,6 @@ nsresult Database::MigrateV75Up() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
-}
-
-nsresult Database::RecalculateOriginFrecencyStatsInternal() {
-  return mMainConn->ExecuteSimpleSQL(nsLiteralCString(
-      "INSERT OR REPLACE INTO moz_meta(key, value) VALUES "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_COUNT
-      "' , "
-      "(SELECT COUNT(*) FROM moz_origins WHERE frecency > 0) "
-      "), "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM
-      "', "
-      "(SELECT TOTAL(frecency) FROM moz_origins WHERE frecency > 0) "
-      "), "
-      "( "
-      "'" MOZ_META_KEY_ORIGIN_FRECENCY_SUM_OF_SQUARES
-      "' , "
-      "(SELECT TOTAL(frecency * frecency) FROM moz_origins WHERE frecency > 0) "
-      ") "));
 }
 
 int64_t Database::CreateMobileRoot() {

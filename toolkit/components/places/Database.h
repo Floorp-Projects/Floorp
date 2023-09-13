@@ -202,7 +202,6 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
     mozilla::Unused << EnsureConnection();
     return mTagsRootId;
   }
-  nsresult RecalculateOriginFrecencyStatsInternal();
 
  protected:
   /**

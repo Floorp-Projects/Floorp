@@ -3479,7 +3479,19 @@ BrowserGlue.prototype = {
         if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            if (Services.policies.isAllowed("defaultBookmarks")) {
+            if (
+              Services.policies.isAllowed("defaultBookmarks") &&
+              // Default bookmarks are imported after startup, and they may
+              // influence the outcome of tests, thus it's possible to use
+              // this test-only pref to skip the import.
+              !(
+                Cu.isInAutomation &&
+                Services.prefs.getBoolPref(
+                  "browser.bookmarks.testing.skipDefaultBookmarksImport",
+                  false
+                )
+              )
+            ) {
               await lazy.BookmarkHTMLUtils.importFromURL(bookmarksUrl, {
                 replace: true,
                 source: lazy.PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP,

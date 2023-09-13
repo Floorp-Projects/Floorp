@@ -251,3 +251,35 @@ add_task(async function test_metadata_unparsable() {
 
   await PlacesTestUtils.clearMetadata();
 });
+
+add_task(async function test_metadata_setMany() {
+  await PlacesUtils.metadata.setMany(
+    new Map([
+      ["test/string", "hi"],
+      ["test/boolean", true],
+    ])
+  );
+  await PlacesUtils.metadata.set("test/string", "hi");
+  Assert.deepEqual(
+    await PlacesUtils.metadata.get("test/string"),
+    "hi",
+    "Should store new string value"
+  );
+  Assert.deepEqual(
+    await PlacesUtils.metadata.get("test/boolean"),
+    true,
+    "Should store new boolean value"
+  );
+  await PlacesUtils.metadata.cache.clear();
+  Assert.equal(
+    await PlacesUtils.metadata.get("test/string"),
+    "hi",
+    "Should return string value after clearing cache"
+  );
+  Assert.deepEqual(
+    await PlacesUtils.metadata.get("test/boolean"),
+    true,
+    "Should store new boolean value"
+  );
+  await PlacesTestUtils.clearMetadata();
+});

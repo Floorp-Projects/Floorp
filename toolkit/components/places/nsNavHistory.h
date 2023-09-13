@@ -426,8 +426,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
   int32_t mUnvisitedTypedBonus;
   int32_t mReloadVisitBonus;
 
-  nsresult RecalculateOriginFrecencyStatsInternal();
-
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQuery(
       const nsTArray<mozilla::places::QueryKeyValuePair>& aTokens,

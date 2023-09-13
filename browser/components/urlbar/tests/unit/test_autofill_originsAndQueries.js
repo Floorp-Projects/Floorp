@@ -946,7 +946,7 @@ add_autofill_task(async function zeroThreshold() {
     await db.execute("UPDATE moz_places SET frecency = -1 WHERE url = :url", {
       url: pageUrl,
     });
-    await db.executeCached("DELETE FROM moz_updateoriginsupdate_temp");
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   });
 
   // Make sure the place's frecency is -1.
@@ -1120,14 +1120,14 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_0() {
   // Make the bookmark fall below the autofill frecency threshold so we ensure
   // the bookmark is always autofilled in this case, even if it doesn't meet
   // the threshold.
-  let meetsThreshold = true;
-  while (meetsThreshold) {
+  await TestUtils.waitForCondition(async () => {
     // Add a visit to another origin to boost the threshold.
     await PlacesTestUtils.addVisits("http://foo-" + url);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let originFrecency = await getOriginFrecency("http://", host);
     let threshold = await getOriginAutofillThreshold();
-    meetsThreshold = threshold <= originFrecency;
-  }
+    return threshold > originFrecency;
+  }, "Make the bookmark fall below the frecency threshold");
 
   // At this point, the bookmark doesn't meet the threshold, but it should
   // still be autofilled.
@@ -1227,14 +1227,14 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_0() {
   // Make the bookmark fall below the autofill frecency threshold so we ensure
   // the bookmark is always autofilled in this case, even if it doesn't meet
   // the threshold.
-  let meetsThreshold = true;
-  while (meetsThreshold) {
+  await TestUtils.waitForCondition(async () => {
     // Add a visit to another origin to boost the threshold.
     await PlacesTestUtils.addVisits("http://foo-" + url);
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let originFrecency = await getOriginFrecency("http://", host);
     let threshold = await getOriginAutofillThreshold();
-    meetsThreshold = threshold <= originFrecency;
-  }
+    return threshold > originFrecency;
+  }, "Make the bookmark fall below the frecency threshold");
 
   // At this point, the bookmark doesn't meet the threshold, but it should
   // still be autofilled.

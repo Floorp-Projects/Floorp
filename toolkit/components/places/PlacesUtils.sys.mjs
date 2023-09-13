@@ -1876,7 +1876,6 @@ export var PlacesUtils = {
         frecency: url.protocol == "place:" ? 0 : -1,
       }
     );
-    await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
   },
 
   /**
@@ -1906,7 +1905,6 @@ export var PlacesUtils = {
         maybeguid: this.history.makeGuid(),
       }))
     );
-    await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
   },
 
   /**
@@ -2183,7 +2181,19 @@ PlacesUtils.metadata = {
    */
   set(key, value) {
     return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.set", db =>
-      this.setWithConnection(db, key, value)
+      this.setWithConnection(db, new Map([[key, value]]))
+    );
+  },
+
+  /**
+   * Sets the value for multiple keys.
+   *
+   * @param {Map} pairs
+   *        The metadata keys to update, with their value.
+   */
+  setMany(pairs) {
+    return PlacesUtils.withConnectionWrapper("PlacesUtils.metadata.set", db =>
+      this.setWithConnection(db, pairs)
     );
   },
 
@@ -2248,28 +2258,46 @@ PlacesUtils.metadata = {
     return value;
   },
 
-  async setWithConnection(db, key, value) {
-    if (value === null) {
-      await this.deleteWithConnection(db, key);
-      return;
+  async setWithConnection(db, pairs) {
+    let entriesToSet = [];
+    let keysToDelete = Array.from(pairs.entries())
+      .filter(([key, value]) => {
+        if (value !== null) {
+          console.log("key " + key);
+          entriesToSet.push({ key: this.canonicalizeKey(key), value });
+          return false;
+        }
+        return true;
+      })
+      .map(([key, value]) => key);
+    if (keysToDelete.length) {
+      await this.deleteWithConnection(db, ...keysToDelete);
+      if (keysToDelete.length == pairs.size) {
+        return;
+      }
     }
 
-    let cacheValue = value;
-    if (
-      typeof value == "object" &&
-      ChromeUtils.getClassName(value) != "Uint8Array"
-    ) {
-      value = this.jsonPrefix + this._base64Encode(JSON.stringify(value));
-    }
-
-    key = this.canonicalizeKey(key);
+    // Generate key{i}, value{i} pairs for the SQL bindings.
+    let params = entriesToSet.reduce((accumulator, { key, value }, i) => {
+      accumulator[`key${i}`] = key;
+      // Convert Objects to base64 JSON urls.
+      accumulator[`value${i}`] =
+        typeof value == "object" &&
+        ChromeUtils.getClassName(value) != "Uint8Array"
+          ? this.jsonPrefix + this._base64Encode(JSON.stringify(value))
+          : value;
+      return accumulator;
+    }, {});
     await db.executeCached(
-      `
-      REPLACE INTO moz_meta (key, value)
-      VALUES (:key, :value)`,
-      { key, value }
+      "REPLACE INTO moz_meta (key, value) VALUES " +
+        entriesToSet.map((e, i) => `(:key${i}, :value${i})`).join(),
+      params
     );
-    this.cache.set(key, cacheValue);
+
+    // Update the cache.
+    entriesToSet.forEach(({ key, value }) => {
+      this.cache.set(key, value);
+    });
   },
 
   async deleteWithConnection(db, ...keys) {

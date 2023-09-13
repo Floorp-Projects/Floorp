@@ -1110,16 +1110,6 @@ interface nsINavHistoryService : nsISupports
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
 
   /**
-   * Resets and recalculates the origin frecency statistics that are kept in the
-   * moz_meta table.
-   *
-   * @param aCallback
-   *        Called when the recalculation is complete.  The arguments passed to
-   *        the observer are not defined.
-   */
-  void recalculateOriginFrecencyStats([optional] in nsIObserver aCallback);
-
-  /**
    * Whether frecency is in the process of being decayed. The value can also
    * be read through the is_frecency_decaying() SQL function exposed by Places
    * database connections.

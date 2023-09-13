@@ -690,8 +690,12 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
     // wipe; we want to merge the restored tree with the one on the server.
     await lazy.PlacesUtils.metadata.setWithConnection(
       db,
-      BookmarkSyncUtils.WIPE_REMOTE_META_KEY,
-      source == lazy.PlacesUtils.bookmarks.SOURCES.RESTORE
+      new Map([
+        [
+          BookmarkSyncUtils.WIPE_REMOTE_META_KEY,
+          source == lazy.PlacesUtils.bookmarks.SOURCES.RESTORE,
+        ],
+      ])
     );
 
     // Reset change counters and sync statuses for roots and remaining
@@ -2027,8 +2031,7 @@ var removeUndeletedTombstones = function (db, guids) {
 async function setHistorySyncId(db, newSyncId) {
   await lazy.PlacesUtils.metadata.setWithConnection(
     db,
-    HistorySyncUtils.SYNC_ID_META_KEY,
-    newSyncId
+    new Map([[HistorySyncUtils.SYNC_ID_META_KEY, newSyncId]])
   );
 
   await lazy.PlacesUtils.metadata.deleteWithConnection(
@@ -2041,8 +2044,7 @@ async function setHistorySyncId(db, newSyncId) {
 async function setBookmarksSyncId(db, newSyncId) {
   await lazy.PlacesUtils.metadata.setWithConnection(
     db,
-    BookmarkSyncUtils.SYNC_ID_META_KEY,
-    newSyncId
+    new Map([[BookmarkSyncUtils.SYNC_ID_META_KEY, newSyncId]])
   );
 
   await lazy.PlacesUtils.metadata.deleteWithConnection(

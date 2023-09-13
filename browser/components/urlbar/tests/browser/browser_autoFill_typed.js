@@ -12,6 +12,7 @@ add_setup(async function () {
 
 add_task(async function origin() {
   await PlacesTestUtils.addVisits(["http://example.com/"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   // all lowercase
   await typeAndCheck([
     ["e", "example.com/"],
@@ -48,6 +49,7 @@ add_task(async function origin() {
 
 add_task(async function url() {
   await PlacesTestUtils.addVisits(["http://example.com/foo/bar"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   // all lowercase
   await typeAndCheck([
     ["e", "example.com/"],

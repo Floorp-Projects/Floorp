@@ -132,7 +132,7 @@ add_task(async function test_autofill() {
     let connectionNumber = server.connectionNumber;
     let searchString = serverInfo.host;
     info(`Searching for '${searchString}'`);
-
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: searchString,
@@ -162,7 +162,7 @@ add_task(async function test_autofill_privateContext() {
     let connectionNumber = server.connectionNumber;
     let searchString = serverInfo.host;
     info(`Searching for '${searchString}'`);
-
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: privateWin,
       value: searchString,

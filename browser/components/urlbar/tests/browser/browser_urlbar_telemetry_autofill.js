@@ -158,18 +158,6 @@ if (AppConstants.platform == "macosx") {
 }
 
 add_setup(async function () {
-  // The following initialization code is necessary to avoid a frequent
-  // intermittent failure in verify-fission where, due to timings, we may or
-  // may not import default bookmarks.
-  info("Ensure Places init is complete");
-  let placesInitCompleteObserved = TestUtils.topicObserved(
-    "places-browser-init-complete"
-  );
-  Cc["@mozilla.org/browser/browserglue;1"]
-    .getService(Ci.nsIObserver)
-    .observe(null, "browser-glue-test", "places-browser-init-complete");
-  await placesInitCompleteObserved;
-
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
   await PlacesTestUtils.clearInputHistory();
@@ -294,6 +282,7 @@ add_task(async function history() {
     for (const { uri, input } of inputHistory) {
       await UrlbarUtils.addToInputHistory(uri, input);
     }
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
     UrlbarPrefs.set("autoFill.adaptiveHistory.enabled", useAdaptiveHistory);
 
@@ -490,7 +479,7 @@ add_task(async function impression() {
         await UrlbarUtils.addToInputHistory(uri, input);
       }
     }
-
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await triggerAutofillAndPickResult(
       userInput,
       autofilled,
@@ -538,6 +527,7 @@ add_task(async function impression() {
 // Checks autofill deletion telemetry.
 add_task(async function deletion() {
   await PlacesTestUtils.addVisits(["http://example.com/"]);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Delete autofilled value by DELETE key");
   await doDeletionTest({

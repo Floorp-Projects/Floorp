@@ -294,6 +294,7 @@ async function doTest({
     recordNavigationalSuggestionTelemetry: true,
   },
 }) {
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   MerinoTestUtils.server.response.body.suggestions = suggestion
     ? [suggestion]
     : [];

@@ -884,6 +884,7 @@ async function addVisits(...urls) {
       await PlacesTestUtils.addVisits(url);
     }
   }
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 }
 
 async function cleanUp() {

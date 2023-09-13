@@ -5,6 +5,8 @@
  * Tests turning non-url-looking values typed in the input field into proper URLs.
  */
 
+requestLongerTimeout(2);
+
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function checkCtrlWorks() {
@@ -61,6 +63,7 @@ add_task(async function checkCtrlWorks() {
       undefined,
       true
     );
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     await UrlbarTestUtils.inputIntoURLBar(win, inputValue);
     EventUtils.synthesizeKey("KEY_Enter", options, win);
     await Promise.all([promiseLoad, promiseStopped]);
@@ -167,17 +170,17 @@ add_task(async function autofill() {
     ["@goo", "https://www.goo.com/", { ctrlKey: true }],
   ];
 
-  function promiseAutofill() {
-    return BrowserTestUtils.waitForEvent(win.gURLBar.inputField, "select");
-  }
-
   for (let [inputValue, expectedURL, options] of testcases) {
     let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
       expectedURL,
       win.gBrowser.selectedBrowser
     );
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     win.gURLBar.select();
-    let autofillPromise = promiseAutofill();
+    let autofillPromise = BrowserTestUtils.waitForEvent(
+      win.gURLBar.inputField,
+      "select"
+    );
     EventUtils.sendString(inputValue, win);
     await autofillPromise;
     EventUtils.synthesizeKey("KEY_Enter", options, win);

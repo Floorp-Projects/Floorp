@@ -74,6 +74,7 @@ add_task(
       false,
       "Search Service should have failed to initialize."
     );
+    await cleanupPlaces();
   }
 );
 

@@ -41,7 +41,6 @@ export var PlacesDBUtils = {
       this.checkIntegrity,
       this.checkCoherence,
       this._refreshUI,
-      this.originFrecencyStats,
       this.incrementalVacuum,
       this.removeOldCorruptDBs,
       this.deleteOrphanPreviews,
@@ -77,7 +76,6 @@ export var PlacesDBUtils = {
       this.checkIntegrity,
       this.checkCoherence,
       this.expire,
-      this.originFrecencyStats,
       this.vacuum,
       this.stats,
       this._refreshUI,
@@ -979,19 +977,6 @@ export var PlacesDBUtils = {
     }
 
     return logs;
-  },
-
-  /**
-   * Recalculates statistical data on the origin frecencies in the database.
-   *
-   * @return {Promise} resolves when statistics are collected.
-   */
-  originFrecencyStats() {
-    return new Promise(resolve => {
-      lazy.PlacesUtils.history.recalculateOriginFrecencyStats(() =>
-        resolve(["Recalculated origin frecency stats"])
-      );
-    });
   },
 
   /**
