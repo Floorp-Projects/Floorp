@@ -13108,7 +13108,6 @@ void Document::SetScrollToRef(nsIURI* aDocumentURI) {
   }
 }
 
-// https://html.spec.whatwg.org/#scrolling-to-a-fragment
 void Document::ScrollToRef() {
   if (mScrolledToRefAlready) {
     RefPtr<PresShell> presShell = GetPresShell();
@@ -13118,52 +13117,53 @@ void Document::ScrollToRef() {
     return;
   }
 
-  // 2. If fragment is the empty string, then return the special value top of
-  // the document.
   if (mScrollToRef.IsEmpty()) {
     return;
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell) {
-    return;
-  }
+  if (presShell) {
+    nsresult rv = NS_ERROR_FAILURE;
+    // We assume that the bytes are in UTF-8, as it says in the spec:
+    // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+    NS_ConvertUTF8toUTF16 ref(mScrollToRef);
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      // Note that GoToAnchor will handle flushing layout as needed.
+      rv = presShell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
 
-  // 3. Let potentialIndicatedElement be the result of finding a potential
-  // indicated element given document and fragment.
-  NS_ConvertUTF8toUTF16 ref(mScrollToRef);
-  auto rv = presShell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+    if (NS_FAILED(rv)) {
+      nsAutoCString buff;
+      const bool unescaped =
+          NS_UnescapeURL(mScrollToRef.BeginReading(), mScrollToRef.Length(),
+                         /*aFlags =*/0, buff);
 
-  // 4. If potentialIndicatedElement is not null, then return
-  // potentialIndicatedElement.
-  if (NS_SUCCEEDED(rv)) {
-    mScrolledToRefAlready = true;
-    return;
-  }
+      // This attempt is only necessary if characters were unescaped.
+      if (unescaped) {
+        NS_ConvertUTF8toUTF16 utf16Str(buff);
+        if (!utf16Str.IsEmpty()) {
+          rv = presShell->GoToAnchor(utf16Str,
+                                     mChangeScrollPosWhenScrollingToRef);
+        }
+      }
 
-  // 5. Let fragmentBytes be the result of percent-decoding fragment.
-  nsAutoCString fragmentBytes;
-  const bool unescaped =
-      NS_UnescapeURL(mScrollToRef.Data(), mScrollToRef.Length(),
-                     /* aFlags = */ 0, fragmentBytes);
-
-  if (!unescaped || fragmentBytes.IsEmpty()) {
-    // Another attempt is only necessary if characters were unescaped.
-    return;
-  }
-
-  // 6. Let decodedFragment be the result of running UTF-8 decode without BOM on
-  // fragmentBytes.
-  nsAutoString decodedFragment;
-  rv = UTF_8_ENCODING->DecodeWithoutBOMHandling(fragmentBytes, decodedFragment);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  // 7. Set potentialIndicatedElement to the result of finding a potential
-  // indicated element given document and decodedFragment.
-  rv = presShell->GoToAnchor(decodedFragment,
-                             mChangeScrollPosWhenScrollingToRef);
-  if (NS_SUCCEEDED(rv)) {
-    mScrolledToRefAlready = true;
+      // If UTF-8 URI failed then try to assume the string as a
+      // document's charset.
+      if (NS_FAILED(rv)) {
+        const Encoding* encoding = GetDocumentCharacterSet();
+        rv = encoding->DecodeWithoutBOMHandling(unescaped ? buff : mScrollToRef,
+                                                ref);
+        if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+          rv = presShell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+        }
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = true;
+    }
   }
 }
 

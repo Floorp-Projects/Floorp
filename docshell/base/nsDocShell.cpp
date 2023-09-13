@@ -10850,7 +10850,6 @@ nsresult nsDocShell::OpenRedirectedChannel(nsDocShellLoadState* aLoadState) {
   return NS_OK;
 }
 
-// https://html.spec.whatwg.org/#scrolling-to-a-fragment
 nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
                                     nsACString& aNewHash, uint32_t aLoadType) {
   if (!mCurrentURI) {
@@ -10880,70 +10879,87 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
   // Both the new and current URIs refer to the same page. We can now
   // browse to the hash stored in the new URI.
 
-  // If it's a load from history, we don't have any anchor jumping to do.
-  // Scrollbar position will be restored by the caller based on positions stored
-  // in session history.
-  bool scroll = aLoadType != LOAD_HISTORY && aLoadType != LOAD_RELOAD_NORMAL;
+  if (!aNewHash.IsEmpty()) {
+    // anchor is there, but if it's a load from history,
+    // we don't have any anchor jumping to do
+    bool scroll = aLoadType != LOAD_HISTORY && aLoadType != LOAD_RELOAD_NORMAL;
 
-  if (aNewHash.IsEmpty()) {
-    // 2. If fragment is the empty string, then return the special value top of
-    // the document.
-    //
-    // Tell the shell it's at an anchor without scrolling.
-    presShell->GoToAnchor(u""_ns, false);
+    // We assume that the bytes are in UTF-8, as it says in the
+    // spec:
+    // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
 
-    if (scroll) {
-      // Scroll to the top of the page. Ignore the return value; failure to
-      // scroll here (e.g. if there is no root scrollframe) is not grounds for
-      // canceling the load!
-      SetCurScrollPosEx(0, 0);
+    // We try the UTF-8 string first, and then try the document's
+    // charset (see below).  If the string is not UTF-8,
+    // conversion will fail and give us an empty Unicode string.
+    // In that case, we should just fall through to using the
+    // page's charset.
+    nsresult rv = NS_ERROR_FAILURE;
+    NS_ConvertUTF8toUTF16 uStr(aNewHash);
+    if (!uStr.IsEmpty()) {
+      rv = presShell->GoToAnchor(uStr, scroll, ScrollFlags::ScrollSmoothAuto);
     }
 
-    return NS_OK;
-  }
+    if (NS_FAILED(rv)) {
+      char* str = ToNewCString(aNewHash, mozilla::fallible);
+      if (!str) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nsUnescape(str);
+      NS_ConvertUTF8toUTF16 utf16Str(str);
+      if (!utf16Str.IsEmpty()) {
+        rv = presShell->GoToAnchor(utf16Str, scroll,
+                                   ScrollFlags::ScrollSmoothAuto);
+      }
+      free(str);
+    }
 
-  // 3. Let potentialIndicatedElement be the result of finding a potential
-  // indicated element given document and fragment.
-  NS_ConvertUTF8toUTF16 uStr(aNewHash);
-  auto rv = presShell->GoToAnchor(uStr, scroll, ScrollFlags::ScrollSmoothAuto);
+    // Above will fail if the anchor name is not UTF-8.  Need to
+    // convert from document charset to unicode.
+    if (NS_FAILED(rv)) {
+      // Get a document charset
+      NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+      Document* doc = mContentViewer->GetDocument();
+      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+      nsAutoCString charset;
+      doc->GetDocumentCharacterSet()->Name(charset);
 
-  // 4. If potentialIndicatedElement is not null, then return
-  // potentialIndicatedElement.
-  if (NS_SUCCEEDED(rv)) {
-    return NS_OK;
-  }
+      nsCOMPtr<nsITextToSubURI> textToSubURI =
+          do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-  // 5. Let fragmentBytes be the result of percent-decoding fragment.
-  nsAutoCString fragmentBytes;
-  const bool unescaped = NS_UnescapeURL(aNewHash.Data(), aNewHash.Length(),
-                                        /* aFlags = */ 0, fragmentBytes);
+      // Unescape and convert to unicode
+      nsAutoString uStr;
 
-  if (!unescaped) {
-    // Another attempt is only necessary if characters were unescaped.
-    return NS_OK;
-  }
+      rv = textToSubURI->UnEscapeAndConvert(charset, aNewHash, uStr);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-  if (fragmentBytes.IsEmpty()) {
-    // When aNewHash contains "%00", the unescaped string may be empty, and
-    // GoToAnchor asserts if we ask it to scroll to an empty ref.
+      // Ignore return value of GoToAnchor, since it will return an error
+      // if there is no such anchor in the document, which is actually a
+      // success condition for us (we want to update the session history
+      // with the new URI no matter whether we actually scrolled
+      // somewhere).
+      //
+      // When aNewHash contains "%00", unescaped string may be empty.
+      // And GoToAnchor asserts if we ask it to scroll to an empty ref.
+      presShell->GoToAnchor(uStr, scroll && !uStr.IsEmpty(),
+                            ScrollFlags::ScrollSmoothAuto);
+    }
+  } else {
+    // Tell the shell it's at an anchor, without scrolling.
     presShell->GoToAnchor(u""_ns, false);
-    return NS_OK;
+
+    // An empty anchor was found, but if it's a load from history,
+    // we don't have to jump to the top of the page. Scrollbar
+    // position will be restored by the caller, based on positions
+    // stored in session history.
+    if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL) {
+      return NS_OK;
+    }
+    // An empty anchor. Scroll to the top of the page.  Ignore the
+    // return value; failure to scroll here (e.g. if there is no
+    // root scrollframe) is not grounds for canceling the load!
+    SetCurScrollPosEx(0, 0);
   }
-
-  // 6. Let decodedFragment be the result of running UTF-8 decode without BOM on
-  // fragmentBytes.
-  nsAutoString decodedFragment;
-  rv = UTF_8_ENCODING->DecodeWithoutBOMHandling(fragmentBytes, decodedFragment);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // 7. Set potentialIndicatedElement to the result of finding a potential
-  // indicated element given document and decodedFragment.
-  //
-  // Ignore the return value of GoToAnchor, since it will return an error if
-  // there is no such anchor in the document, which is actually a success
-  // condition for us (we want to update the session history with the new URI no
-  // matter whether we actually scrolled somewhere).
-  presShell->GoToAnchor(decodedFragment, scroll, ScrollFlags::ScrollSmoothAuto);
 
   return NS_OK;
 }
