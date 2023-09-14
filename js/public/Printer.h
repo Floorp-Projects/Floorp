@@ -135,11 +135,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
 
   size_t length() const;
 
-  // Report that a string operation failed to get the memory it requested. The
-  // first call to this function calls JS_ReportOutOfMemory, and sets this
-  // Sprinter's outOfMemory flag; subsequent calls do nothing.
-  virtual void reportOutOfMemory() override;
-
   // When an OOM has already been reported on the Sprinter, this function will
   // forward this error to the JSContext given in the Sprinter initialization.
   //
