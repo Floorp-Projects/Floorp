@@ -1749,7 +1749,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     fclose(f);
   }
 
-  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
+  JSString* str = sprinter.releaseJS(cx);
   if (!str) {
     return false;
   }
@@ -6891,11 +6891,7 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   }
   str->dumpRepresentation(out, 0);
 
-  if (out.hadOutOfMemory()) {
-    return false;
-  }
-
-  JSString* rep = JS_NewStringCopyN(cx, out.string(), out.getOffset());
+  JSString* rep = out.releaseJS(cx);
   if (!rep) {
     return false;
   }
