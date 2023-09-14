@@ -52,18 +52,6 @@ class JS_PUBLIC_API GenericPrinter {
     MOZ_CRASH("Use an EscapePrinter to handle all characters");
   }
 
-  virtual void putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str);
-  virtual void putAsciiPrintable(mozilla::Span<const char16_t> str);
-
-  inline void putAsciiPrintable(const char c) {
-    MOZ_ASSERT(IsAsciiPrintable(c));
-    putChar(c);
-  }
-  inline void putAsciiPrintable(const char16_t c) {
-    MOZ_ASSERT(IsAsciiPrintable(c));
-    putChar(char(c));
-  }
-
   virtual void putString(JSContext* cx, JSString* str);
 
   // Prints a formatted string into the buffer.
