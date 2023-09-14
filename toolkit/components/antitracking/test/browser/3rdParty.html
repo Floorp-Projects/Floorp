@@ -36,9 +36,7 @@ onmessage = function(e) {
     window.allowListed =
       parts[0] === "true" &&
       (cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||
-       cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
-       (cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN &&
-        SpecialPowers.Services.prefs.getBoolPref("network.cookie.rejectForeignWithExceptions.enabled")));
+       cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
     data = parts[1];
   }
   let runnableStr = `(() => {return (${data});})();`;

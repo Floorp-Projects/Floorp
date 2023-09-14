@@ -246,8 +246,7 @@ CookieJarSettings::GetBlockingAllThirdPartyContexts(
   // for non-cookie storage types, this may change.
   *aBlockingAllThirdPartyContexts =
       mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
-      (!StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled() &&
-       mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN);
+      mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN;
   return NS_OK;
 }
 
@@ -575,15 +574,7 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
 bool CookieJarSettings::IsRejectThirdPartyContexts(uint32_t aCookieBehavior) {
   return aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
          aCookieBehavior ==
-             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
-         IsRejectThirdPartyWithExceptions(aCookieBehavior);
-}
-
-// static
-bool CookieJarSettings::IsRejectThirdPartyWithExceptions(
-    uint32_t aCookieBehavior) {
-  return aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-         StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled();
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 }
 
 NS_IMETHODIMP

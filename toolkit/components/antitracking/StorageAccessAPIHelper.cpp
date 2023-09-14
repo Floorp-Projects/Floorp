@@ -39,7 +39,6 @@
 #include "nsIOService.h"
 #include "nsIWebProgressListener.h"
 #include "nsScriptSecurityManager.h"
-#include "RejectForeignAllowList.h"
 #include "StorageAccess.h"
 #include "nsStringFwd.h"
 
@@ -143,7 +142,6 @@ StorageAccessAPIHelper::AllowAccessFor(
   }
 
   MOZ_ASSERT(
-      CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
@@ -197,9 +195,8 @@ StorageAccessAPIHelper::AllowAccessFor(
       return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                   __func__);
     }
-    if ((CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
-         behavior ==
-             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) &&
+    if (behavior ==
+            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
         !isParentThirdParty) {
       LOG(("Our window isn't a third-party window"));
       return StorageAccessPermissionGrantPromise::CreateAndReject(false,
@@ -419,9 +416,7 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
              trackingPrincipal);
     ContentBlockingNotifier::OnDecision(
         aParentContext, ContentBlockingNotifier::BlockingDecision::eBlock,
-        CookieJarSettings::IsRejectThirdPartyWithExceptions(aCookieBehavior)
-            ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
-            : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER);
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER);
     return StorageAccessPermissionGrantPromise::CreateAndReject(false,
                                                                 __func__);
   }
@@ -611,10 +606,8 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
   // via BrowsingContext. So we just ask the child to do the work.
   ContentBlockingNotifier::OnEvent(
       doc->GetChannel(), false,
-      CookieJarSettings::IsRejectThirdPartyWithExceptions(aCookieBehavior)
-          ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
-          : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-      aTrackingOrigin, Some(aReason));
+      nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER, aTrackingOrigin,
+      Some(aReason));
 }
 
 /* static */
@@ -802,8 +795,7 @@ StorageAccessAPIHelper::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
 // static
 Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
     nsICookieJarSettings* aCookieJarSettings, bool aThirdParty,
-    bool aOnRejectForeignAllowlist, bool aIsOnThirdPartySkipList,
-    bool aIsThirdPartyTracker) {
+    bool aIsOnThirdPartySkipList, bool aIsThirdPartyTracker) {
   MOZ_ASSERT(aCookieJarSettings);
   uint32_t behavior = aCookieJarSettings->GetCookieBehavior();
   switch (behavior) {
@@ -813,10 +805,7 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
       if (!aThirdParty) {
         return Some(true);
       }
-      if (!StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled()) {
-        return Some(false);
-      }
-      return Some(aOnRejectForeignAllowlist);
+      return Some(false);
     case nsICookieService::BEHAVIOR_REJECT:
       return Some(false);
     case nsICookieService::BEHAVIOR_LIMIT_FOREIGN:

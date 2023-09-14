@@ -32,7 +32,6 @@
 #include "AntiTrackingLog.h"
 #include "ContentBlockingAllowList.h"
 #include "mozIThirdPartyUtil.h"
-#include "RejectForeignAllowList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -534,8 +533,7 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
     }
   }
 
-  if ((behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-       !CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)) ||
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
     // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
     // simply rejecting the request to use the storage. In the future, if we
@@ -552,7 +550,6 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
   }
 
   MOZ_ASSERT(
-      CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
@@ -590,13 +587,8 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
       return true;
     }
   } else {
-    MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
-    if (RejectForeignAllowList::Check(document)) {
-      LOG(("This window is exceptionlisted for reject foreign"));
-      return true;
-    }
-
-    blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
+    MOZ_ASSERT_UNREACHABLE(
+        "This should be an exhaustive list of cookie behaviors possible here.");
   }
 
   Document* doc = aWindow->GetExtantDoc();
@@ -725,8 +717,7 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return true;
   }
 
-  if ((behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-       !CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)) ||
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
       behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
     // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
     // simply rejecting the request to use the storage. In the future, if we
@@ -744,7 +735,6 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   }
 
   MOZ_ASSERT(
-      CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
@@ -784,12 +774,8 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
       return true;
     }
   } else {
-    MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
-    if (httpChannel && RejectForeignAllowList::Check(httpChannel)) {
-      LOG(("This channel is exceptionlisted"));
-      return true;
-    }
-    blockedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
+    MOZ_ASSERT_UNREACHABLE(
+        "This should be an exhaustive list of cookie behaviors possible here.");
   }
 
   RefPtr<BrowsingContext> targetBC;

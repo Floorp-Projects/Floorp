@@ -13,10 +13,6 @@ add_task(async () => {
     true
   );
 
-  Services.prefs.setBoolPref(
-    "network.cookie.rejectForeignWithExceptions.enabled",
-    false
-  );
   Services.prefs.setBoolPref("dom.security.https_first", false);
 
   // Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"

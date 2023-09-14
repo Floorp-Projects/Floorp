@@ -209,32 +209,11 @@ this.AntiTracking = {
         this._createCleanupTask(cleanupFunction);
 
         this._createTask({
-          name: name + " reject foreign without exception",
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [
-            ["network.cookie.rejectForeignWithExceptions.enabled", false],
-            ...(extraPrefs || []),
-          ],
-          expectedBlockingNotifications: 0,
-          runInPrivateWindow,
-          iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
-          iframeAllow,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
           name: name + " reject foreign with exception",
           cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
           allowList: true,
           callback: callbackNonTracking,
-          extraPrefs: [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
+          extraPrefs: [...(extraPrefs || [])],
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -249,10 +228,7 @@ this.AntiTracking = {
           cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
           allowList: false,
           callback: callbackTracking,
-          extraPrefs: [
-            ["network.cookie.rejectForeignWithExceptions.enabled", false],
-            ...(extraPrefs || []),
-          ],
+          extraPrefs: [...(extraPrefs || [])],
           expectedBlockingNotifications: expectedBlockingNotifications
             ? Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN
             : 0,
@@ -260,25 +236,6 @@ this.AntiTracking = {
           iframeSandbox,
           accessRemoval,
           callbackAfterRemoval,
-          iframeAllow,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
-          thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
           iframeAllow,
         });
         this._createCleanupTask(cleanupFunction);
@@ -347,22 +304,6 @@ this.AntiTracking = {
         );
         this._createCleanupTask(cleanupFunction);
 
-        this._createWindowOpenTask(
-          name,
-          BEHAVIOR_REJECT_FOREIGN,
-          callbackTracking,
-          callbackNonTracking,
-          runInPrivateWindow,
-          iframeSandbox,
-          false,
-          [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
-          iframeAllow
-        );
-        this._createCleanupTask(cleanupFunction);
-
         // Now, check if it works for nested iframes.
         this._createWindowOpenTask(
           name,
@@ -373,22 +314,6 @@ this.AntiTracking = {
           iframeSandbox,
           true,
           extraPrefs,
-          iframeAllow
-        );
-        this._createCleanupTask(cleanupFunction);
-
-        this._createWindowOpenTask(
-          name,
-          BEHAVIOR_REJECT_FOREIGN,
-          callbackTracking,
-          callbackNonTracking,
-          runInPrivateWindow,
-          iframeSandbox,
-          true,
-          [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
           iframeAllow
         );
         this._createCleanupTask(cleanupFunction);
@@ -410,22 +335,6 @@ this.AntiTracking = {
         );
         this._createCleanupTask(cleanupFunction);
 
-        this._createUserInteractionTask(
-          name,
-          BEHAVIOR_REJECT_FOREIGN,
-          callbackTracking,
-          callbackNonTracking,
-          runInPrivateWindow,
-          iframeSandbox,
-          false,
-          [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
-          iframeAllow
-        );
-        this._createCleanupTask(cleanupFunction);
-
         // Now, check if it works for nested iframes.
         this._createUserInteractionTask(
           name,
@@ -436,22 +345,6 @@ this.AntiTracking = {
           iframeSandbox,
           true,
           extraPrefs,
-          iframeAllow
-        );
-        this._createCleanupTask(cleanupFunction);
-
-        this._createUserInteractionTask(
-          name,
-          BEHAVIOR_REJECT_FOREIGN,
-          callbackTracking,
-          callbackNonTracking,
-          runInPrivateWindow,
-          iframeSandbox,
-          true,
-          [
-            ["network.cookie.rejectForeignWithExceptions.enabled", true],
-            ...(extraPrefs || []),
-          ],
           iframeAllow
         );
         this._createCleanupTask(cleanupFunction);
