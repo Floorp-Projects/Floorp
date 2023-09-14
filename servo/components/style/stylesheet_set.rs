@@ -591,7 +591,7 @@ where
     /// Return an iterator over the flattened view of all the stylesheets.
     pub fn iter(&self) -> StylesheetIterator<S> {
         StylesheetIterator {
-            origins: OriginSet::all().iter(),
+            origins: OriginSet::all().iter_origins(),
             collections: &self.collections,
             current: None,
         }
@@ -601,7 +601,7 @@ where
     /// something external may have invalidated it.
     pub fn force_dirty(&mut self, origins: OriginSet) {
         self.invalidations.invalidate_fully();
-        for origin in origins.iter() {
+        for origin in origins.iter_origins() {
             // We don't know what happened, assume the worse.
             self.collections
                 .borrow_mut_for_origin(&origin)

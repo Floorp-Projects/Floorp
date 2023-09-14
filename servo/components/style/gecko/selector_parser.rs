@@ -30,8 +30,8 @@ bitflags! {
         const PSEUDO_CLASS_ENABLED_IN_UA_SHEETS = 1 << 0;
         const PSEUDO_CLASS_ENABLED_IN_CHROME = 1 << 1;
         const PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME =
-            NonTSPseudoClassFlag::PSEUDO_CLASS_ENABLED_IN_UA_SHEETS.bits |
-            NonTSPseudoClassFlag::PSEUDO_CLASS_ENABLED_IN_CHROME.bits;
+            NonTSPseudoClassFlag::PSEUDO_CLASS_ENABLED_IN_UA_SHEETS.bits() |
+            NonTSPseudoClassFlag::PSEUDO_CLASS_ENABLED_IN_CHROME.bits();
     }
 }
 

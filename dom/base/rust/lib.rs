@@ -46,7 +46,7 @@ bitflags! {
         /// <https://drafts.csswg.org/selectors-4/#user-invalid-pseudo>
         const USER_INVALID = 1 << 13;
         /// All the validity bits at once.
-        const VALIDITY_STATES = Self::VALID.bits | Self::INVALID.bits | Self::USER_VALID.bits | Self::USER_INVALID.bits;
+        const VALIDITY_STATES = Self::VALID.bits() | Self::INVALID.bits() | Self::USER_VALID.bits() | Self::USER_INVALID.bits();
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-broken
         const BROKEN = 1 << 14;
         /// <https://html.spec.whatwg.org/multipage/#selector-required>
@@ -61,7 +61,7 @@ bitflags! {
         /// <https://html.spec.whatwg.org/multipage/#selector-link>
         const UNVISITED = 1 << 19;
         /// <https://drafts.csswg.org/selectors-4/#the-any-link-pseudo>
-        const VISITED_OR_UNVISITED = Self::VISITED.bits | Self::UNVISITED.bits;
+        const VISITED_OR_UNVISITED = Self::VISITED.bits() | Self::UNVISITED.bits();
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-drag-over
         const DRAGOVER = 1 << 20;
         /// <https://html.spec.whatwg.org/multipage/#selector-in-range>
@@ -81,7 +81,7 @@ bitflags! {
         /// Non-standard & undocumented.
         const SUB_SUB_OPTIMUM = 1 << 28;
         /// All the above <meter> bits in one place.
-        const METER_OPTIMUM_STATES = Self::OPTIMUM.bits | Self::SUB_OPTIMUM.bits | Self::SUB_SUB_OPTIMUM.bits;
+        const METER_OPTIMUM_STATES = Self::OPTIMUM.bits() | Self::SUB_OPTIMUM.bits() | Self::SUB_SUB_OPTIMUM.bits();
         /// Non-standard & undocumented.
         const INCREMENT_SCRIPT_LEVEL = 1 << 29;
         /// <https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo>
@@ -131,16 +131,16 @@ bitflags! {
         const POPOVER_OPEN = 1u64 << 47;
 
         /// Some convenience unions.
-        const DIR_STATES = Self::LTR.bits | Self::RTL.bits;
+        const DIR_STATES = Self::LTR.bits() | Self::RTL.bits();
 
-        const DIR_ATTR_STATES = Self::HAS_DIR_ATTR.bits |
-                                Self::HAS_DIR_ATTR_LTR.bits |
-                                Self::HAS_DIR_ATTR_RTL.bits |
-                                Self::HAS_DIR_ATTR_LIKE_AUTO.bits;
+        const DIR_ATTR_STATES = Self::HAS_DIR_ATTR.bits() |
+                                Self::HAS_DIR_ATTR_LTR.bits() |
+                                Self::HAS_DIR_ATTR_RTL.bits() |
+                                Self::HAS_DIR_ATTR_LIKE_AUTO.bits();
 
-        const DISABLED_STATES = Self::DISABLED.bits | Self::ENABLED.bits;
+        const DISABLED_STATES = Self::DISABLED.bits() | Self::ENABLED.bits();
 
-        const REQUIRED_STATES = Self::REQUIRED.bits | Self::OPTIONAL_.bits;
+        const REQUIRED_STATES = Self::REQUIRED.bits() | Self::OPTIONAL_.bits();
     }
 }
 
@@ -157,6 +157,6 @@ bitflags! {
         /// LWTheme status
         const LWTHEME = 1 << 3;
 
-        const ALL_LOCALEDIR_BITS = Self::LTR_LOCALE.bits | Self::RTL_LOCALE.bits;
+        const ALL_LOCALEDIR_BITS = Self::LTR_LOCALE.bits() | Self::RTL_LOCALE.bits();
     }
 }
