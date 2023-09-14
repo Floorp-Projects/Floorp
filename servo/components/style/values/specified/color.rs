@@ -15,7 +15,7 @@ use crate::values::generics::color::{
 use crate::values::specified::calc::CalcNode;
 use crate::values::specified::Percentage;
 use crate::values::{normalize, CustomIdent};
-use cssparser_color::{AngleOrNumber, Color as CSSParserColor, NumberOrPercentage, FromParsedColor};
+use crate::color::parsing::{AngleOrNumber, Color as CSSParserColor, NumberOrPercentage, FromParsedColor, self};
 use cssparser::{Parser, Token, BasicParseErrorKind, ParseErrorKind, color::PredefinedColorSpace};
 use itoa;
 use std::fmt::{self, Write};
@@ -500,7 +500,7 @@ impl FromParsedColor for Color {
 }
 
 struct ColorParser<'a, 'b: 'a>(&'a ParserContext<'b>);
-impl<'a, 'b: 'a, 'i: 'a> cssparser_color::ColorParser<'i> for ColorParser<'a, 'b> {
+impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
     type Output = Color;
     type Error = StyleParseErrorKind<'i>;
 
@@ -601,7 +601,7 @@ impl Color {
         };
 
         let color_parser = ColorParser(&*context);
-        match input.try_parse(|i| cssparser_color::parse_color_with(&color_parser, i)) {
+        match input.try_parse(|i| parsing::parse_color_with(&color_parser, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
                     let enabled = {

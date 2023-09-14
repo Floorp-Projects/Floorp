@@ -10,7 +10,7 @@ use crate::values::computed::percentage::Percentage;
 use crate::values::generics::color::{
     GenericCaretColor, GenericColor, GenericColorMix, GenericColorOrAuto,
 };
-use cssparser_color::Color as CSSParserColor;
+use crate::color::parsing::Color as CSSParserColor;
 use std::fmt;
 use style_traits::{CssWriter, ToCss};
 

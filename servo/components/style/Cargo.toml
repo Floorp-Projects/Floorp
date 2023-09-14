@@ -33,7 +33,6 @@ atomic_refcell = "0.1"
 bitflags = "1.0"
 byteorder = "1.0"
 cssparser = "0.33"
-cssparser-color = "0.1"
 derive_more = { version = "0.99", default-features = false, features = ["add", "add_assign", "deref", "deref_mut", "from"] }
 dom = { path = "../../../dom/base/rust" }
 new_debug_unreachable = "1.0"
