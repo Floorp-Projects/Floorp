@@ -327,9 +327,15 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   }
 
   _toDefaultType(color) {
+    let unit = this.inspector.defaultColorUnit;
+    let forceUppercase = false;
+    if (unit === colorUtils.CssColor.COLORUNIT.authored) {
+      unit = colorUtils.classifyColor(this._originalColor);
+      forceUppercase = colorUtils.colorIsUppercase(this._originalColor);
+    }
+
     const colorObj = new colorUtils.CssColor(color);
-    colorObj.setAuthoredUnitFromColor(this._originalColor);
-    return colorObj.toString();
+    return colorObj.toString(unit, forceUppercase);
   }
 
   /**

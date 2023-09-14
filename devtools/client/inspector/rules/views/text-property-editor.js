@@ -555,7 +555,8 @@ TextPropertyEditor.prototype = {
       shapeSwatchClass: SHAPE_SWATCH_CLASS,
       // Only ask the parser to convert colors to the default color type specified by the
       // user if the property hasn't been changed yet.
-      defaultColorType: !propDirty,
+      useDefaultColorUnit: !propDirty,
+      defaultColorUnit: this.ruleView.inspector.defaultColorUnit,
       urlClass: "theme-link",
       fontFamilyClass: FONT_FAMILY_CLASS,
       baseURI: this.sheetHref,

@@ -5,7 +5,6 @@
 "use strict";
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
-
 const SPECIALVALUES = new Set([
   "currentcolor",
   "initial",
@@ -62,7 +61,6 @@ class CssColor {
     // returned when needed.
     this.lowerCased = colorValue.toLowerCase();
     this.authored = colorValue;
-    this.#setColorUnitUppercase(colorValue);
   }
 
   /**
@@ -77,51 +75,12 @@ class CssColor {
     hwb: "hwb",
   };
 
-  #colorUnit = null;
-  #colorUnitUppercase = false;
-
   // The value as-authored.
   authored = null;
   // A lower-cased copy of |authored|.
   lowerCased = null;
 
-  #setColorUnitUppercase(color) {
-    // Specifically exclude the case where the color is
-    // case-insensitive.  This makes it so that "#000" isn't
-    // considered "upper case" for the purposes of color cycling.
-    this.#colorUnitUppercase =
-      color === color.toUpperCase() && color !== color.toLowerCase();
-  }
-
-  get colorUnit() {
-    if (this.#colorUnit === null) {
-      const defaultUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
-      this.#colorUnit = CssColor.COLORUNIT[defaultUnit];
-      this.#setColorUnitUppercase(this.authored);
-    }
-    return this.#colorUnit;
-  }
-
-  set colorUnit(unit) {
-    this.#colorUnit = unit;
-  }
-
-  /**
-   * If the current color unit pref is "authored", then set the
-   * default color unit from the given color.  Otherwise, leave the
-   * color unit untouched.
-   *
-   * @param {String} color The color to use
-   */
-  setAuthoredUnitFromColor(color) {
-    if (
-      Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
-      CssColor.COLORUNIT.authored
-    ) {
-      this.#colorUnit = classifyColor(color);
-      this.#setColorUnitUppercase(color);
-    }
-  }
+  #currentFormat;
 
   get hasAlpha() {
     if (!this.valid) {
@@ -384,29 +343,42 @@ class CssColor {
     // Put "name" at the end as that provides a hex value if there's
     // no name for the color.
     let formats = ["hex", "hsl", "rgb", "hwb", "name"];
-    const currentFormat = classifyColor(this.toString());
+
+    let currentFormat = this.#currentFormat;
+    // If we don't have determined the current format yet
+    if (!currentFormat) {
+      // If the pref value is COLORUNIT.authored, get the actual unit from the authored color,
+      // otherwise use the pref value.
+      const defaultFormat = Services.prefs.getCharPref(COLOR_UNIT_PREF);
+      currentFormat =
+        defaultFormat === CssColor.COLORUNIT.authored
+          ? classifyColor(this.authored)
+          : defaultFormat;
+    }
     const putOnEnd = formats.splice(0, formats.indexOf(currentFormat));
     formats = [...formats, ...putOnEnd];
 
     const currentDisplayedColor = this[formats[0]];
 
+    let colorUnit;
     for (const format of formats) {
       if (this[format].toLowerCase() !== currentDisplayedColor.toLowerCase()) {
-        this.colorUnit = CssColor.COLORUNIT[format];
+        colorUnit = CssColor.COLORUNIT[format];
         break;
       }
     }
 
-    return this.toString();
+    this.#currentFormat = colorUnit;
+    return this.toString(colorUnit);
   }
 
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
-  toString() {
+  toString(colorUnit, forceUppercase) {
     let color;
 
-    switch (this.colorUnit) {
+    switch (colorUnit) {
       case CssColor.COLORUNIT.authored:
         color = this.authored;
         break;
@@ -430,8 +402,9 @@ class CssColor {
     }
 
     if (
-      this.#colorUnitUppercase &&
-      this.colorUnit != CssColor.COLORUNIT.authored
+      forceUppercase ||
+      (colorUnit != CssColor.COLORUNIT.authored &&
+        colorIsUppercase(this.authored))
     ) {
       color = color.toUpperCase();
     }
@@ -627,7 +600,7 @@ function roundTo(number, digits) {
 
 /**
  * Given a color, classify its type as one of the possible color
- * units, as known by |CssColor.colorUnit|.
+ * units, as known by |CssColor.COLORUNIT|.
  *
  * @param  {String} value
  *         The color, in any form accepted by CSS.
@@ -770,6 +743,13 @@ function calculateContrastRatio(backgroundColor, textColor) {
   return ratio > 1.0 ? ratio : 1 / ratio;
 }
 
+function colorIsUppercase(color) {
+  // Specifically exclude the case where the color is
+  // case-insensitive.  This makes it so that "#000" isn't
+  // considered "upper case" for the purposes of color cycling.
+  return color === color.toUpperCase() && color !== color.toLowerCase();
+}
+
 module.exports.colorUtils = {
   CssColor,
   rgbToHsl,
@@ -780,4 +760,5 @@ module.exports.colorUtils = {
   calculateDeltaE,
   calculateLuminance,
   blendColors,
+  colorIsUppercase,
 };

@@ -41,12 +41,10 @@ function run_test() {
  */
 function runCycle(value, times) {
   let color = new colorUtils.CssColor(value);
-  //console.log("color", value, color.toString(), color);
+  const colorUnit = colorUtils.classifyColor(value);
   for (let i = 0; i < times; i++) {
-    color.nextColorUnit();
-    //console.log("color.nextColorUnit", color.toString(), color);
-    color = new colorUtils.CssColor(color.toString());
-    //console.log("new color", color.toString(), color);
+    const newColor = color.nextColorUnit();
+    color = new colorUtils.CssColor(newColor);
   }
-  return color.toString() === value;
+  return color.toString(colorUnit) === value;
 }
