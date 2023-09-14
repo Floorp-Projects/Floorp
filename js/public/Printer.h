@@ -118,8 +118,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   }
   JS::UniqueChars release();
 
-  // Returns the string at offset |off|.
-  char* stringAt(ptrdiff_t off) const;
   // Returns the char at offset |off|.
   char& operator[](size_t off);
 
