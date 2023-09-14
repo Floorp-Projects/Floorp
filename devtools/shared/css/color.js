@@ -59,8 +59,8 @@ class CssColor {
     // Store a lower-cased version of the color to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
-    this.lowerCased = colorValue.toLowerCase();
-    this.authored = colorValue;
+    this.#lowerCased = colorValue.toLowerCase();
+    this.#authored = colorValue;
   }
 
   /**
@@ -76,11 +76,10 @@ class CssColor {
   };
 
   // The value as-authored.
-  authored = null;
-  // A lower-cased copy of |authored|.
-  lowerCased = null;
-
+  #authored = null;
   #currentFormat;
+  // A lower-cased copy of |authored|.
+  #lowerCased = null;
 
   get hasAlpha() {
     if (!this.valid) {
@@ -96,7 +95,7 @@ class CssColor {
     // We can't use InspectorUtils.isValidCSSColor as colors can be valid but we can't have
     // their rgba tuples (e.g. currentColor, accentColor, … whose actual values depends on
     // additional context we don't have here).
-    return InspectorUtils.colorToRGBA(this.authored) !== null;
+    return InspectorUtils.colorToRGBA(this.#authored) !== null;
   }
 
   /**
@@ -105,15 +104,15 @@ class CssColor {
    * 0 - 255 but rgba alpha values are only 0.0 to 1.0).
    */
   get highResTuple() {
-    const type = classifyColor(this.authored);
+    const type = classifyColor(this.#authored);
 
     if (type === CssColor.COLORUNIT.hex) {
-      return hexToRGBA(this.authored.substring(1), true);
+      return hexToRGBA(this.#authored.substring(1), true);
     }
 
     // If we reach this point then the alpha value must be in the range
     // 0.0 - 1.0 so we need to multiply it by 255.
-    const tuple = InspectorUtils.colorToRGBA(this.authored);
+    const tuple = InspectorUtils.colorToRGBA(this.#authored);
     tuple.a *= 255;
     return tuple;
   }
@@ -131,7 +130,7 @@ class CssColor {
   }
 
   get specialValue() {
-    return SPECIALVALUES.has(this.lowerCased) ? this.authored : null;
+    return SPECIALVALUES.has(this.#lowerCased) ? this.#authored : null;
   }
 
   get name() {
@@ -233,9 +232,9 @@ class CssColor {
       return invalidOrSpecialValue;
     }
     if (!this.hasAlpha) {
-      if (this.lowerCased.startsWith("rgb(")) {
+      if (this.#lowerCased.startsWith("rgb(")) {
         // The color is valid and begins with rgb(.
-        return this.authored;
+        return this.#authored;
       }
       const tuple = this.getRGBATuple();
       return "rgb(" + tuple.r + ", " + tuple.g + ", " + tuple.b + ")";
@@ -248,9 +247,9 @@ class CssColor {
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
-    if (this.lowerCased.startsWith("rgba(")) {
+    if (this.#lowerCased.startsWith("rgba(")) {
       // The color is valid and begins with rgba(.
-      return this.authored;
+      return this.#authored;
     }
     const components = this.getRGBATuple();
     return (
@@ -271,9 +270,9 @@ class CssColor {
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
-    if (this.lowerCased.startsWith("hsl(")) {
+    if (this.#lowerCased.startsWith("hsl(")) {
       // The color is valid and begins with hsl(.
-      return this.authored;
+      return this.#authored;
     }
     if (this.hasAlpha) {
       return this.hsla;
@@ -286,9 +285,9 @@ class CssColor {
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
-    if (this.lowerCased.startsWith("hsla(")) {
+    if (this.#lowerCased.startsWith("hsla(")) {
       // The color is valid and begins with hsla(.
-      return this.authored;
+      return this.#authored;
     }
     if (this.hasAlpha) {
       const a = this.getRGBATuple().a;
@@ -302,9 +301,9 @@ class CssColor {
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
-    if (this.lowerCased.startsWith("hwb(")) {
+    if (this.#lowerCased.startsWith("hwb(")) {
       // The color is valid and begins with hwb(.
-      return this.authored;
+      return this.#authored;
     }
     if (this.hasAlpha) {
       const a = this.getRGBATuple().a;
@@ -352,7 +351,7 @@ class CssColor {
       const defaultFormat = Services.prefs.getCharPref(COLOR_UNIT_PREF);
       currentFormat =
         defaultFormat === CssColor.COLORUNIT.authored
-          ? classifyColor(this.authored)
+          ? classifyColor(this.#authored)
           : defaultFormat;
     }
     const putOnEnd = formats.splice(0, formats.indexOf(currentFormat));
@@ -380,7 +379,7 @@ class CssColor {
 
     switch (colorUnit) {
       case CssColor.COLORUNIT.authored:
-        color = this.authored;
+        color = this.#authored;
         break;
       case CssColor.COLORUNIT.hex:
         color = this.hex;
@@ -404,7 +403,7 @@ class CssColor {
     if (
       forceUppercase ||
       (colorUnit != CssColor.COLORUNIT.authored &&
-        colorIsUppercase(this.authored))
+        colorIsUppercase(this.#authored))
     ) {
       color = color.toUpperCase();
     }
@@ -417,7 +416,7 @@ class CssColor {
    * appropriate.
    */
   getRGBATuple() {
-    const tuple = InspectorUtils.colorToRGBA(this.authored);
+    const tuple = InspectorUtils.colorToRGBA(this.#authored);
 
     tuple.a = parseFloat(tuple.a.toFixed(2));
 
@@ -425,9 +424,9 @@ class CssColor {
   }
 
   #hsl(maybeAlpha) {
-    if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
+    if (this.#lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
-      return this.authored;
+      return this.#authored;
     }
 
     const { r, g, b } = this.getRGBATuple();
@@ -439,9 +438,9 @@ class CssColor {
   }
 
   #hwb(maybeAlpha) {
-    if (this.lowerCased.startsWith("hwb(") && maybeAlpha === undefined) {
+    if (this.#lowerCased.startsWith("hwb(") && maybeAlpha === undefined) {
       // We can use it as-is.
-      return this.authored;
+      return this.#authored;
     }
 
     const { r, g, b } = this.getRGBATuple();
