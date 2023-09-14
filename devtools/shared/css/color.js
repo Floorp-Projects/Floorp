@@ -461,23 +461,6 @@ class CssColor {
     return tuple;
   }
 
-  /**
-   * Returns a HSLA 4-Tuple representation of a color or transparent as
-   * appropriate.
-   */
-  _getHSLATuple() {
-    const { r, g, b, a } = InspectorUtils.colorToRGBA(this.authored);
-
-    const [h, s, l] = rgbToHsl([r, g, b]);
-
-    return {
-      h,
-      s,
-      l,
-      a: parseFloat(a.toFixed(2)),
-    };
-  }
-
   #hsl(maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
