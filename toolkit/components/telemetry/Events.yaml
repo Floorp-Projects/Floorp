@@ -1431,6 +1431,7 @@ relay_integration:
       is_relay_user: >
         Whether the user is a relay user or not.
         Only present if the object is "offer_relay"
+    release_channel_collection: opt-out
   mask_panel:
     description: >
       Panels to show the state of the email alias generation
@@ -1445,6 +1446,7 @@ relay_integration:
       error_code: >
         The error code after users click the email alias generation panel.
         When the event is successful, the error_code  is 0.
+    release_channel_collection: opt-out
   opt_in_panel:
     description: >
       Panel to opt-in Firefox Relay Integration
@@ -1455,6 +1457,7 @@ relay_integration:
     products: ["firefox"]
     record_in_processes: [main]
     notification_emails: ["passwords-dev@mozilla.org"]
+    release_channel_collection: opt-out
   pref_change:
     description: >
       Checkbox in the settings page to enable/disable relay
@@ -1465,6 +1468,7 @@ relay_integration:
     products: ["firefox"]
     record_in_processes: [main]
     notification_emails: ["passwords-dev@mozilla.org"]
+    release_channel_collection: opt-out
 
 jsonfile:
   load:
