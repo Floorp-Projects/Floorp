@@ -143,7 +143,7 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   }
   virtual size_t index() const override { return length(); }
 
-  void putString(JSString* str);
+  void putString(JSContext* cx, JSString* str);
 
   size_t length() const;
 

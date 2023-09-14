@@ -249,11 +249,11 @@ void Sprinter::put(const char* s, size_t len) {
   bp[len] = '\0';
 }
 
-void Sprinter::putString(JSString* s) {
-  MOZ_ASSERT(maybeCx);
+void Sprinter::putString(JSContext* cx, JSString* s) {
+  MOZ_ASSERT(cx);
   InvariantChecker ic(this);
 
-  JSLinearString* linear = s->ensureLinear(maybeCx);
+  JSLinearString* linear = s->ensureLinear(cx);
   if (!linear) {
     return;
   }
