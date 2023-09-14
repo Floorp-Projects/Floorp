@@ -379,8 +379,7 @@ class RestyleManager {
   /**
    * Restyle an element's previous and/or next siblings.
    */
-  void RestyleSiblingsForNthOf(dom::Element* aChild,
-                               NodeSelectorFlags aParentFlags);
+  void RestyleSiblings(dom::Element* aChild, NodeSelectorFlags aParentFlags);
 
   /**
    * Posts restyle hints for siblings of an element and their descendants if the
@@ -389,13 +388,6 @@ class RestyleManager {
    */
   void MaybeRestyleForNthOfAttribute(dom::Element* aChild, nsAtom* aAttribute,
                                      const nsAttrValue* aOldValue);
-
-  void MaybeRestyleForRelativeSelectorAttribute(dom::Element* aElement,
-                                                nsAtom* aAttribute,
-                                                const nsAttrValue* aOldValue);
-  void MaybeRestyleForRelativeSelectorState(ServoStyleSet& aStyleSet,
-                                            dom::Element* aElement,
-                                            dom::ElementState aChangedBits);
 
   // This is only used to reparent things when moving them in/out of the
   // ::first-line.

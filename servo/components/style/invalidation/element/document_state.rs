@@ -6,9 +6,7 @@
 
 use crate::dom::TElement;
 use crate::invalidation::element::invalidation_map::Dependency;
-use crate::invalidation::element::invalidator::{
-    DescendantInvalidationLists, InvalidationVector, SiblingTraversalMap,
-};
+use crate::invalidation::element::invalidator::{DescendantInvalidationLists, InvalidationVector};
 use crate::invalidation::element::invalidator::{Invalidation, InvalidationProcessor};
 use crate::invalidation::element::state_and_attributes;
 use crate::stylist::CascadeData;
@@ -37,15 +35,13 @@ impl Default for InvalidationMatchingData {
 
 /// An invalidation processor for style changes due to state and attribute
 /// changes.
-pub struct DocumentStateInvalidationProcessor<'a, 'b, E: TElement, I> {
+pub struct DocumentStateInvalidationProcessor<'a, E: TElement, I> {
     rules: I,
     matching_context: MatchingContext<'a, E::Impl>,
-    traversal_map: SiblingTraversalMap<E>,
     document_states_changed: DocumentState,
-    _marker: std::marker::PhantomData<&'b ()>,
 }
 
-impl<'a, 'b, E: TElement, I> DocumentStateInvalidationProcessor<'a, 'b, E, I> {
+impl<'a, E: TElement, I> DocumentStateInvalidationProcessor<'a, E, I> {
     /// Creates a new DocumentStateInvalidationProcessor.
     #[inline]
     pub fn new(
@@ -70,17 +66,14 @@ impl<'a, 'b, E: TElement, I> DocumentStateInvalidationProcessor<'a, 'b, E, I> {
             rules,
             document_states_changed,
             matching_context,
-            traversal_map: SiblingTraversalMap::default(),
-            _marker: std::marker::PhantomData,
         }
     }
 }
 
-impl<'a, 'b, E, I> InvalidationProcessor<'b, 'a, E>
-    for DocumentStateInvalidationProcessor<'a, 'b, E, I>
+impl<'a, E, I> InvalidationProcessor<'a, E> for DocumentStateInvalidationProcessor<'a, E, I>
 where
     E: TElement,
-    I: Iterator<Item = &'b CascadeData>,
+    I: Iterator<Item = &'a CascadeData>,
 {
     fn check_outer_dependency(&mut self, _: &Dependency, _: E) -> bool {
         debug_assert!(
@@ -93,9 +86,9 @@ where
     fn collect_invalidations(
         &mut self,
         _element: E,
-        self_invalidations: &mut InvalidationVector<'b>,
-        _descendant_invalidations: &mut DescendantInvalidationLists<'b>,
-        _sibling_invalidations: &mut InvalidationVector<'b>,
+        self_invalidations: &mut InvalidationVector<'a>,
+        _descendant_invalidations: &mut DescendantInvalidationLists<'a>,
+        _sibling_invalidations: &mut InvalidationVector<'a>,
     ) -> bool {
         for cascade_data in &mut self.rules {
             let map = cascade_data.invalidation_map();
@@ -123,10 +116,6 @@ where
 
     fn matching_context(&mut self) -> &mut MatchingContext<'a, E::Impl> {
         &mut self.matching_context
-    }
-
-    fn sibling_traversal_map(&self) -> &SiblingTraversalMap<E> {
-        &self.traversal_map
     }
 
     fn recursion_limit_exceeded(&mut self, _: E) {

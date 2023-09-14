@@ -7,9 +7,7 @@
 
 use crate::context::StackLimitChecker;
 use crate::dom::{TElement, TNode, TShadowRoot};
-use crate::invalidation::element::invalidation_map::{
-    Dependency, NormalDependencyInvalidationKind, DependencyInvalidationKind, RelativeDependencyInvalidationKind
-};
+use crate::invalidation::element::invalidation_map::{Dependency, DependencyInvalidationKind};
 use selectors::matching::matches_compound_selector_from;
 use selectors::matching::{CompoundSelectorMatchingResult, MatchingContext};
 use selectors::parser::{Combinator, Component};
@@ -18,78 +16,8 @@ use smallvec::SmallVec;
 use std::fmt;
 use std::fmt::Write;
 
-struct SiblingInfo<E>
-where
-    E: TElement,
-{
-    affected: E,
-    prev_sibling: Option<E>,
-    next_sibling: Option<E>,
-}
-
-/// Traversal mapping for elements under consideration. It acts like a snapshot map,
-/// though this only "maps" one element at most.
-/// For general invalidations, this has no effect, especially since when
-/// DOM mutates, the mutation's effect should not escape the subtree being mutated.
-/// This is not the case for relative selectors, unfortunately, so we may end up
-/// traversing a portion of the DOM tree that mutated. In case the mutation is removal,
-/// its sibling relation is severed by the time the invalidation happens. This structure
-/// recovers that relation. Note - it assumes that there is only one element under this
-/// effect.
-pub struct SiblingTraversalMap<E>
-where
-    E: TElement,
-{
-    info: Option<SiblingInfo<E>>,
-}
-
-impl<E> Default for SiblingTraversalMap<E>
-where
-    E: TElement,
-{
-    fn default() -> Self {
-        Self { info: None }
-    }
-}
-
-impl<E> SiblingTraversalMap<E>
-where
-    E: TElement,
-{
-    /// Create a new traversal map with the affected element.
-    pub fn new(affected: E, prev_sibling: Option<E>, next_sibling: Option<E>) -> Self {
-        Self {
-            info: Some(SiblingInfo {
-                affected,
-                prev_sibling,
-                next_sibling,
-            }),
-        }
-    }
-
-    /// Get the element's previous sibling element.
-    pub fn next_sibling_for(&self, element: &E) -> Option<E> {
-        if let Some(ref info) = self.info {
-            if *element == info.affected {
-                return info.next_sibling;
-            }
-        }
-        element.next_sibling_element()
-    }
-
-    /// Get the element's previous sibling element.
-    pub fn prev_sibling_for(&self, element: &E) -> Option<E> {
-        if let Some(ref info) = self.info {
-            if *element == info.affected {
-                return info.prev_sibling;
-            }
-        }
-        element.prev_sibling_element()
-    }
-}
-
 /// A trait to abstract the collection of invalidations for a given pass.
-pub trait InvalidationProcessor<'a, 'b, E>
+pub trait InvalidationProcessor<'a, E>
 where
     E: TElement,
 {
@@ -129,10 +57,7 @@ where
     fn check_outer_dependency(&mut self, dependency: &Dependency, element: E) -> bool;
 
     /// The matching context that should be used to process invalidations.
-    fn matching_context(&mut self) -> &mut MatchingContext<'b, E::Impl>;
-
-    /// The traversal map that should be used to process invalidations.
-    fn sibling_traversal_map(&self) -> &SiblingTraversalMap<E>;
+    fn matching_context(&mut self) -> &mut MatchingContext<'a, E::Impl>;
 
     /// Collect invalidations for a given element's descendants and siblings.
     ///
@@ -162,18 +87,6 @@ where
 
     /// Executes an action when any descendant of `Self` is invalidated.
     fn invalidated_descendants(&mut self, element: E, child: E);
-
-    /// Executes an action when an element in a relative selector is reached.
-    /// Lets the dependency to be borrowed for further processing out of the
-    /// invalidation traversal.
-    fn found_relative_selector_invalidation(
-        &mut self,
-        _element: E,
-        _kind: RelativeDependencyInvalidationKind,
-        _relative_dependency: &'a Dependency,
-    ) {
-        debug_assert!(false, "Reached relative selector dependency");
-    }
 }
 
 /// Different invalidation lists for descendants.
@@ -200,16 +113,16 @@ impl<'a> DescendantInvalidationLists<'a> {
 
 /// The struct that takes care of encapsulating all the logic on where and how
 /// element styles need to be invalidated.
-pub struct TreeStyleInvalidator<'a, 'b, 'c, E, P: 'a>
+pub struct TreeStyleInvalidator<'a, 'b, E, P: 'a>
 where
     'b: 'a,
     E: TElement,
-    P: InvalidationProcessor<'b, 'c, E>,
+    P: InvalidationProcessor<'b, E>,
 {
     element: E,
     stack_limit_checker: Option<&'a StackLimitChecker>,
     processor: &'a mut P,
-    _marker: std::marker::PhantomData<(&'b (), &'c ())>,
+    _marker: ::std::marker::PhantomData<&'b ()>,
 }
 
 /// A vector of invalidations, optimized for small invalidation sets.
@@ -272,7 +185,7 @@ impl<'a> Invalidation<'a> {
     pub fn new(dependency: &'a Dependency, scope: Option<OpaqueElement>) -> Self {
         debug_assert!(
             dependency.selector_offset == dependency.selector.len() + 1 ||
-                dependency.normal_invalidation_kind() != NormalDependencyInvalidationKind::Element,
+                dependency.invalidation_kind() != DependencyInvalidationKind::Element,
             "No point to this, if the dependency matched the element we should just invalidate it"
         );
         Self {
@@ -394,11 +307,11 @@ impl InvalidationResult {
     }
 }
 
-impl<'a, 'b, 'c, E, P: 'a> TreeStyleInvalidator<'a, 'b, 'c, E, P>
+impl<'a, 'b, E, P: 'a> TreeStyleInvalidator<'a, 'b, E, P>
 where
     'b: 'a,
     E: TElement,
-    P: InvalidationProcessor<'b, 'c, E>,
+    P: InvalidationProcessor<'b, E>,
 {
     /// Trivially constructs a new `TreeStyleInvalidator`.
     pub fn new(
@@ -410,7 +323,7 @@ where
             element,
             stack_limit_checker,
             processor,
-            _marker: std::marker::PhantomData,
+            _marker: ::std::marker::PhantomData,
         }
     }
 
@@ -475,10 +388,7 @@ where
             return false;
         }
 
-        let mut current = self
-            .processor
-            .sibling_traversal_map()
-            .next_sibling_for(&self.element);
+        let mut current = self.element.next_sibling_element();
         let mut any_invalidated = false;
 
         while let Some(sibling) = current {
@@ -506,10 +416,7 @@ where
                 break;
             }
 
-            current = self
-                .processor
-                .sibling_traversal_map()
-                .next_sibling_for(&sibling);
+            current = sibling.next_sibling_element();
         }
 
         any_invalidated
@@ -931,20 +838,7 @@ where
                                 matched: true,
                             }
                         },
-                        Some(ref p) => {
-                            let invalidation_kind = p.invalidation_kind();
-                            match invalidation_kind {
-                                DependencyInvalidationKind::Normal(_) => &**p,
-                                DependencyInvalidationKind::Relative(kind) => {
-                                    self.processor
-                                        .found_relative_selector_invalidation(self.element, kind, &**p);
-                                    return SingleInvalidationResult {
-                                        invalidated_self: false,
-                                        matched: true,
-                                    };
-                                },
-                            }
-                        },
+                        Some(ref p) => &**p,
                     };
 
                     debug!(" > Checking outer dependency {:?}", cur_dependency);
@@ -962,7 +856,7 @@ where
                         };
                     }
 
-                    if cur_dependency.normal_invalidation_kind() == NormalDependencyInvalidationKind::Element {
+                    if cur_dependency.invalidation_kind() == DependencyInvalidationKind::Element {
                         continue;
                     }
 

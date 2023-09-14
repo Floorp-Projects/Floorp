@@ -8,9 +8,7 @@
 use crate::context::QuirksMode;
 use crate::dom::{TDocument, TElement, TNode, TShadowRoot};
 use crate::invalidation::element::invalidation_map::Dependency;
-use crate::invalidation::element::invalidator::{
-    DescendantInvalidationLists, Invalidation, SiblingTraversalMap,
-};
+use crate::invalidation::element::invalidator::{DescendantInvalidationLists, Invalidation};
 use crate::invalidation::element::invalidator::{InvalidationProcessor, InvalidationVector};
 use crate::selector_parser::SelectorImpl;
 use crate::values::AtomIdent;
@@ -140,19 +138,18 @@ impl<E: TElement> SelectorQuery<E> for QueryFirst {
     }
 }
 
-struct QuerySelectorProcessor<'a, 'b, E, Q>
+struct QuerySelectorProcessor<'a, E, Q>
 where
     E: TElement + 'a,
     Q: SelectorQuery<E>,
     Q::Output: 'a,
 {
     results: &'a mut Q::Output,
-    matching_context: MatchingContext<'b, E::Impl>,
-    traversal_map: SiblingTraversalMap<E>,
+    matching_context: MatchingContext<'a, E::Impl>,
     dependencies: &'a [Dependency],
 }
 
-impl<'a, 'b, E, Q> InvalidationProcessor<'a, 'b, E> for QuerySelectorProcessor<'a, 'b, E, Q>
+impl<'a, E, Q> InvalidationProcessor<'a, E> for QuerySelectorProcessor<'a, E, Q>
 where
     E: TElement + 'a,
     Q: SelectorQuery<E>,
@@ -208,12 +205,8 @@ where
         false
     }
 
-    fn matching_context(&mut self) -> &mut MatchingContext<'b, E::Impl> {
+    fn matching_context(&mut self) -> &mut MatchingContext<'a, E::Impl> {
         &mut self.matching_context
-    }
-
-    fn sibling_traversal_map(&self) -> &SiblingTraversalMap<E> {
-        &self.traversal_map
     }
 
     fn should_process_descendants(&mut self, _: E) -> bool {
@@ -795,7 +788,6 @@ pub fn query_selector<E, Q>(
         let mut processor = QuerySelectorProcessor::<E, Q> {
             results,
             matching_context,
-            traversal_map: SiblingTraversalMap::default(),
             dependencies: &dependencies,
         };
 
