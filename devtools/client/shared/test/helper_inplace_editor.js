@@ -135,8 +135,7 @@ async function testCompletion(
         swatchSpan[0].style.backgroundColor
       );
       const swatchColor = color.rgba;
-      color.newColor(postLabel);
-      const postColor = color.rgba;
+      const postColor = new colorUtils.CssColor(postLabel).rgba;
       ok(swatchColor == postColor, "Color swatch matches postLabel value");
     } else {
       ok(swatchSpan.length === 0, "As expected no swatches were available");

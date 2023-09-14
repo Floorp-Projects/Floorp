@@ -49,14 +49,20 @@ const SPECIALVALUES = new Set([
  *
  *   color.toString() === "#f00"; // Outputs the color type determined in the
  *                                   COLOR_UNIT_PREF constant (above).
- *   // Color objects can be reused
- *   color.newColor("green") === "#0f0"; // true
  *
  *   Valid values for COLOR_UNIT_PREF are contained in CssColor.COLORUNIT.
  */
 class CssColor {
+  /**
+   * @param  {String} colorValue: Any valid color string
+   */
   constructor(colorValue) {
-    this.newColor(colorValue);
+    // Store a lower-cased version of the color to help with format
+    // testing.  The original text is kept as well so it can be
+    // returned when needed.
+    this.lowerCased = colorValue.toLowerCase();
+    this.authored = colorValue;
+    this.#setColorUnitUppercase(colorValue);
   }
 
   /**
@@ -370,22 +376,6 @@ class CssColor {
       return "";
     }
     return false;
-  }
-
-  /**
-   * Change color
-   *
-   * @param  {String} color
-   *         Any valid color string
-   */
-  newColor(color) {
-    // Store a lower-cased version of the color to help with format
-    // testing.  The original text is kept as well so it can be
-    // returned when needed.
-    this.lowerCased = color.toLowerCase();
-    this.authored = color;
-    this.#setColorUnitUppercase(color);
-    return this;
   }
 
   nextColorUnit() {
