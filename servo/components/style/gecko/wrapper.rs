@@ -298,6 +298,11 @@ impl<'ln> GeckoNode<'ln> {
     }
 
     #[inline]
+    fn selector_flags(&self) -> u32 {
+        self.selector_flags_atomic().load(Ordering::Relaxed)
+    }
+
+    #[inline]
     fn set_selector_flags(&self, flags: u32) {
         self.selector_flags_atomic().fetch_or(flags, Ordering::Relaxed);
     }
@@ -1717,6 +1722,25 @@ impl<'le> TElement for GeckoElement<'le> {
             if self.local_name().as_ptr() == atom!("math").as_ptr() {
                 hints.push(MATHML_LANG_RULE.clone());
             }
+        }
+    }
+
+    fn has_selector_flags(&self, flags: ElementSelectorFlags) -> bool {
+        let node_flags = selector_flags_to_node_flags(flags);
+        self.as_node().selector_flags() & node_flags == node_flags
+    }
+
+    fn relative_selector_search_direction(&self) -> Option<ElementSelectorFlags> {
+        use crate::gecko_bindings::structs::NodeSelectorFlags;
+        let flags = self.as_node().selector_flags();
+        if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionAncestorSibling.0) != 0 {
+            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING)
+        } else if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionAncestor.0) != 0 {
+            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR)
+        } else if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionSibling.0) != 0 {
+            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
+        } else {
+            None
         }
     }
 }

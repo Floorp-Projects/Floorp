@@ -11,8 +11,10 @@ use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
 use selectors::matching::{MatchingForInvalidation, SelectorCaches};
+use selectors::Element;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
+use style::invalidation::element::element_wrapper::{ElementWrapper, ElementSnapshot};
 use style::values::generics::color::ColorMixFlags;
 use std::collections::BTreeSet;
 use std::fmt::Write;
@@ -93,6 +95,11 @@ use style::gecko_bindings::sugar::ownership::Strong;
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
     GlobalStyleData, PlatformThreadHandle, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
+};
+use style::invalidation::element::invalidation_map::RelativeSelectorInvalidationMap;
+use style::invalidation::element::invalidator::InvalidationResult;
+use style::invalidation::element::relative_selector::{
+    RelativeSelectorDependencyCollector, RelativeSelectorInvalidator,
 };
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
@@ -5793,7 +5800,6 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     can_use_cache: bool,
     raw_data: &PerDocumentStyleData,
 ) -> Strong<ComputedValues> {
-    use selectors::Element;
     debug_assert!(!snapshots.is_null());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -6740,6 +6746,200 @@ pub extern "C" fn Servo_StyleSet_MightHaveNthOfAttributeDependency(
     }
 }
 
+fn relative_selector_invalidated_at(element: GeckoElement, result: &InvalidationResult) {
+    if result.has_invalidated_siblings() {
+        let parent = element
+            .traversal_parent()
+            .expect("How could we invalidate siblings without a common parent?");
+        unsafe {
+            parent.set_dirty_descendants();
+            bindings::Gecko_NoteDirtySubtreeForInvalidation(parent.0);
+        }
+    } else if result.has_invalidated_descendants() {
+        unsafe { bindings::Gecko_NoteDirtySubtreeForInvalidation(element.0) };
+    } else if result.has_invalidated_self() {
+        unsafe { bindings::Gecko_NoteDirtyElement(element.0) };
+    }
+}
+
+fn add_relative_selector_attribute_dependency<'a>(
+    element: &GeckoElement<'a>,
+    scope: &Option<GeckoElement<'a>>,
+    invalidation_map: &'a RelativeSelectorInvalidationMap,
+    attribute: &AtomIdent,
+    collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
+) {
+    match invalidation_map
+        .map
+        .other_attribute_affecting_selectors
+        .get(attribute)
+    {
+        Some(v) => {
+            for dependency in v {
+                collector.add_dependency(dependency, *element, *scope);
+            }
+        },
+        None => (),
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    old_id: *mut nsAtom,
+    new_id: *mut nsAtom,
+) {
+    let data = raw_data.borrow();
+    let element = GeckoElement(element);
+
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let invalidator = RelativeSelectorInvalidator {
+        element,
+        quirks_mode,
+        invalidated: relative_selector_invalidated_at,
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, quirks_mode, collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+            relative_selector_dependencies_for_id(
+                old_id,
+                new_id,
+                element,
+                scope,
+                quirks_mode,
+                &invalidation_map,
+                collector
+            );
+            add_relative_selector_attribute_dependency(
+                element,
+                &scope,
+                invalidation_map,
+                &AtomIdent(atom!("id")),
+                collector,
+            );
+        },
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    snapshots: &ServoElementSnapshotTable,
+) {
+    let data = raw_data.borrow();
+    let element = GeckoElement(element);
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let invalidator = RelativeSelectorInvalidator {
+        element,
+        quirks_mode,
+        invalidated: relative_selector_invalidated_at,
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, quirks_mode, mut collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+
+            relative_selector_dependencies_for_class(
+                &classes_changed(element, snapshots),
+                &element,
+                scope,
+                quirks_mode,
+                invalidation_map,
+                collector
+            );
+            add_relative_selector_attribute_dependency(
+                element,
+                &scope,
+                invalidation_map,
+                &AtomIdent(atom!("class")),
+                &mut collector,
+            );
+        },
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    local_name: *mut nsAtom,
+) {
+    let data = raw_data.borrow();
+    let element = GeckoElement(element);
+
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    unsafe {
+        AtomIdent::with(local_name, |atom| {
+            let invalidator = RelativeSelectorInvalidator {
+                element,
+                quirks_mode,
+                invalidated: relative_selector_invalidated_at,
+                _marker: std::marker::PhantomData,
+            };
+
+            invalidator.invalidate_relative_selectors_for_this(
+                &data.stylist,
+                |element, scope, data, _quirks_mode, mut collector| {
+                    add_relative_selector_attribute_dependency(
+                        element,
+                        &scope,
+                        data.relative_selector_invalidation_map(),
+                        atom,
+                        &mut collector,
+                    );
+                },
+            );
+        })
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    state: u64,
+) {
+    let element = GeckoElement(element);
+
+    let state = match ElementState::from_bits(state) {
+        Some(state) => state,
+        None => return,
+    };
+    let data = raw_data.borrow();
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+
+    let invalidator = RelativeSelectorInvalidator {
+        element,
+        quirks_mode,
+        invalidated: relative_selector_invalidated_at,
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, quirks_mode, collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+            invalidation_map
+                .map
+                .state_affecting_selectors
+                .lookup_with_additional(*element, quirks_mode, None, &[], state, |dependency| {
+                    if !dependency.state.intersects(state) {
+                        return true;
+                    }
+                    collector.add_dependency(&dependency.dep, *element, *scope);
+                    true
+                });
+        },
+    );
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_HasStateDependency(
     raw_data: &PerDocumentStyleData,
@@ -6889,6 +7089,106 @@ pub extern "C" fn Servo_CssUrl_IsLocalRef(url: &url::CssUrl) -> bool {
     url.is_fragment()
 }
 
+fn relative_selector_dependencies_for_id<'a>(
+    old_id: *const nsAtom,
+    new_id: *const nsAtom,
+    element: &GeckoElement<'a>,
+    scope: &Option<GeckoElement<'a>>,
+    quirks_mode: QuirksMode,
+    invalidation_map: &'a RelativeSelectorInvalidationMap,
+    collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
+) {
+    [old_id, new_id].iter().filter(|id| !id.is_null()).for_each(|id| {
+        unsafe {
+            AtomIdent::with(*id, |atom| {
+                match invalidation_map.map.id_to_selector.get(atom, quirks_mode) {
+                    Some(v) => {
+                        for dependency in v {
+                            collector.add_dependency(dependency, *element, *scope);
+                        }
+                    },
+                    None => (),
+                };
+            })
+        }
+    });
+}
+
+fn relative_selector_dependencies_for_class<'a>(
+    classes_changed: &SmallVec<[Atom; 8]>,
+    element: &GeckoElement<'a>,
+    scope: &Option<GeckoElement<'a>>,
+    quirks_mode: QuirksMode,
+    invalidation_map: &'a RelativeSelectorInvalidationMap,
+    collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
+) {
+    classes_changed.iter().for_each(|atom| {
+        match invalidation_map
+            .map
+            .class_to_selector
+            .get(atom, quirks_mode)
+        {
+            Some(v) => {
+                for dependency in v {
+                    collector.add_dependency(dependency, *element, *scope);
+                }
+            },
+            None => (),
+        };
+    });
+}
+
+fn process_relative_selector_invalidations(
+    element: &GeckoElement,
+    snapshot_table: &ServoElementSnapshotTable,
+    data: &PerDocumentStyleDataImpl,
+) {
+    let snapshot = match snapshot_table.get(element) {
+        None => return,
+        Some(s) => s,
+    };
+    let state_changes = ElementWrapper::new(*element, snapshot_table).state_changes();
+    let classes_changed = classes_changed(element, snapshot_table);
+
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let invalidator = RelativeSelectorInvalidator {
+        element: *element,
+        quirks_mode,
+        invalidated: relative_selector_invalidated_at,
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, quirks_mode, collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+            if snapshot.id_changed() {
+                relative_selector_dependencies_for_id(
+                    element.id().map(|id| id.as_ptr().cast_const()).unwrap_or(ptr::null()),
+                    snapshot.id_attr().map(|id| id.as_ptr().cast_const()).unwrap_or(ptr::null()),
+                    element,
+                    scope,
+                    quirks_mode,
+                    invalidation_map,
+                    collector,
+                );
+            }
+            relative_selector_dependencies_for_class(&classes_changed, element, scope, quirks_mode, invalidation_map, collector);
+            snapshot.each_attr_changed(|attr| add_relative_selector_attribute_dependency(element, &scope, invalidation_map, attr, collector));
+            invalidation_map
+                .map
+                .state_affecting_selectors
+                .lookup_with_additional(*element, quirks_mode, None, &[], state_changes, |dependency| {
+                    if !dependency.state.intersects(state_changes) {
+                        return true;
+                    }
+                    collector.add_dependency(&dependency.dep, *element, *scope);
+                    true
+                });
+        },
+    );
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_ProcessInvalidations(
     set: &PerDocumentStyleData,
@@ -6901,8 +7201,16 @@ pub extern "C" fn Servo_ProcessInvalidations(
     debug_assert!(element.has_snapshot());
     debug_assert!(!element.handled_snapshot());
 
+    let snapshot_table = unsafe { &*snapshots };
+    let per_doc_data = set.borrow();
+    process_relative_selector_invalidations(&element, snapshot_table, &per_doc_data);
+
     let mut data = element.mutate_data();
-    debug_assert!(data.is_some());
+    if data.is_none() {
+        // Snapshot for unstyled element is really only meant for relative selector
+        // invalidation, so this is fine.
+        return;
+    }
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -6912,7 +7220,7 @@ pub extern "C" fn Servo_ProcessInvalidations(
         &guard,
         &per_doc_data.stylist,
         TraversalFlags::empty(),
-        unsafe { &*snapshots },
+        snapshot_table,
     );
     let mut data = data.as_mut().map(|d| &mut **d);
 
