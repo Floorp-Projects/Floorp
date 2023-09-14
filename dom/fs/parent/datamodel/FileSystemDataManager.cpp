@@ -525,25 +525,22 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   mState = State::Opening;
 
-  RefPtr<quota::ClientDirectoryLock> directoryLock =
-      mQuotaManager->CreateDirectoryLock(
-          {mOriginMetadata, mozilla::dom::quota::Client::FILESYSTEM},
-          /* aExclusive */ false);
+  mQuotaManager
+      ->OpenClientDirectory(
+          {mOriginMetadata, mozilla::dom::quota::Client::FILESYSTEM})
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr<FileSystemDataManager>(this)](
+              quota::ClientDirectoryLockPromise::ResolveOrRejectValue&& value) {
+            if (value.IsReject()) {
+              return BoolPromise::CreateAndReject(value.RejectValue(),
+                                                  __func__);
+            }
 
-  directoryLock->Acquire()
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr<FileSystemDataManager>(this),
-              directoryLock = directoryLock](
-                 const BoolPromise::ResolveOrRejectValue& value) mutable {
-               if (value.IsReject()) {
-                 return BoolPromise::CreateAndReject(value.RejectValue(),
-                                                     __func__);
-               }
+            self->mDirectoryLock = std::move(value.ResolveValue());
 
-               self->mDirectoryLock = std::move(directoryLock);
-
-               return BoolPromise::CreateAndResolve(true, __func__);
-             })
+            return BoolPromise::CreateAndResolve(true, __func__);
+          })
       ->Then(mQuotaManager->IOThread(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
