@@ -27,7 +27,7 @@ async function test_bfcache_telemetry(probeInParent) {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL1);
 
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, URL2);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, URL2);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let bfcacheCombo = await getBFCacheComboTelemetry(probeInParent);

@@ -37,7 +37,7 @@ function test() {
   );
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "bug645699.html");
+  BrowserTestUtils.startLoadingURIString(gBrowser, TESTROOT + "bug645699.html");
 }
 
 function allow_blocked(installInfo) {

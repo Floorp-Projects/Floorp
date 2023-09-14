@@ -149,7 +149,7 @@ add_task(async function test_usernameOnlyForm() {
       { contentIds: ids, expected: true },
       task
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       "data:text/html;charset=utf-8," +
         "<html><body>" +
@@ -181,7 +181,7 @@ add_task(async function test_nonSupportedInputType() {
       { contentIds: ids, expected: false },
       task
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       "data:text/html;charset=utf-8," +
         "<html><body>" +
@@ -215,7 +215,7 @@ add_task(async function test_usernameOnlyFormPrefOff() {
       { contentIds: ids, expected: false },
       task
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       "data:text/html;charset=utf-8," +
         "<html><body>" +

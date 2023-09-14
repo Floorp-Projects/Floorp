@@ -21,7 +21,7 @@ declTest("contentWindow null when inner window inactive", {
 
     let url = CONTENT_WINDOW_URL + "?2";
     let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-    BrowserTestUtils.loadURIString(browser, url);
+    BrowserTestUtils.startLoadingURIString(browser, url);
     await loaded;
 
     let result = await actorParent.sendQuery("checkActor");

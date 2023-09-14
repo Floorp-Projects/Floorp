@@ -27,7 +27,7 @@ add_task(async function test_exit_background_customize_mode() {
   await finishedCustomizing;
 
   let newURL = "http://example.com/";
-  BrowserTestUtils.loadURIString(custTab.linkedBrowser, newURL);
+  BrowserTestUtils.startLoadingURIString(custTab.linkedBrowser, newURL);
   await BrowserTestUtils.browserLoaded(custTab.linkedBrowser, false, newURL);
 
   Assert.equal(

@@ -33,7 +33,10 @@ add_task(async function () {
   // flag will be applied to the loadgroup, such that the sub resources
   // are forced to be revalidated. So we use `BrowserTestUtils.loadURI` to
   // avoid having `VALIDATE_ALWAYS` applied.
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, IMAGE_CACHE_URL);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    IMAGE_CACHE_URL
+  );
   await waitForEvents;
 
   const requests = document.querySelectorAll(".request-list-item");

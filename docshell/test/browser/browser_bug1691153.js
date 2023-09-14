@@ -20,7 +20,7 @@ add_task(async () => {
   );
   info("new tab loaded");
 
-  BrowserTestUtils.loadURIString(browser, HTML_URI);
+  BrowserTestUtils.startLoadingURIString(browser, HTML_URI);
   await browserLoaded;
   info("The test page has loaded!");
 

@@ -48,7 +48,7 @@ add_task(async function unknownContentType_title_with_pref_enabled() {
 
   is(gBrowser.contentTitle, "Test Page", "Should have the right title.");
 
-  BrowserTestUtils.loadURIString(browser, unknown_url);
+  BrowserTestUtils.startLoadingURIString(browser, unknown_url);
   let win = await waitForNewWindow();
   is(
     win.location.href,
@@ -73,7 +73,7 @@ add_task(async function unknownContentType_title_with_pref_disabled() {
 
   is(gBrowser.contentTitle, "Test Page", "Should have the right title.");
 
-  BrowserTestUtils.loadURIString(browser, unknown_url);
+  BrowserTestUtils.startLoadingURIString(browser, unknown_url);
   // If the pref is disabled, then the downloads panel should open right away
   // since there is no UCT window prompt to block it.
   let waitForPanelShown = BrowserTestUtils.waitForCondition(() => {

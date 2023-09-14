@@ -230,7 +230,7 @@ add_task(async function testPermissionHints() {
 
     await closePermissionPopup();
     let loaded = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURIString(browser, PERMISSIONS_PAGE);
+    BrowserTestUtils.startLoadingURIString(browser, PERMISSIONS_PAGE);
     await loaded;
     await openPermissionPopup();
 

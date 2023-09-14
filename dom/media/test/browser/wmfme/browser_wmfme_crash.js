@@ -21,7 +21,7 @@ add_task(async function testPlaybackRecoveryFromCrash() {
     window.gBrowser,
     "about:blank"
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, VIDEO_PAGE);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await playVideo(tab);

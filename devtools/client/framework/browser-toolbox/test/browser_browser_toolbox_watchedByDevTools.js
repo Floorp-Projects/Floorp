@@ -80,7 +80,7 @@ add_task(async function () {
     false,
     encodeURI(EXAMPLE_ORG_URI)
   );
-  BrowserTestUtils.loadURIString(newTab.linkedBrowser, EXAMPLE_ORG_URI);
+  BrowserTestUtils.startLoadingURIString(newTab.linkedBrowser, EXAMPLE_ORG_URI);
   await onBrowserLoaded;
 
   isnot(

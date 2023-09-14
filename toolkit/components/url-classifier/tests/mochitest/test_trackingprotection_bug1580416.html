@@ -35,7 +35,7 @@ function testOnWindow(contentPage) {
                               subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
-            BrowserTestUtils.loadURIString(win.gBrowser, contentPage);
+            BrowserTestUtils.startLoadingURIString(win.gBrowser, contentPage);
             return;
           }
           win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -48,7 +48,7 @@ function testOnWindow(contentPage) {
           }, false, true);
         }, true);
         SimpleTest.executeSoon(function() {
-          BrowserTestUtils.loadURIString(win.gBrowser, contentPage);
+          BrowserTestUtils.startLoadingURIString(win.gBrowser, contentPage);
         });
       });
     }, {capture: true, once: true});

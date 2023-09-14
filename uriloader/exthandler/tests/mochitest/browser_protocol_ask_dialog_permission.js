@@ -128,7 +128,7 @@ function useServerRedirect(serverRedirect) {
       ROOT_PATH +
       "redirect_helper.sjs?" +
       params.toString();
-    BrowserTestUtils.loadURIString(browser, uri);
+    BrowserTestUtils.startLoadingURIString(browser, uri);
   };
 }
 
@@ -1300,7 +1300,7 @@ add_task(async function test_redirect_principal_js() {
           ROOT_PATH +
           "script_redirect.html?" +
           params.toString();
-        BrowserTestUtils.loadURIString(browser, uri);
+        BrowserTestUtils.startLoadingURIString(browser, uri);
       },
       permDialogOptions: {
         checkboxOrigin: ORIGIN1,

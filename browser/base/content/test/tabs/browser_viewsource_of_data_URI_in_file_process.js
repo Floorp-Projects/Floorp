@@ -23,7 +23,7 @@ add_task(async function () {
       false,
       DATA_URI
     );
-    BrowserTestUtils.loadURIString(fileBrowser, DATA_URI);
+    BrowserTestUtils.startLoadingURIString(fileBrowser, DATA_URI);
     let href = await promiseLoad;
     is(href, DATA_URI, "Check data URI loaded.");
     let dataPid = await SpecialPowers.spawn(fileBrowser, [], () => {

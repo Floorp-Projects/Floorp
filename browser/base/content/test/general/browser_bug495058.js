@@ -13,7 +13,7 @@ const URIS = [
 add_task(async function () {
   for (let uri of URIS) {
     let tab = BrowserTestUtils.addTab(gBrowser);
-    BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
+    BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, uri);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     let isRemote = tab.linkedBrowser.isRemoteBrowser;
 

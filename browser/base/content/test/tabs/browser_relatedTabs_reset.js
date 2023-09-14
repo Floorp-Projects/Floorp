@@ -42,7 +42,7 @@ add_task(async function () {
   function loadTab(tab, url) {
     let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     info("Loading page: " + url);
-    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
     return loaded;
   }
 

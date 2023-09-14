@@ -93,7 +93,7 @@ add_task(async function test_creation() {
   // Open a second tab, save session, ensure that the correct files exist.
   info("Testing situation after a second write");
   let URL2 = URL_BASE + "?second_write";
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, URL2);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, URL2);
   await promiseBrowserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
   await SessionSaver.run();

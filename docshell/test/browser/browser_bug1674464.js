@@ -12,7 +12,7 @@ add_task(async function test_backAndReload() {
       await BrowserTestUtils.crashFrame(browser);
 
       info("Start second load.");
-      BrowserTestUtils.loadURIString(browser, DUMMY_2);
+      BrowserTestUtils.startLoadingURIString(browser, DUMMY_2);
       await BrowserTestUtils.waitForLocationChange(gBrowser, DUMMY_2);
 
       browser.goBack();

@@ -139,7 +139,7 @@ add_task(async function testBackForwardButtonPress() {
   await BrowserTestUtils.withNewTab(
     "https://example.com/1",
     async function (aBrowser) {
-      BrowserTestUtils.loadURIString(aBrowser, "https://example.com/2");
+      BrowserTestUtils.startLoadingURIString(aBrowser, "https://example.com/2");
 
       await BrowserTestUtils.browserLoaded(aBrowser);
       let backButton = document.getElementById("back-button");

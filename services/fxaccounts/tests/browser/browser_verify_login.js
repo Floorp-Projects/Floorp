@@ -12,7 +12,10 @@ add_task(async function () {
   };
   info("testVerifyNewSignin");
   setupMockAlertsService();
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    "about:mozilla"
+  );
   await waitForDocLoadComplete();
 
   let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);

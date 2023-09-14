@@ -51,7 +51,7 @@ var check_use_counter_worker = async function (
     worker_type
   );
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
     gHttpTestRoot + "file_use_counter_worker.html"
   );

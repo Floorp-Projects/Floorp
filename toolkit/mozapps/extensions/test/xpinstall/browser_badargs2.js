@@ -35,7 +35,7 @@ function test() {
     expectUncaughtException();
   }
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );

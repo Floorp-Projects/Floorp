@@ -11,7 +11,7 @@ async function testLastClosedActionsEntries() {
   SessionStore.resetLastClosedActions();
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     win2.gBrowser.selectedBrowser,
     "https://www.mozilla.org/"
   );
@@ -102,7 +102,7 @@ add_task(async function test_undo_last_action() {
   // open and close a window, then reopen it
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
   Assert.equal(win2.gBrowser.tabs.length, 1, "Second window has one open tab");
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     win2.gBrowser.selectedBrowser,
     "https://example.com/"
   );

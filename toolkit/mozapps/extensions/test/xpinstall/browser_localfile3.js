@@ -23,7 +23,7 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    BrowserTestUtils.loadURIString(gBrowser, xpipath);
+    BrowserTestUtils.startLoadingURIString(gBrowser, xpipath);
   });
 }
 

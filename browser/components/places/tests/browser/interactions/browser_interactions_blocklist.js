@@ -42,7 +42,7 @@ async function loadBlockedUrl(expectRecording) {
   await BrowserTestUtils.withNewTab(ALLOWED_TEST_URL, async browser => {
     Interactions._pageViewStartTime = Cu.now() - 10000;
 
-    BrowserTestUtils.loadURIString(browser, BLOCKED_TEST_URL);
+    BrowserTestUtils.startLoadingURIString(browser, BLOCKED_TEST_URL);
     await BrowserTestUtils.browserLoaded(browser, false, BLOCKED_TEST_URL);
 
     await assertDatabaseValues([
@@ -54,7 +54,7 @@ async function loadBlockedUrl(expectRecording) {
 
     Interactions._pageViewStartTime = Cu.now() - 20000;
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     if (expectRecording) {

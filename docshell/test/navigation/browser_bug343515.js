@@ -69,7 +69,7 @@ add_task(async function () {
   });
 
   // Navigate tab 2 to a different page
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     ctx.tab2Browser,
     testPath + "bug343515_pg3.html"
   );
@@ -172,7 +172,7 @@ add_task(async function () {
   await BrowserTestUtils.switchTab(gBrowser, ctx.tab1);
 
   // Navigate to page 3
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     ctx.tab1Browser,
     testPath + "bug343515_pg3.html"
   );

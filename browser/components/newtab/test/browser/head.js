@@ -225,7 +225,7 @@ async function waitForPreloaded(browser) {
  */
 async function waitForUrlLoad(url) {
   let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
 }
 

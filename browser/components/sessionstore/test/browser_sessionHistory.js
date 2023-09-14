@@ -18,7 +18,7 @@ add_task(async function test_load_start() {
 
   // Load a new URI.
   let historyReplacePromise = promiseOnHistoryReplaceEntry(browser);
-  BrowserTestUtils.loadURIString(browser, PAGE);
+  BrowserTestUtils.startLoadingURIString(browser, PAGE);
 
   // Remove the tab before it has finished loading.
   await historyReplacePromise;
@@ -90,7 +90,7 @@ add_task(async function test_pageshow() {
   await promiseBrowserLoaded(browser);
 
   // Create a second shistory entry.
-  BrowserTestUtils.loadURIString(browser, URL2);
+  BrowserTestUtils.startLoadingURIString(browser, URL2);
   await promiseBrowserLoaded(browser);
 
   // Wait until shistory changes.
@@ -200,7 +200,7 @@ add_task(async function test_about_page_navigate() {
   // Verify that the title is also recorded.
   is(entries[0].title, "about:blank", "title is correct");
 
-  BrowserTestUtils.loadURIString(browser, "about:robots");
+  BrowserTestUtils.startLoadingURIString(browser, "about:robots");
   await promiseBrowserLoaded(browser);
 
   // Check that we have changed the history entry.

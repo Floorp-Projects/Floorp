@@ -131,7 +131,7 @@ add_task(async function resume_delayed_media_when_enable_blocking_autoplay() {
   info(
     "- check that loading a new URI in page clears gesture activation status -"
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, PAGE);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- should block autoplay again as gesture activation status cleared -");

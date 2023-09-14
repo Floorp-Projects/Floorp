@@ -26,7 +26,10 @@ function test() {
     BrowserTestUtils.browserLoaded(aWin.gBrowser.selectedBrowser).then(
       aCallback
     );
-    BrowserTestUtils.loadURIString(aWin.gBrowser.selectedBrowser, pageURI);
+    BrowserTestUtils.startLoadingURIString(
+      aWin.gBrowser.selectedBrowser,
+      pageURI
+    );
   }
 
   testOnWindow(true, function (win) {

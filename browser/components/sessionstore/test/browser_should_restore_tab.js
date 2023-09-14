@@ -103,7 +103,7 @@ add_task(async function test_navigated_about_home() {
     "https://example.com/"
   );
   await tabOpenedAndSwitchedTo;
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:home");
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, "about:home");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   // even if we end up on an ignorable URL,
   // if there's meaningful history, we should save this tab

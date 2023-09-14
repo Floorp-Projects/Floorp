@@ -46,7 +46,7 @@ add_task(async function test_reader_button() {
       e.originalTarget.location.href.endsWith("HiddenNodes.html") &&
       e.originalTarget.document.readyState == "complete"
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
   await paintPromise;
 
   is_element_hidden(

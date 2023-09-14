@@ -23,7 +23,7 @@ add_task(async function test() {
     "pageshow",
     true
   );
-  BrowserTestUtils.loadURIString(browser, "http://mochi.test:8888/");
+  BrowserTestUtils.startLoadingURIString(browser, "http://mochi.test:8888/");
   await pageShowPromise;
 
   ok(pageShowPromise, "need to check something");

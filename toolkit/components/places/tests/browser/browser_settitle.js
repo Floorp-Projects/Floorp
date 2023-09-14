@@ -29,7 +29,7 @@ add_task(async function () {
   const url2 =
     "http://example.com/tests/toolkit/components/places/tests/browser/title2.html";
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url2);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url2);
   await loadPromise;
 
   const events = await titleChangedPromise;
