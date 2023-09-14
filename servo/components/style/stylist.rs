@@ -12,7 +12,7 @@ use crate::dom::{TElement, TShadowRoot};
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
 use crate::invalidation::element::invalidation_map::{
-    note_selector_for_invalidation, InvalidationMap,
+    note_selector_for_invalidation, InvalidationMap, RelativeSelectorInvalidationMap,
 };
 use crate::invalidation::media_queries::{
     EffectiveMediaQueryResults, MediaListKey, ToMediaListKey,
@@ -755,7 +755,9 @@ impl Stylist {
     pub fn num_invalidations(&self) -> usize {
         self.cascade_data
             .iter_origins()
-            .map(|(data, _)| data.invalidation_map.len())
+            .map(|(data, _)| {
+                data.invalidation_map.len() + data.relative_selector_invalidation_map.len()
+            })
             .sum()
     }
 
@@ -884,6 +886,20 @@ impl Stylist {
         }
 
         doc_author_rules_apply && f(&self.cascade_data.author)
+    }
+
+    /// Execute callback for all applicable style rule data.
+    pub fn for_each_cascade_data_with_scope<'a, E, F>(&'a self, element: E, mut f: F)
+    where
+        E: TElement + 'a,
+        F: FnMut(&'a CascadeData, Option<E>),
+    {
+        f(&self.cascade_data.user_agent.cascade_data, None);
+        element.each_applicable_non_document_style_rule_data(|data, scope| {
+            f(data, Some(scope));
+        });
+        f(&self.cascade_data.user, None);
+        f(&self.cascade_data.author, None);
     }
 
     /// Computes the style for a given "precomputed" pseudo-element, taking the
@@ -2302,6 +2318,9 @@ pub struct CascadeData {
     /// The invalidation map for these rules.
     invalidation_map: InvalidationMap,
 
+    /// The relative selector equivalent of the invalidation map.
+    relative_selector_invalidation_map: RelativeSelectorInvalidationMap,
+
     /// The attribute local names that appear in attribute selectors.  Used
     /// to avoid taking element snapshots when an irrelevant attribute changes.
     /// (We don't bother storing the namespace, since namespaced attributes are
@@ -2392,6 +2411,7 @@ impl CascadeData {
             slotted_rules: None,
             part_rules: None,
             invalidation_map: InvalidationMap::new(),
+            relative_selector_invalidation_map: RelativeSelectorInvalidationMap::new(),
             nth_of_mapped_ids: PrecomputedHashSet::default(),
             nth_of_class_dependencies: PrecomputedHashSet::default(),
             nth_of_attribute_dependencies: PrecomputedHashSet::default(),
@@ -2468,6 +2488,11 @@ impl CascadeData {
     /// Returns the invalidation map.
     pub fn invalidation_map(&self) -> &InvalidationMap {
         &self.invalidation_map
+    }
+
+    /// Returns the relative selector invalidation map.
+    pub fn relative_selector_invalidation_map(&self) -> &RelativeSelectorInvalidationMap {
+        &self.relative_selector_invalidation_map
     }
 
     /// Returns whether the given ElementState bit is relied upon by a selector
@@ -2603,6 +2628,7 @@ impl CascadeData {
         self.animations.shrink_if_needed();
         self.custom_property_registrations.shrink_if_needed();
         self.invalidation_map.shrink_if_needed();
+        self.relative_selector_invalidation_map.shrink_if_needed();
         self.attribute_dependencies.shrink_if_needed();
         self.nth_of_attribute_dependencies.shrink_if_needed();
         self.nth_of_class_dependencies.shrink_if_needed();
@@ -2792,6 +2818,7 @@ impl CascadeData {
                                 &rule.selector,
                                 quirks_mode,
                                 &mut self.invalidation_map,
+                                &mut self.relative_selector_invalidation_map,
                             )?;
                             let mut needs_revalidation = false;
                             let mut visitor = StylistSelectorVisitor {
@@ -3256,6 +3283,7 @@ impl CascadeData {
     fn clear(&mut self) {
         self.clear_cascade_data();
         self.invalidation_map.clear();
+        self.relative_selector_invalidation_map.clear();
         self.attribute_dependencies.clear();
         self.nth_of_attribute_dependencies.clear();
         self.nth_of_class_dependencies.clear();

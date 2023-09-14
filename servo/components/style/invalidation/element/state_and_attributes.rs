@@ -522,31 +522,12 @@ where
         let invalidation =
             Invalidation::new(&dependency, self.matching_context.current_host.clone());
 
-        match invalidation_kind {
-            NormalDependencyInvalidationKind::Element => unreachable!(),
-            NormalDependencyInvalidationKind::ElementAndDescendants => {
-                self.invalidates_self = true;
-                self.descendant_invalidations
-                    .dom_descendants
-                    .push(invalidation);
-            },
-            NormalDependencyInvalidationKind::Descendants => {
-                self.descendant_invalidations
-                    .dom_descendants
-                    .push(invalidation);
-            },
-            NormalDependencyInvalidationKind::Siblings => {
-                self.sibling_invalidations.push(invalidation);
-            },
-            NormalDependencyInvalidationKind::Parts => {
-                self.descendant_invalidations.parts.push(invalidation);
-            },
-            NormalDependencyInvalidationKind::SlottedElements => {
-                self.descendant_invalidations
-                    .slotted_descendants
-                    .push(invalidation);
-            },
-        }
+        self.invalidates_self |= push_invalidation(
+            invalidation,
+            invalidation_kind,
+            self.descendant_invalidations,
+            self.sibling_invalidations,
+        );
     }
 
     /// Returns whether `dependency` may cause us to invalidate the style of
@@ -560,5 +541,53 @@ where
             NormalDependencyInvalidationKind::Siblings |
             NormalDependencyInvalidationKind::Descendants => true,
         }
+    }
+}
+
+pub(crate) fn push_invalidation<'a>(
+    invalidation: Invalidation<'a>,
+    invalidation_kind: NormalDependencyInvalidationKind,
+    descendant_invalidations: &mut DescendantInvalidationLists<'a>,
+    sibling_invalidations: &mut InvalidationVector<'a>,
+) -> bool {
+    match invalidation_kind {
+        NormalDependencyInvalidationKind::Element => unreachable!(),
+        NormalDependencyInvalidationKind::ElementAndDescendants => {
+            descendant_invalidations.dom_descendants.push(invalidation);
+            true
+        },
+        NormalDependencyInvalidationKind::Descendants => {
+            descendant_invalidations.dom_descendants.push(invalidation);
+            false
+        },
+        NormalDependencyInvalidationKind::Siblings => {
+            sibling_invalidations.push(invalidation);
+            false
+        },
+        NormalDependencyInvalidationKind::Parts => {
+            descendant_invalidations.parts.push(invalidation);
+            false
+        },
+        NormalDependencyInvalidationKind::SlottedElements => {
+            descendant_invalidations
+                .slotted_descendants
+                .push(invalidation);
+            false
+        },
+    }
+}
+
+pub(crate) fn dependency_may_be_relevant<E: TElement>(
+    dependency: &Dependency,
+    element: &E,
+    already_invalidated_self: bool,
+) -> bool {
+    match dependency.normal_invalidation_kind() {
+        NormalDependencyInvalidationKind::Element => !already_invalidated_self,
+        NormalDependencyInvalidationKind::SlottedElements => element.is_html_slot_element(),
+        NormalDependencyInvalidationKind::Parts => element.shadow_root().is_some(),
+        NormalDependencyInvalidationKind::ElementAndDescendants |
+        NormalDependencyInvalidationKind::Siblings |
+        NormalDependencyInvalidationKind::Descendants => true,
     }
 }
