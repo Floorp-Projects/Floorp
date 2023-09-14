@@ -179,11 +179,6 @@ class CookieJarSettings final : public nsICookieJarSettings {
   // network.cookie.rejectForeignWithExceptions.enabled pref is set to true.
   static bool IsRejectThirdPartyContexts(uint32_t aCookieBehavior);
 
-  // This static method returns true if aCookieBehavior is
-  // BEHAVIOR_REJECT_FOREIGN and
-  // network.cookie.rejectForeignWithExceptions.enabled pref is set to true.
-  static bool IsRejectThirdPartyWithExceptions(uint32_t aCookieBehavior);
-
  private:
   enum State {
     // No cookie permissions are allowed to be stored in this object.

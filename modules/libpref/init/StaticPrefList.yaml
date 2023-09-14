@@ -11222,12 +11222,6 @@
   value: 0 # accept all cookies
   mirror: always
 
-# See the full list of values in nsICookieService.idl.
-- name: network.cookie.rejectForeignWithExceptions.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # The cookieBehavior to be used in Private Browsing mode.
 - name: network.cookie.cookieBehavior.pbmode
   type: RelaxedAtomicInt32

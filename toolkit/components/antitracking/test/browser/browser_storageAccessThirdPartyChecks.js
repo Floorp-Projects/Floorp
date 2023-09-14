@@ -61,40 +61,6 @@ add_task(async _ => {
 });
 
 AntiTracking._createTask({
-  name: "Test that we never grant access to cookieBehavior=1, when network.cookie.rejectForeignWithExceptions.enabled is set to false",
-  cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-  allowList: false,
-  callback: async _ => {
-    /* import-globals-from storageAccessAPIHelpers.js */
-    await noStorageAccessInitially();
-
-    await callRequestStorageAccess(null, true);
-  },
-  extraPrefs: [
-    ["network.cookie.rejectForeignWithExceptions.enabled", false],
-    [APS_PREF, false],
-  ],
-  expectedBlockingNotifications: 0,
-  runInPrivateWindow: false,
-  iframeSandbox: null,
-  accessRemoval: null,
-  callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE,
-  errorMessageDomains: [
-    "https://tracking.example.org",
-    "https://tracking.example.org",
-  ],
-});
-
-add_task(async _ => {
-  await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
-      resolve()
-    );
-  });
-});
-
-AntiTracking._createTask({
   name: "Test that we never grant access to cookieBehavior=2",
   cookieBehavior: BEHAVIOR_REJECT,
   allowList: false,

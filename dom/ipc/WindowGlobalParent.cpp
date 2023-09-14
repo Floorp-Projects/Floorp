@@ -543,9 +543,7 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
   MOZ_ASSERT(NS_IsMainThread());
   DebugOnly<bool> isCookiesBlocked =
       aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      (aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN &&
-       StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled());
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
   MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
   MOZ_ASSERT_IF(!isCookiesBlocked, aReason.isNothing());
   MOZ_ASSERT_IF(isCookiesBlocked && !aBlocked, aReason.isSome());
