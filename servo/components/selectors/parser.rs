@@ -1927,6 +1927,11 @@ impl<Impl: SelectorImpl> Component<Impl> {
                     return false;
                 }
             },
+            Has(ref list) => {
+                if !visitor.visit_relative_selector_list(list) {
+                    return false;
+                }
+            },
             _ => {},
         }
 

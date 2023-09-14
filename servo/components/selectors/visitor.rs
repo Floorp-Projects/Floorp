@@ -7,7 +7,7 @@
 #![deny(missing_docs)]
 
 use crate::attr::NamespaceConstraint;
-use crate::parser::{Combinator, Component, Selector, SelectorImpl};
+use crate::parser::{Combinator, Component, RelativeSelector, Selector, SelectorImpl};
 
 /// A trait to visit selector properties.
 ///
@@ -31,6 +31,14 @@ pub trait SelectorVisitor: Sized {
 
     /// Visit a simple selector.
     fn visit_simple_selector(&mut self, _: &Component<Self::Impl>) -> bool {
+        true
+    }
+
+    /// Visit a nested relative selector list. The caller is responsible to call visit
+    /// into the internal selectors if / as needed.
+    ///
+    /// The default implementation skips it altogether.
+    fn visit_relative_selector_list(&mut self, _list: &[RelativeSelector<Self::Impl>]) -> bool {
         true
     }
 
@@ -73,6 +81,8 @@ bitflags! {
         /// The visitor is inside :nth-child(.. of <selector list>) or
         /// :nth-last-child(.. of <selector list>)
         const NTH_OF = 1 << 3;
+        /// The visitor is inside :has(..)
+        const HAS = 1 << 4;
     }
 }
 
@@ -107,5 +117,20 @@ impl SelectorListKind {
     /// :nth-last-child(.. of <selector list>)
     pub fn in_nth_of(&self) -> bool {
         self.intersects(SelectorListKind::NTH_OF)
+    }
+
+    /// Whether the visitor is inside :has(..)
+    pub fn in_has(&self) -> bool {
+        self.intersects(SelectorListKind::HAS)
+    }
+
+    /// Whether this nested selector is relevant for nth-of dependencies.
+    pub fn relevant_to_nth_of_dependencies(&self) -> bool {
+        // Order of nesting for `:has` and `:nth-child(.. of ..)` doesn't matter, because:
+        // * `:has(:nth-child(.. of ..))`: The location of the anchoring element is
+        //   independent from where `:nth-child(.. of ..)` is applied.
+        // * `:nth-child(.. of :has(..))`: Invalidations inside `:has` must first use the
+        //   `:has` machinary to find the anchor, then carry out the remaining invalidation.
+        self.in_nth_of() && !self.in_has()
     }
 }
