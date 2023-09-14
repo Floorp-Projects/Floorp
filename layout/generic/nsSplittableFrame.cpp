@@ -203,7 +203,7 @@ nscoord nsSplittableFrame::CalcAndCacheConsumedBSize() {
       continue;
     }
 
-    bSize += prev->ContentSize(wm).BSize(wm);
+    bSize += prev->ContentBSize(wm);
     bool found = false;
     nscoord consumed = prev->GetProperty(ConsumedBSizeProperty(), &found);
     if (found) {
