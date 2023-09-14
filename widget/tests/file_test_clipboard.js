@@ -6,7 +6,7 @@
 "use strict";
 
 function getLoadContext() {
-  return window.docShell.QueryInterface(Ci.nsILoadContext);
+  return SpecialPowers.wrap(window).docShell.QueryInterface(Ci.nsILoadContext);
 }
 
 // Get clipboard data to paste.
@@ -17,7 +17,7 @@ function paste(clipboard) {
   trans.init(getLoadContext());
   trans.addDataFlavor("text/plain");
   clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
-  let str = {};
+  let str = SpecialPowers.createBlankObject();
   try {
     trans.getTransferData("text/plain", str);
   } catch (e) {
@@ -114,7 +114,7 @@ clipboardTypes.forEach(function (clipboardType) {
 
       // Set text/plain to empty string.
       writeStringToClipboard("", "text/plain", clipboardType);
-      // XXX gtk doesn't support get empty text data from clipboard.
+      // XXX gtk doesn't support get empty text data from clipboard, bug 1852983.
       if (navigator.platform.includes("Linux")) {
         todo_is(
           getClipboardData("text/plain", clipboardType),
@@ -128,10 +128,19 @@ clipboardTypes.forEach(function (clipboardType) {
           `Should get empty string on clipboard type ${clipboardType}`
         );
       }
-      ok(
-        clipboard.hasDataMatchingFlavors(["text/plain"], clipboardType),
-        `Should have text/plain flavor on clipboard ${clipboardType}`
-      );
+      // XXX android doesn't support setting empty text data to clipboard, bug 1841058.
+      if (navigator.userAgent.includes("Android")) {
+        todo_is(
+          clipboard.hasDataMatchingFlavors(["text/plain"], clipboardType),
+          true,
+          `Should have text/plain flavor on clipboard ${clipboardType}`
+        );
+      } else {
+        ok(
+          clipboard.hasDataMatchingFlavors(["text/plain"], clipboardType),
+          `Should have text/plain flavor on clipboard ${clipboardType}`
+        );
+      }
 
       // Clear all clipboard data.
       cleanupAllClipboard();
