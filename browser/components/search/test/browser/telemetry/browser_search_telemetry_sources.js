@@ -215,7 +215,7 @@ add_task(async function test_source_urlbar_handoff() {
     async () => {
       Services.fog.testResetFOG();
       tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-      BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:newtab");
+      BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, "about:newtab");
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
 
       info("Focus on search input in newtab content");
@@ -340,7 +340,7 @@ async function checkAboutPage(
     async () => {
       tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-      BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
+      BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, page);
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, page);
 
       // Wait for the full load.

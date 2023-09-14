@@ -95,7 +95,7 @@ add_task(async function test_closed_by_tab_navigation() {
   });
 
   info("Navigating tab to a different but same origin page.");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, TEST_PATH);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, TEST_PATH);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, TEST_PATH);
   ok(dialog._frame.contentWindow, "Dialog should stay open.");
 
@@ -111,7 +111,10 @@ add_task(async function test_closed_by_tab_navigation() {
 
   info("Now navigate to a cross-origin page.");
   const CROSS_ORIGIN_TEST_PATH = TEST_PATH.replace(".com", ".org");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, CROSS_ORIGIN_TEST_PATH);
+  BrowserTestUtils.startLoadingURIString(
+    tab.linkedBrowser,
+    CROSS_ORIGIN_TEST_PATH
+  );
   let loadPromise = BrowserTestUtils.browserLoaded(
     tab.linkedBrowser,
     false,

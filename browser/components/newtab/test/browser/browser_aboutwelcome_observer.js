@@ -54,7 +54,7 @@ add_task(async function test_About_Welcome_Location_Change() {
     aboutWelcomeActor.AboutWelcomeObserver,
     "AboutWelcomeObserver is not null"
   );
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/#foo"

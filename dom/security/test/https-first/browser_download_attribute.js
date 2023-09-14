@@ -88,7 +88,7 @@ add_task(async function test_with_downloads_pref_enabled() {
   let downloadsPanelPromise = promisePanelOpened();
   let downloadsPromise = Downloads.getList(Downloads.PUBLIC);
 
-  BrowserTestUtils.loadURIString(gBrowser, insecureTestURI);
+  BrowserTestUtils.startLoadingURIString(gBrowser, insecureTestURI);
   // wait for downloadsPanel to open before continuing with test
   await downloadsPanelPromise;
   let downloadList = await downloadsPromise;

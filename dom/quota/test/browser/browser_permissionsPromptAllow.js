@@ -24,7 +24,7 @@ addTest(async function testPermissionAllow() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(true, gBrowser);
 
   is(
@@ -52,7 +52,7 @@ addTest(async function testNoPermissionPrompt() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(true, gBrowser);
 
   is(

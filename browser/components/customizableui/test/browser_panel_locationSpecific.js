@@ -57,7 +57,7 @@ add_task(async function () {
   // Simulate a location change, and check which panel closes.
   let browser = gBrowser.selectedBrowser;
   let loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, "http://mochi.test:8888/#0");
+  BrowserTestUtils.startLoadingURIString(browser, "http://mochi.test:8888/#0");
   await loaded;
 
   await specificPanelHiddenPromise;

@@ -49,7 +49,7 @@ add_task(async function test_screenshot() {
     set: [["screenshots.browser.component.enabled", true]],
   });
 
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, DUMMY_PAGE);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, DUMMY_PAGE);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,

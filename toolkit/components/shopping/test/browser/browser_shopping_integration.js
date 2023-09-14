@@ -73,7 +73,7 @@ add_task(async function test_sidebar_navigation() {
       BrowserTestUtils.browserLoaded(browser, false, OTHER_PRODUCT_TEST_URL),
       promiseSidebarUpdated(sidebar, OTHER_PRODUCT_TEST_URL),
     ]);
-    BrowserTestUtils.loadURIString(browser, OTHER_PRODUCT_TEST_URL);
+    BrowserTestUtils.startLoadingURIString(browser, OTHER_PRODUCT_TEST_URL);
     info("Loading another product.");
     await loadedPromise;
     Assert.ok(sidebar, "Sidebar should exist.");
@@ -94,7 +94,7 @@ add_task(async function test_sidebar_navigation() {
       false,
       "https://example.com/1"
     );
-    BrowserTestUtils.loadURIString(browser, "https://example.com/1");
+    BrowserTestUtils.startLoadingURIString(browser, "https://example.com/1");
     info("Go to a non-product.");
     await loadedPromise;
     Assert.ok(BrowserTestUtils.is_hidden(sidebar));
@@ -132,7 +132,7 @@ add_task(async function test_sidebar_navigation() {
       PRODUCT_TEST_URL + "?th=1"
     );
     // Navigate to the same product, but with a th=1 added.
-    BrowserTestUtils.loadURIString(browser, PRODUCT_TEST_URL + "?th=1");
+    BrowserTestUtils.startLoadingURIString(browser, PRODUCT_TEST_URL + "?th=1");
     // When just comparing URLs product info would be cleared out,
     // but when comparing the parsed product ids, we do nothing as the product
     // has not changed.

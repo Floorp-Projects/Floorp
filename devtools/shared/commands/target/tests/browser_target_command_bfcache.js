@@ -94,7 +94,10 @@ async function testTopLevelNavigations(bfcacheInParent) {
     false,
     secondPageUrl
   );
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, secondPageUrl);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    secondPageUrl
+  );
   await onLoaded;
 
   // Assert BrowsingContext changes as it impact the behavior of targets
@@ -317,7 +320,10 @@ async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
     false,
     secondPageUrl
   );
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, secondPageUrl);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    secondPageUrl
+  );
   await onLoaded;
 
   // Same-origin navigations also spawn a new top level target

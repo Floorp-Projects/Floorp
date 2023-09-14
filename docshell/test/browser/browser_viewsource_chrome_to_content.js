@@ -13,7 +13,7 @@ add_task(async function chrome_to_content_view_source() {
     is(browser.documentURI.spec, "about:mozilla");
 
     // This process switch would previously crash in debug builds due to assertion failures.
-    BrowserTestUtils.loadURIString(browser, TEST_URI);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URI);
     await BrowserTestUtils.browserLoaded(browser);
     is(browser.documentURI.spec, TEST_URI);
   });

@@ -39,7 +39,7 @@ add_task(async function () {
           return loadedURL == "about:config";
         }
       );
-      BrowserTestUtils.loadURIString(browser, "about:config");
+      BrowserTestUtils.startLoadingURIString(browser, "about:config");
       await didLoad;
 
       gBrowser.goBack();

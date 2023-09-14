@@ -20,7 +20,7 @@ add_task(async function test_migration_dialog_open_in_tab_dialog_box() {
   let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
   await BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, prefsBrowser);
   await dialogClosed;
-  BrowserTestUtils.loadURIString(prefsBrowser, "about:blank");
+  BrowserTestUtils.startLoadingURIString(prefsBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(prefsBrowser);
 });
 

@@ -21,7 +21,7 @@ function runTest() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "unsigned.xpi");
+    BrowserTestUtils.startLoadingURIString(gBrowser, TESTROOT + "unsigned.xpi");
   });
 }
 

@@ -80,7 +80,7 @@ add_task(async function test_backButton_forwardButton() {
   await withTestPage(async function (aBrowser) {
     info("Loading formless_basic.html?second");
     // Load a new page in the tab so we can test going back
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       aBrowser,
       "https://example.com" + DIRECTORY_PATH + "formless_basic.html?second"
     );
@@ -139,7 +139,7 @@ add_task(async function test_reloadButton() {
 add_task(async function test_back_keyboard_shortcut() {
   await withTestPage(async function (aBrowser) {
     // Load a new page in the tab so we can test going back
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       aBrowser,
       "https://example.com" + DIRECTORY_PATH + "formless_basic.html?second"
     );

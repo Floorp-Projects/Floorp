@@ -39,7 +39,7 @@ add_task(async function () {
   let expectedFavicon = TEST_ROOT + "file_generic_favicon.ico";
   let faviconPromise = waitForFavicon(extraTab.linkedBrowser, expectedFavicon);
 
-  BrowserTestUtils.loadURIString(extraTab.linkedBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(extraTab.linkedBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
 
   await faviconPromise;

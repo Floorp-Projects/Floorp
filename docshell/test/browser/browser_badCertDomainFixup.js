@@ -24,7 +24,7 @@ async function verifyErrorPage(errorPageURL) {
   let certErrorLoaded = BrowserTestUtils.waitForErrorPage(
     gBrowser.selectedBrowser
   );
-  BrowserTestUtils.loadURIString(gBrowser, errorPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser, errorPageURL);
   await certErrorLoaded;
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
@@ -59,7 +59,7 @@ add_task(async function prefixBadCertDomain() {
     false,
     FIXED_URL
   );
-  BrowserTestUtils.loadURIString(gBrowser, BAD_CERT_DOMAIN_ERROR_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser, BAD_CERT_DOMAIN_ERROR_URL);
   await loadSuccessful;
 
   info("The URL was fixed as expected");

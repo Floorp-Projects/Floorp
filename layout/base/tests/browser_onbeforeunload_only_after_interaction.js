@@ -49,7 +49,7 @@ async function openPage(shouldClick) {
     { gBrowser, url: "about:blank" },
     async function (browser) {
       // Load the page.
-      BrowserTestUtils.loadURIString(browser, PAGE_URL);
+      BrowserTestUtils.startLoadingURIString(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
 
       if (shouldClick) {
@@ -68,7 +68,7 @@ async function openPage(shouldClick) {
         "Click should update document interactivity state"
       );
       // And then navigate away.
-      BrowserTestUtils.loadURIString(browser, "http://example.com/");
+      BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(browser);
     }
   );

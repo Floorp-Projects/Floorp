@@ -115,7 +115,7 @@ add_task(async function test_heartbeat_tactic_2() {
   Assert.ok(ASRouter.isUnblockedMessage(msg), "Message is unblocked");
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-  BrowserTestUtils.loadURIString(tab1.linkedBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(tab1.linkedBrowser, TEST_URL);
 
   let chiclet = document.getElementById("contextual-feature-recommendation");
   Assert.ok(chiclet, "CFR chiclet element found");
@@ -137,7 +137,7 @@ add_task(async function test_heartbeat_tactic_2() {
   );
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-  BrowserTestUtils.loadURIString(tab2.linkedBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(tab2.linkedBrowser, TEST_URL);
 
   await BrowserTestUtils.waitForCondition(
     () => chiclet.hidden,

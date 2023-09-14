@@ -133,7 +133,7 @@ add_task(async function test_remote_window_open_data_uri2() {
   // The iframe test2.html will fetch test2.js, which will have cookies.
   const DATA_URI = `data:text/html,
                     <iframe id="iframe1" src="${TEST_PAGE}"></iframe>`;
-  BrowserTestUtils.loadURIString(browser, DATA_URI);
+  BrowserTestUtils.startLoadingURIString(browser, DATA_URI);
   await BrowserTestUtils.browserLoaded(browser, true, TEST_PAGE);
 
   await SpecialPowers.spawn(browser, [], async function () {

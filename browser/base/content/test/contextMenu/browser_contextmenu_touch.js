@@ -63,7 +63,7 @@ add_task(async function test_back_forward_button_contextmenu_touch() {
         () => !backbutton.hasAttribute("disabled")
       );
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      BrowserTestUtils.loadURIString(browser, "http://example.org");
+      BrowserTestUtils.startLoadingURIString(browser, "http://example.org");
       await notDisabled;
       await openAndCheckContextMenu(contextMenu, backbutton);
 

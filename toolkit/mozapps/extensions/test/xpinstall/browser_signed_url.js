@@ -8,7 +8,10 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "amosigned.xpi");
+    BrowserTestUtils.startLoadingURIString(
+      gBrowser,
+      TESTROOT + "amosigned.xpi"
+    );
   });
 }
 

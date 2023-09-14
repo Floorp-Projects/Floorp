@@ -34,7 +34,7 @@ add_task(async function () {
     if (testCase.loadURL) {
       info(`Loading : ${testCase.loadURL}`);
       let expectedLoad = testCase.expectedLoad || testCase.loadURL;
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         gBrowser.selectedBrowser,
         testCase.loadURL
       );

@@ -19,7 +19,7 @@ function caretMoveChecker(target, caretOffset) {
 async function checkURLBarCaretEvents() {
   const kURL = "about:mozilla";
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.loadURIString(newWin.gBrowser.selectedBrowser, kURL);
+  BrowserTestUtils.startLoadingURIString(newWin.gBrowser.selectedBrowser, kURL);
   newWin.gBrowser.selectedBrowser.focus();
 
   await waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event => {

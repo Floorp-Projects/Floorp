@@ -20,7 +20,7 @@ add_task(async function test_normal_and_history_loads() {
     { gBrowser, url: testPage },
     async function (browser) {
       for (let i = 0; i < 2; ++i) {
-        BrowserTestUtils.loadURIString(browser, testPage + "?" + i);
+        BrowserTestUtils.startLoadingURIString(browser, testPage + "?" + i);
         await BrowserTestUtils.browserLoaded(browser);
       }
 

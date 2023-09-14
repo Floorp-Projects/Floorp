@@ -977,7 +977,7 @@ var TESTS = [
     });
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    BrowserTestUtils.loadURIString(gBrowser, path);
+    BrowserTestUtils.startLoadingURIString(gBrowser, path);
     await failPromise;
 
     // Wait for the browser code to add the failure notification
@@ -1048,12 +1048,15 @@ var TESTS = [
       false,
       requestedUrl
     );
-    BrowserTestUtils.loadURIString(gBrowser, TESTROOT2 + "enabled.html");
+    BrowserTestUtils.startLoadingURIString(
+      gBrowser,
+      TESTROOT2 + "enabled.html"
+    );
     await loadedPromise;
 
     let progressPromise = waitForProgressNotification();
     let notificationPromise = waitForNotification("addon-install-failed");
-    BrowserTestUtils.loadURIString(gBrowser, TESTROOT + "corrupt.xpi");
+    BrowserTestUtils.startLoadingURIString(gBrowser, TESTROOT + "corrupt.xpi");
     await progressPromise;
     let panel = await notificationPromise;
 
@@ -1091,7 +1094,7 @@ var TESTS = [
     await new Promise(resolve => executeSoon(resolve));
 
     notificationPromise = waitForNotification("addon-install-blocked");
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       gBrowser,
       TESTROOT + "installtrigger.html?" + triggers
     );

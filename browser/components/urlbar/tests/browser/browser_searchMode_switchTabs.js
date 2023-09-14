@@ -247,7 +247,7 @@ add_task(async function slow_load_guaranteed() {
   // away from before setURI was called.
   backgroundTab.ownerGlobal.gURLBar.searchMode = { engineName };
   let loadPromise = BrowserTestUtils.browserLoaded(backgroundTab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     backgroundTab.linkedBrowser,
     "http://example.com/?search=test"
   );

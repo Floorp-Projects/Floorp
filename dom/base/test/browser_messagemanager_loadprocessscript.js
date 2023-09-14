@@ -143,7 +143,10 @@ add_task(async function () {
   );
 
   // Load something in the main process
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    "about:mozilla"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let init = Services.ppmm.initialProcessData;
@@ -169,7 +172,10 @@ add_task(async function () {
     gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
       remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
     });
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(
+      gBrowser.selectedBrowser,
+      "about:blank"
+    );
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     checkBaseProcessCount(

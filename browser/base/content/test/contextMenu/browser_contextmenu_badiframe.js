@@ -36,7 +36,7 @@ async function openTestPage() {
     },
     true /* maybeErrorPage */
   );
-  BrowserTestUtils.loadURIString(browser, testPage);
+  BrowserTestUtils.startLoadingURIString(browser, testPage);
   await pageAndIframesLoaded;
 
   // Make sure both the top-level document and the iframe documents have

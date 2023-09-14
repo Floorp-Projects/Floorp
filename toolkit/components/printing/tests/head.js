@@ -30,7 +30,7 @@ class PrintHelper {
             null,
             true
           );
-          BrowserTestUtils.loadURIString(browser, pageUrl);
+          BrowserTestUtils.startLoadingURIString(browser, pageUrl);
           await loaded;
         }
         await testFn(new PrintHelper(browser));

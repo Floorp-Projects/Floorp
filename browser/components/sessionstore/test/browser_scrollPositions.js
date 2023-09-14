@@ -196,7 +196,7 @@ async function test_scroll_background_tabs(aURL) {
 
   // Navigate to a different page and scroll there as well.
   let browser2loaded = BrowserTestUtils.browserLoaded(browser, false, URL2);
-  BrowserTestUtils.loadURIString(browser, URL2);
+  BrowserTestUtils.startLoadingURIString(browser, URL2);
   await browser2loaded;
 
   // Scroll down a little.

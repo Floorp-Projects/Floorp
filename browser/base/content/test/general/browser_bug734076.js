@@ -124,7 +124,7 @@ add_task(async function () {
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
     );
-    BrowserTestUtils.loadURIString(gBrowser, test.url);
+    BrowserTestUtils.startLoadingURIString(gBrowser, test.url);
     await loadedPromise;
 
     info("Run subtest " + test.name);

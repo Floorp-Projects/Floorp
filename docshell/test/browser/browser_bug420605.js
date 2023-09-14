@@ -117,7 +117,7 @@ add_task(async function test() {
     "DOMContentLoaded",
     true
   ).then(onPageLoad);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, pageurl);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, pageurl);
 
   await promiseIcon1;
   await promiseIcon2;

@@ -124,7 +124,7 @@
       gBrowser = document.getElementById(browserId);
 
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURIString(gBrowser, kBaseURL + "/sample_entireword_" + testName + ".html");
+      BrowserTestUtils.startLoadingURIString(gBrowser, kBaseURL + "/sample_entireword_" + testName + ".html");
       await promise;
       gFindBar.browser = gBrowser;
       await onDocumentLoaded(testName);

@@ -19,7 +19,7 @@ let testcases = [
       false,
       CANONICAL_URL_REDIRECTED
     );
-    BrowserTestUtils.loadURIString(browser, CANONICAL_URL_REDIRECTED);
+    BrowserTestUtils.startLoadingURIString(browser, CANONICAL_URL_REDIRECTED);
     await loadPromise;
     await freePortal(true);
     ensurePortalTab(win);

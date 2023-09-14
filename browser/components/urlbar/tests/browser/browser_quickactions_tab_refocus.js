@@ -83,7 +83,7 @@ add_task(async function test_about_pages() {
     );
     if (firstLoad) {
       info("Load initial URI");
-      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, uri);
+      BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, uri);
     } else {
       info("Open about page by quick action");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({

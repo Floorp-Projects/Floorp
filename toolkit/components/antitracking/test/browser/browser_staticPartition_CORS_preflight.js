@@ -89,7 +89,10 @@ add_task(async function () {
       // the preflight cache is partitioned. The fetch will also be performed in
       // the iframe with the same origin as above to ensure we use the same
       // loading principal.
-      BrowserTestUtils.loadURIString(tab.linkedBrowser, TEST_ANOTHER_PAGE);
+      BrowserTestUtils.startLoadingURIString(
+        tab.linkedBrowser,
+        TEST_ANOTHER_PAGE
+      );
       await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
       await SpecialPowers.spawn(

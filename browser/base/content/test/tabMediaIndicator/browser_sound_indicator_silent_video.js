@@ -40,7 +40,7 @@ add_task(async function should_not_show_sound_indicator_for_silent_video() {
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("- loading autoplay silent video -");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, SILENT_PAGE);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, SILENT_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await SpecialPowers.spawn(
     tab.linkedBrowser,
@@ -69,7 +69,10 @@ add_task(
     await waitForTabSoundIndicatorDisappears(tab);
 
     info("- loading autoplay almost silent video -");
-    BrowserTestUtils.loadURIString(tab.linkedBrowser, ALMOST_SILENT_PAGE);
+    BrowserTestUtils.startLoadingURIString(
+      tab.linkedBrowser,
+      ALMOST_SILENT_PAGE
+    );
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     await SpecialPowers.spawn(
       tab.linkedBrowser,

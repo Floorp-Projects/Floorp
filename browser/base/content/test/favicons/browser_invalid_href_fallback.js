@@ -12,7 +12,7 @@ add_task(async () => {
     { gBrowser, url: "about:blank" },
     async browser => {
       let faviconPromise = waitForLinkAvailable(browser);
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         browser,
         testPath + "file_invalid_href.html"
       );

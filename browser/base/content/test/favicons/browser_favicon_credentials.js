@@ -32,7 +32,7 @@ function run_test(url, shouldHaveCookies, description) {
       async browser => {
         const faviconPromise = waitForFaviconMessage(true, FAVICON_URL);
 
-        BrowserTestUtils.loadURIString(browser, url);
+        BrowserTestUtils.startLoadingURIString(browser, url);
         await BrowserTestUtils.browserLoaded(browser);
 
         await faviconPromise;
