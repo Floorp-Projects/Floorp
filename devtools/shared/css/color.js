@@ -71,33 +71,33 @@ class CssColor {
     hwb: "hwb",
   };
 
-  _colorUnit = null;
-  _colorUnitUppercase = false;
+  #colorUnit = null;
+  #colorUnitUppercase = false;
 
   // The value as-authored.
   authored = null;
   // A lower-cased copy of |authored|.
   lowerCased = null;
 
-  _setColorUnitUppercase(color) {
+  #setColorUnitUppercase(color) {
     // Specifically exclude the case where the color is
     // case-insensitive.  This makes it so that "#000" isn't
     // considered "upper case" for the purposes of color cycling.
-    this._colorUnitUppercase =
+    this.#colorUnitUppercase =
       color === color.toUpperCase() && color !== color.toLowerCase();
   }
 
   get colorUnit() {
-    if (this._colorUnit === null) {
+    if (this.#colorUnit === null) {
       const defaultUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
-      this._colorUnit = CssColor.COLORUNIT[defaultUnit];
-      this._setColorUnitUppercase(this.authored);
+      this.#colorUnit = CssColor.COLORUNIT[defaultUnit];
+      this.#setColorUnitUppercase(this.authored);
     }
-    return this._colorUnit;
+    return this.#colorUnit;
   }
 
   set colorUnit(unit) {
-    this._colorUnit = unit;
+    this.#colorUnit = unit;
   }
 
   /**
@@ -112,8 +112,8 @@ class CssColor {
       Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
       CssColor.COLORUNIT.authored
     ) {
-      this._colorUnit = classifyColor(color);
-      this._setColorUnitUppercase(color);
+      this.#colorUnit = classifyColor(color);
+      this.#setColorUnitUppercase(color);
     }
   }
 
@@ -170,7 +170,7 @@ class CssColor {
   }
 
   get name() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -185,7 +185,7 @@ class CssColor {
   }
 
   get hex() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -205,7 +205,7 @@ class CssColor {
   }
 
   get alphaHex() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -228,7 +228,7 @@ class CssColor {
   }
 
   get longHex() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -246,7 +246,7 @@ class CssColor {
   }
 
   get longAlphaHex() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -263,7 +263,7 @@ class CssColor {
   }
 
   get rgb() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -279,7 +279,7 @@ class CssColor {
   }
 
   get rgba() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -302,7 +302,7 @@ class CssColor {
   }
 
   get hsl() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -313,11 +313,11 @@ class CssColor {
     if (this.hasAlpha) {
       return this.hsla;
     }
-    return this._hsl();
+    return this.#hsl();
   }
 
   get hsla() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -327,13 +327,13 @@ class CssColor {
     }
     if (this.hasAlpha) {
       const a = this.getRGBATuple().a;
-      return this._hsl(a);
+      return this.#hsl(a);
     }
-    return this._hsl(1);
+    return this.#hsl(1);
   }
 
   get hwb() {
-    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    const invalidOrSpecialValue = this.#getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
@@ -343,9 +343,9 @@ class CssColor {
     }
     if (this.hasAlpha) {
       const a = this.getRGBATuple().a;
-      return this._hwb(a);
+      return this.#hwb(a);
     }
-    return this._hwb();
+    return this.#hwb();
   }
 
   /**
@@ -362,7 +362,7 @@ class CssColor {
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
-  _getInvalidOrSpecialValue() {
+  #getInvalidOrSpecialValue() {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -384,7 +384,7 @@ class CssColor {
     // returned when needed.
     this.lowerCased = color.toLowerCase();
     this.authored = color;
-    this._setColorUnitUppercase(color);
+    this.#setColorUnitUppercase(color);
     return this;
   }
 
@@ -440,7 +440,7 @@ class CssColor {
     }
 
     if (
-      this._colorUnitUppercase &&
+      this.#colorUnitUppercase &&
       this.colorUnit != CssColor.COLORUNIT.authored
     ) {
       color = color.toUpperCase();
@@ -478,7 +478,7 @@ class CssColor {
     };
   }
 
-  _hsl(maybeAlpha) {
+  #hsl(maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
@@ -492,7 +492,7 @@ class CssColor {
     return "hsl(" + h + ", " + s + "%, " + l + "%)";
   }
 
-  _hwb(maybeAlpha) {
+  #hwb(maybeAlpha) {
     if (this.lowerCased.startsWith("hwb(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
