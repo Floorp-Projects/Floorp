@@ -71,13 +71,13 @@ skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
 
 ["test_bug760802.xhtml"]
 
-["test_clipboard.xhtml"]
+["test_clipboard_chrome.html"]
 
-["test_clipboard_asyncSetData.xhtml"]
+["test_clipboard_asyncSetData_chrome.html"]
 
-["test_clipboard_cache.xhtml"]
+["test_clipboard_cache_chrome.html"]
 
-["test_clipboard_owner.xhtml"]
+["test_clipboard_owner_chrome.html"]
 
 ["test_composition_text_querycontent.xhtml"]
 support-files = ["window_composition_text_querycontent.xhtml"]
