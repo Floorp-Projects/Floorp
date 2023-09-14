@@ -916,15 +916,9 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  if (mContent->AsElement()->State().HasState(dom::ElementState::FOCUSRING)) {
-    nsPresContext* pc = PresContext();
-    const nsStyleDisplay* disp = StyleDisplay();
-    if (IsThemed(disp) &&
-        pc->Theme()->ThemeWantsButtonInnerFocusRing(
-            this, disp->EffectiveAppearance()) &&
-        mDisplayFrame && IsVisibleForPainting()) {
-      aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder, this);
-    }
+  if (Select().State().HasState(dom::ElementState::FOCUSRING) && IsThemed() &&
+      PresContext()->Theme()->ThemeWantsButtonInnerFocusRing()) {
+    aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder, this);
   }
 
   DisplaySelectionOverlay(aBuilder, aLists.Content());

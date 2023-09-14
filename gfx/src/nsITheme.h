@@ -235,17 +235,8 @@ class nsITheme : public nsISupports {
    */
   virtual bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) = 0;
 
-  /**
-   * Whether we want an inner focus ring for buttons and such.
-   *
-   * Usually, we don't want it if we have our own focus indicators, but windows
-   * is special, because it wants it even though focus also alters the border
-   * color and such.
-   */
-  virtual bool ThemeWantsButtonInnerFocusRing(nsIFrame* aFrame,
-                                              StyleAppearance aAppearance) {
-    return !ThemeDrawsFocusForWidget(aFrame, aAppearance);
-  }
+  // Whether we want an inner focus ring for buttons and menulists.
+  virtual bool ThemeWantsButtonInnerFocusRing() { return false; }
 
   /**
    * Should we insert a dropmarker inside of combobox button?
