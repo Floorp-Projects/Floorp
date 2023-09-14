@@ -177,14 +177,15 @@ class ProviderQuickActions extends UrlbarProvider {
           children: result.payload.results.map(({ key }, i) => {
             let action = this.#actions.get(key);
             let inActive = "isActive" in action && !action.isActive();
-            let row = {
+            return {
               name: `button-${i}`,
               tag: "span",
               attributes: {
                 "data-key": key,
                 "data-input-length": result.payload.inputLength,
-                class: "urlbarView-quickaction-row",
+                class: "urlbarView-quickaction-button",
                 role: inActive ? "" : "button",
+                disabled: inActive,
               },
               children: [
                 {
@@ -209,10 +210,6 @@ class ProviderQuickActions extends UrlbarProvider {
                 },
               ],
             };
-            if (inActive) {
-              row.attributes.disabled = "disabled";
-            }
-            return row;
           }),
         },
       ],

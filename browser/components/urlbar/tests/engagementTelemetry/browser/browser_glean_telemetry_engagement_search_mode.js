@@ -55,7 +55,7 @@ add_task(async function actions() {
   await doActionsTest({
     trigger: async () => {
       const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      doClickSubButton(".urlbarView-quickaction-row[data-key=addons]");
+      doClickSubButton(".urlbarView-quickaction-button[data-key=addons]");
       await onLoad;
     },
     assert: () => assertEngagementTelemetry([{ search_mode: "actions" }]),
