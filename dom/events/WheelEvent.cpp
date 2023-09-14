@@ -68,7 +68,7 @@ int32_t WheelEvent::WheelDeltaX(CallerType aCallerType) {
     // We always return pixels regardless of the checking-state.
     double pixelDelta =
         ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->OverriddenDeltaX())
+            ? CSSCoord(DevToCssPixels(ev->OverriddenDeltaX()))
             : ev->OverriddenDeltaX() *
                   CSSPixel::FromAppUnits(ev->mScrollAmount.width).Rounded();
     return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));
@@ -85,7 +85,7 @@ int32_t WheelEvent::WheelDeltaY(CallerType aCallerType) {
   if (IsTrusted()) {
     double pixelDelta =
         ev->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PIXEL
-            ? DevToCssPixels(ev->OverriddenDeltaY())
+            ? CSSCoord(DevToCssPixels(ev->OverriddenDeltaY()))
             : ev->OverriddenDeltaY() *
                   CSSPixel::FromAppUnits(ev->mScrollAmount.height).Rounded();
     return int32_t(-std::round(pixelDelta * kTrustedDeltaToWheelDelta));

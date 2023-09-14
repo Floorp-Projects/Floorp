@@ -4152,8 +4152,9 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
 
   nsSize size(CSSPixel::ToAppUnits(width / zoom),
               CSSPixel::ToAppUnits(height / zoom));
-  nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x / zoom),
-                  CSSPixel::ToAppUnits(aCursor.mHotspot.y / zoom));
+  nsPoint hotspot(
+      CSSPixel::ToAppUnits(ViewAs<CSSPixel>(aCursor.mHotspot.x / zoom)),
+      CSSPixel::ToAppUnits(ViewAs<CSSPixel>(aCursor.mHotspot.y / zoom)));
 
   const nsRect cursorRect(point - hotspot, size);
   auto output = DOMIntersectionObserver::Intersect(input, cursorRect);
