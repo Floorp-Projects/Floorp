@@ -791,7 +791,7 @@
 
 /* Sponsored Firefox Suggest rows */
 
-.urlbarView-row[type$=_adm_sponsored] > .urlbarView-row-inner {
+.urlbarView-row[type$=_adm_sponsored][icon-size="16"] > .urlbarView-row-inner {
   /* Keep the status quo before these rows were rich suggestions, where the row
      height is roughly the same as usual rows. */
   padding-block: 0;
