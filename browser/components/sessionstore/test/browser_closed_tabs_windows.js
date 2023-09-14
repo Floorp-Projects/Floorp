@@ -6,7 +6,10 @@ const multiWindowState = {
       tabs: [
         {
           entries: [
-            { url: "https://example.com#0", triggeringPrincipal_base64 },
+            {
+              url: "https://example.com#win-0-tab-0",
+              triggeringPrincipal_base64,
+            },
           ],
         },
       ],
@@ -15,7 +18,7 @@ const multiWindowState = {
           state: {
             entries: [
               {
-                url: "https://example.com#closed0",
+                url: "https://example.com#win-0-closed-0",
                 triggeringPrincipal_base64,
               },
             ],
@@ -25,7 +28,7 @@ const multiWindowState = {
           state: {
             entries: [
               {
-                url: "https://example.com#closed1",
+                url: "https://example.com#win-0-closed-1",
                 triggeringPrincipal_base64,
               },
             ],
@@ -38,12 +41,18 @@ const multiWindowState = {
       tabs: [
         {
           entries: [
-            { url: "https://example.org#1", triggeringPrincipal_base64 },
+            {
+              url: "https://example.org#win-1-tab-0",
+              triggeringPrincipal_base64,
+            },
           ],
         },
         {
           entries: [
-            { url: "https://example.org#2", triggeringPrincipal_base64 },
+            {
+              url: "https://example.org#win-1-tab-1",
+              triggeringPrincipal_base64,
+            },
           ],
         },
       ],
@@ -52,7 +61,7 @@ const multiWindowState = {
           state: {
             entries: [
               {
-                url: "https://example.org#closed0",
+                url: "https://example.org#win-1-closed-0",
                 triggeringPrincipal_base64,
               },
             ],
@@ -64,12 +73,22 @@ const multiWindowState = {
   ],
   _closedWindows: [
     {
+      tabs: [
+        {
+          entries: [
+            {
+              url: "https://example.org#closedWin-0-tab-0",
+              triggeringPrincipal_base64,
+            },
+          ],
+        },
+      ],
       _closedTabs: [
         {
           state: {
             entries: [
               {
-                url: "https://example.org#closedWindowClosedTab0",
+                url: "https://example.org##closedWin-0-closed-0",
                 triggeringPrincipal_base64,
               },
             ],
@@ -92,6 +111,14 @@ add_task(async function test_ClosedTabMethods() {
     multiWindowState.windows.length,
     `We expect ${multiWindowState.windows} open browser windows`
   );
+  info(
+    `After setup, current tab URI: ${browserWindows[0].gBrowser.currentURI.spec}`
+  );
+  Assert.equal(
+    browserWindows[0].gBrowser.currentURI.spec,
+    "https://example.com/#win-0-tab-0",
+    "The first tab of the first window we restored is current"
+  );
 
   for (let idx = 0; idx < browserWindows.length; idx++) {
     const win = browserWindows[idx];
@@ -100,7 +127,7 @@ add_task(async function test_ClosedTabMethods() {
     Assert.equal(
       winData._closedTabs.length,
       SessionStore.getClosedTabDataForWindow(win).length,
-      `getClosedTabDataForWindow() for window ${idx} returned the expected number of objects`
+      `getClosedTabDataForWindow() for open window ${idx} returned the expected number of objects`
     );
   }
 
@@ -128,6 +155,65 @@ add_task(async function test_ClosedTabMethods() {
   closedCount = SessionStore.getClosedTabCountFromClosedWindows();
   Assert.equal(1, closedCount, "1 closed tabs from closed windows");
 
+  // ***********************************
+  info("check with the all-windows pref off");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
+  });
+
+  info("With this pref off, the closed tab count is that of the top window");
+  closedCount = SessionStore.getClosedTabCount({
+    closedTabsFromClosedWindows: false,
+  }); // Equivalent to SS.getClosedTabCountForWindow(browserWindows[0]),
+  Assert.equal(closedCount, 2, `2 closed tabs from the top (first) window`);
+  Assert.equal(
+    SessionStore.getClosedTabCount(), // includes closed tabs from closed windows, but only the top open window
+    3,
+    `3 closed tabs when counting the top window and the closed window`
+  );
+
+  allWindowsClosedTabs = SessionStore.getClosedTabData(); // Equivalent to SS.getClosedTabDataForWindow(browserWindows[0]),
+  Assert.equal(
+    allWindowsClosedTabs.length,
+    2,
+    "getClosedTabData returned the number of entries for the top window"
+  );
+  SpecialPowers.popPrefEnv();
+  await TestUtils.waitForTick();
+  //
+  // ***********************************
+
+  closedCount = SessionStore.getClosedTabCount();
+  Assert.equal(
+    4,
+    closedCount,
+    "Sanity-check, with the pref on, we're back to 4 closed tabs"
+  );
+
+  // ***********************************
+  info("check with the closed-tabs-from-closed-windows pref off");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.sessionstore.closedTabsFromClosedWindows", false]],
+  });
+
+  info(
+    "With this pref off, the closed tab count is that of only the only windows"
+  );
+  closedCount = SessionStore.getClosedTabCount(); // Equivalent to SS.getClosedTabCountForWindow(browserWindows[0]),
+  Assert.equal(3, closedCount, `3 closed tabs from the open windows`);
+
+  allWindowsClosedTabs = SessionStore.getClosedTabData();
+  Assert.equal(
+    allWindowsClosedTabs.length,
+    3,
+    "getClosedTabData returned the number of entries for the top window"
+  );
+  SpecialPowers.popPrefEnv();
+  await TestUtils.waitForTick();
+  //
+  // ***********************************
+
+  info("forget the closed tab from the closed window");
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"
   );
@@ -143,40 +229,25 @@ add_task(async function test_ClosedTabMethods() {
     closedCount,
     "0 closed tabs from closed windows after forgetting them"
   );
-
-  // ***********************************
-  // check with the pref off
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
-  });
-
   closedCount = SessionStore.getClosedTabCount();
-
-  Assert.equal(2, closedCount, "2 closed tabs for the top window");
-
-  allWindowsClosedTabs = SessionStore.getClosedTabData();
   Assert.equal(
+    3,
     closedCount,
-    2,
-    "getClosedTabData returned the number of entries for the top window"
+    "3 closed tabs now that the closed tab from the closed window is forgotten"
   );
-  for (let tabData of allWindowsClosedTabs) {
-    Assert.ok(tabData.sourceWindowId, "each tab has a sourceWindowId property");
-  }
-  SpecialPowers.popPrefEnv();
-  //
-  // ***********************************
 
+  info("restore one of the closed tabs from an open window");
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"
   );
+
   SessionStore.undoCloseTab(browserWindows[0], 0);
   await sessionStoreUpdated;
 
   Assert.equal(
     1,
     SessionStore.getClosedTabCountForWindow(browserWindows[0]),
-    "Now theres one closed tab"
+    "Now theres one closed tab in the first window"
   );
   Assert.equal(
     1,
@@ -190,12 +261,14 @@ add_task(async function test_ClosedTabMethods() {
     "Theres a total for 2 closed tabs"
   );
 
+  // Bug 1836198 - sometimes this reports 1 not 2.
   Assert.equal(
     2,
     SessionStore.getClosedTabData().length,
     "We get the right number of tab entries from getClosedTabData()"
   );
 
+  info("forget the last closed tab in the first window");
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"
   );
@@ -205,7 +278,7 @@ add_task(async function test_ClosedTabMethods() {
   Assert.equal(
     0,
     SessionStore.getClosedTabCountForWindow(browserWindows[0]),
-    "The first window has closed tabs after forgetting the last tab"
+    "The first window has 0 closed tabs after forgetting the last tab"
   );
   Assert.equal(
     1,
@@ -224,6 +297,9 @@ add_task(async function test_ClosedTabMethods() {
     "We get the right number of tab entries from getClosedTabData()"
   );
 
+  info(
+    "Close the 2nd window. This makes its 1 closed tab a 'closed tab from closed window'"
+  );
   await promiseAllButPrimaryWindowClosed();
 
   Assert.equal(
