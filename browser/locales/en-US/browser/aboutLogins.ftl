@@ -83,7 +83,7 @@ about-logins-list-section-week = Last 7 days
 about-logins-login-intro-heading-logged-out2 = Looking for your saved logins? Turn on sync or import them.
 about-logins-login-intro-heading-logged-in = No synced logins found.
 login-intro-description = If you saved your logins to { -brand-product-name } on a different device, here’s how to get them here:
-login-intro-instructions-fxa = Create or sign in to your { -fxaccount-brand-name(capitalization: "sentence") } on the device where your logins are saved.
+login-intro-instructions-fxa2 = Create or sign in to your account on the device where your logins are saved.
 login-intro-instructions-fxa-settings = Go to Settings > Sync > Turn on syncing… Select the Logins and passwords checkbox.
 login-intro-instructions-fxa-passwords-help = Visit <a data-l10n-name="passwords-help-link">passwords support</a> for more help.
 about-logins-intro-browser-only-import = If your logins are saved in another browser, you can <a data-l10n-name="import-link">import them into { -brand-product-name }</a>
@@ -203,10 +203,10 @@ about-logins-confirm-remove-all-sync-dialog-title =
      [one] Remove { $count } login from all devices?
     *[other] Remove all { $count } logins from all devices?
   }
-about-logins-confirm-remove-all-sync-dialog-message=
+about-logins-confirm-remove-all-sync-dialog-message2=
   { $count ->
-     [1] This will remove the login you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
-    *[other] This will remove all logins you’ve saved to { -brand-short-name } on all devices synced to your { -fxaccount-brand-name }. This will also remove breach alerts that appear here. You won’t be able to undo this action.
+     [1] This will remove the login you’ve saved to { -brand-short-name } on all devices synced to your account. This will also remove breach alerts that appear here. You won’t be able to undo this action.
+    *[other] This will remove all logins you’ve saved to { -brand-short-name } on all devices synced to your account. This will also remove breach alerts that appear here. You won’t be able to undo this action.
   }
 
 ##

@@ -154,7 +154,7 @@ window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
   let options = {};
   if (fxaLoggedIn && passwordSyncEnabled) {
     options.title = "about-logins-confirm-remove-all-sync-dialog-title";
-    options.message = "about-logins-confirm-remove-all-sync-dialog-message";
+    options.message = "about-logins-confirm-remove-all-sync-dialog-message2";
   } else {
     options.title = "about-logins-confirm-remove-all-dialog-title";
     options.message = "about-logins-confirm-remove-all-dialog-message";
