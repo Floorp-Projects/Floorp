@@ -63,11 +63,21 @@ pub struct Dependency {
     ///
     #[ignore_malloc_size_of = "Arc"]
     pub parent: Option<Arc<Dependency>>,
+
+    /// What kind of relative selector invalidation this generates.
+    /// None if this dependency is not within a relative selector.
+    relative_kind: Option<RelativeDependencyInvalidationKind>,
+}
+
+impl SelectorMapEntry for Dependency {
+    fn selector(&self) -> SelectorIter<SelectorImpl> {
+        self.selector.iter_from(self.selector_offset)
+    }
 }
 
 /// The kind of elements down the tree this dependency may affect.
-#[derive(Debug, Eq, PartialEq)]
-pub enum DependencyInvalidationKind {
+#[derive(Clone, Copy, Debug, Eq, PartialEq, MallocSizeOf)]
+pub enum NormalDependencyInvalidationKind {
     /// This dependency may affect the element that changed itself.
     Element,
     /// This dependency affects the style of the element itself, and also the
@@ -86,6 +96,34 @@ pub enum DependencyInvalidationKind {
     Parts,
 }
 
+/// The kind of elements up the tree this relative selector dependency may
+/// affect. Because this travels upwards, it's not viable for parallel subtree
+/// traversal, and is handled separately.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, MallocSizeOf)]
+pub enum RelativeDependencyInvalidationKind {
+    /// This dependency may affect relative selector anchors for ancestors.
+    Ancestors,
+    /// This dependency may affect a relative selector anchor for the parent.
+    Parent,
+    /// This dependency may affect a relative selector anchor for the previous sibling.
+    PrevSibling,
+    /// This dependency may affect relative selector anchors for ancestors' previous siblings.
+    AncestorPrevSibling,
+    /// This dependency may affect relative selector anchors for earlier siblings.
+    EarlierSibling,
+    /// This dependency may affect relative selector anchors for ancestors' earlier siblings.
+    AncestorEarlierSibling,
+}
+
+/// Invalidation kind merging normal and relative dependencies.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, MallocSizeOf)]
+pub enum DependencyInvalidationKind {
+    /// This dependency is a normal dependency.
+    Normal(NormalDependencyInvalidationKind),
+    /// This dependency is a relative dependency.
+    Relative(RelativeDependencyInvalidationKind),
+}
+
 impl Dependency {
     /// Creates a dummy dependency to invalidate the whole selector.
     ///
@@ -100,6 +138,7 @@ impl Dependency {
             selector_offset: selector.len() + 1,
             selector,
             parent: None,
+            relative_kind: None,
         }
     }
 
@@ -107,7 +146,7 @@ impl Dependency {
     /// dependency represents.
     ///
     /// TODO(emilio): Consider storing inline if it helps cache locality?
-    pub fn combinator(&self) -> Option<Combinator> {
+    fn combinator(&self) -> Option<Combinator> {
         if self.selector_offset == 0 {
             return None;
         }
@@ -118,28 +157,32 @@ impl Dependency {
         )
     }
 
-    /// The kind of invalidation that this would generate.
-    pub fn invalidation_kind(&self) -> DependencyInvalidationKind {
+    /// The kind of normal invalidation that this would generate. The dependency
+    /// in question must be a normal dependency.
+    pub fn normal_invalidation_kind(&self) -> NormalDependencyInvalidationKind {
+        debug_assert!(self.relative_kind.is_none(), "Querying normal invalidation kind on relative dependency.");
         match self.combinator() {
-            None => DependencyInvalidationKind::Element,
+            None => NormalDependencyInvalidationKind::Element,
             Some(Combinator::Child) | Some(Combinator::Descendant) => {
-                DependencyInvalidationKind::Descendants
+                NormalDependencyInvalidationKind::Descendants
             },
             Some(Combinator::LaterSibling) | Some(Combinator::NextSibling) => {
-                DependencyInvalidationKind::Siblings
+                NormalDependencyInvalidationKind::Siblings
             },
             // TODO(emilio): We could look at the selector itself to see if it's
             // an eager pseudo, and return only Descendants here if not.
-            Some(Combinator::PseudoElement) => DependencyInvalidationKind::ElementAndDescendants,
-            Some(Combinator::SlotAssignment) => DependencyInvalidationKind::SlottedElements,
-            Some(Combinator::Part) => DependencyInvalidationKind::Parts,
+            Some(Combinator::PseudoElement) => NormalDependencyInvalidationKind::ElementAndDescendants,
+            Some(Combinator::SlotAssignment) => NormalDependencyInvalidationKind::SlottedElements,
+            Some(Combinator::Part) => NormalDependencyInvalidationKind::Parts,
         }
     }
-}
 
-impl SelectorMapEntry for Dependency {
-    fn selector(&self) -> SelectorIter<SelectorImpl> {
-        self.selector.iter_from(self.selector_offset)
+    /// The kind of invalidation that this would generate.
+    pub fn invalidation_kind(&self) -> DependencyInvalidationKind {
+        if let Some(kind) = self.relative_kind {
+            return DependencyInvalidationKind::Relative(kind);
+        }
+        DependencyInvalidationKind::Normal(self.normal_invalidation_kind())
     }
 }
 
@@ -242,51 +285,47 @@ impl InvalidationMap {
         self.state_affecting_selectors.shrink_if_needed();
         self.other_attribute_affecting_selectors.shrink_if_needed();
     }
-
-    /// Adds a selector to this `InvalidationMap`.  Returns Err(..) to
-    /// signify OOM.
-    pub fn note_selector(
-        &mut self,
-        selector: &Selector<SelectorImpl>,
-        quirks_mode: QuirksMode,
-    ) -> Result<(), AllocErr> {
-        debug!("InvalidationMap::note_selector({:?})", selector);
-
-        let mut document_state = DocumentState::empty();
-
-        {
-            let mut parent_stack = SmallVec::new();
-            let mut alloc_error = None;
-            let mut collector = SelectorDependencyCollector {
-                map: self,
-                document_state: &mut document_state,
-                selector,
-                parent_selectors: &mut parent_stack,
-                quirks_mode,
-                compound_state: PerCompoundState::new(0),
-                alloc_error: &mut alloc_error,
-            };
-
-            let visit_result = collector.visit_whole_selector();
-            debug_assert_eq!(!visit_result, alloc_error.is_some());
-            if let Some(alloc_error) = alloc_error {
-                return Err(alloc_error);
-            }
-        }
-
-        if !document_state.is_empty() {
-            let dep = DocumentStateDependency {
-                state: document_state,
-                dependency: Dependency::for_full_selector_invalidation(selector.clone()),
-            };
-            self.document_state_selectors.try_reserve(1)?;
-            self.document_state_selectors.push(dep);
-        }
-
-        Ok(())
-    }
 }
 
+/// Adds a selector to the given `InvalidationMap`. Returns Err(..) to signify OOM.
+pub fn note_selector_for_invalidation(
+    selector: &Selector<SelectorImpl>,
+    quirks_mode: QuirksMode,
+    map: &mut InvalidationMap,
+) -> Result<(), AllocErr> {
+    debug!("note_selector_for_invalidation({:?})", selector);
+
+    let mut document_state = DocumentState::empty();
+    {
+        let mut parent_stack = SmallVec::new();
+        let mut alloc_error = None;
+        let mut collector = SelectorDependencyCollector {
+            map,
+            document_state: &mut document_state,
+            selector,
+            parent_selectors: &mut parent_stack,
+            quirks_mode,
+            compound_state: PerCompoundState::new(0),
+            alloc_error: &mut alloc_error,
+        };
+
+        let visit_result = collector.visit_whole_selector();
+        debug_assert_eq!(!visit_result, alloc_error.is_some());
+        if let Some(alloc_error) = alloc_error {
+            return Err(alloc_error);
+        }
+    }
+
+    if !document_state.is_empty() {
+        let dep = DocumentStateDependency {
+            state: document_state,
+            dependency: Dependency::for_full_selector_invalidation(selector.clone()),
+        };
+        map.document_state_selectors.try_reserve(1)?;
+        map.document_state_selectors.push(dep);
+    }
+    Ok(())
+}
 struct PerCompoundState {
     /// The offset at which our compound starts.
     offset: usize,
@@ -410,7 +449,7 @@ impl<'a> SelectorDependencyCollector<'a> {
 
         fn dependencies_from(entries: &mut [ParentDependencyEntry]) -> Option<Arc<Dependency>> {
             if entries.is_empty() {
-                return None
+                return None;
             }
 
             let last_index = entries.len() - 1;
@@ -418,13 +457,18 @@ impl<'a> SelectorDependencyCollector<'a> {
             let last = &mut last[0];
             let selector = &last.selector;
             let selector_offset = last.offset;
-            Some(last.cached_dependency.get_or_insert_with(|| {
-                Arc::new(Dependency {
-                    selector: selector.clone(),
-                    selector_offset,
-                    parent: dependencies_from(previous),
-                })
-            }).clone())
+            Some(
+                last.cached_dependency
+                    .get_or_insert_with(|| {
+                        Arc::new(Dependency {
+                            selector: selector.clone(),
+                            selector_offset,
+                            parent: dependencies_from(previous),
+                            relative_kind: None,
+                        })
+                    })
+                    .clone(),
+            )
         }
 
         dependencies_from(&mut self.parent_selectors)
@@ -436,6 +480,7 @@ impl<'a> SelectorDependencyCollector<'a> {
             selector: self.selector.clone(),
             selector_offset: self.compound_state.offset,
             parent,
+            relative_kind: None,
         }
     }
 }
