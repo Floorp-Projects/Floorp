@@ -105,6 +105,14 @@ class JitZone {
                 StableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
   InlinedScriptMap inlinedCompilations_;
 
+  // The following two fields are a pair of associated scripts. If they are
+  // non-null, the child has been inlined into the parent, and we have bailed
+  // out due to a MonomorphicInlinedStubFolding bailout. If it wasn't
+  // trial-inlined, we need to track for the parent if we attach a new case to
+  // the corresponding folded stub which belongs to the child.
+  WeakHeapPtr<JSScript*> lastStubFoldingBailoutChild_;
+  WeakHeapPtr<JSScript*> lastStubFoldingBailoutParent_;
+
   mozilla::Maybe<IonCompilationId> currentCompilationId_;
   bool keepJitScripts_ = false;
 
@@ -163,6 +171,24 @@ class JitZone {
 
   void removeInlinedCompilations(JSScript* inlined) {
     inlinedCompilations_.remove(inlined);
+  }
+
+  void noteStubFoldingBailout(JSScript* child, JSScript* parent) {
+    lastStubFoldingBailoutChild_ = child;
+    lastStubFoldingBailoutParent_ = parent;
+  }
+  bool hasStubFoldingBailoutData(JSScript* child) const {
+    return lastStubFoldingBailoutChild_ &&
+           lastStubFoldingBailoutChild_.get() == child &&
+           lastStubFoldingBailoutParent_;
+  }
+  JSScript* stubFoldingBailoutParent() const {
+    MOZ_ASSERT(lastStubFoldingBailoutChild_);
+    return lastStubFoldingBailoutParent_.get();
+  }
+  void clearStubFoldingBailoutData() {
+    lastStubFoldingBailoutChild_ = nullptr;
+    lastStubFoldingBailoutParent_ = nullptr;
   }
 
   bool keepJitScripts() const { return keepJitScripts_; }

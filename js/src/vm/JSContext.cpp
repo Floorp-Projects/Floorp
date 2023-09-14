@@ -1042,8 +1042,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       interruptCallbackDisabled(this, false),
       interruptBits_(0),
       inlinedICScript_(this, nullptr),
-      lastStubFoldingBailoutChild_(this, nullptr),
-      lastStubFoldingBailoutParent_(this, nullptr),
       jitStackLimit(JS::NativeStackLimitMin),
       jitStackLimitNoInterrupt(this, JS::NativeStackLimitMin),
       jobQueue(this, nullptr),
