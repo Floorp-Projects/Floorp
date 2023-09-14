@@ -273,8 +273,6 @@ bool Sprinter::putString(JSString* s) {
   return true;
 }
 
-ptrdiff_t Sprinter::getOffset() const { return offset; }
-
 void Sprinter::reportOutOfMemory() {
   if (hadOOM_) {
     return;
