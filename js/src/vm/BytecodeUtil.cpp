@@ -1390,7 +1390,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
   }
 
-  size_t before = sp->stringEnd() - sp->string();
+  size_t before = sp->length();
   bool stackDumped = false;
   auto dumpStack = [&cx, &script, &pc, &parser, &sp, &before, &stackDumped]() {
     if (!parser) {
@@ -1401,7 +1401,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
     stackDumped = true;
 
-    size_t after = sp->stringEnd() - sp->string();
+    size_t after = sp->length();
     MOZ_ASSERT(after >= before);
 
     static const size_t stack_column = 40;
