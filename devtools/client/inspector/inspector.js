@@ -10,6 +10,7 @@ const { executeSoon } = require("resource://devtools/shared/DevToolsUtils.js");
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 const createStore = require("resource://devtools/client/inspector/store.js");
 const InspectorStyleChangeTracker = require("resource://devtools/client/inspector/shared/style-change-tracker.js");
+const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
@@ -103,6 +104,7 @@ const THREE_PANE_CHROME_ENABLED_PREF =
 const TELEMETRY_EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
 const TELEMETRY_SCALAR_NODE_SELECTION_COUNT =
   "devtools.inspector.node_selection_count";
+const DEFAULT_COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -156,6 +158,8 @@ function Inspector(toolbox, commands) {
   this._panels = new Map();
 
   this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
+  this._handleDefaultColorUnitPrefChange =
+    this._handleDefaultColorUnitPrefChange.bind(this);
   this._handleRejectionIfNotDestroyed =
     this._handleRejectionIfNotDestroyed.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
@@ -185,6 +189,13 @@ function Inspector(toolbox, commands) {
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
   this.onReflowInSelection = this.onReflowInSelection.bind(this);
   this.listenForSearchEvents = this.listenForSearchEvents.bind(this);
+
+  this.prefObserver = new PrefObserver("devtools.");
+  this.prefObserver.on(
+    DEFAULT_COLOR_UNIT_PREF,
+    this._handleDefaultColorUnitPrefChange
+  );
+  this.defaultColorUnit = Services.prefs.getStringPref(DEFAULT_COLOR_UNIT_PREF);
 }
 
 Inspector.prototype = {
@@ -536,6 +547,12 @@ Inspector.prototype = {
   // find itself midway through without a highlighter to test.
   // This value is exposed on Inspector so individual tests can restore it when needed.
   HIGHLIGHTER_AUTOHIDE_TIMER: flags.testing ? 0 : 1000,
+
+  _handleDefaultColorUnitPrefChange() {
+    this.defaultColorUnit = Services.prefs.getStringPref(
+      DEFAULT_COLOR_UNIT_PREF
+    );
+  },
 
   /**
    * Handle promise rejections for various asynchronous actions, and only log errors if
@@ -1718,6 +1735,12 @@ Inspector.prototype = {
     this._destroyMarkup();
 
     this.teardownToolbar();
+
+    this.prefObserver.on(
+      DEFAULT_COLOR_UNIT_PREF,
+      this._handleDefaultColorUnitPrefChange
+    );
+    this.prefObserver.destroy();
 
     this.breadcrumbs.destroy();
     this.styleChangeTracker.destroy();

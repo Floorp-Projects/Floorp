@@ -30,14 +30,6 @@ function run_test() {
     const result = colorUtils.classifyColor(test.input);
     equal(result, test.output, "test classifyColor(" + test.input + ")");
 
-    const obj = new colorUtils.CssColor("purple");
-    obj.setAuthoredUnitFromColor(test.input);
-    equal(
-      obj.colorUnit,
-      test.output,
-      "test setAuthoredUnitFromColor(" + test.input + ")"
-    );
-
     ok(
       InspectorUtils.colorToRGBA(test.input) !== null,
       "'" + test.input + "' is a color"
@@ -55,12 +47,9 @@ function run_test() {
 
   // Regression test for bug 1303826.
   const black = new colorUtils.CssColor("#000");
-  black.colorUnit = "name";
-  equal(black.toString(), "black", "test non-upper-case color cycling");
+  equal(black.toString("name"), "black", "test non-upper-case color cycling");
 
   const upper = new colorUtils.CssColor("BLACK");
-  upper.colorUnit = "hex";
-  equal(upper.toString(), "#000", "test upper-case color cycling");
-  upper.colorUnit = "name";
-  equal(upper.toString(), "BLACK", "test upper-case color preservation");
+  equal(upper.toString("hex"), "#000", "test upper-case color cycling");
+  equal(upper.toString("name"), "BLACK", "test upper-case color preservation");
 }

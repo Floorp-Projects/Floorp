@@ -14,9 +14,7 @@ const EIGHT_CHARACTER_HEX = "#fefefef0";
 // eslint-disable-next-line
 function run_test() {
   const cssColor = new colorUtils.CssColor(EIGHT_CHARACTER_HEX);
-  cssColor.colorUnit = colorUtils.CssColor.COLORUNIT.hex;
-
-  const color = cssColor.toString();
+  const color = cssColor.toString(colorUtils.CssColor.COLORUNIT.hex);
 
   equal(color, EIGHT_CHARACTER_HEX, "alpha value is correct");
 }

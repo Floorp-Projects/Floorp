@@ -46,17 +46,11 @@ function testColorUtils(canvas) {
 }
 
 function testToString(color, name, hex, hsl, rgb) {
-  color.colorUnit = colorUtils.CssColor.COLORUNIT.name;
-  is(color.toString(), name, "toString() with authored type");
-
-  color.colorUnit = colorUtils.CssColor.COLORUNIT.hex;
-  is(color.toString(), hex, "toString() with hex type");
-
-  color.colorUnit = colorUtils.CssColor.COLORUNIT.hsl;
-  is(color.toString(), hsl, "toString() with hsl type");
-
-  color.colorUnit = colorUtils.CssColor.COLORUNIT.rgb;
-  is(color.toString(), rgb, "toString() with rgb type");
+  const { COLORUNIT } = colorUtils.CssColor;
+  is(color.toString(COLORUNIT.name), name, "toString() with authored type");
+  is(color.toString(COLORUNIT.hex), hex, "toString() with hex type");
+  is(color.toString(COLORUNIT.hsl), hsl, "toString() with hsl type");
+  is(color.toString(COLORUNIT.rgb), rgb, "toString() with rgb type");
 }
 
 function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
