@@ -392,88 +392,55 @@ void Scope::dump() {
 /* static */
 bool Scope::dumpForDisassemble(JSContext* cx, JS::Handle<Scope*> scope,
                                GenericPrinter& out, const char* indent) {
-  if (!out.put(ScopeKindString(scope->kind()))) {
-    return false;
-  }
-  if (!out.put(" {")) {
-    return false;
-  }
+  out.put(ScopeKindString(scope->kind()));
+  out.put(" {");
 
   size_t i = 0;
   for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++, i++) {
     if (i == 0) {
-      if (!out.put("\n")) {
-        return false;
-      }
+      out.put("\n");
     }
     UniqueChars bytes = AtomToPrintableString(cx, bi.name());
     if (!bytes) {
       return false;
     }
-    if (!out.put(indent)) {
-      return false;
-    }
-    if (!out.printf("  %2zu: %s %s ", i, BindingKindString(bi.kind()),
-                    bytes.get())) {
-      return false;
-    }
+    out.put(indent);
+    out.printf("  %2zu: %s %s ", i, BindingKindString(bi.kind()), bytes.get());
     switch (bi.location().kind()) {
       case BindingLocation::Kind::Global:
         if (bi.isTopLevelFunction()) {
-          if (!out.put("(global function)\n")) {
-            return false;
-          }
+          out.put("(global function)\n");
         } else {
-          if (!out.put("(global)\n")) {
-            return false;
-          }
+          out.put("(global)\n");
         }
         break;
       case BindingLocation::Kind::Argument:
-        if (!out.printf("(arg slot %u)\n", bi.location().argumentSlot())) {
-          return false;
-        }
+        out.printf("(arg slot %u)\n", bi.location().argumentSlot());
         break;
       case BindingLocation::Kind::Frame:
-        if (!out.printf("(frame slot %u)\n", bi.location().slot())) {
-          return false;
-        }
+        out.printf("(frame slot %u)\n", bi.location().slot());
         break;
       case BindingLocation::Kind::Environment:
-        if (!out.printf("(env slot %u)\n", bi.location().slot())) {
-          return false;
-        }
+        out.printf("(env slot %u)\n", bi.location().slot());
         break;
       case BindingLocation::Kind::NamedLambdaCallee:
-        if (!out.put("(named lambda callee)\n")) {
-          return false;
-        }
+        out.put("(named lambda callee)\n");
         break;
       case BindingLocation::Kind::Import:
-        if (!out.put("(import)\n")) {
-          return false;
-        }
+        out.put("(import)\n");
         break;
     }
   }
   if (i > 0) {
-    if (!out.put(indent)) {
-      return false;
-    }
+    out.put(indent);
   }
-  if (!out.put("}")) {
-    return false;
-  }
+  out.put("}");
 
   ScopeIter si(scope);
   si++;
   for (; si; si++) {
-    if (!out.put(" -> ")) {
-      return false;
-    }
-    if (!out.put(ScopeKindString(si.kind()))) {
-      return false;
-    }
+    out.put(" -> ");
+    out.put(ScopeKindString(si.kind()));
   }
   return true;
 }
