@@ -70,21 +70,43 @@ export class ShoppingSidebarChild extends RemotePageChild {
           return;
         }
 
-        let equalURIs = uri && this.#productURI?.equalsExceptRef(uri);
-        // If we have a previous product, check that the ids have changed:
-        if (!isReload && !equalURIs && this.#product && uri) {
-          let updatedProduct = ShoppingProduct.fromURL(URL.fromURI(uri));
-          if (updatedProduct?.id === this.#product.product.id) {
-            return;
-          }
-          // Otherwise, just check if we now have a new product url:
-        } else if (!isReload && equalURIs) {
+        // If we haven't reloaded, check if the URIs represent the same product
+        // as sites might change the URI after they have loaded (Bug 1852099).
+        if (!isReload && this.isSameProduct(uri, this.#productURI)) {
           return;
         }
+
         this.#productURI = uri;
         this.updateContent({ haveUpdatedURI: true, isReload });
         break;
     }
+  }
+
+  isSameProduct(newURI, currentURI) {
+    if (!newURI || !currentURI) {
+      return false;
+    }
+
+    // Check if the URIs are equal:
+    if (currentURI.equalsExceptRef(newURI)) {
+      return true;
+    }
+
+    if (!this.#product) {
+      return false;
+    }
+
+    // If the current ShoppingProduct has product info set,
+    // check if the product ids are the same:
+    let currentProduct = this.#product.product;
+    if (currentProduct) {
+      let newProduct = ShoppingProduct.fromURL(URL.fromURI(newURI));
+      if (newProduct.id === currentProduct.id) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   handleEvent(event) {
