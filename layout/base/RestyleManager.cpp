@@ -80,6 +80,9 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
 
 void RestyleManager::ContentInserted(nsIContent* aChild) {
   MOZ_ASSERT(aChild->GetParentNode());
+  if (aChild->IsElement()) {
+    StyleSet()->MaybeInvalidateForElementInsertion(*aChild->AsElement());
+  }
   RestyleForInsertOrChange(aChild);
 }
 
@@ -95,6 +98,10 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     }
   }
 #endif
+  if (aFirstNewContent->IsElement()) {
+    StyleSet()->MaybeInvalidateForElementAppend(*aFirstNewContent->AsElement());
+  }
+
   const auto selectorFlags = container->GetSelectorFlags() &
                              NodeSelectorFlags::AllSimpleRestyleFlagsForAppend;
   if (!selectorFlags) {
@@ -410,6 +417,19 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     // look up the cache with their address for a different element before it's
     // invalidated.
     IncrementUndisplayedRestyleGeneration();
+  }
+
+  if (aOldChild->IsElement()) {
+    Element* nextSibling =
+        aFollowingSibling ? aFollowingSibling->IsElement()
+                                ? aFollowingSibling->AsElement()
+                                : aFollowingSibling->GetNextElementSibling()
+                          : nullptr;
+    Element* prevSibling = aFollowingSibling
+                               ? aFollowingSibling->GetPreviousElementSibling()
+                               : container->GetLastElementChild();
+    StyleSet()->MaybeInvalidateForElementRemove(*aOldChild->AsElement(),
+                                                prevSibling, nextSibling);
   }
 
   const auto selectorFlags =

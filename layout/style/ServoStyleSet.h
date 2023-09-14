@@ -491,6 +491,26 @@ class ServoStyleSet {
                                                       dom::ElementState);
 
   /**
+   * Maybe invalidate if a DOM element insertion might require us to restyle
+   * the relative selector to ancestors/previous siblings.
+   */
+  void MaybeInvalidateForElementInsertion(const dom::Element&);
+
+  /**
+   * Maybe invalidate if a DOM element append might require us to restyle
+   * the relative selector to ancestors/previous siblings.
+   */
+  void MaybeInvalidateForElementAppend(const dom::Element&);
+
+  /**
+   * Maybe invalidate if a DOM element removal might require us to restyle
+   * the relative selector to ancestors/previous siblings.
+   */
+  void MaybeInvalidateForElementRemove(const dom::Element& aElement,
+                                       const dom::Element* aPrevSibling,
+                                       const dom::Element* aNextSibling);
+
+  /**
    * Returns true if a change in event state on an element might require
    * us to restyle the element.
    *
