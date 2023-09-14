@@ -426,6 +426,30 @@ class SearchDialogControllerTest {
     }
 
     @Test
+    fun `WHEN felt privacy is enabled THEN do not dispatch AllowSearchSuggestionsInPrivateModePrompt`() {
+        every { settings.feltPrivateBrowsingEnabled } returns true
+
+        val text = "mozilla"
+
+        createController().handleTextChanged(text)
+        val actionSlot = mutableListOf<SearchFragmentAction>()
+        verify { store.dispatch(capture(actionSlot)) }
+        assertFalse(actionSlot.any { it is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt })
+    }
+
+    @Test
+    fun `WHEN felt privacy is disabled THEN dispatch AllowSearchSuggestionsInPrivateModePrompt`() {
+        every { settings.feltPrivateBrowsingEnabled } returns false
+
+        val text = "mozilla"
+
+        createController().handleTextChanged(text)
+        val actionSlot = mutableListOf<SearchFragmentAction>()
+        verify { store.dispatch(capture(actionSlot)) }
+        assertTrue(actionSlot.any { it is SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt })
+    }
+
+    @Test
     fun handleUrlTapped() {
         val url = "https://www.google.com/"
         val flags = EngineSession.LoadUrlFlags.all()
