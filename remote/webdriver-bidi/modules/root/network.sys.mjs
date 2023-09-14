@@ -455,6 +455,16 @@ class NetworkModule extends Module {
     }
 
     const protocolEventName = "network.beforeRequestSent";
+
+    // Process the navigation to create potentially missing navigation ids
+    // before the early return below.
+    const navigation = this.#getNavigationId(
+      protocolEventName,
+      isNavigationRequest,
+      browsingContext,
+      requestData.url
+    );
+
     const isListening = this.messageHandler.eventsDispatcher.hasListener(
       protocolEventName,
       { contextId }
@@ -467,7 +477,7 @@ class NetworkModule extends Module {
 
     const baseParameters = this.#processNetworkEvent(protocolEventName, {
       contextId,
-      isNavigationRequest,
+      navigation,
       redirectCount,
       requestData,
       timestamp,
@@ -528,6 +538,16 @@ class NetworkModule extends Module {
       name === "response-started"
         ? "network.responseStarted"
         : "network.responseCompleted";
+
+    // Process the navigation to create potentially missing navigation ids
+    // before the early return below.
+    const navigation = this.#getNavigationId(
+      protocolEventName,
+      isNavigationRequest,
+      browsingContext,
+      requestData.url
+    );
+
     const isListening = this.messageHandler.eventsDispatcher.hasListener(
       protocolEventName,
       { contextId }
@@ -540,7 +560,7 @@ class NetworkModule extends Module {
 
     const baseParameters = this.#processNetworkEvent(protocolEventName, {
       contextId,
-      isNavigationRequest,
+      navigation,
       redirectCount,
       requestData,
       timestamp,
@@ -584,8 +604,8 @@ class NetworkModule extends Module {
    * @param {object} data
    * @param {string} data.contextId
    *     The browsing context id for the network event.
-   * @param {boolean} data.isNavigationRequest
-   *     True if the network event is related to a navigation request.
+   * @param {string|null} data.navigation
+   *     The navigation id if this is a network event for a navigation request.
    * @param {number} data.redirectCount
    *     The redirect count for the network event.
    * @param {RequestData} data.requestData
@@ -594,22 +614,8 @@ class NetworkModule extends Module {
    *     The timestamp when the network event was created.
    */
   #processNetworkEvent(eventName, data) {
-    const {
-      contextId,
-      isNavigationRequest,
-      redirectCount,
-      requestData,
-      timestamp,
-    } = data;
-
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
-
-    const navigation = this.#getNavigationId(
-      eventName,
-      isNavigationRequest,
-      browsingContext,
-      requestData.url
-    );
+    const { contextId, navigation, redirectCount, requestData, timestamp } =
+      data;
     const intercepts = this.#getNetworkIntercepts(eventName, requestData);
     const isBlocked = !!intercepts.length;
 
