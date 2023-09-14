@@ -9,7 +9,7 @@ clipboardTypes.forEach(function (type) {
   if (clipboard.isClipboardTypeSupported(type)) {
     clipboardTypes.forEach(function (otherType) {
       if (clipboard.isClipboardTypeSupported(otherType)) {
-        [true, false].forEach(function (async) {
+        [true, false].forEach(async function (async) {
           add_task(async function test_clipboard_pending_asyncSetData() {
             info(
               `Test having a pending asyncSetData request on ${type} and then make a new ${
@@ -19,13 +19,17 @@ clipboardTypes.forEach(function (type) {
 
             // Create a pending asyncSetData request
             let priorResult;
-            let priorRequest = clipboard.asyncSetData(type, {
-              QueryInterface: ChromeUtils.generateQI([
-                "nsIAsyncSetClipboardDataCallback",
-              ]),
-              onComplete(rv) {
-                priorResult = rv;
-              },
+            let priorRequest;
+            let priorPromise = new Promise(resolve => {
+              priorRequest = clipboard.asyncSetData(type, {
+                QueryInterface: SpecialPowers.ChromeUtils.generateQI([
+                  "nsIAsyncSetClipboardDataCallback",
+                ]),
+                onComplete(rv) {
+                  priorResult = rv;
+                  resolve();
+                },
+              });
             });
 
             // Create a new request
@@ -37,7 +41,11 @@ clipboardTypes.forEach(function (type) {
             );
 
             if (type === otherType) {
-              info("The new request should cancel the prior pending request");
+              info(
+                "The new request to the same clipboard type should cancel the prior pending request"
+              );
+              await priorPromise;
+
               is(
                 priorResult,
                 Cr.NS_ERROR_ABORT,
@@ -60,18 +68,21 @@ clipboardTypes.forEach(function (type) {
               }
             } else {
               info(
-                "The new request should be used to cancel the prior pending request for different clipboard types"
-              );
-              is(
-                priorResult,
-                undefined,
-                "The pending asyncSetData request should not be canceled"
+                "The new request to the different clipboard type should not cancel the prior pending request"
               );
               str = generateRandomString();
               priorRequest.setData(
                 generateNewTransferable("text/plain", str),
                 null
               );
+              await priorPromise;
+
+              is(
+                priorResult,
+                Cr.NS_OK,
+                "The pending asyncSetData request should success"
+              );
+
               try {
                 priorRequest.setData(
                   generateNewTransferable("text/plain", generateRandomString())
@@ -109,7 +120,7 @@ clipboardTypes.forEach(function (type) {
       // Create a pending asyncSetData request
       let result;
       let request = clipboard.asyncSetData(type, {
-        QueryInterface: ChromeUtils.generateQI([
+        QueryInterface: SpecialPowers.ChromeUtils.generateQI([
           "nsIAsyncSetClipboardDataCallback",
         ]),
         onComplete(rv) {

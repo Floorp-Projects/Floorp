@@ -3,6 +3,9 @@
 
 "use strict";
 
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Cr = SpecialPowers.Cr;
 const clipboard = SpecialPowers.Services.clipboard;
 const clipboardTypes = [
   clipboard.kGlobalClipboard,
@@ -104,7 +107,7 @@ function getClipboardData(aFlavor, aClipboardType) {
   clipboard.getData(trans, aClipboardType);
 
   try {
-    var data = {};
+    var data = SpecialPowers.createBlankObject();
     trans.getTransferData(aFlavor, data);
     return data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data;
   } catch (ex) {
