@@ -6234,7 +6234,13 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_ACTIVATEAPP: {
-      GPUProcessManager::Get()->SetAppInForeground(wParam);
+      // Bug 1851991: Sometimes this can be called before gfxPlatform::Init
+      // when a window is created very early. In that case we just forego
+      // setting this and accept the GPU process might briefly run at a lower
+      // priority.
+      if (GPUProcessManager::Get()) {
+        GPUProcessManager::Get()->SetAppInForeground(wParam);
+      }
     } break;
 
     case WM_MOUSEACTIVATE:
