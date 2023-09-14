@@ -1408,6 +1408,27 @@ void ServoStyleSet::MaybeInvalidateRelativeSelectorStateDependency(
       mRawData.get(), &aElement, aState.GetInternalValue());
 }
 
+void ServoStyleSet::MaybeInvalidateRelativeSelectorForEmptyDependency(
+    const Element& aElement) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorEmptyDependency(mRawData.get(),
+                                                                &aElement);
+}
+
+void ServoStyleSet::MaybeInvalidateRelativeSelectorForNthEdgeDependency(
+    const Element& aElement) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorNthEdgeDependency(
+      mRawData.get(), &aElement);
+}
+
+void ServoStyleSet::MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+    const Element* aFromSibling) {
+  if (aFromSibling == nullptr) {
+    return;
+  }
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorNthDependencyFromSibling(
+      mRawData.get(), aFromSibling);
+}
+
 void ServoStyleSet::MaybeInvalidateForElementInsertion(
     const Element& aElement) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(mRawData.get(),

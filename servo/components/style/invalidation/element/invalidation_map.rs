@@ -248,7 +248,7 @@ pub struct DocumentStateDependency {
 
 /// Dependency mapping for classes or IDs.
 pub type IdOrClassDependencyMap = MaybeCaseInsensitiveHashMap<Atom, SmallVec<[Dependency; 1]>>;
-/// Dependency mapping for pseudo-class states.
+/// Dependency mapping for non-tree-strctural pseudo-class states.
 pub type StateDependencyMap = SelectorMap<StateDependency>;
 /// Dependency mapping for local names.
 pub type LocalNameDependencyMap = PrecomputedHashMap<LocalName, SmallVec<[Dependency; 1]>>;
@@ -277,11 +277,45 @@ pub struct InvalidationMap {
     pub other_attribute_affecting_selectors: LocalNameDependencyMap,
 }
 
+bitflags! {
+    /// Tree-structural pseudoclasses that we care about for (Relative selector) invalidation.
+    /// Specifically, we need to store information on ones that don't generate the inner selector.
+    #[derive(MallocSizeOf)]
+    pub struct TSStateForInvalidation : u8 {
+        /// :empty
+        const EMPTY = 1 << 0;
+        /// :nth, :first-child, etc, without of.
+        const NTH = 1 << 1;
+    }
+}
+
+/// Dependency for tree-structural pseudo-classes.
+#[derive(Clone, Debug, MallocSizeOf)]
+pub struct TSStateDependency {
+    /// The other dependency fields.
+    pub dep: Dependency,
+    /// The state this dependency is affected by.
+    pub state: TSStateForInvalidation,
+}
+
+impl SelectorMapEntry for TSStateDependency {
+    fn selector(&self) -> SelectorIter<SelectorImpl> {
+        self.dep.selector()
+    }
+}
+
+/// Dependency mapping for tree-structural pseudo-class states.
+pub type TSStateDependencyMap = SelectorMap<TSStateDependency>;
+
 /// A map to store all relative selector invalidations.
+/// This keeps a lot more data than the usual map, because any change can generate
+/// upward traversals that need to be handled separately.
 #[derive(Clone, Debug, MallocSizeOf)]
 pub struct RelativeSelectorInvalidationMap {
     /// Portion common to the normal invalidation map, except that this is for relative selectors and their inner selectors.
     pub map: InvalidationMap,
+    /// A map for a given tree-structural pseudo-class to all the relative selector dependencies with that type.
+    pub ts_state_to_selector: TSStateDependencyMap,
     /// A map from a given type name to all the relative selector dependencies with that type.
     pub type_to_selector: LocalNameDependencyMap,
     /// All relative selector dependencies that specify `*`.
@@ -297,6 +331,7 @@ impl RelativeSelectorInvalidationMap {
     pub fn new() -> Self {
         Self {
             map: InvalidationMap::new(),
+            ts_state_to_selector: TSStateDependencyMap::default(),
             type_to_selector: LocalNameDependencyMap::default(),
             any_to_selector: SmallVec::default(),
             used: false,
@@ -312,6 +347,7 @@ impl RelativeSelectorInvalidationMap {
     /// Clears this map, leaving it empty.
     pub fn clear(&mut self) {
         self.map.clear();
+        self.ts_state_to_selector.clear();
         self.type_to_selector.clear();
         self.any_to_selector.clear();
     }
@@ -319,6 +355,7 @@ impl RelativeSelectorInvalidationMap {
     /// Shrink the capacity of hash maps if needed.
     pub fn shrink_if_needed(&mut self) {
         self.map.shrink_if_needed();
+        self.ts_state_to_selector.shrink_if_needed();
         self.type_to_selector.shrink_if_needed();
     }
 }
@@ -789,6 +826,7 @@ impl<'a> SelectorVisitor for SelectorDependencyCollector<'a> {
 
 struct RelativeSelectorPerCompoundState {
     state: PerCompoundState,
+    ts_state: TSStateForInvalidation,
     added_entry: bool,
 }
 
@@ -796,6 +834,7 @@ impl RelativeSelectorPerCompoundState {
     fn new(offset: usize) -> Self {
         Self {
             state: PerCompoundState::new(offset),
+            ts_state: TSStateForInvalidation::empty(),
             added_entry: false,
         }
     }
@@ -869,6 +908,20 @@ impl<'a> RelativeSelectorDependencyCollector<'a> {
         Ok(())
     }
 
+    fn add_ts_pseudo_class_dependency(&mut self) -> Result<(), AllocErr> {
+        if self.compound_state.ts_state.is_empty() {
+            return Ok(());
+        }
+        let dependency = self.dependency();
+        self.map.ts_state_to_selector.insert(
+            TSStateDependency {
+                dep: dependency,
+                state: self.compound_state.ts_state,
+            },
+            self.quirks_mode,
+        )
+    }
+
     fn visit_whole_selector(&mut self) -> bool {
         let mut iter = self.selector.selector.iter_skip_relative_selector_anchor();
         let mut index = 0;
@@ -896,6 +949,10 @@ impl<'a> RelativeSelectorDependencyCollector<'a> {
                 self.quirks_mode,
                 self,
             ) {
+                *self.alloc_error = Some(err);
+                return false;
+            }
+            if let Err(err) = self.add_ts_pseudo_class_dependency() {
                 *self.alloc_error = Some(err);
                 return false;
             }
@@ -1016,6 +1073,18 @@ impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
                     *self.alloc_error = Some(err.into());
                     return false;
                 }
+                true
+            },
+            Component::Empty => {
+                self.compound_state
+                    .ts_state
+                    .insert(TSStateForInvalidation::EMPTY);
+                true
+            },
+            Component::Nth(..) => {
+                self.compound_state
+                    .ts_state
+                    .insert(TSStateForInvalidation::NTH);
                 true
             },
             Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
