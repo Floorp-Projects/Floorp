@@ -3502,8 +3502,8 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
 bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
                             js::Sprinter* sp) {
   sp->put("\nSource notes:\n");
-  sp->jsprintf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
-               "pc", "delta", "desc", "args");
+  sp->printf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
+             "pc", "delta", "desc", "args");
   sp->put("---- ---- ------ ----- ------ ---------- ------\n");
 
   unsigned offset = 0;
@@ -3517,8 +3517,8 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
     offset += delta;
     SrcNoteType type = sn->type();
     const char* name = sn->name();
-    sp->jsprintf("%3u: %4u %6u %5u [%4u] %-10s", unsigned(sn - notes), lineno,
-                 column.zeroOriginValue(), offset, delta, name);
+    sp->printf("%3u: %4u %6u %5u [%4u] %-10s", unsigned(sn - notes), lineno,
+               column.zeroOriginValue(), offset, delta, name);
 
     switch (type) {
       case SrcNoteType::Null:
@@ -3530,14 +3530,14 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
       case SrcNoteType::ColSpan: {
         JS::ColumnNumberOffset colspan = SrcNote::ColSpan::getSpan(sn);
-        sp->jsprintf(" colspan %u", colspan.value());
+        sp->printf(" colspan %u", colspan.value());
         column += colspan;
         break;
       }
 
       case SrcNoteType::SetLine:
         lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-        sp->jsprintf(" lineno %u", lineno);
+        sp->printf(" lineno %u", lineno);
         column = JS::LimitedColumnNumberZeroOrigin::zero();
         break;
 
@@ -3582,8 +3582,8 @@ bool JSScript::dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
   sp->put("\nException table:\nkind               stack    start      end\n");
 
   for (const js::TryNote& tn : script->trynotes()) {
-    sp->jsprintf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
-                 tn.stackDepth, tn.start, tn.start + tn.length);
+    sp->printf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
+               tn.stackDepth, tn.start, tn.start + tn.length);
   }
   return true;
 }
@@ -3595,16 +3595,16 @@ bool JSScript::dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
   for (const ScopeNote& note : script->scopeNotes()) {
     if (note.index == ScopeNote::NoScopeIndex) {
-      sp->jsprintf("%8s ", "(none)");
+      sp->printf("%8s ", "(none)");
     } else {
-      sp->jsprintf("%8u ", note.index.index);
+      sp->printf("%8u ", note.index.index);
     }
     if (note.parent == ScopeNote::NoScopeIndex) {
-      sp->jsprintf("%8s ", "(none)");
+      sp->printf("%8s ", "(none)");
     } else {
-      sp->jsprintf("%8u ", note.parent);
+      sp->printf("%8u ", note.parent);
     }
-    sp->jsprintf("%8u %8u\n", note.start, note.start + note.length);
+    sp->printf("%8u %8u\n", note.start, note.start + note.length);
   }
   return true;
 }
@@ -3616,7 +3616,7 @@ bool JSScript::dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
 
   size_t i = 0;
   for (JS::GCCellPtr gcThing : script->gcthings()) {
-    sp->jsprintf("%8zu   ", i);
+    sp->printf("%8zu   ", i);
     if (gcThing.is<JS::BigInt>()) {
       sp->put("BigInt     ");
       gcThing.as<JS::BigInt>().dump(*sp);
@@ -3647,8 +3647,8 @@ bool JSScript::dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
 
         if (fun->hasBaseScript()) {
           BaseScript* script = fun->baseScript();
-          sp->jsprintf(" @ %u:%u\n", script->lineno(),
-                       script->column().zeroOriginValue());
+          sp->printf(" @ %u:%u\n", script->lineno(),
+                     script->column().zeroOriginValue());
         } else {
           sp->put(" (no script)\n");
         }
