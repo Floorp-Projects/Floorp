@@ -179,7 +179,7 @@ nsDOMTokenList* HTMLFormElement::RelList() {
 
 NS_IMPL_ELEMENT_CLONE(HTMLFormElement)
 
-nsIHTMLCollection* HTMLFormElement::Elements() { return mControls; }
+HTMLFormControlsCollection* HTMLFormElement::Elements() { return mControls; }
 
 void HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                     const nsAttrValue* aValue, bool aNotify) {

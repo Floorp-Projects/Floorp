@@ -18,6 +18,7 @@
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "nsIFormControl.h"
 
 #include "mozilla/FloatingPoint.h"
@@ -48,7 +49,7 @@ void HTMLFormAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::autocomplete) {
     dom::HTMLFormElement* formEl = dom::HTMLFormElement::FromNode(mContent);
 
-    nsIHTMLCollection* controls = formEl->Elements();
+    HTMLFormControlsCollection* controls = formEl->Elements();
     uint32_t length = controls->Length();
     for (uint32_t i = 0; i < length; i++) {
       if (LocalAccessible* acc = mDoc->GetAccessible(controls->Item(i))) {

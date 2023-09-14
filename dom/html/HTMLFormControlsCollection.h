@@ -74,6 +74,7 @@ class HTMLFormControlsCollection final : public nsIHTMLCollection,
       nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const;
 
   // nsWrapperCache
+  using nsWrapperCache::GetWrapper;
   using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::PreserveWrapper;
   virtual JSObject* WrapObject(JSContext* aCx,

@@ -329,7 +329,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   // it's only out-of-line because the class definition is not available in the
   // header
-  nsIHTMLCollection* Elements();
+  HTMLFormControlsCollection* Elements();
 
   int32_t Length();
 
