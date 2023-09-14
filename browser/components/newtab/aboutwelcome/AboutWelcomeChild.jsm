@@ -441,6 +441,7 @@ const SHOPPING_MICROSURVEY = {
   screens: [
     {
       id: "SHOPPING_MICROSURVEY_SCREEN_1",
+      above_button_steps_indicator: true,
       content: {
         position: "split",
         layout: "survey",
@@ -516,6 +517,7 @@ const SHOPPING_MICROSURVEY = {
     },
     {
       id: "SHOPPING_MICROSURVEY_SCREEN_2",
+      above_button_steps_indicator: true,
       content: {
         position: "split",
         layout: "survey",
