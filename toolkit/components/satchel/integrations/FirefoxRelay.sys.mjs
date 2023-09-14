@@ -94,7 +94,7 @@ async function fetchWithReauth(
   const relayToken = await getRelayTokenAsync();
   if (!relayToken) {
     if (browser) {
-      await showErrorAsync(browser, "firefox-relay-must-login-to-fxa");
+      await showErrorAsync(browser, "firefox-relay-must-login-to-account");
     }
     return undefined;
   }
