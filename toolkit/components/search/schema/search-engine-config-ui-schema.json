@@ -6,6 +6,7 @@
     "orderHint",
     "sendAttributionRequest",
     "telemetryId",
+    "urls",
     "params",
     "extraParams",
     "suggestExtraParams",
