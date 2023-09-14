@@ -85,20 +85,20 @@
 .urlbarView-body-inner {
   width: calc(100% + 2 * var(--urlbarView-row-gutter));
   margin-inline: calc(-1 * var(--urlbarView-row-gutter));
-}
 
-#urlbar[open] > .urlbarView > .urlbarView-body-outer > .urlbarView-body-inner {
-  border-top: 1px solid var(--autocomplete-popup-separator-color);
+  #urlbar[open] > .urlbarView > .urlbarView-body-outer > & {
+    border-top: 1px solid var(--autocomplete-popup-separator-color);
+  }
 }
 
 .urlbarView-results {
   padding-block: 4px;
   white-space: nowrap;
-}
 
-/* Vertically center the one-offs when no results are present. */
-.urlbarView[noresults] > .urlbarView-body-outer > .urlbarView-body-inner > .urlbarView-results {
-  padding-block: 0;
+  /* Vertically center the one-offs when no results are present. */
+  .urlbarView[noresults] > .urlbarView-body-outer > .urlbarView-body-inner > & {
+    padding-block: 0;
+  }
 }
 
 .urlbarView-row {
@@ -115,64 +115,61 @@
   border: var(--urlbarView-row-gutter) solid transparent;
   border-radius: calc(var(--urlbarView-row-gutter) + var(--toolbarbutton-border-radius));
   background-clip: padding-box;
-}
 
-.urlbarView-row[row-selectable]:not([selected]):hover {
-  background-color: var(--autocomplete-popup-hover-background);
-}
+  &[row-selectable]:not([selected]):hover {
+    background-color: var(--autocomplete-popup-hover-background);
+  }
 
-.urlbarView-row[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
-}
+  &[selected] {
+    background-color: var(--autocomplete-popup-highlight-background);
+    color: var(--autocomplete-popup-highlight-color);
+  }
 
-:root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
-  min-height: 32px;
-}
+  :root:not([uidensity=compact]) &:not([type=tip], [type=dynamic]) {
+    min-height: 32px;
+  }
 
-:root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
-  padding-block: 11px;
-}
-
-.urlbarView-row-inner {
-  display: inline-flex;
-  flex: 1 1;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  padding-inline: var(--urlbarView-item-inline-padding);
-  padding-block: 6px;
-}
-
-:root:not([uidensity=compact]) .urlbarView-row-inner {
-  min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
+  :root[uidensity=touch] &:not([type=tip], [type=dynamic]) {
+    padding-block: 11px;
+  }
 }
 
 .urlbarView-row-inner,
 .urlbarView-no-wrap {
+  display: inline-flex;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: start;
 }
 
+.urlbarView-row-inner {
+  flex: 1 1;
+  overflow: hidden;
+  padding-inline: var(--urlbarView-item-inline-padding);
+  padding-block: 6px;
+
+  :root:not([uidensity=compact]) & {
+    min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
+  }
+}
+
 .urlbarView-no-wrap {
-  display: inline-flex;
   max-width: 100%;
   flex-grow: 0;
   flex-shrink: 0;
+
+  .urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > &,
+  .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > &,
+  .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > & {
+    /* We prioritize icons + title + action over the url, so they can grow freely,
+       but the url should never disappear when it's visible */
+    max-width: calc(70% - 2 * (var(--urlbarView-favicon-width) + (6px + 2px)));
+  }
 }
 
 .urlbarView-url {
   flex-grow: 1;
   flex-shrink: 1;
-}
-
-.urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap,
-.urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > .urlbarView-no-wrap,
-.urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap {
-  /* We prioritize icons + title + action over the url, so they can grow freely,
-     but the url should never disappear when it's visible */
-  flex-shrink: 0;
-  max-width: calc(70% - 2 * (var(--urlbarView-favicon-width) + (6px + 2px)));
 }
 
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
