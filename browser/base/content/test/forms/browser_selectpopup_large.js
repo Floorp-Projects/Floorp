@@ -322,10 +322,7 @@ add_task(async function test_large_popup_in_small_window() {
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     newWin.gBrowser.selectedBrowser
   );
-  BrowserTestUtils.startLoadingURIString(
-    newWin.gBrowser.selectedBrowser,
-    pageUrl
-  );
+  BrowserTestUtils.loadURIString(newWin.gBrowser.selectedBrowser, pageUrl);
   await browserLoadedPromise;
 
   newWin.gBrowser.selectedBrowser.focus();

@@ -49,7 +49,7 @@ export var ControlCenter = {
         let browserWindow =
           Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
-        BrowserTestUtils.startLoadingURIString(
+        BrowserTestUtils.loadURIString(
           gBrowser.selectedBrowser,
           channel.file.path
         );
@@ -278,7 +278,7 @@ export var ControlCenter = {
 async function loadPage(url) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let gBrowser = browserWindow.gBrowser;
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url);
 }
 

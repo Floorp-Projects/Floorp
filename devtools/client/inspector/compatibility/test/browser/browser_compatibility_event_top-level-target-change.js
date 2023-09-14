@@ -79,6 +79,6 @@ async function navigateTo(uri, tab, { store }) {
   const onSelectedNodeUpdated = waitForUpdateSelectedNodeAction(store);
   const onTopLevelTargetUpdated = waitForUpdateTopLevelTargetAction(store);
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, uri);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
   await Promise.all([onLoaded, onSelectedNodeUpdated, onTopLevelTargetUpdated]);
 }

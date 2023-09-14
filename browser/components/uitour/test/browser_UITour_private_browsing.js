@@ -23,7 +23,7 @@ add_task(async function test_privatebrowsing_window() {
     ABOUT_ORIGIN_WITH_UITOUR_DEFAULT,
     HTTPS_ORIGIN_WITH_UITOUR_DEFAULT,
   ]) {
-    BrowserTestUtils.startLoadingURIString(browser, uri);
+    BrowserTestUtils.loadURIString(browser, uri);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(browser, [], async () => {

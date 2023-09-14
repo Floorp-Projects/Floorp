@@ -366,10 +366,7 @@ add_task(async function test_no_cert_error() {
   gBrowser.selectedTab = newTab;
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser,
-    "https://nocert.example.com/"
-  );
+  BrowserTestUtils.loadURIString(gBrowser, "https://nocert.example.com/");
   await promise;
   is(
     getIdentityMode(),
@@ -410,11 +407,8 @@ add_task(async function test_https_only_error() {
   gBrowser.selectedTab = newTab;
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://nocert.example.com/"
-  );
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  BrowserTestUtils.loadURIString(gBrowser, "http://nocert.example.com/");
   await promise;
   is(
     getIdentityMode(),
@@ -582,7 +576,7 @@ add_task(async function test_about_blocked() {
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
 
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
 
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
@@ -611,10 +605,7 @@ add_task(async function test_no_cert_error_security_connection_bg() {
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser,
-    "https://nocert.example.com/"
-  );
+  BrowserTestUtils.loadURIString(gBrowser, "https://nocert.example.com/");
   await promise;
 
   is(

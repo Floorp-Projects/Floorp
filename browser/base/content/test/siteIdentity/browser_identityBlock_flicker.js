@@ -43,10 +43,7 @@ add_task(async function test() {
     false,
     "https://example.com/"
   );
-  BrowserTestUtils.startLoadingURIString(
-    tab.linkedBrowser,
-    "https://example.com"
-  );
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "https://example.com");
   await loaded;
 
   is(classChanges, 1, "Changed the className once");

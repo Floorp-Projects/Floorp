@@ -40,9 +40,7 @@ add_task(async function () {
   });
   Services.console.registerListener(on_new_message);
   // 1. Upgrade page to https://
-  let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, kTestURI);
-  await promiseLoaded;
+  await BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, kTestURI);
 
   await BrowserTestUtils.waitForCondition(() => tests.length === 0);
 

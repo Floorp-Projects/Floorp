@@ -107,10 +107,7 @@ async function openAboutTranslations({
   });
 
   // Now load the about:translations page, since the actor could be mocked.
-  BrowserTestUtils.startLoadingURIString(
-    tab.linkedBrowser,
-    "about:translations"
-  );
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:translations");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Resolve the files.
@@ -489,7 +486,7 @@ async function loadTestPage({
     autoDownloadFromRemoteSettings,
   });
 
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, page);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   if (autoOffer && TranslationsParent.shouldAlwaysOfferTranslations()) {
@@ -980,10 +977,7 @@ async function setupAboutPreferences(languagePairs) {
     languagePairs,
   });
 
-  BrowserTestUtils.startLoadingURIString(
-    tab.linkedBrowser,
-    "about:preferences"
-  );
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:preferences");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   const elements = await selectAboutPreferencesElements();

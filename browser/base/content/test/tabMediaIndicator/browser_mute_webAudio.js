@@ -42,7 +42,7 @@ add_task(async function mute_web_audio() {
     window.gBrowser,
     "about:blank"
   );
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, PAGE);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- tab should be audible -");

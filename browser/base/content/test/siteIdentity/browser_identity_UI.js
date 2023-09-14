@@ -122,7 +122,7 @@ async function runTest(i, forward) {
     false,
     currentTest.location
   );
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     currentTest.location
   );

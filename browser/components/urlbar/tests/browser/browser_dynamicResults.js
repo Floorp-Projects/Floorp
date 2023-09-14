@@ -513,10 +513,7 @@ add_task(async function shouldNavigate() {
       "We navigated to payload.url when result selected"
     );
 
-    BrowserTestUtils.startLoadingURIString(
-      gBrowser.selectedBrowser,
-      "about:home"
-    );
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:home");
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,

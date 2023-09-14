@@ -72,7 +72,7 @@ add_task(async () => {
     );
   });
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     newWindow.gBrowser.selectedBrowser,
     "about:mozilla"
   );
@@ -81,7 +81,7 @@ add_task(async () => {
     false,
     "about:mozilla"
   );
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     newWindow.gBrowser.selectedBrowser,
     "about:about"
   );
@@ -179,7 +179,7 @@ add_task(async () => {
     );
   });
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     newWindow.gBrowser.selectedBrowser,
     "about:mozilla"
   );
@@ -188,7 +188,7 @@ add_task(async () => {
     false,
     "about:mozilla"
   );
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     newWindow.gBrowser.selectedBrowser,
     "about:about"
   );

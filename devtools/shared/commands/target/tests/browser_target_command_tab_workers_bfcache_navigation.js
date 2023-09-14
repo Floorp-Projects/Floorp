@@ -92,7 +92,7 @@ add_task(async function () {
 
   info("Check that navigating away does destroy all targets");
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     tab.linkedBrowser,
     "data:text/html,<meta charset=utf8>Away"
   );

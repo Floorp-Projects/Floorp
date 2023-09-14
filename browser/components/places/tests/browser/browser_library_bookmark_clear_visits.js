@@ -104,7 +104,7 @@ add_task(async function tags() {
 async function updateMostRecentVisitTime() {
   for (const url of TEST_URLS) {
     const onLoaded = BrowserTestUtils.browserLoaded(gBrowser, false, url);
-    BrowserTestUtils.startLoadingURIString(gBrowser, url);
+    BrowserTestUtils.loadURIString(gBrowser, url);
     await onLoaded;
   }
 }

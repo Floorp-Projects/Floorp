@@ -181,10 +181,7 @@ add_task(async function test_user_defined_commands() {
 
   // Create a window before the extension is loaded.
   let win1 = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.startLoadingURIString(
-    win1.gBrowser.selectedBrowser,
-    "about:robots"
-  );
+  BrowserTestUtils.loadURIString(win1.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
 
   // We would have previously focused the window's content area after the
@@ -269,10 +266,7 @@ add_task(async function test_user_defined_commands() {
 
   // Create another window after the extension is loaded.
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.startLoadingURIString(
-    win2.gBrowser.selectedBrowser,
-    "about:robots"
-  );
+  BrowserTestUtils.loadURIString(win2.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
   // See comment above.
@@ -312,7 +306,7 @@ add_task(async function test_user_defined_commands() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     privateWin.gBrowser.selectedBrowser,
     "about:robots"
   );

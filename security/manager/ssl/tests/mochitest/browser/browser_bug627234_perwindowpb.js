@@ -48,10 +48,7 @@ function test() {
       }
     );
 
-    BrowserTestUtils.startLoadingURIString(
-      aWindow.gBrowser.selectedBrowser,
-      testURI
-    );
+    BrowserTestUtils.loadURIString(aWindow.gBrowser.selectedBrowser, testURI);
   }
 
   function testOnWindow(aOptions, aCallback) {

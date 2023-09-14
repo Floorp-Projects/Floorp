@@ -10,7 +10,7 @@ add_task(async function test_backAndReload() {
     { gBrowser, url: DUMMY },
     async function (browser) {
       info("Start JSON load.");
-      BrowserTestUtils.startLoadingURIString(browser, JSON);
+      BrowserTestUtils.loadURIString(browser, JSON);
       await BrowserTestUtils.waitForLocationChange(gBrowser, JSON);
 
       info("JSON load has started, go back.");

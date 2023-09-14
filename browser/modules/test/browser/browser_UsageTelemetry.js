@@ -346,10 +346,7 @@ add_task(async function test_tabsHistogram() {
   );
   openedTabs.push(tab);
   BrowserUsageTelemetry._lastRecordTabCount = 0;
-  BrowserTestUtils.startLoadingURIString(
-    tab.linkedBrowser,
-    "http://example.com/"
-  );
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(
     tab.linkedBrowser,
     false,
@@ -430,10 +427,7 @@ add_task(async function test_tabsHistogram() {
     Date.now() - MINIMUM_TAB_COUNT_INTERVAL_MS / 2;
   {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
-    BrowserTestUtils.startLoadingURIString(
-      tab.linkedBrowser,
-      "http://example.com/"
-    );
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(
       tab.linkedBrowser,
       false,
@@ -455,10 +449,7 @@ add_task(async function test_tabsHistogram() {
     Date.now() - (MINIMUM_TAB_COUNT_INTERVAL_MS + 1000);
   {
     let oldLastRecordTabCount = BrowserUsageTelemetry._lastRecordTabCount;
-    BrowserTestUtils.startLoadingURIString(
-      tab.linkedBrowser,
-      "http://example.com/"
-    );
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, "http://example.com/");
     await BrowserTestUtils.browserLoaded(
       tab.linkedBrowser,
       false,
@@ -563,7 +554,7 @@ add_task(async function test_loadedTabsHistogram() {
   resetTimestamps();
 
   await Promise.all([
-    BrowserTestUtils.startLoadingURIString(
+    BrowserTestUtils.loadURIString(
       lazyTab.linkedBrowser,
       "http://example.com/"
     ),

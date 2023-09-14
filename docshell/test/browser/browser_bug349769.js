@@ -28,7 +28,7 @@ add_task(async function test() {
       { gBrowser },
       async function (newBrowser) {
         let loadedPromise = BrowserTestUtils.browserLoaded(newBrowser);
-        BrowserTestUtils.startLoadingURIString(newBrowser, uri);
+        BrowserTestUtils.loadURIString(newBrowser, uri);
 
         var prin = newBrowser.contentPrincipal;
         isnot(

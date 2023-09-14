@@ -4,7 +4,7 @@
 async function runTest(desc, url, expectedURI) {
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
-    BrowserTestUtils.startLoadingURIString(browser, url);
+    BrowserTestUtils.loadURIString(browser, url);
     await loaded;
 
     await SpecialPowers.spawn(

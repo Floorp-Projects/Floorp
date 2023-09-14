@@ -20,10 +20,7 @@ add_task(async function test_check_referrer_for_discovered_favicon() {
         }
       ).then(([chan]) => chan.getRequestHeader("Referer"));
 
-      BrowserTestUtils.startLoadingURIString(
-        browser,
-        `${FOLDER}discovery.html`
-      );
+      BrowserTestUtils.loadURIString(browser, `${FOLDER}discovery.html`);
 
       let referrer = await referrerPromise;
       is(
@@ -48,7 +45,7 @@ add_task(
           }
         ).then(([chan]) => chan.getRequestHeader("Referer"));
 
-        BrowserTestUtils.startLoadingURIString(
+        BrowserTestUtils.loadURIString(
           browser,
           `${FOLDER}file_favicon_no_referrer.html`
         );

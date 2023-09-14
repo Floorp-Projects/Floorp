@@ -15,7 +15,7 @@ add_task(async function () {
   }
 
   let tab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, uri);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, uri);
   await TabStateFlusher.flush(tab.linkedBrowser);
 

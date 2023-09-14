@@ -79,7 +79,7 @@
       var testName = "[nostore]";
 
       // Load a page with a no-store header
-      BrowserTestUtils.startLoadingURIString(gBrowser, nostoreURI);
+      BrowserTestUtils.loadURIString(gBrowser, nostoreURI);
       yield undefined;
 
 
@@ -105,7 +105,7 @@
       // Load a new document into the browser
       var simple = "data:text/html,<html><head><title>test2</title></head>" +
                      "<body>test2</body></html>";
-      BrowserTestUtils.startLoadingURIString(gBrowser, simple);
+      BrowserTestUtils.loadURIString(gBrowser, simple);
       yield undefined;
 
 
@@ -129,7 +129,7 @@
 
       // Load a page with a no-cache header. This should not be
       // restricted like no-store (bug 567365)
-      BrowserTestUtils.startLoadingURIString(gBrowser, nocacheURI);
+      BrowserTestUtils.loadURIString(gBrowser, nocacheURI);
       yield undefined;
 
 
@@ -152,7 +152,7 @@
       isnot(currScrollY, originalYPosition,
             testName + " failed to scroll window vertically");
 
-      BrowserTestUtils.startLoadingURIString(gBrowser, simple);
+      BrowserTestUtils.loadURIString(gBrowser, simple);
       yield undefined;
 
 

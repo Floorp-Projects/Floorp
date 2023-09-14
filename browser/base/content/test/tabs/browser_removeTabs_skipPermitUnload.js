@@ -46,10 +46,7 @@ add_setup(async function () {
   // Run tests in a new window to avoid affecting the main test window.
   win = await BrowserTestUtils.openNewBrowserWindow();
 
-  BrowserTestUtils.startLoadingURIString(
-    win.gBrowser.selectedBrowser,
-    TEST_URL
-  );
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, TEST_URL);
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
     false,

@@ -34,7 +34,7 @@ function createRootMessageHandler(sessionId) {
  */
 async function loadURL(browser, url) {
   const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.startLoadingURIString(browser, url);
+  BrowserTestUtils.loadURIString(browser, url);
   return loaded;
 }
 

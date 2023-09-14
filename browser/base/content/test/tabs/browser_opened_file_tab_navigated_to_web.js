@@ -42,7 +42,7 @@ add_task(async function () {
 
   // Ensure that new file:// tab can be navigated to web content.
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  BrowserTestUtils.startLoadingURIString(openedBrowser, "http://example.org/");
+  BrowserTestUtils.loadURIString(openedBrowser, "http://example.org/");
   let href = await BrowserTestUtils.browserLoaded(
     openedBrowser,
     false,

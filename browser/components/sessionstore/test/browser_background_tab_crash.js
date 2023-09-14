@@ -32,7 +32,7 @@ async function setupBackgroundTabs(testFn) {
   // foreground.
   let initialTab = gBrowser.selectedTab;
   let initialBrowser = initialTab.linkedBrowser;
-  BrowserTestUtils.startLoadingURIString(initialBrowser, NON_REMOTE_PAGE);
+  BrowserTestUtils.loadURIString(initialBrowser, NON_REMOTE_PAGE);
   await BrowserTestUtils.browserLoaded(initialBrowser);
   // Quick sanity check - the browser should be non remote.
   Assert.ok(

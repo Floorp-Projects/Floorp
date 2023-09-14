@@ -43,7 +43,7 @@ function triggerSave(aWindow, aCallback) {
     windowObserver.setCallback(onUCTDialog);
   }
 
-  BrowserTestUtils.startLoadingURIString(testBrowser, testURI);
+  BrowserTestUtils.loadURIString(testBrowser, testURI);
 
   // Create the folder the link will be saved into.
   var destDir = createTemporarySaveDirectory();

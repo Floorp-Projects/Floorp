@@ -111,7 +111,7 @@ async function testRealRefresh(refreshPage, delay) {
     async function (browser) {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         browser,
         refreshPage + "?p=" + TARGET_PAGE + "&d=" + delay
       );
@@ -177,7 +177,7 @@ add_task(async function test_can_update_notification() {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
       // First, attempt a redirect
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         browser,
         META_PAGE + "?d=0&p=" + TARGET_PAGE
       );

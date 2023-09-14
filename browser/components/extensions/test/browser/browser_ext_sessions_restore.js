@@ -81,10 +81,7 @@ add_task(async function test_sessions_restore() {
   await extension.awaitMessage("ready");
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.startLoadingURIString(
-    win.gBrowser.selectedBrowser,
-    "about:config"
-  );
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:config");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   for (let url of ["about:robots", "about:mozilla"]) {
     await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
@@ -215,10 +212,7 @@ add_task(async function test_sessions_event_page() {
   // test events waken background
   await extension.terminateBackground();
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.startLoadingURIString(
-    win.gBrowser.selectedBrowser,
-    "about:config"
-  );
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:config");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   for (let url of ["about:robots", "about:mozilla"]) {
     await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);

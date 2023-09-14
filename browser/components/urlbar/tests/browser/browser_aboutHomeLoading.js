@@ -70,7 +70,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
       },
       { capture: true, once: true }
     );
-    BrowserTestUtils.startLoadingURIString(newTabBrowser, "about:preferences");
+    BrowserTestUtils.loadURIString(newTabBrowser, "about:preferences");
   });
   document.getElementById("home-button").click();
   await BrowserTestUtils.browserLoaded(
@@ -145,7 +145,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
     false,
     "about:logo"
   );
-  BrowserTestUtils.startLoadingURIString(currentBrowser, "about:logo");
+  BrowserTestUtils.loadURIString(currentBrowser, "about:logo");
   await loadPromise;
 
   let homeButton = win.document.getElementById("home-button");

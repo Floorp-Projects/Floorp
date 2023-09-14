@@ -44,7 +44,7 @@ async function test_navigation(nextPage, shouldCancel) {
     tab.linkedBrowser,
     "DOMTitleChanged"
   );
-  BrowserTestUtils.startLoadingURIString(gBrowser, nextPage);
+  BrowserTestUtils.loadURIString(gBrowser, nextPage);
 
   const result = await Promise.race([
     nextPageLoaded,

@@ -39,7 +39,7 @@ add_task(async function test_privateMode() {
     private: true,
   });
   await BrowserTestUtils.firstBrowserLoaded(privateWin);
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     privateWin.gBrowser.selectedBrowser,
     "https://example.com/"
   );
