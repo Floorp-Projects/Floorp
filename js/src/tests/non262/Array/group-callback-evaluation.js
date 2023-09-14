@@ -1,3 +1,5 @@
+// |reftest| shell-option(--enable-array-grouping) skip-if(!Object.groupBy)
+
 var array = [1, 2, 3];
 
 var calls = 0;

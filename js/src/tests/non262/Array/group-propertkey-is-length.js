@@ -1,3 +1,5 @@
+// |reftest| shell-option(--enable-array-grouping) skip-if(!Object.groupBy)
+
 var array = [0];
 
 var grouped = Object.groupBy(array, () => "length");
