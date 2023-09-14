@@ -82,6 +82,13 @@ sealed interface ReviewQualityCheckState : State {
                             "reviewGrade, adjustedRating or highlights is not null"
                     }
                 }
+
+                val showMoreButtonVisible: Boolean =
+                    highlights != null && highlights != highlights.forCompactMode()
+
+                val highlightsFadeVisible: Boolean =
+                    highlights != null && showMoreButtonVisible &&
+                        highlights.forCompactMode().entries.first().value.size > 1
             }
         }
     }

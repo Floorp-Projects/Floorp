@@ -94,6 +94,8 @@ fun ProductAnalysis(
         if (productAnalysis.highlights != null) {
             HighlightsCard(
                 highlights = productAnalysis.highlights,
+                highlightsFadeVisible = productAnalysis.highlightsFadeVisible,
+                showMoreButtonVisible = productAnalysis.showMoreButtonVisible,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -192,6 +194,8 @@ private fun AdjustedProductRatingCard(
 @Composable
 private fun HighlightsCard(
     highlights: Map<HighlightType, List<String>>,
+    highlightsFadeVisible: Boolean,
+    showMoreButtonVisible: Boolean,
     modifier: Modifier = Modifier,
 ) {
     ReviewQualityCheckCard(modifier = modifier) {
@@ -243,7 +247,7 @@ private fun HighlightsCard(
                 targetState = isExpanded,
                 label = "HighlightsCard-Crossfade",
             ) { expanded ->
-                if (expanded.not()) {
+                if (expanded.not() && highlightsFadeVisible) {
                     Spacer(
                         modifier = Modifier
                             .height(32.dp)
@@ -261,16 +265,18 @@ private fun HighlightsCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        if (showMoreButtonVisible) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        SecondaryButton(
-            text = if (isExpanded) {
-                stringResource(R.string.review_quality_check_highlights_show_less)
-            } else {
-                stringResource(R.string.review_quality_check_highlights_show_more)
-            },
-            onClick = { isExpanded = isExpanded.not() },
-        )
+            SecondaryButton(
+                text = if (isExpanded) {
+                    stringResource(R.string.review_quality_check_highlights_show_less)
+                } else {
+                    stringResource(R.string.review_quality_check_highlights_show_more)
+                },
+                onClick = { isExpanded = isExpanded.not() },
+            )
+        }
     }
 }
 
