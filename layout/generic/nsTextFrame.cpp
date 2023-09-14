@@ -10271,7 +10271,7 @@ Maybe<nscoord> nsTextFrame::GetNaturalBaselineBOffset(
   if (!aWM.IsOrthogonalTo(GetWritingMode())) {
     if (aWM.IsCentralBaseline()) {
       return Some(GetLogicalUsedBorderAndPadding(aWM).BStart(aWM) +
-                  ContentSize(aWM).BSize(aWM) / 2);
+                  ContentBSize(aWM) / 2);
     }
     return Some(mAscent);
   }

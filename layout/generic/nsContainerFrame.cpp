@@ -1163,7 +1163,7 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
             StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
                 frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
                     ? prevRect.ISize(wm)
-                    : prevInFlow->ContentSize(wm).ISize(wm))));
+                    : prevInFlow->ContentISize(wm))));
 
         // An overflow container's block-size must be 0.
         sizeOverride.mStyleBSize.emplace(

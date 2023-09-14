@@ -1063,6 +1063,12 @@ class nsIFrame : public nsQueryFrame {
         std::max(0, size.ISize(aWritingMode) - bp.IStartEnd(aWritingMode)),
         std::max(0, size.BSize(aWritingMode) - bp.BStartEnd(aWritingMode)));
   }
+  nscoord ContentISize(mozilla::WritingMode aWritingMode) const {
+    return ContentSize(aWritingMode).ISize(aWritingMode);
+  }
+  nscoord ContentBSize(mozilla::WritingMode aWritingMode) const {
+    return ContentSize(aWritingMode).BSize(aWritingMode);
+  }
 
   /**
    * When we change the size of the frame's border-box rect, we may need to
