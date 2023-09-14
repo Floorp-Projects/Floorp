@@ -273,6 +273,7 @@ bool ForkServer::RunForkServer(int* aArgc, char*** aArgv) {
       // The server has stopped.
       MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
               ("Terminate the fork server"));
+      Omnijar::CleanUp();
       NS_LogTerm();
       return true;
     }
