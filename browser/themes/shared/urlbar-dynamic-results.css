@@ -86,19 +86,18 @@
  */
 
 .urlbarView-dynamic-calculator-action {
-  font-size: .85em;
+  font-size: var(--urlbarView-small-font-size);
   font-weight: normal;
-  visibility: collapse;
-}
 
-.urlbarView-row[dynamicType=calculator]:is(:hover, [selected]) .urlbarView-dynamic-calculator-action {
-  visibility: visible;
-}
+  .urlbarView-row:not(:hover, [selected]) & {
+    visibility: collapse;
+  }
 
-.urlbarView-dynamic-calculator-action::before {
-  content: "\2014";
-  margin: 0 .4em;
-  opacity: 0.6;
+  &::before {
+    content: "\2014";
+    margin: 0 .4em;
+    opacity: 0.6;
+  }
 }
 
 /**
