@@ -45,8 +45,8 @@ template <class T>
 
 static void SetTypePolicyBailoutKind(MInstruction* newIns,
                                      MInstruction* forIns) {
-  // Infallible ToFloat32 doesn't bail out.
-  if (newIns->isToFloat32() && !newIns->isGuard()) {
+  // Infallible ToFloat32 or ToDouble doesn't bail out.
+  if ((newIns->isToFloat32() || newIns->isToDouble()) && !newIns->isGuard()) {
     return;
   }
 
