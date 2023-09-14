@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1694265848036,
+      "status": "nightly",
+      "version": "118",
+      "browserid": "edge",
+      "id": "36c856c4-dd23-4793-9bb0-827e7a56697c",
+      "last_modified": 1694439985514
+    },
+    {
+      "name": "Edge",
+      "schema": 1694265847867,
+      "status": "current",
+      "version": "116",
+      "browserid": "edge",
+      "id": "84a6e2fc-78f4-47fe-8d3f-05bfe4635c8e",
+      "last_modified": 1694439985511
+    },
+    {
+      "name": "Edge",
+      "schema": 1694265847950,
+      "status": "beta",
+      "version": "117",
+      "browserid": "edge",
+      "id": "ca91473a-c03b-4e16-8008-b9cec23ce674",
+      "last_modified": 1694439985508
+    },
+    {
       "name": "Deno",
       "schema": 1692797056081,
       "status": "current",
@@ -190,33 +217,6 @@
       "last_modified": 1691389490457
     },
     {
-      "name": "Edge",
-      "schema": 1691241842679,
-      "status": "current",
-      "version": "115",
-      "browserid": "edge",
-      "id": "8b77aeb1-59b4-46f3-a998-5e155ebf6d3e",
-      "last_modified": 1691389490449
-    },
-    {
-      "name": "Edge",
-      "schema": 1691241842874,
-      "status": "nightly",
-      "version": "117",
-      "browserid": "edge",
-      "id": "ca91473a-c03b-4e16-8008-b9cec23ce674",
-      "last_modified": 1691389490445
-    },
-    {
-      "name": "Edge",
-      "schema": 1691241842776,
-      "status": "beta",
-      "version": "116",
-      "browserid": "edge",
-      "id": "84a6e2fc-78f4-47fe-8d3f-05bfe4635c8e",
-      "last_modified": 1691389490442
-    },
-    {
       "name": "Samsung Internet",
       "schema": 1690982642139,
       "status": "current",
@@ -224,15 +224,6 @@
       "browserid": "samsunginternet_android",
       "id": "0f7edb64-99cc-41ee-ae73-ec4edfcef9ab",
       "last_modified": 1690987664600
-    },
-    {
-      "name": "Edge",
-      "schema": 1688822644007,
-      "status": "planned",
-      "version": "118",
-      "browserid": "edge",
-      "id": "36c856c4-dd23-4793-9bb0-827e7a56697c",
-      "last_modified": 1688974992825
     },
     {
       "name": "Node.js",
@@ -388,5 +379,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1692814731173
+  "timestamp": 1694439985514
 }
