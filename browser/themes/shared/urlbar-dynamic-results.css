@@ -82,10 +82,11 @@
 }
 
 /**
- * Calculator
+ * Calculator & Unit Conversion
  */
 
-.urlbarView-dynamic-calculator-action {
+.urlbarView-dynamic-calculator-action,
+.urlbarView-dynamic-unitConversion-action {
   font-size: var(--urlbarView-small-font-size);
   font-weight: normal;
 
@@ -98,38 +99,6 @@
     margin: 0 .4em;
     opacity: 0.6;
   }
-}
-
-/**
- * Unit Conversion
- */
-
-.urlbarView-row[dynamicType=unitConversion][selected] {
-  fill-opacity: 1;
-}
-
-.urlbarView-dynamic-unitConversion-action {
-	font-size: .85em;
-	font-weight: normal;
-	visibility: collapse;
-}
-
-.urlbarView-dynamic-unitConversion-action::before {
-	content: "\2014";
-	margin: 0 .4em;
-	opacity: 0.6;
-}
-
-.urlbarView-row[dynamicType=unitConversion]:is(:hover, [selected]) .urlbarView-dynamic-unitConversion-action {
-	visibility: visible;
-}
-
-.urlbarView-row[dynamicType=unitConversion]:hover .urlbarView-dynamic-unitConversion-action {
-	color: var(--urlbar-popup-action-color);
-}
-
-.urlbarView-row[dynamicType=unitConversion][selected] .urlbarView-dynamic-unitConversion-action {
-  color: var(--autocomplete-popup-highlight-color);
 }
 
 /** Quick actions **/
