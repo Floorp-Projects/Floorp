@@ -19,6 +19,111 @@
 #include "js/Utility.h"
 #include "util/Text.h"
 
+// [SMDOC] *Printer, Sprinter, Fprinter, ...
+//
+// # Motivation
+//
+// In many places, we want to have functions which are capable of logging
+// various data structures. Previously, we had logging functions for each
+// storage, such as using `fwrite`, `printf` or `snprintf`. In additional cases,
+// many of these logging options were using a string serializing logging
+// function, only to discard the allocated string after it had been copied to a
+// file.
+//
+// GenericPrinter is an answer to avoid excessive amount of temporary
+// allocations which are used once, and a way to make logging functions work
+// independently of the backend they are used with.
+//
+// # Design
+//
+// The GenericPrinter implements most of `put`, `printf`, `vprintf` and
+// `putChar` functions, which are implemented using `put` and `putChar`
+// functions in the derivative classes. Thus, one does not have to reimplement
+// `putString` nor `printf` for each printer.
+//
+//   // Logging the value N to whatever printer is provided such as
+//   // a file or a string.
+//   void logN(GenericPrinter& out) {
+//     out.printf("[Logging] %d\n", this->n);
+//   }
+//
+// The printing functions are infallible, from the logging functions
+// perspective. If an issue happens while printing, this would be recorded by
+// the Printer, and this can be tested using `hadOutOfMemory` function by the
+// owner of the Printer instance.
+//
+// Even in case of failure, printing functions should remain safe to use. Thus
+// calling `put` twice in a row is safe even if no check for `hadOutOfMemory` is
+// performed. This is necessary to simplify the control flow and avoid bubble up
+// failures out of logging functions.
+//
+// Note, being safe to use does not imply correctness. In case of failure the
+// correctness of the printed characters is no longer guarantee. One should use
+// `hadOutOfMemory` function to know if any failure happened which might have
+// caused incorrect content to be saved. In some cases, such as `Sprinter`,
+// where the string buffer can be extracted, the returned value would account
+// for checking `hadOutOfMemory`.
+//
+// # Implementations
+//
+// The GenericPrinter is a base class where the derivative classes are providing
+// different implementations which have their own advantages and disadvantages:
+//
+//  - Fprinter: FILE* printer. Write the content directly to a file.
+//
+//  - Sprinter: System allocator C-string buffer. Write the content to a buffer
+//    which is reallocated as more content is added. The buffer can then be
+//    extracted into a C-string or a JSString, respectively using `release` and
+//    `releaseJS`.
+//
+//  - LSprinter: LifoAlloc C-string rope. Write the content to a list of chunks
+//    in a LifoAlloc buffer, no-reallocation occur but one should use
+//    `exportInto` to serialize its content to a Sprinter or a Fprinter. This is
+//    useful to avoid reallocation copies, while using an existing LifoAlloc.
+//
+//  - EscapePrinter: Wrapper around other printers, to escape characters when
+//    necessary.
+//
+// # Print UTF-16
+//
+// The GenericPrinter only handle `char` inputs, which is good enough for ASCII
+// and Latin1 character sets. However, to handle UTF-16, one should use an
+// EscapePrinter as well as a policy for escaping characters.
+//
+// One might require different escaping policies based on the escape sequences
+// and based on the set of accepted character for the content generated. For
+// example, JSON does not specify \x<XX> escape sequences.
+//
+// Today the following escape policies exists:
+//
+//  - StringEscape: Produce C-like escape sequences: \<c>, \x<XX> and \u<XXXX>.
+//  - JSONEscape: Produce JSON escape sequences: \<c> and \u<XXXX>.
+//
+// An escape policy is defined by 2 functions:
+//
+//   bool isSafeChar(char16_t c):
+//     Returns whether a character can be printed without being escaped.
+//
+//   void convertInto(GenericPrinter& out, char16_t c):
+//     Calls the printer with the escape sequence for the character given as
+//     argument.
+//
+// To use an escape policy, the printer should be wrapped using an EscapePrinter
+// as follows:
+//
+//   {
+//     // The escaped string is surrounded by double-quotes, escape the double
+//     // quotes as well.
+//     StringEscape esc('"');
+//
+//     // Wrap our existing `GenericPrinter& out` using the `EscapePrinter`.
+//     EscapePrinter ep(out, esc);
+//
+//     // Append a sequence of characters which might contain UTF-16 characters.
+//     ep.put(chars);
+//   }
+//
+
 namespace js {
 
 class LifoAlloc;
@@ -42,10 +147,19 @@ class JS_PUBLIC_API GenericPrinter {
   // still report any of the previous errors.
   virtual void put(const char* s, size_t len) = 0;
   inline void put(const char* s) { put(s, strlen(s)); }
+
+  // Put a mozilla::Span / mozilla::Range of Latin1Char or char16_t characters
+  // in the output.
+  //
+  // Note that the char16_t variant is expected to crash unless putChar is
+  // overriden to handle properly the full set of WTF-16 character set.
   virtual void put(mozilla::Span<const JS::Latin1Char> str);
-  // Would crash unless putChar is overriden, like in EscapePrinter.
   virtual void put(mozilla::Span<const char16_t> str);
 
+  // Same as the various put function but only appending a single character.
+  //
+  // Note that the char16_t variant is expected to crash unless putChar is
+  // overriden to handle properly the full set of WTF-16 character set.
   virtual inline void putChar(const char c) { put(&c, 1); }
   virtual inline void putChar(const JS::Latin1Char c) { putChar(char(c)); }
   virtual inline void putChar(const char16_t c) {
@@ -58,10 +172,29 @@ class JS_PUBLIC_API GenericPrinter {
   void printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
   void vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
 
+  // In some cases, such as handling JSRopes in a less-quadratic worse-case,
+  // it might be useful to copy content which has already been generated.
+  //
+  // If the buffer is back-readable, then this function should return `true`
+  // and `putFromIndex` should be implemented to delegate to a `put` call at
+  // the matching index and the corresponding length. To provide the index
+  // argument of `putFromIndex`, the `index` method should also be implemented
+  // to return the index within the inner buffer used by the printer.
   virtual bool canPutFromIndex() const { return false; }
+
+  // Append to the current buffer, bytes which have previously been appended
+  // before.
   virtual void putFromIndex(size_t index, size_t length) {
     MOZ_CRASH("Calls to putFromIndex should be guarded by canPutFromIndex.");
   }
+
+  // When the printer has a seekable buffer and `canPutFromIndex` returns
+  // `true`, this function can return the `index` of the next character to be
+  // added to the buffer.
+  //
+  // This function is monotonic. Thus, if the printer encounter an
+  // Out-Of-Memory issue, then the returned index should be the maximal value
+  // ever returned.
   virtual size_t index() const { return 0; }
 
   // In some printers, this ensure that the content is fully written.
