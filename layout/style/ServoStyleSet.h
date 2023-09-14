@@ -463,6 +463,34 @@ class ServoStyleSet {
                                   nsAtom* aNewID) const;
 
   /**
+   * Maybe invalidate if a modification to an ID might require us to restyle
+   * the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorIDDependency(const dom::Element&,
+                                                   nsAtom* aOldID,
+                                                   nsAtom* aNewID);
+
+  /**
+   * Maybe invalidate if a modification to an attribute with the specified local
+   * name might require us to restyle the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorClassDependency(const dom::Element&);
+
+  /**
+   * Maybe invalidate if a modification to an ID might require us to restyle
+   * the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorAttributeDependency(const dom::Element&,
+                                                          nsAtom* aAttribute);
+
+  /**
+   * Maybe invalidate if a change in event state on an element might require us
+   * to restyle the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorStateDependency(const dom::Element&,
+                                                      dom::ElementState);
+
+  /**
    * Returns true if a change in event state on an element might require
    * us to restyle the element.
    *
