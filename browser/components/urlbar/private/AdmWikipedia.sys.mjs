@@ -198,9 +198,15 @@ export class AdmWikipedia extends BaseFeature {
     );
 
     if (suggestion.is_sponsored) {
+      // If quickSuggestSponsoredPriority is enabled, as "Sponsored" label is
+      // shown as group label, no need here.
+      if (!lazy.UrlbarPrefs.get("quickSuggestSponsoredPriority")) {
+        result.payload.descriptionL10n = {
+          id: "urlbar-result-action-sponsored",
+        };
+        result.richSuggestionIconSize = 16;
+      }
       result.isRichSuggestion = true;
-      result.richSuggestionIconSize = 16;
-      result.payload.descriptionL10n = { id: "urlbar-result-action-sponsored" };
     }
 
     return result;

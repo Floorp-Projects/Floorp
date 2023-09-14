@@ -342,6 +342,15 @@ urlbar:
       description: >-
         The index of sponsored QuickSuggest results within the general group. A
         negative index is relative to the end of the group
+    quickSuggestSponsoredPriority:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.sponsoredPriority
+      description: >-
+        Whether or not showing sponsored suggestion as priority.
+        If this variable is true, the following things are processed.
+        * "Sponsored" label is shown as the group label.
+        * Change the suggested index to 1.
+        * Handle as top pick.
     recordNavigationalSuggestionTelemetry:
       type: boolean
       description: Whether to record navigational suggestion telemetry. Defaults to false.

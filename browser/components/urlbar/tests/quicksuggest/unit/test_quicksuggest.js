@@ -1373,3 +1373,86 @@ add_task(async function remoteSettingsDataType() {
     await cleanUpNimbus();
   }
 });
+
+// For priority sponsored suggestion,
+// always isBestMatch will be true and suggestIndex will be 1.
+// It does not have descriptionL10n.
+const EXPECTED_SPONSORED_PRIORITY_RESULT = {
+  ...EXPECTED_SPONSORED_RESULT,
+  isBestMatch: true,
+  payload: {
+    ...EXPECTED_SPONSORED_RESULT.payload,
+    descriptionL10n: undefined,
+  },
+};
+
+add_task(async function sponsoredPriority_normal() {
+  await doSponsoredPriorityTest({
+    searchWord: SPONSORED_SEARCH_STRING,
+    remoteSettingsData: [REMOTE_SETTINGS_RESULTS[0]],
+    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+  });
+});
+
+add_task(async function sponsoredPriority_nonsponsoredSuggestion() {
+  // Not affect to except sponsored suggestion.
+  await doSponsoredPriorityTest({
+    searchWord: NONSPONSORED_SEARCH_STRING,
+    remoteSettingsData: [REMOTE_SETTINGS_RESULTS[1]],
+    expectedMatches: [EXPECTED_NONSPONSORED_RESULT],
+  });
+});
+
+add_task(async function sponsoredPriority_sponsoredIndex() {
+  await doSponsoredPriorityTest({
+    nimbusSettings: { quickSuggestSponsoredIndex: 2 },
+    searchWord: SPONSORED_SEARCH_STRING,
+    remoteSettingsData: [REMOTE_SETTINGS_RESULTS[0]],
+    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+  });
+});
+
+add_task(async function sponsoredPriority_position() {
+  await doSponsoredPriorityTest({
+    nimbusSettings: { quickSuggestAllowPositionInSuggestions: true },
+    searchWord: SPONSORED_SEARCH_STRING,
+    remoteSettingsData: [
+      Object.assign({}, REMOTE_SETTINGS_RESULTS[0], { position: 2 }),
+    ],
+    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+  });
+});
+
+async function doSponsoredPriorityTest({
+  remoteSettingsConfig = {},
+  nimbusSettings = {},
+  searchWord,
+  remoteSettingsData,
+  expectedMatches,
+}) {
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+
+  const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
+    ...nimbusSettings,
+    quickSuggestSponsoredPriority: true,
+  });
+
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "data",
+      attachment: remoteSettingsData,
+    },
+  ]);
+  await QuickSuggestTestUtils.setConfig(remoteSettingsConfig);
+
+  await check_results({
+    context: createContext(searchWord, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: expectedMatches,
+  });
+
+  await cleanUpNimbusEnable();
+}

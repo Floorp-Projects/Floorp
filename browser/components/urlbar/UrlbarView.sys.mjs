@@ -2129,6 +2129,12 @@ export class UrlbarView {
           return { id: "urlbar-group-mdn" };
         case "pocket":
           return { id: "urlbar-group-pocket" };
+        case "adm_sponsored": {
+          if (lazy.UrlbarPrefs.get("quickSuggestSponsoredPriority")) {
+            return { id: "urlbar-group-sponsored" };
+          }
+          break;
+        }
       }
     }
 

@@ -423,6 +423,8 @@ class _QuickSuggestTestUtils {
    *   Whether the result is expected to be sponsored.
    * @param {boolean} [options.isBestMatch]
    *   Whether the result is expected to be a best match.
+   * @param {boolean} [options.isEmptyDescription]
+   *   Whether the description text is empty or not.
    * @returns {result}
    *   The quick suggest result.
    */
@@ -433,6 +435,7 @@ class _QuickSuggestTestUtils {
     index = -1,
     isSponsored = true,
     isBestMatch = false,
+    isEmptyDescription = false,
   } = {}) {
     this.Assert.ok(
       url || originalUrl,
@@ -495,7 +498,7 @@ class _QuickSuggestTestUtils {
       this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
       this.Assert.equal(
         sponsoredElement.textContent,
-        isSponsored ? "Sponsored" : "",
+        isSponsored && !isEmptyDescription ? "Sponsored" : "",
         "Result sponsored label"
       );
     } else {
