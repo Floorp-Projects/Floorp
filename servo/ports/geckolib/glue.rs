@@ -96,7 +96,7 @@ use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
     GlobalStyleData, PlatformThreadHandle, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
 };
-use style::invalidation::element::invalidation_map::RelativeSelectorInvalidationMap;
+use style::invalidation::element::invalidation_map::{RelativeSelectorInvalidationMap, TSStateForInvalidation};
 use style::invalidation::element::invalidator::{InvalidationResult, SiblingTraversalMap};
 use style::invalidation::element::relative_selector::{
     RelativeSelectorDependencyCollector, RelativeSelectorInvalidator,
@@ -7006,6 +7006,89 @@ fn invalidate_relative_selector_next_sibling_side_effect(
         ElementSelectorFlags::empty(),
         |d| d.dependency_is_relative_with_single_next_sibling(),
     );
+}
+
+fn invalidate_relative_selector_ts_dependency(
+    raw_data: &PerDocumentStyleData,
+    element: GeckoElement,
+    state: TSStateForInvalidation,
+) {
+    let data = raw_data.borrow();
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+
+    let invalidator = RelativeSelectorInvalidator {
+        element,
+        quirks_mode,
+        invalidated: relative_selector_invalidated_at,
+        sibling_traversal_map: SiblingTraversalMap::default(),
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, quirks_mode, collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+            invalidation_map
+                .ts_state_to_selector
+                .lookup_with_additional(
+                    *element,
+                    quirks_mode,
+                    None,
+                    &[],
+                    ElementState::empty(),
+                    |dependency| {
+                        if !dependency.state.intersects(state) {
+                            return true;
+                        }
+                        collector.add_dependency(&dependency.dep, *element, *scope);
+                        true
+                    },
+                );
+        },
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorEmptyDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+) {
+    invalidate_relative_selector_ts_dependency(
+        raw_data,
+        GeckoElement(element),
+        TSStateForInvalidation::EMPTY,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthEdgeDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+) {
+    invalidate_relative_selector_ts_dependency(
+        raw_data,
+        GeckoElement(element),
+        TSStateForInvalidation::NTH,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthDependencyFromSibling(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+) {
+    let mut element = Some(GeckoElement(element));
+
+    // Short of doing the actual matching, any of the siblings can match the selector, so we
+    // have to try invalidating against all of them.
+    while let Some(sibling) = element {
+        invalidate_relative_selector_ts_dependency(
+            raw_data,
+            sibling,
+            TSStateForInvalidation::NTH,
+        );
+        element = sibling.next_sibling_element();
+    }
 }
 
 #[no_mangle]
