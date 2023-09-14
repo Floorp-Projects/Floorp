@@ -967,7 +967,7 @@ void js::Nursery::printProfileHeader() {
 }
 
 // static
-bool js::Nursery::printProfileDurations(const ProfileDurations& times,
+void js::Nursery::printProfileDurations(const ProfileDurations& times,
                                         Sprinter& sprinter) {
   for (auto time : times) {
     int64_t micros = int64_t(time.ToMicroseconds());
@@ -975,7 +975,6 @@ bool js::Nursery::printProfileDurations(const ProfileDurations& times,
   }
 
   sprinter.put("\n");
-  return true;
 }
 
 static constexpr size_t NurserySliceMetadataFormatWidth() {
@@ -1024,9 +1023,7 @@ void js::Nursery::printTotalProfileTimes() {
   size_t width = NurserySliceMetadataFormatWidth();
   sprinter.jsprintf(" %-*s", int(width), collections);
 
-  if (!printProfileDurations(totalDurations_, sprinter)) {
-    return;
-  }
+  printProfileDurations(totalDurations_, sprinter);
 
   JS::UniqueChars str = sprinter.release();
   if (!str) {
