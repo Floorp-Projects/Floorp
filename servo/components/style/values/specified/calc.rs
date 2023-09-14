@@ -16,7 +16,7 @@ use crate::values::specified::length::{ContainerRelativeLength, ViewportPercenta
 use crate::values::specified::{self, Angle, Resolution, Time};
 use crate::values::{serialize_number, serialize_percentage, CSSFloat, CSSInteger};
 use cssparser::{CowRcStr, Parser, Token};
-use cssparser_color::{AngleOrNumber, NumberOrPercentage};
+use crate::color::parsing::{AngleOrNumber, NumberOrPercentage};
 use smallvec::SmallVec;
 use std::cmp;
 use std::fmt::{self, Write};

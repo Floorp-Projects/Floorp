@@ -7,6 +7,7 @@
 /// cbindgen:ignore
 pub mod convert;
 pub mod mix;
+pub mod parsing;
 
 use cssparser::color::PredefinedColorSpace;
 use std::fmt::{self, Write};
@@ -512,7 +513,7 @@ impl ToCss for AbsoluteColor {
             ColorSpace::Srgb if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) => {
                 // The "none" keyword is not supported in the rgb/rgba legacy syntax.
                 cssparser::ToCss::to_css(
-                    &cssparser_color::RgbaLegacy::from_floats(
+                    &parsing::RgbaLegacy::from_floats(
                         self.components.0,
                         self.components.1,
                         self.components.2,
@@ -523,19 +524,19 @@ impl ToCss for AbsoluteColor {
             },
             ColorSpace::Hsl | ColorSpace::Hwb => self.into_srgb_legacy().to_css(dest),
             ColorSpace::Lab => cssparser::ToCss::to_css(
-                &cssparser_color::Lab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Lab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Lch => cssparser::ToCss::to_css(
-                &cssparser_color::Lch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Lch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Oklab => cssparser::ToCss::to_css(
-                &cssparser_color::Oklab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Oklab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Oklch => cssparser::ToCss::to_css(
-                &cssparser_color::Oklch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Oklch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             _ => {
@@ -560,14 +561,14 @@ impl ToCss for AbsoluteColor {
                     },
                 };
 
-                let color_function = cssparser_color::ColorFunction {
+                let color_function = parsing::ColorFunction {
                     color_space,
                     c1: maybe_c1,
                     c2: maybe_c2,
                     c3: maybe_c3,
                     alpha: maybe_alpha,
                 };
-                let color = cssparser_color::Color::ColorFunction(color_function);
+                let color = parsing::Color::ColorFunction(color_function);
                 cssparser::ToCss::to_css(&color, dest)
             },
         }

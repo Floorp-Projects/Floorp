@@ -8,9 +8,6 @@
 //! Relative colors, color-mix, system colors, and other such things require better calc() support
 //! and integration.
 
-#[cfg(test)]
-mod tests;
-
 use cssparser::color::{
     clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, serialize_color_alpha,
     PredefinedColorSpace, OPAQUE,

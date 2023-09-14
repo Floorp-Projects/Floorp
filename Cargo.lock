@@ -1037,15 +1037,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cssparser-color"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "556c099a61d85989d7af52b692e35a8d68a57e7df8c6d07563dc0778b3960c9f"
-dependencies = [
- "cssparser",
-]
-
-[[package]]
 name = "cssparser-macros"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5191,7 +5182,6 @@ dependencies = [
  "bitflags 1.3.2",
  "byteorder",
  "cssparser",
- "cssparser-color",
  "derive_more 0.99.999",
  "dom",
  "euclid",

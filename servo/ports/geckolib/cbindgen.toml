@@ -38,7 +38,7 @@ includes = ["mozilla/ServoStyleConstsForwards.h", "mozilla/ServoStyleSet.h"]
 [parse]
 parse_deps = true
 extra_bindings = ["style"]
-include = ["style", "app_units", "cssparser", "cssparser_color", "style_traits", "servo_arc"]
+include = ["style", "app_units", "cssparser", "style_traits", "servo_arc"]
 
 [struct]
 associated_constants_in_body = true
