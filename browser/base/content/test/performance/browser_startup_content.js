@@ -32,6 +32,7 @@ const known_scripts = {
 
     // Browser front-end
     "resource:///actors/AboutReaderChild.sys.mjs",
+    "resource:///actors/InteractionsChild.sys.mjs",
     "resource:///actors/LinkHandlerChild.sys.mjs",
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
     "resource://gre/actors/ContentMetaChild.sys.mjs",
@@ -59,11 +60,6 @@ if (!Services.appinfo.sessionHistoryInParent) {
   known_scripts.modules.add(
     "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
   );
-}
-
-if (AppConstants.NIGHTLY_BUILD) {
-  // Browser front-end.
-  known_scripts.modules.add("resource:///actors/InteractionsChild.sys.mjs");
 }
 
 // Items on this list *might* load when creating the process, as opposed to
