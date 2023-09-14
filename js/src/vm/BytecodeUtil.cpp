@@ -105,9 +105,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
 [[nodiscard]] static bool DumpIonScriptCounts(Sprinter* sp, HandleScript script,
                                               jit::IonScriptCounts* ionCounts) {
-  if (!sp->jsprintf("IonScript [%zu blocks]:\n", ionCounts->numBlocks())) {
-    return false;
-  }
+  sp->jsprintf("IonScript [%zu blocks]:\n", ionCounts->numBlocks());
 
   for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
     const jit::IonBlockCounts& block = ionCounts->block(i);
@@ -115,27 +113,16 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
     JS::LimitedColumnNumberZeroOrigin columnNumber;
     lineNumber = PCToLineNumber(script, script->offsetToPC(block.offset()),
                                 &columnNumber);
-    if (!sp->jsprintf("BB #%" PRIu32 " [%05u,%u,%u]", block.id(),
-                      block.offset(), lineNumber,
-                      columnNumber.zeroOriginValue())) {
-      return false;
-    }
+    sp->jsprintf("BB #%" PRIu32 " [%05u,%u,%u]", block.id(), block.offset(),
+                 lineNumber, columnNumber.zeroOriginValue());
     if (block.description()) {
-      if (!sp->jsprintf(" [inlined %s]", block.description())) {
-        return false;
-      }
+      sp->jsprintf(" [inlined %s]", block.description());
     }
     for (size_t j = 0; j < block.numSuccessors(); j++) {
-      if (!sp->jsprintf(" -> #%" PRIu32, block.successor(j))) {
-        return false;
-      }
+      sp->jsprintf(" -> #%" PRIu32, block.successor(j));
     }
-    if (!sp->jsprintf(" :: %" PRIu64 " hits\n", block.hitCount())) {
-      return false;
-    }
-    if (!sp->jsprintf("%s\n", block.code())) {
-      return false;
-    }
+    sp->jsprintf(" :: %" PRIu64 " hits\n", block.hitCount());
+    sp->jsprintf("%s\n", block.code());
   }
 
   return true;
@@ -157,19 +144,13 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
       return false;
     }
 
-    if (!sp->put("                  {")) {
-      return false;
-    }
+    sp->put("                  {");
 
     PCCounts* counts = script->maybeGetPCCounts(pc);
     if (double val = counts ? counts->numExec() : 0.0) {
-      if (!sp->jsprintf("\"%s\": %.0f", PCCounts::numExecName, val)) {
-        return false;
-      }
+      sp->jsprintf("\"%s\": %.0f", PCCounts::numExecName, val);
     }
-    if (!sp->put("}\n")) {
-      return false;
-    }
+    sp->put("}\n");
 
     pc = next;
   }
@@ -1025,68 +1006,42 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   }
 
   if (showAll) {
-    if (!sp->jsprintf("%s:%u\n", script->filename(),
-                      unsigned(script->lineno()))) {
-      return false;
-    }
+    sp->jsprintf("%s:%u\n", script->filename(),
+                 unsigned(script->lineno()));
   }
 
   if (pc != nullptr) {
-    if (!sp->put("    ")) {
-      return false;
-    }
+    sp->put("    ");
   }
   if (showAll) {
-    if (!sp->put("sn stack ")) {
-      return false;
-    }
+    sp->put("sn stack ");
   }
-  if (!sp->put("loc   ")) {
-    return false;
-  }
+  sp->put("loc   ");
   if (lines) {
-    if (!sp->put("line")) {
-      return false;
-    }
+    sp->put("line");
   }
-  if (!sp->put("  op\n")) {
-    return false;
-  }
+  sp->put("  op\n");
 
   if (pc != nullptr) {
-    if (!sp->put("    ")) {
-      return false;
-    }
+    sp->put("    ");
   }
   if (showAll) {
-    if (!sp->put("-- ----- ")) {
-      return false;
-    }
+    sp->put("-- ----- ");
   }
-  if (!sp->put("----- ")) {
-    return false;
-  }
+  sp->put("----- ");
   if (lines) {
-    if (!sp->put("----")) {
-      return false;
-    }
+    sp->put("----");
   }
-  if (!sp->put("  --\n")) {
-    return false;
-  }
+  sp->put("  --\n");
 
   jsbytecode* next = script->code();
   jsbytecode* end = script->codeEnd();
   while (next < end) {
     if (next == script->main()) {
-      if (!sp->put("main:\n")) {
-        return false;
-      }
+      sp->put("main:\n");
     }
     if (pc != nullptr) {
-      if (!sp->put(pc == next ? "--> " : "    ")) {
-        return false;
-      }
+      sp->put(pc == next ? "--> " : "    ");
     }
     if (showAll) {
       const SrcNote* sn = GetSrcNote(cx, script, next);
@@ -1099,27 +1054,17 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
           if (!(!next->isTerminator() && next->delta() == 0)) {
             break;
           }
-          if (!sp->jsprintf("%s\n    ", sn->name())) {
-            return false;
-          }
+          sp->jsprintf("%s\n    ", sn->name());
           sn = *iter;
         }
-        if (!sp->jsprintf("%s ", sn->name())) {
-          return false;
-        }
+        sp->jsprintf("%s ", sn->name());
       } else {
-        if (!sp->put("   ")) {
-          return false;
-        }
+        sp->put("   ");
       }
       if (parser && parser->isReachable(next)) {
-        if (!sp->jsprintf("%05u ", parser->stackDepthAtPC(next))) {
-          return false;
-        }
+        sp->jsprintf("%05u ", parser->stackDepthAtPC(next));
       } else {
-        if (!sp->put("      ")) {
-          return false;
-        }
+        sp->put("      ");
       }
     }
     unsigned len = Disassemble1(cx, script, next, script->pcToOffset(next),
@@ -1296,13 +1241,9 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
                                           BytecodeParser::JumpKind kind) {
     if (!called) {
       called = true;
-      if (!sp->put("\n# ")) {
-        return false;
-      }
+      sp->put("\n# ");
     } else {
-      if (!sp->put(", ")) {
-        return false;
-      }
+      sp->put(", ");
     }
 
     switch (kind) {
@@ -1310,34 +1251,24 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
         break;
 
       case BytecodeParser::JumpKind::SwitchCase:
-        if (!sp->put("switch-case ")) {
-          return false;
-        }
+        sp->put("switch-case ");
         break;
 
       case BytecodeParser::JumpKind::SwitchDefault:
-        if (!sp->put("switch-default ")) {
-          return false;
-        }
+        sp->put("switch-default ");
         break;
 
       case BytecodeParser::JumpKind::TryCatch:
-        if (!sp->put("try-catch ")) {
-          return false;
-        }
+        sp->put("try-catch ");
         break;
 
       case BytecodeParser::JumpKind::TryFinally:
-        if (!sp->put("try-finally ")) {
-          return false;
-        }
+        sp->put("try-finally ");
         break;
     }
 
-    if (!sp->jsprintf("from %s @ %05u", CodeName(JSOp(*pc)),
-                      unsigned(script->pcToOffset(pc)))) {
-      return false;
-    }
+    sp->jsprintf("from %s @ %05u", CodeName(JSOp(*pc)),
+                 unsigned(script->pcToOffset(pc)));
 
     return true;
   };
@@ -1345,9 +1276,7 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
     return false;
   }
   if (called) {
-    if (!sp->put("\n")) {
-      return false;
-    }
+    sp->put("\n");
   }
 
   return true;
@@ -1368,9 +1297,7 @@ static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
     }
   }
 
-  if (!sp->put("{")) {
-    return false;
-  }
+  sp->put("{");
 
   for (size_t i = props.length(); i > 0; i--) {
     PropertyKey key = props[i - 1];
@@ -1380,17 +1307,14 @@ static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
       ReportOutOfMemory(cx);
       return false;
     }
-    if (!sp->putString(str)) {
-      return false;
-    }
+    sp->putString(str);
     if (i > 1) {
-      if (!sp->put(", ")) {
-        return false;
-      }
+      sp->put(", ");
     }
   }
 
-  return sp->put("}");
+  sp->put("}");
+  return true;
 }
 
 static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -1418,27 +1342,19 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
     static const size_t stack_column = 40;
     for (size_t i = after - before; i < stack_column - 1; i++) {
-      if (!sp->put(" ")) {
-        return false;
-      }
+      sp->put(" ");
     }
 
-    if (!sp->put(" # ")) {
-      return false;
-    }
+    sp->put(" # ");
 
     if (!parser->isReachable(pc)) {
-      if (!sp->put("!!! UNREACHABLE !!!")) {
-        return false;
-      }
+      sp->put("!!! UNREACHABLE !!!");
     } else {
       uint32_t depth = parser->stackDepthAfterPC(pc);
 
       for (uint32_t i = 0; i < depth; i++) {
         if (i) {
-          if (!sp->put(" ")) {
-            return false;
-          }
+          sp->put(" ");
         }
 
         const OffsetAndDefIndex& offsetAndDefIndex =
@@ -1466,17 +1382,11 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   JSOp op = JSOp(*pc);
   const JSCodeSpec& cs = CodeSpec(op);
   const unsigned len = cs.length;
-  if (!sp->jsprintf("%05u:", loc)) {
-    return 0;
-  }
+  sp->jsprintf("%05u:", loc);
   if (lines) {
-    if (!sp->jsprintf("%4u", PCToLineNumber(script, pc))) {
-      return 0;
-    }
+    sp->jsprintf("%4u", PCToLineNumber(script, pc));
   }
-  if (!sp->jsprintf("  %s", CodeName(op))) {
-    return 0;
-  }
+  sp->jsprintf("  %s", CodeName(op));
 
   int i;
   switch (JOF_TYPE(cs.format)) {
@@ -1485,9 +1395,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
     case JOF_JUMP: {
       ptrdiff_t off = GET_JUMP_OFFSET(pc);
-      if (!sp->jsprintf(" %u (%+d)", unsigned(loc + int(off)), int(off))) {
-        return 0;
-      }
+      sp->jsprintf(" %u (%+d)", unsigned(loc + int(off)), int(off));
       break;
     }
 
@@ -1497,9 +1405,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!ToDisassemblySource(cx, scope, &bytes)) {
         return 0;
       }
-      if (!sp->jsprintf(" %s", bytes.get())) {
-        return 0;
-      }
+      sp->jsprintf(" %s", bytes.get());
       break;
     }
 
@@ -1510,17 +1416,12 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         return 0;
       }
       EnvironmentCoordinate ec(pc);
-      if (!sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(),
-                        ec.slot())) {
-        return 0;
-      }
+      sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot());
       break;
     }
     case JOF_DEBUGCOORD: {
       EnvironmentCoordinate ec(pc);
-      if (!sp->jsprintf("(hops = %u, slot = %u)", ec.hops(), ec.slot())) {
-        return 0;
-      }
+      sp->jsprintf("(hops = %u, slot = %u)", ec.hops(), ec.slot());
       break;
     }
     case JOF_ATOM: {
@@ -1529,9 +1430,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      if (!sp->jsprintf(" %s", bytes.get())) {
-        return 0;
-      }
+      sp->jsprintf(" %s", bytes.get());
       break;
     }
     case JOF_STRING: {
@@ -1540,17 +1439,13 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      if (!sp->jsprintf(" %s", bytes.get())) {
-        return 0;
-      }
+      sp->jsprintf(" %s", bytes.get());
       break;
     }
 
     case JOF_DOUBLE: {
       double d = GET_INLINE_VALUE(pc).toDouble();
-      if (!sp->jsprintf(" %lf", d)) {
-        return 0;
-      }
+      sp->jsprintf(" %lf", d);
       break;
     }
 
@@ -1560,9 +1455,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      if (!sp->jsprintf(" %s", bytes.get())) {
-        return 0;
-      }
+      sp->jsprintf(" %s", bytes.get());
       break;
     }
 
@@ -1574,18 +1467,14 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         if (!bytes) {
           return 0;
         }
-        if (!sp->jsprintf(" %s", bytes.get())) {
-          return 0;
-        }
+        sp->jsprintf(" %s", bytes.get());
       }
       break;
     }
 
     case JOF_SHAPE: {
       SharedShape* shape = script->getShape(pc);
-      if (!sp->put(" ")) {
-        return 0;
-      }
+      sp->put(" ");
       if (!PrintShapeProperties(cx, sp, shape)) {
         return 0;
       }
@@ -1599,9 +1488,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      if (!sp->jsprintf(" %s", bytes.get())) {
-        return 0;
-      }
+      sp->jsprintf(" %s", bytes.get());
       break;
     }
 
@@ -1614,10 +1501,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       pc2 += JUMP_OFFSET_LEN;
       high = GET_JUMP_OFFSET(pc2);
       pc2 += JUMP_OFFSET_LEN;
-      if (!sp->jsprintf(" defaultOffset %d low %d high %d", int(off), low,
-                        high)) {
-        return 0;
-      }
+      sp->jsprintf(" defaultOffset %d low %d high %d", int(off), low, high);
 
       // Display stack dump before diplaying the offsets for each case.
       if (!dumpStack()) {
@@ -1627,60 +1511,42 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       for (i = low; i <= high; i++) {
         off =
             script->tableSwitchCaseOffset(pc, i - low) - script->pcToOffset(pc);
-        if (!sp->jsprintf("\n\t%d: %d", i, int(off))) {
-          return 0;
-        }
+        sp->jsprintf("\n\t%d: %d", i, int(off));
       }
       break;
     }
 
     case JOF_QARG:
-      if (!sp->jsprintf(" %u", GET_ARGNO(pc))) {
-        return 0;
-      }
+      sp->jsprintf(" %u", GET_ARGNO(pc));
       break;
 
     case JOF_LOCAL:
-      if (!sp->jsprintf(" %u", GET_LOCALNO(pc))) {
-        return 0;
-      }
+      sp->jsprintf(" %u", GET_LOCALNO(pc));
       break;
 
     case JOF_GCTHING:
-      if (!sp->jsprintf(" %u", unsigned(GET_GCTHING_INDEX(pc)))) {
-        return 0;
-      }
+      sp->jsprintf(" %u", unsigned(GET_GCTHING_INDEX(pc)));
       break;
 
     case JOF_UINT32:
-      if (!sp->jsprintf(" %u", GET_UINT32(pc))) {
-        return 0;
-      }
+      sp->jsprintf(" %u", GET_UINT32(pc));
       break;
 
     case JOF_ICINDEX:
-      if (!sp->jsprintf(" (ic: %u)", GET_ICINDEX(pc))) {
-        return 0;
-      }
+      sp->jsprintf(" (ic: %u)", GET_ICINDEX(pc));
       break;
 
     case JOF_LOOPHEAD:
-      if (!sp->jsprintf(" (ic: %u, depthHint: %u)", GET_ICINDEX(pc),
-                        LoopHeadDepthHint(pc))) {
-        return 0;
-      }
+      sp->jsprintf(" (ic: %u, depthHint: %u)", GET_ICINDEX(pc),
+                   LoopHeadDepthHint(pc));
       break;
 
     case JOF_TWO_UINT8: {
       int one = (int)GET_UINT8(pc);
       int two = (int)GET_UINT8(pc + 1);
 
-      if (!sp->jsprintf(" %d", one)) {
-        return 0;
-      }
-      if (!sp->jsprintf(" %d", two)) {
-        return 0;
-      }
+      sp->jsprintf(" %d", one);
+      sp->jsprintf(" %d", two);
       break;
     }
 
@@ -1707,9 +1573,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       MOZ_ASSERT(op == JSOp::Int32);
       i = GET_INT32(pc);
     print_int:
-      if (!sp->jsprintf(" %d", i)) {
-        return 0;
-      }
+      sp->jsprintf(" %d", i);
       break;
 
     default: {
@@ -1725,9 +1589,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     return 0;
   }
 
-  if (!sp->put("\n")) {
-    return 0;
-  }
+  sp->put("\n");
   return len;
 }
 
@@ -1949,7 +1811,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::Uint16:
     case JSOp::Uint24:
     case JSOp::Int32:
-      return sprinter.printf("%d", GetBytecodeInteger(pc));
+      sprinter.printf("%d", GetBytecodeInteger(pc));
+      return true;
     case JSOp::String:
       return quote(loadString(pc), '"');
     case JSOp::Symbol: {
@@ -2105,7 +1968,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("arguments.length");
 
       case JSOp::GetFrameArg:
-        return sprinter.printf("arguments[%u]", GET_ARGNO(pc));
+        sprinter.printf("arguments[%u]", GET_ARGNO(pc));
+        return true;
 
       case JSOp::GetActualArg:
         return write("arguments[") && decompilePCForStackOperand(pc, -1) &&
@@ -2128,7 +1992,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("OBJ");
 
       case JSOp::Double:
-        return sprinter.printf("%lf", GET_INLINE_VALUE(pc).toDouble());
+        sprinter.printf("%lf", GET_INLINE_VALUE(pc).toDouble());
+        return true;
 
       case JSOp::Exception:
         return write("EXCEPTION");
@@ -2313,7 +2178,10 @@ bool ExpressionDecompiler::init() {
   return sprinter.init();
 }
 
-bool ExpressionDecompiler::write(const char* s) { return sprinter.put(s); }
+bool ExpressionDecompiler::write(const char* s) {
+  sprinter.put(s);
+  return true;
+}
 
 bool ExpressionDecompiler::write(JSString* str) {
   if (str == cx->names().dot_this_) {
@@ -2322,7 +2190,8 @@ bool ExpressionDecompiler::write(JSString* str) {
   if (str == cx->names().dot_newTarget_) {
     return write("new.target");
   }
-  return sprinter.putString(str);
+  sprinter.putString(str);
+  return true;
 }
 
 bool ExpressionDecompiler::quote(JSString* s, char quote) {
@@ -2391,7 +2260,8 @@ static bool DecompileAtPCForStackDump(
     return false;
   }
 
-  return sp->put(result.get());
+  sp->put(result.get());
+  return true;
 }
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 

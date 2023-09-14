@@ -35,27 +35,36 @@ class JS_PUBLIC_API GenericPrinter {
   constexpr GenericPrinter() : hadOOM_(false) {}
 
  public:
-  // Puts |len| characters from |s| at the current position and
-  // return true on success, false on failure.
-  virtual bool put(const char* s, size_t len) = 0;
-  inline bool put(const char* s) { return put(s, strlen(s)); }
-  inline bool putChar(const char c) { return put(&c, 1); }
+  // Puts |len| characters from |s| at the current position. This function might
+  // silently fail and the error can be tested using `hadOutOfMemory()`. Calling
+  // this function or any other printing functions after a failures is accepted,
+  // but the outcome would still remain incorrect and `hadOutOfMemory()` would
+  // still report any of the previous errors.
+  virtual void put(const char* s, size_t len) = 0;
+  inline void put(const char* s) { put(s, strlen(s)); }
+  inline void putChar(const char c) { put(&c, 1); }
 
-  virtual bool putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str);
-  virtual bool putAsciiPrintable(mozilla::Span<const char16_t> str);
+  virtual void putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str);
+  virtual void putAsciiPrintable(mozilla::Span<const char16_t> str);
 
-  inline bool putAsciiPrintable(const char c) {
+  inline void putAsciiPrintable(const char c) {
     MOZ_ASSERT(IsAsciiPrintable(c));
-    return putChar(c);
+    putChar(c);
   }
-  inline bool putAsciiPrintable(const char16_t c) {
+  inline void putAsciiPrintable(const char16_t c) {
     MOZ_ASSERT(IsAsciiPrintable(c));
-    return putChar(char(c));
+    putChar(char(c));
   }
 
   // Prints a formatted string into the buffer.
-  bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-  bool vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+  void printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+  void vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+
+  virtual bool canPutFromIndex() const { return false; }
+  virtual void putFromIndex(size_t index, size_t length) {
+    MOZ_CRASH("Calls to putFromIndex should be guarded by canPutFromIndex.");
+  }
+  virtual size_t index() const { return 0; }
 
   // In some printers, this ensure that the content is fully written.
   virtual void flush() { /* Do nothing */
@@ -123,15 +132,23 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
 
   // Puts |len| characters from |s| at the current position and
   // return true on success, false on failure.
-  virtual bool put(const char* s, size_t len) override;
+  virtual void put(const char* s, size_t len) override;
   using GenericPrinter::put;  // pick up |inline bool put(const char* s);|
+
+  virtual bool canPutFromIndex() const override { return true; }
+  virtual void putFromIndex(size_t index, size_t length) override {
+    MOZ_ASSERT(index <= this->index());
+    MOZ_ASSERT(index + length <= this->index());
+    put(base + index, length);
+  }
+  virtual size_t index() const override { return length(); }
 
   // Format the given format/arguments as if by JS_vsmprintf, then put it.
   // Return true on success, else return false and report an error (typically
   // OOM).
-  [[nodiscard]] bool jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+  void jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
-  bool putString(JSString* str);
+  void putString(JSString* str);
 
   size_t length() const;
 
@@ -167,7 +184,7 @@ class JS_PUBLIC_API Fprinter final : public GenericPrinter {
 
   // Puts |len| characters from |s| at the current position and
   // return true on success, false on failure.
-  virtual bool put(const char* s, size_t len) override;
+  virtual void put(const char* s, size_t len) override;
   using GenericPrinter::put;  // pick up |inline bool put(const char* s);|
 };
 
@@ -203,7 +220,7 @@ class JS_PUBLIC_API LSprinter final : public GenericPrinter {
 
   // Puts |len| characters from |s| at the current position and
   // return true on success, false on failure.
-  virtual bool put(const char* s, size_t len) override;
+  virtual void put(const char* s, size_t len) override;
   using GenericPrinter::put;  // pick up |inline bool put(const char* s);|
 };
 
