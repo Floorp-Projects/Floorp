@@ -11,7 +11,9 @@ use crate::context::{CascadeInputs, QuirksMode};
 use crate::dom::{TElement, TShadowRoot};
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
-use crate::invalidation::element::invalidation_map::InvalidationMap;
+use crate::invalidation::element::invalidation_map::{
+    note_selector_for_invalidation, InvalidationMap,
+};
 use crate::invalidation::media_queries::{
     EffectiveMediaQueryResults, MediaListKey, ToMediaListKey,
 };
@@ -2768,8 +2770,11 @@ impl CascadeData {
                         }
 
                         if rebuild_kind.should_rebuild_invalidation() {
-                            self.invalidation_map
-                                .note_selector(&rule.selector, quirks_mode)?;
+                            note_selector_for_invalidation(
+                                &rule.selector,
+                                quirks_mode,
+                                &mut self.invalidation_map,
+                            )?;
                             let mut needs_revalidation = false;
                             let mut visitor = StylistSelectorVisitor {
                                 needs_revalidation: &mut needs_revalidation,
