@@ -40,15 +40,20 @@ function disallowAdditionalProperties(section) {
   }
 }
 
-add_task(async function test_search_config_validates_to_schema() {
-  let schema = await IOUtils.readJSON(
+let searchConfigSchema;
+
+add_setup(async function () {
+  searchConfigSchema = await IOUtils.readJSON(
     PathUtils.join(do_get_cwd().path, "search-engine-config-schema.json")
   );
-  disallowAdditionalProperties(schema);
+});
+
+add_task(async function test_search_config_validates_to_schema() {
+  disallowAdditionalProperties(searchConfigSchema);
 
   let selector = new SearchEngineSelector(() => {});
   let searchConfig = await selector.getEngineConfiguration();
-  let validator = new JsonSchema.Validator(schema);
+  let validator = new JsonSchema.Validator(searchConfigSchema);
 
   for (let entry of searchConfig) {
     // Records in Remote Settings contain additional properties independent of
@@ -63,5 +68,18 @@ add_task(async function test_search_config_validates_to_schema() {
       message += `:\n${JSON.stringify(result.errors, null, 2)}`;
     }
     Assert.ok(result.valid, message);
+  }
+});
+
+add_task(async function test_ui_schema_valid() {
+  let uiSchema = await IOUtils.readJSON(
+    PathUtils.join(do_get_cwd().path, "search-engine-config-ui-schema.json")
+  );
+
+  for (let key of Object.keys(searchConfigSchema.properties)) {
+    Assert.ok(
+      uiSchema["ui:order"].includes(key),
+      `Should have ${key} listed at the top-level of the ui schema`
+    );
   }
 });
