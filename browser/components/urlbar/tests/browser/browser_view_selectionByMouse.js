@@ -50,7 +50,7 @@ add_task(async function basic() {
     {
       description: "Normal result to quick action button",
       mousedown: ".urlbarView-row:nth-child(1) > .urlbarView-row-inner",
-      mouseup: ".urlbarView-quickaction-row[data-key=test-downloads]",
+      mouseup: ".urlbarView-quickaction-button[data-key=test-downloads]",
       expected: "about:downloads",
     },
     {
@@ -61,19 +61,19 @@ add_task(async function basic() {
     },
     {
       description: "Quick action button to normal result",
-      mousedown: ".urlbarView-quickaction-row[data-key=test-addons]",
+      mousedown: ".urlbarView-quickaction-button[data-key=test-addons]",
       mouseup: ".urlbarView-row:nth-child(1)",
       expected: "https://example.com/?q=test",
     },
     {
       description: "Quick action button to quick action button",
-      mousedown: ".urlbarView-quickaction-row[data-key=test-addons]",
-      mouseup: ".urlbarView-quickaction-row[data-key=test-downloads]",
+      mousedown: ".urlbarView-quickaction-button[data-key=test-addons]",
+      mouseup: ".urlbarView-quickaction-button[data-key=test-downloads]",
       expected: "about:downloads",
     },
     {
       description: "Quick action button to out of result",
-      mousedown: ".urlbarView-quickaction-row[data-key=test-downloads]",
+      mousedown: ".urlbarView-quickaction-button[data-key=test-downloads]",
       mouseup: "body",
       expected: false,
     },
@@ -135,7 +135,7 @@ add_task(async function outOfBrowser() {
     },
     {
       description: "Quick action button to out of browser",
-      mousedown: ".urlbarView-quickaction-row[data-key=test-addons]",
+      mousedown: ".urlbarView-quickaction-button[data-key=test-addons]",
     },
   ];
 
@@ -191,21 +191,21 @@ add_task(async function withSelectionByKeyboard() {
       mouseup: "body",
       expected: {
         selectedElementByKey:
-          "#urlbar-results .urlbarView-quickaction-row[selected]",
+          "#urlbar-results .urlbarView-quickaction-button[selected]",
         selectedElementAfterMouseDown:
-          "#urlbar-results .urlbarView-quickaction-row[selected]",
+          "#urlbar-results .urlbarView-quickaction-button[selected]",
         actionedPage: false,
       },
     },
     {
       description: "Select normal result, then click on about:downloads",
-      mousedown: ".urlbarView-quickaction-row[data-key=test-downloads]",
-      mouseup: ".urlbarView-quickaction-row[data-key=test-downloads]",
+      mousedown: ".urlbarView-quickaction-button[data-key=test-downloads]",
+      mouseup: ".urlbarView-quickaction-button[data-key=test-downloads]",
       expected: {
         selectedElementByKey:
           "#urlbar-results .urlbarView-row > .urlbarView-row-inner[selected]",
         selectedElementAfterMouseDown:
-          ".urlbarView-quickaction-row[data-key=test-downloads]",
+          ".urlbarView-quickaction-button[data-key=test-downloads]",
         actionedPage: "about:downloads",
       },
     },

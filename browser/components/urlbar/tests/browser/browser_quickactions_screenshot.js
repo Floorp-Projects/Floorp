@@ -111,7 +111,7 @@ add_task(async function search_mode_on_webpage() {
 
   info("Trigger the screenshot mode");
   const initialActionButtons = window.document.querySelectorAll(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-button"
   );
   let screenshotButton;
   for (let i = 0; i < initialActionButtons.length; i++) {
@@ -150,7 +150,7 @@ add_task(async function search_mode_on_webpage() {
   await clickQuickActionOneoffButton();
   await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   const finalActionButtons = window.document.querySelectorAll(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-button"
   );
 
   info("Check the action buttons and the urlbar");

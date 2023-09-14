@@ -271,7 +271,7 @@ add_task(async function selected_result_action() {
     await showResultByArrowDown();
     await selectRowByProvider("quickactions");
     const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    doClickSubButton(".urlbarView-quickaction-row[data-key=addons]");
+    doClickSubButton(".urlbarView-quickaction-button[data-key=addons]");
     await onLoad;
 
     assertEngagementTelemetry([

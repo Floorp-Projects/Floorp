@@ -1453,7 +1453,7 @@ export var UrlbarUtils = {
 
     if (
       result.providerName === "quickactions" &&
-      element?.classList.contains("urlbarView-quickaction-row")
+      element?.classList.contains("urlbarView-quickaction-button")
     ) {
       return element.dataset.key;
     }

@@ -118,7 +118,7 @@
   }
 }
 
-.urlbarView-quickaction-row {
+.urlbarView-quickaction-button {
   box-shadow: 0 0 1px rgba(128, 128, 142, 0.9), 0 0 4px rgba(128, 128, 142, 0.5);
   border-radius: 4px;
   display: flex;
