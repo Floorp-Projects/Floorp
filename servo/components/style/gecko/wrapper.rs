@@ -884,6 +884,18 @@ fn selector_flags_to_node_flags(flags: ElementSelectorFlags) -> u32 {
     if flags.contains(ElementSelectorFlags::HAS_EMPTY_SELECTOR) {
         gecko_flags |= NodeSelectorFlags::HasEmptySelector.0;
     }
+    if flags.contains(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR) {
+        gecko_flags |= NodeSelectorFlags::RelativeSelectorAnchor.0;
+    }
+    if flags.contains(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT) {
+        gecko_flags |= NodeSelectorFlags::RelativeSelectorAnchorNonSubject.0;
+    }
+    if flags.contains(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR) {
+        gecko_flags |= NodeSelectorFlags::RelativeSelectorSearchDirectionAncestor.0;
+    }
+    if flags.contains(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING) {
+        gecko_flags |= NodeSelectorFlags::RelativeSelectorSearchDirectionSibling.0;
+    }
 
     gecko_flags
 }

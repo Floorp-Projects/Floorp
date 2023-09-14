@@ -207,6 +207,25 @@ enum class NodeSelectorFlags : uint32_t {
   /// DOM mutation.
   AllSimpleRestyleFlags =
       AllSimpleRestyleFlagsForAppend | HasSlowSelectorLaterSiblings,
+
+  // This node was evaluated as an anchor for a relative selector.
+  RelativeSelectorAnchor = 1 << 5,
+
+  // This node was evaluated as an anchor for a relative selector, and that
+  // relative selector was not the subject of the overall selector.
+  RelativeSelectorAnchorNonSubject = 1 << 6,
+
+  // This node's sibling(s) performed a relative selector search to this node.
+  RelativeSelectorSearchDirectionSibling = 1 << 7,
+
+  // This node's ancestor(s) performed a relative selector search to this node.
+  RelativeSelectorSearchDirectionAncestor = 1 << 8,
+
+  // This node's sibling(s) and ancestor(s), and/or this node's ancestor's
+  // sibling(s) performed a relative selector search to this node.
+  RelativeSelectorSearchDirectionAncestorSibling =
+      RelativeSelectorSearchDirectionSibling |
+      RelativeSelectorSearchDirectionAncestor,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(NodeSelectorFlags);
