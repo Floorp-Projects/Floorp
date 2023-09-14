@@ -38,9 +38,6 @@ class JS_PUBLIC_API GenericPrinter {
   // Puts |len| characters from |s| at the current position and
   // return true on success, false on failure.
   virtual bool put(const char* s, size_t len) = 0;
-  virtual void flush() { /* Do nothing */
-  }
-
   inline bool put(const char* s) { return put(s, strlen(s)); }
   inline bool putChar(const char c) { return put(&c, 1); }
 
@@ -59,6 +56,10 @@ class JS_PUBLIC_API GenericPrinter {
   // Prints a formatted string into the buffer.
   bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
   bool vprintf(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+
+  // In some printers, this ensure that the content is fully written.
+  virtual void flush() { /* Do nothing */
+  }
 
   // Report that a string operation failed to get the memory it requested.
   virtual void reportOutOfMemory();
