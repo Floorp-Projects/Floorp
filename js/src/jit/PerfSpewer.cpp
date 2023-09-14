@@ -495,7 +495,7 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
   if (PerfIROpsEnabled()) {
     Sprinter buf;
     CHECK_RETURN(buf.init());
-    buf.put(LIRCodeName(op));
+    CHECK_RETURN(buf.put(LIRCodeName(op)));
     ins->printOperands(buf);
     opcodeStr = buf.release();
   }
@@ -509,53 +509,53 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
 }
 
 #ifdef JS_JITSPEW
-static void PrintStackValue(JSContext* cx, StackValue* stackVal,
-                            CompilerFrameInfo& frame, Sprinter& buf) {
+static void PrintStackValue(StackValue* stackVal, CompilerFrameInfo& frame,
+                            Sprinter& buf) {
   switch (stackVal->kind()) {
     /****** Constant ******/
     case StackValue::Constant: {
       js::Value constantVal = stackVal->constant();
       if (constantVal.isInt32()) {
-        buf.printf("%d", constantVal.toInt32());
+        CHECK_RETURN(buf.jsprintf("%d", constantVal.toInt32()));
       } else if (constantVal.isObjectOrNull()) {
-        buf.printf("obj:%p", constantVal.toObjectOrNull());
+        CHECK_RETURN(buf.jsprintf("obj:%p", constantVal.toObjectOrNull()));
       } else if (constantVal.isString()) {
-        buf.put("str:");
-        buf.putString(cx, constantVal.toString());
+        CHECK_RETURN(buf.put("str:"));
+        CHECK_RETURN(buf.putString(constantVal.toString()));
       } else if (constantVal.isNumber()) {
-        buf.printf("num:%f", constantVal.toNumber());
+        CHECK_RETURN(buf.jsprintf("num:%f", constantVal.toNumber()));
       } else if (constantVal.isSymbol()) {
-        buf.put("sym:");
+        CHECK_RETURN(buf.put("sym:"));
         constantVal.toSymbol()->dump(buf);
       } else {
-        buf.printf("raw:%" PRIx64, constantVal.asRawBits());
+        CHECK_RETURN(buf.jsprintf("raw:%" PRIx64, constantVal.asRawBits()));
       }
     } break;
     /****** Register ******/
     case StackValue::Register: {
       Register reg = stackVal->reg().payloadOrValueReg();
-      buf.put(reg.name());
+      CHECK_RETURN(buf.put(reg.name()));
     } break;
     /****** Stack ******/
     case StackValue::Stack:
-      buf.put("stack");
+      CHECK_RETURN(buf.put("stack"));
       break;
     /****** ThisSlot ******/
     case StackValue::ThisSlot: {
 #  ifdef JS_HAS_HIDDEN_SP
-      buf.put("this");
+      CHECK_RETURN(buf.put("this"));
 #  else
       Address addr = frame.addressOfThis();
-      buf.printf("this:%s(%d)", addr.base.name(), addr.offset);
+      CHECK_RETURN(buf.jsprintf("this:%s(%d)", addr.base.name(), addr.offset));
 #  endif
     } break;
     /****** LocalSlot ******/
     case StackValue::LocalSlot:
-      buf.printf("local:%u", stackVal->localSlot());
+      CHECK_RETURN(buf.jsprintf("local:%u", stackVal->localSlot()));
       break;
     /****** ArgSlot ******/
     case StackValue::ArgSlot:
-      buf.printf("arg:%u", stackVal->argSlot());
+      CHECK_RETURN(buf.jsprintf("arg:%u", stackVal->argSlot()));
       break;
 
     default:
@@ -582,7 +582,7 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
 
     Sprinter buf(cx);
     CHECK_RETURN(buf.init());
-    buf.put(js::CodeName(op));
+    CHECK_RETURN(buf.put(js::CodeName(op)));
 
     switch (op) {
       case JSOp::SetName:
@@ -593,8 +593,8 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
       case JSOp::GetGName: {
         // Emit the name used for these ops
         Rooted<PropertyName*> name(cx, script->getName(pc));
-        buf.put(" ");
-        buf.putString(cx, name);
+        CHECK_RETURN(buf.put(" "));
+        CHECK_RETURN(buf.putString(name));
       } break;
       default:
         break;
@@ -602,14 +602,14 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
 
     // Output should be "JSOp (operand1), (operand2), ..."
     for (unsigned i = 1; i <= numOperands; i++) {
-      buf.put(" (");
+      CHECK_RETURN(buf.put(" ("));
       StackValue* stackVal = frame.peek(-int(i));
-      PrintStackValue(cx, stackVal, frame, buf);
+      PrintStackValue(stackVal, frame, buf);
 
       if (i < numOperands) {
-        buf.put("),");
+        CHECK_RETURN(buf.put("),"));
       } else {
-        buf.put(")");
+        CHECK_RETURN(buf.put(")"));
       }
     }
     opcodeStr = buf.release();
