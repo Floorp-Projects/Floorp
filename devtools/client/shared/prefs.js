@@ -213,26 +213,27 @@ exports.PrefsHelper = PrefsHelper;
  * A PreferenceObserver observes a pref branch for pref changes.
  * It emits an event for each preference change.
  */
-function PrefObserver(branchName) {
-  this.branchName = branchName;
-  this.branch = Services.prefs.getBranch(branchName);
-  this.branch.addObserver("", this);
+class PrefObserver extends EventEmitter {
+  constructor(branchName) {
+    super();
 
-  EventEmitter.decorate(this);
+    this.#branchName = branchName;
+    this.#branch = Services.prefs.getBranch(branchName);
+    this.#branch.addObserver("", this);
+  }
+
+  #branchName;
+  #branch;
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed") {
+      this.emit(this.#branchName + data);
+    }
+  }
+
+  destroy() {
+    this.#branch.removeObserver("", this);
+  }
 }
 
 exports.PrefObserver = PrefObserver;
-
-PrefObserver.prototype = {
-  observe(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      this.emit(this.branchName + data);
-    }
-  },
-
-  destroy() {
-    if (this.branch) {
-      this.branch.removeObserver("", this);
-    }
-  },
-};
