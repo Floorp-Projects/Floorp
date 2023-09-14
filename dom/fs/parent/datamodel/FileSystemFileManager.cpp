@@ -170,8 +170,6 @@ nsresult EnsureFileSystemDirectory(
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
-
   QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
 
   QM_TRY_INSPECT(const auto& fileSystemDirectory,
