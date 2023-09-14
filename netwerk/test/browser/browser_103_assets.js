@@ -145,14 +145,12 @@ add_task(async function test_103_asset_javascript() {
 });
 
 // preload javascript module
-/* TODO(Bug 1798319): enable this test case
 add_task(async function test_103_asset_module() {
   await test_hint_asset("test_103_asset_normal", "module", "normal");
   await test_hint_asset("test_103_asset_hinted", "module", "hinted");
   await test_hint_asset("test_103_asset_reload", "module", "reload");
   await test_hint_asset("test_103_asset_cached", "module", "cached");
 });
-*/
 
 // preload font
 add_task(async function test_103_asset_font() {
