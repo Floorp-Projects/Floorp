@@ -375,6 +375,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "surfaceReviewQualityExplainerURLClicked":
         Glean.shopping.surfaceShowQualityExplainerUrlClicked.record();
         break;
+      case "noReviewReliabilityAvailable":
+        Glean.shopping.surfaceNoReviewReliabilityAvailable.record();
+        break;
     }
   }
 }
