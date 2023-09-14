@@ -48,7 +48,7 @@ async function visitTestSites(urls = [ORIGIN_A, ORIGIN_B, ORIGIN_C]) {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   for (let url of urls) {
-    await BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   }
 
@@ -343,7 +343,7 @@ add_task(async function test_pbm() {
     private: true,
   });
   let tab = BrowserTestUtils.addTab(pbmWindow.gBrowser, "about:blank");
-  await BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_A);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_A);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(
@@ -396,7 +396,7 @@ add_task(async function test_container_tab() {
   let tab = BrowserTestUtils.addTab(gBrowser, ORIGIN_B, {
     userContextId: 1,
   });
-  await BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(
@@ -579,7 +579,7 @@ add_task(async function test_site_preference_pbm() {
     private: true,
   });
   let tab = BrowserTestUtils.addTab(pbmWindow.gBrowser, "about:blank");
-  await BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(
@@ -601,7 +601,7 @@ add_task(async function test_site_preference_pbm() {
     true
   );
 
-  await BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, ORIGIN_B);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(
