@@ -6863,6 +6863,90 @@ networking:
     record_in_processes:
       - 'main'
 
+  doh_heuristics_attempts:
+    bug_numbers:
+      - 1784258
+    description: >
+      The number of times we ran DoH heuristics.
+    kind: uint
+    expires: never # capturing continuously for monitoring purposes
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  doh_heuristics_pass_count:
+    bug_numbers:
+      - 1784258
+    description: >
+      The number of times we passed DoH heuristics.
+    kind: uint
+    expires: never # capturing continuously for monitoring purposes
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  doh_heuristics_result:
+    bug_numbers:
+      - 1784258
+    description: >
+      The value of this scalar indicates the result of the last heuristic run.
+      0: "incomplete"
+      1: "pass"
+      2: "opt-out"
+      3: "manually-disabled"
+      4: "manually-enabled"
+      5: "enterprise-disabled"
+      6: "enterprise-present"
+      7: "enterprise-enabled"
+      8: "vpn"
+      9: "proxy"
+      10: "nrpt"
+      11: "parental"
+      12: "modifiedRoots"
+      13: "thirdPartyRoots"
+      14: "google"
+      15: "youtube"
+      16: "zscaler"
+      17: "canary"
+      18: "ignored"
+    kind: uint
+    expires: never # capturing continuously for monitoring purposes
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  doh_heuristic_ever_tripped:
+    bug_numbers:
+      - 1784258
+    description: >
+      True if this heuristic (key) was ever tripped during the session.
+    kind: boolean
+    keyed: true
+    expires: never # capturing continuously for monitoring purposes
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:
