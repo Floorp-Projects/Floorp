@@ -4,14 +4,15 @@
 
 package org.mozilla.fenix.addons
 
-import android.content.Context
-import android.content.DialogInterface.OnClickListener
+import android.view.View
+import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import mozilla.components.browser.state.action.ExtensionProcessDisabledPopupAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
@@ -19,12 +20,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.anyInt
-import org.mockito.Mockito.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -36,17 +35,18 @@ class ExtensionProcessDisabledControllerTest {
 
     @Test
     fun `WHEN showExtensionProcessDisabledPopup is true AND positive button clicked then enable extension process spawning`() {
-        val context: Context = mock()
         val store = BrowserStore()
         val engine: Engine = mock()
+        val dialog: AlertDialog = mock()
         val appName = "TestApp"
         val builder: AlertDialog.Builder = mock()
-        val controller = ExtensionProcessDisabledController(context, store, engine, builder, appName)
+        val controller =
+            ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
+        val buttonsContainerCaptor = argumentCaptor<View>()
+
         controller.start()
 
-        whenever(context.getString(anyInt(), anyString())).thenReturn("TestString")
-
-        val posClickCaptor = argumentCaptor<OnClickListener>()
+        whenever(builder.show()).thenReturn(dialog)
 
         assertFalse(store.state.showExtensionProcessDisabledPopup)
 
@@ -55,12 +55,11 @@ class ExtensionProcessDisabledControllerTest {
         store.waitUntilIdle()
         assertTrue(store.state.showExtensionProcessDisabledPopup)
 
-        verify(builder).setPositiveButton(anyInt(), posClickCaptor.capture())
-
+        verify(builder).setView(buttonsContainerCaptor.capture())
         verify(builder).show()
 
-        val dialog: AlertDialog = mock()
-        posClickCaptor.value.onClick(dialog, 1)
+        buttonsContainerCaptor.value.findViewById<Button>(R.id.positive).performClick()
+
         store.waitUntilIdle()
 
         verify(engine).enableExtensionProcessSpawning()
@@ -70,17 +69,18 @@ class ExtensionProcessDisabledControllerTest {
 
     @Test
     fun `WHEN showExtensionProcessDisabledPopup is true AND negative button clicked then dismiss without enabling extension process spawning`() {
-        val context: Context = mock()
         val store = BrowserStore()
         val engine: Engine = mock()
         val appName = "TestApp"
+        val dialog: AlertDialog = mock()
         val builder: AlertDialog.Builder = mock()
-        val controller = ExtensionProcessDisabledController(context, store, engine, builder, appName)
+        val controller =
+            ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
+        val buttonsContainerCaptor = argumentCaptor<View>()
+
         controller.start()
 
-        whenever(context.getString(anyInt(), anyString())).thenReturn("TestString")
-
-        val negClickCaptor = argumentCaptor<OnClickListener>()
+        whenever(builder.show()).thenReturn(dialog)
 
         assertFalse(store.state.showExtensionProcessDisabledPopup)
 
@@ -89,12 +89,11 @@ class ExtensionProcessDisabledControllerTest {
         store.waitUntilIdle()
         assertTrue(store.state.showExtensionProcessDisabledPopup)
 
-        verify(builder).setNegativeButton(anyInt(), negClickCaptor.capture())
-
+        verify(builder).setView(buttonsContainerCaptor.capture())
         verify(builder).show()
 
-        val dialog: AlertDialog = mock()
-        negClickCaptor.value.onClick(dialog, 1)
+        buttonsContainerCaptor.value.findViewById<Button>(R.id.negative).performClick()
+
         store.waitUntilIdle()
 
         assertFalse(store.state.showExtensionProcessDisabledPopup)
