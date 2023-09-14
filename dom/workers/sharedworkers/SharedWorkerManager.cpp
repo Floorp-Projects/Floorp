@@ -159,6 +159,12 @@ void SharedWorkerManager::Terminate() {
   MOZ_ASSERT(mActors.IsEmpty());
   MOZ_ASSERT(mHolders.IsEmpty());
 
+  // mRemoteWorkerController creation can fail. If the creation fails
+  // mRemoteWorkerController is nullptr and we should stop termination here.
+  if (!mRemoteWorkerController) {
+    return;
+  }
+
   mRemoteWorkerController->Terminate();
   mRemoteWorkerController = nullptr;
 }

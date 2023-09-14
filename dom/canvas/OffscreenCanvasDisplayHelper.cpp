@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OffscreenCanvasDisplayHelper.h"
+#include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/Swizzle.h"
@@ -27,11 +29,17 @@ OffscreenCanvasDisplayHelper::OffscreenCanvasDisplayHelper(
 
 OffscreenCanvasDisplayHelper::~OffscreenCanvasDisplayHelper() = default;
 
-void OffscreenCanvasDisplayHelper::Destroy() {
+void OffscreenCanvasDisplayHelper::DestroyElement() {
   MOZ_ASSERT(NS_IsMainThread());
 
   MutexAutoLock lock(mMutex);
   mCanvasElement = nullptr;
+}
+
+void OffscreenCanvasDisplayHelper::DestroyCanvas() {
+  MutexAutoLock lock(mMutex);
+  mOffscreenCanvas = nullptr;
+  mWorkerRef = nullptr;
 }
 
 CanvasContextType OffscreenCanvasDisplayHelper::GetContextType() const {
@@ -46,12 +54,15 @@ RefPtr<layers::ImageContainer> OffscreenCanvasDisplayHelper::GetImageContainer()
 }
 
 void OffscreenCanvasDisplayHelper::UpdateContext(
+    OffscreenCanvas* aOffscreenCanvas, RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
     CanvasContextType aType, const Maybe<int32_t>& aChildId) {
   RefPtr<layers::ImageContainer> imageContainer =
       MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
 
   MutexAutoLock lock(mMutex);
 
+  mOffscreenCanvas = aOffscreenCanvas;
+  mWorkerRef = std::move(aWorkerRef);
   mType = aType;
   mContextChildId = aChildId;
   mImageContainer = std::move(imageContainer);
@@ -63,6 +74,61 @@ void OffscreenCanvasDisplayHelper::UpdateContext(
   }
 
   MaybeQueueInvalidateElement();
+}
+
+void OffscreenCanvasDisplayHelper::FlushForDisplay() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MutexAutoLock lock(mMutex);
+
+  // Without an OffscreenCanvas object bound to us, we either have not drawn
+  // using the canvas at all, or we have already destroyed it.
+  if (!mOffscreenCanvas) {
+    return;
+  }
+
+  // We assign/destroy the worker ref at the same time as the OffscreenCanvas
+  // ref, so we can only have the canvas without a worker ref if it exists on
+  // the main thread.
+  if (!mWorkerRef) {
+    // We queue to ensure that we have the same asynchronous update behaviour
+    // for a main thread and a worker based OffscreenCanvas.
+    mOffscreenCanvas->QueueCommitToCompositor();
+    return;
+  }
+
+  class FlushWorkerRunnable final : public WorkerRunnable {
+   public:
+    FlushWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                        OffscreenCanvasDisplayHelper* aDisplayHelper)
+        : WorkerRunnable(aWorkerPrivate), mDisplayHelper(aDisplayHelper) {}
+
+    bool WorkerRun(JSContext*, WorkerPrivate*) override {
+      // The OffscreenCanvas can only be freed on the worker thread, so we
+      // cannot be racing with an OffscreenCanvas::DestroyCanvas call and its
+      // destructor. We just need to make sure we don't call into
+      // OffscreenCanvas while holding the lock since it calls back into the
+      // OffscreenCanvasDisplayHelper.
+      RefPtr<OffscreenCanvas> canvas;
+      {
+        MutexAutoLock lock(mDisplayHelper->mMutex);
+        canvas = mDisplayHelper->mOffscreenCanvas;
+      }
+
+      if (canvas) {
+        canvas->CommitFrameToCompositor();
+      }
+      return true;
+    }
+
+   private:
+    RefPtr<OffscreenCanvasDisplayHelper> mDisplayHelper;
+  };
+
+  // Otherwise we are calling from the main thread during painting to a canvas
+  // on a worker thread.
+  auto task = MakeRefPtr<FlushWorkerRunnable>(mWorkerRef->Private(), this);
+  task->Dispatch();
 }
 
 bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(

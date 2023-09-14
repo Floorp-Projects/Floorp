@@ -418,7 +418,11 @@ class RelayOffered {
   #isRelayUser;
 
   async *autocompleteItemsAsync(_origin, scenarioName, hasInput) {
-    if (!hasInput && isSignup(scenarioName)) {
+    if (
+      !hasInput &&
+      isSignup(scenarioName) &&
+      !Services.prefs.prefIsLocked("signon.firefoxRelay.feature")
+    ) {
       if (this.#isRelayUser === undefined) {
         this.#isRelayUser = await isRelayUserAsync();
       }

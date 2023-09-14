@@ -2936,8 +2936,8 @@ var gPrivacyPane = {
     document.getElementById("passwordExceptions").disabled = !prefValue;
     document.getElementById("generatePasswords").disabled = !prefValue;
     document.getElementById("passwordAutofillCheckbox").disabled = !prefValue;
-    document.getElementById("relayIntegration").disabled = !prefValue;
-
+    document.getElementById("relayIntegration").disabled =
+      !prefValue || Services.prefs.prefIsLocked("signon.firefoxRelay.feature");
     // don't override pref value in UI
     return undefined;
   },
@@ -2976,7 +2976,7 @@ var gPrivacyPane = {
     var warn = Preferences.get("xpinstall.whitelist.required");
     var exceptions = document.getElementById("addonExceptions");
 
-    exceptions.disabled = !warn.value;
+    exceptions.disabled = !warn.value || warn.locked;
 
     // don't override the preference value
     return undefined;

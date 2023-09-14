@@ -682,6 +682,24 @@
       }
     },
 
+    "FirefoxSuggest": {
+      "type": "object",
+      "properties": {
+        "WebSuggestions": {
+          "type": "boolean"
+        },
+        "SponsoredSuggestions": {
+          "type": "boolean"
+        },
+        "ImproveSuggest": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "GoToIntranetSiteForSingleWordEntryInAddressBar": {
       "type": "boolean"
     },

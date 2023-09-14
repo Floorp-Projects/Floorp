@@ -340,6 +340,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   bool IsOffscreen() const { return !!mOffscreenCanvas; }
   OffscreenCanvas* GetOffscreenCanvas() const { return mOffscreenCanvas; }
+  void FlushOffscreenCanvas();
 
   layers::ImageContainer* GetImageContainer() const { return mImageContainer; }
 

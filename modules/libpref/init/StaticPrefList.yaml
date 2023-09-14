@@ -1350,6 +1350,12 @@
   value: false
   mirror: always
 
+# See bug 1811830
+- name: browser.download.force_save_internally_handled_attachments
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.download.sanitize_non_media_extensions
   type: bool
   value: true

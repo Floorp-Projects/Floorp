@@ -66,6 +66,9 @@ OffscreenCanvas::OffscreenCanvas(
       mDisplay(aDisplay) {}
 
 OffscreenCanvas::~OffscreenCanvas() {
+  if (mDisplay) {
+    mDisplay->DestroyCanvas();
+  }
   NS_ReleaseOnMainThread("OffscreenCanvas::mExpandedReader",
                          mExpandedReader.forget());
 }
@@ -179,6 +182,27 @@ void OffscreenCanvas::GetContext(
       return;
   }
 
+  // If we are on a worker, we need to give our OffscreenCanvasDisplayHelper
+  // object access to a worker ref so we can dispatch properly during painting
+  // if we need to flush our contents to its ImageContainer for display.
+  RefPtr<ThreadSafeWorkerRef> workerRef;
+  if (mDisplay) {
+    if (WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate()) {
+      RefPtr<StrongWorkerRef> strongRef = StrongWorkerRef::Create(
+          workerPrivate, "OffscreenCanvas::GetContext",
+          [display = mDisplay]() { display->DestroyCanvas(); });
+      if (NS_WARN_IF(!strongRef)) {
+        aResult.SetNull();
+        aRv.ThrowUnknownError("Worker shutting down");
+        return;
+      }
+
+      workerRef = new ThreadSafeWorkerRef(strongRef);
+    } else {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+  }
+
   RefPtr<nsISupports> result = CanvasRenderingContextHelper::GetOrCreateContext(
       aCx, contextType, aContextOptions, aRv);
   if (!result) {
@@ -220,7 +244,8 @@ void OffscreenCanvas::GetContext(
   }
 
   if (mDisplay) {
-    mDisplay->UpdateContext(mCurrentContextType, childId);
+    mDisplay->UpdateContext(this, std::move(workerRef), mCurrentContextType,
+                            childId);
   }
 }
 

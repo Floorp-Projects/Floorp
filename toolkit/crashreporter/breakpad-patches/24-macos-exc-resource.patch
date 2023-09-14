@@ -80,7 +80,7 @@ diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_proces
 +          {
 +            uint32_t type = (exception_flags >> 29) & 0x7ULL;
 +            uint32_t flavor = (exception_flags >> 26) & 0x7ULL;
-+            char flavor_string[4] = {};
++            char flavor_string[6] = {};
 +            switch (type) {
 +              case MD_MAC_EXC_RESOURCE_TYPE_CPU:
 +                reason.append("RESOURCE_TYPE_CPU / ");

@@ -112,6 +112,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
       // CompositableHandle managed inside the compositor process. There is
       // nothing to paint until the owner attaches it.
 
+      element->FlushOffscreenCanvas();
+
       nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
       nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
       IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);

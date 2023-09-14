@@ -51,6 +51,7 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/static/browser_parsable_script.js
         - browser/base/content/test/tabMediaIndicator/browser_mute_webAudio.js
         - browser/base/content/test/tabs/browser_new_file_whitelisted_http_tab.js
+        - browser/components/enterprisepolicies/Policies.sys.mjs
         - browser/components/migration/ChromeMigrationUtils.sys.mjs
         - browser/components/migration/ChromeProfileMigrator.sys.mjs
         - browser/components/newtab/data/content/activity-stream.bundle.js

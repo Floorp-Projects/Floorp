@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PdfJsDefaultPreferences: "resource://pdf.js/PdfJsDefaultPreferences.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
 });
 
@@ -1275,6 +1276,35 @@ export var Policies = {
     },
   },
 
+  FirefoxSuggest: {
+    onBeforeAddons(manager, param) {
+      (async () => {
+        await lazy.UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
+        if ("WebSuggestions" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.suggest.quicksuggest.nonsponsored",
+            param.WebSuggestions,
+            param.Locked
+          );
+        }
+        if ("SponsoredSuggestions" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.suggest.quicksuggest.sponsored",
+            param.SponsoredSuggestions,
+            param.Locked
+          );
+        }
+        if ("ImproveSuggest" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.quicksuggest.dataCollection.enabled",
+            param.ImproveSuggest,
+            param.Locked
+          );
+        }
+      })();
+    },
+  },
+
   GoToIntranetSiteForSingleWordEntryInAddressBar: {
     onBeforeAddons(manager, param) {
       setAndLockPref("browser.fixup.dns_first_for_single_words", param);
@@ -1688,6 +1718,7 @@ export var Policies = {
         "toolkit.legacyUserProfileCustomizations.stylesheets",
         "ui.",
         "widget.",
+        "xpinstall.whitelist.required",
       ];
       if (!AppConstants.MOZ_REQUIRE_SIGNING) {
         allowedPrefixes.push("xpinstall.signatures.required");
@@ -1704,6 +1735,7 @@ export var Policies = {
         "security.OCSP.require",
         "security.ssl.enable_ocsp_stapling",
         "security.ssl.errorReporting.enabled",
+        "security.ssl.require_safe_negotiation",
         "security.tls.enable_0rtt_data",
         "security.tls.hello_downgrade_check",
         "security.tls.version.enable-deprecated",

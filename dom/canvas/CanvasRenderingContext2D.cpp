@@ -4372,14 +4372,14 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   const double kHangingBaselineDefault = 0.8;      // fraction of ascent
   const double kIdeographicBaselineDefault = 0.5;  // fraction of descent
 
-  gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
+  RefPtr<gfxFontGroup> currentFontStyle = GetCurrentFontStyle();
   if (NS_WARN_IF(!currentFontStyle)) {
     aError = NS_ERROR_FAILURE;
     return nullptr;
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
-  Document* document = presShell ? presShell->GetDocument() : nullptr;
+  RefPtr<Document> document = presShell ? presShell->GetDocument() : nullptr;
 
   // replace all the whitespace characters with U+0020 SPACE
   nsAutoString textToDraw(aRawText);
