@@ -65,6 +65,11 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   throw new Error("FirefoxRelay.sys.mjs should only run in the parent process");
 }
 
+// Using 418 to avoid conflict with other standard http error code
+const AUTH_TOKEN_ERROR_CODE = 418;
+
+let gFlowId;
+
 async function getRelayTokenAsync() {
   try {
     return await lazy.fxAccounts.getOAuthToken({ scope: gConfig.scope });
@@ -124,7 +129,7 @@ async function getReusableMasksAsync(browser, _origin) {
   if (!response) {
     // fetchWithReauth only returns undefined if login / obtaining a token failed.
     // Otherwise, it will return a response object.
-    return [undefined, RelayFeature.AUTH_TOKEN_ERROR_CODE];
+    return [undefined, AUTH_TOKEN_ERROR_CODE];
   }
 
   if (response.ok) {
@@ -143,9 +148,10 @@ async function getReusableMasksAsync(browser, _origin) {
 
 /**
  * Show localized notification.
- * @param browser
- * @param messageId messageId from browser/firefoxRelay.ftl
- * @param messageArgs
+ *
+ * @param {*} browser
+ * @param {*} messageId from browser/firefoxRelay.ftl
+ * @param {object} messageArgs
  */
 async function showErrorAsync(browser, messageId, messageArgs) {
   const { PopupNotifications } = browser.ownerGlobal.wrappedJSObject;
@@ -202,11 +208,7 @@ async function formatMessages(...ids) {
 async function showReusableMasksAsync(browser, origin, error) {
   const [reusableMasks, status] = await getReusableMasksAsync(browser, origin);
   if (!reusableMasks) {
-    FirefoxRelayTelemetry.recordRelayReusePanelEvent(
-      "shown",
-      FirefoxRelay.flowId,
-      status
-    );
+    FirefoxRelayTelemetry.recordRelayReusePanelEvent("shown", gFlowId, status);
     return null;
   }
 
@@ -222,7 +224,7 @@ async function showReusableMasksAsync(browser, origin, error) {
     async callback() {
       FirefoxRelayTelemetry.recordRelayReusePanelEvent(
         "get_unlimited_masks",
-        FirefoxRelay.flowId
+        gFlowId
       );
       browser.ownerGlobal.openWebLinkIn(gConfig.manageURL, "tab");
     },
@@ -267,19 +269,23 @@ async function showReusableMasksAsync(browser, origin, error) {
           mask.description || mask.generated_for || mask.used_on;
         button.appendChild(maskDescription);
 
-        button.addEventListener("click", () => {
-          notification.remove();
-          lazy.log.info("Reusing Relay mask");
-          fillUsername(mask.full_address);
-          showConfirmation(
-            browser,
-            "confirmation-hint-firefox-relay-mask-reused"
-          );
-          FirefoxRelayTelemetry.recordRelayReusePanelEvent(
-            "reuse_mask",
-            FirefoxRelay.flowId
-          );
-        });
+        button.addEventListener(
+          "click",
+          () => {
+            notification.remove();
+            lazy.log.info("Reusing Relay mask");
+            fillUsername(mask.full_address);
+            showConfirmation(
+              browser,
+              "confirmation-hint-firefox-relay-mask-reused"
+            );
+            FirefoxRelayTelemetry.recordRelayReusePanelEvent(
+              "reuse_mask",
+              gFlowId
+            );
+          },
+          { once: true }
+        );
         fragment.appendChild(button);
       });
     list.appendChild(fragment);
@@ -297,10 +303,7 @@ async function showReusableMasksAsync(browser, origin, error) {
         break;
       case "shown":
         notificationShown();
-        FirefoxRelayTelemetry.recordRelayReusePanelEvent(
-          "shown",
-          FirefoxRelay.flowId
-        );
+        FirefoxRelayTelemetry.recordRelayReusePanelEvent("shown", gFlowId);
         break;
     }
   }
@@ -344,8 +347,8 @@ async function generateUsernameAsync(browser, origin) {
   if (!response) {
     FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
       "shown",
-      FirefoxRelay.flowId,
-      RelayFeature.AUTH_TOKEN_ERROR_CODE
+      gFlowId,
+      AUTH_TOKEN_ERROR_CODE
     );
     return undefined;
   }
@@ -362,7 +365,7 @@ async function generateUsernameAsync(browser, origin) {
     if (error?.error_code == "free_tier_limit") {
       FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
         "shown",
-        FirefoxRelay.flowId,
+        gFlowId,
         error?.error_code
       );
       return showReusableMasksAsync(browser, origin, error);
@@ -379,7 +382,7 @@ async function generateUsernameAsync(browser, origin) {
 
   FirefoxRelayTelemetry.recordRelayReusePanelEvent(
     "shown",
-    FirefoxRelay.flowId,
+    gFlowId,
     response.status
   );
 
@@ -413,14 +416,14 @@ class RelayOffered {
           "PasswordManager:offerRelayIntegration",
           {
             telemetry: {
-              flowId: FirefoxRelay.flowId,
+              flowId: gFlowId,
               scenarioName,
             },
           }
         );
         FirefoxRelayTelemetry.recordRelayOfferedEvent(
           "shown",
-          FirefoxRelay.flowId,
+          gFlowId,
           scenarioName
         );
       }
@@ -479,8 +482,8 @@ class RelayOffered {
       callback: async () => {
         lazy.log.info("user opted in to Firefox Relay integration");
         // Capture the flowId here since async operations might take some time to resolve
-        // and by then FirefoxRelay.flowId might have another value
-        const flowId = FirefoxRelay.flowId;
+        // and by then gFlowId might have another value
+        const flowId = gFlowId;
         if (await this.notifyServerTermsAcceptedAsync(browser)) {
           feature.markAsEnabled();
           FirefoxRelayTelemetry.recordRelayOptInPanelEvent("enabled", flowId);
@@ -497,10 +500,7 @@ class RelayOffered {
           "user decided not to decide about Firefox Relay integration"
         );
         feature.markAsOffered();
-        FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
-          "postponed",
-          FirefoxRelay.flowId
-        );
+        FirefoxRelayTelemetry.recordRelayOptInPanelEvent("postponed", gFlowId);
       },
     };
     const disableIntegration = {
@@ -510,10 +510,7 @@ class RelayOffered {
       callback() {
         lazy.log.info("user opted out from Firefox Relay integration");
         feature.markAsDisabled();
-        FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
-          "disabled",
-          FirefoxRelay.flowId
-        );
+        FirefoxRelayTelemetry.recordRelayOptInPanelEvent("disabled", gFlowId);
       },
     };
     let notification;
@@ -557,7 +554,7 @@ class RelayOffered {
               );
               FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
                 "shown",
-                FirefoxRelay.flowId
+                gFlowId
               );
               break;
           }
@@ -584,14 +581,11 @@ class RelayEnabled {
         "PasswordManager:generateRelayUsername",
         {
           telemetry: {
-            flowId: FirefoxRelay.flowId,
+            flowId: gFlowId,
           },
         }
       );
-      FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
-        "shown",
-        FirefoxRelay.flowId
-      );
+      FirefoxRelayTelemetry.recordRelayUsernameFilledEvent("shown", gFlowId);
     }
   }
 
@@ -603,9 +597,6 @@ class RelayEnabled {
 class RelayDisabled {}
 
 class RelayFeature extends OptInFeature {
-  // Using 418 to avoid conflict with other standard http error code
-  static AUTH_TOKEN_ERROR_CODE = 418;
-
   constructor() {
     super(RelayOffered, RelayEnabled, RelayDisabled, gConfig.relayFeaturePref);
     Services.telemetry.setEventRecordingEnabled("relay_integration", true);
@@ -638,7 +629,7 @@ class RelayFeature extends OptInFeature {
     // We can use flowID to build the Funnel Diagram
     // This value need to always be regenerated in the entry point of an user
     // action so we overwrite the previous one.
-    this.flowId = TelemetryUtils.generateUUID();
+    gFlowId = TelemetryUtils.generateUUID();
 
     if (this.implementation.autocompleteItemsAsync) {
       for await (const item of this.implementation.autocompleteItemsAsync(

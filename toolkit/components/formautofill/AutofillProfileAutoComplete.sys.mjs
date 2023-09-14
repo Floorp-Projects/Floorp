@@ -21,10 +21,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FormAutofillContent: "resource://autofill/FormAutofillContent.sys.mjs",
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  FormScenarios: "resource://gre/modules/FormScenarios.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
-  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
-  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.sys.mjs",
 });
 
 const autocompleteController = Cc[
@@ -270,34 +268,6 @@ AutofillProfileAutoCompleteSearch.prototype = {
     });
   },
 
-  getScenarioName(input) {
-    if (!input) {
-      return "";
-    }
-
-    // Running simple heuristics first, because running the SignUpFormRuleset is expensive
-    if (
-      !(
-        lazy.LoginHelper.isInferredEmailField(input) ||
-        lazy.LoginHelper.isInferredUsernameField(input)
-      )
-    ) {
-      return "";
-    }
-
-    const formRoot = lazy.FormLikeFactory.findRootForField(input);
-
-    if (!HTMLFormElement.isInstance(formRoot)) {
-      return "";
-    }
-
-    const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
-    const { rules, type } = lazy.SignUpFormRuleset;
-    const results = rules.against(formRoot);
-    const score = results.get(formRoot).scoreFor(type);
-    return score > threshold ? "SignUpFormScenario" : "";
-  },
-
   /**
    * Stops an asynchronous search that is in progress
    */
@@ -330,7 +300,10 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
     let actor = getActorFromWindow(input.ownerGlobal);
     return actor.sendQuery("FormAutofill:GetRecords", {
-      scenarioName: this.getScenarioName(input),
+      scenarioName:
+        "signUpForm" in lazy.FormScenarios.detect({ input })
+          ? "SignUpFormScenario"
+          : "",
       ...data,
     });
   },
