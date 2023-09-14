@@ -924,7 +924,7 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
   size_t dedupCount = stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED);
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
-  sprinter.jsprintf(" " format, value);
+  sprinter.printf(" " format, value);
 
   FOR_EACH_NURSERY_PROFILE_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
@@ -946,13 +946,13 @@ void js::Nursery::printProfileHeader() {
   sprinter.put(gcstats::MinorGCProfilePrefix);
 
 #define PRINT_FIELD_NAME(name, width, _1, _2)   \
-  sprinter.jsprintf(" %-*s", width, name);
+  sprinter.printf(" %-*s", width, name);
 
   FOR_EACH_NURSERY_PROFILE_METADATA(PRINT_FIELD_NAME)
 #undef PRINT_FIELD_NAME
 
 #define PRINT_PROFILE_NAME(_1, text)            \
-  sprinter.jsprintf(" %-6.6s", text);
+  sprinter.printf(" %-6.6s", text);
 
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_PROFILE_NAME)
 #undef PRINT_PROFILE_NAME
@@ -971,7 +971,7 @@ void js::Nursery::printProfileDurations(const ProfileDurations& times,
                                         Sprinter& sprinter) {
   for (auto time : times) {
     int64_t micros = int64_t(time.ToMicroseconds());
-    sprinter.jsprintf(" %6" PRIi64, micros);
+    sprinter.printf(" %6" PRIi64, micros);
   }
 
   sprinter.put("\n");
@@ -1013,7 +1013,7 @@ void js::Nursery::printTotalProfileTimes() {
   MOZ_ASSERT(r > 0 && r < int(sizeof(collections)));
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
-  sprinter.jsprintf(" " format, value);
+  sprinter.printf(" " format, value);
 
   FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
@@ -1021,7 +1021,7 @@ void js::Nursery::printTotalProfileTimes() {
   // Use whole width of per-slice metadata to print total slices so the profile
   // totals that follow line up.
   size_t width = NurserySliceMetadataFormatWidth();
-  sprinter.jsprintf(" %-*s", int(width), collections);
+  sprinter.printf(" %-*s", int(width), collections);
 
   printProfileDurations(totalDurations_, sprinter);
 
