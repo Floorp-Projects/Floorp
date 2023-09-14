@@ -57,7 +57,15 @@ MDefinition* WarpBuilderShared::unboxObjectInfallible(MDefinition* def,
     return def;
   }
 
-  MOZ_ASSERT(def->type() == MIRType::Value);
+  if (def->type() != MIRType::Value) {
+    // Corner case: if the MIR node has a type other than Object or Value, this
+    // code isn't actually reachable and we expect an earlier guard to fail.
+    // Just insert a Box to satisfy MIR invariants.
+    MOZ_ASSERT(movable == IsMovable::No);
+    auto* box = MBox::New(alloc(), def);
+    current->add(box);
+    def = box;
+  }
 
   auto* unbox = MUnbox::New(alloc(), def, MIRType::Object, MUnbox::Infallible);
   if (movable == IsMovable::No) {
