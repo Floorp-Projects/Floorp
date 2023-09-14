@@ -39,8 +39,8 @@ interface HTMLFormElement : HTMLElement {
            [PutForwards=value]
            readonly attribute DOMTokenList relList;
 
-  [Constant]
-  readonly attribute HTMLCollection elements;
+  [SameObject]
+  readonly attribute HTMLFormControlsCollection elements;
   [Pure]
   readonly attribute long length;
 
