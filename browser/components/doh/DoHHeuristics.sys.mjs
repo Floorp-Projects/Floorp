@@ -105,6 +105,55 @@ export const Heuristics = {
     }
     return Ci.nsITRRSkipReason.TRR_FAILED;
   },
+
+  // Keep this in sync with the description of networking.doh_heuristics_result
+  // defined in Scalars.yaml
+  Telemetry: {
+    incomplete: 0,
+    pass: 1,
+    optOut: 2,
+    manuallyDisabled: 3,
+    manuallyEnabled: 4,
+    enterpriseDisabled: 5,
+    enterprisePresent: 6,
+    enterpriseEnabled: 7,
+    vpn: 8,
+    proxy: 9,
+    nrpt: 10,
+    browserParent: 11,
+    modifiedRoots: 12,
+    thirdPartyRoots: 13,
+    google: 14,
+    youtube: 15,
+    zscalerCanary: 16,
+    canary: 17,
+    ignored: 18,
+
+    heuristicNames() {
+      return [
+        "google",
+        "youtube",
+        "zscalerCanary",
+        "canary",
+        "modifiedRoots",
+        "browserParent",
+        "thirdPartyRoots",
+        "policy",
+        "vpn",
+        "proxy",
+        "nrpt",
+      ];
+    },
+
+    fromResults(results) {
+      for (let label of Heuristics.Telemetry.heuristicNames()) {
+        if (results[label] == Heuristics.DISABLE_DOH) {
+          return Heuristics.Telemetry[label];
+        }
+      }
+      return Heuristics.Telemetry.pass;
+    },
+  },
 };
 
 async function dnsLookup(hostname, resolveCanonicalName = false) {

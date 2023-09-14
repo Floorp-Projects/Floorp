@@ -4,9 +4,11 @@ ChromeUtils.defineESModuleGetters(this, {
   DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
   DoHController: "resource:///modules/DoHController.sys.mjs",
   DoHTestUtils: "resource://testing-common/DoHTestUtils.sys.mjs",
+  Heuristics: "resource:///modules/DoHHeuristics.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RegionTestUtils: "resource://testing-common/RegionTestUtils.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
@@ -70,6 +72,7 @@ async function setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
 
   // Enable the CFR.
   Preferences.set(CFR_PREF, JSON.stringify(CFR_JSON));
@@ -223,6 +226,49 @@ async function checkHeuristicsTelemetry(
   // same way, so as to test one event at a time, and this clearEvents() call
   // will continue to exist as-is.
   Services.telemetry.clearEvents();
+}
+
+// Generates an array of expectations for the ever_tripped scalar
+// containing false and key, except for the keyes contained in
+// the `except` parameter.
+function falseExpectations(except) {
+  return Heuristics.Telemetry.heuristicNames()
+    .map(e => [
+      "networking.doh_heuristic_ever_tripped",
+      { value: false, key: e },
+    ])
+    .filter(e => except && !except.includes(e[1].key));
+}
+
+function checkScalars(expectations) {
+  // expectations: [[scalarname: expectationObject]]
+  // expectationObject: {value, key}
+  let snapshot = TelemetryTestUtils.getProcessScalars("parent", false, false);
+  let keyedSnapshot = TelemetryTestUtils.getProcessScalars(
+    "parent",
+    true,
+    false
+  );
+  for (let ex of expectations) {
+    let scalarName = ex[0];
+    let exObject = ex[1];
+    if (exObject.key) {
+      TelemetryTestUtils.assertKeyedScalar(
+        keyedSnapshot,
+        scalarName,
+        exObject.key,
+        exObject.value,
+        `${scalarName} expected to have ${exObject.value}, key: ${exObject.key}`
+      );
+    } else {
+      TelemetryTestUtils.assertScalar(
+        snapshot,
+        scalarName,
+        exObject.value,
+        `${scalarName} expected to have ${exObject.value}`
+      );
+    }
+  }
 }
 
 async function checkHeuristicsTelemetryMultiple(expectedEvaluateReasons) {

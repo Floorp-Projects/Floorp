@@ -28,6 +28,14 @@ add_task(async function testDoorhangerUserReject() {
   await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 
+  checkScalars([
+    ["networking.doh_heuristics_attempts", { value: 1 }],
+    ["networking.doh_heuristics_pass_count", { value: 1 }],
+    ["networking.doh_heuristics_result", { value: Heuristics.Telemetry.pass }],
+    // All of the heuristics must be false.
+    falseExpectations([]),
+  ]);
+
   prefPromise = TestUtils.waitForPrefChange(
     prefs.DOORHANGER_USER_DECISION_PREF
   );
@@ -51,6 +59,17 @@ add_task(async function testDoorhangerUserReject() {
   await ensureTRRMode(undefined);
   ensureNoHeuristicsTelemetry();
   is(Preferences.get(prefs.BREADCRUMB_PREF), undefined, "Breadcrumb cleared.");
+
+  checkScalars([
+    ["networking.doh_heuristics_attempts", { value: 1 }],
+    ["networking.doh_heuristics_pass_count", { value: 1 }],
+    [
+      "networking.doh_heuristics_result",
+      { value: Heuristics.Telemetry.optOut },
+    ],
+    // All of the heuristics must be false.
+    falseExpectations([]),
+  ]);
 
   // Simulate a network change.
   simulateNetworkChange();

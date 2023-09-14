@@ -83,6 +83,19 @@ add_task(async function testProviderSteering() {
   // Set enterprise roots enabled and ensure provider steering is disabled.
   Preferences.set("security.enterprise_roots.enabled", true);
   await testNetChangeResult(AUTO_TRR_URI, "disable_doh");
+  checkScalars(
+    [
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.modifiedRoots },
+      ],
+      [
+        "networking.doh_heuristic_ever_tripped",
+        { value: true, key: "modifiedRoots" },
+      ],
+      // All of the other heuristics must be false.
+    ].concat(falseExpectations(["modifiedRoots"]))
+  );
   Preferences.reset("security.enterprise_roots.enabled");
 
   // Check that provider steering is enabled again after we reset above.
@@ -97,6 +110,20 @@ add_task(async function testProviderSteering() {
   await testNetChangeResult(AUTO_TRR_URI, "disable_doh");
   gDNSOverride.clearHostOverride(googleDomain);
   gDNSOverride.addIPOverride(googleDomain, googleIP);
+  checkScalars(
+    [
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.google },
+      ],
+      ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
+      [
+        "networking.doh_heuristic_ever_tripped",
+        { value: true, key: "modifiedRoots" },
+      ],
+      // All of the other heuristics must be false.
+    ].concat(falseExpectations(["modifiedRoots", "google"]))
+  );
 
   // Check that provider steering is enabled again after we reset above.
   await testNetChangeResult(provider.uri, "enable_doh", provider.id);
@@ -104,4 +131,19 @@ add_task(async function testProviderSteering() {
   // Finally, provider steering should be disabled once we clear the override.
   gDNSOverride.clearHostOverride(TEST_DOMAIN);
   await testNetChangeResult(AUTO_TRR_URI, "enable_doh");
+
+  checkScalars(
+    [
+      [
+        "networking.doh_heuristics_result",
+        { value: Heuristics.Telemetry.pass },
+      ],
+      ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
+      [
+        "networking.doh_heuristic_ever_tripped",
+        { value: true, key: "modifiedRoots" },
+      ],
+      // All of the other heuristics must be false.
+    ].concat(falseExpectations(["modifiedRoots", "google"]))
+  );
 });
