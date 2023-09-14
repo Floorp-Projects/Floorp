@@ -43,8 +43,6 @@ function testColorUtils(canvas) {
     testToString(color, name, hex, hsl, rgb);
     testColorMatch(name, hex, hsl, rgb, color.rgba, canvas);
   }
-
-  testSetAlpha();
 }
 
 function testToString(color, name, hex, hsl, rgb) {
@@ -111,37 +109,4 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   test(hex, "hex");
   test(hsl, "hsl");
   test(rgb, "rgb");
-}
-
-function testSetAlpha() {
-  const values = [
-    ["longhex", "#ff0000", 0.5, "rgba(255, 0, 0, 0.5)"],
-    ["hex", "#f0f", 0.2, "rgba(255, 0, 255, 0.2)"],
-    ["rgba", "rgba(120, 34, 23, 1)", 0.25, "rgba(120, 34, 23, 0.25)"],
-    ["rgb", "rgb(120, 34, 23)", 0.25, "rgba(120, 34, 23, 0.25)"],
-    ["hsl", "hsl(208, 100%, 97%)", 0.75, "rgba(240, 248, 255, 0.75)"],
-    ["hsla", "hsla(208, 100%, 97%, 1)", 0.75, "rgba(240, 248, 255, 0.75)"],
-    ["alphahex", "#f08f", 0.6, "rgba(255, 0, 136, 0.6)"],
-    ["longalphahex", "#00ff80ff", 0.2, "rgba(0, 255, 128, 0.2)"],
-  ];
-  values.forEach(([type, value, alpha, expected]) => {
-    is(
-      colorUtils.setAlpha(value, alpha),
-      expected,
-      "correctly sets alpha value for " + type
-    );
-  });
-
-  try {
-    colorUtils.setAlpha("rgb(24, 25%, 45, 1)", 1);
-    ok(false, "Should fail when passing in an invalid color.");
-  } catch (e) {
-    ok(true, "Fails when setAlpha receives an invalid color.");
-  }
-
-  is(
-    colorUtils.setAlpha("#fff"),
-    "rgba(255, 255, 255, 1)",
-    "sets alpha to 1 if invalid."
-  );
 }

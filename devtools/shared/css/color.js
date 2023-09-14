@@ -636,35 +636,6 @@ function roundTo(number, digits) {
 }
 
 /**
- * Takes a color value of any type (hex, hsl, hsla, rgb, rgba, hwb)
- * and an alpha value to generate an rgba string with the correct
- * alpha value.
- *
- * @param  {String} colorValue
- *         Color in the form of hex, hsl, hsla, rgb, rgba.
- * @param  {Number} alpha
- *         Alpha value for the color, between 0 and 1.
- * @return {String}
- *         Converted color with `alpha` value in rgba form.
- */
-function setAlpha(colorValue, alpha) {
-  const color = new CssColor(colorValue);
-
-  // Throw if the color supplied is not valid.
-  if (!color.valid) {
-    throw new Error("Invalid color.");
-  }
-
-  // If an invalid alpha valid, just set to 1.
-  if (!(alpha >= 0 && alpha <= 1)) {
-    alpha = 1;
-  }
-
-  const { r, g, b } = color.getRGBATuple();
-  return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
-}
-
-/**
  * Given a color, classify its type as one of the possible color
  * units, as known by |CssColor.colorUnit|.
  *
@@ -814,7 +785,6 @@ module.exports.colorUtils = {
   rgbToHsl,
   rgbToHwb,
   rgbToLab,
-  setAlpha,
   classifyColor,
   calculateContrastRatio,
   calculateDeltaE,
