@@ -6746,19 +6746,57 @@ pub extern "C" fn Servo_StyleSet_MightHaveNthOfAttributeDependency(
     }
 }
 
+fn on_siblings_invalidated(element: GeckoElement) {
+    let parent = element
+        .traversal_parent()
+        .expect("How could we invalidate siblings without a common parent?");
+    unsafe {
+        parent.set_dirty_descendants();
+        bindings::Gecko_NoteDirtySubtreeForInvalidation(parent.0);
+    }
+}
+
+fn restyle_for_nth_of(element: GeckoElement, flags: ElementSelectorFlags) {
+    debug_assert!(
+        !flags.is_empty(),
+        "Calling restyle for nth but no relevant flag is set."
+    );
+    fn invalidate_siblings_of(
+        element: GeckoElement,
+        get_sibling: fn(GeckoElement) -> Option<GeckoElement>,
+    ) {
+        let mut sibling = get_sibling(element);
+        while let Some(sib) = sibling {
+            if let Some(mut data) = sib.mutate_data() {
+                data.hint.insert(RestyleHint::restyle_subtree());
+            }
+            sibling = get_sibling(sib);
+        }
+    }
+
+    if flags.intersects(ElementSelectorFlags::HAS_SLOW_SELECTOR) {
+        invalidate_siblings_of(element, |e| e.prev_sibling_element());
+    }
+    if flags.intersects(ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+        invalidate_siblings_of(element, |e| e.next_sibling_element());
+    }
+    on_siblings_invalidated(element);
+}
+
 fn relative_selector_invalidated_at(element: GeckoElement, result: &InvalidationResult) {
     if result.has_invalidated_siblings() {
-        let parent = element
-            .traversal_parent()
-            .expect("How could we invalidate siblings without a common parent?");
-        unsafe {
-            parent.set_dirty_descendants();
-            bindings::Gecko_NoteDirtySubtreeForInvalidation(parent.0);
-        }
+        on_siblings_invalidated(element);
     } else if result.has_invalidated_descendants() {
         unsafe { bindings::Gecko_NoteDirtySubtreeForInvalidation(element.0) };
     } else if result.has_invalidated_self() {
         unsafe { bindings::Gecko_NoteDirtyElement(element.0) };
+        let flags = element
+            .parent_element()
+            .map_or(ElementSelectorFlags::empty(), |e| e.slow_selector_flags());
+        // We invalidated up to the anchor, and it has a flag for nth-of invalidation.
+        if !flags.is_empty() {
+            restyle_for_nth_of(element, flags);
+        }
     }
 }
 
@@ -7272,6 +7310,13 @@ pub extern "C" fn Servo_StyleSet_HasNthOfStateDependency(
 
     data.stylist
         .any_applicable_rule_data(element, |data| data.has_nth_of_state_dependency(state))
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_RestyleSiblingsForNthOf(element: &RawGeckoElement, flags: u32) {
+    let flags = ElementSelectorFlags::from_bits_truncate(flags as usize);
+    let element = GeckoElement(element);
+    restyle_for_nth_of(element, flags);
 }
 
 #[no_mangle]

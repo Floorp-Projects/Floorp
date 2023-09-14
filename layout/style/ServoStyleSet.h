@@ -548,6 +548,12 @@ class ServoStyleSet {
   bool HasNthOfStateDependency(const dom::Element&, dom::ElementState) const;
 
   /**
+   * Restyle this element's siblings in order to propagate any potential change
+   * in :nth-child(of) styling.
+   */
+  void RestyleSiblingsForNthOf(const dom::Element&, uint32_t) const;
+
+  /**
    * Returns true if a change in document state might require us to restyle the
    * document.
    */
