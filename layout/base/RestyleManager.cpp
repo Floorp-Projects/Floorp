@@ -3064,7 +3064,6 @@ ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
   //
   // Can't wait to make ProcessPendingRestyles the only entry-point for styling,
   // so this becomes much easier to reason about. Today is not that day though.
-  MOZ_ASSERT(aElement.HasServoData());
   MOZ_ASSERT(!aElement.HasFlag(ELEMENT_HANDLED_SNAPSHOT));
 
   ServoElementSnapshot* snapshot =
@@ -3456,7 +3455,11 @@ void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
   // cause the style to change.
   IncrementUndisplayedRestyleGeneration();
 
-  if (!aElement.HasServoData()) {
+  // Relative selector invalidation travels ancestor and earlier sibling
+  // direction, so it's very possible that it invalidates a styled element.
+  if (!aElement.HasServoData() &&
+      !(aElement.GetSelectorFlags() &
+        NodeSelectorFlags::RelativeSelectorSearchDirectionAncestorSibling)) {
     return;
   }
 
