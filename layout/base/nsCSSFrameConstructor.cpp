@@ -1478,6 +1478,10 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
 }
 
 void nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame) {
+  if (aFrame->StyleDisplay()->IsContainStyle()) {
+    mContainStyleScopeManager.DestroyScopesFor(aFrame);
+  }
+
   if (aFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT) &&
       mContainStyleScopeManager.DestroyQuoteNodesFor(aFrame)) {
     QuotesDirty();
@@ -1489,10 +1493,6 @@ void nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame) {
     // USE nodes.  However, this is unlikely to happen in the real world
     // since USE nodes generally go along with INCREMENT nodes.
     CountersDirty();
-  }
-
-  if (aFrame->StyleDisplay()->IsContainStyle()) {
-    mContainStyleScopeManager.DestroyScopesFor(aFrame);
   }
 
   RestyleManager()->NotifyDestroyingFrame(aFrame);
@@ -3703,7 +3703,8 @@ nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
   return &sCanvasData;
 }
 
-static MOZ_NEVER_INLINE void DestroyFramesInList(PresShell* aPs, nsFrameList& aList) {
+static MOZ_NEVER_INLINE void DestroyFramesInList(PresShell* aPs,
+                                                 nsFrameList& aList) {
   nsIFrame::DestroyContext context(aPs);
   aList.DestroyFrames(context);
 }
