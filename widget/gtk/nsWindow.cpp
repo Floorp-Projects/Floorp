@@ -5883,15 +5883,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                                  TransparencyMode::Transparent);
 
   // Figure out our parent window - only used for WindowType::Child
-  GdkWindow* parentGdkWindow = nullptr;
   nsWindow* parentnsWindow = nullptr;
 
   if (aParent) {
     parentnsWindow = static_cast<nsWindow*>(aParent);
-    parentGdkWindow = parentnsWindow->mGdkWindow;
   } else if (aNativeParent && GDK_IS_WINDOW(aNativeParent)) {
-    parentGdkWindow = GDK_WINDOW(aNativeParent);
-    parentnsWindow = get_window_for_gdk_window(parentGdkWindow);
+    parentnsWindow = get_window_for_gdk_window(GDK_WINDOW(aNativeParent));
     if (!parentnsWindow) {
       return NS_ERROR_FAILURE;
     }
