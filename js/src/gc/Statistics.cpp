@@ -1662,7 +1662,11 @@ void Statistics::printProfileHeader() {
     return;
   }
 
-  fputs(sprinter.string(), profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), profileFile());
 }
 
 static TimeDuration SumAllPhaseKinds(const Statistics::PhaseKindTimes& times) {
@@ -1705,7 +1709,11 @@ void Statistics::printSliceProfile() {
     return;
   }
 
-  fputs(sprinter.string(), profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), profileFile());
 }
 
 Statistics::ProfileDurations Statistics::getProfileTimes(
@@ -1829,7 +1837,11 @@ void Statistics::printTotalProfileTimes() {
     return;
   }
 
-  fputs(sprinter.string(), profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), profileFile());
 }
 
 const char* Statistics::formatTotalSlices() {
