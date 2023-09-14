@@ -3354,7 +3354,9 @@ void RestyleManager::ElementStateChanged(Element* aElement,
   ElementState previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 
-  MaybeRestyleForNthOfState(*StyleSet(), aElement, aChangedBits);
+  ServoStyleSet& styleSet = *StyleSet();
+  MaybeRestyleForNthOfState(styleSet, aElement, aChangedBits);
+  MaybeRestyleForRelativeSelectorState(styleSet, aElement, aChangedBits);
 }
 
 void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,
@@ -3501,6 +3503,7 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   MaybeRestyleForNthOfAttribute(aElement, aAttribute, aOldValue);
+  MaybeRestyleForRelativeSelectorAttribute(aElement, aAttribute, aOldValue);
 
   if (aAttribute == nsGkAtoms::style) {
     restyleHint |= RestyleHint::RESTYLE_STYLE_ATTRIBUTE;
@@ -3598,6 +3601,35 @@ void RestyleManager::MaybeRestyleForNthOfAttribute(
   if (mightHaveNthOfDependency) {
     RestyleSiblings(aChild, parentFlags);
   }
+}
+
+void RestyleManager::MaybeRestyleForRelativeSelectorAttribute(
+    Element* aElement, nsAtom* aAttribute, const nsAttrValue* aOldValue) {
+  if (!aElement->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
+    return;
+  }
+  auto& styleSet = *StyleSet();
+  if (aAttribute == nsGkAtoms::id) {
+    auto* const oldAtom = aOldValue->Type() == nsAttrValue::eAtom
+                              ? aOldValue->GetAtomValue()
+                              : nullptr;
+    styleSet.MaybeInvalidateRelativeSelectorIDDependency(*aElement, oldAtom,
+                                                         aElement->GetID());
+  } else if (aAttribute == nsGkAtoms::_class) {
+    styleSet.MaybeInvalidateRelativeSelectorClassDependency(*aElement);
+  } else {
+    styleSet.MaybeInvalidateRelativeSelectorAttributeDependency(*aElement,
+                                                                aAttribute);
+  }
+}
+
+void RestyleManager::MaybeRestyleForRelativeSelectorState(
+    ServoStyleSet& aStyleSet, Element* aElement, ElementState aChangedBits) {
+  if (!aElement->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
+    return;
+  }
+  aStyleSet.MaybeInvalidateRelativeSelectorStateDependency(*aElement,
+                                                           aChangedBits);
 }
 
 void RestyleManager::ReparentComputedStyleForFirstLine(nsIFrame* aFrame) {

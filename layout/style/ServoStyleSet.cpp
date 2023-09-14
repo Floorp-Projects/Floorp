@@ -1384,6 +1384,30 @@ bool ServoStyleSet::MightHaveNthOfClassDependency(const Element& aElement) {
                                                       &Snapshots());
 }
 
+void ServoStyleSet::MaybeInvalidateRelativeSelectorIDDependency(
+    const Element& aElement, nsAtom* aOldID, nsAtom* aNewID) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
+      mRawData.get(), &aElement, aOldID, aNewID);
+}
+
+void ServoStyleSet::MaybeInvalidateRelativeSelectorClassDependency(
+    const Element& aElement) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
+      mRawData.get(), &aElement, &Snapshots());
+}
+
+void ServoStyleSet::MaybeInvalidateRelativeSelectorAttributeDependency(
+    const Element& aElement, nsAtom* aAttribute) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDependency(
+      mRawData.get(), &aElement, aAttribute);
+}
+
+void ServoStyleSet::MaybeInvalidateRelativeSelectorStateDependency(
+    const Element& aElement, ElementState aState) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
+      mRawData.get(), &aElement, aState.GetInternalValue());
+}
+
 bool ServoStyleSet::MightHaveNthOfAttributeDependency(
     const Element& aElement, nsAtom* aAttribute) const {
   return Servo_StyleSet_MightHaveNthOfAttributeDependency(
