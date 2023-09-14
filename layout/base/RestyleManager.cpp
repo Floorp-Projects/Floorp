@@ -3599,24 +3599,8 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 
 void RestyleManager::RestyleSiblingsForNthOf(Element* aChild,
                                              NodeSelectorFlags aParentFlags) {
-  const DebugOnly<nsINode*> parentNode = aChild->GetParentNode();
-  MOZ_ASSERT(parentNode->IsElement() || parentNode->IsShadowRoot());
-
-  DebugOnly<bool> restyledSiblings = false;
-  // NodeSelectorFlags::HasSlowSelector typically indicates restyling the
-  // parent, but since we know we're restyling for :nth-last-child(.. of
-  // <selector>), we can restyle only previous siblings without
-  // under-invalidating.
-  if (aParentFlags & NodeSelectorFlags::HasSlowSelector) {
-    RestylePreviousSiblings(aChild->GetPreviousSibling());
-    restyledSiblings = true;
-  }
-  if (aParentFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
-    RestyleSiblingsStartingWith(aChild->GetNextSibling());
-    restyledSiblings = true;
-  }
-  MOZ_ASSERT(restyledSiblings,
-             "How can we restyle siblings without a slow selector flag?");
+  StyleSet()->RestyleSiblingsForNthOf(*aChild,
+                                      static_cast<uint32_t>(aParentFlags));
 }
 
 void RestyleManager::MaybeRestyleForNthOfAttribute(
