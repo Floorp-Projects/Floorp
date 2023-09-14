@@ -71,8 +71,7 @@ void GenericPrinter::putString(JSContext* cx, JSString* str) {
     JSLinearString* linear = iter.front();
     if (linear->hasLatin1Chars()) {
       put(linear->latin1Range(nogc));
-    }
-    else {
+    } else {
       put(linear->twoByteRange(nogc));
     }
     iter.popFront();
@@ -93,7 +92,7 @@ void GenericPrinter::vprintf(const char* fmt, va_list ap) {
   }
 
   GenericPrinterPrintfTarget printer(*this);
-  (void) printer.vprint(fmt, ap);
+  (void)printer.vprint(fmt, ap);
 }
 
 const size_t Sprinter::DefaultSize = 64;
