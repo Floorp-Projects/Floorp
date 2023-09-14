@@ -122,7 +122,7 @@ search:
       setPref: browser.urlbar.trending.requireSearchMode
       description: Controls whether trending suggestions are only shown in search mode or not.
     trendingMaxResultsNoSearchMode:
-      type: boolean
+      type: int
       setPref: browser.urlbar.trending.maxResultsNoSearchMode
       description: The maximum number of trending results mode outside search mode.
 
