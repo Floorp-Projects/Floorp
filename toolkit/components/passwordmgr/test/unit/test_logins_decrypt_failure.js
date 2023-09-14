@@ -35,8 +35,9 @@ add_task(async function test_logins_decrypt_failure() {
 
   // These functions don't see the non-decryptable entries anymore.
   let savedLogins = await Services.logins.getAllLogins();
+  Assert.equal(savedLogins.length, 0);
   Assert.equal(savedLogins.length, 0, "getAllLogins length");
-  await Assert.rejects(Services.logins.searchLoginsAsync({}), /is required/);
+  Assert.equal(Services.logins.findLogins("", "", "").length, 0);
   Assert.equal(Services.logins.searchLogins(newPropertyBag()).length, 0);
   Assert.throws(
     () => Services.logins.modifyLogin(logins[0], newPropertyBag()),
@@ -62,11 +63,7 @@ add_task(async function test_logins_decrypt_failure() {
 
   // Finding logins doesn't return the non-decryptable duplicates.
   Assert.equal(
-    (
-      await Services.logins.searchLoginsAsync({
-        origin: "http://www.example.com",
-      })
-    ).length,
+    Services.logins.findLogins("http://www.example.com", "", "").length,
     1
   );
   let matchData = newPropertyBag({ origin: "http://www.example.com" });

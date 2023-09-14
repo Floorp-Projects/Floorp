@@ -14,6 +14,8 @@ import {
 } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
+import { Async } from "resource://services-common/async.sys.mjs";
+
 // These are valid fields the server could have for a logins record
 // we mainly use this to detect if there are any unknownFields and
 // store (but don't process) those fields to roundtrip them back
@@ -162,11 +164,13 @@ PasswordEngine.prototype = {
       return null;
     }
 
-    let logins = await this._store.storage.searchLoginsAsync({
-      origin: login.origin,
-      formActionOrigin: login.formActionOrigin,
-      httpRealm: login.httpRealm,
-    });
+    let logins = this._store.storage.findLogins(
+      login.origin,
+      login.formActionOrigin,
+      login.httpRealm
+    );
+
+    await Async.promiseYield(); // Yield back to main thread after synchronous operation.
 
     // Look for existing logins that match the origin, but ignore the password.
     for (let local of logins) {
