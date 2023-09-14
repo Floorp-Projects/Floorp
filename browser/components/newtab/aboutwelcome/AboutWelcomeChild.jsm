@@ -592,33 +592,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   0
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "optedIn",
-  "browser.shopping.experience2023.optedIn",
-  0
-);
-
 let optInDynamicContent;
+// Limit pref increase to 5 as we don't need to count any higher than that
 const MIN_VISITS_TO_SHOW_SURVEY = 5;
 
 class AboutWelcomeShoppingChild extends AboutWelcomeChild {
   // Static state used to track session in which user opted-in
   static optedInSession = false;
 
-  actorCreated() {
-    super.actorCreated();
-    this.init();
-  }
+  // Static used to track PDP visits per session for showing survey
+  static eligiblePDPvisits = [];
 
-  init() {
-    // init called on Update Event when child actor created on PDP page open
-    if (!lazy.optedIn) {
-      return;
-    }
-
-    // Limit pref increase to 5 as we don't need to count any higher than that
-    if (lazy.pdpVisits < 5) {
+  computeEligiblePDPCount(data) {
+    // Increment our pref if this isn't a page we've already seen this session
+    if (lazy.pdpVisits < MIN_VISITS_TO_SHOW_SURVEY) {
       this.AWSendToParent("SPECIAL_ACTION", {
         type: "SET_PREF",
         data: {
@@ -630,53 +617,77 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
       });
     }
 
-    // Show micro survey to opted-in users at least 24 hours after they’ve opted in,
-    // on the next session, and after 5 PDP visits
-    // Set `this.showMicroSurvey` when above states are met
+    // Add this product to our list of unique eligible PDPs visited
+    // to prevent errors caused by multiple events being fired simultaneously
+    AboutWelcomeShoppingChild.eligiblePDPvisits.push(data?.product_id);
+  }
 
-    // TBD: Wait 24 hrs after opt-in , check if existing shopping logic has when opted-in
-    // else use optInTime pref set when user click opt-in message primary CTA
-
+  evaluateAndShowSurvey() {
+    // Re-evaluate if we should show the survey
+    // Render survey if user is opted-in and has met survey seen conditions
     this.showMicroSurvey =
       !lazy.isSurveySeen &&
       !AboutWelcomeShoppingChild.optedInSession &&
       lazy.pdpVisits >= MIN_VISITS_TO_SHOW_SURVEY;
+
+    if (this.showMicroSurvey) {
+      this.renderMessage();
+    }
   }
 
   handleEvent(event) {
     // Decide when to show/hide onboarding and survey message
-    const { productUrl, showOnboarding } = event.detail;
+    const { productUrl, showOnboarding, data } = event.detail;
 
     // Display onboarding if a user hasn't opted-in
     const optInReady = showOnboarding && productUrl;
-
-    // hide the message root if we shouldn't show the opt in card
-    // and if we shouldn't show a microsurvey
-    this.document.getElementById("multi-stage-message-root").hidden =
-      !optInReady && !this.showMicroSurvey;
-
-    // Render survey if user is opted-in and has met survey seen conditions
-    if (!showOnboarding && productUrl && this.showMicroSurvey) {
+    if (optInReady) {
+      // Render opt-in message
+      AboutWelcomeShoppingChild.optedInSession = true;
+      this.AWSetProductURL(new URL(productUrl).hostname);
       this.renderMessage();
       return;
     }
 
-    if (!optInReady) {
+    // Hide the container until the user is eligible to see the survey
+    if (!lazy.isSurveySeen) {
+      this.document.getElementById("multi-stage-message-root").hidden = true;
+    }
+
+    // Early exit if user has seen survey, if we have no data,
+    // or if pdp is ineligible or not unique
+    if (
+      lazy.isSurveySeen ||
+      !data ||
+      !productUrl ||
+      (data?.needs_analysis &&
+        (!data?.product_id || !data?.grade || !data?.adjusted_rating)) ||
+      AboutWelcomeShoppingChild.eligiblePDPvisits.includes(data?.product_id)
+    ) {
       return;
     }
 
-    // Render opt-in message
-    AboutWelcomeShoppingChild.optedInSession = true;
-    this.AWSetProductURL(new URL(productUrl).hostname);
-    this.renderMessage();
+    this.computeEligiblePDPCount(data, productUrl);
+    this.evaluateAndShowSurvey();
   }
 
   renderMessage() {
+    this.document.getElementById("multi-stage-message-root").hidden = false;
     this.document.dispatchEvent(
       new this.contentWindow.CustomEvent("RenderWelcome", {
         bubbles: true,
       })
     );
+  }
+
+  // TODO - Move messages into an ASRouter message provider. See bug 1848251.
+  AWGetFeatureConfig() {
+    let messageContent = optInDynamicContent;
+    if (this.showMicroSurvey) {
+      messageContent = SHOPPING_MICROSURVEY;
+      this.setShoppingSurveySeen();
+    }
+    return Cu.cloneInto(messageContent, this.contentWindow);
   }
 
   setShoppingSurveySeen() {
@@ -748,16 +759,6 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     }
 
     optInDynamicContent = content;
-  }
-
-  // TODO - Move messages into an ASRouter message provider. See bug 1848251.
-  AWGetFeatureConfig() {
-    let messageContent = optInDynamicContent;
-    if (this.showMicroSurvey) {
-      messageContent = SHOPPING_MICROSURVEY;
-      this.setShoppingSurveySeen();
-    }
-    return Cu.cloneInto(messageContent, this.contentWindow);
   }
 
   AWEnsureLangPackInstalled() {}
