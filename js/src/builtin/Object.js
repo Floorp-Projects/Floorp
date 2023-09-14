@@ -368,6 +368,7 @@ function ObjectHasOwn(O, P) {
   return hasOwn(P, obj);
 }
 
+#ifdef NIGHTLY_BUILD
 // Array Grouping proposal
 //
 // Object.groupBy ( items, callbackfn )
@@ -434,3 +435,4 @@ function ObjectGroupBy(items, callbackfn) {
   // Step 4.
   return obj;
 }
+#endif

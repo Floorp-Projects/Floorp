@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-array-grouping) skip-if(!Object.groupBy||!xulRuntime.shell) -- array-grouping is not enabled unconditionally, requires shell-options
 // Copyright (c) 2023 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

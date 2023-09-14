@@ -132,6 +132,7 @@ function $MapSpecies() {
 }
 SetCanonicalName($MapSpecies, "get [Symbol.species]");
 
+#ifdef NIGHTLY_BUILD
 // Array Grouping proposal
 //
 // Map.groupBy ( items, callbackfn )
@@ -196,3 +197,4 @@ function MapGroupBy(items, callbackfn) {
   // Step 4.
   return map;
 }
+#endif
