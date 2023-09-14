@@ -57,13 +57,35 @@ bitflags! {
         /// The element has an empty selector, so when a child is appended we
         /// might need to restyle the parent completely.
         const HAS_EMPTY_SELECTOR = 1 << 4;
+
+        /// The element may anchor a relative selector.
+        const ANCHORS_RELATIVE_SELECTOR = 1 << 5;
+
+        /// The element may anchor a relative selector that is not the subject
+        /// of the whole selector.
+        const ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT = 1 << 6;
+
+        /// The element is reached by a relative selector search in the sibling direction.
+        const RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING = 1 << 7;
+
+        /// The element is reached by a relative selector search in the ancestor direction.
+        const RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR = 1 << 8;
+
+        // The element is reached by a relative selector search in both sibling and ancestor directions.
+        const RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING =
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING.bits |
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR.bits;
     }
 }
 
 impl ElementSelectorFlags {
     /// Returns the subset of flags that apply to the element.
     pub fn for_self(self) -> ElementSelectorFlags {
-        self & ElementSelectorFlags::HAS_EMPTY_SELECTOR
+        self & (ElementSelectorFlags::HAS_EMPTY_SELECTOR |
+            ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR |
+            ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT |
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING |
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR)
     }
 
     /// Returns the subset of flags that apply to the parent.
@@ -376,9 +398,21 @@ fn matches_relative_selector<E: Element>(
     context: &mut MatchingContext<E::Impl>,
     rightmost: Rightmost,
 ) -> bool {
+    // Overall, we want to mark the path that we've traversed so that when an element
+    // is invalidated, we early-reject unnecessary relative selector invalidations.
     if relative_selector.match_hint.is_descendant_direction() {
+        if context.needs_selector_flags() {
+            element.apply_selector_flags(
+                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
+            );
+        }
         let mut next_element = element.first_element_child();
         while let Some(el) = next_element {
+            if context.needs_selector_flags() {
+                el.apply_selector_flags(
+                    ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
+                );
+            }
             let mut matched = matches_complex_selector(
                 relative_selector.selector.iter(),
                 &el,
@@ -409,8 +443,21 @@ fn matches_relative_selector<E: Element>(
             ),
             "Not descendant direction, but also not sibling direction?"
         );
+        if context.needs_selector_flags() {
+            element.apply_selector_flags(
+                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
+            );
+        }
+        let sibling_flag = if relative_selector.match_hint.is_subtree() {
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING
+        } else {
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING
+        };
         let mut next_element = element.next_sibling_element();
         while let Some(el) = next_element {
+            if context.needs_selector_flags() {
+                el.apply_selector_flags(sibling_flag);
+            }
             let matched = if relative_selector.match_hint.is_subtree() {
                 matches_relative_selector_subtree(
                     &relative_selector.selector,
@@ -480,13 +527,20 @@ fn matches_relative_selectors<E: Element>(
     context: &mut MatchingContext<E::Impl>,
     rightmost: Rightmost,
 ) -> bool {
-    // Relative selectors have different implications, depending on if the relative
-    // selector is in the subject position or not (See style sharing code for
-    // further information)
+    // Due to style sharing implications (See style sharing code), we mark the current styling context
+    // to mark elements considered for :has matching. Additionally, we want to mark the elements themselves,
+    // since we don't want to indiscriminately invalidate every element as a potential anchor.
     if rightmost == Rightmost::Yes {
         context.considered_relative_selector.considered_anchor();
+        if context.needs_selector_flags() {
+            element.apply_selector_flags(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR);
+        }
     } else {
         context.considered_relative_selector.considered();
+        if context.needs_selector_flags() {
+            element
+                .apply_selector_flags(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT);
+        }
     }
 
     for relative_selector in selectors.iter() {
@@ -525,6 +579,11 @@ fn matches_relative_selector_subtree<E: Element>(
     let mut current = element.first_element_child();
 
     while let Some(el) = current {
+        if context.needs_selector_flags() {
+            el.apply_selector_flags(
+                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
+            );
+        }
         if matches_complex_selector(selector.iter(), &el, context, rightmost) {
             return true;
         }
