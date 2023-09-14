@@ -876,6 +876,9 @@ export class ShoppingProduct {
 
   uninit() {
     this._abortController.abort();
+    this.analysis = null;
+    this.recommendations = null;
+    this.product = null;
   }
 }
 

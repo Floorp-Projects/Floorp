@@ -225,3 +225,58 @@ add_task(async function test_button_hidden_when_opted_out() {
     }
   );
 });
+
+add_task(async function test_sidebar_button_open_close() {
+  // Disable OHTTP for now to get this landed; we'll re-enable with proper
+  // mocking in the near future.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["toolkit.shopping.ohttpRelayURL", ""],
+      ["toolkit.shopping.ohttpConfigURL", ""],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
+    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
+    Assert.ok(sidebar, "Sidebar should exist");
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
+    let shoppingButton = document.getElementById("shopping-sidebar-button");
+    ok(
+      BrowserTestUtils.is_visible(shoppingButton),
+      "Shopping Button should be visible on a product page"
+    );
+
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
+
+    info("Verifying product info for initial product.");
+    await verifyProductInfo(sidebar, {
+      productURL: PRODUCT_TEST_URL,
+      adjustedRating: "4.1",
+      letterGrade: "B",
+    });
+
+    // close the sidebar
+    shoppingButton.click();
+    ok(BrowserTestUtils.is_hidden(sidebar), "Sidebar should be hidden");
+
+    // reopen the sidebar
+    shoppingButton.click();
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
+
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
+
+    info("Verifying product info for has not changed.");
+    await verifyProductInfo(sidebar, {
+      productURL: PRODUCT_TEST_URL,
+      adjustedRating: "4.1",
+      letterGrade: "B",
+    });
+  });
+});
