@@ -64,12 +64,11 @@ toolbar[brighttext]:not(:-moz-lwtheme) {
   background-color: transparent;
 
   #navigator-toolbox:not(:-moz-lwtheme) {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-titlebar-maximized;
-    background-color: transparent;
+    background-color: ActiveCaption;
     color: CaptionText;
 
     &:-moz-window-inactive {
+      background-color: InactiveCaption;
       color: InactiveCaptionText;
     }
   }
@@ -86,11 +85,7 @@ toolbar[brighttext]:not(:-moz-lwtheme) {
   -moz-default-appearance: -moz-window-decorations;
   appearance: auto;
 
-  #navigator-toolbox:not(:-moz-lwtheme) {
-    -moz-default-appearance: -moz-window-titlebar;
-  }
-
-  #navigator-toolbox:-moz-lwtheme,
+  #navigator-toolbox,
   dialog::backdrop {
     border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
     border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
