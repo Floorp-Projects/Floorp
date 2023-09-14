@@ -391,7 +391,6 @@ export const LoginHelper = {
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
   showAutoCompleteImport: null,
-  signupDectectionConfidenceThreshold: null,
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
   captureInputChanges: null,
@@ -463,12 +462,6 @@ export const LoginHelper = {
     this.showAutoCompleteImport = Services.prefs.getStringPref(
       "signon.showAutoCompleteImport",
       ""
-    );
-    this.signupDetectionConfidenceThreshold = parseFloat(
-      Services.prefs.getStringPref("signon.signupDetection.confidenceThreshold")
-    );
-    this.signupDetectionEnabled = Services.prefs.getBoolPref(
-      "signon.signupDetection.enabled"
     );
 
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref(

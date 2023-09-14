@@ -9,7 +9,6 @@ const TEST_URL = `https://example.com${DIRECTORY_PATH}form_signup_detection.html
  * @returns The amount of entries found in the histogram data
  */
 function countEntries(histogramData) {
-  info(typeof histogramData);
   return histogramData
     ? Object.values(histogramData.values).reduce((a, b) => a + b, 0)
     : null;
@@ -48,9 +47,6 @@ add_task(async () => {
 
   await formProcessed;
 
-  info(
-    "Test case: When loading the document the two <form> HTML elements are processed and each one is run against the SignUpFormRuleset. After the page load the histogram PWMGR_SIGNUP_FORM_DETECTION_MS should have two entries."
-  );
   await countEntriesOfChildHistogram(SIGNUP_DETECTION_HISTOGRAM, 2);
 
   gBrowser.removeTab(tab);

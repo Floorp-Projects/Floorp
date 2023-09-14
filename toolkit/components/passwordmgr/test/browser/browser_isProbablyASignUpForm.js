@@ -8,34 +8,44 @@ add_task(async () => {
       gBrowser,
       url: TEST_URL,
     },
-    async function (browser) {
+    async browser => {
       await SpecialPowers.spawn(browser, [], async () => {
         const doc = content.document;
-        const { LoginManagerChild } = ChromeUtils.importESModule(
-          "resource://gre/modules/LoginManagerChild.sys.mjs"
+        const { FormScenarios } = ChromeUtils.importESModule(
+          "resource://gre/modules/FormScenarios.sys.mjs"
         );
-        const loginManagerChild = new LoginManagerChild();
-        const docState = loginManagerChild.stateForDocument(doc);
-        let isSignUpForm;
 
-        info("Test case: Obvious signup form is detected as sign up form");
-        const signUpForm = doc.getElementById("obvious-signup-form");
-        isSignUpForm = docState.isProbablyASignUpForm(signUpForm);
-        Assert.equal(isSignUpForm, true);
+        function assertSignUpForm(
+          message,
+          formId,
+          inputId,
+          expectedToBeSignUp
+        ) {
+          const isSignUpForm = !!FormScenarios.detect({
+            form: doc.getElementById(formId),
+            input: doc.getElementById(inputId),
+          }).signUpForm;
+          Assert.equal(isSignUpForm, expectedToBeSignUp, message);
+        }
 
-        info(
-          "Test case: Obvious non signup form is detected as non sign up form"
+        assertSignUpForm(
+          "Obvious signup form is detected as sign up form",
+          "obvious-signup-form",
+          "obvious-signup-email",
+          true
         );
-        const loginForm = doc.getElementById("obvious-login-form");
-        isSignUpForm = docState.isProbablyASignUpForm(loginForm);
-        Assert.equal(isSignUpForm, false);
-
-        info(
-          "Test case: An <input> HTML element is detected as non sign up form"
+        assertSignUpForm(
+          "Obvious non signup form is detected as non sign up form",
+          "obvious-login-form",
+          "obvious-login-username",
+          false
         );
-        const inputField = doc.getElementById("obvious-signup-username");
-        isSignUpForm = docState.isProbablyASignUpForm(inputField);
-        Assert.equal(isSignUpForm, false);
+        assertSignUpForm(
+          "An <input> HTML element is detected as non sign up form",
+          "",
+          "standalone-username",
+          false
+        );
       });
     }
   );

@@ -31,6 +31,11 @@ EXTRA_JS_MODULES += [
     "FormAutoComplete.sys.mjs",
     "FormHistory.sys.mjs",
     "FormHistoryStartup.sys.mjs",
+    "FormScenarios.sys.mjs",
+    "integrations/FirefoxRelay.sys.mjs",
+    "integrations/FirefoxRelayTelemetry.mjs",
+    "integrations/FirefoxRelayUtils.sys.mjs",
+    "SignUpFormRuleset.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

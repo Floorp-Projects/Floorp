@@ -52,11 +52,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  FormScenarios: "resource://gre/modules/FormScenarios.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
   LoginFormFactory: "resource://gre/modules/LoginFormFactory.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   LoginRecipesContent: "resource://gre/modules/LoginRecipes.sys.mjs",
-  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.sys.mjs",
   LoginManagerTelemetry: "resource://gre/modules/LoginManagerTelemetry.sys.mjs",
 });
 
@@ -484,11 +484,6 @@ export class LoginFormState {
   #cachedIsInferredLoginForm = new WeakMap();
 
   /**
-   * Caches the scores when running the SignUpFormRuleset against a form
-   */
-  #cachedSignUpFormScore = new WeakMap();
-
-  /**
    * Records the mock username field when its associated form is submitted.
    */
   mockUsernameOnlyField = null;
@@ -599,37 +594,6 @@ export class LoginFormState {
     }
 
     return result;
-  }
-
-  /**
-   * Determine if the form is a sign-up form.
-   * This is done by running the rules of the Fathom SignUpFormRuleset against the form and calucating a score between 0 and 1.
-   * It's considered a sign-up form, if the score is higher than the confidence threshold (default=0.75)
-   *
-   * @param {HTMLFormElement} formElement
-   * @returns {boolean} returns true if the calculcated score is higher than the confidenceThreshold
-   */
-  isProbablyASignUpForm(formElement) {
-    if (!HTMLFormElement.isInstance(formElement)) {
-      return false;
-    }
-    const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
-    let score = this.#cachedSignUpFormScore.get(formElement);
-    if (!score) {
-      TelemetryStopwatch.start("PWMGR_SIGNUP_FORM_DETECTION_MS");
-      try {
-        const { rules, type } = lazy.SignUpFormRuleset;
-        const results = rules.against(formElement);
-        score = results.get(formElement).scoreFor(type);
-        TelemetryStopwatch.finish("PWMGR_SIGNUP_FORM_DETECTION_MS");
-      } finally {
-        if (TelemetryStopwatch.running("PWMGR_SIGNUP_FORM_DETECTION_MS")) {
-          TelemetryStopwatch.cancel("PWMGR_SIGNUP_FORM_DETECTION_MS");
-        }
-      }
-      this.#cachedSignUpFormScore.set(formElement, score);
-    }
-    return score > threshold;
   }
 
   /**
@@ -2801,21 +2765,17 @@ export class LoginManagerChild extends JSWindowActorChild {
 
     let scenario;
 
-    // For SignUpFormScenario we expect an email like username
-    if (this.#relayIsAvailableOrEnabled() && usernameField) {
-      // Sign-up detection ruleset requires a <form>.
-      // When form.rootElement is not a form, fall back on the heuristic that
-      // assumes a form/document and a passwordField with autocomplete new-password
-      if (
-        HTMLFormElement.isInstance(form.rootElement) &&
-        lazy.LoginHelper.signupDetectionEnabled
-      ) {
-        if (docState.isProbablyASignUpForm(form.rootElement)) {
-          scenario = new SignUpFormScenario(usernameField, passwordField);
-        }
-      } else if (passwordACFieldName == "new-password") {
+    if (usernameField) {
+      const isSignUpForm =
+        lazy.FormScenarios.detect({
+          input: usernameField,
+          formRoot: form.rootElement,
+        }).signUpForm ?? passwordACFieldName == "new-password";
+
+      if (isSignUpForm) {
         scenario = new SignUpFormScenario(usernameField, passwordField);
       }
+
       if (scenario) {
         docState.setScenario(form.rootElement, scenario);
         lazy.gFormFillService.markAsLoginManagerField(usernameField);
@@ -3164,15 +3124,6 @@ export class LoginManagerChild extends JSWindowActorChild {
         autofillResult,
       });
     }
-  }
-  #relayIsAvailableOrEnabled() {
-    // This code is a mirror of what FirefoxRelay.jsm is doing,
-    // but we can not load Relay module in the child process.
-    const value = Services.prefs.getStringPref(
-      "signon.firefoxRelay.feature",
-      undefined
-    );
-    return ["available", "offered", "enabled"].includes(value);
   }
 
   getScenario(inputElement) {
