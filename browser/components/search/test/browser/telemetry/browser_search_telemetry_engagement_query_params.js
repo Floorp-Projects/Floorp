@@ -101,7 +101,7 @@ add_task(async function test_click_links() {
   ]);
 
   info("Load SERP again.");
-  await BrowserTestUtils.loadURIString(gBrowser, url);
+  BrowserTestUtils.loadURIString(gBrowser, url);
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await waitForPageWithAdImpressions();
 

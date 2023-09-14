@@ -140,7 +140,7 @@ async function loadURIAndCheckRemoteType(
   );
   let loaded = BrowserTestUtils.browserLoaded(aBrowser, false, aURI);
   info(`About to load ${aURI} in ${aText}`);
-  await BrowserTestUtils.loadURIString(aBrowser, aURI);
+  BrowserTestUtils.loadURIString(aBrowser, aURI);
   await loaded;
 
   // Verify correct remote type
