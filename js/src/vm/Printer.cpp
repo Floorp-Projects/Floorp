@@ -155,12 +155,6 @@ UniqueChars Sprinter::release() {
   return UniqueChars(str);
 }
 
-char* Sprinter::stringAt(ptrdiff_t off) const {
-  MOZ_ASSERT(!hadOutOfMemory());
-  MOZ_ASSERT(off >= 0 && (size_t)off < size);
-  return base + off;
-}
-
 char& Sprinter::operator[](size_t off) {
   MOZ_ASSERT(!hadOutOfMemory());
   MOZ_ASSERT(off < size);
@@ -192,12 +186,11 @@ bool Sprinter::put(const char* s, size_t len) {
     return false;
   }
 
-  /* s is within the buffer already */
+  // s is within the buffer already
   if (s >= oldBase && s < oldEnd) {
-    /* buffer was realloc'ed */
-    if (base != oldBase) {
-      s = stringAt(s - oldBase); /* this is where it lives now */
-    }
+    // Update the source pointer in case of a realloc-ation.
+    size_t index = s - oldBase;
+    s = &base[index];
     memmove(bp, s, len);
   } else {
     js_memcpy(bp, s, len);
