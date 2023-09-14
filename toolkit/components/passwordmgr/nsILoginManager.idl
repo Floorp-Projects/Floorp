@@ -195,8 +195,7 @@ interface nsILoginManager : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
-   * @deprecated Use `searchLoginsAsync` instead. This function is retained
-   * for Thunderbird compatibility.
+   * @deprecated Use `searchLoginsAsync` instead.
    *
    * @param aOrigin
    *        The origin to restrict searches to. For example: "http://www.site.com".
