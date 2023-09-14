@@ -866,6 +866,20 @@ impl<'le> GeckoElement<'le> {
                 )
                 .is_ok()
     }
+
+    /// Get slow selector flags required for nth-of invalidation.
+    pub fn slow_selector_flags(&self) -> ElementSelectorFlags {
+        use crate::gecko_bindings::structs::NodeSelectorFlags;
+        let mut result = ElementSelectorFlags::empty();
+        let flags = self.as_node().selector_flags();
+        if flags & NodeSelectorFlags::HasSlowSelector.0 != 0 {
+            result.insert(ElementSelectorFlags::HAS_SLOW_SELECTOR);
+        }
+        if flags & NodeSelectorFlags::HasSlowSelectorLaterSiblings.0 != 0 {
+            result.insert(ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+        }
+        result
+    }
 }
 
 /// Converts flags from the layout used by rust-selectors to the layout used
