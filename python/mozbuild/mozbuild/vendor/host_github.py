@@ -21,14 +21,6 @@ class GitHubHost(BaseHost):
         info = self.api_get(f"commits/{revision}")
         return (info["sha"], info["commit"]["committer"]["date"])
 
-    def upstream_tag(self, tag):
-        """Github API allows using a tag name with the commits API."""
-        if tag == "HEAD":  # Checking for latest tag
-            info = self.api_get("tags")
-            tag = info[0]["name"]
-        sha, timestamp = self.upstream_commit(tag)
-        return tag, timestamp
-
     def upstream_snapshot(self, revision):
         return "/".join(
             [self.manifest["vendoring"]["url"], "archive", revision + ".tar.gz"]

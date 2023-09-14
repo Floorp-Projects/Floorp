@@ -33,25 +33,28 @@ class BaseHost:
                 check=True,
             )
             os.chdir("/".join([temp_repo_clone, self.manifest["origin"]["name"]]))
-            if revision == "HEAD":
+            revision_arg = []
+            if revision and revision != "HEAD":
+                revision_arg = [revision]
+
+            try:
+                print(
+                    ["git", "--no-pager", "tag", "-l", "--sort=creatordate"]
+                    + revision_arg
+                )
                 tag = subprocess.run(
-                    ["git", "--no-pager", "tag", "--sort=creatordate"],
+                    ["git", "--no-pager", "tag", "-l", "--sort=creatordate"]
+                    + revision_arg,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     universal_newlines=True,
                     check=True,
                 ).stdout.splitlines()[-1]
-            else:
-                try:
-                    tag = subprocess.run(
-                        ["git", "--no-pager", "tag", "-l", revision],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        universal_newlines=True,
-                        check=True,
-                    ).stdout.splitlines()[-1]
-                except IndexError:  # 0 lines of output, the tag does not exist
+            except IndexError:  # 0 lines of output, the tag does not exist
+                if revision:
                     raise Exception(f"Requested tag {revision} not found in source.")
+                else:
+                    raise Exception("No tags found in source.")
 
             tag_timestamp = subprocess.run(
                 [
