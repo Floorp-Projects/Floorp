@@ -461,9 +461,6 @@ export const DoHController = {
       case "disabled":
         lazy.Preferences.set(ROLLOUT_MODE_PREF, 0);
         break;
-      case "UIOk":
-        lazy.Preferences.set(BREADCRUMB_PREF, true);
-        break;
       case "enabled":
         lazy.Preferences.set(ROLLOUT_MODE_PREF, 2);
         lazy.Preferences.set(BREADCRUMB_PREF, true);
