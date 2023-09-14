@@ -80,15 +80,18 @@
 }
 
 .privacy-detailedoption,
-#fpiIncompatibilityWarning {
+#fpiIncompatibilityWarning,
+#rfpIncompatibilityWarning {
   margin: 3px 0;
 }
 
-#fpiIncompatibilityWarning {
+#fpiIncompatibilityWarning,
+#rfpIncompatibilityWarning {
   background-color: var(--section-highlight-background-color);
 }
 
 #fpiIncompatibilityWarning,
+#rfpIncompatibilityWarning,
 #contentBlockingCategories {
   margin-top: 16px;
 }
