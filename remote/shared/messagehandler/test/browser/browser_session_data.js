@@ -181,7 +181,10 @@ add_task(async function test_sessionDataRootOnlyModule() {
   const rootMessageHandler = createRootMessageHandler(sessionId);
   ok(rootMessageHandler, "Valid ROOT MessageHandler created");
 
-  await loadURL(gBrowser, "https://example.com/document-builder.sjs?html=tab");
+  await BrowserTestUtils.loadURIString(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
 
   const windowGlobalCreated = rootMessageHandler.once(
     "window-global-handler-created"

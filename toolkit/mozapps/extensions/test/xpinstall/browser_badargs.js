@@ -29,7 +29,7 @@ function test() {
     expectUncaughtException();
   }
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );

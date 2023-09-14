@@ -43,7 +43,7 @@ add_task(async function test_keyboard_navigation_activeScript() {
     useAddonManager: "temporary",
   });
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     "https://example.org/"
   );

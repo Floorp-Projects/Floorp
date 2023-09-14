@@ -25,7 +25,7 @@ add_task(async function () {
   });
   Services.console.registerListener(on_auto_upgrade_message);
 
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, kTestURI);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, kTestURI);
 
   await BrowserTestUtils.waitForCondition(() => seenAutoUpgradeMessage);
 

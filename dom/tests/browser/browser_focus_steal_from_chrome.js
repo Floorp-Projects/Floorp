@@ -68,9 +68,9 @@ add_task(async function () {
         fg.focus();
 
         // Load the URIs.
-        BrowserTestUtils.startLoadingURIString(bg, test.uri);
+        BrowserTestUtils.loadURIString(bg, test.uri);
         await BrowserTestUtils.browserLoaded(bg);
-        BrowserTestUtils.startLoadingURIString(fg, test.uri);
+        BrowserTestUtils.loadURIString(fg, test.uri);
         await BrowserTestUtils.browserLoaded(fg);
 
         ok(true, "Test1: Both of the tabs are loaded");
@@ -137,15 +137,15 @@ add_task(async function () {
         let originalFocus = Services.focus.focusedElement;
 
         // Load about:blank just to make sure that everything works nicely
-        BrowserTestUtils.startLoadingURIString(bg, "about:blank");
+        BrowserTestUtils.loadURIString(bg, "about:blank");
         await BrowserTestUtils.browserLoaded(bg);
-        BrowserTestUtils.startLoadingURIString(fg, "about:blank");
+        BrowserTestUtils.loadURIString(fg, "about:blank");
         await BrowserTestUtils.browserLoaded(fg);
 
         // Load the URIs.
-        BrowserTestUtils.startLoadingURIString(bg, test.uri);
+        BrowserTestUtils.loadURIString(bg, test.uri);
         await BrowserTestUtils.browserLoaded(bg);
-        BrowserTestUtils.startLoadingURIString(fg, test.uri);
+        BrowserTestUtils.loadURIString(fg, test.uri);
         await BrowserTestUtils.browserLoaded(fg);
 
         ok(true, "Test2: Both of the tabs are loaded");

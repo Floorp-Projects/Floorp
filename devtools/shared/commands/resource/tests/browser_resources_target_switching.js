@@ -55,10 +55,7 @@ add_task(async function () {
 
   let onSwitched = targetCommand.once("switched-target");
   info("Navigate to another process");
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser.selectedBrowser,
-    "about:robots"
-  );
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await onSwitched;
 
@@ -70,7 +67,7 @@ add_task(async function () {
 
   info("Navigate back to data: URI");
   onSwitched = targetCommand.once("switched-target");
-  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, TEST_URI);
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, TEST_URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await onSwitched;
 

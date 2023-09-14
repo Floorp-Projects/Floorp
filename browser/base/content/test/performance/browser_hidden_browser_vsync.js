@@ -21,7 +21,7 @@ add_task(async function test_hidden_sidebar() {
   let panel = gBrowser.getPanel(mainBrowser);
   panel.append(b);
   let loaded = BrowserTestUtils.browserLoaded(b);
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     b,
     `data:text/html,<!doctype html><style>
   @keyframes fade-in {

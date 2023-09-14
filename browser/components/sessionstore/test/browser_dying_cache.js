@@ -12,13 +12,9 @@ add_task(async function test() {
 
   // Load some URL in the current tab.
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
-  BrowserTestUtils.startLoadingURIString(
-    win.gBrowser.selectedBrowser,
-    "about:robots",
-    {
-      flags,
-    }
-  );
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:robots", {
+    flags,
+  });
   await promiseBrowserLoaded(win.gBrowser.selectedBrowser);
 
   // Open a second tab and close the first one.

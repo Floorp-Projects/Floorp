@@ -255,13 +255,7 @@ add_task(async function testSourcesOnload() {
     onAvailable: resources => availableResources.push(...resources),
   });
 
-  const promiseLoad = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    TEST_URL
-  );
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, TEST_URL);
-  await promiseLoad;
+  await BrowserTestUtils.loadURIString(tab.linkedBrowser, TEST_URL);
 
   // Some sources may be created after the document is done loading (like eventHandler usecase)
   // so we may be received *after* watchResource resolved

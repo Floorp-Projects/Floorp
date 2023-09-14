@@ -399,7 +399,7 @@ function waitFor(aTimeout = 100) {
 function promiseTabLoadEvent(aTab, aURL) {
   let browser = aTab.linkedBrowser;
 
-  BrowserTestUtils.startLoadingURIString(browser, aURL);
+  BrowserTestUtils.loadURIString(browser, aURL);
   return BrowserTestUtils.browserLoaded(browser);
 }
 

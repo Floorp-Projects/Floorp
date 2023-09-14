@@ -128,7 +128,7 @@ async function navigateToWithDevToolsOpen(tab, uri, isErrorPage = false) {
     null,
     isErrorPage
   );
-  BrowserTestUtils.startLoadingURIString(browser, uri);
+  BrowserTestUtils.loadURIString(browser, uri);
 
   info(`Waiting for page to be loaded…`);
   await onBrowserLoaded;

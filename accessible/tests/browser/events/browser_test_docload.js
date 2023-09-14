@@ -43,7 +43,7 @@ async function runTests(browser, accDoc) {
     ],
   });
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     browser,
     `data:text/html;charset=utf-8,
     <html><body id="body2">
@@ -59,7 +59,7 @@ async function runTests(browser, accDoc) {
     [EVENT_REORDER, getAccessible(browser)],
   ]);
 
-  BrowserTestUtils.startLoadingURIString(browser, "about:about");
+  BrowserTestUtils.loadURIString(browser, "about:about");
 
   await onLoadEvents;
 
@@ -79,7 +79,7 @@ async function runTests(browser, accDoc) {
     [EVENT_REORDER, getAccessible(browser)],
   ]);
 
-  BrowserTestUtils.startLoadingURIString(browser, "about:mozilla");
+  BrowserTestUtils.loadURIString(browser, "about:mozilla");
 
   await onLoadEvents;
 
@@ -100,11 +100,8 @@ async function runTests(browser, accDoc) {
     [EVENT_REORDER, getAccessible(browser)],
   ]);
 
-  BrowserTestUtils.startLoadingURIString(
-    browser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://www.wronguri.wronguri/"
-  );
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  BrowserTestUtils.loadURIString(browser, "http://www.wronguri.wronguri/");
 
   await onLoadEvents;
 
@@ -114,10 +111,7 @@ async function runTests(browser, accDoc) {
     [EVENT_REORDER, getAccessible(browser)],
   ]);
 
-  BrowserTestUtils.startLoadingURIString(
-    browser,
-    "https://nocert.example.com:443/"
-  );
+  BrowserTestUtils.loadURIString(browser, "https://nocert.example.com:443/");
 
   await onLoadEvents;
 }

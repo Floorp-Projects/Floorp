@@ -30,7 +30,7 @@ function test() {
     })
   );
   gNewTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     gBrowser.getBrowserForTab(gNewTab),
     TESTROOT + "installtrigger.html?" + triggers
   );

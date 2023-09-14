@@ -189,10 +189,7 @@ add_task(async function test_screenshot_enabled_or_disabled() {
     false,
     "about:blank"
   );
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser.selectedBrowser,
-    "about:blank"
-  );
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
   await onLoaded;
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -386,7 +383,7 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         gBrowser.selectedBrowser,
         "http://example.com/"
       );
@@ -404,7 +401,7 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         gBrowser.selectedBrowser,
         "http://example.com/"
       );
@@ -422,7 +419,7 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         gBrowser.selectedBrowser,
         "http://example.com/"
       );
@@ -440,7 +437,7 @@ let COMMANDS_TESTS = [
         false,
         "http://example.com/"
       );
-      BrowserTestUtils.startLoadingURIString(
+      BrowserTestUtils.loadURIString(
         gBrowser.selectedBrowser,
         "http://example.com/"
       );
@@ -520,7 +517,7 @@ add_task(async function test_viewsource() {
   );
 
   info("Check the button status of when the page is web content");
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     gBrowser.selectedBrowser,
     "http://example.com"
   );

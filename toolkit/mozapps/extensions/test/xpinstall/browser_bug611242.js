@@ -16,10 +16,7 @@ add_task(async function test() {
         content.wrappedJSObject.InstallTrigger.enabled.k = function () {};
       });
 
-      BrowserTestUtils.startLoadingURIString(
-        browser,
-        TESTROOT2 + "enabled.html"
-      );
+      BrowserTestUtils.loadURIString(browser, TESTROOT2 + "enabled.html");
       await BrowserTestUtils.browserLoaded(browser);
       await SpecialPowers.spawn(browser, [], () => {
         is(

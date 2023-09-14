@@ -46,7 +46,7 @@ async function runTest(
 ) {
   let loaded = waitForPage();
   info("Loading first page");
-  BrowserTestUtils.startLoadingURIString(gBrowser, firstUrl);
+  BrowserTestUtils.loadURIString(gBrowser, firstUrl);
   await loaded;
   await verifyErrorPage(expectErrorPageOnFirstVisit);
 

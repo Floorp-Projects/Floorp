@@ -78,7 +78,7 @@ async function gotoUrl(url, tab) {
     false,
     url
   );
-  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
   await browserLoadedPromise;
   info(`Loaded page: ${url}`);
 }

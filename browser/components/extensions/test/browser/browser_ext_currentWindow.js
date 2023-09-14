@@ -62,16 +62,10 @@ add_task(async function () {
 
   await focusWindow(win2);
 
-  BrowserTestUtils.startLoadingURIString(
-    win1.gBrowser.selectedBrowser,
-    "about:robots"
-  );
+  BrowserTestUtils.loadURIString(win1.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
 
-  BrowserTestUtils.startLoadingURIString(
-    win2.gBrowser.selectedBrowser,
-    "about:config"
-  );
+  BrowserTestUtils.loadURIString(win2.gBrowser.selectedBrowser, "about:config");
   await BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
   let extension = ExtensionTestUtils.loadExtension({

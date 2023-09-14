@@ -45,10 +45,7 @@ add_task(async function test_multiple_dialog_navigation() {
         gBrowser,
         "https://example.org/gone"
       );
-      BrowserTestUtils.startLoadingURIString(
-        browser,
-        "https://example.org/gone"
-      );
+      BrowserTestUtils.loadURIString(browser, "https://example.org/gone");
       info("Waiting for the next page to load.");
       await loadedOtherPage;
       info(

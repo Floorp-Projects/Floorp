@@ -580,7 +580,7 @@ async function navigateTo(
   if (uri === browser.currentURI.spec) {
     gBrowser.reloadTab(gBrowser.getTabForBrowser(browser));
   } else {
-    BrowserTestUtils.startLoadingURIString(browser, uri);
+    BrowserTestUtils.loadURIString(browser, uri);
   }
 
   if (waitForLoad) {

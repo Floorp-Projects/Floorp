@@ -628,10 +628,7 @@ async function mockFxaDeviceConnected(win) {
   const url = "https://example.org/pair/auth/complete";
   is(win.gBrowser.tabs.length, 3, "Tabs strip should contain three tabs");
 
-  BrowserTestUtils.startLoadingURIString(
-    win.gBrowser.selectedTab.linkedBrowser,
-    url
-  );
+  BrowserTestUtils.loadURIString(win.gBrowser.selectedTab.linkedBrowser, url);
 
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedTab.linkedBrowser,

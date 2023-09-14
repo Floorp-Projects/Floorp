@@ -42,7 +42,7 @@ add_task(async function navigate() {
   isAppTab = isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
-  BrowserTestUtils.startLoadingURIString(gBrowser, DUMMY);
+  BrowserTestUtils.loadURIString(gBrowser, DUMMY);
   await BrowserTestUtils.browserStopped(gBrowser);
   isAppTab = isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
@@ -55,7 +55,7 @@ add_task(async function navigate() {
   isAppTab = isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
 
-  BrowserTestUtils.startLoadingURIString(gBrowser, "about:robots");
+  BrowserTestUtils.loadURIString(gBrowser, "about:robots");
   await BrowserTestUtils.browserStopped(gBrowser);
   isAppTab = isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");

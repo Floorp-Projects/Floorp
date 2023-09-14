@@ -191,10 +191,7 @@ add_task(async function testWindowTitle() {
   let promiseLoaded = BrowserTestUtils.browserLoaded(
     realWin.gBrowser.selectedBrowser
   );
-  BrowserTestUtils.startLoadingURIString(
-    realWin.gBrowser.selectedBrowser,
-    NEW_URL
-  );
+  BrowserTestUtils.loadURIString(realWin.gBrowser.selectedBrowser, NEW_URL);
   await promiseLoaded;
   await verifyTitle(
     realWin,

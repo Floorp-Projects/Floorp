@@ -98,7 +98,7 @@ addRDMTask(TEST_COM_URL, async function ({ ui }) {
   const previousBrowsingContextId = browser.browsingContext.id;
   const waitForReload = await watchForDevToolsReload(browser);
 
-  BrowserTestUtils.startLoadingURIString(
+  BrowserTestUtils.loadURIString(
     browser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
