@@ -1400,7 +1400,7 @@ impl LonghandId {
         const FLAGS: [u16; ${len(data.longhands)}] = [
             % for property in data.longhands:
                 % for flag in property.flags + restriction_flags(property):
-                    PropertyFlags::${flag}.bits |
+                    PropertyFlags::${flag}.bits() |
                 % endfor
                 0,
             % endfor
@@ -1575,7 +1575,7 @@ impl ShorthandId {
         const FLAGS: [u16; ${len(data.shorthands)}] = [
             % for property in data.shorthands:
                 % for flag in property.flags:
-                    PropertyFlags::${flag}.bits |
+                    PropertyFlags::${flag}.bits() |
                 % endfor
                 0,
             % endfor

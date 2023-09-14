@@ -230,10 +230,10 @@ bitflags! {
         const RESOLUTION = 1 << 4;
 
         /// <length-percentage>
-        const LENGTH_PERCENTAGE = Self::LENGTH.bits | Self::PERCENTAGE.bits;
+        const LENGTH_PERCENTAGE = Self::LENGTH.bits() | Self::PERCENTAGE.bits();
         // NOTE: When you add to this, make sure to make Atan2 deal with these.
         /// Allow all units.
-        const ALL = Self::LENGTH.bits | Self::PERCENTAGE.bits | Self::ANGLE.bits | Self::TIME.bits | Self::RESOLUTION.bits;
+        const ALL = Self::LENGTH.bits() | Self::PERCENTAGE.bits() | Self::ANGLE.bits() | Self::TIME.bits() | Self::RESOLUTION.bits();
     }
 }
 

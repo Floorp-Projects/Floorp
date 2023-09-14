@@ -1179,11 +1179,11 @@ bitflags! {
         /// `paint` variant, turns on paint containment
         const PAINT = 1 << 4;
         /// 'size' variant, turns on size containment
-        const SIZE = 1 << 5 | Contain::INLINE_SIZE.bits | Contain::BLOCK_SIZE.bits;
+        const SIZE = 1 << 5 | Contain::INLINE_SIZE.bits() | Contain::BLOCK_SIZE.bits();
         /// `content` variant, turns on layout and paint containment
-        const CONTENT = 1 << 6 | Contain::LAYOUT.bits | Contain::STYLE.bits | Contain::PAINT.bits;
+        const CONTENT = 1 << 6 | Contain::LAYOUT.bits() | Contain::STYLE.bits() | Contain::PAINT.bits();
         /// `strict` variant, turns on all types of containment
-        const STRICT = 1 << 7 | Contain::LAYOUT.bits | Contain::STYLE.bits | Contain::PAINT.bits | Contain::SIZE.bits;
+        const STRICT = 1 << 7 | Contain::LAYOUT.bits() | Contain::STYLE.bits() | Contain::PAINT.bits() | Contain::SIZE.bits();
     }
 }
 

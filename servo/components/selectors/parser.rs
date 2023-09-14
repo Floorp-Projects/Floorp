@@ -106,7 +106,7 @@ bitflags! {
         const AFTER_NON_STATEFUL_PSEUDO_ELEMENT = 1 << 4;
 
         /// Whether we are after any of the pseudo-like things.
-        const AFTER_PSEUDO = Self::AFTER_PART.bits | Self::AFTER_SLOTTED.bits | Self::AFTER_PSEUDO_ELEMENT.bits;
+        const AFTER_PSEUDO = Self::AFTER_PART.bits() | Self::AFTER_SLOTTED.bits() | Self::AFTER_PSEUDO_ELEMENT.bits();
 
         /// Whether we explicitly disallow combinators.
         const DISALLOW_COMBINATORS = 1 << 5;
