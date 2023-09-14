@@ -81,12 +81,9 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
 
   // Only display focus rings if we actually have them. Since at most one
   // button would normally display a focus ring, most buttons won't have them.
-  const auto* disp = mFrame->StyleDisplay();
-  nsPresContext* pc = mFrame->PresContext();
   if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder() &&
-      mFrame->IsThemed(disp) &&
-      pc->Theme()->ThemeWantsButtonInnerFocusRing(
-          mFrame, disp->EffectiveAppearance())) {
+      mFrame->IsThemed() &&
+      mFrame->PresContext()->Theme()->ThemeWantsButtonInnerFocusRing()) {
     aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, GetFrame(),
                                                            this);
   }
