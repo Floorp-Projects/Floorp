@@ -379,7 +379,8 @@ class RestyleManager {
   /**
    * Restyle an element's previous and/or next siblings.
    */
-  void RestyleSiblings(dom::Element* aChild, NodeSelectorFlags aParentFlags);
+  void RestyleSiblingsForNthOf(dom::Element* aChild,
+                               NodeSelectorFlags aParentFlags);
 
   /**
    * Posts restyle hints for siblings of an element and their descendants if the

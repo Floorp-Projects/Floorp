@@ -491,6 +491,27 @@ class ServoStyleSet {
                                                       dom::ElementState);
 
   /**
+   * Maybe invalidate if a change on an element that might be selected by :empty
+   * that might require us to restyle the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorForEmptyDependency(const dom::Element&);
+
+  /**
+   * Maybe invalidate if a state change on an element that might be selected
+   * by a selector that can only selector first/last child, that
+   * might require us to restyle the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorForNthEdgeDependency(const dom::Element&);
+
+  /**
+   * Maybe invalidate if a state change on an element that might be selected by
+   * :nth-* (Or :nth-like) selectors that might require us to restyle the
+   * relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+      const dom::Element*);
+
+  /**
    * Maybe invalidate if a DOM element insertion might require us to restyle
    * the relative selector to ancestors/previous siblings.
    */
