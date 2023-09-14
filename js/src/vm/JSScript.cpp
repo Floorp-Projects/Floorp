@@ -3502,8 +3502,8 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
 bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
                             js::Sprinter* sp) {
   sp->put("\nSource notes:\n");
-  sp->printf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
-             "pc", "delta", "desc", "args");
+  sp->printf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column", "pc",
+             "delta", "desc", "args");
   sp->put("---- ---- ------ ----- ------ ---------- ------\n");
 
   unsigned offset = 0;
@@ -3582,8 +3582,8 @@ bool JSScript::dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
   sp->put("\nException table:\nkind               stack    start      end\n");
 
   for (const js::TryNote& tn : script->trynotes()) {
-    sp->printf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
-               tn.stackDepth, tn.start, tn.start + tn.length);
+    sp->printf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()), tn.stackDepth,
+               tn.start, tn.start + tn.length);
   }
   return true;
 }

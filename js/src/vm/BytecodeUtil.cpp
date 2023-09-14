@@ -1006,8 +1006,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   }
 
   if (showAll) {
-    sp->printf("%s:%u\n", script->filename(),
-               unsigned(script->lineno()));
+    sp->printf("%s:%u\n", script->filename(), unsigned(script->lineno()));
   }
 
   if (pc != nullptr) {
@@ -1268,7 +1267,7 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
     }
 
     sp->printf("from %s @ %05u", CodeName(JSOp(*pc)),
-                 unsigned(script->pcToOffset(pc)));
+               unsigned(script->pcToOffset(pc)));
 
     return true;
   };
@@ -1416,7 +1415,8 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         return 0;
       }
       EnvironmentCoordinate ec(pc);
-      sp->printf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot());
+      sp->printf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(),
+                 ec.slot());
       break;
     }
     case JOF_DEBUGCOORD: {
@@ -2226,9 +2226,7 @@ JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
   MOZ_CRASH("No binding");
 }
 
-UniqueChars ExpressionDecompiler::getOutput() {
-  return sprinter.release();
-}
+UniqueChars ExpressionDecompiler::getOutput() { return sprinter.release(); }
 
 }  // anonymous namespace
 
