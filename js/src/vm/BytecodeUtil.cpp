@@ -3103,10 +3103,6 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
   bool isEmpty = true;
   lcovRealm->exportInto(out, &isEmpty);
-  if (out.hadOutOfMemory()) {
-    return false;
-  }
-
   return true;
 }
 

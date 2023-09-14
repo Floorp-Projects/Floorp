@@ -3490,7 +3490,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
     }
   }
 
-  return !sprinter->hadOutOfMemory();
+  return true;
 }
 
 static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
