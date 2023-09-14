@@ -87,6 +87,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Læs om Komplet Cookiebeskyttelse</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Adgang til kamera er nødvendig. Gå til Indstillinger i Android, tryk på Tilladelser, og tryk så på Tillad.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1414,7 +1415,7 @@
     <string name="deleting_browsing_data_in_progress">Sletter browserdata…</string>
 
     <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
-    <string name="delete_all_history_group_prompt_message">Slet alle websteder i &quot;%s&quot;</string>
+    <string name="delete_all_history_group_prompt_message">Slet alle websteder i “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Annuller</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1910,7 +1911,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL til brug for søgning</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example" formatted="false">Erstat forespørgslen med &quot;%s”. Eksempel:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Erstat forespørgslen med “%s”. Eksempel:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detaljer om tilpasset søgetjeneste</string>
@@ -1920,9 +1921,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL til søgeforslags-API</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Erstat forespørgslen med &quot;%s&quot;. Eksempel:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Erstat forespørgslen med “%s”. Eksempel:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Erstat forespørgslen med &quot;%s&quot;. Eksempel:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Erstat forespørgslen med “%s”. Eksempel:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Gem</string>
 

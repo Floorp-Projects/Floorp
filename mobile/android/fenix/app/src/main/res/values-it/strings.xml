@@ -66,6 +66,20 @@
     <string name="private_browsing_placeholder_description_2">%1$s cancella la cronologia di ricerca e di navigazione dalle schede anonime quando le chiudi o esci dall’app. Questo non ti rende anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, ma è utile per impedire a chi usa il tuo stesso dispositivo di vedere la tua attività online.</string>
     <string name="private_browsing_common_myths">Miti da sfatare sulla navigazione anonima</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Non lasciare tracce su questo dispositivo</string>
+
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s elimina i cookie, la cronologia e i dati dei siti web quando chiudi tutte le finestre anonime. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Chi potrebbe vedere la mia attività?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Apri la prossima scheda anonima con un solo tocco.</string>
@@ -87,6 +101,12 @@
     <string name="tcp_cfr_message">La funzione per la protezione della privacy più potente che abbiamo mai realizzato isola gli elementi traccianti tra i siti.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Ulteriori informazioni sulla Protezione totale per i cookie</string>
+
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Tocca qui per avviare una nuova sessione anonima. Elimina cronologia, cookie… tutto.</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">È richiesto l’accesso alla fotocamera. Puoi acconsentire all’accesso dalla scheda dei permessi nelle impostazioni di Android.</string>
@@ -227,6 +247,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Schermata principale</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Elimina cronologia di navigazione</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lingua selezionata</string>
@@ -349,6 +372,18 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Attiva le notifiche</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Non adesso</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Prova il widget di ricerca di Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Con Firefox nella schermata iniziale, potrai accedere facilmente a un browser dedicato alla privacy che blocca i traccianti intersito.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Aggiungi widget di Firefox</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Non ora</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1353,6 +1388,8 @@
     <string name="snackbar_private_tab_closed">Scheda anonima chiusa</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Schede anonime chiuse</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Eliminati dati della navigazione anonima</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ANNULLA</string>
 
@@ -2189,6 +2226,164 @@
     <string name="experiments_snackbar">Attiva la telemetria per inviare dati.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Vai alle impostazioni</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">Verifica recensioni</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">Recensioni affidabili</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Un misto di recensioni affidabili e inaffidabili</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">Recensioni inaffidabili</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">Quanto sono affidabili queste recensioni?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Valutazione rettificata</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">Recensioni inaffidabili rimosse</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">In evidenza dalle recensioni recenti</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">Come determiniamo la qualità delle recensioni</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Utilizziamo la tecnologia IA di %s by Mozilla per analizzare l’affidabilità delle recensioni sui prodotti. Questa analisi ti aiuterà solo a valutare la qualità delle recensioni, non la qualità del prodotto.</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Assegniamo alle recensioni di ogni prodotto un <b>voto in lettere</b> dalla A alla F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Recensioni affidabili. Riteniamo che le recensioni provengano con buona probabilità da clienti reali che hanno lasciato recensioni oneste e imparziali.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Crediamo che ci sia un misto di recensioni affidabili e inaffidabili.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Recensioni inaffidabili. Riteniamo che le recensioni siano false o provenienti da revisori di parte.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>valutazione rettificata</b> si basa esclusivamente su recensioni che riteniamo affidabili.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[Gli elementi <b>in evidenza</b> provengono dalle recensioni su %s degli ultimi 80 giorni che riteniamo affidabili.]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">Scopri ulteriori informazioni su %s.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">come %s by Mozilla determina la qualità delle recensioni</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">Impostazioni</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">Mostra annunci nella verifica recensioni</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Verranno visualizzati annunci occasionali per prodotti pertinenti. Tutti gli annunci devono soddisfare i nostri standard di qualità per le recensioni. %s</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Ulteriori informazioni</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">Disattiva la verifica recensioni</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Altri prodotti da valutare</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Annuncio di %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">Verifica recensioni con tecnologia %s.</string>
+
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s by Mozilla</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Nuove informazioni da controllare</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Controlla adesso</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Non ci sono ancora abbastanza recensioni</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Non appena questo prodotto avrà più recensioni, saremo in grado di verificarne la qualità.</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Il prodotto non è disponibile</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Se noti che questo prodotto è di nuovo disponibile, segnalacelo e lavoreremo per verificarne le recensioni.</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Segnala che questo prodotto è di nuovo disponibile</string>
+
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Verifica qualità della recensioni in corso</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Verifica qualità della recensioni in corso</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Questa operazione potrebbe richiedere circa 60 secondi.</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Grazie per la segnalazione!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Dovremmo avere informazioni su questo prodotto entro 24 ore. Ricontrolla più tardi.</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Impossibile verificare queste recensioni</string>
+
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Purtroppo non è possibile verificare la qualità delle recensioni per alcuni tipi di prodotto come carte regalo, video in streaming e giochi.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Informazioni disponibili a breve</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Dovremmo avere informazioni su questo prodotto entro 24 ore. Ricontrolla più tardi.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">L’analisi è aggiornata</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">OK</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Nessuna informazione disponibile in questo momento</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Stiamo lavorando per risolvere il problema. Ricontrolla a breve.</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Nessuna connessione di rete</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Controlla la connessione di rete e prova a ricaricare la pagina.</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Non ci sono ancora informazioni su queste recensioni</string>
+
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Per sapere se le recensioni di questo prodotto sono affidabili, verificane la qualità. Ci vogliono solo circa 60 secondi.</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Verifica qualità della recensioni</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Prova la nostra guida per ottenere affidabili recensioni di prodotti</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Scopri quanto sono affidabili le recensioni dei prodotti su %1$s prima di acquistarli. Verifica recensioni, una funzione sperimentale di %2$s, è integrata direttamente nel browser. Funziona anche su %3$s e %4$s.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Utilizzando la tecnologia di %1$s by Mozilla, ti aiutiamo a evitare recensioni di parte e non autentiche. Il nostro modello di intelligenza artificiale migliora costantemente per proteggerti mentre fai acquisti. %2$s</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">Ulteriori informazioni</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">Selezionando “Sì, provalo” accetti l’%2$s e i %3$s di %1$s by Mozilla.</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">informativa sulla privacy</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">termini di utilizzo</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Sì, provalo</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">Non ora</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Prima di acquistare, scopri se puoi fidarti delle recensioni di questo prodotto.</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Prova verifica recensioni</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Queste recensioni sono affidabili? Controlla ora per vedere la valutazione rettificata.</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Apri verifica recensioni</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check">Apri verifica qualità recensioni</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check_close">Chiudi verifica qualità recensioni</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">%1$s su 5 stelle</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">Nascondi dettagli</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">Mostra dettagli</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">Qualità</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">Prezzo</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">Spedizione</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">Imballaggio e aspetto</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">Competitività</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

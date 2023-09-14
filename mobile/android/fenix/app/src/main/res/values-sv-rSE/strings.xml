@@ -89,6 +89,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Läs mer om Totalt skydd mot kakor</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameraåtkomst behövs. Gå till Android-inställningar, tryck på behörigheter och tryck på tillåt.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -352,6 +353,9 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Slå på aviseringar</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Inte nu</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Inte nu</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1335,6 +1339,8 @@
     <string name="snackbar_private_tab_closed">Privat flik stängd</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Privata flikar stängda</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Privat webbläsardata raderades</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ÅNGRA</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -2164,6 +2170,10 @@
     <string name="experiments_snackbar">Aktivera telemetri för att skicka data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå till inställningar</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">Recensionsgranskare</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

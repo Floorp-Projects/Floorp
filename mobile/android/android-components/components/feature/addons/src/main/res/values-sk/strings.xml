@@ -170,6 +170,16 @@
     <string name="mozac_feature_addons_successfully_installed">Doplnok %1$s bol úspešne nainštalovaný</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Doplnok %1$s sa nepodarilo nainštalovať</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Tento doplnok sa nepodarilo nainštalovať.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Tento doplnok nemohol byť stiahnutý kvôli problémom s pripojením.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Tento doplnok nemohol byť nainštalovaný, pretože je zrejme poškodený.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Tento doplnok nemohol byť nainštalovaný, pretože nebol overený.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Doplnok %1$s nemohol byť nainštalovaný, pretože nie je kompatibilný s prehliadačom %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">Doplnok %1$s nebolo možné nainštalovať, pretože je veľké riziko, že spôsobí problémy so stabilitou alebo bezpečnosťou prehliadača.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

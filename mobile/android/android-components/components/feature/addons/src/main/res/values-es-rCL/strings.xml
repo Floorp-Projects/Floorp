@@ -170,6 +170,16 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s instalado correctamente</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Falló la instalación de %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Falló la instalación de este complemento.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Este complemento no pudo ser descargado por una falla en la conexión.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Este complemento no pudo ser instalado porque parece estar corrupto.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Este complemento no pudo ser instalado porque no ha sido verificado.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s no pudo ser instalado porque no es compatible con %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">%1$s no pudo ser instalado porque tiene un alto riesgo de causar problemas de estabilidad o seguridad</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

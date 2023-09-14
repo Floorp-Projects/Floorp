@@ -170,6 +170,16 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s паспяхова ўсталяваны</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Не атрымалася ўсталяваць %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Не ўдалося ўсталяваць гэты дадатак.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Немагчыма сцягнуць гэты дадатак, бо злучэнне не ўдалося.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Гэты дадатак не можа быць усталяваны, бо ён выглядае пашкоджаным.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Гэты дадатак не можа быць усталяваны, бо ён не правераны.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s не можа быць усталяваны, бо ён несумяшчальны з %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">%1$s не можа быць усталяваны, бо ёсць вялікая рызыка, што ён выкліча праблемы ўстойлівасці або бяспекі</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

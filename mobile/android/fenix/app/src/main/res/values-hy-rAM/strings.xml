@@ -64,6 +64,19 @@
     <string name="private_browsing_placeholder_description_2">%1$s-ը մաքրում է որոնման և զննարկման պատմությունը, երբ փակում եք ներդիրը կամ դուրս եք գալիս հավելվածից: Չնայած դա ձեզ անանուն չի դարձնում կայքերի կամ ձեր համացանցի ծառայություններ մատուցողի համար, այն ավելի հեշտ է դարձնում ձեր առցանց ակտիվության գաղտնիությունը այն դեպքում, եթե մեկ ուրիշը ևս օգտագործում է տվյալ սարքը:</string>
     <string name="private_browsing_common_myths">Տարածված առասպելներ գաղտնի դիտարկման վերաբերյալ</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Այս սարքի վրա հետքեր չթողնել</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s-ը ջնջում է ձեր թխուկները, պատմությունը և կայքի տվյալները, երբ փակում եք ձեր բոլոր մասնավոր պատուհանները: %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Ո՞վ կարող է տեսնել իմ գործունեությունը:</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Գործարկեք հաջորդ անձնական ներդիրը մեկ հպումով:</string>
@@ -85,6 +98,11 @@
     <string name="tcp_cfr_message">Գաղտնիության մեր ամենահզոր հատկանիշը, որը դեռևս մեկուսացնում է միջկայքի հետագծումը:</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Իմացեք Total Cookie Protection-ի մասին</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Հպեք այստեղ՝ նոր մասնավոր աշխատաշրջան սկսելու համար: Ջնջեք ձեր պատմությունը, թխուկները՝ ամեն ինչ:</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Անհրաժեշտ է տեսախցիկի մատչում: Անցեք Android-ի կարգավորումներ, հպեք թույլտվություններին և հպեք թույլատրել:</string>
@@ -224,6 +242,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Հիմնական էկրան</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Ջնջել դիտարկման պատմությունը</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ընտրված լեզուն</string>
@@ -344,6 +365,18 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Միացնել ծանուցումները</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Փորձեք Firefox-ի որոնման վիդջեթը</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Եթե Firefox-ը ձեր հիմնական էկրանին լինի, դուք հեշտությամբ մուտք կունենաք գաղտնիությունը առաջին տեղում զննիչին, որն արգելափակում է միջկայքային հետագծումները:</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Ավելացնել Firefox վիդջեթ</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1319,6 +1352,8 @@
     <string name="snackbar_private_tab_closed">Գաղտնի ներդիրը փակվեց</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Գաղտնի ներդիրները փակվեցին</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Մասնավոր զննարկման տվյալները ջնջվել են</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ՀԵՏԱՐԿԵԼ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -2143,6 +2178,162 @@
     <string name="experiments_snackbar">Միացնել հեռաչափությունը՝ տվյալներ ուղարկելու համար:</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Անցնել Կարգավորումներին</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">Վերանայման ստուգիչ</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">Հուսալի կարծիքներ</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Հուսալի և անվստահելի կարծիքների խառնուրդ</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">Անվստահելի կարծիքներ</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">Որքանո՞վ են վստահելի այս կարծիքները:</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Ճշգրտված վարկանիշ</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">Անվստահելի կարծիքները հեռացվեցին</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">Գունանշումներ վերջին կարծիքներից</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">Ինչպես ենք մենք որոշում կարծիքների որակը</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Մենք օգտագործում ենք AI տեխնոլոգիա %s-ից Mozilla-ի կողմից՝ արտադրանքի կարծիքների հավաստիությունը ստուգելու համար: Սա միայն կօգնի ձեզ գնահատել կարծիքների որակը, այլ ոչ թե արտադրանքի որակը:</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Մենք յուրաքանչյուր ապրանքի կարծիքներին տալիս ենք <b>տառային գնահատական</b>՝ A-ից մինչև F:]]></string>
+
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Հուսալի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, իրական հաճախորդներից են, ովքեր թողել են ազնիվ, անաչառ կարծիքներ:</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Մենք հավատում ենք, որ կա հուսալի և անվստահելի կարծիքների խառնուրդ:</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Անվստահելի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, կեղծ են կամ կողմնակալ գրախոսների կողմից:</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Ճշգրտված վարկանիշը</b> հիմնված է միայն այն կարծիքների վրա, որոնք մենք վստահելի ենք համարում:]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Գունանշումները</b> վերջին 80 օրվա ընթացքում %s կարծիքներից են, որոնք, մեր կարծիքով, հուսալի են:]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">Իմացեք ավելին %s-ի մասին:</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">ինչպես %s-ը  է Mozilla-ի կողմից որոշում կարծիքների որակը</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">Կարգավորումներ</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">Ցուցադրել գովազդը կարծիքների ստուգիչում</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Դուք երբեմն կտեսնեք համապատասխան ապրանքների գովազդներ: Բոլոր գովազդները պետք է համապատասխանեն կարծիքների որակի մեր չափանիշներին: %s</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Իմանալ ավելին</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">Անջատեք վերանայման ստուգիչը</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Ավելի շատ հաշվի առնել</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Գովազդ %s-ի կողմից</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">Կարծիքների ստուգիչն աշխատում է %s-ի կողմից:</string>
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozilla-ի կողմից</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Նոր տեղեկատվություն ստուգելու համար</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Ստուգիր հիմա</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Դեռևս բավարար ակնարկներ չկան</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Երբ այս ապրանքն ավելի շատ կարծիքներ ունենա, մենք կկարողանանք ստուգել դրանց որակը:</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Ապրանքը հասանելի չէ</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Եթե տեսնեք, որ այս ապրանքը կրկին պահեստում է, հաղորդեք դրա մասին, և մենք կաշխատենք ստուգել ակնարկները:</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Հաղորդեք, որ այս ապրանքը կրկին պահեստում է</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Կարծիքի որակի ստուգում</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Կարծիքի որակի ստուգում</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Սա կարող է տևել մոտ 60 վայրկյան:</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Շնորհակալություն հայտնելու համար:</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Մենք պետք է 24 ժամվա ընթացքում տեղեկություններ ունենանք այս ապրանքի կարծիքների մասին: Խնդրում ենք նորից ստուգել:</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Մենք չենք կարող ստուգել այս կարծիքները</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Ցավոք, մենք չենք կարող ստուգել որոշ տեսակի ապրանքների կարծիքների որակը: Օրինակ՝ նվեր քարտեր և հոսքային տեսանյութերի, երաժշտության և խաղեր:</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Տեղեկությունները շուտով</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Մենք պետք է 24 ժամվա ընթացքում տեղեկություններ ունենանք այս ապրանքի կարծիքների մասին: Խնդրում ենք նորից ստուգել:</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Վերլուծությունն արդիական է</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Հասկացա</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Այս պահին տեղեկություններ չկան</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Մենք աշխատում ենք խնդիրը լուծելու ուղղությամբ։ Խնդրում ենք նորից ստուգել շուտով:</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Չկա ցանցային կապակցում</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Ստուգեք ձեր ցանցային կապակցումը և փորձեք վերաբեռնել էջը:</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Այս կարծիքների մասին դեռ տեղեկություններ չկան</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Իմանալու համար, թե արդյոք այս ապրանքի կարծիքները հուսալի են, ստուգեք կարծիքների որակը: Դա կտևի ընդամենը մոտ 60 վայրկյան:</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Ստուգեք կարծիքի որակը</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Փորձեք արտադրանքի կարծիքների մեր վստահելի ուղեցույցը</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Գնելուց առաջ տեսեք, թե որքան հուսալի են արտադրանքի կարծիքները %1$s-ում: Կարծիքների ստուգիչը՝ %2$s-ի փորձարարական յուրահատկությունն է և ներկառուցված է հենց զննիչում: Այն աշխատում է նաև %3$s-ի և %4$s-ի վրա:</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Օգտագործելով %1$s-ի հզորությունը Mozilla-ի կողմից՝ մենք օգնում ենք ձեզ խուսափել կողմնակալ և ոչ վավերական կարծիքներից: Մեր AI մոդելը միշտ բարելավվում է՝ պաշտպանելու ձեզ գնումներ կատարելիս: %2$s</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">Իմանալ ավելին</string>
+
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնում եք %1$s-ը Mozilla-ի կողմիցի %2$s-ին և %3$s-ին:</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">գաղտնիության դրույթներ</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">օգտվելու կանոններ</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Այո, փորձիր</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">Ոչ հիմա</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Իմացեք, թե արդյոք կարող եք վստահել այս ապրանքի կարծիքներին՝ նախքան գնելը:</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Վերանայման ստուգիչ</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Արդյո՞ք այս կարծիքները հուսալի են: Ստուգեք հիմա՝ ճշգրտված գնահատականը տեսնելու համար:</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Բացել կարծիքների ստուգիչը</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Բետա</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check">Բացել կարծիքների որակի ստուգումը</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check_close">Փակել կարծիքի որակի ստուգումը</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">%1$s-ը 5 քայլից</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">Ցուցադրել ավելի քիչ</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">Ցուցադրել ավելին</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">Որակ</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">Գին</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">Առաքում</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">Փաթեթավորում և տեսք</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">Մրցունակություն</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

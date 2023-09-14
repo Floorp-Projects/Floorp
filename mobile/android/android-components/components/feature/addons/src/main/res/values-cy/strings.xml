@@ -170,6 +170,16 @@
     <string name="mozac_feature_addons_successfully_installed">Wedi gosod %1$s yn llwyddiannus</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Wedi methu gosod %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Wedi methu gosod yr ychwanegyn hwn.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Ni fu modd llwytho’r ychwanegyn hwn i lawr oherwydd methiant y cysylltiad.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Nid oedd modd gosod yr ychwanegyn am ei fod yn edrych yn wallus.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Nid oedd modd gosod yr ychwanegyn am nad yw wedi ei wirio.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Nid oedd modd gosod %1$s oherwydd nid yw’n gydnaws â %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">Nid oedd modd gosod %1$s oherwydd bod risg uchel o achosi problemau sefydlogrwydd neu ddiogelwch</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

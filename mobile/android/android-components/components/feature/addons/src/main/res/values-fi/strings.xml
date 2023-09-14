@@ -170,6 +170,16 @@
     <string name="mozac_feature_addons_successfully_installed">Asennettiin onnistuneesti %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Lisäosan %1$s asennus epäonnistui</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Tämän lisäosan asentaminen epäonnistui.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Tätä lisäosaa ei voitu ladata yhteyshäiriön vuoksi.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Lisäosaa ei voitu asentaa koska se vaikuttaa olevan vaurioitunut.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Tätä lisäosaa ei voitu asentaa koska sitä ei ole varmennettu.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Lisäosaa %1$s ei voitu asentaa, koska se ei ole yhteensopiva %2$sin version %3$s kanssa.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">Laajennusta %1$s ei voitu asentaa, koska sen riski aiheuttaa epävakautta tai tietoturvaongelmia on suuri</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
