@@ -10,4 +10,3 @@ pub mod invalidation_map;
 pub mod invalidator;
 pub mod restyle_hints;
 pub mod state_and_attributes;
-pub mod relative_selector;

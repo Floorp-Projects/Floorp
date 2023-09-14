@@ -463,75 +463,6 @@ class ServoStyleSet {
                                   nsAtom* aNewID) const;
 
   /**
-   * Maybe invalidate if a modification to an ID might require us to restyle
-   * the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorIDDependency(const dom::Element&,
-                                                   nsAtom* aOldID,
-                                                   nsAtom* aNewID);
-
-  /**
-   * Maybe invalidate if a modification to an attribute with the specified local
-   * name might require us to restyle the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorClassDependency(const dom::Element&);
-
-  /**
-   * Maybe invalidate if a modification to an ID might require us to restyle
-   * the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorAttributeDependency(const dom::Element&,
-                                                          nsAtom* aAttribute);
-
-  /**
-   * Maybe invalidate if a change in event state on an element might require us
-   * to restyle the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorStateDependency(const dom::Element&,
-                                                      dom::ElementState);
-
-  /**
-   * Maybe invalidate if a change on an element that might be selected by :empty
-   * that might require us to restyle the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorForEmptyDependency(const dom::Element&);
-
-  /**
-   * Maybe invalidate if a state change on an element that might be selected
-   * by a selector that can only selector first/last child, that
-   * might require us to restyle the relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorForNthEdgeDependency(const dom::Element&);
-
-  /**
-   * Maybe invalidate if a state change on an element that might be selected by
-   * :nth-* (Or :nth-like) selectors that might require us to restyle the
-   * relative selector it refers to.
-   */
-  void MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-      const dom::Element*);
-
-  /**
-   * Maybe invalidate if a DOM element insertion might require us to restyle
-   * the relative selector to ancestors/previous siblings.
-   */
-  void MaybeInvalidateForElementInsertion(const dom::Element&);
-
-  /**
-   * Maybe invalidate if a DOM element append might require us to restyle
-   * the relative selector to ancestors/previous siblings.
-   */
-  void MaybeInvalidateForElementAppend(const dom::Element&);
-
-  /**
-   * Maybe invalidate if a DOM element removal might require us to restyle
-   * the relative selector to ancestors/previous siblings.
-   */
-  void MaybeInvalidateForElementRemove(const dom::Element& aElement,
-                                       const dom::Element* aPrevSibling,
-                                       const dom::Element* aNextSibling);
-
-  /**
    * Returns true if a change in event state on an element might require
    * us to restyle the element.
    *
@@ -546,12 +477,6 @@ class ServoStyleSet {
    * us to restyle the element's siblings.
    */
   bool HasNthOfStateDependency(const dom::Element&, dom::ElementState) const;
-
-  /**
-   * Restyle this element's siblings in order to propagate any potential change
-   * in :nth-child(of) styling.
-   */
-  void RestyleSiblingsForNthOf(const dom::Element&, uint32_t) const;
 
   /**
    * Returns true if a change in document state might require us to restyle the
