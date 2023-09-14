@@ -3408,7 +3408,7 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
   if (!str) {
     return false;
   }
@@ -3490,7 +3490,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
     }
   }
 
-  return true;
+  return !sprinter->hadOutOfMemory();
 }
 
 static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
@@ -3503,7 +3503,16 @@ static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  const char* chars = sprinter.string();
+  size_t len;
+  JS::UniqueTwoByteChars buf(
+      JS::LossyUTF8CharsToNewTwoByteCharsZ(
+          cx, JS::UTF8Chars(chars, strlen(chars)), &len, js::MallocArena)
+          .get());
+  if (!buf) {
+    return false;
+  }
+  JSString* str = JS_NewUCStringCopyN(cx, buf.get(), len);
   if (!str) {
     return false;
   }
@@ -3527,11 +3536,7 @@ static bool Disassemble(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::UniqueChars str = sprinter.release();
-  if (!str) {
-    return false;
-  }
-  fprintf(gOutFile->fp, "%s\n", str.get());
+  fprintf(gOutFile->fp, "%s\n", sprinter.string());
   args.rval().setUndefined();
   return true;
 }
@@ -3589,11 +3594,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::UniqueChars chars = sprinter.release();
-  if (!chars) {
-    return false;
-  }
-  fprintf(gOutFile->fp, "%s\n", chars.get());
+  fprintf(gOutFile->fp, "%s\n", sprinter.string());
 
   args.rval().setUndefined();
   return true;
@@ -3656,11 +3657,15 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       if (line2 < line1) {
         if (bupline != line2) {
           bupline = line2;
-          sprinter.printf("%s %3u: BACKUP\n", sep, line2);
+          if (!sprinter.jsprintf("%s %3u: BACKUP\n", sep, line2)) {
+            return false;
+          }
         }
       } else {
         if (bupline && line1 == line2) {
-          sprinter.printf("%s %3u: RESTORE\n", sep, line2);
+          if (!sprinter.jsprintf("%s %3u: RESTORE\n", sep, line2)) {
+            return false;
+          }
         }
         bupline = 0;
         while (line1 < line2) {
@@ -3670,7 +3675,9 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
           line1++;
-          sprinter.printf("%s %3u: %s", sep, line1, linebuf);
+          if (!sprinter.jsprintf("%s %3u: %s", sep, line1, linebuf)) {
+            return false;
+          }
         }
       }
 
@@ -3683,11 +3690,7 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       pc += len;
     }
 
-    JS::UniqueChars str = sprinter.release();
-    if (!str) {
-      return false;
-    }
-    fprintf(gOutFile->fp, "%s\n", str.get());
+    fprintf(gOutFile->fp, "%s\n", sprinter.string());
   }
 
   args.rval().setUndefined();
