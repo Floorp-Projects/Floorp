@@ -5,15 +5,27 @@
 //! Invalidation of element styles relative selectors.
 
 use crate::data::ElementData;
-use crate::dom::TElement;
+use crate::dom::{TElement, TNode};
+use crate::invalidation::element::invalidation_map::{
+    Dependency, DependencyInvalidationKind, RelativeDependencyInvalidationKind, NormalDependencyInvalidationKind, RelativeSelectorInvalidationMap,
+};
+use crate::invalidation::element::invalidator::{
+    DescendantInvalidationLists, Invalidation, InvalidationProcessor, InvalidationResult,
+    InvalidationVector, SiblingTraversalMap, TreeStyleInvalidator,
+};
 use crate::invalidation::element::restyle_hints::RestyleHint;
-use crate::invalidation::element::invalidator::{TreeStyleInvalidator, InvalidationResult, InvalidationProcessor, InvalidationVector, DescendantInvalidationLists, Invalidation, SiblingTraversalMap,};
-use crate::invalidation::element::invalidation_map::{Dependency, RelativeDependencyInvalidationKind, DependencyInvalidationKind, NormalDependencyInvalidationKind};
-use crate::invalidation::element::state_and_attributes::{invalidated_descendants, invalidated_self, invalidated_sibling, should_process_descendants, push_invalidation, dependency_may_be_relevant};
+use crate::invalidation::element::state_and_attributes::{
+    dependency_may_be_relevant, invalidated_descendants, invalidated_self, invalidated_sibling,
+    push_invalidation, should_process_descendants,
+};
 use crate::stylist::{CascadeData, Stylist};
+use dom::ElementState;
 use fxhash::FxHashMap;
+use selectors::matching::{
+    ElementSelectorFlags, MatchingContext, MatchingForInvalidation, MatchingMode,
+    NeedsSelectorFlags, QuirksMode, SelectorCaches, VisitedHandlingMode,
+};
 use selectors::OpaqueElement;
-use selectors::matching::{QuirksMode, ElementSelectorFlags, MatchingContext, SelectorCaches, MatchingForInvalidation, MatchingMode, VisitedHandlingMode, NeedsSelectorFlags};
 use selectors::parser::SelectorKey;
 use smallvec::SmallVec;
 use std::ops::DerefMut;
@@ -29,6 +41,8 @@ where
     pub quirks_mode: QuirksMode,
     /// Callback to trigger when the subject element is invalidated.
     pub invalidated: fn(E, &InvalidationResult),
+    /// The traversal map that should be used to process invalidations.
+    pub sibling_traversal_map: SiblingTraversalMap<E>,
     /// Marker for 'a lifetime.
     pub _marker: ::std::marker::PhantomData<&'a ()>,
 }
@@ -89,13 +103,16 @@ where
         outer: &'a Dependency,
         host: Option<E>,
     ) {
-        self.invalidations.entry(key).and_modify(|(h, o, d)| {
-            // Just keep one.
-            if *o <= offset {
-                return;
-            }
-            (*h, *o, *d) = (host, offset, outer);
-        }).or_insert_with(|| (host, offset, outer));
+        self.invalidations
+            .entry(key)
+            .and_modify(|(h, o, d)| {
+                // Just keep one.
+                if *o <= offset {
+                    return;
+                }
+                (*h, *o, *d) = (host, offset, outer);
+            })
+            .or_insert_with(|| (host, offset, outer));
     }
 
     /// Add this dependency, if it is unique (i.e. Different outer dependency or same outer dependency
@@ -159,6 +176,87 @@ where
         }
         result
     }
+
+    fn collect_all_dependencies_for_element(
+        &mut self,
+        element: E,
+        scope: &Option<E>,
+        quirks_mode: QuirksMode,
+        map: &'a RelativeSelectorInvalidationMap,
+        accept: fn(&Dependency) -> bool,
+    ) {
+        element
+            .id()
+            .map(|v| match map.map.id_to_selector.get(v, quirks_mode) {
+                Some(v) => {
+                    for dependency in v {
+                        if !accept(dependency) {
+                            continue;
+                        }
+                        self.add_dependency(dependency, element, *scope);
+                    }
+                },
+                None => (),
+            });
+        element.each_class(|v| match map.map.class_to_selector.get(v, quirks_mode) {
+            Some(v) => {
+                for dependency in v {
+                    if !accept(dependency) {
+                        continue;
+                    }
+                    self.add_dependency(dependency, element, *scope);
+                }
+            },
+            None => (),
+        });
+        element.each_attr_name(
+            |v| match map.map.other_attribute_affecting_selectors.get(v) {
+                Some(v) => {
+                    for dependency in v {
+                        if !accept(dependency) {
+                            continue;
+                        }
+                        self.add_dependency(dependency, element, *scope);
+                    }
+                },
+                None => (),
+            },
+        );
+        let state = element.state();
+        map.map.state_affecting_selectors.lookup_with_additional(
+            element,
+            quirks_mode,
+            None,
+            &[],
+            ElementState::empty(),
+            |dependency| {
+                if !dependency.state.intersects(state) {
+                    return true;
+                }
+                if !accept(&dependency.dep) {
+                    return true;
+                }
+                self.add_dependency(&dependency.dep, element, *scope);
+                true
+            },
+        );
+
+        if let Some(v) = map.type_to_selector.get(element.local_name()) {
+            for dependency in v {
+                if !accept(dependency) {
+                    continue;
+                }
+                self.add_dependency(dependency, element, *scope);
+            }
+        }
+
+        for dependency in &map.any_to_selector {
+            if !accept(dependency) {
+                continue;
+            }
+            self.add_dependency(dependency, element, *scope);
+        }
+    }
 }
 
 impl<'a, E> RelativeSelectorInvalidator<'a, E>
@@ -193,6 +291,45 @@ where
                 &mut collector,
             );
         });
+        self.invalidate_from_dependencies(collector.get());
+    }
+
+    /// Gather relative selector dependencies for the given element (And its subtree) that mutated, and invalidate as necessary.
+    pub fn invalidate_relative_selectors_for_dom_mutation(
+        self,
+        subtree: bool,
+        stylist: &'a Stylist,
+        inherited_search_path: ElementSelectorFlags,
+        accept: fn(&Dependency) -> bool,
+    ) {
+        let mut collector = RelativeSelectorDependencyCollector::<'a, E>::new(self.element);
+        let mut traverse_subtree = false;
+        self.element.apply_selector_flags(inherited_search_path);
+        stylist.for_each_cascade_data_with_scope(self.element, |data, scope| {
+            let map = data.relative_selector_invalidation_map();
+            if !map.used {
+                return;
+            }
+            traverse_subtree |= map.needs_ancestors_traversal;
+            collector.collect_all_dependencies_for_element(self.element, &scope, self.quirks_mode, map, accept);
+        });
+
+        if subtree && traverse_subtree {
+            for node in self.element.as_node().dom_descendants() {
+                let descendant = match node.as_element() {
+                    Some(e) => e,
+                    None => continue,
+                };
+                descendant.apply_selector_flags(inherited_search_path);
+                stylist.for_each_cascade_data_with_scope(descendant, |data, scope| {
+                    let map = data.relative_selector_invalidation_map();
+                    if !map.used {
+                        return;
+                    }
+                    collector.collect_all_dependencies_for_element(descendant, &scope, self.quirks_mode, map, accept);
+                });
+            }
+        }
         self.invalidate_from_dependencies(collector.get());
     }
 
@@ -235,15 +372,17 @@ where
                 }
             },
             RelativeDependencyInvalidationKind::PrevSibling => {
-                self.element.prev_sibling_element().map(|e| {
-                    if !Self::in_search_direction(
-                        &e,
-                        ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
-                    ) {
-                        return;
-                    }
-                    self.handle_anchor(e, outer_dependency, host);
-                });
+                self.sibling_traversal_map
+                    .prev_sibling_for(&self.element)
+                    .map(|e| {
+                        if !Self::in_search_direction(
+                            &e,
+                            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
+                        ) {
+                            return;
+                        }
+                        self.handle_anchor(e, outer_dependency, host);
+                    });
             },
             RelativeDependencyInvalidationKind::AncestorPrevSibling => {
                 let mut parent = self.element.parent_element();
@@ -267,7 +406,7 @@ where
                 }
             },
             RelativeDependencyInvalidationKind::EarlierSibling => {
-                let mut sibling = self.element.prev_sibling_element();
+                let mut sibling = self.sibling_traversal_map.prev_sibling_for(&self.element);
                 while let Some(sib) = sibling {
                     if !Self::in_search_direction(
                         &sib,
