@@ -1609,6 +1609,8 @@ nsresult ClearStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("ClearStorageOp::DoDirectoryWork", OTHER);
 
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
+
   DeleteFiles(aQuotaManager);
 
   aQuotaManager.RemoveQuota();
