@@ -8,6 +8,8 @@ use crate::{
     QueueWriteAction, RawString, TextureAction,
 };
 
+use crate::SwapChainId;
+
 use wgc::{id, identity::IdentityManager};
 use wgt::{Backend, TextureFormat};
 
@@ -504,6 +506,7 @@ pub extern "C" fn wgpu_client_create_texture(
     client: &Client,
     device_id: id::DeviceId,
     desc: &wgt::TextureDescriptor<Option<&nsACString>, crate::FfiSlice<TextureFormat>>,
+    swap_chain_id: Option<&SwapChainId>,
     bb: &mut ByteBuf,
 ) -> id::TextureId {
     let label = wgpu_string(desc.label);
@@ -521,6 +524,7 @@ pub extern "C" fn wgpu_client_create_texture(
     let action = DeviceAction::CreateTexture(
         id,
         desc.map_label_and_view_formats(|_| label, |_| view_formats),
+        swap_chain_id.copied(),
     );
     *bb = make_byte_buf(&action);
 
@@ -1249,4 +1253,25 @@ pub unsafe extern "C" fn wgpu_queue_write_texture(
 #[no_mangle]
 pub extern "C" fn wgpu_texture_format_block_size_single_aspect(format: wgt::TextureFormat) -> u32 {
     format.block_size(None).unwrap_or(0)
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_use_external_texture_in_swapChain(
+    device_id: id::DeviceId,
+    format: wgt::TextureFormat,
+) -> bool {
+    if device_id.backend() != wgt::Backend::Dx12 {
+        return false;
+    }
+
+    if !static_prefs::pref!("dom.webgpu.swap-chain.external-texture-dx12") {
+        return false;
+    }
+
+    let supported = match format {
+        wgt::TextureFormat::Bgra8Unorm => true,
+        _ => false,
+    };
+
+    supported
 }

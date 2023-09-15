@@ -94,7 +94,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<WebGPUChild> GetBridge();
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
-      const layers::RemoteTextureOwnerId aOwnerId, gfx::SurfaceFormat aFormat,
+      const layers::RemoteTextureOwnerId aOwnerId,
+      bool aUseExternalTextureInSwapChain, gfx::SurfaceFormat aFormat,
       gfx::IntSize aCanvasSize);
   bool CheckNewWarning(const nsACString& aMessage);
 
@@ -130,6 +131,9 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   already_AddRefed<Texture> CreateTexture(
       const dom::GPUTextureDescriptor& aDesc);
+  already_AddRefed<Texture> CreateTexture(
+      const dom::GPUTextureDescriptor& aDesc,
+      Maybe<layers::RemoteTextureOwnerId> aOwnerId);
   already_AddRefed<Sampler> CreateSampler(
       const dom::GPUSamplerDescriptor& aDesc);
 

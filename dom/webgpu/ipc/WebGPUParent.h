@@ -6,6 +6,8 @@
 #ifndef WEBGPU_PARENT_H_
 #define WEBGPU_PARENT_H_
 
+#include <unordered_map>
+
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -22,6 +24,7 @@ class RemoteTextureOwnerClient;
 namespace webgpu {
 
 class ErrorBuffer;
+class ExternalTexture;
 class PresentationData;
 
 class WebGPUParent final : public PWebGPUParent {
@@ -75,7 +78,8 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDeviceCreateSwapChain(
       RawId aDeviceId, RawId aQueueId, const layers::RGBDescriptor& aDesc,
       const nsTArray<RawId>& aBufferIds,
-      const layers::RemoteTextureOwnerId& aOwnerId);
+      const layers::RemoteTextureOwnerId& aOwnerId,
+      bool aUseExternalTextureInSwapChain);
   ipc::IPCResult RecvDeviceCreateShaderModule(
       RawId aDeviceId, RawId aModuleId, const nsString& aLabel,
       const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage);
@@ -123,6 +127,21 @@ class WebGPUParent final : public PWebGPUParent {
 
   BufferMapData* GetBufferMapData(RawId aBufferId);
 
+  bool UseExternalTextureForSwapChain(ffi::WGPUSwapChainId aSwapChainId);
+
+  bool CreateExternalTextureForSwapChain(ffi::WGPUSwapChainId aSwapChainId,
+                                         ffi::WGPUDeviceId aDeviceId,
+                                         ffi::WGPUTextureId aTextureId,
+                                         uint32_t aWidth, uint32_t aHeight,
+                                         struct ffi::WGPUTextureFormat aFormat);
+
+  std::shared_ptr<ExternalTexture> CreateExternalTexture(
+      ffi::WGPUDeviceId aDeviceId, ffi::WGPUTextureId aTextureId,
+      uint32_t aWidth, uint32_t aHeight,
+      const struct ffi::WGPUTextureFormat aFormat);
+
+  std::shared_ptr<ExternalTexture> GetExternalTexture(ffi::WGPUTextureId aId);
+
  private:
   void DeallocBufferShmem(RawId aBufferId);
 
@@ -154,6 +173,9 @@ class WebGPUParent final : public PWebGPUParent {
   /// Associated stack of error scopes for each device.
   std::unordered_map<uint64_t, std::vector<ErrorScope>>
       mErrorScopeStackByDevice;
+
+  std::unordered_map<ffi::WGPUTextureId, std::shared_ptr<ExternalTexture>>
+      mExternalTextures;
 };
 
 }  // namespace webgpu

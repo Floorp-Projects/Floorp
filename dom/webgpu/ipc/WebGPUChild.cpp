@@ -302,8 +302,9 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
   return bufferId;
 }
 
-RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
-                                       const dom::GPUTextureDescriptor& aDesc) {
+RawId WebGPUChild::DeviceCreateTexture(
+    RawId aSelfId, const dom::GPUTextureDescriptor& aDesc,
+    Maybe<layers::RemoteTextureOwnerId> aOwnerId) {
   ffi::WGPUTextureDescriptor desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);
@@ -334,9 +335,14 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   }
   desc.view_formats = {viewFormats.Elements(), viewFormats.Length()};
 
+  Maybe<ffi::WGPUSwapChainId> ownerId;
+  if (aOwnerId.isSome()) {
+    ownerId = Some(ffi::WGPUSwapChainId{aOwnerId->mId});
+  }
+
   ByteBuf bb;
-  RawId id = ffi::wgpu_client_create_texture(mClient.get(), aSelfId, &desc,
-                                             ToFFI(&bb));
+  RawId id = ffi::wgpu_client_create_texture(
+      mClient.get(), aSelfId, &desc, ownerId.ptrOr(nullptr), ToFFI(&bb));
   if (!SendDeviceAction(aSelfId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
@@ -1124,14 +1130,16 @@ ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
 
 void WebGPUChild::DeviceCreateSwapChain(
     RawId aSelfId, const RGBDescriptor& aRgbDesc, size_t maxBufferCount,
-    const layers::RemoteTextureOwnerId& aOwnerId) {
+    const layers::RemoteTextureOwnerId& aOwnerId,
+    bool aUseExternalTextureInSwapChain) {
   RawId queueId = aSelfId;  // TODO: multiple queues
   nsTArray<RawId> bufferIds(maxBufferCount);
   for (size_t i = 0; i < maxBufferCount; ++i) {
     bufferIds.AppendElement(
         ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId));
   }
-  SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aOwnerId);
+  SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aOwnerId,
+                            aUseExternalTextureInSwapChain);
 }
 
 void WebGPUChild::QueueOnSubmittedWorkDone(

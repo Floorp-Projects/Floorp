@@ -121,9 +121,15 @@ already_AddRefed<Buffer> Device::CreateBuffer(
 
 already_AddRefed<Texture> Device::CreateTexture(
     const dom::GPUTextureDescriptor& aDesc) {
+  return CreateTexture(aDesc, /* aOwnerId */ Nothing());
+}
+
+already_AddRefed<Texture> Device::CreateTexture(
+    const dom::GPUTextureDescriptor& aDesc,
+    Maybe<layers::RemoteTextureOwnerId> aOwnerId) {
   RawId id = 0;
   if (mBridge->CanSend()) {
-    id = mBridge->DeviceCreateTexture(mId, aDesc);
+    id = mBridge->DeviceCreateTexture(mId, aDesc, aOwnerId);
   }
   RefPtr<Texture> texture = new Texture(this, id, aDesc);
   return texture.forget();
@@ -294,7 +300,8 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
 
 already_AddRefed<Texture> Device::InitSwapChain(
     const dom::GPUCanvasConfiguration& aDesc,
-    const layers::RemoteTextureOwnerId aOwnerId, gfx::SurfaceFormat aFormat,
+    const layers::RemoteTextureOwnerId aOwnerId,
+    bool aUseExternalTextureInSwapChain, gfx::SurfaceFormat aFormat,
     gfx::IntSize aCanvasSize) {
   if (!mBridge->CanSend()) {
     return nullptr;
@@ -303,7 +310,8 @@ already_AddRefed<Texture> Device::InitSwapChain(
   const layers::RGBDescriptor rgbDesc(aCanvasSize, aFormat);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
-  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount, aOwnerId);
+  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount, aOwnerId,
+                                 aUseExternalTextureInSwapChain);
 
   dom::GPUTextureDescriptor desc;
   desc.mDimension = dom::GPUTextureDimension::_2d;
@@ -318,7 +326,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   desc.mViewFormats = aDesc.mViewFormats;
   // TODO: `mColorSpace`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846608>
   // TODO: `mAlphaMode`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846605>
-  return CreateTexture(desc);
+  return CreateTexture(desc, Some(aOwnerId));
 }
 
 bool Device::CheckNewWarning(const nsACString& aMessage) {
