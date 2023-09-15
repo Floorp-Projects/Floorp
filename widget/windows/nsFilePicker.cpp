@@ -27,6 +27,8 @@
 
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 
+using mozilla::Maybe;
+using mozilla::Result;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
@@ -78,6 +80,62 @@ NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
   return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
+/* static */
+Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerLocal(
+    HWND parent, filedialog::FileDialogType type,
+    nsTArray<filedialog::Command> const& commands) {
+  using mozilla::Err;
+  using mozilla::Nothing;
+  using mozilla::Some;
+
+  namespace fd = filedialog;
+
+  RefPtr<IFileDialog> dialog;
+  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(type));
+
+  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
+    return Err(res);
+  }
+
+  // synchronously show the dialog
+  auto const ret = dialog->Show(parent);
+  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+    return Maybe<fd::Results>(Nothing());
+  }
+  if (FAILED(ret)) {
+    return Err(ret);
+  }
+
+  return fd::GetFileResults(dialog.get()).map(mozilla::Some<fd::Results>);
+}
+
+/* static */
+Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerLocal(
+    HWND parent, nsTArray<filedialog::Command> const& commands) {
+  using mozilla::Err;
+  using mozilla::Nothing;
+  using mozilla::Some;
+  namespace fd = filedialog;
+
+  RefPtr<IFileDialog> dialog;
+  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(fd::FileDialogType::Open));
+
+  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
+    return Err(res);
+  }
+
+  // synchronously show the dialog
+  auto const ret = dialog->Show(parent);
+  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+    return Maybe<nsString>(Nothing());
+  }
+  if (FAILED(ret)) {
+    return Err(ret);
+  }
+
+  return fd::GetFolderResults(dialog.get()).map(mozilla::Some<nsString>);
+}
+
 /*
  * Folder picker invocation
  */
@@ -90,13 +148,6 @@ NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
  * @return true if a file was selected successfully.
  */
 bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
-  RefPtr<IFileOpenDialog> dialog;
-  if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr,
-                              CLSCTX_INPROC_SERVER, IID_IFileOpenDialog,
-                              getter_AddRefs(dialog)))) {
-    return false;
-  }
-
   namespace fd = ::mozilla::widget::filedialog;
   nsTArray<fd::Command> commands = {
       fd::SetOptions(FOS_PICKFOLDERS),
@@ -111,25 +162,28 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
     commands.AppendElement(fd::SetFolder(aInitialDir));
   }
 
+  nsString result;
   {
-    if (FAILED(fd::ApplyCommands(dialog, commands))) {
-      return false;
-    }
-
     ScopedRtlShimWindow shim(mParentWidget.get());
-    mozilla::BackgroundHangMonitor().NotifyWait();
+    AutoWidgetPickerState awps(mParentWidget);
 
-    if (FAILED(dialog->Show(shim.get()))) {
+    mozilla::BackgroundHangMonitor().NotifyWait();
+    auto res = ShowFolderPickerLocal(shim.get(), commands);
+    if (res.isErr()) {
+      NS_WARNING("ShowFolderPickerImpl failed");
       return false;
     }
+
+    auto optResults = res.unwrap();
+    if (!optResults) {
+      // cancellation, not error
+      return false;
+    }
+
+    result = optResults.extract();
   }
 
-  auto result = fd::GetFolderResults(dialog.get());
-  if (result.isErr()) {
-    return false;
-  }
-
-  mUnicodeFile = result.unwrap();
+  mUnicodeFile = result;
   return true;
 }
 
@@ -146,21 +200,6 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
  */
 bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   AUTO_PROFILER_LABEL("nsFilePicker::ShowFilePicker", OTHER);
-
-  RefPtr<IFileDialog> dialog;
-  if (mMode != modeSave) {
-    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr,
-                                CLSCTX_INPROC_SERVER, IID_IFileOpenDialog,
-                                getter_AddRefs(dialog)))) {
-      return false;
-    }
-  } else {
-    if (FAILED(CoCreateInstance(CLSID_FileSaveDialog, nullptr,
-                                CLSCTX_INPROC_SERVER, IID_IFileSaveDialog,
-                                getter_AddRefs(dialog)))) {
-      return false;
-    }
-  }
 
   namespace fd = ::mozilla::widget::filedialog;
   nsTArray<fd::Command> commands;
@@ -241,29 +280,33 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   }
 
   // display
+  fd::Results result;
   {
-    if (FAILED(fd::ApplyCommands(dialog, commands))) {
-      return false;
-    }
-
     ScopedRtlShimWindow shim(mParentWidget.get());
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();
-    if (FAILED(dialog->Show(shim.get()))) {
+    auto res = ShowFilePickerLocal(
+        shim.get(),
+        mMode == modeSave ? FileDialogType::Save : FileDialogType::Open,
+        commands);
+
+    if (res.isErr()) {
+      NS_WARNING("ShowFilePickerImpl failed");
       return false;
     }
-  }
 
-  // results
-  auto result_ = fd::GetFileResults(dialog.get());
-  if (result_.isErr()) {
-    return false;
+    auto optResults = res.unwrap();
+    if (!optResults) {
+      // cancellation, not error
+      return false;
+    }
+
+    result = optResults.extract();
   }
-  auto result = result_.unwrap();
 
   // Remember what filter type the user selected
-  mSelectedType = result.selectedFileTypeIndex();
+  mSelectedType = int32_t(result.selectedFileTypeIndex());
 
   auto const& paths = result.paths();
 

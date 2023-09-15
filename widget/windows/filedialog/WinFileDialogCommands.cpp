@@ -97,6 +97,19 @@ static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
     if (FAILED(_tmp_hr_)) return Err(_tmp_hr_); \
   } while (0)
 
+mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(
+    FileDialogType type) {
+  RefPtr<IFileDialog> dialog;
+
+  CLSID const clsid = type == FileDialogType::Open ? CLSID_FileOpenDialog
+                                                   : CLSID_FileSaveDialog;
+  HRESULT const hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER,
+                                      IID_IFileDialog, getter_AddRefs(dialog));
+  MOZ_ENSURE_HRESULT_OK(hr);
+
+  return std::move(dialog);
+}
+
 HRESULT ApplyCommands(::IFileDialog* dialog,
                       nsTArray<Command> const& commands) {
   Applicator applicator{.dialog = dialog};
