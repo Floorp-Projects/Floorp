@@ -2649,6 +2649,9 @@ unsigned js::PCToLineNumber(unsigned startLine,
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, startLine);
       column = JS::LimitedColumnNumberZeroOrigin::zero();
+    } else if (type == SrcNoteType::SetLineColumn) {
+      lineno = SrcNote::SetLineColumn::getLine(sn, startLine);
+      column = SrcNote::SetLineColumn::getColumn(sn);
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
       column = JS::LimitedColumnNumberZeroOrigin::zero();
@@ -2704,6 +2707,8 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+    } else if (type == SrcNoteType::SetLineColumn) {
+      lineno = SrcNote::SetLineColumn::getLine(sn, script->lineno());
     } else if (type == SrcNoteType::NewLine ||
                type == SrcNoteType::NewLineColumn) {
       lineno++;
@@ -2725,6 +2730,8 @@ JS_PUBLIC_API unsigned js::GetScriptLineExtent(JSScript* script) {
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+    } else if (type == SrcNoteType::SetLineColumn) {
+      lineno = SrcNote::SetLineColumn::getLine(sn, script->lineno());
     } else if (type == SrcNoteType::NewLine ||
                type == SrcNoteType::NewLineColumn) {
       lineno++;
@@ -3486,6 +3493,15 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
           return false;
         }
         column = JS::LimitedColumnNumberZeroOrigin::zero();
+        break;
+
+      case SrcNoteType::SetLineColumn:
+        lineno = SrcNote::SetLineColumn::getLine(sn, script->lineno());
+        column = SrcNote::SetLineColumn::getColumn(sn);
+        if (!sp->jsprintf(" lineno %u column %u", lineno,
+                          column.zeroOriginValue())) {
+          return false;
+        }
         break;
 
       case SrcNoteType::NewLine:

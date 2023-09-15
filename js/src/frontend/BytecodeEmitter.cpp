@@ -620,8 +620,18 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     if (lastLineOnlySrcNoteIndex != LastSrcNoteIsNotLineOnly) {
       MOZ_ASSERT(bytecodeSection().lastColumn() ==
                  JS::LimitedColumnNumberZeroOrigin::zero());
-      if (!convertLastNewLineToNewLineColumn(columnIndex)) {
-        return false;
+
+      const SrcNotesVector& notes = bytecodeSection().notes();
+      SrcNoteType type = notes[lastLineOnlySrcNoteIndex].type();
+      if (type == SrcNoteType::NewLine) {
+        if (!convertLastNewLineToNewLineColumn(columnIndex)) {
+          return false;
+        }
+      } else {
+        MOZ_ASSERT(type == SrcNoteType::SetLine);
+        if (!convertLastSetLineToSetLineColumn(columnIndex)) {
+          return false;
+        }
       }
     } else {
       if (!newSrcNote2(SrcNoteType::ColSpan,
@@ -12411,7 +12421,7 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
     *indexp = index;
   }
 
-  if (type == SrcNoteType::NewLine) {
+  if (type == SrcNoteType::NewLine || type == SrcNoteType::SetLine) {
     lastLineOnlySrcNoteIndex = index;
   } else {
     lastLineOnlySrcNoteIndex = LastSrcNoteIsNotLineOnly;
@@ -12444,6 +12454,24 @@ bool BytecodeEmitter::convertLastNewLineToNewLineColumn(
 
   SrcNoteWriter::convertNote(sn, SrcNoteType::NewLineColumn);
   if (!newSrcNoteOperand(SrcNote::NewLineColumn::toOperand(column))) {
+    return false;
+  }
+
+  lastLineOnlySrcNoteIndex = LastSrcNoteIsNotLineOnly;
+  return true;
+}
+
+bool BytecodeEmitter::convertLastSetLineToSetLineColumn(
+    JS::LimitedColumnNumberZeroOrigin column) {
+  SrcNotesVector& notes = bytecodeSection().notes();
+  // The Line operand is either 1 byte or 4 bytes.
+  MOZ_ASSERT(lastLineOnlySrcNoteIndex == notes.length() - 1 - 1 ||
+             lastLineOnlySrcNoteIndex == notes.length() - 1 - 4);
+  SrcNote* sn = &notes[lastLineOnlySrcNoteIndex];
+  MOZ_ASSERT(sn->type() == SrcNoteType::SetLine);
+
+  SrcNoteWriter::convertNote(sn, SrcNoteType::SetLineColumn);
+  if (!newSrcNoteOperand(SrcNote::SetLineColumn::columnToOperand(column))) {
     return false;
   }
 

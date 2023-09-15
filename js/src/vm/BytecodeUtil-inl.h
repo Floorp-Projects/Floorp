@@ -208,6 +208,10 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         lineno = SrcNote::SetLine::getLine(sn, initialLine);
         column = JS::LimitedColumnNumberZeroOrigin::zero();
         lastLinePC = snpc;
+      } else if (type == SrcNoteType::SetLineColumn) {
+        lineno = SrcNote::SetLineColumn::getLine(sn, initialLine);
+        column = SrcNote::SetLineColumn::getColumn(sn);
+        lastLinePC = snpc;
       } else if (type == SrcNoteType::NewLine) {
         lineno++;
         column = JS::LimitedColumnNumberZeroOrigin::zero();
