@@ -21,7 +21,7 @@ async function startUtilityProcess(actors = []) {
 
 // Returns an array of process infos for utility processes of the given type
 // or all utility processes if actor is not defined.
-async function getUtilityProcesses(actor = undefined) {
+async function getUtilityProcesses(actor = undefined, options = {}) {
   let procInfos = (await ChromeUtils.requestProcInfo()).children.filter(p => {
     return (
       p.type === "utility" &&
@@ -30,19 +30,23 @@ async function getUtilityProcesses(actor = undefined) {
     );
   });
 
-  info(`Utility process infos = ${JSON.stringify(procInfos)}`);
+  if (!options?.quiet) {
+    info(`Utility process infos = ${JSON.stringify(procInfos)}`);
+  }
   return procInfos;
 }
 
-async function getUtilityPid(actor) {
-  let process = await getUtilityProcesses(actor);
-  is(process.length, 1, `exactly one ${actor} process exists`);
-  return process[0].pid;
+async function tryGetUtilityPid(actor, options = {}) {
+  let process = await getUtilityProcesses(actor, options);
+  if (!options?.quiet) {
+    ok(process.length <= 1, `at most one ${actor} process exists`);
+  }
+  return process[0]?.pid;
 }
 
 async function checkUtilityExists(actor) {
   info(`Looking for a running ${actor} utility process`);
-  const utilityPid = await getUtilityPid(actor);
+  const utilityPid = await tryGetUtilityPid(actor);
   ok(utilityPid > 0, `Found ${actor} utility process ${utilityPid}`);
   return utilityPid;
 }
@@ -55,7 +59,7 @@ async function checkUtilityExists(actor) {
 async function cleanUtilityProcessShutdown(actor, preferKill = false) {
   info(`${preferKill ? "Kill" : "Clean shutdown"} Utility Process ${actor}`);
 
-  const utilityPid = await getUtilityPid(actor);
+  const utilityPid = await tryGetUtilityPid(actor);
   ok(utilityPid !== undefined, `Must have PID for ${actor} utility process`);
 
   const utilityProcessGone = TestUtils.topicObserved(

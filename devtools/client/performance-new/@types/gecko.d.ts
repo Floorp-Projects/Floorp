@@ -250,12 +250,14 @@ declare namespace MockedExports {
   interface FilePicker {
     init: (window: Window, title: string, mode: number) => void;
     open: (callback: (rv: number) => unknown) => void;
-    // The following are enum values.
-    modeGetFolder: number;
-    returnOK: number;
     file: {
       path: string;
     };
+    // The following are enum values.
+    modeOpen: number;
+    modeGetFolder: number;
+    returnOK: number;
+    returnCancel: number;
   }
 
   interface Cc {

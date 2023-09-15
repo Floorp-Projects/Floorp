@@ -21,6 +21,8 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
+#include "nsHashPropertyBag.h"
+#include "nsStringFwd.h"
 
 #ifdef XP_WIN
 #  include "mozilla/dom/WindowsUtilsParent.h"
@@ -288,6 +290,24 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
 
           MOZ_DIAGNOSTIC_ASSERT(aActor->CanSend(), "IPC established for actor");
           self->RegisterActor(utilityParent, aActor->GetActorName());
+        }
+
+        {
+          nsAutoString pid;
+          pid.AppendInt(size_t(utilityParent->OtherPid()));
+
+          auto props = MakeRefPtr<nsHashPropertyBag>();
+          props->SetPropertyAsACString(
+              u"actor"_ns, GetUtilityActorName(aActor->GetActorName()));
+
+          if (RefPtr obs = mozilla::services::GetObserverService()) {
+            obs->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
+                                 "ipc:utility-startup", pid.get());
+          } else {
+            NS_WARNING(
+                "Could not get an nsIObserverService; "
+                "ipc:utility-startup skipped");
+          }
         }
 
         PROFILER_MARKER_TEXT(

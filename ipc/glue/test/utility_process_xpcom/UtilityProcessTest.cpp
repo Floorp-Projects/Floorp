@@ -11,6 +11,12 @@
 #  include "mozilla/ProcInfo.h"
 #  include "mozilla/IntentionalCrash.h"
 
+#  ifdef XP_WIN
+#    include <handleapi.h>
+#    include <processthreadsapi.h>
+#    include <tlhelp32.h>
+#  endif
+
 namespace mozilla::ipc {
 
 static UtilityActorName UtilityActorNameFromString(
@@ -104,6 +110,42 @@ UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
 
   promise.forget(aOutPromise);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+UtilityProcessTest::IsChildProcessDead(uint32_t aPid, bool* out) {
+  NS_ENSURE_ARG(out);
+#  ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#  else
+
+  nsAutoRef<HANDLE> h{::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)};
+
+  auto GetParentPid = [&](DWORD pid) -> Maybe<DWORD> {
+    PROCESSENTRY32 p = {.dwSize = sizeof(p)};
+    bool ok = ::Process32First(h.get(), &p);
+    while (ok && p.th32ProcessID != pid) {
+      ok = ::Process32Next(h.get(), &p);
+    }
+    return ok ? Some(p.th32ParentProcessID) : Nothing();
+  };
+
+  auto const geckoParentProcessPid =
+      XRE_IsParentProcess() ? Some(::GetCurrentProcessId())
+                            : GetParentPid(::GetCurrentProcessId());
+  if (geckoParentProcessPid.isNothing()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Note that there is a potential race condition here which would lead to a
+  // false negative -- it's possible that the relevant child process _was_
+  // destroyed, but that `aPid` has since been reused for a different child
+  // process.
+  //
+  // This is probably very unlikely to happen in a testing environment.
+  *out = GetParentPid(aPid) != geckoParentProcessPid;
+  return NS_OK;
+#  endif
 }
 
 NS_IMETHODIMP
