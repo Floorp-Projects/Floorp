@@ -37,6 +37,8 @@ class WinFileDialogParent : public PWinFileDialogParent {
 
  private:
   ~WinFileDialogParent();
+
+  void ProcessingError(Result aCode, const char* aReason) override;
 };
 
 // Proxy for the WinFileDialog process and actor.

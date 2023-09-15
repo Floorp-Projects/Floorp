@@ -38,10 +38,6 @@ WinFileDialogChild::~WinFileDialogChild() {
     mUsed = true;                                                              \
   } while (0)
 
-// (this alternate definition requires data-steward review first)
-// #define MOZ_IPC_HRESULT_FAIL(hr, what) \
-//   IPC_FAIL_UNSAFE_PRINTF(this, "HRESULT %8lX while %s", (hr), (what))
-
 #define MOZ_IPC_HRESULT_FAIL(hr, what) IPC_FAIL(this, what)
 
 #define MOZ_IPC_ENSURE_HRESULT_OK(hr, what)             \
@@ -131,5 +127,9 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
 
 #undef MOZ_IPC_ENSURE_HRESULT_OK
 #undef MOZ_IPC_HRESULT_FAIL
+
+void WinFileDialogChild::ProcessingError(Result aCode, const char* aReason) {
+  detail::LogProcessingError(sLogFileDialog, this, aCode, aReason);
+}
 
 }  // namespace mozilla::widget::filedialog

@@ -8,6 +8,7 @@
 #define widget_windows_filedialog_WinFileDialogCommands_h__
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/ipc/MessageLink.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
 // Windows interface types, defined in <shobjidl.h>
@@ -35,6 +36,13 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog*);
 //
 // Requires that Show() has been called and has returned S_OK.
 mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog*);
+
+namespace detail {
+// Log the error. If it's a notable error, kill the child process.
+void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
+                        ipc::HasResultCodes::Result aCode, const char* aReason);
+}  // namespace detail
+
 }  // namespace mozilla::widget::filedialog
 
 namespace IPC {
