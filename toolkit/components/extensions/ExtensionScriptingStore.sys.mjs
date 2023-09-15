@@ -179,7 +179,9 @@ export const makeInternalContentScript = (
       cssPaths,
       excludeMatches: options.excludeMatches,
       jsPaths,
-      matchAboutBlank: true,
+      // TODO(Bug 1853411): revert the short-term workaround special casing
+      // webcompat extension id once it is not necessary anymore.
+      matchAboutBlank: extension.id !== "webcompat@mozilla.org",
       matches: options.matches,
       originAttributesPatterns: null,
       persistAcrossSessions: options.persistAcrossSessions,
