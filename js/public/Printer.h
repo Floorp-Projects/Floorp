@@ -17,6 +17,7 @@
 
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
+#include "util/Text.h"
 
 namespace js {
 
@@ -42,6 +43,18 @@ class JS_PUBLIC_API GenericPrinter {
 
   inline bool put(const char* s) { return put(s, strlen(s)); }
   inline bool putChar(const char c) { return put(&c, 1); }
+
+  virtual bool putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str);
+  virtual bool putAsciiPrintable(mozilla::Span<const char16_t> str);
+
+  inline bool putAsciiPrintable(const char c) {
+    MOZ_ASSERT(IsAsciiPrintable(c));
+    return putChar(c);
+  }
+  inline bool putAsciiPrintable(const char16_t c) {
+    MOZ_ASSERT(IsAsciiPrintable(c));
+    return putChar(char(c));
+  }
 
   // Prints a formatted string into the buffer.
   bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);

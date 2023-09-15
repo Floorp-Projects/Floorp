@@ -47,6 +47,24 @@ void GenericPrinter::reportOutOfMemory() {
   hadOOM_ = true;
 }
 
+bool GenericPrinter::putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str) {
+#ifdef DEBUG
+  for (char c: str) {
+    MOZ_ASSERT(IsAsciiPrintable(c));
+  }
+#endif
+  return put(reinterpret_cast<const char*>(&str[0]), str.Length());
+}
+
+bool GenericPrinter::putAsciiPrintable(mozilla::Span<const char16_t> str) {
+  for (char16_t c: str) {
+    if (!putAsciiPrintable(c)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool GenericPrinter::printf(const char* fmt, ...) {
   va_list va;
   va_start(va, fmt);
@@ -310,17 +328,9 @@ JS_PUBLIC_API bool QuoteString(Sprinter* sp,
       c = *t;
     }
 
-    {
-      ptrdiff_t len = t - s;
-      ptrdiff_t base = sp->getOffset();
-      if (!sp->reserve(len)) {
-        return false;
-      }
-
-      for (ptrdiff_t i = 0; i < len; ++i) {
-        (*sp)[base + i] = char(s[i]);
-      }
-      (*sp)[base + len] = '\0';
+    mozilla::Span<const CharT> span(s.get(), t - s);
+    if (!sp->putAsciiPrintable(span)) {
+      return false;
     }
 
     if (t == end) {
