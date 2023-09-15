@@ -126,8 +126,16 @@ export let DownloadsViewableInternally = {
     {
       extension: "webp",
       mimeTypes: ["image/webp"],
-      available: true,
-      managedElsewhere: false,
+      initAvailable() {
+        XPCOMUtils.defineLazyPreferenceGetter(
+          this,
+          "available",
+          "image.webp.enabled",
+          false,
+          () => DownloadsViewableInternally._updateHandler(this)
+        );
+      },
+      // available getter is set by initAvailable()
     },
     {
       extension: "avif",

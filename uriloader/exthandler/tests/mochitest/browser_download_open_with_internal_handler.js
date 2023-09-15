@@ -487,6 +487,10 @@ add_task(async function test_check_open_with_external_then_internal() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_type() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["image.webp.enabled", true]],
+    });
+
     const mimeInfosToRestore = alwaysAskForHandlingTypes({
       "binary/octet-stream": "xml",
       "image/webp": "webp",
