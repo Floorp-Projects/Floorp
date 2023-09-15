@@ -13,12 +13,6 @@
 
 static_assert(sizeof(PROCESS_MITIGATION_DYNAMIC_CODE_POLICY) == 4);
 
-#if (_WIN32_WINNT < 0x0602)
-BOOL WINAPI GetProcessMitigationPolicy(
-    HANDLE hProcess, PROCESS_MITIGATION_POLICY MitigationPolicy, PVOID lpBuffer,
-    SIZE_T dwLength);
-#endif  // (_WIN32_WINNT < 0x0602)
-
 namespace mozilla {
 
 static decltype(&::GetProcessMitigationPolicy)
