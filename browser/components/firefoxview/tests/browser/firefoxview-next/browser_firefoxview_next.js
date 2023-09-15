@@ -3,22 +3,25 @@
 
 /* import-globals-from ../head.js */
 
+const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
+const FXVIEW_ENABLED_PREF = "browser.tabs.firefox-view";
+
 add_task(async function about_firefoxview_next_pref() {
   // Verify pref enables new Firefox view
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-next", true);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
   });
   // Verify pref enables new Firefox view even when old is disabled
-  Services.prefs.setBoolPref("browser.tabs.firefox-view", false);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_ENABLED_PREF, false]] });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
   });
-  Services.prefs.setBoolPref("browser.tabs.firefox-view", true);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_ENABLED_PREF, true]] });
   // Verify pref disables new Firefox view
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-next", false);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, false]] });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview");
@@ -26,7 +29,7 @@ add_task(async function about_firefoxview_next_pref() {
 });
 
 add_task(async function test_aria_roles() {
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-next", true);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
@@ -94,7 +97,7 @@ add_task(async function test_aria_roles() {
     );
   });
   // Verify pref disables new Firefox view
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-next", false);
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, false]] });
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview");
