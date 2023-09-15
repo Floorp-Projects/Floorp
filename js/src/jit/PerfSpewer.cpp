@@ -838,6 +838,7 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
       switch (sn->type()) {
         case SrcNoteType::SetLine:
         case SrcNoteType::NewLine:
+        case SrcNoteType::NewLineColumn:
         case SrcNoteType::ColSpan:
           if (sn->delta() > 0) {
             n_records++;
@@ -881,6 +882,9 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
       colno = JS::LimitedColumnNumberZeroOrigin::zero();
+    } else if (type == SrcNoteType::NewLineColumn) {
+      lineno++;
+      colno = SrcNote::NewLineColumn::getColumn(sn);
     } else if (type == SrcNoteType::ColSpan) {
       colno += SrcNote::ColSpan::getSpan(sn);
     } else {

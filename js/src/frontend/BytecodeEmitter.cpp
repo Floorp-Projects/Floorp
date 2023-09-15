@@ -597,12 +597,12 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
 
 /* Updates the line number and column number information in the source notes. */
 bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
-  if (!updateLineNumberNotes(offset)) {
-    return false;
-  }
-
   if (skipLocationSrcNotes()) {
     return true;
+  }
+
+  if (!updateLineNumberNotes(offset)) {
+    return false;
   }
 
   JS::LimitedColumnNumberZeroOrigin columnIndex =
@@ -617,9 +617,17 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   JS::ColumnNumberOffset colspan = columnIndex - bytecodeSection().lastColumn();
 
   if (colspan != JS::ColumnNumberOffset::zero()) {
-    if (!newSrcNote2(SrcNoteType::ColSpan,
-                     SrcNote::ColSpan::toOperand(colspan))) {
-      return false;
+    if (lastLineOnlySrcNoteIndex != LastSrcNoteIsNotLineOnly) {
+      MOZ_ASSERT(bytecodeSection().lastColumn() ==
+                 JS::LimitedColumnNumberZeroOrigin::zero());
+      if (!convertLastNewLineToNewLineColumn(columnIndex)) {
+        return false;
+      }
+    } else {
+      if (!newSrcNote2(SrcNoteType::ColSpan,
+                       SrcNote::ColSpan::toOperand(colspan))) {
+        return false;
+      }
     }
     bytecodeSection().setLastColumn(columnIndex, offset);
     bytecodeSection().updateSeparatorPositionIfPresent();
@@ -12402,6 +12410,13 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
   if (indexp) {
     *indexp = index;
   }
+
+  if (type == SrcNoteType::NewLine) {
+    lastLineOnlySrcNoteIndex = index;
+  } else {
+    lastLineOnlySrcNoteIndex = LastSrcNoteIsNotLineOnly;
+  }
+
   return true;
 }
 
@@ -12417,6 +12432,22 @@ bool BytecodeEmitter::newSrcNote2(SrcNoteType type, ptrdiff_t offset,
   if (indexp) {
     *indexp = index;
   }
+  return true;
+}
+
+bool BytecodeEmitter::convertLastNewLineToNewLineColumn(
+    JS::LimitedColumnNumberZeroOrigin column) {
+  SrcNotesVector& notes = bytecodeSection().notes();
+  MOZ_ASSERT(lastLineOnlySrcNoteIndex == notes.length() - 1);
+  SrcNote* sn = &notes[lastLineOnlySrcNoteIndex];
+  MOZ_ASSERT(sn->type() == SrcNoteType::NewLine);
+
+  SrcNoteWriter::convertNote(sn, SrcNoteType::NewLineColumn);
+  if (!newSrcNoteOperand(SrcNote::NewLineColumn::toOperand(column))) {
+    return false;
+  }
+
+  lastLineOnlySrcNoteIndex = LastSrcNoteIsNotLineOnly;
   return true;
 }
 

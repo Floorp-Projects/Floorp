@@ -212,6 +212,10 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         lineno++;
         column = JS::LimitedColumnNumberZeroOrigin::zero();
         lastLinePC = snpc;
+      } else if (type == SrcNoteType::NewLineColumn) {
+        lineno++;
+        column = SrcNote::NewLineColumn::getColumn(sn);
+        lastLinePC = snpc;
       } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
         lastLinePC = snpc;

@@ -2652,6 +2652,9 @@ unsigned js::PCToLineNumber(unsigned startLine,
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
       column = JS::LimitedColumnNumberZeroOrigin::zero();
+    } else if (type == SrcNoteType::NewLineColumn) {
+      lineno++;
+      column = SrcNote::NewLineColumn::getColumn(sn);
     } else if (type == SrcNoteType::ColSpan) {
       column += SrcNote::ColSpan::getSpan(sn);
     }
@@ -2701,7 +2704,8 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-    } else if (type == SrcNoteType::NewLine) {
+    } else if (type == SrcNoteType::NewLine ||
+               type == SrcNoteType::NewLineColumn) {
       lineno++;
     }
   }
@@ -2721,7 +2725,8 @@ JS_PUBLIC_API unsigned js::GetScriptLineExtent(JSScript* script) {
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-    } else if (type == SrcNoteType::NewLine) {
+    } else if (type == SrcNoteType::NewLine ||
+               type == SrcNoteType::NewLineColumn) {
       lineno++;
     }
 
@@ -3437,9 +3442,9 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
 bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
                             js::Sprinter* sp) {
   if (!sp->put("\nSource notes:\n") ||
-      !sp->jsprintf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
+      !sp->jsprintf("%4s %4s %6s %5s %6s %-16s %s\n", "ofs", "line", "column",
                     "pc", "delta", "desc", "args") ||
-      !sp->put("---- ---- ------ ----- ------ ---------- ------\n")) {
+      !sp->put("---- ---- ------ ----- ------ ---------------- ------\n")) {
     return false;
   }
 
@@ -3455,7 +3460,7 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
     offset += delta;
     SrcNoteType type = sn->type();
     const char* name = sn->name();
-    if (!sp->jsprintf("%3u: %4u %6u %5u [%4u] %-10s", unsigned(sn - notes),
+    if (!sp->jsprintf("%3u: %4u %6u %5u [%4u] %-16s", unsigned(sn - notes),
                       lineno, column.zeroOriginValue(), offset, delta, name)) {
       return false;
     }
@@ -3486,6 +3491,15 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
       case SrcNoteType::NewLine:
         ++lineno;
         column = JS::LimitedColumnNumberZeroOrigin::zero();
+        break;
+
+      case SrcNoteType::NewLineColumn:
+        column = SrcNote::NewLineColumn::getColumn(sn);
+        if (!sp->jsprintf(" column %u", column.zeroOriginValue())) {
+          return false;
+        }
+
+        ++lineno;
         break;
 
       default:
