@@ -8662,6 +8662,10 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
     ReportAccessDenied(cx);
     return false;
   }
+  if (JS_IsDeadWrapper(source)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
+  }
   MOZ_ASSERT(source->getClass()->isDOMClass());
 
   // The following steps aim to replicate the behavior of UpdateReflectorGlobal
