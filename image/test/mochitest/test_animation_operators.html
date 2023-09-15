@@ -159,8 +159,7 @@ function runTests()
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-
-SpecialPowers.pushPrefEnv({"set": [["image.webp.enabled", true]]}, runTests);
+runTests();
 
 </script>
 </pre>

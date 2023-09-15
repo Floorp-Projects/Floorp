@@ -39,12 +39,8 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   EXPECT_TRUE(NS_IsMainThread());
   sImageLibInitialized = true;
 
-  // Ensure WebP is enabled to run decoder tests.
-  nsresult rv = Preferences::SetBool("image.webp.enabled", true);
-  EXPECT_TRUE(rv == NS_OK);
-
   // Ensure AVIF is enabled to run decoder tests.
-  rv = Preferences::SetBool("image.avif.enabled", true);
+  nsresult rv = Preferences::SetBool("image.avif.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
   rv = Preferences::SetBool("image.avif.sequence.enabled", true);
   EXPECT_TRUE(rv == NS_OK);

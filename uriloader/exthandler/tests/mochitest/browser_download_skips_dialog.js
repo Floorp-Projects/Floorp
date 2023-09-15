@@ -13,7 +13,6 @@ add_task(async function skipDialogAndDownloadFile() {
     set: [
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", true],
-      ["image.webp.enabled", true],
     ],
   });
 
