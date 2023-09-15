@@ -1,0 +1,82 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ExternalTextureD3D11.h"
+
+#include <d3d11.h>
+
+#include "mozilla/gfx/DeviceManagerDx.h"
+
+namespace mozilla::webgpu {
+
+// static
+UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
+    const uint32_t aWidth, const uint32_t aHeight,
+    const struct ffi::WGPUTextureFormat aFormat) {
+  const RefPtr<ID3D11Device> d3d11Device =
+      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  if (!d3d11Device) {
+    gfxCriticalNoteOnce << "CompositorDevice does not exist";
+    return nullptr;
+  }
+
+  if (aFormat.tag != ffi::WGPUTextureFormat_Bgra8Unorm) {
+    gfxCriticalNoteOnce << "Non supported format: " << aFormat.tag;
+    return nullptr;
+  }
+
+  CD3D11_TEXTURE2D_DESC desc(
+      DXGI_FORMAT_B8G8R8A8_UNORM, aWidth, aHeight, 1, 1,
+      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+  RefPtr<ID3D11Texture2D> texture;
+  HRESULT hr =
+      d3d11Device->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
+  if (FAILED(hr)) {
+    gfxCriticalNoteOnce << "CreateTexture2D failed:  " << gfx::hexa(hr);
+    return nullptr;
+  }
+  return MakeUnique<ExternalTextureD3D11>(aWidth, aHeight, aFormat, texture);
+}
+
+ExternalTextureD3D11::ExternalTextureD3D11(
+    const uint32_t aWidth, const uint32_t aHeight,
+    const struct ffi::WGPUTextureFormat aFormat,
+    RefPtr<ID3D11Texture2D> aTexture)
+    : ExternalTexture(aWidth, aHeight, aFormat), mTexture(aTexture) {
+  MOZ_ASSERT(mTexture);
+}
+
+ExternalTextureD3D11::~ExternalTextureD3D11() {}
+
+void* ExternalTextureD3D11::GetExternalTextureHandle() {
+  RefPtr<IDXGIResource> resource;
+  mTexture->QueryInterface((IDXGIResource**)getter_AddRefs(resource));
+  if (!resource) {
+    gfxCriticalNoteOnce << "Failed to get IDXGIResource";
+    return 0;
+  }
+
+  HANDLE sharedHandle;
+  HRESULT hr = resource->GetSharedHandle(&sharedHandle);
+  if (FAILED(hr)) {
+    gfxCriticalNoteOnce << "GetSharedHandle failed: " << gfx::hexa(hr);
+    return 0;
+  }
+  return sharedHandle;
+}
+
+Maybe<layers::SurfaceDescriptor> ExternalTextureD3D11::ToSurfaceDescriptor() {
+  const auto format = gfx::SurfaceFormat::B8G8R8A8;
+  return Some(layers::SurfaceDescriptorD3D10(
+      (WindowsHandle)GetExternalTextureHandle(),
+      /* gpuProcessTextureId */ Nothing(),
+      /* arrayIndex */ 0, format, gfx::IntSize(mWidth, mHeight),
+      gfx::ColorSpace2::SRGB, gfx::ColorRange::FULL, /* hasKeyedMutex */ true));
+}
+
+}  // namespace mozilla::webgpu

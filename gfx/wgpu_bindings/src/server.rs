@@ -6,7 +6,7 @@ use crate::{
     error::{ErrMsg, ErrorBuffer, ErrorBufferType},
     identity::IdentityRecyclerFactory,
     wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction, DropAction,
-    QueueWriteAction, TextureAction,
+    QueueWriteAction, SwapChainId, TextureAction,
 };
 
 use nsstring::{nsACString, nsCString, nsString};
@@ -15,8 +15,14 @@ use wgc::{gfx_select, id};
 use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
 
 use std::borrow::Cow;
+use std::os::raw::c_void;
 use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
+
+#[cfg(target_os = "windows")]
+use winapi::um::d3d12 as d3d12_ty;
+#[cfg(target_os = "windows")]
+use winapi::Interface;
 
 // The seemingly redundant u64 suffixes help cbindgen with generating the right C++ code.
 // See https://github.com/mozilla/cbindgen/issues/849.
@@ -42,17 +48,24 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
 }
 
 // hide wgc's global in private
-pub struct Global(wgc::global::Global<IdentityRecyclerFactory>);
+pub struct Global {
+    global: wgc::global::Global<IdentityRecyclerFactory>,
+    #[allow(dead_code)]
+    owner: *mut c_void,
+}
 
 impl std::ops::Deref for Global {
     type Target = wgc::global::Global<IdentityRecyclerFactory>;
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.global
     }
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Global {
+pub extern "C" fn wgpu_server_new(
+    factory: IdentityRecyclerFactory,
+    owner: *mut c_void,
+) -> *mut Global {
     log::info!("Initializing WGPU server");
     let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
     let backends = if backends_pref.is_empty() {
@@ -64,7 +77,7 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
         );
         wgc::instance::parse_backends_from_comma_list(&backends_pref)
     };
-    let global = Global(wgc::global::Global::new(
+    let global = wgc::global::Global::new(
         "wgpu",
         factory,
         wgt::InstanceDescriptor {
@@ -72,7 +85,8 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
             dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
             gles_minor_version: wgt::Gles3MinorVersion::Automatic,
         },
-    ));
+    );
+    let global = Global { global, owner };
     Box::into_raw(Box::new(global))
 }
 
@@ -413,6 +427,29 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
 
+extern "C" {
+    #[allow(dead_code)]
+    fn wgpu_server_use_external_texture_for_swap_chain(
+        param: *mut c_void,
+        swap_chain_id: SwapChainId,
+    ) -> bool;
+    #[allow(dead_code)]
+    fn wgpu_server_create_external_texture_for_swap_chain(
+        param: *mut c_void,
+        swap_chain_id: SwapChainId,
+        device_id: id::DeviceId,
+        texture_id: id::TextureId,
+        width: u32,
+        height: u32,
+        format: wgt::TextureFormat,
+    ) -> bool;
+    #[allow(dead_code)]
+    fn wgpu_server_get_external_texture_handle(
+        param: *mut c_void,
+        id: id::TextureId,
+    ) -> *mut c_void;
+}
+
 impl Global {
     fn device_action<A: wgc::hal_api::HalApi>(
         &self,
@@ -421,7 +458,7 @@ impl Global {
         mut error_buf: ErrorBuffer,
     ) {
         match action {
-            DeviceAction::CreateTexture(id, desc) => {
+            DeviceAction::CreateTexture(id, desc, swap_chain_id) => {
                 let max = MAX_TEXTURE_EXTENT;
                 if desc.size.width > max
                     || desc.size.height > max
@@ -434,6 +471,98 @@ impl Global {
                     });
                     return;
                 }
+
+                #[cfg(target_os = "windows")]
+                {
+                    let use_external_texture = if swap_chain_id.is_some() {
+                        unsafe {
+                            wgpu_server_use_external_texture_for_swap_chain(
+                                self.owner,
+                                swap_chain_id.unwrap(),
+                            )
+                        }
+                    } else {
+                        false
+                    };
+
+                    if use_external_texture && self_id.backend() == wgt::Backend::Dx12 {
+                        let ret = unsafe {
+                            wgpu_server_create_external_texture_for_swap_chain(
+                                self.owner,
+                                swap_chain_id.unwrap(),
+                                self_id,
+                                id,
+                                desc.size.width,
+                                desc.size.height,
+                                desc.format,
+                            )
+                        };
+                        if ret != true {
+                            error_buf.init(ErrMsg {
+                                message: "Failed to create external texture",
+                                r#type: ErrorBufferType::Internal,
+                            });
+                        }
+
+                        let dx12_device = unsafe {
+                            self.device_as_hal::<wgc::api::Dx12, _, d3d12::Device>(
+                                self_id,
+                                |hal_device| hal_device.unwrap().raw_device().clone(),
+                            )
+                        };
+
+                        let handle =
+                            unsafe { wgpu_server_get_external_texture_handle(self.owner, id) };
+                        if handle.is_null() {
+                            error_buf.init(ErrMsg {
+                                message: "Failed to get external texture handle",
+                                r#type: ErrorBufferType::Internal,
+                            });
+                        }
+                        let mut resource = d3d12::Resource::null();
+                        let hr = unsafe {
+                            dx12_device.OpenSharedHandle(
+                                handle,
+                                &d3d12_ty::ID3D12Resource::uuidof(),
+                                resource.mut_void(),
+                            )
+                        };
+                        if hr != 0 {
+                            error_buf.init(ErrMsg {
+                                message: "Failed to open shared handle",
+                                r#type: ErrorBufferType::Internal,
+                            });
+                        }
+
+                        let hal_texture = unsafe {
+                            <wgh::api::Dx12 as wgh::Api>::Device::texture_from_raw(
+                                resource,
+                                wgt::TextureFormat::Bgra8Unorm,
+                                wgt::TextureDimension::D2,
+                                desc.size,
+                                1,
+                                1,
+                            )
+                        };
+                        let (_, error) = unsafe {
+                            self.create_texture_from_hal::<wgh::api::Dx12>(
+                                hal_texture,
+                                self_id,
+                                &desc,
+                                id,
+                            )
+                        };
+                        if let Some(err) = error {
+                            error_buf.init(err);
+                        }
+                        return;
+                    }
+                }
+
+                if swap_chain_id.is_some() && self_id.backend() != wgt::Backend::Dx12 {
+                    debug_assert!(false, "Unexpected to be called");
+                }
+
                 let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);

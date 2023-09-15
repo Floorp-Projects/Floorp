@@ -118,7 +118,11 @@ struct ImplicitLayout<'a> {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 enum DeviceAction<'a> {
-    CreateTexture(id::TextureId, wgc::resource::TextureDescriptor<'a>),
+    CreateTexture(
+        id::TextureId,
+        wgc::resource::TextureDescriptor<'a>,
+        Option<SwapChainId>,
+    ),
     CreateSampler(id::SamplerId, wgc::resource::SamplerDescriptor<'a>),
     CreateBindGroupLayout(
         id::BindGroupLayoutId,
@@ -222,3 +226,7 @@ impl<'a> ImageDataLayout<'a> {
         }
     }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct SwapChainId(pub u64);
