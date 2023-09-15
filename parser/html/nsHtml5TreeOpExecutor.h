@@ -216,7 +216,7 @@ class nsHtml5TreeOpExecutor final
   bool IsInFlushLoop() { return mRunFlushLoopOnStack; }
 #endif
 
-  void RunScript(nsIContent* aScriptElement);
+  void RunScript(nsIContent* aScriptElement, bool aMayDocumentWriteOrBlock);
 
   /**
    * Flush the operations from the tree operations from the argument
@@ -249,8 +249,7 @@ class nsHtml5TreeOpExecutor final
                      const nsAString& aFetchPriority,
                      const nsAString& aIntegrity,
                      ReferrerPolicy aReferrerPolicy, bool aScriptFromHead,
-                     bool aAsync, bool aDefer, bool aNoModule,
-                     bool aLinkPreload);
+                     bool aAsync, bool aDefer, bool aLinkPreload);
 
   void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
                     const nsAString& aCrossOrigin, const nsAString& aMedia,
