@@ -155,12 +155,6 @@ UniqueChars Sprinter::release() {
   return UniqueChars(str);
 }
 
-char& Sprinter::operator[](size_t off) {
-  MOZ_ASSERT(!hadOutOfMemory());
-  MOZ_ASSERT(off < size);
-  return *(base + off);
-}
-
 char* Sprinter::reserve(size_t len) {
   InvariantChecker ic(this);
 
