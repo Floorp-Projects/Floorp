@@ -52,8 +52,8 @@ nsresult AppleDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */) ==
-      media::DecodeSupport::Unsupported) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */)
+          .isEmpty()) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> decoder;
@@ -67,8 +67,8 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */) ==
-      media::DecodeSupport::Unsupported) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */)
+          .isEmpty()) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> decoder = new AppleATDecoder(aParams.AudioConfig());
@@ -82,23 +82,20 @@ media::DecodeSupportSet AppleDecoderModule::SupportsMimeType(
                       aMimeType.EqualsLiteral("audio/mp4a-latm") ||
                       MP4Decoder::IsH264(aMimeType) ||
                       VPXDecoder::IsVP9(aMimeType);
-  media::DecodeSupportSet supportType{media::DecodeSupport::Unsupported};
+  media::DecodeSupportSet supportType{};
 
   if (checkSupport) {
     UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
-    if (!trackInfo) {
-      supportType = media::DecodeSupport::Unsupported;
-    } else if (trackInfo->IsAudio()) {
+    if (trackInfo && trackInfo->IsAudio()) {
       supportType = media::DecodeSupport::SoftwareDecode;
-    } else {
+    } else if (trackInfo && trackInfo->IsVideo()) {
       supportType = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
     }
   }
 
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Apple decoder %s requested type '%s'",
-           supportType == media::DecodeSupport::Unsupported ? "rejects"
-                                                            : "supports",
+           supportType.isEmpty() ? "rejects" : "supports",
            aMimeType.BeginReading()));
   return supportType;
 }
@@ -123,7 +120,7 @@ media::DecodeSupportSet AppleDecoderModule::Supports(
     }
     return media::DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupport::Unsupported;
+  return media::DecodeSupportSet{};
 }
 
 bool AppleDecoderModule::IsVideoSupported(

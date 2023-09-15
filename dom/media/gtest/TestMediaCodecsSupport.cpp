@@ -9,6 +9,30 @@
 using namespace mozilla;
 using namespace media;
 
+TEST(MediaCodecsSupport, BasicDecodeSupportSet)
+{
+  DecodeSupportSet support{};
+  EXPECT_TRUE(support != DecodeSupport::SoftwareDecode);
+  EXPECT_TRUE(support != DecodeSupport::HardwareDecode);
+  EXPECT_TRUE(!support.contains(DecodeSupport::SoftwareDecode));
+  EXPECT_TRUE(!support.contains(DecodeSupport::HardwareDecode));
+  EXPECT_TRUE(support.isEmpty());
+
+  support += DecodeSupport::SoftwareDecode;
+  EXPECT_TRUE(support == DecodeSupport::SoftwareDecode);
+  EXPECT_TRUE(support != DecodeSupport::HardwareDecode);
+  EXPECT_TRUE(support.contains(DecodeSupport::SoftwareDecode));
+  EXPECT_TRUE(!support.contains(DecodeSupport::HardwareDecode));
+  EXPECT_TRUE(!support.isEmpty());
+
+  support += DecodeSupport::HardwareDecode;
+  EXPECT_TRUE(support != DecodeSupport::SoftwareDecode);
+  EXPECT_TRUE(support != DecodeSupport::HardwareDecode);
+  EXPECT_TRUE(support.contains(DecodeSupport::SoftwareDecode));
+  EXPECT_TRUE(support.contains(DecodeSupport::HardwareDecode));
+  EXPECT_TRUE(!support.isEmpty());
+}
+
 // Test MCSInfo::GetDecodeSupportSet function.
 // This function is used to retrieve SW/HW support information for a
 // given codec from a MediaCodecsSupported EnumSet.

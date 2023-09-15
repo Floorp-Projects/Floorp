@@ -277,9 +277,9 @@ bool RemoteDecoderManagerChild::Supports(
 
   // We can ignore the SupportDecoderParams argument for now as creation of the
   // decoder will actually fail later and fallback PDMs will be tested on later.
-  return PDMFactory::SupportsMimeType(aParams.MimeType(), *supported,
-                                      aLocation) !=
-         media::DecodeSupport::Unsupported;
+  return !PDMFactory::SupportsMimeType(aParams.MimeType(), *supported,
+                                       aLocation)
+              .isEmpty();
 }
 
 /* static */
