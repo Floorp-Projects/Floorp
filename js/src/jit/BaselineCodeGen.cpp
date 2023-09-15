@@ -1709,6 +1709,11 @@ bool BaselineCodeGen<Handler>::emit_NopDestructuring() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_NopIsAssignOp() {
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_TryDestructuring() {
   return true;
 }

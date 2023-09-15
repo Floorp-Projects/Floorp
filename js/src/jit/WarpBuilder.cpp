@@ -688,6 +688,8 @@ bool WarpBuilder::build_Nop(BytecodeLocation) { return true; }
 
 bool WarpBuilder::build_NopDestructuring(BytecodeLocation) { return true; }
 
+bool WarpBuilder::build_NopIsAssignOp(BytecodeLocation) { return true; }
+
 bool WarpBuilder::build_TryDestructuring(BytecodeLocation) {
   // Set the hasTryBlock flag to turn off optimizations that eliminate dead
   // resume points operands because the exception handler code for
