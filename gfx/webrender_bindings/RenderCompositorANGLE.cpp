@@ -26,6 +26,9 @@
 #include "nsPrintfCString.h"
 #include "FxROutputHandler.h"
 
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN8
+
 #include <d3d11.h>
 #include <dcomp.h>
 #include <dxgi1_2.h>
