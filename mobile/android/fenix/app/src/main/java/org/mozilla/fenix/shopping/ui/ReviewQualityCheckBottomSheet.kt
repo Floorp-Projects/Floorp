@@ -133,7 +133,15 @@ private fun ProductReview(
             }
 
             is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
-                // Bug 1840333
+                NoAnalysis(
+                    productRecommendationsEnabled = state.productRecommendationsPreference,
+                    isAnalyzing = productReviewState.isReanalyzing,
+                    onAnalyzeClick = onReanalyzeClick,
+                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                    onOptOutClick = onOptOutClick,
+                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
