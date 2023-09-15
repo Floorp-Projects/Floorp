@@ -29,7 +29,8 @@ class DataPipeBase {
 
  protected:
   explicit DataPipeBase(bool aReceiverSide, nsresult aError);
-  DataPipeBase(bool aReceiverSide, ScopedPort aPort, SharedMemory* aShmem,
+  DataPipeBase(bool aReceiverSide, ScopedPort aPort,
+               SharedMemoryBasic::Handle aShmemHandle, SharedMemory* aShmem,
                uint32_t aCapacity, nsresult aPeerStatus, uint32_t aOffset,
                uint32_t aAvailable);
 
@@ -102,11 +103,13 @@ class DataPipeSender final : public nsIAsyncOutputStream,
 
   explicit DataPipeSender(nsresult aError)
       : data_pipe_detail::DataPipeBase(/* aReceiverSide */ false, aError) {}
-  DataPipeSender(ScopedPort aPort, SharedMemory* aShmem, uint32_t aCapacity,
-                 nsresult aPeerStatus, uint32_t aOffset, uint32_t aAvailable)
-      : data_pipe_detail::DataPipeBase(/* aReceiverSide */ false,
-                                       std::move(aPort), aShmem, aCapacity,
-                                       aPeerStatus, aOffset, aAvailable) {}
+  DataPipeSender(ScopedPort aPort, SharedMemoryBasic::Handle aShmemHandle,
+                 SharedMemory* aShmem, uint32_t aCapacity, nsresult aPeerStatus,
+                 uint32_t aOffset, uint32_t aAvailable)
+      : data_pipe_detail::DataPipeBase(
+            /* aReceiverSide */ false, std::move(aPort),
+            std::move(aShmemHandle), aShmem, aCapacity, aPeerStatus, aOffset,
+            aAvailable) {}
 
   ~DataPipeSender() = default;
 };
@@ -140,11 +143,12 @@ class DataPipeReceiver final : public nsIAsyncInputStream,
 
   explicit DataPipeReceiver(nsresult aError)
       : data_pipe_detail::DataPipeBase(/* aReceiverSide */ true, aError) {}
-  DataPipeReceiver(ScopedPort aPort, SharedMemory* aShmem, uint32_t aCapacity,
+  DataPipeReceiver(ScopedPort aPort, SharedMemoryBasic::Handle aShmemHandle,
+                   SharedMemory* aShmem, uint32_t aCapacity,
                    nsresult aPeerStatus, uint32_t aOffset, uint32_t aAvailable)
-      : data_pipe_detail::DataPipeBase(/* aReceiverSide */ true,
-                                       std::move(aPort), aShmem, aCapacity,
-                                       aPeerStatus, aOffset, aAvailable) {}
+      : data_pipe_detail::DataPipeBase(
+            /* aReceiverSide */ true, std::move(aPort), std::move(aShmemHandle),
+            aShmem, aCapacity, aPeerStatus, aOffset, aAvailable) {}
 
   ~DataPipeReceiver() = default;
 };

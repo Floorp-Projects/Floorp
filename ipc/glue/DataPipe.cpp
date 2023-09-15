@@ -71,10 +71,12 @@ static void DoNotifyOnUnlock(DataPipeAutoLock& aLock,
 class DataPipeLink : public NodeController::PortObserver {
  public:
   DataPipeLink(bool aReceiverSide, std::shared_ptr<Mutex> aMutex,
-               ScopedPort aPort, SharedMemory* aShmem, uint32_t aCapacity,
-               nsresult aPeerStatus, uint32_t aOffset, uint32_t aAvailable)
+               ScopedPort aPort, SharedMemoryBasic::Handle aShmemHandle,
+               SharedMemory* aShmem, uint32_t aCapacity, nsresult aPeerStatus,
+               uint32_t aOffset, uint32_t aAvailable)
       : mMutex(std::move(aMutex)),
         mPort(std::move(aPort)),
+        mShmemHandle(std::move(aShmemHandle)),
         mShmem(aShmem),
         mCapacity(aCapacity),
         mReceiverSide(aReceiverSide),
@@ -163,6 +165,7 @@ class DataPipeLink : public NodeController::PortObserver {
   std::shared_ptr<Mutex> mMutex;
 
   ScopedPort mPort MOZ_GUARDED_BY(*mMutex);
+  SharedMemoryBasic::Handle mShmemHandle MOZ_GUARDED_BY(*mMutex);
   const RefPtr<SharedMemory> mShmem;
   const uint32_t mCapacity;
   const bool mReceiverSide;
@@ -242,14 +245,16 @@ DataPipeBase::DataPipeBase(bool aReceiverSide, nsresult aError)
       mStatus(NS_SUCCEEDED(aError) ? NS_BASE_STREAM_CLOSED : aError) {}
 
 DataPipeBase::DataPipeBase(bool aReceiverSide, ScopedPort aPort,
+                           SharedMemoryBasic::Handle aShmemHandle,
                            SharedMemory* aShmem, uint32_t aCapacity,
                            nsresult aPeerStatus, uint32_t aOffset,
                            uint32_t aAvailable)
     : mMutex(std::make_shared<Mutex>(aReceiverSide ? "DataPipeReceiver"
                                                    : "DataPipeSender")),
       mStatus(NS_OK),
-      mLink(new DataPipeLink(aReceiverSide, mMutex, std::move(aPort), aShmem,
-                             aCapacity, aPeerStatus, aOffset, aAvailable)) {
+      mLink(new DataPipeLink(aReceiverSide, mMutex, std::move(aPort),
+                             std::move(aShmemHandle), aShmem, aCapacity,
+                             aPeerStatus, aOffset, aAvailable)) {
   mLink->Init();
 }
 
@@ -445,10 +450,7 @@ void DataPipeWrite(IPC::MessageWriter* aWriter, T* aParam) {
 
   // Serialize relevant parameters to our peer.
   WriteParam(aWriter, std::move(aParam->mLink->mPort));
-  if (!aParam->mLink->mShmem->WriteHandle(aWriter)) {
-    aWriter->FatalError("failed to write DataPipe shmem handle");
-    MOZ_CRASH("failed to write DataPipe shmem handle");
-  }
+  WriteParam(aWriter, std::move(aParam->mLink->mShmemHandle));
   WriteParam(aWriter, aParam->mLink->mCapacity);
   WriteParam(aWriter, aParam->mLink->mPeerStatus);
   WriteParam(aWriter, aParam->mLink->mOffset);
@@ -478,9 +480,19 @@ bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult) {
     aReader->FatalError("failed to read DataPipe port");
     return false;
   }
-  RefPtr shmem = new SharedMemoryBasic();
-  if (!shmem->ReadHandle(aReader)) {
+  SharedMemoryBasic::Handle shmemHandle;
+  if (!ReadParam(aReader, &shmemHandle)) {
     aReader->FatalError("failed to read DataPipe shmem");
+    return false;
+  }
+  // Due to the awkward shared memory API provided by SharedMemoryBasic, we need
+  // to transfer ownership into the `shmem` here, then steal it back later in
+  // the function. Bug 1797039 tracks potential changes to the RawShmem API
+  // which could improve this situation.
+  RefPtr shmem = new SharedMemoryBasic();
+  if (!shmem->SetHandle(std::move(shmemHandle),
+                        SharedMemory::RightsReadWrite)) {
+    aReader->FatalError("failed to create DataPipe shmem from handle");
     return false;
   }
   uint32_t capacity = 0;
@@ -501,8 +513,8 @@ bool DataPipeRead(IPC::MessageReader* aReader, RefPtr<T>* aResult) {
     return false;
   }
 
-  *aResult =
-      new T(std::move(port), shmem, capacity, peerStatus, offset, available);
+  *aResult = new T(std::move(port), shmem->TakeHandle(), shmem, capacity,
+                   peerStatus, offset, available);
   if (MOZ_LOG_TEST(gDataPipeLog, LogLevel::Debug)) {
     DataPipeAutoLock lock(*(*aResult)->mMutex);
     MOZ_LOG(gDataPipeLog, LogLevel::Debug,
@@ -701,16 +713,30 @@ nsresult NewDataPipe(uint32_t aCapacity, DataPipeSender** aSender,
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
+  // Allocate a pair of ports for messaging between the sender & receiver.
   auto [senderPort, receiverPort] = controller->CreatePortPair();
+
+  // Create and allocate the shared memory region.
   auto shmem = MakeRefPtr<SharedMemoryBasic>();
   size_t alignedCapacity = SharedMemory::PageAlignedSize(aCapacity);
   if (!shmem->Create(alignedCapacity) || !shmem->Map(alignedCapacity)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  RefPtr sender = new DataPipeSender(std::move(senderPort), shmem, aCapacity,
-                                     NS_OK, 0, aCapacity);
-  RefPtr receiver = new DataPipeReceiver(std::move(receiverPort), shmem,
+  // We'll first clone then take the handle from the region so that the sender &
+  // receiver each have a handle. This avoids the need to duplicate the handle
+  // when serializing, when errors are non-recoverable.
+  SharedMemoryBasic::Handle senderShmemHandle = shmem->CloneHandle();
+  SharedMemoryBasic::Handle receiverShmemHandle = shmem->TakeHandle();
+  if (!senderShmemHandle || !receiverShmemHandle) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  RefPtr sender =
+      new DataPipeSender(std::move(senderPort), std::move(senderShmemHandle),
+                         shmem, aCapacity, NS_OK, 0, aCapacity);
+  RefPtr receiver = new DataPipeReceiver(std::move(receiverPort),
+                                         std::move(receiverShmemHandle), shmem,
                                          aCapacity, NS_OK, 0, 0);
   sender.forget(aSender);
   receiver.forget(aReceiver);
