@@ -440,6 +440,11 @@ export var BrowserTestUtils = {
       );
     }
 
+    // Consumers may pass gBrowser instead of a browser, so adjust for that.
+    if ("selectedBrowser" in browser) {
+      browser = browser.selectedBrowser;
+    }
+
     // If browser belongs to tabbrowser-tab, ensure it has been
     // inserted into the document.
     let tabbrowser = browser.ownerGlobal.gBrowser;
