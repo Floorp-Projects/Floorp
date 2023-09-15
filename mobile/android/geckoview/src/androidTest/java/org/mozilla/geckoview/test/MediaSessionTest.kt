@@ -68,7 +68,6 @@ class MediaSessionTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "media.mediacontrol.stopcontrol.aftermediaends" to false,
-                "dom.media.mediasession.enabled" to true,
             ),
         )
     }
