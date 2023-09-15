@@ -8,6 +8,8 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 import { ExtensionParent } from "resource://gre/modules/ExtensionParent.sys.mjs";
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { StartupCache } = ExtensionParent;
 
 const lazy = {};
@@ -16,6 +18,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "matchAboutBlankDefaultFalse",
+  "extensions.scripting.matchAboutBlankDefaultFalse",
+  false
+);
 
 class Store {
   async _init() {
@@ -181,7 +190,9 @@ export const makeInternalContentScript = (
       jsPaths,
       // TODO(Bug 1853411): revert the short-term workaround special casing
       // webcompat extension id once it is not necessary anymore.
-      matchAboutBlank: extension.id !== "webcompat@mozilla.org",
+      matchAboutBlank: lazy.matchAboutBlankDefaultFalse
+        ? false // If the hidden pref is set, then forcefully set matchAboutBlank to false
+        : extension.id !== "webcompat@mozilla.org",
       matches: options.matches,
       originAttributesPatterns: null,
       persistAcrossSessions: options.persistAcrossSessions,
