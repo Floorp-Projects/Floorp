@@ -181,8 +181,8 @@ add_task(async function test_sessionDataRootOnlyModule() {
   const rootMessageHandler = createRootMessageHandler(sessionId);
   ok(rootMessageHandler, "Valid ROOT MessageHandler created");
 
-  await BrowserTestUtils.loadURIString(
-    gBrowser,
+  BrowserTestUtils.loadURIString(
+    gBrowser.selectedBrowser,
     "https://example.com/document-builder.sjs?html=tab"
   );
 
