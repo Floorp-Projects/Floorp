@@ -577,6 +577,7 @@ nsresult nsStandardURL::NormalizeIPv4(const nsACString& host,
   uint32_t ipv4;
   int32_t start = (dotCount > 0 ? dotIndex[dotCount - 1] + 1 : 0);
 
+  // parse the last part first
   nsresult res;
   // Doing a special case for all items being base 10 gives ~35% speedup
   res = (onlyBase10
@@ -588,6 +589,7 @@ nsresult nsStandardURL::NormalizeIPv4(const nsACString& host,
     return NS_ERROR_FAILURE;
   }
 
+  // parse remaining parts starting from first part
   int32_t lastUsed = -1;
   for (int32_t i = 0; i < dotCount; i++) {
     uint32_t number;
@@ -735,6 +737,71 @@ uint32_t nsStandardURL::AppendToBuf(char* buf, uint32_t i, const char* str,
   return i + len;
 }
 
+static bool ContainsOnlyAsciiDigits(const nsDependentCSubstring& input) {
+  for (const auto* c = input.BeginReading(); c < input.EndReading(); c++) {
+    if (!IsAsciiDigit(*c)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool ContainsOnlyAsciiHexDigits(const nsDependentCSubstring& input) {
+  for (const auto* c = input.BeginReading(); c < input.EndReading(); c++) {
+    if (!IsAsciiHexDigit(*c)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// https://url.spec.whatwg.org/#ends-in-a-number-checker
+static bool EndsInANumber(const nsCString& input) {
+  // 1. Let parts be the result of strictly splitting input on U+002E (.).
+  nsTArray<nsDependentCSubstring> parts;
+  for (const nsDependentCSubstring& part : input.Split('.')) {
+    parts.AppendElement(part);
+  }
+
+  if (parts.Length() == 0) {
+    return false;
+  }
+
+  // 2.If the last item in parts is the empty string, then:
+  //    1. If parts’s size is 1, then return false.
+  //    2. Remove the last item from parts.
+  if (parts.LastElement().IsEmpty()) {
+    if (parts.Length() == 1) {
+      return false;
+    }
+    Unused << parts.PopLastElement();
+  }
+
+  // 3. Let last be the last item in parts.
+  const nsDependentCSubstring& last = parts.LastElement();
+
+  // 4. If last is non-empty and contains only ASCII digits, then return true.
+  // The erroneous input "09" will be caught by the IPv4 parser at a later
+  // stage.
+  if (!last.IsEmpty()) {
+    if (ContainsOnlyAsciiDigits(last)) {
+      return true;
+    }
+  }
+
+  // 5. If parsing last as an IPv4 number does not return failure, then return
+  // true. This is equivalent to checking that last is "0X" or "0x", followed by
+  // zero or more ASCII hex digits.
+  if (StringBeginsWith(last, "0x"_ns) || StringBeginsWith(last, "0X"_ns)) {
+    if (ContainsOnlyAsciiHexDigits(Substring(last, 2))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // basic algorithm:
 //  1- escape url segments (for improved GetSpec efficiency)
 //  2- allocate spec buffer
@@ -846,8 +913,14 @@ nsresult nsStandardURL::BuildNormalizedSpec(const char* spec,
           return rv;
         }
         encHost = ipString;
-      } else if (NS_SUCCEEDED(NormalizeIPv4(encHost, ipString))) {
-        encHost = ipString;
+      } else {
+        if (EndsInANumber(encHost)) {
+          rv = NormalizeIPv4(encHost, ipString);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          encHost = ipString;
+        }
       }
     }
 
@@ -2176,8 +2249,14 @@ nsresult nsStandardURL::SetHost(const nsACString& input) {
         return rv;
       }
       hostBuf = ipString;
-    } else if (NS_SUCCEEDED(NormalizeIPv4(hostBuf, ipString))) {
-      hostBuf = ipString;
+    } else {
+      if (EndsInANumber(hostBuf)) {
+        rv = NormalizeIPv4(hostBuf, ipString);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        hostBuf = ipString;
+      }
     }
   }
 
