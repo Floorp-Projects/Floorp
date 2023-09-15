@@ -315,6 +315,7 @@ mochitest-browser-a11y:
     max-run-time:
         by-test-platform:
             .*tsan.*: 2700
+            linux.*/debug: 2700
             default: 1800
     mozharness:
         mochitest-flavor: browser
