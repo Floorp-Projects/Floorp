@@ -5978,12 +5978,6 @@
   value: false
   mirror: always
 
-# Whether font sanitization is performed on the main thread or not.
-- name: gfx.downloadable_fonts.sanitize_omt
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to validate OpenType variation tables in fonts.
 - name: gfx.downloadable_fonts.validate_variation_tables
   type: RelaxedAtomicBool
