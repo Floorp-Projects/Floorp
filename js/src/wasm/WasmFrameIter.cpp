@@ -693,13 +693,48 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
 
     switch (callIndirectId.kind()) {
       case CallIndirectIdKind::Global: {
-        Register scratch = WasmTableCallScratchReg0;
+        Label fail;
+        Register scratch1 = WasmTableCallScratchReg0;
+        Register scratch2 = WasmTableCallScratchReg1;
+
+        // Check if this function's type is exactly the expected function type
         masm.loadPtr(
-            Address(InstanceReg, Instance::offsetInData(
-                                     callIndirectId.instanceDataOffset())),
-            scratch);
+            Address(InstanceReg,
+                    Instance::offsetInData(
+                        callIndirectId.instanceDataOffset() +
+                        offsetof(wasm::TypeDefInstanceData, superTypeVector))),
+            scratch1);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg,
-                       scratch, &functionBody);
+                       scratch1, &functionBody);
+
+        // Otherwise, we need to see if this function's type is a sub type of
+        // the expected function type. This requires us to check if the
+        // expected's type is in the super type vector of this function's type.
+        //
+        // We can skip this if our function type has no super types.
+        if (callIndirectId.hasSuperType()) {
+          // Check if the expected function type was an immediate, not a
+          // type definition. Because we only allow the immediate form for
+          // final types without super types, this implies that we have a
+          // signature mismatch.
+          masm.branchTestPtr(Assembler::Condition::NonZero, WasmTableCallSigReg,
+                             Imm32(FuncType::ImmediateBit), &fail);
+
+          // Load the subtyping depth of the expected function type. Re-use the
+          // index register, as it's no longer needed.
+          Register subTypingDepth = WasmTableCallIndexReg;
+          masm.load8ZeroExtend(
+              Address(WasmTableCallSigReg,
+                      int32_t(SuperTypeVector::offsetOfSubTypingDepth())),
+              subTypingDepth);
+
+          // Perform the check
+          masm.branchWasmSTVIsSubtypeDynamicDepth(
+              scratch1, WasmTableCallSigReg, subTypingDepth, scratch2,
+              &functionBody, true);
+        }
+
+        masm.bind(&fail);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }

@@ -5272,7 +5272,9 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   switch (callIndirectId.kind()) {
     case wasm::CallIndirectIdKind::Global:
       loadPtr(Address(InstanceReg, wasm::Instance::offsetInData(
-                                       callIndirectId.instanceDataOffset())),
+                                       callIndirectId.instanceDataOffset() +
+                                       offsetof(wasm::TypeDefInstanceData,
+                                                superTypeVector))),
               WasmTableCallSigReg);
       break;
     case wasm::CallIndirectIdKind::Immediate:
@@ -5414,7 +5416,9 @@ void MacroAssembler::wasmReturnCallIndirect(
   switch (callIndirectId.kind()) {
     case wasm::CallIndirectIdKind::Global:
       loadPtr(Address(InstanceReg, wasm::Instance::offsetInData(
-                                       callIndirectId.instanceDataOffset())),
+                                       callIndirectId.instanceDataOffset() +
+                                       offsetof(wasm::TypeDefInstanceData,
+                                                superTypeVector))),
               WasmTableCallSigReg);
       break;
     case wasm::CallIndirectIdKind::Immediate:
@@ -5839,43 +5843,19 @@ void MacroAssembler::branchWasmSTVIsSubtype(Register subSTV, Register superSTV,
                                             bool onSuccess) {
   MOZ_ASSERT_IF(superDepth >= wasm::MinSuperTypeVectorLength,
                 scratch != Register::Invalid());
+  Label fallthrough;
+  Label* failed = onSuccess ? &fallthrough : label;
 
-  // We generate just different enough code for 'is' subtype vs 'is not'
-  // subtype that we handle them separately.
-  if (onSuccess) {
-    Label failed;
-
-    // At this point, we could generate a fast success check which jumps to
-    // `label` if `subSTV == superSTV`.  However,
-    // profiling of Barista-3 seems to show this is hardly worth anything,
-    // whereas it is worth us generating smaller code and in particular one
-    // fewer conditional branch.  So it is omitted:
-    //
-    //   branchPtr(Assembler::Equal, subSTV, superSTV, label);
-
-    // Emit a bounds check if the super type depth may be out-of-bounds.
-    if (superDepth >= wasm::MinSuperTypeVectorLength) {
-      // Slowest path for having a bounds check of the super type vector
-      load32(Address(subSTV, wasm::SuperTypeVector::offsetOfLength()), scratch);
-      branch32(Assembler::LessThanOrEqual, scratch, Imm32(superDepth), &failed);
-    }
-
-    // Load the `superTypeDepth` entry from subSTV. This will be `superSTV` if
-    // `subSTV` is indeed a subtype.
-    loadPtr(
-        Address(subSTV, wasm::SuperTypeVector::offsetOfSTVInVector(superDepth)),
-        subSTV);
-    branchPtr(Assembler::Equal, subSTV, superSTV, label);
-
-    // Fallthrough to the failed case
-    bind(&failed);
-    return;
-  }
+  // At this point, we could generate a fast success check which jumps to
+  // `success` if `subSTV == superSTV`.  However,
+  // profiling of Barista-3 seems to show this is hardly worth anything,
+  // whereas it is worth us generating smaller code and in particular one
+  // fewer conditional branch.
 
   // Emit a bounds check if the super type depth may be out-of-bounds.
   if (superDepth >= wasm::MinSuperTypeVectorLength) {
     load32(Address(subSTV, wasm::SuperTypeVector::offsetOfLength()), scratch);
-    branch32(Assembler::LessThanOrEqual, scratch, Imm32(superDepth), label);
+    branch32(Assembler::BelowOrEqual, scratch, Imm32(superDepth), failed);
   }
 
   // Load the `superTypeDepth` entry from subSTV. This will be `superSTV` if
@@ -5883,8 +5863,35 @@ void MacroAssembler::branchWasmSTVIsSubtype(Register subSTV, Register superSTV,
   loadPtr(
       Address(subSTV, wasm::SuperTypeVector::offsetOfSTVInVector(superDepth)),
       subSTV);
-  branchPtr(Assembler::NotEqual, subSTV, superSTV, label);
-  // Fallthrough to the success case
+
+  // We succeed iff the entries are equal
+  branchPtr(onSuccess ? Assembler::Equal : Assembler::NotEqual, subSTV,
+            superSTV, label);
+
+  bind(&fallthrough);
+}
+
+void MacroAssembler::branchWasmSTVIsSubtypeDynamicDepth(
+    Register subSTV, Register superSTV, Register superDepth, Register scratch,
+    Label* label, bool onSuccess) {
+  Label fallthrough;
+  Label* failed = onSuccess ? &fallthrough : label;
+
+  // Bounds check of the super type vector
+  load32(Address(subSTV, wasm::SuperTypeVector::offsetOfLength()), scratch);
+  branch32(Assembler::BelowOrEqual, scratch, superDepth, failed);
+
+  // Load `subSTV[superTypeDepth]`. This will be `superSTV` if `subSTV` is
+  // indeed a subtype.
+  loadPtr(BaseIndex(subSTV, superDepth, ScalePointer,
+                    offsetof(wasm::SuperTypeVector, types_)),
+          subSTV);
+
+  // We succeed iff the entries are equal
+  branchPtr(onSuccess ? Assembler::Equal : Assembler::NotEqual, subSTV,
+            superSTV, label);
+
+  bind(&fallthrough);
 }
 
 void MacroAssembler::branchWasmAnyRefIsNull(bool isNull, Register src,

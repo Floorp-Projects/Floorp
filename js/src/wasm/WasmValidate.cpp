@@ -1902,6 +1902,11 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
 
         typeDef->setSuperTypeDef(superTypeDef);
       }
+
+      if (typeDef->isFuncType()) {
+        typeDef->funcType().initImmediateTypeId(
+            env->gcEnabled(), typeDef->isFinal(), superTypeDef, recGroupLength);
+      }
     }
 
     // Check the super types to make sure they are compatible with their

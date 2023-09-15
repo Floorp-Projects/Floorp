@@ -218,7 +218,29 @@ static ImmediateType EncodeImmediateFuncType(const FuncType& funcType) {
 //=========================================================================
 // FuncType
 
-void FuncType::initImmediateTypeId() {
+void FuncType::initImmediateTypeId(bool gcEnabled, bool isFinal,
+                                   const TypeDef* superTypeDef,
+                                   uint32_t recGroupLength) {
+  // To improve the performance of the structural type check in
+  // the call_indirect function prologue, we attempt to encode the
+  // entire function type into an immediate such that bitwise equality
+  // implies structural equality. With the GC proposal, we don't
+  // want to generalize the immediate form for the new type system, so
+  // we don't use it when a type is non-final (i.e. may have sub types), or
+  // has super types, or is in a recursion group with other types.
+  //
+  // If non-final types are allowed, then the type can have subtypes, and we
+  // should therefore do a full subtype check on call_indirect, which
+  // doesn't work well with immediates. If the type has a super type, the
+  // same reason applies. And finally, types in recursion groups of
+  // size > 1 may not be considered equivalent even if they are
+  // structurally equivalent in every respect.
+  if (gcEnabled && (!isFinal || superTypeDef || recGroupLength != 1)) {
+    immediateTypeId_ = NO_IMMEDIATE_TYPE_ID;
+    return;
+  }
+
+  // Otherwise, try to encode this function type into an immediate.
   if (!IsImmediateFuncType(*this)) {
     immediateTypeId_ = NO_IMMEDIATE_TYPE_ID;
     return;
@@ -425,10 +447,11 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
 
     // Make the typedef and the vector point at each other.
     typeDef.setSuperTypeVector(currentVector);
-    currentVector->setTypeDef(&typeDef);
+    currentVector->typeDef_ = &typeDef;
+    currentVector->subTypingDepth_ = typeDef.subTypingDepth();
 
     // Every vector stores all ancestor types and itself.
-    currentVector->setLength(SuperTypeVector::lengthForTypeDef(typeDef));
+    currentVector->length_ = SuperTypeVector::lengthForTypeDef(typeDef);
 
     // Initialize the entries in the vector
     const TypeDef* currentTypeDef = &typeDef;
@@ -438,7 +461,7 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
       // If this entry is required just to hit the minimum size, then
       // initialize it to null.
       if (reverseIndex > typeDef.subTypingDepth()) {
-        currentVector->setType(reverseIndex, nullptr);
+        currentVector->types_[reverseIndex] = nullptr;
         continue;
       }
 
@@ -446,7 +469,7 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
       // currentTypeDef.
       MOZ_ASSERT(reverseIndex == currentTypeDef->subTypingDepth());
 
-      currentVector->setType(reverseIndex, currentTypeDef->superTypeVector());
+      currentVector->types_[reverseIndex] = currentTypeDef->superTypeVector();
       currentTypeDef = currentTypeDef->superTypeDef();
     }
 

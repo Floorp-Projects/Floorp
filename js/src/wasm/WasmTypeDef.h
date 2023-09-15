@@ -19,6 +19,7 @@
 #ifndef wasm_type_def_h
 #define wasm_type_def_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/HashTable.h"
 
@@ -58,7 +59,10 @@ class FuncType {
   // A packed structural type identifier for use in the call_indirect type
   // check in the prologue of functions. If this function type cannot fit in
   // this immediate, it will be NO_IMMEDIATE_TYPE_ID.
-  uint32_t immediateTypeId_;
+  //
+  // This is initialized in DecodeTypeSection once we have the full recursion
+  // group around.
+  uint32_t immediateTypeId_ = NO_IMMEDIATE_TYPE_ID;
 
   // This function type cannot be packed into an immediate for call_indirect
   // signature checks.
@@ -106,15 +110,10 @@ class FuncType {
     return false;
   }
 
-  void initImmediateTypeId();
-
  public:
-  FuncType() : args_(), results_() { initImmediateTypeId(); }
-
+  FuncType() : args_(), results_() {}
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
-      : args_(std::move(args)), results_(std::move(results)) {
-    initImmediateTypeId();
-  }
+      : args_(std::move(args)), results_(std::move(results)) {}
 
   FuncType(FuncType&&) = default;
   FuncType& operator=(FuncType&&) = default;
@@ -131,6 +130,9 @@ class FuncType {
   ValType result(unsigned i) const { return results_[i]; }
   const ValTypeVector& results() const { return results_; }
 
+  void initImmediateTypeId(bool gcEnabled, bool isFinal,
+                           const TypeDef* superTypeDef,
+                           uint32_t recGroupLength);
   bool hasImmediateTypeId() const {
     return immediateTypeId_ != NO_IMMEDIATE_TYPE_ID;
   }
@@ -543,6 +545,9 @@ class SuperTypeVector {
   // point back to this SuperTypeVector.
   const TypeDef* typeDef_;
 
+  // A cached copy of subTypingDepth from TypeDef.
+  uint32_t subTypingDepth_;
+
   // The length of types stored inline below.
   uint32_t length_;
 
@@ -558,18 +563,12 @@ class SuperTypeVector {
       RecGroup* recGroup);
 
   const TypeDef* typeDef() const { return typeDef_; }
-  void setTypeDef(const TypeDef* typeDef) { typeDef_ = typeDef; }
 
   uint32_t length() const { return length_; }
-  void setLength(uint32_t length) { length_ = length; }
 
   const SuperTypeVector* type(size_t index) const {
     MOZ_ASSERT(index < length_);
     return types_[index];
-  }
-  void setType(size_t index, const SuperTypeVector* type) {
-    MOZ_ASSERT(index < length_);
-    types_[index] = type;
   }
 
   // The length of a super type vector for a specific type def.
@@ -577,6 +576,9 @@ class SuperTypeVector {
   // The byte size of a super type vector for a specific type def.
   static size_t byteSizeForTypeDef(const TypeDef& typeDef);
 
+  static size_t offsetOfSubTypingDepth() {
+    return offsetof(SuperTypeVector, subTypingDepth_);
+  }
   static size_t offsetOfLength() { return offsetof(SuperTypeVector, length_); }
   static size_t offsetOfSelfTypeDef() {
     return offsetof(SuperTypeVector, typeDef_);
@@ -686,6 +688,10 @@ class TypeDef {
     return offsetof(TypeDef, superTypeVector_);
   }
 
+  static size_t offsetOfSubTypingDepth() {
+    return offsetof(TypeDef, subTypingDepth_);
+  }
+
   const TypeDef* superTypeDef() const { return superTypeDef_; }
 
   bool isFinal() const { return isFinal_; }
@@ -787,7 +793,7 @@ class TypeDef {
         return ArrayType::matches(&lhs.recGroup(), lhs.arrayType_,
                                   &rhs.recGroup(), rhs.arrayType_);
       case TypeDefKind::None:
-        return true;
+        MOZ_CRASH("can't match TypeDefKind::None");
     }
     return false;
   }
@@ -949,12 +955,10 @@ class RecGroup : public AtomicRefCounted<RecGroup> {
     // Super type vectors are only needed for GC and have a size/time impact
     // that we don't want to encur until we're ready for it. Only use them when
     // GC is built into the binary.
-#ifdef ENABLE_WASM_GC
     vectors_ = SuperTypeVector::createMultipleForRecGroup(this);
     if (!vectors_) {
       return false;
     }
-#endif
     visitReferencedGroups([](const RecGroup* recGroup) { recGroup->AddRef(); });
     finalizedTypes_ = true;
     return true;
