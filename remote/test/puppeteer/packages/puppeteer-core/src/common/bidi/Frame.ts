@@ -16,43 +16,45 @@
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import {ElementHandle} from '../../api/ElementHandle.js';
-import {Frame as BaseFrame} from '../../api/Frame.js';
+import {Frame, throwIfDetached} from '../../api/Frame.js';
 import {Deferred} from '../../util/Deferred.js';
+import {CDPSession} from '../Connection.js';
 import {UTILITY_WORLD_NAME} from '../FrameManager.js';
 import {PuppeteerLifeCycleEvent} from '../LifecycleWatcher.js';
 import {TimeoutSettings} from '../TimeoutSettings.js';
-import {EvaluateFunc, EvaluateFuncWith, HandleFor, NodeFor} from '../types.js';
-import {waitForEvent, withSourcePuppeteerURLIfNone} from '../util.js';
+import {Awaitable} from '../types.js';
+import {waitForEvent} from '../util.js';
 
 import {
   BrowsingContext,
   getWaitUntilSingle,
   lifeCycleToSubscribedEvent,
 } from './BrowsingContext.js';
+import {ExposeableFunction} from './ExposedFunction.js';
 import {HTTPResponse} from './HTTPResponse.js';
-import {Page} from './Page.js';
+import {BidiPage} from './Page.js';
 import {
   MAIN_SANDBOX,
   PUPPETEER_SANDBOX,
-  SandboxChart,
   Sandbox,
+  SandboxChart,
 } from './Sandbox.js';
 
 /**
  * Puppeteer's Frame class could be viewed as a BiDi BrowsingContext implementation
  * @internal
  */
-export class Frame extends BaseFrame {
-  #page: Page;
+export class BidiFrame extends Frame {
+  #page: BidiPage;
   #context: BrowsingContext;
   #timeoutSettings: TimeoutSettings;
   #abortDeferred = Deferred.create<Error>();
+  #disposed = false;
   sandboxes: SandboxChart;
   override _id: string;
 
   constructor(
-    page: Page,
+    page: BidiPage,
     context: BrowsingContext,
     timeoutSettings: TimeoutSettings,
     parentId?: string | null
@@ -64,14 +66,19 @@ export class Frame extends BaseFrame {
     this._id = this.#context.id;
     this._parentId = parentId ?? undefined;
 
-    const puppeteerRealm = context.createSandboxRealm(UTILITY_WORLD_NAME);
     this.sandboxes = {
-      [MAIN_SANDBOX]: new Sandbox(context, timeoutSettings),
-      [PUPPETEER_SANDBOX]: new Sandbox(puppeteerRealm, timeoutSettings),
+      [MAIN_SANDBOX]: new Sandbox(undefined, this, context, timeoutSettings),
+      [PUPPETEER_SANDBOX]: new Sandbox(
+        UTILITY_WORLD_NAME,
+        this,
+        context.createRealmForSandbox(),
+        timeoutSettings
+      ),
     };
+  }
 
-    puppeteerRealm.setFrame(this);
-    context.setFrame(this);
+  override get client(): CDPSession {
+    return this.context().cdpSession;
   }
 
   override mainRealm(): Sandbox {
@@ -82,46 +89,23 @@ export class Frame extends BaseFrame {
     return this.sandboxes[PUPPETEER_SANDBOX];
   }
 
-  override page(): Page {
+  override page(): BidiPage {
     return this.#page;
-  }
-
-  override name(): string {
-    return this._name || '';
   }
 
   override url(): string {
     return this.#context.url;
   }
 
-  override parentFrame(): Frame | null {
+  override parentFrame(): BidiFrame | null {
     return this.#page.frame(this._parentId ?? '');
   }
 
-  override childFrames(): Frame[] {
+  override childFrames(): BidiFrame[] {
     return this.#page.childFrames(this.#context.id);
   }
 
-  override async evaluateHandle<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.#context.evaluateHandle(pageFunction, ...args);
-  }
-
-  override async evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    return this.#context.evaluate(pageFunction, ...args);
-  }
-
+  @throwIfDetached
   override async goto(
     url: string,
     options?: {
@@ -131,10 +115,14 @@ export class Frame extends BaseFrame {
       waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
     }
   ): Promise<HTTPResponse | null> {
-    const navigationId = await this.#context.goto(url, options);
+    const navigationId = await this.#context.goto(url, {
+      ...options,
+      timeout: options?.timeout ?? this.#timeoutSettings.navigationTimeout(),
+    });
     return this.#page.getNavigationResponse(navigationId);
   }
 
+  @throwIfDetached
   override setContent(
     html: string,
     options: {
@@ -142,69 +130,17 @@ export class Frame extends BaseFrame {
       waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
     }
   ): Promise<void> {
-    return this.#context.setContent(html, options);
-  }
-
-  override content(): Promise<string> {
-    return this.#context.content();
-  }
-
-  override title(): Promise<string> {
-    return this.#context.title();
+    return this.#context.setContent(html, {
+      ...options,
+      timeout: options?.timeout ?? this.#timeoutSettings.navigationTimeout(),
+    });
   }
 
   context(): BrowsingContext {
     return this.#context;
   }
 
-  override $<Selector extends string>(
-    selector: Selector
-  ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    return this.mainRealm().$(selector);
-  }
-
-  override $$<Selector extends string>(
-    selector: Selector
-  ): Promise<Array<ElementHandle<NodeFor<Selector>>>> {
-    return this.mainRealm().$$(selector);
-  }
-
-  override $eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<NodeFor<Selector>, Params> = EvaluateFuncWith<
-      NodeFor<Selector>,
-      Params
-    >,
-  >(
-    selector: Selector,
-    pageFunction: string | Func,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(this.$eval.name, pageFunction);
-    return this.mainRealm().$eval(selector, pageFunction, ...args);
-  }
-
-  override $$eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<
-      Array<NodeFor<Selector>>,
-      Params
-    > = EvaluateFuncWith<Array<NodeFor<Selector>>, Params>,
-  >(
-    selector: Selector,
-    pageFunction: string | Func,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(this.$$eval.name, pageFunction);
-    return this.mainRealm().$$eval(selector, pageFunction, ...args);
-  }
-
-  override $x(expression: string): Promise<Array<ElementHandle<Node>>> {
-    return this.mainRealm().$x(expression);
-  }
-
+  @throwIfDetached
   override async waitForNavigation(
     options: {
       timeout?: number;
@@ -220,32 +156,77 @@ export class Frame extends BaseFrame {
       getWaitUntilSingle(waitUntil)
     ) as string;
 
-    const [info] = await Promise.all([
+    const [info] = await Deferred.race([
+      // TODO(lightning00blade): Should also keep tack of
+      // navigationAborted and navigationFailed
+      Promise.all([
+        waitForEvent<Bidi.BrowsingContext.NavigationInfo>(
+          this.#context,
+          waitUntilEvent,
+          () => {
+            return true;
+          },
+          timeout,
+          this.#abortDeferred.valueOrThrow()
+        ),
+        waitForEvent(
+          this.#context,
+          Bidi.ChromiumBidi.BrowsingContext.EventNames.NavigationStarted,
+          () => {
+            return true;
+          },
+          timeout,
+          this.#abortDeferred.valueOrThrow()
+        ),
+      ]),
       waitForEvent<Bidi.BrowsingContext.NavigationInfo>(
         this.#context,
-        waitUntilEvent,
+        Bidi.ChromiumBidi.BrowsingContext.EventNames.FragmentNavigated,
         () => {
           return true;
         },
         timeout,
         this.#abortDeferred.valueOrThrow()
-      ),
-      waitForEvent(
-        this.#context,
-        Bidi.BrowsingContext.EventNames.FragmentNavigated,
-        () => {
-          return true;
-        },
-        timeout,
-        this.#abortDeferred.valueOrThrow()
-      ),
+      ).then(info => {
+        return [info, undefined];
+      }),
     ]);
 
     return this.#page.getNavigationResponse(info.navigation);
   }
 
-  dispose(): void {
+  override get detached(): boolean {
+    return this.#disposed;
+  }
+
+  [Symbol.dispose](): void {
+    if (this.#disposed) {
+      return;
+    }
+    this.#disposed = true;
     this.#abortDeferred.reject(new Error('Frame detached'));
     this.#context.dispose();
+    this.sandboxes[MAIN_SANDBOX][Symbol.dispose]();
+    this.sandboxes[PUPPETEER_SANDBOX][Symbol.dispose]();
+  }
+
+  #exposedFunctions = new Map<string, ExposeableFunction<never[], unknown>>();
+  override async exposeFunction<Args extends unknown[], Ret>(
+    name: string,
+    apply: (...args: Args) => Awaitable<Ret>
+  ): Promise<void> {
+    if (this.#exposedFunctions.has(name)) {
+      throw new Error(
+        `Failed to add page binding with name ${name}: globalThis['${name}'] already exists!`
+      );
+    }
+    const exposeable = new ExposeableFunction(this, name, apply);
+    this.#exposedFunctions.set(name, exposeable);
+    try {
+      await exposeable.expose();
+    } catch (error) {
+      this.#exposedFunctions.delete(name);
+      throw error;
+    }
   }
 }

@@ -46,16 +46,14 @@ export class CDPKeyboard extends Keyboard {
   #client: CDPSession;
   #pressedKeys = new Set<string>();
 
-  /**
-   * @internal
-   */
   _modifiers = 0;
 
-  /**
-   * @internal
-   */
   constructor(client: CDPSession) {
     super();
+    this.#client = client;
+  }
+
+  updateClient(client: CDPSession): void {
     this.#client = client;
   }
 
@@ -281,13 +279,14 @@ export class CDPMouse extends Mouse {
   #client: CDPSession;
   #keyboard: CDPKeyboard;
 
-  /**
-   * @internal
-   */
   constructor(client: CDPSession, keyboard: CDPKeyboard) {
     super();
     this.#client = client;
     this.#keyboard = keyboard;
+  }
+
+  updateClient(client: CDPSession): void {
+    this.#client = client;
   }
 
   #_state: Readonly<MouseState> = {
@@ -494,7 +493,7 @@ export class CDPMouse extends Mouse {
     await this.move(start.x, start.y);
     await this.down();
     await this.move(target.x, target.y);
-    return promise;
+    return await promise;
   }
 
   override async dragEnter(
@@ -562,13 +561,14 @@ export class CDPTouchscreen extends Touchscreen {
   #client: CDPSession;
   #keyboard: CDPKeyboard;
 
-  /**
-   * @internal
-   */
   constructor(client: CDPSession, keyboard: CDPKeyboard) {
     super();
     this.#client = client;
     this.#keyboard = keyboard;
+  }
+
+  updateClient(client: CDPSession): void {
+    this.#client = client;
   }
 
   override async tap(x: number, y: number): Promise<void> {

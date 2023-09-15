@@ -171,7 +171,7 @@ const serviceWorkerExtensionPath = path.join(
         browserWSEndpoint,
         _isPageTarget(target) {
           return (
-            target.type === 'other' && target.url.startsWith('devtools://')
+            target.type() === 'other' && target.url().startsWith('devtools://')
           );
         },
       });
@@ -338,6 +338,24 @@ const serviceWorkerExtensionPath = path.join(
           return target.url().includes('devtools://');
         }),
       ]);
+      await browser.close();
+    });
+    it('should expose DevTools as a page', async () => {
+      const browser = await launchBrowser(
+        Object.assign({devtools: true}, headfulOptions)
+      );
+      const context = await browser.createIncognitoBrowserContext();
+      const [target] = await Promise.all([
+        browser.waitForTarget((target: {url: () => string | string[]}) => {
+          return target.url().includes('devtools://');
+        }),
+        context.newPage(),
+      ]);
+      const page = await target.page();
+      await page!.waitForFunction(() => {
+        // @ts-expect-error wrong context.
+        return Boolean(DevToolsAPI);
+      });
       await browser.close();
     });
   });

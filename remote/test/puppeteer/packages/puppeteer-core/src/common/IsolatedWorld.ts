@@ -16,38 +16,25 @@
 
 import {Protocol} from 'devtools-protocol';
 
-import type {ClickOptions, ElementHandle} from '../api/ElementHandle.js';
-import {Realm} from '../api/Frame.js';
-import {KeyboardTypeOptions} from '../api/Input.js';
 import {JSHandle} from '../api/JSHandle.js';
-import {assert} from '../util/assert.js';
+import {Realm} from '../api/Realm.js';
 import {Deferred} from '../util/Deferred.js';
 
 import {Binding} from './Binding.js';
 import {CDPSession} from './Connection.js';
 import {ExecutionContext} from './ExecutionContext.js';
-import {Frame} from './Frame.js';
-import {FrameManager} from './FrameManager.js';
+import {CDPFrame} from './Frame.js';
 import {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorlds.js';
-import {LifecycleWatcher, PuppeteerLifeCycleEvent} from './LifecycleWatcher.js';
 import {TimeoutSettings} from './TimeoutSettings.js';
-import {
-  BindingPayload,
-  EvaluateFunc,
-  EvaluateFuncWith,
-  HandleFor,
-  InnerLazyParams,
-  NodeFor,
-} from './types.js';
+import {BindingPayload, EvaluateFunc, HandleFor} from './types.js';
 import {
   addPageBinding,
-  createJSHandle,
+  createCdpHandle,
   debugError,
-  getPageContent,
-  setPageContent,
+  Mutex,
   withSourcePuppeteerURLIfNone,
 } from './util.js';
-import {TaskManager, WaitTask} from './WaitTask.js';
+import {WebWorker} from './WebWorker.js';
 
 /**
  * @public
@@ -101,77 +88,63 @@ export interface IsolatedWorldChart {
 /**
  * @internal
  */
-export class IsolatedWorld implements Realm {
-  #frame: Frame;
-  #document?: ElementHandle<Document>;
+export class IsolatedWorld extends Realm {
   #context = Deferred.create<ExecutionContext>();
-  #detached = false;
 
   // Set of bindings that have been registered in the current context.
   #contextBindings = new Set<string>();
 
   // Contains mapping from functions that should be bound to Puppeteer functions.
   #bindings = new Map<string, Binding>();
-  #taskManager = new TaskManager();
-
-  get taskManager(): TaskManager {
-    return this.#taskManager;
-  }
 
   get _bindings(): Map<string, Binding> {
     return this.#bindings;
   }
 
-  constructor(frame: Frame) {
-    // Keep own reference to client because it might differ from the FrameManager's
-    // client for OOP iframes.
-    this.#frame = frame;
-    this.#client.on('Runtime.bindingCalled', this.#onBindingCalled);
+  readonly #frameOrWorker: CDPFrame | WebWorker;
+
+  constructor(
+    frameOrWorker: CDPFrame | WebWorker,
+    timeoutSettings: TimeoutSettings
+  ) {
+    super(timeoutSettings);
+    this.#frameOrWorker = frameOrWorker;
+    this.frameUpdated();
   }
 
-  get #client(): CDPSession {
-    return this.#frame._client();
+  get environment(): CDPFrame | WebWorker {
+    return this.#frameOrWorker;
   }
 
-  get #frameManager(): FrameManager {
-    return this.#frame._frameManager;
+  frameUpdated(): void {
+    this.client.on('Runtime.bindingCalled', this.#onBindingCalled);
   }
 
-  get #timeoutSettings(): TimeoutSettings {
-    return this.#frameManager.timeoutSettings;
-  }
-
-  frame(): Frame {
-    return this.#frame;
+  get client(): CDPSession {
+    return this.#frameOrWorker.client;
   }
 
   clearContext(): void {
-    this.#document = undefined;
     this.#context = Deferred.create();
+    if (this.#frameOrWorker instanceof CDPFrame) {
+      this.#frameOrWorker.clearDocumentHandle();
+    }
   }
 
   setContext(context: ExecutionContext): void {
     this.#contextBindings.clear();
     this.#context.resolve(context);
-    void this.#taskManager.rerunAll();
+    void this.taskManager.rerunAll();
   }
 
   hasContext(): boolean {
     return this.#context.resolved();
   }
 
-  _detach(): void {
-    this.#detached = true;
-    this.#client.off('Runtime.bindingCalled', this.#onBindingCalled);
-    this.#taskManager.terminateAll(
-      new Error('waitForFunction failed: frame got detached.')
-    );
-  }
-
-  executionContext(): Promise<ExecutionContext> {
-    if (this.#detached) {
+  #executionContext(): Promise<ExecutionContext> {
+    if (this.disposed) {
       throw new Error(
-        `Execution context is not available in detached frame "${this.#frame.url()}" (are you trying to evaluate?)`
+        `Execution context is not available in detached frame "${this.environment.url()}" (are you trying to evaluate?)`
       );
     }
     if (this.#context === null) {
@@ -191,8 +164,8 @@ export class IsolatedWorld implements Realm {
       this.evaluateHandle.name,
       pageFunction
     );
-    const context = await this.executionContext();
-    return context.evaluateHandle(pageFunction, ...args);
+    const context = await this.#executionContext();
+    return await context.evaluateHandle(pageFunction, ...args);
   }
 
   async evaluate<
@@ -206,156 +179,8 @@ export class IsolatedWorld implements Realm {
       this.evaluate.name,
       pageFunction
     );
-    const context = await this.executionContext();
-    return context.evaluate(pageFunction, ...args);
-  }
-
-  async $<Selector extends string>(
-    selector: Selector
-  ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    const document = await this.document();
-    return document.$(selector);
-  }
-
-  async $$<Selector extends string>(
-    selector: Selector
-  ): Promise<Array<ElementHandle<NodeFor<Selector>>>> {
-    const document = await this.document();
-    return document.$$(selector);
-  }
-
-  async document(): Promise<ElementHandle<Document>> {
-    if (this.#document) {
-      return this.#document;
-    }
-    const context = await this.executionContext();
-    this.#document = await context.evaluateHandle(() => {
-      return document;
-    });
-    return this.#document;
-  }
-
-  async $x(expression: string): Promise<Array<ElementHandle<Node>>> {
-    const document = await this.document();
-    return document.$x(expression);
-  }
-
-  async $eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<NodeFor<Selector>, Params> = EvaluateFuncWith<
-      NodeFor<Selector>,
-      Params
-    >,
-  >(
-    selector: Selector,
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(this.$eval.name, pageFunction);
-    const document = await this.document();
-    return document.$eval(selector, pageFunction, ...args);
-  }
-
-  async $$eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<
-      Array<NodeFor<Selector>>,
-      Params
-    > = EvaluateFuncWith<Array<NodeFor<Selector>>, Params>,
-  >(
-    selector: Selector,
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(this.$$eval.name, pageFunction);
-    const document = await this.document();
-    return document.$$eval(selector, pageFunction, ...args);
-  }
-
-  async content(): Promise<string> {
-    return await this.evaluate(getPageContent);
-  }
-
-  async setContent(
-    html: string,
-    options: {
-      timeout?: number;
-      waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
-    } = {}
-  ): Promise<void> {
-    const {
-      waitUntil = ['load'],
-      timeout = this.#timeoutSettings.navigationTimeout(),
-    } = options;
-
-    await setPageContent(this, html);
-
-    const watcher = new LifecycleWatcher(
-      this.#frameManager,
-      this.#frame,
-      waitUntil,
-      timeout
-    );
-    const error = await Deferred.race<void | Error | undefined>([
-      watcher.terminationPromise(),
-      watcher.lifecyclePromise(),
-    ]);
-    watcher.dispose();
-    if (error) {
-      throw error;
-    }
-  }
-
-  async click(
-    selector: string,
-    options?: Readonly<ClickOptions>
-  ): Promise<void> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    await handle.click(options);
-    await handle.dispose();
-  }
-
-  async focus(selector: string): Promise<void> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    await handle.focus();
-    await handle.dispose();
-  }
-
-  async hover(selector: string): Promise<void> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    await handle.hover();
-    await handle.dispose();
-  }
-
-  async select(selector: string, ...values: string[]): Promise<string[]> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    const result = await handle.select(...values);
-    await handle.dispose();
-    return result;
-  }
-
-  async tap(selector: string): Promise<void> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    await handle.tap();
-    await handle.dispose();
-  }
-
-  async type(
-    selector: string,
-    text: string,
-    options?: Readonly<KeyboardTypeOptions>
-  ): Promise<void> {
-    const handle = await this.$(selector);
-    assert(handle, `No element found for selector: ${selector}`);
-    await handle.type(text, options);
-    await handle.dispose();
+    const context = await this.#executionContext();
+    return await context.evaluate(pageFunction, ...args);
   }
 
   // If multiple waitFor are set up asynchronously, we need to wait for the
@@ -369,7 +194,8 @@ export class IsolatedWorld implements Realm {
       return;
     }
 
-    await this.#mutex.acquire();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    using _ = await this.#mutex.acquire();
     try {
       await context._client.send(
         'Runtime.addBinding',
@@ -403,8 +229,6 @@ export class IsolatedWorld implements Realm {
       }
 
       debugError(error);
-    } finally {
-      this.#mutex.release();
     }
   }
 
@@ -440,81 +264,40 @@ export class IsolatedWorld implements Realm {
     }
   };
 
-  waitForFunction<
-    Params extends unknown[],
-    Func extends EvaluateFunc<InnerLazyParams<Params>> = EvaluateFunc<
-      InnerLazyParams<Params>
-    >,
-  >(
-    pageFunction: Func | string,
-    options: {
-      polling?: 'raf' | 'mutation' | number;
-      timeout?: number;
-      root?: ElementHandle<Node>;
-      signal?: AbortSignal;
-    } = {},
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    const {
-      polling = 'raf',
-      timeout = this.#timeoutSettings.timeout(),
-      root,
-      signal,
-    } = options;
-    if (typeof polling === 'number' && polling < 0) {
-      throw new Error('Cannot poll with non-positive interval');
-    }
-    const waitTask = new WaitTask(
-      this,
-      {
-        polling,
-        root,
-        timeout,
-        signal,
-      },
-      pageFunction as unknown as
-        | ((...args: unknown[]) => Promise<Awaited<ReturnType<Func>>>)
-        | string,
-      ...args
-    );
-    return waitTask.result;
-  }
-
-  async title(): Promise<string> {
-    return this.evaluate(() => {
-      return document.title;
-    });
-  }
-
   async adoptBackendNode(
     backendNodeId?: Protocol.DOM.BackendNodeId
   ): Promise<JSHandle<Node>> {
-    const executionContext = await this.executionContext();
-    const {object} = await this.#client.send('DOM.resolveNode', {
+    const executionContext = await this.#executionContext();
+    const {object} = await this.client.send('DOM.resolveNode', {
       backendNodeId: backendNodeId,
       executionContextId: executionContext._contextId,
     });
-    return createJSHandle(executionContext, object) as JSHandle<Node>;
+    return createCdpHandle(this, object) as JSHandle<Node>;
   }
 
   async adoptHandle<T extends JSHandle<Node>>(handle: T): Promise<T> {
-    const context = await this.executionContext();
-    assert(
-      handle.executionContext() !== context,
-      'Cannot adopt handle that already belongs to this execution context'
-    );
-    const nodeInfo = await this.#client.send('DOM.describeNode', {
+    if (handle.realm === this) {
+      // If the context has already adopted this handle, clone it so downstream
+      // disposal doesn't become an issue.
+      return (await handle.evaluateHandle(value => {
+        return value;
+      })) as unknown as T;
+    }
+    const nodeInfo = await this.client.send('DOM.describeNode', {
       objectId: handle.id,
     });
     return (await this.adoptBackendNode(nodeInfo.node.backendNodeId)) as T;
   }
 
   async transferHandle<T extends JSHandle<Node>>(handle: T): Promise<T> {
-    const context = await this.executionContext();
-    if (handle.executionContext() === context) {
+    if (handle.realm === this) {
       return handle;
     }
-    const info = await this.#client.send('DOM.describeNode', {
+    // Implies it's a primitive value, probably.
+    if (handle.remoteObject().objectId === undefined) {
+      return handle;
+    }
+    const info = await this.client.send('DOM.describeNode', {
       objectId: handle.remoteObject().objectId,
     });
     const newHandle = (await this.adoptBackendNode(
@@ -523,29 +306,9 @@ export class IsolatedWorld implements Realm {
     await handle.dispose();
     return newHandle;
   }
-}
 
-class Mutex {
-  #locked = false;
-  #acquirers: Array<() => void> = [];
-
-  // This is FIFO.
-  acquire(): Promise<void> {
-    if (!this.#locked) {
-      this.#locked = true;
-      return Promise.resolve();
-    }
-    const deferred = Deferred.create<void>();
-    this.#acquirers.push(deferred.resolve.bind(deferred));
-    return deferred.valueOrThrow();
-  }
-
-  release(): void {
-    const resolve = this.#acquirers.shift();
-    if (!resolve) {
-      this.#locked = false;
-      return;
-    }
-    resolve();
+  [Symbol.dispose](): void {
+    super[Symbol.dispose]();
+    this.client.off('Runtime.bindingCalled', this.#onBindingCalled);
   }
 }

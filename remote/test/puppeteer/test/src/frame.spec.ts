@@ -30,50 +30,13 @@ import {
 describe('Frame specs', function () {
   setupTestBrowserHooks();
 
-  describe('Frame.executionContext', function () {
-    it('should work', async () => {
-      const {page, server} = await getTestState();
-
-      await page.goto(server.EMPTY_PAGE);
-      await attachFrame(page, 'frame1', server.EMPTY_PAGE);
-      expect(page.frames()).toHaveLength(2);
-      const [frame1, frame2] = page.frames();
-      const context1 = await frame1!.executionContext();
-      const context2 = await frame2!.executionContext();
-      expect(context1).toBeTruthy();
-      expect(context2).toBeTruthy();
-      expect(context1 !== context2).toBeTruthy();
-      expect(context1._world?.frame()).toBe(frame1);
-      expect(context2._world?.frame()).toBe(frame2);
-
-      await Promise.all([
-        context1.evaluate(() => {
-          return ((globalThis as any).a = 1);
-        }),
-        context2.evaluate(() => {
-          return ((globalThis as any).a = 2);
-        }),
-      ]);
-      const [a1, a2] = await Promise.all([
-        context1.evaluate(() => {
-          return (globalThis as any).a;
-        }),
-        context2.evaluate(() => {
-          return (globalThis as any).a;
-        }),
-      ]);
-      expect(a1).toBe(1);
-      expect(a2).toBe(2);
-    });
-  });
-
   describe('Frame.evaluateHandle', function () {
     it('should work', async () => {
       const {page, server} = await getTestState();
 
       await page.goto(server.EMPTY_PAGE);
       const mainFrame = page.mainFrame();
-      const windowHandle = await mainFrame.evaluateHandle(() => {
+      using windowHandle = await mainFrame.evaluateHandle(() => {
         return window;
       });
       expect(windowHandle).toBeTruthy();
@@ -86,17 +49,15 @@ describe('Frame specs', function () {
 
       const frame1 = (await attachFrame(page, 'frame1', server.EMPTY_PAGE))!;
       await detachFrame(page, 'frame1');
-      let error!: Error;
-      await frame1
-        .evaluate(() => {
+      let error: Error | undefined;
+      try {
+        await frame1.evaluate(() => {
           return 7 * 8;
-        })
-        .catch(error_ => {
-          return (error = error_);
         });
-      expect(error.message).toContain(
-        'Execution context is not available in detached frame'
-      );
+      } catch (err) {
+        error = err as Error;
+      }
+      expect(error?.message).toContain('Attempted to use detached Frame');
     });
 
     it('allows readonly array to be an argument', async () => {
@@ -213,6 +174,7 @@ describe('Frame specs', function () {
         return navigatedFrames.push(frame);
       });
       await page.goto(server.PREFIX + '/frames/nested-frames.html');
+
       expect(attachedFrames).toHaveLength(4);
       expect(detachedFrames).toHaveLength(0);
       expect(navigatedFrames).toHaveLength(5);
@@ -339,7 +301,7 @@ describe('Frame specs', function () {
   describe('Frame.client', function () {
     it('should return the client instance', async () => {
       const {page} = await getTestState();
-      expect(page.mainFrame()._client()).toBeInstanceOf(CDPSession);
+      expect(page.mainFrame().client).toBeInstanceOf(CDPSession);
     });
   });
 });

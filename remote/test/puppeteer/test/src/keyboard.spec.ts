@@ -67,7 +67,7 @@ describe('Keyboard', function () {
       })
     ).toBe('Hello World!');
     for (const _ of 'World!') {
-      page.keyboard.press('ArrowLeft');
+      await page.keyboard.press('ArrowLeft');
     }
     await page.keyboard.type('inserted ');
     expect(
@@ -75,11 +75,11 @@ describe('Keyboard', function () {
         return document.querySelector('textarea')!.value;
       })
     ).toBe('Hello inserted World!');
-    page.keyboard.down('Shift');
+    await page.keyboard.down('Shift');
     for (const _ of 'inserted ') {
-      page.keyboard.press('ArrowLeft');
+      await page.keyboard.press('ArrowLeft');
     }
-    page.keyboard.up('Shift');
+    await page.keyboard.up('Shift');
     await page.keyboard.press('Backspace');
     expect(
       await page.evaluate(() => {
@@ -119,7 +119,7 @@ describe('Keyboard', function () {
     const {page, server} = await getTestState();
 
     await page.goto(server.PREFIX + '/input/textarea.html');
-    const textarea = (await page.$('textarea'))!;
+    using textarea = (await page.$('textarea'))!;
     await textarea.press('a');
     expect(
       await page.evaluate(() => {
@@ -148,7 +148,7 @@ describe('Keyboard', function () {
     const {page, server} = await getTestState();
 
     await page.goto(server.PREFIX + '/input/textarea.html');
-    const textarea = (await page.$('textarea'))!;
+    using textarea = (await page.$('textarea'))!;
     await textarea.press('a', {text: 'ё'});
     expect(
       await page.evaluate(() => {
@@ -444,7 +444,7 @@ describe('Keyboard', function () {
         true
       );
     });
-    const textarea = (await page.$('textarea'))!;
+    using textarea = (await page.$('textarea'))!;
 
     await textarea.press('Digit5');
     expect(await page.evaluate('keyLocation')).toBe(0);
@@ -490,7 +490,7 @@ describe('Keyboard', function () {
       server.PREFIX + '/input/textarea.html'
     );
     const frame = page.frames()[1]!;
-    const textarea = (await frame.$('textarea'))!;
+    using textarea = (await frame.$('textarea'))!;
     await textarea.type('👹 Tokyo street Japan 🇯🇵');
     expect(
       await frame.$eval('textarea', textarea => {

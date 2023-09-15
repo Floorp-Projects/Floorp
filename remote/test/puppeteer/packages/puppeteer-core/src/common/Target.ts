@@ -19,9 +19,10 @@ import {Protocol} from 'devtools-protocol';
 import type {Browser} from '../api/Browser.js';
 import type {BrowserContext} from '../api/BrowserContext.js';
 import {Page, PageEmittedEvents} from '../api/Page.js';
+import {Target, TargetType} from '../api/Target.js';
 import {Deferred} from '../util/Deferred.js';
 
-import {CDPSession} from './Connection.js';
+import {CDPSession, CDPSessionImpl} from './Connection.js';
 import {CDPPage} from './Page.js';
 import {Viewport} from './PuppeteerViewport.js';
 import {TargetManager} from './TargetManager.js';
@@ -38,147 +39,126 @@ export enum InitializationStatus {
 }
 
 /**
- * Target represents a
- * {@link https://chromedevtools.github.io/devtools-protocol/tot/Target/ | CDP target}.
- * In CDP a target is something that can be debugged such a frame, a page or a
- * worker.
- *
- * @public
+ * @internal
  */
-export class Target {
-  #browserContext: BrowserContext;
+export class CDPTarget extends Target {
+  #browserContext?: BrowserContext;
   #session?: CDPSession;
   #targetInfo: Protocol.Target.TargetInfo;
-  #targetManager: TargetManager;
-  #sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>;
+  #targetManager?: TargetManager;
+  #sessionFactory:
+    | ((isAutoAttachEmulated: boolean) => Promise<CDPSession>)
+    | undefined;
 
-  /**
-   * @internal
-   */
   _initializedDeferred = Deferred.create<InitializationStatus>();
-  /**
-   * @internal
-   */
   _isClosedDeferred = Deferred.create<void>();
-  /**
-   * @internal
-   */
   _targetId: string;
 
   /**
+   * To initialize the target for use, call initialize.
+   *
    * @internal
    */
   constructor(
     targetInfo: Protocol.Target.TargetInfo,
     session: CDPSession | undefined,
-    browserContext: BrowserContext,
-    targetManager: TargetManager,
-    sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>
+    browserContext: BrowserContext | undefined,
+    targetManager: TargetManager | undefined,
+    sessionFactory:
+      | ((isAutoAttachEmulated: boolean) => Promise<CDPSession>)
+      | undefined
   ) {
+    super();
     this.#session = session;
     this.#targetManager = targetManager;
     this.#targetInfo = targetInfo;
     this.#browserContext = browserContext;
     this._targetId = targetInfo.targetId;
     this.#sessionFactory = sessionFactory;
-    this._initialize();
+    if (this.#session && this.#session instanceof CDPSessionImpl) {
+      this.#session._setTarget(this);
+    }
   }
 
-  /**
-   * @internal
-   */
+  _subtype(): string | undefined {
+    return this.#targetInfo.subtype;
+  }
+
   _session(): CDPSession | undefined {
     return this.#session;
   }
 
-  /**
-   * @internal
-   */
   protected _sessionFactory(): (
     isAutoAttachEmulated: boolean
   ) => Promise<CDPSession> {
+    if (!this.#sessionFactory) {
+      throw new Error('sessionFactory is not initialized');
+    }
     return this.#sessionFactory;
   }
 
-  /**
-   * Creates a Chrome Devtools Protocol session attached to the target.
-   */
-  createCDPSession(): Promise<CDPSession> {
-    return this.#sessionFactory(false);
+  override createCDPSession(): Promise<CDPSession> {
+    if (!this.#sessionFactory) {
+      throw new Error('sessionFactory is not initialized');
+    }
+    return this.#sessionFactory(false).then(session => {
+      (session as CDPSessionImpl)._setTarget(this);
+      return session;
+    });
   }
 
-  /**
-   * @internal
-   */
+  override url(): string {
+    return this.#targetInfo.url;
+  }
+
+  override type(): TargetType {
+    const type = this.#targetInfo.type;
+    switch (type) {
+      case 'page':
+        return TargetType.PAGE;
+      case 'background_page':
+        return TargetType.BACKGROUND_PAGE;
+      case 'service_worker':
+        return TargetType.SERVICE_WORKER;
+      case 'shared_worker':
+        return TargetType.SHARED_WORKER;
+      case 'browser':
+        return TargetType.BROWSER;
+      case 'webview':
+        return TargetType.WEBVIEW;
+      case 'tab':
+        return TargetType.TAB;
+      default:
+        return TargetType.OTHER;
+    }
+  }
+
   _targetManager(): TargetManager {
+    if (!this.#targetManager) {
+      throw new Error('targetManager is not initialized');
+    }
     return this.#targetManager;
   }
 
-  /**
-   * @internal
-   */
   _getTargetInfo(): Protocol.Target.TargetInfo {
     return this.#targetInfo;
   }
 
-  /**
-   * If the target is not of type `"service_worker"` or `"shared_worker"`, returns `null`.
-   */
-  async worker(): Promise<WebWorker | null> {
-    return null;
-  }
-
-  url(): string {
-    return this.#targetInfo.url;
-  }
-
-  /**
-   * Identifies what kind of target this is.
-   *
-   * @remarks
-   *
-   * See {@link https://developer.chrome.com/extensions/background_pages | docs} for more info about background pages.
-   */
-  type():
-    | 'page'
-    | 'background_page'
-    | 'service_worker'
-    | 'shared_worker'
-    | 'other'
-    | 'browser'
-    | 'webview' {
-    const type = this.#targetInfo.type;
-    if (
-      type === 'page' ||
-      type === 'background_page' ||
-      type === 'service_worker' ||
-      type === 'shared_worker' ||
-      type === 'browser' ||
-      type === 'webview'
-    ) {
-      return type;
+  override browser(): Browser {
+    if (!this.#browserContext) {
+      throw new Error('browserContext is not initialised');
     }
-    return 'other';
-  }
-
-  /**
-   * Get the browser the target belongs to.
-   */
-  browser(): Browser {
     return this.#browserContext.browser();
   }
 
-  /**
-   * Get the browser context the target belongs to.
-   */
-  browserContext(): BrowserContext {
+  override browserContext(): BrowserContext {
+    if (!this.#browserContext) {
+      throw new Error('browserContext is not initialised');
+    }
     return this.#browserContext;
   }
 
-  /**
-   * Get the target that opened this target. Top-level targets return `null`.
-   */
-  opener(): Target | undefined {
+  override opener(): Target | undefined {
     const {openerId} = this.#targetInfo;
     if (!openerId) {
       return;
@@ -186,51 +166,31 @@ export class Target {
     return this.browser()._targets.get(openerId);
   }
 
-  /**
-   * @internal
-   */
   _targetInfoChanged(targetInfo: Protocol.Target.TargetInfo): void {
     this.#targetInfo = targetInfo;
     this._checkIfInitialized();
   }
 
-  /**
-   * @internal
-   */
-  protected _initialize(): void {
+  _initialize(): void {
     this._initializedDeferred.resolve(InitializationStatus.SUCCESS);
   }
 
-  /**
-   * @internal
-   */
   protected _checkIfInitialized(): void {
     if (!this._initializedDeferred.resolved()) {
       this._initializedDeferred.resolve(InitializationStatus.SUCCESS);
     }
-  }
-
-  /**
-   * If the target is not of type `"page"`, `"webview"` or `"background_page"`,
-   * returns `null`.
-   */
-  async page(): Promise<Page | null> {
-    return null;
   }
 }
 
 /**
  * @internal
  */
-export class PageTarget extends Target {
+export class PageTarget extends CDPTarget {
   #defaultViewport?: Viewport;
   protected pagePromise?: Promise<Page>;
   #screenshotTaskQueue: TaskQueue;
   #ignoreHTTPSErrors: boolean;
 
-  /**
-   * @internal
-   */
   constructor(
     targetInfo: Protocol.Target.TargetInfo,
     session: CDPSession | undefined,
@@ -247,7 +207,7 @@ export class PageTarget extends Target {
     this.#screenshotTaskQueue = screenshotTaskQueue;
   }
 
-  protected override _initialize(): void {
+  override _initialize(): void {
     this._initializedDeferred
       .valueOrThrow()
       .then(async result => {
@@ -306,7 +266,12 @@ export class PageTarget extends Target {
 /**
  * @internal
  */
-export class WorkerTarget extends Target {
+export class DevToolsTarget extends PageTarget {}
+
+/**
+ * @internal
+ */
+export class WorkerTarget extends CDPTarget {
   #workerPromise?: Promise<WebWorker>;
 
   override async worker(): Promise<WebWorker | null> {
@@ -326,11 +291,11 @@ export class WorkerTarget extends Target {
         );
       });
     }
-    return this.#workerPromise;
+    return await this.#workerPromise;
   }
 }
 
 /**
  * @internal
  */
-export class OtherTarget extends Target {}
+export class OtherTarget extends CDPTarget {}

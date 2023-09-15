@@ -20,12 +20,11 @@ import {TargetFilterCallback} from '../api/Browser.js';
 import {assert} from '../util/assert.js';
 import {Deferred} from '../util/Deferred.js';
 
-import {CDPSession, Connection} from './Connection.js';
+import {CDPSession, CDPSessionEmittedEvents, Connection} from './Connection.js';
 import {EventEmitter} from './EventEmitter.js';
-import {Target} from './Target.js';
+import {CDPTarget} from './Target.js';
 import {
   TargetFactory,
-  TargetInterceptor,
   TargetManagerEmittedEvents,
   TargetManager,
 } from './TargetManager.js';
@@ -66,11 +65,11 @@ export class FirefoxTargetManager
    *
    * The target is removed from here once it's been destroyed.
    */
-  #availableTargetsByTargetId = new Map<string, Target>();
+  #availableTargetsByTargetId = new Map<string, CDPTarget>();
   /**
    * Tracks which sessions attach to which target.
    */
-  #availableTargetsBySessionId = new Map<string, Target>();
+  #availableTargetsBySessionId = new Map<string, CDPTarget>();
   /**
    * If a target was filtered out by `targetFilterCallback`, we still receive
    * events about it from CDP, but we don't forward them to the rest of Puppeteer.
@@ -78,11 +77,6 @@ export class FirefoxTargetManager
   #ignoredTargets = new Set<string>();
   #targetFilterCallback: TargetFilterCallback | undefined;
   #targetFactory: TargetFactory;
-
-  #targetInterceptors = new WeakMap<
-    CDPSession | Connection,
-    TargetInterceptor[]
-  >();
 
   #attachedToTargetListenersBySession = new WeakMap<
     CDPSession | Connection,
@@ -108,28 +102,6 @@ export class FirefoxTargetManager
     this.setupAttachmentListeners(this.#connection);
   }
 
-  addTargetInterceptor(
-    client: CDPSession | Connection,
-    interceptor: TargetInterceptor
-  ): void {
-    const interceptors = this.#targetInterceptors.get(client) || [];
-    interceptors.push(interceptor);
-    this.#targetInterceptors.set(client, interceptors);
-  }
-
-  removeTargetInterceptor(
-    client: CDPSession | Connection,
-    interceptor: TargetInterceptor
-  ): void {
-    const interceptors = this.#targetInterceptors.get(client) || [];
-    this.#targetInterceptors.set(
-      client,
-      interceptors.filter(currentInterceptor => {
-        return currentInterceptor !== interceptor;
-      })
-    );
-  }
-
   setupAttachmentListeners(session: CDPSession | Connection): void {
     const listener = (event: Protocol.Target.AttachedToTargetEvent) => {
       return this.#onAttachedToTarget(session, event);
@@ -141,7 +113,6 @@ export class FirefoxTargetManager
 
   #onSessionDetached = (session: CDPSession) => {
     this.removeSessionListeners(session);
-    this.#targetInterceptors.delete(session);
     this.#availableTargetsBySessionId.delete(session.id());
   };
 
@@ -155,7 +126,7 @@ export class FirefoxTargetManager
     }
   }
 
-  getAvailableTargets(): Map<string, Target> {
+  getAvailableTargets(): Map<string, CDPTarget> {
     return this.#availableTargetsByTargetId;
   }
 
@@ -187,21 +158,19 @@ export class FirefoxTargetManager
 
     if (event.targetInfo.type === 'browser' && event.targetInfo.attached) {
       const target = this.#targetFactory(event.targetInfo, undefined);
+      target._initialize();
       this.#availableTargetsByTargetId.set(event.targetInfo.targetId, target);
       this.#finishInitializationIfReady(target._targetId);
       return;
     }
 
-    if (
-      this.#targetFilterCallback &&
-      !this.#targetFilterCallback(event.targetInfo)
-    ) {
+    const target = this.#targetFactory(event.targetInfo, undefined);
+    if (this.#targetFilterCallback && !this.#targetFilterCallback(target)) {
       this.#ignoredTargets.add(event.targetInfo.targetId);
       this.#finishInitializationIfReady(event.targetInfo.targetId);
       return;
     }
-
-    const target = this.#targetFactory(event.targetInfo, undefined);
+    target._initialize();
     this.#availableTargetsByTargetId.set(event.targetInfo.targetId, target);
     this.emit(TargetManagerEmittedEvents.TargetAvailable, target);
     this.#finishInitializationIfReady(target._targetId);
@@ -238,17 +207,7 @@ export class FirefoxTargetManager
       this.#availableTargetsByTargetId.get(targetInfo.targetId)!
     );
 
-    for (const hook of this.#targetInterceptors.get(parentSession) || []) {
-      if (!(parentSession instanceof Connection)) {
-        assert(this.#availableTargetsBySessionId.has(parentSession.id()));
-      }
-      await hook(
-        target,
-        parentSession instanceof Connection
-          ? null
-          : this.#availableTargetsBySessionId.get(parentSession.id())!
-      );
-    }
+    parentSession.emit(CDPSessionEmittedEvents.Ready, session);
   };
 
   #finishInitializationIfReady(targetId: string): void {

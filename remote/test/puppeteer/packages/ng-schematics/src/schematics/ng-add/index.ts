@@ -20,11 +20,12 @@ import {of} from 'rxjs';
 import {concatMap, map, scan} from 'rxjs/operators';
 
 import {
-  addBaseFiles,
+  addCommonFiles as addCommonFilesHelper,
   addFrameworkFiles,
   getNgCommandName,
+  hasE2ETester,
 } from '../utils/files.js';
-import {getAngularConfig} from '../utils/json.js';
+import {getApplicationProjects} from '../utils/json.js';
 import {
   addPackageJsonDependencies,
   addPackageJsonScripts,
@@ -34,7 +35,9 @@ import {
   type NodePackage,
   updateAngularJsonScripts,
 } from '../utils/packages.js';
-import {TestingFramework, type SchematicsOptions} from '../utils/types.js';
+import {TestRunner, type SchematicsOptions} from '../utils/types.js';
+
+const DEFAULT_PORT = 4200;
 
 // You don't have to export the function as default. You can also have more than one rule
 // factory per file.
@@ -42,9 +45,9 @@ export function ngAdd(options: SchematicsOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     return chain([
       addDependencies(options),
-      addPuppeteerFiles(options),
+      addCommonFiles(options),
       addOtherFiles(options),
-      updateScripts(options),
+      updateScripts(),
       updateAngularConfig(options),
     ])(tree, context);
   };
@@ -74,15 +77,15 @@ function addDependencies(options: SchematicsOptions): Rule {
   };
 }
 
-function updateScripts(options: SchematicsOptions): Rule {
+function updateScripts(): Rule {
   return (tree: Tree, context: SchematicContext): Tree => {
     context.logger.debug('Updating "package.json" scripts');
-    const angularJson = getAngularConfig(tree);
-    const projects = Object.keys(angularJson['projects']);
+    const projects = getApplicationProjects(tree);
+    const projectsKeys = Object.keys(projects);
 
-    if (projects.length === 1) {
-      const name = getNgCommandName(options);
-      const prefix = options.isDefaultTester ? '' : `run ${projects[0]}:`;
+    if (projectsKeys.length === 1) {
+      const name = getNgCommandName(projects);
+      const prefix = hasE2ETester(projects) ? `run ${projectsKeys[0]}:` : '';
       return addPackageJsonScripts(tree, [
         {
           name,
@@ -94,17 +97,16 @@ function updateScripts(options: SchematicsOptions): Rule {
   };
 }
 
-function addPuppeteerFiles(options: SchematicsOptions): Rule {
+function addCommonFiles(options: SchematicsOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('Adding Puppeteer base files.');
-    const {projects} = getAngularConfig(tree);
+    const projects = getApplicationProjects(tree);
 
-    return addBaseFiles(tree, context, {
-      projects,
+    return addCommonFilesHelper(tree, context, projects, {
       options: {
         ...options,
-        ext:
-          options.testingFramework === TestingFramework.Node ? 'test' : 'e2e',
+        port: DEFAULT_PORT,
+        ext: options.testRunner === TestRunner.Node ? 'test' : 'e2e',
       },
     });
   };
@@ -113,11 +115,13 @@ function addPuppeteerFiles(options: SchematicsOptions): Rule {
 function addOtherFiles(options: SchematicsOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('Adding Puppeteer additional files.');
-    const {projects} = getAngularConfig(tree);
+    const projects = getApplicationProjects(tree);
 
-    return addFrameworkFiles(tree, context, {
-      projects,
-      options,
+    return addFrameworkFiles(tree, context, projects, {
+      options: {
+        ...options,
+        port: DEFAULT_PORT,
+      },
     });
   };
 }

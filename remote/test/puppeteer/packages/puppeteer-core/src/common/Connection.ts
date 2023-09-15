@@ -24,6 +24,7 @@ import {ConnectionTransport} from './ConnectionTransport.js';
 import {debug} from './Debug.js';
 import {TargetCloseError, ProtocolError} from './Errors.js';
 import {EventEmitter} from './EventEmitter.js';
+import {CDPTarget} from './Target.js';
 import {debugError} from './util.js';
 
 const debugProtocolSend = debug('puppeteer:protocol:SEND ►');
@@ -159,9 +160,16 @@ export class CallbackRegistry {
     errorMessage: string | ProtocolError,
     originalMessage?: string
   ): void {
-    const isError = errorMessage instanceof ProtocolError;
-    const message = isError ? errorMessage.message : errorMessage;
-    const error = isError ? errorMessage : callback.error;
+    let error: ProtocolError;
+    let message: string;
+    if (errorMessage instanceof ProtocolError) {
+      error = errorMessage;
+      error.cause = callback.error;
+      message = errorMessage.message;
+    } else {
+      error = callback.error;
+      message = errorMessage;
+    }
 
     callback.reject(
       rewriteError(
@@ -299,8 +307,8 @@ export class Connection extends EventEmitter {
    */
   protected async onMessage(message: string): Promise<void> {
     if (this.#delay) {
-      await new Promise(f => {
-        return setTimeout(f, this.#delay);
+      await new Promise(r => {
+        return setTimeout(r, this.#delay);
       });
     }
     debugProtocolReceive(message);
@@ -310,7 +318,8 @@ export class Connection extends EventEmitter {
       const session = new CDPSessionImpl(
         this,
         object.params.targetInfo.type,
-        sessionId
+        sessionId,
+        object.sessionId
       );
       this.#sessions.set(sessionId, session);
       this.emit('sessionattached', session);
@@ -428,6 +437,12 @@ export interface CDPSessionOnMessageObject {
  */
 export const CDPSessionEmittedEvents = {
   Disconnected: Symbol('CDPSession.Disconnected'),
+  Swapped: Symbol('CDPSession.Swapped'),
+  /**
+   * Emitted when the session is ready to be configured during the auto-attach
+   * process. Right after the event is handled, the session will be resumed.
+   */
+  Ready: Symbol('CDPSession.Ready'),
 } as const;
 
 /**
@@ -470,6 +485,15 @@ export class CDPSession extends EventEmitter {
     throw new Error('Not implemented');
   }
 
+  /**
+   * Parent session in terms of CDP's auto-attach mechanism.
+   *
+   * @internal
+   */
+  parentSession(): CDPSession | undefined {
+    return undefined;
+  }
+
   send<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
@@ -504,19 +528,54 @@ export class CDPSessionImpl extends CDPSession {
   #targetType: string;
   #callbacks = new CallbackRegistry();
   #connection?: Connection;
+  #parentSessionId?: string;
+  #target?: CDPTarget;
 
   /**
    * @internal
    */
-  constructor(connection: Connection, targetType: string, sessionId: string) {
+  constructor(
+    connection: Connection,
+    targetType: string,
+    sessionId: string,
+    parentSessionId: string | undefined
+  ) {
     super();
     this.#connection = connection;
     this.#targetType = targetType;
     this.#sessionId = sessionId;
+    this.#parentSessionId = parentSessionId;
+  }
+
+  /**
+   * Sets the CDPTarget associated with the session instance.
+   *
+   * @internal
+   */
+  _setTarget(target: CDPTarget): void {
+    this.#target = target;
+  }
+
+  /**
+   * Gets the CDPTarget associated with the session instance.
+   *
+   * @internal
+   */
+  _target(): CDPTarget {
+    assert(this.#target, 'Target must exist');
+    return this.#target;
   }
 
   override connection(): Connection | undefined {
     return this.#connection;
+  }
+
+  override parentSession(): CDPSession | undefined {
+    if (!this.#parentSessionId) {
+      return;
+    }
+    const parent = this.#connection?.session(this.#parentSessionId);
+    return parent ?? undefined;
   }
 
   override send<T extends keyof ProtocolMapping.Commands>(

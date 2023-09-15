@@ -14,8 +14,19 @@ const WORKSPACE_OPTIONS = {
   version: '14.0.0',
 };
 
-const APPLICATION_OPTIONS = {
+const SINGLE_APPLICATION_OPTIONS = {
   name: 'sandbox',
+  directory: '.',
+  createApplication: true,
+  version: '14.0.0',
+};
+
+const MULTI_APPLICATION_OPTIONS = {
+  name: SINGLE_APPLICATION_OPTIONS.name,
+};
+
+export const MULTI_LIBRARY_OPTIONS = {
+  name: 'components',
 };
 
 export function setupHttpHooks(): void {
@@ -34,13 +45,10 @@ export function setupHttpHooks(): void {
   });
 }
 
-export function getProjectFile(file: string): string {
-  return `/${WORKSPACE_OPTIONS.newProjectRoot}/${APPLICATION_OPTIONS.name}/${file}`;
-}
-
 export function getAngularJsonScripts(
   tree: UnitTestTree,
-  isDefault = true
+  isDefault = true,
+  name = SINGLE_APPLICATION_OPTIONS.name
 ): {
   builder: string;
   configurations: Record<string, any>;
@@ -48,9 +56,7 @@ export function getAngularJsonScripts(
 } {
   const angularJson = tree.readJson('angular.json') as any;
   const e2eScript = isDefault ? 'e2e' : 'puppeteer';
-  return angularJson['projects']?.[APPLICATION_OPTIONS.name]?.['architect'][
-    e2eScript
-  ];
+  return angularJson['projects']?.[name]?.['architect'][e2eScript];
 }
 
 export function getPackageJson(tree: UnitTestTree): {
@@ -66,8 +72,16 @@ export function getPackageJson(tree: UnitTestTree): {
   };
 }
 
+export function getMultiApplicationFile(file: string): string {
+  return `/${WORKSPACE_OPTIONS.newProjectRoot}/${MULTI_APPLICATION_OPTIONS.name}/${file}`;
+}
+export function getMultiLibraryFile(file: string): string {
+  return `/${WORKSPACE_OPTIONS.newProjectRoot}/${MULTI_LIBRARY_OPTIONS.name}/${file}`;
+}
+
 export async function buildTestingTree(
-  command: 'ng-add' | 'test',
+  command: 'ng-add' | 'e2e' | 'config',
+  type: 'single' | 'multi' = 'single',
   userOptions?: Record<string, any>
 ): Promise<UnitTestTree> {
   const runner = new SchematicTestRunner(
@@ -75,26 +89,40 @@ export async function buildTestingTree(
     join(__dirname, '../../lib/schematics/collection.json')
   );
   const options = {
-    isDefaultTester: true,
-    exportConfig: false,
-    testingFramework: 'jasmine',
+    testRunner: 'jasmine',
     ...userOptions,
   };
   let workingTree: UnitTestTree;
 
   // Build workspace
-  workingTree = await runner.runExternalSchematic(
-    '@schematics/angular',
-    'workspace',
-    WORKSPACE_OPTIONS
-  );
-  // Build dummy application
-  workingTree = await runner.runExternalSchematic(
-    '@schematics/angular',
-    'application',
-    APPLICATION_OPTIONS,
-    workingTree
-  );
+  if (type === 'single') {
+    workingTree = await runner.runExternalSchematic(
+      '@schematics/angular',
+      'ng-new',
+      SINGLE_APPLICATION_OPTIONS
+    );
+  } else {
+    // Build workspace
+    workingTree = await runner.runExternalSchematic(
+      '@schematics/angular',
+      'workspace',
+      WORKSPACE_OPTIONS
+    );
+    // Build dummy application
+    workingTree = await runner.runExternalSchematic(
+      '@schematics/angular',
+      'application',
+      MULTI_APPLICATION_OPTIONS,
+      workingTree
+    );
+    // Build dummy library
+    workingTree = await runner.runExternalSchematic(
+      '@schematics/angular',
+      'library',
+      MULTI_LIBRARY_OPTIONS,
+      workingTree
+    );
+  }
 
   if (command !== 'ng-add') {
     // We want to create update the proper files with `ng-add`
@@ -103,4 +131,16 @@ export async function buildTestingTree(
   }
 
   return await runner.runSchematic(command, options, workingTree);
+}
+
+export async function runSchematic(
+  tree: UnitTestTree,
+  command: 'ng-add' | 'test',
+  options?: Record<string, any>
+): Promise<UnitTestTree> {
+  const runner = new SchematicTestRunner(
+    'schematics',
+    join(__dirname, '../../lib/schematics/collection.json')
+  );
+  return await runner.runSchematic(command, options, tree);
 }

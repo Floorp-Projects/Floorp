@@ -16,11 +16,18 @@
 
 import Protocol from 'devtools-protocol';
 
-import {CDPSession} from '../common/Connection.js';
-import {ExecutionContext} from '../common/ExecutionContext.js';
-import {EvaluateFuncWith, HandleFor, HandleOr} from '../common/types.js';
+import {Symbol} from '../../third_party/disposablestack/disposablestack.js';
+import {
+  EvaluateFuncWith,
+  HandleFor,
+  HandleOr,
+  Moveable,
+} from '../common/types.js';
+import {debugError, withSourcePuppeteerURLIfNone} from '../common/util.js';
+import {moveable} from '../util/decorators.js';
 
 import {ElementHandle} from './ElementHandle.js';
+import {Realm} from './Realm.js';
 
 /**
  * Represents a reference to a JavaScript object. Instances can be created using
@@ -43,7 +50,12 @@ import {ElementHandle} from './ElementHandle.js';
  *
  * @public
  */
-export class JSHandle<T = unknown> {
+@moveable
+export abstract class JSHandle<T = unknown>
+  implements Disposable, AsyncDisposable, Moveable
+{
+  declare move: () => this;
+
   /**
    * Used for nominally typing {@link JSHandle}.
    */
@@ -57,21 +69,12 @@ export class JSHandle<T = unknown> {
   /**
    * @internal
    */
+  abstract get realm(): Realm;
+
+  /**
+   * @internal
+   */
   get disposed(): boolean {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @internal
-   */
-  executionContext(): ExecutionContext {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @internal
-   */
-  get client(): CDPSession {
     throw new Error('Not implemented');
   }
 
@@ -84,9 +87,12 @@ export class JSHandle<T = unknown> {
   >(
     pageFunction: Func | string,
     ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>>;
-  async evaluate(): Promise<unknown> {
-    throw new Error('Not implemented');
+  ): Promise<Awaited<ReturnType<Func>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
+    return await this.realm.evaluate(pageFunction, this, ...args);
   }
 
   /**
@@ -99,23 +105,31 @@ export class JSHandle<T = unknown> {
   >(
     pageFunction: Func | string,
     ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>>;
-  async evaluateHandle(): Promise<HandleFor<unknown>> {
-    throw new Error('Not implemented');
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
+    return await this.realm.evaluateHandle(pageFunction, this, ...args);
   }
 
   /**
    * Fetches a single property from the referenced object.
    */
-  async getProperty<K extends keyof T>(
+  getProperty<K extends keyof T>(
     propertyName: HandleOr<K>
   ): Promise<HandleFor<T[K]>>;
-  async getProperty(propertyName: string): Promise<JSHandle<unknown>>;
+  getProperty(propertyName: string): Promise<JSHandle<unknown>>;
+
+  /**
+   * @internal
+   */
   async getProperty<K extends keyof T>(
     propertyName: HandleOr<K>
-  ): Promise<HandleFor<T[K]>>;
-  async getProperty<K extends keyof T>(): Promise<HandleFor<T[K]>> {
-    throw new Error('Not implemented');
+  ): Promise<HandleFor<T[K]>> {
+    return await this.evaluateHandle((object, propertyName) => {
+      return object[propertyName as K];
+    }, propertyName);
   }
 
   /**
@@ -137,7 +151,29 @@ export class JSHandle<T = unknown> {
    * ```
    */
   async getProperties(): Promise<Map<string, JSHandle>> {
-    throw new Error('Not implemented');
+    const propertyNames = await this.evaluate(object => {
+      const enumerableProperties = [];
+      const descriptors = Object.getOwnPropertyDescriptors(object);
+      for (const propertyName in descriptors) {
+        if (descriptors[propertyName]?.enumerable) {
+          enumerableProperties.push(propertyName);
+        }
+      }
+      return enumerableProperties;
+    });
+    const map = new Map<string, JSHandle>();
+    const results = await Promise.all(
+      propertyNames.map(key => {
+        return this.getProperty(key);
+      })
+    );
+    for (const [key, value] of Object.entries(propertyNames)) {
+      using handle = results[key as any];
+      if (handle) {
+        map.set(value, handle.move());
+      }
+    }
+    return map;
   }
 
   /**
@@ -148,24 +184,18 @@ export class JSHandle<T = unknown> {
    * @remarks
    * If the object has a `toJSON` function, it **will not** be called.
    */
-  async jsonValue(): Promise<T> {
-    throw new Error('Not implemented');
-  }
+  abstract jsonValue(): Promise<T>;
 
   /**
    * Either `null` or the handle itself if the handle is an
    * instance of {@link ElementHandle}.
    */
-  asElement(): ElementHandle<Node> | null {
-    throw new Error('Not implemented');
-  }
+  abstract asElement(): ElementHandle<Node> | null;
 
   /**
    * Releases the object referenced by the handle for garbage collection.
    */
-  async dispose(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract dispose(): Promise<void>;
 
   /**
    * Returns a string representation of the JSHandle.
@@ -173,23 +203,25 @@ export class JSHandle<T = unknown> {
    * @remarks
    * Useful during debugging.
    */
-  toString(): string {
-    throw new Error('Not implemented');
-  }
+  abstract toString(): string;
 
   /**
    * @internal
    */
-  get id(): string | undefined {
-    throw new Error('Not implemented');
-  }
+  abstract get id(): string | undefined;
 
   /**
    * Provides access to the
    * {@link https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#type-RemoteObject | Protocol.Runtime.RemoteObject}
    * backing this handle.
    */
-  remoteObject(): Protocol.Runtime.RemoteObject {
-    throw new Error('Not implemented');
+  abstract remoteObject(): Protocol.Runtime.RemoteObject;
+
+  [Symbol.dispose](): void {
+    return void this.dispose().catch(debugError);
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.dispose();
   }
 }

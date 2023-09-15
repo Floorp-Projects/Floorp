@@ -1,3 +1,6 @@
+const rulesDirPlugin = require('eslint-plugin-rulesdir');
+rulesDirPlugin.RULES_DIR = 'tools/eslint/lib';
+
 module.exports = {
   root: true,
   env: {
@@ -136,10 +139,12 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
         'plugin:@typescript-eslint/stylistic',
       ],
-      plugins: ['eslint-plugin-tsdoc', 'local'],
+      plugins: ['eslint-plugin-tsdoc', 'rulesdir'],
       rules: {
         // Keeps comments formatted.
-        'local/prettier-comments': 'error',
+        'rulesdir/prettier-comments': 'error',
+        // Enforces clean up of used resources.
+        'rulesdir/use-using': 'error',
         // Brackets keep code readable.
         curly: ['error', 'all'],
         // Brackets keep code readable and `return` intentions clear.
@@ -213,7 +218,22 @@ module.exports = {
           {ignoreVoid: true, ignoreIIFE: true},
         ],
         '@typescript-eslint/prefer-ts-expect-error': 'error',
+        // This is more performant; see https://v8.dev/blog/fast-async.
+        '@typescript-eslint/return-await': ['error', 'always'],
       },
+      overrides: [
+        {
+          files: [
+            'packages/puppeteer-core/src/**/*.test.ts',
+            'tools/mochaRunner/src/test.ts',
+          ],
+          rules: {
+            // With the Node.js test runner, `describe` and `it` are technically
+            // promises, but we don't need to await them.
+            '@typescript-eslint/no-floating-promises': 'off',
+          },
+        },
+      ],
     },
   ],
 };

@@ -100,9 +100,18 @@ export interface InstallOptions {
 /**
  * @public
  */
+export function install(
+  options: InstallOptions & {unpack?: true}
+): Promise<InstalledBrowser>;
+/**
+ * @public
+ */
+export function install(
+  options: InstallOptions & {unpack: false}
+): Promise<string>;
 export async function install(
   options: InstallOptions
-): Promise<InstalledBrowser> {
+): Promise<InstalledBrowser | string> {
   options.platform ??= detectBrowserPlatform();
   options.unpack ??= true;
   if (!options.platform) {
@@ -118,46 +127,36 @@ export async function install(
   );
   const fileName = url.toString().split('/').pop();
   assert(fileName, `A malformed download URL was found: ${url}.`);
-  const structure = new Cache(options.cacheDir);
-  const browserRoot = structure.browserRoot(options.browser);
-  const archivePath = path.join(browserRoot, fileName);
+  const cache = new Cache(options.cacheDir);
+  const browserRoot = cache.browserRoot(options.browser);
+  const archivePath = path.join(browserRoot, `${options.buildId}-${fileName}`);
   if (!existsSync(browserRoot)) {
     await mkdir(browserRoot, {recursive: true});
   }
 
   if (!options.unpack) {
     if (existsSync(archivePath)) {
-      return {
-        path: archivePath,
-        browser: options.browser,
-        platform: options.platform,
-        buildId: options.buildId,
-      };
+      return archivePath;
     }
     debugInstall(`Downloading binary from ${url}`);
     debugTime('download');
     await downloadFile(url, archivePath, options.downloadProgressCallback);
     debugTimeEnd('download');
-    return {
-      path: archivePath,
-      browser: options.browser,
-      platform: options.platform,
-      buildId: options.buildId,
-    };
+    return archivePath;
   }
 
-  const outputPath = structure.installationDir(
+  const outputPath = cache.installationDir(
     options.browser,
     options.platform,
     options.buildId
   );
   if (existsSync(outputPath)) {
-    return {
-      path: outputPath,
-      browser: options.browser,
-      platform: options.platform,
-      buildId: options.buildId,
-    };
+    return new InstalledBrowser(
+      cache,
+      options.browser,
+      options.buildId,
+      options.platform
+    );
   }
   try {
     debugInstall(`Downloading binary from ${url}`);
@@ -180,12 +179,12 @@ export async function install(
       await unlink(archivePath);
     }
   }
-  return {
-    path: outputPath,
-    browser: options.browser,
-    platform: options.platform,
-    buildId: options.buildId,
-  };
+  return new InstalledBrowser(
+    cache,
+    options.browser,
+    options.buildId,
+    options.platform
+  );
 }
 
 /**

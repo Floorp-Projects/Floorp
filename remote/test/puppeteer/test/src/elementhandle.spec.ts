@@ -35,7 +35,7 @@ describe('ElementHandle specs', function () {
 
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
-      const elementHandle = (await page.$('.box:nth-of-type(13)'))!;
+      using elementHandle = (await page.$('.box:nth-of-type(13)'))!;
       const box = await elementHandle.boundingBox();
       expect(box).toEqual({x: 100, y: 50, width: 50, height: 50});
     });
@@ -45,7 +45,7 @@ describe('ElementHandle specs', function () {
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/frames/nested-frames.html');
       const nestedFrame = page.frames()[1]!.childFrames()[1]!;
-      const elementHandle = (await nestedFrame.$('div'))!;
+      using elementHandle = (await nestedFrame.$('div'))!;
       const box = await elementHandle.boundingBox();
       if (isChrome) {
         expect(box).toEqual({x: 28, y: 182, width: 264, height: 18});
@@ -57,7 +57,7 @@ describe('ElementHandle specs', function () {
       const {page} = await getTestState();
 
       await page.setContent('<div style="display:none">hi</div>');
-      const element = (await page.$('div'))!;
+      using element = (await page.$('div'))!;
       expect(await element.boundingBox()).toBe(null);
     });
     it('should force a layout', async () => {
@@ -67,7 +67,7 @@ describe('ElementHandle specs', function () {
       await page.setContent(
         '<div style="width: 100px; height: 100px">hello</div>'
       );
-      const elementHandle = (await page.$('div'))!;
+      using elementHandle = (await page.$('div'))!;
       await page.evaluate((element: HTMLElement) => {
         return (element.style.height = '200px');
       }, elementHandle);
@@ -82,7 +82,7 @@ describe('ElementHandle specs', function () {
           <rect id="theRect" x="30" y="50" width="200" height="300"></rect>
         </svg>
       `);
-      const element = (await page.$(
+      using element = (await page.$(
         '#therect'
       )) as ElementHandle<SVGRectElement>;
       const pptrBoundingBox = await element.boundingBox();
@@ -111,7 +111,7 @@ describe('ElementHandle specs', function () {
 
       // Step 2: Add div and position it absolutely inside frame.
       const frame = page.frames()[1]!;
-      const divHandle = (
+      using divHandle = (
         await frame.evaluateHandle(() => {
           const div = document.createElement('div');
           document.body.appendChild(div);
@@ -145,7 +145,7 @@ describe('ElementHandle specs', function () {
         y: 2 + 5,
       });
       expect(box.content[0]).toEqual({
-        x: 1 + 4 + 3 + 1 + 2, // frame.left + div.left + div.marginLeft + div.borderLeft + dif.paddingLeft
+        x: 1 + 4 + 3 + 1 + 2, // frame.left + div.left + div.marginLeft + div.borderLeft + div.paddingLeft
         y: 2 + 5,
       });
     });
@@ -154,7 +154,7 @@ describe('ElementHandle specs', function () {
       const {page} = await getTestState();
 
       await page.setContent('<div style="display:none">hi</div>');
-      const element = (await page.$('div'))!;
+      using element = (await page.$('div'))!;
       expect(await element.boxModel()).toBe(null);
     });
   });
@@ -165,7 +165,7 @@ describe('ElementHandle specs', function () {
 
       await page.goto(server.EMPTY_PAGE);
       await attachFrame(page, 'frame1', server.EMPTY_PAGE);
-      const elementHandle = (await page.$('#frame1'))!;
+      using elementHandle = (await page.$('#frame1'))!;
       const frame = await elementHandle.contentFrame();
       expect(frame).toBe(page.frames()[1]);
     });
@@ -175,7 +175,7 @@ describe('ElementHandle specs', function () {
     it('should work', async () => {
       const {page} = await getTestState();
       await page.setContent('<div style="display: none">text</div>');
-      const element = (await page.waitForSelector('div'))!;
+      using element = (await page.waitForSelector('div'))!;
       await expect(element.isVisible()).resolves.toBeFalsy();
       await expect(element.isHidden()).resolves.toBeTruthy();
       await element.evaluate(e => {
@@ -191,7 +191,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
-      const button = (await page.$('button'))!;
+      using button = (await page.$('button'))!;
       await button.click();
       expect(
         await page.evaluate(() => {
@@ -219,7 +219,7 @@ describe('ElementHandle specs', function () {
         });
       });
 
-      const divHandle = (await page.$('div'))!;
+      using divHandle = (await page.$('div'))!;
       await divHandle.click();
       await divHandle.click({
         offset: {
@@ -237,7 +237,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/shadow.html');
-      const buttonHandle = await page.evaluateHandle(() => {
+      using buttonHandle = await page.evaluateHandle(() => {
         // @ts-expect-error button is expected to be in the page's scope.
         return button as HTMLButtonElement;
       });
@@ -253,7 +253,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
-      const buttonTextNode = await page.evaluateHandle(() => {
+      using buttonTextNode = await page.evaluateHandle(() => {
         return document.querySelector('button')!.firstChild as HTMLElement;
       });
       let error!: Error;
@@ -269,7 +269,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
-      const button = (await page.$('button'))!;
+      using button = (await page.$('button'))!;
       await page.evaluate((button: HTMLElement) => {
         return button.remove();
       }, button);
@@ -286,7 +286,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
-      const button = (await page.$('button'))!;
+      using button = (await page.$('button'))!;
       await page.evaluate((button: HTMLElement) => {
         return (button.style.display = 'none');
       }, button);
@@ -294,15 +294,15 @@ describe('ElementHandle specs', function () {
         return error_;
       });
       expect(error.message).atLeastOneToContain([
-        'Node is either not clickable or not an HTMLElement',
-        'no such node',
+        'Node is either not clickable or not an Element',
+        'no such element',
       ]);
     });
     it('should throw for recursively hidden nodes', async () => {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/button.html');
-      const button = (await page.$('button'))!;
+      using button = (await page.$('button'))!;
       await page.evaluate((button: HTMLElement) => {
         return (button.parentElement!.style.display = 'none');
       }, button);
@@ -310,20 +310,20 @@ describe('ElementHandle specs', function () {
         return error_;
       });
       expect(error.message).atLeastOneToContain([
-        'Node is either not clickable or not an HTMLElement',
-        'no such node',
+        'Node is either not clickable or not an Element',
+        'no such element',
       ]);
     });
     it('should throw for <br> elements', async () => {
       const {page} = await getTestState();
 
       await page.setContent('hello<br>goodbye');
-      const br = (await page.$('br'))!;
+      using br = (await page.$('br'))!;
       const error = await br.click().catch(error_ => {
         return error_;
       });
       expect(error.message).atLeastOneToContain([
-        'Node is either not clickable or not an HTMLElement',
+        'Node is either not clickable or not an Element',
         'no such node',
       ]);
     });
@@ -341,11 +341,11 @@ describe('ElementHandle specs', function () {
         `;
       });
       await page.evaluate(async () => {
-        return new Promise(resolve => {
+        return await new Promise(resolve => {
           return window.requestAnimationFrame(resolve);
         });
       });
-      const divHandle = (await page.$('div'))!;
+      using divHandle = (await page.$('div'))!;
       expect(await divHandle.clickablePoint()).toEqual({
         x: 45 + 60, // margin + middle point offset
         y: 45 + 30, // margin + middle point offset
@@ -361,6 +361,58 @@ describe('ElementHandle specs', function () {
       });
     });
 
+    it('should not work if the click box is not visible', async () => {
+      const {page} = await getTestState();
+
+      await page.setContent(
+        '<button style="width: 10px; height: 10px; position: absolute; left: -20px"></button>'
+      );
+      using handle = await page.locator('button').waitHandle();
+      await expect(handle.clickablePoint()).rejects.toBeInstanceOf(Error);
+
+      await page.setContent(
+        '<button style="width: 10px; height: 10px; position: absolute; right: -20px"></button>'
+      );
+      using handle2 = await page.locator('button').waitHandle();
+      await expect(handle2.clickablePoint()).rejects.toBeInstanceOf(Error);
+
+      await page.setContent(
+        '<button style="width: 10px; height: 10px; position: absolute; top: -20px"></button>'
+      );
+      using handle3 = await page.locator('button').waitHandle();
+      await expect(handle3.clickablePoint()).rejects.toBeInstanceOf(Error);
+
+      await page.setContent(
+        '<button style="width: 10px; height: 10px; position: absolute; bottom: -20px"></button>'
+      );
+      using handle4 = await page.locator('button').waitHandle();
+      await expect(handle4.clickablePoint()).rejects.toBeInstanceOf(Error);
+    });
+
+    it('should not work if the click box is not visible due to the iframe', async () => {
+      const {page} = await getTestState();
+
+      await page.setContent(
+        `<iframe name='frame' style='position: absolute; left: -100px' srcdoc="<button style='width: 10px; height: 10px;'></button>"></iframe>`
+      );
+      const frame = await page.waitForFrame(frame => {
+        return frame.name() === 'frame';
+      });
+
+      using handle = await frame.locator('button').waitHandle();
+      await expect(handle.clickablePoint()).rejects.toBeInstanceOf(Error);
+
+      await page.setContent(
+        `<iframe name='frame2' style='position: absolute; top: -100px' srcdoc="<button style='width: 10px; height: 10px;'></button>"></iframe>`
+      );
+      const frame2 = await page.waitForFrame(frame => {
+        return frame.name() === 'frame2';
+      });
+
+      using handle2 = await frame2.locator('button').waitHandle();
+      await expect(handle2.clickablePoint()).rejects.toBeInstanceOf(Error);
+    });
+
     it('should work for iframes', async () => {
       const {page} = await getTestState();
       await page.evaluate(() => {
@@ -371,12 +423,12 @@ describe('ElementHandle specs', function () {
         `;
       });
       await page.evaluate(async () => {
-        return new Promise(resolve => {
+        return await new Promise(resolve => {
           return window.requestAnimationFrame(resolve);
         });
       });
       const frame = page.frames()[1]!;
-      const divHandle = (await frame.$('div'))!;
+      using divHandle = (await frame.$('div'))!;
       expect(await divHandle.clickablePoint()).toEqual({
         x: 20 + 45 + 60, // iframe pos + margin + middle point offset
         y: 20 + 45 + 30, // iframe pos + margin + middle point offset
@@ -403,7 +455,7 @@ describe('ElementHandle specs', function () {
       await page.setContent(
         '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
       );
-      let element = (await waitFor)!;
+      using element = (await waitFor)!;
       if (element instanceof Error) {
         throw element;
       }
@@ -415,13 +467,13 @@ describe('ElementHandle specs', function () {
       await element.evaluate(el => {
         el.innerHTML = '<div class="bar">bar1</div>';
       });
-      element = (await innerWaitFor)!;
-      if (element instanceof Error) {
-        throw element;
+      using element2 = (await innerWaitFor)!;
+      if (element2 instanceof Error) {
+        throw element2;
       }
-      expect(element).toBeDefined();
+      expect(element2).toBeDefined();
       expect(
-        await element.evaluate(el => {
+        await element2.evaluate(el => {
           return (el as HTMLElement).innerText;
         })
       ).toStrictEqual('bar1');
@@ -444,12 +496,12 @@ describe('ElementHandle specs', function () {
         </div>`
       );
 
-      const el1 = (await page.waitForSelector(
+      using el1 = (await page.waitForSelector(
         '#el1'
       )) as ElementHandle<HTMLDivElement>;
 
       for (const path of ['//div', './/div']) {
-        const e = (await el1.waitForXPath(
+        using e = (await el1.waitForXPath(
           path
         )) as ElementHandle<HTMLDivElement>;
         expect(
@@ -466,7 +518,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       await page.goto(server.PREFIX + '/input/scrollable.html');
-      const button = (await page.$('#button-6'))!;
+      using button = (await page.$('#button-6'))!;
       await button.hover();
       expect(
         await page.evaluate(() => {
@@ -481,7 +533,7 @@ describe('ElementHandle specs', function () {
       const {page, server} = await getTestState();
 
       async function getVisibilityForButton(selector: string) {
-        const button = (await page.$(selector))!;
+        using button = (await page.$(selector))!;
         return await button.isIntersectingViewport();
       }
 
@@ -505,7 +557,7 @@ describe('ElementHandle specs', function () {
       await page.goto(server.PREFIX + '/offscreenbuttons.html');
       // a button almost cannot be seen
       // sometimes we expect to return false by isIntersectingViewport1
-      const button = (await page.$('#btn11'))!;
+      using button = (await page.$('#btn11'))!;
       expect(
         await button.isIntersectingViewport({
           threshold: 0.001,
@@ -518,7 +570,7 @@ describe('ElementHandle specs', function () {
       await page.goto(server.PREFIX + '/offscreenbuttons.html');
       // a button almost cannot be seen
       // sometimes we expect to return false by isIntersectingViewport1
-      const button = (await page.$('#btn0'))!;
+      using button = (await page.$('#btn0'))!;
       expect(
         await button.isIntersectingViewport({
           threshold: 1,
@@ -563,7 +615,7 @@ describe('ElementHandle specs', function () {
 
       const [invisibleCircle, invisibleSvg] = await Promise.all([
         page.$('div circle'),
-        await page.$('div svg'),
+        page.$('div svg'),
       ]);
 
       // Firefox seems slow when using `isIntersectingViewport`
@@ -609,7 +661,7 @@ describe('ElementHandle specs', function () {
           return document.querySelector(`[id="${selector}"]`);
         },
       });
-      const element = (await page.$(
+      using element = (await page.$(
         'getById/foo'
       )) as ElementHandle<HTMLDivElement>;
       expect(
@@ -728,7 +780,7 @@ describe('ElementHandle specs', function () {
       await page.setContent(
         '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
       );
-      let element = (await waitFor)!;
+      using element = (await waitFor)!;
       if (element instanceof Error) {
         throw element;
       }
@@ -744,13 +796,13 @@ describe('ElementHandle specs', function () {
         el.innerHTML = '<div class="bar">bar1</div>';
       });
 
-      element = (await innerWaitFor)!;
-      if (element instanceof Error) {
-        throw element;
+      using element2 = (await innerWaitFor)!;
+      if (element2 instanceof Error) {
+        throw element2;
       }
-      expect(element).toBeDefined();
+      expect(element2).toBeDefined();
       expect(
-        await element.evaluate(el => {
+        await element2.evaluate(el => {
           return el.innerText;
         })
       ).toStrictEqual('bar1');
@@ -795,7 +847,7 @@ describe('ElementHandle specs', function () {
         },
       });
 
-      const element = (await page.$('getByClass/foo'))!;
+      using element = (await page.$('getByClass/foo'))!;
       expect(element).toBeDefined();
 
       const elements = await page.$$('getByClass/foo');
@@ -841,7 +893,7 @@ describe('ElementHandle specs', function () {
         },
       });
 
-      const element = (await page.$(
+      using element = (await page.$(
         'getById/foo'
       )) as ElementHandle<HTMLDivElement>;
       expect(
@@ -852,13 +904,56 @@ describe('ElementHandle specs', function () {
     });
   });
 
-  describe('Element.toElement', () => {
+  describe('ElementHandle.toElement', () => {
     it('should work', async () => {
       const {page} = await getTestState();
       await page.setContent('<div class="foo">Foo1</div>');
-      const element = await page.$('.foo');
-      const div = await element?.toElement('div');
+      using element = await page.$('.foo');
+      using div = await element?.toElement('div');
       expect(div).toBeDefined();
+    });
+  });
+
+  describe('ElementHandle[Symbol.dispose]', () => {
+    it('should work', async () => {
+      const {page} = await getTestState();
+      using handle = await page.evaluateHandle('document');
+      const spy = sinon.spy(handle, Symbol.dispose);
+      {
+        using _ = handle;
+      }
+      expect(handle).toBeInstanceOf(ElementHandle);
+      expect(spy.calledOnce).toBeTruthy();
+      expect(handle.disposed).toBeTruthy();
+    });
+  });
+
+  describe('ElementHandle[Symbol.asyncDispose]', () => {
+    it('should work', async () => {
+      const {page} = await getTestState();
+      using handle = await page.evaluateHandle('document');
+      const spy = sinon.spy(handle, Symbol.asyncDispose);
+      {
+        await using _ = handle;
+      }
+      expect(handle).toBeInstanceOf(ElementHandle);
+      expect(spy.calledOnce).toBeTruthy();
+      expect(handle.disposed).toBeTruthy();
+    });
+  });
+
+  describe('ElementHandle.move', () => {
+    it('should work', async () => {
+      const {page} = await getTestState();
+      using handle = await page.evaluateHandle('document');
+      const spy = sinon.spy(handle, Symbol.dispose);
+      {
+        using _ = handle;
+        handle.move();
+      }
+      expect(handle).toBeInstanceOf(ElementHandle);
+      expect(spy.calledOnce).toBeTruthy();
+      expect(handle.disposed).toBeFalsy();
     });
   });
 });

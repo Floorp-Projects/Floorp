@@ -16,6 +16,7 @@
 
 import expect from 'expect';
 import {BrowserContext} from 'puppeteer-core/internal/api/BrowserContext.js';
+import {CDPTarget} from 'puppeteer-core/internal/common/Target.js';
 
 import {describeWithDebugLogs, getTestState, launch} from './mocha-utils.js';
 import {attachFrame, detachFrame, navigateFrame} from './utils.js';
@@ -306,17 +307,23 @@ describeWithDebugLogs('OOPIF', function () {
   it('should load oopif iframes with subresources and request interception', async () => {
     const {server, page, context} = state;
 
-    const frame = page.waitForFrame(frame => {
+    const framePromise = page.waitForFrame(frame => {
       return frame.url().endsWith('/oopif.html');
     });
-    await page.setRequestInterception(true);
     page.on('request', request => {
-      return request.continue();
+      void request.continue();
+    });
+    await page.setRequestInterception(true);
+    const requestPromise = page.waitForRequest(request => {
+      return request.url().includes('requestFromOOPIF');
     });
     await page.goto(server.PREFIX + '/dynamic-oopif.html');
-    await frame;
+    const frame = await framePromise;
+    const request = await requestPromise;
     expect(oopifs(context)).toHaveLength(1);
+    expect(request.frame()).toBe(frame);
   });
+
   it('should support frames within OOP iframes', async () => {
     const {server, page} = state;
 
@@ -371,7 +378,7 @@ describeWithDebugLogs('OOPIF', function () {
       button.innerText = 'click';
       document.body.appendChild(button);
     });
-    const button = (await frame.waitForSelector('#test-button', {
+    using button = (await frame.waitForSelector('#test-button', {
       visible: true,
     }))!;
     const result = await button.clickablePoint();
@@ -447,6 +454,6 @@ describeWithDebugLogs('OOPIF', function () {
 
 function oopifs(context: BrowserContext) {
   return context.targets().filter(target => {
-    return target._getTargetInfo().type === 'iframe';
+    return (target as CDPTarget)._getTargetInfo().type === 'iframe';
   });
 }

@@ -22,6 +22,100 @@ All notable changes to this project will be documented in this file. See [standa
     * puppeteer-core bumped from 20.8.1 to 20.8.2
     * @puppeteer/browsers bumped from 1.4.4 to 1.4.5
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.0.2 to 21.0.3
+    * @puppeteer/browsers bumped from 1.5.1 to 1.6.0
+
+## [21.2.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.1.1...puppeteer-v21.2.0) (2023-09-12)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.1.1 to 21.2.0
+
+## [21.1.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.1.0...puppeteer-v21.1.1) (2023-08-28)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.1.0 to 21.1.1
+
+## [21.1.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.0.3...puppeteer-v21.1.0) (2023-08-18)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.0.3 to 21.1.0
+    * @puppeteer/browsers bumped from 1.6.0 to 1.7.0
+
+## [21.0.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.0.1...puppeteer-v21.0.2) (2023-08-08)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.0.1 to 21.0.2
+    * @puppeteer/browsers bumped from 1.5.0 to 1.5.1
+
+## [21.0.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.0.0...puppeteer-v21.0.1) (2023-08-03)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.0.0 to 21.0.1
+
+## [21.0.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v20.9.0...puppeteer-v21.0.0) (2023-08-02)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 20.9.0 to 21.0.0
+    * @puppeteer/browsers bumped from 1.4.6 to 1.5.0
+
 ## [20.9.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v20.8.3...puppeteer-v20.9.0) (2023-07-20)
 
 

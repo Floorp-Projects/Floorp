@@ -22,7 +22,7 @@ import {HTTPRequest} from '../api/HTTPRequest.js';
 import {HTTPResponse} from '../api/HTTPResponse.js';
 
 import {EventEmitter} from './EventEmitter.js';
-import {Frame} from './Frame.js';
+import {CDPFrame} from './Frame.js';
 import {NetworkManager, NetworkManagerEmittedEvents} from './NetworkManager.js';
 
 // TODO: develop a helper to generate fake network events for attributes that
@@ -37,16 +37,20 @@ class MockCDPSession extends EventEmitter {
   id() {
     return '1';
   }
+  parentSession() {
+    return undefined;
+  }
 }
 
 describe('NetworkManager', () => {
   it('should process extra info on multiple redirects', async () => {
     const mockCDPSession = new MockCDPSession();
-    new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
     mockCDPSession.emit('Network.requestWillBeSent', {
       requestId: '7760711DEFCFA23132D98ABA6B4E175C',
       loaderId: '7760711DEFCFA23132D98ABA6B4E175C',
@@ -473,11 +477,12 @@ describe('NetworkManager', () => {
   });
   it(`should handle "double pause" (crbug.com/1196004) Fetch.requestPaused events for the same Network.requestWillBeSent event`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
     await manager.setRequestInterception(true);
 
     const requests: HTTPRequest[] = [];
@@ -559,11 +564,12 @@ describe('NetworkManager', () => {
   });
   it(`should handle Network.responseReceivedExtraInfo event after Network.responseReceived event (github.com/puppeteer/puppeteer/issues/8234)`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
 
     const requests: HTTPRequest[] = [];
     manager.on(
@@ -677,11 +683,12 @@ describe('NetworkManager', () => {
 
   it(`should resolve the response once the late responseReceivedExtraInfo event arrives`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
 
     const finishedRequests: HTTPRequest[] = [];
     const pendingRequests: HTTPRequest[] = [];
@@ -829,11 +836,12 @@ describe('NetworkManager', () => {
 
   it(`should send responses for iframe that don't receive loadingFinished event`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
 
     const responses: HTTPResponse[] = [];
     const requests: HTTPRequest[] = [];
@@ -992,11 +1000,12 @@ describe('NetworkManager', () => {
 
   it(`should send responses for iframe that don't receive loadingFinished event`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
 
     const responses: HTTPResponse[] = [];
     const requests: HTTPRequest[] = [];
@@ -1138,11 +1147,12 @@ describe('NetworkManager', () => {
 
   it(`should handle cached redirects`, async () => {
     const mockCDPSession = new MockCDPSession();
-    const manager = new NetworkManager(mockCDPSession, true, {
-      frame(): Frame | null {
+    const manager = new NetworkManager(true, {
+      frame(): CDPFrame | null {
         return null;
       },
     });
+    await manager.addClient(mockCDPSession);
 
     const responses: HTTPResponse[] = [];
     const requests: HTTPRequest[] = [];

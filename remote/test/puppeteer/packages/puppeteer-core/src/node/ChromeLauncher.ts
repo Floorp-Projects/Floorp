@@ -25,6 +25,7 @@ import {
 
 import {Browser} from '../api/Browser.js';
 import {debugError} from '../common/util.js';
+import {USE_TAB_TARGET} from '../environment.js';
 import {assert} from '../util/assert.js';
 
 import {
@@ -55,7 +56,7 @@ export class ChromeLauncher extends ProductLauncher {
         [
           '\x1B[1m\x1B[43m\x1B[30m',
           'Puppeteer old Headless deprecation warning:\x1B[0m\x1B[33m',
-          '  In the near feature `headless: true` will default to the new Headless mode',
+          '  In the near future `headless: true` will default to the new Headless mode',
           '  for Chrome instead of the old Headless implementation. For more',
           '  information, please see https://developer.chrome.com/articles/new-headless/.',
           '  Consider opting in early by passing `headless: "new"` to `puppeteer.launch()`',
@@ -165,6 +166,20 @@ export class ChromeLauncher extends ProductLauncher {
 
   override defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
     // See https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
+
+    const disabledFeatures = [
+      'Translate',
+      // AcceptCHFrame disabled because of crbug.com/1348106.
+      'AcceptCHFrame',
+      'MediaRouter',
+      'OptimizationHints',
+    ];
+
+    if (!USE_TAB_TARGET) {
+      disabledFeatures.push('Prerender2');
+      disabledFeatures.push('BackForwardCache');
+    }
+
     const chromeArguments = [
       '--allow-pre-commit-input',
       '--disable-background-networking',
@@ -177,13 +192,13 @@ export class ChromeLauncher extends ProductLauncher {
       '--disable-default-apps',
       '--disable-dev-shm-usage',
       '--disable-extensions',
-      // AcceptCHFrame disabled because of crbug.com/1348106.
-      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+      `--disable-features=${disabledFeatures.join(',')}`,
       '--disable-hang-monitor',
       '--disable-ipc-flooding-protection',
       '--disable-popup-blocking',
       '--disable-prompt-on-repost',
       '--disable-renderer-backgrounding',
+      '--disable-search-engine-choice-screen',
       '--disable-sync',
       '--enable-automation',
       // TODO(sadym): remove '--enable-blink-features=IdleDetection' once

@@ -15,112 +15,43 @@
  */
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
+import Protocol from 'devtools-protocol';
 
 import {ElementHandle} from '../../api/ElementHandle.js';
-import {JSHandle as BaseJSHandle} from '../../api/JSHandle.js';
-import {EvaluateFuncWith, HandleFor, HandleOr} from '../../common/types.js';
-import {withSourcePuppeteerURLIfNone} from '../util.js';
+import {JSHandle} from '../../api/JSHandle.js';
 
 import {Realm} from './Realm.js';
+import {Sandbox} from './Sandbox.js';
 import {BidiSerializer} from './Serializer.js';
 import {releaseReference} from './utils.js';
 
-export class JSHandle<T = unknown> extends BaseJSHandle<T> {
+export class BidiJSHandle<T = unknown> extends JSHandle<T> {
   #disposed = false;
-  #realm: Realm;
-  #remoteValue;
+  readonly #sandbox: Sandbox;
+  readonly #remoteValue: Bidi.Script.RemoteValue;
 
-  constructor(realm: Realm, remoteValue: Bidi.CommonDataTypes.RemoteValue) {
+  constructor(sandbox: Sandbox, remoteValue: Bidi.Script.RemoteValue) {
     super();
-    this.#realm = realm;
+    this.#sandbox = sandbox;
     this.#remoteValue = remoteValue;
   }
 
   context(): Realm {
-    return this.#realm;
+    return this.realm.environment.context();
+  }
+
+  override get realm(): Sandbox {
+    return this.#sandbox;
   }
 
   override get disposed(): boolean {
     return this.#disposed;
   }
 
-  override async evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(
-      this.evaluate.name,
-      pageFunction
-    );
-    return await this.context().evaluate(pageFunction, this, ...args);
-  }
-
-  override async evaluateHandle<
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<T, Params> = EvaluateFuncWith<T, Params>,
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    pageFunction = withSourcePuppeteerURLIfNone(
-      this.evaluateHandle.name,
-      pageFunction
-    );
-    return this.context().evaluateHandle(pageFunction, this, ...args);
-  }
-
-  override async getProperty<K extends keyof T>(
-    propertyName: HandleOr<K>
-  ): Promise<HandleFor<T[K]>>;
-  override async getProperty(propertyName: string): Promise<HandleFor<unknown>>;
-  override async getProperty<K extends keyof T>(
-    propertyName: HandleOr<K>
-  ): Promise<HandleFor<T[K]>> {
-    return await this.evaluateHandle((object, propertyName) => {
-      return object[propertyName as K];
-    }, propertyName);
-  }
-
-  override async getProperties(): Promise<Map<string, BaseJSHandle>> {
-    // TODO(lightning00blade): Either include return of depth Handles in RemoteValue
-    // or new BiDi command that returns array of remote value
-    const keys = await this.evaluate(object => {
-      const enumerableKeys = [];
-      const descriptors = Object.getOwnPropertyDescriptors(object);
-      for (const key in descriptors) {
-        if (descriptors[key]?.enumerable) {
-          enumerableKeys.push(key);
-        }
-      }
-      return enumerableKeys;
-    });
-    const map = new Map<string, BaseJSHandle>();
-    const results = await Promise.all(
-      keys.map(key => {
-        return this.getProperty(key);
-      })
-    );
-
-    for (const [key, value] of Object.entries(keys)) {
-      const handle = results[key as any];
-      if (handle) {
-        map.set(value, handle);
-      }
-    }
-
-    return map;
-  }
-
   override async jsonValue(): Promise<T> {
-    const value = BidiSerializer.deserialize(this.#remoteValue);
-
-    if (this.#remoteValue.type !== 'undefined' && value === undefined) {
-      throw new Error('Could not serialize referenced object');
-    }
-    return value;
+    return await this.evaluate(value => {
+      return value;
+    });
   }
 
   override asElement(): ElementHandle<Node> | null {
@@ -133,7 +64,10 @@ export class JSHandle<T = unknown> extends BaseJSHandle<T> {
     }
     this.#disposed = true;
     if ('handle' in this.#remoteValue) {
-      await releaseReference(this.#realm, this.#remoteValue);
+      await releaseReference(
+        this.context(),
+        this.#remoteValue as Bidi.Script.RemoteReference
+      );
     }
   }
 
@@ -164,7 +98,11 @@ export class JSHandle<T = unknown> extends BaseJSHandle<T> {
     return 'handle' in this.#remoteValue ? this.#remoteValue.handle : undefined;
   }
 
-  remoteValue(): Bidi.CommonDataTypes.RemoteValue {
+  remoteValue(): Bidi.Script.RemoteValue {
     return this.#remoteValue;
+  }
+
+  override remoteObject(): Protocol.Runtime.RemoteObject {
+    throw new Error('Not available in WebDriver BiDi');
   }
 }

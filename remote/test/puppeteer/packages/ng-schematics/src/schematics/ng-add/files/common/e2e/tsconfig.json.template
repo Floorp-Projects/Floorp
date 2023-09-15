@@ -1,0 +1,10 @@
+{
+  "extends": "<%= tsConfigPath %>",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "rootDir": "tests/",
+    "outDir": "build/",
+    "types": ["<%= testRunner %>"]
+  },
+  "include": ["tests/**/*.ts"]
+}

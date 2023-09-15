@@ -18,14 +18,30 @@ import type {Readable} from 'stream';
 
 import {Protocol} from 'devtools-protocol';
 
+import {
+  filterAsync,
+  first,
+  firstValueFrom,
+  from,
+  fromEvent,
+  map,
+  merge,
+  Observable,
+  raceWith,
+  delay,
+  filter,
+  of,
+  switchMap,
+  startWith,
+} from '../../third_party/rxjs/rxjs.js';
 import type {HTTPRequest} from '../api/HTTPRequest.js';
 import type {HTTPResponse} from '../api/HTTPResponse.js';
 import type {Accessibility} from '../common/Accessibility.js';
+import type {CDPSession} from '../common/Connection.js';
 import type {ConsoleMessage} from '../common/ConsoleMessage.js';
 import type {Coverage} from '../common/Coverage.js';
 import {Device} from '../common/Device.js';
 import {DeviceRequestPrompt} from '../common/DeviceRequestPrompt.js';
-import type {Dialog} from '../common/Dialog.js';
 import {TargetCloseError} from '../common/Errors.js';
 import {EventEmitter, Handler} from '../common/EventEmitter.js';
 import type {FileChooser} from '../common/FileChooser.js';
@@ -43,19 +59,20 @@ import {
   PDFOptions,
 } from '../common/PDFOptions.js';
 import type {Viewport} from '../common/PuppeteerViewport.js';
-import type {Target} from '../common/Target.js';
 import type {Tracing} from '../common/Tracing.js';
 import type {
+  Awaitable,
   EvaluateFunc,
   EvaluateFuncWith,
   HandleFor,
   NodeFor,
 } from '../common/types.js';
 import {
+  debugError,
   importFSPromises,
   isNumber,
   isString,
-  waitForEvent,
+  timeout,
   withSourcePuppeteerURLIfNone,
 } from '../common/util.js';
 import type {WebWorker} from '../common/WebWorker.js';
@@ -64,6 +81,7 @@ import {Deferred} from '../util/Deferred.js';
 
 import type {Browser} from './Browser.js';
 import type {BrowserContext} from './BrowserContext.js';
+import type {Dialog} from './Dialog.js';
 import type {ClickOptions, ElementHandle} from './ElementHandle.js';
 import type {
   Frame,
@@ -71,9 +89,15 @@ import type {
   FrameAddStyleTagOptions,
   FrameWaitForFunctionOptions,
 } from './Frame.js';
-import {Keyboard, Mouse, Touchscreen, KeyboardTypeOptions} from './Input.js';
+import {Keyboard, KeyboardTypeOptions, Mouse, Touchscreen} from './Input.js';
 import type {JSHandle} from './JSHandle.js';
-import {Locator} from './Locator.js';
+import {
+  AwaitedLocator,
+  FunctionLocator,
+  Locator,
+  NodeLocator,
+} from './locators/locators.js';
+import type {Target} from './Target.js';
 
 /**
  * @public
@@ -458,7 +482,10 @@ export interface NewDocumentScriptEvaluation {
  *
  * @public
  */
-export class Page extends EventEmitter {
+export abstract class Page
+  extends EventEmitter
+  implements AsyncDisposable, Disposable
+{
   #handlerMap = new WeakMap<Handler<any>, Handler<any>>();
 
   /**
@@ -619,6 +646,13 @@ export class Page extends EventEmitter {
    * Page is guaranteed to have a main frame which persists during navigations.
    */
   mainFrame(): Frame {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Creates a Chrome Devtools Protocol session attached to the page.
+   */
+  createCDPSession(): Promise<CDPSession> {
     throw new Error('Not implemented');
   }
 
@@ -824,7 +858,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * Creates a locator for the provided `selector`. See {@link Locator} for
+   * Creates a locator for the provided selector. See {@link Locator} for
    * details and supported actions.
    *
    * @remarks
@@ -833,8 +867,25 @@ export class Page extends EventEmitter {
    */
   locator<Selector extends string>(
     selector: Selector
-  ): Locator<NodeFor<Selector>> {
-    return Locator.create(this, selector);
+  ): Locator<NodeFor<Selector>>;
+
+  /**
+   * Creates a locator for the provided function. See {@link Locator} for
+   * details and supported actions.
+   *
+   * @remarks
+   * Locators API is experimental and we will not follow semver for breaking
+   * change in the Locators API.
+   */
+  locator<Ret>(func: () => Awaitable<Ret>): Locator<Ret>;
+  locator<Selector extends string, Ret>(
+    selectorOrFunc: Selector | (() => Awaitable<Ret>)
+  ): Locator<NodeFor<Selector>> | Locator<Ret> {
+    if (typeof selectorOrFunc === 'string') {
+      return NodeLocator.create(this, selectorOrFunc);
+    } else {
+      return FunctionLocator.create(this, selectorOrFunc);
+    }
   }
 
   /**
@@ -842,7 +893,9 @@ export class Page extends EventEmitter {
    *
    * @internal
    */
-  locatorRace(locators: Array<Locator<Node>>): Locator<Node> {
+  locatorRace<Locators extends readonly unknown[] | []>(
+    locators: Locators
+  ): Locator<AwaitedLocator<Locators[number]>> {
     return Locator.race(locators);
   }
 
@@ -857,7 +910,7 @@ export class Page extends EventEmitter {
   async $<Selector extends string>(
     selector: Selector
   ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    return this.mainFrame().$(selector);
+    return await this.mainFrame().$(selector);
   }
 
   /**
@@ -870,7 +923,7 @@ export class Page extends EventEmitter {
   async $$<Selector extends string>(
     selector: Selector
   ): Promise<Array<ElementHandle<NodeFor<Selector>>>> {
-    return this.mainFrame().$$(selector);
+    return await this.mainFrame().$$(selector);
   }
 
   /**
@@ -936,12 +989,12 @@ export class Page extends EventEmitter {
   >(
     pageFunction: Func | string,
     ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>>;
-  async evaluateHandle<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
-  >(): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    throw new Error('Not implemented');
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
+    return await this.mainFrame().evaluateHandle(pageFunction, ...args);
   }
 
   /**
@@ -1049,7 +1102,7 @@ export class Page extends EventEmitter {
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
     pageFunction = withSourcePuppeteerURLIfNone(this.$eval.name, pageFunction);
-    return this.mainFrame().$eval(selector, pageFunction, ...args);
+    return await this.mainFrame().$eval(selector, pageFunction, ...args);
   }
 
   /**
@@ -1127,7 +1180,7 @@ export class Page extends EventEmitter {
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
     pageFunction = withSourcePuppeteerURLIfNone(this.$$eval.name, pageFunction);
-    return this.mainFrame().$$eval(selector, pageFunction, ...args);
+    return await this.mainFrame().$$eval(selector, pageFunction, ...args);
   }
 
   /**
@@ -1141,7 +1194,7 @@ export class Page extends EventEmitter {
    * @param expression - Expression to evaluate
    */
   async $x(expression: string): Promise<Array<ElementHandle<Node>>> {
-    return this.mainFrame().$x(expression);
+    return await this.mainFrame().$x(expression);
   }
 
   /**
@@ -1186,7 +1239,7 @@ export class Page extends EventEmitter {
   async addScriptTag(
     options: FrameAddScriptTagOptions
   ): Promise<ElementHandle<HTMLScriptElement>> {
-    return this.mainFrame().addScriptTag(options);
+    return await this.mainFrame().addScriptTag(options);
   }
 
   /**
@@ -1208,7 +1261,7 @@ export class Page extends EventEmitter {
   async addStyleTag(
     options: FrameAddStyleTagOptions
   ): Promise<ElementHandle<HTMLStyleElement | HTMLLinkElement>> {
-    return this.mainFrame().addStyleTag(options);
+    return await this.mainFrame().addStyleTag(options);
   }
 
   /**
@@ -1281,13 +1334,10 @@ export class Page extends EventEmitter {
    * @param pptrFunction - Callback function which will be called in Puppeteer's
    * context.
    */
-  async exposeFunction(
+  abstract exposeFunction(
     name: string,
     pptrFunction: Function | {default: Function}
   ): Promise<void>;
-  async exposeFunction(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 
   /**
    * The method removes a previously added function via ${@link Page.exposeFunction}
@@ -1394,14 +1444,14 @@ export class Page extends EventEmitter {
    * {@link Frame.url | page.mainFrame().url()}.
    */
   url(): string {
-    throw new Error('Not implemented');
+    return this.mainFrame().url();
   }
 
   /**
    * The full HTML contents of the page, including the DOCTYPE.
    */
   async content(): Promise<string> {
-    throw new Error('Not implemented');
+    return await this.mainFrame().content();
   }
 
   /**
@@ -1430,9 +1480,8 @@ export class Page extends EventEmitter {
    * - `networkidle2` : consider setting content to be finished when there are
    *   no more than 2 network connections for at least `500` ms.
    */
-  async setContent(html: string, options?: WaitForOptions): Promise<void>;
-  async setContent(): Promise<void> {
-    throw new Error('Not implemented');
+  async setContent(html: string, options?: WaitForOptions): Promise<void> {
+    await this.mainFrame().setContent(html, options);
   }
 
   /**
@@ -1495,9 +1544,8 @@ export class Page extends EventEmitter {
   async goto(
     url: string,
     options?: WaitForOptions & {referer?: string; referrerPolicy?: string}
-  ): Promise<HTTPResponse | null>;
-  async goto(): Promise<HTTPResponse | null> {
-    throw new Error('Not implemented');
+  ): Promise<HTTPResponse | null> {
+    return await this.mainFrame().goto(url, options);
   }
 
   /**
@@ -1652,69 +1700,39 @@ export class Page extends EventEmitter {
       inFlightRequestsCount: () => number;
     },
     idleTime: number,
-    timeout: number,
+    ms: number,
     closedDeferred: Deferred<TargetCloseError>
   ): Promise<void> {
-    const idleDeferred = Deferred.create<void>();
-    const abortDeferred = Deferred.create<Error>();
-
-    let idleTimer: NodeJS.Timeout | undefined;
-    const cleanup = () => {
-      clearTimeout(idleTimer);
-      abortDeferred.reject(new Error('abort'));
-    };
-
-    const evaluate = () => {
-      clearTimeout(idleTimer);
-
-      if (networkManager.inFlightRequestsCount() === 0) {
-        idleTimer = setTimeout(() => {
-          return idleDeferred.resolve();
-        }, idleTime);
-      }
-    };
-
-    const listenToEvent = (event: symbol) => {
-      return waitForEvent(
-        networkManager,
-        event,
-        () => {
-          evaluate();
-          return false;
-        },
-        timeout,
-        abortDeferred
-      );
-    };
-
-    const eventPromises = [
-      listenToEvent(NetworkManagerEmittedEvents.Request),
-      listenToEvent(NetworkManagerEmittedEvents.Response),
-      listenToEvent(NetworkManagerEmittedEvents.RequestFailed),
-    ];
-
-    evaluate();
-
-    // We don't want to reject the closed deferred when
-    // the race if finished so we pass the Promise instead
-    const closedPromise = closedDeferred.valueOrThrow();
-
-    await Deferred.race([idleDeferred, ...eventPromises, closedPromise]).then(
-      r => {
-        cleanup();
-        return r;
-      },
-      error => {
-        cleanup();
-        throw error;
-      }
+    await firstValueFrom(
+      merge(
+        fromEvent(
+          networkManager,
+          NetworkManagerEmittedEvents.Request as unknown as string
+        ),
+        fromEvent(
+          networkManager,
+          NetworkManagerEmittedEvents.Response as unknown as string
+        ),
+        fromEvent(
+          networkManager,
+          NetworkManagerEmittedEvents.RequestFailed as unknown as string
+        )
+      ).pipe(
+        startWith(null),
+        filter(() => {
+          return networkManager.inFlightRequestsCount() === 0;
+        }),
+        switchMap(v => {
+          return of(v).pipe(delay(idleTime));
+        }),
+        raceWith(timeout(ms), from(closedDeferred.valueOrThrow()))
+      )
     );
   }
 
   /**
-   * @param urlOrPredicate - A URL or predicate to wait for.
-   * @param options - Optional waiting parameters
-   * @returns Promise which resolves to the matched frame.
+   * Waits for a frame matching the given conditions to appear.
+   *
    * @example
    *
    * ```ts
@@ -1722,20 +1740,37 @@ export class Page extends EventEmitter {
    *   return frame.name() === 'Test';
    * });
    * ```
-   *
-   * @remarks
-   * Optional Parameter have:
-   *
-   * - `timeout`: Maximum wait time in milliseconds, defaults to `30` seconds,
-   *   pass `0` to disable the timeout. The default value can be changed by using
-   *   the {@link Page.setDefaultTimeout} method.
    */
   async waitForFrame(
-    urlOrPredicate: string | ((frame: Frame) => boolean | Promise<boolean>),
-    options?: {timeout?: number}
-  ): Promise<Frame>;
-  async waitForFrame(): Promise<Frame> {
-    throw new Error('Not implemented');
+    urlOrPredicate: string | ((frame: Frame) => Awaitable<boolean>),
+    options: WaitTimeoutOptions = {}
+  ): Promise<Frame> {
+    const {timeout: ms = this.getDefaultTimeout()} = options;
+
+    if (isString(urlOrPredicate)) {
+      urlOrPredicate = (frame: Frame) => {
+        return urlOrPredicate === frame.url();
+      };
+    }
+
+    return await firstValueFrom(
+      merge(
+        fromEvent(this, PageEmittedEvents.FrameAttached) as Observable<Frame>,
+        fromEvent(this, PageEmittedEvents.FrameNavigated) as Observable<Frame>,
+        from(this.frames())
+      ).pipe(
+        filterAsync(urlOrPredicate),
+        first(),
+        raceWith(
+          timeout(ms),
+          fromEvent(this, PageEmittedEvents.Close).pipe(
+            map(() => {
+              throw new TargetCloseError('Page closed.');
+            })
+          )
+        )
+      )
+    );
   }
 
   /**
@@ -2169,12 +2204,12 @@ export class Page extends EventEmitter {
   >(
     pageFunction: Func | string,
     ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>>;
-  async evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>,
-  >(): Promise<Awaited<ReturnType<Func>>> {
-    throw new Error('Not implemented');
+  ): Promise<Awaited<ReturnType<Func>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
+    return await this.mainFrame().evaluate(pageFunction, ...args);
   }
 
   /**
@@ -2407,7 +2442,7 @@ export class Page extends EventEmitter {
    * Shortcut for {@link Frame.title | page.mainFrame().title()}.
    */
   async title(): Promise<string> {
-    throw new Error('Not implemented');
+    return await this.mainFrame().title();
   }
 
   async close(options?: {runBeforeUnload?: boolean}): Promise<void>;
@@ -2807,6 +2842,14 @@ export class Page extends EventEmitter {
   ): Promise<DeviceRequestPrompt>;
   waitForDevicePrompt(): Promise<DeviceRequestPrompt> {
     throw new Error('Not implemented');
+  }
+
+  [Symbol.dispose](): void {
+    return void this.close().catch(debugError);
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.close();
   }
 }
 

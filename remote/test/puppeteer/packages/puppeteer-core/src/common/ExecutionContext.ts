@@ -34,7 +34,7 @@ import {EvaluateFunc, HandleFor} from './types.js';
 import {
   PuppeteerURL,
   createEvaluationError,
-  createJSHandle,
+  createCdpHandle,
   getSourcePuppeteerURLIfAvailable,
   isString,
   valueFromRemoteObject,
@@ -54,7 +54,7 @@ const getSourceUrlComment = (url: string) => {
  *
  * - Each {@link Frame} of a {@link Page | page} has a "default" execution
  *   context that is always created after frame is attached to DOM. This context
- *   is returned by the {@link Frame.executionContext} method.
+ *   is returned by the {@link Frame.realm} method.
  * - Each {@link https://developer.chrome.com/extensions | Chrome extensions}
  *   creates additional execution contexts to isolate their code.
  *
@@ -70,14 +70,14 @@ const getSourceUrlComment = (url: string) => {
  */
 export class ExecutionContext {
   _client: CDPSession;
-  _world?: IsolatedWorld;
+  _world: IsolatedWorld;
   _contextId: number;
   _contextName?: string;
 
   constructor(
     client: CDPSession,
     contextPayload: Protocol.Runtime.ExecutionContextDescription,
-    world?: IsolatedWorld
+    world: IsolatedWorld
   ) {
     this._client = client;
     this._world = world;
@@ -105,7 +105,7 @@ export class ExecutionContext {
             selector: string
           ): Promise<JSHandle<Node[]>> => {
             const results = ARIAQueryHandler.queryAll(element, selector);
-            return element.executionContext().evaluateHandle(
+            return await element.realm.evaluateHandle(
               (...elements) => {
                 return elements;
               },
@@ -248,7 +248,7 @@ export class ExecutionContext {
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.#evaluate(false, pageFunction, ...args);
+    return await this.#evaluate(false, pageFunction, ...args);
   }
 
   async #evaluate<
@@ -303,7 +303,7 @@ export class ExecutionContext {
 
       return returnByValue
         ? valueFromRemoteObject(remoteObject)
-        : createJSHandle(this, remoteObject);
+        : createCdpHandle(this._world, remoteObject);
     }
 
     const functionDeclaration = stringifyFunction(pageFunction);
@@ -338,7 +338,7 @@ export class ExecutionContext {
     }
     return returnByValue
       ? valueFromRemoteObject(remoteObject)
-      : createJSHandle(this, remoteObject);
+      : createCdpHandle(this._world, remoteObject);
 
     async function convertArgument(
       this: ExecutionContext,
@@ -368,7 +368,7 @@ export class ExecutionContext {
           ? arg
           : null;
       if (objectHandle) {
-        if (objectHandle.executionContext() !== this) {
+        if (objectHandle.realm !== this._world) {
           throw new Error(
             'JSHandles can be evaluated only in the context they were created!'
           );

@@ -4,15 +4,14 @@ import ProtocolMapping from 'devtools-protocol/types/protocol-mapping.js';
 import {WaitForOptions} from '../../api/Page.js';
 import {assert} from '../../util/assert.js';
 import {Deferred} from '../../util/Deferred.js';
-import type {CDPSession, Connection as CDPConnection} from '../Connection.js';
-import {ProtocolError, TimeoutError} from '../Errors.js';
-import {EventEmitter} from '../EventEmitter.js';
+import {Connection as CDPConnection, CDPSession} from '../Connection.js';
+import {ProtocolError, TargetCloseError, TimeoutError} from '../Errors.js';
 import {PuppeteerLifeCycleEvent} from '../LifecycleWatcher.js';
-import {TimeoutSettings} from '../TimeoutSettings.js';
-import {getPageContent, setPageContent, waitWithTimeout} from '../util.js';
+import {setPageContent, waitWithTimeout} from '../util.js';
 
 import {Connection} from './Connection.js';
 import {Realm} from './Realm.js';
+import {debugError} from './utils.js';
 
 /**
  * @internal
@@ -32,41 +31,67 @@ const lifeCycleToReadinessState = new Map<
   PuppeteerLifeCycleEvent,
   Bidi.BrowsingContext.ReadinessState
 >([
-  ['load', 'complete'],
-  ['domcontentloaded', 'interactive'],
+  ['load', Bidi.BrowsingContext.ReadinessState.Complete],
+  ['domcontentloaded', Bidi.BrowsingContext.ReadinessState.Interactive],
 ]);
 
 /**
  * @internal
  */
-export class CDPSessionWrapper extends EventEmitter implements CDPSession {
+export const cdpSessions = new Map<string, CDPSessionWrapper>();
+
+/**
+ * @internal
+ */
+export class CDPSessionWrapper extends CDPSession {
   #context: BrowsingContext;
   #sessionId = Deferred.create<string>();
+  #detached = false;
 
-  constructor(context: BrowsingContext) {
+  constructor(context: BrowsingContext, sessionId?: string) {
     super();
     this.#context = context;
-    context.connection
-      .send('cdp.getSession', {
-        context: context.id,
-      })
-      .then(session => {
-        this.#sessionId.resolve(session.result.session!);
-      })
-      .catch(err => {
-        this.#sessionId.reject(err);
-      });
+    if (!this.#context.supportsCDP()) {
+      return;
+    }
+    if (sessionId) {
+      this.#sessionId.resolve(sessionId);
+      cdpSessions.set(sessionId, this);
+    } else {
+      context.connection
+        .send('cdp.getSession', {
+          context: context.id,
+        })
+        .then(session => {
+          this.#sessionId.resolve(session.result.session!);
+          cdpSessions.set(session.result.session!, this);
+        })
+        .catch(err => {
+          this.#sessionId.reject(err);
+        });
+    }
   }
 
-  connection(): CDPConnection | undefined {
+  override connection(): CDPConnection | undefined {
     return undefined;
   }
-  async send<T extends keyof ProtocolMapping.Commands>(
+
+  override async send<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
   ): Promise<ProtocolMapping.Commands[T]['returnType']> {
+    if (!this.#context.supportsCDP()) {
+      throw new Error(
+        'CDP support is required for this feature. The current browser does not support CDP.'
+      );
+    }
+    if (this.#detached) {
+      throw new TargetCloseError(
+        `Protocol error (${method}): Session closed. Most likely the page has been closed.`
+      );
+    }
     const session = await this.#sessionId.valueOrThrow();
-    const result = await this.#context.connection.send('cdp.sendCommand', {
+    const {result} = await this.#context.connection.send('cdp.sendCommand', {
       method: method,
       params: paramArgs[0],
       session,
@@ -74,47 +99,76 @@ export class CDPSessionWrapper extends EventEmitter implements CDPSession {
     return result.result;
   }
 
-  detach(): Promise<void> {
-    throw new Error('Method not implemented.');
+  override async detach(): Promise<void> {
+    cdpSessions.delete(this.id());
+    if (!this.#detached && this.#context.supportsCDP()) {
+      await this.#context.cdpSession.send('Target.detachFromTarget', {
+        sessionId: this.id(),
+      });
+    }
+    this.#detached = true;
   }
 
-  id(): string {
+  override id(): string {
     const val = this.#sessionId.value();
     return val instanceof Error || val === undefined ? '' : val;
   }
 }
 
 /**
+ * Internal events that the BrowsingContext class emits.
+ *
+ * @internal
+ */
+export const BrowsingContextEmittedEvents = {
+  /**
+   * Emitted on the top-level context, when a descendant context is created.
+   */
+  Created: Symbol('BrowsingContext.created'),
+  /**
+   * Emitted on the top-level context, when a descendant context or the
+   * top-level context itself is destroyed.
+   */
+  Destroyed: Symbol('BrowsingContext.destroyed'),
+} as const;
+
+/**
  * @internal
  */
 export class BrowsingContext extends Realm {
-  #timeoutSettings: TimeoutSettings;
   #id: string;
   #url: string;
   #cdpSession: CDPSession;
+  #parent?: string | null;
+  #browserName = '';
 
   constructor(
     connection: Connection,
-    timeoutSettings: TimeoutSettings,
-    info: Bidi.BrowsingContext.Info
+    info: Bidi.BrowsingContext.Info,
+    browserName: string
   ) {
-    super(connection, info.context);
-    this.connection = connection;
-    this.#timeoutSettings = timeoutSettings;
+    super(connection);
     this.#id = info.context;
     this.#url = info.url;
-    this.#cdpSession = new CDPSessionWrapper(this);
+    this.#parent = info.parent;
+    this.#browserName = browserName;
+    this.#cdpSession = new CDPSessionWrapper(this, undefined);
 
-    this.on(
-      'browsingContext.fragmentNavigated',
-      (info: Bidi.BrowsingContext.NavigationInfo) => {
-        this.#url = info.url;
-      }
-    );
+    this.on('browsingContext.domContentLoaded', this.#updateUrl.bind(this));
+    this.on('browsingContext.fragmentNavigated', this.#updateUrl.bind(this));
+    this.on('browsingContext.load', this.#updateUrl.bind(this));
   }
 
-  createSandboxRealm(sandbox: string): Realm {
-    return new Realm(this.connection, this.#id, sandbox);
+  supportsCDP(): boolean {
+    return !this.#browserName.toLowerCase().includes('firefox');
+  }
+
+  #updateUrl(info: Bidi.BrowsingContext.NavigationInfo) {
+    this.#url = info.url;
+  }
+
+  createRealmForSandbox(): Realm {
+    return new Realm(this.connection);
   }
 
   get url(): string {
@@ -125,12 +179,12 @@ export class BrowsingContext extends Realm {
     return this.#id;
   }
 
-  get cdpSession(): CDPSession {
-    return this.#cdpSession;
+  get parent(): string | undefined | null {
+    return this.#parent;
   }
 
-  navigated(url: string): void {
-    this.#url = url;
+  get cdpSession(): CDPSession {
+    return this.#cdpSession;
   }
 
   async goto(
@@ -138,14 +192,11 @@ export class BrowsingContext extends Realm {
     options: {
       referer?: string;
       referrerPolicy?: string;
-      timeout?: number;
+      timeout: number;
       waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
-    } = {}
+    }
   ): Promise<string | null> {
-    const {
-      waitUntil = 'load',
-      timeout = this.#timeoutSettings.navigationTimeout(),
-    } = options;
+    const {waitUntil = 'load', timeout} = options;
 
     const readinessState = lifeCycleToReadinessState.get(
       getWaitUntilSingle(waitUntil)
@@ -174,11 +225,8 @@ export class BrowsingContext extends Realm {
     }
   }
 
-  async reload(options: WaitForOptions = {}): Promise<void> {
-    const {
-      waitUntil = 'load',
-      timeout = this.#timeoutSettings.navigationTimeout(),
-    } = options;
+  async reload(options: WaitForOptions & {timeout: number}): Promise<void> {
+    const {waitUntil = 'load', timeout} = options;
 
     const readinessState = lifeCycleToReadinessState.get(
       getWaitUntilSingle(waitUntil)
@@ -197,14 +245,11 @@ export class BrowsingContext extends Realm {
   async setContent(
     html: string,
     options: {
-      timeout?: number;
+      timeout: number;
       waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
     }
   ): Promise<void> {
-    const {
-      waitUntil = 'load',
-      timeout = this.#timeoutSettings.navigationTimeout(),
-    } = options;
+    const {waitUntil = 'load', timeout} = options;
 
     const waitUntilEvent = lifeCycleToSubscribedEvent.get(
       getWaitUntilSingle(waitUntil)
@@ -224,15 +269,11 @@ export class BrowsingContext extends Realm {
     ]);
   }
 
-  async content(): Promise<string> {
-    return await this.evaluate(getPageContent);
-  }
-
   async sendCDPCommand<T extends keyof ProtocolMapping.Commands>(
     method: T,
     ...paramArgs: ProtocolMapping.Commands[T]['paramsType']
   ): Promise<ProtocolMapping.Commands[T]['returnType']> {
-    return this.#cdpSession.send(method, ...paramArgs);
+    return await this.#cdpSession.send(method, ...paramArgs);
   }
 
   title(): Promise<string> {
@@ -244,6 +285,7 @@ export class BrowsingContext extends Realm {
   dispose(): void {
     this.removeAllListeners();
     this.connection.unregisterBrowsingContexts(this.#id);
+    void this.#cdpSession.detach().catch(debugError);
   }
 }
 

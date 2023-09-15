@@ -133,6 +133,38 @@ export class CLI {
             'Install the latest available build for the Chrome browser.'
           );
           yargs.example(
+            '$0 install chrome@canary',
+            'Install the latest available build for the Chrome Canary browser.'
+          );
+          yargs.example(
+            '$0 install chrome@115',
+            'Install the latest available build for Chrome 115.'
+          );
+          yargs.example(
+            '$0 install chromedriver@canary',
+            'Install the latest available build for ChromeDriver Canary.'
+          );
+          yargs.example(
+            '$0 install chromedriver@115',
+            'Install the latest available build for ChromeDriver 115.'
+          );
+          yargs.example(
+            '$0 install chromedriver@115.0.5790',
+            'Install the latest available patch (115.0.5790.X) build for ChromeDriver.'
+          );
+          yargs.example(
+            '$0 install chrome-headless-shell',
+            'Install the latest available chrome-headless-shell build.'
+          );
+          yargs.example(
+            '$0 install chrome-headless-shell@beta',
+            'Install the latest available chrome-headless-shell build corresponding to the Beta channel.'
+          );
+          yargs.example(
+            '$0 install chrome-headless-shell@118',
+            'Install the latest available chrome-headless-shell 118 build.'
+          );
+          yargs.example(
             '$0 install chromium@1083080',
             'Install the revision 1083080 of the Chromium browser.'
           );
@@ -201,15 +233,15 @@ export class CLI {
             default: false,
           });
           yargs.example(
-            '$0 launch chrome@1083080',
-            'Launch the Chrome browser identified by the revision 1083080.'
+            '$0 launch chrome@115.0.5790.170',
+            'Launch Chrome 115.0.5790.170'
           );
           yargs.example(
             '$0 launch firefox@112.0a1',
             'Launch the Firefox browser identified by the milestone 112.0a1.'
           );
           yargs.example(
-            '$0 launch chrome@1083080 --detached',
+            '$0 launch chrome@115.0.5790.170 --detached',
             'Launch the browser but detach the sub-processes.'
           );
           yargs.example(
