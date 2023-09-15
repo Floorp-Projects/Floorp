@@ -727,8 +727,10 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         if has_writing_mode {
             self.compute_writing_mode();
         }
-        let has_font_stuff = self
-            .apply_one_prioritary_property(data, PrioritaryPropertyId::XTextScale) |
+        if self.apply_one_prioritary_property(data, PrioritaryPropertyId::XTextScale) {
+            self.unzoom_fonts_if_needed();
+        }
+        let has_font_stuff =
             self.apply_one_prioritary_property(data, PrioritaryPropertyId::XLang) |
             self.apply_one_prioritary_property(data, PrioritaryPropertyId::MozMinFontSizeRatio) |
             self.apply_one_prioritary_property(data, PrioritaryPropertyId::MathDepth) |
@@ -1169,9 +1171,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     /// FIXME(emilio): Why doing this _before_ handling font-size? That sounds wrong.
     #[cfg(feature = "gecko")]
     fn unzoom_fonts_if_needed(&mut self) {
-        if !self.seen.contains(LonghandId::XTextScale) {
-            return;
-        }
+        debug_assert!(self.seen.contains(LonghandId::XTextScale));
 
         let builder = &mut self.context.builder;
 
@@ -1403,7 +1403,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn fixup_font_stuff(&mut self) {
         #[cfg(feature = "gecko")]
         {
-            self.unzoom_fonts_if_needed();
             self.recompute_initial_font_family_if_needed();
             self.prioritize_user_fonts_if_needed();
             self.recompute_keyword_font_size_if_needed();
