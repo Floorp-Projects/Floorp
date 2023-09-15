@@ -99,7 +99,7 @@ const invalidStyle4Payload = "foo<span style=\"@import 'xxx.css';\">bar</span>ba
 const invalidStyle5Payload = "foo<span style=\"@font-face{font-family:xxx;src:'xxx.ttf';}\">bar</span>baz";
 const invalidStyle6Payload = "foo<span style=\"@namespace xxx url(http://example.com/);\">bar</span>baz";
 const invalidStyle7Payload = "<html><head><title>xxx</title></head><body>foo</body></html>";
-const invalidStyle8Payload = "foo<style>@-moz-document url(http://example.com/) {};</style>baz";
+const invalidStyle8Payload = "foo<style>@-moz-document url-prefix() {};</style>baz";
 const invalidStyle9Payload = "foo<style>@-moz-keyframes bar {};</style>baz";
 const nestedStylePayload = "foo<style>#bar1{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-1&quot;/>');<style></style>#bar2{-moz-binding:url('data:text/xml,<?xml version=&quot;1.0&quot;><binding xmlns=&quot;http://www.mozilla.org/xbl&quot; id=&quot;binding-2&quot;/>');</style>baz";
 const validImgSrc1Payload = "foo<img src=\"data:image/png,bar\">baz";
@@ -610,9 +610,7 @@ function runTest(test) {
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  SpecialPowers.pushPrefEnv(
-    { "set": [["layout.css.moz-document.content.enabled", true]]},
-    doNextTest);
+    doNextTest();
 });
 </script>
 </pre>

@@ -69,7 +69,6 @@ var cjkDecimalWidth = controlCJKDecimal.getBoundingClientRect().width;
 // [at-rule type, passing condition, failing condition]
 var outerRuleInfo = [
   ["@media", "all", "not all"],
-  ["@-moz-document", "url-prefix('')", "url-prefix('zzz')"],
   ["@supports", "(color: green)", "(unknown: unknown)"]
 ];
 
@@ -235,10 +234,7 @@ function runTest()
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  { "set": [["layout.css.moz-document.content.enabled", true ]]},
-  runTest,
-);
+runTest();
 </script>
 </body>
 </html>
