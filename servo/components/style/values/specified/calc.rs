@@ -7,10 +7,8 @@
 //! [calc]: https://drafts.csswg.org/css-values/#calc-notation
 
 use crate::parser::ParserContext;
-use crate::values::generics::calc::{
-    self as generic, CalcNodeLeaf, CalcUnits, MinMaxOp, ModRemOp, PositivePercentageBasis,
-    RoundingStrategy, SortKey,
-};
+use crate::values::generics::calc::{self as generic, CalcNodeLeaf, CalcUnits};
+use crate::values::generics::calc::{MinMaxOp, ModRemOp, RoundingStrategy, SortKey};
 use crate::values::specified::length::{AbsoluteLength, FontRelativeLength, NoCalcLength};
 use crate::values::specified::length::{ContainerRelativeLength, ViewportPercentageLength};
 use crate::values::specified::{self, Angle, Resolution, Time};
@@ -153,6 +151,38 @@ impl CalcLengthPercentage {
 
 impl SpecifiedValueInfo for CalcLengthPercentage {}
 
+impl PartialOrd for Leaf {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        use self::Leaf::*;
+
+        if std::mem::discriminant(self) != std::mem::discriminant(other) {
+            return None;
+        }
+
+        match (self, other) {
+            // NOTE: Percentages can't be compared reasonably here because the
+            // percentage basis might be negative, see bug 1709018.
+            // Conveniently, we only use this for <length-percentage> (for raw
+            // percentages, we go through resolve()).
+            (&Percentage(..), &Percentage(..)) => None,
+            (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
+            (&Angle(ref one), &Angle(ref other)) => one.degrees().partial_cmp(&other.degrees()),
+            (&Time(ref one), &Time(ref other)) => one.seconds().partial_cmp(&other.seconds()),
+            (&Resolution(ref one), &Resolution(ref other)) => one.dppx().partial_cmp(&other.dppx()),
+            (&Number(ref one), &Number(ref other)) => one.partial_cmp(other),
+            _ => {
+                match *self {
+                    Length(..) | Percentage(..) | Angle(..) | Time(..) | Number(..) |
+                    Resolution(..) => {},
+                }
+                unsafe {
+                    debug_unreachable!("Forgot a branch?");
+                }
+            },
+        }
+    }
+}
+
 impl generic::CalcNodeLeaf for Leaf {
     fn unit(&self) -> CalcUnits {
         match self {
@@ -177,37 +207,6 @@ impl generic::CalcNodeLeaf for Leaf {
 
     fn new_number(value: f32) -> Self {
         Self::Number(value)
-    }
-
-    fn compare(&self, other: &Self, basis: PositivePercentageBasis) -> Option<cmp::Ordering> {
-        use self::Leaf::*;
-
-        if std::mem::discriminant(self) != std::mem::discriminant(other) {
-            return None;
-        }
-
-        match (self, other) {
-            (&Percentage(ref one), &Percentage(ref other)) => {
-                match basis {
-                    PositivePercentageBasis::Yes => one.partial_cmp(other),
-                    PositivePercentageBasis::Unknown => None,
-                }
-            },
-            (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
-            (&Angle(ref one), &Angle(ref other)) => one.degrees().partial_cmp(&other.degrees()),
-            (&Time(ref one), &Time(ref other)) => one.seconds().partial_cmp(&other.seconds()),
-            (&Resolution(ref one), &Resolution(ref other)) => one.dppx().partial_cmp(&other.dppx()),
-            (&Number(ref one), &Number(ref other)) => one.partial_cmp(other),
-            _ => {
-                match *self {
-                    Length(..) | Percentage(..) | Angle(..) | Time(..) | Number(..) |
-                    Resolution(..) => {},
-                }
-                unsafe {
-                    debug_unreachable!("Forgot a branch?");
-                }
-            },
-        }
     }
 
     fn as_number(&self) -> Option<f32> {
