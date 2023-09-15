@@ -52,8 +52,6 @@ class SharedMemoryBasic final
 
   virtual void Unmap() override { mSharedMemory.Unmap(); }
 
-  virtual void CloseHandle() override { mSharedMemory.Close(false); }
-
   virtual void* memory() const override {
 #ifdef FUZZING
     return SharedMemoryFuzzer::MutateSharedMemory(mSharedMemory.memory(),
@@ -70,6 +68,10 @@ class SharedMemoryBasic final
   }
 
   virtual Handle CloneHandle() override { return mSharedMemory.CloneHandle(); }
+
+  virtual Handle TakeHandle() override {
+    return mSharedMemory.TakeHandle(false);
+  }
 
   static void* FindFreeAddressSpace(size_t size) {
     return base::SharedMemory::FindFreeAddressSpace(size);

@@ -41,8 +41,6 @@ class SharedMemoryBasic final
 
   virtual void Unmap() override;
 
-  virtual void CloseHandle() override;
-
   virtual void* memory() const override {
 #ifdef FUZZING
     return SharedMemoryFuzzer::MutateSharedMemory(mMemory, mAllocSize);
@@ -58,6 +56,8 @@ class SharedMemoryBasic final
   virtual bool IsHandleValid(const Handle& aHandle) const override;
 
   virtual Handle CloneHandle() override;
+
+  virtual Handle TakeHandle() override;
 
  private:
   ~SharedMemoryBasic();
