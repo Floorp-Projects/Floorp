@@ -91,22 +91,25 @@ static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
 }
 }  // namespace
 
-#define MOZ_ENSURE_HRESULT_OK(call_)          \
-  do {                                        \
-    HRESULT const hr = (call_);               \
-    if (FAILED(hr)) return Err(nsresult(hr)); \
+#define MOZ_ENSURE_HRESULT_OK(call_)            \
+  do {                                          \
+    HRESULT const _tmp_hr_ = (call_);           \
+    if (FAILED(_tmp_hr_)) return Err(_tmp_hr_); \
   } while (0)
 
-nsresult ApplyCommands(::IFileDialog* dialog,
-                       nsTArray<Command> const& commands) {
+HRESULT ApplyCommands(::IFileDialog* dialog,
+                      nsTArray<Command> const& commands) {
   Applicator applicator{.dialog = dialog};
   for (auto const& cmd : commands) {
-    MOZ_ENSURE_HRESULT_OK(applicator.Visit(cmd));
+    HRESULT const hr = applicator.Visit(cmd);
+    if (FAILED(hr)) {
+      return hr;
+    }
   }
-  return NS_OK;
+  return S_OK;
 }
 
-mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
+mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
   FILEOPENDIALOGOPTIONS fos;
   MOZ_ENSURE_HRESULT_OK(dialog->GetOptions(&fos));
 
@@ -121,7 +124,7 @@ mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
     RefPtr<IShellItem> item;
     MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
     if (!item) {
-      return Err(nsresult::NS_ERROR_FAILURE);
+      return Err(E_FAIL);
     }
 
     nsAutoString path;
@@ -135,13 +138,13 @@ mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
   dialog->QueryInterface(IID_IFileOpenDialog, getter_AddRefs(openDlg));
   if (!openDlg) {
     MOZ_ASSERT(false, "a file-save dialog was given FOS_ALLOWMULTISELECT?");
-    return Err(NS_ERROR_UNEXPECTED);
+    return Err(E_UNEXPECTED);
   }
 
   RefPtr<IShellItemArray> items;
   MOZ_ENSURE_HRESULT_OK(openDlg->GetResults(getter_AddRefs(items)));
   if (!items) {
-    return Err(NS_ERROR_FAILURE);
+    return Err(E_FAIL);
   }
 
   nsTArray<nsString> paths;
@@ -161,7 +164,7 @@ mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
   return Results(std::move(paths), std::move(index));
 }
 
-mozilla::Result<nsString, nsresult> GetFolderResults(::IFileDialog* dialog) {
+mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
   RefPtr<IShellItem> item;
   MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
   if (!item) {
@@ -169,7 +172,7 @@ mozilla::Result<nsString, nsresult> GetFolderResults(::IFileDialog* dialog) {
     // might be due to misbehaving shell extensions?
     MOZ_ASSERT(false,
                "unexpected lack of item: was `Show`'s return value checked?");
-    return Err(NS_ERROR_FAILURE);
+    return Err(E_FAIL);
   }
 
   // If the user chose a Win7 Library, resolve to the library's

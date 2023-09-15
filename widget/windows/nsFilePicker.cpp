@@ -112,7 +112,7 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
   }
 
   {
-    if (NS_FAILED(fd::ApplyCommands(dialog, commands))) {
+    if (FAILED(fd::ApplyCommands(dialog, commands))) {
       return false;
     }
 
@@ -242,7 +242,7 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
 
   // display
   {
-    if (NS_FAILED(fd::ApplyCommands(dialog, commands))) {
+    if (FAILED(fd::ApplyCommands(dialog, commands))) {
       return false;
     }
 
