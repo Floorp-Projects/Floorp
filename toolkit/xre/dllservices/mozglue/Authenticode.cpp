@@ -4,16 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// We need Windows 8 functions and structures to be able to verify SHA-256.
-#if defined(_WIN32_WINNT)
-#  undef _WIN32_WINNT
-#  define _WIN32_WINNT _WIN32_WINNT_WIN8
-#endif  // defined(_WIN32_WINNT)
-#if defined(NTDDI_VERSION)
-#  undef NTDDI_VERSION
-#  define NTDDI_VERSION NTDDI_WIN8
-#endif  // defined(NTDDI_VERSION)
-
 #include "Authenticode.h"
 
 #include "mozilla/ArrayUtils.h"
