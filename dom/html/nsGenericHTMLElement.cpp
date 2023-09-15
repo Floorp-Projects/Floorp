@@ -791,8 +791,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
           AddToNameTable(aValue->GetAtomValue());
         }
       }
-    } else if ((aName == nsGkAtoms::inputmode &&
-                StaticPrefs::dom_forms_inputmode()) ||
+    } else if (aName == nsGkAtoms::inputmode ||
                aName == nsGkAtoms::enterkeyhint) {
       nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
       if (window && window->GetFocusedElement() == this) {

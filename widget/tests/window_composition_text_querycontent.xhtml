@@ -10828,8 +10828,6 @@ async function runPasswordMaskDelayTest() {
 
 async function runInputModeTest()
 {
-  await SpecialPowers.setBoolPref("dom.forms.inputmode", true);
-
   let result = [];
 
   function handler(aEvent)
@@ -10860,8 +10858,6 @@ async function runInputModeTest()
   textarea.value = "";
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
-
-  await SpecialPowers.clearUserPref("dom.forms.inputmode");
 }
 
 
