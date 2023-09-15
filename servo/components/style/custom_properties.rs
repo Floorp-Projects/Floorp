@@ -719,8 +719,6 @@ impl<'a> CustomPropertiesBuilder<'a> {
                         );
                         return;
                     }
-                    // TODO(zrhoffman, 1852360): Perform computed value-time validation on
-                    // registered properties that contain references.
                     if let Some(registration) = self.stylist.get_custom_property_registration(&name)
                     {
                         let mut input = ParserInput::new(&unparsed_value.css);
