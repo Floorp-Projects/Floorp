@@ -14,6 +14,14 @@ class EventModule extends Module {
         additionalInformation: "information added through interception",
       };
     }
+
+    if (name === "event.testEventCancelableWithInterception") {
+      if (payload.shouldCancel) {
+        return null;
+      }
+      return payload;
+    }
+
     return payload;
   }
 

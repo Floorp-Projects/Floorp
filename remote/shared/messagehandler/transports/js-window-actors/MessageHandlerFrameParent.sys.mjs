@@ -6,11 +6,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/messagehandler/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
   RootMessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/RootMessageHandlerRegistry.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
+
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 ChromeUtils.defineLazyGetter(lazy, "WebDriverError", () => {
   return ChromeUtils.importESModule(
@@ -89,6 +92,12 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
     if (module?.interceptEvent) {
       eventPayload = await module.interceptEvent(name, data);
 
+      if (eventPayload === null) {
+        lazy.logger.trace(
+          `${moduleName}.interceptEvent returned null, skipping event: ${name}, data: ${data}`
+        );
+        return;
+      }
       // Make sure that an event payload is returned.
       if (!eventPayload) {
         throw new Error(
