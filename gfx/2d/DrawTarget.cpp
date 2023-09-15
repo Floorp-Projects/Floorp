@@ -204,6 +204,11 @@ void DrawTarget::StrokeGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
 already_AddRefed<SourceSurface> DrawTarget::IntoLuminanceSource(
     LuminanceType aMaskType, float aOpacity) {
+  // The default IntoLuminanceSource implementation needs a format of B8G8R8A8.
+  if (mFormat != SurfaceFormat::B8G8R8A8) {
+    return nullptr;
+  }
+
   RefPtr<SourceSurface> surface = Snapshot();
   if (!surface) {
     return nullptr;
