@@ -732,11 +732,6 @@ add_task(async function match_request_domains() {
         "8.8.8.8: not matched by any of the domains"
       );
       await testMatchesRequest(
-        { url: "http://9.127.0.0.1/", type },
-        [5],
-        "9.127.0.0.1: while not a valid IP, it looks like a subdomain"
-      );
-      await testMatchesRequest(
         { url: "http://[::1]/", type },
         [2, 5],
         "[::1]: IPv6 matches with bracket"

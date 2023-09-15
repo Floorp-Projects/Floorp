@@ -371,11 +371,14 @@ TEST(TestMozURL, UrlTestData)
     const char* originEnd;
     origin.getString(&originBegin, &originEnd);
 
+    auto baseCString = nsDependentCString("about:blank");
     const Json::Value& base = item["base"];
-    ASSERT_TRUE(base.isString());
-    const char* baseBegin;
-    const char* baseEnd;
-    base.getString(&baseBegin, &baseEnd);
+    if (!base.isNull()) {
+      const char* baseBegin;
+      const char* baseEnd;
+      base.getString(&baseBegin, &baseEnd);
+      baseCString.Assign(nsDependentCSubstring(baseBegin, baseEnd));
+    }
 
     const Json::Value& input = item["input"];
     ASSERT_TRUE(input.isString());
@@ -383,8 +386,7 @@ TEST(TestMozURL, UrlTestData)
     const char* inputEnd;
     input.getString(&inputBegin, &inputEnd);
 
-    CheckOrigin(nsDependentCString(inputBegin, inputEnd),
-                nsDependentCString(baseBegin, baseEnd),
+    CheckOrigin(nsDependentCString(inputBegin, inputEnd), baseCString,
                 nsDependentCString(originBegin, originEnd));
   }
 }

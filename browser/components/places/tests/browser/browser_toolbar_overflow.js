@@ -20,7 +20,7 @@ add_setup(async function () {
     guid: PlacesUtils.bookmarks.toolbarGuid,
     children: Array(BOOKMARKS_COUNT)
       .fill("")
-      .map((_, i) => ({ url: `http://test.places.${i}/` })),
+      .map((_, i) => ({ url: `http://test.places.y${i}/` })),
   });
 
   // Toggle the bookmarks toolbar so that we start from a stable situation and
@@ -107,7 +107,7 @@ add_task(async function test_separator_first() {
   Assert.greater(children.length, 2, "Multiple elements are visible");
   Assert.equal(
     children[1]._placesNode.uri,
-    "http://test.places.0/",
+    "http://test.places.y0/",
     "Found the first bookmark"
   );
   Assert.equal(
@@ -211,7 +211,7 @@ async function test_index(desc, index, expected) {
   if (expected && nodeExisted) {
     Assert.equal(
       children[index]._placesNode.uri,
-      `http://test.places.${index}/`,
+      `http://test.places.y${index}/`,
       "Found the previous bookmark at the expected position"
     );
     Assert.equal(

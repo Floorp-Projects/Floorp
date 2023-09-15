@@ -165,7 +165,7 @@ var itemsCount = 0;
 async function new_bookmark(aInfo) {
   ++itemsCount;
   if (!("url" in aInfo)) {
-    aInfo.url = uri("http://test.item." + itemsCount);
+    aInfo.url = uri("http://test.item.y" + itemsCount);
   }
 
   if (!("title" in aInfo)) {
