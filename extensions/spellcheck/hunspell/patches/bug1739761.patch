@@ -1,6 +1,6 @@
-diff --git a/extensions/spellcheck/hunspell/src/hashmgr.cxx b/extensions/spellcheck/hunspell/src/hashmgr.cxx
---- a/extensions/spellcheck/hunspell/src/hashmgr.cxx
-+++ b/extensions/spellcheck/hunspell/src/hashmgr.cxx
+diff --git a/src/hashmgr.cxx b/src/hashmgr.cxx
+--- a/src/hashmgr.cxx
++++ b/src/hashmgr.cxx
 @@ -63,16 +63,17 @@
   * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
   * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -538,9 +538,9 @@ diff --git a/extensions/spellcheck/hunspell/src/hashmgr.cxx b/extensions/spellch
 +  --outstanding_arena_allocations;
 +  assert(outstanding_arena_allocations >= 0);
 +}
-diff --git a/extensions/spellcheck/hunspell/src/hashmgr.hxx b/extensions/spellcheck/hunspell/src/hashmgr.hxx
---- a/extensions/spellcheck/hunspell/src/hashmgr.hxx
-+++ b/extensions/spellcheck/hunspell/src/hashmgr.hxx
+diff --git a/src/hashmgr.hxx b/src/hashmgr.hxx
+--- a/src/hashmgr.hxx
++++ b/src/hashmgr.hxx
 @@ -67,16 +67,18 @@
   * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   * SUCH DAMAGE.

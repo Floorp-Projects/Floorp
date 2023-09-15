@@ -1,7 +1,7 @@
-diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+diff --git a/src/csutil.cxx b/src/csutil.cxx
 index 48e58ff4b2677..39a54d38023c8 100644
---- a/extensions/spellcheck/hunspell/src/csutil.cxx
-+++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/src/csutil.cxx
++++ b/src/csutil.cxx
 @@ -108,6 +108,7 @@ static struct unicode_info2* utf_tbl = NULL;
  static int utf_tbl_count =
      0;  // utf_tbl can be used by multiple Hunspell instances
