@@ -38,7 +38,17 @@ WinFileDialogChild::~WinFileDialogChild() {
     mUsed = true;                                                              \
   } while (0)
 
-#define MOZ_IPC_HRESULT_FAIL(hr, what) IPC_FAIL(this, what)
+template <size_t N>
+WinFileDialogChild::IPCResult WinFileDialogChild::MakeIpcFailure(
+    HRESULT hr, const char (&what)[N]) {
+  // The crash-report annotator stringifies integer values anyway. We do so
+  // eagerly here to avoid questions about C int/long conversion semantics.
+  nsPrintfCString data("%lu", hr);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::WindowsFileDialogErrorCode, data);
+
+  return IPC_FAIL(this, what);
+}
 
 #define MOZ_IPC_ENSURE_HRESULT_OK(hr, what)             \
   do {                                                  \
@@ -48,7 +58,7 @@ WinFileDialogChild::~WinFileDialogChild() {
     if (FAILED(_hr_)) {                                 \
       MOZ_LOG(sLogFileDialog, LogLevel::Error,          \
               ("HRESULT %8lX while %s", (hr), (what))); \
-      return MOZ_IPC_HRESULT_FAIL(_hr_, (what));        \
+      return MakeIpcFailure(_hr_, (what));              \
     }                                                   \
   } while (0)
 
@@ -62,7 +72,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
   {
     auto res = MakeFileDialog(type);
     if (res.isErr()) {
-      return MOZ_IPC_HRESULT_FAIL(res.unwrapErr(), "creating file dialog");
+      return MakeIpcFailure(res.unwrapErr(), "creating file dialog");
     }
     dialog = res.unwrap();
   }
@@ -80,7 +90,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
   {
     auto res = GetFileResults(dialog.get());
     if (res.isErr()) {
-      return MOZ_IPC_HRESULT_FAIL(res.unwrapErr(), "GetFileResults");
+      return MakeIpcFailure(res.unwrapErr(), "GetFileResults");
     }
     resolver(Some(res.unwrap()));
   }
@@ -97,7 +107,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
   {
     auto res = MakeFileDialog(FileDialogType::Open);
     if (res.isErr()) {
-      return MOZ_IPC_HRESULT_FAIL(res.unwrapErr(), "creating file dialog");
+      return MakeIpcFailure(res.unwrapErr(), "creating file dialog");
     }
     dialog = res.unwrap();
   }
@@ -117,7 +127,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
   {
     auto res = GetFolderResults(dialog.get());
     if (res.isErr()) {
-      return MOZ_IPC_HRESULT_FAIL(res.unwrapErr(), "GetFolderResults");
+      return MakeIpcFailure(res.unwrapErr(), "GetFolderResults");
     }
     resolver(Some(res.unwrap()));
   }
@@ -126,7 +136,6 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
 }
 
 #undef MOZ_IPC_ENSURE_HRESULT_OK
-#undef MOZ_IPC_HRESULT_FAIL
 
 void WinFileDialogChild::ProcessingError(Result aCode, const char* aReason) {
   detail::LogProcessingError(sLogFileDialog, this, aCode, aReason);

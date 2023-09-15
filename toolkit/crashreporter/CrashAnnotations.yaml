@@ -943,6 +943,14 @@ WasmLibrarySandboxMallocFailed:
     malloc inside the sandbox to fail.
   type: boolean
 
+WindowsFileDialogErrorCode:
+  description: >
+    The HRESULT returned from a Win32 system call leading to termination of the
+    file-dialog utility process. MozCrashReason is expected to provide context
+    for the value.
+  type: integer
+  ping: true
+
 WindowsPackageFamilyName:
   description: >
     If running in a Windows package context, the package family name, per

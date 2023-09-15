@@ -36,6 +36,10 @@ class WinFileDialogChild : public PWinFileDialogChild {
 
   void ProcessingError(Result aCode, const char* aReason) override;
 
+  // Defined and used only in WinFileDialogChild.cpp.
+  template <size_t N>
+  IPCResult MakeIpcFailure(HRESULT hr, const char (&what)[N]);
+
   // This flag properly _should_ be static (_i.e._, per-process) rather than
   // per-instance; but we can't presently instantiate two separate utility
   // processes with the same sandbox type, so we have to reuse the existing
