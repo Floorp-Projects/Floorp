@@ -2977,12 +2977,6 @@
   value: @IS_ANDROID@
   mirror: always
 
-# Is support for HTMLElement.inputMode enabled?
-- name: dom.forms.inputmode
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.forms.always_allow_pointer_events.enabled
   type: bool
   value: @IS_NIGHTLY_BUILD@

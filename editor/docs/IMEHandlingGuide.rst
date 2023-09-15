@@ -964,8 +964,7 @@ The value is a string representing the focused editor.
 mHTMLInputMode
 ^^^^^^^^^^^^^^
 
-The value is ``inputmode`` attribute value of the focused editor. This is set
-only when ``"dom.forms.inputmode"`` pref is true.
+The value is ``inputmode`` attribute value of the focused editor.
 
 mActionHint
 ^^^^^^^^^^^

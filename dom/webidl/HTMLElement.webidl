@@ -53,7 +53,7 @@ interface HTMLElement : Element {
            attribute DOMString? popover;
   [CEReactions, SetterThrows, Pure]
            attribute boolean spellcheck;
-  [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString inputMode;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString enterKeyHint;

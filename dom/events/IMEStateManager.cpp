@@ -1644,9 +1644,7 @@ MOZ_CAN_RUN_SCRIPT static void GetActionHint(const IMEState& aState,
 
 static void GetInputMode(const IMEState& aState, const nsIContent& aContent,
                          nsAString& aInputMode) {
-  if (aState.IsEditable() &&
-      (StaticPrefs::dom_forms_inputmode() ||
-       nsContentUtils::IsChromeDoc(aContent.OwnerDoc()))) {
+  if (aState.IsEditable()) {
     aContent.AsElement()->GetAttr(nsGkAtoms::inputmode, aInputMode);
     if (aContent.IsHTMLElement(nsGkAtoms::input) &&
         aInputMode.EqualsLiteral("mozAwesomebar")) {
