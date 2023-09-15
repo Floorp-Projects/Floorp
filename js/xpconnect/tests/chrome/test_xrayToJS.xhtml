@@ -247,7 +247,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "getOwnPropertyNames", "getOwnPropertySymbols",
                       "preventExtensions", "freeze", "fromEntries", "isFrozen", "seal",
                       "isSealed", "assign", "getPrototypeOf", "values",
-                      "entries", "isExtensible", "hasOwn"]);
+                      "entries", "isExtensible", "hasOwn", "groupBy"]);
   gPrototypeProperties.Array =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
@@ -304,7 +304,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["constructor", "size", Symbol.toStringTag, "get", "has", "set", "delete",
      "keys", "values", "clear", "forEach", "entries", Symbol.iterator];
   gConstructorProperties.Map =
-    constructorProps([Symbol.species]);
+    constructorProps(["groupBy", Symbol.species]);
 
   gPrototypeProperties.Set =
     ["constructor", "size", Symbol.toStringTag, "has", "add", "delete",
