@@ -17,10 +17,15 @@ class LogModule extends Module {
 
   interceptEvent(name, payload) {
     if (name == "log.entryAdded") {
+      const browsingContext = payload.source.context;
+      if (!lazy.TabManager.isValidCanonicalBrowsingContext(browsingContext)) {
+        // Discard events for invalid browsing contexts.
+        return null;
+      }
+
       // Resolve browsing context to a Navigable id.
-      payload.source.context = lazy.TabManager.getIdForBrowsingContext(
-        payload.source.context
-      );
+      payload.source.context =
+        lazy.TabManager.getIdForBrowsingContext(browsingContext);
 
       payload = lazy.processExtraData(this.messageHandler.sessionId, payload);
     }
