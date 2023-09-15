@@ -12,16 +12,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VsyncDispatcher.h"
 
-// Direct Manipulation is only defined for Win8 and newer.
-#if defined(_WIN32_WINNT)
-#  undef _WIN32_WINNT
-#  define _WIN32_WINNT _WIN32_WINNT_WIN8
-#endif  // defined(_WIN32_WINNT)
-#if defined(NTDDI_VERSION)
-#  undef NTDDI_VERSION
-#  define NTDDI_VERSION NTDDI_WIN8
-#endif  // defined(NTDDI_VERSION)
-
 #include "directmanipulation.h"
 
 namespace mozilla {

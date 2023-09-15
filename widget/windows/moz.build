@@ -67,6 +67,7 @@ EXPORTS.mozilla.widget += [
 UNIFIED_SOURCES += [
     "AudioSession.cpp",
     "CompositorWidgetChild.cpp",
+    "DirectManipulationOwner.cpp",
     "GfxInfo.cpp",
     "IEnumFE.cpp",
     "IMMHandler.cpp",
@@ -130,11 +131,6 @@ SOURCES += [
     "WindowsSMTCProvider.cpp",
     "WindowsUIUtils.cpp",
     "WinMouseScrollHandler.cpp",
-]
-
-# These files redefine the winsdk api version macro and we don't want it to leak to other files.
-SOURCES += [
-    "DirectManipulationOwner.cpp",
 ]
 
 # Needs INITGUID and we don't allow INITGUID in unified sources since bug 970429.
