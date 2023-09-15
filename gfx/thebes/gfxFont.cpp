@@ -2313,6 +2313,7 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
   fontParams.obliqueSkew = SkewForSyntheticOblique();
   fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
   fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
+  fontParams.hasTextShadow = aRunParams.hasTextShadow;
   fontParams.contextPaint = aRunParams.runContextPaint;
 
   if (fontParams.haveColorGlyphs && !UseNativeColrFontSupport()) {
@@ -2649,6 +2650,11 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                                layout::TextDrawTarget* aTextDrawer,
                                const FontDrawParams& aFontParams,
                                const Point& aPoint, uint32_t aGlyphId) {
+  if (aTextDrawer && aFontParams.hasTextShadow) {
+    aTextDrawer->FoundUnsupportedFeature();
+    return true;
+  }
+
   if (const auto* paintGraph =
           COLRFonts::GetGlyphPaintGraph(GetFontEntry()->GetCOLR(), aGlyphId)) {
     const auto* hbShaper = GetHarfBuzzShaper();

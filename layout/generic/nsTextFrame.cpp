@@ -223,6 +223,7 @@ struct nsTextFrame::DrawTextRunParams {
   gfx::FontPaletteValueSet* paletteValueSet = nullptr;
   float textStrokeWidth = 0.0f;
   bool drawSoftHyphen = false;
+  bool hasTextShadow = false;
   explicit DrawTextRunParams(gfxContext* aContext) : context(aContext) {}
 };
 
@@ -6070,6 +6071,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   params.glyphRange = aParams.glyphRange;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
   params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
+  params.hasTextShadow = !StyleText()->mTextShadow.IsEmpty();
 
   PaintShadowParams shadowParams(aParams);
   shadowParams.provider = aParams.provider;
@@ -6656,6 +6658,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   params.glyphRange = range;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
   params.paletteValueSet = PresContext()->GetFontPaletteValueSet();
+  params.hasTextShadow = !StyleText()->mTextShadow.IsEmpty();
 
   DrawText(range, textBaselinePt, params);
 }
@@ -6672,6 +6675,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
   params.fontPalette = aParams.fontPalette;
   params.paletteValueSet = aParams.paletteValueSet;
   params.callbacks = aParams.callbacks;
+  params.hasTextShadow = aParams.hasTextShadow;
   if (aParams.callbacks) {
     aParams.callbacks->NotifyBeforeText(aParams.textColor);
     params.drawMode = DrawMode::GLYPH_PATH;
