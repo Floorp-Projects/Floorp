@@ -102,3 +102,8 @@ foreignObject {
 circle, ellipse, line, mesh, path, polygon, polyline, rect {
   user-select: none;
 }
+
+a:any-link {
+  /* We don't want SVG link to be underlined */
+  text-decoration: none;
+}

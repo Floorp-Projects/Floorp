@@ -1796,11 +1796,6 @@
   value: false
   mirror: always
 
-- name: browser.underline_anchors
-  type: bool
-  value: true
-  mirror: always
-
 - name: browser.viewport.desktopWidth
   type: RelaxedAtomicInt32
   value: 980

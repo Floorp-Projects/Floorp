@@ -6,7 +6,7 @@
 // It doesn't matter what two preferences are used here, as long as the first is a built-in
 // one that defaults to false and the second defaults to true.
 const KNOWN_PREF_1 = "browser.display.use_system_colors";
-const KNOWN_PREF_2 = "browser.underline_anchors";
+const KNOWN_PREF_2 = "browser.autofocus";
 
 // This test verifies that pressing the reset all button for experimental features
 // resets all of the checkboxes to their default state.

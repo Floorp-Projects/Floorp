@@ -31,10 +31,6 @@ colors-use-system =
     .label = Use system colors
     .accesskey = s
 
-colors-underline-links =
-    .label = Underline links
-    .accesskey = U
-
 colors-links-header = Link Colors
 
 colors-unvisited-links = Unvisited Links
