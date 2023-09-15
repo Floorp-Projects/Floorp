@@ -35,7 +35,6 @@ import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
-import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -48,8 +47,12 @@ import java.util.Date
  * Implementation of Robot Pattern for the settings search sub menu.
  */
 class SettingsSubMenuAboutRobot {
-
-    fun verifyAboutFirefoxPreview() = assertFirefoxPreviewPage()
+    fun verifyAboutFirefoxPreviewInfo() {
+        assertVersionNumber()
+        assertProductCompany()
+        assertCurrentTimestamp()
+        verifyTheLinksList()
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -61,13 +64,6 @@ class SettingsSubMenuAboutRobot {
     }
 }
 
-private fun assertFirefoxPreviewPage() {
-    assertVersionNumber()
-    assertProductCompany()
-    assertCurrentTimestamp()
-    verifyListElements()
-}
-
 private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
     navigationToolbar {
     }.openThreeDotMenu {
@@ -77,7 +73,7 @@ private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
     }
 }
 
-private fun verifyListElements() {
+private fun verifyTheLinksList() {
     assertAboutToolbar()
     assertWhatIsNewInFirefoxPreview()
     navigateBackToAboutPage(::assertSupport)
