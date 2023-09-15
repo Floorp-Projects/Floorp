@@ -346,6 +346,7 @@ const OPTIN_DEFAULT = {
   template: "multistage",
   backdrop: "transparent",
   aria_role: "alert",
+  UTMTerm: "opt-in",
   screens: [
     {
       id: "FS_OPT_IN",
@@ -361,7 +362,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.support.mozilla.org",
+              args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/review-checker-review-quality?utm_source=review-checker&utm_campaign=learn-more&utm_medium=in-product",
               where: "tab",
             },
           },
@@ -385,7 +386,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.fakespot.com/privacy-policy",
+              args: "https://www.fakespot.com/privacy-policy?utm_source=review-checker&utm_campaign=privacy-policy&utm_medium=in-product",
               where: "tab",
             },
           },
@@ -394,7 +395,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.fakespot.com/terms",
+              args: "https://www.fakespot.com/terms?utm_source=review-checker&utm_campaign=terms-of-use&utm_medium=in-product",
               where: "tab",
             },
           },
