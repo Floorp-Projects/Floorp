@@ -90,9 +90,6 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportsMimeType(
 media::DecodeSupportSet MFMediaEngineDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
-  if (!aParams.mMediaEngineId) {
-    return media::DecodeSupportSet{};
-  }
   return SupportInternal(aParams, aDiagnostics);
 }
 
