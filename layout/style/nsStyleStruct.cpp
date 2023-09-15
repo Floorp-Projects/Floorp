@@ -1503,7 +1503,7 @@ bool StyleImage::IsOpaque() const {
     return AsGradient()->IsOpaque();
   }
 
-  if (IsElement()) {
+  if (IsElement() || IsMozThemed()) {
     return false;
   }
 
@@ -1536,6 +1536,7 @@ bool StyleImage::IsComplete() const {
       return false;
     case Tag::Gradient:
     case Tag::Element:
+    case Tag::MozThemed:
       return true;
     case Tag::Url:
     case Tag::Rect: {
@@ -1568,6 +1569,7 @@ bool StyleImage::IsSizeAvailable() const {
       return false;
     case Tag::Gradient:
     case Tag::Element:
+    case Tag::MozThemed:
       return true;
     case Tag::Url:
     case Tag::Rect: {

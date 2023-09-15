@@ -65,3 +65,5 @@ skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overf
 fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow-small.html progress-nobar.html
 
 == chrome://reftest/content/native-theme/676387-1.xhtml chrome://reftest/content/native-theme/676387-1-ref.xhtml
+
+== chrome://reftest/content/native-theme/moz-theme.html chrome://reftest/content/native-theme/moz-theme.html
