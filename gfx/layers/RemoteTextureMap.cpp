@@ -173,6 +173,8 @@ void RemoteTextureMap::PushTexture(
     const std::shared_ptr<gl::SharedSurface>& aSharedSurface) {
   MOZ_RELEASE_ASSERT(aTextureHost);
 
+  std::vector<RefPtr<TextureHost>>
+      releasingTextures;  // Release outside the monitor
   std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
@@ -229,12 +231,29 @@ void RemoteTextureMap::PushTexture(
     // Release owner->mReleasingRenderedTextureHosts before checking
     // NumCompositableRefs()
     if (!owner->mReleasingRenderedTextureHosts.empty()) {
+      std::transform(
+          owner->mReleasingRenderedTextureHosts.begin(),
+          owner->mReleasingRenderedTextureHosts.end(),
+          std::back_inserter(releasingTextures),
+          [](CompositableTextureHostRef& aRef) { return aRef.get(); });
       owner->mReleasingRenderedTextureHosts.clear();
     }
 
     // Drop obsoleted remote textures.
     while (!owner->mUsingTextureDataHolders.empty()) {
       auto& front = owner->mUsingTextureDataHolders.front();
+      // If mLatestRenderedTextureHost is last compositable ref of remote
+      // texture's TextureHost, its RemoteTextureHostWrapper is already
+      // unregistered. It happens when pushed remote textures that follow are
+      // not rendered since last mLatestRenderedTextureHost update. In this
+      // case, remove the TextureHost from mUsingTextureDataHolders. It is for
+      // unblocking remote texture recyclieng.
+      if (front->mTextureHost &&
+          front->mTextureHost->NumCompositableRefs() == 1 &&
+          front->mTextureHost == owner->mLatestRenderedTextureHost) {
+        owner->mUsingTextureDataHolders.pop_front();
+        continue;
+      }
       // When compositable ref of TextureHost becomes 0, the TextureHost is not
       // used by WebRender anymore.
       if (front->mTextureHost &&
@@ -381,7 +400,8 @@ void RemoteTextureMap::KeepTextureDataAliveForTextureHostIfNecessary(
 void RemoteTextureMap::UnregisterTextureOwner(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid) {
   UniquePtr<TextureOwner> releasingOwner;  // Release outside the monitor
-  RefPtr<TextureHost> releasingTexture;    // Release outside the monitor
+  std::vector<RefPtr<TextureHost>>
+      releasingTextures;  // Release outside the monitor
   std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
@@ -396,7 +416,7 @@ void RemoteTextureMap::UnregisterTextureOwner(
 
     if (it->second->mLatestTextureHost) {
       // Release CompositableRef in mMonitor
-      releasingTexture = it->second->mLatestTextureHost;
+      releasingTextures.emplace_back(it->second->mLatestTextureHost);
       it->second->mLatestTextureHost = nullptr;
     }
 
@@ -406,6 +426,11 @@ void RemoteTextureMap::UnregisterTextureOwner(
     // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
     // NumCompositableRefs().
     if (!it->second->mReleasingRenderedTextureHosts.empty()) {
+      std::transform(
+          it->second->mReleasingRenderedTextureHosts.begin(),
+          it->second->mReleasingRenderedTextureHosts.end(),
+          std::back_inserter(releasingTextures),
+          [](CompositableTextureHostRef& aRef) { return aRef.get(); });
       it->second->mReleasingRenderedTextureHosts.clear();
     }
     if (it->second->mLatestRenderedTextureHost) {
@@ -467,6 +492,11 @@ void RemoteTextureMap::UnregisterTextureOwners(
       // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
       // NumCompositableRefs().
       if (!it->second->mReleasingRenderedTextureHosts.empty()) {
+        std::transform(
+            it->second->mReleasingRenderedTextureHosts.begin(),
+            it->second->mReleasingRenderedTextureHosts.end(),
+            std::back_inserter(releasingTextures),
+            [](CompositableTextureHostRef& aRef) { return aRef.get(); });
         it->second->mReleasingRenderedTextureHosts.clear();
       }
       if (it->second->mLatestRenderedTextureHost) {
