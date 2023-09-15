@@ -114,8 +114,11 @@ class SharedMemoryCommon : public SharedMemory {
   typedef HandleImpl Handle;
 
   virtual Handle CloneHandle() = 0;
+  virtual Handle TakeHandle() = 0;
   virtual bool IsHandleValid(const Handle& aHandle) const = 0;
   virtual bool SetHandle(Handle aHandle, OpenRights aRights) = 0;
+
+  virtual void CloseHandle() override { TakeHandle(); }
 
   virtual bool WriteHandle(IPC::MessageWriter* aWriter) override {
     Handle handle = CloneHandle();

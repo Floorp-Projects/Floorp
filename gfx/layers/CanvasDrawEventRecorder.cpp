@@ -42,13 +42,11 @@ bool CanvasEventRingBuffer::InitBuffer(
     return false;
   }
 
-  *aReadHandle = mSharedMemory->CloneHandle();
+  *aReadHandle = mSharedMemory->TakeHandle();
   if (NS_WARN_IF(!*aReadHandle)) {
     mGood = false;
     return false;
   }
-
-  mSharedMemory->CloseHandle();
 
   mBuf = static_cast<char*>(mSharedMemory->memory());
   mBufPos = mBuf;

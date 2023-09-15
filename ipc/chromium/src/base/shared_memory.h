@@ -92,11 +92,11 @@ class SharedMemory {
   void* memory() const { return memory_.get(); }
 
   // Extracts the underlying file handle, returning a RAII type.
-  // This unmaps the memory as a side-effect (and cleans up any OS-specific
-  // resources).
-  mozilla::UniqueFileHandle TakeHandle() {
+  // If `unmap_view` is true, this unmaps the memory as a side-effect (and
+  // cleans up any OS-specific resources).
+  mozilla::UniqueFileHandle TakeHandle(bool unmap_view = true) {
     mozilla::UniqueFileHandle handle = std::move(mapped_file_);
-    Close();
+    Close(unmap_view);
     return handle;
   }
 

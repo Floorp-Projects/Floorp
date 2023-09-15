@@ -147,6 +147,11 @@ auto SharedMemoryBasic::CloneHandle() -> Handle {
   return mozilla::RetainMachSendRight(mPort.get());
 }
 
+auto SharedMemoryBasic::TakeHandle() -> Handle {
+  mOpenRights = RightsReadWrite;
+  return std::move(mPort);
+}
+
 void SharedMemoryBasic::Unmap() {
   if (!mMemory) {
     return;
@@ -160,13 +165,6 @@ void SharedMemoryBasic::Unmap() {
     return;
   }
   mMemory = nullptr;
-}
-
-void SharedMemoryBasic::CloseHandle() {
-  if (mPort) {
-    mPort = nullptr;
-    mOpenRights = RightsReadWrite;
-  }
 }
 
 bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const {
