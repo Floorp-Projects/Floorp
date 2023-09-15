@@ -269,7 +269,7 @@ export var TabManager = {
    *     If `browsingContext` is not a CanonicalBrowsingContext instance.
    */
   getNavigableForBrowsingContext(browsingContext) {
-    if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
+    if (!this.isValidCanonicalBrowsingContext(browsingContext)) {
       throw new TypeError(
         `Expected browsingContext to be a CanonicalBrowsingContext, got ${browsingContext}`
       );
@@ -334,6 +334,23 @@ export var TabManager = {
     // Other accessors (eg `.ownerGlobal` or `.browser.ownerGlobal`) fail on one
     // of the platforms.
     return tab.linkedBrowser.ownerGlobal;
+  },
+
+  /**
+   * Check if the given argument is a valid canonical browsing context and was not
+   * discarded.
+   *
+   * @param {BrowsingContext} browsingContext
+   *     The browsing context to check.
+   *
+   * @returns {boolean}
+   *     True if the browsing context is valid, false otherwise.
+   */
+  isValidCanonicalBrowsingContext(browsingContext) {
+    return (
+      CanonicalBrowsingContext.isInstance(browsingContext) &&
+      !browsingContext.isDiscarded
+    );
   },
 
   /**

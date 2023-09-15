@@ -86,7 +86,7 @@ class NavigationRegistry extends EventEmitter {
    *     The last known navigation data, or null.
    */
   getNavigationForBrowsingContext(context) {
-    if (!CanonicalBrowsingContext.isInstance(context)) {
+    if (!lazy.TabManager.isValidCanonicalBrowsingContext(context)) {
       // Bail out if the provided context is not a valid CanonicalBrowsingContext
       // instance.
       return null;
