@@ -10130,6 +10130,14 @@ var ShoppingSidebarManager = {
       // This is the auto-enable behavior that toggles the `active` pref. It
       // must be at the end of this function, or 2 sidebars could be created.
       ShoppingUtils.handleAutoActivateOnProduct();
+
+      if (!this.isActive) {
+        ShoppingUtils.sendTrigger({
+          browser: aBrowser,
+          id: "shoppingProductPageWithSidebarClosed",
+          context: { isSidebarClosing: !!sidebar },
+        });
+      }
     }
   },
 
