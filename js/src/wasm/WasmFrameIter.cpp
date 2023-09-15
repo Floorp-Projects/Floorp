@@ -729,9 +729,9 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
               subTypingDepth);
 
           // Perform the check
-          masm.branchWasmSTVIsSubtypeDynamicDepth(
-              scratch1, WasmTableCallSigReg, subTypingDepth, scratch2,
-              &functionBody, true);
+          masm.branchWasmSTVIsSubtypeDynamicDepth(scratch1, WasmTableCallSigReg,
+                                                  subTypingDepth, scratch2,
+                                                  &functionBody, true);
         }
 
         masm.bind(&fail);
