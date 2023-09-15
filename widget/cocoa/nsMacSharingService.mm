@@ -87,8 +87,9 @@ static NSString* NSImageToBase64(const NSImage* aImage) {
   NSBitmapImageRep* bitmapRep =
       [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
   [bitmapRep setSize:[aImage size]];
-  NSData* imageData = [bitmapRep representationUsingType:NSPNGFileType
-                                              properties:@{}];
+  NSData* imageData =
+      [bitmapRep representationUsingType:NSBitmapImageFileTypePNG
+                              properties:@{}];
   NSString* base64Encoded = [imageData base64EncodedStringWithOptions:0];
   [bitmapRep release];
   return [NSString stringWithFormat:@"data:image/png;base64,%@", base64Encoded];
