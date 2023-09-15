@@ -1004,9 +1004,7 @@ UniqueChars ToPrintableStringImpl(mozilla::Range<CharT> str,
   if (!sprinter.init()) {
     return nullptr;
   }
-  if (!QuoteString<QuoteTarget::String>(&sprinter, str, quote)) {
-    return nullptr;
-  }
+  QuoteString<QuoteTarget::String>(&sprinter, str, quote);
   return sprinter.release();
 }
 
