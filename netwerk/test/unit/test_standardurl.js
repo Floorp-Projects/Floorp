@@ -675,21 +675,9 @@ add_test(function test_ipv4Normalize() {
 
   // These should treated as a domain instead of an IPv4.
   var nonIPv4s = [
-    "http://0xfffffffff/",
-    "http://0x100000000/",
-    "http://4294967296/",
-    "http://1.2.0x10000/",
-    "http://1.0x1000000/",
-    "http://256.0.0.1/",
-    "http://1.256.1/",
-    "http://-1.0.0.0/",
-    "http://1.2.3.4.5/",
-    "http://010000000000000000/",
     "http://2+3/",
     "http://0.0.0.-1/",
     "http://1.2.3.4../",
-    "http://1..2/",
-    "http://.1.2.3.4/",
     "resource://123/",
     "resource://4294967296/",
   ];

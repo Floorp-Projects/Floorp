@@ -143,7 +143,6 @@ add_task(function test() {
     insertHost("bar.ca", "A", 1, 0, 0, 0, 1000, true),
     insertHost("localhost", "A", 1, 0, 0, 0, 0, false),
     insertHost("127.0.0.1", "A", 1, 0, 0, 0, 0, false),
-    insertHost("263.123.555.676", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false),
     insertHost(
@@ -202,8 +201,6 @@ add_task(function test() {
     ["https://localhost", "A", 1, 0, 0],
     ["http://127.0.0.1", "A", 1, 0, 0],
     ["https://127.0.0.1", "A", 1, 0, 0],
-    ["http://263.123.555.676", "A", 1, 0, 0],
-    ["https://263.123.555.676", "A", 1, 0, 0],
   ];
 
   let found = expected.map(it => 0);

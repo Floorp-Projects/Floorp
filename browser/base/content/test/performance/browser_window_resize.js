@@ -81,7 +81,7 @@ add_task(async function () {
     children: Array(BOOKMARKS_COUNT)
       .fill("")
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      .map((_, i) => ({ url: `http://test.places.${i}/` })),
+      .map((_, i) => ({ url: `http://test.places.${i}.x/` })),
   });
 
   let wasCollapsed = gToolbar.collapsed;

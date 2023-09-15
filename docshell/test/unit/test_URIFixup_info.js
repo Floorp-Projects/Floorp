@@ -410,17 +410,11 @@ var testcases = [
   },
   {
     input: "47.6182,-122.830",
-    fixedURI: "http://47.6182,-122.830/",
     keywordLookup: true,
-    protocolChange: true,
-    affectedByDNSForSingleWordHosts: true,
   },
   {
     input: "-47.6182,-23.51",
-    fixedURI: "http://-47.6182,-23.51/",
     keywordLookup: true,
-    protocolChange: true,
-    affectedByDNSForSingleWordHosts: true,
   },
   {
     input: "-22.14,23.51-",
