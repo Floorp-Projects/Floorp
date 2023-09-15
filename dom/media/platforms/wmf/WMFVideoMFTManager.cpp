@@ -7,7 +7,6 @@
 #include "WMFVideoMFTManager.h"
 
 #include <psapi.h>
-#include <winsdkver.h>
 #include <algorithm>
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
@@ -42,44 +41,6 @@ using mozilla::layers::IMFYCbCrImage;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 using mozilla::media::TimeUnit;
-
-#if WINVER_MAXVER < 0x0A00
-// Windows 10+ SDK has VP80 and VP90 defines
-const GUID MFVideoFormat_VP80 = {
-    0x30385056,
-    0x0000,
-    0x0010,
-    {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-
-const GUID MFVideoFormat_VP90 = {
-    0x30395056,
-    0x0000,
-    0x0010,
-    {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-#endif
-
-#if !defined(__MINGW32__) && _WIN32_WINNT < _WIN32_WINNT_WIN8
-const GUID MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT = {
-    0x851745d5,
-    0xc3d6,
-    0x476d,
-    {0x95, 0x27, 0x49, 0x8e, 0xf2, 0xd1, 0xd, 0x18}};
-const GUID MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT_PROGRESSIVE = {
-    0xf5523a5,
-    0x1cb2,
-    0x47c5,
-    {0xa5, 0x50, 0x2e, 0xeb, 0x84, 0xb4, 0xd1, 0x4a}};
-const GUID MF_SA_D3D11_BINDFLAGS = {
-    0xeacf97ad,
-    0x065c,
-    0x4408,
-    {0xbe, 0xe3, 0xfd, 0xcb, 0xfd, 0x12, 0x8b, 0xe2}};
-const GUID MF_SA_D3D11_SHARED_WITHOUT_MUTEX = {
-    0x39dbd44d,
-    0x2e44,
-    0x4931,
-    {0xa4, 0xc8, 0x35, 0x2d, 0x3d, 0xc4, 0x21, 0x15}};
-#endif
 
 namespace mozilla {
 
