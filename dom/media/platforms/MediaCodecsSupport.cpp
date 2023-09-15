@@ -183,15 +183,15 @@ CodecDefinition MCSInfo::GetCodecDefinition(const MediaCodec& aCodec) {
 }
 
 MediaCodecsSupport MCSInfo::GetMediaCodecsSupportEnum(
-    const MediaCodec& aCodec, const DecodeSupport& aSupport) {
-  if (aSupport == DecodeSupport::Unsupported) {
+    const MediaCodec& aCodec, const DecodeSupportSet& aSupport) {
+  if (aSupport.isEmpty()) {
     return MediaCodecsSupport{};
   }
   const CodecDefinition cd = GetCodecDefinition(aCodec);
-  if (aSupport == DecodeSupport::SoftwareDecode) {
+  if (aSupport.contains(DecodeSupport::SoftwareDecode)) {
     return cd.swDecodeSupport;
   }
-  if (aSupport == DecodeSupport::HardwareDecode) {
+  if (aSupport.contains(DecodeSupport::HardwareDecode)) {
     return cd.hwDecodeSupport;
   }
   return MediaCodecsSupport::SENTINEL;

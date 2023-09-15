@@ -350,7 +350,7 @@ class PlatformDecoderModule {
         SupportsMimeType(trackInfo.mMimeType, aDiagnostics);
 
     // Bail early if we don't support this format at all
-    if (support == media::DecodeSupport::Unsupported) {
+    if (support.isEmpty()) {
       return support;
     }
 
@@ -363,7 +363,7 @@ class PlatformDecoderModule {
 
     // Check whether we support the desired color depth
     if (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics)) {
-      return media::DecodeSupport::Unsupported;
+      return media::DecodeSupportSet{};
     }
     return support;
   }

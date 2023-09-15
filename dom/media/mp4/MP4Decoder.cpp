@@ -160,8 +160,8 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
     RefPtr<PDMFactory> platform = new PDMFactory();
     for (const auto& track : tracks) {
       if (!track ||
-          platform->Supports(SupportDecoderParams(*track), aDiagnostics) ==
-              media::DecodeSupport::Unsupported) {
+          platform->Supports(SupportDecoderParams(*track), aDiagnostics)
+              .isEmpty()) {
         return false;
       }
     }
@@ -189,9 +189,8 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
   // Check that something is supported at least.
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
-    if (track &&
-        platform->Supports(SupportDecoderParams(*track), aDiagnostics) !=
-            media::DecodeSupport::Unsupported) {
+    if (track && !platform->Supports(SupportDecoderParams(*track), aDiagnostics)
+                      .isEmpty()) {
       return true;
     }
   }
