@@ -3078,12 +3078,6 @@
   value: true
   mirror: always
 
-# Media Session API
-- name: dom.media.mediasession.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # WebCodecs API
 - name: dom.media.webcodecs.enabled
   type: RelaxedAtomicBool

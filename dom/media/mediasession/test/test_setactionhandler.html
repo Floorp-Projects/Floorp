@@ -23,8 +23,6 @@ const ACTIONS = [
 ];
 
 (async function testSetActionHandler() {
-  await setupPreference();
-
   for (const action of ACTIONS) {
     info(`Test setActionHandler for '${action}'`);
     generateAction(action);
@@ -45,12 +43,6 @@ const ACTIONS = [
 
   SimpleTest.finish();
 })();
-
-function setupPreference() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["dom.media.mediasession.enabled", true],
-  ]});
-}
 
 function generateAction(action) {
   let details = generateActionDetails(action);
