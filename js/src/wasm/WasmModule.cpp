@@ -863,13 +863,9 @@ static bool GetGlobalExport(JSContext* cx,
   // in its global data area. Either way, we must initialize the global object
   // with the same initial value.
   MOZ_ASSERT(!global.isMutable());
-  MOZ_ASSERT(!global.isImport());
-  RootedVal globalVal(cx);
   MOZ_RELEASE_ASSERT(!global.isImport());
-  const InitExpr& init = global.initExpr();
-  if (!init.evaluate(cx, instanceObj, &globalVal)) {
-    return false;
-  }
+  RootedVal globalVal(cx);
+  instanceObj->instance().constantGlobalGet(globalIndex, &globalVal);
   globalObj->val() = globalVal;
   return true;
 }

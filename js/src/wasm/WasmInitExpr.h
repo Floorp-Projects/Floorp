@@ -86,7 +86,7 @@ class InitExpr {
   // InitExpr::evaluate, i.e. failing only on OOM.
   [[nodiscard]] static bool decodeAndEvaluate(
       JSContext* cx, Handle<WasmInstanceObject*> instanceObj, Decoder& d,
-      MutableHandleVal result);
+      ValType expectedType, MutableHandleVal result);
 
   // Evaluate the constant expresssion with the given context. This may only
   // fail due to an OOM, as all InitExpr's are required to have been validated.

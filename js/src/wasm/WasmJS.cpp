@@ -248,7 +248,11 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
                                      JSMSG_WASM_BAD_GLOB_MUT_LINK);
             return false;
           }
-          if (obj->type() != global.type()) {
+
+          bool matches = global.isMutable()
+                             ? obj->type() == global.type()
+                             : ValType::isSubTypeOf(obj->type(), global.type());
+          if (!matches) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                      JSMSG_WASM_BAD_GLOB_TYPE_LINK);
             return false;
