@@ -248,7 +248,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   friend class HttpBackgroundChannelParent;
 
-  uint64_t mEarlyHintPreloaderId;
+  uint64_t mEarlyHintPreloaderId{};
 
   RefPtr<HttpBaseChannel> mChannel;
   nsCOMPtr<nsICacheEntry> mCacheEntry;
