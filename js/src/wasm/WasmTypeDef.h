@@ -480,9 +480,11 @@ using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 // [SMDOC] Super type vector
 //
 // A super type vector is a vector representation of the linked list of super
-// types that a type definition has. Every element is a raw pointer to a type
-// definition. It's possible to form a vector here because type definitions
-// are trees, not DAGs, with every type having at most one super type.
+// types that a type definition has. Every element is a raw pointer to another
+// super type vector - they are one-to-one with type definitions, so they are
+// functionally equivalent. It is possible to form a vector here because
+// subtypes in wasm form trees, not DAGs, with every type having at most one
+// super type.
 //
 // The first element in the vector is the 'root' type definition without a
 // super type. The last element is to the type definition itself.
@@ -579,7 +581,7 @@ class SuperTypeVector {
   static size_t offsetOfSelfTypeDef() {
     return offsetof(SuperTypeVector, typeDef_);
   };
-  static size_t offsetOfTypeDefInVector(uint32_t typeDefDepth);
+  static size_t offsetOfSTVInVector(uint32_t subTypingDepth);
 };
 
 // Ensure it is safe to use `sizeof(SuperTypeVector)` to find the offset of
@@ -832,12 +834,12 @@ class TypeDef {
     if (MOZ_LIKELY(subTypeDef == superTypeDef)) {
       return true;
     }
-    const SuperTypeVector* subSuperTypeVector = subTypeDef->superTypeVector();
+    const SuperTypeVector* subSTV = subTypeDef->superTypeVector();
 
     // During construction of a recursion group, the super type vector may not
     // have been computed yet, in which case we need to fall back to a linear
     // search.
-    if (!subSuperTypeVector) {
+    if (!subSTV) {
       while (subTypeDef) {
         if (subTypeDef == superTypeDef) {
           return true;
@@ -848,23 +850,22 @@ class TypeDef {
     }
 
     // The supertype vector does exist.  So check it points back here.
-    MOZ_ASSERT(subSuperTypeVector->typeDef() == subTypeDef);
+    MOZ_ASSERT(subSTV->typeDef() == subTypeDef);
 
     // We need to check if `superTypeDef` is one of `subTypeDef`s super types
     // by checking in `subTypeDef`s super type vector. We can use the static
     // information of the depth of `superTypeDef` to index directly into the
     // vector.
     uint32_t subTypingDepth = superTypeDef->subTypingDepth();
-    if (subTypingDepth >= subSuperTypeVector->length()) {
+    if (subTypingDepth >= subSTV->length()) {
       return false;
     }
 
-    const SuperTypeVector* superSuperTypeVector =
-        superTypeDef->superTypeVector();
-    MOZ_ASSERT(superSuperTypeVector);
-    MOZ_ASSERT(superSuperTypeVector->typeDef() == superTypeDef);
+    const SuperTypeVector* superSTV = superTypeDef->superTypeVector();
+    MOZ_ASSERT(superSTV);
+    MOZ_ASSERT(superSTV->typeDef() == superTypeDef);
 
-    return subSuperTypeVector->type(subTypingDepth) == superSuperTypeVector;
+    return subSTV->type(subTypingDepth) == superSTV;
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

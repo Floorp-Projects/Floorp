@@ -1075,7 +1075,7 @@ void LIRGenerator::visitTest(MTest* test) {
     LDefinition scratch1 = LDefinition();
     if (isSubTypeOf->destType().isAnyHierarchy()) {
       // As in visitWasmRefIsSubtypeOfAbstract, we know we do not need
-      // scratch2 and superSuperTypeVector because we know this is not a
+      // scratch2 and superSTV because we know this is not a
       // concrete type.
       scratch1 = MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
                      isSubTypeOf->destType())
@@ -1099,8 +1099,7 @@ void LIRGenerator::visitTest(MTest* test) {
     MWasmRefIsSubtypeOfConcrete* isSubTypeOf =
         opd->toWasmRefIsSubtypeOfConcrete();
     LAllocation ref = useRegister(isSubTypeOf->ref());
-    LAllocation superSuperTypeVector =
-        useRegister(isSubTypeOf->superSuperTypeVector());
+    LAllocation superSTV = useRegister(isSubTypeOf->superSTV());
     LDefinition scratch1 = LDefinition();
     LDefinition scratch2 = LDefinition();
     if (isSubTypeOf->destType().isAnyHierarchy()) {
@@ -1126,7 +1125,7 @@ void LIRGenerator::visitTest(MTest* test) {
 
     add(new (alloc()) LWasmRefIsSubtypeOfConcreteAndBranch(
             ifTrue, ifFalse, isSubTypeOf->sourceType(), isSubTypeOf->destType(),
-            ref, superSuperTypeVector, scratch1, scratch2),
+            ref, superSTV, scratch1, scratch2),
         test);
     return;
   }
@@ -7198,7 +7197,7 @@ void LIRGenerator::visitWasmRefIsSubtypeOfAbstract(
   LDefinition scratch1 = LDefinition();
   if (ins->destType().isAnyHierarchy()) {
     // See comment on MacroAssembler::branchWasmRefIsSubtypeAny.
-    // We know we do not need scratch2 and superSuperTypeVector because we know
+    // We know we do not need scratch2 and superSTV because we know
     // this is not a concrete type.
     MOZ_ASSERT(!MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(
         ins->destType()));
@@ -7239,7 +7238,7 @@ void LIRGenerator::visitWasmRefIsSubtypeOfConcrete(
   // means) but the scratch registers can vary.
 
   LAllocation ref = useRegister(ins->ref());
-  LAllocation superSuperTypeVector = useRegister(ins->superSuperTypeVector());
+  LAllocation superSTV = useRegister(ins->superSTV());
   LDefinition scratch1 = LDefinition();
   LDefinition scratch2 = LDefinition();
   if (ins->destType().isAnyHierarchy()) {
@@ -7271,8 +7270,8 @@ void LIRGenerator::visitWasmRefIsSubtypeOfConcrete(
     MOZ_CRASH("unknown type hierarchy for concrete cast");
   }
 
-  define(new (alloc()) LWasmRefIsSubtypeOfConcrete(ref, superSuperTypeVector,
-                                                   scratch1, scratch2),
+  define(new (alloc())
+             LWasmRefIsSubtypeOfConcrete(ref, superSTV, scratch1, scratch2),
          ins);
 }
 

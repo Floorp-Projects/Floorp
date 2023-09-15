@@ -7622,10 +7622,10 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
                                       RefType destType, Label* label,
                                       bool onSuccess) {
   if (destType.isAnyHierarchy()) {
-    RegPtr superSuperTypeVector;
+    RegPtr superSTV;
     if (MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(destType)) {
       uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-      superSuperTypeVector = loadSuperTypeVector(typeIndex);
+      superSTV = loadSuperTypeVector(typeIndex);
     }
     RegI32 scratch1 =
         MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(destType)
@@ -7637,7 +7637,7 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
             : RegI32::Invalid();
 
     masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label, onSuccess,
-                                   superSuperTypeVector, scratch1, scratch2);
+                                   superSTV, scratch1, scratch2);
 
     if (scratch2.isValid()) {
       freeI32(scratch2);
@@ -7645,16 +7645,16 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
     if (scratch1.isValid()) {
       freeI32(scratch1);
     }
-    if (superSuperTypeVector.isValid()) {
-      freePtr(superSuperTypeVector);
+    if (superSTV.isValid()) {
+      freePtr(superSTV);
     }
   } else if (destType.isFuncHierarchy()) {
-    RegPtr superSuperTypeVector;
+    RegPtr superSTV;
     RegI32 scratch1;
     if (MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
             destType)) {
       uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-      superSuperTypeVector = loadSuperTypeVector(typeIndex);
+      superSTV = loadSuperTypeVector(typeIndex);
       scratch1 = needI32();
     }
     RegI32 scratch2 =
@@ -7663,7 +7663,7 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
             : RegI32::Invalid();
 
     masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label, onSuccess,
-                                    superSuperTypeVector, scratch1, scratch2);
+                                    superSTV, scratch1, scratch2);
 
     if (scratch2.isValid()) {
       freeI32(scratch2);
@@ -7671,8 +7671,8 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
     if (scratch1.isValid()) {
       freeI32(scratch1);
     }
-    if (superSuperTypeVector.isValid()) {
-      freePtr(superSuperTypeVector);
+    if (superSTV.isValid()) {
+      freePtr(superSTV);
     }
   } else if (destType.isExternHierarchy()) {
     masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,

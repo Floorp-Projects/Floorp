@@ -3839,12 +3839,11 @@ class FunctionCompiler {
 
   // Returns an MDefinition holding the supertype vector for `typeIndex`.
   [[nodiscard]] MDefinition* loadSuperTypeVector(uint32_t typeIndex) {
-    uint32_t superTypeVectorOffset =
-        moduleEnv().offsetOfSuperTypeVector(typeIndex);
+    uint32_t stvOffset = moduleEnv().offsetOfSuperTypeVector(typeIndex);
 
-    auto* load = MWasmLoadInstanceDataField::New(
-        alloc(), MIRType::Pointer, superTypeVectorOffset,
-        /*isConst=*/true, instancePointer_);
+    auto* load =
+        MWasmLoadInstanceDataField::New(alloc(), MIRType::Pointer, stvOffset,
+                                        /*isConst=*/true, instancePointer_);
     if (!load) {
       return nullptr;
     }
@@ -4360,9 +4359,9 @@ class FunctionCompiler {
     MInstruction* isSubTypeOf = nullptr;
     if (destType.isTypeRef()) {
       uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-      MDefinition* superSuperTypeVector = loadSuperTypeVector(typeIndex);
-      isSubTypeOf = MWasmRefIsSubtypeOfConcrete::New(
-          alloc(), ref, superSuperTypeVector, sourceType, destType);
+      MDefinition* superSTV = loadSuperTypeVector(typeIndex);
+      isSubTypeOf = MWasmRefIsSubtypeOfConcrete::New(alloc(), ref, superSTV,
+                                                     sourceType, destType);
     } else {
       isSubTypeOf =
           MWasmRefIsSubtypeOfAbstract::New(alloc(), ref, sourceType, destType);
