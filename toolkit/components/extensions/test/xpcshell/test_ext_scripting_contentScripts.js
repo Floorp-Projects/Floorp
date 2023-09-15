@@ -450,3 +450,75 @@ add_task(
     await extension.unload();
   }
 );
+
+async function test_matchAboutBlank_registerContentScripts_default({
+  extId,
+  expectedMatchAboutBlankValue,
+}) {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 2,
+      permissions: ["scripting", "<all_urls>"],
+      browser_specific_settings: {
+        gecko: { id: extId },
+      },
+    },
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "test-content-script",
+          matches: ["http://example.com/*"],
+          js: ["cs.js"],
+        },
+      ]);
+      browser.test.sendMessage("background-done");
+    },
+    file: {
+      "cs.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+
+  equal(
+    extension.extension.registeredContentScripts.size,
+    1,
+    "Got the expected number of registered content scripts"
+  );
+  const [{ id, matchAboutBlank }] = Array.from(
+    extension.extension.registeredContentScripts.values()
+  );
+
+  equal(id, "test-content-script", "Got the expected content script id");
+  equal(
+    matchAboutBlank,
+    expectedMatchAboutBlankValue,
+    "Expect matchAboutBlank to be false"
+  );
+
+  await extension.unload();
+}
+
+// The following test cases are regressions test for Bug 1853412, and it is
+// currently making sure that content scripts registered dynamically
+// by the webcompat built-in have matchAboutBlank set to false.
+add_task(async function test_webcompat_matchAboutBlank_default() {
+  await test_matchAboutBlank_registerContentScripts_default({
+    // This test extension has to have the same id that we expect
+    // the webcompat built-in to have.
+    extId: "webcompat@mozilla.org",
+    expectedMatchAboutBlankValue: false,
+  });
+});
+
+// The following test task asserts that for any extension matchAboutBlank
+// is still set by default to true
+// TODO(Bug 1853411): should change this to default to false for all extensions
+// and this test should be adjusted accordingly.
+add_task(async function test_matchAboutBlank_default() {
+  await test_matchAboutBlank_registerContentScripts_default({
+    extId: "some-unknown-extension-id@test.extension",
+    expectedMatchAboutBlankValue: true,
+  });
+});
