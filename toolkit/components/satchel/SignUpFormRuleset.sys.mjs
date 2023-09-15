@@ -31,7 +31,7 @@ let { isVisible, attributesMatch, setDefault } = utils;
 const DEVELOPMENT = false;
 
 /**
- * --- START OF RULESET ---
+ * --- START OF CODE FROM TRAINING REPOSITORY ---
  */
 const coefficients = {
   form: new Map([
@@ -580,7 +580,7 @@ function createRuleset(coeffs, biases) {
 }
 
 /**
- * --- END OF RULESET ---
+ * --- END OF CODE FROM TRAINING REPOSITORY ---
  */
 
 export const SignUpFormRuleset = {
