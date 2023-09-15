@@ -47,7 +47,6 @@ if (isNode()) {
   pref("devtools.debugger.hide-ignored-sources", false);
   pref("devtools.debugger.source-map-ignore-list-enabled", true);
   pref("devtools.debugger.features.wasm", true);
-  pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);
   pref("devtools.debugger.features.map-expression-bindings", true);
@@ -117,7 +116,6 @@ prefs.cursorBlinkRate = Services.prefs.getIntPref("ui.caretBlinkTime", 530);
 
 export const features = new PrefsHelper("devtools.debugger.features", {
   wasm: ["Bool", "wasm"],
-  mapScopes: ["Bool", "map-scopes"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],

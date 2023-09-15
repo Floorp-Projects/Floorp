@@ -47,7 +47,6 @@ const TEST_URL = PAGES_BASE_URL + "custom/debugger/app-build/index.html";
 
 module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
-  Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
 
   const toolbox = await openDebuggerAndLog("custom", EXPECTED);
 
@@ -77,7 +76,6 @@ module.exports = async function () {
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
-  Services.prefs.clearUserPref("devtools.debugger.features.map-scopes");
   await testTeardown();
 };
 
