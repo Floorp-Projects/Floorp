@@ -46,8 +46,9 @@ namespace js {
   M(SetLine, "setline", int8_t(SrcNote::SetLine::Operands::Count)) \
   /* Bytecode is a recommended breakpoint. */                      \
   M(Breakpoint, "breakpoint", 0)                                   \
-  /* Bytecode is the first in a new steppable area. */             \
-  M(StepSep, "step-sep", 0)                                        \
+  /* Bytecode is a recommended breakpoint, and the first in a */   \
+  /* new steppable area. */                                        \
+  M(BreakpointStepSep, "breakpoint-step-sep", 0)                   \
   M(Unused5, "unused", 0)                                          \
   M(Unused6, "unused", 0)                                          \
   M(Unused7, "unused", 0)                                          \

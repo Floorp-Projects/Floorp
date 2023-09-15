@@ -215,7 +215,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
         lastLinePC = snpc;
-      } else if (type == SrcNoteType::StepSep) {
+      } else if (type == SrcNoteType::BreakpointStepSep) {
+        isBreakpoint = true;
         seenStepSeparator = true;
         lastLinePC = snpc;
       }
