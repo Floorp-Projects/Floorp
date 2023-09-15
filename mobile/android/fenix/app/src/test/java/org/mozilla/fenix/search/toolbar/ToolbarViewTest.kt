@@ -144,6 +144,7 @@ class ToolbarViewTest {
     fun `GIVEN search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
         every { context.settings().showUnifiedSearchFeature } returns true
         every { context.settings().shouldShowHistorySuggestions } returns true
+        every { context.settings().shouldShowBookmarkSuggestions } returns true
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -158,6 +159,7 @@ class ToolbarViewTest {
     fun `GIVEN no search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
         every { context.settings().showUnifiedSearchFeature } returns true
         every { context.settings().shouldShowHistorySuggestions } returns true
+        every { context.settings().shouldShowBookmarkSuggestions } returns true
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -780,6 +782,74 @@ class ToolbarViewTest {
             verify {
                 toolbarView.autocompleteFeature.updateAutocompleteProviders(
                     providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN show bookmark suggestions and unified search are both enabled WHEN the toolbar view is initialized THEN add bookmark storage to autocomplete providers`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val bookmarksStorage: PlacesBookmarksStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+                every { core.bookmarksStorage } returns bookmarksStorage
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+                every { shouldShowHistorySuggestions } returns true
+                every { shouldShowBookmarkSuggestions } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(historyProvider, bookmarksStorage, domainsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN show bookmark suggestions is disabled and unified search is enabled WHEN the toolbar view is initialized THEN don't add bookmark storage to autocomplete providers`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val bookmarksStorage: PlacesBookmarksStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+                every { core.bookmarksStorage } returns bookmarksStorage
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+                every { shouldShowHistorySuggestions } returns true
+                every { shouldShowBookmarkSuggestions } returns false
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(historyProvider, domainsProvider),
                     refreshAutocomplete = true,
                 )
             }

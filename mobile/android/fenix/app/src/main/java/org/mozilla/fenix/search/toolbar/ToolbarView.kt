@@ -210,6 +210,10 @@ class ToolbarView(
                             true -> components.core.historyStorage
                             false -> null
                         },
+                        when (settings.shouldShowBookmarkSuggestions) {
+                            true -> components.core.bookmarksStorage
+                            false -> null
+                        },
                         components.core.domainsAutocompleteProvider,
                     ),
                 )
