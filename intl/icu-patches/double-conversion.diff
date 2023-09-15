@@ -1,0 +1,81 @@
+diff --git a/intl/icu/source/i18n/number_decimalquantity.cpp b/intl/icu/source/i18n/number_decimalquantity.cpp
+index 659465d0870db..bc20c01be2602 100644
+--- a/intl/icu/source/i18n/number_decimalquantity.cpp
++++ b/intl/icu/source/i18n/number_decimalquantity.cpp
+@@ -16,7 +16,7 @@
+ #include "putilimp.h"
+ #include "number_decimalquantity.h"
+ #include "number_roundingutils.h"
+-#include "double-conversion.h"
++#include "double-conversion/double-conversion.h"
+ #include "charstr.h"
+ #include "number_utils.h"
+ #include "uassert.h"
+@@ -26,8 +26,8 @@ using namespace icu;
+ using namespace icu::number;
+ using namespace icu::number::impl;
+ 
+-using icu::double_conversion::DoubleToStringConverter;
+-using icu::double_conversion::StringToDoubleConverter;
++using double_conversion::DoubleToStringConverter;
++using double_conversion::StringToDoubleConverter;
+ 
+ namespace {
+ 
+diff --git a/intl/icu/source/i18n/number_rounding.cpp b/intl/icu/source/i18n/number_rounding.cpp
+index e6bb509ffd75a..4da6f4a4b00a9 100644
+--- a/intl/icu/source/i18n/number_rounding.cpp
++++ b/intl/icu/source/i18n/number_rounding.cpp
+@@ -10,7 +10,7 @@
+ #include "unicode/numberformatter.h"
+ #include "number_types.h"
+ #include "number_decimalquantity.h"
+-#include "double-conversion.h"
++#include "double-conversion/double-conversion.h"
+ #include "number_roundingutils.h"
+ #include "number_skeletons.h"
+ #include "number_decnum.h"
+diff --git a/intl/icu/source/i18n/number_utils.cpp b/intl/icu/source/i18n/number_utils.cpp
+index ad7053214077b..a6c09adc61f18 100644
+--- a/intl/icu/source/i18n/number_utils.cpp
++++ b/intl/icu/source/i18n/number_utils.cpp
+@@ -17,7 +17,7 @@
+ #include "charstr.h"
+ #include "decContext.h"
+ #include "decNumber.h"
+-#include "double-conversion.h"
++#include "double-conversion/double-conversion.h"
+ #include "fphdlimp.h"
+ #include "uresimp.h"
+ #include "ureslocs.h"
+@@ -26,7 +26,7 @@ using namespace icu;
+ using namespace icu::number;
+ using namespace icu::number::impl;
+ 
+-using icu::double_conversion::DoubleToStringConverter;
++using double_conversion::DoubleToStringConverter;
+ 
+ 
+ namespace {
+diff --git a/intl/icu/source/i18n/units_converter.cpp b/intl/icu/source/i18n/units_converter.cpp
+index b89f495121006..2c648933a8b18 100644
+--- a/intl/icu/source/i18n/units_converter.cpp
++++ b/intl/icu/source/i18n/units_converter.cpp
+@@ -7,7 +7,7 @@
+ 
+ #include "charstr.h"
+ #include "cmemory.h"
+-#include "double-conversion-string-to-double.h"
++#include "double-conversion/string-to-double.h"
+ #include "measunit_impl.h"
+ #include "putilimp.h"
+ #include "uassert.h"
+@@ -106,7 +106,7 @@ namespace {
+ 
+ /* Helpers */
+ 
+-using icu::double_conversion::StringToDoubleConverter;
++using double_conversion::StringToDoubleConverter;
+ 
+ // TODO: Make this a shared-utility function.
+ // Returns `double` from a scientific number(i.e. "1", "2.01" or "3.09E+4")
