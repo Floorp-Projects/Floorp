@@ -209,40 +209,41 @@ void LocationBase::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     result = NS_NewURI(getter_AddRefs(newUri), aHref, nullptr, aBase);
   }
 
-  if (newUri) {
-    /* Check with the scriptContext if it is currently processing a script tag.
-     * If so, this must be a <script> tag with a location.href in it.
-     * we want to do a replace load, in such a situation.
-     * In other cases, for example if a event handler or a JS timer
-     * had a location.href in it, we want to do a normal load,
-     * so that the new url will be appended to Session History.
-     * This solution is tricky. Hopefully it isn't going to bite
-     * anywhere else. This is part of solution for bug # 39938, 72197
-     */
-    bool inScriptTag = false;
-    nsIScriptContext* scriptContext = nullptr;
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetEntryGlobal());
-    if (win) {
-      scriptContext = nsGlobalWindowInner::Cast(win)->GetContextInternal();
-    }
-
-    if (scriptContext) {
-      if (scriptContext->GetProcessingScriptTag()) {
-        // Now check to make sure that the script is running in our window,
-        // since we only want to replace if the location is set by a
-        // <script> tag in the same window.  See bug 178729.
-        nsCOMPtr<nsIDocShell> docShell(GetDocShell());
-        nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
-            docShell ? docShell->GetScriptGlobalObject() : nullptr;
-        inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
-      }
-    }
-
-    SetURI(newUri, aSubjectPrincipal, aRv, aReplace || inScriptTag);
+  if (NS_FAILED(result) || !newUri) {
+    aRv.ThrowSyntaxError("'"_ns + NS_ConvertUTF16toUTF8(aHref) +
+                         "' is not a valid URL."_ns);
     return;
   }
 
-  aRv.Throw(result);
+  /* Check with the scriptContext if it is currently processing a script tag.
+   * If so, this must be a <script> tag with a location.href in it.
+   * we want to do a replace load, in such a situation.
+   * In other cases, for example if a event handler or a JS timer
+   * had a location.href in it, we want to do a normal load,
+   * so that the new url will be appended to Session History.
+   * This solution is tricky. Hopefully it isn't going to bite
+   * anywhere else. This is part of solution for bug # 39938, 72197
+   */
+  bool inScriptTag = false;
+  nsIScriptContext* scriptContext = nullptr;
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetEntryGlobal());
+  if (win) {
+    scriptContext = nsGlobalWindowInner::Cast(win)->GetContextInternal();
+  }
+
+  if (scriptContext) {
+    if (scriptContext->GetProcessingScriptTag()) {
+      // Now check to make sure that the script is running in our window,
+      // since we only want to replace if the location is set by a
+      // <script> tag in the same window.  See bug 178729.
+      nsCOMPtr<nsIDocShell> docShell(GetDocShell());
+      nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
+          docShell ? docShell->GetScriptGlobalObject() : nullptr;
+      inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
+    }
+  }
+
+  SetURI(newUri, aSubjectPrincipal, aRv, aReplace || inScriptTag);
 }
 
 void LocationBase::Replace(const nsAString& aUrl,
