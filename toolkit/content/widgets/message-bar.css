@@ -319,3 +319,8 @@ strong {
 :host([type=system]) .icon {
   display: none;
 }
+
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}

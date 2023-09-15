@@ -60,7 +60,7 @@ export class ShoppingContainer extends MozLitElement {
 
     window.document.addEventListener("Update", this);
     window.document.addEventListener("NewAnalysisRequested", this);
-    window.document.addEventListener("ReAnalysisRequested", this);
+    window.document.addEventListener("ReanalysisRequested", this);
     window.document.addEventListener("ReportedProductAvailable", this);
     window.document.addEventListener("adsEnabledByUserChanged", this);
 
@@ -100,7 +100,7 @@ export class ShoppingContainer extends MozLitElement {
         this._update(event.detail);
         break;
       case "NewAnalysisRequested":
-      case "ReAnalysisRequested":
+      case "ReanalysisRequested":
         this.analysisEvent = {
           type: event.type,
           productUrl: this.productUrl,
@@ -146,18 +146,17 @@ export class ShoppingContainer extends MozLitElement {
 
   getContentTemplate() {
     // The user requested an analysis which is not done yet.
-    // We only want to show the analysis-in-progress message-bar
-    // for the product currently in view.
     if (
       this.analysisEvent?.productUrl == this.productUrl &&
       !this.isPolledRequestDone
     ) {
+      const isReanalysis = this.analysisEvent.type === "ReanalysisRequested";
       return html`<shopping-message-bar
-          type="analysis-in-progress"
+          type=${isReanalysis
+            ? "reanalysis-in-progress"
+            : "analysis-in-progress"}
         ></shopping-message-bar>
-        ${this.analysisEvent.type == "ReAnalysisRequested"
-          ? this.getAnalysisDetailsTemplate()
-          : null}`;
+        ${isReanalysis ? this.getAnalysisDetailsTemplate() : null}`;
     }
 
     if (this.data?.error) {

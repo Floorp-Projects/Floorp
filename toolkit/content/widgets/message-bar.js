@@ -47,11 +47,13 @@
       // expected message bar layout is applied on this
       // element.
       const container = document.createElement("div");
+      container.part = "container";
       container.classList.add("container");
       template.content.append(container);
 
       const icon = document.createElement("span");
       icon.classList.add("icon");
+      icon.part = "icon";
       container.append(icon);
 
       const barcontent = document.createElement("span");
