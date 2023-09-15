@@ -101,7 +101,9 @@
   }
 }
 
-/** Quick actions **/
+/**
+ * Quick actions
+ */
 
 .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
   align-items: start;
@@ -424,7 +426,10 @@
   }
 }
 
-/* Add-ons */
+/**
+ * Add-ons
+ */
+
 .urlbarView-dynamic-addons-content {
   display: grid;
   grid-template-areas: "icon header"
@@ -472,10 +477,10 @@
   width: calc(16px * 5);
   height: 16px;
   margin-inline-end: 9px;
-}
 
-.urlbarView-dynamic-addons-content[treatment=b] > .urlbarView-dynamic-addons-footer > .urlbarView-dynamic-addons-ratingContainer {
-  display: none;
+  .urlbarView-dynamic-addons-content[treatment=b] > .urlbarView-dynamic-addons-footer > & {
+    display: none;
+  }
 }
 
 .urlbarView-dynamic-addons-rating {
