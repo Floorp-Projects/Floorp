@@ -216,7 +216,11 @@ static nsCString ImageAcceptHeader() {
     mimeTypes.Append("image/jxl,");
   }
 
-  mimeTypes.Append("image/webp,*/*");
+  if (mozilla::StaticPrefs::image_webp_enabled()) {
+    mimeTypes.Append("image/webp,");
+  }
+
+  mimeTypes.Append("*/*");
 
   return mimeTypes;
 }
@@ -292,6 +296,7 @@ static const char* gCallbackPrefs[] = {
     "image.http.accept",
     "image.avif.enabled",
     "image.jxl.enabled",
+    "image.webp.enabled",
     nullptr,
 };
 
@@ -1683,9 +1688,9 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  const bool imageAcceptPrefChanged = PREF_CHANGED("image.http.accept") ||
-                                      PREF_CHANGED("image.avif.enabled") ||
-                                      PREF_CHANGED("image.jxl.enabled");
+  const bool imageAcceptPrefChanged =
+      PREF_CHANGED("image.http.accept") || PREF_CHANGED("image.avif.enabled") ||
+      PREF_CHANGED("image.jxl.enabled") || PREF_CHANGED("image.webp.enabled");
 
   if (imageAcceptPrefChanged) {
     nsAutoCString userSetImageAcceptHeader;
