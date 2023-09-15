@@ -33,7 +33,7 @@ describe('input tests', function () {
 
       await page.goto(server.PREFIX + '/input/fileupload.html');
       const filePath = path.relative(process.cwd(), FILE_TO_UPLOAD);
-      const input = (await page.$('input'))!;
+      using input = (await page.$('input'))!;
       await page.evaluate((e: HTMLElement) => {
         (globalThis as any)._inputEvents = [];
         e.addEventListener('change', ev => {
@@ -187,7 +187,7 @@ describe('input tests', function () {
       const {page} = await getTestState();
 
       await page.setContent(`<input type=file>`);
-      page.waitForFileChooser().then(chooser => {
+      void page.waitForFileChooser().then(chooser => {
         return chooser.accept([FILE_TO_UPLOAD]);
       });
       expect(
@@ -202,7 +202,7 @@ describe('input tests', function () {
             return (reader.onload = fulfill);
           });
           reader.readAsText(pick.files![0]!);
-          return promise.then(() => {
+          return await promise.then(() => {
             return reader.result;
           });
         })
@@ -212,7 +212,7 @@ describe('input tests', function () {
       const {page} = await getTestState();
 
       await page.setContent(`<input type=file>`);
-      page.waitForFileChooser().then(chooser => {
+      void page.waitForFileChooser().then(chooser => {
         return chooser.accept([FILE_TO_UPLOAD]);
       });
       expect(
@@ -225,7 +225,7 @@ describe('input tests', function () {
           return pick.files!.length;
         })
       ).toBe(1);
-      page.waitForFileChooser().then(chooser => {
+      void page.waitForFileChooser().then(chooser => {
         return chooser.accept([]);
       });
       expect(
@@ -279,7 +279,7 @@ describe('input tests', function () {
       const {page} = await getTestState();
 
       await page.setContent(`<input type=file>`);
-      page.waitForFileChooser().then(chooser => {
+      void page.waitForFileChooser().then(chooser => {
         return chooser.accept(['file-does-not-exist.txt']);
       });
       expect(
@@ -294,7 +294,7 @@ describe('input tests', function () {
             return (reader.onerror = fulfill);
           });
           reader.readAsText(pick.files![0]!);
-          return promise.then(() => {
+          return await promise.then(() => {
             return false;
           });
         })

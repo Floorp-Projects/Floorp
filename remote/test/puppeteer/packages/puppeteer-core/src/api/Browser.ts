@@ -20,11 +20,14 @@ import {ChildProcess} from 'child_process';
 
 import {Protocol} from 'devtools-protocol';
 
+import {Symbol} from '../../third_party/disposablestack/disposablestack.js';
 import {EventEmitter} from '../common/EventEmitter.js';
-import type {Target} from '../common/Target.js'; // TODO: move to ./api
+import {debugError, waitWithTimeout} from '../common/util.js';
+import {Deferred} from '../util/Deferred.js';
 
 import type {BrowserContext} from './BrowserContext.js';
 import type {Page} from './Page.js';
+import type {Target} from './Target.js';
 
 /**
  * BrowserContext options.
@@ -51,16 +54,12 @@ export type BrowserCloseCallback = () => Promise<void> | void;
 /**
  * @public
  */
-export type TargetFilterCallback = (
-  target: Protocol.Target.TargetInfo
-) => boolean;
+export type TargetFilterCallback = (target: Target) => boolean;
 
 /**
  * @internal
  */
-export type IsPageTargetCallback = (
-  target: Protocol.Target.TargetInfo
-) => boolean;
+export type IsPageTargetCallback = (target: Target) => boolean;
 
 /**
  * @internal
@@ -219,7 +218,10 @@ export const enum BrowserEmittedEvents {
  *
  * @public
  */
-export class Browser extends EventEmitter {
+export class Browser
+  extends EventEmitter
+  implements AsyncDisposable, Disposable
+{
   /**
    * @internal
    */
@@ -380,12 +382,35 @@ export class Browser extends EventEmitter {
    * );
    * ```
    */
-  waitForTarget(
+  async waitForTarget(
     predicate: (x: Target) => boolean | Promise<boolean>,
-    options?: WaitForTargetOptions
-  ): Promise<Target>;
-  waitForTarget(): Promise<Target> {
-    throw new Error('Not implemented');
+    options: WaitForTargetOptions = {}
+  ): Promise<Target> {
+    const {timeout = 30000} = options;
+    const targetDeferred = Deferred.create<Target | PromiseLike<Target>>();
+
+    this.on(BrowserEmittedEvents.TargetCreated, check);
+    this.on(BrowserEmittedEvents.TargetChanged, check);
+    try {
+      this.targets().forEach(check);
+      if (!timeout) {
+        return await targetDeferred.valueOrThrow();
+      }
+      return await waitWithTimeout(
+        targetDeferred.valueOrThrow(),
+        'target',
+        timeout
+      );
+    } finally {
+      this.off(BrowserEmittedEvents.TargetCreated, check);
+      this.off(BrowserEmittedEvents.TargetChanged, check);
+    }
+
+    async function check(target: Target): Promise<void> {
+      if ((await predicate(target)) && !targetDeferred.resolved()) {
+        targetDeferred.resolve(target);
+      }
+    }
   }
 
   /**
@@ -456,6 +481,14 @@ export class Browser extends EventEmitter {
    */
   isConnected(): boolean {
     throw new Error('Not implemented');
+  }
+
+  [Symbol.dispose](): void {
+    return void this.close().catch(debugError);
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.close();
   }
 }
 /**

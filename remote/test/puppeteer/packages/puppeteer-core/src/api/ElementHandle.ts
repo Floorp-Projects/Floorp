@@ -17,8 +17,6 @@
 import {Protocol} from 'devtools-protocol';
 
 import {Frame} from '../api/Frame.js';
-import {CDPSession} from '../common/Connection.js';
-import {ExecutionContext} from '../common/ExecutionContext.js';
 import {getQueryHandlerAndSelector} from '../common/GetQueryHandler.js';
 import {WaitForSelectorOptions} from '../common/IsolatedWorld.js';
 import {LazyArg} from '../common/LazyArg.js';
@@ -35,9 +33,9 @@ import {assert} from '../util/assert.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
 
 import {
+  KeyboardTypeOptions,
   KeyPressOptions,
   MouseClickOptions,
-  KeyboardTypeOptions,
 } from './Input.js';
 import {JSHandle} from './JSHandle.js';
 import {ScreenshotOptions} from './Page.js';
@@ -45,11 +43,16 @@ import {ScreenshotOptions} from './Page.js';
 /**
  * @public
  */
+export type Quad = [Point, Point, Point, Point];
+
+/**
+ * @public
+ */
 export interface BoxModel {
-  content: Point[];
-  padding: Point[];
-  border: Point[];
-  margin: Point[];
+  content: Quad;
+  padding: Quad;
+  border: Quad;
+  margin: Quad;
   width: number;
   height: number;
 }
@@ -133,14 +136,65 @@ export interface Point {
  *
  * @public
  */
-
-export class ElementHandle<
+export abstract class ElementHandle<
   ElementType extends Node = Element,
 > extends JSHandle<ElementType> {
   /**
+   * A given method will have it's `this` replaced with an isolated version of
+   * `this` when decorated with this decorator.
+   *
+   * All changes of isolated `this` are reflected on the actual `this`.
+   *
    * @internal
    */
-  protected handle;
+  static bindIsolatedHandle<This extends ElementHandle<Node>>(
+    target: (this: This, ...args: any[]) => Promise<any>,
+    _: unknown
+  ): typeof target {
+    return async function (...args) {
+      // If the handle is already isolated, then we don't need to adopt it
+      // again.
+      if (this.realm === this.frame.isolatedRealm()) {
+        return await target.call(this, ...args);
+      }
+      using adoptedThis = await this.frame.isolatedRealm().adoptHandle(this);
+      const result = await target.call(adoptedThis, ...args);
+      // If the function returns `adoptedThis`, then we return `this`.
+      if (result === adoptedThis) {
+        return this;
+      }
+      // If the function returns a handle, transfer it into the current realm.
+      if (result instanceof JSHandle) {
+        return await this.realm.transferHandle(result);
+      }
+      // If the function returns an array of handlers, transfer them into the
+      // current realm.
+      if (Array.isArray(result)) {
+        await Promise.all(
+          result.map(async (item, index, result) => {
+            if (item instanceof JSHandle) {
+              result[index] = await this.realm.transferHandle(item);
+            }
+          })
+        );
+      }
+      if (result instanceof Map) {
+        await Promise.all(
+          [...result.entries()].map(async ([key, value]) => {
+            if (value instanceof JSHandle) {
+              result.set(key, await this.realm.transferHandle(value));
+            }
+          })
+        );
+      }
+      return result;
+    };
+  }
+
+  /**
+   * @internal
+   */
+  protected readonly handle;
 
   /**
    * @internal
@@ -174,17 +228,22 @@ export class ElementHandle<
    * @internal
    */
   override async getProperty(propertyName: string): Promise<JSHandle<unknown>>;
+  /**
+   * @internal
+   */
+  @ElementHandle.bindIsolatedHandle
   override async getProperty<K extends keyof ElementType>(
     propertyName: HandleOr<K>
   ): Promise<HandleFor<ElementType[K]>> {
-    return this.handle.getProperty(propertyName);
+    return await this.handle.getProperty(propertyName);
   }
 
   /**
    * @internal
    */
+  @ElementHandle.bindIsolatedHandle
   override async getProperties(): Promise<Map<string, JSHandle>> {
-    return this.handle.getProperties();
+    return await this.handle.getProperties();
   }
 
   /**
@@ -200,13 +259,13 @@ export class ElementHandle<
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
-    return this.handle.evaluate(pageFunction, ...args);
+    return await this.handle.evaluate(pageFunction, ...args);
   }
 
   /**
    * @internal
    */
-  override evaluateHandle<
+  override async evaluateHandle<
     Params extends unknown[],
     Func extends EvaluateFuncWith<ElementType, Params> = EvaluateFuncWith<
       ElementType,
@@ -216,14 +275,15 @@ export class ElementHandle<
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.handle.evaluateHandle(pageFunction, ...args);
+    return await this.handle.evaluateHandle(pageFunction, ...args);
   }
 
   /**
    * @internal
    */
+  @ElementHandle.bindIsolatedHandle
   override async jsonValue(): Promise<ElementType> {
-    return this.handle.jsonValue();
+    return await this.handle.jsonValue();
   }
 
   /**
@@ -236,31 +296,28 @@ export class ElementHandle<
   /**
    * @internal
    */
-  override async dispose(): Promise<void> {
-    return await this.handle.dispose();
+  override remoteObject(): Protocol.Runtime.RemoteObject {
+    return this.handle.remoteObject();
   }
 
+  /**
+   * @internal
+   */
+  override dispose(): Promise<void> {
+    return this.handle.dispose();
+  }
+
+  /**
+   * @internal
+   */
   override asElement(): ElementHandle<ElementType> {
     return this;
   }
 
   /**
-   * @internal
+   * Frame corresponding to the current handle.
    */
-  override executionContext(): ExecutionContext {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @internal
-   */
-  override get client(): CDPSession {
-    throw new Error('Not implemented');
-  }
-
-  get frame(): Frame {
-    throw new Error('Not implemented');
-  }
+  abstract get frame(): Frame;
 
   /**
    * Queries the current element for an element matching the given selector.
@@ -269,6 +326,7 @@ export class ElementHandle<
    * @returns A {@link ElementHandle | element handle} to the first element
    * matching the given selector. Otherwise, `null`.
    */
+  @ElementHandle.bindIsolatedHandle
   async $<Selector extends string>(
     selector: Selector
   ): Promise<ElementHandle<NodeFor<Selector>> | null> {
@@ -287,14 +345,15 @@ export class ElementHandle<
    * @returns An array of {@link ElementHandle | element handles} that point to
    * elements matching the given selector.
    */
+  @ElementHandle.bindIsolatedHandle
   async $$<Selector extends string>(
     selector: Selector
   ): Promise<Array<ElementHandle<NodeFor<Selector>>>> {
     const {updatedSelector, QueryHandler} =
       getQueryHandlerAndSelector(selector);
-    return AsyncIterableUtil.collect(
+    return await (AsyncIterableUtil.collect(
       QueryHandler.queryAll(this, updatedSelector)
-    ) as Promise<Array<ElementHandle<NodeFor<Selector>>>>;
+    ) as Promise<Array<ElementHandle<NodeFor<Selector>>>>);
   }
 
   /**
@@ -336,15 +395,13 @@ export class ElementHandle<
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
     pageFunction = withSourcePuppeteerURLIfNone(this.$eval.name, pageFunction);
-    const elementHandle = await this.$(selector);
+    using elementHandle = await this.$(selector);
     if (!elementHandle) {
       throw new Error(
         `Error: failed to find element matching selector "${selector}"`
       );
     }
-    const result = await elementHandle.evaluate(pageFunction, ...args);
-    await elementHandle.dispose();
-    return result;
+    return await elementHandle.evaluate(pageFunction, ...args);
   }
 
   /**
@@ -394,7 +451,7 @@ export class ElementHandle<
   ): Promise<Awaited<ReturnType<Func>>> {
     pageFunction = withSourcePuppeteerURLIfNone(this.$$eval.name, pageFunction);
     const results = await this.$$(selector);
-    const elements = await this.evaluateHandle(
+    using elements = await this.evaluateHandle(
       (_, ...elements) => {
         return elements;
       },
@@ -406,7 +463,6 @@ export class ElementHandle<
         return results.dispose();
       }),
     ]);
-    await elements.dispose();
     return result;
   }
 
@@ -422,11 +478,12 @@ export class ElementHandle<
    * If there are no such elements, the method will resolve to an empty array.
    * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}
    */
+  @ElementHandle.bindIsolatedHandle
   async $x(expression: string): Promise<Array<ElementHandle<Node>>> {
     if (expression.startsWith('//')) {
       expression = `.${expression}`;
     }
-    return this.$$(`xpath/${expression}`);
+    return await this.$$(`xpath/${expression}`);
   }
 
   /**
@@ -466,6 +523,7 @@ export class ElementHandle<
    * @returns An element matching the given selector.
    * @throws Throws if an element matching the given selector doesn't appear.
    */
+  @ElementHandle.bindIsolatedHandle
   async waitForSelector<Selector extends string>(
     selector: Selector,
     options: WaitForSelectorOptions = {}
@@ -480,37 +538,33 @@ export class ElementHandle<
   }
 
   async #checkVisibility(visibility: boolean): Promise<boolean> {
-    const element = await this.frame.isolatedRealm().adoptHandle(this);
-    try {
-      return await this.frame.isolatedRealm().evaluate(
-        async (PuppeteerUtil, element, visibility) => {
-          return Boolean(PuppeteerUtil.checkVisibility(element, visibility));
-        },
-        LazyArg.create(context => {
-          return context.puppeteerUtil;
-        }),
-        element,
-        visibility
-      );
-    } finally {
-      await element.dispose();
-    }
+    return await this.evaluate(
+      async (element, PuppeteerUtil, visibility) => {
+        return Boolean(PuppeteerUtil.checkVisibility(element, visibility));
+      },
+      LazyArg.create(context => {
+        return context.puppeteerUtil;
+      }),
+      visibility
+    );
   }
 
   /**
    * Checks if an element is visible using the same mechanism as
    * {@link ElementHandle.waitForSelector}.
    */
+  @ElementHandle.bindIsolatedHandle
   async isVisible(): Promise<boolean> {
-    return this.#checkVisibility(true);
+    return await this.#checkVisibility(true);
   }
 
   /**
    * Checks if an element is hidden using the same mechanism as
    * {@link ElementHandle.waitForSelector}.
    */
+  @ElementHandle.bindIsolatedHandle
   async isHidden(): Promise<boolean> {
-    return this.#checkVisibility(false);
+    return await this.#checkVisibility(false);
   }
 
   /**
@@ -575,6 +629,7 @@ export class ElementHandle<
    *   default value can be changed by using the {@link Page.setDefaultTimeout}
    *   method.
    */
+  @ElementHandle.bindIsolatedHandle
   async waitForXPath(
     xpath: string,
     options: {
@@ -586,7 +641,7 @@ export class ElementHandle<
     if (xpath.startsWith('//')) {
       xpath = `.${xpath}`;
     }
-    return this.waitForSelector(`xpath/${xpath}`, options);
+    return await this.waitForSelector(`xpath/${xpath}`, options);
   }
 
   /**
@@ -599,15 +654,15 @@ export class ElementHandle<
    *   '.class-name-of-anchor'
    * );
    * // DO NOT DISPOSE `element`, this will be always be the same handle.
-   * const anchor: ElementHandle<HTMLAnchorElement> = await element.toElement(
-   *   'a'
-   * );
+   * const anchor: ElementHandle<HTMLAnchorElement> =
+   *   await element.toElement('a');
    * ```
    *
    * @param tagName - The tag name of the desired element type.
    * @throws An error if the handle does not match. **The handle will not be
    * automatically disposed.**
    */
+  @ElementHandle.bindIsolatedHandle
   async toElement<
     K extends keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap,
   >(tagName: K): Promise<HandleFor<ElementFor<K>>> {
@@ -621,19 +676,31 @@ export class ElementHandle<
   }
 
   /**
-   * Resolves to the content frame for element handles referencing
-   * iframe nodes, or null otherwise
+   * Resolves the frame associated with the element, if any. Always exists for
+   * HTMLIFrameElements.
    */
-  async contentFrame(): Promise<Frame | null> {
-    throw new Error('Not implemented');
-  }
+  abstract contentFrame(this: ElementHandle<HTMLIFrameElement>): Promise<Frame>;
+  abstract contentFrame(): Promise<Frame | null>;
 
   /**
    * Returns the middle point within an element unless a specific offset is provided.
    */
-  async clickablePoint(offset?: Offset): Promise<Point>;
-  async clickablePoint(): Promise<Point> {
-    throw new Error('Not implemented');
+  @ElementHandle.bindIsolatedHandle
+  async clickablePoint(offset?: Offset): Promise<Point> {
+    const box = await this.#clickableBox();
+    if (!box) {
+      throw new Error('Node is either not clickable or not an Element');
+    }
+    if (offset !== undefined) {
+      return {
+        x: box.x + offset.x,
+        y: box.y + offset.y,
+      };
+    }
+    return {
+      x: box.x + box.width / 2,
+      y: box.y + box.height / 2,
+    };
   }
 
   /**
@@ -641,8 +708,11 @@ export class ElementHandle<
    * uses {@link Page} to hover over the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @ElementHandle.bindIsolatedHandle
   async hover(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    await this.scrollIntoViewIfNeeded();
+    const {x, y} = await this.clickablePoint();
+    await this.frame.page().mouse.move(x, y);
   }
 
   /**
@@ -650,12 +720,14 @@ export class ElementHandle<
    * uses {@link Page | Page.mouse} to click in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @ElementHandle.bindIsolatedHandle
   async click(
     this: ElementHandle<Element>,
-    options?: ClickOptions
-  ): Promise<void>;
-  async click(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    options: Readonly<ClickOptions> = {}
+  ): Promise<void> {
+    await this.scrollIntoViewIfNeeded();
+    const {x, y} = await this.clickablePoint(options.offset);
+    await this.frame.page().mouse.click(x, y, options);
   }
 
   /**
@@ -730,6 +802,7 @@ export class ElementHandle<
    * `multiple` attribute, all values are considered, otherwise only the first
    * one is taken into account.
    */
+  @ElementHandle.bindIsolatedHandle
   async select(...values: string[]): Promise<string[]> {
     for (const value of values) {
       assert(
@@ -742,7 +815,7 @@ export class ElementHandle<
       );
     }
 
-    return this.evaluate((element, vals): string[] => {
+    return await this.evaluate((element, vals): string[] => {
       const values = new Set(vals);
       if (!(element instanceof HTMLSelectElement)) {
         throw new Error('Element is not a <select> element.');
@@ -798,25 +871,38 @@ export class ElementHandle<
    * {@link Touchscreen.tap} to tap in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @ElementHandle.bindIsolatedHandle
   async tap(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    await this.scrollIntoViewIfNeeded();
+    const {x, y} = await this.clickablePoint();
+    await this.frame.page().touchscreen.touchStart(x, y);
+    await this.frame.page().touchscreen.touchEnd();
   }
 
+  @ElementHandle.bindIsolatedHandle
   async touchStart(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    await this.scrollIntoViewIfNeeded();
+    const {x, y} = await this.clickablePoint();
+    await this.frame.page().touchscreen.touchStart(x, y);
   }
 
+  @ElementHandle.bindIsolatedHandle
   async touchMove(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    await this.scrollIntoViewIfNeeded();
+    const {x, y} = await this.clickablePoint();
+    await this.frame.page().touchscreen.touchMove(x, y);
   }
 
+  @ElementHandle.bindIsolatedHandle
   async touchEnd(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    await this.scrollIntoViewIfNeeded();
+    await this.frame.page().touchscreen.touchEnd();
   }
 
   /**
    * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
    */
+  @ElementHandle.bindIsolatedHandle
   async focus(): Promise<void> {
     await this.evaluate(element => {
       if (!(element instanceof HTMLElement)) {
@@ -851,12 +937,13 @@ export class ElementHandle<
    *
    * @param options - Delay in milliseconds. Defaults to 0.
    */
+  @ElementHandle.bindIsolatedHandle
   async type(
     text: string,
     options?: Readonly<KeyboardTypeOptions>
-  ): Promise<void>;
-  async type(): Promise<void> {
-    throw new Error('Not implemented');
+  ): Promise<void> {
+    await this.focus();
+    await this.frame.page().keyboard.type(text, options);
   }
 
   /**
@@ -873,20 +960,121 @@ export class ElementHandle<
    * @param key - Name of key to press, such as `ArrowLeft`.
    * See {@link KeyInput} for a list of all key names.
    */
+  @ElementHandle.bindIsolatedHandle
   async press(
     key: KeyInput,
     options?: Readonly<KeyPressOptions>
-  ): Promise<void>;
-  async press(): Promise<void> {
-    throw new Error('Not implemented');
+  ): Promise<void> {
+    await this.focus();
+    await this.frame.page().keyboard.press(key, options);
+  }
+
+  async #clickableBox(): Promise<BoundingBox | null> {
+    const boxes = await this.evaluate(element => {
+      if (!(element instanceof Element)) {
+        return null;
+      }
+      return [...element.getClientRects()].map(rect => {
+        return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+      });
+    });
+    if (!boxes?.length) {
+      return null;
+    }
+    await this.#intersectBoundingBoxesWithFrame(boxes);
+    let frame = this.frame;
+    let parentFrame: Frame | null | undefined;
+    while ((parentFrame = frame?.parentFrame())) {
+      using handle = await frame.frameElement();
+      if (!handle) {
+        throw new Error('Unsupported frame type');
+      }
+      const parentBox = await handle.evaluate(element => {
+        // Element is not visible.
+        if (element.getClientRects().length === 0) {
+          return null;
+        }
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return {
+          left:
+            rect.left +
+            parseInt(style.paddingLeft, 10) +
+            parseInt(style.borderLeftWidth, 10),
+          top:
+            rect.top +
+            parseInt(style.paddingTop, 10) +
+            parseInt(style.borderTopWidth, 10),
+        };
+      });
+      if (!parentBox) {
+        return null;
+      }
+      for (const box of boxes) {
+        box.x += parentBox.left;
+        box.y += parentBox.top;
+      }
+      await handle.#intersectBoundingBoxesWithFrame(boxes);
+      frame = parentFrame;
+    }
+    const box = boxes.find(box => {
+      return box.width >= 1 && box.height >= 1;
+    });
+    if (!box) {
+      return null;
+    }
+    return {
+      x: box.x,
+      y: box.y,
+      height: box.height,
+      width: box.width,
+    };
+  }
+
+  async #intersectBoundingBoxesWithFrame(boxes: BoundingBox[]) {
+    const {documentWidth, documentHeight} = await this.frame
+      .isolatedRealm()
+      .evaluate(() => {
+        return {
+          documentWidth: document.documentElement.clientWidth,
+          documentHeight: document.documentElement.clientHeight,
+        };
+      });
+    for (const box of boxes) {
+      intersectBoundingBox(box, documentWidth, documentHeight);
+    }
   }
 
   /**
    * This method returns the bounding box of the element (relative to the main frame),
    * or `null` if the element is not visible.
    */
+  @ElementHandle.bindIsolatedHandle
   async boundingBox(): Promise<BoundingBox | null> {
-    throw new Error('Not implemented');
+    const box = await this.evaluate(element => {
+      if (!(element instanceof Element)) {
+        return null;
+      }
+      // Element is not visible.
+      if (element.getClientRects().length === 0) {
+        return null;
+      }
+      const rect = element.getBoundingClientRect();
+      return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+    });
+    if (!box) {
+      return null;
+    }
+    const offset = await this.#getTopLeftCornerOfFrame();
+    if (!offset) {
+      return null;
+    }
+    return {
+      x: box.x + offset.x,
+      y: box.y + offset.y,
+      height: box.height,
+      width: box.width,
+    };
   }
 
   /**
@@ -897,8 +1085,136 @@ export class ElementHandle<
    * Boxes are represented as an array of points;
    * Each Point is an object `{x, y}`. Box points are sorted clock-wise.
    */
+  @ElementHandle.bindIsolatedHandle
   async boxModel(): Promise<BoxModel | null> {
-    throw new Error('Not implemented');
+    const model = await this.evaluate(element => {
+      if (!(element instanceof Element)) {
+        return null;
+      }
+      // Element is not visible.
+      if (element.getClientRects().length === 0) {
+        return null;
+      }
+      const rect = element.getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      const offsets = {
+        padding: {
+          left: parseInt(style.paddingLeft, 10),
+          top: parseInt(style.paddingTop, 10),
+          right: parseInt(style.paddingRight, 10),
+          bottom: parseInt(style.paddingBottom, 10),
+        },
+        margin: {
+          left: -parseInt(style.marginLeft, 10),
+          top: -parseInt(style.marginTop, 10),
+          right: -parseInt(style.marginRight, 10),
+          bottom: -parseInt(style.marginBottom, 10),
+        },
+        border: {
+          left: parseInt(style.borderLeft, 10),
+          top: parseInt(style.borderTop, 10),
+          right: parseInt(style.borderRight, 10),
+          bottom: parseInt(style.borderBottom, 10),
+        },
+      };
+      const border: Quad = [
+        {x: rect.left, y: rect.top},
+        {x: rect.left + rect.width, y: rect.top},
+        {x: rect.left + rect.width, y: rect.top + rect.bottom},
+        {x: rect.left, y: rect.top + rect.bottom},
+      ];
+      const padding = transformQuadWithOffsets(border, offsets.border);
+      const content = transformQuadWithOffsets(padding, offsets.padding);
+      const margin = transformQuadWithOffsets(border, offsets.margin);
+      return {
+        content,
+        padding,
+        border,
+        margin,
+        width: rect.width,
+        height: rect.height,
+      };
+
+      function transformQuadWithOffsets(
+        quad: Quad,
+        offsets: {top: number; left: number; right: number; bottom: number}
+      ): Quad {
+        return [
+          {
+            x: quad[0].x + offsets.left,
+            y: quad[0].y + offsets.top,
+          },
+          {
+            x: quad[1].x - offsets.right,
+            y: quad[1].y + offsets.top,
+          },
+          {
+            x: quad[2].x - offsets.right,
+            y: quad[2].y - offsets.bottom,
+          },
+          {
+            x: quad[3].x + offsets.left,
+            y: quad[3].y - offsets.bottom,
+          },
+        ];
+      }
+    });
+    if (!model) {
+      return null;
+    }
+    const offset = await this.#getTopLeftCornerOfFrame();
+    if (!offset) {
+      return null;
+    }
+    for (const attribute of [
+      'content',
+      'padding',
+      'border',
+      'margin',
+    ] as const) {
+      for (const point of model[attribute]) {
+        point.x += offset.x;
+        point.y += offset.y;
+      }
+    }
+    return model;
+  }
+
+  async #getTopLeftCornerOfFrame() {
+    const point = {x: 0, y: 0};
+    let frame = this.frame;
+    let parentFrame: Frame | null | undefined;
+    while ((parentFrame = frame?.parentFrame())) {
+      using handle = await frame.frameElement();
+      if (!handle) {
+        throw new Error('Unsupported frame type');
+      }
+      const parentBox = await handle.evaluate(element => {
+        // Element is not visible.
+        if (element.getClientRects().length === 0) {
+          return null;
+        }
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return {
+          left:
+            rect.left +
+            parseInt(style.paddingLeft, 10) +
+            parseInt(style.borderLeftWidth, 10),
+          top:
+            rect.top +
+            parseInt(style.paddingTop, 10) +
+            parseInt(style.borderTopWidth, 10),
+        };
+      });
+      if (!parentBox) {
+        return null;
+      }
+      point.x += parentBox.left;
+      point.y += parentBox.top;
+      frame = parentFrame;
+    }
+    return point;
   }
 
   /**
@@ -918,17 +1234,15 @@ export class ElementHandle<
    * @internal
    */
   protected async assertConnectedElement(): Promise<void> {
-    const error = await this.evaluate(
-      async (element): Promise<string | undefined> => {
-        if (!element.isConnected) {
-          return 'Node is detached from document';
-        }
-        if (element.nodeType !== Node.ELEMENT_NODE) {
-          return 'Node is not of type HTMLElement';
-        }
-        return;
+    const error = await this.evaluate(async element => {
+      if (!element.isConnected) {
+        return 'Node is detached from document';
       }
-    );
+      if (element.nodeType !== Node.ELEMENT_NODE) {
+        return 'Node is not of type HTMLElement';
+      }
+      return;
+    });
 
     if (error) {
       throw new Error(error);
@@ -959,22 +1273,19 @@ export class ElementHandle<
    * @param options - Threshold for the intersection between 0 (no intersection) and 1
    * (full intersection). Defaults to 1.
    */
+  @ElementHandle.bindIsolatedHandle
   async isIntersectingViewport(
     this: ElementHandle<Element>,
-    options?: {
+    options: {
       threshold?: number;
-    }
+    } = {}
   ): Promise<boolean> {
     await this.assertConnectedElement();
-
-    const {threshold = 0} = options ?? {};
-    const svgHandle = await this.#asSVGElementHandle(this);
-    const intersectionTarget: ElementHandle<Element> = svgHandle
-      ? await this.#getOwnerSVGElement(svgHandle)
-      : this;
-
-    try {
-      return await intersectionTarget.evaluate(async (element, threshold) => {
+    // eslint-disable-next-line rulesdir/use-using -- Returns `this`.
+    const handle = await this.#asSVGElementHandle();
+    using target = handle && (await handle.#getOwnerSVGElement());
+    return await ((target ?? this) as ElementHandle<Element>).evaluate(
+      async (element, threshold) => {
         const visibleRatio = await new Promise<number>(resolve => {
           const observer = new IntersectionObserver(entries => {
             resolve(entries[0]!.intersectionRatio);
@@ -983,18 +1294,16 @@ export class ElementHandle<
           observer.observe(element);
         });
         return threshold === 1 ? visibleRatio === 1 : visibleRatio > threshold;
-      }, threshold);
-    } finally {
-      if (intersectionTarget !== this) {
-        await intersectionTarget.dispose();
-      }
-    }
+      },
+      options.threshold ?? 0
+    );
   }
 
   /**
    * Scrolls the element into view using either the automation protocol client
    * or by calling element.scrollIntoView.
    */
+  @ElementHandle.bindIsolatedHandle
   async scrollIntoView(this: ElementHandle<Element>): Promise<void> {
     await this.assertConnectedElement();
     await this.evaluate(async (element): Promise<void> => {
@@ -1011,36 +1320,29 @@ export class ElementHandle<
    * etc.).
    */
   async #asSVGElementHandle(
-    handle: ElementHandle<Element>
+    this: ElementHandle<Element>
   ): Promise<ElementHandle<SVGElement> | null> {
     if (
-      await handle.evaluate(element => {
+      await this.evaluate(element => {
         return element instanceof SVGElement;
       })
     ) {
-      return handle as ElementHandle<SVGElement>;
+      return this as ElementHandle<SVGElement>;
     } else {
       return null;
     }
   }
 
   async #getOwnerSVGElement(
-    handle: ElementHandle<SVGElement>
+    this: ElementHandle<SVGElement>
   ): Promise<ElementHandle<SVGSVGElement>> {
     // SVGSVGElement.ownerSVGElement === null.
-    return await handle.evaluateHandle(element => {
+    return await this.evaluateHandle(element => {
       if (element instanceof SVGSVGElement) {
         return element;
       }
       return element.ownerSVGElement!;
     });
-  }
-
-  /**
-   * @internal
-   */
-  assertElementHasWorld(): asserts this {
-    assert(this.executionContext()._world);
   }
 
   /**
@@ -1068,12 +1370,12 @@ export class ElementHandle<
    * });
    * ```
    */
-  autofill(data: AutofillData): Promise<void>;
-  autofill(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract autofill(data: AutofillData): Promise<void>;
 }
 
+/**
+ * @public
+ */
 export interface AutofillData {
   creditCard: {
     // See https://chromedevtools.github.io/devtools-protocol/tot/Autofill/#type-CreditCard.
@@ -1083,4 +1385,23 @@ export interface AutofillData {
     expiryYear: string;
     cvc: string;
   };
+}
+
+function intersectBoundingBox(
+  box: BoundingBox,
+  width: number,
+  height: number
+): void {
+  box.width = Math.max(
+    box.x >= 0
+      ? Math.min(width - box.x, box.width)
+      : Math.min(width, box.width + box.x),
+    0
+  );
+  box.height = Math.max(
+    box.y >= 0
+      ? Math.min(height - box.y, box.height)
+      : Math.min(height, box.height + box.y),
+    0
+  );
 }

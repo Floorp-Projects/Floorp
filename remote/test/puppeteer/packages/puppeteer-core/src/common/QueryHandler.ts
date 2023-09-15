@@ -106,8 +106,7 @@ export class QueryHandler {
     element: ElementHandle<Node>,
     selector: string
   ): AwaitableIterable<ElementHandle<Node>> {
-    element.assertElementHasWorld();
-    const handle = await element.evaluateHandle(
+    using handle = await element.evaluateHandle(
       this._querySelectorAll,
       selector,
       LazyArg.create(context => {
@@ -126,8 +125,7 @@ export class QueryHandler {
     element: ElementHandle<Node>,
     selector: string
   ): Promise<ElementHandle<Node> | null> {
-    element.assertElementHasWorld();
-    const result = await element.evaluateHandle(
+    using result = await element.evaluateHandle(
       this._querySelector,
       selector,
       LazyArg.create(context => {
@@ -135,10 +133,9 @@ export class QueryHandler {
       })
     );
     if (!(result instanceof ElementHandle)) {
-      await result.dispose();
       return null;
     }
-    return result;
+    return result.move();
   }
 
   /**
@@ -153,21 +150,22 @@ export class QueryHandler {
     selector: string,
     options: WaitForSelectorOptions
   ): Promise<ElementHandle<Node> | null> {
-    let frame: Frame;
-    let element: ElementHandle<Node> | undefined;
-    if (!(elementOrFrame instanceof ElementHandle)) {
-      frame = elementOrFrame;
-    } else {
+    let frame!: Frame;
+    using element = await (async () => {
+      if (!(elementOrFrame instanceof ElementHandle)) {
+        frame = elementOrFrame;
+        return;
+      }
       frame = elementOrFrame.frame;
-      element = await frame.isolatedRealm().adoptHandle(elementOrFrame);
-    }
+      return await frame.isolatedRealm().adoptHandle(elementOrFrame);
+    })();
 
     const {visible = false, hidden = false, timeout, signal} = options;
 
     try {
       signal?.throwIfAborted();
 
-      const handle = await frame.isolatedRealm().waitForFunction(
+      using handle = await frame.isolatedRealm().waitForFunction(
         async (PuppeteerUtil, query, selector, root, visible) => {
           const querySelector = PuppeteerUtil.createFunction(
             query
@@ -195,15 +193,13 @@ export class QueryHandler {
       );
 
       if (signal?.aborted) {
-        await handle.dispose();
         throw signal.reason;
       }
 
       if (!(handle instanceof ElementHandle)) {
-        await handle.dispose();
         return null;
       }
-      return frame.mainRealm().transferHandle(handle);
+      return await frame.mainRealm().transferHandle(handle);
     } catch (error) {
       if (!isErrorLike(error)) {
         throw error;
@@ -213,10 +209,6 @@ export class QueryHandler {
       }
       error.message = `Waiting for selector \`${selector}\` failed: ${error.message}`;
       throw error;
-    } finally {
-      if (element) {
-        await element.dispose();
-      }
     }
   }
 }

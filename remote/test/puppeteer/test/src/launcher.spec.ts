@@ -19,14 +19,18 @@ import os from 'os';
 import path from 'path';
 import {TLSSocket} from 'tls';
 
-import {Protocol} from 'devtools-protocol';
 import expect from 'expect';
 import {TimeoutError} from 'puppeteer';
 import {Page} from 'puppeteer-core/internal/api/Page.js';
 import {rmSync} from 'puppeteer-core/internal/node/util/fs.js';
 import sinon from 'sinon';
 
-import {getTestState, itOnlyRegularInstall, launch} from './mocha-utils.js';
+import {
+  getTestState,
+  itOnlyRegularInstall,
+  launch,
+  isHeadless,
+} from './mocha-utils.js';
 import {dumpFrames, waitEvent} from './utils.js';
 
 const TMP_FOLDER = path.join(os.tmpdir(), 'pptr_tmp_folder-');
@@ -55,7 +59,7 @@ describe('Launcher specs', function () {
           const error = await navigationPromise;
           expect(
             [
-              'Navigation failed because browser has disconnected!',
+              'Navigating frame was detached',
               'Protocol error (Page.navigate): Target closed.',
             ].includes(error.message)
           ).toBeTruthy();
@@ -78,7 +82,7 @@ describe('Launcher specs', function () {
             });
           remote.disconnect();
           const error = await watchdog;
-          expect(error.message).toContain('Protocol error');
+          expect(error.message).toContain('Session closed.');
         } finally {
           await close();
         }
@@ -103,7 +107,10 @@ describe('Launcher specs', function () {
           ]);
           for (let i = 0; i < 2; i++) {
             const message = results[i].message;
-            expect(message).toContain('Target closed');
+            expect(message).atLeastOneToContain([
+              'Target closed',
+              'Page closed!',
+            ]);
             expect(message).not.toContain('Timeout');
           }
         } finally {
@@ -332,7 +339,9 @@ describe('Launcher specs', function () {
         } catch {}
       });
       it('should return the default arguments', async () => {
-        const {isChrome, isFirefox, puppeteer} = await getTestState();
+        const {isChrome, isFirefox, puppeteer} = await getTestState({
+          skipLaunch: true,
+        });
 
         if (isChrome) {
           expect(puppeteer.defaultArgs()).toContain('--no-first-run');
@@ -372,25 +381,30 @@ describe('Launcher specs', function () {
         }
       });
       it('should report the correct product', async () => {
-        const {isChrome, isFirefox, puppeteer} = await getTestState();
+        const {isChrome, isFirefox, puppeteer} = await getTestState({
+          skipLaunch: true,
+        });
         if (isChrome) {
           expect(puppeteer.product).toBe('chrome');
         } else if (isFirefox) {
           expect(puppeteer.product).toBe('firefox');
         }
       });
-      it('should work with no default arguments', async () => {
-        const {context, close} = await launch({
-          ignoreDefaultArgs: true,
-        });
-        try {
-          const page = await context.newPage();
-          expect(await page.evaluate('11 * 11')).toBe(121);
-          await page.close();
-        } finally {
-          await close();
+      (!isHeadless ? it : it.skip)(
+        'should work with no default arguments',
+        async () => {
+          const {context, close} = await launch({
+            ignoreDefaultArgs: true,
+          });
+          try {
+            const page = await context.newPage();
+            expect(await page.evaluate('11 * 11')).toBe(121);
+            await page.close();
+          } finally {
+            await close();
+          }
         }
-      });
+      );
       it('should filter out ignored default arguments in Chrome', async () => {
         const {defaultBrowserOptions, puppeteer} = await getTestState({
           skipLaunch: true,
@@ -477,10 +491,9 @@ describe('Launcher specs', function () {
         }
       });
       it('should pass the timeout parameter to browser.waitForTarget', async () => {
-        const {defaultBrowserOptions} = await getTestState();
-        const options = Object.assign({}, defaultBrowserOptions, {
+        const options = {
           timeout: 1,
-        });
+        };
         let error!: Error;
         await launch(options).catch(error_ => {
           return (error = error_);
@@ -548,42 +561,42 @@ describe('Launcher specs', function () {
         }
       });
       it('should not allow setting debuggingPort and pipe', async () => {
-        const {defaultBrowserOptions} = await getTestState();
-
-        const options = Object.assign({}, defaultBrowserOptions, {
+        const options = {
           defaultViewport: null,
           debuggingPort: 9999,
           pipe: true,
-        });
-
+        };
         let error!: Error;
         await launch(options).catch(error_ => {
           return (error = error_);
         });
         expect(error.message).toContain('either pipe or debugging port');
       });
-      it('should launch Chrome properly with --no-startup-window and waitForInitialPage=false', async () => {
-        const {defaultBrowserOptions} = await getTestState({
-          skipLaunch: true,
-        });
-        const options = {
-          waitForInitialPage: false,
-          // This is needed to prevent Puppeteer from adding an initial blank page.
-          // See also https://github.com/puppeteer/puppeteer/blob/ad6b736039436fcc5c0a262e5b575aa041427be3/src/node/Launcher.ts#L200
-          ignoreDefaultArgs: true,
-          ...defaultBrowserOptions,
-          args: ['--no-startup-window'],
-        };
-        const {browser, close} = await launch(options, {
-          createContext: false,
-        });
-        try {
-          const pages = await browser.pages();
-          expect(pages).toHaveLength(0);
-        } finally {
-          await close();
+      (!isHeadless ? it : it.skip)(
+        'should launch Chrome properly with --no-startup-window and waitForInitialPage=false',
+        async () => {
+          const {defaultBrowserOptions} = await getTestState({
+            skipLaunch: true,
+          });
+          const options = {
+            waitForInitialPage: false,
+            // This is needed to prevent Puppeteer from adding an initial blank page.
+            // See also https://github.com/puppeteer/puppeteer/blob/ad6b736039436fcc5c0a262e5b575aa041427be3/src/node/Launcher.ts#L200
+            ignoreDefaultArgs: true,
+            ...defaultBrowserOptions,
+            args: ['--no-startup-window'],
+          };
+          const {browser, close} = await launch(options, {
+            createContext: false,
+          });
+          try {
+            const pages = await browser.pages();
+            expect(pages).toHaveLength(0);
+          } finally {
+            await close();
+          }
         }
-      });
+      );
     });
 
     describe('Puppeteer.launch', function () {
@@ -709,7 +722,7 @@ describe('Launcher specs', function () {
         const {browser, close} = await launch(
           {
             targetFilter: target => {
-              return target.type !== 'page';
+              return target.type() !== 'page';
             },
             waitForInitialPage: false,
           },
@@ -746,17 +759,12 @@ describe('Launcher specs', function () {
 
           const remoteBrowser = await puppeteer.connect({
             browserWSEndpoint,
-            targetFilter: (targetInfo: Protocol.Target.TargetInfo) => {
-              return !targetInfo.url?.includes('should-be-ignored');
+            targetFilter: target => {
+              return !target.url().includes('should-be-ignored');
             },
           });
 
           const pages = await remoteBrowser.pages();
-
-          await page2.close();
-          await page1.close();
-          remoteBrowser.disconnect();
-          await browser.close();
 
           expect(
             pages
@@ -765,6 +773,11 @@ describe('Launcher specs', function () {
               })
               .sort()
           ).toEqual(['about:blank', server.EMPTY_PAGE]);
+
+          await page2.close();
+          await page1.close();
+          remoteBrowser.disconnect();
+          await browser.close();
         } finally {
           await close();
         }
@@ -850,10 +863,9 @@ describe('Launcher specs', function () {
             return page.url() === server.EMPTY_PAGE;
           })!;
           await pageTwo.reload();
-          const bodyHandle = await pageTwo.waitForSelector('body', {
+          using _ = await pageTwo.waitForSelector('body', {
             timeout: 10000,
           });
-          await bodyHandle!.dispose();
           await browserTwo.close();
         } finally {
           await close();
@@ -862,14 +874,18 @@ describe('Launcher specs', function () {
     });
     describe('Puppeteer.executablePath', function () {
       itOnlyRegularInstall('should work', async () => {
-        const {puppeteer} = await getTestState();
+        const {puppeteer} = await getTestState({
+          skipLaunch: true,
+        });
 
         const executablePath = puppeteer.executablePath();
         expect(fs.existsSync(executablePath)).toBe(true);
         expect(fs.realpathSync(executablePath)).toBe(executablePath);
       });
       it('returns executablePath for channel', async () => {
-        const {puppeteer} = await getTestState();
+        const {puppeteer} = await getTestState({
+          skipLaunch: true,
+        });
 
         const executablePath = puppeteer.executablePath('chrome');
         expect(executablePath).toBeTruthy();
@@ -878,7 +894,9 @@ describe('Launcher specs', function () {
         const sandbox = sinon.createSandbox();
 
         beforeEach(async () => {
-          const {puppeteer} = await getTestState();
+          const {puppeteer} = await getTestState({
+            skipLaunch: true,
+          });
           sandbox
             .stub(puppeteer.configuration, 'executablePath')
             .value('SOME_CUSTOM_EXECUTABLE');
@@ -889,7 +907,9 @@ describe('Launcher specs', function () {
         });
 
         it('its value is used', async () => {
-          const {puppeteer} = await getTestState();
+          const {puppeteer} = await getTestState({
+            skipLaunch: true,
+          });
           try {
             puppeteer.executablePath();
           } catch (error) {

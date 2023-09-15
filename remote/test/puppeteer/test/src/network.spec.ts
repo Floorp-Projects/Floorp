@@ -231,7 +231,7 @@ describe('network', function () {
         waitUntil: 'networkidle2',
       });
       await page.evaluate(async () => {
-        return await (globalThis as any).activationPromise;
+        return (globalThis as any).activationPromise;
       });
       await page.reload();
 
@@ -522,9 +522,9 @@ describe('network', function () {
       await page.setRequestInterception(true);
       page.on('request', request => {
         if (request.url().endsWith('css')) {
-          request.abort();
+          void request.abort();
         } else {
-          request.continue();
+          void request.continue();
         }
       });
       const failedRequests: HTTPRequest[] = [];
@@ -641,7 +641,7 @@ describe('network', function () {
       const requests = new Map();
       page.on('request', request => {
         requests.set(request.url().split('/').pop(), request);
-        request.continue();
+        void request.continue();
       });
       await page.setRequestInterception(true);
       server.setRedirect('/rrredirect', '/frames/one-frame.html');
@@ -871,7 +871,7 @@ describe('network', function () {
         waitUntil: 'networkidle2',
       });
       await page.evaluate(async () => {
-        return await (globalThis as any).activationPromise;
+        return (globalThis as any).activationPromise;
       });
       await page.reload({
         waitUntil: 'networkidle2',

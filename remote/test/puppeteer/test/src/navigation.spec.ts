@@ -129,6 +129,17 @@ describe('navigation', function () {
       });
       expect(response!.status()).toBe(200);
     });
+    it('should navigate to page with iframe and networkidle0', async () => {
+      const {page, server} = await getTestState();
+
+      const response = await page.goto(
+        server.PREFIX + '/frames/one-frame.html',
+        {
+          waitUntil: 'networkidle0',
+        }
+      );
+      expect(response!.status()).toBe(200);
+    });
     it('should navigate to empty page with networkidle2', async () => {
       const {page, server} = await getTestState();
 
@@ -704,7 +715,6 @@ describe('navigation', function () {
 
       server.setRoute('/frames/style.css', () => {});
       let frame: Frame | undefined;
-      let timeout: NodeJS.Timeout | undefined;
       const eventPromises = Deferred.race([
         Promise.all([
           waitEvent(page, 'frameattached').then(_frame => {
@@ -724,7 +734,6 @@ describe('navigation', function () {
       );
       try {
         await eventPromises;
-        clearTimeout(timeout);
       } catch (error) {
         navigationPromise.catch(() => {});
         throw error;

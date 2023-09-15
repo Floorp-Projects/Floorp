@@ -16,39 +16,17 @@
 
 import {Protocol} from 'devtools-protocol';
 
-import {
-  AutofillData,
-  BoundingBox,
-  BoxModel,
-  ClickOptions,
-  ElementHandle,
-  Offset,
-  Point,
-} from '../api/ElementHandle.js';
-import {KeyPressOptions, KeyboardTypeOptions} from '../api/Input.js';
+import {AutofillData, ElementHandle, Point} from '../api/ElementHandle.js';
 import {Page, ScreenshotOptions} from '../api/Page.js';
 import {assert} from '../util/assert.js';
+import {throwIfDisposed} from '../util/decorators.js';
 
 import {CDPSession} from './Connection.js';
-import {ExecutionContext} from './ExecutionContext.js';
-import {Frame} from './Frame.js';
+import {CDPFrame} from './Frame.js';
 import {FrameManager} from './FrameManager.js';
-import {WaitForSelectorOptions} from './IsolatedWorld.js';
+import {IsolatedWorld} from './IsolatedWorld.js';
 import {CDPJSHandle} from './JSHandle.js';
-import {CDPPage} from './Page.js';
-import {NodeFor} from './types.js';
-import {KeyInput} from './USKeyboardLayout.js';
 import {debugError} from './util.js';
-
-const applyOffsetsToQuad = (
-  quad: Point[],
-  offsetX: number,
-  offsetY: number
-) => {
-  return quad.map(part => {
-    return {x: part.x + offsetX, y: part.y + offsetY};
-  });
-};
 
 /**
  * The CDPElementHandle extends ElementHandle now to keep compatibility
@@ -60,29 +38,20 @@ const applyOffsetsToQuad = (
 export class CDPElementHandle<
   ElementType extends Node = Element,
 > extends ElementHandle<ElementType> {
-  #frame: Frame;
-  declare handle: CDPJSHandle<ElementType>;
+  protected declare readonly handle: CDPJSHandle<ElementType>;
 
   constructor(
-    context: ExecutionContext,
-    remoteObject: Protocol.Runtime.RemoteObject,
-    frame: Frame
+    world: IsolatedWorld,
+    remoteObject: Protocol.Runtime.RemoteObject
   ) {
-    super(new CDPJSHandle(context, remoteObject));
-    this.#frame = frame;
+    super(new CDPJSHandle(world, remoteObject));
   }
 
-  /**
-   * @internal
-   */
-  override executionContext(): ExecutionContext {
-    return this.handle.executionContext();
+  override get realm(): IsolatedWorld {
+    return this.handle.realm;
   }
 
-  /**
-   * @internal
-   */
-  override get client(): CDPSession {
+  get client(): CDPSession {
     return this.handle.client;
   }
 
@@ -91,43 +60,23 @@ export class CDPElementHandle<
   }
 
   get #frameManager(): FrameManager {
-    return this.#frame._frameManager;
+    return this.frame._frameManager;
   }
 
   get #page(): Page {
-    return this.#frame.page();
+    return this.frame.page();
   }
 
-  override get frame(): Frame {
-    return this.#frame;
+  override get frame(): CDPFrame {
+    return this.realm.environment as CDPFrame;
   }
 
-  override async $<Selector extends string>(
-    selector: Selector
-  ): Promise<CDPElementHandle<NodeFor<Selector>> | null> {
-    return super.$(selector) as Promise<CDPElementHandle<
-      NodeFor<Selector>
-    > | null>;
-  }
+  override async contentFrame(
+    this: ElementHandle<HTMLIFrameElement>
+  ): Promise<CDPFrame>;
 
-  override async $$<Selector extends string>(
-    selector: Selector
-  ): Promise<Array<CDPElementHandle<NodeFor<Selector>>>> {
-    return super.$$(selector) as Promise<
-      Array<CDPElementHandle<NodeFor<Selector>>>
-    >;
-  }
-
-  override async waitForSelector<Selector extends string>(
-    selector: Selector,
-    options?: WaitForSelectorOptions
-  ): Promise<CDPElementHandle<NodeFor<Selector>> | null> {
-    return (await super.waitForSelector(selector, options)) as CDPElementHandle<
-      NodeFor<Selector>
-    > | null;
-  }
-
-  override async contentFrame(): Promise<Frame | null> {
+  @throwIfDisposed()
+  override async contentFrame(): Promise<CDPFrame | null> {
     const nodeInfo = await this.client.send('DOM.describeNode', {
       objectId: this.id,
     });
@@ -137,6 +86,8 @@ export class CDPElementHandle<
     return this.#frameManager.frame(nodeInfo.node.frameId);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async scrollIntoView(
     this: CDPElementHandle<Element>
   ): Promise<void> {
@@ -152,164 +103,11 @@ export class CDPElementHandle<
     }
   }
 
-  async #getOOPIFOffsets(
-    frame: Frame
-  ): Promise<{offsetX: number; offsetY: number}> {
-    let offsetX = 0;
-    let offsetY = 0;
-    let currentFrame: Frame | null = frame;
-    while (currentFrame && currentFrame.parentFrame()) {
-      const parent = currentFrame.parentFrame();
-      if (!currentFrame.isOOPFrame() || !parent) {
-        currentFrame = parent;
-        continue;
-      }
-      const {backendNodeId} = await parent._client().send('DOM.getFrameOwner', {
-        frameId: currentFrame._id,
-      });
-      const result = await parent._client().send('DOM.getBoxModel', {
-        backendNodeId: backendNodeId,
-      });
-      if (!result) {
-        break;
-      }
-      const contentBoxQuad = result.model.content;
-      const topLeftCorner = this.#fromProtocolQuad(contentBoxQuad)[0];
-      offsetX += topLeftCorner!.x;
-      offsetY += topLeftCorner!.y;
-      currentFrame = parent;
-    }
-    return {offsetX, offsetY};
-  }
-
-  override async clickablePoint(offset?: Offset): Promise<Point> {
-    const [result, layoutMetrics] = await Promise.all([
-      this.client
-        .send('DOM.getContentQuads', {
-          objectId: this.id,
-        })
-        .catch(debugError),
-      (this.#page as CDPPage)._client().send('Page.getLayoutMetrics'),
-    ]);
-    if (!result || !result.quads.length) {
-      throw new Error('Node is either not clickable or not an HTMLElement');
-    }
-    // Filter out quads that have too small area to click into.
-    // Fallback to `layoutViewport` in case of using Firefox.
-    const {clientWidth, clientHeight} =
-      layoutMetrics.cssLayoutViewport || layoutMetrics.layoutViewport;
-    const {offsetX, offsetY} = await this.#getOOPIFOffsets(this.#frame);
-    const quads = result.quads
-      .map(quad => {
-        return this.#fromProtocolQuad(quad);
-      })
-      .map(quad => {
-        return applyOffsetsToQuad(quad, offsetX, offsetY);
-      })
-      .map(quad => {
-        return this.#intersectQuadWithViewport(quad, clientWidth, clientHeight);
-      })
-      .filter(quad => {
-        return computeQuadArea(quad) > 1;
-      });
-    if (!quads.length) {
-      throw new Error('Node is either not clickable or not an HTMLElement');
-    }
-    const quad = quads[0]!;
-    if (offset) {
-      // Return the point of the first quad identified by offset.
-      let minX = Number.MAX_SAFE_INTEGER;
-      let minY = Number.MAX_SAFE_INTEGER;
-      for (const point of quad) {
-        if (point.x < minX) {
-          minX = point.x;
-        }
-        if (point.y < minY) {
-          minY = point.y;
-        }
-      }
-      if (
-        minX !== Number.MAX_SAFE_INTEGER &&
-        minY !== Number.MAX_SAFE_INTEGER
-      ) {
-        return {
-          x: minX + offset.x,
-          y: minY + offset.y,
-        };
-      }
-    }
-    // Return the middle point of the first quad.
-    let x = 0;
-    let y = 0;
-    for (const point of quad) {
-      x += point.x;
-      y += point.y;
-    }
-    return {
-      x: x / 4,
-      y: y / 4,
-    };
-  }
-
-  #getBoxModel(): Promise<void | Protocol.DOM.GetBoxModelResponse> {
-    const params: Protocol.DOM.GetBoxModelRequest = {
-      objectId: this.id,
-    };
-    return this.client.send('DOM.getBoxModel', params).catch(error => {
-      return debugError(error);
-    });
-  }
-
-  #fromProtocolQuad(quad: number[]): Point[] {
-    return [
-      {x: quad[0]!, y: quad[1]!},
-      {x: quad[2]!, y: quad[3]!},
-      {x: quad[4]!, y: quad[5]!},
-      {x: quad[6]!, y: quad[7]!},
-    ];
-  }
-
-  #intersectQuadWithViewport(
-    quad: Point[],
-    width: number,
-    height: number
-  ): Point[] {
-    return quad.map(point => {
-      return {
-        x: Math.min(Math.max(point.x, 0), width),
-        y: Math.min(Math.max(point.y, 0), height),
-      };
-    });
-  }
-
-  /**
-   * This method scrolls element into view if needed, and then
-   * uses {@link Page.mouse} to hover over the center of the element.
-   * If the element is detached from DOM, the method throws an error.
-   */
-  override async hover(this: CDPElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x, y} = await this.clickablePoint();
-    await this.#page.mouse.move(x, y);
-  }
-
-  /**
-   * This method scrolls element into view if needed, and then
-   * uses {@link Page.mouse} to click in the center of the element.
-   * If the element is detached from DOM, the method throws an error.
-   */
-  override async click(
-    this: CDPElementHandle<Element>,
-    options: Readonly<ClickOptions> = {}
-  ): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x, y} = await this.clickablePoint(options.offset);
-    await this.#page.mouse.click(x, y, options);
-  }
-
   /**
    * This method creates and captures a dragevent from the element.
    */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async drag(
     this: CDPElementHandle<Element>,
     target: Point
@@ -323,6 +121,8 @@ export class CDPElementHandle<
     return await this.#page.mouse.drag(start, target);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async dragEnter(
     this: CDPElementHandle<Element>,
     data: Protocol.Input.DragData = {items: [], dragOperationsMask: 1}
@@ -332,6 +132,8 @@ export class CDPElementHandle<
     await this.#page.mouse.dragEnter(target, data);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async dragOver(
     this: CDPElementHandle<Element>,
     data: Protocol.Input.DragData = {items: [], dragOperationsMask: 1}
@@ -341,6 +143,8 @@ export class CDPElementHandle<
     await this.#page.mouse.dragOver(target, data);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async drop(
     this: CDPElementHandle<Element>,
     data: Protocol.Input.DragData = {items: [], dragOperationsMask: 1}
@@ -350,6 +154,8 @@ export class CDPElementHandle<
     await this.#page.mouse.drop(destination, data);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async dragAndDrop(
     this: CDPElementHandle<Element>,
     target: CDPElementHandle<Node>,
@@ -365,6 +171,8 @@ export class CDPElementHandle<
     await this.#page.mouse.dragAndDrop(startPoint, targetPoint, options);
   }
 
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async uploadFile(
     this: CDPElementHandle<HTMLInputElement>,
     ...filePaths: string[]
@@ -422,99 +230,8 @@ export class CDPElementHandle<
     }
   }
 
-  override async tap(this: CDPElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x, y} = await this.clickablePoint();
-    await this.#page.touchscreen.touchStart(x, y);
-    await this.#page.touchscreen.touchEnd();
-  }
-
-  override async touchStart(this: CDPElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x, y} = await this.clickablePoint();
-    await this.#page.touchscreen.touchStart(x, y);
-  }
-
-  override async touchMove(this: CDPElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x, y} = await this.clickablePoint();
-    await this.#page.touchscreen.touchMove(x, y);
-  }
-
-  override async touchEnd(this: CDPElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    await this.#page.touchscreen.touchEnd();
-  }
-
-  override async type(
-    text: string,
-    options?: Readonly<KeyboardTypeOptions>
-  ): Promise<void> {
-    await this.focus();
-    await this.#page.keyboard.type(text, options);
-  }
-
-  override async press(
-    key: KeyInput,
-    options?: Readonly<KeyPressOptions>
-  ): Promise<void> {
-    await this.focus();
-    await this.#page.keyboard.press(key, options);
-  }
-
-  override async boundingBox(): Promise<BoundingBox | null> {
-    const result = await this.#getBoxModel();
-
-    if (!result) {
-      return null;
-    }
-
-    const {offsetX, offsetY} = await this.#getOOPIFOffsets(this.#frame);
-    const quad = result.model.border;
-    const x = Math.min(quad[0]!, quad[2]!, quad[4]!, quad[6]!);
-    const y = Math.min(quad[1]!, quad[3]!, quad[5]!, quad[7]!);
-    const width = Math.max(quad[0]!, quad[2]!, quad[4]!, quad[6]!) - x;
-    const height = Math.max(quad[1]!, quad[3]!, quad[5]!, quad[7]!) - y;
-
-    return {x: x + offsetX, y: y + offsetY, width, height};
-  }
-
-  override async boxModel(): Promise<BoxModel | null> {
-    const result = await this.#getBoxModel();
-
-    if (!result) {
-      return null;
-    }
-
-    const {offsetX, offsetY} = await this.#getOOPIFOffsets(this.#frame);
-
-    const {content, padding, border, margin, width, height} = result.model;
-    return {
-      content: applyOffsetsToQuad(
-        this.#fromProtocolQuad(content),
-        offsetX,
-        offsetY
-      ),
-      padding: applyOffsetsToQuad(
-        this.#fromProtocolQuad(padding),
-        offsetX,
-        offsetY
-      ),
-      border: applyOffsetsToQuad(
-        this.#fromProtocolQuad(border),
-        offsetX,
-        offsetY
-      ),
-      margin: applyOffsetsToQuad(
-        this.#fromProtocolQuad(margin),
-        offsetX,
-        offsetY
-      ),
-      width,
-      height,
-    };
-  }
-
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   override async screenshot(
     this: CDPElementHandle<Element>,
     options: ScreenshotOptions = {}
@@ -573,29 +290,17 @@ export class CDPElementHandle<
     return imageData;
   }
 
+  @throwIfDisposed()
   override async autofill(data: AutofillData): Promise<void> {
     const nodeInfo = await this.client.send('DOM.describeNode', {
       objectId: this.handle.id,
     });
     const fieldId = nodeInfo.node.backendNodeId;
-    const frameId = this.#frame._id;
+    const frameId = this.frame._id;
     await this.client.send('Autofill.trigger', {
       fieldId,
       frameId,
       card: data.creditCard,
     });
   }
-}
-
-function computeQuadArea(quad: Point[]): number {
-  /* Compute sum of all directed areas of adjacent triangles
-     https://en.wikipedia.org/wiki/Polygon#Simple_polygons
-   */
-  let area = 0;
-  for (let i = 0; i < quad.length; ++i) {
-    const p1 = quad[i]!;
-    const p2 = quad[(i + 1) % quad.length]!;
-    area += (p1.x * p2.y - p2.x * p1.y) / 2;
-  }
-  return Math.abs(area);
 }

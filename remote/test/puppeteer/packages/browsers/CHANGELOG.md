@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.7.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.6.0...browsers-v1.7.0) (2023-08-18)
+
+
+### Features
+
+* support chrome-headless-shell ([#10739](https://github.com/puppeteer/puppeteer/issues/10739)) ([416843b](https://github.com/puppeteer/puppeteer/commit/416843ba68aaab7ae14bbc74c2ac705e877e91a7))
+
+## [1.6.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.5.1...browsers-v1.6.0) (2023-08-10)
+
+
+### Features
+
+* allow installing chrome/chromedriver by milestone and version prefix ([#10720](https://github.com/puppeteer/puppeteer/issues/10720)) ([bec2357](https://github.com/puppeteer/puppeteer/commit/bec2357aeedda42cfaf3096c6293c2f49ceb825e))
+
+## [1.5.1](https://github.com/puppeteer/puppeteer/compare/browsers-v1.5.0...browsers-v1.5.1) (2023-08-08)
+
+
+### Bug Fixes
+
+* add buildId to archive path ([#10699](https://github.com/puppeteer/puppeteer/issues/10699)) ([21461b0](https://github.com/puppeteer/puppeteer/commit/21461b02c65062f5ed240e8ea357e9b7f2d26b32))
+
+## [1.5.0](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.6...browsers-v1.5.0) (2023-08-02)
+
+
+### Features
+
+* add executablePath to InstalledBrowser ([#10594](https://github.com/puppeteer/puppeteer/issues/10594)) ([87522e7](https://github.com/puppeteer/puppeteer/commit/87522e778a6487111931458755e701f1c4b717d9))
+
+
+### Bug Fixes
+
+* clear pending TLS socket handle ([#10667](https://github.com/puppeteer/puppeteer/issues/10667)) ([87bd791](https://github.com/puppeteer/puppeteer/commit/87bd791ddc10c247bf154bbac2aa912327a4cf20))
+* remove typescript from peer dependencies ([#10593](https://github.com/puppeteer/puppeteer/issues/10593)) ([c60572a](https://github.com/puppeteer/puppeteer/commit/c60572a1ca36ea5946d287bd629ac31798d84cb0))
+
 ## [1.4.6](https://github.com/puppeteer/puppeteer/compare/browsers-v1.4.5...browsers-v1.4.6) (2023-07-20)
 
 

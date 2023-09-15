@@ -19,9 +19,9 @@ import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 import {LazyArg} from '../LazyArg.js';
 import {debugError, isDate, isPlainObject, isRegExp} from '../util.js';
 
-import {BrowsingContext} from './BrowsingContext.js';
-import {ElementHandle} from './ElementHandle.js';
-import {JSHandle} from './JSHandle.js';
+import {BidiElementHandle} from './ElementHandle.js';
+import {BidiJSHandle} from './JSHandle.js';
+import {Sandbox} from './Sandbox.js';
 
 /**
  * @internal
@@ -32,8 +32,8 @@ class UnserializableError extends Error {}
  * @internal
  */
 export class BidiSerializer {
-  static serializeNumber(arg: number): Bidi.CommonDataTypes.LocalValue {
-    let value: Bidi.CommonDataTypes.SpecialNumber | number;
+  static serializeNumber(arg: number): Bidi.Script.LocalValue {
+    let value: Bidi.Script.SpecialNumber | number;
     if (Object.is(arg, -0)) {
       value = '-0';
     } else if (Object.is(arg, Infinity)) {
@@ -51,14 +51,14 @@ export class BidiSerializer {
     };
   }
 
-  static serializeObject(arg: object | null): Bidi.CommonDataTypes.LocalValue {
+  static serializeObject(arg: object | null): Bidi.Script.LocalValue {
     if (arg === null) {
       return {
         type: 'null',
       };
     } else if (Array.isArray(arg)) {
       const parsedArray = arg.map(subArg => {
-        return BidiSerializer.serializeRemoveValue(subArg);
+        return BidiSerializer.serializeRemoteValue(subArg);
       });
 
       return {
@@ -78,11 +78,11 @@ export class BidiSerializer {
         throw error;
       }
 
-      const parsedObject: Bidi.CommonDataTypes.MappingLocalValue = [];
+      const parsedObject: Bidi.Script.MappingLocalValue = [];
       for (const key in arg) {
         parsedObject.push([
-          BidiSerializer.serializeRemoveValue(key),
-          BidiSerializer.serializeRemoveValue(arg[key]),
+          BidiSerializer.serializeRemoteValue(key),
+          BidiSerializer.serializeRemoteValue(arg[key]),
         ]);
       }
 
@@ -110,7 +110,7 @@ export class BidiSerializer {
     );
   }
 
-  static serializeRemoveValue(arg: unknown): Bidi.CommonDataTypes.LocalValue {
+  static serializeRemoteValue(arg: unknown): Bidi.Script.LocalValue {
     switch (typeof arg) {
       case 'symbol':
       case 'function':
@@ -143,21 +143,21 @@ export class BidiSerializer {
   }
 
   static async serialize(
-    arg: unknown,
-    context: BrowsingContext
-  ): Promise<
-    Bidi.CommonDataTypes.LocalValue | Bidi.CommonDataTypes.RemoteValue
-  > {
+    sandbox: Sandbox,
+    arg: unknown
+  ): Promise<Bidi.Script.LocalValue> {
     if (arg instanceof LazyArg) {
-      arg = await arg.get(context);
+      arg = await arg.get(sandbox.realm);
     }
+    // eslint-disable-next-line rulesdir/use-using -- We want this to continue living.
     const objectHandle =
-      arg && (arg instanceof JSHandle || arg instanceof ElementHandle)
+      arg && (arg instanceof BidiJSHandle || arg instanceof BidiElementHandle)
         ? arg
         : null;
     if (objectHandle) {
       if (
-        objectHandle.context() !== context &&
+        objectHandle.realm.environment.context() !==
+          sandbox.environment.context() &&
         !('sharedId' in objectHandle.remoteValue())
       ) {
         throw new Error(
@@ -167,15 +167,13 @@ export class BidiSerializer {
       if (objectHandle.disposed) {
         throw new Error('JSHandle is disposed!');
       }
-      return objectHandle.remoteValue();
+      return objectHandle.remoteValue() as Bidi.Script.RemoteReference;
     }
 
-    return BidiSerializer.serializeRemoveValue(arg);
+    return BidiSerializer.serializeRemoteValue(arg);
   }
 
-  static deserializeNumber(
-    value: Bidi.CommonDataTypes.SpecialNumber | number
-  ): number {
+  static deserializeNumber(value: Bidi.Script.SpecialNumber | number): number {
     switch (value) {
       case '-0':
         return -0;
@@ -190,20 +188,22 @@ export class BidiSerializer {
     }
   }
 
-  static deserializeLocalValue(
-    result: Bidi.CommonDataTypes.RemoteValue
-  ): unknown {
+  static deserializeLocalValue(result: Bidi.Script.RemoteValue): unknown {
     switch (result.type) {
       case 'array':
-        // TODO: Check expected output when value is undefined
-        return result.value?.map(value => {
-          return BidiSerializer.deserializeLocalValue(value);
-        });
+        if (result.value) {
+          return result.value.map(value => {
+            return BidiSerializer.deserializeLocalValue(value);
+          });
+        }
+        break;
       case 'set':
-        // TODO: Check expected output when value is undefined
-        return result.value.reduce((acc: Set<unknown>, value) => {
-          return acc.add(BidiSerializer.deserializeLocalValue(value));
-        }, new Set());
+        if (result.value) {
+          return result.value.reduce((acc: Set<unknown>, value) => {
+            return acc.add(BidiSerializer.deserializeLocalValue(value));
+          }, new Set());
+        }
+        break;
       case 'object':
         if (result.value) {
           return result.value.reduce((acc: Record<any, unknown>, tuple) => {
@@ -213,12 +213,14 @@ export class BidiSerializer {
           }, {});
         }
         break;
-
       case 'map':
-        return result.value.reduce((acc: Map<unknown, unknown>, tuple) => {
-          const {key, value} = BidiSerializer.deserializeTuple(tuple);
-          return acc.set(key, value);
-        }, new Map());
+        if (result.value) {
+          return result.value?.reduce((acc: Map<unknown, unknown>, tuple) => {
+            const {key, value} = BidiSerializer.deserializeTuple(tuple);
+            return acc.set(key, value);
+          }, new Map());
+        }
+        break;
       case 'promise':
         return {};
       case 'regexp':
@@ -246,8 +248,8 @@ export class BidiSerializer {
   }
 
   static deserializeTuple([serializedKey, serializedValue]: [
-    Bidi.CommonDataTypes.RemoteValue | string,
-    Bidi.CommonDataTypes.RemoteValue,
+    Bidi.Script.RemoteValue | string,
+    Bidi.Script.RemoteValue,
   ]): {key: unknown; value: unknown} {
     const key =
       typeof serializedKey === 'string'
@@ -258,7 +260,7 @@ export class BidiSerializer {
     return {key, value};
   }
 
-  static deserialize(result: Bidi.CommonDataTypes.RemoteValue): any {
+  static deserialize(result: Bidi.Script.RemoteValue): any {
     if (!result) {
       debugError('Service did not produce a result.');
       return undefined;

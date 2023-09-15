@@ -195,7 +195,7 @@ describe('Evaluation specs', function () {
         }
       );
       const result = await page.evaluate(async function () {
-        return await (globalThis as any).callController(9, 3);
+        return (globalThis as any).callController(9, 3);
       });
       expect(result).toBe(27);
     });
@@ -345,24 +345,6 @@ describe('Evaluation specs', function () {
       });
       expect(result).toBe(undefined);
     });
-    it('should be able to throw a tricky error', async () => {
-      const {page} = await getTestState();
-
-      const windowHandle = await page.evaluateHandle(() => {
-        return window;
-      });
-      const errorText = await windowHandle.jsonValue().catch(error_ => {
-        return error_.message;
-      });
-      const error = await page
-        .evaluate(errorText => {
-          throw new Error(errorText);
-        }, errorText)
-        .catch(error_ => {
-          return error_;
-        });
-      expect(error.message).toContain(errorText);
-    });
     it('should accept a string', async () => {
       const {page} = await getTestState();
 
@@ -385,7 +367,7 @@ describe('Evaluation specs', function () {
       const {page} = await getTestState();
 
       await page.setContent('<section>42</section>');
-      const element = (await page.$('section'))!;
+      using element = (await page.$('section'))!;
       const text = await page.evaluate(e => {
         return e.textContent;
       }, element);
@@ -395,8 +377,9 @@ describe('Evaluation specs', function () {
       const {page} = await getTestState();
 
       await page.setContent('<section>39</section>');
-      const element = (await page.$('section'))!;
+      using element = (await page.$('section'))!;
       expect(element).toBeTruthy();
+      // We want to dispose early.
       await element.dispose();
       let error!: Error;
       await page
@@ -412,7 +395,7 @@ describe('Evaluation specs', function () {
       const {page, server} = await getTestState();
 
       await attachFrame(page, 'frame1', server.EMPTY_PAGE);
-      const bodyHandle = await page.frames()[1]!.$('body');
+      using bodyHandle = await page.frames()[1]!.$('body');
       let error!: Error;
       await page
         .evaluate(body => {
@@ -435,26 +418,6 @@ describe('Evaluation specs', function () {
         return document.execCommand('copy');
       });
       expect(result).toBe(true);
-    });
-    it('should throw a nice error after a navigation', async () => {
-      const {page} = await getTestState();
-
-      const executionContext = await page.mainFrame().executionContext();
-
-      await Promise.all([
-        page.waitForNavigation(),
-        executionContext.evaluate(() => {
-          return window.location.reload();
-        }),
-      ]);
-      const error = await executionContext
-        .evaluate(() => {
-          return null;
-        })
-        .catch(error_ => {
-          return error_;
-        });
-      expect((error as Error).message).toContain('navigation');
     });
     it('should not throw an error when evaluation does a navigation', async () => {
       const {page, server} = await getTestState();

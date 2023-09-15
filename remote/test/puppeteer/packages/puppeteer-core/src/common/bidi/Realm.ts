@@ -12,9 +12,9 @@ import {
 } from '../util.js';
 
 import {Connection} from './Connection.js';
-import {ElementHandle} from './ElementHandle.js';
-import {Frame} from './Frame.js';
-import {JSHandle} from './JSHandle.js';
+import {BidiElementHandle} from './ElementHandle.js';
+import {BidiJSHandle} from './JSHandle.js';
+import {Sandbox} from './Sandbox.js';
 import {BidiSerializer} from './Serializer.js';
 import {createEvaluationError} from './utils.js';
 
@@ -25,31 +25,59 @@ export const getSourceUrlComment = (url: string): string => {
 };
 
 export class Realm extends EventEmitter {
-  connection: Connection;
-  #frame!: Frame;
-  #id: string;
-  #sandbox?: string;
+  readonly connection: Connection;
 
-  constructor(connection: Connection, id: string, sandbox?: string) {
+  #id!: string;
+  #sandbox!: Sandbox;
+
+  constructor(connection: Connection) {
     super();
     this.connection = connection;
-    this.#id = id;
-    this.#sandbox = sandbox;
   }
 
   get target(): Bidi.Script.Target {
     return {
-      context: this.#id,
-      sandbox: this.#sandbox,
+      context: this.#sandbox.environment._id,
+      sandbox: this.#sandbox.name,
     };
   }
 
-  setFrame(frame: Frame): void {
-    this.#frame = frame;
+  handleRealmDestroyed = async (
+    params: Bidi.Script.RealmDestroyed['params']
+  ): Promise<void> => {
+    if (params.realm === this.#id) {
+      // Note: The Realm is destroyed, so in theory the handle should be as
+      // well.
+      this.internalPuppeteerUtil = undefined;
+      this.#sandbox.environment.clearDocumentHandle();
+    }
+  };
+
+  handleRealmCreated = (params: Bidi.Script.RealmCreated['params']): void => {
+    if (
+      params.type === 'window' &&
+      params.context === this.#sandbox.environment._id &&
+      params.sandbox === this.#sandbox.name
+    ) {
+      this.#id = params.realm;
+      void this.#sandbox.taskManager.rerunAll();
+    }
+  };
+
+  setSandbox(sandbox: Sandbox): void {
+    this.#sandbox = sandbox;
+    this.connection.on(
+      Bidi.ChromiumBidi.Script.EventNames.RealmCreated,
+      this.handleRealmCreated
+    );
+    this.connection.on(
+      Bidi.ChromiumBidi.Script.EventNames.RealmDestroyed,
+      this.handleRealmDestroyed
+    );
   }
 
-  protected internalPuppeteerUtil?: Promise<JSHandle<PuppeteerUtil>>;
-  get puppeteerUtil(): Promise<JSHandle<PuppeteerUtil>> {
+  protected internalPuppeteerUtil?: Promise<BidiJSHandle<PuppeteerUtil>>;
+  get puppeteerUtil(): Promise<BidiJSHandle<PuppeteerUtil>> {
     const promise = Promise.resolve() as Promise<unknown>;
     scriptInjector.inject(script => {
       if (this.internalPuppeteerUtil) {
@@ -58,10 +86,12 @@ export class Realm extends EventEmitter {
         });
       }
       this.internalPuppeteerUtil = promise.then(() => {
-        return this.evaluateHandle(script) as Promise<JSHandle<PuppeteerUtil>>;
+        return this.evaluateHandle(script) as Promise<
+          BidiJSHandle<PuppeteerUtil>
+        >;
       });
     }, !this.internalPuppeteerUtil);
-    return this.internalPuppeteerUtil as Promise<JSHandle<PuppeteerUtil>>;
+    return this.internalPuppeteerUtil as Promise<BidiJSHandle<PuppeteerUtil>>;
   }
 
   async evaluateHandle<
@@ -71,7 +101,7 @@ export class Realm extends EventEmitter {
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.#evaluate(false, pageFunction, ...args);
+    return await this.#evaluate(false, pageFunction, ...args);
   }
 
   async evaluate<
@@ -81,7 +111,7 @@ export class Realm extends EventEmitter {
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
-    return this.#evaluate(true, pageFunction, ...args);
+    return await this.#evaluate(true, pageFunction, ...args);
   }
 
   async #evaluate<
@@ -113,8 +143,18 @@ export class Realm extends EventEmitter {
         PuppeteerURL.INTERNAL_URL
     );
 
+    const sandbox = this.#sandbox;
+
     let responsePromise;
-    const resultOwnership = returnByValue ? 'none' : 'root';
+    const resultOwnership = returnByValue
+      ? Bidi.Script.ResultOwnership.None
+      : Bidi.Script.ResultOwnership.Root;
+    const serializationOptions: Bidi.Script.SerializationOptions = returnByValue
+      ? {}
+      : {
+          maxObjectDepth: 0,
+          maxDomDepth: 0,
+        };
     if (isString(pageFunction)) {
       const expression = SOURCE_URL_REGEX.test(pageFunction)
         ? pageFunction
@@ -125,6 +165,8 @@ export class Realm extends EventEmitter {
         target: this.target,
         resultOwnership,
         awaitPromise: true,
+        userActivation: true,
+        serializationOptions,
       });
     } else {
       let functionDeclaration = stringifyFunction(pageFunction);
@@ -135,12 +177,14 @@ export class Realm extends EventEmitter {
         functionDeclaration,
         arguments: await Promise.all(
           args.map(arg => {
-            return BidiSerializer.serialize(arg, this as any);
+            return BidiSerializer.serialize(sandbox, arg);
           })
         ),
         target: this.target,
         resultOwnership,
         awaitPromise: true,
+        userActivation: true,
+        serializationOptions,
       });
     }
 
@@ -152,20 +196,30 @@ export class Realm extends EventEmitter {
 
     return returnByValue
       ? BidiSerializer.deserialize(result.result)
-      : getBidiHandle(this as any, result.result, this.#frame);
+      : createBidiHandle(sandbox, result.result);
+  }
+
+  [Symbol.dispose](): void {
+    this.connection.off(
+      Bidi.ChromiumBidi.Script.EventNames.RealmCreated,
+      this.handleRealmCreated
+    );
+    this.connection.off(
+      Bidi.ChromiumBidi.Script.EventNames.RealmDestroyed,
+      this.handleRealmDestroyed
+    );
   }
 }
 
 /**
  * @internal
  */
-export function getBidiHandle(
-  realmOrContext: Realm,
-  result: Bidi.CommonDataTypes.RemoteValue,
-  frame: Frame
-): JSHandle | ElementHandle<Node> {
+export function createBidiHandle(
+  sandbox: Sandbox,
+  result: Bidi.Script.RemoteValue
+): BidiJSHandle<unknown> | BidiElementHandle<Node> {
   if (result.type === 'node' || result.type === 'window') {
-    return new ElementHandle(realmOrContext, result, frame);
+    return new BidiElementHandle(sandbox, result);
   }
-  return new JSHandle(realmOrContext, result);
+  return new BidiJSHandle(sandbox, result);
 }

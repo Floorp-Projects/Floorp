@@ -19,29 +19,33 @@
  * mirrors the structure of the download server.
  */
 
-import {BrowserPlatform, install} from '@puppeteer/browsers';
-import path from 'path';
-import fs from 'fs';
+import {existsSync, mkdirSync, copyFileSync, rmSync} from 'fs';
+import {normalize, join, dirname} from 'path';
 
-import * as versions from '../test/build/versions.js';
+import {BrowserPlatform, install} from '@puppeteer/browsers';
+
 import {downloadPaths} from '../lib/esm/browser-data/browser-data.js';
+import * as versions from '../test/build/versions.js';
 
 function getBrowser(str) {
   const regex = /test(.+)BuildId/;
   const match = str.match(regex);
 
   if (match && match[1]) {
-    return match[1].toLowerCase();
+    const lowercased = match[1].toLowerCase();
+    if (lowercased === 'chromeheadlessshell') {
+      return 'chrome-headless-shell';
+    }
+    return lowercased;
   } else {
     return null;
   }
 }
 
-const cacheDir = path.normalize(path.join('.', 'test', 'cache'));
+const cacheDir = normalize(join('.', 'test', 'cache'));
 
 for (const version of Object.keys(versions)) {
   const browser = getBrowser(version);
-
   if (!browser) {
     continue;
   }
@@ -49,32 +53,32 @@ for (const version of Object.keys(versions)) {
   const buildId = versions[version];
 
   for (const platform of Object.values(BrowserPlatform)) {
-    const targetPath = path.join(
+    const targetPath = join(
       cacheDir,
       'server',
       ...downloadPaths[browser](platform, buildId)
     );
 
-    if (fs.existsSync(targetPath)) {
+    if (existsSync(targetPath)) {
       continue;
     }
 
-    const result = await install({
+    const archivePath = await install({
       browser,
       buildId,
       platform,
-      cacheDir: path.join(cacheDir, 'tmp'),
+      cacheDir: join(cacheDir, 'tmp'),
       unpack: false,
     });
 
-    fs.mkdirSync(path.dirname(targetPath), {
+    mkdirSync(dirname(targetPath), {
       recursive: true,
     });
-    fs.copyFileSync(result.path, targetPath);
+    copyFileSync(archivePath, targetPath);
   }
 }
 
-fs.rmSync(path.join(cacheDir, 'tmp'), {
+rmSync(join(cacheDir, 'tmp'), {
   recursive: true,
   force: true,
   maxRetries: 10,

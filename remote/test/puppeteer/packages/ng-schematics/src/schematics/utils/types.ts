@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export enum TestingFramework {
+export enum TestRunner {
   Jasmine = 'jasmine',
   Jest = 'jest',
   Mocha = 'mocha',
@@ -22,17 +22,18 @@ export enum TestingFramework {
 }
 
 export interface SchematicsOptions {
-  isDefaultTester: boolean;
-  exportConfig: boolean;
-  testingFramework: TestingFramework;
-  port: number;
+  testRunner: TestRunner;
 }
 
 export interface PuppeteerSchematicsConfig {
   builder: string;
-  options: SchematicsOptions;
+  options: {
+    port: number;
+    testRunner: TestRunner;
+  };
 }
 export interface AngularProject {
+  projectType: 'application' | 'library';
   root: string;
   architect: {
     e2e?: PuppeteerSchematicsConfig;
@@ -46,4 +47,5 @@ export interface AngularJson {
 export interface SchematicsSpec {
   name: string;
   project?: string;
+  route?: string;
 }

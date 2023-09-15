@@ -16,39 +16,31 @@
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import {
-  AutofillData,
-  ElementHandle as BaseElementHandle,
-  ClickOptions,
-} from '../../api/ElementHandle.js';
-import {KeyPressOptions, KeyboardTypeOptions} from '../../api/Input.js';
-import {assert} from '../../util/assert.js';
-import {KeyInput} from '../USKeyboardLayout.js';
+import {AutofillData, ElementHandle} from '../../api/ElementHandle.js';
 
-import {Frame} from './Frame.js';
-import {JSHandle} from './JSHandle.js';
+import {BidiFrame} from './Frame.js';
+import {BidiJSHandle} from './JSHandle.js';
 import {Realm} from './Realm.js';
+import {Sandbox} from './Sandbox.js';
 
 /**
  * @internal
  */
-export class ElementHandle<
+export class BidiElementHandle<
   ElementType extends Node = Element,
-> extends BaseElementHandle<ElementType> {
-  declare handle: JSHandle<ElementType>;
-  #frame: Frame;
+> extends ElementHandle<ElementType> {
+  declare handle: BidiJSHandle<ElementType>;
 
-  constructor(
-    realm: Realm,
-    remoteValue: Bidi.CommonDataTypes.RemoteValue,
-    frame: Frame
-  ) {
-    super(new JSHandle(realm, remoteValue));
-    this.#frame = frame;
+  constructor(sandbox: Sandbox, remoteValue: Bidi.Script.RemoteValue) {
+    super(new BidiJSHandle(sandbox, remoteValue));
   }
 
-  override get frame(): Frame {
-    return this.#frame;
+  override get realm(): Sandbox {
+    return this.handle.realm;
+  }
+
+  override get frame(): BidiFrame {
+    return this.realm.environment;
   }
 
   context(): Realm {
@@ -59,25 +51,17 @@ export class ElementHandle<
     return this.handle.isPrimitiveValue;
   }
 
-  remoteValue(): Bidi.CommonDataTypes.RemoteValue {
+  remoteValue(): Bidi.Script.RemoteValue {
     return this.handle.remoteValue();
   }
 
-  /**
-   * @internal
-   */
-  override assertElementHasWorld(): asserts this {
-    // TODO: Should assert element has a Sandbox
-    return;
-  }
-
   override async autofill(data: AutofillData): Promise<void> {
-    const client = this.#frame.context().cdpSession;
+    const client = this.frame.client;
     const nodeInfo = await client.send('DOM.describeNode', {
       objectId: this.handle.id,
     });
     const fieldId = nodeInfo.node.backendNodeId;
-    const frameId = this.#frame._id;
+    const frameId = this.frame._id;
     await client.send('Autofill.trigger', {
       fieldId,
       frameId,
@@ -85,95 +69,21 @@ export class ElementHandle<
     });
   }
 
-  // ///////////////////
-  // // Input methods //
-  // ///////////////////
-  override async click(
-    this: ElementHandle<Element>,
-    options?: Readonly<ClickOptions>
-  ): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const {x = 0, y = 0} = options?.offset ?? {};
-    const remoteValue = this.remoteValue();
-    assert('sharedId' in remoteValue);
-    return this.#frame.page().mouse.click(
-      x,
-      y,
-      Object.assign({}, options, {
-        origin: {
-          type: 'element' as const,
-          element: remoteValue as Bidi.CommonDataTypes.SharedReference,
-        },
-      })
-    );
-  }
-
-  override async hover(this: ElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const remoteValue = this.remoteValue();
-    assert('sharedId' in remoteValue);
-    return this.#frame.page().mouse.move(0, 0, {
-      origin: {
-        type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
-      },
-    });
-  }
-
-  override async tap(this: ElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const remoteValue = this.remoteValue();
-    assert('sharedId' in remoteValue);
-    return this.#frame.page().touchscreen.tap(0, 0, {
-      origin: {
-        type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
-      },
-    });
-  }
-
-  override async touchStart(this: ElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const remoteValue = this.remoteValue();
-    assert('sharedId' in remoteValue);
-    return this.#frame.page().touchscreen.touchStart(0, 0, {
-      origin: {
-        type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
-      },
-    });
-  }
-
-  override async touchMove(this: ElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    const remoteValue = this.remoteValue();
-    assert('sharedId' in remoteValue);
-    return this.#frame.page().touchscreen.touchMove(0, 0, {
-      origin: {
-        type: 'element' as const,
-        element: remoteValue as Bidi.CommonDataTypes.SharedReference,
-      },
-    });
-  }
-
-  override async touchEnd(this: ElementHandle<Element>): Promise<void> {
-    await this.scrollIntoViewIfNeeded();
-    await this.#frame.page().touchscreen.touchEnd();
-  }
-
-  override async type(
-    text: string,
-    options?: Readonly<KeyboardTypeOptions>
-  ): Promise<void> {
-    await this.focus();
-    await this.#frame.page().keyboard.type(text, options);
-  }
-
-  override async press(
-    key: KeyInput,
-    options?: Readonly<KeyPressOptions>
-  ): Promise<void> {
-    await this.focus();
-    await this.#frame.page().keyboard.press(key, options);
+  override async contentFrame(
+    this: BidiElementHandle<HTMLIFrameElement>
+  ): Promise<BidiFrame>;
+  @ElementHandle.bindIsolatedHandle
+  override async contentFrame(): Promise<BidiFrame | null> {
+    using handle = (await this.evaluateHandle(element => {
+      if (element instanceof HTMLIFrameElement) {
+        return element.contentWindow;
+      }
+      return;
+    })) as BidiJSHandle;
+    const value = handle.remoteValue();
+    if (value.type === 'window') {
+      return this.frame.page().frame(value.value.context);
+    }
+    return null;
   }
 }

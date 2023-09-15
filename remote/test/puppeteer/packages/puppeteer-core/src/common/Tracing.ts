@@ -58,6 +58,13 @@ export class Tracing {
   }
 
   /**
+   * @internal
+   */
+  updateClient(client: CDPSession): void {
+    this.#client = client;
+  }
+
+  /**
    * Starts a trace for the current page.
    * @remarks
    * Only one trace can be active at a time per browser.
@@ -135,6 +142,6 @@ export class Tracing {
     });
     await this.#client.send('Tracing.end');
     this.#recording = false;
-    return contentDeferred.valueOrThrow();
+    return await contentDeferred.valueOrThrow();
   }
 }
