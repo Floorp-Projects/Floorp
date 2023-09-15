@@ -459,7 +459,7 @@ UtilityProcessManager::CreateWinFileDialogAsync() {
   return StartUtility(wfdp, SandboxingKind::WINDOWS_FILE_DIALOG)
       ->Then(
           GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
-          [wfdp, startTime]() {
+          [wfdp, startTime]() mutable {
             LOGD("CreateWinFileDialogAsync() resolve: wfdp = [%p]", wfdp.get());
             if (!wfdp->CanSend()) {
               MOZ_ASSERT(false, "WinFileDialogParent can't send");
@@ -470,7 +470,10 @@ UtilityProcessManager::CreateWinFileDialogAsync() {
                 "UtilityProcessManager::CreateWinFileDialogAsync", OTHER,
                 MarkerOptions(MarkerTiming::IntervalUntilNowFrom(startTime)),
                 "Resolve"_ns);
-            return Promise::CreateAndResolve(wfdp, __PRETTY_FUNCTION__);
+
+            return Promise::CreateAndResolve(
+                widget::filedialog::ProcessProxy(std::move(wfdp)),
+                __PRETTY_FUNCTION__);
           },
           [self = RefPtr(this), startTime](nsresult error) {
             LOGD("CreateWinFileDialogAsync() reject");

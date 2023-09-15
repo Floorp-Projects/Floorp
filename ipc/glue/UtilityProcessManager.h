@@ -24,7 +24,7 @@ class WindowsUtilsParent;
 }  // namespace dom
 
 namespace widget::filedialog {
-class WinFileDialogParent;
+class ProcessProxy;
 }  // namespace widget::filedialog
 
 namespace ipc {
@@ -47,9 +47,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
 #ifdef XP_WIN
   using WindowsUtilsPromise = Promise<RefPtr<dom::WindowsUtilsParent>>;
-
-  using WinFileDialogParent = widget::filedialog::WinFileDialogParent;
-  using WinFileDialogPromise = Promise<RefPtr<WinFileDialogParent>>;
+  using WinFileDialogPromise = Promise<widget::filedialog::ProcessProxy>;
 #endif
 
   static RefPtr<UtilityProcessManager> GetSingleton();

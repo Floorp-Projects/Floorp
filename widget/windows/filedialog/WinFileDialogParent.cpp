@@ -9,11 +9,14 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
 #include "nsISupports.h"
 
 mozilla::LazyLogModule sLogWFD("FileDialog");
 
 namespace mozilla::widget::filedialog {
+
+static size_t sOpenDialogActors = 0;
 
 WinFileDialogParent::WinFileDialogParent() {
   MOZ_LOG(sLogWFD, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
@@ -46,6 +49,29 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
     return NS_ERROR_FAILURE;
   }
 
+  sOpenDialogActors++;
   return NS_OK;
+}
+
+ProcessProxy::ProcessProxy(RefPtr<WFDP>&& obj)
+    : data(MakeRefPtr<Contents>(std::move(obj))) {}
+
+ProcessProxy::Contents::Contents(RefPtr<WFDP>&& obj) : ptr(std::move(obj)) {}
+
+ProcessProxy::Contents::~Contents() {
+  AssertIsOnMainThread();
+
+  // destroy the actor...
+  ptr->Close();
+
+  // ... and possibly the process
+  if (!--sOpenDialogActors) {
+    MOZ_LOG(
+        sLogWFD, LogLevel::Info,
+        ("%s: killing the WINDOWS_FILE_DIALOG process (no more live actors)",
+         __PRETTY_FUNCTION__));
+    ipc::UtilityProcessManager::GetSingleton()->CleanShutdown(
+        ipc::SandboxingKind::WINDOWS_FILE_DIALOG);
+  }
 }
 }  // namespace mozilla::widget::filedialog
