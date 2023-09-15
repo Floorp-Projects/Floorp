@@ -325,7 +325,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
 static const char* gExactCallbackPrefs[] = {
     "browser.active_color",
     "browser.anchor_color",
-    "browser.underline_anchors",
     "browser.visited_color",
     "dom.meta-viewport.enabled",
     "dom.send_after_paint_to_content",
