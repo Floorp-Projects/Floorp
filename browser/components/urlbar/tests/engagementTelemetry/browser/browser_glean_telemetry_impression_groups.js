@@ -120,6 +120,21 @@ add_task(async function top_site() {
   });
 });
 
+add_task(async function clipboard() {
+  await doClipboardTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([
+        {
+          reason: "pause",
+          groups: "general,suggested_index",
+          results: "clipboard,action",
+          n_results: 2,
+        },
+      ]),
+  });
+});
+
 add_task(async function remote_tab() {
   await doRemoteTabTest({
     trigger: () => waitForPauseImpression(),

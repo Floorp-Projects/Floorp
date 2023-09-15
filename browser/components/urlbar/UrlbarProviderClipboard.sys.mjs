@@ -41,6 +41,10 @@ class ProviderClipboard extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
+  setPreviousClipboardValue(newValue) {
+    this.#previousClipboard.value = newValue;
+  }
+
   isActive(queryContext, controller) {
     // Return clipboard results only for empty searches.
     if (

@@ -98,6 +98,7 @@ urlbar:
           `autofill_url`,
           `bookmark`,
           `calc`,
+          `clipboard`,
           `history`,
           `intervention_clear`,
           `intervention_refresh`,
@@ -137,9 +138,11 @@ urlbar:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414#c2
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -219,6 +222,7 @@ urlbar:
           `autofill_url`,
           `bookmark`,
           `calc`,
+          `clipboard`,
           `experimental_addon`,
           `history`,
           `input_field`,
@@ -333,6 +337,7 @@ urlbar:
           `autofill_url`,
           `bookmark`,
           `calc`,
+          `clipboard`,
           `history`,
           `intervention_clear`,
           `intervention_refresh`,
@@ -372,9 +377,11 @@ urlbar:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -470,6 +477,7 @@ urlbar:
           `autofill_url`,
           `bookmark`,
           `calc`,
+          `clipboard`,
           `history`,
           `intervention_clear`,
           `intervention_refresh`,
@@ -509,9 +517,11 @@ urlbar:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247#c3
     data_sensitivity:
       - interaction
     notification_emails:

@@ -1218,6 +1218,9 @@ export var UrlbarUtils = {
           }
           return "quicksuggest";
         }
+        if (result.providerName == "UrlbarProviderClipboard") {
+          return "clipboard";
+        }
         if (result.providerName == "InputHistory") {
           return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
             ? "bookmark_adaptive"
@@ -1430,6 +1433,9 @@ export var UrlbarUtils = {
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
+        }
+        if (result.providerName === "UrlbarProviderClipboard") {
+          return "clipboard";
         }
         return result.source === UrlbarUtils.RESULT_SOURCE.BOOKMARKS
           ? "bookmark"
