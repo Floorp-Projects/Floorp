@@ -516,19 +516,19 @@ static void PrintStackValue(StackValue* stackVal, CompilerFrameInfo& frame,
     case StackValue::Constant: {
       js::Value constantVal = stackVal->constant();
       if (constantVal.isInt32()) {
-        buf.jsprintf("%d", constantVal.toInt32());
+        buf.printf("%d", constantVal.toInt32());
       } else if (constantVal.isObjectOrNull()) {
-        buf.jsprintf("obj:%p", constantVal.toObjectOrNull());
+        buf.printf("obj:%p", constantVal.toObjectOrNull());
       } else if (constantVal.isString()) {
         buf.put("str:");
         buf.putString(constantVal.toString());
       } else if (constantVal.isNumber()) {
-        buf.jsprintf("num:%f", constantVal.toNumber());
+        buf.printf("num:%f", constantVal.toNumber());
       } else if (constantVal.isSymbol()) {
         buf.put("sym:");
         constantVal.toSymbol()->dump(buf);
       } else {
-        buf.jsprintf("raw:%" PRIx64, constantVal.asRawBits());
+        buf.printf("raw:%" PRIx64, constantVal.asRawBits());
       }
     } break;
     /****** Register ******/
@@ -546,16 +546,16 @@ static void PrintStackValue(StackValue* stackVal, CompilerFrameInfo& frame,
       buf.put("this");
 #  else
       Address addr = frame.addressOfThis();
-      buf.jsprintf("this:%s(%d)", addr.base.name(), addr.offset);
+      buf.printf("this:%s(%d)", addr.base.name(), addr.offset);
 #  endif
     } break;
     /****** LocalSlot ******/
     case StackValue::LocalSlot:
-      buf.jsprintf("local:%u", stackVal->localSlot());
+      buf.printf("local:%u", stackVal->localSlot());
       break;
     /****** ArgSlot ******/
     case StackValue::ArgSlot:
-      buf.jsprintf("arg:%u", stackVal->argSlot());
+      buf.printf("arg:%u", stackVal->argSlot());
       break;
 
     default:
