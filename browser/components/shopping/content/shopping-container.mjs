@@ -253,9 +253,13 @@ export class ShoppingContainer extends MozLitElement {
       />
       <div id="shopping-container">
         <div id="header-wrapper">
-          <div id="shopping-header">
-            <h1 id="header" data-l10n-id="shopping-main-container-title"></h1>
-          </div>
+          <header id="shopping-header" data-l10n-id="shopping-a11y-header">
+            <h1
+              id="shopping-header-title"
+              data-l10n-id="shopping-main-container-title"
+            ></h1>
+            <p id="beta-marker" data-l10n-id="shopping-beta-marker"></p>
+          </header>
           <button
             id="close-button"
             class="ghost-button"
