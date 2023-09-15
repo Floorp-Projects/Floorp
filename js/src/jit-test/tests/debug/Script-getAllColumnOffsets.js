@@ -30,7 +30,7 @@ assertOffsetColumns(
 assertOffsetColumns(
   // Should hit each item in the array.
   "function f(n){var a=[1,2,n]}",
-  "                    ^^ ^ ^ ^"
+  "                    ^    ^ ^"
 );
 
 // getColumnOffsets correctly places function calls.

@@ -530,6 +530,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool markSimpleBreakpoint();
   [[nodiscard]] bool updateLineNumberNotes(uint32_t offset);
   [[nodiscard]] bool updateSourceCoordNotes(uint32_t offset);
+  [[nodiscard]] bool updateSourceCoordNotesIfNonLiteral(ParseNode* node);
 
   JSOp strictifySetNameOp(JSOp op);
 

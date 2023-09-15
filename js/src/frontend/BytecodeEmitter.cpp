@@ -645,6 +645,13 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   return true;
 }
 
+bool BytecodeEmitter::updateSourceCoordNotesIfNonLiteral(ParseNode* node) {
+  if (node->isLiteral()) {
+    return true;
+  }
+  return updateSourceCoordNotes(node->pn_pos.begin);
+}
+
 uint32_t BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
   // Try to give the JSOp::LoopHead the same line number as the next
   // instruction. nextpn is often a block, in which case the next instruction
@@ -10903,7 +10910,7 @@ bool BytecodeEmitter::emitArray(ListNode* array) {
         return false;
       }
     } else {
-      if (!updateSourceCoordNotes(elem->pn_pos.begin)) {
+      if (!updateSourceCoordNotesIfNonLiteral(elem)) {
         return false;
       }
       if (elem->isKind(ParseNodeKind::Elision)) {
@@ -11075,14 +11082,14 @@ bool BytecodeEmitter::emitTupleLiteral(ListNode* tuple) {
         return false;
       }
     } else {
-      if (!emitTree(elt)) {
-        //          [stack] TUPLE VALUE
+      // Update location to throw errors about non-primitive elements
+      // in the correct position.
+      if (!updateSourceCoordNotesIfNonLiteral(elt)) {
         return false;
       }
 
-      // Update location to throw errors about non-primitive elements
-      // in the correct position.
-      if (!updateSourceCoordNotes(elt->pn_pos.begin)) {
+      if (!emitTree(elt)) {
+        //          [stack] TUPLE VALUE
         return false;
       }
 
