@@ -24,7 +24,7 @@ function changePage(page) {
   }
 }
 
-function recordTelemetry(source, eventTarget) {
+function recordNavigationTelemetry(source, eventTarget) {
   let page = "recentbrowsing";
   if (source === "category-navigation") {
     page = eventTarget.parentNode.currentCategory;
@@ -46,6 +46,7 @@ function recordTelemetry(source, eventTarget) {
 
 window.addEventListener("DOMContentLoaded", async () => {
   Services.telemetry.setEventRecordingEnabled("firefoxview_next", true);
+  recordEnteredTelemetry();
   let navigation = document.querySelector("fxview-category-navigation");
   for (const item of navigation.categoryButtons) {
     pageList.push(item.getAttribute("name"));
@@ -53,10 +54,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("hashchange", onHashChange);
   window.addEventListener("change-category", function (event) {
     location.hash = event.target.getAttribute("name");
-    recordTelemetry("category-navigation", event.target);
+    recordNavigationTelemetry("category-navigation", event.target);
   });
   window.addEventListener("card-container-view-all", function (event) {
-    recordTelemetry("view-all", event.originalTarget);
+    recordNavigationTelemetry("view-all", event.originalTarget);
   });
   if (document.location.hash) {
     changePage(document.location.hash.substring(1));
@@ -74,6 +75,24 @@ document
       }
     }
   });
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    recordEnteredTelemetry();
+  }
+});
+
+function recordEnteredTelemetry() {
+  Services.telemetry.recordEvent(
+    "firefoxview_next",
+    "entered",
+    "firefoxview",
+    null,
+    {
+      page: document.location?.hash?.substring(1) || "recentbrowsing",
+    }
+  );
+}
 
 window.addEventListener(
   "unload",

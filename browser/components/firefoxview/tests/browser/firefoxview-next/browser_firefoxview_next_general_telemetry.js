@@ -95,6 +95,27 @@ async function contextMenuTelemetry(contextMenuEvent) {
   );
 }
 
+async function enteredTelemetry(enteredEvent) {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for entered firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    enteredEvent,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   registerCleanupFunction(async () => {
@@ -326,6 +347,51 @@ add_task(async function test_context_menu_telemetry() {
     );
     await contextMenuTelemetry(contextMenuEvent);
 
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
+  });
+});
+
+add_task(async function firefox_view_entered_telemetry() {
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
+  await clearAllParentTelemetryEvents();
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+    let enteredEvent = [
+      [
+        "firefoxview_next",
+        "entered",
+        "firefoxview",
+        null,
+        { page: "recentbrowsing" },
+      ],
+    ];
+    await enteredTelemetry(enteredEvent);
+
+    enteredEvent = [
+      [
+        "firefoxview_next",
+        "entered",
+        "firefoxview",
+        null,
+        { page: "recentlyclosed" },
+      ],
+    ];
+
+    navigateToCategory(document, "recentlyclosed");
+    await clearAllParentTelemetryEvents();
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+    is(
+      gBrowser.selectedBrowser.currentURI.spec,
+      "about:robots",
+      "The selected tab is about:robots"
+    );
+    await switchToFxViewTab(browser.ownerGlobal);
+    await enteredTelemetry(enteredEvent);
+    await SpecialPowers.popPrefEnv();
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
