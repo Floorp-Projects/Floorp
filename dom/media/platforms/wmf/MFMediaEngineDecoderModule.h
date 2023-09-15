@@ -16,6 +16,8 @@ class MFMediaEngineDecoderModule final : public PlatformDecoderModule {
 
   static already_AddRefed<PlatformDecoderModule> Create();
 
+  // Used in the content process to query if the config is supported or not.
+  // If in the MFCDM process, should use SupportsMimeType or Supports instead.
   static bool SupportsConfig(const TrackInfo& aConfig);
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
