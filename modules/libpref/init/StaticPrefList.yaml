@@ -7442,15 +7442,15 @@
   value: true
   mirror: always
 
+# Support for Object.groupBy/Map.groupBy in JavaScript.
+-  name: javascript.options.array_grouping
+   type: bool
+   value: true
+   mirror: always
+
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers
-    type: bool
-    value: false
-    mirror: always
-
-  # Experimental support for Array Grouping in JavaScript.
--   name: javascript.options.experimental.array_grouping
     type: bool
     value: false
     mirror: always

@@ -742,8 +742,8 @@ bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
 bool shell::enableWellFormedUnicodeStrings = true;
-#ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = false;
+#ifdef NIGHTLY_BUILD
 // Pref for new Set.prototype methods.
 bool shell::enableNewSetMethods = false;
 // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
@@ -4134,8 +4134,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setIteratorHelpersEnabled(enableIteratorHelpers)
       .setShadowRealmsEnabled(enableShadowRealms)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
-#ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
+#ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
       .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #endif
@@ -11633,8 +11633,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
-      !op.addBoolOption('\0', "enable-array-grouping",
-                        "Enable Array.grouping") ||
+      !op.addBoolOption('\0', "disable-array-grouping",
+                        "Disable Object.groupBy and Map.groupBy") ||
       !op.addBoolOption('\0', "disable-well-formed-unicode-strings",
                         "Disable String.prototype.{is,to}WellFormed() methods"
                         "(Well-Formed Unicode Strings) (default: Enabled)") ||
@@ -12149,8 +12149,8 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableShadowRealms = op.getBoolOption("enable-shadow-realms");
   enableWellFormedUnicodeStrings =
       !op.getBoolOption("disable-well-formed-unicode-strings");
+  enableArrayGrouping = !op.getBoolOption("disable-array-grouping");
 #ifdef NIGHTLY_BUILD
-  enableArrayGrouping = op.getBoolOption("enable-array-grouping");
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
   enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
 #endif
