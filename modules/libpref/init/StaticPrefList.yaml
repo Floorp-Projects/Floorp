@@ -11201,12 +11201,6 @@
   value: true
   mirror: always
 
-# whether to redirect the channel for auth redirects. See Bug 1820807
-- name: network.auth.use_redirect_for_retries
-  type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
-  mirror: always
-
 # Whether to allow truncated brotli with empty output. This also fixes
 # throwing an erroring when receiving highly compressed brotli files when
 # no content type is specified (Bug 1715401). This pref can be removed after

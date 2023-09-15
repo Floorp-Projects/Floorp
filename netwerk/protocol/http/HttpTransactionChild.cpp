@@ -485,7 +485,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
       ToTimingStructArgs(mTransaction->Timings()), proxyConnectResponseCode,
       dataForSniffer, optionalAltSvcUsed, !!mDataBridgeParent,
       mTransaction->TakeRestartedState(), mTransaction->HTTPSSVCReceivedStage(),
-      mTransaction->GetSupportsHTTP3(), mode, reason, mTransaction->Caps());
+      mTransaction->GetSupportsHTTP3(), mode, reason);
   return NS_OK;
 }
 
@@ -565,7 +565,7 @@ HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
                               mTransaction->GetTransferSize(),
                               ToTimingStructArgs(mTransaction->Timings()),
                               responseTrailers, mTransactionObserverResult,
-                              lastActTabOpt, infoArgs);
+                              lastActTabOpt, mTransaction->Caps(), infoArgs);
 
   return NS_OK;
 }
