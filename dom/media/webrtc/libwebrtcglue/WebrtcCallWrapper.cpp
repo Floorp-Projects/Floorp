@@ -57,7 +57,7 @@ webrtc::Call* WebrtcCallWrapper::Call() const {
 
 void WebrtcCallWrapper::UnsetRemoteSSRC(uint32_t aSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  for (auto conduit : mConduits) {
+  for (const auto& conduit : mConduits) {
     conduit->UnsetRemoteSSRC(aSsrc);
   }
 }
