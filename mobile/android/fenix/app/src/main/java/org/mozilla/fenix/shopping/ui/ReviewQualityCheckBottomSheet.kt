@@ -56,7 +56,9 @@ fun ReviewQualityCheckBottomSheet(
                         onRequestDismiss()
                         store.dispatch(ReviewQualityCheckAction.OptOut)
                     },
-                    onReanalyzeClick = {},
+                    onReanalyzeClick = {
+                        store.dispatch(ReviewQualityCheckAction.ReanalyzeProduct)
+                    },
                     onProductRecommendationsEnabledStateChange = {
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },

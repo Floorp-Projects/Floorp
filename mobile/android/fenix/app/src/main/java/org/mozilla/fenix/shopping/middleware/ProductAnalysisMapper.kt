@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
@@ -33,12 +34,12 @@ private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
         val mappedHighlights = highlights?.toHighlights()?.toSortedMap()
 
         if (mappedGrade == null && mappedRating == null && mappedHighlights == null) {
-            ProductReviewState.NoAnalysisPresent
+            ProductReviewState.NoAnalysisPresent()
         } else {
             ProductReviewState.AnalysisPresent(
                 productId = productId!!,
                 reviewGrade = mappedGrade,
-                needsAnalysis = needsAnalysis,
+                analysisStatus = needsAnalysis.toAnalysisStatus(),
                 adjustedRating = mappedRating,
                 productUrl = analysisURL!!,
                 highlights = mappedHighlights,
@@ -51,6 +52,12 @@ private fun String.toGrade(): ReviewQualityCheckState.Grade? =
         ReviewQualityCheckState.Grade.valueOf(this)
     } catch (e: IllegalArgumentException) {
         null
+    }
+
+private fun Boolean.toAnalysisStatus(): AnalysisStatus =
+    when (this) {
+        true -> AnalysisStatus.NEEDS_ANALYSIS
+        false -> AnalysisStatus.UP_TO_DATE
     }
 
 private fun Highlight.toHighlights(): Map<HighlightType, List<String>>? =

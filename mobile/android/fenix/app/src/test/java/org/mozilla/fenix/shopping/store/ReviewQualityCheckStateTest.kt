@@ -9,7 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
+import org.mozilla.fenix.shopping.ProductAnalysisTestData
 
 class ReviewQualityCheckStateTest {
 
@@ -73,12 +73,9 @@ class ReviewQualityCheckStateTest {
     @Test
     fun `WHEN AnalysisPresent is created with grade, rating and highlights as null THEN exception is thrown`() {
         assertThrows(IllegalArgumentException::class.java) {
-            AnalysisPresent(
-                productId = "",
+            ProductAnalysisTestData.analysisPresent(
                 reviewGrade = null,
-                needsAnalysis = false,
                 adjustedRating = null,
-                productUrl = "",
                 highlights = null,
             )
         }
@@ -87,34 +84,25 @@ class ReviewQualityCheckStateTest {
     @Test
     fun `WHEN AnalysisPresent is created with at least one of grade, rating and highlights as not null THEN no exception is thrown`() {
         val ratingPresent = kotlin.runCatching {
-            AnalysisPresent(
-                productId = "1",
+            ProductAnalysisTestData.analysisPresent(
                 reviewGrade = null,
-                needsAnalysis = false,
                 adjustedRating = 1.2f,
-                productUrl = "",
                 highlights = null,
             )
         }
 
         val gradePresent = kotlin.runCatching {
-            AnalysisPresent(
-                productId = "2",
+            ProductAnalysisTestData.analysisPresent(
                 reviewGrade = ReviewQualityCheckState.Grade.A,
-                needsAnalysis = false,
                 adjustedRating = null,
-                productUrl = "",
                 highlights = null,
             )
         }
 
         val highlightsPresent = kotlin.runCatching {
-            AnalysisPresent(
-                productId = "2",
+            ProductAnalysisTestData.analysisPresent(
                 reviewGrade = null,
-                needsAnalysis = false,
                 adjustedRating = null,
-                productUrl = "",
                 highlights = sortedMapOf(
                     ReviewQualityCheckState.HighlightType.QUALITY to listOf(""),
                 ),
@@ -155,12 +143,7 @@ class ReviewQualityCheckStateTest {
                 "Unbeatable deals",
             ),
         )
-        val analysis = AnalysisPresent(
-            productId = "1",
-            reviewGrade = ReviewQualityCheckState.Grade.A,
-            needsAnalysis = false,
-            adjustedRating = 4.2f,
-            productUrl = "",
+        val analysis = ProductAnalysisTestData.analysisPresent(
             highlights = highlights,
         )
 
@@ -173,12 +156,7 @@ class ReviewQualityCheckStateTest {
         val highlights = sortedMapOf(
             ReviewQualityCheckState.HighlightType.PRICE to listOf("Affordable prices"),
         )
-        val analysis = AnalysisPresent(
-            productId = "1",
-            reviewGrade = ReviewQualityCheckState.Grade.A,
-            needsAnalysis = false,
-            adjustedRating = 4.2f,
-            productUrl = "",
+        val analysis = ProductAnalysisTestData.analysisPresent(
             highlights = highlights,
         )
 
@@ -194,12 +172,7 @@ class ReviewQualityCheckStateTest {
                 "Free shipping options",
             ),
         )
-        val analysis = AnalysisPresent(
-            productId = "1",
-            reviewGrade = ReviewQualityCheckState.Grade.A,
-            needsAnalysis = false,
-            adjustedRating = 4.2f,
-            productUrl = "",
+        val analysis = ProductAnalysisTestData.analysisPresent(
             highlights = highlights,
         )
 
@@ -216,12 +189,7 @@ class ReviewQualityCheckStateTest {
                 "Express delivery",
             ),
         )
-        val analysis = AnalysisPresent(
-            productId = "1",
-            reviewGrade = ReviewQualityCheckState.Grade.A,
-            needsAnalysis = false,
-            adjustedRating = 4.2f,
-            productUrl = "",
+        val analysis = ProductAnalysisTestData.analysisPresent(
             highlights = highlights,
         )
 
@@ -246,12 +214,7 @@ class ReviewQualityCheckStateTest {
                 "Unbeatable deals",
             ),
         )
-        val analysis = AnalysisPresent(
-            productId = "1",
-            reviewGrade = ReviewQualityCheckState.Grade.A,
-            needsAnalysis = false,
-            adjustedRating = 4.2f,
-            productUrl = "",
+        val analysis = ProductAnalysisTestData.analysisPresent(
             highlights = highlights,
         )
 

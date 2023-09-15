@@ -80,6 +80,11 @@ sealed interface ReviewQualityCheckAction : Action {
     object RetryProductAnalysis : NetworkAction, UpdateAction
 
     /**
+     * Triggered when the user triggers product re-analysis.
+     */
+    object ReanalyzeProduct : NetworkAction, UpdateAction
+
+    /**
      * Triggered when opening a link from the review quality check feature.
      */
     data class OpenLink(val link: ReviewQualityCheckState.LinkType) : NavigationMiddlewareAction

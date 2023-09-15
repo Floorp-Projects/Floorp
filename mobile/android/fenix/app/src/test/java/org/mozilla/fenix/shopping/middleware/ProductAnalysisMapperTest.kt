@@ -11,6 +11,7 @@ import org.junit.Test
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 
 class ProductAnalysisMapperTest {
 
@@ -34,7 +35,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = ReviewQualityCheckState.Grade.C,
-            needsAnalysis = false,
+            analysisStatus = AnalysisStatus.UP_TO_DATE,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlights = sortedMapOf(
@@ -54,7 +55,7 @@ class ProductAnalysisMapperTest {
         val actual = ProductAnalysisTestData.productAnalysis(
             productId = "id1",
             grade = "C",
-            needsAnalysis = false,
+            needsAnalysis = true,
             adjustedRating = 3.4,
             analysisURL = "https://example.com",
             highlights = Highlight(
@@ -69,7 +70,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = ReviewQualityCheckState.Grade.C,
-            needsAnalysis = false,
+            analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlights = sortedMapOf(
@@ -95,7 +96,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = null,
-            needsAnalysis = false,
+            analysisStatus = AnalysisStatus.UP_TO_DATE,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
         )
@@ -128,7 +129,7 @@ class ProductAnalysisMapperTest {
                 adjustedRating = 0.0,
                 highlights = null,
             ).toProductReviewState()
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()
 
         assertEquals(expected, actual)
     }

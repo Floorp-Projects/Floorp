@@ -54,15 +54,16 @@ sealed interface ReviewQualityCheckState : State {
             /**
              * Denotes no analysis is present for the product the user is browsing.
              */
-            object NoAnalysisPresent : ProductReviewState
+            data class NoAnalysisPresent(
+                val isReanalyzing: Boolean = false,
+            ) : ProductReviewState
 
             /**
              * Denotes the state where analysis of the product is fetched and present.
              *
              * @property productId The id of the product, e.g ASIN, SKU.
              * @property reviewGrade The review grade of the product.
-             * @property needsAnalysis If true, the analysis is stale and that to get the fresh
-             * data, re–analysis is needed.
+             * @property analysisStatus The status of the product analysis.
              * @property adjustedRating The adjusted rating taking review quality into consideration.
              * @property productUrl The url of the product the user is browsing.
              * @property highlights Optional highlights based on recent reviews of the product.
@@ -71,7 +72,7 @@ sealed interface ReviewQualityCheckState : State {
             data class AnalysisPresent(
                 val productId: String,
                 val reviewGrade: Grade?,
-                val needsAnalysis: Boolean,
+                val analysisStatus: AnalysisStatus,
                 val adjustedRating: Float?,
                 val productUrl: String,
                 val highlights: SortedMap<HighlightType, List<String>>?,
@@ -90,6 +91,13 @@ sealed interface ReviewQualityCheckState : State {
                 val highlightsFadeVisible: Boolean =
                     highlights != null && showMoreButtonVisible &&
                         highlights.forCompactMode().entries.first().value.size > 1
+
+                /**
+                 * The status of the product analysis.
+                 */
+                enum class AnalysisStatus {
+                    NEEDS_ANALYSIS, REANALYZING, UP_TO_DATE, COMPLETED
+                }
             }
         }
     }

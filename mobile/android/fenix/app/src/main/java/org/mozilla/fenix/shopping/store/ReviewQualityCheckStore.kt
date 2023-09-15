@@ -5,6 +5,7 @@
 package org.mozilla.fenix.shopping.store
 
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 
 /**
  * Store for review quality check feature.
@@ -74,6 +75,26 @@ private fun mapStateForUpdateAction(
         ReviewQualityCheckAction.FetchProductAnalysis, ReviewQualityCheckAction.RetryProductAnalysis -> {
             state.mapIfOptedIn {
                 it.copy(productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Loading)
+            }
+        }
+
+        ReviewQualityCheckAction.ReanalyzeProduct -> {
+            state.mapIfOptedIn {
+                when (it.productReviewState) {
+                    is ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent -> {
+                        val productReviewState =
+                            it.productReviewState.copy(analysisStatus = AnalysisStatus.REANALYZING)
+                        it.copy(productReviewState = productReviewState)
+                    }
+
+                    is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
+                        it.copy(productReviewState = it.productReviewState.copy(isReanalyzing = true))
+                    }
+
+                    else -> {
+                        it
+                    }
+                }
             }
         }
     }

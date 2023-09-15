@@ -40,6 +40,7 @@ import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.forCompactMode
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -71,10 +72,22 @@ fun ProductAnalysis(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (productAnalysis.needsAnalysis) {
-            ReanalyzeCard(
-                onReanalyzeClick = onReanalyzeClick,
-            )
+        when (productAnalysis.analysisStatus) {
+            AnalysisStatus.NEEDS_ANALYSIS -> {
+                ReanalyzeCard(onReanalyzeClick = onReanalyzeClick)
+            }
+
+            AnalysisStatus.REANALYZING -> {
+                // TBD
+            }
+
+            AnalysisStatus.COMPLETED -> {
+                // TBD
+            }
+
+            AnalysisStatus.UP_TO_DATE -> {
+                // no-op
+            }
         }
 
         if (productAnalysis.reviewGrade != null) {
@@ -367,7 +380,7 @@ private fun ProductAnalysisPreview() {
                 productAnalysis = AnalysisPresent(
                     productId = "123",
                     reviewGrade = ReviewQualityCheckState.Grade.B,
-                    needsAnalysis = false,
+                    analysisStatus = AnalysisStatus.UP_TO_DATE,
                     adjustedRating = 3.6f,
                     productUrl = "123",
                     highlights = sortedMapOf(

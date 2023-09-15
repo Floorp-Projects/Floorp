@@ -51,6 +51,10 @@ class ReviewQualityCheckNetworkMiddleware(
                     store.dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState))
                 }
             }
+
+            ReviewQualityCheckAction.ReanalyzeProduct -> {
+                // Bug 1853311 - Integrate analyze and analysis_status
+            }
         }
     }
 }
