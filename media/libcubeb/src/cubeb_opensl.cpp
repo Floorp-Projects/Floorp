@@ -1852,7 +1852,7 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
     stm->lastPosition = msec;
   }
 
-  uint32_t samplerate = stm->user_output_rate;
+  uint64_t samplerate = stm->user_output_rate;
   uint32_t output_latency = stm->output_latency_ms;
 
   pthread_mutex_lock(&stm->mutex);
