@@ -313,7 +313,6 @@ where
         },
         CascadeMode::Unvisited { visited_rules } => {
             cascade.apply_prioritary_properties(&mut data);
-            cascade.fixup_font_stuff();
 
             if let Some(visited_rules) = visited_rules {
                 cascade.compute_visited_style_if_needed(
@@ -727,21 +726,48 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         if has_writing_mode {
             self.compute_writing_mode();
         }
+
+        // Compute font-family.
+        let has_font_family =
+            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontFamily);
+        let has_lang = self.apply_one_prioritary_property(data, PrioritaryPropertyId::XLang);
+        if has_lang {
+            self.recompute_initial_font_family_if_needed();
+        }
+        if has_font_family {
+            self.prioritize_user_fonts_if_needed();
+        }
+
+        // Compute font-size.
         if self.apply_one_prioritary_property(data, PrioritaryPropertyId::XTextScale) {
             self.unzoom_fonts_if_needed();
         }
-        let has_font_stuff =
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::XLang) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::MozMinFontSizeRatio) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::MathDepth) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontSize) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontSizeAdjust) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontWeight) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStretch) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStyle) |
-            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontFamily);
-        if has_font_stuff {
-            self.fixup_font_stuff();
+        let has_font_size =
+            self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontSize);
+        let has_math_depth =
+            self.apply_one_prioritary_property(data, PrioritaryPropertyId::MathDepth);
+        let has_min_font_size_ratio =
+            self.apply_one_prioritary_property(data, PrioritaryPropertyId::MozMinFontSizeRatio);
+
+        if has_math_depth && has_font_size {
+            self.recompute_math_font_size_if_needed();
+        }
+        if has_lang || has_font_family {
+            self.recompute_keyword_font_size_if_needed();
+        }
+        if has_font_size || has_min_font_size_ratio || has_lang || has_font_family {
+            self.constrain_font_size_if_needed();
+        }
+
+        // Compute the rest of the first-available-font-affecting properties.
+        self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontWeight);
+        self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStretch);
+        self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStyle);
+        self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontFamily);
+
+        // Compute font-size-adjust.
+        if self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontSizeAdjust) {
+            self.resolve_font_size_adjust_from_font_if_needed();
         }
 
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::ColorScheme);
@@ -1025,10 +1051,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         use crate::gecko_bindings::bindings;
         use crate::values::computed::font::FontFamily;
 
-        if !self.seen.contains(LonghandId::XLang) {
-            return;
-        }
-
         let builder = &mut self.context.builder;
         let default_font_type = {
             let font = builder.get_font();
@@ -1066,10 +1088,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     #[cfg(feature = "gecko")]
     fn prioritize_user_fonts_if_needed(&mut self) {
         use crate::gecko_bindings::bindings;
-
-        if !self.seen.contains(LonghandId::FontFamily) {
-            return;
-        }
 
         if static_prefs::pref!("browser.display.use_document_fonts") != 0 {
             return;
@@ -1139,14 +1157,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         use crate::gecko_bindings::bindings;
         use crate::values::generics::NonNegative;
 
-        if !self.seen.contains(LonghandId::XLang) &&
-            !self.seen.contains(LonghandId::FontFamily) &&
-            !self.seen.contains(LonghandId::MozMinFontSizeRatio) &&
-            !self.seen.contains(LonghandId::FontSize)
-        {
-            return;
-        }
-
         let builder = &mut self.context.builder;
         let min_font_size = {
             let font = builder.get_font();
@@ -1202,15 +1212,14 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         use crate::values::generics::NonNegative;
 
         // Do not do anything if font-size: math or math-depth is not set.
-        if !self.seen.contains(LonghandId::MathDepth) ||
-            !self.seen.contains(LonghandId::FontSize) ||
-            self.context
-                .builder
-                .get_font()
-                .clone_font_size()
-                .keyword_info
-                .kw !=
-                specified::FontSizeKeyword::Math
+        if self
+            .context
+            .builder
+            .get_font()
+            .clone_font_size()
+            .keyword_info
+            .kw !=
+            specified::FontSizeKeyword::Math
         {
             return;
         }
@@ -1333,12 +1342,10 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
 
     /// If font-size-adjust used the from-font value, we need to resolve it to an actual number
     /// using metrics from the font.
+    ///
+    /// TODO: Remove this, and make FontSizeAdjust::to_computed_value do this.
     fn resolve_font_size_adjust_from_font_if_needed(&mut self) {
         use crate::values::computed::font::{FontSizeAdjust, FontSizeAdjustFactor as Factor};
-
-        if !self.seen.contains(LonghandId::FontSizeAdjust) {
-            return;
-        }
 
         let font_metrics = |vertical| {
             let orient = if vertical {
@@ -1394,21 +1401,5 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         };
 
         self.context.builder.mutate_font().mFont.sizeAdjust = resolved
-    }
-
-    /// Various properties affect how font-size and font-family are computed.
-    ///
-    /// These need to be handled here, since relative lengths and ex / ch units
-    /// for late properties depend on these.
-    fn fixup_font_stuff(&mut self) {
-        #[cfg(feature = "gecko")]
-        {
-            self.recompute_initial_font_family_if_needed();
-            self.prioritize_user_fonts_if_needed();
-            self.recompute_keyword_font_size_if_needed();
-            self.recompute_math_font_size_if_needed();
-            self.constrain_font_size_if_needed();
-            self.resolve_font_size_adjust_from_font_if_needed()
-        }
     }
 }
