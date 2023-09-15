@@ -25,27 +25,6 @@
 
 namespace js {
 
-class SrcNote;
-
-/*
- * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
- * given pc in a script. We use the script->code pointer to tag the cache,
- * instead of the script address itself, so that source notes are always found
- * by offset from the bytecode with which they were generated.
- */
-struct GSNCache {
-  typedef HashMap<jsbytecode*, const SrcNote*, PointerHasher<jsbytecode*>,
-                  SystemAllocPolicy>
-      Map;
-
-  jsbytecode* code;
-  Map map;
-
-  GSNCache() : code(nullptr) {}
-
-  void purge();
-};
-
 struct EvalCacheEntry {
   JSLinearString* str;
   JSScript* script;
@@ -516,7 +495,6 @@ class RuntimeCaches {
  public:
   MegamorphicCache megamorphicCache;
   UniquePtr<MegamorphicSetPropCache> megamorphicSetPropCache;
-  GSNCache gsnCache;
   UncompressedSourceCache uncompressedSourceCache;
   EvalCache evalCache;
   StringToAtomCache stringToAtomCache;
@@ -551,7 +529,6 @@ class RuntimeCaches {
 
   void purge() {
     purgeForCompaction();
-    gsnCache.purge();
     uncompressedSourceCache.purge();
     purgeStencils();
   }

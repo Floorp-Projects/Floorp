@@ -2212,14 +2212,6 @@ extern JS::UniqueChars FormatIntroducedFilename(const char* filename,
                                                 uint32_t lineno,
                                                 const char* introducer);
 
-struct GSNCache;
-
-const js::SrcNote* GetSrcNote(GSNCache& cache, JSScript* script,
-                              jsbytecode* pc);
-
-extern const js::SrcNote* GetSrcNote(JSContext* cx, JSScript* script,
-                                     jsbytecode* pc);
-
 extern jsbytecode* LineNumberToPC(JSScript* script, unsigned lineno);
 
 extern JS_PUBLIC_API unsigned GetScriptLineExtent(JSScript* script);

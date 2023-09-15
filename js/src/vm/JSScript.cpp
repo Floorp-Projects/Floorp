@@ -2623,73 +2623,6 @@ void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
 
-static const uint32_t GSN_CACHE_THRESHOLD = 100;
-
-void GSNCache::purge() {
-  code = nullptr;
-  map.clearAndCompact();
-}
-
-const js::SrcNote* js::GetSrcNote(GSNCache& cache, JSScript* script,
-                                  jsbytecode* pc) {
-  size_t target = pc - script->code();
-  if (target >= script->length()) {
-    return nullptr;
-  }
-
-  if (cache.code == script->code()) {
-    GSNCache::Map::Ptr p = cache.map.lookup(pc);
-    return p ? p->value() : nullptr;
-  }
-
-  size_t offset = 0;
-  const js::SrcNote* result;
-  for (SrcNoteIterator iter(script->notes());; ++iter) {
-    const auto* sn = *iter;
-    if (sn->isTerminator()) {
-      result = nullptr;
-      break;
-    }
-    offset += sn->delta();
-    if (offset == target && sn->isGettable()) {
-      result = sn;
-      break;
-    }
-  }
-
-  if (cache.code != script->code() && script->length() >= GSN_CACHE_THRESHOLD) {
-    unsigned nsrcnotes = 0;
-    for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
-      const auto* sn = *iter;
-      if (sn->isGettable()) {
-        ++nsrcnotes;
-      }
-    }
-    if (cache.code) {
-      cache.map.clear();
-      cache.code = nullptr;
-    }
-    if (cache.map.reserve(nsrcnotes)) {
-      pc = script->code();
-      for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
-        const auto* sn = *iter;
-        pc += sn->delta();
-        if (sn->isGettable()) {
-          cache.map.putNewInfallible(pc, sn);
-        }
-      }
-      cache.code = script->code();
-    }
-  }
-
-  return result;
-}
-
-const js::SrcNote* js::GetSrcNote(JSContext* cx, JSScript* script,
-                                  jsbytecode* pc) {
-  return GetSrcNote(cx->caches().gsnCache, script, pc);
-}
-
 unsigned js::PCToLineNumber(unsigned startLine,
                             JS::LimitedColumnNumberZeroOrigin startCol,
                             SrcNote* notes, jsbytecode* code, jsbytecode* pc,
@@ -3524,7 +3457,6 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
     switch (type) {
       case SrcNoteType::Null:
-      case SrcNoteType::AssignOp:
       case SrcNoteType::Breakpoint:
       case SrcNoteType::StepSep:
       case SrcNoteType::XDelta:
