@@ -57,12 +57,6 @@ void __fastcall BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
 
 BOOL WINAPI ApiSetQueryApiSetPresence(PCUNICODE_STRING, PBOOLEAN);
 
-#if (_WIN32_WINNT < 0x0602)
-BOOL WINAPI
-SetProcessMitigationPolicy(PROCESS_MITIGATION_POLICY aMitigationPolicy,
-                           PVOID aBuffer, SIZE_T aBufferLen);
-#endif  // (_WIN32_WINNT < 0x0602)
-
 #define RtlGenRandom SystemFunction036
 extern "C" BOOLEAN NTAPI RtlGenRandom(PVOID aRandomBuffer,
                                       ULONG aRandomBufferLength);
