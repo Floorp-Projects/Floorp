@@ -65,6 +65,7 @@ toolbar[brighttext]:not(:-moz-lwtheme) {
 
   #navigator-toolbox:not(:-moz-lwtheme) {
     background-color: ActiveCaption;
+    background-image: -moz-themed(-moz-window-titlebar);
     color: CaptionText;
 
     &:-moz-window-inactive {
