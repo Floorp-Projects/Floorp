@@ -34,6 +34,9 @@
 #include "DeviceAttachmentsD3D11.h"
 #include "BlendShaderConstants.h"
 
+#include <versionhelpers.h>  // For IsWindows8OrGreater
+#include <winsdkver.h>
+
 namespace mozilla {
 
 using namespace gfx;
@@ -161,13 +164,15 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
     hr = dxgiFactory->QueryInterface(
         (IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
 
+#if (_WIN32_WINDOWS_MAXVER >= 0x0A00)
     if (gfxVars::UseDoubleBufferingWithCompositor() && SUCCEEDED(hr) &&
         dxgiFactory2) {
       // DXGI_SCALING_NONE is not available on Windows 7 with Platform Update.
       // This looks awful for things like the awesome bar and browser window
       // resizing so we don't use a flip buffer chain here. When using
       // EFFECT_SEQUENTIAL it looks like windows doesn't stretch the surface
-      // when resizing.
+      // when resizing. We chose not to run this before Windows 10 because it
+      // appears sometimes this breaks our ability to test ASAP compositing.
       RefPtr<IDXGISwapChain1> swapChain;
 
       DXGI_SWAP_CHAIN_DESC1 swapDesc;
@@ -206,7 +211,9 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
 
     // In some configurations double buffering may have failed with an
     // ACCESS_DENIED error.
-    if (!mSwapChain) {
+    if (!mSwapChain)
+#endif
+    {
       if (mWidget->AsWindows()->GetCompositorHwnd()) {
         // Destroy compositor window.
         mWidget->AsWindows()->DestroyCompositorWindow();

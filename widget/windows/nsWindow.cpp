@@ -215,6 +215,17 @@
 #  define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
+// Win 8.1+ (_WIN32_WINNT_WINBLUE)
+#if !defined(WM_DPICHANGED)
+#  define WM_DPICHANGED 0x02E0
+#endif
+
+// Win 8+ (_WIN32_WINNT_WIN8)
+#if !defined(EVENT_OBJECT_CLOAKED)
+#  define EVENT_OBJECT_CLOAKED 0x8017
+#  define EVENT_OBJECT_UNCLOAKED 0x8018
+#endif
+
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/InputAPZContext.h"

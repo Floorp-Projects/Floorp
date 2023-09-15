@@ -12,6 +12,8 @@
 // LogSeverity, defined by setupapi.h to DWORD, messes with other code.
 #undef LogSeverity
 
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WINBLUE
 #include <emi.h>
 
 using namespace mozilla;
