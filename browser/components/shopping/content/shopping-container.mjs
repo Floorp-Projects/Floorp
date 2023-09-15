@@ -47,6 +47,7 @@ export class ShoppingContainer extends MozLitElement {
       unanalyzedProductEl: "unanalyzed-product-card",
       shoppingMessageBarEl: "shopping-message-bar",
       recommendedAdEl: "recommended-ad",
+      loadingEl: "#loading-wrapper",
     };
   }
 
@@ -226,12 +227,24 @@ export class ShoppingContainer extends MozLitElement {
     return null;
   }
 
-  getLoadingTemplate() {
+  /**
+   * @param {object?} options
+   * @param {boolean?} options.animate = true
+   *        Whether to animate the loading state. Defaults to true.
+   *        There will be no animation for users who prefer reduced motion,
+   *        irrespective of the value of this option.
+   */
+  getLoadingTemplate({ animate = true } = {}) {
     /* Due to limitations with aria-busy for certain screen readers
      * (see Bug 1682063), mark loading container as a pseudo image and
      * use aria-label as a workaround. */
     return html`
-      <div id="loading-wrapper" data-l10n-id="shopping-a11y-loading" role="img">
+      <div
+        id="loading-wrapper"
+        data-l10n-id="shopping-a11y-loading"
+        role="img"
+        ${animate ? "class='animate'" : ""}
+      >
         <div class="loading-box medium"></div>
         <div class="loading-box medium"></div>
         <div class="loading-box large"></div>
@@ -293,9 +306,7 @@ export class ShoppingContainer extends MozLitElement {
       content = html``;
       hideFooter = true;
     } else if (this.isOffline) {
-      content = html`<shopping-message-bar
-        type="offline"
-      ></shopping-message-bar>`;
+      content = this.getLoadingTemplate({ animate: false });
       hideFooter = true;
     } else if (!this.data) {
       content = this.getLoadingTemplate();

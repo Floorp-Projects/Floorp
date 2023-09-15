@@ -159,10 +159,10 @@ function verifyFooterVisible(shoppingContainer) {
 }
 
 function verifyFooterHidden(shoppingContainer) {
-  ok(!shoppingContainer.settingsEl, "Got the shopping-settings element");
+  ok(!shoppingContainer.settingsEl, "Do not render shopping-settings element");
   ok(
     !shoppingContainer.analysisExplainerEl,
-    "Got the analysis-explainer element"
+    "Do not render the analysis-explainer element"
   );
 }
 
@@ -181,6 +181,7 @@ function getAnalysisDetails(browser, data) {
       "highlightsEl",
       "settingsEl",
       "shoppingMessageBarEl",
+      "loadingEl",
     ]) {
       returnState[el] =
         !!shoppingContainer[el] &&

@@ -17,7 +17,6 @@ class ShoppingMessageBar extends MozLitElement {
       "product-not-available-reported",
       () => this.getProductNotAvailableReportedTemplate(),
     ],
-    ["offline", () => this.getOfflineWarningTemplate()],
     ["analysis-in-progress", () => this.getAnalysisInProgressTemplate()],
     ["page-not-supported", () => this.pageNotSupportedTemplate()],
   ]);
@@ -161,20 +160,6 @@ class ShoppingMessageBar extends MozLitElement {
         ></strong>
         <span
           data-l10n-id="shopping-message-bar-analysis-in-progress-message"
-        ></span>
-      </article>
-    </message-bar>`;
-  }
-
-  getOfflineWarningTemplate() {
-    return html` <message-bar type="warning">
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-warning-offline-title"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-warning-offline-message"
         ></span>
       </article>
     </message-bar>`;
