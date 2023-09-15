@@ -1997,9 +1997,10 @@ void DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity,
 }
 
 void DrawTargetSkia::PopLayer() {
+  MOZ_RELEASE_ASSERT(!mPushedLayers.empty());
+
   MarkChanged();
 
-  MOZ_ASSERT(!mPushedLayers.empty());
   const PushedLayer& layer = mPushedLayers.back();
 
   mCanvas->restore();
