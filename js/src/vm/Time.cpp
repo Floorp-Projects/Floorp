@@ -48,10 +48,6 @@ int64_t PRMJ_Now() {
 
 #else
 
-#  if _WIN32_WINNT < _WIN32_WINNT_WIN8
-extern "C" WINBASEAPI void WINAPI GetSystemTimePreciseAsFileTime(LPFILETIME);
-#  endif
-
 // Returns the number of microseconds since the Unix epoch.
 static int64_t FileTimeToUnixMicroseconds(const FILETIME& ft) {
   // Get the time in 100ns intervals.
