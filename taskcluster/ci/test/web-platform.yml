@@ -252,6 +252,7 @@ web-platform-tests-canvas:
             windows.*: 2
             .*tsan.*: 2
             linux.*/debug: 2
+            linux.*asan.*: 2
             default: 1
     max-run-time:
         by-test-platform:
