@@ -3956,6 +3956,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
                               Register scratch, uint32_t superDepth,
                               Label* label, bool onSuccess);
 
+  // Same as branchWasmSTVIsSubtype, but looks up a dynamic position in the
+  // super type vector.
+  //
+  // `scratch` is always required. `subSTV` and `superDepth` are clobbered.
+  // `superSTV` is preserved.
+  void branchWasmSTVIsSubtypeDynamicDepth(Register subSTV, Register superSTV,
+                                          Register superDepth, Register scratch,
+                                          Label* label, bool onSuccess);
+
   // Branch if the wasm anyref `src` is or is not the null value.
   void branchWasmAnyRefIsNull(bool isNull, Register src, Label* label);
   // Branch if the wasm anyref `src` is or is not an I31.

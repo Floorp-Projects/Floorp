@@ -163,7 +163,7 @@ const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,
 }
 
 CallIndirectId CallIndirectId::forAsmJSFunc() {
-  return CallIndirectId(CallIndirectIdKind::AsmJS, 0);
+  return CallIndirectId(CallIndirectIdKind::AsmJS);
 }
 
 CallIndirectId CallIndirectId::forFunc(const ModuleEnvironment& moduleEnv,
@@ -188,13 +188,19 @@ CallIndirectId CallIndirectId::forFuncType(const ModuleEnvironment& moduleEnv,
     return CallIndirectId::forAsmJSFunc();
   }
 
-  const FuncType& funcType = moduleEnv.types->type(funcTypeIndex).funcType();
+  const TypeDef& typeDef = moduleEnv.types->type(funcTypeIndex);
+  const FuncType& funcType = typeDef.funcType();
+  CallIndirectId callIndirectId;
   if (funcType.hasImmediateTypeId()) {
-    return CallIndirectId(CallIndirectIdKind::Immediate,
-                          funcType.immediateTypeId());
+    callIndirectId.kind_ = CallIndirectIdKind::Immediate;
+    callIndirectId.immediate_ = funcType.immediateTypeId();
+  } else {
+    callIndirectId.kind_ = CallIndirectIdKind::Global;
+    callIndirectId.global_.instanceDataOffset_ =
+        moduleEnv.offsetOfTypeDef(funcTypeIndex);
+    callIndirectId.global_.hasSuperType_ = typeDef.superTypeDef() != nullptr;
   }
-  return CallIndirectId(CallIndirectIdKind::Global,
-                        moduleEnv.offsetOfTypeDef(funcTypeIndex));
+  return callIndirectId;
 }
 
 CalleeDesc CalleeDesc::function(uint32_t funcIndex) {

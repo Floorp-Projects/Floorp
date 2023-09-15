@@ -626,20 +626,39 @@ struct TryNote {
 WASM_DECLARE_CACHEABLE_POD(TryNote);
 WASM_DECLARE_POD_VECTOR(TryNote, TryNoteVector)
 
+enum class CallIndirectIdKind {
+  // Generate a no-op signature check prologue, asm.js function tables are
+  // homogenous.
+  AsmJS,
+  // Use a machine code immediate for the signature check, only works on simple
+  // function types, without super types, and without siblings in their
+  // recursion group.
+  Immediate,
+  // Use the full type definition and subtyping machinery when performing the
+  // signature check.
+  Global,
+  // Don't generate any signature check prologue, for functions that cannot be
+  // stored in tables.
+  None
+};
+
 // CallIndirectId describes how to compile a call_indirect and matching
 // signature check in the function prologue for a given function type.
 
-enum class CallIndirectIdKind { AsmJS, Immediate, Global, None };
-
 class CallIndirectId {
   CallIndirectIdKind kind_;
-  size_t bits_;
+  union {
+    size_t immediate_;
+    struct {
+      size_t instanceDataOffset_;
+      bool hasSuperType_;
+    } global_;
+  };
 
-  CallIndirectId(CallIndirectIdKind kind, size_t bits)
-      : kind_(kind), bits_(bits) {}
+  explicit CallIndirectId(CallIndirectIdKind kind) : kind_(kind) {}
 
  public:
-  CallIndirectId() : kind_(CallIndirectIdKind::None), bits_(0) {}
+  CallIndirectId() : kind_(CallIndirectIdKind::None) {}
 
   // Get a CallIndirectId for an asm.js function which will generate a no-op
   // checked call prologue.
@@ -656,13 +675,23 @@ class CallIndirectId {
   CallIndirectIdKind kind() const { return kind_; }
   bool isGlobal() const { return kind_ == CallIndirectIdKind::Global; }
 
+  // The bit-packed representation of simple function types. See FuncType in
+  // WasmTypeDef.h for more information.
   uint32_t immediate() const {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Immediate);
-    return bits_;
+    return immediate_;
   }
+
+  // The offset of the TypeDefInstanceData for the function type.
   uint32_t instanceDataOffset() const {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Global);
-    return bits_;
+    return global_.instanceDataOffset_;
+  }
+
+  // Whether the TypeDef has any super types.
+  bool hasSuperType() const {
+    MOZ_ASSERT(kind_ == CallIndirectIdKind::Global);
+    return global_.hasSuperType_;
   }
 };
 
