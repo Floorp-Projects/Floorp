@@ -56,7 +56,12 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
     log::info!("Initializing WGPU server");
     let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
     let backends = if backends_pref.is_empty() {
-        wgt::Backends::PRIMARY
+        #[cfg(windows)] {
+            wgt::Backends::DX12
+        }
+        #[cfg(not(windows))] {
+            wgt::Backends::PRIMARY
+        }
     } else {
         log::info!(
             "Selecting backends based on dom.webgpu.wgpu-backend pref: {:?}",
