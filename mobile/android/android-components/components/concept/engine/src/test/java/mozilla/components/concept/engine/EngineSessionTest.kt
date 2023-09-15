@@ -811,15 +811,22 @@ class EngineSessionTest {
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.BYPASS_CLASSIFIER).value))
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI).value))
         assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.ALLOW_ADDITIONAL_HEADERS).value))
+        assertTrue(LoadUrlFlags.all().contains(LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL).value))
 
         val flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
         assertTrue(flags.contains(LoadUrlFlags.EXTERNAL))
+        assertFalse(flags.contains(LoadUrlFlags.NONE))
         assertFalse(flags.contains(LoadUrlFlags.ALLOW_POPUPS))
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_CACHE))
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_CLASSIFIER))
         assertFalse(flags.contains(LoadUrlFlags.BYPASS_PROXY))
         assertFalse(flags.contains(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI))
         assertFalse(flags.contains(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY))
+        assertFalse(flags.contains(LoadUrlFlags.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE))
+        assertFalse(flags.contains(LoadUrlFlags.ALLOW_ADDITIONAL_HEADERS))
+        assertFalse(flags.contains(LoadUrlFlags.ALLOW_JAVASCRIPT_URL))
     }
 
     @Test

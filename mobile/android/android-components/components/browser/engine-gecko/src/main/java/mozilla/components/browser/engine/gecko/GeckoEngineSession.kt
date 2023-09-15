@@ -26,6 +26,7 @@ import mozilla.components.browser.engine.gecko.shopping.Highlight
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_ADDITIONAL_HEADERS
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.EXTERNAL
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE
@@ -193,8 +194,13 @@ class GeckoEngineSession(
             .flags(flags.getGeckoFlags())
 
         if (additionalHeaders != null) {
+            val headerFilter = if (flags.contains(ALLOW_ADDITIONAL_HEADERS)) {
+                GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE
+            } else {
+                GeckoSession.HEADER_FILTER_CORS_SAFELISTED
+            }
             loader.additionalHeaders(additionalHeaders)
-                .headerFilter(GeckoSession.HEADER_FILTER_CORS_SAFELISTED)
+                .headerFilter(headerFilter)
         }
 
         if (parent != null) {
@@ -1544,8 +1550,16 @@ class GeckoEngineSession(
  * Provides all gecko flags ignoring flags that only exists on AC.
  **/
 @VisibleForTesting
-internal fun EngineSession.LoadUrlFlags.getGeckoFlags(): Int = if (contains(ALLOW_JAVASCRIPT_URL)) {
-    value - ALLOW_JAVASCRIPT_URL
-} else {
-    value
+internal fun EngineSession.LoadUrlFlags.getGeckoFlags(): Int {
+    var newValue = value
+
+    if (contains(ALLOW_ADDITIONAL_HEADERS)) {
+        newValue -= ALLOW_ADDITIONAL_HEADERS
+    }
+
+    if (contains(ALLOW_JAVASCRIPT_URL)) {
+        newValue -= ALLOW_JAVASCRIPT_URL
+    }
+
+    return newValue
 }
