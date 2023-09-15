@@ -16,7 +16,7 @@
 #include "putilimp.h"
 #include "number_decimalquantity.h"
 #include "number_roundingutils.h"
-#include "double-conversion.h"
+#include "double-conversion/double-conversion.h"
 #include "charstr.h"
 #include "number_utils.h"
 #include "uassert.h"
@@ -26,8 +26,8 @@ using namespace icu;
 using namespace icu::number;
 using namespace icu::number::impl;
 
-using icu::double_conversion::DoubleToStringConverter;
-using icu::double_conversion::StringToDoubleConverter;
+using double_conversion::DoubleToStringConverter;
+using double_conversion::StringToDoubleConverter;
 
 namespace {
 

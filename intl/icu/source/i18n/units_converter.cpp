@@ -7,7 +7,7 @@
 
 #include "charstr.h"
 #include "cmemory.h"
-#include "double-conversion-string-to-double.h"
+#include "double-conversion/string-to-double.h"
 #include "measunit_impl.h"
 #include "putilimp.h"
 #include "uassert.h"
@@ -106,7 +106,7 @@ namespace {
 
 /* Helpers */
 
-using icu::double_conversion::StringToDoubleConverter;
+using double_conversion::StringToDoubleConverter;
 
 // TODO: Make this a shared-utility function.
 // Returns `double` from a scientific number(i.e. "1", "2.01" or "3.09E+4")

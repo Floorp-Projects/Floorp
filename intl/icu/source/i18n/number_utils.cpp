@@ -17,7 +17,7 @@
 #include "charstr.h"
 #include "decContext.h"
 #include "decNumber.h"
-#include "double-conversion.h"
+#include "double-conversion/double-conversion.h"
 #include "fphdlimp.h"
 #include "uresimp.h"
 #include "ureslocs.h"
@@ -26,7 +26,7 @@ using namespace icu;
 using namespace icu::number;
 using namespace icu::number::impl;
 
-using icu::double_conversion::DoubleToStringConverter;
+using double_conversion::DoubleToStringConverter;
 
 
 namespace {
