@@ -445,12 +445,15 @@ const SHOPPING_MICROSURVEY = {
       content: {
         position: "split",
         layout: "survey",
-        title: "Help improve Firefox",
-        subtitle:
-          "How satisfied are you with the review checker experience in Firefox?",
+        title: {
+          string_id: "shopping-survey-headline",
+        },
+        subtitle: {
+          string_id: "shopping-survey-question-one",
+        },
         primary_button: {
           label: {
-            raw: "Next",
+            string_id: "shopping-survey-next-button-label",
             paddingBlock: "5px",
             marginBlock: "0px 10px",
           },
@@ -481,35 +484,35 @@ const SHOPPING_MICROSURVEY = {
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Very satisfied" },
+              label: { string_id: "shopping-survey-q1-radio-1-label" },
             },
             {
               id: "radio-2",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Satisfied" },
+              label: { string_id: "shopping-survey-q1-radio-2-label" },
             },
             {
               id: "radio-3",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Neutral" },
+              label: { string_id: "shopping-survey-q1-radio-3-label" },
             },
             {
               id: "radio-4",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Unsatisfied" },
+              label: { string_id: "shopping-survey-q1-radio-4-label" },
             },
             {
               id: "radio-5",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Very unsatisfied" },
+              label: { string_id: "shopping-survey-q1-radio-5-label" },
             },
           ],
         },
@@ -521,12 +524,15 @@ const SHOPPING_MICROSURVEY = {
       content: {
         position: "split",
         layout: "survey",
-        title: "Help improve Firefox",
-        subtitle:
-          "Does the review checker make it easier for you to make purchase decisions?",
+        title: {
+          string_id: "shopping-survey-headline",
+        },
+        subtitle: {
+          string_id: "shopping-survey-question-two",
+        },
         primary_button: {
           label: {
-            raw: "Submit",
+            string_id: "shopping-survey-submit-button-label",
             paddingBlock: "5px",
             marginBlock: "0px 10px",
           },
@@ -557,21 +563,21 @@ const SHOPPING_MICROSURVEY = {
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "Yes" },
+              label: { string_id: "shopping-survey-q2-radio-1-label" },
             },
             {
               id: "radio-2",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "No" },
+              label: { string_id: "shopping-survey-q2-radio-2-label" },
             },
             {
               id: "radio-3",
               type: "radio",
               group: "radios",
               defaultValue: false,
-              label: { raw: "I don’t know" },
+              label: { string_id: "shopping-survey-q2-radio-3-label" },
             },
           ],
         },
