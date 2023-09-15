@@ -885,10 +885,6 @@ var View = {
         fluentName = "about-processes-utility-actor-windows-utils";
         break;
 
-      case "windowsFileDialog":
-        fluentName = "about-processes-utility-actor-windows-file-dialog";
-        break;
-
       default:
         fluentName = "about-processes-utility-actor-unknown";
         break;

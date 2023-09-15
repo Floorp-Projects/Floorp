@@ -10,11 +10,6 @@
 #include <shtypes.h>
 #include <winerror.h>
 #include "WinUtils.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/UtilityProcessManager.h"
-#include "mozilla/Logging.h"
-#include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla::widget::filedialog {
 
@@ -84,48 +79,33 @@ namespace {
 static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
   NS_ENSURE_TRUE(aItem, E_INVALIDARG);
 
-  mozilla::UniquePtr<wchar_t, CoTaskMemFreeDeleter> str;
-  HRESULT const hr =
-      aItem->GetDisplayName(SIGDN_FILESYSPATH, getter_Transfers(str));
+  LPWSTR str = nullptr;
+  auto const onExit = MakeScopeExit([&]() { CoTaskMemFree(str); });
+
+  HRESULT const hr = aItem->GetDisplayName(SIGDN_FILESYSPATH, &str);
   if (SUCCEEDED(hr)) {
-    aResultString.Assign(str.get());
+    aResultString.Assign(str);
   }
   return hr;
 }
 }  // namespace
 
-#define MOZ_ENSURE_HRESULT_OK(call_)            \
-  do {                                          \
-    HRESULT const _tmp_hr_ = (call_);           \
-    if (FAILED(_tmp_hr_)) return Err(_tmp_hr_); \
+#define MOZ_ENSURE_HRESULT_OK(call_)          \
+  do {                                        \
+    HRESULT const hr = (call_);               \
+    if (FAILED(hr)) return Err(nsresult(hr)); \
   } while (0)
 
-mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(
-    FileDialogType type) {
-  RefPtr<IFileDialog> dialog;
-
-  CLSID const clsid = type == FileDialogType::Open ? CLSID_FileOpenDialog
-                                                   : CLSID_FileSaveDialog;
-  HRESULT const hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER,
-                                      IID_IFileDialog, getter_AddRefs(dialog));
-  MOZ_ENSURE_HRESULT_OK(hr);
-
-  return std::move(dialog);
-}
-
-HRESULT ApplyCommands(::IFileDialog* dialog,
-                      nsTArray<Command> const& commands) {
+nsresult ApplyCommands(::IFileDialog* dialog,
+                       nsTArray<Command> const& commands) {
   Applicator applicator{.dialog = dialog};
   for (auto const& cmd : commands) {
-    HRESULT const hr = applicator.Visit(cmd);
-    if (FAILED(hr)) {
-      return hr;
-    }
+    MOZ_ENSURE_HRESULT_OK(applicator.Visit(cmd));
   }
-  return S_OK;
+  return NS_OK;
 }
 
-mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
+mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
   FILEOPENDIALOGOPTIONS fos;
   MOZ_ENSURE_HRESULT_OK(dialog->GetOptions(&fos));
 
@@ -140,7 +120,7 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
     RefPtr<IShellItem> item;
     MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
     if (!item) {
-      return Err(E_FAIL);
+      return Err(nsresult::NS_ERROR_FAILURE);
     }
 
     nsAutoString path;
@@ -154,13 +134,13 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
   dialog->QueryInterface(IID_IFileOpenDialog, getter_AddRefs(openDlg));
   if (!openDlg) {
     MOZ_ASSERT(false, "a file-save dialog was given FOS_ALLOWMULTISELECT?");
-    return Err(E_UNEXPECTED);
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   RefPtr<IShellItemArray> items;
   MOZ_ENSURE_HRESULT_OK(openDlg->GetResults(getter_AddRefs(items)));
   if (!items) {
-    return Err(E_FAIL);
+    return Err(NS_ERROR_FAILURE);
   }
 
   nsTArray<nsString> paths;
@@ -180,7 +160,7 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
   return Results(std::move(paths), std::move(index));
 }
 
-mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
+mozilla::Result<nsString, nsresult> GetFolderResults(::IFileDialog* dialog) {
   RefPtr<IShellItem> item;
   MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
   if (!item) {
@@ -188,7 +168,7 @@ mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
     // might be due to misbehaving shell extensions?
     MOZ_ASSERT(false,
                "unexpected lack of item: was `Show`'s return value checked?");
-    return Err(E_FAIL);
+    return Err(NS_ERROR_FAILURE);
   }
 
   // If the user chose a Win7 Library, resolve to the library's
@@ -212,91 +192,5 @@ mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
 }
 
 #undef MOZ_ENSURE_HRESULT_OK
-
-namespace detail {
-void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
-                        ipc::HasResultCodes::Result aCode,
-                        const char* aReason) {
-  LogLevel const level = [&]() {
-    switch (aCode) {
-      case ipc::HasResultCodes::MsgProcessed:
-        // Normal operation. (We probably never actually get this code.)
-        return LogLevel::Verbose;
-
-      case ipc::HasResultCodes::MsgDropped:
-        return LogLevel::Verbose;
-
-      default:
-        return LogLevel::Error;
-    }
-  }();
-
-  // Processing errors are sometimes unhelpfully formatted. We can't fix that
-  // directly because the unhelpful formatting has made its way to telemetry
-  // (table `telemetry.socorro_crash`, column `ipc_channel_error`) and is being
-  // aggregated on. :(
-  nsCString reason(aReason);
-  if (reason.Last() == '\n') {
-    reason.Truncate(reason.Length() - 1);
-  }
-
-  if (MOZ_LOG_TEST(aModule, level)) {
-    const char* const side = [&]() {
-      switch (aCaller->GetSide()) {
-        case ipc::ParentSide:
-          return "parent";
-        case ipc::ChildSide:
-          return "child";
-        case ipc::UnknownSide:
-          return "unknown side";
-        default:
-          return "<illegal value>";
-      }
-    }();
-
-    const char* const errorStr = [&]() {
-      switch (aCode) {
-        case ipc::HasResultCodes::MsgProcessed:
-          return "Processed";
-        case ipc::HasResultCodes::MsgDropped:
-          return "Dropped";
-        case ipc::HasResultCodes::MsgNotKnown:
-          return "NotKnown";
-        case ipc::HasResultCodes::MsgNotAllowed:
-          return "NotAllowed";
-        case ipc::HasResultCodes::MsgPayloadError:
-          return "PayloadError";
-        case ipc::HasResultCodes::MsgProcessingError:
-          return "ProcessingError";
-        case ipc::HasResultCodes::MsgRouteError:
-          return "RouteError";
-        case ipc::HasResultCodes::MsgValueError:
-          return "ValueError";
-        default:
-          return "<illegal error type>";
-      }
-    }();
-
-    MOZ_LOG(aModule, level,
-            ("%s [%s]: IPC error (%s): %s", aCaller->GetProtocolName(), side,
-             errorStr, reason.get()));
-  }
-
-  if (level == LogLevel::Error) {
-    // kill the child process...
-    if (aCaller->GetSide() == ipc::ParentSide) {
-      // ... which isn't us
-      ipc::UtilityProcessManager::GetSingleton()->CleanShutdown(
-          ipc::SandboxingKind::WINDOWS_FILE_DIALOG);
-    } else {
-      // ... which (presumably) is us
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::ipc_channel_error, reason);
-
-      MOZ_CRASH("IPC error");
-    }
-  }
-}
-}  // namespace detail
 
 }  // namespace mozilla::widget::filedialog

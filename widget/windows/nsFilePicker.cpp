@@ -9,41 +9,30 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <cderr.h>
-#include <winerror.h>
-#include <utility>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BackgroundHangMonitor.h"
-#include "mozilla/Logging.h"
-#include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
-#include "nsCRT.h"
-#include "nsEnumeratorUtils.h"
-#include "nsNetUtil.h"
-#include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
+#include "nsNetUtil.h"
+#include "nsWindow.h"
+#include "nsEnumeratorUtils.h"
+#include "nsCRT.h"
 #include "nsString.h"
 #include "nsToolkit.h"
-#include "nsWindow.h"
 #include "WinUtils.h"
+#include "nsPIDOMWindow.h"
 
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
-#include "mozilla/widget/filedialog/WinFileDialogParent.h"
 
-using mozilla::Maybe;
-using mozilla::Result;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
 
 UniquePtr<char16_t[], nsFilePicker::FreeDeleter>
     nsFilePicker::sLastUsedUnicodeDirectory;
-
-using mozilla::LogLevel;
-static mozilla::LazyLogModule sLogFileDialog("FileDialog");
 
 #define MAX_EXTENSION_LENGTH 10
 
@@ -89,221 +78,6 @@ NS_IMETHODIMP nsFilePicker::Init(mozIDOMWindowProxy* aParent,
   return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
-namespace mozilla::detail {
-namespace {
-// Commit crimes against asynchrony.
-//
-// More specifically, drive a MozPromise to completion (resolution or rejection)
-// on the main thread. This is only even vaguely acceptable in the context of
-// the Windows file picker because a) this is essentially what `IFileDialog`'s
-// `ShowModal()` will do if we open it in-process anyway, and b) there exist
-// concrete plans [0] to remove this, making the Windows file picker fully
-// asynchronous.
-//
-// Do not take this as a model for use in other contexts; SpinEventLoopUntil
-// alone is bad enough.
-//
-// [0] Although see, _e.g._, http://www.thecodelesscode.com/case/234.
-//
-template <typename T, typename E, bool B>
-static auto ImmorallyDrivePromiseToCompletion(
-    RefPtr<MozPromise<T, E, B>>&& promise) -> Result<T, E> {
-  Maybe<Result<T, E>> val = Nothing();
-
-  AssertIsOnMainThread();
-  promise->Then(
-      mozilla::GetMainThreadSerialEventTarget(), "DrivePromiseToCompletion",
-      [&](T ret) { val = Some(std::move(ret)); },
-      [&](E error) { val = Some(Err(error)); });
-
-  SpinEventLoopUntil("DrivePromiseToCompletion"_ns,
-                     [&]() -> bool { return val.isSome(); });
-
-  MOZ_RELEASE_ASSERT(val.isSome());
-  return val.extract();
-}
-
-// Boilerplate for remotely showing a file dialog.
-template <typename ActionType,
-          typename ReturnType = typename decltype(std::declval<ActionType>()(
-              nullptr))::element_type::ResolveValueType>
-static auto ShowRemote(ActionType&& action)
-    -> RefPtr<MozPromise<ReturnType, HRESULT, false>> {
-  using RetPromise = MozPromise<ReturnType, HRESULT, false>;
-
-  constexpr static const auto fail = []() {
-    return RetPromise::CreateAndReject(E_FAIL, __PRETTY_FUNCTION__);
-  };
-
-  auto mgr = mozilla::ipc::UtilityProcessManager::GetSingleton();
-  if (!mgr) {
-    MOZ_ASSERT(false);
-    return fail();
-  }
-
-  auto wfda = mgr->CreateWinFileDialogAsync();
-  if (!wfda) {
-    return fail();
-  }
-
-  return wfda->Then(
-      mozilla::GetMainThreadSerialEventTarget(),
-      "nsFilePicker ShowRemote acquire",
-      [action = std::forward<ActionType>(action)](
-          filedialog::ProcessProxy p) -> RefPtr<RetPromise> {
-        MOZ_LOG(sLogFileDialog, LogLevel::Info,
-                ("nsFilePicker ShowRemote first callback: p = [%p]", p.get()));
-        // false positive: not actually redundant
-        // NOLINTNEXTLINE(readability-redundant-smartptr-get)
-        return action(p.get())->Then(
-            mozilla::GetMainThreadSerialEventTarget(),
-            "nsFilePicker ShowRemote call",
-            [p](ReturnType ret) {
-              return RetPromise::CreateAndResolve(std::move(ret),
-                                                  __PRETTY_FUNCTION__);
-            },
-            [](mozilla::ipc::ResponseRejectReason error) {
-              MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                      ("IPC call rejected: %zu", size_t(error)));
-              return fail();
-            });
-      },
-      [](nsresult error) -> RefPtr<RetPromise> {
-        MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                ("could not acquire WinFileDialog: %zu", size_t(error)));
-        return fail();
-      });
-}
-}  // namespace
-}  // namespace mozilla::detail
-
-Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerImpl(
-    HWND parent, filedialog::FileDialogType type,
-    nsTArray<filedialog::Command> const& commands) {
-  int32_t const pref =
-      mozilla::StaticPrefs::widget_windows_utility_process_file_picker();
-
-  switch (pref) {
-#ifndef NIGHTLY_BUILD
-    default:  // remain local-only on release and beta, for now
-#endif
-    case -1:
-      return ShowFilePickerLocal(parent, type, commands);
-    case 2:
-      return ShowFilePickerRemote(parent, type, commands);
-#ifdef NIGHTLY_BUILD
-    default:  // fall back to local on failure on Nightly builds
-#endif
-    case 1:
-      return ShowFilePickerRemote(parent, type, commands)
-          .orElse([&](HRESULT err) {
-            return ShowFilePickerLocal(parent, type, commands);
-          });
-  }
-}
-
-Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerImpl(
-    HWND parent, nsTArray<filedialog::Command> const& commands) {
-  int32_t const pref =
-      mozilla::StaticPrefs::widget_windows_utility_process_file_picker();
-
-  switch (pref) {
-    case -1:
-      return ShowFolderPickerLocal(parent, commands);
-    case 2:
-      return ShowFolderPickerRemote(parent, commands);
-    default:
-    case 1:
-    case 0:
-      return ShowFolderPickerRemote(parent, commands).orElse([&](HRESULT err) {
-        return ShowFolderPickerLocal(parent, commands);
-      });
-  }
-}
-
-/* static */
-Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerRemote(
-    HWND parent, filedialog::FileDialogType type,
-    nsTArray<filedialog::Command> const& commands) {
-  auto promise =
-      mozilla::detail::ShowRemote([parent, type, commands = commands.Clone()](
-                                      filedialog::WinFileDialogParent* p) {
-        MOZ_LOG(sLogFileDialog, LogLevel::Info,
-                ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
-        return p->SendShowFileDialog((uintptr_t)parent, type, commands);
-      });
-
-  return mozilla::detail::ImmorallyDrivePromiseToCompletion(std::move(promise));
-}
-
-/* static */
-Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerRemote(
-    HWND parent, nsTArray<filedialog::Command> const& commands) {
-  auto promise =
-      mozilla::detail::ShowRemote([parent, commands = commands.Clone()](
-                                      filedialog::WinFileDialogParent* p) {
-        return p->SendShowFolderDialog((uintptr_t)parent, commands);
-      });
-
-  return mozilla::detail::ImmorallyDrivePromiseToCompletion(std::move(promise));
-}
-
-/* static */
-Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerLocal(
-    HWND parent, filedialog::FileDialogType type,
-    nsTArray<filedialog::Command> const& commands) {
-  using mozilla::Err;
-  using mozilla::Nothing;
-  using mozilla::Some;
-
-  namespace fd = filedialog;
-
-  RefPtr<IFileDialog> dialog;
-  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(type));
-
-  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
-    return Err(res);
-  }
-
-  // synchronously show the dialog
-  auto const ret = dialog->Show(parent);
-  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-    return Maybe<fd::Results>(Nothing());
-  }
-  if (FAILED(ret)) {
-    return Err(ret);
-  }
-
-  return fd::GetFileResults(dialog.get()).map(mozilla::Some<fd::Results>);
-}
-
-/* static */
-Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerLocal(
-    HWND parent, nsTArray<filedialog::Command> const& commands) {
-  using mozilla::Err;
-  using mozilla::Nothing;
-  using mozilla::Some;
-  namespace fd = filedialog;
-
-  RefPtr<IFileDialog> dialog;
-  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(fd::FileDialogType::Open));
-
-  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
-    return Err(res);
-  }
-
-  // synchronously show the dialog
-  auto const ret = dialog->Show(parent);
-  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-    return Maybe<nsString>(Nothing());
-  }
-  if (FAILED(ret)) {
-    return Err(ret);
-  }
-
-  return fd::GetFolderResults(dialog.get()).map(mozilla::Some<nsString>);
-}
-
 /*
  * Folder picker invocation
  */
@@ -316,6 +90,13 @@ Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerLocal(
  * @return true if a file was selected successfully.
  */
 bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
+  RefPtr<IFileOpenDialog> dialog;
+  if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr,
+                              CLSCTX_INPROC_SERVER, IID_IFileOpenDialog,
+                              getter_AddRefs(dialog)))) {
+    return false;
+  }
+
   namespace fd = ::mozilla::widget::filedialog;
   nsTArray<fd::Command> commands = {
       fd::SetOptions(FOS_PICKFOLDERS),
@@ -330,28 +111,25 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
     commands.AppendElement(fd::SetFolder(aInitialDir));
   }
 
-  nsString result;
   {
+    if (NS_FAILED(fd::ApplyCommands(dialog, commands))) {
+      return false;
+    }
+
     ScopedRtlShimWindow shim(mParentWidget.get());
-    AutoWidgetPickerState awps(mParentWidget);
-
     mozilla::BackgroundHangMonitor().NotifyWait();
-    auto res = ShowFolderPickerImpl(shim.get(), commands);
-    if (res.isErr()) {
-      NS_WARNING("ShowFolderPickerImpl failed");
+
+    if (FAILED(dialog->Show(shim.get()))) {
       return false;
     }
-
-    auto optResults = res.unwrap();
-    if (!optResults) {
-      // cancellation, not error
-      return false;
-    }
-
-    result = optResults.extract();
   }
 
-  mUnicodeFile = result;
+  auto result = fd::GetFolderResults(dialog.get());
+  if (result.isErr()) {
+    return false;
+  }
+
+  mUnicodeFile = result.unwrap();
   return true;
 }
 
@@ -368,6 +146,21 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
  */
 bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   AUTO_PROFILER_LABEL("nsFilePicker::ShowFilePicker", OTHER);
+
+  RefPtr<IFileDialog> dialog;
+  if (mMode != modeSave) {
+    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr,
+                                CLSCTX_INPROC_SERVER, IID_IFileOpenDialog,
+                                getter_AddRefs(dialog)))) {
+      return false;
+    }
+  } else {
+    if (FAILED(CoCreateInstance(CLSID_FileSaveDialog, nullptr,
+                                CLSCTX_INPROC_SERVER, IID_IFileSaveDialog,
+                                getter_AddRefs(dialog)))) {
+      return false;
+    }
+  }
 
   namespace fd = ::mozilla::widget::filedialog;
   nsTArray<fd::Command> commands;
@@ -448,33 +241,29 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   }
 
   // display
-  fd::Results result;
   {
+    if (NS_FAILED(fd::ApplyCommands(dialog, commands))) {
+      return false;
+    }
+
     ScopedRtlShimWindow shim(mParentWidget.get());
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();
-    auto res = ShowFilePickerImpl(
-        shim.get(),
-        mMode == modeSave ? FileDialogType::Save : FileDialogType::Open,
-        commands);
-
-    if (res.isErr()) {
-      NS_WARNING("ShowFilePickerImpl failed");
+    if (FAILED(dialog->Show(shim.get()))) {
       return false;
     }
-
-    auto optResults = res.unwrap();
-    if (!optResults) {
-      // cancellation, not error
-      return false;
-    }
-
-    result = optResults.extract();
   }
 
+  // results
+  auto result_ = fd::GetFileResults(dialog.get());
+  if (result_.isErr()) {
+    return false;
+  }
+  auto result = result_.unwrap();
+
   // Remember what filter type the user selected
-  mSelectedType = int32_t(result.selectedFileTypeIndex());
+  mSelectedType = result.selectedFileTypeIndex();
 
   auto const& paths = result.paths();
 

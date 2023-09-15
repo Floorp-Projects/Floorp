@@ -6039,12 +6039,9 @@ bool XRE_UseNativeEventProcessing() {
 #  if defined(XP_WIN)
       auto upc = mozilla::ipc::UtilityProcessChild::Get();
       MOZ_ASSERT(upc);
-
-      using SboxKind = mozilla::ipc::SandboxingKind;
-      // These processes are used as external hosts for accessing Windows
-      // APIs which (may) require a Windows native event loop.
-      return upc->mSandbox == SboxKind::WINDOWS_UTILS ||
-             upc->mSandbox == SboxKind::WINDOWS_FILE_DIALOG;
+      // WindowsUtils is for Windows APIs, which typically require a Windows
+      // native event loop.
+      return upc->mSandbox == mozilla::ipc::SandboxingKind::WINDOWS_UTILS;
 #  else
       return false;
 #  endif  // defined(XP_WIN)

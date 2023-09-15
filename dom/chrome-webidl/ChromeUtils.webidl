@@ -794,7 +794,6 @@ enum WebIDLUtilityActorName {
   "mfMediaEngineCDM",
   "jSOracle",
   "windowsUtils",
-  "windowsFileDialog",
 };
 
 dictionary UtilityActorsDictionary {
