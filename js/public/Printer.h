@@ -116,7 +116,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
     MOZ_ASSERT(!hadOutOfMemory());
     return base;
   }
-  const char* stringEnd() const { return string() + offset; }
   JS::UniqueChars release();
 
   // Returns the string at offset |off|.
@@ -143,6 +142,7 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   bool putString(JSString* str);
 
   ptrdiff_t getOffset() const;
+  size_t length() const;
 
   // Report that a string operation failed to get the memory it requested. The
   // first call to this function calls JS_ReportOutOfMemory, and sets this
