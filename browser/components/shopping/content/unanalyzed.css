@@ -12,9 +12,13 @@
 }
 
 #unanalyzed-product-icon {
-  /* TODO: icon chrome url */
-  fill: currentColor;
-  -moz-context-properties: fill;
+  width: 264px;
+  height: 290px;
+  content: url("chrome://browser/content/shopping/assets/unanalyzedLight.avif");
+
+  @media (prefers-color-scheme: dark) {
+    content: url("chrome://browser/content/shopping/assets/unanalyzedDark.avif");
+  }
 }
 
 #unanalyzed-product-message-content {
