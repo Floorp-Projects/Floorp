@@ -104,7 +104,7 @@ add_task(async function test_in_progress_analysis_stale() {
 
           is(
             shoppingContainer.shoppingMessageBarEl?.getAttribute("type"),
-            "analysis-in-progress",
+            "reanalysis-in-progress",
             "shopping-message-bar type should be correct"
           );
         }

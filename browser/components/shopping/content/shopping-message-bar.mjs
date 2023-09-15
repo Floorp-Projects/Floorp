@@ -17,7 +17,8 @@ class ShoppingMessageBar extends MozLitElement {
       "product-not-available-reported",
       () => this.getProductNotAvailableReportedTemplate(),
     ],
-    ["analysis-in-progress", () => this.getAnalysisInProgressTemplate()],
+    ["analysis-in-progress", () => this.analysisInProgressTemplate()],
+    ["reanalysis-in-progress", () => this.reanalysisInProgressTemplate()],
     ["page-not-supported", () => this.pageNotSupportedTemplate()],
   ]);
 
@@ -35,7 +36,7 @@ class ShoppingMessageBar extends MozLitElement {
 
   onClickAnalysisLink() {
     this.dispatchEvent(
-      new CustomEvent("ReAnalysisRequested", {
+      new CustomEvent("ReanalysisRequested", {
         bubbles: true,
         composed: true,
       })
@@ -151,15 +152,34 @@ class ShoppingMessageBar extends MozLitElement {
     </message-bar>`;
   }
 
-  getAnalysisInProgressTemplate() {
+  analysisInProgressTemplate() {
     return html` <message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
+      <article
+        id="message-bar-container"
+        aria-labelledby="header"
+        type="analysis"
+      >
         <strong
           id="header"
-          data-l10n-id="shopping-message-bar-analysis-in-progress-title"
+          data-l10n-id="shopping-message-bar-analysis-in-progress-title2"
         ></strong>
         <span
-          data-l10n-id="shopping-message-bar-analysis-in-progress-message"
+          data-l10n-id="shopping-message-bar-analysis-in-progress-message2"
+        ></span>
+      </article>
+    </message-bar>`;
+  }
+
+  reanalysisInProgressTemplate() {
+    return html` <message-bar>
+      <article
+        id="message-bar-container"
+        aria-labelledby="header"
+        type="re-analysis"
+      >
+        <span
+          id="header"
+          data-l10n-id="shopping-message-bar-analysis-in-progress-title2"
         ></span>
       </article>
     </message-bar>`;
@@ -193,35 +213,6 @@ class ShoppingMessageBar extends MozLitElement {
       `;
     }
     return null;
-  }
-
-  updated() {
-    // message-bar does not support adding a header and does not align it with the icon.
-    // Override styling to make them align.
-    let messageBar = this.renderRoot.querySelector("message-bar");
-    let messageBarContainer = messageBar.shadowRoot.querySelector(".container");
-    let icon = messageBarContainer.querySelector(".icon");
-
-    messageBarContainer.style.alignItems = "start";
-    messageBarContainer.style.padding = "0.5rem 0.75rem";
-    messageBarContainer.style.gap = "0.75rem";
-    icon.style.padding = "0";
-
-    if (this.type === "analysis-in-progress") {
-      messageBarContainer.style.setProperty(
-        "--message-bar-icon-url",
-        `url("chrome://browser/skin/fxa/fxa-spinner.svg")`
-      );
-      icon.animate(
-        [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
-        {
-          duration: 1000 /* in ms */,
-          iterations: Infinity,
-          name: "spin",
-          easing: "linear",
-        }
-      );
-    }
   }
 }
 

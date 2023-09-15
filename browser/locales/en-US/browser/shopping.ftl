@@ -58,8 +58,8 @@ shopping-message-bar-thanks-for-reporting-message = We should have an updated an
 shopping-message-bar-warning-product-not-available-reported-title = Analysis coming soon
 shopping-message-bar-warning-product-not-available-reported-message = An updated analysis should be ready within 24 hours. Please check back.
 
-shopping-message-bar-analysis-in-progress-title = Analysis coming soon
-shopping-message-bar-analysis-in-progress-message = When it’s done, we’ll automatically show the updated info here.
+shopping-message-bar-analysis-in-progress-title2 = Checking review quality
+shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
 
 shopping-message-bar-page-not-supported-title = We can’t check these reviews
 shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.

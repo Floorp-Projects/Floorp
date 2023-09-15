@@ -20,3 +20,23 @@
 button {
   margin-inline-start: 0;
 }
+
+message-bar::part(container) {
+  align-items: start;
+  padding: 0.5rem 0.75rem;
+  gap: 0.75rem;
+}
+
+message-bar::part(icon) {
+  padding: 0;
+}
+
+:host([type=analysis-in-progress]) message-bar::part(icon),
+:host([type=reanalysis-in-progress]) message-bar::part(icon) {
+  --message-bar-icon-url: url("chrome://browser/skin/fxa/fxa-spinner.svg");
+  animation: spin 1s infinite linear;
+}
+
+:host([type=reanalysis-in-progress]) message-bar::part(container) {
+  background-color: transparent;
+}
