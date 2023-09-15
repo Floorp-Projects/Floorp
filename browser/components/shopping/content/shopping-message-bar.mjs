@@ -83,7 +83,7 @@ class ShoppingMessageBar extends MozLitElement {
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
-          data-l10n-id="shopping-message-bar-generic-error-title"
+          data-l10n-id="shopping-message-bar-generic-error-title2"
         ></strong>
         <span data-l10n-id="shopping-message-bar-generic-error-message"></span>
       </article>
@@ -98,7 +98,7 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-warning-not-enough-reviews-title"
         ></strong>
         <span
-          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-message"
+          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-message2"
         ></span>
       </article>
     </message-bar>`;
@@ -112,7 +112,7 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-warning-product-not-available-title"
         ></strong>
         <span
-          data-l10n-id="shopping-message-bar-warning-product-not-available-message"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-message2"
         ></span>
         <button
           id="message-bar-report-product-available-btn"
@@ -132,7 +132,7 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-thanks-for-reporting-title"
         ></strong>
         <span
-          data-l10n-id="shopping-message-bar-thanks-for-reporting-message"
+          data-l10n-id="shopping-message-bar-thanks-for-reporting-message2"
         ></span>
       </article>
     </message-bar>`;
@@ -143,10 +143,10 @@ class ShoppingMessageBar extends MozLitElement {
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
-          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-title"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-title2"
         ></strong>
         <span
-          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-message"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-message2"
         ></span>
       </article>
     </message-bar>`;
