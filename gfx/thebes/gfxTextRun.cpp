@@ -624,6 +624,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   params.textStrokePattern = aParams.textStrokePattern;
   params.drawOpts = aParams.drawOpts;
   params.drawMode = aParams.drawMode;
+  params.hasTextShadow = aParams.hasTextShadow;
   params.callbacks = aParams.callbacks;
   params.runContextPaint = aParams.contextPaint;
   params.paintSVGGlyphs =
