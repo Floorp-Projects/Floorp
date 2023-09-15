@@ -2014,6 +2014,10 @@ class JSScript : public js::BaseScript {
     MOZ_ASSERT(sharedData_);
     return immutableScriptData()->notes();
   }
+  js::SrcNote* notesEnd() const {
+    MOZ_ASSERT(sharedData_);
+    return immutableScriptData()->notes() + numNotes();
+  }
 
   JSString* getString(js::GCThingIndex index) const {
     return &gcthings()[index].as<JSString>();
@@ -2231,7 +2235,7 @@ extern unsigned PCToLineNumber(
 
 extern unsigned PCToLineNumber(
     unsigned startLine, JS::LimitedColumnNumberZeroOrigin startCol,
-    SrcNote* notes, jsbytecode* code, jsbytecode* pc,
+    SrcNote* notes, SrcNote* notesEnd, jsbytecode* code, jsbytecode* pc,
     JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
 
 /*

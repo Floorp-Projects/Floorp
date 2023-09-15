@@ -404,7 +404,7 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
 //  L3:
 // ----
 //
-// NOTE: The notes() array must have been null-padded such that
+// NOTE: The notes() array must have been padded such that
 //       flags/code/notes together have uint32_t alignment.
 //
 // The labels shown are recorded as byte-offsets relative to 'this'. This is to
@@ -555,20 +555,21 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
 
  public:
   // The code() and note() arrays together maintain an target alignment by
-  // padding the source notes with null. This allows arrays with stricter
-  // alignment requirements to follow them.
+  // padding the source notes with padding bytes. This allows arrays with
+  // stricter alignment requirements to follow them.
   static constexpr size_t CodeNoteAlign = sizeof(uint32_t);
 
-  // Compute number of null notes to pad out source notes with.
+  // Compute number of padding notes to pad out source notes with.
   static uint32_t ComputeNotePadding(uint32_t codeLength, uint32_t noteLength) {
     uint32_t flagLength = sizeof(Flags);
-    uint32_t nullLength =
+    uint32_t paddingLength =
         CodeNoteAlign - (flagLength + codeLength + noteLength) % CodeNoteAlign;
 
-    // The source notes must have at least one null-terminator.
-    MOZ_ASSERT(nullLength >= 1);
+    if (paddingLength == CodeNoteAlign) {
+      return 0;
+    }
 
-    return nullLength;
+    return paddingLength;
   }
 
   // Span over all raw bytes in this struct and its trailing arrays.
