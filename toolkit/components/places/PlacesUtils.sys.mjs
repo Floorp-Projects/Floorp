@@ -2263,7 +2263,6 @@ PlacesUtils.metadata = {
     let keysToDelete = Array.from(pairs.entries())
       .filter(([key, value]) => {
         if (value !== null) {
-          console.log("key " + key);
           entriesToSet.push({ key: this.canonicalizeKey(key), value });
           return false;
         }
