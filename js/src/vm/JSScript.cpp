@@ -3247,7 +3247,11 @@ void JSScript::dump(JSContext* cx) {
     return;
   }
 
-  fprintf(stderr, "%s\n", sp.string());
+  JS::UniqueChars str = sp.release();
+  if (!str) {
+    return;
+  }
+  fprintf(stderr, "%s\n", str.get());
 }
 
 void JSScript::dumpRecursive(JSContext* cx) {
@@ -3265,7 +3269,11 @@ void JSScript::dumpRecursive(JSContext* cx) {
     return;
   }
 
-  fprintf(stderr, "%s\n", sp.string());
+  JS::UniqueChars str = sp.release();
+  if (!str) {
+    return;
+  }
+  fprintf(stderr, "%s\n", str.get());
 }
 
 static void DumpMutableScriptFlags(js::JSONPrinter& json,

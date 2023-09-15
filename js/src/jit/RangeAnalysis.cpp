@@ -1959,8 +1959,11 @@ bool RangeAnalysis::analyzeLoop(MBasicBlock* header) {
       return false;
     }
     iterationBound->boundSum.dump(sp);
-    JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s",
-            sp.string());
+    JS::UniqueChars str = sp.release();
+    if (!str) {
+      return false;
+    }
+    JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s", str.get());
   }
 #endif
 

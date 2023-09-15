@@ -3526,7 +3526,11 @@ static bool Disassemble(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  fprintf(gOutFile->fp, "%s\n", sprinter.string());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return false;
+  }
+  fprintf(gOutFile->fp, "%s\n", str.get());
   args.rval().setUndefined();
   return true;
 }
@@ -3584,7 +3588,11 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  fprintf(gOutFile->fp, "%s\n", sprinter.string());
+  JS::UniqueChars chars = sprinter.release();
+  if (!chars) {
+    return false;
+  }
+  fprintf(gOutFile->fp, "%s\n", chars.get());
 
   args.rval().setUndefined();
   return true;
@@ -3680,7 +3688,11 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       pc += len;
     }
 
-    fprintf(gOutFile->fp, "%s\n", sprinter.string());
+    JS::UniqueChars str = sprinter.release();
+    if (!str) {
+      return false;
+    }
+    fprintf(gOutFile->fp, "%s\n", str.get());
   }
 
   args.rval().setUndefined();
