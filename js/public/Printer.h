@@ -42,7 +42,15 @@ class JS_PUBLIC_API GenericPrinter {
   // still report any of the previous errors.
   virtual void put(const char* s, size_t len) = 0;
   inline void put(const char* s) { put(s, strlen(s)); }
-  inline void putChar(const char c) { put(&c, 1); }
+  virtual void put(mozilla::Span<const JS::Latin1Char> str);
+  // Would crash unless putChar is overriden, like in EscapePrinter.
+  virtual void put(mozilla::Span<const char16_t> str);
+
+  virtual inline void putChar(const char c) { put(&c, 1); }
+  virtual inline void putChar(const JS::Latin1Char c) { putChar(char(c)); }
+  virtual inline void putChar(const char16_t c) {
+    MOZ_CRASH("Use an EscapePrinter to handle all characters");
+  }
 
   virtual void putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str);
   virtual void putAsciiPrintable(mozilla::Span<const char16_t> str);
@@ -55,6 +63,8 @@ class JS_PUBLIC_API GenericPrinter {
     MOZ_ASSERT(IsAsciiPrintable(c));
     putChar(char(c));
   }
+
+  virtual void putString(JSContext* cx, JSString* str);
 
   // Prints a formatted string into the buffer.
   void printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
@@ -143,7 +153,7 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   }
   virtual size_t index() const override { return length(); }
 
-  void putString(JSContext* cx, JSString* str);
+  virtual void putString(JSContext* cx, JSString* str) override;
 
   size_t length() const;
 
@@ -217,6 +227,101 @@ class JS_PUBLIC_API LSprinter final : public GenericPrinter {
   // return true on success, false on failure.
   virtual void put(const char* s, size_t len) override;
   using GenericPrinter::put;  // pick up |inline bool put(const char* s);|
+};
+
+// Escaping printers work like any other printer except that any added character
+// are checked for escaping sequences. This one would escape a string such that
+// it can safely be embedded in a JS string.
+template <typename Delegate, typename Escape>
+class JS_PUBLIC_API EscapePrinter final : public GenericPrinter {
+  size_t lengthOfSafeChars(const char* s, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+      if (!esc.isSafeChar(s[i])) {
+        return i;
+      }
+    }
+    return len;
+  }
+
+ private:
+  Delegate& out;
+  Escape& esc;
+
+ public:
+  EscapePrinter(Delegate& out, Escape& esc) : out(out), esc(esc) {}
+  ~EscapePrinter() {}
+
+  using GenericPrinter::put;
+  void put(const char* s, size_t len) override {
+    const char* b = s;
+    while (len) {
+      size_t index = lengthOfSafeChars(b, len);
+      if (index) {
+        out.put(b, index);
+        len -= index;
+        b += index;
+      }
+      if (len) {
+        esc.convertInto(out, char16_t(*b));
+        len -= 1;
+        b += 1;
+      }
+    }
+  }
+
+  inline void putChar(const char c) override {
+    if (esc.isSafeChar(char16_t(c))) {
+      out.putChar(char(c));
+      return;
+    }
+    esc.convertInto(out, char16_t(c));
+  }
+
+  inline void putChar(const JS::Latin1Char c) override {
+    if (esc.isSafeChar(char16_t(c))) {
+      out.putChar(char(c));
+      return;
+    }
+    esc.convertInto(out, char16_t(c));
+  }
+
+  inline void putChar(const char16_t c) override {
+    if (esc.isSafeChar(c)) {
+      out.putChar(char(c));
+      return;
+    }
+    esc.convertInto(out, c);
+  }
+
+  // Forward calls to delegated printer.
+  bool canPutFromIndex() const override { return out.canPutFromIndex(); }
+  void putFromIndex(size_t index, size_t length) final {
+    out.putFromIndex(index, length);
+  }
+  size_t index() const final {return out.index(); }
+  void flush()final { out.flush(); }
+  void reportOutOfMemory() final { out.reportOutOfMemory(); }
+  bool hadOutOfMemory() const final { return out.hadOutOfMemory(); }
+};
+
+class JS_PUBLIC_API JSONEscape {
+ public:
+  inline bool isSafeChar(char16_t c) {
+    return js::IsAsciiPrintable(c) && c != '"' && c != '\\';
+  }
+  void convertInto(GenericPrinter& out, char16_t c);
+};
+
+class JS_PUBLIC_API StringEscape {
+ private:
+  const char quote = '\0';
+ public:
+  explicit StringEscape(const char quote = '\0') : quote(quote) {}
+
+  inline bool isSafeChar(char16_t c) {
+    return js::IsAsciiPrintable(c) && c != quote && c != '\\';
+  }
+  void convertInto(GenericPrinter& out, char16_t c);
 };
 
 // Map escaped code to the letter/symbol escaped with a backslash.
