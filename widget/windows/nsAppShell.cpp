@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/WindowsMessageLoop.h"
 #include "nsAppShell.h"
@@ -366,67 +367,170 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
 
 namespace {
 
-struct MOZ_STACK_CLASS WinErrorState {
-  NTSTATUS const LastNtStatus;
-  DWORD const LastError;
+// Struct storing the visible, loggable error-state of a Windows thread.
+// Approximately `std:pair(::GetLastError(), ::RtlGetLastNtStatus())`.
+//
+// Uses sentinel values rather than a proper `Maybe` type to simplify
+// minidump-analysis.
+struct WinErrorState {
+  // Last error, as provided by ::GetLastError().
+  DWORD error = ~0;
+  // Last NTSTATUS, as provided by the TIB.
+  NTSTATUS ntStatus = ~0;
 
-  static NTSTATUS GetLastNtStatus() {
-    using RtlGetLastNtStatusType = NTSTATUS NTAPI (*)();
-    static const RtlGetLastNtStatusType RtlGetLastNtStatus = []() {
-      HMODULE h = ::GetModuleHandleW(L"ntdll.dll");
-      FARPROC const addr = ::GetProcAddress(h, "RtlGetLastNtStatus");
-      return reinterpret_cast<RtlGetLastNtStatusType>(addr);
-    }();
+ private:
+  // per WINE et al.; stable since NT 3.51
+  constexpr static size_t kLastNtStatusOffset =
+      sizeof(size_t) == 8 ? 0x1250 : 0xbf4;
 
-    if (RtlGetLastNtStatus) {
-      return RtlGetLastNtStatus();
-    }
-
-    // paranoia: otherwise, return a bogus error code with a hopefully-
-    // recognizable value
-    union {
-      std::make_unsigned_t<NTSTATUS> value;
-      NTSTATUS status;
-    } const v = {.value = 0xE'8675309};
-    return v.status;
+  static void SetLastNtStatus(NTSTATUS status) {
+    auto* teb = ::NtCurrentTeb();
+    *reinterpret_cast<NTSTATUS*>(reinterpret_cast<char*>(teb) +
+                                 kLastNtStatusOffset) = status;
   }
 
-  MOZ_NEVER_INLINE WinErrorState()
-      : LastNtStatus(GetLastNtStatus()), LastError(GetLastError()) {}
-  WinErrorState(WinErrorState const&) = default;
-  ~WinErrorState() = default;
+  static NTSTATUS GetLastNtStatus() {
+    auto const* teb = ::NtCurrentTeb();
+    return *reinterpret_cast<NTSTATUS const*>(
+        reinterpret_cast<char const*>(teb) + kLastNtStatusOffset);
+  }
+
+ public:
+  // Restore (or just set) the error state of the current thread.
+  static void Apply(WinErrorState const& state) {
+    SetLastNtStatus(state.ntStatus);
+    ::SetLastError(state.error);
+  }
+
+  // Clear the error-state of the current thread.
+  static void Clear() { Apply({.error = 0, .ntStatus = 0}); }
+
+  // Get the error-state of the current thread.
+  static WinErrorState Get() {
+    return WinErrorState{
+        .error = ::GetLastError(),
+        .ntStatus = GetLastNtStatus(),
+    };
+  }
+
+  bool operator==(WinErrorState const& that) const {
+    return this->error == that.error && this->ntStatus == that.ntStatus;
+  }
 };
+
+// Struct containing information about the user atom table. (See
+// DiagnoseUserAtomTable(), below.)
+struct AtomTableInformation {
+  // Number of atoms in use. (Exactly 0x4000 == 16384, if all are.)
+  UINT in_use = 0;
+  // Number of atoms confirmed not in use.
+  UINT free = 0;
+  // Number of atoms which gave errors when checked.
+  UINT errors = 0;
+
+  // Last atom which gave an unexpected error...
+  UINT lastErrorAtom = ~0u;
+  // ... and the error it gave.
+  WinErrorState lastErrorState;
+};
+
+// Return a summary of the state of the atom table.
+MOZ_NEVER_INLINE static AtomTableInformation DiagnoseUserAtomTable() {
+  // Restore error state on exit, for the sake of automated minidump analyses.
+  auto const _restoreErrState =
+      mozilla::MakeScopeExit([oldErrState = WinErrorState::Get()]() {
+        WinErrorState::Apply(oldErrState);
+      });
+
+  AtomTableInformation retval;
+
+  // Expected error-state on failure-return when the atom is assigned, but not
+  // enough space was provided for the full string.
+  constexpr WinErrorState kBufferTooSmall = {
+      .error = ERROR_INSUFFICIENT_BUFFER,
+      .ntStatus = ((NTSTATUS)0xC0000023),  // == STATUS_BUFFER_TOO_SMALL
+  };
+  // Expected error-state on failure-return when the atom is not assigned.
+  constexpr WinErrorState kInvalidAtom = {
+      .error = ERROR_INVALID_HANDLE,
+      .ntStatus = ((NTSTATUS)STATUS_INVALID_HANDLE),
+  };
+
+  // Iterate over only the dynamic portion of the atom table.
+  for (UINT atom = 0xC000; atom <= 0xFFFF; ++atom) {
+    // The actual atom values are PII. Don't acquire them in their entirety, and
+    // don't keep more information about them than is needed.
+    WCHAR buf[2] = {};
+    // USE OF UNDOCUMENTED BEHAVIOR: The user atom table is shared by message
+    // names, window-class names, and clipboard-format names. Only the last has
+    // a documented getter-mechanism.
+    BOOL const ok = ::GetClipboardFormatNameW(atom, buf, 1);
+    WinErrorState const errState = WinErrorState::Get();
+    if (ok || errState == kBufferTooSmall) {
+      ++retval.in_use;
+    } else if (errState == kInvalidAtom) {
+      ++retval.free;
+    } else {
+      // Unexpected error-state.
+      ++retval.errors;
+      retval.lastErrorAtom = atom;
+      retval.lastErrorState = errState;
+    }
+  }
+
+  return retval;
+}
 
 }  // namespace
 
-// Collect data for bug 1571516. We don't automatically extract `GetLastError`
+// Collect data for bug 1571516. We don't automatically send up `GetLastError`
 // or `GetLastNtStatus` data for beta/release builds, so extract the relevant
 // error values and store them on the stack, where they can be viewed in
-// minidumps.
+// minidumps -- in fact, do so after each individual API call. This takes the
+// form of various local variables whose initial character is an underscore,
+// most of which are also marked [[maybe_unused]].
 //
 // We tag this function `[[clang::optnone]]` to prevent the compiler from
-// eliding those values as unused, as well as to generally simplify the
-// haruspex's task once the minidumps are in. (As this function is called at
-// most once per process, the minor performance hit is not a concern.)
+// eliding those values as _actually_ unused, as well as to generally simplify
+// the haruspex's task once the minidumps are in. (As this function should be
+// called at most once per process, the minor performance hit is not a concern.)
+//
 [[clang::optnone]] MOZ_NEVER_INLINE nsresult nsAppShell::InitHiddenWindow() {
-  // invoke `GetProcAddress` and `GetModuleHandleW` early, to avoid possibly
-  // contaminating the return values of `GetLastNtStatus()` or `GetLastError()`
-  { auto _unused [[maybe_unused]] = WinErrorState(); }
+  // note the incoming error-state; this may be relevant to errors we get later
+  auto _initialErr [[maybe_unused]] = WinErrorState::Get();
+  // reset the error-state, to avoid ambiguity below
+  WinErrorState::Clear();
 
-  sAppShellGeckoMsgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
-  // Diagnostic variables for post-mortem debugging of bug 1571516.
+  // Diagnostic variable. Only collected in the event of a failure in one of the
+  // functions that attempts to register an atom.
+  AtomTableInformation _atomTableInfo [[maybe_unused]];
+
+  // Attempt to register the window message. On failure, retain the initial
+  // value of `sAppShellGeckoMsgId`.
+  auto const _msgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
+  if (_msgId) {
+    sAppShellGeckoMsgId = _msgId;
+  }
   auto const _sAppShellGeckoMsgId [[maybe_unused]] = sAppShellGeckoMsgId;
-  auto const _rwmErr [[maybe_unused]] = WinErrorState();
+  auto const _rwmErr [[maybe_unused]] = WinErrorState::Get();
+  if (!_msgId) _atomTableInfo = DiagnoseUserAtomTable();
   NS_ASSERTION(sAppShellGeckoMsgId,
                "Could not register hidden window event message!");
 
   mLastNativeEventScheduled = TimeStamp::NowLoRes();
 
   WNDCLASSW wc;
-  HINSTANCE module = GetModuleHandle(nullptr);
+  HINSTANCE const module = GetModuleHandle(nullptr);
 
-  const wchar_t* const kWindowClass = L"nsAppShell:EventWindowClass";
-  if (!GetClassInfoW(module, kWindowClass, &wc)) {
+  constexpr const wchar_t* kWindowClass = L"nsAppShell:EventWindowClass";
+  // (Undocumented behavior note: on success, this will specifically be the
+  // window-class atom. We don't rely on this.)
+  BOOL const _gciwRet = ::GetClassInfoW(module, kWindowClass, &wc);
+  auto const _gciwErr [[maybe_unused]] = WinErrorState::Get();
+  WinErrorState::Clear();
+
+  WinErrorState _rcErr [[maybe_unused]];
+  if (!_gciwRet) {
     wc.style = 0;
     wc.lpfnWndProc = EventWindowProc;
     wc.cbClsExtra = 0;
@@ -437,16 +541,19 @@ struct MOZ_STACK_CLASS WinErrorState {
     wc.hbrBackground = (HBRUSH) nullptr;
     wc.lpszMenuName = (LPCWSTR) nullptr;
     wc.lpszClassName = kWindowClass;
-    [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
-    // Diagnostic variable for post-mortem debugging of bug 1571516.
-    auto const _rcErr [[maybe_unused]] = WinErrorState();
-    MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
+
+    ATOM _windowClassAtom = ::RegisterClassW(&wc);
+    _rcErr = WinErrorState::Get();
+
+    if (!_windowClassAtom) _atomTableInfo = DiagnoseUserAtomTable();
+    MOZ_DIAGNOSTIC_ASSERT(_windowClassAtom,
+                          "RegisterClassW for EventWindowClass failed");
+    WinErrorState::Clear();
   }
 
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
                             10, 10, HWND_MESSAGE, nullptr, module, nullptr);
-  // Diagnostic variable for post-mortem debugging of bug 1571516.
-  auto const _cwErr [[maybe_unused]] = WinErrorState();
+  auto const _cwErr [[maybe_unused]] = WinErrorState::Get();
   MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
   NS_ENSURE_STATE(mEventWnd);
 
