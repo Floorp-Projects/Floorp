@@ -586,6 +586,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
 
       case JSOp::Nop:
       case JSOp::NopDestructuring:
+      case JSOp::NopIsAssignOp:
       case JSOp::TryDestructuring:
       case JSOp::Lineno:
       case JSOp::DebugLeaveLexicalEnv:

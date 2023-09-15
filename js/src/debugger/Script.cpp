@@ -1454,6 +1454,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
 
     case JSOp::Nop:
     case JSOp::NopDestructuring:
+    case JSOp::NopIsAssignOp:
     case JSOp::TryDestructuring:
     case JSOp::Lineno:
     case JSOp::JumpTarget:

@@ -688,6 +688,16 @@
      */ \
     MACRO(Pow, pow, "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
+     * No-op instruction for bytecode decompiler to hint that the previous
+     *  binary operator is compound assignment.
+     *
+     *   Category: Expressions
+     *   Type: Other expressions
+     *   Operands:
+     *   Stack:
+     */ \
+    MACRO(NopIsAssignOp, nop_is_assign_op, NULL, 1, 0, 0, JOF_BYTE) \
+    /*
      * Convert a value to a property key.
      *
      * Implements: [ToPropertyKey][1], except that if the result would be the
@@ -3563,14 +3573,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
-  MACRO(237)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(237))     \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

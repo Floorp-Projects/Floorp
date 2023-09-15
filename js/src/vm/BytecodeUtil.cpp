@@ -1816,9 +1816,15 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     // Handle simple cases of binary and unary operators.
     switch (CodeSpec(op).nuses) {
       case 2: {
-        const SrcNote* sn = GetSrcNote(cx, script, pc);
-        const char* extra =
-            sn && sn->type() == SrcNoteType::AssignOp ? "=" : "";
+        const char* extra = "";
+
+        MOZ_ASSERT(pc + 1 < script->codeEnd(),
+                   "binary opcode shouldn't be the last opcode in the script");
+        if (CodeSpec(op).length == 1 &&
+            (JSOp)(*(pc + 1)) == JSOp::NopIsAssignOp) {
+          extra = "=";
+        }
+
         return write("(") && decompilePCForStackOperand(pc, -2) && write(" ") &&
                write(token) && write(extra) && write(" ") &&
                decompilePCForStackOperand(pc, -1) && write(")");

@@ -4325,12 +4325,13 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     }
   }
 
-  /* If += etc., emit the binary operator with a source note. */
+  /* If += etc., emit the binary operator with a hint for the decompiler. */
   if (isCompound) {
-    if (!newSrcNote(SrcNoteType::AssignOp)) {
+    if (!emit1(compoundOp)) {
+      //            [stack] ... VAL
       return false;
     }
-    if (!emit1(compoundOp)) {
+    if (!emit1(JSOp::NopIsAssignOp)) {
       //            [stack] ... VAL
       return false;
     }
