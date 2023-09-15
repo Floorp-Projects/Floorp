@@ -32,22 +32,22 @@ DIRS += [
 TEST_DIRS += ["tests/mochitest"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser/bounds/browser.ini",
-    "tests/browser/browser.ini",
-    "tests/browser/e10s/browser.ini",
-    "tests/browser/events/browser.ini",
-    "tests/browser/fission/browser.ini",
-    "tests/browser/general/browser.ini",
-    "tests/browser/hittest/browser.ini",
-    "tests/browser/mac/browser.ini",
-    "tests/browser/pivot/browser.ini",
-    "tests/browser/role/browser.ini",
-    "tests/browser/scroll/browser.ini",
-    "tests/browser/selectable/browser.ini",
-    "tests/browser/states/browser.ini",
-    "tests/browser/telemetry/browser.ini",
-    "tests/browser/text/browser.ini",
-    "tests/browser/tree/browser.ini",
+    "tests/browser/bounds/browser.toml",
+    "tests/browser/browser.toml",
+    "tests/browser/e10s/browser.toml",
+    "tests/browser/events/browser.toml",
+    "tests/browser/fission/browser.toml",
+    "tests/browser/general/browser.toml",
+    "tests/browser/hittest/browser.toml",
+    "tests/browser/mac/browser.toml",
+    "tests/browser/pivot/browser.toml",
+    "tests/browser/role/browser.toml",
+    "tests/browser/scroll/browser.toml",
+    "tests/browser/selectable/browser.toml",
+    "tests/browser/states/browser.toml",
+    "tests/browser/telemetry/browser.toml",
+    "tests/browser/text/browser.toml",
+    "tests/browser/tree/browser.toml",
 ]
 
 with Files("**"):

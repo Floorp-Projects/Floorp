@@ -1,0 +1,24 @@
+[DEFAULT]
+subsuite = "a11y"
+support-files = [
+  "head.js",
+  "!/accessible/tests/browser/shared-head.js",
+  "!/accessible/tests/browser/*.jsm",
+  "!/accessible/tests/mochitest/*.js",
+]
+prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
+
+["browser_content_tree.js"]
+
+["browser_hidden_iframe.js"]
+https_first_disabled = true
+
+["browser_nested_iframe.js"]
+
+["browser_reframe_root.js"]
+
+["browser_reframe_visibility.js"]
+
+["browser_src_change.js"]
+
+["browser_take_focus.js"]

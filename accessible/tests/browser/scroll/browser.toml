@@ -1,0 +1,19 @@
+[DEFAULT]
+subsuite = "a11y"
+support-files = [
+  "head.js",
+  "!/accessible/tests/browser/shared-head.js",
+  "!/accessible/tests/browser/*.jsm",
+  "!/accessible/tests/mochitest/*.js",
+]
+prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
+
+["browser_scrollToPoint.js"]
+
+["browser_test_scrollTo.js"]
+
+["browser_test_scroll_bounds.js"]
+
+["browser_test_scroll_substring.js"]
+
+["browser_test_zoom_text.js"]
