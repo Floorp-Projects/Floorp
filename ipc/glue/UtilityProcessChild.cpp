@@ -6,6 +6,7 @@
 #include "UtilityProcessChild.h"
 
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/JSOracleChild.h"
 #include "mozilla/dom/MemoryReportRequest.h"

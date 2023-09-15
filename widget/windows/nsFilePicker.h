@@ -83,6 +83,20 @@ class nsFilePicker : public nsBaseWinFilePicker {
   bool ShowFilePicker(const nsString& aInitialDir);
 
  private:
+  // Show the dialog (by default, remotely falling back to locally, or whatever
+  // is specified by the current config).
+  static Result<Maybe<Results>> ShowFilePickerImpl(
+      HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
+  static Result<Maybe<nsString>> ShowFolderPickerImpl(
+      HWND aParent, nsTArray<Command> const& commands);
+
+  // Show the dialog out-of-process.
+  static Result<Maybe<Results>> ShowFilePickerRemote(
+      HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
+  static Result<Maybe<nsString>> ShowFolderPickerRemote(
+      HWND aParent, nsTArray<Command> const& commands);
+
+  // Show the dialog in-process.
   static Result<Maybe<Results>> ShowFilePickerLocal(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
   static Result<Maybe<nsString>> ShowFolderPickerLocal(
