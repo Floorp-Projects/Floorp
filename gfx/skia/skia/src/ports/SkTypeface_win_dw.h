@@ -22,10 +22,6 @@
 #include <dwrite_2.h>
 #include <dwrite_3.h>
 
-#if !defined(__MINGW32__) && WINVER < 0x0A00
-#include "mozilla/gfx/dw-extra.h"
-#endif
-
 class SkFontDescriptor;
 struct SkScalerContextRec;
 

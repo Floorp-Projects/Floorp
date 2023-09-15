@@ -81,12 +81,12 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
         "RenderDcompSurfaceTextureHost.h",
     ]
     UNIFIED_SOURCES += [
+        "DCLayerTree.cpp",
+        "RenderCompositorANGLE.cpp",
         "RenderCompositorD3D11SWGL.cpp",
         "RenderD3D11TextureHost.cpp",
     ]
     SOURCES += [
-        "DCLayerTree.cpp",
-        "RenderCompositorANGLE.cpp",
         "RenderDcompSurfaceTextureHost.cpp",
     ]
 

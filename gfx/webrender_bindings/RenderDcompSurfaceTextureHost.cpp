@@ -5,11 +5,6 @@
 
 #include "RenderDcompSurfaceTextureHost.h"
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WINBLUE
-
 #include <dcomp.h>
 
 #define LOG(msg, ...)                                                        \
