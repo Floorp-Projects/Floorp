@@ -203,31 +203,25 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       SrcNoteType type = sn->type();
       if (type == SrcNoteType::ColSpan) {
         column += SrcNote::ColSpan::getSpan(sn);
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::SetLine) {
         lineno = SrcNote::SetLine::getLine(sn, initialLine);
         column = JS::LimitedColumnNumberZeroOrigin::zero();
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::SetLineColumn) {
         lineno = SrcNote::SetLineColumn::getLine(sn, initialLine);
         column = SrcNote::SetLineColumn::getColumn(sn);
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::NewLine) {
         lineno++;
         column = JS::LimitedColumnNumberZeroOrigin::zero();
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::NewLineColumn) {
         lineno++;
         column = SrcNote::NewLineColumn::getColumn(sn);
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
-        lastLinePC = snpc;
       } else if (type == SrcNoteType::BreakpointStepSep) {
         isBreakpoint = true;
         seenStepSeparator = true;
-        lastLinePC = snpc;
       }
+      lastLinePC = snpc;
       ++iter;
       if (!iter.atEnd()) {
         snpc += (*iter)->delta();
