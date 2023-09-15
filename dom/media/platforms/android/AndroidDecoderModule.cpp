@@ -81,7 +81,7 @@ media::MediaCodecsSupported AndroidDecoderModule::GetSupportedCodecs() {
 DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
     const nsACString& aMimeType) {
   if (jni::GetAPIVersion() < 16) {
-    return media::DecodeSupportSet{};
+    return DecodeSupport::Unsupported;
   }
 
   if (!sSupportedSwMimeTypes) {
@@ -95,46 +95,46 @@ DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
   switch (codec) {
     case MediaCodec::VP8:
       if (!gfx::gfxVars::UseVP8HwDecode()) {
-        return media::DecodeSupportSet{};
+        return DecodeSupport::Unsupported;
       }
       break;
 
     case MediaCodec::VP9:
       if (!gfx::gfxVars::UseVP9HwDecode()) {
-        return media::DecodeSupportSet{};
+        return DecodeSupport::Unsupported;
       }
       break;
 
     // Prefer the ffvpx mp3 software decoder if available.
     case MediaCodec::MP3:
       if (StaticPrefs::media_ffvpx_mp3_enabled()) {
-        return media::DecodeSupportSet{};
+        return DecodeSupport::Unsupported;
       }
       if (sSupportedCodecs &&
           sSupportedCodecs->contains(MediaCodecsSupport::MP3SoftwareDecode)) {
         return DecodeSupport::SoftwareDecode;
       }
-      return media::DecodeSupportSet{};
+      return DecodeSupport::Unsupported;
 
     // Prefer the gecko decoder for theora/opus/vorbis; stagefright crashes
     // on content demuxed from mp4.
     // Not all android devices support FLAC/theora even when they say they do.
     case MediaCodec::Theora:
       SLOG("Rejecting video of type %s", aMimeType.Data());
-      return media::DecodeSupportSet{};
+      return DecodeSupport::Unsupported;
     case MediaCodec::Opus:
       [[fallthrough]];
     case MediaCodec::Vorbis:
       [[fallthrough]];
     case MediaCodec::FLAC:
       SLOG("Rejecting audio of type %s", aMimeType.Data());
-      return media::DecodeSupportSet{};
+      return DecodeSupport::Unsupported;
 
     // When checking "audio/x-wav", CreateDecoder can cause a JNI ERROR by
     // Accessing a stale local reference leading to a SIGSEGV crash.
     // To avoid this we check for wav types here.
     case MediaCodec::Wave:
-      return media::DecodeSupportSet{};
+      return DecodeSupport::Unsupported;
 
     // H264 always reports software decode
     case MediaCodec::H264:
@@ -161,7 +161,7 @@ DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
       sSupportedSwMimeTypes->Contains(TranslateMimeType(aMimeType))) {
     return DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupportSet{};
+  return DecodeSupport::Unsupported;
 }
 
 nsTArray<nsCString> AndroidDecoderModule::GetSupportedMimeTypes() {
@@ -214,7 +214,7 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     ClearOnShutdown(&sSupportedCodecs);
   }
 
-  DecodeSupportSet support;
+  DecodeSupport support;
   // Process each MIME type string
   for (const auto& s : aSupportedTypes) {
     // Verify MIME type string present
@@ -232,10 +232,10 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     const auto caps = Substring(s, 0, 2);
     if (caps == "SW"_ns) {
       sSupportedSwMimeTypes->AppendElement(mimeType);
-      support += DecodeSupport::SoftwareDecode;
+      support = DecodeSupport::SoftwareDecode;
     } else if (caps == "HW"_ns) {
       sSupportedHwMimeTypes->AppendElement(mimeType);
-      support += DecodeSupport::HardwareDecode;
+      support = DecodeSupport::HardwareDecode;
     } else {
       SLOG("Error parsing acceleration info from JNI codec string %s",
            s.Data());
@@ -272,7 +272,7 @@ media::DecodeSupportSet AndroidDecoderModule::Supports(
       PlatformDecoderModule::Supports(aParams, aDiagnostics);
 
   // Short-circuit.
-  if (support.isEmpty()) {
+  if (support == media::DecodeSupport::Unsupported) {
     return support;
   }
 
@@ -281,7 +281,7 @@ media::DecodeSupportSet AndroidDecoderModule::Supports(
   if (AOMDecoder::IsAV1(aParams.MimeType()) &&
       (!StaticPrefs::media_av1_enabled() ||
        !support.contains(media::DecodeSupport::HardwareDecode))) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 #endif
 
@@ -295,7 +295,7 @@ media::DecodeSupportSet AndroidDecoderModule::Supports(
   return java::HardwareCodecCapabilityUtils::Decodes10Bit(
              TranslateMimeType(aParams.MimeType()))
              ? support
-             : media::DecodeSupportSet{};
+             : media::DecodeSupport::Unsupported;
 }
 
 already_AddRefed<MediaDataDecoder> AndroidDecoderModule::CreateVideoDecoder(

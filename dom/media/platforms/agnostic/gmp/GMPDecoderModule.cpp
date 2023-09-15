@@ -68,7 +68,7 @@ media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
   } else if (VPXDecoder::IsVP8(aMimeType)) {
     tags.AppendElement("vp8"_ns);
   } else {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 
   // Optional tag for EME GMP plugins.
@@ -78,7 +78,7 @@ media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
 
   // GMP plugins are always software based.
   return HaveGMPFor(aApi, tags) ? media::DecodeSupport::SoftwareDecode
-                                : media::DecodeSupportSet{};
+                                : media::DecodeSupport::Unsupported;
 }
 
 media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
