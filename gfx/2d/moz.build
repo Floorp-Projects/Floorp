@@ -74,7 +74,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXPORTS.mozilla.gfx += [
-        "dw-extra.h",
         "DWriteSettings.h",
         "UnscaledFontDWrite.h",
         "UnscaledFontGDI.h",
