@@ -161,6 +161,8 @@ pref("floorp.newtab.overrides.newtaburl", "");
 //Portable
 pref("floorp.portable.isUpdate", false);
 
+pref("floorp.privateContainer.enabled", true);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //ブックマークツールバー

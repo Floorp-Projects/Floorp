@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-overrides.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-rest-mode.js", this);
-
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-private-container.js", this);
 
 // This function is called when the floorp browser window is loaded. needs Delay.
 document.addEventListener("DOMContentLoaded", () => {

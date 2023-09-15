@@ -15,6 +15,7 @@ browser.jar:
   content/browser/browser-statusbar.js          (content/browser-statusbar.js)
   content/browser/browser-tabbar.js             (content/browser-tabbar.js)
   content/browser/browser-preferences.js        (content/browser-preferences.js)
+  content/browser/browser-private-container.js  (content/browser-private-container.js)
   content/browser/browser-command.js            (content/browser-command.js)
   content/browser/browser-toolbar-features.js   (content/browser-toolbar-features.js)
   content/browser/browser-floorp.css            (content/browser-floorp.css)
