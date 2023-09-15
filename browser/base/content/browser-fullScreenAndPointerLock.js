@@ -415,9 +415,19 @@ var FullScreen = {
     if (shiftSize > 0) {
       toolbox.style.setProperty("transform", `translateY(${shiftSize}px)`);
       toolbox.style.setProperty("z-index", "2");
+
+      // If the mouse tracking missed our fullScreenToggler, then the toolbox
+      // might not have been shown before the menubar is animated down. Make
+      // sure it is shown now.
+      if (!this.fullScreenToggler.hidden) {
+        this.showNavToolbox();
+      }
     } else {
       toolbox.style.removeProperty("transform");
       toolbox.style.removeProperty("z-index");
+
+      // If menubar is animating away, we might need to hide the toolbox also.
+      this.hideNavToolbox(false);
     }
   },
 
