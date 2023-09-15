@@ -6981,12 +6981,6 @@
   value: false
   mirror: always
 
-# Whether we attempt to decode WebP images or not.
-- name: image.webp.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether we attempt to decode AVIF images or not.
 - name: image.avif.enabled
   type: RelaxedAtomicBool
