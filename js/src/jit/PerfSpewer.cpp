@@ -832,7 +832,8 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
     JitDumpDebugRecord debug_record = {};
     uint64_t n_records = 0;
 
-    for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+    for (SrcNoteIterator iter(script->notes(), script->notesEnd());
+         !iter.atEnd(); ++iter) {
       const auto* const sn = *iter;
       switch (sn->type()) {
         case SrcNoteType::SetLine:
@@ -868,7 +869,8 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
   uint32_t lineno = script->lineno();
   JS::LimitedColumnNumberZeroOrigin colno = script->column();
   uint64_t offset = 0;
-  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+  for (SrcNoteIterator iter(script->notes(), script->notesEnd()); !iter.atEnd();
+       ++iter) {
     const auto* sn = *iter;
     offset += sn->delta();
 

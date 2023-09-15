@@ -31,13 +31,15 @@ namespace js {
  *              | type  | delta |           |1| ext-delta   |
  *              +-------+-------+           +-+-------------+
  *
+ * Extended Delta with `ext-delta == 0` is used as terminator, which is
+ * padded between the end of source notes and the next notes in the
+ * ImmutableScriptData.
+ *
  * NB: the js::SrcNote::specs_ array is indexed by this enum, so its
  * initializers need to match the order here.
  */
 
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                  \
-  /* Terminates a note vector. */                                  \
-  M(Null, "null", 0)                                               \
   M(ColSpan, "colspan", int8_t(SrcNote::ColSpan::Operands::Count)) \
   /* Bytecode follows a source newline. */                         \
   M(NewLine, "newline", 0)                                         \
@@ -46,6 +48,7 @@ namespace js {
   M(Breakpoint, "breakpoint", 0)                                   \
   /* Bytecode is the first in a new steppable area. */             \
   M(StepSep, "step-sep", 0)                                        \
+  M(Unused5, "unused", 0)                                          \
   M(Unused6, "unused", 0)                                          \
   M(Unused7, "unused", 0)                                          \
   /* 8-15 (0b1xxx) are for extended delta notes. */                \
@@ -107,7 +110,8 @@ class SrcNote {
   constexpr explicit SrcNote(uint8_t value) : value_(value) {}
 
  public:
-  constexpr SrcNote() : value_(noteValueUnchecked(SrcNoteType::Null, 0)){};
+  // A default value for padding.
+  constexpr SrcNote() : value_(noteValueUnchecked(SrcNoteType::XDelta, 0)) {}
 
   SrcNote(const SrcNote& other) = default;
   SrcNote& operator=(const SrcNote& other) = default;
@@ -115,7 +119,7 @@ class SrcNote {
   SrcNote(SrcNote&& other) = default;
   SrcNote& operator=(SrcNote&& other) = default;
 
-  static constexpr SrcNote terminator() { return SrcNote(); }
+  static constexpr SrcNote padding() { return SrcNote(); }
 
  private:
   inline uint8_t typeBits() const { return (value_ >> DeltaBits); }
@@ -149,7 +153,7 @@ class SrcNote {
   }
 
   inline bool isTerminator() const {
-    return value_ == uint8_t(SrcNoteType::Null);
+    return value_ == noteValueUnchecked(SrcNoteType::XDelta, 0);
   }
 
   inline ptrdiff_t delta() const {
@@ -376,6 +380,7 @@ inline size_t SrcNote::SetLine::getLine(const SrcNote* sn, size_t initialLine) {
 //   }
 class SrcNoteIterator {
   const SrcNote* current_;
+  const SrcNote* end_;
 
   void next() {
     unsigned arity = current_->arity();
@@ -399,9 +404,13 @@ class SrcNoteIterator {
   SrcNoteIterator(SrcNoteIterator&& other) = default;
   SrcNoteIterator& operator=(SrcNoteIterator&& other) = default;
 
-  explicit SrcNoteIterator(const SrcNote* sn) : current_(sn) {}
+  SrcNoteIterator(const SrcNote* sn, const SrcNote* end)
+      : current_(sn), end_(end) {}
 
-  bool atEnd() const { return current_->isTerminator(); }
+  bool atEnd() const {
+    MOZ_ASSERT(current_ <= end_);
+    return current_ == end_ || current_->isTerminator();
+  }
 
   const SrcNote* operator*() const { return current_; }
 

@@ -121,12 +121,13 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         lineno(script->lineno()),
         column(script->column()),
         sn(script->notes()),
+        snEnd(script->notesEnd()),
         snpc(script->code()),
         isEntryPoint(false),
         isBreakpoint(false),
         seenStepSeparator(false),
         wasArtifactEntryPoint(false) {
-    if (!sn->isTerminator()) {
+    if (sn < snEnd) {
       snpc += sn->delta();
     }
     updatePosition();
@@ -195,9 +196,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
     // Determine the current line number by reading all source notes up to
     // and including the current offset.
     jsbytecode* lastLinePC = nullptr;
-    SrcNoteIterator iter(sn);
-    for (; !iter.atEnd() && snpc <= frontPC();
-         ++iter, snpc += (*iter)->delta()) {
+    SrcNoteIterator iter(sn, snEnd);
+    while (!iter.atEnd() && snpc <= frontPC()) {
       auto sn = *iter;
 
       SrcNoteType type = sn->type();
@@ -219,6 +219,10 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         seenStepSeparator = true;
         lastLinePC = snpc;
       }
+      ++iter;
+      if (!iter.atEnd()) {
+        snpc += (*iter)->delta();
+      }
     }
 
     sn = *iter;
@@ -234,6 +238,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   JS::LimitedColumnNumberZeroOrigin column;
 
   const SrcNote* sn;
+  const SrcNote* snEnd;
   jsbytecode* snpc;
   bool isEntryPoint;
   bool isBreakpoint;

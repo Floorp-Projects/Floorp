@@ -2625,7 +2625,8 @@ js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
 
 unsigned js::PCToLineNumber(unsigned startLine,
                             JS::LimitedColumnNumberZeroOrigin startCol,
-                            SrcNote* notes, jsbytecode* code, jsbytecode* pc,
+                            SrcNote* notes, SrcNote* notesEnd, jsbytecode* code,
+                            jsbytecode* pc,
                             JS::LimitedColumnNumberZeroOrigin* columnp) {
   unsigned lineno = startLine;
   JS::LimitedColumnNumberZeroOrigin column = startCol;
@@ -2637,7 +2638,7 @@ unsigned js::PCToLineNumber(unsigned startLine,
    */
   ptrdiff_t offset = 0;
   ptrdiff_t target = pc - code;
-  for (SrcNoteIterator iter(notes); !iter.atEnd(); ++iter) {
+  for (SrcNoteIterator iter(notes, notesEnd); !iter.atEnd(); ++iter) {
     const auto* sn = *iter;
     offset += sn->delta();
     if (offset > target) {
@@ -2671,7 +2672,7 @@ unsigned js::PCToLineNumber(JSScript* script, jsbytecode* pc,
   }
 
   return PCToLineNumber(script->lineno(), script->column(), script->notes(),
-                        script->code(), pc, columnp);
+                        script->notesEnd(), script->code(), pc, columnp);
 }
 
 jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
@@ -2679,7 +2680,8 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
   ptrdiff_t best = -1;
   unsigned lineno = script->lineno();
   unsigned bestdiff = SrcNote::MaxOperand;
-  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+  for (SrcNoteIterator iter(script->notes(), script->notesEnd()); !iter.atEnd();
+       ++iter) {
     const auto* sn = *iter;
     /*
      * Exact-match only if offset is not in the prologue; otherwise use
@@ -2713,7 +2715,8 @@ out:
 JS_PUBLIC_API unsigned js::GetScriptLineExtent(JSScript* script) {
   unsigned lineno = script->lineno();
   unsigned maxLineNo = lineno;
-  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+  for (SrcNoteIterator iter(script->notes(), script->notesEnd()); !iter.atEnd();
+       ++iter) {
     const auto* sn = *iter;
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
@@ -2856,11 +2859,11 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
   size_t noteLength = notes.Length();
   MOZ_RELEASE_ASSERT(noteLength <= frontend::MaxSrcNotesLength);
 
-  size_t nullLength = ComputeNotePadding(code.Length(), noteLength);
+  size_t notePaddingLength = ComputeNotePadding(code.Length(), noteLength);
 
   // Allocate ImmutableScriptData
   js::UniquePtr<ImmutableScriptData> data(ImmutableScriptData::new_(
-      fc, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
+      fc, code.Length(), noteLength + notePaddingLength, resumeOffsets.Length(),
       scopeNotes.Length(), tryNotes.Length()));
   if (!data) {
     return data;
@@ -2881,7 +2884,8 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
   // Initialize trailing arrays
   CopySpan(code, data->codeSpan());
   CopySpan(notes, data->notesSpan().To(noteLength));
-  std::fill_n(data->notes() + noteLength, nullLength, SrcNote::terminator());
+  std::fill_n(data->notes() + noteLength, notePaddingLength,
+              SrcNote::padding());
   CopySpan(resumeOffsets, data->resumeOffsets());
   CopySpan(scopeNotes, data->scopeNotes());
   CopySpan(tryNotes, data->tryNotes());
@@ -3443,7 +3447,8 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
   unsigned lineno = script->lineno();
   JS::LimitedColumnNumberZeroOrigin column = script->column();
   SrcNote* notes = script->notes();
-  for (SrcNoteIterator iter(notes); !iter.atEnd(); ++iter) {
+  SrcNote* notesEnd = script->notesEnd();
+  for (SrcNoteIterator iter(notes, notesEnd); !iter.atEnd(); ++iter) {
     const auto* sn = *iter;
 
     unsigned delta = sn->delta();
@@ -3456,7 +3461,6 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
     }
 
     switch (type) {
-      case SrcNoteType::Null:
       case SrcNoteType::Breakpoint:
       case SrcNoteType::StepSep:
       case SrcNoteType::XDelta:
