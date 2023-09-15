@@ -3285,13 +3285,6 @@
   value: false
   mirror: always
 
-# This enables width and height attributes and map these attributes to img
-# element's style.
-- name: dom.picture_source_dimension_attributes.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for Element.requestPointerLock enabled?
 # This is added for accessibility purpose. When user has no way to exit
 # pointer lock (e.g. no keyboard available), they can use this pref to

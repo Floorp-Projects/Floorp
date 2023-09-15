@@ -74,8 +74,7 @@ bool HTMLSourceElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsIPrincipal* aMaybeScriptedPrincipal,
                                        nsAttrValue& aResult) {
-  if (StaticPrefs::dom_picture_source_dimension_attributes_enabled() &&
-      aNamespaceID == kNameSpaceID_None &&
+  if (aNamespaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
     return aResult.ParseHTMLDimension(aValue);
   }
@@ -133,8 +132,7 @@ void HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         NS_GetSourceForMediaSourceURI(uri, getter_AddRefs(mSrcMediaSource));
       }
     }
-  } else if (StaticPrefs::dom_picture_source_dimension_attributes_enabled() &&
-             aNameSpaceID == kNameSpaceID_None &&
+  } else if (aNameSpaceID == kNameSpaceID_None &&
              IsAttributeMappedToImages(aName) && IsInPicture()) {
     BuildMappedAttributesForImage();
 
@@ -186,10 +184,6 @@ JSObject* HTMLSourceElement::WrapNode(JSContext* aCx,
  */
 void HTMLSourceElement::BuildMappedAttributesForImage() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::dom_picture_source_dimension_attributes_enabled()) {
-    return;
-  }
 
   mMappedAttributesForImage = nullptr;
 
