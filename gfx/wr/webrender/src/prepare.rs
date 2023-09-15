@@ -11,6 +11,7 @@ use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
 use euclid::Scale;
 use smallvec::SmallVec;
+use crate::composite::CompositorSurfaceKind;
 use crate::command_buffer::{PrimitiveCommand, QuadFlags, CommandBufferIndex};
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
@@ -1962,19 +1963,26 @@ fn build_segments_if_needed(
             assert!(use_legacy_path);
             segment_instance_index
         }
-        PrimitiveInstanceKind::YuvImage { ref mut segment_instance_index, .. } => {
+        PrimitiveInstanceKind::YuvImage { ref mut segment_instance_index, compositor_surface_kind, .. } => {
+            // Only use segments for YUV images if not drawing as a compositor surface
+            if !compositor_surface_kind.supports_segments() {
+                *segment_instance_index = SegmentInstanceIndex::UNUSED;
+                return;
+            }
+
             segment_instance_index
         }
-        PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
+        PrimitiveInstanceKind::Image { data_handle, image_instance_index, compositor_surface_kind, .. } => {
             let image_data = &data_stores.image[data_handle].kind;
             let image_instance = &mut prim_store.images[image_instance_index];
+
             //Note: tiled images don't support automatic segmentation,
             // they strictly produce one segment per visible tile instead.
-            if frame_state
-                .resource_cache
-                .get_image_properties(image_data.key)
-                .and_then(|properties| properties.tiling)
-                .is_some()
+            if !compositor_surface_kind.supports_segments() ||
+                frame_state.resource_cache
+                    .get_image_properties(image_data.key)
+                    .and_then(|properties| properties.tiling)
+                    .is_some()
             {
                 image_instance.segment_instance_index = SegmentInstanceIndex::UNUSED;
                 return;
@@ -2200,4 +2208,14 @@ fn add_composite_prim(
         ),
         targets,
     );
+}
+
+impl CompositorSurfaceKind {
+    /// Returns true if the compositor surface strategy supports segment rendering
+    fn supports_segments(&self) -> bool {
+        match self {
+            CompositorSurfaceKind::Underlay | CompositorSurfaceKind::Overlay => false,
+            CompositorSurfaceKind::Blit => true,
+        }
+    }
 }
