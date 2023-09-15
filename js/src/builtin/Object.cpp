@@ -2267,9 +2267,7 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_FN("isSealed", obj_isSealed, 1, 0),
     JS_SELF_HOSTED_FN("fromEntries", "ObjectFromEntries", 1, 0),
     JS_SELF_HOSTED_FN("hasOwn", "ObjectHasOwn", 2, 0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("groupBy", "ObjectGroupBy", 2, 0),
-#endif
     JS_FS_END};
 
 static JSObject* CreateObjectConstructor(JSContext* cx, JSProtoKey key) {
