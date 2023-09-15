@@ -18,7 +18,7 @@
 #  include "nsPrintfCString.h"
 #endif  // defined(MOZILLA_INTERNAL_API)
 
-#if NTDDI_VERSION < NTDDI_WINBLUE || defined(__MINGW32__)
+#if defined(__MINGW32__)
 
 // Declarations from Windows SDK specific to Windows 8.1
 
@@ -31,7 +31,7 @@ HRESULT WINAPI RoGetAgileReference(AgileReferenceOptions options, REFIID riid,
                                    IUnknown* pUnk,
                                    IAgileReference** ppAgileReference);
 
-#endif  // NTDDI_VERSION < NTDDI_WINBLUE
+#endif  // defined(__MINGW32__)
 
 namespace mozilla {
 namespace mscom {
