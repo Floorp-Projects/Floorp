@@ -258,42 +258,8 @@ impl CalcUnits {
     }
 }
 
-/// For percentage resolution, sometimes we can't assume that the percentage basis is positive (so
-/// we don't know whether a percentage is larger than another).
-pub enum PositivePercentageBasis {
-    /// The percent basis is not known-positive, we can't compare percentages.
-    Unknown,
-    /// The percent basis is known-positive, we assume larger percentages are larger.
-    Yes,
-}
-
-macro_rules! compare_helpers {
-    () => {
-        /// Return whether a leaf is greater than another.
-        #[allow(unused)]
-        fn gt(&self, other: &Self, basis_positive: PositivePercentageBasis) -> bool {
-            self.compare(other, basis_positive) == Some(cmp::Ordering::Greater)
-        }
-
-        /// Return whether a leaf is less than another.
-        fn lt(&self, other: &Self, basis_positive: PositivePercentageBasis) -> bool {
-            self.compare(other, basis_positive) == Some(cmp::Ordering::Less)
-        }
-
-        /// Return whether a leaf is smaller or equal than another.
-        fn lte(&self, other: &Self, basis_positive: PositivePercentageBasis) -> bool {
-            match self.compare(other, basis_positive) {
-                Some(cmp::Ordering::Less) => true,
-                Some(cmp::Ordering::Equal) => true,
-                Some(cmp::Ordering::Greater) => false,
-                None => false,
-            }
-        }
-    };
-}
-
 /// A trait that represents all the stuff a valid leaf of a calc expression.
-pub trait CalcNodeLeaf: Clone + Sized + PartialEq + ToCss {
+pub trait CalcNodeLeaf: Clone + Sized + PartialOrd + PartialEq + ToCss {
     /// Returns the unit of the leaf.
     fn unit(&self) -> CalcUnits;
 
@@ -301,18 +267,10 @@ pub trait CalcNodeLeaf: Clone + Sized + PartialEq + ToCss {
     fn unitless_value(&self) -> f32;
 
     /// Return true if the units of both leaves are equal. (NOTE: Does not take
-    /// the values into account)
+    /// the values into acount)
     fn is_same_unit_as(&self, other: &Self) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
-
-    /// Do a partial comparison of these values.
-    fn compare(
-        &self,
-        other: &Self,
-        base_is_positive: PositivePercentageBasis,
-    ) -> Option<cmp::Ordering>;
-    compare_helpers!();
 
     /// Create a new leaf with a number value.
     fn new_number(value: f32) -> Self;
@@ -870,8 +828,8 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     }
 
                     let candidate_wins = match op {
-                        MinMaxOp::Min => candidate.lt(&result, PositivePercentageBasis::Yes),
-                        MinMaxOp::Max => candidate.gt(&result, PositivePercentageBasis::Yes),
+                        MinMaxOp::Min => candidate < result,
+                        MinMaxOp::Max => candidate > result,
                     };
 
                     if candidate_wins {
@@ -903,10 +861,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
 
                 let mut result = center;
-                if result.gt(&max, PositivePercentageBasis::Yes) {
+                if result > max {
                     result = max;
                 }
-                if result.lt(&min, PositivePercentageBasis::Yes) {
+                if result < min {
                     result = min
                 }
 
@@ -1171,7 +1129,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 ref mut max,
             } => {
                 // NOTE: clamp() is max(min, min(center, max))
-                let min_cmp_center = match min.compare(&center, PositivePercentageBasis::Unknown) {
+                let min_cmp_center = match min.partial_cmp(&center) {
                     Some(o) => o,
                     None => return,
                 };
@@ -1184,7 +1142,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
 
                 // Otherwise try with max.
-                let max_cmp_center = match max.compare(&center, PositivePercentageBasis::Unknown) {
+                let max_cmp_center = match max.partial_cmp(&center) {
                     Some(o) => o,
                     None => return,
                 };
@@ -1192,7 +1150,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 if matches!(max_cmp_center, cmp::Ordering::Less) {
                     // max is less than center, so we need to return effectively
                     // `max(min, max)`.
-                    let max_cmp_min = match max.compare(&min, PositivePercentageBasis::Unknown) {
+                    let max_cmp_min = match max.partial_cmp(&min) {
                         Some(o) => o,
                         None => {
                             debug_assert!(
@@ -1299,7 +1257,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                         let lower_diff = value_or_stop!(value.try_op(&lower_bound, Sub::sub));
                         let upper_diff = value_or_stop!(upper_bound.try_op(value, Sub::sub));
                         // In case of a tie, use the upper bound
-                        if lower_diff.lt(&upper_diff, PositivePercentageBasis::Unknown) {
+                        if lower_diff < upper_diff {
                             replace_self_with!(&mut lower_bound);
                         } else {
                             replace_self_with!(&mut upper_bound);
@@ -1324,7 +1282,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                         }
 
                         // In case of a tie, use the upper bound
-                        if lower_diff.lt(&upper_diff, PositivePercentageBasis::Unknown) {
+                        if lower_diff < upper_diff {
                             replace_self_with!(&mut lower_bound);
                         } else {
                             replace_self_with!(&mut upper_bound);
@@ -1370,9 +1328,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
 
                 let mut result = 0;
                 for i in 1..children.len() {
-                    let o = match children[i]
-                        .compare(&children[result], PositivePercentageBasis::Unknown)
-                    {
+                    let o = match children[i].partial_cmp(&children[result]) {
                         // We can't compare all the children, so we can't
                         // know which one will actually win. Bail out and
                         // keep ourselves as a min / max function.
@@ -1752,21 +1708,15 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
         }
         Ok(())
     }
+}
 
-    fn compare(
-        &self,
-        other: &Self,
-        basis_positive: PositivePercentageBasis,
-    ) -> Option<cmp::Ordering> {
+impl<L: CalcNodeLeaf> PartialOrd for CalcNode<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         match (self, other) {
-            (&CalcNode::Leaf(ref one), &CalcNode::Leaf(ref other)) => {
-                one.compare(other, basis_positive)
-            },
+            (&CalcNode::Leaf(ref one), &CalcNode::Leaf(ref other)) => one.partial_cmp(other),
             _ => None,
         }
     }
-
-    compare_helpers!();
 }
 
 impl<L: CalcNodeLeaf> ToCss for CalcNode<L> {
