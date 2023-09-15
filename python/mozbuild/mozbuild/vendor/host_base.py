@@ -38,10 +38,6 @@ class BaseHost:
                 revision_arg = [revision]
 
             try:
-                print(
-                    ["git", "--no-pager", "tag", "-l", "--sort=creatordate"]
-                    + revision_arg
-                )
                 tag = subprocess.run(
                     ["git", "--no-pager", "tag", "-l", "--sort=creatordate"]
                     + revision_arg,
