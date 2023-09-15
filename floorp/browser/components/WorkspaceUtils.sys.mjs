@@ -27,6 +27,7 @@ export const CONTAINER_ICONS = new Set([
   "briefcase",
   "cart",
   "circle",
+  "compass",
   "dollar",
   "fence",
   "fingerprint",
@@ -34,7 +35,10 @@ export const CONTAINER_ICONS = new Set([
   "vacation",
   "food",
   "fruit",
+  "gear",
   "pet",
+  "question",
+  "star",
   "tree",
   "chill",
 ]);
