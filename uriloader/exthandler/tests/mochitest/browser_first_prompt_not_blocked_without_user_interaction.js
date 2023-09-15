@@ -26,7 +26,7 @@ add_task(async function test_open_without_user_interaction() {
     true
   );
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     TEST_PATH + "file_external_protocol_iframe.html"
   );

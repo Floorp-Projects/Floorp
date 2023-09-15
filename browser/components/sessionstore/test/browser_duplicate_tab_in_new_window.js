@@ -6,7 +6,7 @@ add_task(async function () {
   await BrowserTestUtils.withNewTab(
     "https://example.com",
     async function (aBrowser) {
-      BrowserTestUtils.loadURIString(aBrowser, "https://example.org");
+      BrowserTestUtils.startLoadingURIString(aBrowser, "https://example.org");
       await BrowserTestUtils.browserLoaded(aBrowser);
 
       let windowOpened = BrowserTestUtils.waitForNewWindow(

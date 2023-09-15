@@ -28,7 +28,7 @@ add_task(async function test() {
     private: true,
   });
   let privateBrowser = privateWin.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(privateBrowser, testURI);
+  BrowserTestUtils.startLoadingURIString(privateBrowser, testURI);
   await BrowserTestUtils.browserLoaded(privateBrowser);
 
   info("Test on private window");
@@ -36,7 +36,7 @@ add_task(async function test() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(browser, testURI);
+  BrowserTestUtils.startLoadingURIString(browser, testURI);
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Test on public window");

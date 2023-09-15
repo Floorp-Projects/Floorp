@@ -55,7 +55,7 @@ async function test_early_hints_load_url(usePrivateWin) {
 
   const browser = win.gBrowser.selectedTab.linkedBrowser;
   let loaded = BrowserTestUtils.browserLoaded(browser, false, requestUrl);
-  BrowserTestUtils.loadURIString(browser, requestUrl);
+  BrowserTestUtils.startLoadingURIString(browser, requestUrl);
   await loaded;
 
   Assert.equal(observed.actrualUrl, expectedUrl);

@@ -42,7 +42,7 @@ add_task(async function test_https_only_background_request_redirect() {
 
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       browser,
       "http://example.com/browser/dom/security/test/https-only/file_background_redirect.sjs?start"
     );

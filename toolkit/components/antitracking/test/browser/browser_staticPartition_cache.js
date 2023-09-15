@@ -89,7 +89,7 @@ add_task(async function () {
 
     info("Let's load a page to populate some entries");
     let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
-    BrowserTestUtils.loadURIString(tab.linkedBrowser, cacheURL);
+    BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, cacheURL);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, cacheURL);
 
     let argObj = {

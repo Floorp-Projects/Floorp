@@ -8,7 +8,7 @@ const PDF_TEST_URL =
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;
-  BrowserTestUtils.loadURIString(selectedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
   return selectedBrowser;
 }
@@ -560,7 +560,7 @@ add_task(
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
-    BrowserTestUtils.loadURIString(win.gBrowser, "about:preferences");
+    BrowserTestUtils.startLoadingURIString(win.gBrowser, "about:preferences");
     await BrowserTestUtils.waitForLocationChange(
       win.gBrowser,
       "about:preferences"
@@ -775,7 +775,7 @@ add_task(
       "Feature callout rendered when opening a newtab"
     );
 
-    BrowserTestUtils.loadURIString(win.gBrowser, PDF_TEST_URL);
+    BrowserTestUtils.startLoadingURIString(win.gBrowser, PDF_TEST_URL);
     await BrowserTestUtils.waitForLocationChange(win.gBrowser, PDF_TEST_URL);
     await waitForCalloutRemoved(doc);
 

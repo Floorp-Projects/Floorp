@@ -30,7 +30,7 @@ add_task(async function avoid_timeout_and_show_https_only_error_page() {
       TIMEOUT_PAGE_URI_HTTPS, // Wait for upgraded page to timeout
       true // maybeErrorPage = true, because we need the error page to appear
     );
-    BrowserTestUtils.loadURIString(browser, TIMEOUT_PAGE_URI_HTTP);
+    BrowserTestUtils.startLoadingURIString(browser, TIMEOUT_PAGE_URI_HTTP);
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function () {

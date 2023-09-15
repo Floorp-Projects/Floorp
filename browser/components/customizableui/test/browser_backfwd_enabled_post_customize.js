@@ -17,13 +17,13 @@ add_task(async function test_back_forward_buttons() {
   });
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH);
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "data:text/html,A separate page"
   );
   await loaded;
   loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "data:text/html,Another separate page"
   );

@@ -19,7 +19,7 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href != contentPage) {
-        BrowserTestUtils.loadURIString(win.gBrowser, contentPage);
+        BrowserTestUtils.startLoadingURIString(win.gBrowser, contentPage);
         return;
       }
 

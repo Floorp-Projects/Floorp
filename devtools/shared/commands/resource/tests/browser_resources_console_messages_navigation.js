@@ -47,7 +47,7 @@ async function testCrossProcessTabNavigation(browser, resourceCommand) {
   );
 
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(browser, TEST_URL);
   await onLoaded;
 
   info("Wait for log message");

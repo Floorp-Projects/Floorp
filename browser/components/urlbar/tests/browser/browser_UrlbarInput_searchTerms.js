@@ -100,7 +100,7 @@ add_task(async function go_back() {
   let { tab } = await searchWithTab(SEARCH_STRING);
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "http://www.example.com/some_url"
   );
@@ -131,7 +131,7 @@ add_task(async function load_url() {
     false,
     expectedSearchUrl
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, expectedSearchUrl);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
   assertSearchStringIsInUrlbar(SEARCH_STRING);
 

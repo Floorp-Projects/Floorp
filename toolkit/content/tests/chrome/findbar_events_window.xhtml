@@ -48,7 +48,7 @@
       gBrowser = document.getElementById(browserId);
       const url = "data:text/html,hello there";
       let promise = BrowserTestUtils.browserLoaded(gBrowser, false, url);
-      BrowserTestUtils.loadURIString(gBrowser, url);
+      BrowserTestUtils.startLoadingURIString(gBrowser, url);
       await promise;
       gFindBar.browser = gBrowser;
       await onDocumentLoaded();

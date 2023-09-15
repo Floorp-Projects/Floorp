@@ -22,7 +22,7 @@ add_task(async function testBFCacheEviction() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: uri },
     async function (browser) {
-      BrowserTestUtils.loadURIString(browser, uri2);
+      BrowserTestUtils.startLoadingURIString(browser, uri2);
       await BrowserTestUtils.browserLoaded(browser);
 
       let awaitPageShow = BrowserTestUtils.waitForContentEvent(

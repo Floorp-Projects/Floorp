@@ -14,7 +14,7 @@ add_task(async function test() {
   let browser = win.gBrowser.selectedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     browser,
     "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/" +
       "browser_privatebrowsing_localStorage_page2.html"

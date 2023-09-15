@@ -47,7 +47,7 @@ add_task(async function test_typing_pushState() {
 
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -77,7 +77,7 @@ add_task(async function test_typing_pushState_sameUrl() {
 
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -102,7 +102,7 @@ add_task(async function test_typing_replaceState() {
 
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -132,7 +132,7 @@ add_task(async function test_typing_replaceState_sameUrl() {
 
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -157,7 +157,7 @@ add_task(async function test_typing_hashchange() {
 
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([

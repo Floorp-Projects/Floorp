@@ -25,7 +25,10 @@ add_task(async function test_selectContextualSearchResult_already_installed() {
     false,
     ENGINE_TEST_URL
   );
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, ENGINE_TEST_URL);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    ENGINE_TEST_URL
+  );
   await onLoaded;
 
   const query = "search";
@@ -80,7 +83,10 @@ add_task(async function test_selectContextualSearchResult_not_installed() {
     false,
     ENGINE_TEST_URL
   );
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, ENGINE_TEST_URL);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    ENGINE_TEST_URL
+  );
   await onLoaded;
 
   const query = "search";

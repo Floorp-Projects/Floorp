@@ -107,7 +107,7 @@ function task(contentConsts) {
 add_task(async function () {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   let promise = ContentTask.spawn(tab.linkedBrowser, consts, task);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "data:text/html;charset=utf-8," +
       "<html><body>" +

@@ -34,7 +34,7 @@ function check_menu_at_page(url, testFn) {
       let dclPromise = SpecialPowers.spawn(browser, [], async function () {
         await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
       });
-      BrowserTestUtils.loadURIString(browser, url);
+      BrowserTestUtils.startLoadingURIString(browser, url);
       await dclPromise;
 
       let menu = document.getElementById("menu_HelpPopup");

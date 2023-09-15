@@ -184,6 +184,6 @@ async function loadURL(browser, url, options = {}) {
     url,
     maybeErrorPage
   );
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   return loaded;
 }

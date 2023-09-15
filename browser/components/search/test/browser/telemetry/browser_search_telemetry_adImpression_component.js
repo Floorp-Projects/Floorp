@@ -210,7 +210,7 @@ add_task(async function test_ad_impressions_with_carousels_tabhistory() {
   resetTelemetry();
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "https://www.example.com/some_url"
   );

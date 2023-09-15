@@ -32,7 +32,7 @@ async function navigateTo(uri, tab, toolbox, extension) {
     tab.linkedBrowser
   );
   const onSwitched = toolbox.commands.targetCommand.once("switched-target");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, uri);
   info("Wait for the tab to be loaded");
   await promiseBrowserLoaded;
   info("Wait for the toolbox target to have been switched");

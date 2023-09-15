@@ -192,7 +192,7 @@ add_task(async function test_check_auth() {
   // Try a simple load:
   await checkDialog(
     "https://example.com/",
-    browser => BrowserTestUtils.loadURIString(browser, AUTH_URI),
+    browser => BrowserTestUtils.startLoadingURIString(browser, AUTH_URI),
     HOST,
     "chrome://global/skin/icons/defaultFavicon.svg",
     Ci.nsIPrompt.MODAL_TYPE_TAB

@@ -17,7 +17,7 @@ add_task(async function () {
     /* includesubframes */ false,
     URL
   );
-  BrowserTestUtils.loadURIString(backgroundTab.linkedBrowser, URL);
+  BrowserTestUtils.startLoadingURIString(backgroundTab.linkedBrowser, URL);
   await loadedPromise;
 
   // Get active element in the tab.

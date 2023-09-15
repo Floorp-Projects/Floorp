@@ -321,7 +321,7 @@ add_task(async function test_zoom_api() {
     private: true,
   });
   let selectedBrowser = privateWindow.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(selectedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 
   gBrowser.selectedTab = tab1;

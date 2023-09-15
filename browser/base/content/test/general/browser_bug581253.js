@@ -27,7 +27,7 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
     "the test url is bookmarked"
   );
 
-  BrowserTestUtils.loadURIString(gBrowser, testURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser, testURL);
 
   await TestUtils.waitForCondition(
     () => BookmarkingUI.status == BookmarkingUI.STATUS_STARRED,

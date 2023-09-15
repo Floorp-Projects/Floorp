@@ -134,7 +134,7 @@ export var TestRunner = {
       .removeAttribute("remotecontrol");
 
     let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
-    lazy.BrowserTestUtils.loadURIString(selectedBrowser, HOME_PAGE);
+    lazy.BrowserTestUtils.startLoadingURIString(selectedBrowser, HOME_PAGE);
     await lazy.BrowserTestUtils.browserLoaded(selectedBrowser);
 
     for (let i = 0; i < this.combos.length; i++) {
@@ -228,7 +228,7 @@ export var TestRunner = {
       gBrowser.removeTab(gBrowser.selectedTab, { animate: false });
     }
     gBrowser.unpinTab(gBrowser.selectedTab);
-    lazy.BrowserTestUtils.loadURIString(
+    lazy.BrowserTestUtils.startLoadingURIString(
       gBrowser.selectedBrowser,
       "data:text/html;charset=utf-8,<h1>Done!"
     );

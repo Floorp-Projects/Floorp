@@ -52,7 +52,7 @@ add_task(async function test_with_downloads_pref_disabled() {
   let windowPromise = addWindowListener(
     "chrome://mozapps/content/downloads/unknownContentType.xhtml"
   );
-  BrowserTestUtils.loadURIString(gBrowser, kTestURI);
+  BrowserTestUtils.startLoadingURIString(gBrowser, kTestURI);
   let win = await windowPromise;
 
   is(
@@ -77,7 +77,7 @@ add_task(async function test_with_always_ask_pref_disabled() {
   let downloadsPanelPromise = promisePanelOpened();
   let downloadsPromise = Downloads.getList(Downloads.PUBLIC);
 
-  BrowserTestUtils.loadURIString(gBrowser, kTestURI);
+  BrowserTestUtils.startLoadingURIString(gBrowser, kTestURI);
   // wait until downloadsPanel opens before continuing with test
   await downloadsPanelPromise;
   let downloadList = await downloadsPromise;

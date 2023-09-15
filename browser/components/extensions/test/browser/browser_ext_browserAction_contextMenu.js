@@ -626,7 +626,7 @@ async function browseraction_contextmenu_report_extension_helper() {
       await customizationReady;
     } else {
       info("Navigate the about:addons tab to about:blank");
-      BrowserTestUtils.loadURIString(browser, "about:blank");
+      BrowserTestUtils.startLoadingURIString(browser, "about:blank");
       await BrowserTestUtils.browserLoaded(browser);
     }
 

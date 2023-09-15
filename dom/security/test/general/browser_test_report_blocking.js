@@ -98,7 +98,7 @@ async function testReporting(test) {
     test.frame_uri,
     true
   );
-  BrowserTestUtils.loadURIString(browser, test.test_uri);
+  BrowserTestUtils.startLoadingURIString(browser, test.test_uri);
   await loaded;
 
   let { type } = test;
@@ -134,7 +134,7 @@ async function testReporting(test) {
   browser = tab.linkedBrowser;
 
   loaded = BrowserTestUtils.browserLoaded(browser, true, test.frame_uri, true);
-  BrowserTestUtils.loadURIString(browser, test.test_uri);
+  BrowserTestUtils.startLoadingURIString(browser, test.test_uri);
   await loaded;
 
   frameBC = await SpecialPowers.spawn(browser, [], async _ => {
@@ -174,7 +174,7 @@ async function testReporting(test) {
   browser = tab.linkedBrowser;
 
   loaded = BrowserTestUtils.browserLoaded(browser, true, test.frame_uri, true);
-  BrowserTestUtils.loadURIString(browser, test.test_uri);
+  BrowserTestUtils.startLoadingURIString(browser, test.test_uri);
   await loaded;
 
   frameBC = await SpecialPowers.spawn(browser, [], async _ => {

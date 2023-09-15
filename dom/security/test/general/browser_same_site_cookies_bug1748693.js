@@ -42,14 +42,14 @@ add_task(async function bug1748693() {
   });
 
   let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser,
     `${HTTPS_PATH}file_same_site_cookies_bug1748693.sjs?setcookies`
   );
   await loaded;
 
   loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser,
     `${HTTP_PATH}file_same_site_cookies_bug1748693.sjs`
   );

@@ -2,13 +2,13 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     "data:text/plain;charset=utf-8,1",
     async function (browser) {
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         browser,
         "data:text/plain;charset=utf-8,2"
       );
       await BrowserTestUtils.browserLoaded(browser);
 
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         browser,
         "data:text/plain;charset=utf-8,3"
       );

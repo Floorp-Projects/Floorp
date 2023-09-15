@@ -33,7 +33,7 @@ add_task(async function back_and_forth() {
       false,
       EXAMPLE_URL_2
     );
-    BrowserTestUtils.loadURIString(browser, EXAMPLE_URL_2);
+    BrowserTestUtils.startLoadingURIString(browser, EXAMPLE_URL_2);
     await pageLoadPromise;
     info("Other page finished loading.");
     assertUrlEqualsOriginalURI(EXAMPLE_URL_2, browser.originalURI);
@@ -146,7 +146,7 @@ add_task(async function page_with_iframe() {
     info("Blank page loaded.");
 
     info("Load URL.");
-    BrowserTestUtils.loadURIString(browser, URL);
+    BrowserTestUtils.startLoadingURIString(browser, URL);
     // Make sure the iFrame is finished loading.
     await BrowserTestUtils.browserLoaded(
       browser,

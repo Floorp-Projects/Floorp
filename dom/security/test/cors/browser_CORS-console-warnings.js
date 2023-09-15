@@ -74,7 +74,7 @@ add_task(async function () {
     "about:blank"
   );
 
-  BrowserTestUtils.loadURIString(gBrowser, test_uri);
+  BrowserTestUtils.startLoadingURIString(gBrowser, test_uri);
 
   await BrowserTestUtils.waitForLocationChange(
     gBrowser,
@@ -87,7 +87,7 @@ add_task(async function () {
   messages_seen = 0;
   let test_two_uri =
     "http://mochi.test:8888/browser/dom/security/test/cors/file_bug1456721.html";
-  BrowserTestUtils.loadURIString(gBrowser, test_two_uri);
+  BrowserTestUtils.startLoadingURIString(gBrowser, test_two_uri);
 
   await BrowserTestUtils.waitForLocationChange(
     gBrowser,

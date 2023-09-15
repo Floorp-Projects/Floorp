@@ -29,7 +29,7 @@ async function waitForScrollEvent(aBrowser, aTask) {
 add_task(async function test_no_scrolling() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     await assertDatabaseValues([
@@ -54,7 +54,7 @@ add_task(async function test_arrow_key_down_scroll() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     await assertDatabaseValues([
@@ -77,7 +77,7 @@ add_task(async function test_scrollIntoView() {
       })
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     // JS-triggered scrolling should not be reported
@@ -101,7 +101,7 @@ add_task(async function test_anchor_click() {
       })
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     // The scrolling resulting from clicking on an anchor should not be reported
@@ -124,7 +124,7 @@ add_task(async function test_window_scrollBy() {
       })
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     // The scrolling resulting from the window.scrollBy() call should not be reported
@@ -147,7 +147,7 @@ add_task(async function test_window_scrollTo() {
       })
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     // The scrolling resulting from the window.scrollTo() call should not be reported

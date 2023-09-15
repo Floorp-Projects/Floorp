@@ -32,7 +32,7 @@ add_task(async function () {
 
   // Load more pages than we would save to disk on a clean shutdown.
   for (let i = 0; i < MAX_BACK + 2; i++) {
-    BrowserTestUtils.loadURIString(browser, URL + i);
+    BrowserTestUtils.startLoadingURIString(browser, URL + i);
     await promiseBrowserLoaded(browser);
     ok(browser.isRemoteBrowser, "browser is still remote");
   }
@@ -41,7 +41,7 @@ add_task(async function () {
   await countHistoryEntries(browser, MAX_BACK + 2);
 
   // Load a non-remote page.
-  BrowserTestUtils.loadURIString(browser, "about:robots");
+  BrowserTestUtils.startLoadingURIString(browser, "about:robots");
   await promiseBrowserLoaded(browser);
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
 

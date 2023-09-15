@@ -114,7 +114,7 @@ add_task(async function resume_and_suspend_background_video_decoding() {
 
   info("- before loading media, we shoudn't send the tab hover msg for tab -");
   await check_should_not_send_unselected_tab_hover_msg(browser);
-  BrowserTestUtils.loadURIString(browser, PAGE);
+  BrowserTestUtils.startLoadingURIString(browser, PAGE);
   await BrowserTestUtils.browserLoaded(browser);
 
   info("- should suspend background video decoding -");

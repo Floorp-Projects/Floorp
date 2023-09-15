@@ -188,7 +188,7 @@ body > div > div {width: 1000px;height: 1000px;}\
       let loadedPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser
       );
-      BrowserTestUtils.loadURIString(gBrowser, test.dataUri);
+      BrowserTestUtils.startLoadingURIString(gBrowser, test.dataUri);
       await loadedPromise;
       await ContentTask.spawn(gBrowser.selectedBrowser, {}, async () => {
         // Wait for a paint so that hit-testing works correctly.

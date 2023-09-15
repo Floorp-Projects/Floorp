@@ -18,7 +18,7 @@ add_task(async function runTests() {
     info("# part 1");
     await whenPageShown(browser, () =>
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      BrowserTestUtils.loadURIString(browser, "http://www.example.com/")
+      BrowserTestUtils.startLoadingURIString(browser, "http://www.example.com/")
     );
     await checkListenersAsync("newentry", "shistory has a new entry");
     ok(browser.canGoBack, "we can go back");
@@ -121,7 +121,7 @@ add_task(async function runTests() {
   info("# part 1");
   await whenPageShown(browser, () =>
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    BrowserTestUtils.loadURIString(browser, "http://www.example.com/")
+    BrowserTestUtils.startLoadingURIString(browser, "http://www.example.com/")
   );
   checkListeners("newentry", "shistory has a new entry");
   ok(browser.canGoBack, "we can go back");

@@ -293,7 +293,7 @@ function doPageNavigation(params) {
     TestWindow.getBrowser().gotoIndex(gotoIndex);
   } else if (uri) {
     gNavType = NAV_URI;
-    BrowserTestUtils.loadURIString(TestWindow.getBrowser(), uri);
+    BrowserTestUtils.startLoadingURIString(TestWindow.getBrowser(), uri);
   } else if (reload) {
     gNavType = NAV_RELOAD;
     TestWindow.getBrowser().reload();

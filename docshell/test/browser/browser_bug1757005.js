@@ -21,7 +21,7 @@ add_task(async function () {
       info("Initial load");
 
       let loaded = BrowserTestUtils.browserLoaded(browser);
-      BrowserTestUtils.loadURIString(browser, url2);
+      BrowserTestUtils.startLoadingURIString(browser, url2);
       await loaded;
       info("Second page loaded");
 

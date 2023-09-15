@@ -34,7 +34,7 @@ function test() {
       )
   );
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser,
     TESTROOT2 + "installtrigger_frame.html?" + inner_url
   );

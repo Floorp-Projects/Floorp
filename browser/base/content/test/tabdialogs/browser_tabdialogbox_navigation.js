@@ -28,7 +28,7 @@ add_task(async function test_tabdialogbox_multiple_close_on_nav() {
       await Promise.all(dialogs.map(dialog => dialog._dialogReady));
 
       // Navigate to a different page
-      BrowserTestUtils.loadURIString(browser, "https://example.org");
+      BrowserTestUtils.startLoadingURIString(browser, "https://example.org");
 
       info("Waiting for dialogs to close.");
       await closedPromises;
@@ -163,7 +163,7 @@ add_task(async function test_tabdialogbox_hide() {
       );
 
       // Navigate to a different page
-      BrowserTestUtils.loadURIString(browser, "https://example.org");
+      BrowserTestUtils.startLoadingURIString(browser, "https://example.org");
 
       info("Waiting for dialogs to close.");
       await closedPromises;

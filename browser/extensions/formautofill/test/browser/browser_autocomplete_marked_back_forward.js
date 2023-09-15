@@ -36,7 +36,7 @@ add_task(async function test_back_forward() {
 
       // Now navigate forward and make sure autofill autocomplete results are still attached
       let loadPromise = BrowserTestUtils.browserLoaded(browser);
-      BrowserTestUtils.loadURIString(browser, `${URL}?load=2`);
+      BrowserTestUtils.startLoadingURIString(browser, `${URL}?load=2`);
       info("expecting browser loaded");
       await loadPromise;
 

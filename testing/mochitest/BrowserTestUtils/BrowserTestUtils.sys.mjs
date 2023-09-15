@@ -923,14 +923,18 @@ export var BrowserTestUtils = {
   },
 
   /**
-   * Loads a new URI in the given browser, triggered by the system principal.
+   * Starts the load of a new URI in the given browser, triggered by the system
+   * principal.
+   * Note this won't want for the load to be complete. For that you may either
+   * use BrowserTestUtils.browserLoaded(), BrowserTestUtils.waitForErrorPage(),
+   * or make your own handler.
    *
    * @param {xul:browser} browser
    *        A xul:browser.
    * @param {string} uri
    *        The URI to load.
    */
-  loadURIString(browser, uri) {
+  startLoadingURIString(browser, uri) {
     browser.fixupAndLoadURIString(uri, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });

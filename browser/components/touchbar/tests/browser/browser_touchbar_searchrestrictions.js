@@ -142,7 +142,7 @@ add_task(async function clearURLs() {
   for (let { loadUrl, token } of tests) {
     let browser = win.gBrowser.selectedBrowser;
     let loadedPromise = BrowserTestUtils.browserLoaded(browser, false, loadUrl);
-    BrowserTestUtils.loadURIString(browser, loadUrl);
+    BrowserTestUtils.startLoadingURIString(browser, loadUrl);
     await loadedPromise;
     if (win.gURLBar.getAttribute("pageproxystate") != "valid") {
       await TestUtils.waitForCondition(

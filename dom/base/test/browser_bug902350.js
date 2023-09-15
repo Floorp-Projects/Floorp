@@ -25,7 +25,7 @@ add_task(async function mixed_content_block_for_target_top_test() {
     true,
     frameUrl
   );
-  BrowserTestUtils.loadURIString(testBrowser, url);
+  BrowserTestUtils.startLoadingURIString(testBrowser, url);
   await loadPromise;
   await frameLoadPromise;
 

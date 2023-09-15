@@ -11,7 +11,7 @@ const URL = `${ORIGIN}/${PATH}`;
 
 add_task(async function () {
   await BrowserTestUtils.withNewTab(URL, async function (browser) {
-    BrowserTestUtils.loadURIString(browser, URL);
+    BrowserTestUtils.startLoadingURIString(browser, URL);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(browser, [ORIGIN], async origin => {

@@ -751,7 +751,7 @@ this.AntiTracking = {
         doAccessRemovalChecks &&
         options.accessRemoval == "navigate-topframe"
       ) {
-        BrowserTestUtils.loadURIString(browser, TEST_4TH_PARTY_PAGE);
+        BrowserTestUtils.startLoadingURIString(browser, TEST_4TH_PARTY_PAGE);
         await BrowserTestUtils.browserLoaded(browser);
 
         let pageshow = BrowserTestUtils.waitForContentEvent(

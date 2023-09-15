@@ -29,7 +29,7 @@ add_task(async function () {
     let browser = tab.linkedBrowser;
 
     // Start loading the original URI, then wait until it is loaded.
-    BrowserTestUtils.loadURIString(browser, URL1);
+    BrowserTestUtils.startLoadingURIString(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser, false, URL1);
 
     info("Chrome script has loaded initial URI.");

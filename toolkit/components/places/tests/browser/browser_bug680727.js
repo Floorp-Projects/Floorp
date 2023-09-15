@@ -31,7 +31,10 @@ function test() {
       null,
       true
     ).then(errorListener);
-    BrowserTestUtils.loadURIString(ourTab.linkedBrowser, kUniqueURI.spec);
+    BrowserTestUtils.startLoadingURIString(
+      ourTab.linkedBrowser,
+      kUniqueURI.spec
+    );
   });
 }
 

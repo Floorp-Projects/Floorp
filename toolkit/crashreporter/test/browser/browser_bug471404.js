@@ -49,7 +49,7 @@ add_task(async function test() {
           await test.setup(crD);
         }
 
-        BrowserTestUtils.loadURIString(browser, "about:crashes");
+        BrowserTestUtils.startLoadingURIString(browser, "about:crashes");
         await BrowserTestUtils.browserLoaded(browser).then(() =>
           test.onload(browser)
         );

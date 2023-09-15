@@ -9,7 +9,7 @@ loadTestSubscript("head_sessions.js");
 add_task(async function test_sessions_get_recently_closed() {
   async function openAndCloseWindow(url = "http://example.com", tabUrls) {
     let win = await BrowserTestUtils.openNewBrowserWindow();
-    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     if (tabUrls) {
       for (let url of tabUrls) {
@@ -145,7 +145,7 @@ add_task(async function test_sessions_get_recently_closed_navigated() {
   // Test with a window with navigation history.
   let win = await BrowserTestUtils.openNewBrowserWindow();
   for (let url of ["about:robots", "about:mozilla", "http://example.com/"]) {
-    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   }
 

@@ -39,7 +39,7 @@ function test() {
         certOverrideService.clearValidityOverride(INVALID_CERT_DOMAIN, -1, {});
       });
 
-      BrowserTestUtils.loadURIString(gBrowser, INVALID_CERT_LOCATION);
+      BrowserTestUtils.startLoadingURIString(gBrowser, INVALID_CERT_LOCATION);
       let loaded = await BrowserTestUtils.browserLoaded(
         gBrowser,
         false,

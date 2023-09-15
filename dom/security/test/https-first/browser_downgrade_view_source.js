@@ -14,7 +14,7 @@ const TEST_PATH_HTTPS = getRootDirectory(gTestPath).replace(
 async function runTest(desc, url, expectedURI, excpectedContent) {
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
-    BrowserTestUtils.loadURIString(browser, url);
+    BrowserTestUtils.startLoadingURIString(browser, url);
     await loaded;
 
     await SpecialPowers.spawn(

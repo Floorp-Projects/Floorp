@@ -15,7 +15,7 @@ add_task(async function test() {
 
   async function doTest(aShouldValueExist, aWindow) {
     let browser = aWindow.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURIString(browser, testURI);
+    BrowserTestUtils.startLoadingURIString(browser, testURI);
     await BrowserTestUtils.browserLoaded(browser);
 
     // Wait for the page to reload itself.

@@ -30,7 +30,7 @@ add_task(async function target_to_new_blank_browser() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let originalTab = win.gBrowser.selectedTab;
   let originalBrowser = originalTab.linkedBrowser;
-  BrowserTestUtils.loadURIString(originalBrowser, TEST_PAGE);
+  BrowserTestUtils.startLoadingURIString(originalBrowser, TEST_PAGE);
   await BrowserTestUtils.browserLoaded(originalBrowser, false, TEST_PAGE);
 
   // Now set the targetTopLevelLinkClicksToBlank property to true, since it
@@ -66,7 +66,7 @@ add_task(async function target_to_new_blank_browser() {
 
   // Now do the same thing with a subframe targeting "_top". This should also
   // get redirected to "_blank".
-  BrowserTestUtils.loadURIString(originalBrowser, TEST_IFRAME_PAGE);
+  BrowserTestUtils.startLoadingURIString(originalBrowser, TEST_IFRAME_PAGE);
   await BrowserTestUtils.browserLoaded(
     originalBrowser,
     false,
@@ -124,7 +124,7 @@ add_task(async function target_to_new_blank_browser() {
 add_task(async function skip_blank_target_for_some_loads() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let currentBrowser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(currentBrowser, TEST_PAGE);
+  BrowserTestUtils.startLoadingURIString(currentBrowser, TEST_PAGE);
   await BrowserTestUtils.browserLoaded(currentBrowser, false, TEST_PAGE);
 
   // Now set the targetTopLevelLinkClicksToBlank property to true, since it

@@ -6,7 +6,10 @@ add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(gBrowser, "https://nocert.example.com/");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser,
+    "https://nocert.example.com/"
+  );
   await promise;
 
   await remote(() => {

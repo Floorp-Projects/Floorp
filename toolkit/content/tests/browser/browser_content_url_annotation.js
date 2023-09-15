@@ -61,7 +61,7 @@ add_task(async function test_content_url_annotation() {
         null,
         true
       );
-      BrowserTestUtils.loadURIString(browser, url);
+      BrowserTestUtils.startLoadingURIString(browser, url);
       await promise;
 
       // Crash the tab

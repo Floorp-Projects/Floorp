@@ -68,7 +68,7 @@ function preventBFCache(aBrowsingContext, aPrevent) {
               ? "https://example.org/browser/dom/base/test/fullscreen/file_fullscreen-iframe-inner.html"
               : "http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-iframe-inner.html";
             const loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-            BrowserTestUtils.loadURIString(browser, url);
+            BrowserTestUtils.startLoadingURIString(browser, url);
             await loaded;
 
             // Maybe prevent BFCache on fullscreen test page.

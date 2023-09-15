@@ -121,7 +121,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   ok(true, "extpage1 got a webRequest event as expected");
 
   info("Load a second extension page in the same tab");
-  BrowserTestUtils.loadURIString(browser, extPageURL2);
+  BrowserTestUtils.startLoadingURIString(browser, extPageURL2);
 
   info("Wait extpage1 to receive a pagehide event");
   await extension.awaitMessage("pagehide:extpage1");
@@ -193,7 +193,7 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
     false,
     webPageURL
   );
-  BrowserTestUtils.loadURIString(browserForTab1, webPageURL);
+  BrowserTestUtils.startLoadingURIString(browserForTab1, webPageURL);
   info("Wait the tab to have loaded the new webpage url");
   await promiseLoaded;
   info("Wait the extension page to receive a pagehide event");

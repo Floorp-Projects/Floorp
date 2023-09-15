@@ -9,7 +9,7 @@ async function navigateTo(browser, urls, expectedPersist) {
   // Navigate to a bunch of urls
   for (let url of urls) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-    BrowserTestUtils.loadURIString(browser, url);
+    BrowserTestUtils.startLoadingURIString(browser, url);
     await loaded;
   }
   // When we track pageshow event, save the evt.persisted on a doc element,

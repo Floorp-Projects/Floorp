@@ -33,7 +33,7 @@ add_task(async function () {
         "chrome://mochitests/content",
         "https://example.com"
       ) + "dummy_page.html";
-    BrowserTestUtils.loadURIString(browser, uri);
+    BrowserTestUtils.startLoadingURIString(browser, uri);
     await BrowserTestUtils.browserLoaded(browser, false, uri);
     is(onLocationChangeCount, 1, "should have 1 onLocationChange event");
     is(onSecurityChangeCount, 1, "should have 1 onSecurityChange event");

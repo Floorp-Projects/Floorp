@@ -80,7 +80,7 @@ async function setupPage(htmlPageName, blockedPage) {
     true
   );
 
-  BrowserTestUtils.loadURIString(browser, iFramePage);
+  BrowserTestUtils.startLoadingURIString(browser, iFramePage);
   await browserLoaded;
   info("The error page has loaded!");
 

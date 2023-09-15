@@ -213,7 +213,7 @@ async function runTestIniFrame(gBrowser, enabled, expectNoConsole) {
 
           Services.console.reset();
 
-          BrowserTestUtils.loadURIString(browser, referrerURL);
+          BrowserTestUtils.startLoadingURIString(browser, referrerURL);
           await BrowserTestUtils.browserLoaded(browser, false, referrerURL);
 
           let iframeURL = test.test_url + "?show";
@@ -268,7 +268,7 @@ async function runTestForLinkClick(gBrowser, enabled, expectNoConsole) {
 
           Services.console.reset();
 
-          BrowserTestUtils.loadURIString(browser, referrerURL);
+          BrowserTestUtils.startLoadingURIString(browser, referrerURL);
           await BrowserTestUtils.browserLoaded(browser, false, referrerURL);
 
           let linkURL = test.test_url + "?show";

@@ -48,7 +48,7 @@ function cleanupHSTS(aPartitionEnabled, aUseSite) {
 
 function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   info("Wait for load tab event");
-  BrowserTestUtils.loadURIString(aTab.linkedBrowser, aURL);
+  BrowserTestUtils.startLoadingURIString(aTab.linkedBrowser, aURL);
   return BrowserTestUtils.browserLoaded(aTab.linkedBrowser, false, aFinalURL);
 }
 
@@ -225,7 +225,7 @@ add_task(async function test_includeSubDomains() {
       let certErrorLoaded = BrowserTestUtils.waitForErrorPage(
         tab.linkedBrowser
       );
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         tab.linkedBrowser,
         unsecureNoCertSubEmptyURL
       );

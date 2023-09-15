@@ -47,7 +47,7 @@ async function doTestInSameWindow({
     // Specifically, if we load `about:blank`, expect to see `New Tab` as the
     // title of the tab,  but the former will continue to display the URL that
     // was previously displayed. Therefore, use the latter way.
-    BrowserTestUtils.loadURIString(browser, HOME_URL);
+    BrowserTestUtils.startLoadingURIString(browser, HOME_URL);
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
@@ -143,7 +143,7 @@ async function doSessionRestoreTest({
   expectedSessionRestored,
 }) {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    BrowserTestUtils.loadURIString(browser, HOME_URL);
+    BrowserTestUtils.startLoadingURIString(browser, HOME_URL);
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,

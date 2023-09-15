@@ -189,7 +189,7 @@ async function runTest(test) {
       SERVER_URL(test.expectedTopLevel) + queryString,
       false // maybeErrorPage
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       browser,
       SERVER_URL(test.topLevelScheme) + queryString
     );

@@ -24,7 +24,7 @@ add_task(async function () {
     set: [["dom.security.https_first", true]],
   });
   Services.console.registerListener(on_console_message);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, kTestURI);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, kTestURI);
 
   await BrowserTestUtils.waitForCondition(() => threeMessagesArrived === 3);
 

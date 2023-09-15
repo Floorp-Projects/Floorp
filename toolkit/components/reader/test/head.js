@@ -44,7 +44,7 @@ function promiseTabLoadEvent(tab, url) {
   });
 
   if (url) {
-    BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
   }
 
   // Promise.all rejects if either promise rejects (i.e. if we time out) and

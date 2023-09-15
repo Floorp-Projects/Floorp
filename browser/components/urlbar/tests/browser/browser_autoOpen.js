@@ -81,7 +81,7 @@ add_task(async function newtabAndHome() {
         // After example.com closes, about:newtab/home is selected again.
         await checkOpensOnFocus();
         // Load example.com in the same tab.
-        BrowserTestUtils.loadURIString(
+        BrowserTestUtils.startLoadingURIString(
           gBrowser.selectedBrowser,
           "http://example.com/"
         );

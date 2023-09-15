@@ -9,7 +9,7 @@ var originalWindowWidth;
 // Drag to overflow chevron should open the overflow panel.
 add_task(async function () {
   // Load a page so the identity box can be dragged.
-  BrowserTestUtils.loadURIString(gBrowser, "http://mochi.test:8888/");
+  BrowserTestUtils.startLoadingURIString(gBrowser, "http://mochi.test:8888/");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   originalWindowWidth = window.outerWidth;

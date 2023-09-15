@@ -7,20 +7,23 @@ const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT = MOZILLA_PKIX_ERROR_BASE + 14;
 add_task(async function test() {
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.waitForErrorPage(browser);
-    BrowserTestUtils.loadURIString(browser, "https://self-signed.example.com");
+    BrowserTestUtils.startLoadingURIString(
+      browser,
+      "https://self-signed.example.com"
+    );
     await loaded;
     let securityInfo = gBrowser.securityUI.secInfo;
     ok(!securityInfo, "Found no security info");
 
     loaded = BrowserTestUtils.browserLoaded(browser);
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    BrowserTestUtils.loadURIString(browser, "http://example.com");
+    BrowserTestUtils.startLoadingURIString(browser, "http://example.com");
     await loaded;
     securityInfo = gBrowser.securityUI.secInfo;
     ok(!securityInfo, "Found no security info");
 
     loaded = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURIString(browser, "https://example.com");
+    BrowserTestUtils.startLoadingURIString(browser, "https://example.com");
     await loaded;
     securityInfo = gBrowser.securityUI.secInfo;
     ok(securityInfo, "Found some security info");

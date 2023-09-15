@@ -61,7 +61,7 @@ async function openTestTab(
   knownTabs.byName.set(name, knownTab);
 
   // Now trigger the actual load of our page.
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, realUrl);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, realUrl);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let pid = tab.linkedBrowser.frameLoader.remoteTab.osPid;

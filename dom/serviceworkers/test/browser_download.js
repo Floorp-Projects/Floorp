@@ -86,7 +86,7 @@ function test() {
           return downloadList.addView(downloadListener);
         })
         .then(function () {
-          BrowserTestUtils.loadURIString(gBrowser, url);
+          BrowserTestUtils.startLoadingURIString(gBrowser, url);
         });
     }
   );

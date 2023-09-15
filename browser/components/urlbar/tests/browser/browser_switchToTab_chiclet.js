@@ -17,7 +17,7 @@ add_task(async function test_with_oneoff_button() {
     false,
     TEST_URL
   );
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, TEST_URL);
   await promiseLoad;
 
   info("Opening a new tab");
@@ -76,7 +76,7 @@ add_task(async function test_with_keytype() {
     false,
     TEST_URL
   );
-  BrowserTestUtils.loadURIString(gBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser, TEST_URL);
   await promiseLoad;
 
   info("Opening a new tab");

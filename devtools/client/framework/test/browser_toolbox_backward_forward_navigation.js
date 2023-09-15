@@ -43,7 +43,7 @@ add_task(async function testMultipleNavigations() {
     gBrowser,
     TEST_URI_ORG
   );
-  BrowserTestUtils.loadURIString(gBrowser, TEST_URI_ORG);
+  BrowserTestUtils.startLoadingURIString(gBrowser, TEST_URI_ORG);
   await onLocationChange;
 
   info("And then navigate to a different origin");
@@ -51,7 +51,7 @@ add_task(async function testMultipleNavigations() {
     gBrowser,
     TEST_URI_COM
   );
-  BrowserTestUtils.loadURIString(gBrowser, TEST_URI_COM);
+  BrowserTestUtils.startLoadingURIString(gBrowser, TEST_URI_COM);
   await onLocationChange;
 
   info(

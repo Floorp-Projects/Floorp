@@ -38,7 +38,7 @@ add_task(async function test_eternal_xslt() {
       );
 
       info("Navigating to about:blank");
-      BrowserTestUtils.loadURIString(browser, "about:blank");
+      BrowserTestUtils.startLoadingURIString(browser, "about:blank");
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Check to see if XSLT stops loading");
@@ -60,7 +60,7 @@ add_task(async function test_eternal_xslt() {
       );
 
       info("Navigating to about:blank");
-      BrowserTestUtils.loadURIString(browser, "about:blank");
+      BrowserTestUtils.startLoadingURIString(browser, "about:blank");
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Check to see if XSLT stops loading");

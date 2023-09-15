@@ -93,7 +93,10 @@ async function runTest(test) {
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser);
 
-    BrowserTestUtils.loadURIString(browser, SERVER_URL(test.topLevelScheme));
+    BrowserTestUtils.startLoadingURIString(
+      browser,
+      SERVER_URL(test.topLevelScheme)
+    );
 
     await loaded;
 

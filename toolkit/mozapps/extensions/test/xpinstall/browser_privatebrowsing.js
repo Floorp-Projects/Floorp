@@ -72,7 +72,7 @@ async function test() {
     gPrivateWin.gBrowser
   );
   Services.obs.addObserver(check_channel, "http-on-before-connect");
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gPrivateWin.gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );

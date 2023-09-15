@@ -46,7 +46,7 @@ add_task(async function test_scroll_pushState() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -87,7 +87,7 @@ add_task(async function test_scroll_pushState_sameUrl() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -120,7 +120,7 @@ add_task(async function test_scroll_replaceState() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -161,7 +161,7 @@ add_task(async function test_scroll_replaceState_sameUrl() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -194,7 +194,7 @@ add_task(async function test_scroll_hashchange() {
       EventUtils.synthesizeKey("KEY_ArrowDown")
     );
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([

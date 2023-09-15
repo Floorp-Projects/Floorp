@@ -639,7 +639,7 @@ async function testOpenPDFPreview({
           "InitialDownloadsLoaded",
           true
         );
-        BrowserTestUtils.loadURIString(browser, "about:downloads");
+        BrowserTestUtils.startLoadingURIString(browser, "about:downloads");
         await BrowserTestUtils.browserLoaded(browser);
         info("waiting for downloadsLoaded");
         await downloadsLoaded;

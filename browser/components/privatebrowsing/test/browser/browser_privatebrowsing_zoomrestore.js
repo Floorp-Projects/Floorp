@@ -26,7 +26,7 @@ add_task(async function test() {
     // update is done.  (See bug 856366 for details.)
 
     let browser = aWindow.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await Promise.all([
       BrowserTestUtils.browserLoaded(browser),
       promiseLocationChange(),

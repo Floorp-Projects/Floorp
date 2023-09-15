@@ -82,7 +82,10 @@ add_task(async function () {
   let browserTest = winTest.gBrowser;
 
   info(`loading test page: ${testPageURL}`);
-  BrowserTestUtils.loadURIString(browserTest.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(
+    browserTest.selectedBrowser,
+    testPageURL
+  );
   await BrowserTestUtils.browserLoaded(browserTest.selectedBrowser);
 
   info("test init visibility state");

@@ -34,7 +34,7 @@
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
         gBrowser.addEventListener("pageshow", onPageShow, { once: true });
-        BrowserTestUtils.loadURIString(gBrowser, "data:text/html,<h2 id='h2'>mozilla</h2>");
+        BrowserTestUtils.startLoadingURIString(gBrowser, "data:text/html,<h2 id='h2'>mozilla</h2>");
       }
       setTimeout(_delayedOnLoad, 1000);
     }

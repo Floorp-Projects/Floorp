@@ -4,7 +4,7 @@ const URI =
 add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, URI);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, URI);
 
   const pageInfo = BrowserPageInfo(

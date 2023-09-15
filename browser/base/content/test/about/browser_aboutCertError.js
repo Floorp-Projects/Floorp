@@ -84,7 +84,7 @@ add_task(async function checkReturnToPreviousPage() {
       tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
       browser = tab.linkedBrowser;
 
-      BrowserTestUtils.loadURIString(browser, GOOD_PAGE_2);
+      BrowserTestUtils.startLoadingURIString(browser, GOOD_PAGE_2);
       await BrowserTestUtils.browserLoaded(browser, false, GOOD_PAGE_2);
       await injectErrorPageFrame(tab, BAD_CERT);
     } else {
@@ -93,7 +93,7 @@ add_task(async function checkReturnToPreviousPage() {
 
       info("Loading and waiting for the cert error");
       let certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-      BrowserTestUtils.loadURIString(browser, BAD_CERT);
+      BrowserTestUtils.startLoadingURIString(browser, BAD_CERT);
       await certErrorLoaded;
     }
 

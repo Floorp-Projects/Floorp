@@ -182,7 +182,10 @@ add_task(async function test_navigate_between_webpage_and_aboutaddons() {
   ok(!gBrowser.canGoBack, "Should not be able to go back");
   ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:addons");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    "about:addons"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let manager = await wait_for_manager_load(
@@ -355,7 +358,7 @@ add_task(async function test_navigate_back_from_website() {
   info("Part 1");
   is_in_list(aManager, "addons://list/plugin", false, false);
 
-  BrowserTestUtils.loadURIString(gBrowser, "http://example.com/");
+  BrowserTestUtils.startLoadingURIString(gBrowser, "http://example.com/");
   await wait_for_page_load(gBrowser.selectedBrowser);
 
   info("Part 2");

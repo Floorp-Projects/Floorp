@@ -20,7 +20,10 @@ add_setup(async function () {
     let browserLoaded = BrowserTestUtils.browserLoaded(
       window.gBrowser.selectedBrowser
     );
-    BrowserTestUtils.loadURIString(window.gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(
+      window.gBrowser.selectedBrowser,
+      url
+    );
     await browserLoaded;
     // Capture the title.
     gTestURLsMap.set(url, window.gBrowser.selectedTab.label);

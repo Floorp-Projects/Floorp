@@ -22,7 +22,7 @@ const SW_SCRIPT_URL = `${SAME_ORIGIN_ROOT}simple_fetch_worker.js`;
 const SCRIPT_URL = `${SAME_ORIGIN_ROOT}empty.js`;
 
 async function navigateTab(aTab, aUrl) {
-  BrowserTestUtils.loadURIString(aTab.linkedBrowser, aUrl);
+  BrowserTestUtils.startLoadingURIString(aTab.linkedBrowser, aUrl);
 
   await BrowserTestUtils.waitForLocationChange(gBrowser, aUrl).then(() =>
     BrowserTestUtils.browserStopped(aTab.linkedBrowser)

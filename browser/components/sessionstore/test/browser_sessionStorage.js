@@ -120,7 +120,7 @@ add_task(async function session_storage() {
   );
 
   // Check that loading a new URL discards data.
-  BrowserTestUtils.loadURIString(browser2, "http://mochi.test:8888/");
+  BrowserTestUtils.startLoadingURIString(browser2, "http://mochi.test:8888/");
   await promiseBrowserLoaded(browser2);
   await TabStateFlusher.flush(browser2);
 

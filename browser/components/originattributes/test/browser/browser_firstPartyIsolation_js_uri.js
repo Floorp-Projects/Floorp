@@ -12,7 +12,7 @@ add_task(async function test_remote_window_open_js_uri() {
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  BrowserTestUtils.loadURIString(browser, `javascript:1;`);
+  BrowserTestUtils.startLoadingURIString(browser, `javascript:1;`);
 
   await BrowserTestUtils.browserLoaded(browser);
 
@@ -43,7 +43,7 @@ add_task(async function test_remote_window_open_js_uri2() {
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     browser,
     `javascript:
     let iframe = document.createElement("iframe");

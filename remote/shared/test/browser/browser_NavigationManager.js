@@ -265,7 +265,7 @@ add_task(async function test_sameDocumentNavigation() {
 
   info("Perform a same-document navigation");
   let onNavigationStopped = navigationManager.once("navigation-stopped");
-  BrowserTestUtils.loadURIString(browser, url + "#hash");
+  BrowserTestUtils.startLoadingURIString(browser, url + "#hash");
   await onNavigationStopped;
 
   const hashNavigation = navigationManager.getNavigationForBrowsingContext(
@@ -296,7 +296,7 @@ add_task(async function test_sameDocumentNavigation() {
 
   info("Perform another same-document navigation");
   onNavigationStopped = navigationManager.once("navigation-stopped");
-  BrowserTestUtils.loadURIString(browser, url + "#foo");
+  BrowserTestUtils.startLoadingURIString(browser, url + "#foo");
   await onNavigationStopped;
 
   const otherHashNavigation = navigationManager.getNavigationForBrowsingContext(
@@ -307,7 +307,7 @@ add_task(async function test_sameDocumentNavigation() {
 
   info("Perform a same-hash navigation");
   onNavigationStopped = navigationManager.once("navigation-stopped");
-  BrowserTestUtils.loadURIString(browser, url + "#foo");
+  BrowserTestUtils.startLoadingURIString(browser, url + "#foo");
   await onNavigationStopped;
 
   const sameHashNavigation = navigationManager.getNavigationForBrowsingContext(

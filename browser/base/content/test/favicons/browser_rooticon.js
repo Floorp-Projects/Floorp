@@ -15,7 +15,7 @@ add_task(async () => {
   is(iconURI, expectedIcon, "Got correct initial icon.");
 
   faviconPromise = waitForLinkAvailable(browser);
-  BrowserTestUtils.loadURIString(browser, testPath);
+  BrowserTestUtils.startLoadingURIString(browser, testPath);
   await BrowserTestUtils.browserLoaded(browser);
   iconURI = await faviconPromise;
   is(iconURI, expectedIcon, "Got correct icon on second load.");

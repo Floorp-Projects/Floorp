@@ -169,7 +169,10 @@ async function testHelper(
 
   let win = await BrowserTestUtils.openNewBrowserWindow(options);
 
-  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, urlToNavigate);
+  BrowserTestUtils.startLoadingURIString(
+    win.gBrowser.selectedBrowser,
+    urlToNavigate
+  );
   if (expectedURL) {
     await BrowserTestUtils.browserLoaded(
       win.gBrowser.selectedBrowser,

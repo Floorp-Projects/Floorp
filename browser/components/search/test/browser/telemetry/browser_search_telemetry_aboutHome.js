@@ -62,7 +62,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Load about:home.");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:home");
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, "about:home");
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:home");
 
   info("Wait for ContentSearchUI search provider to initialize.");

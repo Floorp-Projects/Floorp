@@ -148,7 +148,7 @@ function loadTab(tab, url) {
   });
 
   info("Loading page: " + url);
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
   return Promise.all([loaded, visited]);
 }
 

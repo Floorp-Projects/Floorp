@@ -72,7 +72,7 @@ function getAuthPrompt() {
 
 async function loadAccessRestrictedURL(browser, url, username, password) {
   let browserLoaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
 
   // Wait for the auth prompt, enter the login details and close the prompt
   await PromptTestUtils.handleNextPrompt(
@@ -639,7 +639,7 @@ add_task(async function test_normal_autofilled_7() {
       // Add the observer before loading the form page
       let formFilled = listenForTestNotification("FormProcessed");
       await SimpleTest.promiseFocus(browser.ownerGlobal);
-      BrowserTestUtils.loadURIString(browser, form1Url);
+      BrowserTestUtils.startLoadingURIString(browser, form1Url);
       await formFilled;
 
       // the form should have been autofilled, so submit without updating field values

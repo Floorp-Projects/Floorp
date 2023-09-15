@@ -54,7 +54,7 @@ add_task(async function () {
       });
       // 2. Navigate to URL2
       // We are navigating to a page with the same origin so that we will stay in the same process
-      BrowserTestUtils.loadURIString(browser, URL2);
+      BrowserTestUtils.startLoadingURIString(browser, URL2);
       await loadPromise;
 
       // 3. Reload the browser with specific flags so that we end up here

@@ -72,7 +72,7 @@ add_task(async function testDefault({ Security }) {
   for (const url of BAD_CERTS) {
     info(`Navigating to ${url}`);
     const loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
     await loaded;
 
     is(
@@ -91,7 +91,7 @@ add_task(async function testIgnore({ client }) {
 
   for (const url of BAD_CERTS) {
     info(`Navigating to ${url}`);
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     is(
@@ -111,7 +111,7 @@ add_task(async function testUnignore({ client }) {
   for (const url of BAD_CERTS) {
     info(`Navigating to ${url}`);
     const loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
     await loaded;
 
     is(
@@ -132,7 +132,7 @@ add_task(async function testToggle({ client }) {
   await Security.setIgnoreCertificateErrors({ ignore: true });
 
   info(`Navigating to ${UNTRUSTED} having set the override`);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, UNTRUSTED);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, UNTRUSTED);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   is(
@@ -147,7 +147,7 @@ add_task(async function testToggle({ client }) {
 
   info(`Navigating to ${UNTRUSTED} having unset the override`);
   loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, UNTRUSTED);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, UNTRUSTED);
   await loaded;
 
   is(

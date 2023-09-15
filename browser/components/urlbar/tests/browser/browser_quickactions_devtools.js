@@ -114,7 +114,7 @@ add_task(async function test_inspector() {
 
     info("Check the button status");
     const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, page);
+    BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, page);
     await onLoad;
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,

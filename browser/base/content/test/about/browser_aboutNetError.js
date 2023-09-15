@@ -213,7 +213,7 @@ add_task(async function onlyAllow3DESWithDeprecatedTLS() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      BrowserTestUtils.loadURIString(browser, TRIPLEDES_PAGE);
+      BrowserTestUtils.startLoadingURIString(browser, TRIPLEDES_PAGE);
       await BrowserTestUtils.waitForErrorPage(browser);
     }
   );
@@ -223,7 +223,7 @@ add_task(async function onlyAllow3DESWithDeprecatedTLS() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      BrowserTestUtils.loadURIString(browser, TRIPLEDES_PAGE);
+      BrowserTestUtils.startLoadingURIString(browser, TRIPLEDES_PAGE);
       await BrowserTestUtils.browserLoaded(browser, false, TRIPLEDES_PAGE);
     }
   );
@@ -236,7 +236,7 @@ add_task(async function onlyAllow3DESWithDeprecatedTLS() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      BrowserTestUtils.loadURIString(browser, TRIPLEDES_PAGE);
+      BrowserTestUtils.startLoadingURIString(browser, TRIPLEDES_PAGE);
       await BrowserTestUtils.waitForErrorPage(browser);
     }
   );

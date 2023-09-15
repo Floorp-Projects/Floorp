@@ -58,7 +58,7 @@ add_task(async function () {
     true,
     actionURI
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, postURI);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, postURI);
   await browserLoadedPromise;
 
   var actionFileContentAfter = await IOUtils.readUTF8(actionPath);

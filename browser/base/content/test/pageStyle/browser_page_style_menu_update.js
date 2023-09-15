@@ -16,7 +16,7 @@ add_task(async function () {
     false
   );
   let browser = tab.linkedBrowser;
-  BrowserTestUtils.loadURIString(browser, PAGE);
+  BrowserTestUtils.startLoadingURIString(browser, PAGE);
   await promiseStylesheetsLoaded(browser, 18);
 
   let menupopup = document.getElementById("pageStyleMenu").menupopup;

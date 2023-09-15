@@ -132,7 +132,7 @@ add_task(async function test() {
    * permitUnload should be true, and all handlers fired.
    */
   url += "?1";
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
   await promptShownPromise;
 

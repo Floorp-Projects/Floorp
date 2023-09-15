@@ -20,7 +20,7 @@ add_task(async function test() {
 
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri, true);
   let browser2 = tab2.linkedBrowser;
-  BrowserTestUtils.loadURIString(browser2, uri + "nextpage");
+  BrowserTestUtils.startLoadingURIString(browser2, uri + "nextpage");
   await BrowserTestUtils.browserLoaded(browser2, false);
 
   gBrowser.swapBrowsersAndCloseOther(tab1, tab2);

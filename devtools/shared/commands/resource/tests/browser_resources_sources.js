@@ -260,7 +260,7 @@ add_task(async function testSourcesOnload() {
     false,
     TEST_URL
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, TEST_URL);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, TEST_URL);
   await promiseLoad;
 
   // Some sources may be created after the document is done loading (like eventHandler usecase)

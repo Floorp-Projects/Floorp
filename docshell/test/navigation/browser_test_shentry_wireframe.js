@@ -31,7 +31,7 @@ add_task(async function () {
     );
 
     let loaded = BrowserTestUtils.browserLoaded(browser, false, PAGE_2);
-    BrowserTestUtils.loadURIString(browser, PAGE_2);
+    BrowserTestUtils.startLoadingURIString(browser, PAGE_2);
     await loaded;
 
     Assert.equal(

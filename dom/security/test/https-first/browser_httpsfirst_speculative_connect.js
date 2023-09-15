@@ -58,12 +58,8 @@ add_task(async function () {
   });
   Services.console.registerListener(on_new_console_messages);
 
-  let promiseLoaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    "http://httpsfirst.com"
-  );
-  BrowserTestUtils.loadURIString(
+  let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
     `${TEST_PATH_HTTP}file_httpsfirst_speculative_connect.html`
   );

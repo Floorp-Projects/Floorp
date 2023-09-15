@@ -24,7 +24,7 @@ async function testNavigations() {
   let url3 = REQUEST_URL + "file_navigation.html?foo3";
 
   let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(gBrowser, url1);
+  BrowserTestUtils.startLoadingURIString(gBrowser, url1);
   await loaded;
 
   // Load another site

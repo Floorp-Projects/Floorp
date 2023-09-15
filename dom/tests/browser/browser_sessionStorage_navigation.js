@@ -31,7 +31,7 @@ add_task(async function () {
       ],
     });
 
-    BrowserTestUtils.loadURIString(browser, URL1);
+    BrowserTestUtils.startLoadingURIString(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -60,7 +60,7 @@ add_task(async function () {
       }
     );
 
-    BrowserTestUtils.loadURIString(browser, URL2);
+    BrowserTestUtils.startLoadingURIString(browser, URL2);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -79,7 +79,7 @@ add_task(async function () {
       }
     );
 
-    BrowserTestUtils.loadURIString(browser, URL1);
+    BrowserTestUtils.startLoadingURIString(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -99,7 +99,7 @@ add_task(async function () {
 
     info(`Verifying sessionStorage is preserved for ${URL1} after navigating`);
 
-    BrowserTestUtils.loadURIString(browser, URL2);
+    BrowserTestUtils.startLoadingURIString(browser, URL2);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -149,7 +149,7 @@ add_task(async function () {
 
     info(`Verifying SSCache is loaded to the content process only once`);
 
-    BrowserTestUtils.loadURIString(browser, URL1);
+    BrowserTestUtils.startLoadingURIString(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -196,7 +196,7 @@ add_task(async function () {
     const anotherKey = `anotherKey`;
     const anotherValue = `anotherValue;`;
 
-    BrowserTestUtils.loadURIString(browser, URL1_WITH_COOP_COEP);
+    BrowserTestUtils.startLoadingURIString(browser, URL1_WITH_COOP_COEP);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(
@@ -237,7 +237,7 @@ add_task(async function () {
       }
     );
 
-    BrowserTestUtils.loadURIString(browser, URL1);
+    BrowserTestUtils.startLoadingURIString(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser);
 
     await SpecialPowers.spawn(

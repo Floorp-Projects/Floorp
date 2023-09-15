@@ -52,7 +52,7 @@ async function sendTextToInput(browser, text) {
 add_task(async function test_load_and_navigate_away_no_keypresses() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     await assertDatabaseValues([
@@ -63,7 +63,7 @@ add_task(async function test_load_and_navigate_away_no_keypresses() {
       },
     ]);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([
@@ -87,7 +87,7 @@ add_task(async function test_load_type_and_navigate_away() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    BrowserTestUtils.loadURIString(browser, TEST_URL2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
 
     await assertDatabaseValues([
@@ -98,7 +98,7 @@ add_task(async function test_load_type_and_navigate_away() {
       },
     ]);
 
-    BrowserTestUtils.loadURIString(browser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(browser, "about:blank");
     await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
     await assertDatabaseValues([

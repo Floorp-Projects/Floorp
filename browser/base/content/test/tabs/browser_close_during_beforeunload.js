@@ -22,7 +22,7 @@ add_task(async function () {
 
   let browser = win.gBrowser.selectedBrowser;
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  BrowserTestUtils.loadURIString(browser, "http://example.com/");
+  BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 

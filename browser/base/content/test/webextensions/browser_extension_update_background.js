@@ -47,12 +47,18 @@ add_setup(async function () {
 
   // Navigate away from the initial page so that about:addons always
   // opens in a new tab during tests
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    "about:robots"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   registerCleanupFunction(async function () {
     // Return to about:blank when we're done
-    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
+    BrowserTestUtils.startLoadingURIString(
+      gBrowser.selectedBrowser,
+      "about:blank"
+    );
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 });

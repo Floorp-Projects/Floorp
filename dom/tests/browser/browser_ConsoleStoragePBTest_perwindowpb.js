@@ -61,7 +61,10 @@ function test() {
     storageShouldOccur = true;
     innerID = getInnerWindowId(aWindow);
     beforeEvents = ConsoleAPIStorage.getEvents(innerID);
-    BrowserTestUtils.loadURIString(aWindow.gBrowser.selectedBrowser, testURI);
+    BrowserTestUtils.startLoadingURIString(
+      aWindow.gBrowser.selectedBrowser,
+      testURI
+    );
   }
 
   function testOnWindow(aOptions, aCallback) {

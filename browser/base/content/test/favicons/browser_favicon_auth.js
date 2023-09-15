@@ -12,7 +12,7 @@ add_task(async () => {
     async browser => {
       let faviconPromise = waitForFaviconMessage(true, `${ROOT}auth_test.png`);
 
-      BrowserTestUtils.loadURIString(browser, `${ROOT}auth_test.html`);
+      BrowserTestUtils.startLoadingURIString(browser, `${ROOT}auth_test.html`);
       await BrowserTestUtils.browserLoaded(browser);
 
       await Assert.rejects(

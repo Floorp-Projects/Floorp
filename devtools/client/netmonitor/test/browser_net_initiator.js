@@ -152,7 +152,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, INITIATOR_URL);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, INITIATOR_URL);
 
   registerFaviconNotifier(tab.linkedBrowser);
 

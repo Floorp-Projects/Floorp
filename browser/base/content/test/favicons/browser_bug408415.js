@@ -8,7 +8,7 @@ add_task(async function test() {
       const expectedIcon = testPath + "file_generic_favicon.ico";
       let faviconPromise = waitForLinkAvailable(tabBrowser);
 
-      BrowserTestUtils.loadURIString(tabBrowser, URI);
+      BrowserTestUtils.startLoadingURIString(tabBrowser, URI);
 
       let iconURI = await faviconPromise;
       is(iconURI, expectedIcon, "Correct icon before pushState.");

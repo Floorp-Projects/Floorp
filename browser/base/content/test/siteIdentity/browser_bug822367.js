@@ -34,7 +34,7 @@ add_task(async function test() {
 
   // Mixed Script Test
   var url = HTTPS_TEST_ROOT + "file_bug822367_1.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
@@ -63,7 +63,7 @@ add_task(async function MixedTest1B() {
 // Mixed Display Test - Doorhanger should not appear
 add_task(async function MixedTest2() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_2.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 
   await assertMixedContentBlockingState(gTestBrowser, {
@@ -76,7 +76,7 @@ add_task(async function MixedTest2() {
 // Mixed Script and Display Test - User Override should cause both the script and the image to load.
 add_task(async function MixedTest3() {
   var url = HTTPS_TEST_ROOT + "file_bug822367_3.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
@@ -115,7 +115,7 @@ add_task(async function MixedTest3B() {
 // Location change - User override on one page doesn't propagate to another page after location change.
 add_task(async function MixedTest4() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_4.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
@@ -164,7 +164,7 @@ add_task(async function MixedTest4C() {
 // Mixed script attempts to load in a document.open()
 add_task(async function MixedTest5() {
   var url = HTTPS_TEST_ROOT + "file_bug822367_5.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
@@ -192,7 +192,7 @@ add_task(async function MixedTest5B() {
 // Mixed script attempts to load in a document.open() that is within an iframe.
 add_task(async function MixedTest6() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_6.html";
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 

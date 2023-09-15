@@ -96,7 +96,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
       [`${TEST_HIGH1}?q=baz`, E10SUtils.PRIVILEGEDMOZILLA_REMOTE_TYPE],
       [TEST_LOW2, E10SUtils.WEB_REMOTE_TYPE],
     ]) {
-      BrowserTestUtils.loadURIString(browser, url);
+      BrowserTestUtils.startLoadingURIString(browser, url);
       await BrowserTestUtils.browserLoaded(browser, false, url);
       checkBrowserRemoteType(browser, remoteType);
     }
@@ -149,7 +149,7 @@ add_task(async function process_switching_through_navigation_features() {
     );
 
     // Load http webpage
-    BrowserTestUtils.loadURIString(browser, TEST_LOW1);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_LOW1);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_LOW1);
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
@@ -192,7 +192,7 @@ add_task(async function process_switching_through_navigation_features() {
       "Check that privileged page is in privileged mozilla content process after history gotoIndex."
     );
 
-    BrowserTestUtils.loadURIString(browser, TEST_LOW2);
+    BrowserTestUtils.startLoadingURIString(browser, TEST_LOW2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_LOW2);
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 

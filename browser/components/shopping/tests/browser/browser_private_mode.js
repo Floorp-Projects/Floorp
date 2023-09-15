@@ -32,7 +32,7 @@ add_task(async function test_private_window_urlbar_button_hidden() {
   });
 
   let browser = privateWindow.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     browser,
     "https://example.com/product/B09TJGHL5F"
   );

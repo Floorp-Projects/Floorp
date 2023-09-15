@@ -10,7 +10,10 @@ add_task(async () => {
     async browser => {
       let faviconPromise = waitForFaviconMessage(true, `${ROOT}large.png`);
 
-      BrowserTestUtils.loadURIString(browser, ROOT + "large_favicon.html");
+      BrowserTestUtils.startLoadingURIString(
+        browser,
+        ROOT + "large_favicon.html"
+      );
       await BrowserTestUtils.browserLoaded(browser);
 
       await Assert.rejects(

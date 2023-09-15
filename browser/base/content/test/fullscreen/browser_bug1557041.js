@@ -14,7 +14,7 @@ add_task(async function test_identityPopupCausesFSExit() {
 
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-    BrowserTestUtils.loadURIString(browser, url);
+    BrowserTestUtils.startLoadingURIString(browser, url);
     await loaded;
 
     let identityPermissionBox = document.getElementById(

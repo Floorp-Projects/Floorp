@@ -87,7 +87,7 @@ add_task(async function testActiveSessionWhenNavigatingTab() {
 
   info(`navigate tab2 to blank page`);
   const controllerChanged = waitUntilMainMediaControllerChanged();
-  BrowserTestUtils.loadURIString(tab2.linkedBrowser, "about:blank");
+  BrowserTestUtils.startLoadingURIString(tab2.linkedBrowser, "about:blank");
   await controllerChanged;
 
   info(`pressing '${ACTION}' key`);

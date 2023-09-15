@@ -24,7 +24,7 @@ add_task(async function () {
           .setAttribute("onunload", "/* disable bfcache*/");
       });
 
-      BrowserTestUtils.loadURIString(browser, testPage2);
+      BrowserTestUtils.startLoadingURIString(browser, testPage2);
       await BrowserTestUtils.browserLoaded(browser);
 
       let pageShownPromise = BrowserTestUtils.waitForContentEvent(

@@ -34,7 +34,7 @@
       gFindBar = document.getElementById("FindToolbar");
       gBrowser = document.getElementById("content");
       gBrowser.addEventListener("pageshow", onPageShow, { once: true });
-      BrowserTestUtils.loadURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      BrowserTestUtils.startLoadingURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
     }
 
     function onPageShow() {

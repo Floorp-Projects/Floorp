@@ -11,7 +11,7 @@ const TIMEOUT_PAGE_URI_HTTP =
 async function runPrefTest(aURI, aDesc, aAssertURLStartsWith) {
   await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     const loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
-    BrowserTestUtils.loadURIString(browser, aURI);
+    BrowserTestUtils.startLoadingURIString(browser, aURI);
     await loaded;
 
     await ContentTask.spawn(

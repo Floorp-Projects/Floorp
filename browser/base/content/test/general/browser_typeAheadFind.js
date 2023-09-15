@@ -8,7 +8,7 @@ add_task(async function () {
   // Calls focus event on the TabContextMenu early in the test.
   testWindow.gBrowser.selectedTab.focus();
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     testWindow.gBrowser,
     "data:text/html,<h1>A Page</h1>"
   );

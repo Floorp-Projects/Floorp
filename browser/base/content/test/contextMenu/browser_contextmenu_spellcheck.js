@@ -185,7 +185,7 @@ add_task(async function test_text_input_spellcheck_deadactor() {
   contextMenu.hidePopup();
 
   // Now go back to the input testcase:
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, MAIN_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, MAIN_URL);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -206,7 +206,7 @@ add_task(async function test_text_input_spellcheck_deadactor() {
   wgp = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
 
   const NEW_URL = MAIN_URL.replace(".com", ".org");
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, NEW_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, NEW_URL);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -229,7 +229,7 @@ add_task(async function test_text_input_spellcheck_deadactor() {
   // again; now the context menu stuff should be destroyed by the menu
   // hiding, nothing else.
   wgp = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, NEW_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, NEW_URL);
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,

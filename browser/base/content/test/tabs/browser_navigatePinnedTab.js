@@ -40,8 +40,11 @@ add_task(async function () {
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
   );
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  BrowserTestUtils.loadURIString(appTab.linkedBrowser, "http://example.com/");
+  BrowserTestUtils.startLoadingURIString(
+    appTab.linkedBrowser,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    "http://example.com/"
+  );
   info("Started loading example.com");
   await pageLoadPromise;
   info("Loaded example.com");

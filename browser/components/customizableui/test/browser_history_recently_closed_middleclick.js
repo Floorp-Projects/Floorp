@@ -14,7 +14,7 @@ async function setupTest() {
   // Navigate the initial tab to ensure that it won't be reused for the tab
   // that will be reopened.
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
     "https://example.com"
   );

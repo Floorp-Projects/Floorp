@@ -202,7 +202,7 @@ add_task(async function tabhistory() {
   TelemetryTestUtils.assertScalar(scalars, PERSISTED_REVERTED, undefined);
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "https://www.example.com/some_url"
   );

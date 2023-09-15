@@ -34,7 +34,7 @@ addRDMTask(
       // wait specifically for the redirected page
       url => url.includes(`?redirected`)
     );
-    BrowserTestUtils.loadURIString(browser, `${TEST_URL}?redirect`);
+    BrowserTestUtils.startLoadingURIString(browser, `${TEST_URL}?redirect`);
     await onRedirectedPageLoaded;
 
     info("Check the user agent for each requests");

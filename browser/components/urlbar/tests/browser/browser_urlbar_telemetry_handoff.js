@@ -85,7 +85,7 @@ add_task(async function test_search() {
   info("Load about:newtab in new window");
   const newtab = "about:newtab";
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, newtab);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, newtab);
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, newtab);
 
   info("Focus on search input in newtab content");

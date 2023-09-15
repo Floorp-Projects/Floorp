@@ -290,7 +290,7 @@ add_task(async function testBrowserActionTabPopulation() {
   });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     win.gBrowser.selectedBrowser,
     "http://example.com/"
   );
