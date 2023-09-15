@@ -8027,6 +8027,9 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
       return false;
     }
     for (ParseNode* arg : argsList->contents()) {
+      if (!updateSourceCoordNotesIfNonLiteral(arg)) {
+        return false;
+      }
       if (!emitTree(arg)) {
         //          [stack] CALLEE THIS ARG*
         return false;
@@ -8034,6 +8037,9 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
     }
   } else if (cone.wantSpreadOperand()) {
     auto* spreadNode = &argsList->head()->as<UnaryNode>();
+    if (!updateSourceCoordNotesIfNonLiteral(spreadNode->kid())) {
+      return false;
+    }
     if (!emitTree(spreadNode->kid())) {
       //            [stack] CALLEE THIS ARG0
       return false;
@@ -8330,6 +8336,9 @@ bool BytecodeEmitter::emitRightAssociative(ListNode* node) {
 
   // Right-associative operator chain.
   for (ParseNode* subexpr : node->contents()) {
+    if (!updateSourceCoordNotesIfNonLiteral(subexpr)) {
+      return false;
+    }
     if (!emitTree(subexpr)) {
       return false;
     }
@@ -8350,6 +8359,9 @@ bool BytecodeEmitter::emitLeftAssociative(ListNode* node) {
   JSOp op = BinaryOpParseNodeKindToJSOp(node->getKind());
   ParseNode* nextExpr = node->head()->pn_next;
   do {
+    if (!updateSourceCoordNotesIfNonLiteral(nextExpr)) {
+      return false;
+    }
     if (!emitTree(nextExpr)) {
       return false;
     }

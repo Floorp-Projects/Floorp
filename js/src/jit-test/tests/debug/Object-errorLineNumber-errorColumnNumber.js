@@ -11,7 +11,11 @@ assertEq(syntaxError.errorColumnNumber, 8);
 
 var typeError = gw.executeInGlobal("\n1 + f();").throw;
 assertEq(typeError.errorLineNumber, 2);
-assertEq(typeError.errorColumnNumber, 1);
+assertEq(typeError.errorColumnNumber, 5);
+
+var typeError2 = gw.executeInGlobal("\nconsole.log(1, f());").throw;
+assertEq(typeError2.errorLineNumber, 2);
+assertEq(typeError2.errorColumnNumber, 16);
 
 // Custom errors have no line/column numbers .
 var customError = gw.executeInGlobal("\nthrow 1;").throw;
