@@ -51,8 +51,7 @@ function expectedImageAcceptHeader() {
   return (
     (Services.prefs.getBoolPref("image.avif.enabled") ? "image/avif," : "") +
     (Services.prefs.getBoolPref("image.jxl.enabled") ? "image/jxl," : "") +
-    (Services.prefs.getBoolPref("image.webp.enabled") ? "image/webp," : "") +
-    "*/*"
+    "image/webp,*/*"
   );
 }
 

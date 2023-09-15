@@ -13,10 +13,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.always_ask_before_handling_new_types", false],
-      ["image.webp.enabled", true],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
   const allowDirectoriesVal = DownloadIntegration.allowDirectories;
   DownloadIntegration.allowDirectories = true;

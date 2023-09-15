@@ -40,7 +40,6 @@ window.onload = function() {
   // Enable discarding for the test.
   SpecialPowers.pushPrefEnv({
     'set':[['image.mem.discardable',true],
-           ['image.webp.enabled',true],
            ['image.avif.sequence.enabled',true]]
   }, runTest);
 }
