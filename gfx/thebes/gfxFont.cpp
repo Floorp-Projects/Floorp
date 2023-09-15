@@ -4632,18 +4632,9 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
   MOZ_ASSERT(FontSizeAdjust::Tag(sizeAdjustBasis) == aSizeAdjust.tag,
              "gfxFontStyle.sizeAdjustBasis too small?");
 
-  // If we're created with aSizeAdjust holding a FromFont value, we ignore it
-  // here; this is the style system retrieving font metrics in order to resolve
-  // FromFont to an actual ratio, which it can do using the unmodified metrics.
-
-#define HANDLE_TAG(TAG)                                     \
-  case FontSizeAdjust::Tag::TAG:                            \
-    if (aSizeAdjust.As##TAG().IsFromFont()) {               \
-      sizeAdjustBasis = uint8_t(FontSizeAdjust::Tag::None); \
-      sizeAdjust = 0.0f;                                    \
-      break;                                                \
-    }                                                       \
-    sizeAdjust = aSizeAdjust.As##TAG().AsNumber();          \
+#define HANDLE_TAG(TAG)                 \
+  case FontSizeAdjust::Tag::TAG:        \
+    sizeAdjust = aSizeAdjust.As##TAG(); \
     break;
 
   switch (aSizeAdjust.tag) {

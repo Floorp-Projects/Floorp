@@ -10,9 +10,9 @@ use crate::values::computed::font::{FamilyName, FontFamilyList, SingleFontFamily
 use crate::values::computed::Percentage as ComputedPercentage;
 use crate::values::computed::{font as computed, Length, NonNegativeLength};
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
-use crate::values::generics::font::VariationValue;
-use crate::values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
-use crate::values::generics::font::{GenericFontSizeAdjust, GenericNumberOrFromFont};
+use crate::values::generics::font::{
+    self as generics, FeatureTagValue, FontSettings, FontTag, VariationValue,
+};
 use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
@@ -701,13 +701,21 @@ impl Parse for FamilyName {
 
 /// A factor for one of the font-size-adjust metrics, which may be either a number
 /// or the `from-font` keyword.
-pub type FontSizeAdjustFactor = GenericNumberOrFromFont<NonNegativeNumber>;
+#[derive(
+    Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToCss, ToShmem,
+)]
+pub enum FontSizeAdjustFactor {
+    /// An explicitly-specified number.
+    Number(NonNegativeNumber),
+    /// The from-font keyword: resolve the number from font metrics.
+    FromFont,
+}
 
 /// Specified value for font-size-adjust, intended to help
 /// preserve the readability of text when font fallback occurs.
 ///
 /// https://drafts.csswg.org/css-fonts-5/#font-size-adjust-prop
-pub type FontSizeAdjust = GenericFontSizeAdjust<FontSizeAdjustFactor>;
+pub type FontSizeAdjust = generics::GenericFontSizeAdjust<FontSizeAdjustFactor>;
 
 impl Parse for FontSizeAdjust {
     fn parse<'i, 't>(

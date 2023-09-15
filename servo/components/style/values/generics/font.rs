@@ -213,33 +213,6 @@ pub enum FontStyle<Angle> {
     Oblique(Angle),
 }
 
-/// A generic value that holds either a generic Number or the keyword
-/// `from-font`; used for values of font-size-adjust.
-#[repr(u8)]
-#[derive(
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Copy,
-    Debug,
-    MallocSizeOf,
-    Parse,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToAnimatedValue,
-    ToAnimatedZero,
-    ToComputedValue,
-    ToResolvedValue,
-    ToCss,
-    ToShmem,
-)]
-pub enum GenericNumberOrFromFont<N> {
-    /// An explicitly-specified number.
-    Number(N),
-    /// The from-font keyword: resolve the number from font metrics.
-    FromFont,
-}
-
 /// A generic value for the `font-size-adjust` property.
 ///
 /// https://drafts.csswg.org/css-fonts-5/#font-size-adjust-prop

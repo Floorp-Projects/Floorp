@@ -547,7 +547,6 @@ cbindgen-types = [
     { gecko = "StyleGenericCursorImage", servo = "crate::values::generics::ui::GenericCursorImage" },
     { gecko = "StyleFontFamily", servo = "crate::values::computed::font::FontFamily" },
     { gecko = "StyleFontSizeAdjust", servo = "crate::values::computed::font::FontSizeAdjust" },
-    { gecko = "StyleFontSizeAdjustFactor", servo = "crate::values::computed::font::FontSizeAdjustFactor" },
     { gecko = "StyleFontFamilyNameSyntax", servo = "crate::values::computed::font::FontFamilyNameSyntax" },
     { gecko = "StyleGenericColor", servo = "crate::values::generics::color::Color" },
     { gecko = "StyleSystemColor", servo = "crate::values::specified::color::SystemColor" },
