@@ -2326,14 +2326,7 @@ JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
 }
 
 UniqueChars ExpressionDecompiler::getOutput() {
-  ptrdiff_t len = sprinter.stringEnd() - sprinter.stringAt(0);
-  auto res = cx->make_pod_array<char>(len + 1);
-  if (!res) {
-    return nullptr;
-  }
-  js_memcpy(res.get(), sprinter.stringAt(0), len);
-  res[len] = 0;
-  return res;
+  return sprinter.release();
 }
 
 }  // anonymous namespace
