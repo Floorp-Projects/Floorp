@@ -183,6 +183,7 @@ build_runtimes() {
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
       -DLIBUNWIND_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -DPSAPI_VERSION=2" \
       -DLIBUNWIND_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
+      -DLIBUNWIND_ENABLE_FRAME_APIS=ON \
       -DLIBCXXABI_USE_COMPILER_RT=ON \
       -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
       -DLIBCXXABI_ENABLE_THREADS=ON \
