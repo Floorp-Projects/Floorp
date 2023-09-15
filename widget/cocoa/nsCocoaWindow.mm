@@ -170,8 +170,8 @@ void nsCocoaWindow::DestroyNativeWindow() {
 
   // Define a helper function for checking our fullscreen window status.
   bool (^inNativeFullscreen)(void) = ^{
-    return ((mWindow.styleMask & NSFullScreenWindowMask) ==
-            NSFullScreenWindowMask);
+    return ((mWindow.styleMask & NSWindowStyleMaskFullScreen) ==
+            NSWindowStyleMaskFullScreen);
   };
 
   // If we are in native fullscreen, or we are in the middle of a native

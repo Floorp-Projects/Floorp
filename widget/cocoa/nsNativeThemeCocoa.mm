@@ -431,24 +431,24 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() : ThemeCocoa(ScrollbarStyle()) {
   nsAutoreleasePool pool;
 
   mDisclosureButtonCell = [[NSButtonCell alloc] initTextCell:@""];
-  [mDisclosureButtonCell setBezelStyle:NSRoundedDisclosureBezelStyle];
-  [mDisclosureButtonCell setButtonType:NSPushOnPushOffButton];
+  [mDisclosureButtonCell setBezelStyle:NSBezelStyleRoundedDisclosure];
+  [mDisclosureButtonCell setButtonType:NSButtonTypePushOnPushOff];
   [mDisclosureButtonCell setHighlightsBy:NSPushInCellMask];
 
   mHelpButtonCell = [[NSButtonCell alloc] initTextCell:@""];
-  [mHelpButtonCell setBezelStyle:NSHelpButtonBezelStyle];
-  [mHelpButtonCell setButtonType:NSMomentaryPushInButton];
+  [mHelpButtonCell setBezelStyle:NSBezelStyleHelpButton];
+  [mHelpButtonCell setButtonType:NSButtonTypeMomentaryPushIn];
   [mHelpButtonCell setHighlightsBy:NSPushInCellMask];
 
   mPushButtonCell = [[NSButtonCell alloc] initTextCell:@""];
-  [mPushButtonCell setButtonType:NSMomentaryPushInButton];
+  [mPushButtonCell setButtonType:NSButtonTypeMomentaryPushIn];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 
   mRadioButtonCell = [[NSButtonCell alloc] initTextCell:@""];
-  [mRadioButtonCell setButtonType:NSRadioButton];
+  [mRadioButtonCell setButtonType:NSButtonTypeRadio];
 
   mCheckboxCell = [[NSButtonCell alloc] initTextCell:@""];
-  [mCheckboxCell setButtonType:NSSwitchButton];
+  [mCheckboxCell setButtonType:NSButtonTypeSwitch];
   [mCheckboxCell setAllowsMixedState:YES];
 
   mTextFieldCell = [[NSTextFieldCell alloc] initTextCell:@""];
@@ -472,7 +472,7 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() : ThemeCocoa(ScrollbarStyle()) {
   mProgressBarCell = [[NSProgressBarCell alloc] init];
 
   mMeterBarCell = [[NSLevelIndicatorCell alloc]
-      initWithLevelIndicatorStyle:NSContinuousCapacityLevelIndicatorStyle];
+      initWithLevelIndicatorStyle:NSLevelIndicatorStyleContinuousCapacity];
 
   mTreeHeaderCell = [[NSTableHeaderCell alloc] init];
 
@@ -961,11 +961,11 @@ static NSControlStateValue CellStateForCheckboxOrRadioState(
     nsNativeThemeCocoa::CheckboxOrRadioState aState) {
   switch (aState) {
     case nsNativeThemeCocoa::CheckboxOrRadioState::eOff:
-      return NSOffState;
+      return NSControlStateValueOff;
     case nsNativeThemeCocoa::CheckboxOrRadioState::eOn:
-      return NSOnState;
+      return NSControlStateValueOn;
     case nsNativeThemeCocoa::CheckboxOrRadioState::eIndeterminate:
-      return NSMixedState;
+      return NSControlStateValueMixed;
   }
 }
 
@@ -1301,7 +1301,7 @@ void nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext,
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
-  [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
+  [mPushButtonCell setBezelStyle:NSBezelStyleRounded];
   mPushButtonCell.keyEquivalent =
       aButtonType == ButtonType::eDefaultPushButton ? @"\r" : @"";
 
@@ -1321,7 +1321,7 @@ void nsNativeThemeCocoa::DrawSquareBezelPushButton(
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
-  [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
+  [mPushButtonCell setBezelStyle:NSBezelStyleShadowlessSquare];
 
   if (mCellDrawWindow) {
     mCellDrawWindow.cellsShouldLookActive = aControlParams.insideActiveWindow;
@@ -1531,10 +1531,12 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext,
                         kThemeAdornmentNone, controlParams);
       return;
     case ButtonType::eDisclosureButtonClosed:
-      DrawDisclosureButton(cgContext, inBoxRect, controlParams, NSOffState);
+      DrawDisclosureButton(cgContext, inBoxRect, controlParams,
+                           NSControlStateValueOff);
       return;
     case ButtonType::eDisclosureButtonOpen:
-      DrawDisclosureButton(cgContext, inBoxRect, controlParams, NSOnState);
+      DrawDisclosureButton(cgContext, inBoxRect, controlParams,
+                           NSControlStateValueOn);
       return;
   }
 }
@@ -1600,8 +1602,9 @@ void nsNativeThemeCocoa::DrawTreeHeaderCell(
 
   mTreeHeaderCell.enabled = !aParams.controlParams.disabled;
   mTreeHeaderCell.state =
-      (mTreeHeaderCell.enabled && aParams.controlParams.pressed) ? NSOnState
-                                                                 : NSOffState;
+      (mTreeHeaderCell.enabled && aParams.controlParams.pressed)
+          ? NSControlStateValueOn
+          : NSControlStateValueOff;
 
   mCellDrawView._drawingEndSeparator = !aParams.lastTreeHeaderCell;
 

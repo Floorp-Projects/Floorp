@@ -87,7 +87,8 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel,
         kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true, eCaseMatters);
 
     mNativeMenuItem.enabled = isEnabled;
-    mNativeMenuItem.state = mIsChecked ? NSOnState : NSOffState;
+    mNativeMenuItem.state =
+        mIsChecked ? NSControlStateValueOn : NSControlStateValueOff;
 
     SetKeyEquiv();
   }
@@ -155,7 +156,8 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
   }
 
   // update native menu item
-  mNativeMenuItem.state = mIsChecked ? NSOnState : NSOffState;
+  mNativeMenuItem.state =
+      mIsChecked ? NSControlStateValueOn : NSControlStateValueOff;
 
   return NS_OK;
 

@@ -346,7 +346,7 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(
   }
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
-  if (result == NSFileHandlingPanelCancelButton) return retVal;
+  if (result == NSModalResponseCancel) return retVal;
 
   // Converts data from a NSArray of NSURL to the returned format.
   // We should be careful to not call [thePanel URLs] more than once given that
@@ -408,7 +408,7 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFolder(nsIFile** outFile) {
   int result = [thePanel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
-  if (result == NSFileHandlingPanelCancelButton) return retVal;
+  if (result == NSModalResponseCancel) return retVal;
 
   // get the path for the folder (we allow just 1, so that's all we get)
   NSURL* theURL = [[thePanel URLs] objectAtIndex:0];
@@ -494,7 +494,7 @@ nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
   [thePanel setNameFieldStringValue:defaultFilename];
   int result = [thePanel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
-  if (result == NSFileHandlingPanelCancelButton) return retVal;
+  if (result == NSModalResponseCancel) return retVal;
 
   // get the save type
   NSPopUpButton* popupButton = [accessoryView viewWithTag:kSaveTypeControlTag];
