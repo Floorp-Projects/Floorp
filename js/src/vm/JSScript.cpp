@@ -3462,7 +3462,7 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
     switch (type) {
       case SrcNoteType::Breakpoint:
-      case SrcNoteType::StepSep:
+      case SrcNoteType::BreakpointStepSep:
       case SrcNoteType::XDelta:
         break;
 

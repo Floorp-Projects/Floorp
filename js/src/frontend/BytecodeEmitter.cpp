@@ -221,11 +221,7 @@ bool BytecodeEmitter::markStepBreakpoint() {
     return true;
   }
 
-  if (!newSrcNote(SrcNoteType::StepSep)) {
-    return false;
-  }
-
-  if (!newSrcNote(SrcNoteType::Breakpoint)) {
+  if (!newSrcNote(SrcNoteType::BreakpointStepSep)) {
     return false;
   }
 
