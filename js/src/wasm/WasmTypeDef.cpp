@@ -375,8 +375,8 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 // SuperTypeVector
 
 /* static */
-size_t SuperTypeVector::offsetOfTypeDefInVector(uint32_t typeDefDepth) {
-  return offsetof(SuperTypeVector, types_) + sizeof(void*) * typeDefDepth;
+size_t SuperTypeVector::offsetOfSTVInVector(uint32_t subTypingDepth) {
+  return offsetof(SuperTypeVector, types_) + sizeof(void*) * subTypingDepth;
 }
 
 /* static */

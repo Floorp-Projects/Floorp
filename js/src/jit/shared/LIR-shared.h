@@ -3797,12 +3797,12 @@ class LWasmRefIsSubtypeOfConcreteAndBranch
   LIR_HEADER(WasmRefIsSubtypeOfConcreteAndBranch)
 
   static constexpr uint32_t Ref = 0;
-  static constexpr uint32_t SuperSuperTypeVector = 1;
+  static constexpr uint32_t SuperSTV = 1;
 
   LWasmRefIsSubtypeOfConcreteAndBranch(
       MBasicBlock* ifTrue, MBasicBlock* ifFalse, wasm::RefType sourceType,
       wasm::RefType destType, const LAllocation& ref,
-      const LAllocation& superSuperTypeVector, const LDefinition& temp0,
+      const LAllocation& superSTV, const LDefinition& temp0,
       const LDefinition& temp1)
       : LControlInstructionHelper(classOpcode),
         sourceType_(sourceType),
@@ -3810,7 +3810,7 @@ class LWasmRefIsSubtypeOfConcreteAndBranch
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
     setOperand(Ref, ref);
-    setOperand(SuperSuperTypeVector, superSuperTypeVector);
+    setOperand(SuperSTV, superSTV);
     setTemp(0, temp0);
     setTemp(1, temp1);
   }
@@ -3822,9 +3822,7 @@ class LWasmRefIsSubtypeOfConcreteAndBranch
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 
   const LAllocation* ref() { return getOperand(Ref); }
-  const LAllocation* superSuperTypeVector() {
-    return getOperand(SuperSuperTypeVector);
-  }
+  const LAllocation* superSTV() { return getOperand(SuperSTV); }
   const LDefinition* temp0() { return getTemp(0); }
   const LDefinition* temp1() { return getTemp(1); }
 };

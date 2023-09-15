@@ -11459,7 +11459,7 @@ class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
-// Tests if the wasm ref `ref` is a subtype of `superSuperTypeVector`.
+// Tests if the wasm ref `ref` is a subtype of `superSTV`.
 // The actual super type definition must be known at compile time, so that the
 // subtyping depth of super type depth can be used.
 class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
@@ -11467,10 +11467,9 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
   wasm::RefType sourceType_;
   wasm::RefType destType_;
 
-  MWasmRefIsSubtypeOfConcrete(MDefinition* ref,
-                              MDefinition* superSuperTypeVector,
+  MWasmRefIsSubtypeOfConcrete(MDefinition* ref, MDefinition* superSTV,
                               wasm::RefType sourceType, wasm::RefType destType)
-      : MBinaryInstruction(classOpcode, ref, superSuperTypeVector),
+      : MBinaryInstruction(classOpcode, ref, superSTV),
         sourceType_(sourceType),
         destType_(destType) {
     MOZ_ASSERT(destType.isTypeRef());
@@ -11481,7 +11480,7 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
  public:
   INSTRUCTION_HEADER(WasmRefIsSubtypeOfConcrete)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, ref), (1, superSuperTypeVector))
+  NAMED_OPERANDS((0, ref), (1, superSTV))
 
   wasm::RefType sourceType() const { return sourceType_; };
   wasm::RefType destType() const { return destType_; };
