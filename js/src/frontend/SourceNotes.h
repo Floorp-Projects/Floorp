@@ -18,13 +18,16 @@
 
 namespace js {
 
-/*
- * Source notes generated along with bytecode for decompiling and debugging.
- * A source note is a uint8_t with 4 bits of type and 4 of offset from the pc
- * of the previous note. If 4 bits of offset aren't enough, extended delta
- * notes (XDelta) consisting of 1 set high order bit followed by 7 offset
- * bits are emitted before the next note. Some notes have operand offsets
- * encoded immediately after them, in note bytes or byte-triples.
+/**
+ * [SMDOC] Source Notes
+ *
+ * Source notes are generated along with bytecode for associating line/column
+ * to opcode, and annotating opcode as breakpoint for debugging.
+ *
+ * A source note is a uint8_t with 4 bits of type and 4 bits of offset from
+ * the pc of the previous note. If 4 bits of offset aren't enough, extended
+ * delta notes (XDelta) consisting of 1 set high order bit followed by 7 offset
+ * bits are emitted before the next note.
  *
  *                 Source Note               Extended Delta
  *              +7-6-5-4+3-2-1-0+           +7+6-5-4-3-2-1-0+
@@ -34,6 +37,28 @@ namespace js {
  * Extended Delta with `ext-delta == 0` is used as terminator, which is
  * padded between the end of source notes and the next notes in the
  * ImmutableScriptData.
+ *
+ *                 Terminator
+ *              +7+6-5-4-3-2-1-0+
+ *              |1|0 0 0 0 0 0 0|
+ *              +-+-------------+
+ *
+ * Some notes have operand offsets encoded immediately after them. Each operand
+ * is encoded either in single-byte or 4-bytes, depending on the range.
+ *
+ *   Single-byte Operand (0 <= operand <= 127)
+ *
+ *   +7+6-5-4-3-2-1-0+
+ *   |0|   operand   |
+ *   +-+-------------+
+ *
+ *   4-bytes Operand (128 <= operand)
+ *
+ *     (operand_3 << 24) | (operand_2 << 16) | (operand_1 << 8) | operand_0
+ *
+ *   +7-6-5-4-3-2-1-0+ +7-6-5-4-3-2-1-0+ +7-6-5-4-3-2-1-0+ +7-6-5-4-3-2-1-0+
+ *   |1|  operand_3  | |   operand_2   | |   operand_1   | |   operand_0   |
+ *   +---------------+ +---------------+ +---------------+ +---------------+
  *
  * NB: the js::SrcNote::specs_ array is indexed by this enum, so its
  * initializers need to match the order here.
