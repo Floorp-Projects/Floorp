@@ -1684,6 +1684,11 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
 #endif
     case mozilla::ipc::SandboxingKind::WINDOWS_UTILS:
       return BuildUtilitySandbox(mPolicy, WindowsUtilitySandboxProps());
+    case mozilla::ipc::SandboxingKind::WINDOWS_FILE_DIALOG:
+      // This process type is not sandboxed. (See commentary in
+      // `ipc::IsUtilitySandboxEnabled()`.)
+      MOZ_ASSERT_UNREACHABLE("No sandboxing for this process type");
+      return false;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown sandboxing value");
       return false;

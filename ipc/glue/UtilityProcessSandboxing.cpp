@@ -27,6 +27,21 @@ std::vector<std::string> split(const std::string& str, char s) {
 }
 
 bool IsUtilitySandboxEnabled(const char* envVar, SandboxingKind aKind) {
+#ifdef XP_WIN
+  // Sandboxing the Windows file dialog is probably not useful.
+  //
+  // (Additionally, it causes failures in our test environments: when running
+  // tests on windows-11-2009-qr machines, sandboxed child processes can't see
+  // or interact with any other process's windows -- which means they can't
+  // select a window from the parent process as the file dialog's parent. This
+  // occurs regardless of the sandbox preferences, which is why we disable
+  // sandboxing entirely rather than use a maximally permissive preference-set.
+  // This behavior has not been seen in user-facing environments.)
+  if (aKind == SandboxingKind::WINDOWS_FILE_DIALOG) {
+    return false;
+  }
+#endif
+
   if (envVar == nullptr) {
     return true;
   }
