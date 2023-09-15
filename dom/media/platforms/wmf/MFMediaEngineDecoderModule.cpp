@@ -8,6 +8,8 @@
 #include "VideoUtils.h"
 #include "mozilla/MFMediaEngineParent.h"
 #include "mozilla/MFMediaEngineUtils.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
+#include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/mscom/EnsureMTA.h"
@@ -31,9 +33,9 @@ already_AddRefed<PlatformDecoderModule> MFMediaEngineDecoderModule::Create() {
 
 /* static */
 bool MFMediaEngineDecoderModule::SupportsConfig(const TrackInfo& aConfig) {
-  RefPtr<MFMediaEngineDecoderModule> module = new MFMediaEngineDecoderModule();
-  return !module->SupportInternal(SupportDecoderParams(aConfig), nullptr)
-              .isEmpty();
+  RefPtr<PlatformDecoderModule> module = RemoteDecoderModule::Create(
+      RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
+  return !module->Supports(SupportDecoderParams(aConfig), nullptr).isEmpty();
 }
 
 already_AddRefed<MediaDataDecoder>
