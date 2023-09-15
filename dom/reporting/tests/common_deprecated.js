@@ -168,7 +168,7 @@ function test_deprecatedAttribute() {
         "We have a sourceFile"
       );
       is(report.body.lineNumber, 181, "We have a lineNumber");
-      is(report.body.columnNumber, 4, "We have a columnNumber");
+      is(report.body.columnNumber, 7, "We have a columnNumber");
 
       obs.disconnect();
       resolve();

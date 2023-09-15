@@ -25,7 +25,7 @@ test("function f(x) {\n" +    // 1
      "    debugger;\n" +      // 2
      "    return 23 + x;\n" + // 3
      "}\n");                  // 4
-assertEq(log, '3 4 ');
+assertEq(log, '3 3 4 ');
 
 test("function f(x) {\n" +    // 1
      "    debugger;\n" +      // 2
