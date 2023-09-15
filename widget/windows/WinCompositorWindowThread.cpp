@@ -12,10 +12,6 @@
 #include "transport/runnable_utils.h"
 #include "mozilla/StaticPrefs_apz.h"
 
-#if WINVER < 0x0602
-#  define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
-#endif
-
 namespace mozilla {
 namespace widget {
 
