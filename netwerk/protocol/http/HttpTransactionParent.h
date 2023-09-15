@@ -55,7 +55,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
       const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
-      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason);
+      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason,
+      const uint32_t& aCaps);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
@@ -68,7 +69,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      const TimeStamp& aLastActiveTabOptHit, const uint32_t& aCaps,
+      const TimeStamp& aLastActiveTabOptHit,
       const HttpConnectionInfoCloneArgs& aArgs);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
@@ -105,7 +106,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
       const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
-      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason);
+      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason,
+      const uint32_t& aCaps);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount);
   void DoOnStopRequest(
@@ -113,7 +115,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      const uint32_t& aCaps, nsHttpConnectionInfo* aConnInfo);
+      nsHttpConnectionInfo* aConnInfo);
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   // Get event target for ODA.
