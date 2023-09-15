@@ -4,11 +4,6 @@ bugzilla:
   product: "Core"
   component: "Audio/Video"
 
-# The whole library is not used, only the relevant files are imported in the
-# tree, using the script `update.sh`. Some changes have been made to the files,
-# using the patch `moz-libsoundtouch.patch`.
-# We also use a custom soundtouch_config.h.
-
 origin:
   name: "SoundTouch"
   description: "Audio processing library"
