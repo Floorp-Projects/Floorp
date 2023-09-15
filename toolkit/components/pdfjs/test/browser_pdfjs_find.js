@@ -115,7 +115,7 @@ add_task(async function test_findbar_after_navigate() {
     );
 
     info("navigating to a webpage");
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       browser,
       "http://mochi.test:8888/document-builder.sjs?html=<h1>hello, world!</h1>"
     );

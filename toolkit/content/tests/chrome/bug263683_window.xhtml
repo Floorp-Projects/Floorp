@@ -57,7 +57,7 @@
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
       let promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      BrowserTestUtils.startLoadingURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
       await promise;
       await onDocumentLoaded();
     }
@@ -141,7 +141,7 @@
       // For posterity, test iframes too.
 
       promise = BrowserTestUtils.browserLoaded(gBrowser);
-      BrowserTestUtils.loadURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
+      BrowserTestUtils.startLoadingURIString(gBrowser, 'data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
         'src="data:text/html,Text mozilla"></iframe>');
       await promise;
 

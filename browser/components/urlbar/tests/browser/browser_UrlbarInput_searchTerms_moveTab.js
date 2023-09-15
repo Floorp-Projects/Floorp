@@ -117,7 +117,7 @@ add_task(async function move_tab_into_existing_window() {
     false,
     expectedSearchUrl
   );
-  BrowserTestUtils.loadURIString(browser, expectedSearchUrl);
+  BrowserTestUtils.startLoadingURIString(browser, expectedSearchUrl);
   await browserLoadedPromise;
 
   // Mock the default SERP modifying the existing url

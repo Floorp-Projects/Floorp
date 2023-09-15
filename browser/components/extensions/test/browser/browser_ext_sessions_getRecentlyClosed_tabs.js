@@ -53,7 +53,7 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let tabBrowser = win.gBrowser.selectedBrowser;
   for (let url of ["about:robots", "about:mozilla", "about:config"]) {
-    BrowserTestUtils.loadURIString(tabBrowser, url);
+    BrowserTestUtils.startLoadingURIString(tabBrowser, url);
     await BrowserTestUtils.browserLoaded(tabBrowser, false, url);
   }
 
@@ -168,7 +168,10 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   // Test with host permission.
   win = await BrowserTestUtils.openNewBrowserWindow();
   tabBrowser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(tabBrowser, "http://example.com/testpage");
+  BrowserTestUtils.startLoadingURIString(
+    tabBrowser,
+    "http://example.com/testpage"
+  );
   await BrowserTestUtils.browserLoaded(
     tabBrowser,
     false,
@@ -232,7 +235,7 @@ add_task(
     );
     let url = `${testRoot}file_has_non_web_controlled_blank_page_link.html`;
     let win = await BrowserTestUtils.openNewBrowserWindow();
-    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
+    BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser, url);
     await BrowserTestUtils.browserLoaded(
       win.gBrowser.selectedBrowser,
       false,

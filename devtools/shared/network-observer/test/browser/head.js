@@ -26,7 +26,7 @@ const URL_ROOT = CHROME_URL_ROOT.replace(
  */
 async function loadURL(browser, url) {
   const loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   return loaded;
 }
 

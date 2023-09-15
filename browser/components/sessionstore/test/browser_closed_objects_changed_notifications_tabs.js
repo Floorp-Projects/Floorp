@@ -12,7 +12,9 @@ let notificationsCount = 0;
 async function openWindow(url) {
   let win = await promiseNewWindowLoaded();
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
-  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url, { flags });
+  BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser, url, {
+    flags,
+  });
   await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, url);
   return win;
 }

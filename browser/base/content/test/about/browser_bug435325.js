@@ -22,7 +22,7 @@ add_task(async function checkSwitchPageToOnlineMode() {
     let netErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
 
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    BrowserTestUtils.loadURIString(browser, "http://example.com/");
+    BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
     await netErrorLoaded;
 
     // Re-enable the proxy so example.com is resolved to localhost, rather than

@@ -28,7 +28,7 @@ add_task(async function test() {
   // Step 1
   let non_private_browser = gBrowser.selectedBrowser;
   let url = prefix + "?action=set&name=test&value=value&initial=true";
-  BrowserTestUtils.loadURIString(non_private_browser, url);
+  BrowserTestUtils.startLoadingURIString(non_private_browser, url);
   await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
 
   // Step 2
@@ -37,12 +37,12 @@ add_task(async function test() {
   });
   let private_browser = private_window.gBrowser.selectedBrowser;
   url = prefix + "?action=set&name=test2&value=value2";
-  BrowserTestUtils.loadURIString(private_browser, url);
+  BrowserTestUtils.startLoadingURIString(private_browser, url);
   await BrowserTestUtils.browserLoaded(private_browser, false, url);
 
   // Step 3
   url = prefix + "?action=get&name=test2";
-  BrowserTestUtils.loadURIString(non_private_browser, url);
+  BrowserTestUtils.startLoadingURIString(non_private_browser, url);
   await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
   let elts = await getElts(non_private_browser);
   isnot(elts[0], "value2", "public window shouldn't see private storage");
@@ -50,7 +50,7 @@ add_task(async function test() {
 
   // Step 4
   url = prefix + "?action=get&name=test";
-  BrowserTestUtils.loadURIString(private_browser, url);
+  BrowserTestUtils.startLoadingURIString(private_browser, url);
   await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   isnot(elts[0], "value", "private window shouldn't see public storage");
@@ -67,7 +67,7 @@ add_task(async function test() {
   private_browser = private_window.gBrowser.selectedBrowser;
 
   url = prefix + "?action=get&name=test2";
-  BrowserTestUtils.loadURIString(private_browser, url);
+  BrowserTestUtils.startLoadingURIString(private_browser, url);
   await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   isnot(
@@ -88,14 +88,14 @@ add_task(async function test() {
   private_browser = private_window.gBrowser.selectedBrowser;
 
   url = prefix + "?action=set&name=test3&value=value3";
-  BrowserTestUtils.loadURIString(private_browser, url);
+  BrowserTestUtils.startLoadingURIString(private_browser, url);
   await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   is(elts[1], "1", "private window should only see new private items");
 
   // Cleanup.
   url = prefix + "?final=true";
-  BrowserTestUtils.loadURIString(non_private_browser, url);
+  BrowserTestUtils.startLoadingURIString(non_private_browser, url);
   await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
   private_window.close();
 });

@@ -192,7 +192,7 @@ function testOnWindow(aTestData) {
       };
       win.gBrowser.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING);
 
-      BrowserTestUtils.loadURIString(browser, aTestData.url);
+      BrowserTestUtils.startLoadingURIString(browser, aTestData.url);
       await BrowserTestUtils.browserLoaded(
         browser,
         false,

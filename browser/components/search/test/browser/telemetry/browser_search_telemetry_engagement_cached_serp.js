@@ -96,7 +96,7 @@ add_task(async function test_cached_serp() {
   for (let index = 0; index < 3; ++index) {
     info("Load non-search page.");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       tab.linkedBrowser,
       "https://www.example.com"
     );
@@ -182,7 +182,7 @@ add_task(async function test_back_and_forward_content_to_serp_to_serp() {
   info("Load search page.");
   let url = getSERPUrl("searchTelemetryAd_searchbox.html");
   let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, true);
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
   await loadPromise;
   await waitForPageWithAdImpressions();
 

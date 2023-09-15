@@ -73,7 +73,7 @@ add_task(async function test_window_close() {
     false,
     serpUrl
   );
-  BrowserTestUtils.loadURIString(otherWindow.gBrowser, serpUrl);
+  BrowserTestUtils.startLoadingURIString(otherWindow.gBrowser, serpUrl);
   await browserLoadedPromise;
 
   await BrowserTestUtils.closeWindow(otherWindow);
@@ -97,7 +97,7 @@ add_task(async function test_navigation_via_urlbar() {
     false,
     "https://www.example.com/"
   );
-  BrowserTestUtils.loadURIString(gBrowser, "https://www.example.com");
+  BrowserTestUtils.startLoadingURIString(gBrowser, "https://www.example.com");
   await browserLoadedPromise;
 
   assertAbandonmentEvent({
@@ -122,7 +122,7 @@ add_task(async function test_navigation_via_back_button() {
       false,
       serpUrl
     );
-    BrowserTestUtils.loadURIString(browser, serpUrl);
+    BrowserTestUtils.startLoadingURIString(browser, serpUrl);
     await pageLoadPromise;
     info("Serp is now loaded.");
 
@@ -231,7 +231,7 @@ add_task(async function test_without_components() {
     false,
     "https://www.example.com/"
   );
-  BrowserTestUtils.loadURIString(gBrowser, "https://www.example.com");
+  BrowserTestUtils.startLoadingURIString(gBrowser, "https://www.example.com");
   await browserLoadedPromise;
 
   Assert.equal(

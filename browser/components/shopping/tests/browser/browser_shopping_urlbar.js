@@ -34,13 +34,13 @@ add_task(async function test_button_changes_with_location() {
       BrowserTestUtils.is_hidden(shoppingButton),
       "Shopping Button should be hidden on a content page"
     );
-    BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
+    BrowserTestUtils.startLoadingURIString(browser, PRODUCT_PAGE);
     await BrowserTestUtils.browserLoaded(browser);
     ok(
       BrowserTestUtils.is_visible(shoppingButton),
       "Shopping Button should be visible on a product page"
     );
-    BrowserTestUtils.loadURIString(browser, CONTENT_PAGE);
+    BrowserTestUtils.startLoadingURIString(browser, CONTENT_PAGE);
     await BrowserTestUtils.browserLoaded(browser);
     ok(
       BrowserTestUtils.is_hidden(shoppingButton),
@@ -111,7 +111,7 @@ add_task(async function test_button_toggles_sidebars() {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     let browserPanel = gBrowser.getPanel(browser);
 
-    BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
+    BrowserTestUtils.startLoadingURIString(browser, PRODUCT_PAGE);
     await BrowserTestUtils.browserLoaded(browser);
 
     let sidebar = browserPanel.querySelector("shopping-sidebar");
@@ -161,7 +161,7 @@ add_task(async function test_button_toggles_all_windows() {
 
   let newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     newWindow.gBrowser.selectedBrowser,
     PRODUCT_PAGE
   );
@@ -229,7 +229,7 @@ add_task(async function test_button_right_click_doesnt_affect_sidebars() {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     let browserPanel = gBrowser.getPanel(browser);
 
-    BrowserTestUtils.loadURIString(browser, PRODUCT_PAGE);
+    BrowserTestUtils.startLoadingURIString(browser, PRODUCT_PAGE);
     await BrowserTestUtils.browserLoaded(browser);
 
     let sidebar = browserPanel.querySelector("shopping-sidebar");

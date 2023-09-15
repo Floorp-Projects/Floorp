@@ -477,7 +477,7 @@ add_task(async function selected_result_site_specific_contextual_search() {
       false,
       "https://example.com/"
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       gBrowser.selectedBrowser,
       "https://example.com/"
     );

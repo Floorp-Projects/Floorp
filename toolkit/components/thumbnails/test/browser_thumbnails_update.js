@@ -91,7 +91,7 @@ add_task(async function thumbnails_captureAndStoreIfStale_error_response() {
       // The service should not save the thumbnail - so we (a) check the thumbnail
       // remains green and (b) check the mtime of the file is < now.
       ensureThumbnailStale(URL);
-      BrowserTestUtils.loadURIString(browser, URL);
+      BrowserTestUtils.startLoadingURIString(browser, URL);
       await BrowserTestUtils.browserLoaded(browser);
 
       // now() returns a higher-precision value than the modified time of a file.
@@ -127,7 +127,7 @@ add_task(async function thumbnails_captureAndStoreIfStale_non_error_response() {
       // return a 200 response and a red thumbnail - so that new thumbnail should
       // end up captured.
       ensureThumbnailStale(URL);
-      BrowserTestUtils.loadURIString(browser, URL);
+      BrowserTestUtils.startLoadingURIString(browser, URL);
       await BrowserTestUtils.browserLoaded(browser);
 
       // now() returns a higher-precision value than the modified time of a file.

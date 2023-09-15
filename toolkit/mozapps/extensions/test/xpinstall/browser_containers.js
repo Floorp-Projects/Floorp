@@ -66,7 +66,7 @@ function test() {
     userContextId: MY_CONTEXT,
   });
   Services.obs.addObserver(check_channel, "http-on-before-connect");
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     gBrowser,
     TESTROOT + "installtrigger.html?" + triggers
   );

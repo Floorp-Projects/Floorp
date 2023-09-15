@@ -100,7 +100,10 @@ add_task(async function testRestoredWindowFeatures() {
   ];
   const TEST_URL_CHROME = "chrome://mochitests/content/browser/" + DUMMY_PAGE;
 
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, TEST_URL_CHROME);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    TEST_URL_CHROME
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   for (let test of TESTS) {

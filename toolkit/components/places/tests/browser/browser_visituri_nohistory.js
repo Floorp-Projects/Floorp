@@ -32,7 +32,7 @@ add_task(async function () {
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser
   );
-  BrowserTestUtils.loadURIString(gBrowser, FINAL_URL);
+  BrowserTestUtils.startLoadingURIString(gBrowser, FINAL_URL);
   await browserLoadedPromise;
 
   let subject = await visitUriPromise;

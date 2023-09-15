@@ -39,7 +39,7 @@ add_task(async function testCrossOriginNavigation() {
   );
 
   info("Navigate to a cross-origin video file");
-  BrowserTestUtils.loadURIString(
+  BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     getTestWebBasedURL(MEDIA_FILE, { crossOrigin: true })
   );

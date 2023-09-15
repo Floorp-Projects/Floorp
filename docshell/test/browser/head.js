@@ -131,7 +131,7 @@ async function loadURI(url) {
   info(`Doing a top-level loadURI, expecting to load ${url}`);
   let browser = gBrowser.selectedBrowser;
   let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   await loaded;
   info(`Loaded ${url}`);
 }

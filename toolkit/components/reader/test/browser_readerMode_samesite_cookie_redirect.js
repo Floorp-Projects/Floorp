@@ -36,7 +36,7 @@ add_task(async function test_ss_cookie_redirect() {
       browser,
       "AboutReaderContentReady"
     );
-    BrowserTestUtils.loadURIString(
+    BrowserTestUtils.startLoadingURIString(
       browser,
       "about:reader?url=" + encodeURIComponent(serverURL)
     );

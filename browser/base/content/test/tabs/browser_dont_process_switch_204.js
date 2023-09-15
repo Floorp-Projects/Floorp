@@ -28,7 +28,7 @@ add_task(async function () {
     // Attempt to load a uri that returns a 204 response, and then check that
     // we didn't process switch for it.
     let stopped = BrowserTestUtils.browserStopped(aBrowser, TEST_URL, true);
-    BrowserTestUtils.loadURIString(aBrowser, TEST_URL);
+    BrowserTestUtils.startLoadingURIString(aBrowser, TEST_URL);
     await stopped;
 
     let newPid = await SpecialPowers.spawn(aBrowser, [], () => {
@@ -44,7 +44,7 @@ add_task(async function () {
     // Load a valid http page and confirm that we did change process
     // to confirm that we weren't in a web process to begin with.
     let loaded = BrowserTestUtils.browserLoaded(aBrowser, false, BLANK_URL);
-    BrowserTestUtils.loadURIString(aBrowser, BLANK_URL);
+    BrowserTestUtils.startLoadingURIString(aBrowser, BLANK_URL);
     await loaded;
 
     newPid = await SpecialPowers.spawn(aBrowser, [], () => {

@@ -20,7 +20,7 @@ add_task(async function test_network_markers() {
   try {
     const url = BASE_URL_HTTPS + "simple.html?cacheBust=" + Math.random();
     const contentBrowser = win.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURIString(contentBrowser, url);
+    BrowserTestUtils.startLoadingURIString(contentBrowser, url);
     await BrowserTestUtils.browserLoaded(contentBrowser, false, url);
     const contentPid = await SpecialPowers.spawn(
       contentBrowser,

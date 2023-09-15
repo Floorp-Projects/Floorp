@@ -449,7 +449,7 @@ add_task(async function test_track_ad_new_window() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let url = getSERPUrl("searchTelemetryAd.html");
-  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
     false,

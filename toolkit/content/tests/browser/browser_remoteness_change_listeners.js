@@ -32,7 +32,7 @@ add_task(async function test_remoteness_switch_listeners() {
       null,
       "https://example.com/"
     );
-    BrowserTestUtils.loadURIString(browser, "https://example.com/");
+    BrowserTestUtils.startLoadingURIString(browser, "https://example.com/");
     await Promise.all([loaded, navigated]);
     browser.removeProgressListener(wpl);
   });

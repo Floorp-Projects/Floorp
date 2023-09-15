@@ -27,7 +27,7 @@ add_task(async () => {
   ok(seenCookie, "Should have seen the cookie.");
 
   faviconPromise = waitForLinkAvailable(browser);
-  BrowserTestUtils.loadURIString(browser, testPath);
+  BrowserTestUtils.startLoadingURIString(browser, testPath);
   await BrowserTestUtils.browserLoaded(browser);
   await faviconPromise;
   cookies = Services.cookies.getCookiesFromHost(

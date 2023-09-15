@@ -34,7 +34,7 @@
       let docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
         event.accessible.QueryInterface(nsIAccessibleDocument).URL === ABOUT_LICENSE_URL,
         `Loaded tab: ${ABOUT_LICENSE_URL}`);
-      BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser,
+      BrowserTestUtils.startLoadingURIString(win.gBrowser.selectedBrowser,
         "about:license");
       await loaded;
       await docLoaded;

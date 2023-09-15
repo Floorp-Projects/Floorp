@@ -22,7 +22,7 @@ addTest(async function testPermissionTemporaryDenied() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(false, gBrowser);
 
   is(
@@ -64,7 +64,7 @@ addTest(async function testPermissionDenied() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(false, gBrowser);
 
   is(
@@ -92,7 +92,7 @@ addTest(async function testNoPermissionPrompt() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(false, gBrowser);
 
   is(
@@ -122,7 +122,7 @@ addTest(async function testPermissionDeniedDismiss() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, testPageURL);
+  BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, testPageURL);
   await waitForMessage(false, gBrowser);
 
   // Pressing ESC results in a temporary block permission on the browser object.

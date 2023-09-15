@@ -13,7 +13,7 @@ add_task(async function () {
   });
 
   await BrowserTestUtils.withNewTab("about:blank", async function () {
-    BrowserTestUtils.loadURIString(gBrowser, "moz://a");
+    BrowserTestUtils.startLoadingURIString(gBrowser, "moz://a");
     await BrowserTestUtils.waitForLocationChange(
       gBrowser,
       `https://example.com/${path}mozprotocol.html`

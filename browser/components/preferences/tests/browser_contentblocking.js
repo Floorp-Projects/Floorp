@@ -1460,7 +1460,10 @@ add_task(async function testContentBlockingReloadWarning() {
 // if it is the only tab.
 add_task(async function testContentBlockingReloadWarningSingleTab() {
   Services.prefs.setStringPref(CAT_PREF, "standard");
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, PRIVACY_PAGE);
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    PRIVACY_PAGE
+  );
   await BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
@@ -1487,7 +1490,10 @@ add_task(async function testContentBlockingReloadWarningSingleTab() {
     "all of the warnings to reload tabs are still hidden"
   );
   Services.prefs.setStringPref(CAT_PREF, "standard");
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:newtab");
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    "about:newtab"
+  );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 });
 

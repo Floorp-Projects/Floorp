@@ -16,7 +16,7 @@ add_setup(async () => {
   // makes it easier to be consistent with closing and opening
   // behaviours between the two kinds of migration wizards.
   let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURIString(browser, "https://example.com");
+  BrowserTestUtils.startLoadingURIString(browser, "https://example.com");
   await BrowserTestUtils.browserLoaded(browser);
 });
 

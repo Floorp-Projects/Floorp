@@ -268,7 +268,10 @@ add_task(async function test_tabSwitch_pageproxystate() {
   registerCleanupFunction(PlacesUtils.history.clear);
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.startLoadingURIString(
+    win.gBrowser.selectedBrowser,
+    "about:robots"
+  );
   let tab1 = win.gBrowser.selectedTab;
 
   info("Open a new tab and the empty search");

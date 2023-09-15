@@ -35,7 +35,7 @@ const TESTCASES = [
 ];
 
 async function navigateTab(aTab, aUrl) {
-  BrowserTestUtils.loadURIString(aTab.linkedBrowser, aUrl);
+  BrowserTestUtils.startLoadingURIString(aTab.linkedBrowser, aUrl);
 
   await BrowserTestUtils.waitForLocationChange(gBrowser, aUrl).then(() =>
     BrowserTestUtils.browserStopped(aTab.linkedBrowser)

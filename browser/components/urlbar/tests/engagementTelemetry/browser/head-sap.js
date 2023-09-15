@@ -28,7 +28,7 @@ async function doUrlbarTest({ trigger, assert }) {
 
 async function doHandoffTest({ trigger, assert }) {
   await doTest(async browser => {
-    BrowserTestUtils.loadURIString(browser, "about:newtab");
+    BrowserTestUtils.startLoadingURIString(browser, "about:newtab");
     await BrowserTestUtils.browserStopped(browser, "about:newtab");
     await SpecialPowers.spawn(browser, [], function () {
       const searchInput = content.document.querySelector(".fake-editable");
@@ -54,7 +54,7 @@ async function doUrlbarAddonpageTest({ trigger, assert }) {
 
   await doTest(async browser => {
     const onLoad = BrowserTestUtils.browserLoaded(browser);
-    BrowserTestUtils.loadURIString(browser, extensionURL);
+    BrowserTestUtils.startLoadingURIString(browser, extensionURL);
     await onLoad;
     await openPopup("x");
 

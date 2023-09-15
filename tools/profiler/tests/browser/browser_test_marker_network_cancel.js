@@ -22,7 +22,7 @@ add_task(async function test_network_markers_early_cancel() {
 
   const tab = await BrowserTestUtils.openNewForegroundTab(options);
   const loadPromise = BrowserTestUtils.waitForDocLoadAndStopIt(url, tab);
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, url);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
   const contentPid = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],

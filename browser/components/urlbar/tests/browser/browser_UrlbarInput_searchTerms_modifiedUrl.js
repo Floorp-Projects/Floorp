@@ -44,7 +44,7 @@ add_task(async function history_push_state() {
     false,
     expectedSearchUrl
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, expectedSearchUrl);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
 
   let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -86,7 +86,7 @@ add_task(async function url_with_additional_query_params() {
     false,
     expectedSearchUrl
   );
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, expectedSearchUrl);
+  BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
 
   Assert.equal(gURLBar.value, expectedSearchUrl, `URL should be in URL bar`);

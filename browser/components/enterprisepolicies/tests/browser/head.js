@@ -42,7 +42,7 @@ async function checkBlockedPage(url, expectedBlocked) {
 
   if (expectedBlocked) {
     let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-    BrowserTestUtils.loadURIString(gBrowser, url);
+    BrowserTestUtils.startLoadingURIString(gBrowser, url);
     await promise;
     is(
       newTab.linkedBrowser.documentURI.spec.startsWith(
@@ -53,7 +53,7 @@ async function checkBlockedPage(url, expectedBlocked) {
     );
   } else {
     let promise = BrowserTestUtils.browserStopped(gBrowser, url);
-    BrowserTestUtils.loadURIString(gBrowser, url);
+    BrowserTestUtils.startLoadingURIString(gBrowser, url);
     await promise;
 
     is(
@@ -235,7 +235,7 @@ async function testPageBlockedByPolicy(page, policyJSON) {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
-      BrowserTestUtils.loadURIString(browser, page);
+      BrowserTestUtils.startLoadingURIString(browser, page);
       await BrowserTestUtils.browserLoaded(browser, false, page, true);
       await SpecialPowers.spawn(browser, [page], async function (innerPage) {
         ok(

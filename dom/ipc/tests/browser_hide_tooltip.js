@@ -29,7 +29,7 @@ add_task(async function test_hiding_tooltip() {
     false,
     page2
   );
-  BrowserTestUtils.loadURIString(gBrowser, page2);
+  BrowserTestUtils.startLoadingURIString(gBrowser, page2);
   await loaded;
   await hiding;
 

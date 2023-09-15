@@ -186,7 +186,7 @@ add_task(async function test_reinitialization_at_remoteness_change() {
     false,
     E10S_PARENT_TEST_PAGE_URI
   );
-  BrowserTestUtils.loadURIString(browser, E10S_PARENT_TEST_PAGE_URI);
+  BrowserTestUtils.startLoadingURIString(browser, E10S_PARENT_TEST_PAGE_URI);
   await docLoaded;
   ok(!browser.isRemoteBrowser, "Browser should not be remote any more.");
   browser.contentDocument.body.append("The letter s.");

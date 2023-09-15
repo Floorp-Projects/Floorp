@@ -43,7 +43,7 @@ function runTests() {
   BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(
     verifyUInotDegraded
   );
-  BrowserTestUtils.loadURIString(gTestBrowser, url);
+  BrowserTestUtils.startLoadingURIString(gTestBrowser, url);
 }
 
 // ------------------------------------------------------

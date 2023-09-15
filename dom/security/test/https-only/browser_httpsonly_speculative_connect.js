@@ -58,12 +58,8 @@ add_task(async function () {
   });
   Services.console.registerListener(on_new_console_messages);
 
-  let promiseLoaded = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    `${TEST_PATH_HTTP}file_httpsonly_speculative_connect.html`
-  );
-  await BrowserTestUtils.loadURIString(
+  let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
     `${TEST_PATH_HTTP}file_httpsonly_speculative_connect.html`
   );

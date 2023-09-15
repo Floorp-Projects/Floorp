@@ -7,7 +7,7 @@ async function loadURL(url, expectedURL = undefined) {
   const browser = gBrowser.selectedTab.linkedBrowser;
   const loaded = BrowserTestUtils.browserLoaded(browser, true, expectedURL);
 
-  BrowserTestUtils.loadURIString(browser, url);
+  BrowserTestUtils.startLoadingURIString(browser, url);
   await loaded;
 }
 

@@ -24,7 +24,7 @@ add_task(async function () {
   const onLocationChanged = waitForNextLocationChange(webProgress);
   const newLocation = "data:text/html;charset=utf-8,first-page";
   let loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, newLocation);
+  BrowserTestUtils.startLoadingURIString(browser, newLocation);
   await loaded;
 
   const firstPageBrowsingContext = browser.browsingContext;
@@ -101,7 +101,7 @@ add_task(async function () {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const secondLocation = "http://example.com/document-builder.sjs?html=com";
   loaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURIString(browser, secondLocation);
+  BrowserTestUtils.startLoadingURIString(browser, secondLocation);
   await loaded;
 
   const secondPageBrowsingContext = browser.browsingContext;

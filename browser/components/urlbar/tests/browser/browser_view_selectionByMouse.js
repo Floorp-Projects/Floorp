@@ -27,13 +27,16 @@ add_setup(async function () {
     commands: ["test-addons"],
     label: "quickactions-addons",
     onPick: () =>
-      BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:about"),
+      BrowserTestUtils.startLoadingURIString(
+        gBrowser.selectedBrowser,
+        "about:about"
+      ),
   });
   UrlbarProviderQuickActions.addAction("test-downloads", {
     commands: ["test-downloads"],
     label: "quickactions-downloads2",
     onPick: () =>
-      BrowserTestUtils.loadURIString(
+      BrowserTestUtils.startLoadingURIString(
         gBrowser.selectedBrowser,
         "about:downloads"
       ),
