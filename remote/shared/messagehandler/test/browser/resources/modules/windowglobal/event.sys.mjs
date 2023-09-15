@@ -18,6 +18,12 @@ class EventModule extends Module {
     this.emitEvent("event-from-window-global", { text });
   }
 
+  testEmitEventCancelableWithInterception(params) {
+    this.emitEvent("event.testEventCancelableWithInterception", {
+      shouldCancel: params.shouldCancel,
+    });
+  }
+
   testEmitEventWithInterception() {
     this.emitEvent("event.testEventWithInterception", {});
   }
