@@ -83,15 +83,6 @@ struct KeyPair {
       : mGeneral(aGeneral), mSpecific(aSpecific), mScanCode(aScanCode) {}
 };
 
-#if (WINVER < 0x0600)
-struct TITLEBARINFOEX {
-  DWORD cbSize;
-  RECT rcTitleBar;
-  DWORD rgstate[CCHILDREN_TITLEBAR + 1];
-  RECT rgrect[CCHILDREN_TITLEBAR + 1];
-};
-#endif
-
 namespace mozilla {
 namespace widget {
 

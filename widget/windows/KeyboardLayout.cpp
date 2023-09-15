@@ -41,11 +41,6 @@
 #  include <winable.h>
 #endif
 
-// In WinUser.h, MAPVK_VK_TO_VSC_EX is defined only when WINVER >= 0x0600
-#ifndef MAPVK_VK_TO_VSC_EX
-#  define MAPVK_VK_TO_VSC_EX (4)
-#endif
-
 // For collecting other people's log, tell them `MOZ_LOG=KeyboardHandler:4,sync`
 // rather than `MOZ_LOG=KeyboardHandler:5,sync` since using `5` may create too
 // big file.

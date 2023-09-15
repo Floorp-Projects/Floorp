@@ -12,7 +12,6 @@
 
 #  include <windows.h>
 #  include <windows.media.h>
-#  include <winsdkver.h>
 #  include <wrl.h>
 
 #  include "nsMimeTypes.h"

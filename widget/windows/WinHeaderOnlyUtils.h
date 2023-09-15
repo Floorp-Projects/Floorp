@@ -37,16 +37,6 @@
  * should put it elsewhere.
  */
 
-#if _WIN32_WINNT < _WIN32_WINNT_WIN8
-typedef struct _FILE_ID_INFO {
-  ULONGLONG VolumeSerialNumber;
-  FILE_ID_128 FileId;
-} FILE_ID_INFO;
-
-#  define FileIdInfo ((FILE_INFO_BY_HANDLE_CLASS)18)
-
-#endif  // _WIN32_WINNT < _WIN32_WINNT_WIN8
-
 #if !defined(STATUS_SUCCESS)
 #  define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
 #endif  // !defined(STATUS_SUCCESS)
