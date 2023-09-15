@@ -10,6 +10,11 @@
 // - provider
 // - results
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderClipboard:
+    "resource:///modules/UrlbarProviderClipboard.sys.mjs",
+});
+
 // This test has many subtests and can time out in verify mode.
 requestLongerTimeout(5);
 
@@ -430,6 +435,38 @@ add_task(async function selected_result_calc() {
     ]);
   });
 
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function selected_result_clipboard() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.clipboard.featureGate", true],
+      ["browser.urlbar.suggest.clipboard", true],
+    ],
+  });
+  SpecialPowers.clipboardCopyString(
+    "https://example.com/selected_result_clipboard"
+  );
+
+  await doTest(async browser => {
+    await openPopup("");
+    await selectRowByProvider("UrlbarProviderClipboard");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "clipboard",
+        selected_result_subtype: "",
+        selected_position: 1,
+        provider: "UrlbarProviderClipboard",
+        results: "clipboard,action",
+      },
+    ]);
+  });
+
+  SpecialPowers.clipboardCopyString("");
+  UrlbarProviderClipboard.setPreviousClipboardValue("");
   await SpecialPowers.popPrefEnv();
 });
 

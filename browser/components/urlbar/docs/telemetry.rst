@@ -349,6 +349,8 @@ urlbar.picked.*
     A bookmarked URL.
   - ``bookmark_adaptive``
     A bookmarked URL retrieved from adaptive history.
+  - ``clipboard``
+    A URL retrieved from the system clipboard.
   - ``dynamic``
     A specially crafted result, often used in experiments when basic types are
     not flexible enough for a rich layout.
