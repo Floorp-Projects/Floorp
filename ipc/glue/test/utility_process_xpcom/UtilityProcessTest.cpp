@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(ENABLE_TESTS)
-#  include "mozilla/ipc/UtilityProcessTest.h"
 #  include "mozilla/ipc/UtilityProcessManager.h"
+#  include "mozilla/ipc/UtilityProcessTest.h"
 #  include "mozilla/dom/Promise.h"
 #  include "mozilla/ProcInfo.h"
 #  include "mozilla/IntentionalCrash.h"

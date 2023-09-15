@@ -23,6 +23,10 @@ class JSOracleParent;
 class WindowsUtilsParent;
 }  // namespace dom
 
+namespace widget::filedialog {
+class WinFileDialogParent;
+}  // namespace widget::filedialog
+
 namespace ipc {
 
 class UtilityProcessParent;
@@ -34,12 +38,19 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   friend class UtilityProcessParent;
 
  public:
+  template <typename T>
+  using Promise = MozPromise<T, nsresult, true>;
+
   using StartRemoteDecodingUtilityPromise =
-      MozPromise<Endpoint<PRemoteDecoderManagerChild>, nsresult, true>;
+      Promise<Endpoint<PRemoteDecoderManagerChild>>;
   using JSOraclePromise = GenericNonExclusivePromise;
 
-  using WindowsUtilsPromise =
-      MozPromise<RefPtr<dom::WindowsUtilsParent>, nsresult, true>;
+#ifdef XP_WIN
+  using WindowsUtilsPromise = Promise<RefPtr<dom::WindowsUtilsParent>>;
+
+  using WinFileDialogParent = widget::filedialog::WinFileDialogParent;
+  using WinFileDialogPromise = Promise<RefPtr<WinFileDialogParent>>;
+#endif
 
   static RefPtr<UtilityProcessManager> GetSingleton();
 
@@ -64,6 +75,10 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   // Releases the WindowsUtils actor so that it can be destroyed.
   // Subsequent attempts to use WindowsUtils will create a new process.
   void ReleaseWindowsUtils();
+
+  // Get a new Windows file-dialog utility-process actor. These are never
+  // reused; this will always return a fresh actor.
+  RefPtr<WinFileDialogPromise> CreateWinFileDialogAsync();
 #endif
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
