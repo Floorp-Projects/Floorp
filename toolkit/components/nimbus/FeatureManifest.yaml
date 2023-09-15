@@ -1662,6 +1662,10 @@ shopping2023:
       description: True if showing recommended products is enabled
       type: boolean
       setPref: browser.shopping.experience2023.ads.enabled
+    surveyEnabled:
+      description: True if showing survey is enabled
+      type: boolean
+      fallbackPref: browser.shopping.experience2023.survey.enabled
 shoppingOHTTP:
   description: Prefs to control the OHTTP URLs used for shopping.
   owner: gijs@mozilla.com
