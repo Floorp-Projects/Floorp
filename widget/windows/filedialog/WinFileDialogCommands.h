@@ -9,10 +9,17 @@
 
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
-// Windows interface type, defined in <shobjidl_core.h>
+// Windows interface types, defined in <shobjidl.h>
 struct IFileDialog;
+struct IFileOpenDialog;
 
 namespace mozilla::widget::filedialog {
+
+enum class FileDialogType : uint8_t { Open, Save };
+
+// Create a file-dialog of the relevant type. Requires MSCOM to be initialized.
+mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(FileDialogType);
+
 // Apply the selected commands to the IFileDialog, in preparation for showing
 // it. (The actual showing step is left to the caller.)
 [[nodiscard]] HRESULT ApplyCommands(::IFileDialog*,
