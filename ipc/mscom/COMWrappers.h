@@ -9,12 +9,6 @@
 
 #include <objbase.h>
 
-#if (NTDDI_VERSION < NTDDI_WIN8)
-// Win8+ API that we use very carefully
-DECLARE_HANDLE(CO_MTA_USAGE_COOKIE);
-HRESULT WINAPI CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE* pCookie);
-#endif  // (NTDDI_VERSION < NTDDI_WIN8)
-
 // A set of wrapped COM functions, so that we can dynamically link to the
 // functions in combase.dll on win8+. This prevents ole32.dll and many other
 // DLLs loading, which are not required when we have win32k locked down.
