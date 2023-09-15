@@ -2189,6 +2189,16 @@
     <string name="review_quality_check_grade_d_f_description">Upålitelege vurderingar</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Høgdepunkt frå nylege vurderingar</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Vi nyttar AI-teknologi frå %s frå Mozilla for å kontrollere pålitelegheita av produktvurderingar. Dette vil berre hjelpe deg med å fastsetje vurderingskvaliteten, ikkje produktkvaliteten. </string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Vi gir vurderingane til kvart produkt ein <b>bokstavkarakter</b> frå A til F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Pålitelege vurderingar. Vi meinar at vureringane truleg kjem frå ekte kundar som har lagt att ærlege, upartiske vurderingar.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Vi meinar at det finst ei blanding av pålitelege og upålitelege vurderingar.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Upålitelege vurderingar. Vi meinar at vurderingane sannsynlegvis er falske, eller frå partiske kritikarar.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Les meir om %s.</string>
     <!-- Text for title of settings section. -->

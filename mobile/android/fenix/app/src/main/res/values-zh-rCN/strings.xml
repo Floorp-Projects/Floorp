@@ -68,6 +68,20 @@
     <string name="private_browsing_placeholder_description_2">%1$s 会在关闭所有隐私标签页或退出应用时，清除您的搜索记录与浏览历史。虽然这样仍无法对网站和电信运营商匿名，但还是可以更简单地防止其他使用此设备的人得知您的上网活动。</string>
     <string name="private_browsing_common_myths">正确认识隐私浏览功能</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">不在设备上留痕迹</string>
+
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s 会在您关闭所有隐私窗口后删除 Cookie、历史记录、网站数据。%2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">谁可以看到我的活动？</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">一步进入隐私标签页。</string>
@@ -90,6 +104,12 @@
     <string name="tcp_cfr_message">我们最强大的隐私功能：隔离跨站跟踪器。</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">了解“全方位 Cookie 保护”</string>
+
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">点按此处新建隐私浏览，浏览完毕后轻松删除历史记录和 Cookie 等数据。</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">需要访问相机。转到 Android 设置，点按权限，然后点按允许。</string>
@@ -230,6 +250,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">主屏幕</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">清除浏览历史</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">选择的语言</string>
@@ -354,6 +377,20 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">开启通知</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">暂时不要</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">试试 Firefox 搜索微件</string>
+
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">将 Firefox 添加至主屏幕，随手就能打开隐私为先、可拦截跨站跟踪器的浏览器。</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">添加 Firefox 微件</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">暂时不要</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1361,6 +1398,8 @@
     <string name="snackbar_private_tab_closed">隐私标签页已关闭</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">隐私标签页已关闭</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">隐私浏览数据已删除</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">撤销</string>
 
@@ -2195,6 +2234,60 @@
     <string name="experiments_snackbar">启用遥测以发送数据。</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">前往设置</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">核查评价</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">可信评价</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">可信与不可信评价混杂</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">不可信评价</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">这些评价可信度如何？</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">调整后的评分</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">已移除不可信的评价</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">最有帮助的近期评价</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">我们判断评价质量的流程</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">我们使用由 Mozilla 支持的 %s 的人工智能技术来分析商品评价的可信度。分析结果只能辅助您评估评价的质量，不能反映商品质量。</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[我们会以<b>字母等级</b>（从 A 到 F）给商品评价打分。]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">评价可信。分析认为这些评价大概率是由真实消费者作出的诚实公正的评价。</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">分析认为对此商品的评价鱼龙混杂。</string>
+
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">评价不可信。分析认为这些评价大概率不实，或是由“水军”所作出。</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>调整后的评分</b>仅基于我们认为可信的评价作出。]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>最有帮助的评价</b>选自我们认为可信的最近 80 天内的 %s 评价。]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">详细了解%s</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">由 Mozilla 支持的 %s 判断评价质量的流程</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">设置</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">在核查评价中展示广告</string>
+
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">您偶尔会看到相关商品的广告，所有广告均符合我们的评价质量标准。%s</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">详细了解</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">关闭核查评价</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">可参考其他商品</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">由 %s 提供的广告</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

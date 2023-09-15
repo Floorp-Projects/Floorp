@@ -373,6 +373,15 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Kokeile Firefox-hakuwidgetiä</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Kun Firefox on aloitusnäytölläsi, pääset helposti yksityisyyden etusijalle asettavaan selaimeen, joka estää sivustorajat ylittävät seuraimet.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Lisää Firefox-widget</string>
     <!-- Text for the button to dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
 
@@ -2207,26 +2216,64 @@
     <string name="review_quality_check_grade_d_f_description">Epäluotettavat arvostelut</string>
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">Kuinka luotettavia nämä arvostelut ovat?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Oikaistu arvosana</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">Epäluotettavat arvostelut poistettu</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Kohokohdat viimeaikaisista arvosteluista</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Kuinka määritämme arvostelun laadun</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Annamme kunkin tuotteen arvosteluille <b>kirjainarvosanan</b> A:sta F:ään.]]></string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Oikaistu arvosana</b> perustuu vain niihin arvosteluihin, jotka koemme luotettaviksi.]]></string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">Asetukset</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">Näytä mainoksia arvostelujen tarkistimessa</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Lue lisää</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
     <string name="review_quality_check_settings_turn_off">Poista arvostelujen tarkistus käytöstä</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">Arvostelun tarkistuksen tarjoaa %s.</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozillalta</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Tarkista nyt</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Ei vielä tarpeeksi arvosteluja</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Tuote ei ole saatavilla</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Tämä voi kestää noin 60 sekuntia.</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Emme voi tarkistaa näitä arvosteluja</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Valitettavasti emme voi tarkistaa arvostelun laatua tietyntyyppisten tuotteiden osalta. Esimerkiksi lahjakortit ja suoratoistovideot, musiikki ja pelit.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Tietoa tulossa pian</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Meillä pitäisi olla tietoa tämän tuotteen arvosteluista 24 tunnin sisällä. Tarkista tilanne uudelleen.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Analyysi on ajan tasalla</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Selvä</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Tietoja ei juuri nyt saatavilla</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Pyrimme ratkaisemaan ongelman. Tarkista tilanne pian uudelleen.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Ei verkkoyhteyttä</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Tarkista verkkoyhteytesi ja yritä sitten ladata sivu uudelleen.</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Näistä arvosteluista ei ole vielä tietoa</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Tarkista arvostelun laatu</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->

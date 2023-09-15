@@ -66,6 +66,19 @@
        Falsis crodincis su la navigazion privade
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">No sta lassâ segns su chest dispositîf</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s elimine i cookies, la cronologjie e i dâts dai sîts web cuant che tu sieris ducj i barcons privâts. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Cui podaressial viodi la mê ativitât?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Vierç la tô prossime schede privade intune sole tocjade.</string>
@@ -87,6 +100,7 @@
     <string name="tcp_cfr_message">La nestre plui fuarte funzion di protezion de riservatece mai realizade e isole lis spiis inter-sît.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Plui informazions su la Protezion Totâl dai Cookies</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Al covente l’acès ae fotocjamare. Va tes impostazions di Android, va te schede dai permès e tocje permet.</string>

@@ -88,6 +88,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Gini’in doj dàj hua rayi’î nej sa Arân riña nej Kokî rañu’ūnj un</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Gārasunj kâmara. Gūij riña sa nagi’hiát si’hiaj Android , nī gārayina si gā’hue gārasunj sa ni’ña.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -346,6 +347,9 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Nāchrūn nej nuguan’ atāj na’ānj an</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Sī ga\'hue akuan\' nïn</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Sī ga\'hue akuan\' nïn</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

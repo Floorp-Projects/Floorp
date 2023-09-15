@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Installation réussie de %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Échec de l’installation de %1$s</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Ce module complémentaire n’a pas pu être téléchargé à cause d’un échec de connexion.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">%1$s n’a pas pu être installé car il présente un risque élevé de provoquer des problèmes de stabilité ou de sécurité</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

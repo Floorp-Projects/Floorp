@@ -2235,7 +2235,7 @@
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Highlights aus aktuellen Bewertungen</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
-    <string name="review_quality_check_explanation_title">Wie wir die Qualität der Überprüfung bestimmen</string>
+    <string name="review_quality_check_explanation_title">Wie wir die Qualität einer Bewertung bestimmen</string>
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Wir verwenden die KI-Technologie von %s von Mozilla, um die Zuverlässigkeit von Produktbewertungen zu überprüfen. Dies hilft nur bei der Einschätzung der Qualität der Bewertung, nicht der Produktqualität.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->

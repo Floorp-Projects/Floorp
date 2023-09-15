@@ -89,6 +89,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Saber mais sobre a Proteção Total de Cookies</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">É necessário acesso à câmara. Aceda às definições do Android, toque em permissões e toque em permitir.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -225,6 +226,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Ecrã inicial</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Apagar histórico de navegação</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Idioma selecionado</string>
@@ -348,6 +352,9 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ativar notificações</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Agora não</string>
+
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Agora não</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -2154,6 +2161,21 @@
     <string name="experiments_snackbar">Ativar telemetria para enviar dados.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Ir para as definições</string>
+
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">Mostrar menos</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">Mostrar mais</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">Qualidade</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">Preço</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">Envio</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">Embalagem e aparência</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">Competitividade</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

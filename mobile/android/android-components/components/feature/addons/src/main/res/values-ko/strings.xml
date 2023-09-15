@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">개인 정보 설정 읽기 및 수정</string>
     <!-- Description for all_urls add-on permission. -->
@@ -181,7 +181,9 @@
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s 부가 기능은 %2$s %3$s 버전과 호환되지 않기 때문에 설치할 수 없습니다.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">%1$s 부가 기능은 안정성 또는 보안 문제를 일으킬 위험이 높기 때문에 설치할 수 없습니다</string>
+    <string name="mozac_feature_addons_blocklisted_1">%1$s 부가 기능은 안정성 또는 보안 문제를 일으킬 위험이 높기 때문에 설치할 수 없습니다.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s 부가 기능은 안정성 또는 보안 문제를 일으킬 위험이 높기 때문에 설치할 수 없습니다</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s 부가 기능 활성화에 성공했습니다</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s успішно встановлено</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Не вдалося встановити %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Не вдалося встановити цей додаток.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted">%1$s не може бути встановлений через високу ймовірність спричинення проблем безпеки та стабільності</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">移除快捷方式</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">新版变化</string>
     <string name="menu_settings">设置</string>
     <string name="menu_about">关于</string>
     <string name="menu_help">帮助</string>
@@ -1094,7 +1093,7 @@
     picture of search widget from promote search widget dialog. --&gt;
     <!-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. -->
-    <string name="promote_search_widget_dialog_picture_content_description">搜索小部件</string>
+    <string name="promote_search_widget_dialog_picture_content_description">搜索小组件</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
     <!-- This is the title of promote search widget dialog. -->
@@ -1109,17 +1108,17 @@
     of the app (e.g. &quot;Focus&quot;) --&gt;
     <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus") -->
-    <string name="promote_search_widget_dialog_subtitle">开始隐私浏览吧。想更快发起搜索，下次可以直接点按主屏幕上的 %1$s 小部件。</string>
+    <string name="promote_search_widget_dialog_subtitle">开始隐私浏览吧。想更快发起搜索，下次可以直接点按主屏幕上的 %1$s 小组件。</string>
 
     !-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. --&gt;
     <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->
-    <string name="promote_search_widget_button_text">将小部件添加至主屏幕</string>
+    <string name="promote_search_widget_button_text">将小组件添加至主屏幕</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. --&gt;
     <!-- This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen. -->
-    <string name="promote_search_widget_snackbar_message">小部件已添加至主屏幕</string>
+    <string name="promote_search_widget_snackbar_message">小组件已添加至主屏幕</string>
 </resources>
