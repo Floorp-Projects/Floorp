@@ -122,12 +122,6 @@ static nsReturnRef<HANDLE> CreateJobAndAssignProcess(HANDLE aProcess) {
     (0x00000002ULL << 40)
 #endif  // !defined(PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF)
 
-#if (_WIN32_WINNT < 0x0602)
-BOOL WINAPI
-SetProcessMitigationPolicy(PROCESS_MITIGATION_POLICY aMitigationPolicy,
-                           PVOID aBuffer, SIZE_T aBufferLen);
-#endif  // (_WIN32_WINNT >= 0x0602)
-
 /**
  * Any mitigation policies that should be set on the browser process should go
  * here.
