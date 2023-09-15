@@ -2184,7 +2184,6 @@ class LSRequestBase : public DatastoreOperationBase,
 
 class PrepareDatastoreOp
     : public LSRequestBase,
-      public OpenDirectoryListener,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   class LoadDataOp;
 
@@ -2234,7 +2233,7 @@ class PrepareDatastoreOp
   };
 
   RefPtr<PrepareDatastoreOp> mDelayedOp;
-  RefPtr<DirectoryLock> mPendingDirectoryLock;
+  RefPtr<ClientDirectoryLock> mPendingDirectoryLock;
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<Datastore> mDatastore;
@@ -2346,15 +2345,12 @@ class PrepareDatastoreOp
 
   void CleanupMetadata();
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // IPDL overrides.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  // OpenDirectoryListener overrides.
-  void DirectoryLockAcquired(DirectoryLock* aLock) override;
+  void DirectoryLockAcquired(DirectoryLock* aLock);
 
-  void DirectoryLockFailed() override;
+  void DirectoryLockFailed();
 };
 
 class PrepareDatastoreOp::LoadDataOp final
@@ -6848,19 +6844,23 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  // Open directory
-  mPendingDirectoryLock = quotaManager->CreateDirectoryLock(
-      {mOriginMetadata, mozilla::dom::quota::Client::LS},
-      /* aExclusive */ false);
-
   mNestedState = NestedState::DirectoryOpenPending;
 
-  {
-    // Pin the directory lock, because Acquire might clear mPendingDirectoryLock
-    // during the Acquire call.
-    RefPtr pinnedDirectoryLock = mPendingDirectoryLock;
-    pinnedDirectoryLock->Acquire(this);
-  }
+  quotaManager
+      ->OpenClientDirectory({mOriginMetadata, mozilla::dom::quota::Client::LS},
+                            SomeRef(mPendingDirectoryLock))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this)](
+              const ClientDirectoryLockPromise::ResolveOrRejectValue& aValue) {
+            self->mPendingDirectoryLock = nullptr;
+
+            if (aValue.IsResolve()) {
+              self->DirectoryLockAcquired(aValue.ResolveValue());
+            } else {
+              self->DirectoryLockFailed();
+            }
+          });
 
   return NS_OK;
 }
@@ -6915,9 +6915,6 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     QuotaManager* quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
-
-    // This must be called before EnsureTemporaryStorageIsInitialized.
-    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
 
     // This ensures that usages for existings origin directories are cached in
     // memory.
@@ -7587,8 +7584,6 @@ void PrepareDatastoreOp::CleanupMetadata() {
     gPrepareDatastoreOps = nullptr;
   }
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(PrepareDatastoreOp, LSRequestBase)
 
 void PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
