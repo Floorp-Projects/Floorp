@@ -496,6 +496,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                  unsigned* indexp = nullptr);
   [[nodiscard]] bool convertLastNewLineToNewLineColumn(
       JS::LimitedColumnNumberZeroOrigin column);
+  [[nodiscard]] bool convertLastSetLineToSetLineColumn(
+      JS::LimitedColumnNumberZeroOrigin column);
 
   [[nodiscard]] bool newSrcNoteOperand(ptrdiff_t operand);
 

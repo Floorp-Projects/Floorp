@@ -46,12 +46,13 @@ namespace js {
   M(NewLineColumn, "newlinecolumn",                                \
     int8_t(SrcNote::NewLineColumn::Operands::Count))               \
   M(SetLine, "setline", int8_t(SrcNote::SetLine::Operands::Count)) \
+  M(SetLineColumn, "setlinecolumn",                                \
+    int8_t(SrcNote::SetLineColumn::Operands::Count))               \
   /* Bytecode is a recommended breakpoint. */                      \
   M(Breakpoint, "breakpoint", 0)                                   \
   /* Bytecode is a recommended breakpoint, and the first in a */   \
   /* new steppable area. */                                        \
   M(BreakpointStepSep, "breakpoint-step-sep", 0)                   \
-  M(Unused6, "unused", 0)                                          \
   M(Unused7, "unused", 0)                                          \
   /* 8-15 (0b1xxx) are for extended delta notes. */                \
   M(XDelta, "xdelta", 0)
@@ -283,6 +284,31 @@ class SrcNote {
     static inline size_t getLine(const SrcNote* sn, size_t initialLine);
   };
 
+  class SetLineColumn {
+   public:
+    enum class Operands { Line, Column, Count };
+
+   private:
+    static inline size_t lineFromOperand(ptrdiff_t operand) {
+      return size_t(operand);
+    }
+
+    static inline JS::LimitedColumnNumberZeroOrigin columnFromOperand(
+        ptrdiff_t operand) {
+      return JS::LimitedColumnNumberZeroOrigin(operand);
+    }
+
+   public:
+    static inline ptrdiff_t columnToOperand(
+        JS::LimitedColumnNumberZeroOrigin column) {
+      return column.zeroOriginValue();
+    }
+
+    static inline size_t getLine(const SrcNote* sn, size_t initialLine);
+    static inline JS::LimitedColumnNumberZeroOrigin getColumn(
+        const SrcNote* sn);
+  };
+
   friend class SrcNoteWriter;
   friend class SrcNoteReader;
   friend class SrcNoteIterator;
@@ -402,6 +428,20 @@ inline JS::LimitedColumnNumberZeroOrigin SrcNote::NewLineColumn::getColumn(
 inline size_t SrcNote::SetLine::getLine(const SrcNote* sn, size_t initialLine) {
   return initialLine +
          fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Line)));
+}
+
+/* static */
+inline size_t SrcNote::SetLineColumn::getLine(const SrcNote* sn,
+                                              size_t initialLine) {
+  return initialLine + lineFromOperand(SrcNoteReader::getOperand(
+                           sn, unsigned(Operands::Line)));
+}
+
+/* static */
+inline JS::LimitedColumnNumberZeroOrigin SrcNote::SetLineColumn::getColumn(
+    const SrcNote* sn) {
+  return columnFromOperand(
+      SrcNoteReader::getOperand(sn, unsigned(Operands::Column)));
 }
 
 // Iterate over SrcNote array, until it hits terminator.
