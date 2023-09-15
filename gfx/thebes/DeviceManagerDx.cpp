@@ -26,8 +26,8 @@
 
 // -
 
-#include "mozilla/gfx/AllOfDcomp.h"
 #include <d3d11.h>
+#include <dcomp.h>
 #include <ddraw.h>
 #include <dxgi.h>
 

@@ -17,18 +17,6 @@
 
 #include "dwrite_3.h"
 
-// Currently, we build with WINVER=0x601 (Win7), which means newer
-// declarations in dwrite_3.h will not be visible. Also, we don't
-// yet have the Fall Creators Update SDK available on build machines,
-// so even with updated WINVER, some of the interfaces we need would
-// not be present.
-// To work around this, until the build environment is updated,
-// we #include an extra header that contains copies of the relevant
-// classes/interfaces we need.
-#if !defined(__MINGW32__) && WINVER < 0x0A00
-#  include "dw-extra.h"
-#endif
-
 #include "PathSkia.h"
 #include "skia/include/core/SkPaint.h"
 #include "skia/include/core/SkPath.h"
