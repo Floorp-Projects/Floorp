@@ -28,6 +28,7 @@ class ReviewQualityCheckPreferencesMiddleware(
         next: (ReviewQualityCheckAction) -> Unit,
         action: ReviewQualityCheckAction,
     ) {
+        next(action)
         when (action) {
             is ReviewQualityCheckAction.PreferencesMiddlewareAction -> {
                 processAction(context.store, action)
@@ -37,8 +38,6 @@ class ReviewQualityCheckPreferencesMiddleware(
                 // no-op
             }
         }
-        // Forward the actions
-        next(action)
     }
 
     private fun processAction(

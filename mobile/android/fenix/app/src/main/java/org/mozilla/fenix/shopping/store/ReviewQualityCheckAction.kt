@@ -72,12 +72,12 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user has opted in to the review quality check feature and the UI is opened.
      */
-    object FetchProductAnalysis : NetworkAction
+    object FetchProductAnalysis : NetworkAction, UpdateAction
 
     /**
      * Triggered when the user retries to fetch product analysis after a failure.
      */
-    object RetryProductAnalysis : NetworkAction
+    object RetryProductAnalysis : NetworkAction, UpdateAction
 
     /**
      * Triggered when opening a link from the review quality check feature.

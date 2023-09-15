@@ -66,10 +66,14 @@ private fun mapStateForUpdateAction(
         }
 
         is ReviewQualityCheckAction.UpdateProductReview -> {
-            if (state is ReviewQualityCheckState.OptedIn) {
-                state.copy(productReviewState = action.productReviewState)
-            } else {
-                state
+            state.mapIfOptedIn {
+                it.copy(productReviewState = action.productReviewState)
+            }
+        }
+
+        ReviewQualityCheckAction.FetchProductAnalysis, ReviewQualityCheckAction.RetryProductAnalysis -> {
+            state.mapIfOptedIn {
+                it.copy(productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Loading)
             }
         }
     }

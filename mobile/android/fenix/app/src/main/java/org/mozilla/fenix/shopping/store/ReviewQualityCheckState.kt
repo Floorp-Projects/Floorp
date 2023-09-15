@@ -165,6 +165,17 @@ sealed interface ReviewQualityCheckState : State {
             val analysisUrl: String,
         ) : RecommendedProductState
     }
+
+    /**
+     * Returns [ReviewQualityCheckState] applying the given [transform] function if the current
+     * state is [OptedIn].
+     */
+    fun mapIfOptedIn(transform: (OptedIn) -> ReviewQualityCheckState): ReviewQualityCheckState =
+        if (this is OptedIn) {
+            transform(this)
+        } else {
+            this
+        }
 }
 
 /**

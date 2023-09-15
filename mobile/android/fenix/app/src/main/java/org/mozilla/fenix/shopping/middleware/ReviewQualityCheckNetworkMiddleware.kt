@@ -13,7 +13,6 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.FetchProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.RetryProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
-import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 
 /**
  * Middleware that handles network requests for the review quality check feature.
@@ -31,13 +30,13 @@ class ReviewQualityCheckNetworkMiddleware(
         next: (ReviewQualityCheckAction) -> Unit,
         action: ReviewQualityCheckAction,
     ) {
+        next(action)
         when (action) {
             is ReviewQualityCheckAction.NetworkAction -> processAction(context.store, action)
             else -> {
                 // no-op
             }
         }
-        next(action)
     }
 
     private fun processAction(
@@ -46,8 +45,6 @@ class ReviewQualityCheckNetworkMiddleware(
     ) {
         when (action) {
             FetchProductAnalysis, RetryProductAnalysis -> {
-                store.dispatch(ReviewQualityCheckAction.UpdateProductReview(ProductReviewState.Loading))
-
                 scope.launch {
                     val analysis = reviewQualityCheckService.fetchProductReview()
                     val productReviewState = analysis.toProductReviewState()
