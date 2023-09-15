@@ -10,6 +10,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+});
+
 const OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";
 const ACTIVE_PREF = "browser.shopping.experience2023.active";
 const LAST_AUTO_ACTIVATE_PREF =
@@ -113,6 +117,22 @@ export const ShoppingUtils = {
       }
     }
     this.handledAutoActivate = true;
+  },
+
+  /**
+   * Send a Shopping-related trigger message to ASRouter.
+   *
+   * @param {object} trigger The trigger object to send to ASRouter.
+   * @param {object} trigger.context Additional trigger properties to pass to
+   *   the targeting context.
+   * @param {string} trigger.id The id of the trigger.
+   * @param {MozBrowser} trigger.browser The browser to associate with the
+   *   trigger. (This can determine the tab/window the message is shown in,
+   *   depending on the message surface)
+   */
+  async sendTrigger(trigger) {
+    await lazy.ASRouter.waitForInitialized;
+    await lazy.ASRouter.sendTriggerMessage(trigger);
   },
 };
 
