@@ -57,6 +57,8 @@ nsCString GetUtilityActorName(const UtilityActorName aActorName) {
       return "js-oracle"_ns;
     case UtilityActorName::WindowsUtils:
       return "windows-utils"_ns;
+    case UtilityActorName::WindowsFileDialog:
+      return "windows-file-dialog"_ns;
     default:
       return "unknown"_ns;
   }
