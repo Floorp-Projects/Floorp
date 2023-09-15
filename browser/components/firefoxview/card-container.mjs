@@ -21,10 +21,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {boolean} showViewAll - True if you need to display a 'View all' header link to navigate
  */
 class CardContainer extends MozLitElement {
-  constructor() {
-    super();
-    this.isExpanded = true;
-  }
+  initiallyExpanded = true;
 
   static properties = {
     sectionLabel: { type: String },
@@ -48,31 +45,48 @@ class CardContainer extends MozLitElement {
     return this.detailsEl.hasAttribute("open");
   }
 
+  get detailsOpenPrefValue() {
+    const prefName = this.shortPageName
+      ? `browser.tabs.firefox-view.ui-state.${this.shortPageName}.open`
+      : null;
+    if (prefName && Services.prefs.prefHasUserValue(prefName)) {
+      return Services.prefs.getBoolPref(prefName);
+    }
+    return null;
+  }
+
   connectedCallback() {
     super.connectedCallback();
-    if (this.preserveCollapseState && this.shortPageName) {
-      this.openStatePref = `browser.tabs.firefox-view.ui-state.${this.shortPageName}.open`;
-      this.isExpanded = Services.prefs.getBoolPref(this.openStatePref, true);
-    }
+    this.isExpanded = this.detailsOpenPrefValue ?? this.initiallyExpanded;
   }
 
   onToggleContainer() {
+    if (this.isExpanded == this.detailsExpanded) {
+      return;
+    }
     this.isExpanded = this.detailsExpanded;
+
+    if (!this.shortPageName) {
+      return;
+    }
+
     if (this.preserveCollapseState) {
-      Services.prefs.setBoolPref(this.openStatePref, this.isExpanded);
+      const prefName = this.shortPageName
+        ? `browser.tabs.firefox-view.ui-state.${this.shortPageName}.open`
+        : null;
+      Services.prefs.setBoolPref(prefName, this.isExpanded);
     }
+
     // Record telemetry
-    if (this.shortPageName) {
-      Services.telemetry.recordEvent(
-        "firefoxview_next",
-        this.isExpanded ? "card_expanded" : "card_collapsed",
-        "card_container",
-        null,
-        {
-          data_type: this.shortPageName,
-        }
-      );
-    }
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      this.isExpanded ? "card_expanded" : "card_collapsed",
+      "card_container",
+      null,
+      {
+        data_type: this.shortPageName,
+      }
+    );
   }
 
   viewAllClicked() {
