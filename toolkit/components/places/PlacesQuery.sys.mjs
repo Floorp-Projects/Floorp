@@ -8,12 +8,14 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const BULK_PLACES_EVENTS_THRESHOLD = 50;
+const OBSERVER_DEBOUNCE_RATE_MS = 500;
+const OBSERVER_DEBOUNCE_TIMEOUT_MS = 5000;
 
 /**
  * An object that contains details of a page visit.
@@ -22,8 +24,6 @@ const BULK_PLACES_EVENTS_THRESHOLD = 50;
  *
  * @property {Date} date
  *   When this page was visited.
- * @property {number} id
- *   Visit ID from the database.
  * @property {string} title
  *   The page's title.
  * @property {string} url
@@ -56,6 +56,8 @@ export class PlacesQuery {
   #historyListener = null;
   /** @type {function(HistoryVisit[])} */
   #historyListenerCallback = null;
+  /** @type {DeferredTask} */
+  #historyObserverTask = null;
 
   /**
    * Get a snapshot of history visits at this moment.
@@ -115,7 +117,7 @@ export class PlacesQuery {
         groupBy = "url";
         break;
     }
-    const sql = `SELECT v.id, visit_date, title, url, frecency
+    const sql = `SELECT MAX(visit_date) as visit_date, title, url
       FROM moz_historyvisits v
       JOIN moz_places h
       ON v.place_id = h.id
@@ -130,7 +132,6 @@ export class PlacesQuery {
     for (const row of rows) {
       this.appendToCache({
         date: lazy.PlacesUtils.toDate(row.getResultByName("visit_date")),
-        id: row.getResultByName("id"),
         title: row.getResultByName("title"),
         url: row.getResultByName("url"),
       });
@@ -158,6 +159,19 @@ export class PlacesQuery {
    */
   insertSortedIntoCache(visit) {
     const container = this.#getContainerForVisit(visit);
+    const existingVisitsForUrl = this.#cachedHistoryPerUrl.get(visit.url) ?? [];
+    for (const existingVisit of existingVisitsForUrl) {
+      if (this.#getContainerForVisit(existingVisit) === container) {
+        if (existingVisit.date.getTime() >= visit.date.getTime()) {
+          // Existing visit is more recent. Don't insert this one.
+          return;
+        }
+        // Remove the existing visit, then insert the new one.
+        container.splice(container.indexOf(existingVisit), 1);
+        existingVisitsForUrl.delete(existingVisit);
+        break;
+      }
+    }
     let insertionPoint = 0;
     if (visit.date.getTime() < container[0]?.date.getTime()) {
       insertionPoint = lazy.BinarySearch.insertionIndexOf(
@@ -248,12 +262,24 @@ export class PlacesQuery {
     }
     this.#historyListener = null;
     this.#historyListenerCallback = null;
+    this.#historyObserverTask.disarm();
+    this.#historyObserverTask.finalize();
   }
 
   /**
    * Listen for changes to the visits table and update caches accordingly.
    */
   #initHistoryListener() {
+    this.#historyObserverTask = new lazy.DeferredTask(
+      async () => {
+        if (typeof this.#historyListenerCallback === "function") {
+          const history = await this.getHistory(this.cachedHistoryOptions);
+          this.#historyListenerCallback(history);
+        }
+      },
+      OBSERVER_DEBOUNCE_RATE_MS,
+      OBSERVER_DEBOUNCE_TIMEOUT_MS
+    );
     this.#historyListener = async events => {
       if (
         events.length >= BULK_PLACES_EVENTS_THRESHOLD ||
@@ -278,12 +304,7 @@ export class PlacesQuery {
           }
         }
       }
-      lazy.requestIdleCallback(async () => {
-        if (typeof this.#historyListenerCallback === "function") {
-          const history = await this.getHistory(this.cachedHistoryOptions);
-          this.#historyListenerCallback(history);
-        }
-      });
+      this.#historyObserverTask.arm();
     };
     PlacesObservers.addListener(
       ["page-removed", "page-visited", "history-cleared", "page-title-changed"],
@@ -305,7 +326,6 @@ export class PlacesQuery {
     }
     const visit = {
       date: new Date(event.visitTime),
-      id: event.visitId,
       title: event.lastKnownTitle,
       url: event.url,
     };
