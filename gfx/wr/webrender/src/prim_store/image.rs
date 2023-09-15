@@ -8,7 +8,6 @@ use api::{
     RasterSpace, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
 use api::units::*;
-use crate::composite::CompositorSurfaceKind;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
@@ -456,7 +455,7 @@ impl InternablePrimitive for Image {
         PrimitiveInstanceKind::Image {
             data_handle,
             image_instance_index,
-            compositor_surface_kind: CompositorSurfaceKind::Blit,
+            is_compositor_surface: false,
         }
     }
 }
@@ -653,7 +652,7 @@ impl InternablePrimitive for YuvImage {
         PrimitiveInstanceKind::YuvImage {
             data_handle,
             segment_instance_index: SegmentInstanceIndex::INVALID,
-            compositor_surface_kind: CompositorSurfaceKind::Blit,
+            is_compositor_surface: false,
         }
     }
 }
