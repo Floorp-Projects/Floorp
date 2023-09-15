@@ -863,44 +863,39 @@ impl<'a> Iterator for LonghandIdSetIterator<'a> {
 
 <%
 
-CASCADE_GROUPS = {
+PRIORITARY_PROPERTIES = set([
     # The writing-mode group has the most priority of all property groups, as
     # sizes like font-size can depend on it.
-    "writing_mode": [
-        "writing-mode",
-        "direction",
-        "text-orientation",
-    ],
+    "writing-mode",
+    "direction",
+    "text-orientation",
     # The fonts and colors group has the second priority, as all other lengths
     # and colors depend on them.
     #
     # There are some interdependencies between these, but we fix them up in
     # Cascade::fixup_font_stuff.
-    "fonts_and_color": [
-        # Needed to properly compute the zoomed font-size.
-        "-x-text-scale",
-        # Needed to do font-size computation in a language-dependent way.
-        "-x-lang",
-        # Needed for ruby to respect language-dependent min-font-size
-        # preferences properly, see bug 1165538.
-        "-moz-min-font-size-ratio",
-        # font-size depends on math-depth's computed value.
-        "math-depth",
-        # Needed to compute the first available font and its used size,
-        # in order to compute font-relative units correctly.
-        "font-size",
-        "font-size-adjust",
-        "font-weight",
-        "font-stretch",
-        "font-style",
-        "font-family",
-        # color-scheme affects how system colors resolve.
-        "color-scheme",
-        "forced-color-adjust",
-    ],
-}
-def in_late_group(p):
-    return p.name not in CASCADE_GROUPS["writing_mode"] and p.name not in CASCADE_GROUPS["fonts_and_color"]
+    # Needed to properly compute the zoomed font-size.
+    "-x-text-scale",
+    # Needed to do font-size computation in a language-dependent way.
+    "-x-lang",
+    # Needed for ruby to respect language-dependent min-font-size
+    # preferences properly, see bug 1165538.
+    "-moz-min-font-size-ratio",
+    # font-size depends on math-depth's computed value.
+    "math-depth",
+    # Needed to compute the first available font and its used size,
+    # in order to compute font-relative units correctly.
+    "font-size",
+    "font-size-adjust",
+    "font-weight",
+    "font-stretch",
+    "font-style",
+    "font-family",
+    # color-scheme affects how system colors resolve.
+    "color-scheme",
+    # forced-color-adjust affects whether colors are adjusted.
+    "forced-color-adjust",
+])
 
 def is_visited_dependent(p):
     return p.name in [
@@ -924,8 +919,46 @@ def is_visited_dependent(p):
         "outline-color",
         "color",
     ]
-
 %>
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+pub(crate) enum PrioritaryPropertyId {
+    % for p in data.longhands:
+    % if p.name in PRIORITARY_PROPERTIES:
+    ${p.camel_case},
+    % endif
+    % endfor
+}
+
+/// The number of prioritary properties that we have.
+pub const PRIORITARY_PROPERTY_COUNT: usize = ${len(PRIORITARY_PROPERTIES)};
+impl PrioritaryPropertyId {
+    #[inline]
+    pub fn to_longhand(self) -> LonghandId {
+        static PRIORITARY_TO_LONGHAND: [LonghandId; PRIORITARY_PROPERTY_COUNT] = [
+        % for p in data.longhands:
+        % if p.name in PRIORITARY_PROPERTIES:
+            LonghandId::${p.camel_case},
+        % endif
+        % endfor
+        ];
+        PRIORITARY_TO_LONGHAND[self as usize]
+    }
+    #[inline]
+    pub fn from_longhand(l: LonghandId) -> Option<Self> {
+        static LONGHAND_TO_PRIORITARY: [Option<PrioritaryPropertyId>; ${len(data.longhands)}] = [
+        % for p in data.longhands:
+        % if p.name in PRIORITARY_PROPERTIES:
+            Some(PrioritaryPropertyId::${p.camel_case}),
+        % else:
+            None,
+        % endif
+        % endfor
+        ];
+        LONGHAND_TO_PRIORITARY[l as usize]
+    }
+}
 
 impl LonghandIdSet {
     #[inline]
@@ -976,32 +1009,23 @@ impl LonghandIdSet {
     }
 
     #[inline]
-    pub(super) fn writing_mode_group() -> &'static Self {
+    pub(super) fn prioritary_properties() -> &'static Self {
         ${static_longhand_id_set(
-            "WRITING_MODE_GROUP",
-            lambda p: p.name in CASCADE_GROUPS["writing_mode"]
+            "PRIORITARY_PROPERTIES",
+            lambda p: p.name in PRIORITARY_PROPERTIES
         )}
-        &WRITING_MODE_GROUP
-    }
-
-    #[inline]
-    pub(super) fn fonts_and_color_group() -> &'static Self {
-        ${static_longhand_id_set(
-            "FONTS_AND_COLOR_GROUP",
-            lambda p: p.name in CASCADE_GROUPS["fonts_and_color"]
-        )}
-        &FONTS_AND_COLOR_GROUP
+        &PRIORITARY_PROPERTIES
     }
 
     #[inline]
     pub(super) fn late_group_only_inherited() -> &'static Self {
-        ${static_longhand_id_set("LATE_GROUP_ONLY_INHERITED", lambda p: p.style_struct.inherited and in_late_group(p))}
+        ${static_longhand_id_set("LATE_GROUP_ONLY_INHERITED", lambda p: p.style_struct.inherited and p.name not in PRIORITARY_PROPERTIES)}
         &LATE_GROUP_ONLY_INHERITED
     }
 
     #[inline]
     pub(super) fn late_group() -> &'static Self {
-        ${static_longhand_id_set("LATE_GROUP", lambda p: in_late_group(p))}
+        ${static_longhand_id_set("LATE_GROUP", lambda p: p.name not in PRIORITARY_PROPERTIES)}
         &LATE_GROUP
     }
 
@@ -3612,7 +3636,8 @@ pub struct StyleBuilder<'a> {
     /// node.
     pub rules: Option<StrongRuleNode>,
 
-    custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
+    /// The computed custom properties.
+    pub custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
 
     /// The pseudo-element this style will represent.
     pub pseudo: Option<<&'a PseudoElement>,
@@ -3650,7 +3675,6 @@ impl<'a> StyleBuilder<'a> {
         parent_style: Option<<&'a ComputedValues>,
         pseudo: Option<<&'a PseudoElement>,
         rules: Option<StrongRuleNode>,
-        custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
         is_root_element: bool,
     ) -> Self {
         let reset_style = device.default_computed_values();
@@ -3667,7 +3691,7 @@ impl<'a> StyleBuilder<'a> {
             rules,
             modified_reset: false,
             is_root_element,
-            custom_properties,
+            custom_properties: None,
             writing_mode: inherited_style.writing_mode,
             flags: Cell::new(flags),
             visited_style: None,
@@ -3824,15 +3848,16 @@ impl<'a> StyleBuilder<'a> {
                 ).build()
             })
         });
+        let custom_properties = parent.and_then(|p| p.custom_properties().cloned());
         let mut ret = Self::new(
             device,
             stylist,
             parent,
             pseudo,
             /* rules = */ None,
-            parent.and_then(|p| p.custom_properties().cloned()),
             /* is_root_element = */ false,
         );
+        ret.custom_properties = custom_properties;
         ret.visited_style = visited_style;
         ret
     }
