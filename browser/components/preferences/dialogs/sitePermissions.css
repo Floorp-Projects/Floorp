@@ -12,6 +12,7 @@ hbox.website-status {
 #permissionsBox {
   flex: 1 auto;
   height: 18em;
+  min-height: 70px; /* 2 * 35px, which is the min row height specified below */
 }
 
 #siteCol,
