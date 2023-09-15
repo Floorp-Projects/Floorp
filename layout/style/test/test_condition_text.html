@@ -8,23 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814907
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style id="style">
-    @-moz-document media-document(video) {}
-    @-moz-document media-document(image) {}
-    @-moz-document media-document(plugin) {}
-    @-moz-document media-document(all) {}
-    @-moz-document plain-text-document() {}
-    @-moz-document unobservable-document() {}
-
-    @-moz-document url(http://www.example.com/) {}
-    @-moz-document url('http://www.example.com/') {}
-    @-moz-document url("http://www.example.com/") {}
-    @-moz-document url-prefix('http://www.example.com/') {}
-    @-moz-document url-prefix("http://www.example.com/") {}
-    @-moz-document domain('example.com') {}
-    @-moz-document domain("example.com") {}
-    @-moz-document regexp('http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/') {}
-    @-moz-document regexp("http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/") {}
-
     @media all {}
     @media only color {}
     @media (color ) {}
@@ -58,21 +41,6 @@ function runTest()
   var sheet = style.sheet;
 
   var conditions = [
-    "media-document(video)",
-    "media-document(image)",
-    "media-document(plugin)",
-    "media-document(all)",
-    "plain-text-document()",
-    "unobservable-document()",
-    "url(\"http://www.example.com/\")",
-    "url(\"http://www.example.com/\")",
-    "url(\"http://www.example.com/\")",
-    "url-prefix(\"http://www.example.com/\")",
-    "url-prefix(\"http://www.example.com/\")",
-    "domain(\"example.com\")",
-    "domain(\"example.com\")",
-    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
-    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
     "all",
     "only color",
     "(color)",
@@ -99,9 +67,7 @@ function runTest()
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  { "set": [["layout.css.moz-document.content.enabled", true]]},
-  runTest);
+runTest();
 </script>
 </pre>
 </body>

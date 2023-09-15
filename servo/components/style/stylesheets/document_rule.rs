@@ -283,10 +283,6 @@ impl DocumentCondition {
             return true;
         }
 
-        if static_prefs::pref!("layout.css.moz-document.content.enabled") {
-            return true;
-        }
-
         // Allow a single url-prefix() for compatibility.
         //
         // See bug 1446470 and dependencies.

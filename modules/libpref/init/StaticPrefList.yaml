@@ -8572,13 +8572,6 @@
   mirror: always
   rust: true
 
-# Pref to control whether @-moz-document rules are enabled in content pages.
-- name: layout.css.moz-document.content.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is -moz-osx-font-smoothing enabled? (Only supported in OSX builds)
 - name: layout.css.osx-font-smoothing.enabled
   type: bool

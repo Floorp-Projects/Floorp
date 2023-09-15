@@ -12,6 +12,8 @@ support-files = [
 
 ["test_bug1157097.html"]
 
+["test_bug511909.html"]
+
 ["test_bug1346623.html"]
 
 ["test_bug1371453.html"]
@@ -37,6 +39,8 @@ tags = "fullscreen"
 skip-if = ["true"] # bug 1346353
 
 ["test_moz_document_rules.html"]
+
+["test_moz_document_serialization.html"]
 
 ["test_scrollbar_inline_size.html"]
 
