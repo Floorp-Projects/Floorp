@@ -10,6 +10,8 @@
 #include <shtypes.h>
 #include <winerror.h>
 #include "WinUtils.h"
+#include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla::widget::filedialog {
 
@@ -79,12 +81,11 @@ namespace {
 static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
   NS_ENSURE_TRUE(aItem, E_INVALIDARG);
 
-  LPWSTR str = nullptr;
-  auto const onExit = MakeScopeExit([&]() { CoTaskMemFree(str); });
-
-  HRESULT const hr = aItem->GetDisplayName(SIGDN_FILESYSPATH, &str);
+  mozilla::UniquePtr<wchar_t, CoTaskMemFreeDeleter> str;
+  HRESULT const hr =
+      aItem->GetDisplayName(SIGDN_FILESYSPATH, getter_Transfers(str));
   if (SUCCEEDED(hr)) {
-    aResultString.Assign(str);
+    aResultString.Assign(str.get());
   }
   return hr;
 }
