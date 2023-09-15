@@ -625,15 +625,20 @@ bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
          expr->bytecode_.append(exprStart, exprEnd);
 }
 
-bool InitExpr::decodeAndEvaluate(JSContext* cx,
-                                 Handle<WasmInstanceObject*> instanceObj,
-                                 Decoder& d, MutableHandleVal result) {
+/* static */ bool InitExpr::decodeAndEvaluate(
+    JSContext* cx, Handle<WasmInstanceObject*> instanceObj, Decoder& d,
+    ValType expectedType, MutableHandleVal result) {
   InitExprInterpreter interp(cx, instanceObj);
   if (!interp.evaluate(cx, d)) {
     return false;
   }
 
-  result.set(interp.result());
+  Val interpResult = interp.result();
+  // The interpreter evaluation stack does not track the precise type of values.
+  // Users of the result expect the precise type though, so we need to overwrite
+  // it with the one we validated with.
+  interpResult.unsafeSetType(expectedType);
+  result.set(interpResult);
   return true;
 }
 
@@ -648,7 +653,7 @@ bool InitExpr::evaluate(JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
 
   UniqueChars error;
   Decoder d(bytecode_.begin(), bytecode_.end(), 0, &error);
-  if (!decodeAndEvaluate(cx, instanceObj, d, result)) {
+  if (!decodeAndEvaluate(cx, instanceObj, d, type_, result)) {
     // This expression should have been validated already. So we should only be
     // able to OOM, which is reported by having no error message.
     MOZ_RELEASE_ASSERT(!error);

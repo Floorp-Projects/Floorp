@@ -1053,7 +1053,8 @@ bool Instance::iterElemsAnyrefs(const ModuleElemSegment& seg,
       Decoder d(exprs.exprBytes.begin(), exprs.exprBytes.end(), 0, &error);
       for (uint32_t i = 0; i < seg.numElements(); i++) {
         RootedVal result(cx());
-        if (!InitExpr::decodeAndEvaluate(cx(), instanceObj, d, &result)) {
+        if (!InitExpr::decodeAndEvaluate(cx(), instanceObj, d, seg.elemType,
+                                         &result)) {
           MOZ_ASSERT(!error);  // The only possible failure should be OOM.
           return false;
         }

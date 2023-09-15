@@ -220,6 +220,8 @@ struct FuncDesc {
 
 using FuncDescVector = Vector<FuncDesc, 0, SystemAllocPolicy>;
 
+enum class GlobalKind { Import, Constant, Variable };
+
 // A GlobalDesc describes a single global variable.
 //
 // wasm can import and export mutable and immutable globals.
@@ -227,9 +229,6 @@ using FuncDescVector = Vector<FuncDesc, 0, SystemAllocPolicy>;
 // asm.js can import mutable and immutable globals, but a mutable global has a
 // location that is private to the module, and its initial value is copied into
 // that cell from the environment.  asm.js cannot export globals.
-
-enum class GlobalKind { Import, Constant, Variable };
-
 class GlobalDesc {
   GlobalKind kind_;
   // Stores the value type of this global for all kinds, and the initializer
@@ -253,8 +252,8 @@ class GlobalDesc {
 
   explicit GlobalDesc(InitExpr&& initial, bool isMutable,
                       ModuleKind kind = ModuleKind::Wasm)
-      : kind_((isMutable || !initial.isLiteral()) ? GlobalKind::Variable
-                                                  : GlobalKind::Constant) {
+      : kind_((!isMutable && initial.isLiteral()) ? GlobalKind::Constant
+                                                  : GlobalKind::Variable) {
     initial_ = std::move(initial);
     if (isVariable()) {
       isMutable_ = isMutable;
