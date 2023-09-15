@@ -750,6 +750,10 @@ pref("browser.shopping.experience2023.ads.enabled", false);
 // Unlike `browser.shopping.experience2023.ads.enabled`, this pref is controlled by users
 // using the visible toggle.
 pref("browser.shopping.experience2023.ads.userEnabled", false);
+
+// Saves if shopping survey is enabled.
+pref("browser.shopping.experience2023.survey.enabled", true);
+
 // Saves if shopping survey is seen.
 pref("browser.shopping.experience2023.survey.hasSeen", false);
 

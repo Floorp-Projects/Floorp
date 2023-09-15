@@ -612,6 +612,18 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
   // Static used to track PDP visits per session for showing survey
   static eligiblePDPvisits = [];
 
+  constructor() {
+    super();
+    this.surveyEnabled =
+      lazy.NimbusFeatures.shopping2023.getVariable("surveyEnabled");
+
+    // Used by tests
+    this.resetChildStates = () => {
+      AboutWelcomeShoppingChild.eligiblePDPvisits.length = 0;
+      AboutWelcomeShoppingChild.optedInSession = false;
+    };
+  }
+
   computeEligiblePDPCount(data) {
     // Increment our pref if this isn't a page we've already seen this session
     if (lazy.pdpVisits < MIN_VISITS_TO_SHOW_SURVEY) {
@@ -635,6 +647,7 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     // Re-evaluate if we should show the survey
     // Render survey if user is opted-in and has met survey seen conditions
     this.showMicroSurvey =
+      this.surveyEnabled &&
       !lazy.isSurveySeen &&
       !AboutWelcomeShoppingChild.optedInSession &&
       lazy.pdpVisits >= MIN_VISITS_TO_SHOW_SURVEY;
