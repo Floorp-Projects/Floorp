@@ -4994,7 +4994,8 @@ nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
 }
 
 RefPtr<ClientDirectoryLockPromise> QuotaManager::OpenClientDirectory(
-    const ClientMetadata& aClientMetadata) {
+    const ClientMetadata& aClientMetadata,
+    Maybe<RefPtr<ClientDirectoryLock>&> aPendingDirectoryLockOut) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<BoolPromise>> promises;
@@ -5013,6 +5014,10 @@ RefPtr<ClientDirectoryLockPromise> QuotaManager::OpenClientDirectory(
       CreateDirectoryLock(aClientMetadata, /* aExclusive */ false);
 
   promises.AppendElement(clientDirectoryLock->Acquire());
+
+  if (aPendingDirectoryLockOut.isSome()) {
+    aPendingDirectoryLockOut.ref() = clientDirectoryLock;
+  }
 
   return BoolPromise::All(GetCurrentSerialEventTarget(), promises)
       ->Then(

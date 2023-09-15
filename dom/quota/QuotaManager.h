@@ -274,7 +274,8 @@ class QuotaManager final : public BackgroundThreadObject {
   // In other words, protection which the lock represents dies with the lock
   // object itself.
   RefPtr<ClientDirectoryLockPromise> OpenClientDirectory(
-      const ClientMetadata& aClientMetadata);
+      const ClientMetadata& aClientMetadata,
+      Maybe<RefPtr<ClientDirectoryLock>&> aPendingDirectoryLockOut = Nothing());
 
   RefPtr<ClientDirectoryLock> CreateDirectoryLock(
       const ClientMetadata& aClientMetadata, bool aExclusive);
