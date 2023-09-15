@@ -15,11 +15,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1812543
 <pre id="test"></pre>
 <script class="testbody" type="application/javascript">
 
-const isSupportGetFromCachedTransferable =
-  Services.prefs.getBoolPref("widget.clipboard.use-cached-data.enabled");
-
-function testClipboardCache(aClipboardType, aAsync) {
+function testClipboardCache(aClipboardType, aAsync, aIsSupportGetFromCachedTransferable) {
   add_task(function test_clipboard_get() {
+    info(`test_clipboard_get ${aAsync ? "async " : ""}` +
+         `with pref ${aIsSupportGetFromCachedTransferable ? "enabled" : "disabled"}`);
+
     const string = generateRandomString();
     const trans = generateNewTransferable("text/plain", string);
 
@@ -33,11 +33,19 @@ function testClipboardCache(aClipboardType, aAsync) {
     is(getClipboardData("text/plain", aClipboardType), string,
        `Check text/plain data on clipboard ${aClipboardType}`);
 
-    info(`Add text/foo data to transerable`);
+    info(`Add text/foo data to transferable`);
     addStringToTransferable("text/foo", string, trans);
-    is(getClipboardData("text/foo", aClipboardType),
-       isSupportGetFromCachedTransferable ? string : null,
-       `Check text/foo data on clipboard ${aClipboardType}`);
+    // XXX macOS caches the transferable to implement kSelectionCache type, too,
+    // so it behaves differently than other types.
+    if (aClipboardType == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+      todo_is(getClipboardData("text/foo", aClipboardType),
+              aIsSupportGetFromCachedTransferable ? string : null,
+              `Check text/foo data on clipboard ${aClipboardType}`);
+    } else {
+      is(getClipboardData("text/foo", aClipboardType),
+         aIsSupportGetFromCachedTransferable ? string : null,
+         `Check text/foo data on clipboard ${aClipboardType}`);
+    }
 
     info(`Should not get the data from other clipboard type`);
     clipboardTypes.forEach(function(otherType) {
@@ -56,80 +64,127 @@ function testClipboardCache(aClipboardType, aAsync) {
     info(`Check data on clipboard ${aClipboardType} again`);
     is(getClipboardData("text/plain", aClipboardType), string,
        `Check text/plain data on clipboard ${aClipboardType} again`);
-    is(getClipboardData("text/foo", aClipboardType),
-       isSupportGetFromCachedTransferable ? string : null,
-       `Check text/foo data on clipboard ${aClipboardType} again`);
+    // XXX macOS caches the transferable to implement kSelectionCache type, too,
+    // so it behaves differently than other types.
+    if (aClipboardType == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+      todo_is(getClipboardData("text/foo", aClipboardType),
+              aIsSupportGetFromCachedTransferable ? string : null,
+              `Check text/foo data on clipboard ${aClipboardType} again`);
+    } else {
+      is(getClipboardData("text/foo", aClipboardType),
+         aIsSupportGetFromCachedTransferable ? string : null,
+         `Check text/foo data on clipboard ${aClipboardType} again`);
+    }
 
     info(`Clean all clipboard data`);
     cleanupAllClipboard();
   });
 }
 
-add_setup(function init() {
-  cleanupAllClipboard();
-});
-
-clipboardTypes.forEach(function(type) {
-  if (!clipboard.isClipboardTypeSupported(type)) {
-    return;
-  }
-
-  add_task(function test_clipboard_hasDataMatchingFlavors() {
-    const trans = generateNewTransferable("text/plain", generateRandomString());
-
-    info(`Write text/plain data to clipboard ${type}`);
-    clipboard.setData(trans, null, type);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    info(`Add text/foo data to transferable`);
-    addStringToTransferable("text/foo", generateRandomString(), trans);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       isSupportGetFromCachedTransferable,
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    // Check other clipboard types.
-    clipboardTypes.forEach(function(otherType) {
-      if (otherType != type &&
-          clipboard.isClipboardTypeSupported(otherType)) {
-        ok(!clipboard.hasDataMatchingFlavors(["text/plain"], otherType),
-           `Check if there is text/plain flavor on clipboard ${otherType}`);
-        ok(!clipboard.hasDataMatchingFlavors(["text/foo"], otherType),
-           `Check if there is text/foo flavor on clipboard ${otherType}`);
-
-        info(`Write text/plain data to clipboard ${otherType}`);
-        writeRandomStringToClipboard("text/plain", otherType);
-      }
-    });
-
-    // Check again.
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       isSupportGetFromCachedTransferable,
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    info(`Write text/plain data to clipboard ${type} again`);
-    writeRandomStringToClipboard("text/plain", type);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    // Clean clipboard data.
+function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
+  add_task(async function setup() {
     cleanupAllClipboard();
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "widget.clipboard.use-cached-data.enabled",
+          aIsSupportGetFromCachedTransferable,
+        ],
+      ],
+    });
   });
 
-  // Test sync set clipboard data.
-  testClipboardCache(type, false);
+  clipboardTypes.forEach(function (type) {
+    if (!clipboard.isClipboardTypeSupported(type)) {
+      return;
+    }
 
-  // Test async set clipboard data.
-  testClipboardCache(type, true);
+    add_task(function test_clipboard_hasDataMatchingFlavors() {
+      info(`test_clipboard_hasDataMatchingFlavors with pref ` +
+           `${aIsSupportGetFromCachedTransferable ? "enabled" : "disabled"}`);
+
+      const trans = generateNewTransferable("text/plain", generateRandomString());
+
+      info(`Write text/plain data to clipboard ${type}`);
+      clipboard.setData(trans, null, type);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+         `Check if there is text/plain flavor on clipboard ${type}`);
+      ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
+         `Check if there is text/foo flavor on clipboard ${type}`);
+
+      info(`Add text/foo data to transferable`);
+      addStringToTransferable("text/foo", generateRandomString(), trans);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+         `Check if there is text/plain flavor on clipboard ${type}`);
+      // XXX macOS caches the transferable to implement kSelectionCache type, too,
+      // so it behaves differently than other types.
+      if (type == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+        todo_is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+                aIsSupportGetFromCachedTransferable,
+                `Check if there is text/foo flavor on clipboard ${type}`);
+      } else {
+        is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+           aIsSupportGetFromCachedTransferable,
+           `Check if there is text/foo flavor on clipboard ${type}`);
+      }
+
+      // Check other clipboard types.
+      clipboardTypes.forEach(function(otherType) {
+        if (otherType != type &&
+            clipboard.isClipboardTypeSupported(otherType)) {
+          ok(!clipboard.hasDataMatchingFlavors(["text/plain"], otherType),
+             `Check if there is text/plain flavor on clipboard ${otherType}`);
+          ok(!clipboard.hasDataMatchingFlavors(["text/foo"], otherType),
+             `Check if there is text/foo flavor on clipboard ${otherType}`);
+
+          info(`Write text/plain data to clipboard ${otherType}`);
+          writeRandomStringToClipboard("text/plain", otherType);
+        }
+      });
+
+      // Check again.
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+         `Check if there is text/plain flavor on clipboard ${type}`);
+      // XXX macOS caches the transferable to implement kSelectionCache type, too,
+      // so it behaves differently than other types.
+      if (type == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+        todo_is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+                aIsSupportGetFromCachedTransferable,
+                `Check if there is text/foo flavor on clipboard ${type}`);
+      } else {
+        is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+           aIsSupportGetFromCachedTransferable,
+           `Check if there is text/foo flavor on clipboard ${type}`);
+      }
+
+      info(`Write text/plain data to clipboard ${type} again`);
+      writeRandomStringToClipboard("text/plain", type);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+         `Check if there is text/plain flavor on clipboard ${type}`);
+      ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
+         `Check if there is text/foo flavor on clipboard ${type}`);
+
+      // Clean clipboard data.
+      cleanupAllClipboard();
+    });
+
+    // Test sync set clipboard data.
+    testClipboardCache(type, false, aIsSupportGetFromCachedTransferable);
+
+    // Test async set clipboard data.
+    testClipboardCache(type, true, aIsSupportGetFromCachedTransferable);
 });
+}
+
+// Test not get data from clipboard cache.
+runClipboardCacheTests(false);
+
+// Test get data from clipboard cache.
+// XXX: Linux doesn't yet use nsBaseClipboard, so it doesn't support getting data from
+// clipboard cache, bug 1851817.
+if (!navigator.platform.includes("Linux") && !SpecialPowers.isHeadless) {
+  runClipboardCacheTests(true);
+}
 
 </script>
 </body>
