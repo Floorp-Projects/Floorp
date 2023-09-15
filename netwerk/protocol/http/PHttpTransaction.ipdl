@@ -58,8 +58,7 @@ parent:
                        uint32_t                            HTTPSSVCReceivedStage,
                        bool                                supportsHttp3,
                        TRRMode trrMode,
-                       TRRSkippedReason trrSkipReason,
-                       uint32_t caps);
+                       TRRSkippedReason trrSkipReason);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,
@@ -74,6 +73,7 @@ parent:
                       nsHttpHeaderArray? responseTrailers,
                       TransactionObserverResult? transactionObserverResult,
                       TimeStamp lastActiveTabOptimization,
+                      uint32_t caps,
                       HttpConnectionInfoCloneArgs connInfoArgs);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,

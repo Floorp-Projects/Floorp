@@ -244,9 +244,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // That is, we may suspend the channel if the ODA-s to child process are not
   // consumed quickly enough. Otherwise, memory explosion could happen.
   bool NeedFlowControl();
-
-  bool IsRedirectDueToAuthRetry(uint32_t redirectFlags);
-
   int32_t mSendWindowSize;
 
   friend class HttpBackgroundChannelParent;
