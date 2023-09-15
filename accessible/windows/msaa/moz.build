@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     "DocAccessibleWrap.cpp",
     "EnumVariant.cpp",
     "IUnknownImpl.cpp",
+    "LazyInstantiator.cpp",
     "MsaaAccessible.cpp",
     "MsaaDocAccessible.cpp",
     "MsaaIdGenerator.cpp",
@@ -36,8 +37,6 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    # This file cannot be built in unified mode because it redefines _WIN32_WINNT
-    "LazyInstantiator.cpp",
     # This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
     "ServiceProvider.cpp",
 ]
