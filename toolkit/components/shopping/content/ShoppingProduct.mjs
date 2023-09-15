@@ -121,8 +121,6 @@ export class ShoppingProduct {
    */
   constructor(url, options = { allowValidationFailure: true }) {
     this.allowValidationFailure = !!options.allowValidationFailure;
-    this.analysis = undefined;
-    this.recommendations = undefined;
 
     this._abortController = new AbortController();
 
@@ -238,8 +236,6 @@ export class ShoppingProduct {
   /**
    * Request analysis for a product from the API.
    *
-   * @param {boolean} force
-   *  Force always requesting from API.
    * @param {Product} product
    *  Product to request for (defaults to the instances product).
    * @param {object} options
@@ -248,7 +244,6 @@ export class ShoppingProduct {
    *  Parsed JSON API result or null.
    */
   async requestAnalysis(
-    force = false,
     product = this.product,
     options = {
       url: ANALYSIS_API,
@@ -258,10 +253,6 @@ export class ShoppingProduct {
   ) {
     if (!product) {
       return null;
-    }
-
-    if (!force && this.analysis) {
-      return this.analysis;
     }
 
     let requestOptions = {
@@ -276,8 +267,6 @@ export class ShoppingProduct {
       responseSchema,
     });
 
-    this.analysis = result;
-
     return result;
   }
 
@@ -286,8 +275,6 @@ export class ShoppingProduct {
    * Currently only provides recommendations for Amazon products,
    * which may be paid ads.
    *
-   * @param {boolean} force
-   *  Force always requesting from API.
    * @param {Product} product
    *  Product to request for (defaults to the instances product).
    * @param {object} options
@@ -296,7 +283,6 @@ export class ShoppingProduct {
    *  Parsed JSON API result or null.
    */
   async requestRecommendations(
-    force = false,
     product = this.product,
     options = {
       url: RECOMMENDATIONS_API,
@@ -306,10 +292,6 @@ export class ShoppingProduct {
   ) {
     if (!product) {
       return null;
-    }
-
-    if (!force && this.recommendations) {
-      return this.recommendations;
     }
 
     let requestOptions = {
@@ -325,8 +307,6 @@ export class ShoppingProduct {
     for (let ad of result) {
       ad.image_blob = await this.requestImageBlob(ad.image_url);
     }
-
-    this.recommendations = result;
 
     return result;
   }
@@ -876,8 +856,6 @@ export class ShoppingProduct {
 
   uninit() {
     this._abortController.abort();
-    this.analysis = null;
-    this.recommendations = null;
     this.product = null;
   }
 }
