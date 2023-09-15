@@ -8,8 +8,6 @@
 #include "VideoUtils.h"
 #include "mozilla/MFMediaEngineParent.h"
 #include "mozilla/MFMediaEngineUtils.h"
-#include "mozilla/RemoteDecoderManagerChild.h"
-#include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/mscom/EnsureMTA.h"
@@ -33,9 +31,9 @@ already_AddRefed<PlatformDecoderModule> MFMediaEngineDecoderModule::Create() {
 
 /* static */
 bool MFMediaEngineDecoderModule::SupportsConfig(const TrackInfo& aConfig) {
-  RefPtr<PlatformDecoderModule> module = RemoteDecoderModule::Create(
-      RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
-  return !module->Supports(SupportDecoderParams(aConfig), nullptr).isEmpty();
+  RefPtr<MFMediaEngineDecoderModule> module = new MFMediaEngineDecoderModule();
+  return module->SupportInternal(SupportDecoderParams(aConfig), nullptr) !=
+         media::DecodeSupport::Unsupported;
 }
 
 already_AddRefed<MediaDataDecoder>
@@ -82,7 +80,7 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   return SupportInternal(SupportDecoderParams(*trackInfo), aDiagnostics);
 }
@@ -91,7 +89,7 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
   if (!aParams.mMediaEngineId) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   return SupportInternal(aParams, aDiagnostics);
 }
@@ -100,7 +98,7 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
   if (!StaticPrefs::media_wmf_media_engine_enabled()) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   bool supports = false;
   WMFStreamType type = GetStreamTypeFromMimeType(aParams.MimeType());
@@ -111,7 +109,7 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
           ("MFMediaEngine decoder %s requested type '%s'",
            supports ? "supports" : "rejects", aParams.MimeType().get()));
   return supports ? media::DecodeSupport::SoftwareDecode
-                  : media::DecodeSupportSet{};
+                  : media::DecodeSupport::Unsupported;
 }
 
 static bool CreateMFTDecoderOnMTA(const WMFStreamType& aType) {

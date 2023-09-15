@@ -313,14 +313,14 @@ media::DecodeSupportSet WMFDecoderModule::Supports(
     DecoderDoctorDiagnostics* aDiagnostics) const {
   // This should only be supported by MFMediaEngineDecoderModule.
   if (aParams.mMediaEngineId) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   // In GPU process, only support decoding if video. This only gives a hint of
   // what the GPU decoder *may* support. The actual check will occur in
   // CreateVideoDecoder.
   const auto& trackInfo = aParams.mConfig;
   if (XRE_IsGPUProcess() && !trackInfo.GetAsVideoInfo()) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 
   const auto* videoInfo = trackInfo.GetAsVideoInfo();
@@ -330,12 +330,12 @@ media::DecodeSupportSet WMFDecoderModule::Supports(
   // check.
   if (videoInfo && (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics) ||
                     videoInfo->HasAlpha())) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 
   WMFStreamType type = GetStreamTypeFromMimeType(aParams.MimeType());
   if (type == WMFStreamType::Unknown) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 
   if (CanCreateMFTDecoder(type)) {
@@ -348,7 +348,7 @@ media::DecodeSupportSet WMFDecoderModule::Supports(
     }
   }
 
-  return media::DecodeSupportSet{};
+  return media::DecodeSupport::Unsupported;
 }
 
 nsresult WMFDecoderModule::Startup() {
@@ -437,13 +437,14 @@ media::DecodeSupportSet WMFDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   auto supports = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
   MOZ_LOG(
       sPDMLog, LogLevel::Debug,
       ("WMF decoder %s requested type '%s'",
-       !supports.isEmpty() ? "supports" : "rejects", aMimeType.BeginReading()));
+       supports != media::DecodeSupport::Unsupported ? "supports" : "rejects",
+       aMimeType.BeginReading()));
   return supports;
 }
 

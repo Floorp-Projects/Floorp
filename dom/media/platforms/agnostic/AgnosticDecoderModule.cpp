@@ -108,7 +108,7 @@ media::DecodeSupportSet AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
   return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
 }
@@ -118,7 +118,7 @@ media::DecodeSupportSet AgnosticDecoderModule::Supports(
     DecoderDoctorDiagnostics* aDiagnostics) const {
   // This should only be supported by MFMediaEngineDecoderModule.
   if (aParams.mMediaEngineId) {
-    return media::DecodeSupportSet{};
+    return media::DecodeSupport::Unsupported;
   }
 
   const auto& trackInfo = aParams.mConfig;
@@ -143,13 +143,13 @@ media::DecodeSupportSet AgnosticDecoderModule::Supports(
   if (supports) {
     return media::DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupportSet{};
+  return media::DecodeSupport::Unsupported;
 }
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)
-          .isEmpty()) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;
@@ -180,8 +180,8 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)
-          .isEmpty()) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;

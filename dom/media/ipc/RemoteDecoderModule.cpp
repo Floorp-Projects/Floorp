@@ -63,7 +63,7 @@ media::DecodeSupportSet RemoteDecoderModule::Supports(
     //       Will be done in bug 1754239.
     return media::DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupportSet{};
+  return media::DecodeSupport::Unsupported;
 }
 
 RefPtr<RemoteDecoderModule::CreateDecoderPromise>

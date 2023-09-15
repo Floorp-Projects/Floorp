@@ -13,7 +13,8 @@ namespace mozilla {
 /* static */
 bool MP3Decoder::IsEnabled() {
   RefPtr<PDMFactory> platform = new PDMFactory();
-  return !platform->SupportsMimeType("audio/mpeg"_ns).isEmpty();
+  return platform->SupportsMimeType("audio/mpeg"_ns) !=
+         media::DecodeSupport::Unsupported;
 }
 
 /* static */
