@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host {
+  --beta-marker-color: #5B5B66;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --beta-marker-color: var(--in-content-text-color);
+  }
+}
+
 #shopping-container {
   display: flex;
   flex-direction: column;
@@ -23,13 +33,25 @@
 #shopping-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
-#header {
+#shopping-header-title {
   font-size: 1.2em;
   font-weight: 600;
   margin: 0;
+}
+
+#beta-marker {
+  font-size: 0.9em;
+  font-weight: 400;
+  padding: 0.09375rem 0.25rem;
+  margin: 0;
+  line-height: 150%;
+  text-transform: uppercase;
+  color: var(--beta-marker-color);
+  border: 1px solid var(--beta-marker-color);
+  border-radius: 4px;
 }
 
 #close-button {
