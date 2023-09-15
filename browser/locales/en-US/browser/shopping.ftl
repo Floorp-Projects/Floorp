@@ -7,10 +7,13 @@ shopping-page-title = { -brand-product-name } Shopping
 # Title for page showing where a user can check the
 # review quality of online shopping product reviews
 shopping-main-container-title = Review checker
+# The term "Beta" should not be localized.
 shopping-beta-marker = Beta
 # This string is for ensuring that screen reader technology
 # can read out the "Beta" part of the shopping sidebar header.
-# Any changes to shopping-beta-marker should also be reflected here.
+# Like shopping-beta-marker, the term "Beta" should not be localized.
+# Any changes to shopping-main-container-title and
+# shopping-beta-marker should also be reflected here.
 shopping-a11y-header =
   .aria-label = Review checker - beta
 shopping-close-button =
@@ -42,21 +45,21 @@ shopping-letter-grade-tooltip =
 shopping-message-bar-warning-stale-analysis-title = Updates available
 shopping-message-bar-warning-stale-analysis-message = Launch the { -fakespot-brand-full-name } analyzer to get updated info in about 60 seconds.
 
-shopping-message-bar-generic-error-title = Analysis not available right now
+shopping-message-bar-generic-error-title2 = No info available right now
 shopping-message-bar-generic-error-message = We’re working to resolve the issue. Please check back soon.
 
 shopping-message-bar-warning-not-enough-reviews-title = Not enough reviews yet
-shopping-message-bar-warning-not-enough-reviews-message = When this product has more reviews, we’ll be able to analyze them.
+shopping-message-bar-warning-not-enough-reviews-message2 = When this product has more reviews, we’ll be able to check their quality.
 
 shopping-message-bar-warning-product-not-available-title = Product is not available
-shopping-message-bar-warning-product-not-available-message = If you see that this product is back in stock, report it to us and we’ll work on updating the analysis.
+shopping-message-bar-warning-product-not-available-message2 = If you see this product is back in stock, report it and we’ll work on checking the reviews.
 shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
 
 shopping-message-bar-thanks-for-reporting-title = Thanks for reporting!
-shopping-message-bar-thanks-for-reporting-message = We should have an updated analysis within 24 hours. Please check back.
+shopping-message-bar-thanks-for-reporting-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
 
-shopping-message-bar-warning-product-not-available-reported-title = Analysis coming soon
-shopping-message-bar-warning-product-not-available-reported-message = An updated analysis should be ready within 24 hours. Please check back.
+shopping-message-bar-warning-product-not-available-reported-title2 = Info coming soon
+shopping-message-bar-warning-product-not-available-reported-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
 
 shopping-message-bar-analysis-in-progress-title2 = Checking review quality
 shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
@@ -101,6 +104,8 @@ powered-by-fakespot = Review checker is powered by <a data-l10n-name="fakespot-l
 
 ## Strings for the adjusted rating component
 
+# "Adjusted rating" means a star rating that has been adjusted to include only
+# reliable reviews.
 shopping-adjusted-rating-label =
   .label = Adjusted rating
 shopping-adjusted-rating-unreliable-reviews = Unreliable reviews removed
@@ -114,9 +119,8 @@ shopping-review-reliability-label =
 
 shopping-analysis-explainer-label =
   .label = How we determine review quality
-shopping-analysis-explainer-intro =
-  We use AI technology from { -fakespot-brand-full-name } to analyze the reliability of product reviews.
-  This analysis will only help you assess review quality, not product quality.
+shopping-analysis-explainer-intro2 =
+  We use AI technology from { -fakespot-brand-full-name } to check the reliability of product reviews. This will only help you assess review quality, not product quality.
 shopping-analysis-explainer-grades-intro =
   We assign each product’s reviews a <strong>letter grade</strong> from A to F.
 shopping-analysis-explainer-adjusted-rating-description =

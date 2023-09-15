@@ -121,7 +121,7 @@ class AnalysisExplainer extends MozLitElement {
       >
         <div slot="content">
           <div id="analysis-explainer-wrapper">
-            <p data-l10n-id="shopping-analysis-explainer-intro"></p>
+            <p data-l10n-id="shopping-analysis-explainer-intro2"></p>
             ${this.getGradesDescriptionTemplate()}
             ${this.getGradingScaleListTemplate()}
             <p
