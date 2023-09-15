@@ -222,7 +222,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     context,
                     R.drawable.mozac_ic_shopping_24,
                 )!!,
-                contentDescription = context.getString(R.string.browser_menu_review_quality_check),
+                contentDescription = context.getString(R.string.review_quality_check_open_handle_content_description),
                 iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
                 visible = { reviewQualityCheckAvailable },
                 listener = {

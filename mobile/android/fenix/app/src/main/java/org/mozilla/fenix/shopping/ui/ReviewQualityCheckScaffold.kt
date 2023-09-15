@@ -61,7 +61,7 @@ fun ReviewQualityCheckScaffold(
     ) {
         BottomSheetHandle(
             onRequestDismiss = onRequestDismiss,
-            contentDescription = stringResource(R.string.browser_menu_review_quality_check_close),
+            contentDescription = stringResource(R.string.review_quality_check_close_handle_content_description),
             modifier = Modifier
                 .fillMaxWidth(BOTTOM_SHEET_HANDLE_WIDTH_PERCENT)
                 .align(Alignment.CenterHorizontally),
