@@ -38,6 +38,50 @@ class WinFileDialogParent : public PWinFileDialogParent {
  private:
   ~WinFileDialogParent();
 };
+
+// Proxy for the WinFileDialog process and actor.
+//
+// The IPC subsystem holds a strong reference to all IPC actors, so releasing
+// the last RefPtr for such an actor does not actually cause the actor to be
+// destroyed. Similarly, the UtilityProcessManager owns the host process for an
+// actor, and merely destroying all actors within that host process will not
+// cause it to be reaped.
+//
+// This object, then, acts as a proxy for those objects' lifetimes: when the
+// last reference to `Contents` is released, the necessary explicit cleanup of
+// the actor (and, if possible, the host process) will be performed.
+class ProcessProxy {
+ public:
+  using WFDP = WinFileDialogParent;
+
+  explicit ProcessProxy(RefPtr<WFDP>&& obj);
+  ~ProcessProxy() = default;
+
+  explicit operator bool() const { return data->ptr && data->ptr->CanSend(); }
+  bool operator!() const { return !bool(*this); }
+
+  WFDP& operator*() const { return *data->ptr; }
+  WFDP* operator->() const { return data->ptr; }
+  WFDP* get() const { return data->ptr; }
+
+  ProcessProxy(ProcessProxy const& that) = default;
+  ProcessProxy(ProcessProxy&&) = default;
+
+ private:
+  struct Contents {
+    NS_INLINE_DECL_REFCOUNTING(Contents);
+
+   public:
+    explicit Contents(RefPtr<WFDP>&& obj);
+    RefPtr<WFDP> const ptr;
+
+   private:
+    ~Contents();
+  };
+  // guaranteed nonnull
+  RefPtr<Contents> data;
+};
+
 }  // namespace mozilla::widget::filedialog
 
 #endif  // widget_windows_filedialog_WinFileDialogParent_h__
