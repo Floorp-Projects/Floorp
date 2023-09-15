@@ -9823,24 +9823,24 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
       aSystemFont->sizeAdjust = StyleFontSizeAdjust::None();
       break;
     case StyleFontSizeAdjust::Tag::ExHeight:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::ExHeight(
-          StyleFontSizeAdjustFactor::Number(fontStyle.sizeAdjust));
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::ExHeight(fontStyle.sizeAdjust);
       break;
     case StyleFontSizeAdjust::Tag::CapHeight:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::CapHeight(
-          StyleFontSizeAdjustFactor::Number(fontStyle.sizeAdjust));
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::CapHeight(fontStyle.sizeAdjust);
       break;
     case StyleFontSizeAdjust::Tag::ChWidth:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::ChWidth(
-          StyleFontSizeAdjustFactor::Number(fontStyle.sizeAdjust));
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::ChWidth(fontStyle.sizeAdjust);
       break;
     case StyleFontSizeAdjust::Tag::IcWidth:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::IcWidth(
-          StyleFontSizeAdjustFactor::Number(fontStyle.sizeAdjust));
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::IcWidth(fontStyle.sizeAdjust);
       break;
     case StyleFontSizeAdjust::Tag::IcHeight:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::IcHeight(
-          StyleFontSizeAdjustFactor::Number(fontStyle.sizeAdjust));
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::IcHeight(fontStyle.sizeAdjust);
       break;
   }
 
