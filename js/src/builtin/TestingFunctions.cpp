@@ -1653,11 +1653,12 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
   uint8_t* jit_end = nullptr;
 
   if (fun->isAsmJSNative() || fun->isWasmWithJitEntry()) {
-    if (fun->isAsmJSNative()) {
+    if (fun->isAsmJSNative() && !sprinter.jsprintf("; backend=asmjs\n")) {
       return false;
     }
-    sprinter.printf("; backend=asmjs\n");
-    sprinter.printf("; backend=wasm\n");
+    if (!sprinter.jsprintf("; backend=wasm\n")) {
+      return false;
+    }
 
     js::wasm::Instance& inst = fun->wasmInstance();
     const js::wasm::Code& code = inst.code();
@@ -1683,11 +1684,17 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     js::jit::BaselineScript* baseline =
         script->hasBaselineScript() ? script->baselineScript() : nullptr;
     if (ion && ion->method()) {
-      sprinter.printf("; backend=ion\n");
+      if (!sprinter.jsprintf("; backend=ion\n")) {
+        return false;
+      }
+
       jit_begin = ion->method()->raw();
       jit_end = ion->method()->rawEnd();
     } else if (baseline) {
-      sprinter.printf("; backend=baseline\n");
+      if (!sprinter.jsprintf("; backend=baseline\n")) {
+        return false;
+      }
+
       jit_begin = baseline->method()->raw();
       jit_end = baseline->method()->rawEnd();
     }
@@ -1714,7 +1721,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     ReportOutOfMemory(cx);
     return false;
   }
-  sprinter.putString(cx, sresult);
+  sprinter.putString(sresult);
 
   if (args.length() > 1 && args[1].isString()) {
     RootedString str(cx, args[1].toString());
@@ -1742,7 +1749,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     fclose(f);
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
   if (!str) {
     return false;
   }
@@ -6884,7 +6891,11 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   }
   str->dumpRepresentation(out, 0);
 
-  JSString* rep = out.releaseJS(cx);
+  if (out.hadOutOfMemory()) {
+    return false;
+  }
+
+  JSString* rep = JS_NewStringCopyN(cx, out.string(), out.getOffset());
   if (!rep) {
     return false;
   }
