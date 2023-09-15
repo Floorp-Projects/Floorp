@@ -106,7 +106,7 @@
 }
 
 @media not (prefers-reduced-motion) {
-  .loading-box {
+  .animate > .loading-box {
     animation-name: fade-in;
     animation-direction: alternate;
     animation-duration: 1s;

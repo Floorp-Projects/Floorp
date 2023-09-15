@@ -58,9 +58,6 @@ shopping-message-bar-thanks-for-reporting-message = We should have an updated an
 shopping-message-bar-warning-product-not-available-reported-title = Analysis coming soon
 shopping-message-bar-warning-product-not-available-reported-message = An updated analysis should be ready within 24 hours. Please check back.
 
-shopping-message-bar-warning-offline-title = No network connection
-shopping-message-bar-warning-offline-message = Check your network connection. Then, try reloading the page.
-
 shopping-message-bar-analysis-in-progress-title = Analysis coming soon
 shopping-message-bar-analysis-in-progress-message = When it’s done, we’ll automatically show the updated info here.
 

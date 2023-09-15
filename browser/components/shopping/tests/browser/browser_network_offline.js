@@ -13,8 +13,7 @@ add_task(async function test_setup() {
 });
 
 /**
- * Tests that the correct shopping-message-bar component appears if there is no network connection.
- * Only the footer should be visible.
+ * Tests that only the loading state appears when there is no network connection.
  */
 add_task(async function test_offline_warning() {
   await BrowserTestUtils.withNewTab(
@@ -26,16 +25,7 @@ add_task(async function test_offline_warning() {
       let shoppingContainer = await getAnalysisDetails(browser, null);
 
       ok(shoppingContainer.isOffline, "Offline status detected");
-      ok(
-        shoppingContainer.shoppingMessageBarEl,
-        "Got shopping-message-bar element"
-      );
-      is(
-        shoppingContainer.shoppingMessageBarType,
-        "offline",
-        "shopping-message-bar type should be correct"
-      );
-
+      ok(shoppingContainer.loadingEl, "Render loading state");
       verifyAnalysisDetailsHidden(shoppingContainer);
       verifyFooterHidden(shoppingContainer);
     }
