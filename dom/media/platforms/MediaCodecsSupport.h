@@ -66,7 +66,6 @@ using MediaCodecsSupported = EnumSet<MediaCodecsSupport, uint64_t>;
 
 // Codec-agnostic SW/HW decode support information.
 enum class DecodeSupport : int {
-  Unsupported = 0,
   SoftwareDecode,
   HardwareDecode,
 };
@@ -177,7 +176,7 @@ class MCSInfo final {
   // Returns a MediaCodecsSupport enum corresponding to the provided
   // codec type and decode support level requested.
   static MediaCodecsSupport GetMediaCodecsSupportEnum(
-      const MediaCodec& aCodec, const DecodeSupport& aSupport);
+      const MediaCodec& aCodec, const DecodeSupportSet& aSupport);
 
   // Returns true if SW/HW decode enum for a given codec is present in the args.
   static bool SupportsSoftwareDecode(

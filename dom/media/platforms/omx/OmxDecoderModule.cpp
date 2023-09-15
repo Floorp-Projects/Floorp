@@ -53,7 +53,7 @@ media::DecodeSupportSet OmxDecoderModule::SupportsMimeType(
     //       Will be done in bug 1754239.
     return media::DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupport::Unsupported;
+  return media::DecodeSupportSet{};
 }
 
 }  // namespace mozilla

@@ -362,8 +362,7 @@ PDMFactory::CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
   uint32_t i = aIndex;
   auto params = SupportDecoderParams(aParams);
   for (; i < mCurrentPDMs.Length(); i++) {
-    if (mCurrentPDMs[i]->Supports(params, nullptr /* diagnostic */) ==
-        media::DecodeSupport::Unsupported) {
+    if (mCurrentPDMs[i]->Supports(params, nullptr /* diagnostic */).isEmpty()) {
       continue;
     }
     RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
@@ -462,7 +461,7 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
     const nsACString& aMimeType) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
-    return DecodeSupport::Unsupported;
+    return DecodeSupportSet{};
   }
   return Supports(SupportDecoderParams(*trackInfo), nullptr);
 }
@@ -478,7 +477,7 @@ DecodeSupportSet PDMFactory::Supports(
       GetDecoderModule(aParams, aDiagnostics);
 
   if (!current) {
-    return DecodeSupport::Unsupported;
+    return DecodeSupportSet{};
   }
 
   // We have a PDM - check for + return SW/HW support info
@@ -780,8 +779,7 @@ already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoderModule(
 
   RefPtr<PlatformDecoderModule> pdm;
   for (const auto& current : mCurrentPDMs) {
-    if (current->Supports(aParams, aDiagnostics) !=
-        media::DecodeSupport::Unsupported) {
+    if (!current->Supports(aParams, aDiagnostics).isEmpty()) {
       pdm = current;
       break;
     }
@@ -889,7 +887,7 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
       return MCSInfo::GetDecodeSupportSet(MediaCodec::Wave, aSupported);
     }
   }
-  return DecodeSupport::Unsupported;
+  return DecodeSupportSet{};
 }
 
 /* static */
