@@ -1,6 +1,6 @@
-diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
---- a/extensions/spellcheck/hunspell/src/csutil.cxx
-+++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+diff --git a/src/csutil.cxx b/src/csutil.cxx
+--- a/src/csutil.cxx
++++ b/src/csutil.cxx
 @@ -90,21 +90,17 @@
  #else
  #ifndef MOZILLA_CLIENT
@@ -164,9 +164,9 @@ diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellche
  
  int unicodeisalpha(unsigned short c) {
  #ifdef OPENOFFICEORG
-diff --git a/extensions/spellcheck/hunspell/src/csutil.hxx b/extensions/spellcheck/hunspell/src/csutil.hxx
---- a/extensions/spellcheck/hunspell/src/csutil.hxx
-+++ b/extensions/spellcheck/hunspell/src/csutil.hxx
+diff --git a/src/csutil.hxx b/src/csutil.hxx
+--- a/src/csutil.hxx
++++ b/src/csutil.hxx
 @@ -77,20 +77,16 @@
  
  #include <fstream>

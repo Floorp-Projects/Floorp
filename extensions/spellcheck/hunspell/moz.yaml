@@ -1,0 +1,65 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Spelling checker"
+
+origin:
+  name: Hunspell
+  description: Spell checker
+
+  url: http://hunspell.github.io
+
+  release: 1180421f50f211984211e968eb6801ffd3390b8f (2022-08-22T13:53:31Z).
+  revision: 1180421f50f211984211e968eb6801ffd3390b8f
+  license: MPL-1.1
+  license-file: COPYING.MPL
+
+vendoring:
+  url: https://github.com/hunspell/hunspell
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - "*"
+    - "**"
+    - ".*"
+    - "**/.gitignore"
+
+  keep:
+    - glue
+    - tests
+    - COPYING.MPL
+    - src/moz.build
+    - src/sources.mozbuild
+    - src/license.hunspell
+    - src/license.myspell
+    - src/README.md
+
+  include:
+    - "src/hunspell"
+
+  patches:
+    - patches/bug1410214.patch
+    - patches/bug1653659.patch
+    - patches/bug1739761.patch
+    - patches/bug1838113.patch
+
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/src/hunspell'
+      to: '{vendor_dir}/src'
+    - action: delete-path
+      path: "src/Makefile.am"
+    - action: delete-path
+      path: "src/filemgr.cxx"
+    - action: delete-path
+      path: "src/hunvisapi.h.in"
+    - action: delete-path
+      path: "src/hunzip.cxx"
+    - action: delete-path
+      path: "src/hunzip.hxx"
+    - action: delete-path
+      path: "src/utf_info.hxx"
+    - action: delete-path
+      path: "tests/.gitattributes"

@@ -1,6 +1,6 @@
-diff --git a/extensions/spellcheck/hunspell/src/filemgr.hxx b/extensions/spellcheck/hunspell/src/filemgr.hxx
---- a/extensions/spellcheck/hunspell/src/filemgr.hxx
-+++ b/extensions/spellcheck/hunspell/src/filemgr.hxx
+diff --git a/src/filemgr.hxx b/src/filemgr.hxx
+--- a/src/filemgr.hxx
++++ b/src/filemgr.hxx
 @@ -67,32 +67,11 @@
   * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   * SUCH DAMAGE.
