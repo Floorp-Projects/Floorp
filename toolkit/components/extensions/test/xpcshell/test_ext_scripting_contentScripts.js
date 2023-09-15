@@ -522,3 +522,19 @@ add_task(async function test_matchAboutBlank_default() {
     expectedMatchAboutBlankValue: true,
   });
 });
+
+// The following test task asserts that when the hidden pref
+// "extensions.scripting.matchAboutBlankDefaultFalse" is set
+// to true, then matchAboutBlank gets forcefully set to false
+// TODO(Bug 1853411): may remove the hidden pref and this test along with it.
+add_task(
+  {
+    pref_set: [["extensions.scripting.matchAboutBlankDefaultFalse", true]],
+  },
+  async function test_matchAboutBlank_defaultChange_by_hiddenPref() {
+    await test_matchAboutBlank_registerContentScripts_default({
+      extId: "some-unknown-extension-id@test.extension",
+      expectedMatchAboutBlankValue: false,
+    });
+  }
+);
