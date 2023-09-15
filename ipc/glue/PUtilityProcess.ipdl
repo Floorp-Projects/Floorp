@@ -12,7 +12,6 @@ include protocol PJSOracle;
 
 #if defined(XP_WIN)
 include protocol PWindowsUtils;
-include protocol PWinFileDialog;
 #endif
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -103,7 +102,6 @@ child:
 
 #if defined(XP_WIN)
   async StartWindowsUtilsService(Endpoint<PWindowsUtilsChild> aEndpoint);
-  async StartWinFileDialogService(Endpoint<PWinFileDialogChild> aEndpoint);
 
   async GetUntrustedModulesData() returns (UntrustedModulesData? data);
 

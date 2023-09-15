@@ -15547,19 +15547,6 @@
   value: true
   mirror: always
 
-# Whether to open the Windows file and folder pickers "remotely" (in a utility
-# process) or "locally" (in the main process).
-#
-# Valid values:
-#  *  0: auto (possibly release-channel-dependent)
-#  *  1: remotely, falling back to locally
-#  *  2: remotely, no fallback
-#  * -1: locally, no fallback
-- name: widget.windows.utility_process_file_picker
-  type: RelaxedAtomicInt32
-  value: -1
-  mirror: always
-
 # The number of messages of each type to keep for display in
 # about:windows-messages
 - name: widget.windows.messages_to_log

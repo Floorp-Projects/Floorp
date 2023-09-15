@@ -7,51 +7,26 @@
 #ifndef widget_windows_filedialog_WinFileDialogCommands_h__
 #define widget_windows_filedialog_WinFileDialogCommands_h__
 
-#include "ipc/EnumSerializer.h"
-#include "mozilla/ipc/MessageLink.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
-// Windows interface types, defined in <shobjidl.h>
+// Windows interface type, defined in <shobjidl_core.h>
 struct IFileDialog;
-struct IFileOpenDialog;
 
 namespace mozilla::widget::filedialog {
-
-enum class FileDialogType : uint8_t { Open, Save };
-
-// Create a file-dialog of the relevant type. Requires MSCOM to be initialized.
-mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(FileDialogType);
-
 // Apply the selected commands to the IFileDialog, in preparation for showing
 // it. (The actual showing step is left to the caller.)
-[[nodiscard]] HRESULT ApplyCommands(::IFileDialog*,
-                                    nsTArray<Command> const& commands);
+[[nodiscard]] nsresult ApplyCommands(::IFileDialog*,
+                                     nsTArray<Command> const& commands);
 
 // Extract one or more results from the file-picker dialog.
 //
 // Requires that Show() has been called and has returned S_OK.
-mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog*);
+mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog*);
 
 // Extract the chosen folder from the folder-picker dialog.
 //
 // Requires that Show() has been called and has returned S_OK.
-mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog*);
-
-namespace detail {
-// Log the error. If it's a notable error, kill the child process.
-void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
-                        ipc::HasResultCodes::Result aCode, const char* aReason);
-}  // namespace detail
-
+mozilla::Result<nsString, nsresult> GetFolderResults(::IFileDialog*);
 }  // namespace mozilla::widget::filedialog
-
-namespace IPC {
-template <>
-struct ParamTraits<mozilla::widget::filedialog::FileDialogType>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::widget::filedialog::FileDialogType,
-          mozilla::widget::filedialog::FileDialogType::Open,
-          mozilla::widget::filedialog::FileDialogType::Save> {};
-}  // namespace IPC
 
 #endif  // widget_windows_filedialog_WinFileDialogCommands_h__
