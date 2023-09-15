@@ -4614,12 +4614,6 @@
   mirror: always
   rust: true
 
-- name: dom.webgpu.swap-chain.external-texture-dx12
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool

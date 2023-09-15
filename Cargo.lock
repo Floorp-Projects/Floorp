@@ -6391,7 +6391,6 @@ name = "wgpu_bindings"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "d3d12",
  "log",
  "nsstring",
  "parking_lot",
@@ -6400,7 +6399,6 @@ dependencies = [
  "wgpu-core",
  "wgpu-hal",
  "wgpu-types",
- "winapi",
 ]
 
 [[package]]

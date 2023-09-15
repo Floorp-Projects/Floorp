@@ -54,10 +54,6 @@ package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
 rev = "332cd0325da52675432830870584ec9766679c34"
 
-[target.'cfg(windows)'.dependencies]
-d3d12 = "0.7.0"
-winapi = "0.3"
-
 [dependencies]
 bincode = "1"
 log = "0.4"
