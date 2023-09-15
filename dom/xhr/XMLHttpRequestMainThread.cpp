@@ -1528,11 +1528,7 @@ void XMLHttpRequestMainThread::Open(const nsACString& aMethod,
   nsresult rv =
       NS_NewURI(getter_AddRefs(parsedURL), aUrl, originCharset, baseURI);
   if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_MALFORMED_URI) {
-      aRv.Throw(NS_ERROR_DOM_MALFORMED_URI);
-      return;
-    }
-    aRv.Throw(rv);
+    aRv.ThrowSyntaxError("'"_ns + aUrl + "' is not a valid URL."_ns);
     return;
   }
   if (NS_WARN_IF(NS_FAILED(CheckCurrentGlobalCorrectness()))) {
