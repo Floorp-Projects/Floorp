@@ -2479,9 +2479,9 @@ void nsHtml5StreamParser::ParseAvailableData() {
         MarkAsBroken(rv);
         return;
       }
-      if (mTreeBuilder->HasScript()) {
-        // HasScript() cannot return true if the tree builder is preventing
-        // script execution.
+      if (mTreeBuilder->HasScriptThatMayDocumentWriteOrBlock()) {
+        // `HasScriptThatMayDocumentWriteOrBlock()` cannot return true if the
+        // tree builder is preventing script execution.
         MOZ_ASSERT(mMode == NORMAL);
         mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
         nsHtml5Speculation* speculation = new nsHtml5Speculation(

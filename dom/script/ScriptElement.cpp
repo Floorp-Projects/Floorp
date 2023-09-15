@@ -29,6 +29,19 @@ ScriptElement::ScriptAvailable(nsresult aResult, nsIScriptElement* aElement,
   if (!aIsInlineClassicScript && NS_FAILED(aResult)) {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
+      nsCOMPtr<nsIContentSink> sink = parser->GetContentSink();
+      if (sink) {
+        nsCOMPtr<Document> parserDoc = do_QueryInterface(sink->GetTarget());
+        if (GetAsContent()->OwnerDoc() != parserDoc) {
+          // Suppress errors when we've moved between docs.
+          // /html/semantics/scripting-1/the-script-element/moving-between-documents/move-back-iframe-fetch-error-external-module.html
+          // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1849107
+          return NS_OK;
+        }
+      }
+    }
+
+    if (parser) {
       parser->IncrementScriptNestingLevel();
     }
     nsresult rv = FireErrorEvent();
@@ -172,7 +185,7 @@ bool ScriptElement::MaybeProcessScript() {
     if (sink) {
       nsCOMPtr<Document> parserDoc = do_QueryInterface(sink->GetTarget());
       if (ownerDoc != parserDoc) {
-        // Willful violation of HTML5 as of 2010-12-01
+        // Refactor this: https://bugzilla.mozilla.org/show_bug.cgi?id=1849107
         return false;
       }
     }

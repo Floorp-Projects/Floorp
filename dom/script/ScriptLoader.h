@@ -388,8 +388,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                           const nsAString& aNonce,
                           const nsAString& aFetchPriority,
                           const nsAString& aIntegrity, bool aScriptFromHead,
-                          bool aAsync, bool aDefer, bool aNoModule,
-                          bool aLinkPreload,
+                          bool aAsync, bool aDefer, bool aLinkPreload,
                           const ReferrerPolicy aReferrerPolicy,
                           uint64_t aEarlyHintPreloaderId);
 

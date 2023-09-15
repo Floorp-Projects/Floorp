@@ -21,6 +21,8 @@
 #include "js/loader/ModuleLoaderBase.h"
 #include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/Assertions.h"
+#include "nsError.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
 #include "nsContentSecurityManager.h"
@@ -127,6 +129,15 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   return NS_OK;
 }
 
+void ModuleLoader::AsyncExecuteInlineModule(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsFinished());
+  MOZ_ASSERT(aRequest->IsTopLevel());
+  MOZ_ASSERT(aRequest->GetScriptLoadContext()->mIsInline);
+  GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
+  GetScriptLoader()->ProcessPendingRequests();
+  aRequest->GetScriptLoadContext()->MaybeUnblockOnload();
+}
+
 void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFinished());
 
@@ -135,6 +146,25 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
         aRequest->GetScriptLoadContext()->GetParserCreated() ==
             NOT_FROM_PARSER) {
       GetScriptLoader()->RunScriptWhenSafe(aRequest);
+    } else if (aRequest->GetScriptLoadContext()->mIsInline &&
+               aRequest->GetScriptLoadContext()->GetParserCreated() !=
+                   NOT_FROM_PARSER &&
+               !nsContentUtils::IsSafeToRunScript()) {
+      // Avoid giving inline async module scripts that don't have
+      // external dependencies a guaranteed execution time relative
+      // to the HTML parse. That is, deliberately avoid guaranteeing
+      // that the script would always observe a DOM shape where the
+      // parser has not added further elements to the DOM.
+      // (If `nsContentUtils::IsSafeToRunScript()` returns `true`,
+      // we come here synchronously from the parser. If it returns
+      // `false` we come here from an external dependency completing
+      // its fetch, in which case we already are at an unspecific
+      // point relative to the parse.)
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
+          mozilla::NewRunnableMethod<RefPtr<ModuleLoadRequest>>(
+              "ModuleLoader::AsyncExecuteInlineModule", this,
+              &ModuleLoader::AsyncExecuteInlineModule, aRequest)));
+      return;
     } else {
       GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
       GetScriptLoader()->ProcessPendingRequestsAsync();
