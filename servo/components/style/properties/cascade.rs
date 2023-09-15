@@ -763,7 +763,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontWeight);
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStretch);
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontStyle);
-        self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontFamily);
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontSizeAdjust);
 
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::ColorScheme);
