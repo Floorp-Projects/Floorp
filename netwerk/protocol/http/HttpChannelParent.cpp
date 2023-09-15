@@ -22,6 +22,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -61,12 +62,41 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIViewSourceChannel.h"
 
+using namespace mozilla;
+
+namespace geckoprofiler::markers {
+
+struct ChannelMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("ChannelMarker");
+  }
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::ProfilerString8View& aURL, uint64_t aChannelId) {
+    if (aURL.Length() != 0) {
+      aWriter.StringProperty("url", aURL);
+    }
+    aWriter.IntProperty("channelId", static_cast<int64_t>(aChannelId));
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
+    schema.SetTableLabel("{marker.name} - {marker.data.url}");
+    schema.AddKeyFormat("url", MS::Format::Url);
+    schema.AddStaticLabelValue(
+        "Description",
+        "Timestamp capturing various phases of a network channel's lifespan.");
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
+
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
                                      nsILoadContext* aLoadContext,
@@ -441,6 +471,9 @@ bool HttpChannelParent::DoAsyncOpen(
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64
        " browserid=%" PRIx64 "]\n",
        this, aURI->GetSpecOrDefault().get(), aChannelId, aBrowserId));
+
+  PROFILER_MARKER("Receive AsyncOpen in Parent", NETWORK, {}, ChannelMarker,
+                  aURI->GetSpecOrDefault(), aChannelId);
 
   nsresult rv;
 
@@ -2120,5 +2153,4 @@ void HttpChannelParent::SetCookie(nsCString&& aCookie) {
   mCookie = std::move(aCookie);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
