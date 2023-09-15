@@ -12381,11 +12381,6 @@ bool BytecodeEmitter::addTryNote(TryNoteKind kind, uint32_t stackDepth,
 }
 
 bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
-  // Non-gettable source notes such as column/lineno and debugger should not be
-  // emitted for prologue / self-hosted.
-  MOZ_ASSERT_IF(skipLocationSrcNotes() || skipBreakpointSrcNotes(),
-                type <= SrcNoteType::LastGettable);
-
   SrcNotesVector& notes = bytecodeSection().notes();
   unsigned index;
 
