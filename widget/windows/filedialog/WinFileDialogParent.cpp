@@ -53,6 +53,10 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
   return NS_OK;
 }
 
+void WinFileDialogParent::ProcessingError(Result aCode, const char* aReason) {
+  detail::LogProcessingError(sLogWFD, this, aCode, aReason);
+}
+
 ProcessProxy::ProcessProxy(RefPtr<WFDP>&& obj)
     : data(MakeRefPtr<Contents>(std::move(obj))) {}
 

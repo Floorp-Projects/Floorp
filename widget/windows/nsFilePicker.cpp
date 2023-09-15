@@ -150,10 +150,12 @@ static auto ShowRemote(ActionType&& action)
       mozilla::GetMainThreadSerialEventTarget(),
       "nsFilePicker ShowRemote acquire",
       [action = std::forward<ActionType>(action)](
-          RefPtr<filedialog::WinFileDialogParent> p) -> RefPtr<RetPromise> {
+          filedialog::ProcessProxy p) -> RefPtr<RetPromise> {
         MOZ_LOG(sLogFileDialog, LogLevel::Info,
                 ("nsFilePicker ShowRemote first callback: p = [%p]", p.get()));
-        return action(p)->Then(
+        // false positive: not actually redundant
+        // NOLINTNEXTLINE(readability-redundant-smartptr-get)
+        return action(p.get())->Then(
             mozilla::GetMainThreadSerialEventTarget(),
             "nsFilePicker ShowRemote call",
             [p](ReturnType ret) {

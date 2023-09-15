@@ -34,6 +34,8 @@ class WinFileDialogChild : public PWinFileDialogChild {
  private:
   ~WinFileDialogChild();
 
+  void ProcessingError(Result aCode, const char* aReason) override;
+
   // This flag properly _should_ be static (_i.e._, per-process) rather than
   // per-instance; but we can't presently instantiate two separate utility
   // processes with the same sandbox type, so we have to reuse the existing

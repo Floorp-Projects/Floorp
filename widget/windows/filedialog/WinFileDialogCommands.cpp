@@ -10,6 +10,9 @@
 #include <shtypes.h>
 #include <winerror.h>
 #include "WinUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
@@ -209,5 +212,91 @@ mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
 }
 
 #undef MOZ_ENSURE_HRESULT_OK
+
+namespace detail {
+void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
+                        ipc::HasResultCodes::Result aCode,
+                        const char* aReason) {
+  LogLevel const level = [&]() {
+    switch (aCode) {
+      case ipc::HasResultCodes::MsgProcessed:
+        // Normal operation. (We probably never actually get this code.)
+        return LogLevel::Verbose;
+
+      case ipc::HasResultCodes::MsgDropped:
+        return LogLevel::Verbose;
+
+      default:
+        return LogLevel::Error;
+    }
+  }();
+
+  // Processing errors are sometimes unhelpfully formatted. We can't fix that
+  // directly because the unhelpful formatting has made its way to telemetry
+  // (table `telemetry.socorro_crash`, column `ipc_channel_error`) and is being
+  // aggregated on. :(
+  nsCString reason(aReason);
+  if (reason.Last() == '\n') {
+    reason.Truncate(reason.Length() - 1);
+  }
+
+  if (MOZ_LOG_TEST(aModule, level)) {
+    const char* const side = [&]() {
+      switch (aCaller->GetSide()) {
+        case ipc::ParentSide:
+          return "parent";
+        case ipc::ChildSide:
+          return "child";
+        case ipc::UnknownSide:
+          return "unknown side";
+        default:
+          return "<illegal value>";
+      }
+    }();
+
+    const char* const errorStr = [&]() {
+      switch (aCode) {
+        case ipc::HasResultCodes::MsgProcessed:
+          return "Processed";
+        case ipc::HasResultCodes::MsgDropped:
+          return "Dropped";
+        case ipc::HasResultCodes::MsgNotKnown:
+          return "NotKnown";
+        case ipc::HasResultCodes::MsgNotAllowed:
+          return "NotAllowed";
+        case ipc::HasResultCodes::MsgPayloadError:
+          return "PayloadError";
+        case ipc::HasResultCodes::MsgProcessingError:
+          return "ProcessingError";
+        case ipc::HasResultCodes::MsgRouteError:
+          return "RouteError";
+        case ipc::HasResultCodes::MsgValueError:
+          return "ValueError";
+        default:
+          return "<illegal error type>";
+      }
+    }();
+
+    MOZ_LOG(aModule, level,
+            ("%s [%s]: IPC error (%s): %s", aCaller->GetProtocolName(), side,
+             errorStr, reason.get()));
+  }
+
+  if (level == LogLevel::Error) {
+    // kill the child process...
+    if (aCaller->GetSide() == ipc::ParentSide) {
+      // ... which isn't us
+      ipc::UtilityProcessManager::GetSingleton()->CleanShutdown(
+          ipc::SandboxingKind::WINDOWS_FILE_DIALOG);
+    } else {
+      // ... which (presumably) is us
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::ipc_channel_error, reason);
+
+      MOZ_CRASH("IPC error");
+    }
+  }
+}
+}  // namespace detail
 
 }  // namespace mozilla::widget::filedialog
