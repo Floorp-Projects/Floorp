@@ -205,10 +205,7 @@ mochitest-a11y:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc:
-                by-test-platform:
-                    .*-wayland/debug.*: []
-                    default: built-projects
+            1proc: built-projects
     mozharness:
         mochitest-flavor: a11y
 
@@ -350,7 +347,6 @@ mochitest-browser-media:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-wayland/debug: []
                     default: built-projects
     tier: default
     max-run-time:
@@ -550,7 +546,6 @@ mochitest-plain-gpu:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    .*-wayland/debug: []
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
@@ -594,7 +589,6 @@ mochitest-chrome-gpu:
             1proc:
                 by-test-platform:
                     android.*/.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     tier: default
     mozharness:
@@ -796,7 +790,6 @@ mochitest-webgl1-core:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -852,7 +845,6 @@ mochitest-webgl1-ext:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -954,7 +946,6 @@ mochitest-webgl2-ext:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     chunks: 4
     test-manifest-loader: null  # don't load tests in the taskgraph
