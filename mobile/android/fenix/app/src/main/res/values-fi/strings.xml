@@ -11,7 +11,7 @@
     <string name="content_description_menu">Lisää valintoja</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Ota käyttöön yksityinen selaus</string>
+    <string name="content_description_private_browsing_button">Käytä yksityistä selausta</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Poista yksityinen selaus käytöstä</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
@@ -2228,6 +2228,8 @@
     <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Annamme kunkin tuotteen arvosteluille <b>kirjainarvosanan</b> A:sta F:ään.]]></string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Oikaistu arvosana</b> perustuu vain niihin arvosteluihin, jotka koemme luotettaviksi.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Kohokohdat</b> ovat %s arvostelusta viimeisten 80 päivän ajalta, joiden uskomme olevan luotettavia.]]></string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Asetukset</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2244,14 +2246,24 @@
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Tarkista nyt</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Ei vielä tarpeeksi arvosteluja</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Kun tästä tuotteesta on enemmän arvosteluja, voimme tarkistaa niiden laadun.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Tuote ei ole saatavilla</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Jos huomaat, että tämä tuote on jälleen varastossa, ilmoita siitä, niin tarkistamme arvostelut.</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Ilmoita, että tämä tuote on jälleen varastossa</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Tämä voi kestää noin 60 sekuntia.</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Kiitos ilmoituksesta!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Meillä pitäisi olla tietoa tämän tuotteen arvosteluista 24 tunnin sisällä. Tarkista tilanne uudelleen.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Emme voi tarkistaa näitä arvosteluja</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
@@ -2286,8 +2298,14 @@
     <string name="review_quality_check_first_cfr_message">Ota selvää, voitko luottaa tämän tuotteen arvosteluihin – ennen kuin ostat.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Kokeile arvostelujen tarkistusta</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Ovatko nämä arvostelut luotettavia? Tarkista nyt, niin näet oikaistun arvosanan.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Avaa arvostelujen tarkistus</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check">Avaa arvostelun laaduntarkistus</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check_close">Sulje arvostelun laaduntarkistus</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s/5 tähteä</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

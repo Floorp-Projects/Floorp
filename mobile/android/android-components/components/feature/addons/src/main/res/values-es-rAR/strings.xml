@@ -178,6 +178,8 @@
     <string name="mozac_feature_addons_failed_to_install_corrupt_error">Este complemento no pudo instalarse porque parece estar corrupto.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error">Este complemento no pudo ser instalado porque no fue verificado.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s no pudo instalarse porque no es compatible con %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s no se pudo instalar porque tiene un riesgo alto de causar problemas de estabilidad o seguridad.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->

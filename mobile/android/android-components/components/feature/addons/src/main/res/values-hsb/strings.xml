@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s je so wuspěšnje instalował</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s njeda so instalować</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Tutón přidatk njeda so instalować.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error">Tutón přidatk njeda so zwiskoweho zmylka dla sćahnyć.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->

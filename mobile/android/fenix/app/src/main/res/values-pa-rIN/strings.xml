@@ -70,6 +70,19 @@
        ਨਿੱਜੀ ਟੈਬਾਂ ਬਾਰੇ ਆਮ ਫ਼ਰਜ਼ੀ ਗੱਲਾਂ
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਕੋਈ ਪੈੜ੍ਹਾਂ ਨਾ ਛੱਡੋ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">ਜਦੋਂ ਵੀ ਆਪਣੀਆਂ ਪ੍ਰਾਈਵੇਟ ਵਿੰਡੋਆਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੇ ਕੂਕੀਜ਼, ਅਤੀਤ ਅਤੇ ਸਾਈਟ ਡਾਟੇ ਨੂੰ ਹਟਾ ਦਿੰਦਾ ਹੈ। %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">ਮੇਰੀ ਸਰਗਰਮੀ ਨੂੰ ਭਲਾ ਕੌਣ ਵੇਖ ਸਕਦਾ ਹੈ?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">ਆਪਣੀ ਅਗਲੀ ਨਿੱਜੀ ਟੈਬ ਨੂੰ ਛੂਹ ਕੇ ਚਲਾਓ।</string>
@@ -91,6 +104,11 @@
     <string name="tcp_cfr_message">ਸਾਡਾ ਹਾਲੇ ਤੱਕ ਦਾ ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਮਜ਼ਬੂਤ ਪਰਦੇਦਾਰੀ ਫ਼ੀਚਰ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਨੂੰ ਨਿਖੇੜਦਾ ਹੈ।</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">ਪੂਰੀ ਕੂਕੀ ਸੁਰੱਖਿਆ ਬਾਰੇ ਜਾਣੋ</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">ਤਾਜ਼ਾ ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਇੱਥੇ ਕਲਿੱਕ ਕਰੋ। ਆਪਣੇ ਅਤੀਤ, ਕੂਕੀਜ਼ — ਹਰ ਚੀਜ਼ ਹਟਾ ਦਿਓ।</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ਕੈਮਰੇ ਲਈ ਪਹੁੰਚ ਚਾਹੀਦੀ ਹੈ। Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ, ਇਜਾਜ਼ਤਾਂ ਨੂੰ
@@ -231,6 +249,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">ਮੁੱਖ ਸਕਰੀਨ</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ਚੁਣੀ ਹੋਈ ਬੋਲੀ</string>
@@ -354,6 +375,18 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Firefox ਖੋਜ ਵਿਜੈਟ ਅਜ਼ਮਾਓ</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ Firefox ਨਾਲ ਤੁਸੀਂ ਪਰਾਈਵੇਸੀ ਅਧਾਰਿਤ ਬਰਾਊਜ਼ਰ ਨੂੰ ਸੌਖੀ ਤਰ੍ਹਾਂ ਵਰਤ ਸਕਦੇ ਹੋ, ਜੋ ਕਿ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ।</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Firefox ਵਿਜੈਟ ਜੋੜੋ</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1340,6 +1373,8 @@
     <string name="snackbar_private_tab_closed">ਨਿੱਜੀ ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">ਨਿੱਜੀ ਟੈਬਾਂ ਬੰਦ ਕੀਤੀਆਂ</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਇਆ</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
 
@@ -2169,6 +2204,122 @@
     <string name="experiments_snackbar">ਡਾਟਾ ਭੇਜਣ ਲਈ ਟੈਲੀਮੈਂਟਰੀ ਨੂੰ ਸਮਰੱਥ ਕਰੋ।</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">ਪੜਤਾਲ ਜਾਂਚਕਰਤਾ</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">ਭਰੋਸੇਯੋਗ ਪੜਤਾਲਾਂ</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">ਭਰੋਸੇਯੋਗ ਅਤੇ ਗ਼ੈਰ-ਭਰੋਸੇਯੋਗ ਰਲਵੀਆਂ ਪੜਤਾਲਾਂ</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">ਗ਼ੈਰ-ਭਰੋਸੇਯੋਗ ਪੜਤਾਲਾਂ</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">ਇਹ ਪੜਤਾਲਾਂ ਕਿੰਨੀਆਂ ਭਰੋਸੇਯੋਗ ਹਨ?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">ਅਡਜੱਸਟ ਕੀਤੀ ਰੇਟਿੰਗ</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">ਗ਼ੈਰ-ਭਰੋਸੇਯੋਗ ਪੜਤਾਲਾਂ ਹਟਾਈਆਂ</string>
+
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">ਸੱਜਰੀਆਂ ਪੜਤਾਲਾਂ ਤੋਂ ਉਘਾੜੇ</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">ਅਸੀਂ ਪੜਤਾਲ ਦੀ ਕੁਆਲਟੀ ਕਿਵੇਂ ਪਤਾ ਕਰਦੇ ਹਾਂ</string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">%s ਬਾਰੇ ਹੋਰ ਸਿੱਖੋ।</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">ਸੈਟਿੰਗਾਂ</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">ਪੜਤਾਲ ਜਾਂਚਕਰਤਾ ਵਿੱਚ ਇਸ਼ਤਿਹਾਰ ਵੇਖਾਓ</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">ਹੋਰ ਜਾਣੋ</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">ਪੜਤਾਲ ਜਾਂਚਕਰਤਾ ਬੰਦ ਕਰੋ</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">ਵਿਚਾਰਨ ਲਈ ਹੋਰ</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">%s ਵਲੋਂ ਇਸ਼ਤਿਹਾਰ</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">ਪੜਤਾਲ ਕਰਤਾ %s ਰਾਹੀਂ ਚੱਲਦਾ ਹੈ।</string>
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">Mozilla ਵਲੋਂ %s</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">ਜਾਂਚ ਲਈ ਨਵੀਂ ਜਾਣਕਾਰੀ</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">ਹੁਣੇ ਜਾਂਚੋ</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">ਹਾਲੇ ਚੋਖੀਆਂ ਪੜਤਾਲਾਂ ਨਹੀਂ</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">ਉਤਪਾਦ ਮੌਜੂਦ ਨਹੀਂ ਹੈ</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">ਇਸ ਉਤਪਾਦ ਦੇ ਸਟਾਕ ਵਿੱਚ ਵਾਪਸ ਹੋਣ ਦੀ ਜਾਣਕਾਰੀ ਦਿਓ</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">ਪੜਤਾਲ ਕੁਆਲਟੀ ਦੀ ਜਾਂਚ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">ਪੜਤਾਲ ਕੁਆਲਟੀ ਦੀ ਜਾਂਚ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">ਇਸ ਨੂੰ ਲਗਭਗ 60 ਸਕਿੰਟ ਲੱਗ ਸਕਦੇ ਹਨ।</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">ਜਾਣਕਾਰੀ ਦੇਣ ਲਈ ਧੰਨਵਾਦ!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">ਅਸੀਂ ਇਹ ਪੜਤਾਲਾਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹਾਂ</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">ਜਾਣਕਾਰੀ ਛੇਤੀ ਹੀ ਆ ਰਹੀ ਹੈ</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">ਵਿਸ਼ਲੇਸ਼ਣ ਅੱਪ ਟੂ ਡੇਟ ਹੈ</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">ਸਮਝੇ</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">ਹਾਲੇ ਕੋਈ ਵੀ ਜਾਣਕਾਰੀ ਨਹੀਂ ਹੈ</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">ਕੋਈ ਨੈੱਟਵਰਕ ਕਨੈਕਸ਼ਨ ਨਹੀਂ ਹੈ</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">ਪੜਤਲਾ ਕੁਆਲਟੀ ਦੀ ਜਾਂਚ ਕਰੋ</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">ਉਤਪਾਦ ਪੜਤਾਲਾਂ ਲਈ ਸਾਡੀ ਭਰੋਸੇਯੋਗ ਗਾਈਡ ਨੂੰ ਅਜ਼ਮਾਓ</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">ਹੋਰ ਜਾਣੋ</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">“ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ” ਚੁਣ ਕੇ ਤੁਸੀਂ Mozilla ਵਲੋਂ %1$s ਦੀ %2$s ਅਤੇ %3$s ਲਈ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">ਪਰਦੇਦਾਰੀ ਨੀਤੀ</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">ਵਰਤਣ ਲਈ ਸ਼ਰਤਾਂ</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">ਹੁਣੇ ਨਹੀਂ</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">ਪਤਾ ਕਰੋ ਕਿ ਜੇ ਤੁਸੀਂ ਇਸ ਉਤਪਾਦ ਦੀਆਂ ਪੜਤਾਲਾਂ ਉੱਤੇ ਭਰੋਸਾ ਕਰ ਸਕਦੇ ਹੋ — ਖਰੀਦਣ ਤੋਂ ਪਹਿਲਾਂ।</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ਪੜਤਾਲ ਜਾਂਚਕਰਤਾ ਅਜ਼ਮਾਓ</string>
+
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">ਕੀ ਇਹ ਪੜਤਾਲਾਂ ਭਰੋਸੇਯੋਗ ਹਨ? ਅਡਜੱਸਟ ਕੀਤੀ ਰੇਟਿੰਗ ਵੇਖਣ ਲਈ ਹੁਣੇ ਜਾਂਚ ਕਰੋ।</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">ਪੜਤਾਲ ਜਾਂਚਕਰਤਾ ਖੋਲ੍ਹੋ</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">ਬੀਟਾ</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check">ਪੜਤਾਲ ਕੁਆਲਟੀ ਜਾਂਚ ਨੂੰ ਖੋਲ੍ਹੋ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check_close">ਪੜਤਾਲ ਕੁਆਲਟੀ ਜਾਂਚ ਨੂੰ ਬੰਦ ਕਰੋ</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">5 ਵਿੱਚੋਂ %1$s ਤਾਰੇ</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">ਘੱਟ ਵੇਖਾਓ</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">ਹੋਰ ਵੇਖਾਓ</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">ਕੁਆਲਟੀ</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">ਮੁੱਲ</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">ਆਵਾਜਾਈ</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">ਪੈਕਿੰਗ ਅਤੇ ਦਿੱਖ</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">ਮੁਕਾਬਲੇਬਾਜ਼ੀ</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
