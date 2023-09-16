@@ -20,12 +20,21 @@ SOURCES += [
 SOURCES["test-array.c"].flags += ["-fno-lto"]
 SOURCES["test-ctors.c"].flags += ["-fno-lto"]
 
-HOST_SOURCES += [
-    "elf.cpp",
-    "elfhack.cpp",
-]
+if CONFIG["RELRHACK"]:
+    HOST_SOURCES += [
+        "relrhack.cpp",
+    ]
 
-HostProgram("elfhack")
+    HostProgram(CONFIG["RELRHACK_LINKER"])
+
+    HOST_OS_LIBS += CONFIG["RELRHACK_LIBS"]
+else:
+    HOST_SOURCES += [
+        "elf.cpp",
+        "elfhack.cpp",
+    ]
+
+    HostProgram("elfhack")
 
 NO_PGO = True
 
