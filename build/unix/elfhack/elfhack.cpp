@@ -474,8 +474,8 @@ class ElfRelHackCode_Section : public ElfSection {
           addr = relhack_section.getAddr();
         } else if (strcmp(name, "relhack_end") == 0) {
           addr = relhack_section.getAddr() + relhack_section.getSize();
-        } else if (strcmp(name, "elf_header") == 0) {
-          // TODO: change this ungly hack to something better
+        } else if (strcmp(name, "__ehdr_start") == 0) {
+          // TODO: change this ugly hack to something better
           ElfSection* ehdr = parent.getSection(1)->getPrevious()->getPrevious();
           addr = ehdr->getAddr();
         } else if (strcmp(name, "original_init") == 0) {
