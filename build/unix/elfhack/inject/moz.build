@@ -21,6 +21,10 @@ SOURCES += [
     "!%s" % gen_src,
 ]
 
+if CONFIG["RELRHACK"]:
+    DEFINES["RELRHACK"] = True
+    LOCAL_INCLUDES += [".."]
+
 NO_PGO = True
 
 for v in ("OS_CPPFLAGS", "OS_CFLAGS", "DEBUG", "CLANG_PLUGIN", "OPTIMIZE", "FRAMEPTR"):
