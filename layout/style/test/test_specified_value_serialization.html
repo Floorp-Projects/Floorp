@@ -266,49 +266,14 @@
   p.remove();
 })();
 
-(function test_bug_1207734 () {
-   // Test for rotate property serialization.
-   [
-    [" 90deg ", "90deg"],
-    [" 100grad ", "100grad"],
-    [" 100gRaD ", "100grad"],
-    [" 0.25turn  ", "0.25turn"],
-    [" 0.25tUrN  ", "0.25turn"],
-    [" 1.57RaD  ", "1.57rad"],
-  ].forEach(function(arr) {
-    document.documentElement.style.rotate = arr[0];
-    is(document.documentElement.style.rotate, arr[1],
-      "bug-1207734: incorrect rotate serialization");
-  });
-  document.documentElement.style.rotate = "";
-
-  // Test for translate property serialization.
-  [
-    [" 50% 5px 6px ", "50% 5px 6px"],
-    [" 50% 10px 100px ", "50% 10px 100px"],
-    [" 4px 5px ", "4px 5px"],
-    [" 10% 10% 99px  ", "10% 10% 99px"],
-    ["   50px    ", "50px"],
-  ].forEach(function(arr) {
-    document.documentElement.style.translate = arr[0];
-    is(document.documentElement.style.translate, arr[1],
-      "bug-1207734: incorrect translate serialization");
-  });
-  document.documentElement.style.translate = "";
-
-  // Test for scale property serialization.
-  [
-    [" 10  ", "10"],
-    [" 10 20.5 ", "10 20.5"],
-    [" 10 20  30 ", "10 20 30"],
-  ].forEach(function(arr) {
-    document.documentElement.style.scale = arr[0];
-    is(document.documentElement.style.scale, arr[1],
-      "bug-1207734: incorrect scale serialization");
-  });
-
-  document.documentElement.style.scale = "";
-})()
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    set: [['layout.css.individual-transform.enabled', true]],
+  },
+  () =>
+    window.open('file_specified_value_serialization_individual_transforms.html')
+);
 
 </script>
 </pre>

@@ -8474,6 +8474,12 @@
   mirror: always
   rust: true
 
+# Is support for CSS individual transform enabled?
+- name: layout.css.individual-transform.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for CSS initial-letter property enabled?
 - name: layout.css.initial-letter.enabled
   type: bool
