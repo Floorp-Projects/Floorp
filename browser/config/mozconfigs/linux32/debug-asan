@@ -7,7 +7,6 @@ ac_add_options --enable-optimize="-O1"
 ac_add_options --enable-valgrind
 
 . $topsrcdir/build/unix/mozconfig.asan
-ac_add_options --disable-elf-hack
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1

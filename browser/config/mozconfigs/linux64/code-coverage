@@ -1,7 +1,6 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
 ac_add_options --disable-install-strip
-ac_add_options --disable-elf-hack
 ac_add_options --disable-sandbox
 ac_add_options --disable-dmd
 ac_add_options --disable-profiling
