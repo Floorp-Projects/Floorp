@@ -287,23 +287,10 @@ bool UIEvent::GetModifierStateInternal(const nsAString& aKey) {
   return ((inputEvent->mModifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
 }
 
-void UIEvent::InitModifiers(const EventModifierInit& aParam) {
-  if (NS_WARN_IF(!mEvent)) {
-    return;
-  }
-  WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
-  MOZ_ASSERT(inputEvent,
-             "This method shouldn't be called if it doesn't have modifiers");
-  if (NS_WARN_IF(!inputEvent)) {
-    return;
-  }
+static Modifiers ConvertToModifiers(const EventModifierInit& aParam) {
+  Modifiers bits = MODIFIER_NONE;
 
-  inputEvent->mModifiers = MODIFIER_NONE;
-
-#define SET_MODIFIER(aName, aValue)   \
-  if (aParam.m##aName) {              \
-    inputEvent->mModifiers |= aValue; \
-  }
+#define SET_MODIFIER(aName, aValue) bits |= aParam.m##aName ? (aValue) : 0;
 
   SET_MODIFIER(CtrlKey, MODIFIER_CONTROL)
   SET_MODIFIER(ShiftKey, MODIFIER_SHIFT)
@@ -319,6 +306,22 @@ void UIEvent::InitModifiers(const EventModifierInit& aParam) {
   SET_MODIFIER(ModifierSymbolLock, MODIFIER_SYMBOLLOCK)
 
 #undef SET_MODIFIER
+
+  return bits;
+}
+
+void UIEvent::InitModifiers(const EventModifierInit& aParam) {
+  if (NS_WARN_IF(!mEvent)) {
+    return;
+  }
+  WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
+  MOZ_ASSERT(inputEvent,
+             "This method shouldn't be called if it doesn't have modifiers");
+  if (NS_WARN_IF(!inputEvent)) {
+    return;
+  }
+
+  inputEvent->mModifiers = ConvertToModifiers(aParam);
 }
 
 }  // namespace mozilla::dom
