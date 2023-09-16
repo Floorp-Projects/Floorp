@@ -312,7 +312,7 @@ load 1580307.html
 load 1581579.html
 skip-if(release_or_beta) pref(dom.paintWorklet.enabled,true) load 1593766.html # bug 1581896
 load 1594949.html
-pref(layout.css.individual-transform.enabled,true) load 1594960.html
+load 1594960.html
 load 1586444.html
 load 1599286.html
 load 1609786.html

@@ -149,7 +149,7 @@ fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 13
 == invalidate-transform-1.html invalidate-transform-1-ref.html
 == invalidate-svg-scale-1.html invalidate-svg-scale-1-ref.html
 # Bug 1526847
-pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
+== animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
 fuzzy-if(winWidget,0-1,0-1000) == 1569215-1.html 1569215-1-ref.html
 
 == transform-anon-block-1.html transform-anon-block-1-ref.html
