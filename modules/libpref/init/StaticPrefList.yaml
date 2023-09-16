@@ -8486,13 +8486,6 @@
   value: false
   mirror: always
 
-# Pref to control whether line-height: -moz-block-height is exposed to content.
-- name: layout.css.line-height-moz-block-height.content.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is support for motion-path <basic-shape> other than path() enabled?
 # https://drafts.fxtf.org/motion-1/#valdef-offset-path-basic-shape
 - name: layout.css.motion-path-basic-shapes.enabled
