@@ -360,11 +360,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   supported_properties["font-variation-settings"] = [ test_font_variations_transition ];
 }
 
-
-supported_properties["rotate"] = [ test_rotate_transition ];
-supported_properties["scale"] = [ test_scale_transition ];
-supported_properties["translate"] = [ test_translate_transition ];
-
+if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
+  supported_properties["rotate"] = [ test_rotate_transition ];
+  supported_properties["scale"] = [ test_scale_transition ];
+  supported_properties["translate"] = [ test_translate_transition ];
+}
 
 if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
   supported_properties["contain-intrinsic-width"] = [ test_length_transition, test_auto_with_length_transition ];
