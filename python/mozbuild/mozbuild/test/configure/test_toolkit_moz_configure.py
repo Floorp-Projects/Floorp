@@ -159,6 +159,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             value_for_depends[(dep,)] = "/usr/bin/readelf"
 
             return (
+                sandbox._value_for(sandbox["select_linker"]).KIND,
                 sandbox._value_for(sandbox["pack_relative_relocs"]),
                 sandbox._value_for(sandbox["use_elf_hack"]),
             )
@@ -178,9 +179,9 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             # Linker doesn't error out for unknown flags. Glibc is new.
             (MockCC(True, True), ReadElf(False)),
         ):
-            self.assertEqual(get_values(mockcc, readelf), (None, None))
+            self.assertEqual(get_values(mockcc, readelf), ("lld", None, None))
             self.assertEqual(
-                get_values(mockcc, readelf, ["--enable-release"]), (None, True)
+                get_values(mockcc, readelf, ["--enable-release"]), ("bfd", None, True)
             )
             # LLD is picked by default and enabling elfhack fails because of that.
             with self.assertRaises(SystemExit):
@@ -190,16 +191,16 @@ class TestToolkitMozConfigure(BaseConfigureTest):
                 get_values(
                     mockcc, readelf, ["--enable-elf-hack", "--enable-linker=bfd"]
                 ),
-                (None, True),
+                ("bfd", None, True),
             )
 
         # Linker supports pack-relative-relocs, and glibc too. We use pack-relative-relocs
         # unless elfhack is explicitly enabled.
         mockcc = MockCC(True, True)
         readelf = ReadElf(True)
-        self.assertEqual(get_values(mockcc, readelf), (PACK, None))
+        self.assertEqual(get_values(mockcc, readelf), ("lld", PACK, None))
         self.assertEqual(
-            get_values(mockcc, readelf, ["--enable-release"]), (PACK, None)
+            get_values(mockcc, readelf, ["--enable-release"]), ("bfd", PACK, None)
         )
         # LLD is picked by default and enabling elfhack fails because of that.
         with self.assertRaises(SystemExit):
@@ -207,7 +208,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         # If we force to use BFD ld, it works.
         self.assertEqual(
             get_values(mockcc, readelf, ["--enable-elf-hack", "--enable-linker=bfd"]),
-            (None, True),
+            ("bfd", None, True),
         )
 
 
