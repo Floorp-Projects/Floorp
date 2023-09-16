@@ -1940,7 +1940,8 @@ def linker_ldflags_tmpl(host_or_target):
 linker_ldflags = linker_ldflags_tmpl(target)
 add_old_configure_assignment("LINKER_LDFLAGS", linker_ldflags)
 
-add_old_configure_assignment("HOST_LINKER_LDFLAGS", linker_ldflags_tmpl(host))
+host_linker_ldflags = linker_ldflags_tmpl(host)
+add_old_configure_assignment("HOST_LINKER_LDFLAGS", host_linker_ldflags)
 
 
 # There's a wrinkle with MinGW: linker configuration is not enabled, so
