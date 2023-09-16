@@ -302,8 +302,7 @@ class ConnectionOperationBase : public Runnable,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-class OpenOp final : public ConnectionOperationBase,
-                     public OpenDirectoryListener {
+class OpenOp final : public ConnectionOperationBase {
   enum class State {
     // Just created on the PBackground thread, dispatched to the main thread.
     // Next step is FinishOpen.
@@ -367,15 +366,12 @@ class OpenOp final : public ConnectionOperationBase,
 
   void Cleanup() override;
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   NS_IMETHOD
   Run() override;
 
-  // OpenDirectoryListener overrides.
-  void DirectoryLockAcquired(DirectoryLock* aLock) override;
+  void DirectoryLockAcquired(DirectoryLock* aLock);
 
-  void DirectoryLockFailed() override;
+  void DirectoryLockFailed();
 };
 
 class SeekOp final : public ConnectionOperationBase {
@@ -1130,12 +1126,20 @@ nsresult OpenOp::FinishOpen() {
 
   // Open the directory
 
-  RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
-      {mOriginMetadata, mozilla::dom::quota::Client::SDB},
-      /* aExclusive */ false);
-
   mState = State::DirectoryOpenPending;
-  directoryLock->Acquire(this);
+
+  quotaManager
+      ->OpenClientDirectory({mOriginMetadata, mozilla::dom::quota::Client::SDB})
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this)](
+              const ClientDirectoryLockPromise::ResolveOrRejectValue& aValue) {
+            if (aValue.IsResolve()) {
+              self->DirectoryLockAcquired(aValue.ResolveValue());
+            } else {
+              self->DirectoryLockFailed();
+            }
+          });
 
   return NS_OK;
 }
@@ -1180,8 +1184,6 @@ nsresult OpenOp::DatabaseWork() {
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
-
-  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
 
   QM_TRY_INSPECT(
       const auto& dbDirectory,
@@ -1340,8 +1342,6 @@ void OpenOp::Cleanup() {
 
   ConnectionOperationBase::Cleanup();
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(OpenOp, ConnectionOperationBase)
 
 NS_IMETHODIMP
 OpenOp::Run() {
