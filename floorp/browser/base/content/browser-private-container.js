@@ -193,6 +193,10 @@ function addPrivateContainerModifyCSS() {
     menupopup[oncommand="TabContextMenu.reopenInContainer(event);"] > menuitem[data-usercontextid="${PrivateContainer.Functions.getPrivateContainerUserContextId()}"] {
       display: none !important;
     }
+
+    menupopup[oncommand="gContextMenu.openLinkInTab(event);"] > menuitem[data-usercontextid="${PrivateContainer.Functions.getPrivateContainerUserContextId()}"] {
+      display: none !important;
+    }
   `;
   document.head.appendChild(elem);
 }
