@@ -58,7 +58,7 @@ export let PrivateContainer = {
               userContextId,
               public: true,
               icon: "chill",
-              color: "blue",
+              color: "purple",
               name: await l10n.formatValue(PrivateContainer.PRIVATE_CONTAINER_L10N_ID),
               floorpPrivateContainer: true,
             };
