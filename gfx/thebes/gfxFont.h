@@ -2320,6 +2320,7 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   bool isRTL = false;
   bool paintSVGGlyphs = true;
   bool allowGDI = true;
+  bool hasTextShadow = false;
 
   // MRU cache of color-font palettes being used by fonts in the run. We cache
   // these in the TextRunDrawParams so that we can avoid re-creating a new
@@ -2364,6 +2365,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
   bool isVerticalFont;
   bool haveSVGGlyphs;
   bool haveColorGlyphs;
+  bool hasTextShadow;  // whether we're rendering with a text-shadow
 };
 
 struct MOZ_STACK_CLASS EmphasisMarkDrawParams {
