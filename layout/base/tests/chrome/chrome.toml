@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "dom.window.sizeToContent.enabled=true",
-  "layout.css.individual-transform.enabled=true",
 ]
 skip-if = ["os == 'android'"]
 support-files = [
