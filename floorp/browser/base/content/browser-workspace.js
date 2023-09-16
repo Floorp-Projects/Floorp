@@ -57,7 +57,7 @@ const workspaceFunctions = {
       },
 
       handleTabClose() {
-        window.setTimeout(() => {
+        function handleTabCloseFunction() {
           document
             .querySelector(`[floorp-firstVisibleTab]`)
             ?.removeAttribute("floorp-firstVisibleTab");
@@ -84,7 +84,14 @@ const workspaceFunctions = {
             );
             workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();
           }
+        }
+        window.setTimeout(() => {
+          handleTabCloseFunction();
         }, 400);
+
+        window.setTimeout(() => {
+          handleTabCloseFunction();
+        }, 1000);
       },
 
       handleTabObeserver() {
