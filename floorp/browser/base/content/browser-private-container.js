@@ -18,6 +18,8 @@ if (Services.prefs.getBoolPref("floorp.privateContainer.enabled", false)) {
   PrivateContainer.Functions.removePrivateContainerData();
 
   SessionStore.promiseInitialized.then(() => {
+    addPrivateContainerModifyCSS();
+
     gBrowser.tabContainer.addEventListener(
         "TabClose",
         removeDataIfPrivateContainerTabNotExist
@@ -135,6 +137,7 @@ function checkPrivateContainerTabExist() {
 }
 
 function removeDataIfPrivateContainerTabNotExist() {
+    let privateContainerUserContextID = PrivateContainer.Functions.getPrivateContainerUserContextId();
     setTimeout(() => {
         if (!checkPrivateContainerTabExist()) {
             PrivateContainer.Functions.removePrivateContainerData();
@@ -184,7 +187,16 @@ function handleTabModifications() {
   for (let i = 0; i < tabs.length; i++) {
     if (checkTabIsPrivateContainer(tabs[i]) && !tabIsSaveHistory(tabs[i])) {
       applyDoNotSaveHistoryToTab(tabs[i]);
-      console.log("applyDoNotSaveHistoryToTab");
     }
   }
+}
+
+function addPrivateContainerModifyCSS() {
+  let elem = document.createElement("style");
+  elem.textContent = `
+    menupopup[oncommand="TabContextMenu.reopenInContainer(event);"] > menuitem[data-usercontextid="${PrivateContainer.Functions.getPrivateContainerUserContextId()}"] {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(elem);
 }

@@ -103,6 +103,11 @@ var TabStateInternal = {
       tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
     }
 
+    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
+    if (tabData.floorpDisableHistory) {
+      return undefined;
+    }
+
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 
     tabData.userContextId = tab.userContextId || 0;
