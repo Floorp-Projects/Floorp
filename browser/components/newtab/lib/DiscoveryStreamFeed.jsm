@@ -657,6 +657,7 @@ class DiscoveryStreamFeed {
         this.store.getState().Prefs.values?.pocketConfig || {};
       const onboardingExperience =
         this.isBff && pocketConfig.onboardingExperience;
+      const { spocTopsitesPlacementEnabled } = pocketConfig;
 
       let items = isBasicLayout ? 3 : 21;
       if (pocketConfig.fourCardLayout || pocketConfig.hybridLayout) {
@@ -715,6 +716,7 @@ class DiscoveryStreamFeed {
         items,
         sponsoredCollectionsEnabled,
         spocPlacementData,
+        spocTopsitesPlacementEnabled,
         spocTopsitesPlacementData,
         spocPositions: this.parseGridPositions(
           pocketConfig.spocPositions?.split(`,`)
@@ -2191,6 +2193,7 @@ class DiscoveryStreamFeed {
      `spocPositions` Changes the position of spoc cards.
      `spocTopsitesPositions` Changes the position of spoc topsites.
      `spocPlacementData` Used to set the spoc content.
+     `spocTopsitesPlacementEnabled` Tuns on and off the sponsored topsites placement.
      `spocTopsitesPlacementData` Used to set spoc content for topsites.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
@@ -2209,6 +2212,7 @@ getHardcodedLayout = ({
   spocPositions = [1, 5, 7, 11, 18, 20],
   spocTopsitesPositions = [1],
   spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
+  spocTopsitesPlacementEnabled = false,
   spocTopsitesPlacementData = { ad_types: [3120], zone_ids: [280143] },
   widgetPositions = [],
   widgetData = [],
@@ -2237,7 +2241,7 @@ getHardcodedLayout = ({
               id: "newtab-section-header-topsites",
             },
           },
-          ...(spocTopsitesPlacementData
+          ...(spocTopsitesPlacementEnabled && spocTopsitesPlacementData
             ? {
                 placement: {
                   name: "sponsored-topsites",

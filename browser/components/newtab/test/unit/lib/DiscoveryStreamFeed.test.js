@@ -592,6 +592,7 @@ describe("DiscoveryStreamFeed", () => {
         Prefs: {
           values: {
             pocketConfig: {
+              spocTopsitesPlacementEnabled: true,
               spocTopsitesAdTypes: "1230",
               spocTopsitesZoneIds: "4560, 7890",
             },
