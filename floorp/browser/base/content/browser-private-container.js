@@ -7,10 +7,6 @@
 const { PrivateContainer } = ChromeUtils.importESModule(
    "resource:///modules/PrivateContainer.sys.mjs"
 );
-
-const { setTimeout } = ChromeUtils.importESModule(
-    "resource://gre/modules/Timer.sys.mjs"
-);
  
 if (Services.prefs.getBoolPref("floorp.privateContainer.enabled", false)) {
   // Create a private container.
@@ -138,7 +134,7 @@ function checkPrivateContainerTabExist() {
 
 function removeDataIfPrivateContainerTabNotExist() {
     let privateContainerUserContextID = PrivateContainer.Functions.getPrivateContainerUserContextId();
-    setTimeout(() => {
+    window.setTimeout(() => {
         if (!checkPrivateContainerTabExist()) {
             PrivateContainer.Functions.removePrivateContainerData();
         }
