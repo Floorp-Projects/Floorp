@@ -8,7 +8,6 @@
       "description": "Current Analysis status",
       "type": "string",
       "examples": [
-        "not_found",
         "pending",
         "in_progress",
         "completed",

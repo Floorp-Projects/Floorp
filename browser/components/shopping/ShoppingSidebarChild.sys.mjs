@@ -77,7 +77,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         }
 
         this.#productURI = uri;
-        this.updateContent({ haveUpdatedURI: true });
+        this.updateContent({ haveUpdatedURI: true, isReload });
         break;
     }
   }
@@ -169,11 +169,13 @@ export class ShoppingSidebarChild extends RemotePageChild {
    *        fetching the URI from the parent, and assume `this.#productURI`
    *        is current. Defaults to false.
    * @param {bool} options.isPolledRequest = false
+   * @param {bool} options.isReload = false
    *
    */
   async updateContent({
     haveUpdatedURI = false,
     isPolledRequest = false,
+    isReload = false,
   } = {}) {
     // updateContent is an async function, and when we're off making requests or doing
     // other things asynchronously, the actor can be destroyed, the user
@@ -224,37 +226,37 @@ export class ShoppingSidebarChild extends RemotePageChild {
       let uri = this.#productURI;
       this.#product = new ShoppingProduct(uri);
       let data;
-      let isAnalysisInProgress;
-
+      let isPolledRequestDone;
+      // If a reload took place during polling we want to clear
+      // the in-progress message with the next update.
+      if (isReload) {
+        isPolledRequestDone = true;
+      }
       try {
-        let analysisStatusResponse;
+        let analysisStatus;
         if (isPolledRequest) {
           // Request a new analysis.
-          analysisStatusResponse = await this.#product.requestCreateAnalysis();
+          let { status } = await this.#product.requestCreateAnalysis();
+          analysisStatus = status;
         } else {
           // Check if there is an analysis in progress.
-          analysisStatusResponse =
-            await this.#product.requestAnalysisCreationStatus();
+          let { status } = await this.#product.requestAnalysisCreationStatus();
+          analysisStatus = status;
         }
-        let analysisStatus = analysisStatusResponse?.status;
 
-        isAnalysisInProgress =
+        if (
           analysisStatus &&
-          (analysisStatus == "pending" || analysisStatus == "in_progress");
-        if (isAnalysisInProgress) {
-          // Only clear the existing data if the update wasn't
-          // triggered by a Polled Request event as re-analysis should
-          // keep any stale data visible while processing.
-          if (!isPolledRequest) {
-            this.sendToContent("Update", {
-              isAnalysisInProgress,
-            });
-          }
+          (analysisStatus == "pending" || analysisStatus == "in_progress")
+        ) {
+          // TODO: Send content update to show analysis in progress message,
+          // if not already shown (Bug 1851629).
+
           await this.#product.pollForAnalysisCompleted({
             pollInitialWait: analysisStatus == "in_progress" ? 0 : undefined,
           });
-          isAnalysisInProgress = false;
+          isPolledRequestDone = true;
         }
+
         data = await this.#product.requestAnalysis();
       } catch (err) {
         console.error("Failed to fetch product analysis data", err);
@@ -269,7 +271,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
-        isAnalysisInProgress,
+        isPolledRequestDone,
       });
 
       if (!data || data.error) {
@@ -308,7 +310,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
           data,
           productUrl: this.#productURI.spec,
           recommendationData,
-          isAnalysisInProgress,
+          isPolledRequestDone,
         });
       });
     } else {
