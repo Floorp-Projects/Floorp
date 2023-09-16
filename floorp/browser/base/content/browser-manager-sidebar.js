@@ -322,6 +322,7 @@ const bmsController = {
       for (let elem of document.getElementsByClassName("sidepanel-icon")) {
         elem.removeAttribute("muted");
       }
+      bmsController.nowPage = null;
     },
     setUserContextColorLine: id => {
       const wibpanel_usercontext =
@@ -393,6 +394,16 @@ const bmsController = {
         "floorp.browser.sidebar.is.displayed",
         doDisplay
       );
+
+      if (
+        Services.prefs.getBoolPref(
+          "floorp.browser.sidebar2.hide.to.unload.panel.enabled",
+          false
+        ) &&
+        !doDisplay
+      ) {
+        bmsController.controllFunctions.unloadAllWebpanel();
+      }
     },
     setSidebarWidth: webpanel_id => {
       if (

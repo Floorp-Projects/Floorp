@@ -21,6 +21,7 @@ Preferences.addAll([
   { id: "floorp.browser.sidebar2.mode", type: "int" },
   { id: "floorp.browser.restore.sidebar.panel", type: "bool" },
   { id: "floorp.browser.sidebar.useIconProvider", type: "string" },
+  { id: "floorp.browser.sidebar2.hide.to.unload.panel.enabled", type: "bool" },
 ])
 
 var gBSBPane = {

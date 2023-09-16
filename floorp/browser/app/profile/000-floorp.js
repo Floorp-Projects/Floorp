@@ -83,6 +83,7 @@ pref("floorp.browser.sidebar2.data", '{"data":{},"index":[]}');
 pref("floorp.extensions.webextensions.sidebar-action", '{"data":{}}');
 pref("floorp.browser.sidebar2.addons.enabled", false);
 pref("floorp.browser.sidebar2.start.url", "");
+pref("floorp.browser.sidebar2.hide.to.unload.panel.enabled", false);
 
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
