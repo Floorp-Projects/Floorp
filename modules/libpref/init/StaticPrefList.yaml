@@ -8493,12 +8493,6 @@
   mirror: always
   rust: true
 
-# Is support for motion-path enabled?
-- name: layout.css.motion-path.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for motion-path <basic-shape> other than path() enabled?
 # https://drafts.fxtf.org/motion-1/#valdef-offset-path-basic-shape
 - name: layout.css.motion-path-basic-shapes.enabled

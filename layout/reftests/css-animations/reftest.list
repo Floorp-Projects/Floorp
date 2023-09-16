@@ -39,11 +39,11 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-co
 == stacking-context-opacity-removing-important-in-delay.html stacking-context-animation-ref.html
 == stacking-context-transform-none-in-delay.html stacking-context-animation-ref.html
 == stacking-context-transform-removing-important-in-delay.html stacking-context-animation-ref.html
-pref(layout.css.motion-path.enabled,true) == no-stacking-context-offset-distance-animation-with-offset-path-none.html no-stacking-context-animation-ref.html
-pref(layout.css.motion-path.enabled,true) == stacking-context-offset-path-none-animation.html stacking-context-animation-ref.html
-pref(layout.css.motion-path.enabled,true) == stacking-context-offset-path-none-in-delay.html stacking-context-animation-ref.html
-pref(layout.css.motion-path.enabled,true) == stacking-context-offset-path-none-with-fill-backwards.html stacking-context-animation-ref.html
-pref(layout.css.motion-path.enabled,true) == stacking-context-offset-path-none-with-fill-forwards.html stacking-context-animation-ref.html
+== no-stacking-context-offset-distance-animation-with-offset-path-none.html no-stacking-context-animation-ref.html
+== stacking-context-offset-path-none-animation.html stacking-context-animation-ref.html
+== stacking-context-offset-path-none-in-delay.html stacking-context-animation-ref.html
+== stacking-context-offset-path-none-with-fill-backwards.html stacking-context-animation-ref.html
+== stacking-context-offset-path-none-with-fill-forwards.html stacking-context-animation-ref.html
 == background-position-in-delay.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer from its delay phse, and reftest-opaque-layer only handles items assigned to PaintedLayers.
 == background-position-after-finish.html background-position-ref.html
 random-if(useDrawSnapshot) == background-position-running.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer, and reftest-opaque-layer only handles items assigned to PaintedLayers.

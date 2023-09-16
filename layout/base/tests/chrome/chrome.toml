@@ -2,7 +2,6 @@
 prefs = [
   "dom.window.sizeToContent.enabled=true",
   "layout.css.individual-transform.enabled=true",
-  "layout.css.motion-path.enabled=true",
 ]
 skip-if = ["os == 'android'"]
 support-files = [

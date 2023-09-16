@@ -311,11 +311,11 @@ load 1579788.html
 load 1580307.html
 load 1581579.html
 skip-if(release_or_beta) pref(dom.paintWorklet.enabled,true) load 1593766.html # bug 1581896
-pref(layout.css.motion-path.enabled,true) load 1594949.html
-pref(layout.css.motion-path.enabled,true) pref(layout.css.individual-transform.enabled,true) load 1594960.html
+load 1594949.html
+pref(layout.css.individual-transform.enabled,true) load 1594960.html
 load 1586444.html
 load 1599286.html
-pref(layout.css.motion-path.enabled,true) load 1609786.html
+load 1609786.html
 load 1616433.html
 load 1616407.html
 load 1639533.html
