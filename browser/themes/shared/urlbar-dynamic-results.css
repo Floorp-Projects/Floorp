@@ -172,24 +172,16 @@
  * Site-specific search
  */
 
-.urlbarView-row[dynamicType=contextualSearch] .urlbarView-title[overflow] {
-  mask-image: linear-gradient(to left, transparent, black 2em);
+.urlbarView-title-separator.urlbarView-dynamic-contextualSearch-separator {
+  visibility: visible !important /* override .urlbarView-title-separator rules */;
 }
 
-.urlbarView-row[dynamicType=contextualSearch] .urlbarView-title[overflow]:-moz-locale-dir(rtl) {
-  mask-image: linear-gradient(to right, transparent, black 2em);
-}
+.urlbarView-dynamic-contextualSearch-description {
+  font-size: var(--urlbarView-small-font-size);
 
-.urlbarView-row[dynamicType=contextualSearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator.urlbarView-dynamic-contextualSearch-separator {
-  visibility: visible;
-}
-
-.urlbarView-row[dynamicType=contextualSearch] .urlbarView-dynamic-contextualSearch-description {
-  font-size: 0.85em;
-}
-
-.urlbarView-row[dynamicType=contextualSearch]:hover > .urlbarView-row-inner {
-  background-color: var(--autocomplete-popup-hover-background);
+  .urlbarView-row:not([selected]) & {
+    color: var(--urlbar-popup-action-color);
+  }
 }
 
 

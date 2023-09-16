@@ -30,7 +30,7 @@ const VIEW_TEMPLATE = {
     {
       name: "no-wrap",
       tag: "span",
-      classList: ["urlbarView-no-wrap"],
+      classList: ["urlbarView-no-wrap", "urlbarView-overflowable"],
       children: [
         {
           name: "icon",
@@ -40,7 +40,7 @@ const VIEW_TEMPLATE = {
         {
           name: "search",
           tag: "span",
-          classList: ["urlbarView-title"],
+          classList: ["urlbarView-title", "urlbarView-overflowable"],
         },
         {
           name: "separator",
