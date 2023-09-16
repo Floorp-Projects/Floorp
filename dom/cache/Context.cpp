@@ -49,7 +49,6 @@ namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::DirectoryLock;
-using mozilla::dom::quota::OpenDirectoryListener;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -92,8 +91,7 @@ class Context::Data final : public Action::Data {
 // Executed to perform the complicated dance of steps necessary to initialize
 // the QuotaManager.  This must be performed for each origin before any disk
 // IO occurrs.
-class Context::QuotaInitRunnable final : public nsIRunnable,
-                                         public OpenDirectoryListener {
+class Context::QuotaInitRunnable final : public nsIRunnable {
  public:
   QuotaInitRunnable(SafeRefPtr<Context> aContext, SafeRefPtr<Manager> aManager,
                     Data* aData, nsISerialEventTarget* aTarget,
@@ -142,10 +140,9 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
     mInitAction->CancelOnInitiatingThread();
   }
 
-  // OpenDirectoryListener methods
-  virtual void DirectoryLockAcquired(DirectoryLock* aLock) override;
+  void DirectoryLockAcquired(DirectoryLock* aLock);
 
-  virtual void DirectoryLockFailed() override;
+  void DirectoryLockFailed();
 
  private:
   class SyncResolver final : public Action::Resolver {
@@ -369,16 +366,21 @@ Context::QuotaInitRunnable::Run() {
 
       mDirectoryMetadata.emplace(std::move(principalMetadata));
 
-      // Open directory
-      RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
-          {*mDirectoryMetadata, quota::Client::DOMCACHE},
-          /* aExclusive */ false);
-
-      // DirectoryLock::Acquire() will hold a reference to us as a listener. We
-      // will then get DirectoryLockAcquired() on the owning thread when it is
-      // safe to access our storage directory.
       mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
-      directoryLock->Acquire(this);
+
+      quotaManager
+          ->OpenClientDirectory({*mDirectoryMetadata, quota::Client::DOMCACHE})
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              [self = RefPtr(this)](
+                  const quota::ClientDirectoryLockPromise::ResolveOrRejectValue&
+                      aValue) {
+                if (aValue.IsResolve()) {
+                  self->DirectoryLockAcquired(aValue.ResolveValue());
+                } else {
+                  self->DirectoryLockFailed();
+                }
+              });
 
       break;
     }
@@ -393,9 +395,6 @@ Context::QuotaInitRunnable::Run() {
 
         QuotaManager* quotaManager = QuotaManager::Get();
         MOZ_DIAGNOSTIC_ASSERT(quotaManager);
-
-        QM_TRY(
-            MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
 
         QM_TRY(
             MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
