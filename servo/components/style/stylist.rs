@@ -8,7 +8,7 @@ use crate::applicable_declarations::{
     ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
 };
 use crate::context::{CascadeInputs, QuirksMode};
-use crate::dom::TElement;
+use crate::dom::{TElement, TShadowRoot};
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
 use crate::invalidation::element::invalidation_map::{
@@ -23,7 +23,7 @@ use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting}
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
-use crate::rule_collector::RuleCollector;
+use crate::rule_collector::{containing_shadow_ignoring_svg_use, RuleCollector};
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, SelectorMap, SelectorMapEntry};
 use crate::selector_parser::{PerPseudoElementMap, PseudoElement, SelectorImpl, SnapshotMap};
@@ -1380,25 +1380,42 @@ impl Stylist {
             };
         }
 
-        // NOTE(emilio): This is a best-effort thing, the right fix is a bit TBD because it
-        // involves "recording" which tree the name came from, see [1][2].
+        // NOTE(emilio): We implement basically what Blink does for this case,
+        // which is [1] as of this writing.
         //
-        // [1]: https://github.com/w3c/csswg-drafts/issues/1995
-        // [2]: https://bugzil.la/1458189
-        let mut animation = None;
-        let doc_rules_apply = element.each_applicable_non_document_style_rule_data(|data, _host| {
-            if animation.is_none() {
-                animation = data.animations.get(name);
+        // See [2] for the spec discussion about what to do about this. WebKit's
+        // behavior makes a bit more sense off-hand, but it's way more complex
+        // to implement, and it makes value computation having to thread around
+        // the cascade level, which is not great. Also, it breaks if you inherit
+        // animation-name from an element in a different tree.
+        //
+        // See [3] for the bug to implement whatever gets resolved, and related
+        // bugs for a bit more context.
+        //
+        // FIXME(emilio): This should probably work for pseudo-elements (i.e.,
+        // use rule_hash_target().shadow_root() instead of
+        // element.shadow_root()).
+        //
+        // [1]: https://cs.chromium.org/chromium/src/third_party/blink/renderer/
+        //        core/css/resolver/style_resolver.cc?l=1267&rcl=90f9f8680ebb4a87d177f3b0833372ae4e0c88d8
+        // [2]: https://github.com/w3c/csswg-drafts/issues/1995
+        // [3]: https://bugzil.la/1458189
+        if let Some(shadow) = element.shadow_root() {
+            if let Some(data) = shadow.style_data() {
+                try_find_in!(data);
             }
-        });
-
-        if animation.is_some() {
-            return animation;
         }
 
-        if doc_rules_apply {
+        // Use the same rules to look for the containing host as we do for rule
+        // collection.
+        if let Some(shadow) = containing_shadow_ignoring_svg_use(element) {
+            if let Some(data) = shadow.style_data() {
+                try_find_in!(data);
+            }
+        } else {
             try_find_in!(self.cascade_data.author);
         }
+
         try_find_in!(self.cascade_data.user);
         try_find_in!(self.cascade_data.user_agent.cascade_data);
 
