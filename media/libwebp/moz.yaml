@@ -18,8 +18,8 @@ origin:
   license-file: COPYING
 
 updatebot:
-  maintainer-phab: aosmond
-  maintainer-bz: aosmond@mozilla.com
+  maintainer-phab: tnikkel
+  maintainer-bz: tnikkel@gmail.com
   tasks:
     - type: vendoring
       enabled: True
