@@ -117,7 +117,12 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
 
   mConfig.reset(new dom::GPUCanvasConfiguration(aConfig));
   mRemoteTextureOwnerId = Some(layers::RemoteTextureOwnerId::GetNext());
+  mUseExternalTextureInSwapChain =
+      wgpu_client_use_external_texture_in_swapChain(
+          aConfig.mDevice->mId,
+          WebGPUChild::ConvertTextureFormat(aConfig.mFormat));
   mTexture = aConfig.mDevice->InitSwapChain(aConfig, *mRemoteTextureOwnerId,
+                                            mUseExternalTextureInSwapChain,
                                             mGfxFormat, mCanvasSize);
   if (!mTexture) {
     Unconfigure();
