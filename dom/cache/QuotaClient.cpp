@@ -45,7 +45,9 @@ Result<UsageInfo, nsresult> ReduceUsageInfo(nsIFile& aDir,
       aDir, aCanceled, UsageInfo{},
       [&aStepFunc](UsageInfo usageInfo, const nsCOMPtr<nsIFile>& bodyDir)
           -> Result<UsageInfo, nsresult> {
-        QM_TRY(OkIf(!QuotaManager::IsShuttingDown()), Err(NS_ERROR_ABORT));
+        QM_TRY(OkIf(!QuotaManager::IsShuttingDown()).mapErr([](const auto&) {
+          return NS_ERROR_ABORT;
+        }));
 
         QM_TRY_INSPECT(const auto& stepUsageInfo, aStepFunc(bodyDir));
 
