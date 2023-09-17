@@ -4663,11 +4663,6 @@
   value: true
   mirror: always
 
-- name: dom.window.sidebar.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether Window.sizeToContent() is enabled.
 - name: dom.window.sizeToContent.enabled
   type: bool

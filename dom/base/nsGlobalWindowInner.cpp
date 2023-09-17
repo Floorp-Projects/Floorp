@@ -7309,20 +7309,6 @@ External* nsGlobalWindowInner::External() {
   return mExternal;
 }
 
-void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult) {
-  // First check for a named frame named "sidebar"
-  RefPtr<BrowsingContext> domWindow = GetChildWindow(u"sidebar"_ns);
-  if (domWindow) {
-    aResult.SetAsWindowProxy() = std::move(domWindow);
-    return;
-  }
-
-  RefPtr<dom::External> external = External();
-  if (external) {
-    aResult.SetAsExternal() = external;
-  }
-}
-
 void nsGlobalWindowInner::ClearDocumentDependentSlots(JSContext* aCx) {
   // If JSAPI OOMs here, there is basically nothing we can do to recover safely.
   if (!Window_Binding::ClearCachedDocumentValue(aCx, this) ||
