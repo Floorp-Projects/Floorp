@@ -142,6 +142,7 @@ pref("floorp.browser.workspace.changeWorkspaceWithDefaultKey", true);
 pref("floorp.browser.workspace.manageOnBMS", false);
 pref("floorp.browser.workspace.showWorkspaceName", true);
 pref("floorp.browser.workspace.backuped", false);
+pref("floorp.browser.workspace.container.userContextId", 0);
 //temp
 pref("floorp.browser.workspaces.disabledBySystem", true);
 

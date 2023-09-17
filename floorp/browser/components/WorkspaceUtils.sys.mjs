@@ -17,6 +17,7 @@ export const workspacesPreferences = {
     WORKSPACE_INFO_PREF: "floorp.browser.workspace.info",
     WORKSPACE_BACKUPED_PREF: "floorp.browser.workspace.backuped",
     WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF: "floorp.browser.workspace.changeWorkspaceWithDefaultKey",
+    WORKSPACE_CONTAINER_USERCONTEXTID_PREF: "floorp.browser.workspace.container.userContextId",
 };
 
 export const defaultWorkspaceName = Services.prefs.getStringPref(

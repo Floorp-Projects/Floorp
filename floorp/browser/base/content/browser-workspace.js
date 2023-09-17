@@ -754,6 +754,10 @@ const workspaceFunctions = {
 
     changeWorkspace(label) {
       let tabs = gBrowser.tabs;
+      
+      if (Services.prefs.getIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF) != workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label)) {
+        Services.prefs.setIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF, workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label));
+      }
 
       Services.prefs.setStringPref(
         WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
@@ -864,10 +868,15 @@ const workspaceFunctions = {
       ).style.listStyleImage = `url(${iconURL})`;
     },
 
-    addIconToWorkspace(workspaceName, iconName) {
+    addIconToWorkspace(workspaceName, iconName, containerName) {
+      // TODO: Change function name to addWorkspaceInfo.
+      // This function is used to add workspace info to WORKSPACE_INFO_PREF.
+
       if (workspaceName.wrappedJSObject) {
-        iconName = workspaceName.wrappedJSObject.icon;
-        workspaceName = workspaceName.wrappedJSObject.name;
+        let workspaceObj = workspaceName.wrappedJSObject;
+        iconName = workspaceObj.icon;
+        workspaceName = workspaceObj.name;
+        containerName = workspaceObj.container;
       }
 
       let settings = JSON.parse(
@@ -900,11 +909,13 @@ const workspaceFunctions = {
         settingObject = {
           [workspaceName]: {
             icon: iconURL,
+            container: containerName,
           },
         };
         settings.push(settingObject);
       } else {
         settings[targetWorkspaceNumber][workspaceName].icon = iconURL;
+        settings[targetWorkspaceNumber][workspaceName].container = containerName;
       }
 
       Services.prefs.setStringPref(
@@ -914,6 +925,7 @@ const workspaceFunctions = {
 
       //rebuild workspace menu
       workspaceFunctions.manageWorkspaceFunctions.rebuildWorkspaceMenu();
+      workspaceFunctions.manageWorkspaceFunctions.changeWorkspace(Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF));
     },
   },
 
@@ -988,6 +1000,29 @@ const workspaceFunctions = {
           object
         );
       }
+    },
+  },
+
+  containerFunctions: {
+    getWorkspaceUserContextId(workspaceName) {
+      const settings = JSON.parse(
+        Services.prefs.getStringPref(
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF
+        )
+      );
+      const targetWorkspaceNumber =
+        workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
+          workspaceName
+        );
+      if (
+        targetWorkspaceNumber === false ||
+        settings[targetWorkspaceNumber][workspaceName].container == "" ||
+        settings[targetWorkspaceNumber][workspaceName].container == undefined
+      ) {
+        // return string "0".
+        return 0;
+      }
+      return Number(settings[targetWorkspaceNumber][workspaceName].container);
     },
   },
 
@@ -1206,7 +1241,7 @@ const workspaceFunctions = {
                 oncommand="workspaceFunctions.manageWorkspaceFunctions.renameWorkspace('${e.explicitOriginalTarget.getAttribute(
                   "workspace"
                 )}')"/>
-      <menuitem class="workspace-icon-context" id="workspace-item-context-icon-change-icon" data-l10n-id="workspace-select-icon"
+      <menuitem class="workspace-icon-context" id="workspace-item-context-icon-change-icon" data-l10n-id="manage-workspace"
                 oncommand="workspaceFunctions.iconFunctions.setWorkspaceFromPrompt('${e.explicitOriginalTarget.getAttribute(
                   "workspace"
                 )}')"/>

@@ -39,6 +39,7 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
   let _OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
     "floorp.browser.tabs.openNewTabPosition"
   );
+  let workspaceEnabled = Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF, false);
 
   switch (_OPEN_NEW_TAB_POSITION_PREF) {
     case 0:
@@ -83,6 +84,7 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
         openTrustedLinkIn(url, where, {
           relatedToCurrent,
           resolveOnNewTabCreated: resolve,
+          userContextId: workspaceEnabled ? Services.prefs.getIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF) : 0,
         });
       }),
     },

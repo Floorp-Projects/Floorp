@@ -7,6 +7,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { ContextualIdentityService } = ChromeUtils.importESModule(
+  "resource://gre/modules/ContextualIdentityService.sys.mjs"
+);
+
 const WorkspaceUtils = ChromeUtils.importESModule(
   "resource:///modules/WorkspaceUtils.sys.mjs"
 );
@@ -24,7 +28,7 @@ function setTitle() {
  }
  setTitle();
   
-  function onLoad() {
+  async function onLoad() {
     const workspaces = Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF).split(",");
 
     const workspaceSelect = document.getElementById("workspacesPopup");
@@ -59,14 +63,38 @@ function setTitle() {
     }
     iconNameLabel.value = "fingerprint";
 
+    // container
+    const containerSelect = document.getElementById("workspacesContainerSelectPopup");
+    const containerNameLabel = document.getElementById("containerName");
+    const currentContainers = ContextualIdentityService.getPublicIdentities();
+
+    for (let container of currentContainers) {
+      const element = window.MozXULElement.parseXULToFragment(`
+        <menuitem label="${container.name}" value="${container.userContextId}"></menuitem>
+      `);
+
+      if (container.l10nID) {
+        let labelName = ContextualIdentityService.getUserContextLabel(container.userContextId);
+        element.firstElementChild.setAttribute("label", labelName);
+      }
+      
+      containerSelect.appendChild(element);
+    }
+
+    const noContainer = window.MozXULElement.parseXULToFragment(`
+      <menuitem label="No Container" value="0"></menuitem>
+    `);
+    containerSelect.appendChild(noContainer);
+    containerNameLabel.value = "0";
+
     document.addEventListener("dialogaccept", setPref);
-  }
-  
+  }  
   
   function setPref() {
     const workspaceNameLabel = document.getElementById("workspaceName").value.replace(/\s+/g, "-")
     const iconNameLabel = document.getElementById("iconName").value;
+    const containerNameLabel = document.getElementById("containerName").value;
 
     // Return object with workspace name and icon name
-    Services.obs.notifyObservers({ name: workspaceNameLabel, icon: iconNameLabel }, "addIconToWorkspace");
+    Services.obs.notifyObservers({ name: workspaceNameLabel, icon: iconNameLabel, container: containerNameLabel }, "addIconToWorkspace");
   }
