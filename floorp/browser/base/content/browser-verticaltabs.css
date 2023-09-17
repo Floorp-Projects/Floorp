@@ -16,6 +16,9 @@
      min-width: -moz-available !important;
      max-width: -moz-available !important;
      height: 100% !important;
+   }
+
+   #toolbar-items-verticaltabs:-moz-lwtheme {
      background-color: var(--lwt-accent-color);
      background-image: var(--lwt-additional-images);
      background-repeat: no-repeat, no-repeat, no-repeat;
