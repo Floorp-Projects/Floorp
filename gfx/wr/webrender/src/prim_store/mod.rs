@@ -9,6 +9,7 @@ use api::{PrimitiveKeyKind, FillRule, POLYGON_CLIP_VERTEX_MAX};
 use api::units::*;
 use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
+use crate::composite::CompositorSurfaceKind;
 use crate::clip::ClipLeafId;
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
@@ -1002,13 +1003,13 @@ pub enum PrimitiveInstanceKind {
         /// Handle to the common interned data for this primitive.
         data_handle: YuvImageDataHandle,
         segment_instance_index: SegmentInstanceIndex,
-        is_compositor_surface: bool,
+        compositor_surface_kind: CompositorSurfaceKind,
     },
     Image {
         /// Handle to the common interned data for this primitive.
         data_handle: ImageDataHandle,
         image_instance_index: ImageInstanceIndex,
-        is_compositor_surface: bool,
+        compositor_surface_kind: CompositorSurfaceKind,
     },
     /// Always rendered directly into the picture. This tends to be
     /// faster with SWGL.
