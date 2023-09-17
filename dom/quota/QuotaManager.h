@@ -258,6 +258,13 @@ class QuotaManager final : public BackgroundThreadObject {
 
   Result<OriginMetadata, nsresult> GetOriginMetadata(nsIFile* aDirectory);
 
+  RefPtr<UniversalDirectoryLockPromise> OpenStorageDirectory(
+      const Nullable<PersistenceType>& aPersistenceType,
+      const OriginScope& aOriginScope,
+      const Nullable<Client::Type>& aClientType, bool aExclusive,
+      Maybe<RefPtr<UniversalDirectoryLock>&> aPendingDirectoryLockOut =
+          Nothing());
+
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
   // centralized quota and storage handling should call this method to get

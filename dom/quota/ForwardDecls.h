@@ -50,9 +50,12 @@ using BoolResponseResolver = std::function<void(const BoolResponse&)>;
 namespace dom::quota {
 
 class ClientDirectoryLock;
+class UniversalDirectoryLock;
 
 using ClientDirectoryLockPromise =
     MozPromise<RefPtr<ClientDirectoryLock>, nsresult, true>;
+using UniversalDirectoryLockPromise =
+    MozPromise<RefPtr<UniversalDirectoryLock>, nsresult, true>;
 
 }  // namespace dom::quota
 
