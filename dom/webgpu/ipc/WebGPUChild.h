@@ -67,7 +67,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RawId DeviceCreateBuffer(RawId aSelfId, const dom::GPUBufferDescriptor& aDesc,
                            ipc::UnsafeSharedMemoryHandle&& aShmem);
   RawId DeviceCreateTexture(RawId aSelfId,
-                            const dom::GPUTextureDescriptor& aDesc);
+                            const dom::GPUTextureDescriptor& aDesc,
+                            Maybe<layers::RemoteTextureOwnerId> aOwnerId);
   RawId TextureCreateView(RawId aSelfId, RawId aDeviceId,
                           const dom::GPUTextureViewDescriptor& aDesc);
   RawId DeviceCreateSampler(RawId aSelfId,
@@ -105,7 +106,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
-                             const layers::RemoteTextureOwnerId& aOwnerId);
+                             const layers::RemoteTextureOwnerId& aOwnerId,
+                             bool aUseExternalTextureInSwapChain);
 
   void QueueOnSubmittedWorkDone(const RawId aSelfId,
                                 const RefPtr<dom::Promise>& aPromise);
