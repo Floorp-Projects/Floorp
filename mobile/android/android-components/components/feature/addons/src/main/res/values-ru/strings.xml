@@ -179,7 +179,7 @@
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error">Это дополнение не может быть установлено, так как оно не было проверено.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
-    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s не удалось установить, поскольку оно несовместимо с %2$s %3$s.</string>
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Не удалось установить %1$s, поскольку оно несовместимо с %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s не может быть установлено, так как есть высокий риск, что оно вызовет проблемы со стабильностью или безопасностью.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->

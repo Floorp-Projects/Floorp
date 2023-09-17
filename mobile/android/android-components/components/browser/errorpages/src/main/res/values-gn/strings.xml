@@ -68,7 +68,7 @@
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Pe kundahára oike hekopete, hákatu osẽ ñandutígui ombahasakuévo marandu. Eha’ãjey.</p>
       <ul>
-        <li>Pe tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</li>
+        <li>Pe tenda ikatu ndoikói sapy’ami térã ojeporueterei. Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúiramo emyanyhẽ kuatiarogue, ehecha oikópa nde wifi térã mba’ekuaarã ne pumbyry pegua.</li>
       </ul>]]></string>
 
@@ -78,7 +78,7 @@
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Pe tenda ejeruréva nombohovái pe jerure jeike rehegua ha pe kundahára noha’ãrõvéima ñembohovái.</p>
       <ul>
-        <li>¿Ikatu pe mohendahavusu ojepurueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.</li>
+        <li>¿Ikatu pe mohendahavusu ojeporueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúi eikundaha ambue tenda rupi? Ehechajey ne mohendaha oĩpa ñandutípe.</li>
         <li>Ne ñanduti térã ne mohendaha omo’ã chupe peteĩ firewall térã proxy? Peteĩ ñemboheko oiko’ỹva ikatu omboykese ne ñekundaha ñandutípe.</li>
         <li>Oĩ gueteri apañuãi? Eporandu ne ñanduti ñangarekohára térã ne ñanduti me’ẽhárape nepytyvõ hag̃ua.</li>
@@ -89,7 +89,7 @@
 
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-        <li>Tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃ave.</li>
+        <li>Tenda ikatu ndoikói sapy’ami térã ojeporueterei. Eha’ãjey ag̃ave.</li>
         <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehechajey oĩpa wifi térã mba’ekuaarã ne mba’e’oka oku’éva rehegua.</li>
       </ul>]]></string>
 
@@ -131,7 +131,7 @@
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Pe juajuha ñandutigua ndoikói oñeñe’ẽ aja jeikerã rehe. Eha’ãjey ag̃ave.</p>
       <ul>
-        <li>Pe tenda ikatu ndoikói hína sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</li>
+        <li>Pe tenda ikatu ndoikói hína sapy’ami térã ojeporueterei. Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehecha oikópa nde Wi-Fi térã mba’ekuaarã ne pumbyry pegua.</li>
       </ul>]]></string>
 

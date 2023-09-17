@@ -66,6 +66,14 @@
        Ceste myty wó priwatnem modusu
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Na toś tom rěźe žedne slědy njezawóstajiś</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s waše cookieje, historiju a sedłowe daty wulašujo, gaž wšykne swóje priwatne wokna zacynjaśo. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -92,6 +100,11 @@
     <string name="tcp_cfr_message">Naša nejmóčnjejša funkcija priwatnosći sedła pśesegujuce pśeslědowaki izolěrujo.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Zgóńśo wěcej wó dopołnem šćiśe pśed cookiejami</string>
+
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Pótusniśo how, aby nowe priwatne pósejźenje startował. Lašujśo swóju historiju, swóje cookieje – wšykno.</string>
 
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
@@ -355,6 +368,12 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Nic něnto</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Wopytajśo pytański asistent Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Z Firefox na swójej startowej wobrazowce maśo lažki pśistup k wobglědowakoju, za kótaryž priwatnosć jo na prědnem městnje, kótaryž sedła pśesegajuce pśeslědowaki blokěrujo.</string>
     <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Asistent Firefox pśidaś</string>
@@ -2171,6 +2190,8 @@
     <string name="review_quality_check_feature_name">Kontrola pógódnośenjow</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Spušćobne pógódnośenja</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Měšańca ze spušćobnych a njespušćobnych pógódnośenjow</string>
     <!-- Summary for grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_d_f_description">Njespušćobne pógódnośenja</string>
     <!-- Text for title presenting the reliability of a product's reviews. -->
@@ -2179,14 +2200,35 @@
     <string name="review_quality_check_adjusted_rating_title">Pśměrjone pógódnośowanje</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description">Njespušćobne pógódnośenja wótwónoźone</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">Wjerški z nejnowšych pógódnośenjow</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Kak kwalitu pógódnośenja póstajamy</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Wužywamy technologiju KI z %s wót Mozilla, aby my spušćobnosć produktowych pógódnośenjow kontrolěrowali.
+To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produktow.</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Pśirědujomy pógódnośenjam kuždego produkta <b>pismikowu cenzuru</b> wót A do F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Spušćobne pógódnośenja. Myslimy se, až pógódnośenja su nejskerjej wót wopšawdnych kupcow, kótarež su zawóstajili spšawne, bźezpśedsudkowe pógódnośenja.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Wěrimy, až dajo měšańcu spušćobnych a njespušćobnych pógódnośenjow.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Njespušćobne pógódnośenja. Myslimy se, až pógódnośenja su nejskerjej sfalšowane abo wót pógódnośujucych z pśedsudkami.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Pśiměrjone pógódnośowanje</b> jano na pógódnośenjach bazěrujo, kótarež mamy za spušćobne.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Wjerški</b> su z pógódnośenjow %s w běgu slědnych 80 dnjow, kótarež mamy za spušćobne.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Zgóńśo wěcej wó %s.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">kak %s wót Mozilla kwalitu pógódnośenja póstaja</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Nastajenja</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Wabjenje w kontroli pógódnośenjow pokazaś</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Buźośo wótergi wabjenje za relewantne produkty wiźeś. Wšykne wabjeńske anonse muse našym standardam za kwalitu pógódnośenjow wótpowědowaś. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Dalšne informacije</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2195,33 +2237,73 @@
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Dalšne móžnosći</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Wabjenje wót %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Kontrola pógódnośenjow se wót %s spěchujo.</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Kontrola pógódnośenjow se wót %s spěchujo</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s wót Mozilla</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Nowe informacije, kótarež se maju pśeglědowaś</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Něnto kontrolěrowaś</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Hyšći njejo dosć pógódnośenjow</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Gaž toś ten produkt ma wěcej pógódnośenjow, móžomy jich kwalitu kontrolěrowaś.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Produkt njejo k dispoziciji</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Jolic wiźiśo, až toś ten produkt jo zasej na skłaźe, dajśo to k wěsći a buźomy na kontrolěrowanju pógódnośenjow źěłaś.</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">K wěsći daś, až toś ten produkt jo zasej na skłaźe</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pógódnośenjow</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pógódnośenjow</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">To mógło na 60 sekundow traś.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Wjeliki źěk za powěźeńku!</string>
 
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">My dejali w běgu 24 góźin informacije wó pógódnośenjach toś togo produkta měś. Pśiźćo pšosym mimo.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Njamóžomy toś te pógódnośenja pśeglědowaś</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Bóžko  njamóžomy kwalitu pógódnośenja za wěste produktowe typy kontrolěrowaś. Na pśikład za darjeńske kórty a tšugajuce wideo, muziku a graśa.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Informacije skóro pśidu</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">My dejali w běgu 24 góźin informacije wó pógódnośenjach toś togo produkta měś. Pśiźćo pšosym mimo.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Analyza jo aktualna</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Som zrozměł</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
     <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Tuchylu informacije njejsu k dispoziciji</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Źěłamy na rozwězanju toś togo problema. Pśiźćo pšosym skóro zasej mimo.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Žeden seśowy zwisk</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Pśeglědajśo swój seśowy zwisk a wopytajśo pón bok znowego zacytaś.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Hyšći žedne informacije wó toś tych pógódnośenjach</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Aby zgónił, lěc pógódnośenja toś togo produkta su spušćobne, kontrolěrujśo kwalitu pógódnośenjow. Trajo jano na 60 sekundow.</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Kwalitu pógódnośenjow kontrolěrowaś</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Cytajśo naš dowěry gódny pśewodnik wó pógódnośenjach produktow</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Glědajśo, kak spušćobne pógódnośenja produktow na %1$s su, nježli až produkty kupujośo. Kontrola pógódnośenjow, eksperimentalna funkcija z %2$s, jo direktnje do wobglědowaka zatwarjona. Funkcioněrujo teke na %3$s a %4$s.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Z pomocu potenciala %1$s wót Mozilla, pomagamy wam, se njeawtentiskich pógódnośenjow a pógódnośenjow połnych pśedsudkow wobinuś. Naš model KI se stawnje pólěpšujo, aby was šćitał, gaž nakupujośo. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Dalšne informacije</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">Gaž „Jo, wopytaś“ wuběraśo, zwólijośo do %2$s a %3$s Mozilla za %1$s. </string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">pšawidła priwatnosći</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2230,12 +2312,20 @@
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Jo, wopytaś</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Nic něnto</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Wuslěźćo, lěc móžośo pógódnośenjam toś togo produkta dowěriś – nježli až jen kupujośo.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Kontrolu pógódnośenjow wopytaś</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Su toś te pógódnośenja spušćobne? Kontrolěrujśo to něnto, aby pśiměrjone pógódnośowanje wiźeł.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Kontrolu pógódnośenjow wócyniś</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check">Kontrolu kwality pógódnośenjow wócyniś</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="browser_menu_review_quality_check_close">Kontrolu kwality pógódnośenjow zacyniś</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s z 5 gwězdkow</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

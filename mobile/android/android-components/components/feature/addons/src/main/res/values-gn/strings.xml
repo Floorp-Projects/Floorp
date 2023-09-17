@@ -53,7 +53,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Eike kundahára rembiasakuépe</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Ema’ẽag̃ui jepysokue jepuru ha téma ñangareko rehe</string>
+    <string name="mozac_feature_addons_permissions_management_description">Ema’ẽag̃ui jepysokue jeporu ha téma ñangareko rehe</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Embojopyru ñe’ẽmondo ambue tembiporu’i ndive</string>
     <!-- Description for notifications permission. -->
@@ -103,7 +103,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Ndojokupytýi gueteri</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
-    <string name="mozac_feature_addons_unavailable_section">Ndojepurukuaái gueteri</string>
+    <string name="mozac_feature_addons_unavailable_section">Ndojeporukuaái gueteri</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Jepe’apyre</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -147,9 +147,9 @@
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_supported_checker_notification_channel">Tembiporu’i ojokupytýva rechajeyha</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title">Tembiporu’i pyahu ojepurukuaámava</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title">Tembiporu’i pyahu ojeporukuaámava</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Tembiporu’i pyahu ojepurukuaámava</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Tembiporu’i pyahu ojeporukuaámava</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Embojuaju %1$s %2$s rehe</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
@@ -172,6 +172,16 @@
     <string name="mozac_feature_addons_failed_to_install">%1$s ojavy emohendakuévo</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">Ndoikói ko tembipuru’i ñemohenda.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Ko moĩmbaha ndaikatúi oñemboguejy oĩ rupi jejavy jeikekatúpe.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Ko moĩmbaha ndaikatúi oñemohenda noĩporãmbái rupi.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Ko moĩmbaha ndaikatúi oñemohenda ndojehechajeýi rupi.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ndaikatúi oñemohenda ndojokupytýi rupi %2$s %3$s ndive.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s ndaikatúi oñemohenda omoapañuãi rupi tuichaháicha tekopyta térã tekorosã</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ndaikatúi oñemohenda omoapañuãi kuaágui tekopyta térã tekorosãrã</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

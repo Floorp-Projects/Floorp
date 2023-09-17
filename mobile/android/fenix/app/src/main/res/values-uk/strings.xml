@@ -2250,7 +2250,9 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Реклама від %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">Засіб перевірки відгуків розроблено %s.</string>
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Засіб перевірки відгуків розроблено %s.</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Засіб перевірки відгуків від %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s від Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2285,6 +2287,8 @@
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Інформація незабаром надійде</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Оновлені результати мають з’явитися впродовж 24 годин. Перевірте знову пізніше.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Аналіз актуальний</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Зрозуміло</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
@@ -2303,6 +2307,8 @@
     <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Перевірити якість відгуку</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Спробуйте наш надійний путівник відгуками про товари</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Дізнайтеся чи надійні відгуки про товар, перед купівлею в %1$s. Перевірка відгуків — вбудована у браузер експериментальна функція від %2$s. Вона також працює на %3$s і %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Використовуючи можливості %1$s від Mozilla, ми допомагаємо вам уникнути упереджених і несправжніх відгуків. Наша модель ШІ постійно вдосконалюється, щоб захистити вас під час покупок. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->

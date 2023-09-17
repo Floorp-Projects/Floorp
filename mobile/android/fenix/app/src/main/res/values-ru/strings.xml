@@ -686,7 +686,7 @@
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Одно или несколько дополнений перестали работать, что сделало вашу систему нестабильной. %1$s безуспешно пытался перезапустить дополнения.\n\nДополнения не будут перезапущены во время текущего сеанса.\n\nУдаление или отключение дополнений может решить эту проблему.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Попробуйте перезапустить дополнения</string>
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Попробовать перезапустить дополнения</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Продолжить с отключенными дополнениями</string>
 
@@ -2244,7 +2244,7 @@
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Скорректированная оценка</b> основана только на отзывах, которые мы считаем достоверными.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Основные сведения</b> взяты из отзывов %s за последние 80 дней, которые мы считаем надежными.]]></string>
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Основные сведения</b> взяты из отзывов на %s за последние 80 дней, которые мы считаем надежными.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Узнайте больше о %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2264,9 +2264,9 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Реклама от %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Инструмент проверки отзывов работает на %s.</string>
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Инструмент проверки отзывов разработан %s.</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by_2">Инструмент проверки отзывов работает на %s</string>
+    <string name="review_quality_check_powered_by_2">Инструмент проверки отзывов разработан %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s от Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2284,23 +2284,23 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Сообщить, что этот товар снова в наличии</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Проверяем качество обзора</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Проверяем качество отзывов</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Проверяем качество обзора</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Проверяем качество отзывов</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Это может занять около 60 секунд.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Спасибо за сообщение!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Мы должны получить информацию об отзывах об этом продукте в течение 24 часов. Пожалуйста, зайдите позже.</string>
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Мы должны получить информацию об отзывах на этот продукт в течение 24 часов. Пожалуйста, зайдите позже.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Мы не можем проверить эти отзывы</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">К сожалению, мы не можем проверить качество отзывов по некоторым видам товаров. Например, подарочные карты и потоковое видео, музыку и игры.</string>
+    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">К сожалению, мы не можем проверить качество отзывов на некоторые виды товаров. Например, подарочные карты и потоковое видео, музыку и игры.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Информация скоро появится</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Мы должны получить информацию об отзывах об этом продукте в течение 24 часов. Пожалуйста, зайдите позже.</string>
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Мы должны получить информацию об отзывах на этот продукт в течение 24 часов. Пожалуйста, зайдите позже.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Анализ актуален</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
@@ -2316,21 +2316,21 @@
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Информации об этих отзывах пока нет</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Чтобы узнать, достоверны ли отзывы об этом продукте, проверьте качество обзора. Это займет всего около 60 секунд.</string>
+    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Чтобы узнать, достоверны ли отзывы на этот продукт, проверьте качество отзывов. Это займет всего около 60 секунд.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Проверить качество обзора</string>
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Проверить качество отзывов</string>
     <!-- Headline for review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_title">Оцените наше руководство по достоверности обзоров продуктов</string>
+    <string name="review_quality_check_contextual_onboarding_title">Оцените наше руководство по достоверности отзывов на продукты</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">Прежде чем купить, посмотрите, насколько надежны отзывы о продуктах на %1$s. Проверка отзывов — экспериментальная функция от %2$s — встроена прямо в браузер. Она также работает на %3$s и %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_description">Прежде чем купить, посмотрите, насколько достоверны отзывы о товаре на %1$s. Проверка отзывов — экспериментальная функция от %2$s — встроена прямо в браузер. Она также работает на %3$s и %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Используя возможности %1$s от Mozilla, мы помогаем вам избежать предвзятых и недостоверных отзывов. Наша модель искусственного интеллекта постоянно совершенствуется, чтобы защитить вас во время покупок. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Узнать больше</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Выбрав «Да, попробовать», вы соглашаетесь с %1$s от Mozilla %2$s и %3$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption">Выбрав «Да, попробовать», вы соглашаетесь с %1$s принимая %2$s и %3$s от Mozilla.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">политика приватности</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">политику приватности</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">условия использования</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
@@ -2349,9 +2349,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Бета</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Открыть проверку качества обзора</string>
+    <string name="browser_menu_review_quality_check">Открыть проверку качества отзывов</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Закрыть проверку качества обзора</string>
+    <string name="browser_menu_review_quality_check_close">Закрыть проверку качества отзывов</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s из 5 звезд</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

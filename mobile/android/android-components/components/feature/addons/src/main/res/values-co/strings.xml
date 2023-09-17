@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Cunsultà è mudificà e preferenze di vita privata</string>
     <!-- Description for all_urls add-on permission. -->
@@ -170,8 +170,20 @@
     <string name="mozac_feature_addons_successfully_installed">Installazione riesciuta di %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Fiascu di l’installazione di %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Fiascu per installà stu modulu addiziunale.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Stu modulu addiziunale ùn pò micca esse scaricatu per via d’un fiascu di cunnessione.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Stu modulu addiziunale ùn pò micca esse installatu perchè pare deteriuratu.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Stu modulu addiziunale ùn pò micca esse installatu perchè ùn hè micca statu verificatu.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ùn pò micca esse installatu perchè ùn hè micca cumpatibile cù %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">%1$s ùn pò micca esse installatu perchè hà un risicu maiò di cagiunà prublemi d’istabilità o di sicurità</string>
+    <string name="mozac_feature_addons_blocklisted_1">%1$s ùn pò micca esse installatu perchè ci hè un risicu tamantu di cagiunà prublemi di stabilità o di sicurità.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ùn pò micca esse installatu perchè hà un risicu maiò di cagiunà prublemi d’istabilità o di sicurità</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Attivazione riesciuta di %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
