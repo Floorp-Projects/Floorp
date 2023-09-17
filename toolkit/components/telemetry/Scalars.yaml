@@ -1635,13 +1635,14 @@ extensions.apis.dnr:
   startup_cache_entries:
     bug_numbers:
       - 1803363
+      - 1850890
     description: >
       Counters for startup cache data hits or misses on initializating
       DNR rules for extensions loaded on application startup.
       The expected keys are 'hit' and 'miss'.
       This probe is mirrored from a Glean metric with the same name.
     keyed: true
-    expires: '120'
+    expires: '126'
     kind: uint
     notification_emails:
       - addons-dev-internal@mozilla.com
@@ -1652,9 +1653,10 @@ extensions.apis.dnr:
   evaluate_rules_count_max:
     bug_numbers:
       - 1803363
+      - 1850890
     description: >
       Max amount of DNR rules being evaluated.
-    expires: '120'
+    expires: '126'
     kind: uint
     notification_emails:
       - addons-dev-internal@mozilla.com
