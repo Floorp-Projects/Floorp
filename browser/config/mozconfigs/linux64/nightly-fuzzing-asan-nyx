@@ -15,6 +15,7 @@ MOZ_REQUIRE_SIGNING=
 ac_add_options --enable-valgrind
 
 . $topsrcdir/build/unix/mozconfig.asan
+ac_add_options --disable-elf-hack
 
 # Enable ASan for rust code. This is done for specific build tasks rather than
 # globally in mozconfig.asan because it requires an unstable -Z flag.
