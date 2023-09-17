@@ -577,13 +577,6 @@ partial interface Window {
 };
 #endif
 
-// Mozilla extension
-// Sidebar is deprecated and it will be removed in the next cycles. See bug 1640138.
-partial interface Window {
-  [Replaceable, UseCounter, Pref="dom.window.sidebar.enabled"]
-  readonly attribute (External or WindowProxy) sidebar;
-};
-
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PromiseDocumentFlushedCallback = any ();
 
