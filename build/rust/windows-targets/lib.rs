@@ -13,8 +13,8 @@ use syn::{parse_macro_input, Attribute, LitStr, Signature};
  * ```
  * macro_rules! link {
  *    ($library:literal $abi:literal $($link_name:literal)? $(#[$($doc:tt)*])* fn $name:ident($($arg:ident: $argty:ty),*)->$ret:ty) => (
- *        #[link(name = $library)]
  *        extern $abi {
+ *            #[link(name = $library)]
  *            $(#[link_name=$link_name])?
  *            pub fn $name($($arg: $argty),*) -> $ret;
  *        }
@@ -75,8 +75,8 @@ pub fn link(input: TokenStream) -> TokenStream {
     let library = library.strip_suffix(".dll").unwrap_or(&library);
 
     let generated = quote! {
-        #[link(name = #library)]
         extern #abi {
+            #[link(name = #library)]
             #link_name_attr
             pub #function;
         }
