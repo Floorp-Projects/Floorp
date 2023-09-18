@@ -206,21 +206,6 @@ class RTC_EXPORT RTCStats {
     return parent_class::MembersOfThisObjectAndAncestors(0);                \
   }
 
-// Non-standard stats members can be exposed to the JavaScript API in Chrome
-// e.g. through origin trials. The group ID can be used by the blink layer to
-// determine if a stats member should be exposed or not. Multiple non-standard
-// stats members can share the same group ID so that they are exposed together.
-enum class NonStandardGroupId {
-  // Group ID used for testing purposes only.
-  kGroupIdForTesting,
-  // I2E:
-  // https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
-  kRtcAudioJitterBufferMaxPackets,
-  // I2E:
-  // https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/YbhMyqLXXXo
-  kRtcStatsRelativePacketArrivalDelay,
-};
-
 // Certain stat members should only be exposed to the JavaScript API in
 // certain circumstances as to avoid passive fingerprinting.
 enum class StatExposureCriteria : uint8_t {
@@ -274,9 +259,6 @@ class RTCStatsMemberInterface {
   bool is_standardized() const {
     return exposure_criteria() != StatExposureCriteria::kNonStandard;
   }
-  // Non-standard stats members can have group IDs in order to be exposed in
-  // JavaScript through experiments. Standardized stats have no group IDs.
-  virtual std::vector<NonStandardGroupId> group_ids() const { return {}; }
   // The conditions for exposing the statistic to JavaScript. Stats with
   // criteria that is not kAlways has some restriction and should be filtered
   // in accordance to the spec.
@@ -512,22 +494,14 @@ class RTCNonStandardStatsMember
  public:
   explicit RTCNonStandardStatsMember(const char* name)
       : RTCRestrictedStatsBase(name) {}
-  RTCNonStandardStatsMember(const char* name,
-                            std::initializer_list<NonStandardGroupId> group_ids)
-      : RTCRestrictedStatsBase(name), group_ids_(group_ids) {}
   RTCNonStandardStatsMember(const char* name, const T& value)
       : RTCRestrictedStatsBase(name, value) {}
   RTCNonStandardStatsMember(const char* name, T&& value)
       : RTCRestrictedStatsBase(name, std::move(value)) {}
   RTCNonStandardStatsMember(const RTCNonStandardStatsMember<T>& other)
-      : RTCRestrictedStatsBase(other), group_ids_(other.group_ids_) {}
+      : RTCRestrictedStatsBase(other) {}
   RTCNonStandardStatsMember(RTCNonStandardStatsMember<T>&& other)
-      : RTCRestrictedStatsBase(std::move(other)),
-        group_ids_(std::move(other.group_ids_)) {}
-
-  std::vector<NonStandardGroupId> group_ids() const override {
-    return group_ids_;
-  }
+      : RTCRestrictedStatsBase(std::move(other)) {}
 
   T& operator=(const T& value) {
     return RTCRestrictedStatsMember<
@@ -541,7 +515,6 @@ class RTCNonStandardStatsMember
  private:
   using RTCRestrictedStatsBase =
       RTCRestrictedStatsMember<T, StatExposureCriteria::kNonStandard>;
-  std::vector<NonStandardGroupId> group_ids_;
 };
 
 extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
