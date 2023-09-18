@@ -98,6 +98,22 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
   return bounceTrackingState.forget();
 };
 
+void BounceTrackingState::ResetAll() {
+  if (!sBounceTrackingStates) {
+    return;
+  }
+  for (const RefPtr<BounceTrackingState>& bounceTrackingState :
+       sBounceTrackingStates->Values()) {
+    if (bounceTrackingState->mClientBounceDetectionTimeout) {
+      MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+              ("%s: mClientBounceDetectionTimeout->Cancel()", __FUNCTION__));
+      bounceTrackingState->mClientBounceDetectionTimeout->Cancel();
+      bounceTrackingState->mClientBounceDetectionTimeout = nullptr;
+    }
+    bounceTrackingState->ResetBounceTrackingRecord();
+  }
+}
+
 nsresult BounceTrackingState::Init(
     dom::BrowsingContextWebProgress* aWebProgress) {
   NS_ENSURE_ARG_POINTER(aWebProgress);

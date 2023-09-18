@@ -246,6 +246,8 @@ BounceTrackingProtection::GetUserActivationHosts(nsTArray<nsCString>& aHosts) {
 
 NS_IMETHODIMP
 BounceTrackingProtection::Reset() {
+  BounceTrackingState::ResetAll();
+
   mBounceTrackers.Clear();
   mUserActivation.Clear();
 
