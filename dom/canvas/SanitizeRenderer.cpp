@@ -275,44 +275,48 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 std::string SanitizeRenderer(const std::string& str) {
   std::smatch m;
 
-  // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0,
-  // D3D11-27.20.1020.2002)"
-  static const std::regex kReAngle(
-      "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
-  if (std::regex_match(str, m, kReAngle)) {
-    const auto& vendor = m.str(1);
-    const auto& renderer = m.str(2);
-    const auto& d3d_suffix = m.str(3);
+  const auto replacementDevice = [&]() {
+    // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0,
+    // D3D11-27.20.1020.2002)"
+    static const std::regex kReAngle(
+        "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
+    if (std::regex_match(str, m, kReAngle)) {
+      const auto& vendor = m.str(1);
+      const auto& renderer = m.str(2);
+      const auto& d3d_suffix = m.str(3);
 
-    const auto renderer2 = ChooseDeviceReplacement(renderer);
-    return std::string("ANGLE (") + vendor + ", " + renderer2 + d3d_suffix +
-           ")";
-  } else if (Contains(str, "ANGLE")) {
-    gfxCriticalError() << "Failed to parse ANGLE renderer: " << str;
-  }
+      const auto renderer2 = ChooseDeviceReplacement(renderer);
+      return std::string("ANGLE (") + vendor + ", " + renderer2 + d3d_suffix +
+            ")";
+    } else if (Contains(str, "ANGLE")) {
+      gfxCriticalError() << "Failed to parse ANGLE renderer: " << str;
+    }
 
-  static const std::regex kReOpenglEngine("(.*) OpenGL Engine");
-  static const std::regex kRePcieSse2("(.*)(/PCIe?/SSE2)");
-  static const std::regex kReStandard("(.*)( [(].*[)])");
-  if (std::regex_match(str, m, kReOpenglEngine)) {
-    const auto& dev = m.str(1);
+    static const std::regex kReOpenglEngine("(.*) OpenGL Engine");
+    static const std::regex kRePcieSse2("(.*)(/PCIe?/SSE2)");
+    static const std::regex kReStandard("(.*)( [(].*[)])");
+    if (std::regex_match(str, m, kReOpenglEngine)) {
+      const auto& dev = m.str(1);
+      const auto dev2 = ChooseDeviceReplacement(dev);
+      return dev2;
+    }
+    if (std::regex_match(str, m, kRePcieSse2)) {
+      const auto& dev = m.str(1);
+      const auto dev2 = ChooseDeviceReplacement(dev);
+      return dev2 + m.str(2);
+    }
+    if (std::regex_match(str, m, kReStandard)) {
+      const auto& dev = m.str(1);
+      const auto dev2 = ChooseDeviceReplacement(dev);
+      return dev2;
+    }
+
+    const auto& dev = str;
     const auto dev2 = ChooseDeviceReplacement(dev);
     return dev2;
-  }
-  if (std::regex_match(str, m, kRePcieSse2)) {
-    const auto& dev = m.str(1);
-    const auto dev2 = ChooseDeviceReplacement(dev);
-    return dev2 + m.str(2);
-  }
-  if (std::regex_match(str, m, kReStandard)) {
-    const auto& dev = m.str(1);
-    const auto dev2 = ChooseDeviceReplacement(dev);
-    return dev2;
-  }
+  }();
 
-  const auto& dev = str;
-  const auto dev2 = ChooseDeviceReplacement(dev);
-  return dev2;
+  return replacementDevice + ", or similar";
 }
 
 };  // namespace webgl
