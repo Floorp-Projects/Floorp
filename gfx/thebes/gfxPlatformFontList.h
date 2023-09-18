@@ -242,6 +242,12 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   static bool Initialize(gfxPlatformFontList* aList);
 
   static void Shutdown() {
+    // Ensure any font-list initialization thread is finished before we delete
+    // the platform fontlist singleton, which that thread may try to use.
+    if (sInitFontListThread && !IsInitFontListThread()) {
+      PR_JoinThread(sInitFontListThread);
+      sInitFontListThread = nullptr;
+    }
     delete sPlatformFontList;
     sPlatformFontList = nullptr;
   }
