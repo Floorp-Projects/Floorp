@@ -852,6 +852,7 @@ def build_generic_worker_payload(config, task, task_def):
         Optional("mac-behavior"): Any(
             "apple_notarization",
             "mac_sign_and_pkg",
+            "mac_sign_and_pkg_hardened",
             "mac_geckodriver",
             "mac_notarize_geckodriver",
             "mac_single_file",
@@ -859,6 +860,16 @@ def build_generic_worker_payload(config, task, task_def):
         ),
         Optional("entitlements-url"): str,
         Optional("requirements-plist-url"): str,
+        Optional("hardened-sign-config"): [
+            {
+                Optional("deep"): bool,
+                Optional("runtime"): bool,
+                Optional("force"): bool,
+                Optional("entitlements"): str,
+                Optional("requirements"): str,
+                Required("globs"): [str],
+            }
+        ],
     },
 )
 def build_scriptworker_signing_payload(config, task, task_def):
@@ -870,7 +881,11 @@ def build_scriptworker_signing_payload(config, task, task_def):
     }
     if worker.get("mac-behavior"):
         task_def["payload"]["behavior"] = worker["mac-behavior"]
-        for attribute in ("entitlements-url", "requirements-plist-url"):
+        for attribute in (
+            "entitlements-url",
+            "requirements-plist-url",
+            "hardened-sign-config",
+        ):
             if worker.get(attribute):
                 task_def["payload"][attribute] = worker[attribute]
 
