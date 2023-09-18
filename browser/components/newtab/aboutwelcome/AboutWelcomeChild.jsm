@@ -370,8 +370,11 @@ const OPTIN_DEFAULT = {
         above_button_content: [
           {
             type: "image",
-            url: "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
-            height: "auto",
+            url: "chrome://browser/content/shopping/assets/optInLight.avif",
+            darkModeImageURL:
+              "chrome://browser/content/shopping/assets/optInDark.avif",
+            height: "172px",
+            marginInline: "24px",
           },
           {
             type: "text",

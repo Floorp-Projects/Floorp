@@ -202,6 +202,9 @@ export class ProtonScreen extends React.PureComponent {
     darkModeReducedMotionImageURL,
     alt = "",
     height,
+    width,
+    marginInline,
+    marginBlock,
     className = "logo-container",
   }) {
     function getLoadingStrategy() {
@@ -219,7 +222,7 @@ export class ProtonScreen extends React.PureComponent {
     }
 
     return (
-      <picture className={className}>
+      <picture className={className} style={{ marginInline, marginBlock }}>
         {darkModeReducedMotionImageURL ? (
           <source
             srcSet={darkModeReducedMotionImageURL}
@@ -243,7 +246,7 @@ export class ProtonScreen extends React.PureComponent {
         </Localized>
         <img
           className="brand-logo"
-          style={{ height }}
+          style={{ height, width }}
           src={imageURL}
           alt=""
           loading={getLoadingStrategy()}
@@ -433,7 +436,9 @@ export class ProtonScreen extends React.PureComponent {
               imageURL: item.url,
               darkModeImageURL: item.darkModeImageURL,
               height: item.height,
+              width: item.width,
               alt: item.alt_text,
+              marginInline: item.marginInline,
               className: "inline-image",
             })
           );
