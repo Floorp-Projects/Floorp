@@ -51,14 +51,7 @@
 }
 
 #sidebar-throbber[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #sidebar-throbber[loading="true"] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-    width: 16px;
-  }
+  list-style-image: image-set(url("chrome://global/skin/icons/loading.png"), url("chrome://global/skin/icons/loading@2x.png") 2x);
 }
 
 #sidebar-title {

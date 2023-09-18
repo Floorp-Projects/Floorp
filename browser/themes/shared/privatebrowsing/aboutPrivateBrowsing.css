@@ -58,20 +58,11 @@ p {
 }
 
 .logo {
-  background: url("chrome://branding/content/about-logo-private.png") no-repeat center center;
+  background: image-set(url("chrome://branding/content/about-logo-private.png"), url('chrome://branding/content/about-logo-private@2x.png') 2x) no-repeat center center;
   background-size: 96px;
   display: inline-block;
   height: 96px;
   width: 96px;
-}
-
-@media (min-resolution: 2x) {
-  .logo {
-    background-image: url('chrome://branding/content/about-logo-private@2x.png');
-  }
-  .logo[legacy] {
-    background-image: url('chrome://branding/content/about-logo@2x.png');
-  }
 }
 
 .wordmark {

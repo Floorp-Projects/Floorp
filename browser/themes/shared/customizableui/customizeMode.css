@@ -375,7 +375,10 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #customization-panelHolder > #widget-overflow-fixed-list::before {
   display: block;
   content: "";
-  background-image: url("chrome://browser/skin/customizableui/empty-overflow-panel.png");
+  background-image: image-set(
+    url("chrome://browser/skin/customizableui/empty-overflow-panel.png"),
+    url("chrome://browser/skin/customizableui/empty-overflow-panel@2x.png") 2x
+  );
   background-position: center bottom 10px;
   background-size: 218px 134px;
   background-repeat: no-repeat;
@@ -384,12 +387,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   padding-bottom: 154px; /* 154 = 134 for the image, 10px space on either side. */
   margin-bottom: -154px; /* don't affect positioning of the actual contents */
   pointer-events: none;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #customization-panelHolder > #widget-overflow-fixed-list::before {
-    background-image: url("chrome://browser/skin/customizableui/empty-overflow-panel@2x.png");
-  }
 }
 
 #customization-panelHolder > #widget-overflow-fixed-list:empty::before {
