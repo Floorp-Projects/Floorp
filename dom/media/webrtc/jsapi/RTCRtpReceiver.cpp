@@ -510,7 +510,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                   videoStats->frame_counts.key_frames +
                   videoStats->frame_counts.delta_frames);
               local.mJitterBufferDelay.Construct(
-                  videoStats->jitter_buffer_delay_seconds);
+                  videoStats->jitter_buffer_delay.seconds());
               local.mJitterBufferEmittedCount.Construct(
                   videoStats->jitter_buffer_emitted_count);
 
