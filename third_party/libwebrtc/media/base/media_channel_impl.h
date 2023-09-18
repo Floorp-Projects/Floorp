@@ -62,56 +62,21 @@
 // the MediaChannel interfaces.
 // These implementation classes used to be the exposed interface names,
 // but this is in the process of being changed.
-// TODO(bugs.webrtc.org/13931): Consider removing these classes.
-
-// The target
+// TODO(bugs.webrtc.org/13931): Remove the MediaChannel class.
 
 namespace cricket {
 
 class VoiceMediaChannel;
 class VideoMediaChannel;
 
-class MediaChannel : public MediaSendChannelInterface,
-                     public MediaReceiveChannelInterface {
+// The `MediaChannelUtil` class provides functionality that is used by
+// multiple MediaChannel-like objects, of both sending and receiving
+// types.
+class MediaChannelUtil {
  public:
-  // Role of the channel. Used to describe which interface it supports.
-  // This is temporary until we stop using the same implementation for both
-  // interfaces.
-  enum class Role {
-    kSend,
-    kReceive,
-    kBoth  // Temporary value for non-converted test and downstream code
-    // TODO(bugs.webrtc.org/13931): Remove kBoth when usage is removed.
-  };
-
-  explicit MediaChannel(Role role,
-                        webrtc::TaskQueueBase* network_thread,
-                        bool enable_dscp = false);
-  virtual ~MediaChannel();
-
-  Role role() const { return role_; }
-
-  // Downcasting to the subclasses.
-  virtual VideoMediaChannel* AsVideoChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-
-  virtual VoiceMediaChannel* AsVoiceChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  // Must declare the methods inherited from the base interface template,
-  // even when abstract, to tell the compiler that all instances of the name
-  // referred to by subclasses of this share the same implementation.
-  cricket::MediaType media_type() const override = 0;
-  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
-  void OnPacketSent(const rtc::SentPacket& sent_packet) override = 0;
-  void OnReadyToSend(bool ready) override = 0;
-  void OnNetworkRouteChanged(absl::string_view transport_name,
-                             const rtc::NetworkRoute& network_route) override =
-      0;
-
+  MediaChannelUtil(webrtc::TaskQueueBase* network_thread,
+                   bool enable_dscp = false);
+  virtual ~MediaChannelUtil();
   // Returns the absolute sendtime extension id value from media channel.
   virtual int GetRtpSendTimeExtnId() const;
   // Base method to send packet using MediaChannelNetworkInterface.
@@ -125,33 +90,35 @@ class MediaChannel : public MediaSendChannelInterface,
                 rtc::Socket::Option opt,
                 int option);
 
+  // Functions that form part of one or more interface classes.
+  // Not marked override, since this class does not inherit from the
+  // interfaces.
+
   // Corresponds to the SDP attribute extmap-allow-mixed, see RFC8285.
   // Set to true if it's allowed to mix one- and two-byte RTP header extensions
   // in the same stream. The setter and getter must only be called from
   // worker_thread.
-  void SetExtmapAllowMixed(bool extmap_allow_mixed) override;
-  bool ExtmapAllowMixed() const override;
+  void SetExtmapAllowMixed(bool extmap_allow_mixed);
+  bool ExtmapAllowMixed() const;
 
-  void SetInterface(MediaChannelNetworkInterface* iface) override;
+  void SetInterface(MediaChannelNetworkInterface* iface);
   // Returns `true` if a non-null MediaChannelNetworkInterface pointer is held.
   // Must be called on the network thread.
-  bool HasNetworkInterface() const override;
+  bool HasNetworkInterface() const;
 
-  void SetFrameEncryptor(uint32_t ssrc,
-                         rtc::scoped_refptr<webrtc::FrameEncryptorInterface>
-                             frame_encryptor) override;
-  void SetFrameDecryptor(uint32_t ssrc,
-                         rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
-                             frame_decryptor) override;
+  void SetFrameEncryptor(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameEncryptorInterface> frame_encryptor);
+  void SetFrameDecryptor(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor);
 
   void SetEncoderToPacketizerFrameTransformer(
       uint32_t ssrc,
-      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
-      override;
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer);
   void SetDepacketizerToDecoderFrameTransformer(
       uint32_t ssrc,
-      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
-      override;
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer);
 
  protected:
   int SetOptionLocked(MediaChannelNetworkInterface::SocketType type,
@@ -184,7 +151,6 @@ class MediaChannel : public MediaSendChannelInterface,
                     bool rtcp,
                     const rtc::PacketOptions& options);
 
-  const Role role_;
   const bool enable_dscp_;
   const rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
       RTC_PT_GUARDED_BY(network_thread_);
@@ -194,6 +160,61 @@ class MediaChannel : public MediaSendChannelInterface,
   rtc::DiffServCodePoint preferred_dscp_ RTC_GUARDED_BY(network_thread_) =
       rtc::DSCP_DEFAULT;
   bool extmap_allow_mixed_ = false;
+};
+
+// The `MediaChannel` class implements both the SendChannel and
+// ReceiveChannel interface. It is used in legacy code that does not
+// use the split interfaces.
+class MediaChannel : public MediaChannelUtil,
+                     public MediaSendChannelInterface,
+                     public MediaReceiveChannelInterface {
+ public:
+  // Role of the channel. Used to describe which interface it supports.
+  // This is temporary until we stop using the same implementation for both
+  // interfaces.
+  enum class Role {
+    kSend,
+    kReceive,
+    kBoth  // Temporary value for non-converted test and downstream code
+    // TODO(bugs.webrtc.org/13931): Remove kBoth when usage is removed.
+  };
+
+  explicit MediaChannel(Role role,
+                        webrtc::TaskQueueBase* network_thread,
+                        bool enable_dscp = false);
+  virtual ~MediaChannel() = default;
+
+  Role role() const { return role_; }
+
+  // Downcasting to the subclasses.
+  virtual VideoMediaChannel* AsVideoChannel() {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
+
+  virtual VoiceMediaChannel* AsVoiceChannel() {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
+  // Must declare the methods inherited from the base interface template,
+  // even when abstract, to tell the compiler that all instances of the name
+  // referred to by subclasses of this share the same implementation.
+  cricket::MediaType media_type() const override = 0;
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
+  void OnPacketSent(const rtc::SentPacket& sent_packet) override = 0;
+  void OnReadyToSend(bool ready) override = 0;
+  void OnNetworkRouteChanged(absl::string_view transport_name,
+                             const rtc::NetworkRoute& network_route) override =
+      0;
+
+  // Methods from the APIs that are implemented in MediaChannelUtil
+  using MediaChannelUtil::ExtmapAllowMixed;
+  using MediaChannelUtil::HasNetworkInterface;
+  using MediaChannelUtil::SetExtmapAllowMixed;
+  using MediaChannelUtil::SetInterface;
+
+ private:
+  const Role role_;
 };
 
 // Base class for implementation classes
