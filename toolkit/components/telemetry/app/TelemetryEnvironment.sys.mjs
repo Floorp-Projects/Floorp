@@ -155,6 +155,15 @@ export var TelemetryEnvironment = {
     return result;
   },
 
+  /**
+   * Intended to be called by the search service once initialization is complete.
+   */
+  startSearchEngineDataRecording() {
+    let globalEnvironment = getGlobal();
+    globalEnvironment._canQuerySearch = true;
+    globalEnvironment._updateSearchEngine();
+  },
+
   shutdown() {
     return getGlobal().shutdown();
   },
@@ -379,7 +388,6 @@ const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
   "distribution-customization-complete";
 const GFX_FEATURES_READY_TOPIC = "gfx-features-ready";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
-const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 const GMP_PROVIDER_REGISTERED_TOPIC = "gmp-provider-registered";
@@ -1324,7 +1332,6 @@ EnvironmentCache.prototype = {
     Services.obs.addObserver(this, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
     Services.obs.addObserver(this, GFX_FEATURES_READY_TOPIC);
     Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
-    Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC);
     Services.obs.addObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.addObserver(this, BACKGROUND_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.addObserver(this, SERVICES_INFO_CHANGE_TOPIC);
@@ -1342,7 +1349,6 @@ EnvironmentCache.prototype = {
     } catch (ex) {}
     Services.obs.removeObserver(this, GFX_FEATURES_READY_TOPIC);
     Services.obs.removeObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
-    Services.obs.removeObserver(this, SEARCH_SERVICE_TOPIC);
     Services.obs.removeObserver(this, AUTO_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.removeObserver(this, BACKGROUND_UPDATE_PREF_CHANGE_TOPIC);
     Services.obs.removeObserver(this, SERVICES_INFO_CHANGE_TOPIC);
@@ -1368,14 +1374,6 @@ EnvironmentCache.prototype = {
         }
         // Record the new default search choice and send the change notification.
         this._onSearchEngineChange();
-        break;
-      case SEARCH_SERVICE_TOPIC:
-        if (aData != "init-complete") {
-          return;
-        }
-        // Now that the search engine init is complete, record the default search choice.
-        this._canQuerySearch = true;
-        this._updateSearchEngine();
         break;
       case GFX_FEATURES_READY_TOPIC:
       case COMPOSITOR_CREATED_TOPIC:
