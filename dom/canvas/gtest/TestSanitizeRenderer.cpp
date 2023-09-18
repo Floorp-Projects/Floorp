@@ -71,6 +71,15 @@ TEST(SanitizeRenderer, TestLinuxAruba)
   EXPECT_EQ(sanitized, expectation);
 }
 
+TEST(SanitizeRenderer, TestLinuxRembrandt)
+{
+  const std::string renderer(
+      "REMBRANDT (rembrandt, LLVM 14.0.6, DRM 3.49, 6.2.9)");
+  const std::string expectation("Radeon R9 200 Series, or similar");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
 TEST(SanitizeRenderer, TestLinuxIntel620)
 {
   const std::string renderer("Mesa Intel(R) UHD Graphics 620 (KBL GT2)");
@@ -159,7 +168,7 @@ TEST(SanitizeRenderer, TestAngle3070)
 TEST(SanitizeRenderer, TestWindows3070)
 {
   const std::string renderer("GeForce RTX 3070/PCIe/SSE2");
-  const std::string expectation("GeForce GTX 980/PCIe/SSE2, or similar");
+  const std::string expectation("GeForce GTX 980, or similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
