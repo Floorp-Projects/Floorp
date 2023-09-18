@@ -36,7 +36,7 @@ def test_branch(repo):
         pytest.xfail("`git branch --show-current` not implemented yet")
 
     if vcs.name == "git":
-        assert vcs.branch == "main"
+        assert vcs.branch == "master"
     else:
         assert vcs.branch is None
 

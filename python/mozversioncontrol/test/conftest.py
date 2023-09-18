@@ -28,7 +28,7 @@ SETUP = {
         """
         echo "foo" > foo
         echo "bar" > bar
-        git init --initial-branch main
+        git init
         git config user.name "Testing McTesterson"
         git config user.email "<test@example.org>"
         git add *
@@ -37,7 +37,7 @@ SETUP = {
         """
         git remote add upstream ../remoterepo
         git fetch upstream
-        git branch -u upstream/main
+        git branch -u upstream/master
         """,
     ],
 }
