@@ -30,11 +30,10 @@
   margin-block: 0.25rem;
 }
 
-#unanalyzed-product-analysis-link {
-  font-weight: 600;
+#unanalyzed-product-analysis-button {
+  width: 100%;
 }
 
-#unanalyzed-product-message-content,
-#unanalyzed-product-analysis-link {
+#unanalyzed-product-message-content {
   line-height: 150%;
 }

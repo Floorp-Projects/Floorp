@@ -152,9 +152,9 @@ shopping-sidebar-close-button =
 ## used in the name of the Firefox feature ('Review checker'). If that is not
 ## possible - if these terms are not meaningfully different - that is OK.
 
-shopping-unanalyzed-product-header = No analysis for these reviews yet
-shopping-unanalyzed-product-message = Launch the { -fakespot-brand-full-name } analyzer and you’ll know in about 60 seconds whether this product’s reviews are reliable.
-shopping-unanalyzed-product-analyze-link = Launch analyzer on { -fakespot-website-name }
+shopping-unanalyzed-product-header-2 = No info about these reviews yet
+shopping-unanalyzed-product-message-2 = To know whether this product’s reviews are reliable, check the review quality. It only takes about 60 seconds.
+shopping-unanalyzed-product-analyze-button = Check review quality
 
 ## Strings for the advertisement
 
