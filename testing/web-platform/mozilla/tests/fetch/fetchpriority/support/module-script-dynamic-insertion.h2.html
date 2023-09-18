@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<title>fetchpriority</title>
+<body>
+<script>
+  onload = function() {
+    const kData = [
+        { src: "dummy.js?1", fetchPriority: "low"},
+        { src: "dummy.js?2", fetchPriority: "high"},
+        { src: "dummy.js?3", fetchPriority: "auto"},
+        { src: "dummy.js?4"}
+    ];
+
+    let allScriptElements = [];
+    for (data of kData) {
+      let scriptElement = document.createElement("script");
+      scriptElement.src = data.src;
+
+      scriptElement.type = "module";
+
+      if ("fetchPriority" in data) {
+        scriptElement.fetchPriority = data.fetchPriority;
+      }
+
+      allScriptElements.push(scriptElement);
+    }
+
+    document.head.append(...allScriptElements)
+
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>
