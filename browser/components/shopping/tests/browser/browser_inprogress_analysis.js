@@ -25,10 +25,7 @@ add_task(async function test_in_progress_analysis_unanalyzed() {
           await shoppingContainer.updateComplete;
 
           let unanalyzedProduct = shoppingContainer.unanalyzedProductEl;
-          let analysisLink = unanalyzedProduct.analysisLinkEl;
-
-          // Override to prevent page navigation
-          analysisLink.href = undefined;
+          let analysisButton = unanalyzedProduct.analysisButtonEl;
 
           let messageBarVisiblePromise = ContentTaskUtils.waitForCondition(
             () => {
@@ -42,7 +39,7 @@ add_task(async function test_in_progress_analysis_unanalyzed() {
             "Waiting for shopping-message-bar to be visible"
           );
 
-          analysisLink.click();
+          analysisButton.click();
           await messageBarVisiblePromise;
           await shoppingContainer.updateComplete;
 
