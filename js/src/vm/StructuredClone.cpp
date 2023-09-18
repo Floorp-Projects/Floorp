@@ -43,6 +43,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
+#include "gc/GC.h"           // AutoSelectGCHeap
 #include "js/Array.h"        // JS::GetArrayLength, JS::IsArrayObject
 #include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
@@ -422,7 +423,6 @@ struct JSStructuredCloneReader {
                                    const JS::CloneDataPolicy& cloneDataPolicy,
                                    const JSStructuredCloneCallbacks* cb,
                                    void* cbClosure);
-  ~JSStructuredCloneReader();
 
   SCInput& input() { return in; }
   bool read(MutableHandleValue vp, size_t nbytes);
@@ -481,10 +481,6 @@ struct JSStructuredCloneReader {
       MutableHandleValue vp,
       ShouldAtomizeStrings atomizeStrings = DontAtomizeStrings);
 
-  static void NurseryCollectionCallback(JSContext* cx,
-                                        JS::GCNurseryProgress progress,
-                                        JS::GCReason reason, void* data);
-
   SCInput& in;
 
   // The widest scope that the caller will accept, where
@@ -538,7 +534,7 @@ struct JSStructuredCloneReader {
   //
   // This is only used for the most common kind, e.g. plain objects, strings
   // and a couple of others.
-  gc::Heap gcHeap = gc::Heap::Default;
+  AutoSelectGCHeap gcHeap;
 
   friend bool JS_ReadString(JSStructuredCloneReader* r,
                             JS::MutableHandleString str);
@@ -2457,31 +2453,12 @@ JSStructuredCloneReader::JSStructuredCloneReader(
       allObjs(in.context()),
       numItemsRead(0),
       callbacks(cb),
-      closure(cbClosure) {
+      closure(cbClosure),
+      gcHeap(in.context()) {
   // Avoid the need to bounds check by keeping a never-matching element at the
   // base of the `objState` stack. This append() will always succeed because
   // the objState vector has a nonzero MinInlineCapacity.
   MOZ_ALWAYS_TRUE(objState.append(std::make_pair(nullptr, true)));
-
-  JS::AddGCNurseryCollectionCallback(in.context(), &NurseryCollectionCallback,
-                                     this);
-}
-
-JSStructuredCloneReader::~JSStructuredCloneReader() {
-  JS::RemoveGCNurseryCollectionCallback(in.context(),
-                                        &NurseryCollectionCallback, this);
-}
-
-/* static */
-void JSStructuredCloneReader::NurseryCollectionCallback(
-    JSContext* cx, JS::GCNurseryProgress progress, JS::GCReason reason,
-    void* data) {
-  auto* reader = static_cast<JSStructuredCloneReader*>(data);
-
-  // Switch to allocation in the tenured heap after nursery collection.
-  if (progress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) {
-    reader->gcHeap = gc::Heap::Tenured;
-  }
 }
 
 template <typename CharT>
