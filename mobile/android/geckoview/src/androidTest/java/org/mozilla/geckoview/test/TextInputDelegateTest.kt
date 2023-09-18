@@ -1218,8 +1218,6 @@ class TextInputDelegateTest : BaseSessionTest() {
         // no way to set autocapitalize on designmode.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
 
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.forms.autocapitalize" to true))
-
         mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
 
         mainSession.loadTestPath(INPUTS_PATH)
