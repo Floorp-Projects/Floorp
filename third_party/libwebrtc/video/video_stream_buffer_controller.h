@@ -45,8 +45,12 @@ class VideoStreamBufferControllerStatsObserver {
 
   virtual void OnDroppedFrames(uint32_t frames_dropped) = 0;
 
-  // Actual delay experienced by a single frame.
-  virtual void OnDecodableFrame(TimeDelta jitter_buffer_delay) = 0;
+  // `jitter_buffer_delay` is the delay experienced by a single frame,
+  // whereas `target_delay` and `minimum_delay` are the current delays
+  // applied by the jitter buffer.
+  virtual void OnDecodableFrame(TimeDelta jitter_buffer_delay,
+                                TimeDelta target_delay,
+                                TimeDelta minimum_delay) = 0;
 
   virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
 
