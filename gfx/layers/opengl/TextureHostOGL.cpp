@@ -91,6 +91,10 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
 #ifdef MOZ_WIDGET_GTK
     case SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
       result = new DMABUFTextureHostOGL(aFlags, aDesc);
+      if (!result->IsValid()) {
+        gfxCriticalError() << "DMABuf surface import failed!";
+        result = nullptr;
+      }
       break;
     }
 #endif
