@@ -1664,16 +1664,10 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayNewElem();
   [[nodiscard]] bool emitArrayGet(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitArraySet();
-  [[nodiscard]] bool emitArrayLen(bool decodeIgnoredTypeIndex);
+  [[nodiscard]] bool emitArrayLen();
   [[nodiscard]] bool emitArrayCopy();
   [[nodiscard]] bool emitI31New();
   [[nodiscard]] bool emitI31Get(FieldWideningOp wideningOp);
-  [[nodiscard]] bool emitRefTestV5();
-  [[nodiscard]] bool emitRefCastV5();
-  [[nodiscard]] bool emitBrOnCastV5(bool onSuccess);
-  [[nodiscard]] bool emitBrOnCastHeapV5(bool onSuccess, bool nullable);
-  [[nodiscard]] bool emitRefAsStructV5();
-  [[nodiscard]] bool emitBrOnNonStructV5();
   [[nodiscard]] bool emitRefTest(bool nullable);
   [[nodiscard]] bool emitRefCast(bool nullable);
   [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess,

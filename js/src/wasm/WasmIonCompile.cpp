@@ -7346,9 +7346,9 @@ static bool EmitArrayGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
   return true;
 }
 
-static bool EmitArrayLen(FunctionCompiler& f, bool decodeIgnoredTypeIndex) {
+static bool EmitArrayLen(FunctionCompiler& f) {
   MDefinition* arrayObject;
-  if (!f.iter().readArrayLen(decodeIgnoredTypeIndex, &arrayObject)) {
+  if (!f.iter().readArrayLen(&arrayObject)) {
     return false;
   }
 
@@ -7455,51 +7455,6 @@ static bool EmitI31Get(FunctionCompiler& f, FieldWideningOp wideningOp) {
   return true;
 }
 
-static bool EmitRefTestV5(FunctionCompiler& f) {
-  MDefinition* ref;
-  RefType sourceType;
-  uint32_t typeIndex;
-  if (!f.iter().readRefTestV5(&sourceType, &typeIndex, &ref)) {
-    return false;
-  }
-
-  if (f.inDeadCode()) {
-    return true;
-  }
-
-  const TypeDef& typeDef = f.moduleEnv().types->type(typeIndex);
-  RefType destType = RefType::fromTypeDef(&typeDef, false);
-  MDefinition* success = f.refTest(ref, sourceType, destType);
-  if (!success) {
-    return false;
-  }
-
-  f.iter().setResult(success);
-  return true;
-}
-
-static bool EmitRefCastV5(FunctionCompiler& f) {
-  MDefinition* ref;
-  RefType sourceType;
-  uint32_t typeIndex;
-  if (!f.iter().readRefCastV5(&sourceType, &typeIndex, &ref)) {
-    return false;
-  }
-
-  if (f.inDeadCode()) {
-    return true;
-  }
-
-  const TypeDef& typeDef = f.moduleEnv().types->type(typeIndex);
-  RefType destType = RefType::fromTypeDef(&typeDef, /*nullable=*/true);
-  if (!f.refCast(ref, sourceType, destType)) {
-    return false;
-  }
-
-  f.iter().setResult(ref);
-  return true;
-}
-
 static bool EmitRefTest(FunctionCompiler& f, bool nullable) {
   MDefinition* ref;
   RefType sourceType;
@@ -7554,67 +7509,6 @@ static bool EmitBrOnCast(FunctionCompiler& f, bool onSuccess) {
 
   return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, destType,
                           labelType, values);
-}
-
-static bool EmitBrOnCastCommonV5(FunctionCompiler& f, bool onSuccess) {
-  uint32_t labelRelativeDepth;
-  RefType sourceType;
-  uint32_t castTypeIndex;
-  ResultType labelType;
-  DefVector values;
-  if (onSuccess
-          ? !f.iter().readBrOnCastV5(&labelRelativeDepth, &sourceType,
-                                     &castTypeIndex, &labelType, &values)
-          : !f.iter().readBrOnCastFailV5(&labelRelativeDepth, &sourceType,
-                                         &castTypeIndex, &labelType, &values)) {
-    return false;
-  }
-
-  const TypeDef& typeDef = f.moduleEnv().types->type(castTypeIndex);
-  RefType type = RefType::fromTypeDef(&typeDef, false);
-  return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, type,
-                          labelType, values);
-}
-
-static bool EmitBrOnCastHeapV5(FunctionCompiler& f, bool onSuccess,
-                               bool nullable) {
-  uint32_t labelRelativeDepth;
-  RefType sourceType;
-  RefType destType;
-  ResultType labelType;
-  DefVector values;
-  if (onSuccess ? !f.iter().readBrOnCastHeapV5(nullable, &labelRelativeDepth,
-                                               &sourceType, &destType,
-                                               &labelType, &values)
-                : !f.iter().readBrOnCastFailHeapV5(
-                      nullable, &labelRelativeDepth, &sourceType, &destType,
-                      &labelType, &values)) {
-    return false;
-  }
-
-  return f.brOnCastCommon(onSuccess, labelRelativeDepth, sourceType, destType,
-                          labelType, values);
-}
-
-static bool EmitRefAsStructV5(FunctionCompiler& f) {
-  MDefinition* value;
-  if (!f.iter().readConversion(ValType(RefType::any()),
-                               ValType(RefType::struct_().asNonNullable()),
-                               &value)) {
-    return false;
-  }
-  f.iter().setResult(value);
-  return true;
-}
-
-static bool EmitBrOnNonStructV5(FunctionCompiler& f) {
-  uint32_t labelRelativeDepth;
-  ResultType labelType;
-  DefVector values;
-  if (!f.iter().readBrOnNonStructV5(&labelRelativeDepth, &labelType, &values)) {
-    return false;
-  }
-  return f.brOnNonStruct(values);
 }
 
 static bool EmitExternInternalize(FunctionCompiler& f) {
@@ -8255,7 +8149,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayNewFixed(f));
           case uint32_t(GcOp::ArrayNewData):
             CHECK(EmitArrayNewData(f));
-          case uint32_t(GcOp::ArrayInitFromElemStaticV5):
           case uint32_t(GcOp::ArrayNewElem):
             CHECK(EmitArrayNewElem(f));
           case uint32_t(GcOp::ArraySet):
@@ -8266,10 +8159,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayGet(f, FieldWideningOp::Signed));
           case uint32_t(GcOp::ArrayGetU):
             CHECK(EmitArrayGet(f, FieldWideningOp::Unsigned));
-          case uint32_t(GcOp::ArrayLenWithTypeIndex):
-            CHECK(EmitArrayLen(f, /*decodeIgnoredTypeIndex=*/true));
           case uint32_t(GcOp::ArrayLen):
-            CHECK(EmitArrayLen(f, /*decodeIgnoredTypeIndex=*/false));
+            CHECK(EmitArrayLen(f));
           case uint32_t(GcOp::ArrayCopy):
             CHECK(EmitArrayCopy(f));
           case uint32_t(GcOp::I31New):
@@ -8278,33 +8169,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitI31Get(f, FieldWideningOp::Signed));
           case uint32_t(GcOp::I31GetU):
             CHECK(EmitI31Get(f, FieldWideningOp::Unsigned));
-          case uint32_t(GcOp::RefTestV5):
-            CHECK(EmitRefTestV5(f));
-          case uint32_t(GcOp::RefCastV5):
-            CHECK(EmitRefCastV5(f));
           case uint32_t(GcOp::BrOnCast):
             CHECK(EmitBrOnCast(f, /*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK(EmitBrOnCast(f, /*onSuccess=*/false));
-          case uint32_t(GcOp::BrOnCastV5):
-            CHECK(EmitBrOnCastCommonV5(f, /*onSuccess=*/true));
-          case uint32_t(GcOp::BrOnCastFailV5):
-            CHECK(EmitBrOnCastCommonV5(f, /*onSuccess=*/false));
-          case uint32_t(GcOp::BrOnCastHeapV5):
-            CHECK(
-                EmitBrOnCastHeapV5(f, /*onSuccess=*/true, /*nullable=*/false));
-          case uint32_t(GcOp::BrOnCastHeapNullV5):
-            CHECK(EmitBrOnCastHeapV5(f, /*onSuccess=*/true, /*nullable=*/true));
-          case uint32_t(GcOp::BrOnCastFailHeapV5):
-            CHECK(
-                EmitBrOnCastHeapV5(f, /*onSuccess=*/false, /*nullable=*/false));
-          case uint32_t(GcOp::BrOnCastFailHeapNullV5):
-            CHECK(
-                EmitBrOnCastHeapV5(f, /*onSuccess=*/false, /*nullable=*/true));
-          case uint32_t(GcOp::RefAsStructV5):
-            CHECK(EmitRefAsStructV5(f));
-          case uint32_t(GcOp::BrOnNonStructV5):
-            CHECK(EmitBrOnNonStructV5(f));
           case uint32_t(GcOp::RefTest):
             CHECK(EmitRefTest(f, /*nullable=*/false));
           case uint32_t(GcOp::RefTestNull):

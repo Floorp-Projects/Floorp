@@ -209,11 +209,6 @@ enum class OpKind {
   ArraySet,
   ArrayLen,
   ArrayCopy,
-  RefTestV5,
-  RefCastV5,
-  BrOnCastV5,
-  BrOnCastFailV5,
-  BrOnNonStructV5,
   RefTest,
   RefCast,
   BrOnCast,
@@ -771,32 +766,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   Value* ptr);
   [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
                                   Value* ptr);
-  [[nodiscard]] bool readArrayLen(bool decodeIgnoredTypeIndex, Value* ptr);
+  [[nodiscard]] bool readArrayLen(Value* ptr);
   [[nodiscard]] bool readArrayCopy(int32_t* elemSize, bool* elemsAreRefTyped,
                                    Value* dstArray, Value* dstIndex,
                                    Value* srcArray, Value* srcIndex,
                                    Value* numElements);
-  [[nodiscard]] bool readRefTestV5(RefType* sourceType, uint32_t* typeIndex,
-                                   Value* ref);
-  [[nodiscard]] bool readRefCastV5(RefType* sourceType, uint32_t* typeIndex,
-                                   Value* ref);
-  [[nodiscard]] bool readBrOnCastV5(uint32_t* labelRelativeDepth,
-                                    RefType* sourceType,
-                                    uint32_t* castTypeIndex,
-                                    ResultType* labelType, ValueVector* values);
-  [[nodiscard]] bool readBrOnCastHeapV5(bool nullable,
-                                        uint32_t* labelRelativeDepth,
-                                        RefType* sourceType, RefType* destType,
-                                        ResultType* labelType,
-                                        ValueVector* values);
-  [[nodiscard]] bool readBrOnCastFailV5(uint32_t* labelRelativeDepth,
-                                        RefType* sourceType,
-                                        uint32_t* castTypeIndex,
-                                        ResultType* labelType,
-                                        ValueVector* values);
-  [[nodiscard]] bool readBrOnCastFailHeapV5(
-      bool nullable, uint32_t* labelRelativeDepth, RefType* sourceType,
-      RefType* destType, ResultType* labelType, ValueVector* values);
   [[nodiscard]] bool readRefTest(bool nullable, RefType* sourceType,
                                  RefType* destType, Value* ref);
   [[nodiscard]] bool readRefCast(bool nullable, RefType* sourceType,
@@ -804,19 +778,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readBrOnCast(bool onSuccess, uint32_t* labelRelativeDepth,
                                   RefType* sourceType, RefType* destType,
                                   ResultType* labelType, ValueVector* values);
-  [[nodiscard]] bool checkBrOnCastCommonV5(uint32_t labelRelativeDepth,
-                                           RefType* sourceType,
-                                           ValType castToType,
-                                           ResultType* labelType,
-                                           ValueVector* values);
-  [[nodiscard]] bool checkBrOnCastFailCommonV5(uint32_t labelRelativeDepth,
-                                               RefType* sourceType,
-                                               ValType castToType,
-                                               ResultType* labelType,
-                                               ValueVector* values);
-  [[nodiscard]] bool readBrOnNonStructV5(uint32_t* labelRelativeDepth,
-                                         ResultType* labelType,
-                                         ValueVector* values);
   [[nodiscard]] bool readRefConversion(RefType operandType, RefType resultType,
                                        Value* operandValue);
 #endif
@@ -3577,15 +3538,8 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readArrayLen(bool decodeIgnoredTypeIndex,
-                                         Value* ptr) {
+inline bool OpIter<Policy>::readArrayLen(Value* ptr) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayLen);
-
-  // TODO: remove once V8 removes array.len with type index from their snapshot
-  uint32_t unused;
-  if (decodeIgnoredTypeIndex && !readVarU32(&unused)) {
-    return false;
-  }
 
   if (!popWithType(RefType::array(), ptr)) {
     return false;
@@ -3654,43 +3608,6 @@ inline bool OpIter<Policy>::readArrayCopy(int32_t* elemSize,
   }
 
   return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readRefTestV5(RefType* sourceType,
-                                          uint32_t* typeIndex, Value* ref) {
-  MOZ_ASSERT(Classify(op_) == OpKind::RefTestV5);
-
-  if (!readGcTypeIndex(typeIndex)) {
-    return false;
-  }
-
-  StackType inputType;
-  if (!popWithType(RefType::any(), ref, &inputType)) {
-    return false;
-  }
-  *sourceType = inputType.valTypeOr(RefType::any()).refType();
-
-  return push(ValType(ValType::I32));
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readRefCastV5(RefType* sourceType,
-                                          uint32_t* typeIndex, Value* ref) {
-  MOZ_ASSERT(Classify(op_) == OpKind::RefCastV5);
-
-  if (!readGcTypeIndex(typeIndex)) {
-    return false;
-  }
-
-  StackType inputType;
-  if (!popWithType(RefType::any(), ref, &inputType)) {
-    return false;
-  }
-  *sourceType = inputType.valTypeOr(RefType::any()).refType();
-
-  const TypeDef& typeDef = env_.types->type(*typeIndex);
-  return push(RefType::fromTypeDef(&typeDef, inputType.isNullableAsOperand()));
 }
 
 template <typename Policy>
@@ -3850,256 +3767,6 @@ inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
 
   return checkTopTypeMatches(ResultType::Vector(fallthroughTypes), values,
                              /*rewriteStackTypes=*/false);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::checkBrOnCastCommonV5(uint32_t labelRelativeDepth,
-                                                  RefType* sourceType,
-                                                  ValType castToType,
-                                                  ResultType* labelType,
-                                                  ValueVector* values) {
-  if (!(castToType.isRefType() && castToType.refType().isAnyHierarchy())) {
-    return fail("br_on_cast v5 only supports the any hierarchy");
-  }
-
-  // The casted from type is any subtype of anyref.
-  ValType anyrefType(RefType::any());
-  *sourceType = RefType::any();
-
-  // Get the branch target type, which will also determine the type of extra
-  // values that are passed along with the casted type.  This validates
-  // requirement (1).
-  Control* block = nullptr;
-  if (!getControl(labelRelativeDepth, &block)) {
-    return false;
-  }
-  *labelType = block->branchTargetType();
-
-  // Check we have at least one value slot in the branch target type, so as to
-  // receive the casted type in the case where the cast succeeds.
-  const size_t labelTypeNumValues = labelType->length();
-  if (labelTypeNumValues < 1) {
-    return fail("type mismatch: branch target type has no value slots");
-  }
-
-  // The last value slot in the branch target type is what is being cast.
-  // This slot is guaranteed to exist by the above check.
-
-  // Check that the branch target type can accept castType.  The branch target
-  // may specify a supertype of castType, and this is okay.  Validates (2).
-  if (!checkIsSubtypeOf(castToType, (*labelType)[labelTypeNumValues - 1])) {
-    return false;
-  }
-
-  // Create a copy of the branch target type, with the relevant value slot
-  // replaced by anyrefType.  Use this to check that the stack has the proper
-  // types to branch to the target type.
-  //
-  // TODO: We could avoid a potential allocation here by handwriting a custom
-  //       checkTopTypeMatches that handles this case.
-  ValTypeVector fallthroughType;
-  if (!labelType->cloneToVector(&fallthroughType)) {
-    return false;
-  }
-  fallthroughType[labelTypeNumValues - 1] = anyrefType;
-
-  // Validates the first half of (3), if we pretend that topType is eqref,
-  // which it isn't really.
-  return checkTopTypeMatches(ResultType::Vector(fallthroughType), values,
-                             /*rewriteStackTypes=*/false);
-}
-
-// `br_on_cast <labelRelativeDepth> null? <castTypeIndex>`
-//  branches if a reference has a given heap type
-//
-// br_on_cast $label null? castType : [t0* (ref null argType)] ->
-//                                    [t0* (ref null2? argType)]
-// (1) iff $label : [t0* labelType]
-// (2) and (ref null3? castType) <: labelType
-// (3) and castType <: topType and argType <: topType
-//         where topType is a common super type
-// (4) and null? = null3? =/= null2?
-//
-// - passes operand along with branch under target type,
-//   plus possible extra args
-// - if null? is present, branches on null, otherwise does not
-//
-// Currently unhandled:
-//   (3) partial check, and not really right
-//   (4) neither checked nor implemented
-//
-// `values` will be nonempty after the call, and its last entry will be that
-// of the argument.
-
-template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCastV5(uint32_t* labelRelativeDepth,
-                                           RefType* sourceType,
-                                           uint32_t* castTypeIndex,
-                                           ResultType* labelType,
-                                           ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCastV5);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_cast depth");
-  }
-
-  if (!readGcTypeIndex(castTypeIndex)) {
-    return false;
-  }
-
-  // The casted to type is a non-nullable reference to the type index
-  // specified as an immediate.
-  const TypeDef& castTypeDef = env_.types->type(*castTypeIndex);
-  ValType castType(RefType::fromTypeDef(&castTypeDef, false));
-
-  return checkBrOnCastCommonV5(*labelRelativeDepth, sourceType, castType,
-                               labelType, values);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCastHeapV5(
-    bool nullable, uint32_t* labelRelativeDepth, RefType* sourceType,
-    RefType* destType, ResultType* labelType, ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCastV5);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_cast depth");
-  }
-
-  if (!readHeapType(nullable, destType)) {
-    return false;
-  }
-
-  ValType castToType(*destType);
-  return checkBrOnCastCommonV5(*labelRelativeDepth, sourceType, castToType,
-                               labelType, values);
-}
-
-// `br_on_cast_fail <labelRelativeDepth> null? <castTypeIndex>`
-//  branches if a reference does not have a given heap type
-//
-// br_on_cast_fail $label null? castType : [t0* (ref null argType)] ->
-//                                         [t0* (ref null2? castType)]
-// (1) iff $label : [t0* labelType]
-// (2) and (ref null3? argType) <: labelType
-// (3) and castType <: topType and argType <: topType
-//         where topType is a common super type
-// (4) and null? = null2? =/= null3?
-//
-// - passes operand along with branch, plus possible extra args
-// - if null? is present, does not branch on null, otherwise does
-//
-// Currently unhandled:
-//   (3) partial check, and not really right
-//   (4) neither checked nor implemented
-//
-// `values` will be nonempty after the call, and its last entry will be that
-// of the argument.
-template <typename Policy>
-inline bool OpIter<Policy>::checkBrOnCastFailCommonV5(
-    uint32_t labelRelativeDepth, RefType* sourceType, ValType castToType,
-    ResultType* labelType, ValueVector* values) {
-  if (!(castToType.isRefType() && castToType.refType().isAnyHierarchy())) {
-    return fail("br_on_cast_fail v5 only supports the any hierarchy");
-  }
-
-  // Get the branch target type, which will also determine the type of extra
-  // values that are passed along with the casted type.  This validates
-  // requirement (1).
-  Control* block = nullptr;
-  if (!getControl(labelRelativeDepth, &block)) {
-    return false;
-  }
-  *labelType = block->branchTargetType();
-
-  // Check we at least have one value slot in the branch target type, so as to
-  // receive the argument value in the case where the cast fails.
-  if (labelType->length() < 1) {
-    return fail("type mismatch: branch target type has no value slots");
-  }
-
-  // Check all operands match the failure label's target type.  Validates (2).
-  if (!checkTopTypeMatches(*labelType, values,
-                           /*rewriteStackTypes=*/false)) {
-    return false;
-  }
-
-  // The top operand needs to be compatible with the casted from type.
-  // Validates the first half of (3), if we pretend that topType is eqref,
-  // which it isn't really.
-  Value ignored;
-  StackType inputValue;
-  if (!popWithType(ValType(RefType::any()), &ignored, &inputValue)) {
-    return false;
-  }
-  *sourceType = inputValue.valTypeOr(RefType::any()).refType();
-
-  // The top result in the fallthrough case is the casted to type.
-  infalliblePush(TypeAndValue(castToType, ignored));
-  return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCastFailV5(uint32_t* labelRelativeDepth,
-                                               RefType* sourceType,
-                                               uint32_t* castTypeIndex,
-                                               ResultType* labelType,
-                                               ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCastFailV5);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_cast_fail depth");
-  }
-
-  if (!readGcTypeIndex(castTypeIndex)) {
-    return false;
-  }
-
-  // The casted to type is a non-nullable reference to the type index
-  // specified as an immediate.
-  const TypeDef& castToTypeDef = env_.types->type(*castTypeIndex);
-  ValType castToType(RefType::fromTypeDef(&castToTypeDef, false));
-
-  return checkBrOnCastFailCommonV5(*labelRelativeDepth, sourceType, castToType,
-                                   labelType, values);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readBrOnCastFailHeapV5(
-    bool nullable, uint32_t* labelRelativeDepth, RefType* sourceType,
-    RefType* destType, ResultType* labelType, ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnCastFailV5);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_cast_fail depth");
-  }
-
-  if (!readHeapType(nullable, destType)) {
-    return false;
-  }
-
-  ValType castToType(*destType);
-  return checkBrOnCastFailCommonV5(*labelRelativeDepth, sourceType, castToType,
-                                   labelType, values);
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readBrOnNonStructV5(uint32_t* labelRelativeDepth,
-                                                ResultType* labelType,
-                                                ValueVector* values) {
-  MOZ_ASSERT(Classify(op_) == OpKind::BrOnNonStructV5);
-
-  if (!readVarU32(labelRelativeDepth)) {
-    return fail("unable to read br_on_non_struct depth");
-  }
-
-  RefType sourceTypeIgnored;
-
-  // The casted to type is a non-nullable reference to a struct.
-  ValType castToType(RefType::struct_().asNonNullable());
-
-  return checkBrOnCastFailCommonV5(*labelRelativeDepth, &sourceTypeIgnored,
-                                   castToType, labelType, values);
 }
 
 template <typename Policy>
