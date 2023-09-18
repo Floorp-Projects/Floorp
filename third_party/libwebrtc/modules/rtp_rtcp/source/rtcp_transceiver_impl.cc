@@ -15,7 +15,6 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
-#include "api/call/transport.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -52,13 +51,6 @@ std::function<void(rtc::ArrayView<const uint8_t>)> GetRtcpTransport(
     const RtcpTransceiverConfig& config) {
   if (config.rtcp_transport != nullptr) {
     return config.rtcp_transport;
-  }
-
-  if (config.deprecated_outgoing_transport != nullptr) {
-    Transport* transport = config.deprecated_outgoing_transport;
-    return [transport](rtc::ArrayView<const uint8_t> packet) {
-      transport->SendRtcp(packet.data(), packet.size());
-    };
   }
 
   bool first = true;

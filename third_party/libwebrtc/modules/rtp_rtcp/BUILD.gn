@@ -404,7 +404,6 @@ rtc_library("rtcp_transceiver") {
     ":rtp_rtcp_format",
     "../../api:array_view",
     "../../api:rtp_headers",
-    "../../api:transport_api",
     "../../api/task_queue",
     "../../api/units:data_rate",
     "../../api/units:time_delta",

@@ -26,7 +26,6 @@
 
 namespace webrtc {
 class ReceiveStatisticsProvider;
-class Transport;
 
 // Interface to watch incoming rtcp packets by media (rtp) receiver.
 // All message handlers have default empty implementation. This way users only
@@ -114,10 +113,6 @@ struct RtcpTransceiverConfig {
   Clock* clock = nullptr;
 
   // Transport to send RTCP packets to.
-  union {
-    [[deprecated]] Transport* outgoing_transport = nullptr;
-    Transport* deprecated_outgoing_transport;
-  };
   std::function<void(rtc::ArrayView<const uint8_t>)> rtcp_transport;
 
   // Queue for scheduling delayed tasks, e.g. sending periodic compound packets.
