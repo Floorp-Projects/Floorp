@@ -107,9 +107,6 @@ TALOS_PACKAGE = $(PKG_BASENAME).talos.tests.tar.gz
 AWSY_PACKAGE = $(PKG_BASENAME).awsy.tests.tar.gz
 GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.tar.gz
 
-# macOS codesigning package naming
-MACOS_CODESIGN_ARCHIVE_BASENAME = $(PKG_BASENAME).codesign-entitlements
-
 # `.xpt` artifacts: for use in artifact builds.
 XPT_ARTIFACTS_ARCHIVE_BASENAME = $(PKG_BASENAME).xpt_artifacts
 
