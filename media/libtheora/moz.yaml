@@ -95,12 +95,15 @@ vendoring:
   keep:
     - Makefile.in
     - lib/config.h
-    - update.sh
 
   patches:
     - clang-arm.patch
 
   update-actions:
-    - action: run-script
-      script: '{yaml_dir}/update.sh'
-      cwd: '{yaml_dir}'
+    - action: move-file
+      from: '{vendor_dir}/lib/arm/armopts.s.in'
+      to: '{vendor_dir}/lib/arm/armopts.s'
+    - action: replace-in-file-regex
+      file: '{vendor_dir}/lib/arm/armopts.s'
+      pattern: '@HAVE_ARM_ASM_((EDSP)|(MEDIA)|(NEON))@'
+      with: '1'
