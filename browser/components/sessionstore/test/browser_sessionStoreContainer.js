@@ -113,8 +113,9 @@ async function openTabInUserContext(userContextId) {
 
 function waitForNewCookie() {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subj, topic, data) {
-      if (data == "added") {
+    Services.obs.addObserver(function observer(subj, topic) {
+      let notification = subj.QueryInterface(Ci.nsICookieNotification);
+      if (notification.action == Ci.nsICookieNotification.COOKIE_ADDED) {
         Services.obs.removeObserver(observer, topic);
         resolve();
       }
