@@ -243,7 +243,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   void OnReceivedNack(
       const std::vector<uint16_t>& nack_sequence_numbers) override;
   void OnReceivedRtcpReportBlocks(
-      const ReportBlockList& report_blocks) override;
+      rtc::ArrayView<const ReportBlockData> report_blocks) override;
   void OnRequestSendReport() override;
 
   void SetVideoBitrateAllocation(

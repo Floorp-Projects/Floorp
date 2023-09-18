@@ -189,10 +189,10 @@ index ce39006ce8..fc5ff1b272 100644
  static constexpr size_t kNumMediaTypes = 5;
  enum class RtpPacketMediaType : size_t {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index cf4757a77b..cd901d9675 100644
+index 1163d5dee5..9c7006963f 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -145,6 +145,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
+@@ -143,6 +143,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
        rtp_rtcp_(owner),
        registered_ssrcs_(false, config),
        network_link_rtcp_observer_(config.network_link_rtcp_observer),
@@ -200,7 +200,7 @@ index cf4757a77b..cd901d9675 100644
        rtcp_intra_frame_observer_(config.intra_frame_callback),
        rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
        network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -173,6 +174,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
+@@ -171,6 +172,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
        rtp_rtcp_(owner),
        registered_ssrcs_(true, config),
        network_link_rtcp_observer_(config.network_link_rtcp_observer),
@@ -208,7 +208,7 @@ index cf4757a77b..cd901d9675 100644
        rtcp_intra_frame_observer_(config.intra_frame_callback),
        rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
        network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -798,6 +800,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
+@@ -787,6 +789,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
      return false;
    }
  
@@ -219,7 +219,7 @@ index cf4757a77b..cd901d9675 100644
    // Clear our lists.
    rtts_.erase(bye.sender_ssrc());
    EraseIf(received_report_blocks_, [&](const auto& elem) {
-@@ -1219,12 +1225,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
+@@ -1209,12 +1215,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
  }
  
  bool RTCPReceiver::RtcpRrTimeoutLocked(Timestamp now) {
@@ -243,7 +243,7 @@ index cf4757a77b..cd901d9675 100644
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 6099fbf96f..3f0fb3458f 100644
+index 04f993bf8f..d82850dbfd 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
 @@ -361,6 +361,7 @@ class RTCPReceiver final {

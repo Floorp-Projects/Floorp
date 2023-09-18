@@ -107,7 +107,7 @@ class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
   MOCK_METHOD(void, OnReceivedNack, (const std::vector<uint16_t>&), (override));
   MOCK_METHOD(void,
               OnReceivedRtcpReportBlocks,
-              (const ReportBlockList&),
+              (rtc::ArrayView<const ReportBlockData>),
               (override));
 };
 
