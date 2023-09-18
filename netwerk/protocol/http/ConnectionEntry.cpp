@@ -544,6 +544,8 @@ void ConnectionEntry::MakeAllDontReuseExcept(HttpConnectionBase* conn) {
            "because new "
            "spdy connection (%p) takes precedence\n",
            otherConn, conn));
+      otherConn->SetCloseReason(
+          ConnectionCloseReason::CLOSE_EXISTING_CONN_FOR_COALESCING);
       otherConn->DontReuse();
     }
   }

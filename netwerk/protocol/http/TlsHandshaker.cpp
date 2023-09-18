@@ -258,6 +258,7 @@ void TlsHandshaker::Check0RttEnabled(nsITLSSocketControl* ssl) {
          "early selected alpn not available",
          mOwner.get()));
   } else {
+    mOwner->ChangeConnectionState(ConnectionState::ZERORTT);
     LOG1(
         ("TlsHandshaker::Check0RttEnabled %p -"
          "early selected alpn: %s",

@@ -142,6 +142,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   mSocketControl->GetPeerId(peerId);
   nsTArray<uint8_t> token;
   SessionCacheInfo info;
+  udpConn->ChangeConnectionState(ConnectionState::TLS_HANDSHAKING);
+
   if (StaticPrefs::network_http_http3_enable_0rtt() &&
       NS_SUCCEEDED(SSLTokensCache::Get(peerId, token, info))) {
     LOG(("Found a resumption token in the cache."));
@@ -151,6 +153,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       LOG(("Can send ZeroRtt data"));
       RefPtr<Http3Session> self(this);
       mState = ZERORTT;
+      udpConn->ChangeConnectionState(ConnectionState::ZERORTT);
       mZeroRttStarted = TimeStamp::Now();
       // Let the nsHttpConnectionMgr know that the connection can accept
       // transactions.
@@ -469,6 +472,8 @@ nsresult Http3Session::ProcessEvents() {
                static_cast<uint32_t>(rv)));
           return rv;
         }
+
+        mUdpConn->NotifyDataRead();
         break;
       }
       case Http3Event::Tag::DataReadable: {
@@ -595,6 +600,7 @@ nsresult Http3Session::ProcessEvents() {
       } break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
+        mUdpConn->SetCloseReason(ConnectionCloseReason::GO_AWAY);
         mGoawayReceived = true;
         break;
       case Http3Event::Tag::ConnectionClosing:
@@ -642,6 +648,7 @@ nsresult Http3Session::ProcessEvents() {
         LOG(("Http3Session::ProcessEvents - ConnectionClosed"));
         if (NS_SUCCEEDED(mError)) {
           mError = NS_ERROR_NET_TIMEOUT;
+          mUdpConn->SetCloseReason(ConnectionCloseReason::IDLE_TIMEOUT);
           CloseConnectionTelemetry(event.connection_closed.error, false);
         }
         mIsClosedByNeqo = true;
@@ -1534,6 +1541,11 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
     rv = NS_OK;
   }
 
+  // Let the connection know we sent some app data successfully.
+  if (stream && NS_SUCCEEDED(rv)) {
+    mUdpConn->NotifyDataWrite();
+  }
+
   return rv;
 }
 
@@ -2151,6 +2163,7 @@ void Http3Session::Authenticated(int32_t aError) {
     NS_DispatchToCurrentThread(
         NewRunnableMethod("net::HttpConnectionUDP::OnQuicTimeoutExpired",
                           mUdpConn, &HttpConnectionUDP::OnQuicTimeoutExpired));
+    mUdpConn->ChangeConnectionState(ConnectionState::TRANSFERING);
   }
 }
 

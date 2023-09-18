@@ -17723,6 +17723,18 @@
     "kind": "enumerated",
     "description": "The reason why a HTTP transaction is restarted."
   },
+  "HTTP_CONNECTION_CLOSE_REASON": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1784261],
+    "releaseChannelCollection": "opt-out",
+    "description": "Reason for HTTP connection closure, keyed by properties like HTTP version and connection state."
+  },
   "TRANSACTION_ECH_RETRY_WITH_ECH_COUNT": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
