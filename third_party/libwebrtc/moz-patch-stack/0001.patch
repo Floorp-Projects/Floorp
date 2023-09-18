@@ -1,156 +1,133 @@
-From: Alexander Cooper <alcooper@chromium.org>
-Date: Tue, 23 May 2023 16:14:46 +0000
-Subject: (cherry-pick-branch-heads/5790) Revert "pipewire capturer: Reduce the
- amount of copying"
+From: Tommi <tommi@webrtc.org>
+Date: Thu, 1 Jun 2023 16:08:52 +0200
+Subject: (cherry-pick-branch-heads/5790) [M115] Move transceiver iteration
+ loop over to the signaling thread.
 
-This reverts commit 8856410b6d54b546bdb3185587474f0f9b3a7c2e.
+This is required for ReportTransportStats since iterating over the
+transceiver list from the network thread is not safe.
 
-Reason for revert: chromium:1447540
+(cherry picked from commit dba22d31909298161318e00d43a80cdb0abc940f)
 
-Original change's description:
-> pipewire capturer: Reduce the amount of copying
->
-> Improves the capture latency by reducing the amount of
-> copying needed from the frame. We keep track of the
-> damaged region of previous frame and union it with
-> the damaged region of this frame and only copy this
-> union of the frame over. X11 capturer already has
-> such synchronization in place.
->
-> The change is beneficial especially when there are
-> small changes on the screen (e.g. clock ticking).
-> For a 4k screen with 128 cores, I observed the
-> capture latencies drop from 5 - 8 ms to 0 ms when the
-> system is left idle. This is in line with the X11
-> capturer.
->
-> Bug: chromium:1291247
-> Change-Id: Iffb441f9e1902d2658031f5f35b5372ee8e94073
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299720
-> Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-> Commit-Queue: Salman Malik <salmanmalik@chromium.org>
-> Cr-Commit-Position: refs/heads/main@{#39968}
-
-(cherry picked from commit a7d10811cdf1a0a22760b2297fbd2502b49bd75f)
-
-Bug: chromium:1447540
-Change-Id: Id1bfd3fc39fea2bb1f232cad5218f90e144920e7
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/306263
-Commit-Queue: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Alexander Cooper <alcooper@chromium.org>
-Auto-Submit: Alexander Cooper <alcooper@chromium.org>
-Reviewed-by: Mark Foltz <mfoltz@chromium.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40123}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/306582
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/branch-heads/5790@{#1}
+Bug: chromium:1446274, webrtc:12692
+Change-Id: I7c514df9f029112c4b1da85826af91217850fb26
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/307340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40197}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308000
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5790@{#2}
 Cr-Branched-From: 2eacbbc03a4a41ea658661225eb1c8fc07884c33-refs/heads/main@{#40122}
 ---
- .../linux/wayland/shared_screencast_stream.cc | 47 ++++---------------
- 1 file changed, 8 insertions(+), 39 deletions(-)
+ pc/peer_connection.cc                 | 35 +++++++++++++++++----------
+ pc/peer_connection.h                  |  3 ++-
+ pc/peer_connection_integrationtest.cc |  8 ++++++
+ 3 files changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index b2ad7adea8..17c895088a 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -144,7 +144,6 @@ class SharedScreenCastStreamPrivate {
-   uint32_t frame_rate_ = 60;
+diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
+index 59d38727dc..20ffd36eba 100644
+--- a/pc/peer_connection.cc
++++ b/pc/peer_connection.cc
+@@ -733,9 +733,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
+   transport_controller_->SubscribeIceConnectionState(
+       [this](cricket::IceConnectionState s) {
+         RTC_DCHECK_RUN_ON(network_thread());
+-        if (s == cricket::kIceConnectionConnected) {
+-          ReportTransportStats();
+-        }
+         signaling_thread()->PostTask(
+             SafeTask(signaling_thread_safety_.flag(), [this, s]() {
+               RTC_DCHECK_RUN_ON(signaling_thread());
+@@ -2399,6 +2396,20 @@ void PeerConnection::OnTransportControllerConnectionState(
+     case cricket::kIceConnectionConnected:
+       RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
+                           "all transports are writable.";
++      {
++        std::vector<RtpTransceiverProxyRefPtr> transceivers;
++        if (ConfiguredForMedia()) {
++          transceivers = rtp_manager()->transceivers()->List();
++        }
++
++        network_thread()->PostTask(
++            SafeTask(network_thread_safety_,
++                     [this, transceivers = std::move(transceivers)] {
++                       RTC_DCHECK_RUN_ON(network_thread());
++                       ReportTransportStats(std::move(transceivers));
++                     }));
++      }
++
+       SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
+       NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
+       break;
+@@ -2742,20 +2753,18 @@ void PeerConnection::OnTransportControllerGatheringState(
+ }
  
-   bool use_damage_region_ = true;
--  DesktopRegion last_damage_region_;
- 
-   // Specifies whether the pipewire stream has been initialized with a request
-   // to embed cursor into the captured frames.
-@@ -159,9 +158,7 @@ class SharedScreenCastStreamPrivate {
-   void ProcessBuffer(pw_buffer* buffer);
-   bool ProcessMemFDBuffer(pw_buffer* buffer,
-                           DesktopFrame& frame,
--                          const DesktopFrame* previous_frame,
--                          const DesktopVector& offset,
--                          bool effectively_new_frame);
-+                          const DesktopVector& offset);
-   bool ProcessDMABuffer(pw_buffer* buffer,
-                         DesktopFrame& frame,
-                         const DesktopVector& offset);
-@@ -828,22 +825,17 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+ // Runs on network_thread().
+-void PeerConnection::ReportTransportStats() {
++void PeerConnection::ReportTransportStats(
++    std::vector<RtpTransceiverProxyRefPtr> transceivers) {
+   TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
+   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+   std::map<std::string, std::set<cricket::MediaType>>
+       media_types_by_transport_name;
+-  if (ConfiguredForMedia()) {
+-    for (const auto& transceiver :
+-         rtp_manager()->transceivers()->UnsafeList()) {
+-      if (transceiver->internal()->channel()) {
+-        std::string transport_name(
+-            transceiver->internal()->channel()->transport_name());
+-        media_types_by_transport_name[transport_name].insert(
+-            transceiver->media_type());
+-      }
++  for (const auto& transceiver : transceivers) {
++    if (transceiver->internal()->channel()) {
++      std::string transport_name(
++          transceiver->internal()->channel()->transport_name());
++      media_types_by_transport_name[transport_name].insert(
++          transceiver->media_type());
      }
    }
  
--  bool effectively_new_frame = false;
-   if (!queue_.current_frame() ||
-       !queue_.current_frame()->size().equals(frame_size_)) {
-     std::unique_ptr<DesktopFrame> frame(new BasicDesktopFrame(
-         DesktopSize(frame_size_.width(), frame_size_.height())));
-     queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
--    effectively_new_frame = true;
-   }
+diff --git a/pc/peer_connection.h b/pc/peer_connection.h
+index 26d2531bef..37f8df0012 100644
+--- a/pc/peer_connection.h
++++ b/pc/peer_connection.h
+@@ -567,7 +567,8 @@ class PeerConnection : public PeerConnectionInternal,
  
--  UpdateFrameUpdatedRegions(spa_buffer, *queue_.current_frame());
--
-   bool bufferProcessed = false;
-   if (spa_buffer->datas[0].type == SPA_DATA_MemFd) {
--    bufferProcessed = ProcessMemFDBuffer(buffer, *queue_.current_frame(),
--                                         queue_.previous_frame(), offset,
--                                         effectively_new_frame);
-+    bufferProcessed =
-+        ProcessMemFDBuffer(buffer, *queue_.current_frame(), offset);
-   } else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf) {
-     bufferProcessed = ProcessDMABuffer(buffer, *queue_.current_frame(), offset);
-   }
-@@ -870,6 +862,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
-     observer_->OnDesktopFrameChanged();
-   }
+   // Invoked when TransportController connection completion is signaled.
+   // Reports stats for all transports in use.
+-  void ReportTransportStats() RTC_RUN_ON(network_thread());
++  void ReportTransportStats(std::vector<RtpTransceiverProxyRefPtr> transceivers)
++      RTC_RUN_ON(network_thread());
  
-+  UpdateFrameUpdatedRegions(spa_buffer, *queue_.current_frame());
-   queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
+   // Gather the usage of IPv4/IPv6 as best connection.
+   static void ReportBestConnectionState(const cricket::TransportStats& stats);
+diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
+index 812833000b..07c5e0c0d3 100644
+--- a/pc/peer_connection_integrationtest.cc
++++ b/pc/peer_connection_integrationtest.cc
+@@ -1831,6 +1831,10 @@ TEST_P(PeerConnectionIntegrationTest,
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
  
-   if (callback_) {
-@@ -885,9 +878,7 @@ RTC_NO_SANITIZE("cfi-icall")
- bool SharedScreenCastStreamPrivate::ProcessMemFDBuffer(
-     pw_buffer* buffer,
-     DesktopFrame& frame,
--    const DesktopFrame* previous_frame,
--    const DesktopVector& offset,
--    bool effectively_new_frame) {
-+    const DesktopVector& offset) {
-   spa_buffer* spa_buffer = buffer->buffer;
-   ScopedBuf map;
-   uint8_t* src = nullptr;
-@@ -913,31 +904,9 @@ bool SharedScreenCastStreamPrivate::ProcessMemFDBuffer(
-   uint8_t* updated_src =
-       src + (src_stride * offset.y()) + (kBytesPerPixel * offset.x());
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
++
+   EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
+                           "WebRTC.PeerConnection.CandidatePairType_UDP",
+                           webrtc::kIceCandidatePairHostNameHostName));
+@@ -1959,6 +1963,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
  
--  const int stride = src_stride - (kBytesPerPixel * offset.x());
--
--  if (effectively_new_frame || !previous_frame || !use_damage_region_ ||
--      damage_region_.is_empty()) {
--    frame.CopyPixelsFrom(
--        updated_src, stride,
--        DesktopRect::MakeWH(frame.size().width(), frame.size().height()));
--  } else {
--    for (DesktopRegion::Iterator it(last_damage_region_); !it.IsAtEnd();
--         it.Advance()) {
--      const DesktopRect& r = it.rect();
--      frame.CopyPixelsFrom(*previous_frame, r.top_left(), r);
--    }
--
--    for (DesktopRegion::Iterator it(damage_region_); !it.IsAtEnd();
--         it.Advance()) {
--      const auto& rect = it.rect();
--      frame.CopyPixelsFrom(src + rect.top() * stride +
--                               rect.left() * DesktopFrame::kBytesPerPixel,
--                           stride,
--                           DesktopRect::MakeXYWH(rect.left(), rect.top(),
--                                                 rect.width(), rect.height()));
--    }
--  }
--  last_damage_region_ = damage_region_;
-+  frame.CopyPixelsFrom(
-+      updated_src, (src_stride - (kBytesPerPixel * offset.x())),
-+      DesktopRect::MakeWH(frame.size().width(), frame.size().height()));
- 
-   return true;
- }
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
++
+   // TODO(bugs.webrtc.org/9456): Fix it.
+   const int num_best_ipv4 = webrtc::metrics::NumEvents(
+       "WebRTC.PeerConnection.IPMetrics", webrtc::kBestConnections_IPv4);
 -- 
 2.37.3
 

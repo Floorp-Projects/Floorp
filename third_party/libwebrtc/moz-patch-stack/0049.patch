@@ -1,38 +1,300 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 25 Jun 2021 15:12:00 -0500
-Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
- with the Gecko Profiler. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 14 Jul 2021 22:26:00 +0000
+Subject: Bug 1654112 - deconflate the target and host architectures in
+ libwebrtc build files; r=mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D119412
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
+Differential Revision: https://phabricator.services.mozilla.com/D119707
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e21dff7362743b6f4cdd1696b
 ---
- rtc_base/platform_thread.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ BUILD.gn                                         |  6 +++---
+ common_audio/BUILD.gn                            | 16 ++++++++--------
+ common_audio/third_party/ooura/BUILD.gn          |  6 +++---
+ common_audio/third_party/spl_sqrt_floor/BUILD.gn |  4 ++--
+ modules/audio_processing/aec3/BUILD.gn           |  6 +++---
+ modules/audio_processing/aecm/BUILD.gn           |  4 ++--
+ modules/audio_processing/agc/BUILD.gn            |  2 +-
+ modules/audio_processing/agc2/rnn_vad/BUILD.gn   |  2 +-
+ modules/audio_processing/ns/BUILD.gn             |  2 +-
+ modules/desktop_capture/BUILD.gn                 |  2 +-
+ webrtc.gni                                       |  4 ++--
+ 11 files changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 556204ac89..71a9f1b224 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -19,6 +19,8 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 9939f17095..605a27624a 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -414,12 +414,12 @@ config("common_config") {
+     }
+   }
  
- #include "rtc_base/checks.h"
+-  if (current_cpu == "arm64") {
++  if (target_cpu == "arm64") {
+     defines += [ "WEBRTC_ARCH_ARM64" ]
+     defines += [ "WEBRTC_HAS_NEON" ]
+   }
  
-+#include "MicroGeckoProfiler.h"
-+
- namespace rtc {
- namespace {
+-  if (current_cpu == "arm") {
++  if (target_cpu == "arm") {
+     defines += [ "WEBRTC_ARCH_ARM" ]
+     if (arm_version >= 7) {
+       defines += [ "WEBRTC_ARCH_ARM_V7" ]
+@@ -429,7 +429,7 @@ config("common_config") {
+     }
+   }
  
-@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
-       new std::function<void()>([thread_function = std::move(thread_function),
-                                  name = std::string(name), attributes] {
-         rtc::SetCurrentThreadName(name.c_str());
-+
-+        char stacktop;
-+        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
-+
-         SetPriority(attributes.priority);
-         thread_function();
-       });
+-  if (current_cpu == "mipsel") {
++  if (target_cpu == "mipsel") {
+     defines += [ "MIPS32_LE" ]
+     if (mips_float_abi == "hard") {
+       defines += [ "MIPS_FPU_LE" ]
+diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
+index a45214f754..79d9321bbd 100644
+--- a/common_audio/BUILD.gn
++++ b/common_audio/BUILD.gn
+@@ -66,7 +66,7 @@ rtc_library("common_audio") {
+     deps += [ ":common_audio_neon" ]
+   }
+ 
+-  if (current_cpu == "x86" || current_cpu == "x64") {
++  if (target_cpu == "x86" || target_cpu == "x64") {
+     deps += [ ":common_audio_sse2" ]
+     deps += [ ":common_audio_avx2" ]
+   }
+@@ -88,7 +88,7 @@ rtc_source_set("mock_common_audio") {
+ rtc_source_set("common_audio_c_arm_asm") {
+   sources = []
+   deps = []
+-  if (current_cpu == "arm") {
++  if (target_cpu == "arm") {
+     sources += [ "signal_processing/complex_bit_reverse_arm.S" ]
+ 
+     if (arm_version >= 7) {
+@@ -152,7 +152,7 @@ rtc_library("common_audio_c") {
+     "vad/webrtc_vad.c",
+   ]
+ 
+-  if (current_cpu == "mipsel") {
++  if (target_cpu == "mipsel") {
+     sources += [
+       "signal_processing/complex_bit_reverse_mips.c",
+       "signal_processing/complex_fft_mips.c",
+@@ -170,7 +170,7 @@ rtc_library("common_audio_c") {
+     sources += [ "signal_processing/complex_fft.c" ]
+   }
+ 
+-  if (current_cpu != "arm" && current_cpu != "mipsel") {
++  if (target_cpu != "arm" && target_cpu != "mipsel") {
+     sources += [
+       "signal_processing/complex_bit_reverse.c",
+       "signal_processing/filter_ar_fast_q12.c",
+@@ -231,7 +231,7 @@ rtc_library("fir_filter_factory") {
+     "../rtc_base/system:arch",
+     "../system_wrappers",
+   ]
+-  if (current_cpu == "x86" || current_cpu == "x64") {
++  if (target_cpu == "x86" || target_cpu == "x64") {
+     deps += [ ":common_audio_sse2" ]
+     deps += [ ":common_audio_avx2" ]
+   }
+@@ -240,7 +240,7 @@ rtc_library("fir_filter_factory") {
+   }
+ }
+ 
+-if (current_cpu == "x86" || current_cpu == "x64") {
++if (target_cpu == "x86" || target_cpu == "x64") {
+   rtc_library("common_audio_sse2") {
+     sources = [
+       "fir_filter_sse.cc",
+@@ -289,7 +289,7 @@ if (rtc_build_with_neon) {
+       "resampler/sinc_resampler_neon.cc",
+     ]
+ 
+-    if (current_cpu != "arm64") {
++    if (target_cpu != "arm64") {
+       # Enable compilation for the NEON instruction set.
+       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+       cflags = [ "-mfpu=neon" ]
+@@ -312,7 +312,7 @@ if (rtc_build_with_neon) {
+       "signal_processing/min_max_operations_neon.c",
+     ]
+ 
+-    if (current_cpu != "arm64") {
++    if (target_cpu != "arm64") {
+       # Enable compilation for the NEON instruction set.
+       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+       cflags = [ "-mfpu=neon" ]
+diff --git a/common_audio/third_party/ooura/BUILD.gn b/common_audio/third_party/ooura/BUILD.gn
+index 0cdf98e591..a0ddf777db 100644
+--- a/common_audio/third_party/ooura/BUILD.gn
++++ b/common_audio/third_party/ooura/BUILD.gn
+@@ -20,7 +20,7 @@ rtc_library("fft_size_128") {
+   ]
+   cflags = []
+ 
+-  if (current_cpu == "x86" || current_cpu == "x64") {
++  if (target_cpu == "x86" || target_cpu == "x64") {
+     sources += [
+       "fft_size_128/ooura_fft_sse2.cc",
+       "fft_size_128/ooura_fft_tables_neon_sse2.h",
+@@ -38,14 +38,14 @@ rtc_library("fft_size_128") {
+ 
+     deps += [ "../../../common_audio" ]
+ 
+-    if (current_cpu != "arm64") {
++    if (target_cpu != "arm64") {
+       # Enable compilation for the NEON instruction set.
+       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+       cflags += [ "-mfpu=neon" ]
+     }
+   }
+ 
+-  if (current_cpu == "mipsel" && mips_float_abi == "hard") {
++  if (target_cpu == "mipsel" && mips_float_abi == "hard") {
+     sources += [ "fft_size_128/ooura_fft_mips.cc" ]
+   }
+ }
+diff --git a/common_audio/third_party/spl_sqrt_floor/BUILD.gn b/common_audio/third_party/spl_sqrt_floor/BUILD.gn
+index ac862c65a8..e66ed2796e 100644
+--- a/common_audio/third_party/spl_sqrt_floor/BUILD.gn
++++ b/common_audio/third_party/spl_sqrt_floor/BUILD.gn
+@@ -12,11 +12,11 @@ rtc_library("spl_sqrt_floor") {
+   visibility = [ "../..:common_audio_c" ]
+   sources = [ "spl_sqrt_floor.h" ]
+   deps = []
+-  if (current_cpu == "arm") {
++  if (target_cpu == "arm") {
+     sources += [ "spl_sqrt_floor_arm.S" ]
+ 
+     deps += [ "../../../rtc_base/system:asm_defines" ]
+-  } else if (current_cpu == "mipsel") {
++  } else if (target_cpu == "mipsel") {
+     sources += [ "spl_sqrt_floor_mips.c" ]
+   } else {
+     sources += [ "spl_sqrt_floor.c" ]
+diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
+index 3e11a245a1..c29b893b7d 100644
+--- a/modules/audio_processing/aec3/BUILD.gn
++++ b/modules/audio_processing/aec3/BUILD.gn
+@@ -123,7 +123,7 @@ rtc_library("aec3") {
+   ]
+ 
+   defines = []
+-  if (rtc_build_with_neon && current_cpu != "arm64") {
++  if (rtc_build_with_neon && target_cpu != "arm64") {
+     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+     cflags = [ "-mfpu=neon" ]
+   }
+@@ -162,7 +162,7 @@ rtc_library("aec3") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ 
+-  if (current_cpu == "x86" || current_cpu == "x64") {
++  if (target_cpu == "x86" || target_cpu == "x64") {
+     deps += [ ":aec3_avx2" ]
+   }
+ }
+@@ -253,7 +253,7 @@ rtc_source_set("fft_data") {
+   ]
+ }
+ 
+-if (current_cpu == "x86" || current_cpu == "x64") {
++if (target_cpu == "x86" || target_cpu == "x64") {
+   rtc_library("aec3_avx2") {
+     configs += [ "..:apm_debug_dump" ]
+     sources = [
+diff --git a/modules/audio_processing/aecm/BUILD.gn b/modules/audio_processing/aecm/BUILD.gn
+index 80f2901049..a77f04aba5 100644
+--- a/modules/audio_processing/aecm/BUILD.gn
++++ b/modules/audio_processing/aecm/BUILD.gn
+@@ -29,14 +29,14 @@ rtc_library("aecm_core") {
+   if (rtc_build_with_neon) {
+     sources += [ "aecm_core_neon.cc" ]
+ 
+-    if (current_cpu != "arm64") {
++    if (target_cpu != "arm64") {
+       # Enable compilation for the NEON instruction set.
+       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+       cflags += [ "-mfpu=neon" ]
+     }
+   }
+ 
+-  if (current_cpu == "mipsel") {
++  if (target_cpu == "mipsel") {
+     sources += [ "aecm_core_mips.cc" ]
+   } else {
+     sources += [ "aecm_core_c.cc" ]
+diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
+index 508f901b08..75bef1450f 100644
+--- a/modules/audio_processing/agc/BUILD.gn
++++ b/modules/audio_processing/agc/BUILD.gn
+@@ -83,7 +83,7 @@ rtc_library("legacy_agc") {
+   ]
+ 
+   if (rtc_build_with_neon) {
+-    if (current_cpu != "arm64") {
++    if (target_cpu != "arm64") {
+       # Enable compilation for the NEON instruction set.
+       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+       cflags = [ "-mfpu=neon" ]
+diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
+index 3003a585bd..d709eb3699 100644
+--- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
++++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
+@@ -18,7 +18,7 @@ rtc_library("rnn_vad") {
+   ]
+ 
+   defines = []
+-  if (rtc_build_with_neon && current_cpu != "arm64") {
++  if (rtc_build_with_neon && target_cpu != "arm64") {
+     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+     cflags = [ "-mfpu=neon" ]
+   }
+diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
+index d818e23f3c..8c2e9dba84 100644
+--- a/modules/audio_processing/ns/BUILD.gn
++++ b/modules/audio_processing/ns/BUILD.gn
+@@ -43,7 +43,7 @@ rtc_static_library("ns") {
+   ]
+ 
+   defines = []
+-  if (rtc_build_with_neon && current_cpu != "arm64") {
++  if (rtc_build_with_neon && target_cpu != "arm64") {
+     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+     cflags = [ "-mfpu=neon" ]
+   }
+diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
+index 42d72865b9..c184e2fbbc 100644
+--- a/modules/desktop_capture/BUILD.gn
++++ b/modules/desktop_capture/BUILD.gn
+@@ -10,7 +10,7 @@ import("//build/config/linux/gtk/gtk.gni")
+ import("//build/config/ui.gni")
+ import("../../webrtc.gni")
+ 
+-use_desktop_capture_differ_sse2 = current_cpu == "x86" || current_cpu == "x64"
++use_desktop_capture_differ_sse2 = target_cpu == "x86" || target_cpu == "x64"
+ 
+ config("x11_config") {
+   if (rtc_use_x11_extensions) {
+diff --git a/webrtc.gni b/webrtc.gni
+index c25caf85e0..9e49573c98 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -171,13 +171,13 @@ declare_args() {
+ 
+   # Selects fixed-point code where possible.
+   rtc_prefer_fixed_point = false
+-  if (current_cpu == "arm" || current_cpu == "arm64") {
++  if (target_cpu == "arm" || target_cpu == "arm64") {
+     rtc_prefer_fixed_point = true
+   }
+ 
+   # Determines whether NEON code will be built.
+   rtc_build_with_neon =
+-      (current_cpu == "arm" && arm_use_neon) || current_cpu == "arm64"
++      (target_cpu == "arm" && arm_use_neon) || target_cpu == "arm64"
+ 
+   # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported on
+   # all platforms except Android and iOS. Because FFmpeg can be built
 -- 
 2.37.3
 
