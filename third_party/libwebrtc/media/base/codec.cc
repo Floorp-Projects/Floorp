@@ -135,18 +135,11 @@ bool Codec::Matches(const Codec& codec,
                     const webrtc::FieldTrialsView* field_trials) const {
   // Match the codec id/name based on the typical static/dynamic name rules.
   // Matching is case-insensitive.
-
-  // Legacy behaviour with killswitch.
-  if (field_trials &&
-      field_trials->IsDisabled("WebRTC-PayloadTypes-Lower-Dynamic-Range")) {
-    const int kMaxStaticPayloadId = 95;
-    return (id <= kMaxStaticPayloadId || codec.id <= kMaxStaticPayloadId)
-               ? (id == codec.id)
-               : (absl::EqualsIgnoreCase(name, codec.name));
-  }
   // We support the ranges [96, 127] and more recently [35, 65].
   // https://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-1
   // Within those ranges we match by codec name, outside by codec id.
+  // Since no codecs are assigned an id in the range [66, 95] by us, these will
+  // never match.
   const int kLowerDynamicRangeMin = 35;
   const int kLowerDynamicRangeMax = 65;
   const int kUpperDynamicRangeMin = 96;
