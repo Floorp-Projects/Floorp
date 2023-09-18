@@ -14,7 +14,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <utility>
 
 #include "modules/include/module_common_types_public.h"
@@ -350,7 +349,7 @@ void RtpPacketHistory::Clear() {
 void RtpPacketHistory::Reset() {
   packet_history_.clear();
   padding_priority_.clear();
-  large_payload_packet_ = std::nullopt;
+  large_payload_packet_ = absl::nullopt;
 }
 
 void RtpPacketHistory::CullOldPackets() {
