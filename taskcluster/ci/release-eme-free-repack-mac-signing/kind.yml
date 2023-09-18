@@ -10,6 +10,7 @@ transforms:
     - gecko_taskgraph.transforms.name_sanity
     - gecko_taskgraph.transforms.partner_signing
     - gecko_taskgraph.transforms.signing
+    - gecko_taskgraph.transforms.hardened_signing
     - gecko_taskgraph.transforms.task
 
 kind-dependencies:

@@ -111,6 +111,25 @@ graph_config_schema = Schema(
             ),
             Required("mac-requirements"): optionally_keyed_by("platform", str),
         },
+        Required("mac-signing"): {
+            Required("hardened-sign-config"): optionally_keyed_by(
+                "release-level",
+                [
+                    {
+                        Optional("deep"): bool,
+                        Optional("runtime"): bool,
+                        Optional("force"): bool,
+                        Optional("requirements"): optionally_keyed_by(
+                            "release-product", "release-level", str
+                        ),
+                        Optional("entitlements"): optionally_keyed_by(
+                            "release-level", str
+                        ),
+                        Required("globs"): [str],
+                    }
+                ],
+            )
+        },
         Required("taskgraph"): {
             Optional(
                 "register",
