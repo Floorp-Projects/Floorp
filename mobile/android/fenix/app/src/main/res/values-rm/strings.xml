@@ -63,6 +63,19 @@
     <string name="private_browsing_placeholder_description_2">%1$s stizza tia cronologia da tschertga e navigaziun da tabs privats cura che ti als serras u termineschas l\'applicaziun. Cumbain che quai na ta renda betg anonim visavi websites u tes purschider d\'internet, èsi in instrument util per impedir che autras persunas che utiliseschan quest apparat vegnian ad infurmaziuns davart tias activitads online.</string>
     <string name="private_browsing_common_myths">Mitus frequents areguard il modus privat</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Na laschar nagins fastizs sin quest apparat</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s stizza tes cookies, la cronologia e datas da websites cura che ti serras tut tias fanestras privatas. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Tgi pudess vesair mias activitads?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Avra tes proxim tab privat cun tutgar be ina giada.</string>
@@ -84,6 +97,11 @@
     <string name="tcp_cfr_message">Nossa funcziun per la protecziun da datas – la pli avanzada d\'enfin qua – isolescha fastizaders interpaginals.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Ve a savair dapli davart la protecziun totala cunter cookies</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Tutga qua per aviar ina nova sesida privata. Stizza tia cronologia, ils cookies – tut.</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">L\'access a la camera è necessari. Acceda als parameters dad Android, smatga sin permissiuns e lura sin permetter.</string>
@@ -221,6 +239,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Visur da partenza</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Stizzar la cronologia</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lingua tschernida</string>
@@ -342,6 +363,18 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Emprova il widget da retschertga da Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Cun Firefox sin tes visur da partenza has ti in svelt access al navigatur che dat la prioritad a la protecziun da datas e blochescha fastizaders interpaginals.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Agiuntar il widget da Firefox</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Avrir in nov tab da %1$s</string>
@@ -372,6 +405,8 @@
     <string name="preferences_default_search_engine">Maschina da tschertgar da standard</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Tschertga</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Maschinas da tschertgar</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Trav d\'adressas</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -626,6 +661,16 @@
     <string name="addon_not_supported_error">Il supplement na vegn betg sustegnì</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Il supplement è gia installà</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Ils supplements èn deactivads temporarmain</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">In u plirs supplements na funcziunan betg pli e rendan tes sistem instabel. %1$s ha empruvà senza success da reaviar il(s) supplement(s).\n\nIls supplements na vegnan betg reaviads durant la sesida actuala.\n\nEventualmain sa schlia il problem cun allontanar u deactivar supplements.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Empruvar da reaviar ils supplements</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Cuntinuar cun supplements deactivads</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1299,6 +1344,8 @@
     <string name="snackbar_private_tab_closed">Serrà il tab privat</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Serrà ils tabs privats</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Stizzà las datas da la navigaziun privata</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">REVOCAR</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -1346,12 +1393,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabs</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Cronologia da navigaziun e datas da websites</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Cronologia da navigaziun e datas da websites</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Cronologia</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adressas</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Cookies</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies e datas da websites</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Ti vegns deconnectà da las bleras websites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1408,62 +1459,62 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Bainvegni en in meglier internet</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Bainvegni en in meglier internet</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">In navigatur creà per persunas, betg per daners.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">In navigatur creà per persunas, betg per daners.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Cuntinuescha là nua che ti has chalà</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Cuntinuescha là nua che ti has chalà</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Sincronisescha tabs e pleds-clav tranter tes apparats per midar senza interrupziun dad in visur a l\'auter.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Sincronisescha tabs e pleds-clav tranter tes apparats per midar senza interrupziun dad in visur a l\'auter.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">S\'annunziar</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">S\'annunziar</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync è activà</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protecziun da la sfera privata sco standard</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Protecziun da la sfera privata sco standard</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s impedescha automaticamain che interpresas ta persequiteschian a la zuppada en il web.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s impedescha automaticamain che interpresas ta persequiteschian a la zuppada en il web.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Ussa cun la protecziun totala cunter cookies per impedir ch\'ils fastizaders dovrian ils cookies per ta persequitar sur pliras websites.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ussa cun la protecziun totala cunter cookies per impedir ch\'ils fastizaders dovrian ils cookies per ta persequitar sur pliras websites.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standard (predefinì)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standard (predefinì)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Equiliber tranter protecziun da datas e prestaziun. Paginas chargian normal.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Equiliber tranter protecziun da datas e prestaziun. Paginas chargian normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Restrictiv</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Restrictiv</string>
 
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blochescha ulteriurs fastizaders, uschia che paginas chargian pli svelt, ma tschertas paginas na funcziunan eventualmain betg pli endretg.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Blochescha ulteriurs fastizaders, uschia che paginas chargian pli svelt, ma tschertas paginas na funcziunan eventualmain betg pli endretg.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Tscherna la posiziun da la trav d\'utensils</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Tscherna la posiziun da la trav d\'utensils</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Lascha ella giusut u la sposta ensi.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Lascha ella giusut u la sposta ensi.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Ti controlleschas tias datas</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Ti controlleschas tias datas</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox ta pussibilitescha da controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox ta pussibilitescha da controllar tge che ti cundividas en l\'internet e tge che ti cundividas cun nus.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Legia nossas directivas per la protecziun da datas</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Legia nossas directivas per la protecziun da datas</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Pront da scuvrir in internet mirveglius?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Pront da scuvrir in internet mirveglius?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Cumenzar a navigar</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Cumenzar a navigar</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Tscherna tes design</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Tscherna tes design</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Spargna energia e protegia tes egls cun il modus stgir.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Spargna energia e protegia tes egls cun il modus stgir.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatic</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Resguarda ils parameters da tes apparat</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Resguarda ils parameters da tes apparat</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Design stgir</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Design stgir</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Design cler</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Design cler</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Tramess ils tabs!</string>
@@ -1917,7 +1968,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL da l\'API per propostas da tschertga</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Remplazzar la tschertga cun «%s». Per exempel:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Remplazzar la tschertga cun «%s». Per exempel:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Remplazzar la tschertga cun «%s». Per exempel:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Memorisar</string>
 

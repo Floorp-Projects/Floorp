@@ -67,6 +67,19 @@
        Popularne mity na temat przeglądania prywatnego
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Nie zostawiaj śladów na tym urządzeniu</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s usuwa Twoje ciasteczka, historię i dane witryn po zamknięciu wszystkich prywatnych okien. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Kto może zobaczyć co robię?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Otwieraj kolejne prywatne karty jednym stuknięciem.</string>
@@ -88,6 +101,11 @@
     <string name="tcp_cfr_message">Nasza najpotężniejsza funkcja ochrony prywatności w historii izoluje elementy śledzące między witrynami.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Więcej informacji o całkowitej ochronie ciasteczek</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Stuknij tutaj, aby otworzyć nową sesję prywatną. Usuń swoją historię, ciasteczka — wszystko.</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Wymagany jest dostęp do aparatu. Przejdź do ustawień Androida, stuknij „Uprawnienia” i stuknij „Zezwól”.</string>
@@ -226,6 +244,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Strona startowa</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Usuń historię przeglądania</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Wybrany język</string>
@@ -349,6 +370,18 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Wypróbuj widżet wyszukiwania Firefoksa</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Dzięki Firefoksowi na ekranie głównym będziesz mieć łatwy dostęp do przeglądarki dbającej o prywatność, która blokuje elementy śledzące między witrynami.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Dodaj widżet Firefoksa</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Otwórz nową kartę w przeglądarce %1$s</string>
@@ -379,6 +412,8 @@
     <string name="preferences_default_search_engine">Domyślna wyszukiwarka</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Wyszukiwanie</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Wyszukiwarki</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Pasek adresu</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -637,6 +672,17 @@
     <string name="addon_not_supported_error">Dodatek nie jest obsługiwany</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Dodatek jest już zainstalowany</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Dodatki zostały tymczasowo wyłączone</string>
+
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Co najmniej jeden dodatek przestał działać, przez co system stał się niestabilny. %1$s bezskutecznie próbował ponownie włączyć dodatki.\n\nDodatki nie zostaną ponownie włączone w czasie tej sesji.\n\nUsunięcie lub wyłączenie dodatków może naprawić ten problem.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Spróbuj ponownie włączyć dodatki</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Kontynuuj z wyłączonymi dodatkami</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1316,6 +1362,8 @@
     <string name="snackbar_private_tab_closed">Zamknięto prywatną kartę</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Zamknięto prywatne karty</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">Usunięto dane trybu prywatnego</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">Cofnij</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -1363,12 +1411,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Karty: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Historia przeglądania i dane witryn</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Historia przeglądania i dane witryn</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historia przeglądania</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresy: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Ciasteczka</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Ciasteczka</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Ciasteczka i dane witryn</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Spowoduje wylogowanie z większości stron</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1924,7 +1976,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Adres API podpowiedzi wyszukiwania</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Wyszukiwany tekst zastąp „%s”. Przykład:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Wyszukiwany tekst zastąp „%s”. Przykład:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Wyszukiwany tekst zastąp „%s”. Przykład:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Zachowaj</string>
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Číst a upravovat nastavení soukromí</string>
     <!-- Description for all_urls add-on permission. -->
@@ -178,8 +178,12 @@
     <string name="mozac_feature_addons_failed_to_install_corrupt_error">Tento doplněk nemohl být nainstalován, protože je poškozený.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error">Tento doplněk nemohl být nainstalován, protože nebyl ověřen.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Doplněk %1$s nelze nainstalovat, protože není kompatibilní s prohlížečem %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">Doplněk %1$s nebylo možné nainstalovat, protože existuje vysoké riziko, že způsobí problémy se stabilitou nebo zabezpečením.</string>
+    <string name="mozac_feature_addons_blocklisted_1">Doplněk %1$s nebylo možné nainstalovat, protože existuje vysoké riziko, že způsobí problémy se stabilitou nebo zabezpečením.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">Doplněk %1$s nebylo možné nainstalovat, protože existuje vysoké riziko, že způsobí problémy se stabilitou nebo zabezpečením.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Doplněk %1$s byl úspěšně povolen</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
