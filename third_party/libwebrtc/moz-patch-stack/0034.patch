@@ -1,90 +1,66 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 8 Jul 2020 17:35:00 +0000
-Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
- device_caps; r=ng
+From: Randell Jesup <rjesup@wgate.com>
+Date: Sat, 11 Jul 2020 12:31:00 +0000
+Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
+ r=dminor
 
-The capabilities field is for the physical device, device_caps is for the
-specific /dev/videoX device that has been opened. The device_caps field is
-only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
-fall back to capabilities if it is not set.
+Also we drop support for an independent-of-scroll/viewport capture, which
+the old Tab Sharing supported, for security reasons (and we don't need it).
 
-Differential Revision: https://phabricator.services.mozilla.com/D82377
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
+Differential Revision: https://phabricator.services.mozilla.com/D80974
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
- modules/video_capture/linux/device_info_v4l2.h  |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
+ modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a2435bcd4f..cd0ba6e3df 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     struct v4l2_capability cap;
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
--      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (!IsVideoCaptureDevice(&cap)) {
-         continue;
-       }
- 
-@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
-   return false;
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 5211f1acec..4baa93cab9 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+   return capturer;
  }
  
-+bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
-+{
-+  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
-+    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
-+  } else {
-+    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
++    const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
++  if (capturer && options.detect_updated_region()) {
++    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
 +  }
++
++  return capturer;
 +}
 +
- int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
-   // set image format
-   struct v4l2_format video_fmt;
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 95432a509d..e3c2395f49 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -18,6 +18,8 @@
- #include "rtc_base/platform_thread.h"
- #include <sys/inotify.h>
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ bool DesktopCapturer::IsRunningUnderWayland() {
+   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index f39852b58e..9b667739a8 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
  
-+struct v4l2_capability;
++  // Creates a DesktopCapturer instance which targets to capture tab.
++  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
++      const DesktopCaptureOptions& options);
 +
- namespace webrtc {
- namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
  
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
+@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
+   // capture screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+       const DesktopCaptureOptions& options);
++
++  // Creates a DesktopCapturer instance which targets to capture tabs
++  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
++      const DesktopCaptureOptions& options);
+ };
  
- #ifdef WEBRTC_LINUX
-   void HandleEvent(inotify_event* event, int fd);
+ }  // namespace webrtc
 -- 
 2.37.3
 
