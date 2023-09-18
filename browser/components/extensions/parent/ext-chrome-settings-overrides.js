@@ -284,8 +284,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
     if (manifest.chrome_settings_overrides.search_provider) {
       // Registering a search engine can potentially take a long while,
-      // or not complete at all (when searchInitialized is never resolved),
-      // so we are deliberately not awaiting the returned promise here.
+      // or not complete at all (when Services.search.promiseInitialized is
+      // never resolved), so we are deliberately not awaiting the returned
+      // promise here.
       let searchStartupPromise =
         this.processSearchProviderManifestEntry().finally(() => {
           if (
@@ -405,7 +406,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       return;
     }
 
-    await searchInitialized;
+    await Services.search.promiseInitialized;
     if (!this.extension) {
       Cu.reportError(
         `Extension shut down before search provider was registered`

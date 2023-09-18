@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchSettings: "resource://gre/modules/SearchSettings.sys.mjs",
   SearchStaticData: "resource://gre/modules/SearchStaticData.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   UserSearchEngine: "resource://gre/modules/UserSearchEngine.sys.mjs",
 });
 
@@ -160,7 +161,6 @@ const gEmptyParseSubmissionResult = Object.freeze(
  */
 export class SearchService {
   constructor() {
-    this.#initObservers = PromiseUtils.defer();
     // this._engines is prefixed with _ rather than # because it is called from
     // a test.
     this._engines = new Map();
@@ -275,6 +275,18 @@ export class SearchService {
    */
   get hasSuccessfullyInitialized() {
     return this.#initializationStatus == "success";
+  }
+
+  /**
+   * A promise that is resolved when initialization has finished, but does not
+   * trigger initialization to begin.
+   *
+   * @returns {Promise}
+   *   Resolved when initalization has successfully finished, and rejected if it
+   *   has failed.
+   */
+  get promiseInitialized() {
+    return this.#initObservers.promise;
   }
 
   getDefaultEngineInfo() {
@@ -994,7 +1006,12 @@ export class SearchService {
     } // end engine iteration
   }
 
-  #initObservers;
+  /**
+   * A deferred promise that is resolved when initialization completes.
+   *
+   * @type {Deferred}
+   */
+  #initObservers = PromiseUtils.defer();
   #currentEngine;
   #currentPrivateEngine;
   #queuedIdle;
@@ -1382,13 +1399,8 @@ export class SearchService {
       this.#initObservers.reject(result);
     }
 
+    lazy.TelemetryEnvironment.startSearchEngineDataRecording();
     this.#recordTelemetryData();
-
-    Services.obs.notifyObservers(
-      null,
-      lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
-      "init-complete"
-    );
 
     lazy.logConsole.debug("Completed #init");
 
