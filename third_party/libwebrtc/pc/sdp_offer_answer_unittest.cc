@@ -330,7 +330,8 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsHeaderExtensionIdCollision) {
   ASSERT_NE(desc, nullptr);
   RTCError error;
   pc->SetRemoteDescription(std::move(desc), &error);
-  EXPECT_TRUE(error.ok());
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
   EXPECT_METRIC_EQ(
       1, webrtc::metrics::NumEvents(
              "WebRTC.PeerConnection.ValidBundledExtensionIds", false));
