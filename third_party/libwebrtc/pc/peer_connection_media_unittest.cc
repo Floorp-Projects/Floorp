@@ -1037,13 +1037,17 @@ TEST_P(PeerConnectionMediaInvalidMediaTest, FailToSetLocalAnswer) {
   EXPECT_EQ("Failed to set local answer sdp: " + expected_error_, error);
 }
 
-void RemoveVideoContent(cricket::SessionDescription* desc) {
+void RemoveVideoContentAndUnbundle(cricket::SessionDescription* desc) {
+  // Removing BUNDLE is easier than removing the content in there.
+  desc->RemoveGroupByName("BUNDLE");
   auto content_name = cricket::GetFirstVideoContent(desc)->name;
   desc->RemoveContentByName(content_name);
   desc->RemoveTransportInfoByName(content_name);
 }
 
-void RenameVideoContent(cricket::SessionDescription* desc) {
+void RenameVideoContentAndUnbundle(cricket::SessionDescription* desc) {
+  // Removing BUNDLE is easier than renaming the content in there.
+  desc->RemoveGroupByName("BUNDLE");
   auto* video_content = cricket::GetFirstVideoContent(desc);
   auto* transport_info = desc->GetTransportInfoByName(video_content->name);
   video_content->name = "video_renamed";
@@ -1072,10 +1076,10 @@ INSTANTIATE_TEST_SUITE_P(
     PeerConnectionMediaInvalidMediaTest,
     Combine(Values(SdpSemantics::kPlanB_DEPRECATED, SdpSemantics::kUnifiedPlan),
             Values(std::make_tuple("remove video",
-                                   RemoveVideoContent,
+                                   RemoveVideoContentAndUnbundle,
                                    kMLinesOutOfOrder),
                    std::make_tuple("rename video",
-                                   RenameVideoContent,
+                                   RenameVideoContentAndUnbundle,
                                    kMLinesOutOfOrder),
                    std::make_tuple("reverse media sections",
                                    ReverseMediaContent,
