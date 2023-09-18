@@ -302,7 +302,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Mac 11': {
@@ -313,7 +313,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Mac M1 Arm64 12': {
@@ -324,7 +324,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Win 10': {
@@ -333,7 +333,7 @@
         'mixins':
         ['win10-any', 'perf-pool', 'timeout-3h', 'resultdb-gtest-json-format'],
         'test_suites': {
-          'isolated_scripts': 'perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
     },
@@ -359,7 +359,7 @@
           'has_native_resultdb_integration', 'out_dir_arg'
         ],
         'test_suites': {
-          'isolated_scripts': 'perf_tests',
+          'isolated_scripts': 'perf_tests_no_video_codec',
         },
         'args': [
           '--write_perf_output_on_ios',
