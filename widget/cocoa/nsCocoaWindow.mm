@@ -187,27 +187,35 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // fullscreen. If we are, request that we leave fullscreen (only once)
   // and continue to spin the run loop until we're out of fullscreen.
   //
-  // However, it's possible that we are *already* in a run loop inside of
-  // ProcessTransitions(), waiting on a native fullscreen transition to
-  // complete. In such a case, we can't spin the run loop again, so we
-  // don't even enter this loop if mInProcessTransitions is true.
-  bool haveRequestedFullscreenExit = false;
-  NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
-  while (!mInProcessTransitions &&
-         (inNativeFullscreen() || WeAreInNativeTransition()) &&
-         [localRunLoop runMode:NSDefaultRunLoopMode
-                    beforeDate:[NSDate distantFuture]]) {
-    // This loop continues to process events until mWindow is fully out
-    // of native fullscreen.
+  // We also spin this run loop while mWaitingOnFinishCurrentTransition
+  // is true, which indicates we are waiting for an async call to
+  // FinishCurrentTransition to complete. We don't want to allow our own
+  // destruction while we have this pending runnable.
+  //
+  // However, it's possible that we are *already* in a run loop. In such
+  // a case, we can't spin the run loop again, so we don't even enter this
+  // loop if mInLocalRunLoop is true.
+  if (!mInLocalRunLoop) {
+    mInLocalRunLoop = true;
+    bool haveRequestedFullscreenExit = false;
+    NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
+    while ((mWaitingOnFinishCurrentTransition || inNativeFullscreen() ||
+            WeAreInNativeTransition()) &&
+           [localRunLoop runMode:NSDefaultRunLoopMode
+                      beforeDate:[NSDate distantFuture]]) {
+      // This loop continues to process events until mWindow is fully out
+      // of native fullscreen.
 
-    // Check to see if we should one-time request an exit from fullscreen.
-    // We do this if we are in native fullscreen and no window is in a
-    // native fullscreen transition.
-    if (!haveRequestedFullscreenExit && inNativeFullscreen() &&
-        CanStartNativeTransition()) {
-      [mWindow toggleFullScreen:nil];
-      haveRequestedFullscreenExit = true;
+      // Check to see if we should one-time request an exit from fullscreen.
+      // We do this if we are in native fullscreen and no window is in a
+      // native fullscreen transition.
+      if (!haveRequestedFullscreenExit && inNativeFullscreen() &&
+          CanStartNativeTransition()) {
+        [mWindow toggleFullScreen:nil];
+        haveRequestedFullscreenExit = true;
+      }
     }
+    mInLocalRunLoop = false;
   }
 
   [mWindow releaseJSObjects];
@@ -1892,12 +1900,16 @@ void nsCocoaWindow::ProcessTransitions() {
           // fullscreen transition. While that is false, run our own event loop.
           // Eventually, the native fullscreen transition will finish, and we
           // can safely continue.
-          NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
-          while (mWindow && !CanStartNativeTransition() &&
-                 [localRunLoop runMode:NSDefaultRunLoopMode
-                            beforeDate:[NSDate distantFuture]]) {
-            // This loop continues to process events until
-            // CanStartNativeTransition() returns true.
+          if (!mInLocalRunLoop) {
+            mInLocalRunLoop = true;
+            NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
+            while (mWindow && !CanStartNativeTransition() &&
+                   [localRunLoop runMode:NSDefaultRunLoopMode
+                              beforeDate:[NSDate distantFuture]]) {
+              // This loop continues to process events until
+              // CanStartNativeTransition() returns true.
+            }
+            mInLocalRunLoop = false;
           }
 
           // This triggers an async animation, so continue.
@@ -1930,12 +1942,16 @@ void nsCocoaWindow::ProcessTransitions() {
             // fullscreen transition. While that is false, run our own event
             // loop. Eventually, the native fullscreen transition will finish,
             // and we can safely continue.
-            NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
-            while (mWindow && !CanStartNativeTransition() &&
-                   [localRunLoop runMode:NSDefaultRunLoopMode
-                              beforeDate:[NSDate distantFuture]]) {
-              // This loop continues to process events until
-              // CanStartNativeTransition() returns true.
+            if (!mInLocalRunLoop) {
+              mInLocalRunLoop = true;
+              NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
+              while (mWindow && !CanStartNativeTransition() &&
+                     [localRunLoop runMode:NSDefaultRunLoopMode
+                                beforeDate:[NSDate distantFuture]]) {
+                // This loop continues to process events until
+                // CanStartNativeTransition() returns true.
+              }
+              mInLocalRunLoop = false;
             }
 
             // This triggers an async animation, so continue.
@@ -2019,6 +2035,7 @@ void nsCocoaWindow::ProcessTransitions() {
 }
 
 void nsCocoaWindow::FinishCurrentTransition() {
+  mWaitingOnFinishCurrentTransition = false;
   mTransitionCurrent.reset();
   mIsTransitionCurrentAdded = false;
   ProcessTransitions();
@@ -2041,6 +2058,7 @@ void nsCocoaWindow::FinishCurrentTransitionIfMatching(
     // transitions. To accomplish this, we dispatch our cleanup to happen on the
     // next event loop. Doing this will ensure that any async native transition
     // methods we call (like toggleFullScreen) will succeed.
+    mWaitingOnFinishCurrentTransition = true;
     NS_DispatchToCurrentThread(
         NewRunnableMethod("FinishCurrentTransition", this,
                           &nsCocoaWindow::FinishCurrentTransition));
