@@ -6,19 +6,11 @@
 
 :root {
   --toolbarbutton-icon-fill-attention: AccentColor;
-  --warning-icon-bgcolor: #FFA436;
+  --warning-icon-bgcolor: light-dark(#FFA436, #FFBD4F);
 }
 
-:root:-moz-lwtheme,
-:where(panel, toolbar, #urlbar, #searchbar):-moz-lwtheme {
-  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
-}
-
-:root[lwt-popup-brighttext] panel,
-:root[lwt-toolbar-field-brighttext] :is(#urlbar, #searchbar),
-toolbar[brighttext]:-moz-lwtheme {
-  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
-  --warning-icon-bgcolor: #FFBD4F;
+:root:-moz-lwtheme {
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
 }
 
 .toolbarbutton-animatable-box,

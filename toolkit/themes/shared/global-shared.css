@@ -73,6 +73,17 @@
 
 /* Lightweight theme roots */
 
+:root:-moz-lwtheme {
+  toolbar,
+  panel {
+    color-scheme: light;
+  }
+  toolbar[brighttext],
+  &[lwt-popup-brighttext] panel {
+    color-scheme: dark;
+  }
+}
+
 :root[lwtheme-image] {
   text-shadow: 0 -0.5px 1.5px white;
 }
@@ -153,17 +164,14 @@ a {
   color: var(--link-color);
   cursor: pointer;
   text-decoration: underline;
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--link-focus-outline-offset);
+    border-radius: 1px;
+  }
 }
 
-:is(a, .text-link):-moz-lwtheme {
-  color: inherit;
-}
-
-:is(a, .text-link):focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--link-focus-outline-offset);
-  border-radius: 1px;
-}
 
 /* Override properties set on buttons, to display the links without unwanted styling */
 button.text-link {
