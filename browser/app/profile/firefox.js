@@ -1182,13 +1182,8 @@ pref("browser.sessionstore.resuming_after_os_restart", false);
 
 // Toggle for the behavior to include closed tabs from all windows in
 // recently-closed tab lists & counts, and re-open tabs into the current window
-#ifdef NIGHTLY_BUILD
-  pref("browser.sessionstore.closedTabsFromAllWindows", true);
-  pref("browser.sessionstore.closedTabsFromClosedWindows", true);
-#else
-  pref("browser.sessionstore.closedTabsFromAllWindows", false);
-  pref("browser.sessionstore.closedTabsFromClosedWindows", false);
-#endif
+pref("browser.sessionstore.closedTabsFromAllWindows", true);
+pref("browser.sessionstore.closedTabsFromClosedWindows", true);
 
 // Minimal interval between two save operations in milliseconds (while the user is idle).
 pref("browser.sessionstore.interval.idle", 3600000); // 1h
@@ -1236,11 +1231,7 @@ pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
 pref("browser.sessionstore.collect_session_storage", true);
 
 // temporary pref that will be removed in a future release, see bug 1836952
-#ifdef NIGHTLY_BUILD
-  pref("browser.sessionstore.persist_closed_tabs_between_sessions", true);
-#else
-  pref("browser.sessionstore.persist_closed_tabs_between_sessions", false);
-#endif
+pref("browser.sessionstore.persist_closed_tabs_between_sessions", true);
 
 // Don't quit the browser when Ctrl + Q is pressed.
 pref("browser.quitShortcut.disabled", false);
