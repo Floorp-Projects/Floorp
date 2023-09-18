@@ -3394,7 +3394,11 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
   info.jitter_buffer_ms = stats.jitter_buffer_ms;
   info.jitter_buffer_delay_seconds =
       stats.jitter_buffer_delay.seconds<double>();
+  info.jitter_buffer_target_delay_seconds =
+      stats.jitter_buffer_target_delay.seconds<double>();
   info.jitter_buffer_emitted_count = stats.jitter_buffer_emitted_count;
+  info.jitter_buffer_minimum_delay_seconds =
+      stats.jitter_buffer_minimum_delay.seconds<double>();
   info.min_playout_delay_ms = stats.min_playout_delay_ms;
   info.render_delay_ms = stats.render_delay_ms;
   info.frames_received =

@@ -634,6 +634,10 @@ class RTCStatsReportVerifier {
         inbound_stream.jitter_buffer_delay);
     verifier.TestMemberIsNonNegative<uint64_t>(
         inbound_stream.jitter_buffer_emitted_count);
+    verifier.TestMemberIsNonNegative<double>(
+        inbound_stream.jitter_buffer_target_delay);
+    verifier.TestMemberIsNonNegative<double>(
+        inbound_stream.jitter_buffer_minimum_delay);
     if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "video") {
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_received);
       verifier.TestMemberIsUndefined(inbound_stream.concealed_samples);
@@ -643,9 +647,6 @@ class RTCStatsReportVerifier {
           inbound_stream.inserted_samples_for_deceleration);
       verifier.TestMemberIsUndefined(
           inbound_stream.removed_samples_for_acceleration);
-      verifier.TestMemberIsUndefined(inbound_stream.jitter_buffer_target_delay);
-      verifier.TestMemberIsUndefined(
-          inbound_stream.jitter_buffer_minimum_delay);
       verifier.TestMemberIsUndefined(inbound_stream.audio_level);
       verifier.TestMemberIsUndefined(inbound_stream.total_audio_energy);
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_duration);

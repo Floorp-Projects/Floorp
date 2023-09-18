@@ -129,8 +129,12 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
         receive_stats_filled_["JitterBufferDelay"] =
             stats.jitter_buffer_delay > TimeDelta::Zero();
+        receive_stats_filled_["JitterBufferTargetDelay"] =
+            stats.jitter_buffer_target_delay > TimeDelta::Zero();
         receive_stats_filled_["JitterBufferEmittedCount"] =
             stats.jitter_buffer_emitted_count != 0;
+        receive_stats_filled_["JitterBufferMinimumDelay"] =
+            stats.jitter_buffer_minimum_delay > TimeDelta::Zero();
 
         receive_stats_filled_["CName"] |= !stats.c_name.empty();
 

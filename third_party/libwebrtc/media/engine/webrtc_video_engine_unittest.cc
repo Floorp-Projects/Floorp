@@ -6557,7 +6557,9 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.target_delay_ms = 5;
   stats.jitter_buffer_ms = 6;
   stats.jitter_buffer_delay = TimeDelta::Seconds(60);
+  stats.jitter_buffer_target_delay = TimeDelta::Seconds(55);
   stats.jitter_buffer_emitted_count = 6;
+  stats.jitter_buffer_minimum_delay = TimeDelta::Seconds(50);
   stats.min_playout_delay_ms = 7;
   stats.render_delay_ms = 8;
   stats.width = 9;
@@ -6591,8 +6593,12 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(stats.jitter_buffer_ms, receive_info.receivers[0].jitter_buffer_ms);
   EXPECT_EQ(stats.jitter_buffer_delay.seconds<double>(),
             receive_info.receivers[0].jitter_buffer_delay_seconds);
+  EXPECT_EQ(stats.jitter_buffer_target_delay.seconds<double>(),
+            receive_info.receivers[0].jitter_buffer_target_delay_seconds);
   EXPECT_EQ(stats.jitter_buffer_emitted_count,
             receive_info.receivers[0].jitter_buffer_emitted_count);
+  EXPECT_EQ(stats.jitter_buffer_minimum_delay.seconds<double>(),
+            receive_info.receivers[0].jitter_buffer_minimum_delay_seconds);
   EXPECT_EQ(stats.min_playout_delay_ms,
             receive_info.receivers[0].min_playout_delay_ms);
   EXPECT_EQ(stats.render_delay_ms, receive_info.receivers[0].render_delay_ms);

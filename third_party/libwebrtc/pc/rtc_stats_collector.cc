@@ -416,14 +416,10 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
       static_cast<int32_t>(media_receiver_info.packets_lost);
   inbound_stats->jitter_buffer_delay =
       media_receiver_info.jitter_buffer_delay_seconds;
-  if (media_receiver_info.jitter_buffer_target_delay_seconds.has_value()) {
-    inbound_stats->jitter_buffer_target_delay =
-        *media_receiver_info.jitter_buffer_target_delay_seconds;
-  }
-  if (media_receiver_info.jitter_buffer_minimum_delay_seconds.has_value()) {
-    inbound_stats->jitter_buffer_minimum_delay =
-        *media_receiver_info.jitter_buffer_minimum_delay_seconds;
-  }
+  inbound_stats->jitter_buffer_target_delay =
+      media_receiver_info.jitter_buffer_target_delay_seconds;
+  inbound_stats->jitter_buffer_minimum_delay =
+      media_receiver_info.jitter_buffer_minimum_delay_seconds;
   inbound_stats->jitter_buffer_emitted_count =
       media_receiver_info.jitter_buffer_emitted_count;
   if (media_receiver_info.nacks_sent.has_value()) {
