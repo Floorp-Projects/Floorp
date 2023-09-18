@@ -821,14 +821,7 @@
 
 .searchbar-engine-one-off-add-engine:not([image]),
 moz-input-box > menupopup .context-menu-add-engine:not([image]) {
-  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .searchbar-engine-one-off-add-engine:not([image]),
-  moz-input-box > menupopup .context-menu-add-engine:not([image]) {
-    list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
-  }
+  list-style-image: image-set(url("chrome://browser/skin/search-engine-placeholder.png"), url("chrome://browser/skin/search-engine-placeholder@2x.png") 2x);
 }
 
 .searchbar-engine-one-off-add-engine > .button-box::after,
