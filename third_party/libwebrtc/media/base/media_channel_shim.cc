@@ -15,6 +15,25 @@ namespace cricket {
 // Note: The VideoMediaChannel default implementations are not used here, and
 // should be removed from that interface.
 // TODO(bugs.webrtc.org/13931): Remove them.
+VoiceMediaShimChannel::VoiceMediaShimChannel(
+    std::unique_ptr<VoiceMediaSendChannelInterface> send_impl,
+    std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_impl)
+    : VoiceMediaChannel(MediaChannel::Role::kBoth, nullptr, false),
+      send_impl_(std::move(send_impl)),
+      receive_impl_(std::move(receive_impl)) {
+  if (send_impl_ && receive_impl_) {
+    send_impl_->SetSsrcListChangedCallback(
+        [this](const std::set<uint32_t>& choices) {
+          receive_impl_->ChooseReceiverReportSsrc(choices);
+        });
+    send_impl_->SetSendCodecChangedCallback([this]() {
+      receive_impl_->SetReceiveNackEnabled(send_impl_->SendCodecHasNack());
+      receive_impl_->SetReceiveNonSenderRttEnabled(
+          send_impl_->SenderNonSenderRttEnabled());
+    });
+  }
+}
+
 VideoMediaShimChannel::VideoMediaShimChannel(
     std::unique_ptr<VideoMediaSendChannelInterface> send_impl,
     std::unique_ptr<VideoMediaReceiveChannelInterface> receive_impl)

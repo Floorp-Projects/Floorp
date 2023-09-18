@@ -441,8 +441,21 @@ VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
     const webrtc::CryptoOptions& crypto_options,
     webrtc::AudioCodecPairId codec_pair_id) {
   RTC_DCHECK_RUN_ON(call->worker_thread());
-  return new WebRtcVoiceMediaChannel(role, this, config, options,
-                                     crypto_options, call, codec_pair_id);
+  std::unique_ptr<VoiceMediaSendChannelInterface> send_channel;
+  std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_channel;
+  if (role == MediaChannel::Role::kSend || role == MediaChannel::Role::kBoth) {
+    send_channel = std::make_unique<WebRtcVoiceMediaChannel>(
+        MediaChannel::Role::kSend, this, config, options, crypto_options, call,
+        codec_pair_id);
+  }
+  if (role == MediaChannel::Role::kReceive ||
+      role == MediaChannel::Role::kBoth) {
+    receive_channel = std::make_unique<WebRtcVoiceMediaChannel>(
+        MediaChannel::Role::kReceive, this, config, options, crypto_options,
+        call, codec_pair_id);
+  }
+  return new VoiceMediaShimChannel(std::move(send_channel),
+                                   std::move(receive_channel));
 }
 
 void WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
