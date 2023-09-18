@@ -435,6 +435,7 @@ class VoiceChannel : public BaseChannel {
   }
 
  private:
+  void InitCallback();
   // overrides from BaseChannel
   void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,

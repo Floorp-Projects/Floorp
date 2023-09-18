@@ -1761,15 +1761,17 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
   }
   call_->GetTransportControllerSend()->SetSdpBitrateParameters(bitrate_config);
 
+  send_codecs_ = codecs;
   // In legacy kBoth mode, the MediaChannel sets the NACK status.
   // In other modes, this is done externally.
 
   if (role() == MediaChannel::Role::kBoth) {
     SetReceiveNackEnabled(send_codec_spec_->nack_enabled);
     SetReceiveNonSenderRttEnabled(send_codec_spec_->enable_non_sender_rtt);
+  } else if (send_codec_changed_callback_) {
+    send_codec_changed_callback_();
   }
 
-  send_codecs_ = codecs;
   return true;
 }
 

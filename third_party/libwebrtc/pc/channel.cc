@@ -886,7 +886,9 @@ VoiceChannel::VoiceChannel(
                   crypto_options,
                   ssrc_generator),
       send_channel_(media_channel_impl_->AsVoiceChannel()),
-      receive_channel_(media_channel_impl_->AsVoiceChannel()) {}
+      receive_channel_(media_channel_impl_->AsVoiceChannel()) {
+  InitCallback();
+}
 
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");
@@ -894,6 +896,18 @@ VoiceChannel::~VoiceChannel() {
   DisableMedia_w();
 }
 
+void VoiceChannel::InitCallback() {
+  RTC_DCHECK_RUN_ON(worker_thread());
+  // TODO(bugs.webrtc.org/13931): Remove when values are set
+  // in a more sensible fashion
+  send_channel_.SetSendCodecChangedCallback([this]() {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    // Adjust receive streams based on send codec.
+    receive_channel_.SetReceiveNackEnabled(send_channel_.SendCodecHasNack());
+    receive_channel_.SetReceiveNonSenderRttEnabled(
+        send_channel_.SenderNonSenderRttEnabled());
+  });
+}
 void VoiceChannel::UpdateMediaSendRecvState_w() {
   // Render incoming data if we're the active call, and we have the local
   // content. We receive data on the default channel and multiplexed streams.

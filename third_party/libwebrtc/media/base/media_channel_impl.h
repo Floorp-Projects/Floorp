@@ -206,6 +206,8 @@ class MediaChannel : public MediaChannelUtil,
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override =
       0;
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override = 0;
 
   // Methods from the APIs that are implemented in MediaChannelUtil
   using MediaChannelUtil::ExtmapAllowMixed;
@@ -468,6 +470,11 @@ class VoiceMediaSendChannel : public VoiceMediaSendChannelInterface {
   bool SenderNackEnabled() const override { return impl_->SenderNackEnabled(); }
   bool SenderNonSenderRttEnabled() const override {
     return impl_->SenderNonSenderRttEnabled();
+  }
+  bool SendCodecHasNack() const override { return impl()->SendCodecHasNack(); }
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {
+    impl()->SetSendCodecChangedCallback(std::move(callback));
   }
   MediaChannel* ImplForTesting() override { return impl_; }
 

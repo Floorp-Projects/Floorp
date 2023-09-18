@@ -18,6 +18,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
@@ -304,9 +305,14 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
     }
     return send_codec_spec_->enable_non_sender_rtt;
   }
+  bool SendCodecHasNack() const override { return SenderNackEnabled(); }
 
   void SetReceiveNackEnabled(bool enabled) override;
   void SetReceiveNonSenderRttEnabled(bool enabled) override;
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {
+    send_codec_changed_callback_ = std::move(callback);
+  }
 
  private:
   bool SetOptions(const AudioOptions& options);
@@ -404,6 +410,9 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   void FillSendCodecStats(VoiceMediaSendInfo* voice_media_info);
   void FillReceiveCodecStats(VoiceMediaReceiveInfo* voice_media_info);
 
+  // Callback invoked whenever the send codec changes.
+  // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
+  absl::AnyInvocable<void()> send_codec_changed_callback_;
   // Callback invoked whenever the list of SSRCs changes.
   absl::AnyInvocable<void(const std::set<uint32_t>&)>
       ssrc_list_changed_callback_;

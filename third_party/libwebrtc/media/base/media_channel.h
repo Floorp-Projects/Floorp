@@ -243,9 +243,14 @@ class MediaSendChannelInterface {
       webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
   }
   virtual webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const = 0;
+  virtual bool SendCodecHasNack() const = 0;
   // Called whenever the list of sending SSRCs changes.
   virtual void SetSsrcListChangedCallback(
       absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) = 0;
+  // TODO(bugs.webrtc.org/13931): Remove when configuration is more sensible
+  virtual void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) = 0;
+
   // Get the underlying send/receive implementation channel for testing.
   // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
   virtual MediaChannel* ImplForTesting() = 0;
@@ -948,11 +953,7 @@ class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
   // Information queries to support SetReceiverFeedbackParameters
   virtual webrtc::RtcpMode SendCodecRtcpMode() const = 0;
   virtual bool SendCodecHasLntf() const = 0;
-  virtual bool SendCodecHasNack() const = 0;
   virtual absl::optional<int> SendCodecRtxTime() const = 0;
-  // TODO(bugs.webrtc.org/13931): Remove when configuration is more sensible
-  virtual void SetSendCodecChangedCallback(
-      absl::AnyInvocable<void()> callback) = 0;
 };
 
 class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
