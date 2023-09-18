@@ -63,7 +63,7 @@ index bc0ce566b4..2ac08282ae 100644
    absl::optional<TimeDelta> LastRtt() const;
  
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index a43f788445..6bc0841163 100644
+index 6c402640ea..6440bddce7 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -501,6 +501,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -93,10 +93,10 @@ index d3a0dd69e1..20239aee8e 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index c22479f3c9..cfa89e30c2 100644
+index 546de63eec..0aa268e4fc 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -483,6 +483,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+@@ -493,6 +493,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -123,10 +123,10 @@ index c0afe819dd..80a974f95e 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 73c6c4329f..cfffd5d766 100644
+index 2184f33801..d60a855b53 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -394,6 +394,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -387,6 +387,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtp_counters,
        StreamDataCounters* rtx_counters) const = 0;
  
