@@ -1,133 +1,44 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 18 Jan 2021 11:04:00 +0100
-Subject: Bug 1654112 - Include RtcpPacketTypeCounter in audio send stats, to
- not regress nackCount. r=ng
+Date: Fri, 19 Feb 2021 13:45:00 +0100
+Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
+ VideoReceiveStream. r=ng
 
-This is similar to how it's already included for video send.
-
-Differential Revision: https://phabricator.services.mozilla.com/D102273
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc001f4eab9b63ee993b32cd8
+Differential Revision: https://phabricator.services.mozilla.com/D105774
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
 ---
- audio/audio_send_stream.cc |  1 +
- audio/channel_send.cc      | 31 +++++++++++++++++++++++++++++++
- audio/channel_send.h       |  1 +
- call/audio_send_stream.h   |  2 ++
- 4 files changed, 35 insertions(+)
+ call/video_receive_stream.h         | 3 +++
+ video/rtp_video_stream_receiver2.cc | 3 +--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 0caf59a20e..bffb910832 100644
---- a/audio/audio_send_stream.cc
-+++ b/audio/audio_send_stream.cc
-@@ -431,6 +431,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
-   stats.target_bitrate_bps = channel_send_->GetTargetBitrate();
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index d09fb25f14..0885015121 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -206,6 +206,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+       // disabled.
+       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
  
-   webrtc::CallSendStatistics call_stats = channel_send_->GetRTCPStatistics();
-+  stats.rtcp_packet_type_counts = call_stats.rtcp_packet_type_counts;
-   stats.payload_bytes_sent = call_stats.payload_bytes_sent;
-   stats.header_and_padding_bytes_sent =
-       call_stats.header_and_padding_bytes_sent;
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index e1e44ef7e4..4c1d056cc5 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
- class RtpPacketSenderProxy;
- class TransportSequenceNumberProxy;
- 
-+class RtcpCounterObserver : public RtcpPacketTypeCounterObserver {
-+ public:
-+  explicit RtcpCounterObserver(uint32_t ssrc) : ssrc_(ssrc) {}
++      // See draft-alvestrand-rmcat-remb for information.
++      bool remb = false;
 +
-+  void RtcpPacketTypesCounterUpdated(
-+      uint32_t ssrc, const RtcpPacketTypeCounter& packet_counter) override {
-+    if (ssrc_ != ssrc) {
-+      return;
-+    }
-+
-+    MutexLock lock(&mutex_);
-+    packet_counter_ = packet_counter;
-+  }
-+
-+  RtcpPacketTypeCounter GetCounts() {
-+    MutexLock lock(&mutex_);
-+    return packet_counter_;
-+  }
-+
-+ private:
-+  Mutex mutex_;
-+  const uint32_t ssrc_;
-+  RtcpPacketTypeCounter packet_counter_;
-+};
-+
- class ChannelSend : public ChannelSendInterface,
-                     public AudioPacketizationCallback,  // receive encoded
-                                                         // packets from the ACM
-@@ -207,6 +232,8 @@ class ChannelSend : public ChannelSendInterface,
-   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
-   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
+       bool tmmbr = false;
  
-+  const std::unique_ptr<RtcpCounterObserver> rtcp_counter_observer_;
-+
-   PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
-       nullptr;
-   const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
-@@ -384,6 +411,7 @@ ChannelSend::ChannelSend(
-     const FieldTrialsView& field_trials)
-     : ssrc_(ssrc),
-       event_log_(rtc_event_log),
-+      rtcp_counter_observer_(new RtcpCounterObserver(ssrc)),
-       rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
-       retransmission_rate_limiter_(
-           new RateLimiter(clock, kMaxRetransmissionWindowMs)),
-@@ -408,6 +436,8 @@ ChannelSend::ChannelSend(
+       // See LntfConfig for description.
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index a01e60f8bb..91f230eab7 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+       frames_decryptable_(false),
+       absolute_capture_time_interpolator_(clock) {
+   packet_sequence_checker_.Detach();
+-  constexpr bool remb_candidate = true;
+   if (packet_router_)
+-    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
++    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
  
-   configuration.event_log = event_log_;
-   configuration.rtt_stats = rtcp_rtt_stats;
-+  configuration.rtcp_packet_type_counter_observer =
-+      rtcp_counter_observer_.get();
-   configuration.retransmission_rate_limiter =
-       retransmission_rate_limiter_.get();
-   configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -668,6 +698,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
-   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   CallSendStatistics stats = {0};
-   stats.rttMs = GetRTT();
-+  stats.rtcp_packet_type_counts = rtcp_counter_observer_->GetCounts();
- 
-   StreamDataCounters rtp_stats;
-   StreamDataCounters rtx_stats;
-diff --git a/audio/channel_send.h b/audio/channel_send.h
-index 00d954c952..f0c9232296 100644
---- a/audio/channel_send.h
-+++ b/audio/channel_send.h
-@@ -43,6 +43,7 @@ struct CallSendStatistics {
-   TimeDelta total_packet_send_delay = TimeDelta::Zero();
-   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
-   uint64_t retransmitted_packets_sent;
-+  RtcpPacketTypeCounter rtcp_packet_type_counts;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
-diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index f9e49db574..5f4f871bf0 100644
---- a/call/audio_send_stream.h
-+++ b/call/audio_send_stream.h
-@@ -31,6 +31,7 @@
- #include "call/rtp_config.h"
- #include "modules/audio_processing/include/audio_processing_statistics.h"
- #include "modules/rtp_rtcp/include/report_block_data.h"
-+#include "modules/rtp_rtcp/include/rtcp_statistics.h"
- 
- namespace webrtc {
- 
-@@ -65,6 +66,7 @@ class AudioSendStream : public AudioSender {
- 
-     ANAStats ana_statistics;
-     AudioProcessingStats apm_statistics;
-+    RtcpPacketTypeCounter rtcp_packet_type_counts;
- 
-     int64_t target_bitrate_bps = 0;
-     // A snapshot of Report Blocks with additional data of interest to
+   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
+       << "A stream should not be configured with RTCP disabled. This value is "
 -- 
 2.37.3
 

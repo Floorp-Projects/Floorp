@@ -1,56 +1,52 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 5 Sep 2022 13:56:00 +0000
-Subject: Bug 1786502 - Lock access to DeviceInfo devicechange callbacks.
- r=webrtc-reviewers,jib
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 24 Oct 2022 13:00:00 -0500
+Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
 
-Differential Revision: https://phabricator.services.mozilla.com/D155365
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59d9b13e3c17d6f75a40f5c33
+Add assurance that we will not build task_queue_win.cc to avoid
+possible win32k API usage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D160115
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- modules/video_capture/video_capture.h | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ api/task_queue/BUILD.gn | 5 +++++
+ rtc_base/BUILD.gn       | 4 ++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 58485f28e9..04203033b0 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -16,6 +16,8 @@
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
-+#include "rtc_base/synchronization/mutex.h"
-+#include "rtc_base/thread_annotations.h"
- #include <set>
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index 116a50762e..b9c50c1644 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -31,6 +31,11 @@ rtc_library("task_queue") {
+   ]
+ }
  
- #if defined(ANDROID)
-@@ -40,15 +42,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-     virtual uint32_t NumberOfDevices() = 0;
-     virtual int32_t Refresh() = 0;
-     virtual void DeviceChange() {
-+      MutexLock lock(&_inputCallbacksMutex);
-       for (auto inputCallBack : _inputCallBacks) {
-         inputCallBack->OnDeviceChange();
-       }
-     }
-     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       _inputCallBacks.insert(callBack);
-     }
- 
-     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       auto it = _inputCallBacks.find(callBack);
-       if (it != _inputCallBacks.end()) {
-         _inputCallBacks.erase(it);
-@@ -102,7 +107,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
- 
-     virtual ~DeviceInfo() {}
-    private:
--    std::set<VideoInputFeedBack*> _inputCallBacks;
-+    Mutex _inputCallbacksMutex;
-+    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
-   };
- 
-   //   Register capture data callback
++# Mozilla - we want to ensure that rtc_include_tests is set to false
++# to guarantee that default_task_queue_factory is not used so we
++# know that remaining win32k code in task_queue_win.cc is not built.
++# See Bug 1797161 for more info.
++assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
+ if (rtc_include_tests) {
+ rtc_library("task_queue_test") {
+   visibility = [ "*" ]
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 6732520717..86eb42e6e4 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -701,10 +701,14 @@ if (is_mac || is_ios) {
+ if (is_win) {
+   rtc_library("rtc_task_queue_win") {
+     visibility = [ "../api/task_queue:default_task_queue_factory" ]
++# See Bug 1797161 for more info.  Remove from build until win32k
++# usage is removed.
++if (!build_with_mozilla) {
+     sources = [
+       "task_queue_win.cc",
+       "task_queue_win.h",
+     ]
++}
+     deps = [
+       ":checks",
+       ":logging",
 -- 
 2.37.3
 
