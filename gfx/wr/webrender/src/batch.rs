@@ -7,7 +7,6 @@ use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, P
 use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::command_buffer::{PrimitiveCommand, QuadFlags};
-use crate::composite::CompositorSurfaceKind;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
@@ -2316,23 +2315,8 @@ impl BatchBuilder {
                     render_tasks,
                 );
             }
-            PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, compositor_surface_kind, .. } => {
-                if compositor_surface_kind.needs_cutout() {
-                    self.add_compositor_surface_cutout(
-                        prim_rect,
-                        prim_info.clip_chain.local_clip_rect,
-                        prim_info.clip_task_index,
-                        transform_id,
-                        z_id,
-                        bounding_rect,
-                        ctx,
-                        gpu_cache,
-                        render_tasks,
-                        prim_headers,
-                    );
-
-                    return;
-                }
+            PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, is_compositor_surface, .. } => {
+                debug_assert!(!is_compositor_surface);
 
                 let yuv_image_data = &ctx.data_stores.yuv_image[data_handle].kind;
                 let mut textures = TextureSet::UNTEXTURED;
@@ -2436,23 +2420,8 @@ impl BatchBuilder {
                     render_tasks,
                 );
             }
-            PrimitiveInstanceKind::Image { data_handle, image_instance_index, compositor_surface_kind, .. } => {
-                if compositor_surface_kind.needs_cutout() {
-                    self.add_compositor_surface_cutout(
-                        prim_rect,
-                        prim_info.clip_chain.local_clip_rect,
-                        prim_info.clip_task_index,
-                        transform_id,
-                        z_id,
-                        bounding_rect,
-                        ctx,
-                        gpu_cache,
-                        render_tasks,
-                        prim_headers,
-                    );
-
-                    return;
-                }
+            PrimitiveInstanceKind::Image { data_handle, image_instance_index, is_compositor_surface, .. } => {
+                debug_assert!(!is_compositor_surface);
 
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let common_data = &ctx.data_stores.image[data_handle].common;
@@ -3167,61 +3136,6 @@ impl BatchBuilder {
                 );
             }
         }
-    }
-
-    /// Draw a (potentially masked) alpha cutout so that a video underlay will be blended
-    /// through by the compositor
-    fn add_compositor_surface_cutout(
-        &mut self,
-        prim_rect: LayoutRect,
-        local_clip_rect: LayoutRect,
-        clip_task_index: ClipTaskIndex,
-        transform_id: TransformPaletteId,
-        z_id: ZBufferId,
-        bounding_rect: &PictureRect,
-        ctx: &RenderTargetContext,
-        gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskGraph,
-        prim_headers: &mut PrimitiveHeaders,
-    ) {
-        let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_black_rect_handle);
-
-        let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
-            clip_task_index,
-            render_tasks,
-        ).unwrap();
-
-        let prim_header = PrimitiveHeader {
-            local_rect: prim_rect,
-            local_clip_rect,
-            specific_prim_address: prim_cache_address,
-            transform_id,
-        };
-
-        let prim_header_index = prim_headers.push(
-            &prim_header,
-            z_id,
-            [get_shader_opacity(1.0), 0, 0, 0],
-        );
-
-        let batch_key = BatchKey {
-            blend_mode: BlendMode::PremultipliedDestOut,
-            kind: BatchKind::Brush(BrushBatchKind::Solid),
-            textures: BatchTextures::prim_untextured(clip_mask_texture_id),
-        };
-
-        self.add_brush_instance_to_batches(
-            batch_key,
-            BatchFeatures::ALPHA_PASS | BatchFeatures::CLIP_MASK,
-            bounding_rect,
-            z_id,
-            INVALID_SEGMENT_INDEX,
-            EdgeAaSegmentMask::empty(),
-            clip_task_address,
-            BrushFlags::empty(),
-            prim_header_index,
-            0,
-        );
     }
 
     /// Add a single segment instance to a batch.
@@ -3988,15 +3902,5 @@ pub fn add_quad_to_batch<F>(
         };
 
         f(edge_batch_key, instance.into());
-    }
-}
-
-impl CompositorSurfaceKind {
-    /// Returns true if the type of compositor surface needs an alpha cutout rendered
-    fn needs_cutout(&self) -> bool {
-        match self {
-            CompositorSurfaceKind::Underlay => true,
-            CompositorSurfaceKind::Overlay | CompositorSurfaceKind::Blit => false,
-        }
     }
 }
