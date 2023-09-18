@@ -7,6 +7,7 @@ export var CrashTestUtils = {
   dumpHasStream: null,
   dumpHasInstructionPointerMemory: null,
   dumpWin64CFITestSymbols: null,
+  enablePHC: null,
 
   // Constants for crash()
   // Keep these in sync with nsTestCrasher.cpp!
@@ -60,6 +61,11 @@ CrashTestUtils.saveAppMemory = lib.declare(
   "SaveAppMemory",
   ctypes.default_abi,
   ctypes.uint64_t
+);
+CrashTestUtils.enablePHC = lib.declare(
+  "EnablePHC",
+  ctypes.default_abi,
+  ctypes.void_t
 );
 
 try {
