@@ -814,7 +814,11 @@ already_AddRefed<gfx::SourceSurface> TextureClient::BorrowSnapshot() {
 
   RefPtr<gfx::SourceSurface> surface = mData->BorrowSnapshot();
   if (!surface) {
-    surface = BorrowDrawTarget()->Snapshot();
+    RefPtr<gfx::DrawTarget> drawTarget = BorrowDrawTarget();
+    if (!drawTarget) {
+      return nullptr;
+    }
+    surface = drawTarget->Snapshot();
   }
 
   return surface.forget();
