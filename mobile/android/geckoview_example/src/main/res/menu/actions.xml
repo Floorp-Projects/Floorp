@@ -15,5 +15,8 @@
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
     <item android:title="@string/save_pdf" android:id="@+id/save_pdf"/>
     <item android:title="@string/print_page" android:id="@+id/print_page"/>
+    <item android:title="Create Shopping Analysis" android:id="@+id/create_shopping_analysis"/>
+    <item android:title="Get Shopping Analysis Status" android:id="@+id/get_shopping_analysis_status"/>
+    <item android:title="Poll Until Analysis Completed" android:id="@+id/poll_shopping_analysis_status"/>
     <item android:title="@string/settings" android:id="@+id/settings" app:showAsAction="never" />
 </menu>

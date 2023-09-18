@@ -3008,6 +3008,45 @@ public class GeckoSession {
   }
 
   /**
+   * Request the creation of an analysis of product's reviews for a given product URL.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of status of analysis.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<String> requestCreateAnalysis(@NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher.queryString("GeckoView:RequestCreateAnalysis", bundle);
+  }
+
+  /**
+   * Request the status of the current analysis of product's reviews for a given product URL.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of status of analysis.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<String> requestAnalysisCreationStatus(@NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher.queryString("GeckoView:RequestAnalysisCreationStatus", bundle);
+  }
+
+  /**
+   * Poll for the status of the current analysis of product's reviews for a given product URL.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of status of analysis.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<String> pollForAnalysisCompleted(@NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher.queryString("GeckoView:PollForAnalysisCompleted", bundle);
+  }
+
+  /**
    * Request product recommendations given a specific product url.
    *
    * @param url The URL of the product page.

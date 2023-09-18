@@ -1288,6 +1288,15 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.print_page:
         printPage(session);
         break;
+      case R.id.create_shopping_analysis:
+        requestCreateAnalysis(session, mCurrentUri);
+        break;
+      case R.id.get_shopping_analysis_status:
+        requestAnalysisCreationStatus(session, mCurrentUri);
+        break;
+      case R.id.poll_shopping_analysis_status:
+        pollForAnalysisCompleted(session, mCurrentUri);
+        break;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -2137,6 +2146,37 @@ public class GeckoViewActivity extends AppCompatActivity
 
   public void requestAnalysis(@NonNull final GeckoSession session, @NonNull final String url) {
     session.requestAnalysis(url);
+  }
+
+  public void requestCreateAnalysis(
+      @NonNull final GeckoSession session, @NonNull final String url) {
+    GeckoResult<String> result = session.requestCreateAnalysis(url);
+    result.map(
+        status -> {
+          Log.d(LOGTAG, "Started analysis, status: " + status);
+          return status;
+        });
+  }
+
+  public void requestAnalysisCreationStatus(
+      @NonNull final GeckoSession session, @NonNull final String url) {
+    GeckoResult<String> result = session.requestAnalysisCreationStatus(url);
+    result.map(
+        status -> {
+          Log.d(LOGTAG, "Shopping Analysis Status: " + status);
+          return status;
+        });
+  }
+
+  public void pollForAnalysisCompleted(
+      @NonNull final GeckoSession session, @NonNull final String url) {
+    Log.d(LOGTAG, "Start polling for shopping analysis to finish");
+    GeckoResult<String> result = session.pollForAnalysisCompleted(url);
+    result.map(
+        status -> {
+          Log.d(LOGTAG, "Shopping Analysis Status: " + status);
+          return status;
+        });
   }
 
   public void requestRecommendations(
