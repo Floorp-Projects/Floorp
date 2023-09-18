@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/function_view.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -208,7 +209,7 @@ class RtpPacketHistory {
   // in GetPayloadPaddingPacket().
   PacketPrioritySet padding_priority_ RTC_GUARDED_BY(lock_);
 
-  std::optional<RtpPacketToSend> large_payload_packet_ RTC_GUARDED_BY(lock_);
+  absl::optional<RtpPacketToSend> large_payload_packet_ RTC_GUARDED_BY(lock_);
 };
 }  // namespace webrtc
 #endif  // MODULES_RTP_RTCP_SOURCE_RTP_PACKET_HISTORY_H_
