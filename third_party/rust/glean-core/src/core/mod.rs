@@ -114,7 +114,6 @@ where
 ///     trim_data_to_registered_pings: false,
 ///     log_level: None,
 ///     rate_limit: None,
-///     enable_event_timestamps: false,
 /// };
 /// let mut glean = Glean::new(cfg).unwrap();
 /// let ping = PingType::new("sample", true, false, vec![]);
@@ -157,7 +156,6 @@ pub struct Glean {
     pub(crate) schedule_metrics_pings: bool,
     pub(crate) remote_settings_epoch: AtomicU8,
     pub(crate) remote_settings_metrics_config: Arc<Mutex<MetricsEnabledConfig>>,
-    pub(crate) with_timestamps: bool,
 }
 
 impl Glean {
@@ -217,7 +215,6 @@ impl Glean {
             schedule_metrics_pings: false,
             remote_settings_epoch: AtomicU8::new(0),
             remote_settings_metrics_config: Arc::new(Mutex::new(MetricsEnabledConfig::new())),
-            with_timestamps: cfg.enable_event_timestamps,
         };
 
         // Ensuring these pings are registered.
@@ -305,7 +302,6 @@ impl Glean {
             trim_data_to_registered_pings: false,
             log_level: None,
             rate_limit: None,
-            enable_event_timestamps: false,
         };
 
         let mut glean = Self::new(cfg).unwrap();
@@ -553,10 +549,6 @@ impl Glean {
     /// Gets a handle to the event database.
     pub fn event_storage(&self) -> &EventDatabase {
         &self.event_data_store
-    }
-
-    pub(crate) fn with_timestamps(&self) -> bool {
-        self.with_timestamps
     }
 
     /// Gets the maximum number of events to store before sending a ping.

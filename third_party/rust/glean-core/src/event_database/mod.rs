@@ -13,7 +13,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
@@ -188,13 +188,7 @@ impl EventDatabase {
                         ..Default::default()
                     };
                     let startup = get_iso_time_string(glean.start_time(), TimeUnit::Minute);
-                    let mut extra: HashMap<String, String> =
-                        [("glean.startup.date".into(), startup)].into();
-                    if glean.with_timestamps() {
-                        let now = Utc::now();
-                        let precise_timestamp = now.timestamp_millis() as u64;
-                        extra.insert("glean_timestamp".to_string(), precise_timestamp.to_string());
-                    }
+                    let extra = [("glean.startup.date".into(), startup)].into();
                     self.record(
                         glean,
                         &glean_restarted.into(),
@@ -285,7 +279,7 @@ impl EventDatabase {
         {
             let mut db = self.event_stores.write().unwrap(); // safe unwrap, only error case is poisoning
             for store_name in meta.inner.send_in_pings.iter() {
-                let store = db.entry(store_name.to_string()).or_default();
+                let store = db.entry(store_name.to_string()).or_insert_with(Vec::new);
                 let execution_counter = CounterMetric::new(CommonMetricData {
                     name: "execution_counter".into(),
                     category: store_name.into(),

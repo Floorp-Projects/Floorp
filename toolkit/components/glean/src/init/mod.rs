@@ -178,7 +178,6 @@ fn build_configuration(
         trim_data_to_registered_pings: true,
         log_level: None,
         rate_limit,
-        enable_event_timestamps: false,
     };
 
     Ok((configuration, client_info))

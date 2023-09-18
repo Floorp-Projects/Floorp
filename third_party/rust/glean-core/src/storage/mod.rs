@@ -32,7 +32,7 @@ fn snapshot_labeled_metrics(
     metric: &Metric,
 ) {
     let ping_section = format!("labeled_{}", metric.ping_section());
-    let map = snapshot.entry(ping_section).or_default();
+    let map = snapshot.entry(ping_section).or_insert_with(HashMap::new);
 
     // Safe unwrap, the function is only called when the id does contain a '/'
     let (metric_id, label) = metric_id.split_once('/').unwrap();
@@ -90,7 +90,9 @@ impl StorageManager {
             if metric_id.contains('/') {
                 snapshot_labeled_metrics(&mut snapshot, &metric_id, metric);
             } else {
-                let map = snapshot.entry(metric.ping_section().into()).or_default();
+                let map = snapshot
+                    .entry(metric.ping_section().into())
+                    .or_insert_with(HashMap::new);
                 map.insert(metric_id, metric.as_json());
             }
         };

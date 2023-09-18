@@ -711,6 +711,10 @@ criteria = "safe-to-deploy"
 version = "0.8.5"
 criteria = "safe-to-deploy"
 
+[[exemptions.rand_chacha]]
+version = "0.3.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.remove_dir_all]]
 version = "0.5.3"
 criteria = "safe-to-deploy"

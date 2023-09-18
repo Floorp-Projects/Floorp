@@ -130,8 +130,6 @@ pub struct InternalConfiguration {
     pub log_level: Option<LevelFilter>,
     /// The rate at which pings may be uploaded before they are throttled.
     pub rate_limit: Option<PingRateLimit>,
-    /// (Experimental) Whether to add a wallclock timestamp to all events.
-    pub enable_event_timestamps: bool,
 }
 
 /// How to specify the rate at which pings may be uploaded before they are throttled.

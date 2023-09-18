@@ -241,7 +241,7 @@ fn events_ping_with_metric_but_no_events_is_not_sent() {
         },
         vec![],
     );
-    event.record_sync(&glean, 0, HashMap::new(), 0);
+    event.record_sync(&glean, 0, HashMap::new());
 
     // Sending this should now succeed.
     assert!(events_ping.submit_sync(&glean, None));
