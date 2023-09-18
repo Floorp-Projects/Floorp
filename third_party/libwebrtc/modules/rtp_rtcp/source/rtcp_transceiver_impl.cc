@@ -48,6 +48,29 @@ struct SenderReportTimes {
   NtpTime remote_sent_time;
 };
 
+std::function<void(rtc::ArrayView<const uint8_t>)> GetRtcpTransport(
+    const RtcpTransceiverConfig& config) {
+  if (config.rtcp_transport != nullptr) {
+    return config.rtcp_transport;
+  }
+
+  if (config.deprecated_outgoing_transport != nullptr) {
+    Transport* transport = config.deprecated_outgoing_transport;
+    return [transport](rtc::ArrayView<const uint8_t> packet) {
+      transport->SendRtcp(packet.data(), packet.size());
+    };
+  }
+
+  bool first = true;
+  std::string log_prefix = config.debug_id;
+  return [first, log_prefix](rtc::ArrayView<const uint8_t> packet) mutable {
+    if (first) {
+      RTC_LOG(LS_ERROR) << log_prefix << "Sending RTCP packets is disabled.";
+      first = false;
+    }
+  };
+}
+
 }  // namespace
 
 struct RtcpTransceiverImpl::RemoteSenderState {
@@ -103,7 +126,9 @@ class RtcpTransceiverImpl::PacketSender {
 };
 
 RtcpTransceiverImpl::RtcpTransceiverImpl(const RtcpTransceiverConfig& config)
-    : config_(config), ready_to_send_(config.initial_ready_to_send) {
+    : config_(config),
+      rtcp_transport_(GetRtcpTransport(config_)),
+      ready_to_send_(config.initial_ready_to_send) {
   RTC_CHECK(config_.Validate());
   if (ready_to_send_ && config_.schedule_periodic_compound_packets) {
     SchedulePeriodicCompoundPackets(config_.initial_report_delay);
@@ -225,16 +250,6 @@ void RtcpTransceiverImpl::SetRemb(int64_t bitrate_bps,
 
 void RtcpTransceiverImpl::UnsetRemb() {
   remb_.reset();
-}
-
-void RtcpTransceiverImpl::SendRawPacket(rtc::ArrayView<const uint8_t> packet) {
-  if (!ready_to_send_)
-    return;
-  // Unlike other senders, this functions just tries to send packet away and
-  // disregard rtcp_mode, max_packet_size or anything else.
-  // TODO(bugs.webrtc.org/8239): respect config_ by creating the
-  // TransportFeedback inside this class when there is one per rtp transport.
-  config_.outgoing_transport->SendRtcp(packet.data(), packet.size());
 }
 
 void RtcpTransceiverImpl::SendNack(uint32_t ssrc,
@@ -805,21 +820,15 @@ void RtcpTransceiverImpl::CreateCompoundPacket(Timestamp now,
 }
 
 void RtcpTransceiverImpl::SendPeriodicCompoundPacket() {
-  auto send_packet = [this](rtc::ArrayView<const uint8_t> packet) {
-    config_.outgoing_transport->SendRtcp(packet.data(), packet.size());
-  };
   Timestamp now = config_.clock->CurrentTime();
-  PacketSender sender(send_packet, config_.max_packet_size);
+  PacketSender sender(rtcp_transport_, config_.max_packet_size);
   CreateCompoundPacket(now, /*reserved_bytes=*/0, sender);
   sender.Send();
 }
 
 void RtcpTransceiverImpl::SendCombinedRtcpPacket(
     std::vector<std::unique_ptr<rtcp::RtcpPacket>> rtcp_packets) {
-  auto send_packet = [this](rtc::ArrayView<const uint8_t> packet) {
-    config_.outgoing_transport->SendRtcp(packet.data(), packet.size());
-  };
-  PacketSender sender(send_packet, config_.max_packet_size);
+  PacketSender sender(rtcp_transport_, config_.max_packet_size);
 
   for (auto& rtcp_packet : rtcp_packets) {
     rtcp_packet->SetSenderSsrc(config_.feedback_ssrc);
@@ -830,10 +839,7 @@ void RtcpTransceiverImpl::SendCombinedRtcpPacket(
 
 void RtcpTransceiverImpl::SendImmediateFeedback(
     const rtcp::RtcpPacket& rtcp_packet) {
-  auto send_packet = [this](rtc::ArrayView<const uint8_t> packet) {
-    config_.outgoing_transport->SendRtcp(packet.data(), packet.size());
-  };
-  PacketSender sender(send_packet, config_.max_packet_size);
+  PacketSender sender(rtcp_transport_, config_.max_packet_size);
   // Compound mode requires every sent rtcp packet to be compound, i.e. start
   // with a sender or receiver report.
   if (config_.rtcp_mode == RtcpMode::kCompound) {
