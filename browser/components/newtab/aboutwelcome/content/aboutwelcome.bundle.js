@@ -981,6 +981,9 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     darkModeReducedMotionImageURL,
     alt = "",
     height,
+    width,
+    marginInline,
+    marginBlock,
     className = "logo-container"
   }) {
     function getLoadingStrategy() {
@@ -994,7 +997,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("picture", {
-      className: className
+      className: className,
+      style: {
+        marginInline,
+        marginBlock
+      }
     }, darkModeReducedMotionImageURL ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
       srcSet: darkModeReducedMotionImageURL,
       media: "(prefers-color-scheme: dark) and (prefers-reduced-motion: reduce)"
@@ -1011,7 +1018,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
       className: "brand-logo",
       style: {
-        height
+        height,
+        width
       },
       src: imageURL,
       alt: "",
@@ -1154,7 +1162,9 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
             imageURL: item.url,
             darkModeImageURL: item.darkModeImageURL,
             height: item.height,
+            width: item.width,
             alt: item.alt_text,
+            marginInline: item.marginInline,
             className: "inline-image"
           }));
       }
