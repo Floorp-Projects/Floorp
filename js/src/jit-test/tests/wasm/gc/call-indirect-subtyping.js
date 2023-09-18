@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-tail-calls
+// |jit-test| test-also=--wasm-tail-calls; skip-if: !wasmGcEnabled()
 
 // Test that call_indirect will respect subtyping by defining a bunch of types
 // and checking every combination of (expected, actual) type.
