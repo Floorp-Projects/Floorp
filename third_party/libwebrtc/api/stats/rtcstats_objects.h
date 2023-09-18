@@ -251,8 +251,10 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   // Enum type RTCIceTcpCandidateType.
   RTCStatsMember<std::string> tcp_type;
 
-  RTCNonStandardStatsMember<bool> vpn;
-  RTCNonStandardStatsMember<std::string> network_adapter_type;
+  // The following metrics are NOT exposed to JavaScript. We should consider
+  // standardizing or removing them.
+  RTCStatsMember<bool> vpn;
+  RTCStatsMember<std::string> network_adapter_type;
 
  protected:
   RTCIceCandidateStats(std::string id, Timestamp timestamp, bool is_remote);
@@ -402,9 +404,8 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   // TODO(https://crbug.com/webrtc/14177): Expose even if A/V sync is off?
   RTCStatsMember<double> estimated_playout_timestamp;
   // Only defined for video.
-  RTCRestrictedStatsMember<std::string,
-                           StatExposureCriteria::kHardwareCapability>
-      decoder_implementation;
+  // In JavaScript, this is only exposed if HW exposure is allowed.
+  RTCStatsMember<std::string> decoder_implementation;
   // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
@@ -417,17 +418,17 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   // TimingFrameInfo::ToString().
   // TODO(https://crbug.com/webrtc/14586): Unship or standardize this metric.
   RTCStatsMember<std::string> goog_timing_frame_info;
-  RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>
-      power_efficient_decoder;
-  // Non-standard audio metrics.
-  RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
-  RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
-  RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
-  RTCNonStandardStatsMember<uint32_t> interruption_count;
-  RTCNonStandardStatsMember<double> total_interruption_duration;
+  // In JavaScript, this is only exposed if HW exposure is allowed.
+  RTCStatsMember<bool> power_efficient_decoder;
 
-  // The former googMinPlayoutDelayMs (in seconds).
-  RTCNonStandardStatsMember<double> min_playout_delay;
+  // The following metrics are NOT exposed to JavaScript. We should consider
+  // standardizing or removing them.
+  RTCStatsMember<uint64_t> jitter_buffer_flushes;
+  RTCStatsMember<uint64_t> delayed_packet_outage_samples;
+  RTCStatsMember<double> relative_packet_arrival_delay;
+  RTCStatsMember<uint32_t> interruption_count;
+  RTCStatsMember<double> total_interruption_duration;
+  RTCStatsMember<double> min_playout_delay;
 };
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
@@ -465,19 +466,18 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
   RTCStatsMember<uint32_t> quality_limitation_resolution_changes;
   // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcoutboundrtpstreamstats-contenttype
   RTCStatsMember<std::string> content_type;
+  // In JavaScript, this is only exposed if HW exposure is allowed.
   // Only implemented for video.
   // TODO(https://crbug.com/webrtc/14178): Implement for audio as well.
-  RTCRestrictedStatsMember<std::string,
-                           StatExposureCriteria::kHardwareCapability>
-      encoder_implementation;
+  RTCStatsMember<std::string> encoder_implementation;
   // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
   RTCStatsMember<bool> active;
-  RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>
-      power_efficient_encoder;
+  // In JavaScript, this is only exposed if HW exposure is allowed.
+  RTCStatsMember<bool> power_efficient_encoder;
   RTCStatsMember<std::string> scalability_mode;
 };
 
