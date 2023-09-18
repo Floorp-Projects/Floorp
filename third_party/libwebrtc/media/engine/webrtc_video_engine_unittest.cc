@@ -1820,10 +1820,10 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
   }
 
   // Returns pointer to implementation of the send channel.
-  WebRtcVideoChannel* SendImpl() {
+  WebRtcVideoSendChannel* SendImpl() {
     // Note that this function requires intimate knowledge of how the channel
     // was created.
-    return static_cast<cricket::WebRtcVideoChannel*>(
+    return static_cast<cricket::WebRtcVideoSendChannel*>(
         static_cast<VideoMediaShimChannel*>(channel_.get())
             ->SendImplForTesting());
   }
@@ -2685,10 +2685,10 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   }
 
   // Returns pointer to implementation of the send channel.
-  WebRtcVideoChannel* SendImpl() {
+  WebRtcVideoSendChannel* SendImpl() {
     // Note that this function requires intimate knowledge of how the channel
     // was created.
-    return static_cast<cricket::WebRtcVideoChannel*>(
+    return static_cast<cricket::WebRtcVideoSendChannel*>(
         static_cast<VideoMediaShimChannel*>(channel_.get())
             ->SendImplForTesting());
   }
@@ -2696,7 +2696,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   // Casts a shim channel to a webrtc::Transport. Used once.
   webrtc::Transport* ChannelImplAsTransport(VideoMediaChannel* channel) {
     return static_cast<webrtc::Transport*>(
-        static_cast<cricket::WebRtcVideoChannel*>(
+        static_cast<cricket::WebRtcVideoSendChannel*>(
             static_cast<VideoMediaShimChannel*>(channel)
                 ->SendImplForTesting()));
   }
