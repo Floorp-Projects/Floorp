@@ -33,6 +33,7 @@
 #include "mozilla/TimeStamp.h"
 #include "ThirdPartyUtil.h"
 #include "nsIConsoleReportCollector.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 
 using namespace mozilla::ipc;
 
@@ -440,7 +441,16 @@ CookieServiceChild::SetCookieStringFromDocument(
     cookiesToSend.AppendElement(cookie->ToIPC());
 
     // Asynchronously call the parent.
-    SendSetCookies(baseDomain, attrs, documentURI, false, cookiesToSend);
+    dom::WindowGlobalChild* windowGlobalChild =
+        aDocument->GetWindowGlobalChild();
+
+    // If there is no WindowGlobalChild fall back to PCookieService SetCookies.
+    if (NS_WARN_IF(!windowGlobalChild)) {
+      SendSetCookies(baseDomain, attrs, documentURI, false, cookiesToSend);
+      return NS_OK;
+    }
+    windowGlobalChild->SendSetCookies(baseDomain, attrs, documentURI, false,
+                                      cookiesToSend);
   }
 
   return NS_OK;

@@ -232,6 +232,14 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 IPCResult CookieServiceParent::RecvSetCookies(
     const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
     nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies) {
+  return SetCookies(aBaseDomain, aOriginAttributes, aHost, aFromHttp, aCookies,
+                    0, false);
+}
+
+IPCResult CookieServiceParent::SetCookies(
+    const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies,
+    uint64_t aBrowsingContextId, bool aIsThirdPartyCookie) {
   if (!mCookieService) {
     return IPC_OK();
   }
@@ -247,7 +255,8 @@ IPCResult CookieServiceParent::RecvSetCookies(
   mProcessingCookie = true;
 
   bool ok = mCookieService->SetCookiesFromIPC(
-      aBaseDomain, aOriginAttributes, aHost, aFromHttp, aCookies, 0, false);
+      aBaseDomain, aOriginAttributes, aHost, aFromHttp, aCookies,
+      aBrowsingContextId, aIsThirdPartyCookie);
   mProcessingCookie = false;
   return ok ? IPC_OK() : IPC_FAIL(this, "Invalid cookie received.");
 }
