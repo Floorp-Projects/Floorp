@@ -37,10 +37,10 @@ constexpr size_t kMaxFecPackets = kMaxMediaPackets;
 constexpr size_t kFlexfecPacketMaskSizes[] = {2, 6, 14};
 
 // Size (in bytes) of part of header which is not packet mask specific.
-constexpr size_t kBaseHeaderSize = 12;
+constexpr size_t kBaseHeaderSize = 8;
 
 // Size (in bytes) of part of header which is stream specific.
-constexpr size_t kStreamSpecificHeaderSize = 6;
+constexpr size_t kStreamSpecificHeaderSize = 2;
 
 // Size (in bytes) of header, given the single stream packet mask size, i.e.
 // the number of K-bits set.
@@ -82,9 +82,15 @@ FlexfecHeaderReader2::FlexfecHeaderReader2()
 FlexfecHeaderReader2::~FlexfecHeaderReader2() = default;
 
 // TODO(brandtr): Update this function when we support flexible masks,
-// retransmissions, and/or several protected SSRCs.
+// and retransmissions.
 bool FlexfecHeaderReader2::ReadFecHeader(
     ForwardErrorCorrection::ReceivedFecPacket* fec_packet) const {
+  // Protected ssrcs should already be populated from RTP header.
+  if (fec_packet->protected_streams.empty()) {
+    RTC_LOG(LS_WARNING)
+        << "Discarding FlexFEC packet with no protected sources.";
+    return false;
+  }
   if (fec_packet->pkt->data.size() <=
       kBaseHeaderSize + kStreamSpecificHeaderSize) {
     RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
@@ -105,100 +111,103 @@ bool FlexfecHeaderReader2::ReadFecHeader(
            "not yet support this, thus discarding packet.";
     return false;
   }
-  uint8_t ssrc_count = ByteReader<uint8_t>::ReadBigEndian(&data[8]);
-  if (ssrc_count != 1) {
-    RTC_LOG(LS_INFO)
-        << "FlexFEC packet protecting multiple media SSRCs. We do not "
-           "yet support this, thus discarding packet.";
-    return false;
-  }
-  uint32_t protected_ssrc = ByteReader<uint32_t>::ReadBigEndian(&data[12]);
-  uint16_t seq_num_base = ByteReader<uint16_t>::ReadBigEndian(&data[16]);
 
-  // Parse the FlexFEC packet mask and remove the interleaved K-bits.
+  // First seq_num will be in byte index 8
   // (See FEC header schematic in flexfec_header_reader_writer.h.)
-  // We store the packed packet mask in-band, which "destroys" the standards
-  // compliance of the header. That is fine though, since the code that
-  // reads from the header (from this point and onwards) is aware of this.
-  // TODO(brandtr): When the FEC packet classes have been refactored, store
-  // the packed packet masks out-of-band, thus leaving the FlexFEC header as is.
-  //
-  // We treat the mask parts as unsigned integers with host order endianness
-  // in order to simplify the bit shifting between bytes.
-  if (fec_packet->pkt->data.size() < kHeaderSizes[0]) {
-    RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
-    return false;
-  }
-  uint8_t* const packet_mask = data + kPacketMaskOffset;
-  bool k_bit0 = (packet_mask[0] & 0x80) != 0;
-  uint16_t mask_part0 = ByteReader<uint16_t>::ReadBigEndian(&packet_mask[0]);
-  // Shift away K-bit 0, implicitly clearing the last bit.
-  mask_part0 <<= 1;
-  ByteWriter<uint16_t>::WriteBigEndian(&packet_mask[0], mask_part0);
-  size_t packet_mask_size;
-  if (k_bit0) {
-    // The first K-bit is set, and the packet mask is thus only 2 bytes long.
-    // We have now read the entire FEC header, and the rest of the packet
-    // is payload.
-    packet_mask_size = kFlexfecPacketMaskSizes[0];
-  } else {
-    if (fec_packet->pkt->data.size() < kHeaderSizes[1]) {
+  size_t byte_index = 8;
+  for (size_t i = 0; i < fec_packet->protected_streams.size(); ++i) {
+    if (fec_packet->pkt->data.size() < byte_index + kStreamSpecificHeaderSize) {
+      RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
       return false;
     }
-    bool k_bit1 = (packet_mask[2] & 0x80) != 0;
-    // We have already shifted the first two bytes of the packet mask one step
-    // to the left, thus removing K-bit 0. We will now shift the next four bytes
-    // of the packet mask two steps to the left. (One step for the removed
-    // K-bit 0, and one step for the to be removed K-bit 1).
-    uint8_t bit15 = (packet_mask[2] >> 6) & 0x01;
-    packet_mask[1] |= bit15;
-    uint32_t mask_part1 = ByteReader<uint32_t>::ReadBigEndian(&packet_mask[2]);
-    // Shift away K-bit 1 and bit 15, implicitly clearing the last two bits.
-    mask_part1 <<= 2;
-    ByteWriter<uint32_t>::WriteBigEndian(&packet_mask[2], mask_part1);
-    if (k_bit1) {
-      // The first K-bit is clear, but the second K-bit is set. The packet
-      // mask is thus 6 bytes long.  We have now read the entire FEC header,
-      // and the rest of the packet is payload.
-      packet_mask_size = kFlexfecPacketMaskSizes[1];
+
+    fec_packet->protected_streams[i].seq_num_base =
+        ByteReader<uint16_t>::ReadBigEndian(&data[byte_index]);
+    byte_index += kStreamSpecificHeaderSize;
+
+    // Parse the FlexFEC packet mask and remove the interleaved K-bits.
+    // (See FEC header schematic in flexfec_header_reader_writer.h.)
+    // We store the packed packet mask in-band, which "destroys" the standards
+    // compliance of the header. That is fine though, since the code that
+    // reads from the header (from this point and onwards) is aware of this.
+    // TODO(brandtr): When the FEC packet classes have been refactored, store
+    // the packed packet masks out-of-band, thus leaving the FlexFEC header as
+    // is.
+    //
+    // We treat the mask parts as unsigned integers with host order endianness
+    // in order to simplify the bit shifting between bytes.
+    if (fec_packet->pkt->data.size() <
+        (byte_index + kFlexfecPacketMaskSizes[0])) {
+      RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
+      return false;
+    }
+    fec_packet->protected_streams[i].packet_mask_offset = byte_index;
+    bool k_bit0 = (data[byte_index] & 0x80) != 0;
+    uint16_t mask_part0 =
+        ByteReader<uint16_t>::ReadBigEndian(&data[byte_index]);
+    // Shift away K-bit 0, implicitly clearing the last bit.
+    mask_part0 <<= 1;
+    ByteWriter<uint16_t>::WriteBigEndian(&data[byte_index], mask_part0);
+    byte_index += kFlexfecPacketMaskSizes[0];
+    if (k_bit0) {
+      // The first K-bit is set, and the packet mask is thus only 2 bytes long.
+      // We have finished reading the properties for current ssrc.
+      fec_packet->protected_streams[i].packet_mask_size =
+          kFlexfecPacketMaskSizes[0];
     } else {
-      if (fec_packet->pkt->data.size() < kHeaderSizes[2]) {
-        RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
+      if (fec_packet->pkt->data.size() <
+          (byte_index + kFlexfecPacketMaskSizes[1] -
+           kFlexfecPacketMaskSizes[0])) {
         return false;
       }
-      bool k_bit2 = (packet_mask[6] & 0x80) != 0;
-      if (k_bit2) {
-        // The first and second K-bits are clear, but the third K-bit is set.
-        // The packet mask is thus 14 bytes long. We have now read the entire
-        // FEC header, and the rest of the packet is payload.
-        packet_mask_size = kFlexfecPacketMaskSizes[2];
+      bool k_bit1 = (data[byte_index] & 0x80) != 0;
+      // We have already shifted the first two bytes of the packet mask one step
+      // to the left, thus removing K-bit 0. We will now shift the next four
+      // bytes of the packet mask two steps to the left. (One step for the
+      // removed K-bit 0, and one step for the to be removed K-bit 1).
+      uint8_t bit15 = (data[byte_index] >> 6) & 0x01;
+      data[byte_index - 1] |= bit15;
+      uint32_t mask_part1 =
+          ByteReader<uint32_t>::ReadBigEndian(&data[byte_index]);
+      // Shift away K-bit 1 and bit 15, implicitly clearing the last two bits.
+      mask_part1 <<= 2;
+      ByteWriter<uint32_t>::WriteBigEndian(&data[byte_index], mask_part1);
+      byte_index += kFlexfecPacketMaskSizes[1] - kFlexfecPacketMaskSizes[0];
+      if (k_bit1) {
+        // The first K-bit is clear, but the second K-bit is set. The packet
+        // mask is thus 6 bytes long. We have finished reading the properties
+        // for current ssrc.
+        fec_packet->protected_streams[i].packet_mask_size =
+            kFlexfecPacketMaskSizes[1];
       } else {
-        RTC_LOG(LS_WARNING)
-            << "Discarding FlexFEC packet with malformed header.";
-        return false;
+        if (fec_packet->pkt->data.size() <
+            (byte_index + kFlexfecPacketMaskSizes[2] -
+             kFlexfecPacketMaskSizes[1])) {
+          RTC_LOG(LS_WARNING) << "Discarding truncated FlexFEC packet.";
+          return false;
+        }
+        fec_packet->protected_streams[i].packet_mask_size =
+            kFlexfecPacketMaskSizes[2];
+        // At this point, K-bits 0 and 1 have been removed, and the front-most
+        // part of the FlexFEC packet mask has been packed accordingly. We will
+        // now shift the remaning part of the packet mask two steps to the left.
+        // This corresponds to the (in total) two K-bits, which have been
+        // removed.
+        uint8_t tail_bits = (data[byte_index] >> 6) & 0x03;
+        data[byte_index - 1] |= tail_bits;
+        uint64_t mask_part2 =
+            ByteReader<uint64_t>::ReadBigEndian(&data[byte_index]);
+        // Shift away bit 46, and bit 47, which were copied to the previous
+        // part of the mask, implicitly clearing the last two bits.
+        mask_part2 <<= 2;
+        ByteWriter<uint64_t>::WriteBigEndian(&data[byte_index], mask_part2);
+        byte_index += kFlexfecPacketMaskSizes[2] - kFlexfecPacketMaskSizes[1];
       }
-      // At this point, K-bits 0 and 1 have been removed, and the front-most
-      // part of the FlexFEC packet mask has been packed accordingly. We will
-      // now shift the remaning part of the packet mask three steps to the left.
-      // This corresponds to the (in total) three K-bits, which have been
-      // removed.
-      uint8_t tail_bits = (packet_mask[6] >> 5) & 0x03;
-      packet_mask[5] |= tail_bits;
-      uint64_t mask_part2 =
-          ByteReader<uint64_t>::ReadBigEndian(&packet_mask[6]);
-      // Shift away K-bit 2, bit 46, and bit 47, implicitly clearing the last
-      // three bits.
-      mask_part2 <<= 3;
-      ByteWriter<uint64_t>::WriteBigEndian(&packet_mask[6], mask_part2);
     }
   }
 
-  // Store "ULPFECized" packet mask info.
-  fec_packet->fec_header_size = FlexfecHeaderSize(packet_mask_size);
-  fec_packet->protected_streams = {{.ssrc = protected_ssrc,
-                                    .seq_num_base = seq_num_base,
-                                    .packet_mask_offset = kPacketMaskOffset,
-                                    .packet_mask_size = packet_mask_size}};
+  fec_packet->fec_header_size = byte_index;
+
   // In FlexFEC, all media packets are protected in their entirety.
   fec_packet->protection_length =
       fec_packet->pkt->data.size() - fec_packet->fec_header_size;
