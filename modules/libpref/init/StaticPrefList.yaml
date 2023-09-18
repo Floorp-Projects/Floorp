@@ -11693,12 +11693,6 @@
   value: false
   mirror: always
 
-# Whether DNS resolution is limited to literals and cached entries.
-- name: network.dns.skipTRR-when-parental-control-enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: network.dns.disablePrefetchFromHTTPS
   type: bool
   value: true
