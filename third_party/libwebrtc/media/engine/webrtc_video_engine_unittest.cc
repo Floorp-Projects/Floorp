@@ -2088,6 +2088,8 @@ TEST_F(WebRtcVideoChannelBaseTest, GetStats) {
   EXPECT_GT(receive_info.receivers[0].framerate_received, 0);
   EXPECT_GT(receive_info.receivers[0].framerate_decoded, 0);
   EXPECT_GT(receive_info.receivers[0].framerate_output, 0);
+  EXPECT_GT(receive_info.receivers[0].jitter_buffer_delay_seconds, 0.0);
+  EXPECT_GT(receive_info.receivers[0].jitter_buffer_emitted_count, 0u);
 
   EXPECT_EQ(1U, receive_info.receive_codecs.count(DefaultCodec().id));
   EXPECT_EQ(DefaultCodec().ToCodecParameters(),
@@ -6557,7 +6559,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.current_delay_ms = 4;
   stats.target_delay_ms = 5;
   stats.jitter_buffer_ms = 6;
-  stats.jitter_buffer_delay_seconds = 60;
+  stats.jitter_buffer_delay = TimeDelta::Seconds(60);
   stats.jitter_buffer_emitted_count = 6;
   stats.min_playout_delay_ms = 7;
   stats.render_delay_ms = 8;
@@ -6590,7 +6592,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(stats.current_delay_ms, receive_info.receivers[0].current_delay_ms);
   EXPECT_EQ(stats.target_delay_ms, receive_info.receivers[0].target_delay_ms);
   EXPECT_EQ(stats.jitter_buffer_ms, receive_info.receivers[0].jitter_buffer_ms);
-  EXPECT_EQ(stats.jitter_buffer_delay_seconds,
+  EXPECT_EQ(stats.jitter_buffer_delay.seconds<double>(),
             receive_info.receivers[0].jitter_buffer_delay_seconds);
   EXPECT_EQ(stats.jitter_buffer_emitted_count,
             receive_info.receivers[0].jitter_buffer_emitted_count);
