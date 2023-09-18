@@ -17,6 +17,7 @@
 #include "mozIStorageService.h"
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsICookieNotification.h"
 #include "nsICookieService.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsILineInputStream.h"
@@ -372,26 +373,31 @@ CookiePersistentStorage::CookiePersistentStorage()
       mInitialized(false),
       mCorruptFlag(OK) {}
 
-void CookiePersistentStorage::NotifyChangedInternal(nsISupports* aSubject,
-                                                    const char16_t* aData,
-                                                    bool aOldCookieIsSession) {
+void CookiePersistentStorage::NotifyChangedInternal(
+    nsICookieNotification* aNotification, bool aOldCookieIsSession) {
+  MOZ_ASSERT(aNotification);
   // Notify for topic "session-cookie-changed" to update the copy of session
   // cookies in session restore component.
 
+  nsICookieNotification::Action action = aNotification->GetAction();
+
   // Filter out notifications for individual non-session cookies.
-  if (u"changed"_ns.Equals(aData) || u"deleted"_ns.Equals(aData) ||
-      u"added"_ns.Equals(aData)) {
-    nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
-    MOZ_ASSERT(xpcCookie);
-    auto* cookie = static_cast<Cookie*>(xpcCookie.get());
-    if (!cookie->IsSession() && !aOldCookieIsSession) {
+  if (action == nsICookieNotification::COOKIE_CHANGED ||
+      action == nsICookieNotification::COOKIE_DELETED ||
+      action == nsICookieNotification::COOKIE_ADDED) {
+    nsCOMPtr<nsICookie> xpcCookie;
+    DebugOnly<nsresult> rv =
+        aNotification->GetCookie(getter_AddRefs(xpcCookie));
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && xpcCookie);
+    const Cookie& cookie = xpcCookie->AsCookie();
+    if (!cookie.IsSession() && !aOldCookieIsSession) {
       return;
     }
   }
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(aSubject, "session-cookie-changed", aData);
+    os->NotifyObservers(aNotification, "session-cookie-changed", u"");
   }
 }
 

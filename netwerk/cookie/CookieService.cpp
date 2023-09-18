@@ -581,9 +581,9 @@ CookieService::SetCookieStringFromDocument(Document* aDocument,
       do_QueryInterface(aDocument->GetChannel());
 
   // add the cookie to the list. AddCookie() takes care of logging.
-  PickStorage(attrs)->AddCookie(crc, baseDomain, attrs, cookie,
-                                currentTimeInUsec, documentURI, aCookieString,
-                                false);
+  PickStorage(attrs)->AddCookie(
+      crc, baseDomain, attrs, cookie, currentTimeInUsec, documentURI,
+      aCookieString, false, aDocument->GetBrowsingContext(), thirdParty);
   return NS_OK;
 }
 
@@ -729,9 +729,12 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
     cookie->SetCreationTime(
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
+    RefPtr<BrowsingContext> bc = loadInfo->GetBrowsingContext();
+
     // add the cookie to the list. AddCookie() takes care of logging.
     storage->AddCookie(crc, baseDomain, attrs, cookie, currentTimeInUsec,
-                       aHostURI, aCookieHeader, true);
+                       aHostURI, aCookieHeader, true, bc,
+                       loadInfo->GetIsThirdPartyContextToTopWindow());
   }
 
   return NS_OK;
@@ -859,7 +862,8 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
 
   CookieStorage* storage = PickStorage(*aOriginAttributes);
   storage->AddCookie(nullptr, baseDomain, *aOriginAttributes, cookie,
-                     currentTimeInUsec, nullptr, VoidCString(), true);
+                     currentTimeInUsec, nullptr, VoidCString(), true, nullptr,
+                     false);
   return NS_OK;
 }
 
@@ -2517,7 +2521,7 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
     storage->AddCookie(nullptr, aBaseDomain, aAttrs, cookie, currentTimeInUsec,
-                       aHostURI, ""_ns, aFromHttp);
+                       aHostURI, ""_ns, aFromHttp, nullptr, false);
   }
 
   return true;

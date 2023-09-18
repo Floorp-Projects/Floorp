@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
     "nsICookie.idl",
     "nsICookieJarSettings.idl",
     "nsICookieManager.idl",
+    "nsICookieNotification.idl",
     "nsICookiePermission.idl",
     "nsICookieService.idl",
 ]
@@ -23,6 +24,7 @@ EXPORTS.mozilla.net = [
     "Cookie.h",
     "CookieJarSettings.h",
     "CookieKey.h",
+    "CookieNotification.h",
     "CookiePersistentStorage.h",
     "CookiePrivateStorage.h",
     "CookieService.h",
@@ -35,6 +37,7 @@ UNIFIED_SOURCES += [
     "CookieCommons.cpp",
     "CookieJarSettings.cpp",
     "CookieLogging.cpp",
+    "CookieNotification.cpp",
     "CookiePersistentStorage.cpp",
     "CookiePrivateStorage.cpp",
     "CookieService.cpp",

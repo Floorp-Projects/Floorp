@@ -454,7 +454,7 @@ const validateFirstPartyDomain = details => {
 this.cookies = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {
     onChanged({ fire }) {
-      let observer = (subject, topic, data) => {
+      let observer = (subject, topic) => {
         let notify = (removed, cookie, cause) => {
           cookie.QueryInterface(Ci.nsICookie);
 
@@ -470,22 +470,34 @@ this.cookies = class extends ExtensionAPIPersistent {
           }
         };
 
+        let notification = subject.QueryInterface(Ci.nsICookieNotification);
+        let { cookie } = notification;
+
+        let {
+          COOKIE_DELETED,
+          COOKIE_ADDED,
+          COOKIE_CHANGED,
+          COOKIES_BATCH_DELETED,
+        } = Ci.nsICookieNotification;
+
         // We do our best effort here to map the incompatible states.
-        switch (data) {
-          case "deleted":
-            notify(true, subject, "explicit");
+        switch (notification.action) {
+          case COOKIE_DELETED:
+            notify(true, cookie, "explicit");
             break;
-          case "added":
-            notify(false, subject, "explicit");
+          case COOKIE_ADDED:
+            notify(false, cookie, "explicit");
             break;
-          case "changed":
-            notify(true, subject, "overwrite");
-            notify(false, subject, "explicit");
+          case COOKIE_CHANGED:
+            notify(true, cookie, "overwrite");
+            notify(false, cookie, "explicit");
             break;
-          case "batch-deleted":
-            subject.QueryInterface(Ci.nsIArray);
-            for (let i = 0; i < subject.length; i++) {
-              let cookie = subject.queryElementAt(i, Ci.nsICookie);
+          case COOKIES_BATCH_DELETED:
+            let cookieArray = notification.batchDeletedCookies.QueryInterface(
+              Ci.nsIArray
+            );
+            for (let i = 0; i < cookieArray.length; i++) {
+              let cookie = cookieArray.queryElementAt(i, Ci.nsICookie);
               if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
                 notify(true, cookie, "expired");
               } else {
