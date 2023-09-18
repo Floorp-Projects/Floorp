@@ -73,6 +73,7 @@
 #include "SessionStoreFunctions.h"
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
+#include "nsIXULRuntime.h"
 
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 
@@ -606,6 +607,11 @@ already_AddRefed<JSActor> WindowGlobalParent::InitJSActor(
 }
 
 bool WindowGlobalParent::IsCurrentGlobal() {
+  if (mozilla::SessionHistoryInParent() && BrowsingContext() &&
+      BrowsingContext()->IsInBFCache()) {
+    return false;
+  }
+
   return CanSend() && BrowsingContext()->GetCurrentWindowGlobal() == this;
 }
 
