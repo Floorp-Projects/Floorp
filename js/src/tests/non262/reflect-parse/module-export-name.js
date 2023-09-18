@@ -105,7 +105,7 @@ assertModule(`
   exportDecl(null, [exportNamespaceSpec(literal("x"))], moduleRequest(literal("module"), []), false),
 ]);
 
-if (getRealmConfiguration()['importAssertions']) {
+if (getRealmConfiguration("importAssertions")) {
   assertModule(`
     import {"x" as y} from "module" assert {type: "json"};
   `, [

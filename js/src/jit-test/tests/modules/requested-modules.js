@@ -50,7 +50,7 @@ testRequestedModules("import a from 'foo'; export {} from 'bar'; export * from '
     { specifier: 'baz', assertions: null }
 ]);
 
-if(getRealmConfiguration()['importAssertions']) {
+if (getRealmConfiguration("importAssertions")) {
     testRequestedModules("import a from 'foo' assert {}", [
         { specifier: 'foo', assertions: null },
     ]);

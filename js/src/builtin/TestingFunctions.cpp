@@ -188,35 +188,54 @@ static bool EnvVarAsInt(const char* name, int* valueOut) {
 
 static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject info(cx, JS_NewPlainObject(cx));
-  if (!info) {
+  RootedObject callee(cx, &args.callee());
+  if (args.length() != 1) {
+    ReportUsageErrorASCII(cx, callee, "Must have one argument");
+    return false;
+  }
+  if (!args[0].isString()) {
+    ReportUsageErrorASCII(cx, callee, "Argument must be a string");
     return false;
   }
 
-  bool importAssertions = cx->options().importAssertions();
-  if (!JS_SetProperty(cx, info, "importAssertions",
-                      importAssertions ? TrueHandleValue : FalseHandleValue)) {
+  RootedString argStr(cx, ToString(cx, args[0]));
+  if (!argStr) {
+    return false;
+  }
+  Rooted<JSLinearString*> str(cx, argStr->ensureLinear(cx));
+  if (!str) {
     return false;
   }
 
+  if (StringEqualsLiteral(str, "importAssertions")) {
+    args.rval().setBoolean(cx->options().importAssertions());
+    return true;
+  }
+
+  if (StringEqualsLiteral(str, "enableArrayGrouping")) {
+    args.rval().setBoolean(
 #ifdef NIGHTLY_BUILD
-  bool arrayGrouping = cx->realm()->creationOptions().getArrayGroupingEnabled();
-  if (!JS_SetProperty(cx, info, "enableArrayGrouping",
-                      arrayGrouping ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
+        cx->realm()->creationOptions().getArrayGroupingEnabled()
+#else
+        false
 #endif
+    );
+    return true;
+  }
 
+  if (StringEqualsLiteral(str, "enableNewSetMethods")) {
+    args.rval().setBoolean(
 #ifdef NIGHTLY_BUILD
-  bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
-  if (!JS_SetProperty(cx, info, "enableNewSetMethods",
-                      newSetMethods ? TrueHandleValue : FalseHandleValue)) {
-    return false;
-  }
+        cx->realm()->creationOptions().getNewSetMethodsEnabled()
+#else
+        false
 #endif
+    );
+    return true;
+  }
 
-  args.rval().setObject(*info);
-  return true;
+  ReportUsageErrorASCII(cx, callee, "Invalid option name");
+  return false;
 }
 
 static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
@@ -8754,10 +8773,9 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Return an object describing some of the configuration options SpiderMonkey\n"
 "  was built with."),
 
-    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 0, 0,
-"getRealmConfiguration()",
-"  Return an object describing some of the runtime options SpiderMonkey\n"
-"  is running with."),
+    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 1, 0,
+"getRealmConfiguration(option)",
+"  Query the runtime options SpiderMonkey is running with."),
 
     JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
 "isLcovEnabled()",

@@ -386,7 +386,7 @@ program([
     )
 ]).assert(parseAsModule("export default 1234"));
 
-if (getRealmConfiguration()['importAssertions']) {
+if (getRealmConfiguration("importAssertions")) {
     program([
         exportDeclaration(
             null,

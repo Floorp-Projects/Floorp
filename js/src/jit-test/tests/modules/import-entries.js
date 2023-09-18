@@ -70,7 +70,7 @@ testImportEntries('import {x} from "a"; import {y} from "b";',
                   [{moduleRequest: {specifier: 'a', assertions: null}, importName: 'x', localName: 'x'},
                    {moduleRequest: {specifier: 'b', assertions: null}, importName: 'y', localName: 'y'}]);
 
-if(getRealmConfiguration()['importAssertions']) {
+if (getRealmConfiguration("importAssertions")) {
     testImportEntries('import v from "mod" assert {};',
                   [{moduleRequest: {specifier: 'mod', assertions: null}, importName: 'default', localName: 'v'}]);
 
