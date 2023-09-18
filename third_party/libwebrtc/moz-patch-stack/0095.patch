@@ -1,41 +1,31 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 4 Jul 2023 08:34:00 +0000
+Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
+ pw_stream raw pointer member r=webrtc-reviewers,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
+
+Differential Revision: https://phabricator.services.mozilla.com/D182671
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ modules/video_capture/linux/video_capture_pipewire.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 5a68019a8b..fb133ff73a 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -17,6 +17,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index e2c8d1b168..2a58c7d3e0 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   VideoCaptureCapability frameInfo_;
+   bool started_;
  
- namespace webrtc {
- namespace {
-@@ -223,6 +224,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
-   }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
- }
- 
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+-  struct pw_stream* stream_;
++  struct pw_stream* stream_ = nullptr;
+   struct spa_hook stream_listener_;
+ };
+ }  // namespace videocapturemodule
 -- 
-2.34.1
+2.37.3
 

@@ -1,58 +1,32 @@
-From: Wang Qing <wangqing-hf@loongson.cn>
-Date: Wed, 25 Sep 2019 14:15:00 +0000
-Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
+From: Jed Davis <jld@mozilla.com>
+Date: Sun, 17 Nov 2019 03:40:00 +0000
+Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
+ r=jesup
 
-Differential Revision: https://phabricator.services.mozilla.com/D45620
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
+PhysicalSocketServer isn't currently used by Mozilla's WebRTC
+integration, but just in case, let's make sure that this array index is
+bounds-checked in actual use, not just in debug builds (which tend to
+never see realistic test conditions).
+
+Differential Revision: https://phabricator.services.mozilla.com/D52745
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
 ---
- modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
- modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-index 1ac71899ee..3fe86f2f85 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
- const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 33ea941808..2dfdd9a5df 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -1431,7 +1431,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+         int fd = pdispatcher->GetDescriptor();
+         // "select"ing a file descriptor that is equal to or larger than
+         // FD_SETSIZE will result in undefined behavior.
+-        RTC_DCHECK_LT(fd, FD_SETSIZE);
++        RTC_CHECK_LT(fd, FD_SETSIZE);
+         if (fd > fdmax)
+           fdmax = fd;
  
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
- constexpr bool kIsArm = true;
- #else
- constexpr bool kIsArm = false;
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 5457402542..bceb321951 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -693,7 +693,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
- 
- int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   // On mobile platform, use a lower speed setting for lower resolutions for
-   // CPUs with 4 or more cores.
-   RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -726,7 +726,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- }
- 
- int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
--#if defined(WEBRTC_ANDROID)
-+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   if (width * height >= 320 * 180) {
-     if (cpus >= 4) {
-       // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -800,7 +800,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
-   // multi-res encoding feature?
-   denoiserState denoiser_state = kDenoiserOnYOnly;
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   denoiser_state = kDenoiserOnYOnly;
- #else
-   denoiser_state = kDenoiserOnAdaptive;
 -- 
-2.34.1
+2.37.3
 

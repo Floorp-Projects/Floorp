@@ -1,0 +1,42 @@
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
+
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
+
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
+---
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index f784b8eebc..528ed6c616 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -281,12 +281,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
+   }
+ 
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
+ 
+  private:
+-- 
+2.37.3
+

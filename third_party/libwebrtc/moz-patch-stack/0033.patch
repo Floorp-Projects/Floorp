@@ -1,32 +1,43 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 1 Dec 2020 09:36:00 -0500
-Subject: Bug 1654112 - Disable creating av1 encoder and decoder. r=ng
+Date: Tue, 11 Feb 2020 17:07:00 +0000
+Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D130089
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e78d38af299c2296bf9d20ec9
+Getting the JNI calls here to work requires a good amount of webrtc.org
+machinery. It might be worth setting that up the next time we do an upstream
+merge, but for now, it is a lot simpler to just remove the affected code,
+given that we are not interested in collecting this data anyway.
+
+Differential Revision: https://phabricator.services.mozilla.com/D61860
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
 ---
- media/engine/internal_decoder_factory.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
-index e761fd60c8..001c666313 100644
---- a/media/engine/internal_decoder_factory.cc
-+++ b/media/engine/internal_decoder_factory.cc
-@@ -49,12 +49,14 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
-   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
-     formats.push_back(h264_format);
- 
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   if (kDav1dIsIncluded) {
-     formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
-     formats.push_back(SdpVideoFormat(
-         cricket::kAv1CodecName,
-         {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
+index 877986134a..c1d2d61a71 100644
+--- a/sdk/android/src/java/org/webrtc/Histogram.java
++++ b/sdk/android/src/java/org/webrtc/Histogram.java
+@@ -27,18 +27,13 @@ class Histogram {
    }
-+#endif
  
-   return formats;
+   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
+-    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
++    return new Histogram(0);
+   }
+ 
+   static public Histogram createEnumeration(String name, int max) {
+-    return new Histogram(nativeCreateEnumeration(name, max));
++    return new Histogram(0);
+   }
+ 
+   public void addSample(int sample) {
+-    nativeAddSample(handle, sample);
+   }
+-
+-  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
+-  private static native long nativeCreateEnumeration(String name, int max);
+-  private static native void nativeAddSample(long handle, int sample);
  }
 -- 
-2.34.1
+2.37.3
 

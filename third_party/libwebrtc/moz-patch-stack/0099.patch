@@ -1,0 +1,29 @@
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
+ thread). r=pehrsons,webrtc-reviewers
+
+This was causing assertions.
+
+Differential Revision: https://phabricator.services.mozilla.com/D179731
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
+---
+ audio/channel_send.cc | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 5ee97f290e..f784b8eebc 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -457,8 +457,6 @@ ChannelSend::ChannelSend(
+ 
+   int error = audio_coding_->RegisterTransportCallback(this);
+   RTC_DCHECK_EQ(0, error);
+-  if (frame_transformer)
+-    InitFrameTransformerDelegate(std::move(frame_transformer));
+ }
+ 
+ ChannelSend::~ChannelSend() {
+-- 
+2.37.3
+

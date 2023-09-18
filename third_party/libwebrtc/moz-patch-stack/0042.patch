@@ -1,300 +1,133 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 14 Jul 2021 22:26:00 +0000
-Subject: Bug 1654112 - deconflate the target and host architectures in
- libwebrtc build files; r=mjf
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 18 Jan 2021 11:04:00 +0100
+Subject: Bug 1654112 - Include RtcpPacketTypeCounter in audio send stats, to
+ not regress nackCount. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D119707
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e21dff7362743b6f4cdd1696b
+This is similar to how it's already included for video send.
+
+Differential Revision: https://phabricator.services.mozilla.com/D102273
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc001f4eab9b63ee993b32cd8
 ---
- BUILD.gn                                         |  6 +++---
- common_audio/BUILD.gn                            | 16 ++++++++--------
- common_audio/third_party/ooura/BUILD.gn          |  6 +++---
- common_audio/third_party/spl_sqrt_floor/BUILD.gn |  4 ++--
- modules/audio_processing/aec3/BUILD.gn           |  6 +++---
- modules/audio_processing/aecm/BUILD.gn           |  4 ++--
- modules/audio_processing/agc/BUILD.gn            |  2 +-
- modules/audio_processing/agc2/rnn_vad/BUILD.gn   |  2 +-
- modules/audio_processing/ns/BUILD.gn             |  2 +-
- modules/desktop_capture/BUILD.gn                 |  2 +-
- webrtc.gni                                       |  4 ++--
- 11 files changed, 27 insertions(+), 27 deletions(-)
+ audio/audio_send_stream.cc |  1 +
+ audio/channel_send.cc      | 31 +++++++++++++++++++++++++++++++
+ audio/channel_send.h       |  1 +
+ call/audio_send_stream.h   |  2 ++
+ 4 files changed, 35 insertions(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 9939f17095..605a27624a 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -414,12 +414,12 @@ config("common_config") {
-     }
-   }
+diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
+index 0caf59a20e..bffb910832 100644
+--- a/audio/audio_send_stream.cc
++++ b/audio/audio_send_stream.cc
+@@ -431,6 +431,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
+   stats.target_bitrate_bps = channel_send_->GetTargetBitrate();
  
--  if (current_cpu == "arm64") {
-+  if (target_cpu == "arm64") {
-     defines += [ "WEBRTC_ARCH_ARM64" ]
-     defines += [ "WEBRTC_HAS_NEON" ]
-   }
+   webrtc::CallSendStatistics call_stats = channel_send_->GetRTCPStatistics();
++  stats.rtcp_packet_type_counts = call_stats.rtcp_packet_type_counts;
+   stats.payload_bytes_sent = call_stats.payload_bytes_sent;
+   stats.header_and_padding_bytes_sent =
+       call_stats.header_and_padding_bytes_sent;
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index e1e44ef7e4..4c1d056cc5 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
+ class RtpPacketSenderProxy;
+ class TransportSequenceNumberProxy;
  
--  if (current_cpu == "arm") {
-+  if (target_cpu == "arm") {
-     defines += [ "WEBRTC_ARCH_ARM" ]
-     if (arm_version >= 7) {
-       defines += [ "WEBRTC_ARCH_ARM_V7" ]
-@@ -429,7 +429,7 @@ config("common_config") {
-     }
-   }
++class RtcpCounterObserver : public RtcpPacketTypeCounterObserver {
++ public:
++  explicit RtcpCounterObserver(uint32_t ssrc) : ssrc_(ssrc) {}
++
++  void RtcpPacketTypesCounterUpdated(
++      uint32_t ssrc, const RtcpPacketTypeCounter& packet_counter) override {
++    if (ssrc_ != ssrc) {
++      return;
++    }
++
++    MutexLock lock(&mutex_);
++    packet_counter_ = packet_counter;
++  }
++
++  RtcpPacketTypeCounter GetCounts() {
++    MutexLock lock(&mutex_);
++    return packet_counter_;
++  }
++
++ private:
++  Mutex mutex_;
++  const uint32_t ssrc_;
++  RtcpPacketTypeCounter packet_counter_;
++};
++
+ class ChannelSend : public ChannelSendInterface,
+                     public AudioPacketizationCallback,  // receive encoded
+                                                         // packets from the ACM
+@@ -207,6 +232,8 @@ class ChannelSend : public ChannelSendInterface,
+   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
+   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
  
--  if (current_cpu == "mipsel") {
-+  if (target_cpu == "mipsel") {
-     defines += [ "MIPS32_LE" ]
-     if (mips_float_abi == "hard") {
-       defines += [ "MIPS_FPU_LE" ]
-diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index a45214f754..79d9321bbd 100644
---- a/common_audio/BUILD.gn
-+++ b/common_audio/BUILD.gn
-@@ -66,7 +66,7 @@ rtc_library("common_audio") {
-     deps += [ ":common_audio_neon" ]
-   }
++  const std::unique_ptr<RtcpCounterObserver> rtcp_counter_observer_;
++
+   PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
+       nullptr;
+   const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
+@@ -384,6 +411,7 @@ ChannelSend::ChannelSend(
+     const FieldTrialsView& field_trials)
+     : ssrc_(ssrc),
+       event_log_(rtc_event_log),
++      rtcp_counter_observer_(new RtcpCounterObserver(ssrc)),
+       rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
+       retransmission_rate_limiter_(
+           new RateLimiter(clock, kMaxRetransmissionWindowMs)),
+@@ -408,6 +436,8 @@ ChannelSend::ChannelSend(
  
--  if (current_cpu == "x86" || current_cpu == "x64") {
-+  if (target_cpu == "x86" || target_cpu == "x64") {
-     deps += [ ":common_audio_sse2" ]
-     deps += [ ":common_audio_avx2" ]
-   }
-@@ -88,7 +88,7 @@ rtc_source_set("mock_common_audio") {
- rtc_source_set("common_audio_c_arm_asm") {
-   sources = []
-   deps = []
--  if (current_cpu == "arm") {
-+  if (target_cpu == "arm") {
-     sources += [ "signal_processing/complex_bit_reverse_arm.S" ]
+   configuration.event_log = event_log_;
+   configuration.rtt_stats = rtcp_rtt_stats;
++  configuration.rtcp_packet_type_counter_observer =
++      rtcp_counter_observer_.get();
+   configuration.retransmission_rate_limiter =
+       retransmission_rate_limiter_.get();
+   configuration.extmap_allow_mixed = extmap_allow_mixed;
+@@ -668,6 +698,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   CallSendStatistics stats = {0};
+   stats.rttMs = GetRTT();
++  stats.rtcp_packet_type_counts = rtcp_counter_observer_->GetCounts();
  
-     if (arm_version >= 7) {
-@@ -152,7 +152,7 @@ rtc_library("common_audio_c") {
-     "vad/webrtc_vad.c",
-   ]
+   StreamDataCounters rtp_stats;
+   StreamDataCounters rtx_stats;
+diff --git a/audio/channel_send.h b/audio/channel_send.h
+index 00d954c952..f0c9232296 100644
+--- a/audio/channel_send.h
++++ b/audio/channel_send.h
+@@ -43,6 +43,7 @@ struct CallSendStatistics {
+   TimeDelta total_packet_send_delay = TimeDelta::Zero();
+   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
+   uint64_t retransmitted_packets_sent;
++  RtcpPacketTypeCounter rtcp_packet_type_counts;
+   // A snapshot of Report Blocks with additional data of interest to statistics.
+   // Within this list, the sender-source SSRC pair is unique and per-pair the
+   // ReportBlockData represents the latest Report Block that was received for
+diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
+index f9e49db574..5f4f871bf0 100644
+--- a/call/audio_send_stream.h
++++ b/call/audio_send_stream.h
+@@ -31,6 +31,7 @@
+ #include "call/rtp_config.h"
+ #include "modules/audio_processing/include/audio_processing_statistics.h"
+ #include "modules/rtp_rtcp/include/report_block_data.h"
++#include "modules/rtp_rtcp/include/rtcp_statistics.h"
  
--  if (current_cpu == "mipsel") {
-+  if (target_cpu == "mipsel") {
-     sources += [
-       "signal_processing/complex_bit_reverse_mips.c",
-       "signal_processing/complex_fft_mips.c",
-@@ -170,7 +170,7 @@ rtc_library("common_audio_c") {
-     sources += [ "signal_processing/complex_fft.c" ]
-   }
+ namespace webrtc {
  
--  if (current_cpu != "arm" && current_cpu != "mipsel") {
-+  if (target_cpu != "arm" && target_cpu != "mipsel") {
-     sources += [
-       "signal_processing/complex_bit_reverse.c",
-       "signal_processing/filter_ar_fast_q12.c",
-@@ -231,7 +231,7 @@ rtc_library("fir_filter_factory") {
-     "../rtc_base/system:arch",
-     "../system_wrappers",
-   ]
--  if (current_cpu == "x86" || current_cpu == "x64") {
-+  if (target_cpu == "x86" || target_cpu == "x64") {
-     deps += [ ":common_audio_sse2" ]
-     deps += [ ":common_audio_avx2" ]
-   }
-@@ -240,7 +240,7 @@ rtc_library("fir_filter_factory") {
-   }
- }
+@@ -65,6 +66,7 @@ class AudioSendStream : public AudioSender {
  
--if (current_cpu == "x86" || current_cpu == "x64") {
-+if (target_cpu == "x86" || target_cpu == "x64") {
-   rtc_library("common_audio_sse2") {
-     sources = [
-       "fir_filter_sse.cc",
-@@ -289,7 +289,7 @@ if (rtc_build_with_neon) {
-       "resampler/sinc_resampler_neon.cc",
-     ]
+     ANAStats ana_statistics;
+     AudioProcessingStats apm_statistics;
++    RtcpPacketTypeCounter rtcp_packet_type_counts;
  
--    if (current_cpu != "arm64") {
-+    if (target_cpu != "arm64") {
-       # Enable compilation for the NEON instruction set.
-       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-       cflags = [ "-mfpu=neon" ]
-@@ -312,7 +312,7 @@ if (rtc_build_with_neon) {
-       "signal_processing/min_max_operations_neon.c",
-     ]
- 
--    if (current_cpu != "arm64") {
-+    if (target_cpu != "arm64") {
-       # Enable compilation for the NEON instruction set.
-       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-       cflags = [ "-mfpu=neon" ]
-diff --git a/common_audio/third_party/ooura/BUILD.gn b/common_audio/third_party/ooura/BUILD.gn
-index 0cdf98e591..a0ddf777db 100644
---- a/common_audio/third_party/ooura/BUILD.gn
-+++ b/common_audio/third_party/ooura/BUILD.gn
-@@ -20,7 +20,7 @@ rtc_library("fft_size_128") {
-   ]
-   cflags = []
- 
--  if (current_cpu == "x86" || current_cpu == "x64") {
-+  if (target_cpu == "x86" || target_cpu == "x64") {
-     sources += [
-       "fft_size_128/ooura_fft_sse2.cc",
-       "fft_size_128/ooura_fft_tables_neon_sse2.h",
-@@ -38,14 +38,14 @@ rtc_library("fft_size_128") {
- 
-     deps += [ "../../../common_audio" ]
- 
--    if (current_cpu != "arm64") {
-+    if (target_cpu != "arm64") {
-       # Enable compilation for the NEON instruction set.
-       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-       cflags += [ "-mfpu=neon" ]
-     }
-   }
- 
--  if (current_cpu == "mipsel" && mips_float_abi == "hard") {
-+  if (target_cpu == "mipsel" && mips_float_abi == "hard") {
-     sources += [ "fft_size_128/ooura_fft_mips.cc" ]
-   }
- }
-diff --git a/common_audio/third_party/spl_sqrt_floor/BUILD.gn b/common_audio/third_party/spl_sqrt_floor/BUILD.gn
-index ac862c65a8..e66ed2796e 100644
---- a/common_audio/third_party/spl_sqrt_floor/BUILD.gn
-+++ b/common_audio/third_party/spl_sqrt_floor/BUILD.gn
-@@ -12,11 +12,11 @@ rtc_library("spl_sqrt_floor") {
-   visibility = [ "../..:common_audio_c" ]
-   sources = [ "spl_sqrt_floor.h" ]
-   deps = []
--  if (current_cpu == "arm") {
-+  if (target_cpu == "arm") {
-     sources += [ "spl_sqrt_floor_arm.S" ]
- 
-     deps += [ "../../../rtc_base/system:asm_defines" ]
--  } else if (current_cpu == "mipsel") {
-+  } else if (target_cpu == "mipsel") {
-     sources += [ "spl_sqrt_floor_mips.c" ]
-   } else {
-     sources += [ "spl_sqrt_floor.c" ]
-diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 3e11a245a1..c29b893b7d 100644
---- a/modules/audio_processing/aec3/BUILD.gn
-+++ b/modules/audio_processing/aec3/BUILD.gn
-@@ -123,7 +123,7 @@ rtc_library("aec3") {
-   ]
- 
-   defines = []
--  if (rtc_build_with_neon && current_cpu != "arm64") {
-+  if (rtc_build_with_neon && target_cpu != "arm64") {
-     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-     cflags = [ "-mfpu=neon" ]
-   }
-@@ -162,7 +162,7 @@ rtc_library("aec3") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- 
--  if (current_cpu == "x86" || current_cpu == "x64") {
-+  if (target_cpu == "x86" || target_cpu == "x64") {
-     deps += [ ":aec3_avx2" ]
-   }
- }
-@@ -253,7 +253,7 @@ rtc_source_set("fft_data") {
-   ]
- }
- 
--if (current_cpu == "x86" || current_cpu == "x64") {
-+if (target_cpu == "x86" || target_cpu == "x64") {
-   rtc_library("aec3_avx2") {
-     configs += [ "..:apm_debug_dump" ]
-     sources = [
-diff --git a/modules/audio_processing/aecm/BUILD.gn b/modules/audio_processing/aecm/BUILD.gn
-index 80f2901049..a77f04aba5 100644
---- a/modules/audio_processing/aecm/BUILD.gn
-+++ b/modules/audio_processing/aecm/BUILD.gn
-@@ -29,14 +29,14 @@ rtc_library("aecm_core") {
-   if (rtc_build_with_neon) {
-     sources += [ "aecm_core_neon.cc" ]
- 
--    if (current_cpu != "arm64") {
-+    if (target_cpu != "arm64") {
-       # Enable compilation for the NEON instruction set.
-       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-       cflags += [ "-mfpu=neon" ]
-     }
-   }
- 
--  if (current_cpu == "mipsel") {
-+  if (target_cpu == "mipsel") {
-     sources += [ "aecm_core_mips.cc" ]
-   } else {
-     sources += [ "aecm_core_c.cc" ]
-diff --git a/modules/audio_processing/agc/BUILD.gn b/modules/audio_processing/agc/BUILD.gn
-index 508f901b08..75bef1450f 100644
---- a/modules/audio_processing/agc/BUILD.gn
-+++ b/modules/audio_processing/agc/BUILD.gn
-@@ -83,7 +83,7 @@ rtc_library("legacy_agc") {
-   ]
- 
-   if (rtc_build_with_neon) {
--    if (current_cpu != "arm64") {
-+    if (target_cpu != "arm64") {
-       # Enable compilation for the NEON instruction set.
-       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-       cflags = [ "-mfpu=neon" ]
-diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-index 3003a585bd..d709eb3699 100644
---- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-+++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
-@@ -18,7 +18,7 @@ rtc_library("rnn_vad") {
-   ]
- 
-   defines = []
--  if (rtc_build_with_neon && current_cpu != "arm64") {
-+  if (rtc_build_with_neon && target_cpu != "arm64") {
-     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-     cflags = [ "-mfpu=neon" ]
-   }
-diff --git a/modules/audio_processing/ns/BUILD.gn b/modules/audio_processing/ns/BUILD.gn
-index d818e23f3c..8c2e9dba84 100644
---- a/modules/audio_processing/ns/BUILD.gn
-+++ b/modules/audio_processing/ns/BUILD.gn
-@@ -43,7 +43,7 @@ rtc_static_library("ns") {
-   ]
- 
-   defines = []
--  if (rtc_build_with_neon && current_cpu != "arm64") {
-+  if (rtc_build_with_neon && target_cpu != "arm64") {
-     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
-     cflags = [ "-mfpu=neon" ]
-   }
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 42d72865b9..c184e2fbbc 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -10,7 +10,7 @@ import("//build/config/linux/gtk/gtk.gni")
- import("//build/config/ui.gni")
- import("../../webrtc.gni")
- 
--use_desktop_capture_differ_sse2 = current_cpu == "x86" || current_cpu == "x64"
-+use_desktop_capture_differ_sse2 = target_cpu == "x86" || target_cpu == "x64"
- 
- config("x11_config") {
-   if (rtc_use_x11_extensions) {
-diff --git a/webrtc.gni b/webrtc.gni
-index 962cb07866..72677752e1 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -171,13 +171,13 @@ declare_args() {
- 
-   # Selects fixed-point code where possible.
-   rtc_prefer_fixed_point = false
--  if (current_cpu == "arm" || current_cpu == "arm64") {
-+  if (target_cpu == "arm" || target_cpu == "arm64") {
-     rtc_prefer_fixed_point = true
-   }
- 
-   # Determines whether NEON code will be built.
-   rtc_build_with_neon =
--      (current_cpu == "arm" && arm_use_neon) || current_cpu == "arm64"
-+      (target_cpu == "arm" && arm_use_neon) || target_cpu == "arm64"
- 
-   # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported on
-   # all platforms except Android and iOS. Because FFmpeg can be built
+     int64_t target_bitrate_bps = 0;
+     // A snapshot of Report Blocks with additional data of interest to
 -- 
-2.34.1
+2.37.3
 

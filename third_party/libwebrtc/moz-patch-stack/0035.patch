@@ -1,44 +1,90 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Feb 2021 13:45:00 +0100
-Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
- VideoReceiveStream. r=ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 8 Jul 2020 17:35:00 +0000
+Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
+ device_caps; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D105774
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
+The capabilities field is for the physical device, device_caps is for the
+specific /dev/videoX device that has been opened. The device_caps field is
+only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
+fall back to capabilities if it is not set.
+
+Differential Revision: https://phabricator.services.mozilla.com/D82377
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
 ---
- call/video_receive_stream.h         | 3 +++
- video/rtp_video_stream_receiver2.cc | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
+ modules/video_capture/linux/device_info_v4l2.h  |  3 +++
+ 2 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index d09fb25f14..0885015121 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -206,6 +206,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // disabled.
-       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index a2435bcd4f..cd0ba6e3df 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
+     snprintf(device, sizeof(device), "/dev/video%d", n);
+     if ((fd = open(device, O_RDONLY)) != -1) {
+       // query device capabilities and make sure this is a video capture device
+-      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
+-          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
++      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
+         close(fd);
+         continue;
+       }
+@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
+     snprintf(device, sizeof(device), "/dev/video%d", n);
+     if ((fd = open(device, O_RDONLY)) != -1) {
+       // query device capabilities and make sure this is a video capture device
+-      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
+-          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
++      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
+         close(fd);
+         continue;
+       }
+@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
+     struct v4l2_capability cap;
+     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
+       // skip devices without video capture capability
+-      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
++      if (!IsVideoCaptureDevice(&cap)) {
+         continue;
+       }
  
-+      // See draft-alvestrand-rmcat-remb for information.
-+      bool remb = false;
+@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
+   return false;
+ }
+ 
++bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
++{
++  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
++    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
++  } else {
++    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
++  }
++}
 +
-       bool tmmbr = false;
+ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+   // set image format
+   struct v4l2_format video_fmt;
+diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
+index 95432a509d..e3c2395f49 100644
+--- a/modules/video_capture/linux/device_info_v4l2.h
++++ b/modules/video_capture/linux/device_info_v4l2.h
+@@ -18,6 +18,8 @@
+ #include "rtc_base/platform_thread.h"
+ #include <sys/inotify.h>
  
-       // See LntfConfig for description.
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index a01e60f8bb..91f230eab7 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
-       frames_decryptable_(false),
-       absolute_capture_time_interpolator_(clock) {
-   packet_sequence_checker_.Detach();
--  constexpr bool remb_candidate = true;
-   if (packet_router_)
--    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
-+    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
++struct v4l2_capability;
++
+ namespace webrtc {
+ namespace videocapturemodule {
+ class DeviceInfoV4l2 : public DeviceInfoImpl {
+@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
  
-   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
-       << "A stream should not be configured with RTCP disabled. This value is "
+  private:
+   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
++  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
+ 
+ #ifdef WEBRTC_LINUX
+   void HandleEvent(inotify_event* event, int fd);
 -- 
-2.34.1
+2.37.3
 

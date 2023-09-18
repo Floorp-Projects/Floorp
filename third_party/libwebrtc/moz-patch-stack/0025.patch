@@ -1,43 +1,96 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:07:00 +0000
-Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
+Date: Tue, 17 Sep 2019 06:47:00 +0000
+Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
 
-Getting the JNI calls here to work requires a good amount of webrtc.org
-machinery. It might be worth setting that up the next time we do an upstream
-merge, but for now, it is a lot simpler to just remove the affected code,
-given that we are not interested in collecting this data anyway.
+This restores the code for generating devicechange events that was
+accidentally removed as part of updating the Windows video capture code
+in Bug 1552755.
 
-Differential Revision: https://phabricator.services.mozilla.com/D61860
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
+Differential Revision: https://phabricator.services.mozilla.com/D46033
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
 ---
- sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
+ .../video_capture/windows/device_info_ds.h    |  3 ++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
-index 877986134a..c1d2d61a71 100644
---- a/sdk/android/src/java/org/webrtc/Histogram.java
-+++ b/sdk/android/src/java/org/webrtc/Histogram.java
-@@ -27,18 +27,13 @@ class Histogram {
-   }
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index d0d274cb02..460ef3b7b9 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -20,6 +20,29 @@
+ namespace webrtc {
+ namespace videocapturemodule {
  
-   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
--    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
-+    return new Histogram(0);
++LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
++{
++    DeviceInfoDS* pParent;
++    if (uiMsg == WM_CREATE)
++    {
++        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
++        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
++    }
++    else if (uiMsg == WM_DESTROY)
++    {
++        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
++    }
++    else if (uiMsg == WM_DEVICECHANGE)
++    {
++        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
++        if (pParent)
++        {
++            pParent->DeviceChange();
++        }
++    }
++    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
++}
++
+ // static
+ DeviceInfoDS* DeviceInfoDS::Create() {
+   DeviceInfoDS* dsInfo = new DeviceInfoDS();
+@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
+                         << rtc::ToHex(hr);
+     }
    }
- 
-   static public Histogram createEnumeration(String name, int max) {
--    return new Histogram(nativeCreateEnumeration(name, max));
-+    return new Histogram(0);
-   }
- 
-   public void addSample(int sample) {
--    nativeAddSample(handle, sample);
-   }
--
--  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
--  private static native long nativeCreateEnumeration(String name, int max);
--  private static native void nativeAddSample(long handle, int sample);
++
++  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
++  _wndClass = {0};
++  _wndClass.lpfnWndProc = &WndProc;
++  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
++  _wndClass.hInstance = _hInstance;
++
++  if (RegisterClass(&_wndClass)) {
++    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
++                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
++                         NULL, _hInstance, this);
++  }
  }
+ 
+ DeviceInfoDS::~DeviceInfoDS() {
+@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
+   if (_CoUninitializeIsRequired) {
+     CoUninitialize();
+   }
++  if (_hwnd != NULL) {
++    DestroyWindow(_hwnd);
++  }
++  UnregisterClass(_wndClass.lpszClassName, _hInstance);
+ }
+ 
+ int32_t DeviceInfoDS::Init() {
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index 1b52645cde..dc7b9b1a24 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
+   IEnumMoniker* _dsMonikerDevEnum;
+   bool _CoUninitializeIsRequired;
+   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
++  HWND _hwnd;
++  WNDCLASS _wndClass;
++  HINSTANCE _hInstance;
+ };
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
 -- 
-2.34.1
+2.37.3
 

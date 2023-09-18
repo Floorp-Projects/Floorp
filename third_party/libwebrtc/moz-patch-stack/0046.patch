@@ -1,38 +1,50 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Mon, 26 Jul 2021 22:51:00 -0700
-Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D120930
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
-index 13d848dce0..46a46ef51d 100644
---- a/modules/rtp_rtcp/source/source_tracker.cc
-+++ b/modules/rtp_rtcp/source/source_tracker.cc
-@@ -47,7 +47,8 @@ void SourceTracker::OnFrameDeliveredInternal(
-       SourceKey key(RtpSourceType::CSRC, csrc);
-       SourceEntry& entry = UpdateEntry(key);
- 
--      entry.timestamp = now;
-+      const auto packet_time = packet_info.receive_time();
-+      entry.timestamp = packet_time.ms() ? packet_time : now;
-       entry.audio_level = packet_info.audio_level();
-       entry.absolute_capture_time = packet_info.absolute_capture_time();
-       entry.local_capture_clock_offset =
-@@ -86,6 +87,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
-             .local_capture_clock_offset = entry.local_capture_clock_offset});
-   }
- 
-+  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-+    return a.timestamp_ms() > b.timestamp_ms();
-+  });
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
-   return sources;
- }
- 
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
++
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
++
++#include_next <X11/extensions/Xrandr.h>
++
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_
 -- 
-2.34.1
+2.37.3
 

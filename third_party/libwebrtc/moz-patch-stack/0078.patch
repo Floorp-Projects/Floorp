@@ -1,34 +1,49 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 27 Feb 2023 16:22:00 +0000
-Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
- designated initializer. r=mjf,webrtc-reviewers
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
 
-This fixes a build failure in the base-toolchain job with GCC 7.5.0:
-  In file included from Unified_cpp_threading_gn0.cpp:38:0:
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
-       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-                                                   ^
-
-Differential Revision: https://phabricator.services.mozilla.com/D171057
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
+Differential Revision: https://phabricator.services.mozilla.com/D135061
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
 ---
- rtc_base/physical_socket_server.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ video/receive_statistics_proxy.cc   | 9 +++++++--
+ video/rtp_video_stream_receiver2.cc | 4 +++-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 2dfdd9a5df..d0053dd82b 100644
---- a/rtc_base/physical_socket_server.cc
-+++ b/rtc_base/physical_socket_server.cc
-@@ -462,7 +462,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
-   int received = 0;
-   if (read_scm_timestamp_experiment_) {
-     iovec iov = {.iov_base = buffer, .iov_len = length};
--    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-+    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
-     if (out_addr) {
-       out_addr->Clear();
-       msg.msg_name = addr;
+diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
+index ab16d8f763..46270d74f9 100644
+--- a/video/receive_statistics_proxy.cc
++++ b/video/receive_statistics_proxy.cc
+@@ -832,8 +832,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+ }
+ 
+ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
+-  RTC_DCHECK_RUN_ON(&main_thread_);
+-  stats_.packets_discarded += packets_discarded;
++  // Can be called on either the decode queue or the worker thread
++  // See FrameBuffer2 for more details.
++  worker_thread_->PostTask(
++      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
++        RTC_DCHECK_RUN_ON(&main_thread_);
++        stats_.packets_discarded += packets_discarded;
++      }));
+ }
+ 
+ void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index dccaa3158f..b5e120b8b7 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -1207,7 +1207,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+     packet_infos_.erase(packet_infos_.begin(),
+                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
+     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
+-    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
++    if (num_packets_cleared > 0) {
++      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
++    }
+     reference_finder_->ClearTo(seq_num);
+   }
+ }
 -- 
-2.34.1
+2.37.3
 

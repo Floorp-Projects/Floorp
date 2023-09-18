@@ -1,63 +1,26 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 91d5fc2ed6.
- r=webrtc-reviewers,mjf
+Date: Wed, 11 Jan 2023 22:42:00 +0000
+Subject: Bug 1800942 - Add DCHECKs to
+ TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
 
-Upstream commit: https://webrtc.googlesource.com/src/+/91d5fc2ed6ef347d90182868320267d45cf9525b
-    Support more pixel formats in v4l2 camera backend
-
-    These were tested with gstreamer and v4l2loopback, example setup:
-    $ sudo v4l2loopback-ctl add -n BGRA 10
-    $ gst-launch-1.0 videotestsrc pattern=smpte-rp-219 ! \
-      video/x-raw,format=BGRA ! v4l2sink device=/dev/video10 > /dev/null &
-
-    Then conversion was confirmed with video_loopback:
-    $ ./video_loopback --capture_device_index=3 --logs 2>&1 | grep -i \
-      capture
-
-    Bug: webrtc:14830
-    Change-Id: I35c8e453cf7f9a2923935b0ad82477a3144e8c12
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291532
-    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
-    Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39979}
-
-Differential Revision: https://phabricator.services.mozilla.com/D177232
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92dc582fdcf3a2fdb3fcdbcd96080d081de8f8d5
+Differential Revision: https://phabricator.services.mozilla.com/D166536
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
 ---
- .../video_capture/linux/device_info_v4l2.cc    | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ modules/video_coding/timing/timestamp_extrapolator.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 04caaea592..abd2886f85 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -57,6 +57,24 @@
- #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
- #endif
+diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
+index a90df8bf7f..77e5508a76 100644
+--- a/modules/video_coding/timing/timestamp_extrapolator.cc
++++ b/modules/video_coding/timing/timestamp_extrapolator.cc
+@@ -125,6 +125,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
+ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
+     uint32_t timestamp90khz) const {
+   int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
++  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
  
-+// These defines are here to support building on kernel 3.16 which some
-+// downstream projects, e.g. Firefox, use.
-+// TODO(apehrson): Remove them and their undefs when no longer needed.
-+#ifndef V4L2_PIX_FMT_ABGR32
-+#define ABGR32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_ARGB32
-+#define ARGB32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_RGBA32
-+#define RGBA32_OVERRIDE 1
-+#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
-+#endif
-+
- namespace webrtc {
- namespace videocapturemodule {
- #ifdef WEBRTC_LINUX
+   if (!first_unwrapped_timestamp_) {
+     return absl::nullopt;
 -- 
-2.34.1
+2.37.3
 

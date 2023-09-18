@@ -1,0 +1,50 @@
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
+ disabled r=ng,webrtc-reviewers
+
+Depends on D172224
+
+Differential Revision: https://phabricator.services.mozilla.com/D172229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
+---
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 5b7edef1af..5933abb2fb 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -419,7 +419,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
+     return false;
+   }
+-  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  if (mozilla::gfx::IsDMABufEnabled()) {
++    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  }
+ 
+   pw_stream_node_id_ = stream_node_id;
+ 
+@@ -508,7 +510,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
+                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
+       // Modifiers can be used with PipeWire >= 0.3.33
+-      if (has_required_pw_client_version && has_required_pw_server_version) {
++      if (egl_dmabuf_ &&
++          has_required_pw_client_version && has_required_pw_server_version) {
+         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
+ 
+         if (!modifiers_.empty()) {
+@@ -927,7 +930,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
+ 
+   const uint n_planes = spa_buffer->n_datas;
+ 
+-  if (!n_planes) {
++  if (!n_planes || !egl_dmabuf_) {
+     return false;
+   }
+ 
+-- 
+2.37.3
+

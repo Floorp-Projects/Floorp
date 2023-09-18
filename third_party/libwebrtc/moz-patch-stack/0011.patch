@@ -1,45 +1,37 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 19 Sep 2018 15:06:00 -0400
-Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 9 Jul 2021 18:14:00 -0500
+Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
 
-This fixes a bug in the upstream code introduced when they removed the
-ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
-passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
-causes bad rendering and instabilities.
-
-Differential Revision: https://phabricator.services.mozilla.com/D7478
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
+Differential Revision: https://phabricator.services.mozilla.com/D119674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
 ---
- modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ rtc_base/logging.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 184e865365..0c6e3784a2 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -214,12 +214,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index ad2303735e..9c2d3b0a39 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
+ }
  
-+  int dst_width = buffer->width();
-+  int dst_height = buffer->height();
-+
-+  // LibYuv expects pre-rotation_mode values for dst.
-+  // Stride values should correspond to the destination values.
-+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
-+    std::swap(dst_width, dst_height);
-+  }
-+
-   const int conversionResult = libyuv::ConvertToI420(
-       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
--      width, height, target_width, target_height, rotation_mode,
-+      width, height, dst_width, dst_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
-   if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
+ void LogMessage::LogToDebug(LoggingSeverity min_sev) {
+-  g_dbg_sev = min_sev;
+   webrtc::MutexLock lock(&GetLoggingLock());
++  g_dbg_sev = min_sev;
+   UpdateMinLogSeverity();
+ }
+ 
+@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+ 
+ // static
+ bool LogMessage::IsNoop(LoggingSeverity severity) {
++  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
++  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
++  webrtc::MutexLock lock(&GetLoggingLock());
+   if (severity >= g_dbg_sev || severity >= g_min_sev)
+     return false;
+   return streams_empty_.load(std::memory_order_relaxed);
 -- 
-2.34.1
+2.37.3
 

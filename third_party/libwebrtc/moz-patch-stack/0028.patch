@@ -1,66 +1,56 @@
-From: Randell Jesup <rjesup@wgate.com>
-Date: Sat, 11 Jul 2020 12:31:00 +0000
-Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
- r=dminor
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:12:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Windows. r=dminor
 
-Also we drop support for an independent-of-scroll/viewport capture, which
-the old Tab Sharing supported, for security reasons (and we don't need it).
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D80974
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
+Differential Revision: https://phabricator.services.mozilla.com/D46274
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
- modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
- 2 files changed, 19 insertions(+)
+ modules/video_capture/windows/device_info_ds.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 5211f1acec..4baa93cab9 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index a7eca19bbf..9d22f42f4d 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -20,7 +20,7 @@
+ namespace webrtc {
+ namespace videocapturemodule {
+ 
+-BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
++BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
+ {
+   if (pHdr == NULL) {
+     return FALSE;
+@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
+     return FALSE;
+   }
+   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+-  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
++  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
  }
  
-+// static
-+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
-+    const DesktopCaptureOptions& options) {
-+  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
-+  if (capturer && options.detect_updated_region()) {
-+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-+  }
-+
-+  return capturer;
-+}
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index f39852b58e..9b667739a8 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
+ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+     else if (uiMsg == WM_DEVICECHANGE)
+     {
+         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+-        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
++        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
+         {
+             pParent->DeviceChange();
+         }
+@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
+     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
+     di.dbcc_size = sizeof(di);
+     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
+-    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
++    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
  
-+  // Creates a DesktopCapturer instance which targets to capture tab.
-+  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-+      const DesktopCaptureOptions& options);
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
- 
-@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
-+
-+  // Creates a DesktopCapturer instance which targets to capture tabs
-+  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
-+      const DesktopCaptureOptions& options);
- };
- 
- }  // namespace webrtc
+     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
+                                              DEVICE_NOTIFY_WINDOW_HANDLE);
 -- 
-2.34.1
+2.37.3
 

@@ -1,25 +1,26 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 1 Jun 2022 12:47:00 -0500
-Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
- config.emplace(...)
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Tue, 2 Nov 2021 14:35:00 +0000
+Subject: Bug 1729455 - Ensure the libwebrtc system clock is not used. r=bwc
 
+Differential Revision: https://phabricator.services.mozilla.com/D128244
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3e8ac168ee3db089dd892bf140df53e15d6f0918
 ---
- modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ rtc_base/system_time.cc | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index 4c0f5fc5ee..1afac9fb42 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-@@ -468,7 +468,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-   if (!enabled.Get()) {
-     return config;
-   }
--  config.emplace();
-+  config.emplace(Config());
-   config->bandwidth_rampup_upper_bound_factor =
-       bandwidth_rampup_upper_bound_factor.Get();
-   config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
+diff --git a/rtc_base/system_time.cc b/rtc_base/system_time.cc
+index 058e6c2990..1a5e447916 100644
+--- a/rtc_base/system_time.cc
++++ b/rtc_base/system_time.cc
+@@ -12,6 +12,8 @@
+ // rtc::SystemTimeNanos() must be provided externally.
+ #ifndef WEBRTC_EXCLUDE_SYSTEM_TIME
+ 
++#error Mozilla: Must not use the built-in libwebrtc clock
++
+ #include <stdint.h>
+ 
+ #include <limits>
 -- 
-2.34.1
+2.37.3
 

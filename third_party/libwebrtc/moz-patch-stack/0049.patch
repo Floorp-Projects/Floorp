@@ -1,30 +1,38 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 28 Oct 2021 18:13:00 +0000
-Subject: Bug 1729367 - P6 - Restore PID recording post cherry-pick;r=mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 25 Jun 2021 15:12:00 -0500
+Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
+ with the Gecko Profiler. r=ng
 
-This restores the code from P0, which was removed to make cherry-picking 439ffe462a66ad9fa9a251b265e4ab28c2647d25 and 449a78b1e20ea85b11f967cf3a184ee610ce21c3 easier.
-
-Differential Revision: https://phabricator.services.mozilla.com/D129714
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/72a83cb2e571023cd4150bbdef5be5455ce851f4
+Differential Revision: https://phabricator.services.mozilla.com/D119412
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
 ---
- modules/desktop_capture/win/window_capture_utils.cc | 4 ++++
- 1 file changed, 4 insertions(+)
+ rtc_base/platform_thread.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
-index ccfef49bc5..d58c02e17c 100644
---- a/modules/desktop_capture/win/window_capture_utils.cc
-+++ b/modules/desktop_capture/win/window_capture_utils.cc
-@@ -79,6 +79,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
-   DesktopCapturer::Source window;
-   window.id = reinterpret_cast<WindowId>(hwnd);
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 556204ac89..71a9f1b224 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -19,6 +19,8 @@
  
-+  DWORD pid;
-+  GetWindowThreadProcessId(hwnd, &pid);
-+  window.pid = static_cast<pid_t>(pid);
+ #include "rtc_base/checks.h"
+ 
++#include "MicroGeckoProfiler.h"
 +
-   // GetWindowText* are potentially blocking operations if `hwnd` is
-   // owned by the current process. The APIs will send messages to the window's
-   // message loop, and if the message loop is waiting on this operation we will
+ namespace rtc {
+ namespace {
+ 
+@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
+       new std::function<void()>([thread_function = std::move(thread_function),
+                                  name = std::string(name), attributes] {
+         rtc::SetCurrentThreadName(name.c_str());
++
++        char stacktop;
++        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
++
+         SetPriority(attributes.priority);
+         thread_function();
+       });
 -- 
-2.34.1
+2.37.3
 

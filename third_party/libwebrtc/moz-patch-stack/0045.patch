@@ -1,76 +1,57 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Mar 2021 08:55:00 -0600
-Subject: Bug 1654112 - libwebrtc modification: Surface video RTCP SR stats
- again. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 18 Feb 2021 17:23:00 -0800
+Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
+ r=pehrsons
 
-libwebrtc has stopped surfacing these, and Chromium does not support
-these stats at all.
+Upstreaming bug 1697385
 
-Differential Revision: https://phabricator.services.mozilla.com/D108674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f4b22708a4690753638ca32c
+Differential Revision: https://phabricator.services.mozilla.com/D107899
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
 ---
- video/rtp_video_stream_receiver2.cc | 10 ++++++++++
- video/rtp_video_stream_receiver2.h  |  6 ++++++
- video/video_receive_stream2.cc      |  8 ++++++++
- 3 files changed, 24 insertions(+)
+ modules/video_capture/windows/device_info_ds.cc | 3 ++-
+ modules/video_capture/windows/device_info_ds.h  | 6 +++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 25bd997029..a9e6579092 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1051,6 +1051,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
-   return absl::nullopt;
- }
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index 9d22f42f4d..f6927281f3 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
+                                     char* deviceUniqueIdUTF8,
+                                     uint32_t deviceUniqueIdUTF8Length,
+                                     char* productUniqueIdUTF8,
+-                                    uint32_t productUniqueIdUTF8Length) {
++                                    uint32_t productUniqueIdUTF8Length,
++                                    pid_t* pid) {
+   MutexLock lock(&_apiLock);
+   const int32_t result = GetDeviceInfo(
+       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index ed2a726d6f..e6dfaed366 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -12,8 +12,11 @@
+ #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
  
-+// Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+// stats at all, and even on the most recent libwebrtc code there does not
-+// seem to be any support for these stats right now. So, we hack this in.
-+void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count,
-+    int64_t* ntp_timestamp_ms) const {
-+  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
-+}
-+
- void RtpVideoStreamReceiver2::ManageFrame(
-     std::unique_ptr<RtpFrameObject> frame) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index f9ed339c0a..53378e9e9b 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -206,6 +206,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   absl::optional<int64_t> LastReceivedPacketMs() const;
-   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
+ #include <dshow.h>
++#include <Ks.h>
++#include <dbt.h>
  
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
-+
-  private:
-   // Implements RtpVideoFrameReceiver.
-   void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 7adf0d230d..a24060c867 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -574,6 +574,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-       }
-     }
-   }
-+
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
-+      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
-+      &stats.rtcp_sender_ntp_timestamp_ms);
-+
-   return stats;
- }
+ #include "modules/video_capture/device_info_impl.h"
++#include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_impl.h"
  
+ namespace webrtc {
+@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8,
+-                        uint32_t productUniqueIdUTF8Length) override;
++                        uint32_t productUniqueIdUTF8Length,
++                        pid_t* pid) override;
+ 
+   /*
+    * Display OS /capture device specific settings dialog
 -- 
-2.34.1
+2.37.3
 
