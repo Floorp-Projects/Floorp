@@ -11,7 +11,6 @@
 #ifndef gc_GC_h
 #define gc_GC_h
 
-#include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
@@ -237,34 +236,6 @@ struct MOZ_RAII AutoDisableCompactingGC {
 
  private:
   JSContext* cx;
-};
-
-/*
- * Dynamically select the GC heap to allocate into for a graph of GC things.
- *
- * Initially |heap()| will return Heap::Default to select nursery allocation,
- * but when a specified number of nursery collections have been triggered it
- * switches to returning Heap::Tenured.
- */
-class MOZ_RAII AutoSelectGCHeap {
- public:
-  explicit AutoSelectGCHeap(JSContext* cx,
-                            size_t allowedNurseryCollections = 0);
-  ~AutoSelectGCHeap();
-
-  gc::Heap heap() const { return heap_; }
-  operator gc::Heap() const { return heap_; }
-
-  void onNurseryCollectionEnd();
-
- private:
-  static void NurseryCollectionCallback(JSContext* cx,
-                                        JS::GCNurseryProgress progress,
-                                        JS::GCReason reason, void* data);
-
-  JSContext* cx_;
-  size_t allowedNurseryCollections_;
-  gc::Heap heap_ = gc::Heap::Default;
 };
 
 } /* namespace js */

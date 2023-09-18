@@ -24,7 +24,6 @@
 #include "builtin/Array.h"
 #include "builtin/SelfHostingDefines.h"
 #include "ds/Sort.h"
-#include "gc/GC.h"
 #include "gc/GCContext.h"
 #include "js/ForOfIterator.h"         // JS::ForOfIterator
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -965,14 +964,9 @@ NativeIterator::NativeIterator(JSContext* cx,
   }
   MOZ_ASSERT(static_cast<void*>(shapesEnd_) == propertyCursor_);
 
-  // Allocate any strings in the nursery until the first minor GC. After this
-  // point they will end up getting tenured anyway because they are reachable
-  // from |propIter| which will be tenured.
-  AutoSelectGCHeap gcHeap(cx);
-
   size_t numProps = props.length();
   for (size_t i = 0; i < numProps; i++) {
-    JSLinearString* str = IdToString(cx, props[i], gcHeap);
+    JSLinearString* str = IdToString(cx, props[i]);
     if (!str) {
       *hadError = true;
       return;
