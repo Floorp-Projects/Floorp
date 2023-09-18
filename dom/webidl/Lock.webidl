@@ -7,7 +7,7 @@
  * https://w3c.github.io/web-locks/
  */
 
-[SecureContext, Exposed=(Window,Worker), Pref="dom.weblocks.enabled"]
+[SecureContext, Exposed=(Window,Worker)]
 interface Lock {
   readonly attribute DOMString name;
   readonly attribute LockMode mode;

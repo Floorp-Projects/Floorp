@@ -4596,12 +4596,6 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
-# Whether the Web Locks API is enabled
-- name: dom.weblocks.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether the WebMIDI API is enabled
 - name: dom.webmidi.enabled
   type: bool

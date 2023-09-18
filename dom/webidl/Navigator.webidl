@@ -341,7 +341,6 @@ partial interface Navigator {
 // https://w3c.github.io/web-locks/#navigator-mixins
 [SecureContext]
 interface mixin NavigatorLocks {
-  [Pref="dom.weblocks.enabled"]
   readonly attribute LockManager locks;
 };
 Navigator includes NavigatorLocks;
