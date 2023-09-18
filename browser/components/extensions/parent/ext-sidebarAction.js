@@ -197,9 +197,8 @@ this.sidebarAction = class extends ExtensionAPI {
     menuitem.setAttribute(
       "style",
       `
-      --webextension-menuitem-image: image-set(url("${getIcon(
-        16
-      )}"), url("${getIcon(32)}") 2x);
+      --webextension-menuitem-image: url("${getIcon(16)}");
+      --webextension-menuitem-image-2x: url("${getIcon(32)}");
     `
     );
   }
