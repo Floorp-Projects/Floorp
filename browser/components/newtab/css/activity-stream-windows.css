@@ -1183,13 +1183,8 @@ main.has-snippet {
   display: inline-block;
   height: 82px;
   width: 82px;
-  background: url("chrome://branding/content/about-logo.png") no-repeat center;
+  background: image-set(url("chrome://branding/content/about-logo.png"), url("chrome://branding/content/about-logo@2x.png") 2x) no-repeat center;
   background-size: 82px;
-}
-@media (min-resolution: 2x) {
-  .search-wrapper .logo-and-wordmark .logo {
-    background-image: url("chrome://branding/content/about-logo@2x.png");
-  }
 }
 .search-wrapper .logo-and-wordmark .wordmark {
   background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
@@ -2726,7 +2721,7 @@ main.has-snippet {
   }
 }
 .ds-onboarding-container .ds-onboarding-graphic {
-  background-image: url("chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif");
+  background-image: image-set(url("chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif"), url("chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif") 2x);
   border-radius: 8px;
   background-size: contain;
   background-repeat: no-repeat;
@@ -2738,11 +2733,6 @@ main.has-snippet {
   margin-inline-start: 54px;
   flex-shrink: 0;
   display: none;
-}
-@media (min-resolution: 2x) {
-  .ds-onboarding-container .ds-onboarding-graphic {
-    background-image: url("chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif");
-  }
 }
 @media (min-width: 866px) {
   .ds-onboarding-container .ds-onboarding-graphic {

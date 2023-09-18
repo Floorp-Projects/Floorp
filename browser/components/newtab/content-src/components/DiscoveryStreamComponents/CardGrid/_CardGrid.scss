@@ -111,12 +111,7 @@ $col4-header-font-size: 14;
   }
 
   .ds-onboarding-graphic {
-    background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif');
-
-    @media (min-resolution: 2x) {
-      background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif');
-    }
-
+    background-image: image-set(url('chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif'), url('chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif') 2x);
     border-radius: 8px;
     background-size: contain;
     background-repeat: no-repeat;
