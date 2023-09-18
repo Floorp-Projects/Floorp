@@ -195,8 +195,11 @@ class VideoMediaShimChannel : public VideoMediaChannel {
   void SetSendCodecChangedCallback(
       absl::AnyInvocable<void()> callback) override {
     // This callback is used internally by the shim, so should not be called by
-    // users.
-    RTC_CHECK_NOTREACHED();
+    // users for the "both" case.
+    if (send_impl_ && receive_impl_) {
+      RTC_CHECK_NOTREACHED();
+    }
+    send_impl()->SetSendCodecChangedCallback(std::move(callback));
   }
 
   // Implementation of Delayable
