@@ -71,3 +71,9 @@ about-private-browsing-pin-promo-title = No saved cookies or history, right from
 about-private-browsing-cookie-banners-promo-header = Cookie banners begone!
 about-private-browsing-cookie-banners-promo-button = Reduce Cookie Banners
 about-private-browsing-cookie-banners-promo-message = Let { -brand-short-name } automatically answer cookie pop-ups for you so you can get back to distraction-free browsing. { -brand-short-name } will reject all requests if possible.
+
+## Strings for Felt Privacy v1 experiments in 119
+
+about-private-browsing-felt-privacy-v1-info-header = Leave no traces on this device
+about-private-browsing-felt-privacy-v1-info-body = { -brand-short-name} deletes your cookie, history, and site data when you close all your private windows.
+about-private-browsing-felt-privacy-v1-info-link = Who might be able to see my activity?

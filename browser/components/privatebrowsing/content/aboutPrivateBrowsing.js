@@ -54,6 +54,13 @@ function renderInfo({
     container.style.backgroundImage = `url(${infoIcon})`;
   }
 
+  if (feltPrivacyEnabled) {
+    infoTitleEnabled = true;
+    infoTitle = "fluent:about-private-browsing-felt-privacy-v1-info-header";
+    infoBody = "fluent:about-private-browsing-felt-privacy-v1-info-body";
+    infoLinkText = "fluent:about-private-browsing-felt-privacy-v1-info-link";
+  }
+
   titleEl.hidden = !infoTitleEnabled;
 
   translateElements([

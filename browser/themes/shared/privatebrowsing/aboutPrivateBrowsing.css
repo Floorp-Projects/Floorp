@@ -371,6 +371,16 @@ p {
     font-size: 0.93em;
     margin: 0;
     padding-inline-start: 20px;
+    padding-block-end: 25px;
+  }
+
+  #info-title:not([hidden]) + #info-body {
+    margin-block: 0;
+  }
+
+  #info-title {
+    font-size: 1em;
+    margin-block: 0;
   }
 }
 
