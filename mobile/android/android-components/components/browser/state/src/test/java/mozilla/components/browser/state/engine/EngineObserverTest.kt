@@ -91,7 +91,16 @@ class EngineObserverTest {
                 onResult: (List<ProductRecommendation>) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
-
+            override fun reanalyzeProduct(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun requestAnalysisStatus(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -168,7 +177,16 @@ class EngineObserverTest {
                 onResult: (List<ProductRecommendation>) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
-
+            override fun reanalyzeProduct(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun requestAnalysisStatus(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -242,7 +260,16 @@ class EngineObserverTest {
                 onResult: (ProductAnalysis) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
-
+            override fun reanalyzeProduct(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun requestAnalysisStatus(
+                url: String,
+                onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,

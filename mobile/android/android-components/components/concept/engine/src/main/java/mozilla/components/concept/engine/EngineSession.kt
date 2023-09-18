@@ -852,7 +852,7 @@ abstract class EngineSession(
      * @param onResult callback invoked if the engine API returned a valid response. Please note
      * that the response can be null - which can indicate a bug, a miscommunication
      * or other unexpected failure.
-     * @param onError callback invoked if there was an error getting the response.
+     * @param onException callback invoked if there was an error getting the response.
      */
     abstract fun requestProductRecommendations(
         url: String,
@@ -863,12 +863,36 @@ abstract class EngineSession(
     /**
      * Requests the analysis results for a given product page URL.
      *
-     * @param onSuccess callback invoked if the engine API returns a valid response.
-     * @param onError callback invoked if there was an error getting the response.
+     * @param onResult callback invoked if the engine API returns a valid response.
+     * @param onException callback invoked if there was an error getting the response.
      */
     abstract fun requestProductAnalysis(
         url: String,
         onResult: (ProductAnalysis) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
+     * Requests the reanalysis of a product for a given product page URL.
+     *
+     * @param onResult callback invoked if the engine API returns a valid response.
+     * @param onException callback invoked if there was an error getting the response.
+     */
+    abstract fun reanalyzeProduct(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
+     * Requests the status of a product analysis for a given product page URL.
+     *
+     * @param onResult callback invoked if the engine API returns a valid response.
+     * @param onException callback invoked if there was an error getting the response.
+     */
+    abstract fun requestAnalysisStatus(
+        url: String,
+        onResult: (String) -> Unit,
         onException: (Throwable) -> Unit,
     )
 

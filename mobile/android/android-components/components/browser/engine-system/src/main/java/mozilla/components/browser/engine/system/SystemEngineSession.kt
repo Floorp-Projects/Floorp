@@ -446,6 +446,28 @@ class SystemEngineSession(
         throw UnsupportedOperationException("Analysis of product reviews for shopping is not available in this engine")
     }
 
+    /**
+     * See [EngineSession.reanalyzeProduct]
+     */
+    override fun reanalyzeProduct(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Reanalyzing product reviews for shopping is not available in this engine")
+    }
+
+    /**
+     * See [EngineSession.requestAnalysisStatus]
+     */
+    override fun requestAnalysisStatus(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Requesting product analysis status is not available in this engine")
+    }
+
     override fun hasCookieBannerRuleForSession(
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,

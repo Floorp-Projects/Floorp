@@ -767,6 +767,62 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.reanalyzeProduct]
+     */
+    override fun reanalyzeProduct(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.requestCreateAnalysis(url).then({
+                response ->
+            val errorMessage = "Invalid value: unable to reanalyze product from Gecko Engine."
+            if (response == null) {
+                logger.error(errorMessage)
+                onException(
+                    java.lang.IllegalStateException(errorMessage),
+                )
+                return@then GeckoResult()
+            }
+            onResult(response)
+            GeckoResult<String>()
+        }, {
+                throwable ->
+            logger.error("Request to reanalyze product failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
+    }
+
+    /**
+     * See [EngineSession.requestAnalysisStatus]
+     */
+    override fun requestAnalysisStatus(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.requestAnalysisCreationStatus(url).then({
+                response ->
+            val errorMessage = "Invalid value: unable to request analysis status from Gecko Engine."
+            if (response == null) {
+                logger.error(errorMessage)
+                onException(
+                    java.lang.IllegalStateException(errorMessage),
+                )
+                return@then GeckoResult()
+            }
+            onResult(response)
+            GeckoResult<String>()
+        }, {
+                throwable ->
+            logger.error("Request for product analysis status failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
+    }
+
+    /**
      * Purges the history for the session (back and forward history).
      */
     override fun purgeHistory() {
