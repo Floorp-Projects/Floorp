@@ -7457,9 +7457,9 @@ bool BaseCompiler::emitArraySet() {
   return true;
 }
 
-bool BaseCompiler::emitArrayLen(bool decodeIgnoredTypeIndex) {
+bool BaseCompiler::emitArrayLen() {
   Nothing nothing;
-  if (!iter_.readArrayLen(decodeIgnoredTypeIndex, &nothing)) {
+  if (!iter_.readArrayLen(&nothing)) {
     return false;
   }
 
@@ -7605,25 +7605,6 @@ void BaseCompiler::emitRefCastCommon(RefType sourceType, RefType destType) {
   pushRef(ref);
 }
 
-bool BaseCompiler::emitRefTestV5() {
-  Nothing nothing;
-  RefType sourceType;
-  uint32_t typeIndex;
-  if (!iter_.readRefTestV5(&sourceType, &typeIndex, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
-  RefType destType = RefType::fromTypeDef(&typeDef, /*nullable=*/false);
-  emitRefTestCommon(sourceType, destType);
-
-  return true;
-}
-
 void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
                                       RefType destType, Label* label,
                                       bool onSuccess) {
@@ -7686,25 +7667,6 @@ void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
   } else {
     MOZ_CRASH("unknown type hierarchy in cast");
   }
-}
-
-bool BaseCompiler::emitRefCastV5() {
-  Nothing nothing;
-  RefType sourceType;
-  uint32_t typeIndex;
-  if (!iter_.readRefCastV5(&sourceType, &typeIndex, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
-  RefType destType = RefType::fromTypeDef(&typeDef, /*nullable=*/true);
-  emitRefCastCommon(sourceType, destType);
-
-  return true;
 }
 
 bool BaseCompiler::emitRefTest(bool nullable) {
@@ -7798,100 +7760,6 @@ bool BaseCompiler::emitBrOnCast(bool onSuccess) {
 
   return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
                             sourceType, destType);
-}
-
-bool BaseCompiler::emitBrOnCastV5(bool onSuccess) {
-  MOZ_ASSERT(!hasLatentOp());
-
-  uint32_t labelRelativeDepth;
-  RefType sourceType;
-  uint32_t castTypeIndex;
-  ResultType labelType;
-  BaseNothingVector unused_values{};
-  if (onSuccess
-          ? !iter_.readBrOnCastV5(&labelRelativeDepth, &sourceType,
-                                  &castTypeIndex, &labelType, &unused_values)
-          : !iter_.readBrOnCastFailV5(&labelRelativeDepth, &sourceType,
-                                      &castTypeIndex, &labelType,
-                                      &unused_values)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  const TypeDef& typeDef = moduleEnv_.types->type(castTypeIndex);
-  RefType destType = RefType::fromTypeDef(&typeDef, false);
-  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
-                            sourceType, destType);
-}
-
-bool BaseCompiler::emitBrOnCastHeapV5(bool onSuccess, bool nullable) {
-  MOZ_ASSERT(!hasLatentOp());
-
-  uint32_t labelRelativeDepth;
-  RefType sourceType;
-  RefType destType;
-  ResultType labelType;
-  BaseNothingVector unused_values{};
-  if (onSuccess ? !iter_.readBrOnCastHeapV5(nullable, &labelRelativeDepth,
-                                            &sourceType, &destType, &labelType,
-                                            &unused_values)
-                : !iter_.readBrOnCastFailHeapV5(nullable, &labelRelativeDepth,
-                                                &sourceType, &destType,
-                                                &labelType, &unused_values)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
-                            sourceType, destType);
-}
-
-bool BaseCompiler::emitRefAsStructV5() {
-  Nothing nothing;
-  return iter_.readConversion(ValType(RefType::any()),
-                              ValType(RefType::struct_().asNonNullable()),
-                              &nothing);
-}
-
-bool BaseCompiler::emitBrOnNonStructV5() {
-  MOZ_ASSERT(!hasLatentOp());
-
-  uint32_t labelRelativeDepth;
-  ResultType labelType;
-  BaseNothingVector unused_values{};
-  if (!iter_.readBrOnNonStructV5(&labelRelativeDepth, &labelType,
-                                 &unused_values)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  Control& target = controlItem(labelRelativeDepth);
-  target.bceSafeOnExit &= bceSafe_;
-
-  BranchState b(&target.label, target.stackHeight, InvertBranch(false),
-                labelType);
-  if (b.hasBlockResults()) {
-    needResultRegisters(b.resultType);
-  }
-  RegI32 condition = needI32();
-  masm.move32(Imm32(1), condition);
-  if (b.hasBlockResults()) {
-    freeResultRegisters(b.resultType);
-  }
-  if (!jumpConditionalWithResults(&b, Assembler::Equal, condition, Imm32(0))) {
-    return false;
-  }
-  freeI32(condition);
-  return true;
 }
 
 bool BaseCompiler::emitExternInternalize() {
@@ -10052,7 +9920,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayNewDefault());
           case uint32_t(GcOp::ArrayNewData):
             CHECK_NEXT(emitArrayNewData());
-          case uint32_t(GcOp::ArrayInitFromElemStaticV5):
           case uint32_t(GcOp::ArrayNewElem):
             CHECK_NEXT(emitArrayNewElem());
           case uint32_t(GcOp::ArrayGet):
@@ -10063,10 +9930,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayGet(FieldWideningOp::Unsigned));
           case uint32_t(GcOp::ArraySet):
             CHECK_NEXT(emitArraySet());
-          case uint32_t(GcOp::ArrayLenWithTypeIndex):
-            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/true));
           case uint32_t(GcOp::ArrayLen):
-            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/false));
+            CHECK_NEXT(emitArrayLen());
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
           case uint32_t(GcOp::I31New):
@@ -10075,10 +9940,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitI31Get(FieldWideningOp::Signed));
           case uint32_t(GcOp::I31GetU):
             CHECK_NEXT(emitI31Get(FieldWideningOp::Unsigned));
-          case uint32_t(GcOp::RefTestV5):
-            CHECK_NEXT(emitRefTestV5());
-          case uint32_t(GcOp::RefCastV5):
-            CHECK_NEXT(emitRefCastV5());
           case uint32_t(GcOp::RefTest):
             CHECK_NEXT(emitRefTest(/*nullable=*/false));
           case uint32_t(GcOp::RefTestNull):
@@ -10091,26 +9952,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCast(/*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK_NEXT(emitBrOnCast(/*onSuccess=*/false));
-          case uint32_t(GcOp::BrOnCastV5):
-            CHECK_NEXT(emitBrOnCastV5(/*onSuccess=*/true));
-          case uint32_t(GcOp::BrOnCastFailV5):
-            CHECK_NEXT(emitBrOnCastV5(/*onSuccess=*/false));
-          case uint32_t(GcOp::BrOnCastHeapV5):
-            CHECK_NEXT(
-                emitBrOnCastHeapV5(/*onSuccess=*/true, /*nullable=*/false));
-          case uint32_t(GcOp::BrOnCastHeapNullV5):
-            CHECK_NEXT(
-                emitBrOnCastHeapV5(/*onSuccess=*/true, /*nullable=*/true));
-          case uint32_t(GcOp::BrOnCastFailHeapV5):
-            CHECK_NEXT(
-                emitBrOnCastHeapV5(/*onSuccess=*/false, /*nullable=*/false));
-          case uint32_t(GcOp::BrOnCastFailHeapNullV5):
-            CHECK_NEXT(
-                emitBrOnCastHeapV5(/*onSuccess=*/false, /*nullable=*/true));
-          case uint32_t(GcOp::RefAsStructV5):
-            CHECK_NEXT(emitRefAsStructV5());
-          case uint32_t(GcOp::BrOnNonStructV5):
-            CHECK_NEXT(emitBrOnNonStructV5());
           case uint16_t(GcOp::ExternInternalize):
             CHECK_NEXT(emitExternInternalize());
           case uint16_t(GcOp::ExternExternalize):

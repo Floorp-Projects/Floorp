@@ -120,9 +120,6 @@ enum class TypeCode {
   // Type constructor for recursion groups - gc proposal
   RecGroup = 0x4f,  // SLEB128(-0x31)
 
-  // TODO: update wasm-tools to use the correct prefix
-  RecGroupOld = 0x45,
-
   // Type prefix for parent types - gc proposal
   SubNoFinalType = 0x50,  // SLEB128(-0x30)
 
@@ -497,15 +494,11 @@ enum class GcOp {
   ArrayNewFixed = 0x1a,
   ArrayNewDefault = 0x1c,
   ArrayNewData = 0x1d,
-  // array.init_from_elem_static in V5 became array.new_elem in V6, changing
-  // opcodes in the process
-  ArrayInitFromElemStaticV5 = 0x10,
   ArrayNewElem = 0x1f,
   ArrayGet = 0x13,
   ArrayGetS = 0x14,
   ArrayGetU = 0x15,
   ArraySet = 0x16,
-  ArrayLenWithTypeIndex = 0x17,
   ArrayCopy = 0x18,
   ArrayLen = 0x19,
 
@@ -515,24 +508,12 @@ enum class GcOp {
   I31GetU = 0x22,
 
   // Ref operations
-  RefTestV5 = 0x44,
-  RefCastV5 = 0x45,
-  BrOnCastV5 = 0x46,
-  BrOnCastHeapV5 = 0x42,
-  BrOnCastHeapNullV5 = 0x4a,
-  BrOnCastFailV5 = 0x47,
-  BrOnCastFailHeapV5 = 0x43,
-  BrOnCastFailHeapNullV5 = 0x4b,
   RefTest = 0x40,
   RefCast = 0x41,
   RefTestNull = 0x48,
   RefCastNull = 0x49,
   BrOnCast = 0x4e,
   BrOnCastFail = 0x4f,
-
-  // Dart compatibility instruction
-  RefAsStructV5 = 0x59,
-  BrOnNonStructV5 = 0x64,
 
   // Extern/any coercion operations
   ExternInternalize = 0x70,
