@@ -1,42 +1,69 @@
 From: Byron Campen <docfaraday@gmail.com>
 Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Work around a race in
- ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
+Subject: Bug 1838080: Use the current TaskQueue, instead of the current
+ thread, to init this. r=pehrsons,webrtc-reviewers
 
-This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
-because that does an async dispatch to the encoder queue in the handling for
-transformed frames. If this is unset while that dispatch is in flight, we
-nullptr crash.
+There are situations where the current thread is not set, but the current
+TaskQueue is (but not vice versa).
 
-Differential Revision: https://phabricator.services.mozilla.com/D180735
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
+Differential Revision: https://phabricator.services.mozilla.com/D180736
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d5ee7ce9e6386aa1b657be9b
 ---
- audio/channel_send.cc | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ .../rtp_video_stream_receiver_frame_transformer_delegate.cc  | 3 +--
+ .../rtp_video_stream_receiver_frame_transformer_delegate.h   | 5 ++---
+ video/rtp_video_stream_receiver2.cc                          | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index f784b8eebc..528ed6c616 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -281,12 +281,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
-   void EnqueuePackets(
-       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
-     MutexLock lock(&mutex_);
--    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
-+    if (rtp_packet_pacer_) {
-+      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
-+    }
-   }
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+index aa5c8dfa28..15a8da18ca 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+@@ -79,8 +79,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+     RtpVideoStreamReceiverFrameTransformerDelegate(
+         RtpVideoFrameReceiver* receiver,
+         rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-        rtc::Thread* network_thread,
+-        uint32_t ssrc)
++        TaskQueueBase* network_thread, uint32_t ssrc)
+     : receiver_(receiver),
+       frame_transformer_(std::move(frame_transformer)),
+       network_thread_(network_thread),
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+index 3e8257f906..5adca0634c 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+@@ -39,8 +39,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+   RtpVideoStreamReceiverFrameTransformerDelegate(
+       RtpVideoFrameReceiver* receiver,
+       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-      rtc::Thread* network_thread,
+-      uint32_t ssrc);
++      TaskQueueBase* network_thread, uint32_t ssrc);
  
-   void RemovePacketsForSsrc(uint32_t ssrc) override {
-     MutexLock lock(&mutex_);
--    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
-+    if (rtp_packet_pacer_) {
-+      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
-+    }
-   }
+   void Init();
+   void Reset();
+@@ -65,7 +64,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+   RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
+   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
+       RTC_GUARDED_BY(network_sequence_checker_);
+-  rtc::Thread* const network_thread_;
++  TaskQueueBase* const network_thread_;
+   const uint32_t ssrc_;
+ };
  
-  private:
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index b6d8af8903..e28bb302fe 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+   if (frame_transformer) {
+     frame_transformer_delegate_ =
+         rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-            this, std::move(frame_transformer), rtc::Thread::Current(),
++            this, std::move(frame_transformer), TaskQueueBase::Current(),
+             config_.rtp.remote_ssrc);
+     frame_transformer_delegate_->Init();
+   }
 -- 
 2.37.3
 
