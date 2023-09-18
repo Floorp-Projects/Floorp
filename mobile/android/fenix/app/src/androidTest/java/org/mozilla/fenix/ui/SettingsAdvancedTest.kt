@@ -32,6 +32,11 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class SettingsAdvancedTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
+    private val youTubeSchemaLink = itemContainingText("Youtube schema link")
+    private val youTubeFullLink = itemContainingText("Youtube full link")
+    private val playStoreLink = itemContainingText("Playstore link")
+    private val playStoreUrl = "play.google.com"
+    private val youTubePage = "vnd.youtube://".toUri()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
@@ -77,7 +82,7 @@ class SettingsAdvancedTest {
     @SmokeTest
     @Test
     fun neverOpenLinkInAppTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -91,10 +96,10 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(playStoreLink)
             waitForPageToLoad()
-            verifyUrl("youtube.com")
+            verifyUrl(playStoreUrl)
         }
     }
 
@@ -102,7 +107,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingNeverOpenLinkInAppTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.togglePrivateBrowsingMode()
@@ -119,10 +124,10 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(playStoreLink)
             waitForPageToLoad()
-            verifyUrl("youtube.com")
+            verifyUrl(playStoreUrl)
         }
     }
 
@@ -131,7 +136,7 @@ class SettingsAdvancedTest {
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppCancelTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -149,12 +154,12 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(youTubeFullLink)
             verifyOpenLinkInAnotherAppPrompt()
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
             waitForPageToLoad()
-            verifyUrl("youtube.com")
+            verifyUrl("youtube")
         }
     }
 
@@ -163,7 +168,7 @@ class SettingsAdvancedTest {
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppOpenTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -181,8 +186,8 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(youTubeSchemaLink)
             verifyOpenLinkInAnotherAppPrompt()
             clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             mDevice.waitForIdle()
@@ -194,7 +199,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppCancelTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.togglePrivateBrowsingMode()
@@ -215,12 +220,12 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
-            verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(youTubeFullLink)
+            verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube")
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
             waitForPageToLoad()
-            verifyUrl("youtube.com")
+            verifyUrl("youtube")
         }
     }
 
@@ -228,7 +233,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppOpenTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.togglePrivateBrowsingMode()
@@ -249,9 +254,9 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
-            verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(youTubeSchemaLink)
+            verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube")
             clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             mDevice.waitForIdle()
             assertYoutubeAppOpens()
@@ -262,7 +267,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun alwaysOpenLinkInAppTest() {
-        val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -280,8 +285,8 @@ class SettingsAdvancedTest {
         exitMenu()
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            clickPageObject(itemContainingText("Youtube link"))
+        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            clickPageObject(youTubeSchemaLink)
             mDevice.waitForIdle()
             assertYoutubeAppOpens()
         }
@@ -293,10 +298,9 @@ class SettingsAdvancedTest {
         activityIntentTestRule.applySettingsExceptions {
             it.isOpenInAppBannerEnabled = true
         }
-        val defaultWebPage = "https://m.youtube.com/"
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.toUri()) {
+        }.enterURLAndEnterToBrowser(youTubePage) {
             waitForPageToLoad()
             verifyOpenLinksInAppsCFRExists(true)
             clickOpenLinksInAppsDismissCFRButton()
@@ -310,10 +314,9 @@ class SettingsAdvancedTest {
         activityIntentTestRule.applySettingsExceptions {
             it.isOpenInAppBannerEnabled = true
         }
-        val defaultWebPage = "https://m.youtube.com/"
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.toUri()) {
+        }.enterURLAndEnterToBrowser(youTubePage) {
             waitForPageToLoad()
             verifyOpenLinksInAppsCFRExists(true)
         }.clickOpenLinksInAppsGoToSettingsCFRButton {

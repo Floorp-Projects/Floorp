@@ -15,12 +15,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -287,10 +288,10 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            longClickPageObject(itemContainingText("Youtube link"))
-            verifyContextMenuForLinksToOtherApps("youtube.com".toUri())
+            longClickPageObject(itemContainingText("Youtube full link"))
+            verifyContextMenuForLinksToOtherApps("youtube.com")
             clickContextMenuItem("Open link in external app")
-            assertYoutubeAppOpens()
+            assertExternalAppOpens(YOUTUBE_APP)
         }
     }
 }

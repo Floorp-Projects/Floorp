@@ -192,11 +192,11 @@ class BrowserRobot {
         )
     }
 
-    fun verifyContextMenuForLinksToOtherApps(containsURL: Uri) {
+    fun verifyContextMenuForLinksToOtherApps(containsURL: String) {
         // If the link is re-directing to an external app the "Open link in external app" option is available
         // If the link is not directing to another local asset the "Download link" option is not available
         assertItemContainingTextExists(
-            contextMenuLinkUrl(containsURL.toString()),
+            contextMenuLinkUrl(containsURL),
             contextMenuOpenLinkInNewTab,
             contextMenuOpenLinkInPrivateTab,
             contextMenuCopyLink,
