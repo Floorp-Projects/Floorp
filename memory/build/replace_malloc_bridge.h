@@ -116,6 +116,19 @@ struct DMDFuncs;
 }  // namespace dmd
 
 namespace phc {
+
+// PHC has three different states:
+//  * Not compiled in
+//  * OnlyFree         - The memory allocator is hooked but new allocations
+//                       requests will be forwarded to mozjemalloc, free() will
+//                       correctly free any PHC allocations and realloc() will
+//                       "move" PHC allocations to mozjemalloc allocations.
+//  * Enabled          - Full use.
+enum PHCState {
+  OnlyFree,
+  Enabled,
+};
+
 class AddrInfo;
 
 struct MemoryUsage {
@@ -139,7 +152,7 @@ struct DebugFdRegistry {
 }  // namespace mozilla
 
 struct ReplaceMallocBridge {
-  ReplaceMallocBridge() : mVersion(5) {}
+  ReplaceMallocBridge() : mVersion(6) {}
 
   // This method was added in version 1 of the bridge.
   virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
@@ -194,6 +207,11 @@ struct ReplaceMallocBridge {
   // Return PHC memory usage information by filling in the supplied structure.
   // This method was added in version 5 of the bridge.
   virtual void PHCMemoryUsage(mozilla::phc::MemoryUsage& aMemoryUsage) {}
+
+  // Set PHC's state.  See the comments above on `PHCState` for the meaning of
+  // each state.
+  // This method was added in version 6 of the bridge.
+  virtual void SetPHCState(mozilla::phc::PHCState aState) {}
 
 #  ifndef REPLACE_MALLOC_IMPL
   // Returns the replace-malloc bridge if its version is at least the
@@ -267,6 +285,13 @@ struct ReplaceMalloc {
     auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 5);
     if (singleton) {
       singleton->PHCMemoryUsage(aMemoryUsage);
+    }
+  }
+
+  static void SetPHCState(mozilla::phc::PHCState aPHCState) {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 6);
+    if (singleton) {
+      singleton->SetPHCState(aPHCState);
     }
   }
 };

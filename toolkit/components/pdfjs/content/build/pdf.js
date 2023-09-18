@@ -946,7 +946,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.11.42',
+    apiVersion: '3.11.63',
     data,
     password,
     disableAutoFetch,
@@ -2574,9 +2574,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.11.42';
+const version = '3.11.63';
 exports.version = version;
-const build = 'cf7efdb04';
+const build = '586d3add4';
 exports.build = build;
 
 /***/ }),
@@ -2768,6 +2768,7 @@ class AnnotationEditor {
   _focusEventsAllowed = true;
   #isDraggable = false;
   #zIndex = AnnotationEditor._zIndex++;
+  static _borderLineWidth = -1;
   static _colorManager = new _tools.ColorManager();
   static _zIndex = 1;
   constructor(parameters) {
@@ -2817,7 +2818,13 @@ class AnnotationEditor {
     fakeEditor.deleted = true;
     fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
   }
-  static initialize(_l10n) {}
+  static initialize(_l10n) {
+    if (AnnotationEditor._borderLineWidth !== -1) {
+      return;
+    }
+    const style = getComputedStyle(document.documentElement);
+    AnnotationEditor._borderLineWidth = parseFloat(style.getPropertyValue("--outline-width")) || 0;
+  }
   static updateDefaultParams(_type, _value) {}
   static get defaultPropertiesToUpdate() {
     return [];
@@ -2936,7 +2943,6 @@ class AnnotationEditor {
   }
   translateInPage(x, y) {
     this.#translate(this.pageDimensions, x, y);
-    this.moveInDOM();
     this.div.scrollIntoView({
       block: "nearest"
     });
@@ -2955,11 +2961,36 @@ class AnnotationEditor {
         this.y -= Math.floor(this.y);
       }
     }
-    this.div.style.left = `${(100 * this.x).toFixed(2)}%`;
-    this.div.style.top = `${(100 * this.y).toFixed(2)}%`;
+    let {
+      x,
+      y
+    } = this;
+    const [bx, by] = this.#getBaseTranslation();
+    x += bx;
+    y += by;
+    this.div.style.left = `${(100 * x).toFixed(2)}%`;
+    this.div.style.top = `${(100 * y).toFixed(2)}%`;
     this.div.scrollIntoView({
       block: "nearest"
     });
+  }
+  #getBaseTranslation() {
+    const [parentWidth, parentHeight] = this.parentDimensions;
+    const {
+      _borderLineWidth
+    } = AnnotationEditor;
+    const x = _borderLineWidth / parentWidth;
+    const y = _borderLineWidth / parentHeight;
+    switch (this.rotation) {
+      case 90:
+        return [-x, y];
+      case 180:
+        return [x, y];
+      case 270:
+        return [x, -y];
+      default:
+        return [-x, -y];
+    }
   }
   fixAndSetPosition() {
     const [pageWidth, pageHeight] = this.pageDimensions;
@@ -2991,10 +3022,17 @@ class AnnotationEditor {
         y = Math.max(0, Math.min(pageHeight - width, y));
         break;
     }
-    this.x = x / pageWidth;
-    this.y = y / pageHeight;
-    this.div.style.left = `${(100 * this.x).toFixed(2)}%`;
-    this.div.style.top = `${(100 * this.y).toFixed(2)}%`;
+    this.x = x /= pageWidth;
+    this.y = y /= pageHeight;
+    const [bx, by] = this.#getBaseTranslation();
+    x += bx;
+    y += by;
+    const {
+      style
+    } = this.div;
+    style.left = `${(100 * x).toFixed(2)}%`;
+    style.top = `${(100 * y).toFixed(2)}%`;
+    this.moveInDOM();
   }
   static #rotatePoint(x, y, angle) {
     switch (angle) {
@@ -3146,7 +3184,6 @@ class AnnotationEditor {
           const [parentWidth, parentHeight] = this.parentDimensions;
           this.setDims(parentWidth * newWidth, parentHeight * newHeight);
           this.fixAndSetPosition();
-          this.moveInDOM();
         },
         undo: () => {
           this.width = savedWidth;
@@ -3156,7 +3193,6 @@ class AnnotationEditor {
           const [parentWidth, parentHeight] = this.parentDimensions;
           this.setDims(parentWidth * savedWidth, parentHeight * savedHeight);
           this.fixAndSetPosition();
-          this.moveInDOM();
         },
         mustExec: true
       });
@@ -3320,14 +3356,13 @@ class AnnotationEditor {
     window.addEventListener("blur", pointerUpCallback);
   }
   moveInDOM() {
-    this.parent.moveEditorInDOM(this);
+    this.parent?.moveEditorInDOM(this);
   }
   _setParentAndPosition(parent, x, y) {
     parent.changeParent(this);
     this.x = x;
     this.y = y;
     this.fixAndSetPosition();
-    this.moveInDOM();
   }
   getRect(tx, ty) {
     const scale = this.parentScale;
@@ -10150,7 +10185,6 @@ class AnnotationEditorLayer {
       editor.isAttachedToDOM = true;
     }
     editor.fixAndSetPosition();
-    this.moveEditorInDOM(editor);
     editor.onceAdded();
     this.#uiManager.addToAnnotationStorage(editor);
   }
@@ -10164,12 +10198,16 @@ class AnnotationEditorLayer {
     if (editor.div.contains(activeElement)) {
       editor._focusEventsAllowed = false;
       setTimeout(() => {
-        editor.div.addEventListener("focusin", () => {
+        if (!editor.div.contains(document.activeElement)) {
+          editor.div.addEventListener("focusin", () => {
+            editor._focusEventsAllowed = true;
+          }, {
+            once: true
+          });
+          activeElement.focus();
+        } else {
           editor._focusEventsAllowed = true;
-        }, {
-          once: true
-        });
-        activeElement.focus();
+        }
       }, 0);
     }
     editor._structTreeParentId = this.#accessibilityManager?.moveElementInDOM(this.div, editor.div, editor.contentDiv, true);
@@ -10463,6 +10501,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.#fontSize = params.fontSize || FreeTextEditor._defaultFontSize;
   }
   static initialize(l10n) {
+    super.initialize(l10n);
     this._l10nPromise = new Map(["free_text2_default_content", "editor_free_text2_aria_label"].map(str => [str, l10n.get(str)]));
     const style = getComputedStyle(document.documentElement);
     this._internalPadding = parseFloat(style.getPropertyValue("--freetext-padding"));
@@ -13637,6 +13676,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this._willKeepAspectRatio = true;
   }
   static initialize(l10n) {
+    super.initialize(l10n);
     this._l10nPromise = new Map(["editor_ink_canvas_aria_label", "editor_ink2_aria_label"].map(str => [str, l10n.get(str)]));
   }
   static updateDefaultParams(type, value) {
@@ -15037,8 +15077,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.11.42';
-const pdfjsBuild = 'cf7efdb04';
+const pdfjsVersion = '3.11.63';
+const pdfjsBuild = '586d3add4';
 })();
 
 /******/ 	return __webpack_exports__;

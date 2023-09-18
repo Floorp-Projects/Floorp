@@ -98,9 +98,8 @@ the interactive setup process.
 
 .. note::
 
-    In general, the Firefox workflow works best with Mercurial. However,
-    if you'd prefer to use ``git``, you can grab the source code in
-    "git" form by running the bootstrap script with the ``vcs`` parameter:
+    To use ``git``, you can grab the source code in "git" form by running the
+    bootstrap script with the ``vcs`` parameter:
 
     .. code-block:: shell
 

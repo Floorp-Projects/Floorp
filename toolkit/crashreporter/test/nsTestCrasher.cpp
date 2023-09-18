@@ -323,6 +323,12 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
   }
 }
 
+extern "C" NS_EXPORT void EnablePHC() {
+#ifdef MOZ_PHC
+  ReplaceMalloc::SetPHCState(mozilla::phc::PHCState::Enabled);
+#endif
+};
+
 char testData[32];
 
 extern "C" NS_EXPORT uint64_t SaveAppMemory() {
