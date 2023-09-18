@@ -121,7 +121,7 @@ where
         token: Token,
         interests: Interest,
     ) -> io::Result<()> {
-        (&mut **self).register(registry, token, interests)
+        (**self).register(registry, token, interests)
     }
 
     fn reregister(
@@ -130,10 +130,10 @@ where
         token: Token,
         interests: Interest,
     ) -> io::Result<()> {
-        (&mut **self).reregister(registry, token, interests)
+        (**self).reregister(registry, token, interests)
     }
 
     fn deregister(&mut self, registry: &Registry) -> io::Result<()> {
-        (&mut **self).deregister(registry)
+        (**self).deregister(registry)
     }
 }

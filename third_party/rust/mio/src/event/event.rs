@@ -62,7 +62,7 @@ impl Event {
     /// | [kqueue]      | `EV_ERROR` and `EV_EOF` with `fflags` set to `0`. |
     ///
     /// [OS selector]: ../struct.Poll.html#implementation-notes
-    /// [epoll]: http://man7.org/linux/man-pages/man7/epoll.7.html
+    /// [epoll]: https://man7.org/linux/man-pages/man7/epoll.7.html
     /// [kqueue]: https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2
     pub fn is_error(&self) -> bool {
         sys::event::is_error(&self.inner)
@@ -93,7 +93,7 @@ impl Event {
     /// | [kqueue]      | `EV_EOF`        |
     ///
     /// [OS selector]: ../struct.Poll.html#implementation-notes
-    /// [epoll]: http://man7.org/linux/man-pages/man7/epoll.7.html
+    /// [epoll]: https://man7.org/linux/man-pages/man7/epoll.7.html
     /// [kqueue]: https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2
     pub fn is_read_closed(&self) -> bool {
         sys::event::is_read_closed(&self.inner)
@@ -123,7 +123,7 @@ impl Event {
     /// | [kqueue]      | `EV_EOF`        |
     ///
     /// [OS selector]: ../struct.Poll.html#implementation-notes
-    /// [epoll]: http://man7.org/linux/man-pages/man7/epoll.7.html
+    /// [epoll]: https://man7.org/linux/man-pages/man7/epoll.7.html
     /// [kqueue]: https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2
     pub fn is_write_closed(&self) -> bool {
         sys::event::is_write_closed(&self.inner)
@@ -144,7 +144,7 @@ impl Event {
     /// | [kqueue]      | *Not supported* |
     ///
     /// [OS selector]: ../struct.Poll.html#implementation-notes
-    /// [epoll]: http://man7.org/linux/man-pages/man7/epoll.7.html
+    /// [epoll]: https://man7.org/linux/man-pages/man7/epoll.7.html
     /// [kqueue]: https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2
     #[inline]
     pub fn is_priority(&self) -> bool {
@@ -167,7 +167,7 @@ impl Event {
     /// 1: Only supported on DragonFly BSD, FreeBSD, iOS and macOS.
     ///
     /// [OS selector]: ../struct.Poll.html#implementation-notes
-    /// [epoll]: http://man7.org/linux/man-pages/man7/epoll.7.html
+    /// [epoll]: https://man7.org/linux/man-pages/man7/epoll.7.html
     /// [kqueue]: https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2
     pub fn is_aio(&self) -> bool {
         sys::event::is_aio(&self.inner)

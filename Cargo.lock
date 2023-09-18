@@ -260,7 +260,7 @@ dependencies = [
  "libc",
  "log",
  "memmap2",
- "mio 0.8.0",
+ "mio 0.8.8",
  "scopeguard",
  "serde",
  "serde_bytes",
@@ -2159,7 +2159,6 @@ dependencies = [
  "mdns_service",
  "midir_impl",
  "mime-guess-ffi",
- "mio 0.8.0",
  "moz_asserts",
  "mozannotation_client",
  "mozannotation_server",
@@ -2199,7 +2198,6 @@ dependencies = [
  "webext_storage_bridge",
  "webrender_bindings",
  "wgpu_bindings",
- "windows-sys",
  "wpf-gpu-raster",
  "xpcom",
 ]
@@ -3481,15 +3479,14 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.8.0"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba272f85fa0b41fc91872be579b3bbe0f56b792aa361a380eb669469f68dafb2"
+checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
  "log",
- "miow",
- "ntapi 0.3.999",
- "winapi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
+ "windows-sys",
 ]
 
 [[package]]
@@ -3933,22 +3930,6 @@ name = "nsstring-gtest"
 version = "0.1.0"
 dependencies = [
  "nsstring",
-]
-
-[[package]]
-name = "ntapi"
-version = "0.3.999"
-dependencies = [
- "ntapi 0.4.0",
-]
-
-[[package]]
-name = "ntapi"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc51db7b362b205941f71232e56c625156eb9a929f8cf74a428fd5bc094a4afc"
-dependencies = [
- "winapi",
 ]
 
 [[package]]
@@ -5530,7 +5511,7 @@ dependencies = [
  "bytes",
  "libc",
  "memchr",
- "mio 0.8.0",
+ "mio 0.8.8",
  "num_cpus",
  "pin-project-lite",
  "socket2",

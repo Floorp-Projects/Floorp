@@ -7,18 +7,18 @@ use std::os::unix::net;
 use std::path::Path;
 
 pub(crate) fn bind(path: &Path) -> io::Result<net::UnixDatagram> {
-    let fd = new_socket(libc::AF_UNIX, libc::SOCK_DGRAM)?;
-    // Ensure the fd is closed.
-    let socket = unsafe { net::UnixDatagram::from_raw_fd(fd) };
     let (sockaddr, socklen) = socket_addr(path)?;
     let sockaddr = &sockaddr as *const libc::sockaddr_un as *const _;
-    syscall!(bind(fd, sockaddr, socklen))?;
+
+    let socket = unbound()?;
+    syscall!(bind(socket.as_raw_fd(), sockaddr, socklen))?;
+
     Ok(socket)
 }
 
 pub(crate) fn unbound() -> io::Result<net::UnixDatagram> {
-    new_socket(libc::AF_UNIX, libc::SOCK_DGRAM)
-        .map(|socket| unsafe { net::UnixDatagram::from_raw_fd(socket) })
+    let fd = new_socket(libc::AF_UNIX, libc::SOCK_DGRAM)?;
+    Ok(unsafe { net::UnixDatagram::from_raw_fd(fd) })
 }
 
 pub(crate) fn pair() -> io::Result<(net::UnixDatagram, net::UnixDatagram)> {

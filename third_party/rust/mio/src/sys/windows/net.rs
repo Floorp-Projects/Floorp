@@ -3,15 +3,14 @@ use std::mem;
 use std::net::SocketAddr;
 use std::sync::Once;
 
-use winapi::ctypes::c_int;
-use winapi::shared::in6addr::{in6_addr_u, IN6_ADDR};
-use winapi::shared::inaddr::{in_addr_S_un, IN_ADDR};
-use winapi::shared::ws2def::{ADDRESS_FAMILY, AF_INET, AF_INET6, SOCKADDR, SOCKADDR_IN};
-use winapi::shared::ws2ipdef::{SOCKADDR_IN6_LH_u, SOCKADDR_IN6_LH};
-use winapi::um::winsock2::{ioctlsocket, socket, FIONBIO, INVALID_SOCKET, SOCKET};
+use windows_sys::Win32::Networking::WinSock::{
+    closesocket, ioctlsocket, socket, AF_INET, AF_INET6, FIONBIO, IN6_ADDR, IN6_ADDR_0,
+    INVALID_SOCKET, IN_ADDR, IN_ADDR_0, SOCKADDR, SOCKADDR_IN, SOCKADDR_IN6, SOCKADDR_IN6_0,
+    SOCKET,
+};
 
 /// Initialise the network stack for Windows.
-pub(crate) fn init() {
+fn init() {
     static INIT: Once = Once::new();
     INIT.call_once(|| {
         // Let standard library call `WSAStartup` for us, we can't do it
@@ -22,26 +21,30 @@ pub(crate) fn init() {
 }
 
 /// Create a new non-blocking socket.
-pub(crate) fn new_ip_socket(addr: SocketAddr, socket_type: c_int) -> io::Result<SOCKET> {
-    use winapi::um::winsock2::{PF_INET, PF_INET6};
-
+pub(crate) fn new_ip_socket(addr: SocketAddr, socket_type: i32) -> io::Result<SOCKET> {
     let domain = match addr {
-        SocketAddr::V4(..) => PF_INET,
-        SocketAddr::V6(..) => PF_INET6,
+        SocketAddr::V4(..) => AF_INET,
+        SocketAddr::V6(..) => AF_INET6,
     };
 
-    new_socket(domain, socket_type)
+    new_socket(domain.into(), socket_type)
 }
 
-pub(crate) fn new_socket(domain: c_int, socket_type: c_int) -> io::Result<SOCKET> {
-    syscall!(
-        socket(domain, socket_type, 0),
+pub(crate) fn new_socket(domain: u32, socket_type: i32) -> io::Result<SOCKET> {
+    init();
+
+    let socket = syscall!(
+        socket(domain as i32, socket_type, 0),
         PartialEq::eq,
         INVALID_SOCKET
-    )
-    .and_then(|socket| {
-        syscall!(ioctlsocket(socket, FIONBIO, &mut 1), PartialEq::ne, 0).map(|_| socket as SOCKET)
-    })
+    )?;
+
+    if let Err(err) = syscall!(ioctlsocket(socket, FIONBIO, &mut 1), PartialEq::ne, 0) {
+        let _ = unsafe { closesocket(socket) };
+        return Err(err);
+    }
+
+    Ok(socket as SOCKET)
 }
 
 /// A type with the same memory layout as `SOCKADDR`. Used in converting Rust level
@@ -51,7 +54,7 @@ pub(crate) fn new_socket(domain: c_int, socket_type: c_int) -> io::Result<SOCKET
 #[repr(C)]
 pub(crate) union SocketAddrCRepr {
     v4: SOCKADDR_IN,
-    v6: SOCKADDR_IN6_LH,
+    v6: SOCKADDR_IN6,
 }
 
 impl SocketAddrCRepr {
@@ -60,49 +63,49 @@ impl SocketAddrCRepr {
     }
 }
 
-pub(crate) fn socket_addr(addr: &SocketAddr) -> (SocketAddrCRepr, c_int) {
+pub(crate) fn socket_addr(addr: &SocketAddr) -> (SocketAddrCRepr, i32) {
     match addr {
         SocketAddr::V4(ref addr) => {
             // `s_addr` is stored as BE on all machine and the array is in BE order.
             // So the native endian conversion method is used so that it's never swapped.
             let sin_addr = unsafe {
-                let mut s_un = mem::zeroed::<in_addr_S_un>();
-                *s_un.S_addr_mut() = u32::from_ne_bytes(addr.ip().octets());
+                let mut s_un = mem::zeroed::<IN_ADDR_0>();
+                s_un.S_addr = u32::from_ne_bytes(addr.ip().octets());
                 IN_ADDR { S_un: s_un }
             };
 
             let sockaddr_in = SOCKADDR_IN {
-                sin_family: AF_INET as ADDRESS_FAMILY,
+                sin_family: AF_INET as u16, // 1
                 sin_port: addr.port().to_be(),
                 sin_addr,
                 sin_zero: [0; 8],
             };
 
             let sockaddr = SocketAddrCRepr { v4: sockaddr_in };
-            (sockaddr, mem::size_of::<SOCKADDR_IN>() as c_int)
+            (sockaddr, mem::size_of::<SOCKADDR_IN>() as i32)
         }
         SocketAddr::V6(ref addr) => {
             let sin6_addr = unsafe {
-                let mut u = mem::zeroed::<in6_addr_u>();
-                *u.Byte_mut() = addr.ip().octets();
+                let mut u = mem::zeroed::<IN6_ADDR_0>();
+                u.Byte = addr.ip().octets();
                 IN6_ADDR { u }
             };
             let u = unsafe {
-                let mut u = mem::zeroed::<SOCKADDR_IN6_LH_u>();
-                *u.sin6_scope_id_mut() = addr.scope_id();
+                let mut u = mem::zeroed::<SOCKADDR_IN6_0>();
+                u.sin6_scope_id = addr.scope_id();
                 u
             };
 
-            let sockaddr_in6 = SOCKADDR_IN6_LH {
-                sin6_family: AF_INET6 as ADDRESS_FAMILY,
+            let sockaddr_in6 = SOCKADDR_IN6 {
+                sin6_family: AF_INET6 as u16, // 23
                 sin6_port: addr.port().to_be(),
                 sin6_addr,
                 sin6_flowinfo: addr.flowinfo(),
-                u,
+                Anonymous: u,
             };
 
             let sockaddr = SocketAddrCRepr { v6: sockaddr_in6 };
-            (sockaddr, mem::size_of::<SOCKADDR_IN6_LH>() as c_int)
+            (sockaddr, mem::size_of::<SOCKADDR_IN6>() as i32)
         }
     }
 }

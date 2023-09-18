@@ -1,17 +1,17 @@
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-use ntapi::ntioapi::IO_STATUS_BLOCK;
+use windows_sys::Win32::System::WindowsProgramming::IO_STATUS_BLOCK;
 
 pub struct IoStatusBlock(IO_STATUS_BLOCK);
 
 cfg_io_source! {
-    use ntapi::ntioapi::IO_STATUS_BLOCK_u;
+    use windows_sys::Win32::System::WindowsProgramming::{IO_STATUS_BLOCK_0};
 
     impl IoStatusBlock {
         pub fn zeroed() -> Self {
             Self(IO_STATUS_BLOCK {
-                u: IO_STATUS_BLOCK_u { Status: 0 },
+                Anonymous: IO_STATUS_BLOCK_0 { Status: 0 },
                 Information: 0,
             })
         }

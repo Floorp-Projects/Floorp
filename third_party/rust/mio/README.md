@@ -1,4 +1,4 @@
-# Mio – Metal IO
+# Mio – Metal I/O
 
 Mio is a fast, low-level I/O library for Rust focusing on non-blocking APIs and
 event notification for building high performance I/O apps with as little
@@ -6,23 +6,22 @@ overhead as possible over the OS abstractions.
 
 [![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![Build Status][azure-badge]][azure-url]
+[![Build Status][actions-badge]][actions-url]
 [![Build Status][cirrus-badge]][cirrus-url]
 
 [crates-badge]: https://img.shields.io/crates/v/mio.svg
 [crates-url]: https://crates.io/crates/mio
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: LICENSE
-[azure-badge]: https://dev.azure.com/tokio-rs/Tokio/_apis/build/status/tokio-rs.mio?branchName=master
-[azure-url]: https://dev.azure.com/tokio-rs/Tokio/_build/latest?definitionId=2&branchName=master
+[actions-badge]: https://github.com/tokio-rs/mio/workflows/CI/badge.svg
+[actions-url]: https://github.com/tokio-rs/mio/actions?query=workflow%3ACI+branch%3Amaster
 [cirrus-badge]: https://api.cirrus-ci.com/github/tokio-rs/mio.svg
 [cirrus-url]: https://cirrus-ci.com/github/tokio-rs/mio
 
 **API documentation**
 
-* [master](https://tokio-rs.github.io/mio/doc/mio/)
+* [v0.8](https://docs.rs/mio/^0.8)
 * [v0.7](https://docs.rs/mio/^0.7)
-* [v0.6](https://docs.rs/mio/^0.6)
 
 This is a low level library, if you are looking for something easier to get
 started with, see [Tokio](https://tokio.rs).
@@ -33,7 +32,7 @@ To use `mio`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mio = "0.7"
+mio = "0.8"
 ```
 
 Next we can start using Mio. The following is quick introduction using
@@ -135,11 +134,9 @@ Currently supported platforms:
 * Linux
 * NetBSD
 * OpenBSD
-* Solaris
 * Windows
 * iOS
 * macOS
-* Wine (version 6.11+, see [issue #1444])
 
 There are potentially others. If you find that Mio works on another
 platform, submit a PR to update the list!
@@ -152,13 +149,16 @@ The Windows implementation for polling sockets is using the [wepoll] strategy.
 This uses the Windows AFD system to access socket readiness events.
 
 [wepoll]: https://github.com/piscisaureus/wepoll
-[issue #1444]: https://github.com/tokio-rs/mio/issues/1444
 
 ### Unsupported
 
 * Haiku, see [issue #1472]
+* Solaris, see [issue #1152]
+* Wine, see [issue #1444]
 
 [issue #1472]: https://github.com/tokio-rs/mio/issues/1472
+[issue #1152]: https://github.com/tokio-rs/mio/issues/1152
+[issue #1444]: https://github.com/tokio-rs/mio/issues/1444
 
 ## Community
 

@@ -28,7 +28,7 @@ use std::io;
 /// kqueue. On Linux it uses [eventfd].
 ///
 /// [implementation notes of `Poll`]: struct.Poll.html#implementation-notes
-/// [eventfd]: http://man7.org/linux/man-pages/man2/eventfd.2.html
+/// [eventfd]: https://man7.org/linux/man-pages/man2/eventfd.2.html
 ///
 /// # Examples
 ///

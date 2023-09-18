@@ -2,7 +2,7 @@ use crate::sys::windows::Event;
 use crate::sys::windows::Selector;
 use crate::Token;
 
-use miow::iocp::CompletionPort;
+use super::iocp::CompletionPort;
 use std::io;
 use std::sync::Arc;
 
