@@ -2965,12 +2965,6 @@
   mirror: always
 #endif
 
-# Is support for HTMLElement.autocapitalize enabled?
-- name: dom.forms.autocapitalize
-  type: bool
-  value: true
-  mirror: always
-
 # Support for input type=month, type=week. By default, disabled.
 - name: dom.forms.datetime.others
   type: bool

@@ -1662,7 +1662,6 @@ static void GetAutocapitalize(const IMEState& aState, const Element& aElement,
                               const InputContext& aInputContext,
                               nsAString& aAutocapitalize) {
   if (aElement.IsHTMLElement() && aState.IsEditable() &&
-      StaticPrefs::dom_forms_autocapitalize() &&
       aInputContext.IsAutocapitalizeSupported()) {
     nsGenericHTMLElement::FromNode(&aElement)->GetAutocapitalize(
         aAutocapitalize);

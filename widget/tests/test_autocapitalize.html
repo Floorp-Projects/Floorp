@@ -49,14 +49,11 @@ SimpleTest.waitForFocus(async () => {
     { id: "d3", autocapitalize: "sentences", desc: "input with autocapitalize=on in form" },
   ];
 
-  await SpecialPowers.setBoolPref("dom.forms.autocapitalize", true);
-
   for (let test of tests) {
     document.getElementById(test.id).focus();
     is(SpecialPowers.DOMWindowUtils.focusedAutocapitalize, test.autocapitalize, test.desc);
   }
 
-  SpecialPowers.clearUserPref("dom.forms.autocapitalize");
   SimpleTest.finish();
 });
 </script>
