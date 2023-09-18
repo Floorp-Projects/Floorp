@@ -42,6 +42,7 @@ LIB_TO_LICENSES_DICT = {
     ],
     'boringssl': ['third_party/boringssl/src/LICENSE'],
     'crc32c': ['third_party/crc32c/src/LICENSE'],
+    'cpu_features': ['third_party/cpu_features/src/LICENSE'],
     'dav1d': ['third_party/dav1d/LICENSE'],
     'errorprone': [
         'third_party/android_deps/libs/'
