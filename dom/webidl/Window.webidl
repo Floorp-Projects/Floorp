@@ -794,7 +794,7 @@ partial interface Window {
 };
 
 partial interface Window {
-  [SameObject, Pref="dom.visualviewport.enabled", Replaceable]
+  [SameObject, Replaceable]
   readonly attribute VisualViewport visualViewport;
 };
 
