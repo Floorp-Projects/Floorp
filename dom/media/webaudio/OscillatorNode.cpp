@@ -321,8 +321,10 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
         case OscillatorType::Custom:
           ComputeCustom(output, ticks, start, end);
           break;
-        default:
-          ComputeSilence(aOutput);
+        case OscillatorType::EndGuard_:
+          MOZ_ASSERT_UNREACHABLE("end guard");
+          // Avoid `default:` so that `-Wswitch` catches missing enumerators
+          // at compile time.
       };
     }
 
