@@ -25,6 +25,7 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
+#include "modules/rtp_rtcp/source/rtp_packet_history.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/checks.h"
@@ -51,11 +52,20 @@ RTCPSender::Configuration AddRtcpSendEvaluationCallback(
   return config;
 }
 
+RtpPacketHistory::PaddingMode GetPaddingMode(
+    const FieldTrialsView* field_trials) {
+  if (field_trials &&
+      field_trials->IsEnabled("WebRTC-PaddingMode-RecentLargePacket")) {
+    return RtpPacketHistory::PaddingMode::kRecentLargePacket;
+  }
+  return RtpPacketHistory::PaddingMode::kPriority;
+}
+
 }  // namespace
 
 ModuleRtpRtcpImpl2::RtpSenderContext::RtpSenderContext(
     const RtpRtcpInterface::Configuration& config)
-    : packet_history(config.clock, config.enable_rtx_padding_prioritization),
+    : packet_history(config.clock, GetPaddingMode(config.field_trials)),
       sequencer(config.local_media_ssrc,
                 config.rtx_send_ssrc,
                 /*require_marker_before_media_padding=*/!config.audio,
