@@ -1,0 +1,78 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsICookie;
+interface nsIArray;
+webidl BrowsingContext;
+
+/**
+ * Meta object dispatched by cookie change notifications.
+ */
+[builtinclass, scriptable, uuid(5b3490f2-75f0-4e36-9f3d-47c857ecdfbb)]
+interface nsICookieNotification : nsISupports {
+
+    cenum Action : 8 {
+        // A cookie was deleted. cookie contains the deleted cookie.
+        COOKIE_DELETED,
+        // A cookie was added. cookie contains the added cookie.
+        COOKIE_ADDED,
+        // A cookie was altered. cookie contains the updated version of the
+        // cookie. Note that host, path, and name are invariant for a given
+        // cookie; other parameters may change.
+        COOKIE_CHANGED,
+        // the entire cookie list was cleared. cookie is null.
+        ALL_COOKIES_CLEARED,
+        // A set of cookies was purged. batchDeletedCookies contains the list of
+        // deleted cookies. cookie is null.
+        // Purging typically affects expired cookies or cases where the cookie
+        // list grows too large.
+        COOKIES_BATCH_DELETED,
+    };
+
+    /**
+     * Describes the cookie operation this notification is for. Cookies may be
+     * deleted, added or changed. See Action enum above for possible values.
+     */
+    [infallible] readonly attribute nsICookieNotification_Action action;
+
+
+    /**
+     * The cookie the notification is for, may be null depending on the action.
+     */
+    [infallible] readonly attribute nsICookie cookie;
+
+    /**
+     * Base domain of the cookie. May be empty if cookie is null.
+     */
+    readonly attribute ACString baseDomain;
+
+    /**
+     * List of cookies purged.
+     * Only set when action == COOKIES_BATCH_DELETED.
+     */
+    readonly attribute nsIArray batchDeletedCookies;
+
+    /**
+     * The id of the BrowsingContext the cookie change was triggered from. Set
+     * to 0 if there is not applicable BrowsingContext.
+     */
+    [infallible] readonly attribute unsigned long long browsingContextId;
+
+    /**
+     * BrowsingContext associated with browsingContextId. May be nullptr.
+     */
+    [infallible] readonly attribute BrowsingContext browsingContext;
+
+    /**
+     * Whether the cookie modified is considered third-party
+     * relative to the top level context.
+     * This flag only applies if cookie != null.
+     * May also be false for non web callers.
+     */
+    [infallible] readonly attribute boolean isThirdPartyCookie;
+};
