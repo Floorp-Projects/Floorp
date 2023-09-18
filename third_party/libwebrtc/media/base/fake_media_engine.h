@@ -420,6 +420,9 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
   bool SenderNonSenderRttEnabled() const override { return false; }
   void SetReceiveNackEnabled(bool enabled) {}
   void SetReceiveNonSenderRttEnabled(bool enabled) {}
+  bool SendCodecHasNack() const override { return false; }
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {}
 
  private:
   class VoiceChannelAudioSink : public AudioSource::Sink {
