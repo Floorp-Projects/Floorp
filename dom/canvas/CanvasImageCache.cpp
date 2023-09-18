@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_canvas.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"

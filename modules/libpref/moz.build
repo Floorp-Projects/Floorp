@@ -33,7 +33,6 @@ pref_groups = [
     "beacon",
     "bidi",
     "browser",
-    "canvas",
     "channelclassifier",
     "clipboard",
     "content",
