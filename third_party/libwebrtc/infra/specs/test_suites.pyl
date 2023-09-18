@@ -208,6 +208,19 @@
       },
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
+      },
+    },
+    'perf_tests_no_video_codec': {
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+      },
+    },
+    'perf_tests_save_worst_frame': {
+      'video_codec_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
         'args': [
           '--test_artifacts_dir=${ISOLATED_OUTDIR}',
           '--save_worst_frame',
