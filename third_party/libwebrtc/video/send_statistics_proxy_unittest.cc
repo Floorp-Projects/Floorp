@@ -2618,7 +2618,7 @@ TEST_F(SendStatisticsProxyTest, ResetsRtpCountersOnContentChange) {
       static_cast<StreamDataCountersCallback*>(statistics_proxy_.get());
   StreamDataCounters counters;
   StreamDataCounters rtx_counters;
-  counters.first_packet_time_ms = fake_clock_.TimeInMilliseconds();
+  counters.first_packet_time = fake_clock_.CurrentTime();
 
   const int kMinRequiredPeriodSamples = 8;
   const int kPeriodIntervalMs = 2000;

@@ -170,7 +170,7 @@ index 238788d740..6d12dba577 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index 3b165218b9..8a2cc19bd9 100644
+index ce39006ce8..fc5ff1b272 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 @@ -188,6 +188,14 @@ class NetworkLinkRtcpObserver {

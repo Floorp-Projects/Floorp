@@ -259,12 +259,12 @@ TEST_P(ReceiveStatisticsTest, GetReceiveStreamDataCounters) {
   ASSERT_TRUE(statistician != NULL);
 
   StreamDataCounters counters = statistician->GetReceiveStreamDataCounters();
-  EXPECT_GT(counters.first_packet_time_ms, -1);
+  EXPECT_TRUE(counters.first_packet_time.IsFinite());
   EXPECT_EQ(1u, counters.transmitted.packets);
 
   receive_statistics_->OnRtpPacket(packet1_);
   counters = statistician->GetReceiveStreamDataCounters();
-  EXPECT_GT(counters.first_packet_time_ms, -1);
+  EXPECT_TRUE(counters.first_packet_time.IsFinite());
   EXPECT_EQ(2u, counters.transmitted.packets);
 }
 
