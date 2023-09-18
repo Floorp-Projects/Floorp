@@ -7,13 +7,12 @@ const path = "http://{{domains[www1]}}:{{ports[http][0]}}/fetch/orb/resources";
 // This is due to web compatibility, but might be removed in the future.
 // See Bug 1828375
 promise_test(
-  async () =>
-    await fetchORB(
-      `${path}/text.txt`,
-      null,
-      contentType("text/plain"),
-      contentTypeOptions("nosniff")
-    ),
+  t => testFetchNoCors(
+    `${path}/text.txt`,
+    null,
+    contentType("text/plain"),
+    contentTypeOptions("nosniff")
+  ),
   "ORB shouldn't block opaque text/plain with nosniff"
 );
 
@@ -21,7 +20,7 @@ promise_test(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     `${path}/data.json`,
     null,
     contentType("application/json"),
@@ -34,7 +33,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     `${path}/data.json`,
     null,
     contentType(""),

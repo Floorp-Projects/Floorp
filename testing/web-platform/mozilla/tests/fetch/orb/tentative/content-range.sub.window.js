@@ -8,7 +8,7 @@ const url =
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     url,
     { headers: new Headers([["Range", "bytes 10-99"]]) },
     header("Content-Range", "bytes 10-99/1010"),
