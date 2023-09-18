@@ -1434,13 +1434,8 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 .subviewradio > .radio-check[selected] {
-  background-color: #fff;
-  border: 4px solid #177ee6;
-}
-
-:root[lwt-popup-brighttext] .subviewradio > .radio-check[selected] {
-  background-color: transparent;
-  border: 4px solid #00ddff;
+  background-color: light-dark(#fff, transparent);
+  border: 4px solid light-dark(#177ee6, #00ddff);
 }
 
 #PanelUI-panic-explanations {

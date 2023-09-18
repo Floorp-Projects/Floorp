@@ -762,23 +762,23 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
 
   @media (prefers-reduced-motion: no-preference) {
     &[busy] {
-      list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting.png");
-      @media (min-resolution: 1.1dppx) {
-        list-style-image: url("chrome://browser/skin/tabbrowser/tab-connecting@2x.png");
-      }
+      list-style-image: image-set(
+        url("chrome://browser/skin/tabbrowser/tab-connecting.png"),
+        url("chrome://browser/skin/tabbrowser/tab-connecting@2x.png") 2x
+      );
     }
 
     &[progress] {
-      list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading.png");
-      @media (min-resolution: 1.1dppx) {
-        list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading@2x.png");
-      }
+      list-style-image: image-set(
+        url("chrome://browser/skin/tabbrowser/tab-loading.png"),
+        url("chrome://browser/skin/tabbrowser/tab-loading@2x.png") 2x
+      );
 
       :root[lwt-popup-brighttext] &[progress]:not([selected]) {
-        list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png");
-        @media (min-resolution: 1.1dppx) {
-          list-style-image: url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png");
-        }
+        list-style-image: image-set(
+          url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png"),
+          url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png") 2x
+        );
       }
     }
   }

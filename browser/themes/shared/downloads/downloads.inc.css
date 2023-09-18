@@ -77,15 +77,10 @@
 
 #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
 #downloadsListBox > richlistitem[verdict="Malware"] .downloadDetails {
-  color: #C50042;
+  color: light-dark(#C50042, #FF848B);
   /* The details text usually gets an opacity reduction, but for the error
      states we disable that, because it would reduce the contrast too much. */
   opacity: inherit;
-}
-
-:root[lwt-popup-brighttext] #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
-:root[lwt-popup-brighttext] #downloadsListBox > richlistitem[verdict="Malware"] .downloadDetails {
-  color: #FF848B;
 }
 
 .downloadTypeIcon {
@@ -109,11 +104,7 @@
 }
 
 #downloadsSummaryDescription {
-  color: LinkText;
-}
-
-:root[lwt-popup-brighttext] #downloadsSummaryDescription {
-  color: #75baff; /* --blue-30 */
+  color: var(--link-color);
 }
 
 /*** List items and similar elements in the summary ***/
