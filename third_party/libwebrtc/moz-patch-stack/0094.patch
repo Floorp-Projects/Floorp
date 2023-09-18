@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
-index c90e035f37..18ec208ec5 100644
+index 6f72f7927e..37965305d9 100644
 --- a/modules/video_capture/video_capture_options.h
 +++ b/modules/video_capture/video_capture_options.h
-@@ -51,7 +51,7 @@ class RTC_EXPORT VideoCaptureOptions {
+@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
    void Init(Callback* callback);
  
@@ -22,7 +22,7 @@ index c90e035f37..18ec208ec5 100644
    bool allow_v4l2() const { return allow_v4l2_; }
    void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
  #endif
-@@ -64,7 +64,7 @@ class RTC_EXPORT VideoCaptureOptions {
+@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
  #endif
  
   private:

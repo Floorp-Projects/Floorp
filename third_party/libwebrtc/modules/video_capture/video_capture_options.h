@@ -13,6 +13,10 @@
 #include "api/scoped_refptr.h"
 #include "rtc_base/system/rtc_export.h"
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+#include "modules/portal/pipewire_utils.h"
+#endif
+
 namespace webrtc {
 
 #if defined(WEBRTC_USE_PIPEWIRE)
@@ -69,7 +73,7 @@ class RTC_EXPORT VideoCaptureOptions {
 #endif
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool allow_pipewire_ = false;
-  int pipewire_fd_ = -1;
+  int pipewire_fd_ = kInvalidPipeWireFd;
   rtc::scoped_refptr<videocapturemodule::PipeWireSession> pipewire_session_;
 #endif
 };
