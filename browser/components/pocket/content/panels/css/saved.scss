@@ -185,7 +185,7 @@
     visibility: visible;
 }
 .pkt_ext_containersaved .pkt_ext_logo {
-    background: url(../img/pocketlogosolo@1x.png) center center no-repeat;
+    background: image-set(url(../img/pocketlogosolo@1x.png), url(../img/pocketlogosolo@2x.png) 2x),  center center no-repeat;
     display: block;
     float: inline-start;
     height: 40px;
@@ -193,22 +193,10 @@
     position: relative;
     width: 44px;
 }
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersaved .pkt_ext_logo {
-        background-image: url(../img/pocketlogosolo@2x.png);
-        background-size: 44px 40px;
-    }
-}
 .pkt_ext_container_finalerrorstate .pkt_ext_logo {
-    background-image: url(../img/pocketerror@1x.png);
+    background-image: image-set(url(../img/pocketerror@1x.png), url(../img/pocketerror@2x.png) 2x);
     height: 44px;
     width: 44px;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_container_finalerrorstate .pkt_ext_logo {
-        background-image: url(../img/pocketerror@2x.png);
-        background-size: 44px 44px;
-    }
 }
 .pkt_ext_containersaved .pkt_ext_topdetail {
     float: inline-start;
@@ -319,7 +307,7 @@
     padding-inline-start: 0;
 }
 .pkt_ext_containersaved  .pkt_ext_close {
-    background: url(../img/tag_close@1x.png) center center no-repeat;
+    background: image-set(url(../img/tag_close@1x.png), url(../img/tag_close@2x.png) 2x) center center no-repeat;
     color: #333;
     display: block;
     font-size: 0.8em;
@@ -331,12 +319,6 @@
     text-indent: -9999px;
     top: -1em;
     width: 10px;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersaved  .pkt_ext_close {
-        background-image: url(../img/tag_close@2x.png);
-        background-size: 8px 8px;
-    }
 }
 .pkt_ext_containersaved .pkt_ext_close:hover {
     color: #000;
@@ -559,13 +541,7 @@
     content: none;
 }
 .pkt_ext_containersaved .token_tag:hover span {
-    background-image: url(../img/tag_closeactive@1x.png);
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersaved .token_tag:hover span {
-        background-image: url(../img/tag_closeactive@2x.png);
-        background-size: 8px 8px;
-    }
+    background-image: image-set(url(../img/tag_closeactive@1x.png), url(../img/tag_closeactive@2x.png) 2x);
 }
 .pkt_ext_containersaved .pkt_ext_recenttag_detail_disabled .token_tag,
 .pkt_ext_containersaved .pkt_ext_recenttag_detail_disabled .token_tag:hover,
@@ -706,7 +682,7 @@
     width: 0;
 }
 .pkt_ext_containersaved .token-input-token span {
-    background: url(../img/tag_close@1x.png) center center no-repeat;
+    background: image-set(url(../img/tag_close@1x.png), url(../img/tag_close@2x.png) 2x) center center no-repeat;
     cursor: pointer;
     display: inline-block;
     height: 8px;
@@ -716,25 +692,13 @@
     width: 8px;
     text-indent: -99px;
 }
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersaved .token-input-token span {
-        background-image: url(../img/tag_close@2x.png);
-        background-size: 8px 8px;
-    }
-}
 .pkt_ext_containersaved .token-input-selected-token {
     background-color: #008acb;
     border-color: #008acb;
     color: #fff;
 }
 .pkt_ext_containersaved .token-input-selected-token span {
-    background-image: url(../img/tag_closeactive@1x.png);
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersaved .token-input-selected-token span {
-        background-image: url(../img/tag_closeactive@2x.png);
-        background-size: 8px 8px;
-    }
+    background-image: image-set(url(../img/tag_closeactive@1x.png), url(../img/tag_closeactive@2x.png) 2x);
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper_disabled .token-input-selected-token {
     background-color: #f7f7f7;

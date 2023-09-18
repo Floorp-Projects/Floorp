@@ -70,7 +70,7 @@
     border-width: 0 0 1px;
 }
 .pkt_ext_containersignup .pkt_ext_logo {
-    background: url(../img/pocketlogo@1x.png) center bottom no-repeat;
+    background: image-set(url(../img/pocketlogo@1x.png), url(../img/pocketlogo@2x.png) 2x) center bottom no-repeat;
     display: block;
     height: 32px;
     margin: 0 auto 15px;
@@ -79,26 +79,14 @@
     text-indent: -9999px;
     width: 123px;
 }
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersignup .pkt_ext_logo {
-        background-image: url(../img/pocketlogo@2x.png);
-        background-size: 123px 32px;
-    }
-}
 .pkt_ext_containersignup .pkt_ext_introimg {
-    background: url(../img/pocketsignup_hero@1x.png) center center no-repeat;
+    background: image-set(url(../img/pocketsignup_hero@1x.png), url(../img/pocketsignup_hero@2x.png) 2x) center center no-repeat;
     display: block;
     height: 125px;
     margin: 0 auto;
     position: relative;
     text-indent: -9999px;
     width: 255px;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersignup .pkt_ext_introimg {
-        background-image: url(../img/pocketsignup_hero@2x.png);
-        background-size: 255px 125px;
-    }
 }
 .pkt_ext_containersignup .pkt_ext_tagline {
     margin-bottom: 0.5em;
@@ -118,7 +106,7 @@
     margin-bottom: 0.8em;
 }
 .pkt_ext_containersignup .ff_signuphelp {
-    background: url(../img/signup_help@1x.png) center center no-repeat;
+    background: image-set(url(../img/signup_help@1x.png), url(../img/signup_help@2x.png) 2x) center center no-repeat;
     display: block;
     height: 18px;
     margin-top: -9px;
@@ -127,12 +115,6 @@
     text-indent: -9999px;
     width: 18px;
     top: 50%;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersignup .ff_signuphelp {
-        background-image: url(../img/signup_help@2x.png);
-        background-size: 18px 18px;
-    }
 }
 .pkt_ext_containersignup .alreadyhave {
     font-size: 0.9em;
@@ -178,7 +160,7 @@
     text-indent: -999px;
 }
 .pkt_ext_introstoryone_img {
-    background: url(../img/pocketsignup_button@1x.png) center right no-repeat;
+    background: image-set(url(../img/pocketsignup_button@1x.png), url(../img/pocketsignup_button@2x.png) 2x) center right no-repeat;
     height: 82px;
     padding-block: 0;
     padding-inline: 0.7em 0;
@@ -187,14 +169,8 @@
 .pkt_ext_introstoryone_img:dir(rtl) {
     background-position-x: left;
 }
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_introstoryone_img {
-        background-image: url(../img/pocketsignup_button@2x.png);
-        background-size: 82px 82px;
-    }
-}
 .pkt_ext_introstorytwo_img {
-    background: url(../img/pocketsignup_devices@1x.png) bottom right no-repeat;
+    background: image-set(url(../img/pocketsignup_devices@1x.png), url(../img/pocketsignup_devices@2x.png) 2x) bottom right no-repeat;
     height: 110px;
     padding-block: 1em 0;
     padding-inline: 0.7em 0;
@@ -202,12 +178,6 @@
 }
 .pkt_ext_introstorytwo_img:dir(rtl) {
     background-position-x: left;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_introstorytwo_img {
-        background-image: url(../img/pocketsignup_devices@2x.png);
-        background-size: 124px 110px;
-    }
 }
 .pkt_ext_introstorydivider {
     border-top: 1px solid #c1c1c1;
@@ -281,19 +251,13 @@
     padding: 0;
 }
 .pkt_ext_containersignup .signup-btn-firefox .logo {
-    background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
+    background: image-set(url(../img/signup_firefoxlogo@1x.png), url(../img/signup_firefoxlogo@2x.png) 2x) center center no-repeat;
     height: 2.6em;
     inset-inline-start: 10px;
     margin: 0;
     padding: 0;
     width: 22px;
     position: absolute;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_containersignup .signup-btn-firefox .logo {
-        background-image: url(../img/signup_firefoxlogo@2x.png);
-        background-size: 22px 22px;
-    }
 }
 .pkt_ext_containersignup .forgotreset-btn-change {
     margin-bottom: 2em;
