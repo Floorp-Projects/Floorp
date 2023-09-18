@@ -178,7 +178,7 @@ static const char* kLangPackFonts[] = {
   "Simplified Arabic",  // Arabic Script Supplemental Fonts
   "Traditional Arabic",  // Arabic Script Supplemental Fonts
   "Tunga",  // Kannada Supplemental Fonts
-  "UD Digi Kyokasho",  // Japanese Supplemental Fonts
+  "UD Digi Kyokasho N-B",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho N-R",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NK-B",  // Japanese Supplemental Fonts
   "UD Digi Kyokasho NK-R",  // Japanese Supplemental Fonts
