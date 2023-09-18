@@ -148,29 +148,16 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
 
   // Returns true if the final frequency (and thus the phase increment) changed,
   // false otherwise. This allow some optimizations at callsite.
-  bool UpdateParametersIfNeeded(TrackTime ticks, size_t count) {
-    float frequency, detune;
-
+  bool UpdateParametersIfNeeded(size_t aIndexInBlock,
+                                const float aFrequency[WEBAUDIO_BLOCK_SIZE],
+                                const float aDetune[WEBAUDIO_BLOCK_SIZE]) {
     // Shortcut if frequency-related AudioParam are not automated, and we
     // already have computed the frequency information and related parameters.
     if (!ParametersMayNeedUpdate()) {
       return false;
     }
 
-    bool simpleFrequency = mFrequency.HasSimpleValue();
-    bool simpleDetune = mDetune.HasSimpleValue();
-
-    if (simpleFrequency) {
-      frequency = mFrequency.GetValue();
-    } else {
-      frequency = mFrequency.GetValueAtTime(ticks, count);
-    }
-    if (simpleDetune) {
-      detune = mDetune.GetValue();
-    } else {
-      detune = mDetune.GetValueAtTime(ticks, count);
-    }
-
+    float detune = aDetune[aIndexInBlock];
     if (detune != mLastDetune) {
       mLastDetune = detune;
       // Single-precision fdlibm_exp2f() would sometimes amplify rounding
@@ -178,7 +165,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1849806#c4
       mDetuneRatio = fdlibm_exp2(detune / 1200.);
     }
-    float finalFrequency = frequency * mDetuneRatio;
+    float finalFrequency = aFrequency[aIndexInBlock] * mDetuneRatio;
     mRecomputeParameters = false;
 
     if (finalFrequency == mFinalFrequency) {
@@ -211,12 +198,13 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ComputeSine(float* aOutput, TrackTime ticks, uint32_t aStart,
-                   uint32_t aEnd) {
+  void ComputeSine(float* aOutput, uint32_t aStart, uint32_t aEnd,
+                   const float aFrequency[WEBAUDIO_BLOCK_SIZE],
+                   const float aDetune[WEBAUDIO_BLOCK_SIZE]) {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       // We ignore the return value, changing the frequency has no impact on
       // performances here.
-      UpdateParametersIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(i, aFrequency, aDetune);
 
       aOutput[i] = fdlibm_sinf(mPhase);
 
@@ -229,8 +217,9 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
            mRecomputeParameters;
   }
 
-  void ComputeCustom(float* aOutput, TrackTime ticks, uint32_t aStart,
-                     uint32_t aEnd) {
+  void ComputeCustom(float* aOutput, uint32_t aStart, uint32_t aEnd,
+                     const float aFrequency[WEBAUDIO_BLOCK_SIZE],
+                     const float aDetune[WEBAUDIO_BLOCK_SIZE]) {
     MOZ_ASSERT(mPeriodicWave, "No custom waveform data");
 
     uint32_t periodicWaveSize = mPeriodicWave->periodicWaveSize();
@@ -245,7 +234,8 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     // mPhase runs [0,periodicWaveSize) here instead of [0,2*M_PI).
     float basePhaseIncrement = mPeriodicWave->rateScale();
 
-    bool needToFetchWaveData = UpdateParametersIfNeeded(ticks, aStart);
+    bool needToFetchWaveData =
+        UpdateParametersIfNeeded(aStart, aFrequency, aDetune);
 
     bool parametersMayNeedUpdate = ParametersMayNeedUpdate();
     mPeriodicWave->waveDataForFundamentalFrequency(
@@ -259,7 +249,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
               mFinalFrequency, lowerWaveData, higherWaveData,
               tableInterpolationFactor);
         }
-        needToFetchWaveData = UpdateParametersIfNeeded(ticks, i);
+        needToFetchWaveData = UpdateParametersIfNeeded(i, aFrequency, aDetune);
       }
       // Bilinear interpolation between adjacent samples in each table.
       float floorPhase = floorf(mPhase);
@@ -310,16 +300,32 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       uint32_t start, end;
       FillBounds(output, ticks, start, end);
 
+      float frequency[WEBAUDIO_BLOCK_SIZE];
+      float detune[WEBAUDIO_BLOCK_SIZE];
+      if (ParametersMayNeedUpdate()) {
+        if (mFrequency.HasSimpleValue()) {
+          std::fill_n(frequency, WEBAUDIO_BLOCK_SIZE, mFrequency.GetValue());
+        } else {
+          mFrequency.GetValuesAtTime(ticks + start, frequency + start,
+                                     end - start);
+        }
+        if (mDetune.HasSimpleValue()) {
+          std::fill_n(detune, WEBAUDIO_BLOCK_SIZE, mDetune.GetValue());
+        } else {
+          mDetune.GetValuesAtTime(ticks + start, detune + start, end - start);
+        }
+      }
+
       // Synthesize the correct waveform.
       switch (mType) {
         case OscillatorType::Sine:
-          ComputeSine(output, ticks, start, end);
+          ComputeSine(output, start, end, frequency, detune);
           break;
         case OscillatorType::Square:
         case OscillatorType::Triangle:
         case OscillatorType::Sawtooth:
         case OscillatorType::Custom:
-          ComputeCustom(output, ticks, start, end);
+          ComputeCustom(output, start, end, frequency, detune);
           break;
         case OscillatorType::EndGuard_:
           MOZ_ASSERT_UNREACHABLE("end guard");
