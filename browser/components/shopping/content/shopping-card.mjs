@@ -56,7 +56,7 @@ class ShoppingCard extends MozLitElement {
   cardTemplate() {
     if (this.type === "accordion") {
       return html`
-        <details id="shopping-details">
+        <details id="shopping-details" @toggle=${this.onCardToggle}>
           <summary>${this.labelTemplate()}</summary>
           <div id="content"><slot name="content"></slot></div>
         </details>
@@ -90,6 +90,14 @@ class ShoppingCard extends MozLitElement {
     `;
   }
 
+  onCardToggle() {
+    const buttonAction = this.detailsEl.open ? "expanded" : "collapsed";
+    this.recordChevronButtonGleanEvent([
+      this.getAttribute("data-l10n-id"),
+      buttonAction,
+    ]);
+  }
+
   handleShowMoreButtonClick(e) {
     this._isExpanded = !this._isExpanded;
     // toggle show more/show less text
@@ -115,13 +123,6 @@ class ShoppingCard extends MozLitElement {
 
   handleChevronButtonClick() {
     this.detailsEl.open = !this.detailsEl.open;
-    // here, open represents the state, so we want the inverse for which
-    // action the user is taking.
-    const buttonAction = this.detailsEl.open ? "expanded" : "collapsed";
-    this.recordChevronButtonGleanEvent([
-      this.getAttribute("data-l10n-id"),
-      buttonAction,
-    ]);
   }
 
   render() {
