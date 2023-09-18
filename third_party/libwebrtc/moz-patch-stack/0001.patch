@@ -103,10 +103,10 @@ index 26d2531bef..37f8df0012 100644
    // Gather the usage of IPv4/IPv6 as best connection.
    static void ReportBestConnectionState(const cricket::TransportStats& stats);
 diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 812833000b..07c5e0c0d3 100644
+index aa659b4ebd..7fbfb7fb32 100644
 --- a/pc/peer_connection_integrationtest.cc
 +++ b/pc/peer_connection_integrationtest.cc
-@@ -1831,6 +1831,10 @@ TEST_P(PeerConnectionIntegrationTest,
+@@ -1731,6 +1731,10 @@ TEST_P(PeerConnectionIntegrationTest,
    EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
                   callee()->ice_connection_state(), kDefaultTimeout);
  
@@ -117,7 +117,7 @@ index 812833000b..07c5e0c0d3 100644
    EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
                            "WebRTC.PeerConnection.CandidatePairType_UDP",
                            webrtc::kIceCandidatePairHostNameHostName));
-@@ -1959,6 +1963,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
+@@ -1859,6 +1863,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
    EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
                   callee()->ice_connection_state(), kDefaultTimeout);
  
