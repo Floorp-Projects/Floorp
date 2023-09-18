@@ -581,9 +581,7 @@ void RtpSenderEgress::UpdateRtpStats(Timestamp now,
     StreamDataCounters* counters =
         packet_ssrc == rtx_ssrc_ ? &rtx_rtp_stats_ : &rtp_stats_;
 
-    if (counters->first_packet_time_ms == -1) {
-      counters->first_packet_time_ms = now.ms();
-    }
+    counters->MaybeSetFirstPacketTime(now);
 
     if (packet_type == RtpPacketMediaType::kForwardErrorCorrection) {
       counters->fec.Add(counter);

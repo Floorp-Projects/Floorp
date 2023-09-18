@@ -110,7 +110,8 @@ bool StreamStatisticianImpl::UpdateOutOfOrder(const RtpPacketReceived& packet,
 
 void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   RTC_DCHECK_EQ(ssrc_, packet.Ssrc());
-  int64_t now_ms = clock_->TimeInMilliseconds();
+  Timestamp now = clock_->CurrentTime();
+  int64_t now_ms = now.ms();
 
   incoming_bitrate_.Update(packet.size(), now_ms);
   receive_counters_.transmitted.AddPacket(packet);
@@ -124,7 +125,7 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
     received_seq_first_ = sequence_number;
     last_report_seq_max_ = sequence_number - 1;
     received_seq_max_ = sequence_number - 1;
-    receive_counters_.first_packet_time_ms = now_ms;
+    receive_counters_.first_packet_time = now;
   } else if (UpdateOutOfOrder(packet, sequence_number, now_ms)) {
     return;
   }
