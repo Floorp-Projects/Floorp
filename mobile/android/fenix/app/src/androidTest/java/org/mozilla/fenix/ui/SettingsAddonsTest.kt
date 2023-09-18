@@ -47,9 +47,10 @@ class SettingsAddonsTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/875780
     // Walks through settings add-ons menu to ensure all items are present
     @Test
-    fun settingsAddonsItemsTest() {
+    fun verifyAddonsListItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -64,9 +65,10 @@ class SettingsAddonsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/875781
     // Installs an add-on from the Add-ons menu and verifies the prompts
     @Test
-    fun installAddonTest() {
+    fun installAddonFromMainMenuTest() {
         val addonName = "uBlock Origin"
 
         homeScreen {}
@@ -92,9 +94,10 @@ class SettingsAddonsTest {
             }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561597
     // Installs an addon, then uninstalls it
     @Test
-    fun verifyAddonsCanBeUninstalled() {
+    fun verifyAddonsCanBeUninstalledTest() {
         val addonName = "uBlock Origin"
 
         addonsMenu {
@@ -112,6 +115,7 @@ class SettingsAddonsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561600
     // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
     @SmokeTest
     @Test
@@ -133,9 +137,10 @@ class SettingsAddonsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561594
     @SmokeTest
     @Test
-    fun useAddonsInPrivateModeTest() {
+    fun verifyUBlockWorksInPrivateModeTest() {
         val addonName = "uBlock Origin"
         val genericPage = getGenericAsset(mockWebServer, 1)
 
