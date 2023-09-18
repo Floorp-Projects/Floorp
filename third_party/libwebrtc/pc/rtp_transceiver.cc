@@ -202,7 +202,7 @@ RTCError RtpTransceiver::CreateChannel(
                     "No media engine for mid=" + std::string(mid));
   }
   bool use_split_media_channel =
-      context()->field_trials().IsEnabled("WebRTC-SplitMediaChannel");
+      !context()->field_trials().IsDisabled("WebRTC-SplitMediaChannel");
   std::unique_ptr<cricket::ChannelInterface> new_channel;
   if (media_type() == cricket::MEDIA_TYPE_AUDIO) {
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
