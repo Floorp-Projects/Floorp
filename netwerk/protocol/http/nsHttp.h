@@ -50,35 +50,6 @@ enum class SupportedAlpnRank : uint8_t {
   HTTP_3_VER_1 = 7,
 };
 
-// IMPORTANT: when adding new values, always add them to the end, otherwise
-// it will mess up telemetry.
-enum class ConnectionCloseReason : uint32_t {
-  UNSET = 0,
-  OK,
-  IDLE_TIMEOUT,
-  TLS_TIMEOUT,
-  GO_AWAY,
-  DNS_ERROR,
-  NET_RESET,
-  NET_TIMEOUT,
-  NET_REFUSED,
-  NET_INTERRUPT,
-  NET_INADEQ_SEQURITY,
-  SOCKET_ADDRESS_NOT_SUPPORTED,
-  OUT_OF_MEMORY,
-  SOCKET_ADDRESS_IN_USE,
-  BINDING_ABORTED,
-  BINDING_REDIRECTED,
-  ERROR_ABORT,
-  CLOSE_EXISTING_CONN_FOR_COALESCING,
-  CLOSE_NEW_CONN_FOR_COALESCING,
-  CANT_REUSED,
-  OTHER_NET_ERROR,
-  SECURITY_ERROR,
-};
-
-ConnectionCloseReason ToCloseReason(nsresult aErrorCode);
-
 inline bool IsHttp3(SupportedAlpnRank aRank) {
   return aRank >= SupportedAlpnRank::HTTP_3_DRAFT_29;
 }

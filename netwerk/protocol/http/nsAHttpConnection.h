@@ -173,7 +173,6 @@ class nsAHttpConnection : public nsISupports {
   virtual nsITRRSkipReason::value TRRSkipReason() = 0;
   virtual bool GetEchConfigUsed() = 0;
   virtual PRIntervalTime LastWriteTime() = 0;
-  virtual void SetCloseReason(ConnectionCloseReason aReason) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
@@ -277,9 +276,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   }                                                                          \
   bool GetEchConfigUsed() override {                                         \
     return (!(fwdObject)) ? false : (fwdObject)->GetEchConfigUsed();         \
-  }                                                                          \
-  void SetCloseReason(ConnectionCloseReason aReason) override {              \
-    if (fwdObject) (fwdObject)->SetCloseReason(aReason);                     \
   }                                                                          \
   PRIntervalTime LastWriteTime() override;
 

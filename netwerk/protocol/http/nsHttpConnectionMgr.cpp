@@ -848,8 +848,6 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
             ("UpdateCoalescingForNewConn() found existing active H2 conn that "
              "could have served newConn, but new connection is H3, therefore "
              "close the H2 conncetion"));
-        existingConn->SetCloseReason(
-            ConnectionCloseReason::CLOSE_EXISTING_CONN_FOR_COALESCING);
         existingConn->DontReuse();
       }
     } else if (existingConn->UsingHttp3() && newConn->UsingSpdy()) {
@@ -860,8 +858,6 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
              "could have served H2 newConn graceful close of newConn=%p to "
              "migrate to existingConn %p\n",
              newConn, existingConn));
-        existingConn->SetCloseReason(
-            ConnectionCloseReason::CLOSE_NEW_CONN_FOR_COALESCING);
         newConn->DontReuse();
         return;
       }
@@ -871,8 +867,6 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
            "have served newConn "
            "graceful close of newConn=%p to migrate to existingConn %p\n",
            newConn, existingConn));
-      existingConn->SetCloseReason(
-          ConnectionCloseReason::CLOSE_NEW_CONN_FOR_COALESCING);
       newConn->DontReuse();
       return;
     }
@@ -2519,7 +2513,6 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
       ent->RemoveH2WebsocketConns(conn);
     }
     LOG(("  connection cannot be reused; closing connection\n"));
-    conn->SetCloseReason(ConnectionCloseReason::CANT_REUSED);
     conn->Close(NS_ERROR_ABORT);
   }
 
