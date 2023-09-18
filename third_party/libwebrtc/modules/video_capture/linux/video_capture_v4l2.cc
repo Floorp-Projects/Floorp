@@ -276,6 +276,16 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
     return -1;
   }
 
+  // Needed to start UVC camera - from the uvcview application
+  enum v4l2_buf_type type;
+  type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
+    RTC_LOG(LS_INFO) << "Failed to turn on stream";
+    return -1;
+  }
+
+  _captureStarted = true;
+
   // start capture thread;
   if (_captureThread.empty()) {
     quit_ = false;
@@ -287,16 +297,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
         "CaptureThread",
         rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
   }
-
-  // Needed to start UVC camera - from the uvcview application
-  enum v4l2_buf_type type;
-  type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to turn on stream";
-    return -1;
-  }
-
-  _captureStarted = true;
   return 0;
 }
 
