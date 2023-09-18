@@ -3910,11 +3910,6 @@
   value: true
   mirror: always
 
-- name: dom.workers.requestAnimationFrame
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: dom.workers.serialized-sab-access
   type: RelaxedAtomicBool
   value: false
