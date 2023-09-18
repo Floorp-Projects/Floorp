@@ -3193,7 +3193,8 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
     // All ranges in the bundle must be compatible with the physical register.
     MOZ_ASSERT(range->vreg().isCompatible(r.reg));
 
-    for (size_t a = 0; a < r.reg.numAliased(); a++) {
+    const size_t numAliased = r.reg.numAliased();
+    for (size_t a = 0; a < numAliased; a++) {
       PhysicalRegister& rAlias = registers[r.reg.aliased(a).code()];
       LiveRangePlus existingPlus;
       if (!rAlias.allocations.contains(rangePlus, &existingPlus)) {
@@ -3218,6 +3219,7 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
         *pfixed = true;
         return true;
       }
+      MOZ_ASSERT(r.reg.numAliased() == numAliased);
     }
   }
 
