@@ -1,31 +1,36 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 4 Jul 2023 08:34:00 +0000
-Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
- pw_stream raw pointer member r=webrtc-reviewers,ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 22 Jun 2023 16:23:00 +0000
+Subject: Bug 1837918 - libwebrtc update broke the build on
+ OpenBSD;r=mjf,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
-
-Differential Revision: https://phabricator.services.mozilla.com/D182671
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
+Differential Revision: https://phabricator.services.mozilla.com/D181791
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
 ---
- modules/video_capture/linux/video_capture_pipewire.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_capture/video_capture_options.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index e2c8d1b168..2a58c7d3e0 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-   VideoCaptureCapability frameInfo_;
-   bool started_;
+diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
+index 6f72f7927e..37965305d9 100644
+--- a/modules/video_capture/video_capture_options.h
++++ b/modules/video_capture/video_capture_options.h
+@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
--  struct pw_stream* stream_;
-+  struct pw_stream* stream_ = nullptr;
-   struct spa_hook stream_listener_;
- };
- }  // namespace videocapturemodule
+   void Init(Callback* callback);
+ 
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2() const { return allow_v4l2_; }
+   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
+ #endif
+@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
+ #endif
+ 
+  private:
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2_ = false;
+ #endif
+ #if defined(WEBRTC_USE_PIPEWIRE)
 -- 
 2.37.3
 
