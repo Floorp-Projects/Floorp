@@ -15,10 +15,7 @@
 #shopping-container {
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  height: 100%;
   width: 100%;
-  border-inline-start: 1px solid var(--in-content-box-border-color);
 }
 
 #header-wrapper {
