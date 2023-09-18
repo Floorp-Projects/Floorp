@@ -7,7 +7,7 @@ const path = "http://{{domains[www1]}}:{{ports[http][0]}}/fetch/orb/resources";
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(`${path}/font.ttf`, null, contentType("font/ttf")),
+  testFetchNoCors(`${path}/font.ttf`, null, contentType("font/ttf")),
   "ORB should filter opaque font/ttf"
 );
 
@@ -15,7 +15,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(`${path}/text.txt`, null, contentType("text/plain")),
+  testFetchNoCors(`${path}/text.txt`, null, contentType("text/plain")),
   "ORB should filter opaque text/plain"
 );
 
@@ -23,7 +23,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(`${path}/data.json`, null, contentType("application/json")),
+  testFetchNoCors(`${path}/data.json`, null, contentType("application/json")),
   "ORB should filter opaque application/json (non-empty)"
 );
 
@@ -31,7 +31,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(`${path}/empty.json`, null, contentType("application/json")),
+  testFetchNoCors(`${path}/empty.json`, null, contentType("application/json")),
   "ORB should filter opaque application/json (empty)"
 );
 
@@ -39,7 +39,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     `${path}/data_non_ascii.json`,
     null,
     contentType("application/json")

@@ -1,3 +1,10 @@
+function testFetchNoCors(file, options, ...pipe) {
+  return fetch(`${file}${pipe.length ? `?pipe=${pipe.join("|")}` : ""}`, {
+    ...(options || {}),
+    mode: "no-cors",
+  });
+}
+
 function promise_internal_response_is_filtered(fetchPromise, message) {
   return promise_test(async () => {
     const response = await fetchPromise;

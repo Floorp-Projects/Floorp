@@ -7,7 +7,7 @@ const path = "http://{{domains[www1]}}:{{ports[http][0]}}/fetch/orb/resources";
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     `${path}/data.json`,
     null,
     contentType("application/json"),
@@ -20,7 +20,7 @@ promise_internal_response_is_filtered(
 // fetch() function in the Fetch specification. See Bug 1823877. This
 // might be removed in the future.
 promise_internal_response_is_filtered(
-  fetchORB(
+  testFetchNoCors(
     `${path}/data.json`,
     null,
     contentType("application/json"),
