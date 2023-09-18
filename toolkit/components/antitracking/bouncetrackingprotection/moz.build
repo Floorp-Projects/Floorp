@@ -22,12 +22,14 @@ EXPORTS.mozilla += [
     "BounceTrackingProtection.h",
     "BounceTrackingRecord.h",
     "BounceTrackingState.h",
+    "BounceTrackingStorageObserver.h",
 ]
 
 UNIFIED_SOURCES += [
     "BounceTrackingProtection.cpp",
     "BounceTrackingRecord.cpp",
     "BounceTrackingState.cpp",
+    "BounceTrackingStorageObserver.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
