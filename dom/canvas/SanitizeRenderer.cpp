@@ -24,7 +24,8 @@ static bool Contains(const std::string& str, const std::string& part) {
  * For example strings:
  * https://hackmd.io/Ductv3pQTMej74gbveD4yw
  */
-static std::optional<std::string> ChooseDeviceReplacement(const std::string& str) {
+static std::optional<std::string> ChooseDeviceReplacement(
+    const std::string& str) {
   if (str.find("llvmpipe") == 0) return "llvmpipe";
   if (str.find("Apple") == 0) return "Apple M1";
 
@@ -42,7 +43,7 @@ static std::optional<std::string> ChooseDeviceReplacement(const std::string& str
     if (Contains(str, "REMBRANDT")) {  // Mobile 6xxx iGPUs
       return RADEON_R9_290;
     }
-    if (Contains(str, "RENOIR")) { // Desktop 4xxxG iGPUs
+    if (Contains(str, "RENOIR")) {  // Desktop 4xxxG iGPUs
       return RADEON_R9_290;
     }
     if (Contains(str, "Vega")) {
@@ -294,11 +295,12 @@ std::string SanitizeRenderer(const std::string& raw_renderer) {
 
       auto renderer2 = ChooseDeviceReplacement(renderer);
       if (!renderer2) {
-        gfxCriticalNote << "Couldn't sanitize ANGLE renderer \"" << renderer << "\" from GL_RENDERER \"" << raw_renderer;
+        gfxCriticalNote << "Couldn't sanitize ANGLE renderer \"" << renderer
+                        << "\" from GL_RENDERER \"" << raw_renderer;
         renderer2 = GENERIC_RENDERER;
       }
       return std::string("ANGLE (") + vendor + ", " + *renderer2 + d3d_suffix +
-            ")";
+             ")";
     } else if (Contains(raw_renderer, "ANGLE")) {
       gfxCriticalError() << "Failed to parse ANGLE renderer: " << raw_renderer;
       return {};
@@ -325,7 +327,8 @@ std::string SanitizeRenderer(const std::string& raw_renderer) {
   }();
 
   if (!replacementDevice) {
-    gfxCriticalNote << "Couldn't sanitize GL_RENDERER \"" << raw_renderer << "\"";
+    gfxCriticalNote << "Couldn't sanitize GL_RENDERER \"" << raw_renderer
+                    << "\"";
     return GENERIC_RENDERER;
   }
 
