@@ -99,8 +99,8 @@ class CookieService final : public nsICookieService,
 
   bool SetCookiesFromIPC(const nsACString& aBaseDomain,
                          const OriginAttributes& aAttrs, nsIURI* aHostURI,
-                         bool aFromHttp,
-                         const nsTArray<CookieStruct>& aCookies);
+                         bool aFromHttp, const nsTArray<CookieStruct>& aCookies,
+                         uint64_t aBrowsingContextId, bool aIsThirdPartyCookie);
 
  protected:
   virtual ~CookieService();

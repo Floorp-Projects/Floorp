@@ -246,8 +246,8 @@ IPCResult CookieServiceParent::RecvSetCookies(
   // we don't send it back to the same content process.
   mProcessingCookie = true;
 
-  bool ok = mCookieService->SetCookiesFromIPC(aBaseDomain, aOriginAttributes,
-                                              aHost, aFromHttp, aCookies);
+  bool ok = mCookieService->SetCookiesFromIPC(
+      aBaseDomain, aOriginAttributes, aHost, aFromHttp, aCookies, 0, false);
   mProcessingCookie = false;
   return ok ? IPC_OK() : IPC_FAIL(this, "Invalid cookie received.");
 }
