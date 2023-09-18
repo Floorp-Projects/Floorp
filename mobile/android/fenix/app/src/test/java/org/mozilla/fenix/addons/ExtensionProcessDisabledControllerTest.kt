@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -40,8 +41,7 @@ class ExtensionProcessDisabledControllerTest {
         val dialog: AlertDialog = mock()
         val appName = "TestApp"
         val builder: AlertDialog.Builder = mock()
-        val controller =
-            ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
+        val controller = ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
         val buttonsContainerCaptor = argumentCaptor<View>()
 
         controller.start()
@@ -74,8 +74,7 @@ class ExtensionProcessDisabledControllerTest {
         val appName = "TestApp"
         val dialog: AlertDialog = mock()
         val builder: AlertDialog.Builder = mock()
-        val controller =
-            ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
+        val controller = ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
         val buttonsContainerCaptor = argumentCaptor<View>()
 
         controller.start()
@@ -99,5 +98,37 @@ class ExtensionProcessDisabledControllerTest {
         assertFalse(store.state.showExtensionProcessDisabledPopup)
         verify(engine, never()).enableExtensionProcessSpawning()
         verify(dialog).dismiss()
+    }
+
+    @Test
+    fun `WHEN dispatching the same event twice THEN the dialog should only be created once`() {
+        val store = BrowserStore()
+        val engine: Engine = mock()
+        val appName = "TestApp"
+        val dialog: AlertDialog = mock()
+        val builder: AlertDialog.Builder = mock()
+        val controller = ExtensionProcessDisabledController(testContext, store, engine, builder, appName)
+        val buttonsContainerCaptor = argumentCaptor<View>()
+
+        controller.start()
+
+        whenever(builder.show()).thenReturn(dialog)
+
+        // First dispatch...
+        store.dispatch(ExtensionProcessDisabledPopupAction(showPopup = true))
+        dispatcher.scheduler.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        // Second dispatch... without having dismissed the dialog before!
+        store.dispatch(ExtensionProcessDisabledPopupAction(showPopup = true))
+        dispatcher.scheduler.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(builder).setView(buttonsContainerCaptor.capture())
+        verify(builder, times(1)).show()
+
+        // Click a button to dismiss the dialog.
+        buttonsContainerCaptor.value.findViewById<Button>(R.id.negative).performClick()
+        store.waitUntilIdle()
     }
 }

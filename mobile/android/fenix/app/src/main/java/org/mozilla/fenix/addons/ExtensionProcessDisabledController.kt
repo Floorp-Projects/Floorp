@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.UiContext
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.state.action.ExtensionProcessDisabledPopupAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -19,52 +20,6 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.geckoview.WebExtensionController
-
-/**
- * Present a dialog to the user notifying of extension process spawning disabled and also asking
- * whether they would like to continue trying or disable extensions. If the user chooses to retry,
- * enable the extension process spawning with [WebExtensionController.enableExtensionProcessSpawning].
- *
- * @param context to show the AlertDialog
- * @param store The [BrowserStore] which holds the state for showing the dialog
- * @param webExtensionController to call when a user enables the process spawning
- * @param builder to use for creating the dialog which can be styled as needed
- * @param appName to be added to the message. Necessary to be added as a param for testing
- */
-private fun presentDialog(
-    @UiContext context: Context,
-    store: BrowserStore,
-    engine: Engine,
-    builder: AlertDialog.Builder,
-    appName: String,
-) {
-    val message = context.getString(R.string.addon_process_crash_dialog_message, appName)
-    var onDismissDialog: (() -> Unit)? = null
-    val layout = LayoutInflater.from(context)
-        .inflate(R.layout.crash_extension_dialog, null, false)
-    layout?.apply {
-        findViewById<TextView>(R.id.message)?.text = message
-        findViewById<Button>(R.id.positive)?.setOnClickListener {
-            engine.enableExtensionProcessSpawning()
-            Addons.extensionsProcessUiRetry.add()
-            store.dispatch(ExtensionProcessDisabledPopupAction(false))
-            onDismissDialog?.invoke()
-        }
-        findViewById<Button>(R.id.negative)?.setOnClickListener {
-            Addons.extensionsProcessUiDisable.add()
-            store.dispatch(ExtensionProcessDisabledPopupAction(false))
-            onDismissDialog?.invoke()
-        }
-    }
-    builder.apply {
-        setCancelable(false)
-        setView(layout)
-        setTitle(R.string.addon_process_crash_dialog_title)
-    }
-
-    val dialog = builder.show()
-    onDismissDialog = { dialog?.dismiss() }
-}
 
 /**
  * Controller for showing the user a dialog when the the extension process spawning has been disabled.
@@ -84,4 +39,68 @@ class ExtensionProcessDisabledController(
 ) : ExtensionProcessDisabledPopupObserver(
     store,
     { presentDialog(context, store, engine, builder, appName) },
-)
+) {
+    override fun onDestroy(owner: LifecycleOwner) {
+        super.onDestroy(owner)
+        // In case the activity gets destroyed, we want to re-create the dialog.
+        shouldCreateDialog = true
+    }
+
+    companion object {
+        private var shouldCreateDialog: Boolean = true
+
+        /**
+         * Present a dialog to the user notifying of extension process spawning disabled and also asking
+         * whether they would like to continue trying or disable extensions. If the user chooses to retry,
+         * enable the extension process spawning with [WebExtensionController.enableExtensionProcessSpawning].
+         *
+         * @param context to show the AlertDialog
+         * @param store The [BrowserStore] which holds the state for showing the dialog
+         * @param webExtensionController to call when a user enables the process spawning
+         * @param builder to use for creating the dialog which can be styled as needed
+         * @param appName to be added to the message. Necessary to be added as a param for testing
+         */
+        private fun presentDialog(
+            @UiContext context: Context,
+            store: BrowserStore,
+            engine: Engine,
+            builder: AlertDialog.Builder,
+            appName: String,
+        ) {
+            if (!shouldCreateDialog) {
+                return
+            }
+
+            val message = context.getString(R.string.addon_process_crash_dialog_message, appName)
+            var onDismissDialog: (() -> Unit)? = null
+            val layout = LayoutInflater.from(context)
+                .inflate(R.layout.crash_extension_dialog, null, false)
+            layout?.apply {
+                findViewById<TextView>(R.id.message)?.text = message
+                findViewById<Button>(R.id.positive)?.setOnClickListener {
+                    engine.enableExtensionProcessSpawning()
+                    Addons.extensionsProcessUiRetry.add()
+                    store.dispatch(ExtensionProcessDisabledPopupAction(false))
+                    onDismissDialog?.invoke()
+                }
+                findViewById<Button>(R.id.negative)?.setOnClickListener {
+                    Addons.extensionsProcessUiDisable.add()
+                    store.dispatch(ExtensionProcessDisabledPopupAction(false))
+                    onDismissDialog?.invoke()
+                }
+            }
+            builder.apply {
+                setCancelable(false)
+                setView(layout)
+                setTitle(R.string.addon_process_crash_dialog_title)
+            }
+
+            val dialog = builder.show()
+            shouldCreateDialog = false
+            onDismissDialog = {
+                dialog?.dismiss()
+                shouldCreateDialog = true
+            }
+        }
+    }
+}
