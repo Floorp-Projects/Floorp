@@ -77,7 +77,6 @@
   /* This should be used for icons and chiclets inside the input field. It makes
      the gap around them more uniform when they are close to the field edges */
   --urlbar-icon-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
-  --urlbar-popup-url-color: -moz-nativehyperlinktext;
 
   --pocket-icon-fill: #ef4056;
 
