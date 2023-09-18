@@ -2481,7 +2481,9 @@ CookieStorage* CookieService::PickStorage(
 bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
                                       const OriginAttributes& aAttrs,
                                       nsIURI* aHostURI, bool aFromHttp,
-                                      const nsTArray<CookieStruct>& aCookies) {
+                                      const nsTArray<CookieStruct>& aCookies,
+                                      uint64_t aBrowsingContextId,
+                                      bool aIsThirdPartyCookie) {
   if (!IsInitialized()) {
     // If we are probably shutting down, we can ignore this cookie.
     return true;
@@ -2520,8 +2522,11 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
     cookie->SetCreationTime(
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
+    RefPtr<dom::BrowsingContext> browsingContext =
+        BrowsingContext::Get(aBrowsingContextId);
     storage->AddCookie(nullptr, aBaseDomain, aAttrs, cookie, currentTimeInUsec,
-                       aHostURI, ""_ns, aFromHttp, nullptr, false);
+                       aHostURI, ""_ns, aFromHttp, browsingContext,
+                       aIsThirdPartyCookie);
   }
 
   return true;
