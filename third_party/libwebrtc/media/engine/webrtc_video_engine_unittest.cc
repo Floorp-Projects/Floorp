@@ -937,7 +937,7 @@ TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
       RtpExtension::kTransportSequenceNumberUri, kTransportSeqExtensionId));
   ASSERT_TRUE(channel->SetRecvParameters(parameters));
   channel->SetInterface(&network);
-  channel->AsVideoReceiveChannel()->OnReadyToSend(true);
+  channel->AsVideoSendChannel()->OnReadyToSend(true);
   channel->AsVideoReceiveChannel()->SetReceive(true);
 
   // Inject a RTX packet.
