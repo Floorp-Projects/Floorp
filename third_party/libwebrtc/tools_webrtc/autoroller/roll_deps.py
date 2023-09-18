@@ -515,7 +515,7 @@ def GenerateCommitMessage(
         commit_msg.append('* %s: %s..%s' %
                           (c.path, c.current_version, c.new_version))
       elif isinstance(c, ChangedVersionEntry):
-        commit_msg.append('* %s_vesion: %s..%s' %
+        commit_msg.append('* %s_version: %s..%s' %
                           (c.path, c.current_version, c.new_version))
       else:
         commit_msg.append('* %s: %s/+log/%s..%s' %
