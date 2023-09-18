@@ -61,6 +61,10 @@ class BounceTrackingState : public nsIWebProgressListener,
   nsresult OnStartNavigation(nsIPrincipal* aTriggeringPrincipal,
                              const bool aHasValidUserGestureActivation);
 
+  // Record sites which have written cookies in the current extended
+  // navigation.
+  nsresult OnCookieWrite(const nsACString& aSiteHost);
+
   // Whether the given BrowsingContext should hold a BounceTrackingState
   // instance to monitor bounce tracking navigations.
   static bool ShouldCreateBounceTrackingStateForBC(
@@ -124,10 +128,6 @@ class BounceTrackingState : public nsIWebProgressListener,
   // Record sites which have activated service workers in the current
   // extended navigation.
   nsresult OnServiceWorkerActivation();
-
-  // Record sites which have written cookies in the current extended
-  // navigation.
-  nsresult OnNetworkCookieWrite();
 };
 
 }  // namespace mozilla
