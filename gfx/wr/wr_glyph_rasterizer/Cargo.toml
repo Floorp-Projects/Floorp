@@ -25,7 +25,7 @@ tracy-rs = "0.1.2"
 log = "0.4"
 lazy_static = "1"
 fxhash = "0.2.1"
-glean = { version = "53.2.0", optional = true }
+glean = { version = "54.0.0", optional = true }
 firefox-on-glean = { version = "0.1.0", optional = true }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 
