@@ -102,7 +102,6 @@ if (!build_with_chromium && !build_with_mozilla) {
       }
       if (rtc_enable_protobuf) {
         deps += [
-          "audio:low_bandwidth_audio_perf_test",
           "logging:rtc_event_log_rtp_dump",
           "tools_webrtc/perf:webrtc_dashboard_upload",
         ]
