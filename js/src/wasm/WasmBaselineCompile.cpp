@@ -5991,7 +5991,7 @@ bool BaseCompiler::emitRefAsNonNull() {
 
   RegRef rp = popRef();
   Label ok;
-  masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
+  masm.branchWasmAnyRefIsNull(false, rp, &ok);
   trap(Trap::NullPointerDereference);
   masm.bind(&ok);
   pushRef(rp);
@@ -7561,6 +7561,12 @@ bool BaseCompiler::emitI31Get(FieldWideningOp wideningOp) {
 
   RegRef i31Value = popRef();
   RegI32 intValue = needI32();
+
+  Label success;
+  masm.branchWasmAnyRefIsNull(false, i31Value, &success);
+  trap(Trap::NullPointerDereference);
+  masm.bind(&success);
+
   if (wideningOp == FieldWideningOp::Signed) {
     masm.convertWasmI31RefTo32Signed(i31Value, intValue);
   } else {
