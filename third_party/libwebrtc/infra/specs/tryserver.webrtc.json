@@ -12249,6 +12249,32 @@
         "test_id_prefix": "ninja://modules/video_capture:video_capture_tests/"
       },
       {
+        "args": [
+          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--nologs",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "isolate_name": "video_codec_perf_tests",
+        "merge": {
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Mac-12"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
         "isolate_name": "video_engine_tests",
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
@@ -14758,6 +14784,32 @@
           ]
         },
         "test_id_prefix": "ninja://modules/video_capture:video_capture_tests/"
+      },
+      {
+        "args": [
+          "--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/",
+          "--nologs",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "isolate_name": "video_codec_perf_tests",
+        "merge": {
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-10-19045"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
         "isolate_name": "video_engine_tests",

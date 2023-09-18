@@ -12,14 +12,6 @@
       'android_examples_junit_tests': {},
       'android_sdk_junit_tests': {},
     },
-    'android_perf_tests': {
-      'video_codec_perf_tests': {
-        'mixins': ['perf-video-codec-perf-tests'],
-      },
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-      },
-    },
     'android_tests': {
       'AppRTCMobile_test_apk': {},
       'android_instrumentation_test_apk': {},
@@ -56,22 +48,10 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'android_webrtc_perf_tests_tryserver': {
+    'android_tests_tryserver_specific': {
       'webrtc_perf_tests': {
         'mixins': ['quick-perf-tests'],
       }
-    },
-    'desktop_perf_tests': {
-      'video_codec_perf_tests': {
-        'mixins': ['perf-video-codec-perf-tests'],
-      },
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-        'args': [
-          '--test_artifacts_dir=${ISOLATED_OUTDIR}',
-          '--save_worst_frame',
-        ],
-      },
     },
     'desktop_tests': {
       'audio_decoder_unittests': {},
@@ -106,6 +86,20 @@
       },
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
+    },
+    'desktop_tests_linux_specific': {
+      'shared_screencast_stream_test': {},
+    },
+    'desktop_tests_try_server_specific': {
+      'video_capture_tests': {
+        'mixins': ['baremetal-try-pool'],
+      },
+      'video_codec_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      }
     },
     'fuchsia_compatible_tests': {
       'audio_decoder_unittests': {},
@@ -201,9 +195,6 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'linux_desktop_specific_tests': {
-      'shared_screencast_stream_test': {},
-    },
     'more_configs_tests': {
       'peerconnection_unittests': {
         'swarming': {
@@ -211,29 +202,21 @@
         },
       },
     },
+    'perf_tests': {
+      'video_codec_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+        'args': [
+          '--test_artifacts_dir=${ISOLATED_OUTDIR}',
+          '--save_worst_frame',
+        ],
+      },
+    },
     'video_capture_tests': {
       'video_capture_tests': {
         'mixins': ['baremetal-pool'],
-      }
-    },
-    'video_capture_tests_tryserver': {
-      'video_capture_tests': {
-        'mixins': ['baremetal-try-pool'],
-      }
-    },
-    'video_codec_perf_tests_tryserver': {
-      'video_codec_perf_tests': {
-        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
-      }
-    },
-    'webrtc_perf_tests': {
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-      },
-    },
-    'webrtc_perf_tests_tryserver': {
-      'webrtc_perf_tests': {
-        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
       }
     },
   },
@@ -244,12 +227,11 @@
   'compound_suites': {
     'android_tests_tryserver': [
       'android_tests',
-      'android_webrtc_perf_tests_tryserver',
+      'android_tests_tryserver_specific',
     ],
     'desktop_tests_tryserver': [
       'desktop_tests',
-      'video_capture_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
+      'desktop_tests_try_server_specific',
     ],
     'desktop_tests_with_video_capture': [
       'desktop_tests',
@@ -257,19 +239,17 @@
     ],
     'linux_desktop_tests_tryserver': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
-      'video_capture_tests_tryserver',
-      'video_codec_perf_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
+      'desktop_tests_linux_specific',
+      'desktop_tests_try_server_specific',
     ],
     'linux_desktop_tests_with_video_capture': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
+      'desktop_tests_linux_specific',
       'video_capture_tests',
     ],
     'linux_tests': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
+      'desktop_tests_linux_specific',
     ],
   },
 
