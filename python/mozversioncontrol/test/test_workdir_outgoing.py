@@ -58,7 +58,7 @@ def test_workdir_outgoing(repo):
     vcs = get_repository_object(repo.dir)
     assert vcs.path == str(repo.dir)
 
-    remote_path = "../remoterepo" if repo.vcs == "hg" else "upstream/main"
+    remote_path = "../remoterepo" if repo.vcs == "hg" else "upstream/master"
 
     # Mutate files.
     repo.execute_next_step()
