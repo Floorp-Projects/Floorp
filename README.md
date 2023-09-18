@@ -132,31 +132,7 @@ You can download the latest version of Floorp Browser from the official website:
 
 ### 🧰 Writing Code
 
-- We welcome contributions from everyone. First, you need to fork this repository and clone it to your local machine.
-
-- You can use any IDE or text editor you want. We recommend using [Visual Studio Code](https://code.visualstudio.com/).
-
-- We use "JavaScript", "XHTML", and "CSS" for writing code. If you would like to learn more about these languages, please refer to the following links.
-
-    - [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-
-    - [XHTML](https://www.w3schools.com/xml)
-
-    - [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)
-
-- Firefox uses legacy technologies, which Mozilla calls "XUL". If you would like to learn more about XUL, please refer to the following link.
-
-    - [XUL](https://www.xul.fr/en-xml-xul.php)
-
-- If you want to know about Floorp's code, please see the following links.
-
-    - [Firefox Source Docs](https://firefox-source-docs.mozilla.org/)
-
-    - [Firefox Source Code](https://github.com/mozilla/gecko-dev)
-
-    - [Searchfox](https://searchfox.org/)
-
-- If you would like to build Floorp Browser, please refer to the [Building](#building) section.
+See [Development](https://github.com/Floorp-Projects/Floorp/wiki/developers-getting-started)
 
 ### 📝 Translating
 
@@ -171,49 +147,6 @@ You can download the latest version of Floorp Browser from the official website:
 - If you find a bug, please report it to the [Issues](https://github.com/Floorp-Projects/Floorp/issues) page or using [Official Support Site](https://support.ablaze.one/contact).
 
 ---
-
-## 🗜️ Building
-
-### 📦 Requirements
-
-- Windows:
-  - [Mozilla Build Shell](https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe)
-  - [git](https://git-scm.com/download/win)
-
-- macOS:
-    - [Xcode](https://apps.apple.com/us/app/xcode/id497799835?mt=12)
-    - [git](https://git-scm.com/download/mac)
-
-- Linux:
-    - [git](https://git-scm.com/download/linux)
-    - curl `sudo apt install curl`
-    - python3 `sudo apt install python3`
-    - pip3 `sudo apt install python3-pip`
-    - Mercurial `python3 -m pip install --user mercurial`
-
-## 🧨 Bootstrap, Build & run
-
-- Windows (on Mozilla Build Shell: `C:\mozilla-build\start-shell.bat`)
-- macOS & Linux (on Terminal)
-
-```bash
-$ cd /path/to/your/Floorp/repository
-
-**set mozconfig**
-$ echo 'ac_add_options --with-app-name=floorp' >> mozconfig
-$ echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-$ echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-
-
-** Bootstrap Source code**
-$ ./mach bootstrap
-
-** Build Floorp Browser **
-$ ./mach build
-
-** Run Floorp Browser **
-$ ./mach run
-```
 
 ## 📄 Floorp License Notices 📄
 
