@@ -428,10 +428,6 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
 
   // The former googMinPlayoutDelayMs (in seconds).
   RTCNonStandardStatsMember<double> min_playout_delay;
-
-  // Temporarily added to unblock a roll.
-  // TODO(https://crbug.com/webrtc/15198): Delete this.
-  RTCStatsMember<std::string> track_id;
 };
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
@@ -483,10 +479,6 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
   RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>
       power_efficient_encoder;
   RTCStatsMember<std::string> scalability_mode;
-
-  // Temporarily added to unblock a roll.
-  // TODO(https://crbug.com/webrtc/15198): Delete this.
-  RTCStatsMember<std::string> track_id;
 };
 
 // https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*
