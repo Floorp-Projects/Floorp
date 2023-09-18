@@ -89,7 +89,10 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
       rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
+      // TODO(bugs.webrtc.org/15111):
+      //   Remove the raw AudioFrameProcessor pointer in the follow-up.
       webrtc::AudioFrameProcessor* audio_frame_processor,
+      std::unique_ptr<webrtc::AudioFrameProcessor> owned_audio_frame_processor,
       const webrtc::FieldTrialsView& trials);
 
   WebRtcVoiceEngine() = delete;
@@ -156,7 +159,10 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   // The audio processing module.
   rtc::scoped_refptr<webrtc::AudioProcessing> apm_;
   // Asynchronous audio processing.
+  // TODO(bugs.webrtc.org/15111):
+  //   Remove the raw AudioFrameProcessor pointer in the follow-up.
   webrtc::AudioFrameProcessor* const audio_frame_processor_;
+  std::unique_ptr<webrtc::AudioFrameProcessor> owned_audio_frame_processor_;
   // The primary instance of WebRtc VoiceEngine.
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   std::vector<AudioCodec> send_codecs_;
