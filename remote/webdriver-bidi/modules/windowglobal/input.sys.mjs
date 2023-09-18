@@ -59,20 +59,9 @@ class InputModule extends WindowGlobalBiDiModule {
    */
   async #deserializeActionOrigins(actions) {
     const promises = [];
-
-    if (!Array.isArray(actions)) {
-      // Silently ignore invalid action chains because they are fully parsed later.
-      return Promise.resolve();
-    }
-
     for (const actionsByTick of actions) {
-      if (!Array.isArray(actionsByTick?.actions)) {
-        // Silently ignore invalid actions because they are fully parsed later.
-        return Promise.resolve();
-      }
-
       for (const action of actionsByTick.actions) {
-        if (action?.origin?.type === "element") {
+        if (action.origin?.type === "element") {
           promises.push(
             (async () => {
               action.origin = await this.#getElementFromElementOrigin(
@@ -83,7 +72,6 @@ class InputModule extends WindowGlobalBiDiModule {
         }
       }
     }
-
     return Promise.all(promises);
   }
 
