@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<title>fetchpriority: internal priorities of corresponding http-on-opening-requests</title>
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+  <script>
+    const kFetchPriorityLowRequestFileNameAndSuffix = "dummy.js?1";
+    const kFetchPriorityHighRequestFileNameAndSuffix = "dummy.js?2";
+
+    const kExpectedHttpOnOpeningRequestsForNonAutoFetchPriority =
+      [{ fileNameAndSuffix: kFetchPriorityLowRequestFileNameAndSuffix,
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW },
+        { fileNameAndSuffix: kFetchPriorityHighRequestFileNameAndSuffix,
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH }];
+
+    const kTopicHttpOnOpeningRequest = "http-on-opening-request";
+
+    function getFileNameAndSuffixOf(s) {
+      return s.substr(s.lastIndexOf("/") + 1);
+    }
+    let httpOnOpeningRequests = [];
+
+    const observeHttpOnOpeningRequest = { observe(aSubject, aTopic) {
+      assert_equals(aTopic, kTopicHttpOnOpeningRequest, "Observed '" +
+            kTopicHttpOnOpeningRequest + "'");
+
+      const fileNameAndSuffix = getFileNameAndSuffixOf(
+        aSubject.QueryInterface(SpecialPowers.Ci.nsIChannel).URI.spec);
+      const internalPriority =
+        aSubject.QueryInterface(SpecialPowers.Ci.nsISupportsPriority).priority;
+
+      httpOnOpeningRequests.push(
+        { fileNameAndSuffix: fileNameAndSuffix,
+        internalPriority: internalPriority});
+    }};
+
+    SpecialPowers.addObserver(observeHttpOnOpeningRequest,
+          kTopicHttpOnOpeningRequest);
+
+    const kTestData = [
+      "support/script-initial-load.h2.html",
+      "support/async-script-initial-load.h2.html",
+      "support/deferred-script-initial-load.h2.html",
+      "support/module-script-initial-load.h2.html",
+      "support/async-module-script-initial-load.h2.html",
+      // Dynamic insertion executes non-speculative-parsing
+      // (https://developer.mozilla.org/en-US/docs/Glossary/speculative_parsing)
+      // code paths.
+      "support/script-dynamic-insertion.h2.html",
+      "support/module-script-dynamic-insertion.h2.html",
+    ];
+
+    function runSingleTest(testData) {
+      promise_test((t) => {
+        return new Promise(resolve => {
+          var childWindow = window.open(testData);
+
+          t.add_cleanup(() => {
+                httpOnOpeningRequests = [];
+                childWindow.close();
+          });
+
+          window.addEventListener("message", resolve);
+        }).then(e => {
+          assert_true(typeof e.data === "string", "String message received");
+          assert_equals(e.data, "ChildLoaded", "Child loaded");
+
+          const httpOnOpeningRequestsForNonAutoFetchPriority =
+            httpOnOpeningRequests.filter((actualRequest) =>
+              kExpectedHttpOnOpeningRequestsForNonAutoFetchPriority.some(
+                (expectedRequest) => expectedRequest.fileNameAndSuffix ==
+                                     actualRequest.fileNameAndSuffix));
+
+          assert_equals(httpOnOpeningRequestsForNonAutoFetchPriority.length,
+            kExpectedHttpOnOpeningRequestsForNonAutoFetchPriority.length,
+              "Check number of non-auto http-on-opening requests");
+
+          // Only requests where fetchpriority differs from "auto" are checked,
+          // because only then the priority is adjusted.
+          //
+          // The actual order of the "http-on-opening-request"s is not checked,
+          // since the corresponding notification is sent when the script is
+          // started to be loaded. However, since the resources might be to
+          // quick to load, depending on the machine and network, it can't be
+          // ensured that the server can reflect the priorities correctly.
+          // Hence, here only the internal priority sent to the server is
+          // checked.
+          kExpectedHttpOnOpeningRequestsForNonAutoFetchPriority.forEach(
+            (expectedRequest) => {
+              const actualRequest =
+                httpOnOpeningRequestsForNonAutoFetchPriority.find(
+                  (actualRequest) => actualRequest.fileNameAndSuffix ==
+                                     expectedRequest.fileNameAndSuffix);
+              assert_equals(expectedRequest.internalPriority,
+                            actualRequest.internalPriority,
+                "Check internal priority for '" +
+                expectedRequest.fileNameAndSuffix + "'");
+          });
+        });
+      }, testData + ": embed scripts with different 'fetchpriority' values");
+    }
+
+    function runTests() {
+      for (testData of kTestData) {
+        runSingleTest(testData);
+      }
+    }
+
+    runTests();
+
+  </script>
+</body>
+</html>
