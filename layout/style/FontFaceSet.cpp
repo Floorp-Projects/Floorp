@@ -107,13 +107,6 @@ FontFaceSet::~FontFaceSet() {
   Destroy();
 }
 
-/* static */ bool FontFaceSet::IsEnabled() {
-  if (!NS_IsMainThread()) {
-    return StaticPrefs::layout_css_font_loading_api_workers_enabled();
-  }
-  return true;
-}
-
 /* static */ already_AddRefed<FontFaceSet> FontFaceSet::CreateForDocument(
     dom::Document* aDocument) {
   RefPtr<FontFaceSet> set = new FontFaceSet(aDocument->GetScopeObject());
@@ -403,12 +396,10 @@ void FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise() {
   (new AsyncEventDispatcher(this, u"loading"_ns, CanBubble::eNo))
       ->PostDOMEvent();
 
-  if (IsEnabled()) {
-    if (mReady && mReady->State() != Promise::PromiseState::Pending) {
-      if (GetParentObject()) {
-        ErrorResult rv;
-        mReady = Promise::Create(GetParentObject(), rv);
-      }
+  if (mReady && mReady->State() != Promise::PromiseState::Pending) {
+    if (GetParentObject()) {
+      ErrorResult rv;
+      mReady = Promise::Create(GetParentObject(), rv);
     }
 
     // We may previously have been in a state where all fonts had finished
