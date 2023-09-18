@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6
  2 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index f628bfc8d5..0229e71cea 100644
+index 2adb1cdb50..3f52b3dd61 100644
 --- a/modules/video_capture/linux/pipewire_session.cc
 +++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -233,7 +233,10 @@ PipeWireSession::~PipeWireSession() {
+@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
  }
  
  void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
@@ -28,9 +28,9 @@ index f628bfc8d5..0229e71cea 100644
 +    callback_ = callback;
 +  }
  
-   if (fd != -1) {
+   if (fd != kInvalidPipeWireFd) {
      InitPipeWire(fd);
-@@ -375,6 +378,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
+@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
  }
  
  void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
@@ -39,7 +39,7 @@ index f628bfc8d5..0229e71cea 100644
    if (callback_) {
      callback_->OnInitialized(status);
      callback_ = nullptr;
-@@ -382,6 +387,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
+@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
  }
  
  void PipeWireSession::Cleanup() {
@@ -50,10 +50,10 @@ index f628bfc8d5..0229e71cea 100644
  }
  
 diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
-index 54555edb1d..5f372b3494 100644
+index 982b468838..fdc06a6b2a 100644
 --- a/modules/video_capture/linux/pipewire_session.h
 +++ b/modules/video_capture/linux/pipewire_session.h
-@@ -23,6 +23,7 @@
+@@ -24,6 +24,7 @@
  #include "modules/video_capture/linux/camera_portal.h"
  #include "modules/video_capture/video_capture.h"
  #include "modules/video_capture/video_capture_options.h"
@@ -61,7 +61,7 @@ index 54555edb1d..5f372b3494 100644
  
  namespace webrtc {
  namespace videocapturemodule {
-@@ -115,7 +116,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
+@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
    void Finish(VideoCaptureOptions::Status status);
    void Cleanup();
  

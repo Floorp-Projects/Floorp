@@ -122,7 +122,7 @@ index 9b667739a8..f4e2861025 100644
    // capture windows.
    static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
 diff --git a/modules/desktop_capture/linux/wayland/screencast_portal.cc b/modules/desktop_capture/linux/wayland/screencast_portal.cc
-index 3d28d42ba6..ebe6779e31 100644
+index a473802176..61ed84ebb5 100644
 --- a/modules/desktop_capture/linux/wayland/screencast_portal.cc
 +++ b/modules/desktop_capture/linux/wayland/screencast_portal.cc
 @@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(

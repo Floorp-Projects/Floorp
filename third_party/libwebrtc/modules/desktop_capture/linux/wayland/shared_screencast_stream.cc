@@ -457,7 +457,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
   {
     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
 
-    if (fd >= 0) {
+    if (fd != kInvalidPipeWireFd) {
       pw_core_ = pw_context_connect_fd(
           pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
     } else {
@@ -988,7 +988,7 @@ SharedScreenCastStream::CreateDefault() {
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {
-  return private_->StartScreenCastStream(stream_node_id, -1);
+  return private_->StartScreenCastStream(stream_node_id, kInvalidPipeWireFd);
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(

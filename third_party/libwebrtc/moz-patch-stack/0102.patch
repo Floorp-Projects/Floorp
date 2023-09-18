@@ -14,7 +14,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 17c895088a..0102346036 100644
+index 5b4e23c32d..0c26e7a7d5 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 @@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(

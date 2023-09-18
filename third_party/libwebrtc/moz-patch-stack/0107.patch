@@ -25,10 +25,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4c2505f533280d901
  1 file changed, 4 insertions(+)
 
 diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index 0229e71cea..46ea23f1cb 100644
+index 3f52b3dd61..4d1b200aca 100644
 --- a/modules/video_capture/linux/pipewire_session.cc
 +++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -361,6 +361,10 @@ void PipeWireSession::OnRegistryGlobal(void* data,
+@@ -360,6 +360,10 @@ void PipeWireSession::OnRegistryGlobal(void* data,
    if (!spa_dict_lookup(props, PW_KEY_NODE_DESCRIPTION))
      return;
  
