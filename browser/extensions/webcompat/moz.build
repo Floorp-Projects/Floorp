@@ -16,7 +16,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["about-compat"] += [
     "about-compat/aboutCompat.css",
     "about-compat/aboutCompat.html",
     "about-compat/aboutCompat.js",
-    "about-compat/AboutCompat.jsm",
+    "about-compat/AboutCompat.sys.mjs",
     "about-compat/aboutPage.js",
     "about-compat/aboutPage.json",
     "about-compat/aboutPageProcessScript.js",
@@ -31,6 +31,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["data"] += [
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["experiment-apis"] += [
     "experiment-apis/aboutConfigPrefs.js",
     "experiment-apis/aboutConfigPrefs.json",
+    "experiment-apis/aboutConfigPrefsChild.js",
     "experiment-apis/appConstants.js",
     "experiment-apis/appConstants.json",
     "experiment-apis/matchPatterns.js",

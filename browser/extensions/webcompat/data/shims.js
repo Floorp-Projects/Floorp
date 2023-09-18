@@ -589,7 +589,6 @@ const AVAILABLE_SHIMS = [
     ],
     contentScripts: [
       {
-        cookieStoreId: "firefox-private",
         js: "firebase.js",
         runAt: "document_start",
         matches: [
