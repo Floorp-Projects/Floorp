@@ -9,6 +9,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/EarlyHintRegistrar.h"
 #include "mozilla/net/HttpChannelParent.h"
@@ -17,7 +18,9 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
@@ -1037,6 +1040,54 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
   nsCORSListenerProxy::RemoveFromCorsPreflightCache(uri, principal,
                                                     originAttributes);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult HttpChannelParent::RecvSetCookies(
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    nsIURI* aHost, const bool& aFromHttp, nsTArray<CookieStruct>&& aCookies) {
+  net::PCookieServiceParent* csParent =
+      LoneManagedOrNullAsserts(Manager()->ManagedPCookieServiceParent());
+  if (!csParent) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  auto* cs = static_cast<net::CookieServiceParent*>(csParent);
+
+  // Get the BrowsingContext and determine whether the cookies  being set
+  // are third-party to the top level.
+  uint64_t browsingContextId = 0;
+  bool isThirdPartyCookie = false;
+
+  if (mBrowserParent) {
+    dom::BrowsingContext* browsingContext =
+        mBrowserParent->GetBrowsingContext();
+    if (browsingContext) {
+      browsingContextId = browsingContext->Id();
+      // Check if the cookies being set are third-party to the top level. We
+      // do this by comparing the top level principals base domain with
+      // aBaseDomain.
+      if (!browsingContext->IsTop()) {
+        dom::BrowsingContext* topBC = browsingContext->Top();
+        MOZ_ASSERT(topBC);
+
+        RefPtr<WindowGlobalParent> topWGP =
+            topBC->Canonical()->GetEmbedderWindowGlobal();
+        NS_ENSURE_TRUE(topWGP, IPC_FAIL_NO_REASON(this));
+
+        nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
+        MOZ_ASSERT(topPrincipal);
+        nsAutoCString topBaseDomain;
+        nsresult rv = topPrincipal->GetBaseDomain(topBaseDomain);
+        NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+
+        isThirdPartyCookie = aBaseDomain.Equals(topBaseDomain);
+      }
+    }
+  }
+
+  return cs->SetCookies(nsCString(aBaseDomain), aOriginAttributes, aHost,
+                        aFromHttp, aCookies, browsingContextId,
+                        isThirdPartyCookie);
 }
 
 //-----------------------------------------------------------------------------

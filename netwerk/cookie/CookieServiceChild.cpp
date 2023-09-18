@@ -8,6 +8,7 @@
 #include "CookieLogging.h"
 #include "CookieService.h"
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
@@ -28,6 +29,7 @@
 #include "nsIURI.h"
 #include "nsIPrefBranch.h"
 #include "nsIWebProgressListener.h"
+#include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -571,7 +573,10 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
 
   // Asynchronously call the parent.
   if (CanSend() && !cookiesToSend.IsEmpty()) {
-    SendSetCookies(baseDomain, attrs, aHostURI, true, cookiesToSend);
+    RefPtr<HttpChannelChild> httpChannelChild = do_QueryObject(aChannel);
+    MOZ_ASSERT(httpChannelChild);
+    httpChannelChild->SendSetCookies(baseDomain, attrs, aHostURI, true,
+                                     cookiesToSend);
   }
 
   return NS_OK;
