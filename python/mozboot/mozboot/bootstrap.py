@@ -600,7 +600,7 @@ def current_firefox_checkout(env, hg: Optional[Path] = None):
     while path:
         hg_dir = path / ".hg"
         git_dir = path / ".git"
-        moz_configure = path / "moz.configure"
+        known_file = path / "config" / "milestone.txt"
         if hg and hg_dir.exists():
             # Verify the hg repo is a Firefox repo by looking at rev 0.
             try:
@@ -622,11 +622,10 @@ def current_firefox_checkout(env, hg: Optional[Path] = None):
         # foot-shootings.  Determining a canonical git checkout of mozilla-unified
         # is...complicated
         elif git_dir.exists() or hg_dir.exists():
-            moz_configure = path / "moz.configure"
-            if moz_configure.exists():
+            if known_file.exists():
                 _warn_if_risky_revision(path)
                 return ("git" if git_dir.exists() else "hg"), path
-        elif moz_configure.exists():
+        elif known_file.exists():
             return "SOURCE", path
 
         if not len(path.parents):

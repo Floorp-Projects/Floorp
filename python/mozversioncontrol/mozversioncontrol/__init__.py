@@ -887,7 +887,7 @@ def get_repository_object(
         return HgRepository(path, hg=hg)
     elif (path / ".git").exists():
         return GitRepository(path, git=git)
-    elif (path / "moz.configure").exists():
+    elif (path / "config" / "milestone.txt").exists():
         return SrcRepository(path, src=src)
     else:
         raise InvalidRepoPath(f"Unknown VCS, or not a source checkout: {path}")
