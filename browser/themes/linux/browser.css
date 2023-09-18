@@ -21,11 +21,6 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-:root:not(:-moz-lwtheme),
-toolbar[brighttext]:not(:-moz-lwtheme) {
-  --tab-attention-icon-color: AccentColor;
-}
-
 :root:-moz-lwtheme {
   --chrome-content-separator-color: rgba(0,0,0,.3);
 }

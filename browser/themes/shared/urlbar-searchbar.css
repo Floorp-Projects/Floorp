@@ -53,11 +53,18 @@
   color-scheme: light;
 }
 
-:root[lwt-toolbar-field-brighttext] #urlbar:not([focused="true"]),
-:root[lwt-toolbar-field-brighttext] #searchbar:not(:focus-within),
-:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"],
-:root[lwt-toolbar-field-focus-brighttext] #searchbar:focus-within {
-  color-scheme: dark;
+:root[lwt-toolbar-field-brighttext] {
+  #urlbar:not([focused="true"]),
+  #searchbar:not(:focus-within) {
+    color-scheme: dark;
+  }
+}
+
+:root[lwt-toolbar-field-focus-brighttext] {
+  #urlbar[focused="true"],
+  #searchbar:focus-within {
+    color-scheme: dark;
+  }
 }
 
 #urlbar-background,

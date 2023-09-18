@@ -13,21 +13,13 @@
 /* download progress bar is used in contexts which are not LightweightThemeConsumers and
    do not get the lwt- theme variables. So we duplicate the fallbacks here. */
 :root:-moz-lwtheme {
-  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
+  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:-moz-lwtheme {
-    --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
-  }
   #contentAreaDownloadsView {
     --download-progress-fill-color: var(--in-content-item-selected);
   }
-}
-
-:root[lwt-popup-brighttext] panel,
-toolbar[brighttext]:-moz-lwtheme {
-  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
 }
 
 /*

@@ -17,8 +17,7 @@
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
   --tab-block-margin: 4px;
-  --tab-attention-icon-color: rgb(42,195,162);
-
+  --tab-attention-icon-color: AccentColor;
   /* --tabpanel-background-color matches $in-content-page-background in newtab
      (browser/components/newtab/content-src/styles/_variables.scss) */
   --tabpanel-background-color: #F9F9FB;
@@ -32,10 +31,6 @@
        ntp_background. */
     --tabpanel-background-color: #25003e !important;
   }
-}
-
-toolbar[brighttext] {
-  --tab-attention-icon-color: rgb(84,255,189);
 }
 
 #tabbrowser-tabpanels {

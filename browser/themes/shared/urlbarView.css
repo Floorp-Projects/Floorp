@@ -31,18 +31,18 @@
   --urlbarView-result-button-selected-background-color: color-mix(in srgb, var(--toolbar-field-focus-background-color) var(--urlbarView-result-button-background-opacity), transparent);
   --urlbarView-result-button-hover-color: var(--toolbar-field-focus-background-color);
   --urlbarView-result-button-hover-background-color: color-mix(in srgb, var(--toolbar-field-focus-color) var(--urlbarView-result-button-background-opacity), transparent);
+
+  --urlbar-popup-url-color: var(--link-color);
 }
 
 :root:-moz-lwtheme {
   --urlbar-popup-action-color: rgb(91,91,102);
-  --urlbar-popup-url-color: rgb(0,97,224);
   /* Fallback colours for when theme authors don't define lwtheme variables. */
   --autocomplete-popup-highlight-background: rgb(0, 99, 255);
   --autocomplete-popup-highlight-color: white;
 }
 
 :root[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-url-color: var(--lwt-brighttext-url-color);
   --urlbar-popup-action-color: rgb(191,191,201);
 }
 

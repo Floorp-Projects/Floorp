@@ -84,7 +84,6 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
-  --lwt-brighttext-url-color: #00ddff;
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
 
@@ -93,6 +92,7 @@
 
 :root:-moz-lwtheme {
   --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
+  --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
 }
 
 @media (prefers-contrast) {
@@ -150,17 +150,6 @@
   :root {
     --tabs-navbar-shadow-size: 0.33px;
   }
-}
-
-/* Set link color with proper contrast for WebExt themes */
-
-:is(toolbar, panel) :is(a, .text-link):-moz-lwtheme {
-  color: #0060df;
-}
-
-toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
-:root[lwt-popup-brighttext] panel :is(a, .text-link) {
-  color: var(--lwt-brighttext-url-color);
 }
 
 /* Toolbar / content area border */
