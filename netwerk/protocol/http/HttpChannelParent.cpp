@@ -1047,9 +1047,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCookies(
     nsIURI* aHost, const bool& aFromHttp, nsTArray<CookieStruct>&& aCookies) {
   net::PCookieServiceParent* csParent =
       LoneManagedOrNullAsserts(Manager()->ManagedPCookieServiceParent());
-  if (!csParent) {
-    return IPC_FAIL_NO_REASON(this);
-  }
+  NS_ENSURE_TRUE(csParent, IPC_OK());
 
   auto* cs = static_cast<net::CookieServiceParent*>(csParent);
 
@@ -1061,7 +1059,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCookies(
   if (mBrowserParent) {
     dom::BrowsingContext* browsingContext =
         mBrowserParent->GetBrowsingContext();
-    if (browsingContext) {
+    if (browsingContext && !browsingContext->IsDiscarded()) {
       browsingContextId = browsingContext->Id();
       // Check if the cookies being set are third-party to the top level. We
       // do this by comparing the top level principals base domain with
@@ -1072,15 +1070,16 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCookies(
 
         RefPtr<WindowGlobalParent> topWGP =
             topBC->Canonical()->GetEmbedderWindowGlobal();
-        NS_ENSURE_TRUE(topWGP, IPC_FAIL_NO_REASON(this));
+        if (!NS_WARN_IF(topWGP)) {
+          nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
+          MOZ_ASSERT(topPrincipal);
+          nsAutoCString topBaseDomain;
+          nsresult rv = topPrincipal->GetBaseDomain(topBaseDomain);
 
-        nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
-        MOZ_ASSERT(topPrincipal);
-        nsAutoCString topBaseDomain;
-        nsresult rv = topPrincipal->GetBaseDomain(topBaseDomain);
-        NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
-
-        isThirdPartyCookie = aBaseDomain.Equals(topBaseDomain);
+          if (!NS_WARN_IF(NS_FAILED(rv))) {
+            isThirdPartyCookie = aBaseDomain.Equals(topBaseDomain);
+          }
+        }
       }
     }
   }
