@@ -30,12 +30,6 @@ function restoreForm(form) {
   form.uname.focus();
 }
 
-function sendFakeAutocompleteEvent(element) {
-  var acEvent = document.createEvent("HTMLEvents");
-  acEvent.initEvent("DOMAutoComplete", true, false);
-  element.dispatchEvent(acEvent);
-}
-
 add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
