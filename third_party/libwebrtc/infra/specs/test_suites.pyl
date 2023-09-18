@@ -107,13 +107,6 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'fuchsia_compatible_perf_tests': {
-      'fuchsia_perf_tests': {
-        'mixins': [
-          'perf-fuchsia-perf-tests',
-        ],
-      },
-    },
     'fuchsia_compatible_tests': {
       'audio_decoder_unittests': {},
       'common_audio_unittests': {},

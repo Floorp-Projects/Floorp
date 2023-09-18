@@ -96,18 +96,6 @@
       }
     }
   },
-  'perf-fuchsia-perf-tests': {
-    'merge': {
-      'script': '//tools_webrtc/perf/process_perf_results.py',
-      'args': ['--test-suite', 'fuchsia_perf_tests'],
-    },
-    '$mixin_append': {
-      'args': [
-        '--nologs',
-        '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json',
-      ],
-    },
-  },
   'perf-output': {
     '$mixin_append': {
       'args': [

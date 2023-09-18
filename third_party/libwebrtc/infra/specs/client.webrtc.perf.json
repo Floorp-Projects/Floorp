@@ -309,18 +309,18 @@
           "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
           "--test-arg=--undefok=test_launcher_summary_output",
-          "--nologs",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json"
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
+          "--nologs"
         ],
-        "isolate_name": "fuchsia_perf_tests",
+        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
-            "fuchsia_perf_tests"
+            "webrtc_perf_tests"
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "name": "fuchsia_perf_tests",
+        "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
           "result_format": "gtest_json"
@@ -340,7 +340,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
-        "test_id_prefix": "ninja://:fuchsia_perf_tests/"
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
   },
