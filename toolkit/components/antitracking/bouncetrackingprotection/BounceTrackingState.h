@@ -45,6 +45,10 @@ class BounceTrackingState : public nsIWebProgressListener,
   static already_AddRefed<BounceTrackingState> GetOrCreate(
       dom::BrowsingContextWebProgress* aWebProgress);
 
+  // Reset state for all BounceTrackingState instances this includes resetting
+  // BounceTrackingRecords and cancelling any running timers.
+  static void ResetAll();
+
   BounceTrackingRecord* GetBounceTrackingRecord();
 
   void ResetBounceTrackingRecord();
