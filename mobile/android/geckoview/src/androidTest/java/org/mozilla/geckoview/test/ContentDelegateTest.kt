@@ -673,6 +673,17 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    fun requestCreateAnalysisAndStatus() {
+        if (!sessionRule.env.isAutomation) {
+            val result = mainSession.requestCreateAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
+            assertThat("Analysis status is not null", sessionRule.waitForResult(result), notNullValue())
+
+            val status = mainSession.requestAnalysisCreationStatus("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
+            assertThat("Analysis status is not null", sessionRule.waitForResult(status), notNullValue())
+        }
+    }
+
+    @Test
     fun requestAnalysis() {
         // TODO: bug1845760 replace with static example.com product page and enable in automation
         if (!sessionRule.env.isAutomation) {

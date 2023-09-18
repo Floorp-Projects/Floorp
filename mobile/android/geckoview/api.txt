@@ -998,12 +998,15 @@ package org.mozilla.geckoview {
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
     method @AnyThread public void loadUri(@NonNull String);
     method @UiThread public void open(@NonNull GeckoRuntime);
+    method @AnyThread @NonNull public GeckoResult<String> pollForAnalysisCompleted(@NonNull String);
     method @AnyThread public void printPageContent();
     method @AnyThread public void purgeHistory();
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
     method @AnyThread @NonNull public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<String> requestAnalysisCreationStatus(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<String> requestCreateAnalysis(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.Recommendation>> requestRecommendations(@NonNull String);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
