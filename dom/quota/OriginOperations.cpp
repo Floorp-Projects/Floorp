@@ -407,6 +407,7 @@ class GetFullOriginMetadataOp : public QuotaRequestBase {
   // XXX Consider wrapping with LazyInitializedOnce
   OriginMetadata mOriginMetadata;
   Maybe<FullOriginMetadata> mMaybeFullOriginMetadata;
+  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
   GetFullOriginMetadataOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -569,6 +570,7 @@ class EstimateOp final : public QuotaRequestBase {
   const EstimateParams mParams;
   OriginMetadata mOriginMetadata;
   std::pair<uint64_t, uint64_t> mUsageAndLimit;
+  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
   EstimateOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -748,6 +750,7 @@ RefPtr<QuotaRequestBase> CreateListOriginsOp(
 
 RefPtr<BoolPromise> FinalizeOriginEvictionOp::Open() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(!mLocks.IsEmpty());
 
   return BoolPromise::CreateAndResolve(true, __func__);
 }
@@ -1135,10 +1138,6 @@ nsresult GetOriginUsageOp::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> GetOriginUsageOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  if (mFromMemory) {
-    return BoolPromise::CreateAndResolve(true, __func__);
-  }
-
   mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
       Nullable<PersistenceType>(),
       OriginScope::FromOrigin(mPrincipalMetadata.mOrigin),
@@ -1306,6 +1305,7 @@ InitOp::InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
 
 RefPtr<BoolPromise> InitOp::OpenDirectory() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mDirectoryLock);
 
   return BoolPromise::CreateAndResolve(true, __func__);
 }
@@ -1510,7 +1510,13 @@ nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> GetFullOriginMetadataOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  return BoolPromise::CreateAndResolve(true, __func__);
+  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+      Nullable<PersistenceType>(mOriginMetadata.mPersistenceType),
+      OriginScope::FromOrigin(mOriginMetadata.mOrigin),
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
+
+  return mDirectoryLock->Acquire();
 }
 
 nsresult GetFullOriginMetadataOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1541,7 +1547,11 @@ void GetFullOriginMetadataOp::GetResponse(RequestResponse& aResponse) {
       std::move(mMaybeFullOriginMetadata);
 }
 
-void GetFullOriginMetadataOp::CloseDirectory() { AssertIsOnOwningThread(); }
+void GetFullOriginMetadataOp::CloseDirectory() {
+  AssertIsOnOwningThread();
+
+  mDirectoryLock = nullptr;
+}
 
 ClearStorageOp::ClearStorageOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
@@ -2185,7 +2195,14 @@ nsresult EstimateOp::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> EstimateOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  return BoolPromise::CreateAndResolve(true, __func__);
+  // XXX In theory, we should be locking entire group, not just one origin.
+  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+      Nullable<PersistenceType>(mOriginMetadata.mPersistenceType),
+      OriginScope::FromOrigin(mOriginMetadata.mOrigin),
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
+
+  return mDirectoryLock->Acquire();
 }
 
 nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -2218,7 +2235,11 @@ void EstimateOp::GetResponse(RequestResponse& aResponse) {
   aResponse = estimateResponse;
 }
 
-void EstimateOp::CloseDirectory() { AssertIsOnOwningThread(); }
+void EstimateOp::CloseDirectory() {
+  AssertIsOnOwningThread();
+
+  mDirectoryLock = nullptr;
+}
 
 ListOriginsOp::ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
     : QuotaRequestBase(std::move(aQuotaManager), "dom::quota::ListOriginsOp"),
