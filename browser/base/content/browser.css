@@ -393,64 +393,29 @@ toolbarpaletteitem {
   width: 16px;
 }
 
-@media not all and (min-resolution: 1.1dppx) {
-  .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image, inherit);
-  }
+.webextension-browser-action {
+  list-style-image: var(--webextension-toolbar-image, inherit);
 
-  toolbar[brighttext] .webextension-browser-action {
+  toolbar[brighttext] & {
     list-style-image: var(--webextension-toolbar-image-light, inherit);
   }
-
-  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
+  toolbar:not([brighttext]) &:-moz-lwtheme {
     list-style-image: var(--webextension-toolbar-image-dark, inherit);
   }
-
-  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
+  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > & {
     list-style-image: var(--webextension-menupanel-image, inherit);
-  }
 
-  :root[lwt-popup-brighttext] toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
-    list-style-image: var(--webextension-menupanel-image-light, inherit);
-  }
-
-  :root:not([lwt-popup-brighttext]) toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action:-moz-lwtheme  {
-    list-style-image: var(--webextension-menupanel-image-dark, inherit);
-  }
-
-  .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image, inherit) !important;
+    :root[lwt-popup-brighttext] & {
+      list-style-image: var(--webextension-menupanel-image-light, inherit);
+    }
+    :root:not([lwt-popup-brighttext]) &:-moz-lwtheme {
+      list-style-image: var(--webextension-menupanel-image-dark, inherit);
+    }
   }
 }
 
-@media (min-resolution: 1.1dppx) {
-  .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x, inherit);
-  }
-
-  toolbar[brighttext] .webextension-browser-action {
-    list-style-image: var(--webextension-toolbar-image-2x-light, inherit);
-  }
-
-  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
-    list-style-image: var(--webextension-toolbar-image-2x-dark, inherit);
-  }
-
-  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
-    list-style-image: var(--webextension-menupanel-image-2x, inherit);
-  }
-
-  :root[lwt-popup-brighttext] toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
-    list-style-image: var(--webextension-menupanel-image-2x-light, inherit);
-  }
-
-  :root:not([lwt-popup-brighttext]) toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action:-moz-lwtheme {
-    list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
-  }
-
-  .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image-2x, inherit) !important;
-  }
+.webextension-menuitem {
+  list-style-image: var(--webextension-menuitem-image, inherit) !important;
 }
 
 toolbarpaletteitem[removable="false"] {
@@ -458,9 +423,7 @@ toolbarpaletteitem[removable="false"] {
 }
 
 @media not (-moz-platform: macos) {
-  toolbarpaletteitem[place="palette"],
-  toolbarpaletteitem[place="panel"],
-  toolbarpaletteitem[place="toolbar"] {
+  toolbarpaletteitem:is([place="palette"], [place="panel"], [place="toolbar"]) {
     -moz-user-focus: normal;
   }
 }
@@ -1449,12 +1412,6 @@ printpreview-pagination:focus-within,
   fill: currentColor;
   width: 16px;
   height: 16px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-    list-style-image: var(--webextension-menuitem-image-2x, inherit);
-  }
 }
 
 toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
