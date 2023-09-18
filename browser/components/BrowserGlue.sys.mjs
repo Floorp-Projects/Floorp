@@ -73,6 +73,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
+  SearchSERPDomainToCategoriesMap:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
@@ -2995,6 +2997,13 @@ BrowserGlue.prototype = {
         condition: lazy.TelemetryUtils.isTelemetryEnabled,
         task: async () => {
           await lazy.ProvenanceData.submitProvenanceTelemetry();
+        },
+      },
+
+      {
+        name: "SearchSERPDomainToCategoriesMap.init",
+        task: () => {
+          lazy.SearchSERPDomainToCategoriesMap.init().catch(console.error);
         },
       },
 
