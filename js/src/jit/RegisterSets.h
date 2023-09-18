@@ -86,7 +86,7 @@ struct AnyRegister {
     MOZ_ASSERT_IF(aliasIdx == 0, ret == *this);
     return ret;
   }
-  uint8_t numAliased() const {
+  uint32_t numAliased() const {
     if (isFloat()) {
       return fpu().numAliased();
     }
