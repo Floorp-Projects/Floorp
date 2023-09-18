@@ -179,58 +179,14 @@ class MediaChannelNetworkInterface {
   virtual ~MediaChannelNetworkInterface() {}
 };
 
-// Functions shared across all MediaChannel interfaces.
-// Because there are implementation types that implement multiple
-// interfaces, this is not a base class (no diamond inheritance).
-template <class T>
-class MediaBaseChannelInterface {
- public:
-  virtual ~MediaBaseChannelInterface() = default;
-  virtual cricket::MediaType media_type() const = 0;
-
-  // Networking functions. We assume that both the send channel and the
-  // receive channel send RTP packets (RTCP packets in the case of a receive
-  // channel).
-
-  // Called on the network when an RTP packet is received.
-  virtual void OnPacketReceived(const webrtc::RtpPacketReceived& packet) = 0;
-  // Called on the network thread after a transport has finished sending a
-  // packet.
-  virtual void OnPacketSent(const rtc::SentPacket& sent_packet) = 0;
-  // Called when the socket's ability to send has changed.
-  virtual void OnReadyToSend(bool ready) = 0;
-  // Called when the network route used for sending packets changed.
-  virtual void OnNetworkRouteChanged(
-      absl::string_view transport_name,
-      const rtc::NetworkRoute& network_route) = 0;
-
-  // Corresponds to the SDP attribute extmap-allow-mixed, see RFC8285.
-  // Set to true if it's allowed to mix one- and two-byte RTP header extensions
-  // in the same stream. The setter and getter must only be called from
-  // worker_thread.
-  virtual void SetExtmapAllowMixed(bool extmap_allow_mixed) = 0;
-  virtual bool ExtmapAllowMixed() const = 0;
-
-  // Sets the abstract interface class for sending RTP/RTCP data.
-  virtual void SetInterface(MediaChannelNetworkInterface* iface) = 0;
-
-  // Returns `true` if a non-null MediaChannelNetworkInterface pointer is held.
-  // Must be called on the network thread.
-  virtual bool HasNetworkInterface() const = 0;
-
-  // Get the underlying send/receive implementation channel for testing.
-  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
-  virtual MediaChannel* ImplForTesting() = 0;
-};
-
-class MediaSendChannelInterface
-    : public MediaBaseChannelInterface<MediaSendChannelInterface> {
+class MediaSendChannelInterface {
  public:
   virtual ~MediaSendChannelInterface() = default;
 
   virtual VideoMediaSendChannelInterface* AsVideoSendChannel() = 0;
 
   virtual VoiceMediaSendChannelInterface* AsVoiceSendChannel() = 0;
+  virtual cricket::MediaType media_type() const = 0;
 
   // Creates a new outgoing media stream with SSRCs and CNAME as described
   // by sp.
@@ -240,6 +196,29 @@ class MediaSendChannelInterface
   // multiple SSRCs. In the case of an ssrc of 0, the possibly cached
   // StreamParams is removed.
   virtual bool RemoveSendStream(uint32_t ssrc) = 0;
+  // Called on the network thread after a transport has finished sending a
+  // packet.
+  virtual void OnPacketSent(const rtc::SentPacket& sent_packet) = 0;
+  // Called when the socket's ability to send has changed.
+  virtual void OnReadyToSend(bool ready) = 0;
+  // Called when the network route used for sending packets changed.
+  virtual void OnNetworkRouteChanged(
+      absl::string_view transport_name,
+      const rtc::NetworkRoute& network_route) = 0;
+  // Sets the abstract interface class for sending RTP/RTCP data.
+  virtual void SetInterface(MediaChannelNetworkInterface* iface) = 0;
+
+  // Returns `true` if a non-null MediaChannelNetworkInterface pointer is held.
+  // Must be called on the network thread.
+  virtual bool HasNetworkInterface() const = 0;
+
+  // Corresponds to the SDP attribute extmap-allow-mixed, see RFC8285.
+  // Set to true if it's allowed to mix one- and two-byte RTP header extensions
+  // in the same stream. The setter and getter must only be called from
+  // worker_thread.
+  virtual void SetExtmapAllowMixed(bool extmap_allow_mixed) = 0;
+  virtual bool ExtmapAllowMixed() const = 0;
+
   // Set the frame encryptor to use on all outgoing frames. This is optional.
   // This pointers lifetime is managed by the set of RtpSender it is attached
   // to.
@@ -267,17 +246,19 @@ class MediaSendChannelInterface
   // Called whenever the list of sending SSRCs changes.
   virtual void SetSsrcListChangedCallback(
       absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) = 0;
+  // Get the underlying send/receive implementation channel for testing.
+  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
+  virtual MediaChannel* ImplForTesting() = 0;
 };
 
-class MediaReceiveChannelInterface
-    : public MediaBaseChannelInterface<MediaReceiveChannelInterface>,
-      public Delayable {
+class MediaReceiveChannelInterface : public Delayable {
  public:
   virtual ~MediaReceiveChannelInterface() = default;
 
   virtual VideoMediaReceiveChannelInterface* AsVideoReceiveChannel() = 0;
   virtual VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() = 0;
 
+  virtual cricket::MediaType media_type() const = 0;
   // Creates a new incoming media stream with SSRCs, CNAME as described
   // by sp. In the case of a sp without SSRCs, the unsignaled sp is cached
   // to be used later for unsignaled streams received.
@@ -289,6 +270,10 @@ class MediaReceiveChannelInterface
   // Resets any cached StreamParams for an unsignaled RecvStream, and removes
   // any existing unsignaled streams.
   virtual void ResetUnsignaledRecvStream() = 0;
+  // Sets the abstract interface class for sending RTP/RTCP data.
+  virtual void SetInterface(MediaChannelNetworkInterface* iface) = 0;
+  // Called on the network when an RTP packet is received.
+  virtual void OnPacketReceived(const webrtc::RtpPacketReceived& packet) = 0;
   // Gets the current unsignaled receive stream's SSRC, if there is one.
   virtual absl::optional<uint32_t> GetUnsignaledSsrc() const = 0;
   // Sets the local SSRC for listening to incoming RTCP reports.
@@ -318,6 +303,9 @@ class MediaReceiveChannelInterface
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface>
           frame_transformer) = 0;
+  // Get the underlying send/receive implementation channel for testing.
+  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
+  virtual MediaChannel* ImplForTesting() = 0;
 };
 
 // The stats information is structured as follows:
