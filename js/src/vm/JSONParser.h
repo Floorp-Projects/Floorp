@@ -17,6 +17,7 @@
 #include <utility>   // std::move
 
 #include "ds/IdValuePair.h"  // IdValuePair
+#include "gc/GC.h"           // AutoSelectGCHeap
 #include "js/GCVector.h"     // JS::GCVector
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
 #include "js/Value.h"           // JS::Value, JS::BooleanValue, JS::NullValue
@@ -194,11 +195,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   ParseType parseType = ParseType::JSONParse;
 
-  // The number of nursery collections that have occurred.
-  size_t nurseryCollectionCount = 0;
-
-  // The heap to use for allocating GC things.
-  gc::Heap gcHeap = gc::Heap::Default;
+  AutoSelectGCHeap gcHeap;
 
  private:
   // Unused element and property vectors for previous in progress arrays and
@@ -271,10 +268,6 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
   inline void freeStackEntry(StackEntry& entry);
 
   void trace(JSTracer* trc);
-
-  static void NurseryCollectionCallback(JSContext* cx,
-                                        JS::GCNurseryProgress progress,
-                                        JS::GCReason reason, void* data);
 };
 
 template <typename CharT>
