@@ -63,6 +63,12 @@ cfg_os_poll! {
     pub use self::windows::*;
 }
 
+#[cfg(target_os = "wasi")]
+cfg_os_poll! {
+    mod wasi;
+    pub(crate) use self::wasi::*;
+}
+
 cfg_not_os_poll! {
     mod shell;
     pub(crate) use self::shell::*;

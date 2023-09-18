@@ -19,7 +19,7 @@ impl Selector {
         os_required!();
     }
 
-    #[cfg(debug_assertions)]
+    #[cfg(all(debug_assertions, not(target_os = "wasi")))]
     pub fn register_waker(&self) -> bool {
         os_required!();
     }
@@ -39,6 +39,25 @@ cfg_any_os_ext! {
         }
 
         pub fn deregister(&self, _: RawFd) -> io::Result<()> {
+            os_required!();
+        }
+    }
+}
+
+#[cfg(target_os = "wasi")]
+cfg_any_os_ext! {
+    use crate::{Interest, Token};
+
+    impl Selector {
+        pub fn register(&self, _: wasi::Fd, _: Token, _: Interest) -> io::Result<()> {
+            os_required!();
+        }
+
+        pub fn reregister(&self, _: wasi::Fd, _: Token, _: Interest) -> io::Result<()> {
+            os_required!();
+        }
+
+        pub fn deregister(&self, _: wasi::Fd) -> io::Result<()> {
             os_required!();
         }
     }

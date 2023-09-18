@@ -20,18 +20,9 @@ pub struct Interest(NonZeroU8);
 const READABLE: u8 = 0b0001;
 const WRITABLE: u8 = 0b0010;
 // The following are not available on all platforms.
-#[cfg_attr(
-    not(any(
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "ios",
-        target_os = "macos"
-    )),
-    allow(dead_code)
-)]
 const AIO: u8 = 0b0100;
-#[cfg_attr(not(target_os = "freebsd"), allow(dead_code))]
 const LIO: u8 = 0b1000;
+const PRIORITY: u8 = 0b10000;
 
 impl Interest {
     /// Returns a `Interest` set representing readable interests.
@@ -45,13 +36,19 @@ impl Interest {
         target_os = "dragonfly",
         target_os = "freebsd",
         target_os = "ios",
-        target_os = "macos"
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
     ))]
     pub const AIO: Interest = Interest(unsafe { NonZeroU8::new_unchecked(AIO) });
 
     /// Returns a `Interest` set representing LIO completion interests.
     #[cfg(target_os = "freebsd")]
     pub const LIO: Interest = Interest(unsafe { NonZeroU8::new_unchecked(LIO) });
+
+    /// Returns a `Interest` set representing priority completion interests.
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    pub const PRIORITY: Interest = Interest(unsafe { NonZeroU8::new_unchecked(PRIORITY) });
 
     /// Add together two `Interest`.
     ///
@@ -104,14 +101,19 @@ impl Interest {
         (self.0.get() & WRITABLE) != 0
     }
 
-    /// Returns true if `Interest` contains AIO readiness
+    /// Returns true if `Interest` contains AIO readiness.
     pub const fn is_aio(self) -> bool {
         (self.0.get() & AIO) != 0
     }
 
-    /// Returns true if `Interest` contains LIO readiness
+    /// Returns true if `Interest` contains LIO readiness.
     pub const fn is_lio(self) -> bool {
         (self.0.get() & LIO) != 0
+    }
+
+    /// Returns true if `Interest` contains priority readiness.
+    pub const fn is_priority(self) -> bool {
+        (self.0.get() & PRIORITY) != 0
     }
 }
 
@@ -152,7 +154,9 @@ impl fmt::Debug for Interest {
             target_os = "dragonfly",
             target_os = "freebsd",
             target_os = "ios",
-            target_os = "macos"
+            target_os = "macos",
+            target_os = "tvos",
+            target_os = "watchos",
         ))]
         {
             if self.is_aio() {
@@ -170,6 +174,16 @@ impl fmt::Debug for Interest {
                     write!(fmt, " | ")?
                 }
                 write!(fmt, "LIO")?;
+                one = true
+            }
+        }
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            if self.is_priority() {
+                if one {
+                    write!(fmt, " | ")?
+                }
+                write!(fmt, "PRIORITY")?;
                 one = true
             }
         }

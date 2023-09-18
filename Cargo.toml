@@ -137,9 +137,6 @@ wasi = { path = "build/rust/wasi" }
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen = { path = "build/rust/bindgen" }
 
-# Patch ntapi 0.3 to 0.4
-ntapi = { path = "build/rust/ntapi" }
-
 # Patch nix 0.24 to 0.26
 nix = { path = "build/rust/nix" }
 

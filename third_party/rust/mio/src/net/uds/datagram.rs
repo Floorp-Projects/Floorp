@@ -22,8 +22,8 @@ impl UnixDatagram {
     ///
     /// This function is intended to be used to wrap a Unix datagram from the
     /// standard library in the Mio equivalent. The conversion assumes nothing
-    /// about the underlying datagram; ; it is left up to the user to set it
-    /// in non-blocking mode.
+    /// about the underlying datagram; it is left up to the user to set it in
+    /// non-blocking mode.
     pub fn from_std(socket: net::UnixDatagram) -> UnixDatagram {
         UnixDatagram {
             inner: IoSource::new(socket),
@@ -31,6 +31,9 @@ impl UnixDatagram {
     }
 
     /// Connects the socket to the specified address.
+    ///
+    /// This may return a `WouldBlock` in which case the socket connection
+    /// cannot be completed immediately.
     pub fn connect<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
         self.inner.connect(path)
     }
@@ -107,6 +110,74 @@ impl UnixDatagram {
     /// (see the documentation of `Shutdown`).
     pub fn shutdown(&self, how: Shutdown) -> io::Result<()> {
         self.inner.shutdown(how)
+    }
+
+    /// Execute an I/O operation ensuring that the socket receives more events
+    /// if it hits a [`WouldBlock`] error.
+    ///
+    /// # Notes
+    ///
+    /// This method is required to be called for **all** I/O operations to
+    /// ensure the user will receive events once the socket is ready again after
+    /// returning a [`WouldBlock`] error.
+    ///
+    /// [`WouldBlock`]: io::ErrorKind::WouldBlock
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use std::io;
+    /// use std::os::unix::io::AsRawFd;
+    /// use mio::net::UnixDatagram;
+    ///
+    /// let (dgram1, dgram2) = UnixDatagram::pair()?;
+    ///
+    /// // Wait until the dgram is writable...
+    ///
+    /// // Write to the dgram using a direct libc call, of course the
+    /// // `io::Write` implementation would be easier to use.
+    /// let buf = b"hello";
+    /// let n = dgram1.try_io(|| {
+    ///     let buf_ptr = &buf as *const _ as *const _;
+    ///     let res = unsafe { libc::send(dgram1.as_raw_fd(), buf_ptr, buf.len(), 0) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::send, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("write {} bytes", n);
+    ///
+    /// // Wait until the dgram is readable...
+    ///
+    /// // Read from the dgram using a direct libc call, of course the
+    /// // `io::Read` implementation would be easier to use.
+    /// let mut buf = [0; 512];
+    /// let n = dgram2.try_io(|| {
+    ///     let buf_ptr = &mut buf as *mut _ as *mut _;
+    ///     let res = unsafe { libc::recv(dgram2.as_raw_fd(), buf_ptr, buf.len(), 0) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::recv, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("read {} bytes", n);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn try_io<F, T>(&self, f: F) -> io::Result<T>
+    where
+        F: FnOnce() -> io::Result<T>,
+    {
+        self.inner.do_io(|_| f())
     }
 }
 

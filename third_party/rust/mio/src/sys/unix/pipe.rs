@@ -155,6 +155,7 @@ pub fn new() -> io::Result<(Sender, Receiver)> {
         target_os = "netbsd",
         target_os = "openbsd",
         target_os = "illumos",
+        target_os = "redox",
     ))]
     unsafe {
         if libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC | libc::O_NONBLOCK) != 0 {
@@ -162,7 +163,12 @@ pub fn new() -> io::Result<(Sender, Receiver)> {
         }
     }
 
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
+    #[cfg(any(
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
+    ))]
     unsafe {
         // For platforms that don't have `pipe2(2)` we need to manually set the
         // correct flags on the file descriptor.
@@ -175,7 +181,7 @@ pub fn new() -> io::Result<(Sender, Receiver)> {
                 || libc::fcntl(*fd, libc::F_SETFD, libc::FD_CLOEXEC) != 0
             {
                 let err = io::Error::last_os_error();
-                // Don't leak file descriptors. Can't handle error though.
+                // Don't leak file descriptors. Can't handle closing error though.
                 let _ = libc::close(fds[0]);
                 let _ = libc::close(fds[1]);
                 return Err(err);
@@ -187,18 +193,22 @@ pub fn new() -> io::Result<(Sender, Receiver)> {
         target_os = "android",
         target_os = "dragonfly",
         target_os = "freebsd",
+        target_os = "illumos",
+        target_os = "ios",
         target_os = "linux",
+        target_os = "macos",
         target_os = "netbsd",
         target_os = "openbsd",
-        target_os = "ios",
-        target_os = "macos",
-        target_os = "illumos",
+        target_os = "redox",
+        target_os = "tvos",
+        target_os = "watchos",
     )))]
     compile_error!("unsupported target for `mio::unix::pipe`");
 
-    // Safety: we just initialised the `fds` above.
+    // SAFETY: we just initialised the `fds` above.
     let r = unsafe { Receiver::from_raw_fd(fds[0]) };
     let w = unsafe { Sender::from_raw_fd(fds[1]) };
+
     Ok((w, r))
 }
 
@@ -214,6 +224,74 @@ impl Sender {
     /// Set the `Sender` into or out of non-blocking mode.
     pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
         set_nonblocking(self.inner.as_raw_fd(), nonblocking)
+    }
+
+    /// Execute an I/O operation ensuring that the socket receives more events
+    /// if it hits a [`WouldBlock`] error.
+    ///
+    /// # Notes
+    ///
+    /// This method is required to be called for **all** I/O operations to
+    /// ensure the user will receive events once the socket is ready again after
+    /// returning a [`WouldBlock`] error.
+    ///
+    /// [`WouldBlock`]: io::ErrorKind::WouldBlock
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use std::io;
+    /// use std::os::unix::io::AsRawFd;
+    /// use mio::unix::pipe;
+    ///
+    /// let (sender, receiver) = pipe::new()?;
+    ///
+    /// // Wait until the sender is writable...
+    ///
+    /// // Write to the sender using a direct libc call, of course the
+    /// // `io::Write` implementation would be easier to use.
+    /// let buf = b"hello";
+    /// let n = sender.try_io(|| {
+    ///     let buf_ptr = &buf as *const _ as *const _;
+    ///     let res = unsafe { libc::write(sender.as_raw_fd(), buf_ptr, buf.len()) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::write, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("write {} bytes", n);
+    ///
+    /// // Wait until the receiver is readable...
+    ///
+    /// // Read from the receiver using a direct libc call, of course the
+    /// // `io::Read` implementation would be easier to use.
+    /// let mut buf = [0; 512];
+    /// let n = receiver.try_io(|| {
+    ///     let buf_ptr = &mut buf as *mut _ as *mut _;
+    ///     let res = unsafe { libc::read(receiver.as_raw_fd(), buf_ptr, buf.len()) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::read, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("read {} bytes", n);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn try_io<F, T>(&self, f: F) -> io::Result<T>
+    where
+        F: FnOnce() -> io::Result<T>,
+    {
+        self.inner.do_io(|_| f())
     }
 }
 
@@ -243,29 +321,29 @@ impl event::Source for Sender {
 
 impl Write for Sender {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).write(buf))
+        self.inner.do_io(|mut sender| sender.write(buf))
     }
 
     fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).write_vectored(bufs))
+        self.inner.do_io(|mut sender| sender.write_vectored(bufs))
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.inner.do_io(|sender| (&*sender).flush())
+        self.inner.do_io(|mut sender| sender.flush())
     }
 }
 
 impl Write for &Sender {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).write(buf))
+        self.inner.do_io(|mut sender| sender.write(buf))
     }
 
     fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).write_vectored(bufs))
+        self.inner.do_io(|mut sender| sender.write_vectored(bufs))
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.inner.do_io(|sender| (&*sender).flush())
+        self.inner.do_io(|mut sender| sender.flush())
     }
 }
 
@@ -312,6 +390,74 @@ impl Receiver {
     pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
         set_nonblocking(self.inner.as_raw_fd(), nonblocking)
     }
+
+    /// Execute an I/O operation ensuring that the socket receives more events
+    /// if it hits a [`WouldBlock`] error.
+    ///
+    /// # Notes
+    ///
+    /// This method is required to be called for **all** I/O operations to
+    /// ensure the user will receive events once the socket is ready again after
+    /// returning a [`WouldBlock`] error.
+    ///
+    /// [`WouldBlock`]: io::ErrorKind::WouldBlock
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// #
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use std::io;
+    /// use std::os::unix::io::AsRawFd;
+    /// use mio::unix::pipe;
+    ///
+    /// let (sender, receiver) = pipe::new()?;
+    ///
+    /// // Wait until the sender is writable...
+    ///
+    /// // Write to the sender using a direct libc call, of course the
+    /// // `io::Write` implementation would be easier to use.
+    /// let buf = b"hello";
+    /// let n = sender.try_io(|| {
+    ///     let buf_ptr = &buf as *const _ as *const _;
+    ///     let res = unsafe { libc::write(sender.as_raw_fd(), buf_ptr, buf.len()) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::write, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("write {} bytes", n);
+    ///
+    /// // Wait until the receiver is readable...
+    ///
+    /// // Read from the receiver using a direct libc call, of course the
+    /// // `io::Read` implementation would be easier to use.
+    /// let mut buf = [0; 512];
+    /// let n = receiver.try_io(|| {
+    ///     let buf_ptr = &mut buf as *mut _ as *mut _;
+    ///     let res = unsafe { libc::read(receiver.as_raw_fd(), buf_ptr, buf.len()) };
+    ///     if res != -1 {
+    ///         Ok(res as usize)
+    ///     } else {
+    ///         // If EAGAIN or EWOULDBLOCK is set by libc::read, the closure
+    ///         // should return `WouldBlock` error.
+    ///         Err(io::Error::last_os_error())
+    ///     }
+    /// })?;
+    /// eprintln!("read {} bytes", n);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn try_io<F, T>(&self, f: F) -> io::Result<T>
+    where
+        F: FnOnce() -> io::Result<T>,
+    {
+        self.inner.do_io(|_| f())
+    }
 }
 
 impl event::Source for Receiver {
@@ -340,21 +486,21 @@ impl event::Source for Receiver {
 
 impl Read for Receiver {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).read(buf))
+        self.inner.do_io(|mut sender| sender.read(buf))
     }
 
     fn read_vectored(&mut self, bufs: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).read_vectored(bufs))
+        self.inner.do_io(|mut sender| sender.read_vectored(bufs))
     }
 }
 
 impl Read for &Receiver {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).read(buf))
+        self.inner.do_io(|mut sender| sender.read(buf))
     }
 
     fn read_vectored(&mut self, bufs: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
-        self.inner.do_io(|sender| (&*sender).read_vectored(bufs))
+        self.inner.do_io(|mut sender| sender.read_vectored(bufs))
     }
 }
 

@@ -1,14 +1,16 @@
 // You can run this example from the root of the mio repo:
 // cargo run --example udp_server --features="os-poll net"
 use log::warn;
-use mio::net::UdpSocket;
 use mio::{Events, Interest, Poll, Token};
 use std::io;
 
 // A token to allow us to identify which event is for the `UdpSocket`.
 const UDP_SOCKET: Token = Token(0);
 
+#[cfg(not(target_os = "wasi"))]
 fn main() -> io::Result<()> {
+    use mio::net::UdpSocket;
+
     env_logger::init();
 
     // Create a poll instance.
@@ -19,6 +21,7 @@ fn main() -> io::Result<()> {
 
     // Setup the UDP socket.
     let addr = "127.0.0.1:9000".parse().unwrap();
+
     let mut socket = UdpSocket::bind(addr)?;
 
     // Register our socket with the token defined above and an interest in being
@@ -74,4 +77,9 @@ fn main() -> io::Result<()> {
             }
         }
     }
+}
+
+#[cfg(target_os = "wasi")]
+fn main() {
+    panic!("can't bind to an address with wasi")
 }

@@ -3,13 +3,11 @@ use crate::sys::windows::Event;
 use std::cell::UnsafeCell;
 use std::fmt;
 
-#[cfg(feature = "os-ext")]
-use winapi::um::minwinbase::OVERLAPPED;
-use winapi::um::minwinbase::OVERLAPPED_ENTRY;
+use windows_sys::Win32::System::IO::{OVERLAPPED, OVERLAPPED_ENTRY};
 
 #[repr(C)]
 pub(crate) struct Overlapped {
-    inner: UnsafeCell<miow::Overlapped>,
+    inner: UnsafeCell<OVERLAPPED>,
     pub(crate) callback: fn(&OVERLAPPED_ENTRY, Option<&mut Vec<Event>>),
 }
 
@@ -17,13 +15,13 @@ pub(crate) struct Overlapped {
 impl Overlapped {
     pub(crate) fn new(cb: fn(&OVERLAPPED_ENTRY, Option<&mut Vec<Event>>)) -> Overlapped {
         Overlapped {
-            inner: UnsafeCell::new(miow::Overlapped::zero()),
+            inner: UnsafeCell::new(unsafe { std::mem::zeroed() }),
             callback: cb,
         }
     }
 
     pub(crate) fn as_ptr(&self) -> *const OVERLAPPED {
-        unsafe { (*self.inner.get()).raw() }
+        self.inner.get()
     }
 }
 

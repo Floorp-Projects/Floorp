@@ -1,8 +1,7 @@
 use std::fmt;
 
-use miow::iocp::CompletionStatus;
-
 use super::afd;
+use super::iocp::CompletionStatus;
 use crate::Token;
 
 #[derive(Clone)]

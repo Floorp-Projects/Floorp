@@ -20,43 +20,49 @@ pub(crate) fn new_socket(domain: libc::c_int, socket_type: libc::c_int) -> io::R
         target_os = "illumos",
         target_os = "linux",
         target_os = "netbsd",
-        target_os = "openbsd"
+        target_os = "openbsd",
     ))]
     let socket_type = socket_type | libc::SOCK_NONBLOCK | libc::SOCK_CLOEXEC;
 
-    // Gives a warning for platforms without SOCK_NONBLOCK.
-    #[allow(clippy::let_and_return)]
-    let socket = syscall!(socket(domain, socket_type, 0));
+    let socket = syscall!(socket(domain, socket_type, 0))?;
 
     // Mimick `libstd` and set `SO_NOSIGPIPE` on apple systems.
-    #[cfg(target_vendor = "apple")]
-    let socket = socket.and_then(|socket| {
-        syscall!(setsockopt(
-            socket,
-            libc::SOL_SOCKET,
-            libc::SO_NOSIGPIPE,
-            &1 as *const libc::c_int as *const libc::c_void,
-            size_of::<libc::c_int>() as libc::socklen_t
-        ))
-        .map(|_| socket)
-    });
+    #[cfg(any(
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
+    ))]
+    if let Err(err) = syscall!(setsockopt(
+        socket,
+        libc::SOL_SOCKET,
+        libc::SO_NOSIGPIPE,
+        &1 as *const libc::c_int as *const libc::c_void,
+        size_of::<libc::c_int>() as libc::socklen_t
+    )) {
+        let _ = syscall!(close(socket));
+        return Err(err);
+    }
 
     // Darwin doesn't have SOCK_NONBLOCK or SOCK_CLOEXEC.
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
-    let socket = socket.and_then(|socket| {
-        // For platforms that don't support flags in socket, we need to
-        // set the flags ourselves.
-        syscall!(fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK))
-            .and_then(|_| syscall!(fcntl(socket, libc::F_SETFD, libc::FD_CLOEXEC)).map(|_| socket))
-            .map_err(|e| {
-                // If either of the `fcntl` calls failed, ensure the socket is
-                // closed and return the error.
-                let _ = syscall!(close(socket));
-                e
-            })
-    });
+    #[cfg(any(
+        target_os = "ios",
+        target_os = "macos",
+        target_os = "tvos",
+        target_os = "watchos",
+    ))]
+    {
+        if let Err(err) = syscall!(fcntl(socket, libc::F_SETFL, libc::O_NONBLOCK)) {
+            let _ = syscall!(close(socket));
+            return Err(err);
+        }
+        if let Err(err) = syscall!(fcntl(socket, libc::F_SETFD, libc::FD_CLOEXEC)) {
+            let _ = syscall!(close(socket));
+            return Err(err);
+        }
+    }
 
-    socket
+    Ok(socket)
 }
 
 /// A type with the same memory layout as `libc::sockaddr`. Used in converting Rust level
@@ -96,7 +102,9 @@ pub(crate) fn socket_addr(addr: &SocketAddr) -> (SocketAddrCRepr, libc::socklen_
                     target_os = "ios",
                     target_os = "macos",
                     target_os = "netbsd",
-                    target_os = "openbsd"
+                    target_os = "openbsd",
+                    target_os = "tvos",
+                    target_os = "watchos",
                 ))]
                 sin_len: 0,
             };
@@ -120,7 +128,9 @@ pub(crate) fn socket_addr(addr: &SocketAddr) -> (SocketAddrCRepr, libc::socklen_
                     target_os = "ios",
                     target_os = "macos",
                     target_os = "netbsd",
-                    target_os = "openbsd"
+                    target_os = "openbsd",
+                    target_os = "tvos",
+                    target_os = "watchos",
                 ))]
                 sin6_len: 0,
                 #[cfg(target_os = "illumos")]
