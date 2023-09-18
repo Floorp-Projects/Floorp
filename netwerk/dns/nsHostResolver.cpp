@@ -1031,8 +1031,7 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
     return;
   }
 
-  if (StaticPrefs::network_dns_skipTRR_when_parental_control_enabled() &&
-      TRRService::Get()->ParentalControlEnabled()) {
+  if (TRRService::Get()->ParentalControlEnabled()) {
     aRec->RecordReason(TRRSkippedReason::TRR_PARENTAL_CONTROL);
     aRec->mEffectiveTRRMode = nsIRequest::TRR_DISABLED_MODE;
     return;
