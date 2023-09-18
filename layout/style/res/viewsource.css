@@ -89,10 +89,8 @@ span[id] {
 .highlight .error {
   color: revert;
   font-weight: bold;
-  text-decoration: underline;
-  text-decoration-color: red;
-  text-decoration-style: dotted;
-  text-decoration-skip-ink: none;
+  background-color: rgba(231, 116, 113, 0.3);
+  text-decoration: underline wavy red 0.5px;
 }
 @media (prefers-color-scheme: dark) {
   .highlight .start-tag,
