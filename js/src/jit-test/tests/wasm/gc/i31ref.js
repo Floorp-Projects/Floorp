@@ -122,3 +122,43 @@ for (let a of WasmI31refValues) {
     assertEq(!!i31EqualsEq(a, b), a === b);
   }
 }
+
+// Test that i32 values get wrapped correctly
+const bigI32Tests = [
+  {
+    input: MaxI31refValue + 1,
+    expected: MinI31refValue,
+  },
+  {
+    input: MinI31refValue - 1,
+    expected: MaxI31refValue,
+  },
+]
+for (const {input, expected} of bigI32Tests) {
+  const { get, getElem } = wasmEvalText(`(module
+    (func (export "get") (param i32) (result i32)
+      (i31.get_s (i31.new (local.get 0)))
+    )
+
+    (table i31ref (elem (item (i31.new (i32.const ${input})))))
+    (func (export "getElem") (result i32)
+      (i31.get_s (table.get 0 (i32.const 0)))
+    )
+  )`).exports;
+  assertEq(get(input), expected);
+  assertEq(getElem(), expected);
+}
+
+const { i31GetU_null, i31GetS_null } = wasmEvalText(`(module
+  (func (export "i31GetU_null") (result i32)
+    ref.null i31
+    i31.get_u
+  )
+  (func (export "i31GetS_null") (result i32)
+    ref.null i31
+    i31.get_s
+  )
+)`).exports;
+
+assertErrorMessage(() => i31GetU_null(), WebAssembly.RuntimeError, /dereferencing null pointer/);
+assertErrorMessage(() => i31GetS_null(), WebAssembly.RuntimeError, /dereferencing null pointer/);

@@ -224,6 +224,13 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return pushRef(RefType::fromTypeDef(&typeDef, false),
                    AnyRef::fromJSObject(*arrayObj));
   }
+
+  bool evalI31New(JSContext* cx) {
+    uint32_t value = stack.back().i32();
+    stack.popBack();
+    return pushRef(RefType::i31().asNonNullable(),
+                   AnyRef::fromUint32Truncate(value));
+  }
 #endif  // ENABLE_WASM_GC
 };
 
@@ -379,6 +386,9 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
               return false;
             }
             CHECK(evalArrayNewDefault(cx, typeIndex));
+          }
+          case uint32_t(GcOp::I31New): {
+            CHECK(evalI31New(cx));
           }
           default: {
             MOZ_CRASH();
@@ -579,6 +589,15 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
           case uint32_t(GcOp::ArrayNewDefault): {
             uint32_t typeIndex;
             if (!iter.readArrayNewDefault(&typeIndex, &nothing)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::I31New): {
+            Nothing value;
+            if (!iter.readConversion(ValType::I32,
+                                     ValType(RefType::i31().asNonNullable()),
+                                     &value)) {
               return false;
             }
             break;

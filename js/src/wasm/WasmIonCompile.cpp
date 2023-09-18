@@ -7444,6 +7444,9 @@ static bool EmitI31Get(FunctionCompiler& f, FieldWideningOp wideningOp) {
     return true;
   }
 
+  if (!f.refAsNonNull(input)) {
+    return false;
+  }
   MDefinition* output = f.i31Get(input, wideningOp);
   if (!output) {
     return false;
