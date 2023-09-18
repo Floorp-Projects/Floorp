@@ -127,8 +127,6 @@ struct RTCPReceiver::PacketInformation {
 
   uint32_t remote_ssrc = 0;
   std::vector<uint16_t> nack_sequence_numbers;
-  // TODO(hbos): Remove `report_blocks` in favor of `report_block_datas`.
-  ReportBlockList report_blocks;
   std::vector<ReportBlockData> report_block_datas;
   absl::optional<TimeDelta> rtt;
   uint32_t receiver_estimated_max_bitrate_bps = 0;
@@ -638,15 +636,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
     packet_information->rtt = rtt;
   }
 
-  packet_information->report_blocks.push_back(
-      {.sender_ssrc = remote_ssrc,
-       .source_ssrc = report_block.source_ssrc(),
-       .fraction_lost = report_block.fraction_lost(),
-       .packets_lost = report_block.cumulative_lost(),
-       .extended_highest_sequence_number = report_block.extended_high_seq_num(),
-       .jitter = report_block.jitter(),
-       .last_sender_report_timestamp = report_block.last_sr(),
-       .delay_since_last_sender_report = report_block.delay_since_last_sr()});
   packet_information->report_block_datas.push_back(*report_block_data);
 }
 
@@ -1179,7 +1168,8 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
 
   if ((packet_information.packet_type_flags & kRtcpSr) ||
       (packet_information.packet_type_flags & kRtcpRr)) {
-    rtp_rtcp_->OnReceivedRtcpReportBlocks(packet_information.report_blocks);
+    rtp_rtcp_->OnReceivedRtcpReportBlocks(
+        packet_information.report_block_datas);
   }
 
   if (network_state_estimate_observer_ &&

@@ -55,7 +55,7 @@ class RTCPReceiver final {
     virtual void OnReceivedNack(
         const std::vector<uint16_t>& nack_sequence_numbers) = 0;
     virtual void OnReceivedRtcpReportBlocks(
-        const ReportBlockList& report_blocks) = 0;
+        rtc::ArrayView<const ReportBlockData> report_blocks) = 0;
 
    protected:
     virtual ~ModuleRtpRtcp() = default;
