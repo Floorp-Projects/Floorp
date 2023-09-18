@@ -164,7 +164,7 @@ Further information regarding these metrics can be viewed at `visual-metrics <ht
 Gecko Profiling with Browsertime
 --------------------------------
 
-To run gecko profiling using Raptor-Browsertime you can add the ``--gecko-profile`` flag to any command and you will get profiles from the test (with the profiler page opening in the browser automatically). This method also performs symbolication for you except for Android builds. You should trigger the ``upload-symbols`` task for that Android build to be able to see symbolicated samples. For example:
+To run gecko profiling using Raptor-Browsertime you can add the ``--gecko-profile`` flag to any command and you will get profiles from the test (with the profiler page opening in the browser automatically). This method also performs symbolication for you. For example:
 
 ::
 
