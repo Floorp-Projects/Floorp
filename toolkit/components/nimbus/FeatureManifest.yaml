@@ -1357,6 +1357,10 @@ networking:
       description: Whether the Necko predictor is enabled
       type: boolean
       setPref: "network.predictor.enabled"
+    http3CCalgorithm:
+      description: The congestion control algorithm with which to configure neqo. 0 for NewReno, 1 for Cubic
+      type: int
+      setPref: "network.http.http3.cc_algorithm"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
