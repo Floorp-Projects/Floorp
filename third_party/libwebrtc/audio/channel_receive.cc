@@ -831,13 +831,12 @@ CallReceiveStatistics ChannelReceive::GetRTCPStatistics() const {
         rtp_stats.packet_counter.header_bytes +
         rtp_stats.packet_counter.padding_bytes;
     stats.packetsReceived = rtp_stats.packet_counter.packets;
-    stats.last_packet_received_timestamp_ms =
-        rtp_stats.last_packet_received_timestamp_ms;
+    stats.last_packet_received = rtp_stats.last_packet_received;
   } else {
     stats.payload_bytes_received = 0;
     stats.header_and_padding_bytes_received = 0;
     stats.packetsReceived = 0;
-    stats.last_packet_received_timestamp_ms = absl::nullopt;
+    stats.last_packet_received = absl::nullopt;
   }
 
   {

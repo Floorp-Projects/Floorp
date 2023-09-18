@@ -2183,9 +2183,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Audio) {
   voice_media_info.receivers[0].relative_packet_arrival_delay_seconds = 16;
   voice_media_info.receivers[0].interruption_count = 7788;
   voice_media_info.receivers[0].total_interruption_duration_ms = 778899;
-
-  voice_media_info.receivers[0].last_packet_received_timestamp_ms =
-      absl::nullopt;
+  voice_media_info.receivers[0].last_packet_received = absl::nullopt;
 
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
@@ -2251,7 +2249,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Audio) {
       expected_audio);
 
   // Set previously undefined values and "GetStats" again.
-  voice_media_info.receivers[0].last_packet_received_timestamp_ms = 3000;
+  voice_media_info.receivers[0].last_packet_received = Timestamp::Seconds(3);
   expected_audio.last_packet_received_timestamp = 3000.0;
   voice_media_info.receivers[0].estimated_playout_ntp_timestamp_ms = 4567;
   expected_audio.estimated_playout_timestamp = 4567;
@@ -2344,8 +2342,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].jitter_buffer_target_delay_seconds = 1.1;
   video_media_info.receivers[0].jitter_buffer_minimum_delay_seconds = 0.999;
   video_media_info.receivers[0].jitter_buffer_emitted_count = 13;
-  video_media_info.receivers[0].last_packet_received_timestamp_ms =
-      absl::nullopt;
+  video_media_info.receivers[0].last_packet_received = absl::nullopt;
   video_media_info.receivers[0].content_type = VideoContentType::UNSPECIFIED;
   video_media_info.receivers[0].estimated_playout_ntp_timestamp_ms =
       absl::nullopt;
@@ -2427,7 +2424,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   // Set previously undefined values and "GetStats" again.
   video_media_info.receivers[0].qp_sum = 9;
   expected_video.qp_sum = 9;
-  video_media_info.receivers[0].last_packet_received_timestamp_ms = 1000;
+  video_media_info.receivers[0].last_packet_received = Timestamp::Seconds(1);
   expected_video.last_packet_received_timestamp = 1000.0;
   video_media_info.receivers[0].content_type = VideoContentType::SCREENSHARE;
   expected_video.content_type = "screenshare";

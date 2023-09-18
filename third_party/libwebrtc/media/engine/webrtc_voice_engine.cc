@@ -2496,8 +2496,7 @@ bool WebRtcVoiceMediaChannel::GetReceiveStats(VoiceMediaReceiveInfo* info,
     rinfo.decoding_plc_cng = stats.decoding_plc_cng;
     rinfo.decoding_muted_output = stats.decoding_muted_output;
     rinfo.capture_start_ntp_time_ms = stats.capture_start_ntp_time_ms;
-    rinfo.last_packet_received_timestamp_ms =
-        stats.last_packet_received_timestamp_ms;
+    rinfo.last_packet_received = stats.last_packet_received;
     rinfo.estimated_playout_ntp_timestamp_ms =
         stats.estimated_playout_ntp_timestamp_ms;
     rinfo.jitter_buffer_flushes = stats.jitter_buffer_flushes;

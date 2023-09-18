@@ -595,13 +595,13 @@ TEST_P(ReceiveStatisticsTest, LastPacketReceivedTimestamp) {
   RtpReceiveStats counters =
       receive_statistics_->GetStatistician(kSsrc1)->GetStats();
 
-  EXPECT_EQ(42, counters.last_packet_received_timestamp_ms);
+  EXPECT_EQ(counters.last_packet_received, Timestamp::Millis(42));
 
   clock_.AdvanceTimeMilliseconds(3);
   packet1_.SetSequenceNumber(101);
   receive_statistics_->OnRtpPacket(packet1_);
   counters = receive_statistics_->GetStatistician(kSsrc1)->GetStats();
-  EXPECT_EQ(45, counters.last_packet_received_timestamp_ms);
+  EXPECT_EQ(counters.last_packet_received, Timestamp::Millis(45));
 }
 
 TEST_P(ReceiveStatisticsTest, SimpleJitterComputation) {

@@ -227,8 +227,8 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
         TimeDelta::Seconds(stats.jitter) / last_payload_type_frequency_;
   }
   if (last_receive_time_.has_value()) {
-    stats.last_packet_received_timestamp_ms =
-        (*last_receive_time_ + delta_internal_unix_epoch_).ms();
+    stats.last_packet_received =
+        *last_receive_time_ + delta_internal_unix_epoch_;
   }
   stats.packet_counter = receive_counters_.transmitted;
   return stats;
