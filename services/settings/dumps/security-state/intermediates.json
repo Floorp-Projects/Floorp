@@ -16975,24 +16975,6 @@
       "last_modified": 1665169023249
     },
     {
-      "schema": 1665168565158,
-      "derHash": "V74y0GOICfHLfGtY1Xz/rrmXdLHwtX1qNwiSOVSlSCQ=",
-      "subject": "CN=GTS CA 2D3,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "51c94f773aed17ce6f1afbdda4cb9425d8a0804b4c6c9f53777c2da6c713a5ba",
-        "size": 1142,
-        "filename": "NqKkrnUJcS9kqNTlWGRTYYSR8gm9VdeCq0trowfI1Co=.pem",
-        "location": "security-state-staging/intermediates/5968045a-5794-4b92-9623-94947253e464.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NqKkrnUJcS9kqNTlWGRTYYSR8gm9VdeCq0trowfI1Co=",
-      "crlite_enrolled": false,
-      "id": "66edf7de-f474-4b21-8358-3fbbf721abdc",
-      "last_modified": 1665169023241
-    },
-    {
       "schema": 1664891326687,
       "derHash": "2FmCjk6MNezDjkFeHQz/1KnfwRYgVAHRKY/BM0fcAYc=",
       "subject": "CN=SSL Secure Site CA,O=SSL Limited,C=GB",
@@ -29035,5 +29017,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1694617023325
+  "timestamp": 1694703423238
 }
