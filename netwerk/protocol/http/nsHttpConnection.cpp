@@ -162,9 +162,6 @@ nsresult nsHttpConnection::Init(
   if (NS_SUCCEEDED(mErrorBeforeConnect)) {
     mSocketTransport->SetEventSink(this, nullptr);
     mSocketTransport->SetSecurityCallbacks(this);
-    ChangeConnectionState(ConnectionState::INITED);
-  } else {
-    SetCloseReason(ToCloseReason(mErrorBeforeConnect));
   }
 
   mTlsHandshaker = new TlsHandshaker(mConnInfo, this);
@@ -496,7 +493,6 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
         caps));
 
   if (!mExperienced && !trans->IsNullTransaction()) {
-    mHasFirstHttpTransaction = true;
     if (mTlsHandshaker->NPNComplete()) {
       mExperienced = true;
     }
@@ -518,12 +514,6 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   mTransactionCaps = caps;
   mPriority = pri;
-
-  if (mHasFirstHttpTransaction && mExperienced) {
-    mHasFirstHttpTransaction = false;
-    mExperienceState |= ConnectionExperienceState::Experienced;
-  }
-
   if (mTransaction && (mUsingSpdyVersion != SpdyVersion::NONE)) {
     return AddTransaction(trans, pri);
   }
@@ -566,12 +556,6 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
   trans->GetSecurityCallbacks(getter_AddRefs(callbacks));
   SetSecurityCallbacks(callbacks);
   mTlsHandshaker->SetupSSL(mInSpdyTunnel, mForcePlainText);
-  if (mTlsHandshaker->NPNComplete()) {
-    // For non-HTTPS connection, change the state to TRANSFERING directly.
-    ChangeConnectionState(ConnectionState::TRANSFERING);
-  } else {
-    ChangeConnectionState(ConnectionState::TLS_HANDSHAKING);
-  }
 
   // take ownership of the transaction
   mTransaction = trans;
@@ -693,14 +677,8 @@ nsresult nsHttpConnection::CreateTunnelStream(
 }
 
 void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
-  LOG(("nsHttpConnection::Close [this=%p reason=%" PRIx32
-       " mExperienceState=%x]\n",
-       this, static_cast<uint32_t>(reason), mExperienceState));
-
-  if (mConnectionState != ConnectionState::CLOSED) {
-    RecordConnectionCloseTelemetry(reason);
-    ChangeConnectionState(ConnectionState::CLOSED);
-  }
+  LOG(("nsHttpConnection::Close [this=%p reason=%" PRIx32 "]\n", this,
+       static_cast<uint32_t>(reason)));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mTlsHandshaker->NotifyClose();
@@ -1235,7 +1213,7 @@ uint32_t nsHttpConnection::ReadTimeoutTick(PRIntervalTime now) {
            PR_IntervalToMilliseconds(mTransaction->ResponseTimeout())));
 
       mResponseTimeoutEnabled = false;
-      SetCloseReason(ConnectionCloseReason::IDLE_TIMEOUT);
+
       // This will also close the connection
       CloseTransaction(mTransaction, NS_ERROR_NET_TIMEOUT);
       return UINT32_MAX;
@@ -1260,7 +1238,6 @@ uint32_t nsHttpConnection::ReadTimeoutTick(PRIntervalTime now) {
            gHttpHandler->TLSHandshakeTimeout()));
 
       // This will also close the connection
-      SetCloseReason(ConnectionCloseReason::TLS_TIMEOUT);
       CloseTransaction(mTransaction, NS_ERROR_NET_TIMEOUT);
       return UINT32_MAX;
     }
@@ -1585,10 +1562,7 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   } else {
     mLastWriteTime = PR_IntervalNow();
     mSocketOutCondition = NS_OK;  // reset condition
-    if (!TunnelSetupInProgress()) {
-      mTotalBytesWritten += *countRead;
-      mExperienceState |= ConnectionExperienceState::First_Request_Sent;
-    }
+    if (!TunnelSetupInProgress()) mTotalBytesWritten += *countRead;
   }
 
   return mSocketOutCondition;
@@ -1774,7 +1748,6 @@ nsresult nsHttpConnection::OnWriteSegment(char* buf, uint32_t count,
     mSocketInCondition = NS_BASE_STREAM_CLOSED;
   } else {
     mSocketInCondition = NS_OK;  // reset condition
-    mExperienceState |= ConnectionExperienceState::First_Response_Received;
   }
 
   return mSocketInCondition;
@@ -2389,8 +2362,6 @@ void nsHttpConnection::HandshakeDoneInternal() {
   if (mTlsHandshaker->NPNComplete()) {
     return;
   }
-
-  ChangeConnectionState(ConnectionState::TRANSFERING);
 
   nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
   GetTLSSocketControl(getter_AddRefs(tlsSocketControl));

@@ -368,7 +368,6 @@ uint32_t Http2Session::ReadTimeoutTick(PRIntervalTime now) {
          this, pingTimeout));
     if ((now - mPingSentEpoch) >= pingTimeout) {
       LOG3(("Http2Session::ReadTimeoutTick %p Ping Timer Exhaustion\n", this));
-      mConnection->SetCloseReason(ConnectionCloseReason::IDLE_TIMEOUT);
       mPingSentEpoch = 0;
       if (isTrr) {
         // These must be set this way to ensure we gracefully restart all
@@ -2176,7 +2175,6 @@ nsresult Http2Session::RecvGoAway(Http2Session* self) {
     return self->SessionError(PROTOCOL_ERROR);
   }
 
-  self->mConnection->SetCloseReason(ConnectionCloseReason::GO_AWAY);
   self->mShouldGoAway = true;
   self->mGoAwayID = NetworkEndian::readUint32(self->mInputFrameBuffer.get() +
                                               kFrameHeaderBytes);
