@@ -63,10 +63,6 @@
     "label": "//sdk/android:android_instrumentation_test_apk",
     "type": "console_test_launcher",
   },
-  "fuchsia_perf_tests": {
-    "label": "//:fuchsia_perf_tests",
-    "type": "raw",
-  },
   "low_bandwidth_audio_test": {
     "label": "//audio:low_bandwidth_audio_test",
     "type": "console_test_launcher",

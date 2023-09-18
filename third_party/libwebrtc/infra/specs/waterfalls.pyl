@@ -288,10 +288,10 @@
         'linux',
         'mixins': [
           'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h',
-          'resultdb-gtest-json-format', 'fuchsia-gtest-output'
+          'resultdb-gtest-json-format', 'fuchsia-gtest-output', 'perf-output'
         ],
         'test_suites': {
-          'isolated_scripts': 'fuchsia_compatible_perf_tests',
+          'isolated_scripts': 'webrtc_perf_tests',
         }
       },
       'Perf Linux Bionic': {
