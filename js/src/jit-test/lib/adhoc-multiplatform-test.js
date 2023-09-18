@@ -135,16 +135,15 @@ function codegenTestMultiplatform_adhoc(module_text, export_name,
 
     // Poke the build-configuration object to find out what target we're
     // generating code for.
-    let conf     = getBuildConfiguration();
-    let genX64   = conf.x64;
-    let genX86   = conf.x86;
-    let genArm64 = conf.arm64;
-    let genArm   = conf.arm;
+    let genX64   = getBuildConfiguration("x64");
+    let genX86   = getBuildConfiguration("x86");
+    let genArm64 = getBuildConfiguration("arm64");
+    let genArm   = getBuildConfiguration("arm");
     // So far so good, except .. X64 or X86 might be emulating something else.
-    if (genX64 && genArm64 && conf['arm64-simulator']) {
+    if (genX64 && genArm64 && getBuildConfiguration("arm64-simulator")) {
         genX64 = false;
     }
-    if (genX86 && genArm && conf['arm-simulator']) {
+    if (genX86 && genArm && getBuildConfiguration("arm-simulator")) {
         genX86 = false;
     }
 

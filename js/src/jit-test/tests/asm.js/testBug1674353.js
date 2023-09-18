@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()["pointer-byte-size"] != 8
+// |jit-test| skip-if: getBuildConfiguration("pointer-byte-size") != 8
 
 var stdlib = this;
 // The significance of this constant is that it is a 31-bit value that is larger

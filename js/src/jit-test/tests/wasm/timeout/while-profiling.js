@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6; skip-if: !wasmIsSupported() || !getBuildConfiguration()['arm-simulator']
+// |jit-test| exitstatus: 6; skip-if: !wasmIsSupported() || !getBuildConfiguration("arm-simulator")
 
 // Single-step profiling currently only works in the ARM simulator
 

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()["android"]
+// |jit-test| skip-if: getBuildConfiguration("android")
 
 try {
     var z = "1";
@@ -25,7 +25,7 @@ try {
             z += z
     } catch (e) {}
     uneval(this);
-    assertEq(getBuildConfiguration()["pointer-byte-size"], 8, "32-bit should OOM; 64-bit should not");
+    assertEq(getBuildConfiguration("pointer-byte-size"), 8, "32-bit should OOM; 64-bit should not");
 } catch (e) {
     const msg = e + "";
     assertEq(msg.includes("out of memory") || msg.includes("InternalError: allocation size overflow"), true);

@@ -6,7 +6,7 @@
 
 let verifyCodegen = _method => {};
 if (hasDisassembler() && wasmCompileMode() == "ion" &&
-    getBuildConfiguration().x64 && !getBuildConfiguration().simulator) {
+    getBuildConfiguration("x64") && !getBuildConfiguration("simulator")) {
   if (isAvxPresent()) {
     verifyCodegen = method => {
         assertEq(wasmDis(method, {asString: true}).includes('vpblendvb'), true);

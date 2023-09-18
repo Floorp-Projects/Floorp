@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()["arm64-simulator"] === true
+// |jit-test| skip-if: getBuildConfiguration("arm64-simulator") === true
 // This test times out in ARM64 simulator builds.
 
 function makeIonCompiledScript(n) {

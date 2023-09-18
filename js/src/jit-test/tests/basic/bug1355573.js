@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration().debug === true
+// |jit-test| skip-if: getBuildConfiguration("debug") === true
 function f(){};
 Object.defineProperty(f, "name", {value: "a".repeat((1<<30)-2)});
 var ex = null;

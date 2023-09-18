@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration().arm; test-also=--arm-hwcap=armv7,vfp
+// |jit-test| skip-if: !getBuildConfiguration("arm"); test-also=--arm-hwcap=armv7,vfp
 
 // The command line options disable the idiv instruction and thus make the
 // baseline compiler unavailable, so we must be prepared for a run-time error

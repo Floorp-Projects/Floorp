@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration()['has-gczeal'] || (getBuildConfiguration()['osx'] && getBuildConfiguration()['arm64'])
+// |jit-test| skip-if: !getBuildConfiguration("has-gczeal") || (getBuildConfiguration("osx") && getBuildConfiguration("arm64"))
 
 // Test aborting an incremental GC in all possible states
 

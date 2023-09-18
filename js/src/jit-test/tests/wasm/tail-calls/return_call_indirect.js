@@ -149,7 +149,7 @@ var ins = wasmEvalText(`(module
   )
 )`);
 
-if (getBuildConfiguration().simulator) {
+if (getBuildConfiguration("simulator")) {
   assertEq(ins.exports.main(400000), 80000200000n);
 } else {
   assertEq(ins.exports.main(40000000), 800000020000000n);

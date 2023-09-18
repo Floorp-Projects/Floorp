@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()["android"]
+// |jit-test| skip-if: getBuildConfiguration("android")
 
 try {
   a = {};
@@ -7,7 +7,7 @@ try {
   Function(a, a, a);
   assertEq(true, false, "allocation overflow expected");
 } catch (e) {
-  if (getBuildConfiguration()['pointer-byte-size'] == 4) {
+  if (getBuildConfiguration("pointer-byte-size") == 4) {
     assertEq((e + "").includes("InternalError: allocation size overflow"), true);
   } // else on 64-bit, it will be a SyntaxError for invalid code.
 }

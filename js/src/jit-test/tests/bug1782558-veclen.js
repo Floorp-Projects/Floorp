@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()["pointer-byte-size"] > 4 || getBuildConfiguration()["android"]
+// |jit-test| skip-if: getBuildConfiguration("pointer-byte-size") > 4 || getBuildConfiguration("android")
 
 // On 64-bit, this will allocate 2G temporary strings for keys while
 // stringifying the Array, which takes a rather long time and doesn't have the

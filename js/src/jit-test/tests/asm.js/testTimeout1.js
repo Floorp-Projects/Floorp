@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration()['wasi']
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration("wasi")
 
 load(libdir + "asm.js");
 

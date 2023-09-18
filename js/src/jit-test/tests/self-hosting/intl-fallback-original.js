@@ -1,4 +1,4 @@
-// |jit-test| skip-if: typeof Intl === 'undefined'; skip-if: getBuildConfiguration()['wasi']
+// |jit-test| skip-if: typeof Intl === 'undefined'; skip-if: getBuildConfiguration("wasi")
 
 // Clobbering `Symbol` should not impact creation of %Intl%.[[FallbackSymbol]]
 globalThis.Symbol = null;
