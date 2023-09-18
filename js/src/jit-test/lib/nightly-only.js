@@ -7,7 +7,7 @@
 // Call the function f. On beta and release, expect it to throw an error that is
 // an instance of error.
 function nightlyOnly(error, f) {
-  if (getBuildConfiguration().release_or_beta) {
+  if (getBuildConfiguration("release_or_beta")) {
     try {
       f();
       throw new Error("use of feature expected to fail on release and beta, but succeeded; please update test");

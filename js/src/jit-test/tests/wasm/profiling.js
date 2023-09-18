@@ -70,7 +70,7 @@ test(`(module
 this,
 ["", ">", "1,>", "<,1,>", "1,>", ">", ""]);
 
-if (getBuildConfiguration()["arm-simulator"]) {
+if (getBuildConfiguration("arm-simulator")) {
     // On ARM, some int64 operations are calls to C++.
     for (let op of ['div_s', 'rem_s', 'div_u', 'rem_u']) {
         test(`(module

@@ -33,8 +33,7 @@ function test() {
   assertEq(a[MAX_DENSE_ELEMENTS_COUNT + 1], MAX_DENSE_ELEMENTS_COUNT + 1);
 }
 
-var config = getBuildConfiguration();
 // Takes too long time on debug build.
-if (!config.debug) {
+if (!getBuildConfiguration("debug")) {
   test();
 }

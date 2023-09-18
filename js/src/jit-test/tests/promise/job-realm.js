@@ -1,5 +1,5 @@
 // `debugGetQueuedJobs` is available only in debug build.
-if (!getBuildConfiguration().debug) {
+if (!getBuildConfiguration("debug")) {
   quit();
 }
 

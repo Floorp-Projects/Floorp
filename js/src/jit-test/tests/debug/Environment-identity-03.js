@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()['wasi']
+// |jit-test| skip-if: getBuildConfiguration("wasi")
 //
 // Two Environments nested in the same runtime scope share the correct tail of their parent chains.
 

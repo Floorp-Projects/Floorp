@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration()['has-gczeal']
+// |jit-test| skip-if: !getBuildConfiguration("has-gczeal")
 gczeal(0);
 gczeal(20);
 startgc(1);

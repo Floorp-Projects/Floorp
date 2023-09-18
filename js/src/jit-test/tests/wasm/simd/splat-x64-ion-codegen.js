@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator || isAvxPresent(); include:codegen-x64-test.js
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration("x64") || getBuildConfiguration("simulator") || isAvxPresent(); include:codegen-x64-test.js
 
 // Test that there are no extraneous moves or other instructions for splat and
 // other splat-like operations that can reuse its input for its output and/or
@@ -13,7 +13,7 @@ codegenTestX64_PTYPE_v128(
 // register, this changes not just the name slightly but the binary encoding in
 // larger ways.
 
-if (!getBuildConfiguration().windows) {
+if (!getBuildConfiguration("windows")) {
     codegenTestX64_PTYPE_v128(
         [['v128.load32_splat', 'i32', `
 f3 41 0f 10 04 3f         movssl \\(%r15,%rdi,1\\), %xmm0

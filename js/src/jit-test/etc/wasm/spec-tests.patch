@@ -18,7 +18,7 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js b/js/src/j
 @@ -1076,8 +1076,15 @@ let $24 = instantiate(`(module
    )
  )`);
- 
+
 -// ./test/core/align64.wast:864
 -assert_trap(() => invoke($24, `store`, [65532n, -1n]), `out of bounds memory access`);
 +// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
@@ -29,7 +29,7 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js b/js/src/j
 +        () => invoke($24, `store`, [65532n, -1n]),
 +        `out of bounds memory access`,
 +    );
- 
+
 -// ./test/core/align64.wast:866
 -assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
 +    // ./test/core/align64.wast:866
@@ -41,17 +41,15 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/harness/harness.js b/js/sr
 @@ -19,6 +19,17 @@ if (!wasmIsSupported()) {
    quit();
  }
- 
+
 +function partialOobWriteMayWritePartialData() {
-+    let cfg = getBuildConfiguration();
-+    let arm_native = cfg["arm"] && !cfg["arm-simulator"];
-+    let arm64_native = cfg["arm64"] && !cfg["arm64-simulator"];
++    let arm_native = getBuildConfiguration("arm") && !getBuildConfiguration("arm-simulator");
++    let arm64_native = getBuildConfiguration("arm64") && !getBuildConfiguration("arm64-simulator");
 +    return arm_native || arm64_native;
 +}
 +
-+let cfg = getBuildConfiguration();
-+let native_arm = cfg["arm"] && !cfg["arm-simulator"];
-+let native_arm64 = cfg["arm64"] && !cfg["arm64-simulator"];
++let native_arm = getBuildConfiguration("arm") && !getBuildConfiguration("arm-simulator");
++let native_arm64 = getBuildConfiguration("arm64") && !getBuildConfiguration("arm64-simulator");
 +
  function bytes(type, bytes) {
    var typedBuffer = new Uint8Array(bytes);
@@ -62,7 +60,7 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js b/js
 @@ -617,8 +617,16 @@ assert_trap(() => invoke($1, `i64.load32
  // ./test/core/memory_trap64.wast:265
  assert_trap(() => invoke($1, `i64.load32_u`, [-4n]), `out of bounds memory access`);
- 
+
 -// ./test/core/memory_trap64.wast:268
 -assert_return(() => invoke($1, `i64.load`, [65528n]), [value("i64", 7523094288207667809n)]);
 +// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
@@ -72,7 +70,7 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js b/js
 +    assert_return(() => invoke($1, `i64.load`, [65528n]), [
 +        value("i64", 7523094288207667809n),
 +    ]);
- 
+
 -// ./test/core/memory_trap64.wast:269
 -assert_return(() => invoke($1, `i64.load`, [0n]), [value("i64", 7523094288207667809n)]);
 +    // ./test/core/memory_trap64.wast:269

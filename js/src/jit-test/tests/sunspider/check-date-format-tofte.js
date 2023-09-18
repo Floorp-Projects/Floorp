@@ -1,4 +1,4 @@
-// |jit-test| tz-pacific; skip-if: getBuildConfiguration()['wasi']
+// |jit-test| tz-pacific; skip-if: getBuildConfiguration("wasi")
 
 function arrayExists(array, x) {
     for (var i = 0; i < array.length; i++) {

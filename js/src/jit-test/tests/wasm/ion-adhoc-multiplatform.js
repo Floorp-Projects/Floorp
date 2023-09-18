@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || getBuildConfiguration().windows || (!getBuildConfiguration().x64 && !getBuildConfiguration().x86 && !getBuildConfiguration().arm64 && !getBuildConfiguration().arm); include:adhoc-multiplatform-test.js
+// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || getBuildConfiguration("windows") || (!getBuildConfiguration("x64") && !getBuildConfiguration("x86") && !getBuildConfiguration("arm64") && !getBuildConfiguration("arm")); include:adhoc-multiplatform-test.js
 //
 // These tests push wasm functions through the ion pipe and specify an expected
 // disassembly output on all 4 primary targets, x64 / x86 / arm64 / arm(32).

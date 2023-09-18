@@ -1,4 +1,4 @@
-// |jit-test| --spectre-mitigations=on; skip-if: getBuildConfiguration()['mips32'] || getBuildConfiguration()['mips64'] || getBuildConfiguration()['riscv64']
+// |jit-test| --spectre-mitigations=on; skip-if: getBuildConfiguration("mips32") || getBuildConfiguration("mips64") || getBuildConfiguration("riscv64")
 function f() {
     return arguments[arguments.length];
 }

@@ -1,6 +1,6 @@
 // Functions shared by gc/pretenure-*.js tests
 
-const is64bit = getBuildConfiguration()['pointer-byte-size'] === 8;
+const is64bit = getBuildConfiguration("pointer-byte-size") === 8;
 
 // Count of objects that will exceed the size of the nursery.
 const nurseryCount = is64bit ? 25000 : 50000;

@@ -1,4 +1,4 @@
-// |jit-test| allow-unhandlable-oom; skip-if: (getBuildConfiguration()['android'] && getBuildConfiguration()['debug'])
+// |jit-test| allow-unhandlable-oom; skip-if: (getBuildConfiguration("android") && getBuildConfiguration("debug"))
 
 gczeal(0);
 if (!this.enqueueMark) {

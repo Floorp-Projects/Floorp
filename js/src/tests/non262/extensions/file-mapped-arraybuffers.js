@@ -43,6 +43,6 @@ function test() {
     assertThrowsInstanceOf(() => createMappedArrayBuffer("empty.txt", 0, 8), Error);
 }
 
-if (getBuildConfiguration()["mapped-array-buffer"])
+if (getBuildConfiguration("mapped-array-buffer"))
     test();
 reportCompare(0, 0, 'ok');

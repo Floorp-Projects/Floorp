@@ -365,7 +365,7 @@ wasmAssert(`(module
         let s = "";
         for ( let i in x )
             s = s + i + ",";
-        if (getBuildConfiguration().release_or_beta) {
+        if (getBuildConfiguration("release_or_beta")) {
             assertEq(s, "valueOf,value,");
         } else {
             assertEq(s, "type,valueOf,value,");

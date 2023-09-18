@@ -111,7 +111,7 @@ fill(src_buf);
 // Too slow in debug-noopt builds but we don't want to flag the test as slow,
 // since that means it'll never be run.
 
-if (this.getBuildConfiguration && !getBuildConfiguration().debug)
+if (this.getBuildConfiguration && !getBuildConfiguration("debug"))
 {
     let t = new Uint8Array(target_buf);
     for (let my_src_buf of [src_buf, target_buf]) {

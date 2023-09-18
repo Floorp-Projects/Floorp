@@ -239,7 +239,7 @@ assertEq(WebAssembly.validate(wasmTextToBinary(`
 
 // Smoketest: Can we actually allocate a memory larger than 4GB?
 
-if (getBuildConfiguration()["pointer-byte-size"] == 8) {
+if (getBuildConfiguration("pointer-byte-size") == 8) {
     // TODO: "index" is not yet part of the spec
     // https://github.com/WebAssembly/memory64/issues/24
 
@@ -1380,7 +1380,7 @@ function testAtomicWake(ins, mem, LOC) {
 let configs = [[40, 0, 3], [40, 3, '']];
 
 // On 64-bit systems, test beyond 2GB and also beyond 4GB
-if (getBuildConfiguration()["pointer-byte-size"] == 8) {
+if (getBuildConfiguration("pointer-byte-size") == 8) {
     configs.push([Math.pow(2, 31) + 40, 32771, '']);
     configs.push([Math.pow(2, 32) + 40, 65539, '']);
     configs.push([Math.pow(2, 31) + 40, 32771, 32773]);
@@ -1492,7 +1492,7 @@ for ( let shared of ['','shared'] ) {
     assertSame(iota(5).map(x => x+49), mem.slice(128, 133));
 }
 
-if (getBuildConfiguration()["pointer-byte-size"] == 8) {
+if (getBuildConfiguration("pointer-byte-size") == 8) {
     for ( let shared of ['','shared'] ) {
         let limit = wasmMaxMemoryPages('i64');
         let initial = 65537;
