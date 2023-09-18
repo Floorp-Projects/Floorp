@@ -92,7 +92,7 @@ index 76690c414f..7ec433177b 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index e1f3e347ab..18a0a155b8 100644
+index f78a0da41a..e7bb109527 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 @@ -184,7 +184,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
@@ -127,7 +127,7 @@ index e349f463f6..b437c491fc 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index da67a0021f..5d6d66ef4b 100644
+index b3a872ab09..f45053cab0 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -196,7 +196,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
