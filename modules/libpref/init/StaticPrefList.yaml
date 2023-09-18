@@ -4251,12 +4251,6 @@
   value: 128
   mirror: always
 
-# Is support for Window.visualViewport enabled?
-- name: dom.visualviewport.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for WebVR APIs enabled?
 # Disabled everywhere, but not removed.
 - name: dom.vr.enabled
