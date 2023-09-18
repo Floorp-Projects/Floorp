@@ -1348,21 +1348,6 @@ TEST_P(PeerConnectionMediaTest, SetRemoteDescriptionFailsWithDuplicateMids) {
             "Failed to set remote offer sdp: Duplicate a=mid value 'same'.");
 }
 
-TEST_P(PeerConnectionMediaTest,
-       CombinedAudioVideoBweConfigPropagatedToMediaEngine) {
-  RTCConfiguration config;
-  config.combined_audio_video_bwe.emplace(true);
-  auto caller = CreatePeerConnectionWithAudioVideo(config);
-
-  ASSERT_TRUE(caller->SetLocalDescription(caller->CreateOffer()));
-
-  auto caller_voice = caller->media_engine()->GetVoiceSendChannel(0);
-  ASSERT_TRUE(caller_voice);
-  const cricket::AudioOptions& audio_options = caller_voice->options();
-  EXPECT_EQ(config.combined_audio_video_bwe,
-            audio_options.combined_audio_video_bwe);
-}
-
 // Test that if a RED codec refers to another codec in its fmtp line, but that
 // codec's payload type was reassigned for some reason (either the remote
 // endpoint selected a different payload type or there was a conflict), the RED

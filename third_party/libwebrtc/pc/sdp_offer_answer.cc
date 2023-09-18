@@ -1326,8 +1326,6 @@ void SdpOfferAnswerHandler::Initialize(
   // RTCConfiguration value (not available on Web).
   video_options_.screencast_min_bitrate_kbps =
       configuration.screencast_min_bitrate.value_or(100);
-  audio_options_.combined_audio_video_bwe =
-      configuration.combined_audio_video_bwe;
 
   audio_options_.audio_jitter_buffer_max_packets =
       configuration.audio_jitter_buffer_max_packets;

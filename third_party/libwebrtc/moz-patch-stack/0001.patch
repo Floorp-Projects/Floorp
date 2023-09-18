@@ -25,10 +25,10 @@ Cr-Branched-From: 2eacbbc03a4a41ea658661225eb1c8fc07884c33-refs/heads/main@{#401
  3 files changed, 32 insertions(+), 14 deletions(-)
 
 diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
-index 59d38727dc..20ffd36eba 100644
+index e0cef06714..dd34f0fcd3 100644
 --- a/pc/peer_connection.cc
 +++ b/pc/peer_connection.cc
-@@ -733,9 +733,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
+@@ -731,9 +731,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
    transport_controller_->SubscribeIceConnectionState(
        [this](cricket::IceConnectionState s) {
          RTC_DCHECK_RUN_ON(network_thread());
@@ -38,7 +38,7 @@ index 59d38727dc..20ffd36eba 100644
          signaling_thread()->PostTask(
              SafeTask(signaling_thread_safety_.flag(), [this, s]() {
                RTC_DCHECK_RUN_ON(signaling_thread());
-@@ -2399,6 +2396,20 @@ void PeerConnection::OnTransportControllerConnectionState(
+@@ -2397,6 +2394,20 @@ void PeerConnection::OnTransportControllerConnectionState(
      case cricket::kIceConnectionConnected:
        RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
                            "all transports are writable.";
@@ -59,7 +59,7 @@ index 59d38727dc..20ffd36eba 100644
        SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
        NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
        break;
-@@ -2742,20 +2753,18 @@ void PeerConnection::OnTransportControllerGatheringState(
+@@ -2740,20 +2751,18 @@ void PeerConnection::OnTransportControllerGatheringState(
  }
  
  // Runs on network_thread().
