@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "118.1.0",
+  "version": "118.3.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -16,6 +16,11 @@
       "parent": {
         "scopes": ["addon_parent"],
         "script": "experiment-apis/aboutConfigPrefs.js",
+        "paths": [["aboutConfigPrefs"]]
+      },
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/aboutConfigPrefsChild.js",
         "paths": [["aboutConfigPrefs"]]
       }
     },
@@ -65,6 +70,7 @@
 
   "permissions": [
     "mozillaAddons",
+    "scripting",
     "tabs",
     "webNavigation",
     "webRequest",
