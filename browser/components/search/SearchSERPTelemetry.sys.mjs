@@ -12,6 +12,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "gCryptoHash", () => {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
 // The various histograms and scalars that we report to.
 const SEARCH_CONTENT_SCALAR_BASE = "browser.search.content.";
 const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
@@ -21,6 +25,7 @@ const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 // Exported for tests.
 export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
+export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
@@ -1502,5 +1507,274 @@ class DomainCategorizer {
   }
 }
 
+/**
+ * @typedef {object} DomainToCategoriesRecord
+ * @property {number} version
+ *  The version of the record.
+ */
+
+/**
+ * @typedef {object} DomainCategoryScore
+ * @property {number} category
+ *  The index of the category.
+ * @property {number} score
+ *  The score associated with the category.
+ */
+
+/**
+ * Maps domain to categories, with data synced with Remote Settings.
+ */
+class DomainToCategoriesMap {
+  /**
+   * Contains the domain to category scores.
+   *
+   * @type {Object<string, Array<DomainCategoryScore>> | null}
+   */
+  #map = null;
+
+  /**
+   * Latest version number of the attachments.
+   *
+   * @type {number | null}
+   */
+  #version = null;
+
+  /**
+   * The Remote Settings client.
+   *
+   * @type {object | null}
+   */
+  #client = null;
+
+  /**
+   * Whether this is synced with Remote Settings.
+   *
+   * @type {boolean}
+   */
+  #init = false;
+
+  /**
+   * Callback when Remote Settings syncs.
+   *
+   * @type {Function | null}
+   */
+  #onSettingsSync = null;
+
+  /**
+   * Initializes the map with local attachments and creates a listener for
+   * updates to Remote Settings in case the mappings are updated while the
+   * client is on.
+   */
+  async init() {
+    if (!lazy.serpEventTelemetryCategorization || this.#init) {
+      return;
+    }
+
+    this.#init = true;
+
+    lazy.logConsole.debug("Domain-to-categories map is initializing.");
+    this.#client = lazy.RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+
+    this.#onSettingsSync = event => this.#sync(event.data);
+    this.#client.on("sync", this.#onSettingsSync);
+
+    let records = await this.#client.get();
+    await this.#clearAndPopulateMap(records);
+  }
+
+  uninit() {
+    lazy.logConsole.debug("Uninitializing domain-to-categories map.");
+    if (this.#init) {
+      this.#map = null;
+      this.#version = null;
+
+      this.#client.off("sync", this.#onSettingsSync);
+      this.#client = null;
+      this.#onSettingsSync = null;
+
+      this.#init = false;
+    }
+  }
+
+  /**
+   * Given a domain, find categories and relevant scores.
+   *
+   * @param {string} domain Domain to lookup.
+   * @returns {Array<DomainCategoryScore>}
+   *  An array containing categories and their respective score. If no record
+   *  for the domain is available, return an empty array.
+   */
+  get(domain) {
+    if (this.empty) {
+      return [];
+    }
+    lazy.gCryptoHash.init(lazy.gCryptoHash.MD5);
+    let bytes = new TextEncoder().encode(domain);
+    lazy.gCryptoHash.update(bytes, domain.length);
+    let hash = lazy.gCryptoHash.finish(true);
+    let rawValues = this.#map[hash] ?? [];
+    if (rawValues.length) {
+      let output = [];
+      // Transform data into a more readable format.
+      // [x, y] => { category: x, score: y }
+      for (let i = 0; i < rawValues.length; i += 2) {
+        output.push({ category: rawValues[i], score: rawValues[i + 1] });
+      }
+      return output;
+    }
+    return [];
+  }
+
+  /**
+   * If the map was initialized, returns the version number for the data.
+   * The version number is determined by the record with the highest version
+   * number. Even if the records have different versions, only records from the
+   * latest version should be available. Returns null if the map was not
+   * initialized.
+   *
+   * @returns {null | number} The version number.
+   */
+  get version() {
+    return this.#version;
+  }
+
+  /**
+   * Whether the map is empty of data.
+   *
+   * @returns {boolean}
+   */
+  get empty() {
+    return !this.#map;
+  }
+
+  /**
+   * Inspects a list of records from the categorization domain bucket and finds
+   * the maximum version score from the set of records. Each record should have
+   * the same version number but if for any reason one entry has a lower
+   * version number, the latest version can be used to filter it out.
+   *
+   * @param {Array<DomainToCategoriesRecord>} records
+   *   An array containing the records from a Remote Settings collection.
+   * @returns {number}
+   */
+  #retrieveLatestVersion(records) {
+    return records.reduce((version, record) => {
+      if (record.version > version) {
+        return record.version;
+      }
+      return version;
+    }, 0);
+  }
+
+  /**
+   * Callback when Remote Settings has indicated the collection has been
+   * synced. Since the records in the collection will be updated all at once,
+   * use the array of current records which at this point in time would have
+   * the latest records from Remote Settings. Additionally, delete any
+   * attachment for records that no longer exist.
+   *
+   * @param {object} data
+   *  Object containing records that are current, deleted, created, or updated.
+   *
+   */
+  async #sync(data) {
+    lazy.logConsole.debug("Syncing domain-to-categories with Remote Settings.");
+
+    // Remove local files of deleted records.
+    let toDelete = data?.deleted.filter(d => d.attachment);
+    await Promise.all(
+      toDelete.map(record => this.#client.attachments.deleteDownloaded(record))
+    );
+
+    this.#clearAndPopulateMap(data?.current);
+  }
+
+  /**
+   * Clear the existing map and populate it with attachments found in the
+   * records. If no attachments are found, or no record containing an
+   * attachment contained the latest version, then nothing will change.
+   *
+   * @param {Array<DomainToCategoriesRecord>} records
+   *  The records containing attachments.
+   *
+   */
+  async #clearAndPopulateMap(records) {
+    // Set map to null so that if there are errors in the downloads, consumers
+    // will be able to know whether the map has information. Once we've
+    // successfully downloaded attachments and are parsing them, a non-null
+    // object will be created.
+    this.#map = null;
+    this.#version = null;
+
+    if (!records?.length) {
+      lazy.logConsole.debug("No records found for domain-to-categories map.");
+      return;
+    }
+
+    if (!records.length) {
+      lazy.logConsole.error(
+        "No valid attachments available for domain-to-categories map."
+      );
+      return;
+    }
+
+    let fileContents = [];
+    for (let record of records) {
+      let result;
+      // Downloading attachments can fail.
+      try {
+        result = await this.#client.attachments.download(record);
+      } catch (ex) {
+        lazy.logConsole.error("Could not download file:", ex);
+        return;
+      }
+      fileContents.push(result.buffer);
+    }
+
+    // All attachments should have the same version number. If for whatever
+    // reason they don't, we should only use the attachments with the latest
+    // version.
+    this.#version = this.#retrieveLatestVersion(records);
+
+    if (!this.#version) {
+      lazy.logConsole.debug("Could not find a version number for any record.");
+      return;
+    }
+
+    // Queue the series of assignments.
+    for (let i = 0; i < fileContents.length; ++i) {
+      let buffer = fileContents[i];
+      Services.tm.idleDispatchToMainThread(() => {
+        let start = Cu.now();
+        let json;
+        try {
+          json = JSON.parse(new TextDecoder().decode(buffer));
+        } catch (ex) {
+          // TODO: If there was an error decoding the buffer, we may want to
+          // dispatch an error in telemetry or try again.
+          return;
+        }
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetry.#clearAndPopulateMap",
+          start,
+          "Convert buffer to JSON."
+        );
+        if (!this.#map) {
+          this.#map = {};
+        }
+        Object.assign(this.#map, json);
+        lazy.logConsole.debug("Updated domain-to-categories map.");
+        if (i == fileContents.length - 1) {
+          Services.obs.notifyObservers(
+            null,
+            "domain-to-categories-map-update-complete"
+          );
+        }
+      });
+    }
+  }
+}
+
+export var SearchSERPDomainToCategoriesMap = new DomainToCategoriesMap();
 export var SearchSERPTelemetry = new TelemetryHandler();
 export var SearchSERPCategorization = new DomainCategorizer();
