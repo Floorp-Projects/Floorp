@@ -40,6 +40,8 @@
       },
       {
         "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
@@ -115,6 +117,8 @@
       },
       {
         "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
@@ -190,6 +194,8 @@
       },
       {
         "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
@@ -265,6 +271,8 @@
       },
       {
         "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
@@ -305,6 +313,46 @@
     "isolated_scripts": [
       {
         "args": [
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
+        ],
+        "isolate_name": "video_codec_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "video_codec_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "gce": "1",
+              "os": "Ubuntu-18.04",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "expiration": 10800,
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
@@ -496,6 +544,42 @@
     "isolated_scripts": [
       {
         "args": [
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "isolate_name": "video_codec_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "video_codec_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "arm64-64-Apple_M1",
+              "gce": "0",
+              "os": "Mac-12",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "expiration": 10800,
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
