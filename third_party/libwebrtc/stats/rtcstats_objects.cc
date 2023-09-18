@@ -291,94 +291,6 @@ const char* RTCRemoteIceCandidateStats::type() const {
 }
 
 // clang-format off
-WEBRTC_RTCSTATS_IMPL(DEPRECATED_RTCMediaStreamStats, RTCStats, "stream",
-    &stream_identifier,
-    &track_ids)
-// clang-format on
-
-DEPRECATED_RTCMediaStreamStats::DEPRECATED_RTCMediaStreamStats(
-    std::string id,
-    Timestamp timestamp)
-    : RTCStats(std::move(id), timestamp),
-      stream_identifier("streamIdentifier"),
-      track_ids("trackIds") {}
-
-DEPRECATED_RTCMediaStreamStats::DEPRECATED_RTCMediaStreamStats(
-    const DEPRECATED_RTCMediaStreamStats& other) = default;
-
-DEPRECATED_RTCMediaStreamStats::~DEPRECATED_RTCMediaStreamStats() {}
-
-// clang-format off
-WEBRTC_RTCSTATS_IMPL(DEPRECATED_RTCMediaStreamTrackStats, RTCStats, "track",
-                     &track_identifier,
-                     &media_source_id,
-                     &remote_source,
-                     &ended,
-                     &detached,
-                     &kind,
-                     &jitter_buffer_delay,
-                     &jitter_buffer_emitted_count,
-                     &frame_width,
-                     &frame_height,
-                     &frames_sent,
-                     &huge_frames_sent,
-                     &frames_received,
-                     &frames_decoded,
-                     &frames_dropped,
-                     &audio_level,
-                     &total_audio_energy,
-                     &echo_return_loss,
-                     &echo_return_loss_enhancement,
-                     &total_samples_received,
-                     &total_samples_duration,
-                     &concealed_samples,
-                     &silent_concealed_samples,
-                     &concealment_events,
-                     &inserted_samples_for_deceleration,
-                     &removed_samples_for_acceleration)
-// clang-format on
-
-DEPRECATED_RTCMediaStreamTrackStats::DEPRECATED_RTCMediaStreamTrackStats(
-    std::string id,
-    Timestamp timestamp,
-    const char* kind)
-    : RTCStats(std::move(id), timestamp),
-      track_identifier("trackIdentifier"),
-      media_source_id("mediaSourceId"),
-      remote_source("remoteSource"),
-      ended("ended"),
-      detached("detached"),
-      kind("kind", kind),
-      jitter_buffer_delay("jitterBufferDelay"),
-      jitter_buffer_emitted_count("jitterBufferEmittedCount"),
-      frame_width("frameWidth"),
-      frame_height("frameHeight"),
-      frames_sent("framesSent"),
-      huge_frames_sent("hugeFramesSent"),
-      frames_received("framesReceived"),
-      frames_decoded("framesDecoded"),
-      frames_dropped("framesDropped"),
-      audio_level("audioLevel"),
-      total_audio_energy("totalAudioEnergy"),
-      echo_return_loss("echoReturnLoss"),
-      echo_return_loss_enhancement("echoReturnLossEnhancement"),
-      total_samples_received("totalSamplesReceived"),
-      total_samples_duration("totalSamplesDuration"),
-      concealed_samples("concealedSamples"),
-      silent_concealed_samples("silentConcealedSamples"),
-      concealment_events("concealmentEvents"),
-      inserted_samples_for_deceleration("insertedSamplesForDeceleration"),
-      removed_samples_for_acceleration("removedSamplesForAcceleration") {
-  RTC_DCHECK(kind == RTCMediaStreamTrackKind::kAudio ||
-             kind == RTCMediaStreamTrackKind::kVideo);
-}
-
-DEPRECATED_RTCMediaStreamTrackStats::DEPRECATED_RTCMediaStreamTrackStats(
-    const DEPRECATED_RTCMediaStreamTrackStats& other) = default;
-
-DEPRECATED_RTCMediaStreamTrackStats::~DEPRECATED_RTCMediaStreamTrackStats() {}
-
-// clang-format off
 WEBRTC_RTCSTATS_IMPL(RTCPeerConnectionStats, RTCStats, "peer-connection",
     &data_channels_opened,
     &data_channels_closed)
@@ -399,7 +311,6 @@ RTCPeerConnectionStats::~RTCPeerConnectionStats() {}
 WEBRTC_RTCSTATS_IMPL(RTCRtpStreamStats, RTCStats, "rtp",
     &ssrc,
     &kind,
-    &track_id,
     &transport_id,
     &codec_id)
 // clang-format on
@@ -408,7 +319,6 @@ RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
     : RTCStats(std::move(id), timestamp),
       ssrc("ssrc"),
       kind("kind"),
-      track_id("trackId"),
       transport_id("transportId"),
       codec_id("codecId") {}
 

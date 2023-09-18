@@ -651,7 +651,6 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
         received_stats->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>()[0];
     ASSERT_TRUE(rtp_stats->relative_packet_arrival_delay.is_defined());
     ASSERT_TRUE(rtp_stats->packets_received.is_defined());
-    ASSERT_TRUE(rtp_stats->track_id.is_defined());
     rtp_stats_id_ = rtp_stats->id();
     audio_packets_stat_ = *rtp_stats->packets_received;
     audio_delay_stat_ = *rtp_stats->relative_packet_arrival_delay;
