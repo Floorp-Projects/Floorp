@@ -61,6 +61,7 @@ pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDi
         trim_data_to_registered_pings: false,
         log_level: None,
         rate_limit: None,
+        enable_event_timestamps: false,
     };
     let glean = Glean::new(cfg).unwrap();
 

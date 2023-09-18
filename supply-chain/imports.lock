@@ -37,27 +37,6 @@ user-login = "padenot"
 user-name = "Paul Adenot"
 
 [[publisher.authenticator]]
-version = "0.4.0-alpha.15"
-when = "2023-05-15"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
-[[publisher.authenticator]]
-version = "0.4.0-alpha.18"
-when = "2023-06-20"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
-[[publisher.authenticator]]
-version = "0.4.0-alpha.19"
-when = "2023-08-15"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
-[[publisher.authenticator]]
 version = "0.4.0-alpha.20"
 when = "2023-08-24"
 user-id = 175410
@@ -226,15 +205,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "53.2.0"
-when = "2023-08-02"
+version = "54.0.0"
+when = "2023-09-13"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "53.2.0"
-when = "2023-08-02"
+version = "54.0.0"
+when = "2023-09-13"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -245,13 +224,6 @@ when = "2021-03-17"
 user-id = 84794
 user-login = "jamienicol"
 user-name = "Jamie Nicol"
-
-[[publisher.headers]]
-version = "0.3.8"
-when = "2022-09-02"
-user-id = 359
-user-login = "seanmonstar"
-user-name = "Sean McArthur"
 
 [[publisher.headers]]
 version = "0.3.9"
@@ -393,13 +365,6 @@ user-id = 101233
 user-login = "le-automaton"
 
 [[publisher.proc-macro2]]
-version = "1.0.59"
-when = "2023-05-25"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.proc-macro2]]
 version = "1.0.66"
 when = "2023-07-16"
 user-id = 3618
@@ -503,13 +468,6 @@ when = "2022-10-02"
 user-id = 2017
 user-login = "mbrubeck"
 user-name = "Matt Brubeck"
-
-[[publisher.syn]]
-version = "1.0.107"
-when = "2022-12-18"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
 
 [[publisher.syn]]
 version = "2.0.18"
@@ -1011,12 +969,6 @@ who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "1.0.58"
 
-[[audits.embark-studios.audits.cty]]
-who = "Johan Andersson <opensource@embark-studios.com>"
-criteria = "safe-to-deploy"
-version = "0.2.2"
-notes = "Inspected it and is a tiny crate with just type definitions"
-
 [[audits.embark-studios.audits.derive_more]]
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
@@ -1238,6 +1190,11 @@ who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 delta = "1.17.2 -> 1.18.0"
 
+[[audits.isrg.audits.rand_chacha]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.3.1"
+
 [[audits.isrg.audits.rand_core]]
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
@@ -1304,15 +1261,3 @@ criteria = "safe-to-deploy"
 version = "1.4.0"
 notes = "I have read over the macros, and audited the unsafe code."
 aggregated-from = "https://raw.githubusercontent.com/mozilla/cargo-vet/main/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.time]]
-who = "Kershaw Chang <kershaw@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.1.45 -> 0.3.17"
-aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.time-macros]]
-who = "Kershaw Chang <kershaw@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.2.6"
-aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
