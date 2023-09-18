@@ -188,6 +188,13 @@ class BookmarksRobot {
         addFolderButton().click()
     }
 
+    fun clickAddNewFolderButtonFromSelectFolderView() =
+        itemWithResId("$packageName:id/add_folder_button")
+            .also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
+
     fun addNewFolderName(name: String) {
         addFolderTitleField()
             .click()

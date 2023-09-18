@@ -83,52 +83,6 @@ class SmokeTest {
         mockWebServer.shutdown()
     }
 
-    // Verifies that deleting a Bookmarks folder also removes the item from inside it.
-    @Test
-    fun deleteNonEmptyBookmarkFolderTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        browserScreen {
-            createBookmark(website.url)
-        }.openThreeDotMenu {
-        }.openBookmarks {
-            verifyBookmarkTitle("Test_Page_1")
-            createFolder("My Folder")
-            verifyFolderTitle("My Folder")
-        }.openThreeDotMenu("Test_Page_1") {
-        }.clickEdit {
-            clickParentFolderSelector()
-            selectFolder("My Folder")
-            navigateUp()
-            saveEditBookmark()
-            createFolder("My Folder 2")
-            verifyFolderTitle("My Folder 2")
-        }.openThreeDotMenu("My Folder 2") {
-        }.clickEdit {
-            clickParentFolderSelector()
-            selectFolder("My Folder")
-            navigateUp()
-            saveEditBookmark()
-        }.openThreeDotMenu("My Folder") {
-        }.clickDelete {
-            cancelFolderDeletion()
-            verifyFolderTitle("My Folder")
-        }.openThreeDotMenu("My Folder") {
-        }.clickDelete {
-            confirmDeletion()
-            verifyDeleteSnackBarText()
-            verifyBookmarkIsDeleted("My Folder")
-            verifyBookmarkIsDeleted("My Folder 2")
-            verifyBookmarkIsDeleted("Test_Page_1")
-            navigateUp()
-        }
-
-        browserScreen {
-        }.openThreeDotMenu {
-            verifyAddBookmarkButton()
-        }
-    }
-
     @Test
     fun shareTabsFromTabsTrayTest() {
         val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
