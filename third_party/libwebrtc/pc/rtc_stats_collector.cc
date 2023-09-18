@@ -474,9 +474,9 @@ std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
       voice_receiver_info.total_output_duration;
   // `fir_count` and `pli_count` are only valid for video and are
   // purposefully left undefined for audio.
-  if (voice_receiver_info.last_packet_received_timestamp_ms.has_value()) {
-    inbound_audio->last_packet_received_timestamp = static_cast<double>(
-        *voice_receiver_info.last_packet_received_timestamp_ms);
+  if (voice_receiver_info.last_packet_received.has_value()) {
+    inbound_audio->last_packet_received_timestamp =
+        voice_receiver_info.last_packet_received->ms<double>();
   }
   if (voice_receiver_info.estimated_playout_ntp_timestamp_ms.has_value()) {
     // TODO(bugs.webrtc.org/10529): Fix time origin.
@@ -649,9 +649,9 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
   inbound_video->min_playout_delay =
       static_cast<double>(video_receiver_info.min_playout_delay_ms) /
       rtc::kNumMillisecsPerSec;
-  if (video_receiver_info.last_packet_received_timestamp_ms.has_value()) {
-    inbound_video->last_packet_received_timestamp = static_cast<double>(
-        *video_receiver_info.last_packet_received_timestamp_ms);
+  if (video_receiver_info.last_packet_received.has_value()) {
+    inbound_video->last_packet_received_timestamp =
+        video_receiver_info.last_packet_received->ms<double>();
   }
   if (video_receiver_info.estimated_playout_ntp_timestamp_ms.has_value()) {
     // TODO(bugs.webrtc.org/10529): Fix time origin if needed.

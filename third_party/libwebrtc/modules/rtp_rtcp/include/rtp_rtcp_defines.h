@@ -395,9 +395,12 @@ struct RtpReceiveStats {
   // Interarrival jitter in time.
   webrtc::TimeDelta interarrival_jitter = webrtc::TimeDelta::Zero();
 
-  // Timestamp and counters exposed in RTCInboundRtpStreamStats, see
+  // Time of the last packet received in unix epoch,
+  // i.e. Timestamp::Zero() represents 1st Jan 1970 00:00
+  absl::optional<Timestamp> last_packet_received;
+
+  // Counters exposed in RTCInboundRtpStreamStats, see
   // https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*
-  absl::optional<int64_t> last_packet_received_timestamp_ms;
   RtpPacketCounter packet_counter;
 };
 
