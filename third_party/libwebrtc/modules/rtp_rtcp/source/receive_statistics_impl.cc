@@ -27,8 +27,16 @@
 
 namespace webrtc {
 namespace {
-constexpr int64_t kStatisticsTimeoutMs = 8000;
-constexpr int64_t kStatisticsProcessIntervalMs = 1000;
+constexpr TimeDelta kStatisticsTimeout = TimeDelta::Seconds(8);
+constexpr TimeDelta kStatisticsProcessInterval = TimeDelta::Seconds(1);
+
+TimeDelta UnixEpochDelta(Clock& clock) {
+  Timestamp now = clock.CurrentTime();
+  NtpTime ntp_now = clock.ConvertTimestampToNtpTime(now);
+  return TimeDelta::Millis(ntp_now.ToMs() - now.ms() -
+                           rtc::kNtpJan1970Millisecs);
+}
+
 }  // namespace
 
 StreamStatistician::~StreamStatistician() {}
@@ -38,10 +46,8 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
                                                int max_reordering_threshold)
     : ssrc_(ssrc),
       clock_(clock),
-      delta_internal_unix_epoch_ms_(clock_->CurrentNtpInMilliseconds() -
-                                    clock_->TimeInMilliseconds() -
-                                    rtc::kNtpJan1970Millisecs),
-      incoming_bitrate_(kStatisticsProcessIntervalMs,
+      delta_internal_unix_epoch_(UnixEpochDelta(*clock_)),
+      incoming_bitrate_(kStatisticsProcessInterval.ms(),
                         RateStatistics::kBpsScale),
       max_reordering_threshold_(max_reordering_threshold),
       enable_retransmit_detection_(false),
@@ -49,7 +55,6 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
       jitter_q4_(0),
       cumulative_loss_(0),
       cumulative_loss_rtcp_offset_(0),
-      last_receive_time_ms_(0),
       last_received_timestamp_(0),
       received_seq_first_(-1),
       received_seq_max_(-1),
@@ -61,7 +66,7 @@ StreamStatisticianImpl::~StreamStatisticianImpl() = default;
 
 bool StreamStatisticianImpl::UpdateOutOfOrder(const RtpPacketReceived& packet,
                                               int64_t sequence_number,
-                                              int64_t now_ms) {
+                                              Timestamp now) {
   // Check if `packet` is second packet of a stream restart.
   if (received_seq_out_of_order_) {
     // Count the previous packet as a received; it was postponed below.
@@ -103,7 +108,7 @@ bool StreamStatisticianImpl::UpdateOutOfOrder(const RtpPacketReceived& packet,
     return false;
 
   // Old out of order packet, may be retransmit.
-  if (enable_retransmit_detection_ && IsRetransmitOfOldPacket(packet, now_ms))
+  if (enable_retransmit_detection_ && IsRetransmitOfOldPacket(packet, now))
     receive_counters_.retransmitted.AddPacket(packet);
   return true;
 }
@@ -111,9 +116,8 @@ bool StreamStatisticianImpl::UpdateOutOfOrder(const RtpPacketReceived& packet,
 void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   RTC_DCHECK_EQ(ssrc_, packet.Ssrc());
   Timestamp now = clock_->CurrentTime();
-  int64_t now_ms = now.ms();
 
-  incoming_bitrate_.Update(packet.size(), now_ms);
+  incoming_bitrate_.Update(packet.size(), now.ms());
   receive_counters_.transmitted.AddPacket(packet);
   --cumulative_loss_;
 
@@ -126,7 +130,7 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
     last_report_seq_max_ = sequence_number - 1;
     received_seq_max_ = sequence_number - 1;
     receive_counters_.first_packet_time = now;
-  } else if (UpdateOutOfOrder(packet, sequence_number, now_ms)) {
+  } else if (UpdateOutOfOrder(packet, sequence_number, now)) {
     return;
   }
   // In order packet.
@@ -140,18 +144,19 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   if (packet.Timestamp() != last_received_timestamp_ &&
       (receive_counters_.transmitted.packets -
        receive_counters_.retransmitted.packets) > 1) {
-    UpdateJitter(packet, now_ms);
+    UpdateJitter(packet, now);
   }
   last_received_timestamp_ = packet.Timestamp();
-  last_receive_time_ms_ = now_ms;
+  last_receive_time_ = now;
 }
 
 void StreamStatisticianImpl::UpdateJitter(const RtpPacketReceived& packet,
-                                          int64_t receive_time_ms) {
-  int64_t receive_diff_ms = receive_time_ms - last_receive_time_ms_;
-  RTC_DCHECK_GE(receive_diff_ms, 0);
-  uint32_t receive_diff_rtp = static_cast<uint32_t>(
-      (receive_diff_ms * packet.payload_type_frequency()) / 1000);
+                                          Timestamp receive_time) {
+  RTC_DCHECK(last_receive_time_.has_value());
+  TimeDelta receive_diff = receive_time - *last_receive_time_;
+  RTC_DCHECK_GE(receive_diff, TimeDelta::Zero());
+  uint32_t receive_diff_rtp =
+      (receive_diff * packet.payload_type_frequency()).seconds<uint32_t>();
   int32_t time_diff_samples =
       receive_diff_rtp - (packet.Timestamp() - last_received_timestamp_);
 
@@ -178,13 +183,13 @@ void StreamStatisticianImpl::ReviseFrequencyAndJitter(
   if (payload_type_frequency != 0) {
     if (last_payload_type_frequency_ != 0) {
       // Value in "jitter_q4_" variable is a number of samples.
-      // I.e. jitter = timestamp (ms) * frequency (kHz).
+      // I.e. jitter = timestamp (s) * frequency (Hz).
       // Since the frequency has changed we have to update the number of samples
       // accordingly. The new value should rely on a new frequency.
 
       // If we don't do such procedure we end up with the number of samples that
-      // cannot be converted into milliseconds correctly
-      // (i.e. jitter_ms = jitter_q4_ >> 4 / (payload_type_frequency / 1000)).
+      // cannot be converted into TimeDelta correctly
+      // (i.e. jitter = jitter_q4_ >> 4 / payload_type_frequency).
       // In such case, the number of samples has a "mix".
 
       // Doing so we pretend that everything prior and including the current
@@ -219,11 +224,11 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
     // Divide value in fractional seconds by frequency to get jitter in
     // fractional seconds.
     stats.interarrival_jitter =
-        webrtc::TimeDelta::Seconds(stats.jitter) / last_payload_type_frequency_;
+        TimeDelta::Seconds(stats.jitter) / last_payload_type_frequency_;
   }
-  if (last_receive_time_ms_ > 0) {
+  if (last_receive_time_.has_value()) {
     stats.last_packet_received_timestamp_ms =
-        last_receive_time_ms_ + delta_internal_unix_epoch_ms_;
+        (*last_receive_time_ + delta_internal_unix_epoch_).ms();
   }
   stats.packet_counter = receive_counters_.transmitted;
   return stats;
@@ -231,12 +236,12 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
 
 void StreamStatisticianImpl::MaybeAppendReportBlockAndReset(
     std::vector<rtcp::ReportBlock>& report_blocks) {
-  int64_t now_ms = clock_->TimeInMilliseconds();
-  if (now_ms - last_receive_time_ms_ >= kStatisticsTimeoutMs) {
-    // Not active.
+  if (!ReceivedRtpPacket()) {
     return;
   }
-  if (!ReceivedRtpPacket()) {
+  Timestamp now = clock_->CurrentTime();
+  if (now - *last_receive_time_ >= kStatisticsTimeout) {
+    // Not active.
     return;
   }
 
@@ -278,9 +283,9 @@ void StreamStatisticianImpl::MaybeAppendReportBlockAndReset(
   // Only for report blocks in RTCP SR and RR.
   last_report_cumulative_loss_ = cumulative_loss_;
   last_report_seq_max_ = received_seq_max_;
-  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "cumulative_loss_pkts", now_ms,
+  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "cumulative_loss_pkts", now.ms(),
                                   cumulative_loss_, ssrc_);
-  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "received_seq_max_pkts", now_ms,
+  BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "received_seq_max_pkts", now.ms(),
                                   (received_seq_max_ - received_seq_first_),
                                   ssrc_);
 }
@@ -310,30 +315,26 @@ uint32_t StreamStatisticianImpl::BitrateReceived() const {
 
 bool StreamStatisticianImpl::IsRetransmitOfOldPacket(
     const RtpPacketReceived& packet,
-    int64_t now_ms) const {
-  uint32_t frequency_khz = packet.payload_type_frequency() / 1000;
-  RTC_DCHECK_GT(frequency_khz, 0);
-
-  int64_t time_diff_ms = now_ms - last_receive_time_ms_;
+    Timestamp now) const {
+  int frequency_hz = packet.payload_type_frequency();
+  RTC_DCHECK(last_receive_time_.has_value());
+  RTC_DCHECK_GT(frequency_hz, 0);
+  TimeDelta time_diff = now - *last_receive_time_;
 
   // Diff in time stamp since last received in order.
   uint32_t timestamp_diff = packet.Timestamp() - last_received_timestamp_;
-  uint32_t rtp_time_stamp_diff_ms = timestamp_diff / frequency_khz;
-
-  int64_t max_delay_ms = 0;
+  TimeDelta rtp_time_stamp_diff =
+      TimeDelta::Seconds(timestamp_diff) / frequency_hz;
 
   // Jitter standard deviation in samples.
   float jitter_std = std::sqrt(static_cast<float>(jitter_q4_ >> 4));
 
   // 2 times the standard deviation => 95% confidence.
-  // And transform to milliseconds by dividing by the frequency in kHz.
-  max_delay_ms = static_cast<int64_t>((2 * jitter_std) / frequency_khz);
+  // Min max_delay is 1ms.
+  TimeDelta max_delay = std::max(
+      TimeDelta::Seconds(2 * jitter_std / frequency_hz), TimeDelta::Millis(1));
 
-  // Min max_delay_ms is 1.
-  if (max_delay_ms == 0) {
-    max_delay_ms = 1;
-  }
-  return time_diff_ms > rtp_time_stamp_diff_ms + max_delay_ms;
+  return time_diff > rtp_time_stamp_diff + max_delay;
 }
 
 std::unique_ptr<ReceiveStatistics> ReceiveStatistics::Create(Clock* clock) {
