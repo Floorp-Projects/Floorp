@@ -245,6 +245,7 @@ rtc_library("video_stream_buffer_controller") {
     "../api/task_queue",
     "../api/units:data_size",
     "../api/units:time_delta",
+    "../api/units:timestamp",
     "../api/video:encoded_frame",
     "../api/video:frame_buffer",
     "../api/video:video_rtp_headers",

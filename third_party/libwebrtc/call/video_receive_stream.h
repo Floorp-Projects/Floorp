@@ -97,9 +97,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
     int current_delay_ms = 0;
     int target_delay_ms = 0;
     int jitter_buffer_ms = 0;
-    // https://w3c.github.io/webrtc-stats/#dom-rtcvideoreceiverstats-jitterbufferdelay
-    double jitter_buffer_delay_seconds = 0;
-    // https://w3c.github.io/webrtc-stats/#dom-rtcvideoreceiverstats-jitterbufferemittedcount
+    // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
+    TimeDelta jitter_buffer_delay = TimeDelta::Zero();
+    // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferemittedcount
     uint64_t jitter_buffer_emitted_count = 0;
     int min_playout_delay_ms = 0;
     int render_delay_ms = 10;

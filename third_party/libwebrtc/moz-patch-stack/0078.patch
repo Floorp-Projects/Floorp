@@ -116,7 +116,7 @@ index 8267b8e6cb..f5d93f5f76 100644
    num_discarded_packets_ += num_discarded_packets;
  }
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 46270d74f9..b8fb48ff72 100644
+index 941e25b97c..14cd765577 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
 @@ -20,6 +20,7 @@
@@ -127,7 +127,7 @@ index 46270d74f9..b8fb48ff72 100644
  #include "system_wrappers/include/clock.h"
  #include "system_wrappers/include/metrics.h"
  #include "video/video_receive_stream2.h"
-@@ -793,6 +794,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+@@ -800,6 +801,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
                                               VideoContentType content_type) {
    RTC_DCHECK_RUN_ON(&main_thread_);
  
@@ -137,7 +137,7 @@ index 46270d74f9..b8fb48ff72 100644
    if (is_keyframe) {
      ++stats_.frame_counts.key_frames;
    } else {
-@@ -824,6 +828,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+@@ -831,6 +835,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
  void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
    // Can be called on either the decode queue or the worker thread
    // See FrameBuffer2 for more details.
@@ -146,7 +146,7 @@ index 46270d74f9..b8fb48ff72 100644
    worker_thread_->PostTask(
        SafeTask(task_safety_.flag(), [frames_dropped, this]() {
          RTC_DCHECK_RUN_ON(&main_thread_);
-@@ -834,6 +840,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -841,6 +847,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
  void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
    // Can be called on either the decode queue or the worker thread
    // See FrameBuffer2 for more details.
@@ -156,7 +156,7 @@ index 46270d74f9..b8fb48ff72 100644
    worker_thread_->PostTask(
        SafeTask(task_safety_.flag(), [packets_discarded, this]() {
          RTC_DCHECK_RUN_ON(&main_thread_);
-@@ -862,6 +871,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
+@@ -869,6 +878,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
  
  void ReceiveStatisticsProxy::OnRttUpdate(int64_t avg_rtt_ms) {
    RTC_DCHECK_RUN_ON(&main_thread_);
@@ -188,10 +188,10 @@ index b5e120b8b7..f11e37e6b3 100644
      }
      reference_finder_->ClearTo(seq_num);
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index a59ed7b2e3..a5b50c6cee 100644
+index 413af4a968..408c5949d9 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
-@@ -30,6 +30,7 @@
+@@ -31,6 +31,7 @@
  #include "rtc_base/checks.h"
  #include "rtc_base/logging.h"
  #include "rtc_base/thread_annotations.h"
@@ -199,7 +199,7 @@ index a59ed7b2e3..a5b50c6cee 100644
  #include "video/frame_decode_scheduler.h"
  #include "video/frame_decode_timing.h"
  #include "video/task_queue_frame_decode_scheduler.h"
-@@ -141,6 +142,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+@@ -152,6 +153,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
      std::unique_ptr<EncodedFrame> frame) {
    RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
    FrameMetadata metadata(*frame);
@@ -209,7 +209,7 @@ index a59ed7b2e3..a5b50c6cee 100644
    int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
    if (buffer_->InsertFrame(std::move(frame))) {
      RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
-@@ -151,6 +155,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+@@ -162,6 +166,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
                                   *metadata.receive_time);
      }
      if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
