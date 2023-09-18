@@ -797,3 +797,32 @@ JS_PUBLIC_API void js::gc::SetPerformanceHint(JSContext* cx,
 
   cx->runtime()->gc.setPerformanceHint(hint);
 }
+
+AutoSelectGCHeap::AutoSelectGCHeap(JSContext* cx,
+                                   size_t allowedNurseryCollections)
+    : cx_(cx), allowedNurseryCollections_(allowedNurseryCollections) {
+  JS::AddGCNurseryCollectionCallback(cx, &NurseryCollectionCallback, this);
+}
+
+AutoSelectGCHeap::~AutoSelectGCHeap() {
+  JS::RemoveGCNurseryCollectionCallback(cx_, &NurseryCollectionCallback, this);
+}
+
+/* static */
+void AutoSelectGCHeap::NurseryCollectionCallback(JSContext* cx,
+                                                 JS::GCNurseryProgress progress,
+                                                 JS::GCReason reason,
+                                                 void* data) {
+  if (progress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) {
+    static_cast<AutoSelectGCHeap*>(data)->onNurseryCollectionEnd();
+  }
+}
+
+void AutoSelectGCHeap::onNurseryCollectionEnd() {
+  if (allowedNurseryCollections_ != 0) {
+    allowedNurseryCollections_--;
+    return;
+  }
+
+  heap_ = gc::Heap::Tenured;
+}
