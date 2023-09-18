@@ -548,4 +548,55 @@ TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoGetReofferedWhenActive) {
 
 #endif  // WEBRTC_HAVE_SCTP
 
+TEST_F(SdpOfferAnswerTest, SimulcastAnswerWithNoRidsIsRejected) {
+  auto pc = CreatePeerConnection();
+
+  RtpTransceiverInit init;
+  RtpEncodingParameters rid1;
+  rid1.rid = "1";
+  init.send_encodings.push_back(rid1);
+  RtpEncodingParameters rid2;
+  rid2.rid = "2";
+  init.send_encodings.push_back(rid2);
+
+  auto transceiver = pc->AddTransceiver(cricket::MEDIA_TYPE_VIDEO, init);
+  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
+  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
+
+  // A SDP answer with simulcast but without mid/rid extensions.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=setup:passive\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+      "a=mid:" +
+      mid +
+      "\r\n"
+      "a=recvonly\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtcp-rsize\r\n"
+      "a=rtpmap:96 VP8/90000\r\n"
+      "a=rid:1 recv\r\n"
+      "a=rid:2 recv\r\n"
+      "a=simulcast:recv 1;2\r\n";
+  std::string extensions =
+      "a=extmap:9 urn:ietf:params:rtp-hdrext:sdes:mid\r\n"
+      "a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n";
+  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  EXPECT_FALSE(pc->SetRemoteDescription(std::move(answer)));
+
+  auto answer_with_extensions =
+      CreateSessionDescription(SdpType::kAnswer, sdp + extensions);
+  EXPECT_TRUE(pc->SetRemoteDescription(std::move(answer_with_extensions)));
+}
+
 }  // namespace webrtc
