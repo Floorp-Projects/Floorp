@@ -48,12 +48,8 @@ license:
         - python/mozlint/test/files/
         # By design
         - python/mozrelease/mozrelease
-        - security/mac/hardenedruntime/browser.developer.entitlements.xml
-        - security/mac/hardenedruntime/browser.production.entitlements.xml
-        - security/mac/hardenedruntime/developer.entitlements.xml
-        - security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
-        - security/mac/hardenedruntime/plugin-container.production.entitlements.xml
-        - security/mac/hardenedruntime/production.entitlements.xml
+        - security/mac/hardenedruntime/v1/production/browser.xml
+        - security/mac/hardenedruntime/v1/developer/browser.xml
         - testing/marionette/harness/marionette_harness/www/
         # Browsertime can't handle this script when there's a comment at the top
         - testing/raptor/browsertime/browsertime_benchmark.js

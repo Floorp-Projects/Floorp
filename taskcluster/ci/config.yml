@@ -730,8 +730,8 @@ mac-notarization:
         by-platform:
             macosx64.*:
                 by-release-level:
-                    production: security/mac/hardenedruntime/production.entitlements.xml
-                    default: security/mac/hardenedruntime/developer.entitlements.xml
+                    production: security/mac/hardenedruntime/v1/production/browser.xml
+                    default: security/mac/hardenedruntime/v1/developer/browser.xml
             default: ''
     mac-requirements:
         by-platform:
