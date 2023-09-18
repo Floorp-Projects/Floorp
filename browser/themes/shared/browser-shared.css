@@ -1037,3 +1037,8 @@ panel toolbarseparator {
 #PictureInPicturePanelFooter {
   margin: 8px 16px 16px;
 }
+
+/* Shopping sidebar */
+shopping-sidebar {
+  border-inline-start: 1px solid var(--chrome-content-separator-color);
+}
