@@ -425,6 +425,15 @@ Section "Uninstall"
   Var /GLOBAL UnusedExecCatchReturn
   ExecWait '"$INSTDIR\${FileMainEXE}" --backgroundtask uninstall' $UnusedExecCatchReturn
 
+  ; Uninstall the default browser agent scheduled task and all other scheduled
+  ; tasks registered by Firefox.
+  ; This also removes the registry entries that the WDBA creates.
+  ; One of the scheduled tasks that this will remove is the Background Update
+  ; Task. Ideally, this will eventually be changed so that it doesn't rely on
+  ; the WDBA. See Bug 1710143.
+  ExecWait '"$INSTDIR\default-browser-agent.exe" uninstall $AppUserModelID'
+  ${RemoveDefaultBrowserAgentShortcut}
+
   ; Delete the app exe to prevent launching the app while we are uninstalling.
   ClearErrors
   ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -643,15 +652,6 @@ Section "Uninstall"
     DeleteRegKey HKCU "Software\Classes\CLSID\$0\InProcServer32"
     DeleteRegKey HKCU "Software\Classes\CLSID\$0"
   ${EndIf}
-
-  ; Uninstall the default browser agent scheduled task and all other scheduled
-  ; tasks registered by Firefox.
-  ; This also removes the registry entries that the WDBA creates.
-  ; One of the scheduled tasks that this will remove is the Background Update
-  ; Task. Ideally, this will eventually be changed so that it doesn't rely on
-  ; the WDBA. See Bug 1710143.
-  ExecWait '"$INSTDIR\default-browser-agent.exe" uninstall $AppUserModelID'
-  ${RemoveDefaultBrowserAgentShortcut}
 
   ${un.RemovePrecompleteEntries} "false"
 

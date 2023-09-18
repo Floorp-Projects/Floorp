@@ -75,4 +75,8 @@ int wmain(int argc, wchar_t** argv) {
   CreateProcessW(programPath.c_str(), cmdLine.get(), nullptr, nullptr, false,
                  DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr, nullptr,
                  &si, &pi);
+
+  // Wait until process exists so uninstalling doesn't interrupt the background
+  // task cleaning registry entries.
+  WaitForSingleObject(pi.hProcess, INFINITE);
 }
