@@ -644,6 +644,7 @@ if (rtc_include_tests) {
       "../../api:field_trials_registry",
       "../../api:frame_transformer_factory",
       "../../api:libjingle_peerconnection_api",
+      "../../api:make_ref_counted",
       "../../api:mock_frame_encryptor",
       "../../api:mock_transformable_video_frame",
       "../../api:rtp_headers",
