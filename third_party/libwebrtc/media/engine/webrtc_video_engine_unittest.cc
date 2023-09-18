@@ -1797,11 +1797,10 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     // needs to be disabled, otherwise, tests which check the size of received
     // frames become flaky.
     media_config.video.enable_cpu_adaptation = false;
-    channel_.reset(
-        static_cast<cricket::WebRtcVideoChannel*>(engine_.CreateMediaChannel(
-            cricket::MediaChannel::Role::kBoth, call_.get(), media_config,
-            cricket::VideoOptions(), webrtc::CryptoOptions(),
-            video_bitrate_allocator_factory_.get())));
+    channel_.reset(engine_.CreateMediaChannel(
+        cricket::MediaChannel::Role::kBoth, call_.get(), media_config,
+        cricket::VideoOptions(), webrtc::CryptoOptions(),
+        video_bitrate_allocator_factory_.get()));
     send_channel_ = std::make_unique<VideoMediaSendChannel>(channel_.get());
     receive_channel_ =
         std::make_unique<VideoMediaReceiveChannel>(channel_.get());
@@ -1818,6 +1817,15 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     frame_source_ = std::make_unique<cricket::FakeFrameSource>(
         640, 480, rtc::kNumMicrosecsPerSec / kFramerate);
     EXPECT_TRUE(channel_->SetVideoSend(kSsrc, nullptr, frame_forwarder_.get()));
+  }
+
+  // Returns pointer to implementation of the send channel.
+  WebRtcVideoChannel* SendImpl() {
+    // Note that this function requires intimate knowledge of how the channel
+    // was created.
+    return static_cast<cricket::WebRtcVideoChannel*>(
+        static_cast<VideoMediaShimChannel*>(channel_.get())
+            ->SendImplForTesting());
   }
 
   // Utility method to setup an additional stream to send and receive video.
@@ -1866,7 +1874,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     frame_source_ = std::make_unique<cricket::FakeFrameSource>(
         kVideoWidth, kVideoHeight, rtc::kNumMicrosecsPerSec / kFramerate);
 
-    bool sending = channel_->sending();
+    bool sending = SendImpl()->sending();
     bool success = SetSend(false);
     if (success) {
       cricket::VideoSendParameters parameters;
@@ -1992,7 +2000,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
   std::unique_ptr<webrtc::test::FrameForwarder> frame_forwarder_;
   std::unique_ptr<webrtc::test::FrameForwarder> frame_forwarder_2_;
 
-  std::unique_ptr<WebRtcVideoChannel> channel_;
+  std::unique_ptr<VideoMediaChannel> channel_;
   std::unique_ptr<VideoMediaSendChannel> send_channel_;
   std::unique_ptr<VideoMediaReceiveChannel> receive_channel_;
   cricket::FakeNetworkInterface network_interface_;
@@ -2004,23 +2012,23 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
 
 // Test that SetSend works.
 TEST_F(WebRtcVideoChannelBaseTest, SetSend) {
-  EXPECT_FALSE(channel_->sending());
+  EXPECT_FALSE(SendImpl()->sending());
   EXPECT_TRUE(channel_->SetVideoSend(kSsrc, nullptr, frame_forwarder_.get()));
   EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_FALSE(channel_->sending());
+  EXPECT_FALSE(SendImpl()->sending());
   EXPECT_TRUE(SetSend(true));
-  EXPECT_TRUE(channel_->sending());
+  EXPECT_TRUE(SendImpl()->sending());
   SendFrame();
   EXPECT_GT(NumRtpPackets(), 0);
   EXPECT_TRUE(SetSend(false));
-  EXPECT_FALSE(channel_->sending());
+  EXPECT_FALSE(SendImpl()->sending());
 }
 
 // Test that SetSend fails without codecs being set.
 TEST_F(WebRtcVideoChannelBaseTest, SetSendWithoutCodecs) {
-  EXPECT_FALSE(channel_->sending());
+  EXPECT_FALSE(SendImpl()->sending());
   EXPECT_FALSE(SetSend(true));
-  EXPECT_FALSE(channel_->sending());
+  EXPECT_FALSE(SendImpl()->sending());
 }
 
 // Test that we properly set the send and recv buffer sizes by the time
@@ -2544,13 +2552,13 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderFallback) {
 
   // RequestEncoderFallback will post a task to the worker thread (which is also
   // the current thread), hence the ProcessMessages call.
-  channel_->RequestEncoderFallback();
+  SendImpl()->RequestEncoderFallback();
   time_controller_.AdvanceTime(kFrameDuration);
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP8", codec.name);
 
   // No other codec to fall back to, keep using VP8.
-  channel_->RequestEncoderFallback();
+  SendImpl()->RequestEncoderFallback();
   time_controller_.AdvanceTime(kFrameDuration);
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP8", codec.name);
@@ -2568,8 +2576,8 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchDefaultFallback) {
 
   // RequestEncoderSwitch will post a task to the worker thread (which is also
   // the current thread), hence the ProcessMessages call.
-  channel_->RequestEncoderSwitch(webrtc::SdpVideoFormat("UnavailableCodec"),
-                                 /*allow_default_fallback=*/true);
+  SendImpl()->RequestEncoderSwitch(webrtc::SdpVideoFormat("UnavailableCodec"),
+                                   /*allow_default_fallback=*/true);
   time_controller_.AdvanceTime(kFrameDuration);
 
   // Requested encoder is not available. Default fallback is allowed. Switch to
@@ -2591,7 +2599,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchStrictPreference) {
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP8", codec.name);
 
-  channel_->RequestEncoderSwitch(
+  SendImpl()->RequestEncoderSwitch(
       webrtc::SdpVideoFormat("VP9", {{"profile-id", "1"}}),
       /*allow_default_fallback=*/false);
   time_controller_.AdvanceTime(kFrameDuration);
@@ -2601,7 +2609,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchStrictPreference) {
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP8", codec.name);
 
-  channel_->RequestEncoderSwitch(
+  SendImpl()->RequestEncoderSwitch(
       webrtc::SdpVideoFormat("VP9", {{"profile-id", "0"}}),
       /*allow_default_fallback=*/false);
   time_controller_.AdvanceTime(kFrameDuration);
@@ -2624,7 +2632,7 @@ TEST_F(WebRtcVideoChannelBaseTest, SendCodecIsMovedToFrontInRtpParameters) {
 
   // RequestEncoderFallback will post a task to the worker thread (which is also
   // the current thread), hence the ProcessMessages call.
-  channel_->RequestEncoderFallback();
+  SendImpl()->RequestEncoderFallback();
   time_controller_.AdvanceTime(kFrameDuration);
 
   send_codecs = send_channel_->GetRtpSendParameters(kSsrc).codecs;
@@ -2674,6 +2682,23 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   void ResetTest() {
     TearDown();
     SetUp();
+  }
+
+  // Returns pointer to implementation of the send channel.
+  WebRtcVideoChannel* SendImpl() {
+    // Note that this function requires intimate knowledge of how the channel
+    // was created.
+    return static_cast<cricket::WebRtcVideoChannel*>(
+        static_cast<VideoMediaShimChannel*>(channel_.get())
+            ->SendImplForTesting());
+  }
+
+  // Casts a shim channel to a webrtc::Transport. Used once.
+  webrtc::Transport* ChannelImplAsTransport(VideoMediaChannel* channel) {
+    return static_cast<webrtc::Transport*>(
+        static_cast<cricket::WebRtcVideoChannel*>(
+            static_cast<VideoMediaShimChannel*>(channel)
+                ->SendImplForTesting()));
   }
 
   cricket::VideoCodec GetEngineCodec(const std::string& name) {
@@ -5511,15 +5536,13 @@ TEST_F(WebRtcVideoChannelTest, TestSetDscpOptions) {
   std::unique_ptr<cricket::FakeNetworkInterface> network_interface(
       new cricket::FakeNetworkInterface);
   MediaConfig config;
-  std::unique_ptr<cricket::WebRtcVideoChannel> channel;
+  std::unique_ptr<cricket::VideoMediaChannel> channel;
   std::unique_ptr<cricket::VideoMediaSendChannel> send_channel;
   webrtc::RtpParameters parameters;
 
-  channel.reset(
-      static_cast<cricket::WebRtcVideoChannel*>(engine_.CreateMediaChannel(
-          cricket::MediaChannel::Role::kBoth, call_.get(), config,
-          VideoOptions(), webrtc::CryptoOptions(),
-          video_bitrate_allocator_factory_.get())));
+  channel.reset(engine_.CreateMediaChannel(
+      cricket::MediaChannel::Role::kBoth, call_.get(), config, VideoOptions(),
+      webrtc::CryptoOptions(), video_bitrate_allocator_factory_.get()));
   send_channel.reset(new VideoMediaSendChannel(channel_.get()));
 
   channel->SetInterface(network_interface.get());
@@ -5530,11 +5553,9 @@ TEST_F(WebRtcVideoChannelTest, TestSetDscpOptions) {
   // Default value when DSCP is enabled is also DSCP_DEFAULT, until it is set
   // through rtp parameters.
   config.enable_dscp = true;
-  channel.reset(
-      static_cast<cricket::WebRtcVideoChannel*>(engine_.CreateMediaChannel(
-          cricket::MediaChannel::Role::kBoth, call_.get(), config,
-          VideoOptions(), webrtc::CryptoOptions(),
-          video_bitrate_allocator_factory_.get())));
+  channel.reset(engine_.CreateMediaChannel(
+      cricket::MediaChannel::Role::kBoth, call_.get(), config, VideoOptions(),
+      webrtc::CryptoOptions(), video_bitrate_allocator_factory_.get()));
   send_channel.reset(new VideoMediaSendChannel(channel.get()));
   channel->SetInterface(network_interface.get());
   EXPECT_EQ(rtc::DSCP_DEFAULT, network_interface->dscp());
@@ -5556,19 +5577,17 @@ TEST_F(WebRtcVideoChannelTest, TestSetDscpOptions) {
 
   // Packets should also self-identify their dscp in PacketOptions.
   const uint8_t kData[10] = {0};
-  EXPECT_TRUE(static_cast<webrtc::Transport*>(channel.get())
-                  ->SendRtcp(kData, sizeof(kData)));
+  EXPECT_TRUE(
+      ChannelImplAsTransport(channel.get())->SendRtcp(kData, sizeof(kData)));
   EXPECT_EQ(rtc::DSCP_CS1, network_interface->options().dscp);
   channel->SetInterface(nullptr);
 
   // Verify that setting the option to false resets the
   // DiffServCodePoint.
   config.enable_dscp = false;
-  channel.reset(
-      static_cast<cricket::WebRtcVideoChannel*>(engine_.CreateMediaChannel(
-          cricket::MediaChannel::Role::kBoth, call_.get(), config,
-          VideoOptions(), webrtc::CryptoOptions(),
-          video_bitrate_allocator_factory_.get())));
+  channel.reset(engine_.CreateMediaChannel(
+      cricket::MediaChannel::Role::kBoth, call_.get(), config, VideoOptions(),
+      webrtc::CryptoOptions(), video_bitrate_allocator_factory_.get()));
   channel->SetInterface(network_interface.get());
   EXPECT_EQ(rtc::DSCP_DEFAULT, network_interface->dscp());
   channel->SetInterface(nullptr);
