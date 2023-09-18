@@ -1380,7 +1380,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #panic-button-success-icon,
 #PanelUI-panic-timeframe-icon {
-  list-style-image: url(chrome://browser/skin/panic-panel/header.png);
+  list-style-image: image-set(
+    url(chrome://browser/skin/panic-panel/header.png),
+    url(chrome://browser/skin/panic-panel/header@2x.png) 2x
+  );
   max-height: 48px;
   width: 48px;
 }
@@ -1450,32 +1453,32 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 .PanelUI-panic-actionlist {
-  padding-block: 2px;
-  padding-inline-start: 20px;
-  background-size: 16px 16px;
-  background-repeat: no-repeat;
-  background-color: transparent;
-  background-position: left center;
+  padding: 2px 0;
 }
 
-.PanelUI-panic-actionlist:-moz-locale-dir(rtl) {
-  background-position-x: right;
+.PanelUI-panic-actionlist::before {
+  display: inline-block;
+  content: "";
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 4px;
+  background-image: image-set(
+    url(chrome://browser/skin/panic-panel/icons.png),
+    url(chrome://browser/skin/panic-panel/icons@2x.png) 2x
+  );
+  vertical-align: bottom;
 }
 
-#PanelUI-panic-actionlist-cookies {
-  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 16, 16, 0);
+#PanelUI-panic-actionlist-history::before {
+  background-position-x: 16px;
 }
 
-#PanelUI-panic-actionlist-history {
-  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 32, 16, 16);
+#PanelUI-panic-actionlist-windows::before {
+  background-position-x: 32px;
 }
 
-#PanelUI-panic-actionlist-windows {
-  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 48, 16, 32);
-}
-
-#PanelUI-panic-actionlist-newwindow {
-  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 64, 16, 48);
+#PanelUI-panic-actionlist-newwindow::before {
+  background-position-x: 48px;
 }
 
 #PanelUI-panic-warning {
@@ -1531,29 +1534,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 
 #panic-button-success-closebutton:hover:active {
   background-color: var(--button-active-bgcolor);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #panic-button-success-icon,
-  #PanelUI-panic-timeframe-icon {
-    list-style-image: url(chrome://browser/skin/panic-panel/header@2x.png);
-  }
-
-  #PanelUI-panic-actionlist-cookies {
-    background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 32, 32, 0);
-  }
-
-  #PanelUI-panic-actionlist-history {
-    background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 64, 32, 32);
-  }
-
-  #PanelUI-panic-actionlist-windows {
-    background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 96, 32, 64);
-  }
-
-  #PanelUI-panic-actionlist-newwindow {
-    background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 128, 32, 96);
-  }
 }
 
 .panel-header {
