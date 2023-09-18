@@ -1001,6 +1001,7 @@ class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
                                              bool nack_enabled,
                                              webrtc::RtcpMode rtcp_mode,
                                              absl::optional<int> rtx_time) = 0;
+  virtual bool AddDefaultRecvStreamForTesting(const StreamParams& sp) = 0;
 };
 
 }  // namespace cricket

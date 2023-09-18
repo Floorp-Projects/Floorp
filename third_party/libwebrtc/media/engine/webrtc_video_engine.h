@@ -168,7 +168,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool AddSendStream(const StreamParams& sp) override;
   bool RemoveSendStream(uint32_t ssrc) override;
   bool AddRecvStream(const StreamParams& sp) override;
-  bool AddRecvStream(const StreamParams& sp, bool default_stream);
+  bool AddDefaultRecvStreamForTesting(const StreamParams& sp) override {
+    // Invokes private AddRecvStream variant function
+    return AddRecvStream(sp, true);
+  }
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
@@ -379,6 +382,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void ReCreateDefaultReceiveStream(uint32_t ssrc,
                                     absl::optional<uint32_t> rtx_ssrc);
+  // Add a receive stream. Used for testing.
+  bool AddRecvStream(const StreamParams& sp, bool default_stream);
+
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
