@@ -143,6 +143,10 @@ class RtpHelper : public Base {
         CreateRtpParametersWithEncodings(sp);
     return true;
   }
+  virtual bool AddDefaultRecvStreamForTesting(const StreamParams& sp) {
+    RTC_CHECK_NOTREACHED();
+    return false;
+  }
   virtual bool RemoveRecvStream(uint32_t ssrc) {
     auto parameters_iterator = rtp_receive_parameters_.find(ssrc);
     if (parameters_iterator != rtp_receive_parameters_.end()) {

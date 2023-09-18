@@ -242,6 +242,8 @@ class VideoMediaChannel : public MediaChannel,
   void SetSsrcListChangedCallback(
       absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override =
       0;
+  bool AddRecvStream(const StreamParams& sp) override = 0;
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
 
   // This fills the "bitrate parts" (rtx, video bitrate) of the
   // BandwidthEstimationInfo, since that part that isn't possible to get
@@ -815,8 +817,12 @@ class VideoMediaReceiveChannel : public VideoMediaReceiveChannelInterface {
     impl()->SetReceiverFeedbackParameters(lntf_enabled, nack_enabled, rtcp_mode,
                                           rtx_time);
   }
-  MediaChannel* ImplForTesting() override { return impl_; }
   void SetReceive(bool receive) override { impl()->SetReceive(receive); }
+
+  MediaChannel* ImplForTesting() override { return impl_; }
+  bool AddDefaultRecvStreamForTesting(const StreamParams& sp) override {
+    return impl()->AddDefaultRecvStreamForTesting(sp);
+  }
 
  private:
   VideoMediaReceiveChannelInterface* impl() { return impl_; }
