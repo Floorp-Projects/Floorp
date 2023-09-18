@@ -20,9 +20,11 @@ export const workspacesPreferences = {
     WORKSPACE_CONTAINER_USERCONTEXTID_PREF: "floorp.browser.workspace.container.userContextId",
 };
 
-export const defaultWorkspaceName = Services.prefs.getStringPref(
+export function getDefaultWorkspace() {
+  return Services.prefs.getStringPref(
     workspacesPreferences.WORKSPACE_ALL_PREF
-    ).split(",")[0];
+  ).split(",")[0];
+}
 
 export const CONTAINER_ICONS = new Set([
   "briefcase",

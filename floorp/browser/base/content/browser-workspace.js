@@ -383,7 +383,7 @@ const workspaceFunctions = {
     },
 
     deleteworkspace(workspace) {
-      if (workspace !== WorkspaceUtils.defaultWorkspaceName) {
+      if (workspace !== WorkspaceUtils.getDefaultWorkspace()) {
         let allWorkspaces = Services.prefs
           .getCharPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
@@ -399,7 +399,7 @@ const workspaceFunctions = {
           );
           Services.prefs.setStringPref(
             WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
-            WorkspaceUtils.defaultWorkspaceName
+            WorkspaceUtils.getDefaultWorkspace()
           );
           workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
         }
@@ -1250,7 +1250,7 @@ const workspaceFunctions = {
 
       if (
         e.explicitOriginalTarget.getAttribute("workspace") ==
-        WorkspaceUtils.defaultWorkspaceName
+        WorkspaceUtils.getDefaultWorkspace()
       ) {
         menuitemElem.firstChild.remove();
       }
