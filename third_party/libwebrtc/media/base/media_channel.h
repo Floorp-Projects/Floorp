@@ -381,8 +381,8 @@ struct MediaSenderInfo {
   std::vector<SsrcReceiverInfo> remote_stats;
   // A snapshot of the most recent Report Block with additional data of interest
   // to statistics. Used to implement RTCRemoteInboundRtpStreamStats. Within
-  // this list, the ReportBlockData::RTCPReportBlock::source_ssrc(), which is
-  // the SSRC of the corresponding outbound RTP stream, is unique.
+  // this list, the `ReportBlockData::source_ssrc()`, which is the SSRC of the
+  // corresponding outbound RTP stream, is unique.
   std::vector<webrtc::ReportBlockData> report_block_datas;
   absl::optional<bool> active;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay

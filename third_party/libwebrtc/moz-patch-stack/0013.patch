@@ -79,7 +79,7 @@ index f2cb9db6cc..a0dcb971c4 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index 178c6b00ae..bc2fbc05e0 100644
+index 50937f574d..5da38a077b 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 @@ -182,6 +182,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
@@ -91,7 +91,7 @@ index 178c6b00ae..bc2fbc05e0 100644
 +
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
+   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 index 0687f32352..58f393a2fa 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
@@ -109,7 +109,7 @@ index 0687f32352..58f393a2fa 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index d6ffd8a9df..dfa99aaaed 100644
+index 1e11713ece..8eaa984f92 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -194,6 +194,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
@@ -121,7 +121,7 @@ index d6ffd8a9df..dfa99aaaed 100644
 +
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
+   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 index 2184f33801..d60a855b53 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
