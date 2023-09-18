@@ -119,13 +119,7 @@
 
 @media not (prefers-contrast) {
   :root:-moz-lwtheme {
-    --focus-outline-color: #0061E0;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:-moz-lwtheme {
-      --focus-outline-color: #00DDFF;
-    }
+    --focus-outline-color: light-dark(#0061E0, #00DDFF);
   }
 }
 
@@ -368,16 +362,9 @@ menupopup::part(drop-indicator) {
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
-  color-scheme: light;
+  color-scheme: env(-moz-content-preferred-color-scheme);
   --arrowpanel-background: Field;
   --arrowpanel-color: FieldText;
-}
-
-/* stylelint-disable-next-line media-feature-name-no-unknown */
-@media (-moz-content-prefers-color-scheme: dark) and (not (prefers-contrast)) {
-  #DateTimePickerPanel {
-    color-scheme: dark;
-  }
 }
 
 #widget-overflow .webextension-popup-browser {
@@ -755,20 +742,6 @@ popupnotificationcontent {
   margin-block-start: 8px;
 }
 
-/**
- * Our OS integration code toggles whether system colors should return light or
- * dark values based on the luminosity of the toolbar background. Because themes
- * can style panels to have a different background color than the toolbar, we
- * need specific overrides for system colors used in light or dark themes.
- */
-.popup-notification-body:-moz-lwtheme {
-  color-scheme: light;
-}
-
-:root[lwt-popup-brighttext] .popup-notification-body {
-  color-scheme: dark;
-}
-
 .popup-notification-body menulist {
   margin: 0;
 }
@@ -948,23 +921,17 @@ popupnotificationcontent {
 
 #historySwipeAnimationPreviousArrow,
 #historySwipeAnimationNextArrow {
-  --swipe-nav-icon-primary-color: #0060DF;
-  --swipe-nav-icon-accent-color: #FFFFFF;
+  --swipe-nav-icon-primary-color: SelectedItemText;
+  --swipe-nav-icon-accent-color: SelectedItem;
 }
 
-@media (-moz-content-prefers-color-scheme: dark) {
+@media not (prefers-contrast) {
+  /* TODO: Should this be in browser-custom-colors to respect system theming on
+   * Linux? */
   #historySwipeAnimationPreviousArrow,
   #historySwipeAnimationNextArrow {
-    --swipe-nav-icon-primary-color: #00DDFF;
-    --swipe-nav-icon-accent-color: #000000;
-  }
-}
-
-@media (prefers-contrast) {
-  #historySwipeAnimationPreviousArrow,
-  #historySwipeAnimationNextArrow {
-    --swipe-nav-icon-primary-color: SelectedItemText;
-    --swipe-nav-icon-accent-color: SelectedItem;
+    --swipe-nav-icon-primary-color: light-dark(#0060DF, #00DDFF);
+    --swipe-nav-icon-accent-color: light-dark(#FFFFFF, #000000);
   }
 }
 

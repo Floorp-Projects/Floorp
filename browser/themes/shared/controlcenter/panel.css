@@ -722,7 +722,7 @@
   background-repeat: no-repeat;
   background-position: center;
 
-  fill: #0090ED;
+  fill: light-dark(#0090ED, #80EBFF);
 }
 
 .protections-popup-shim-allow-hint-icon {
@@ -735,11 +735,6 @@
 
 .protections-popup-list-host-shim-allow-indicator {
   width: 16px;
-}
-
-:root[lwt-popup-brighttext] .protections-popup-shim-allow-hint-icon,
-:root[lwt-popup-brighttext] .protections-popup-list-host-shim-allow-indicator {
-  fill: #80EBFF;
 }
 
 .protections-popup-shim-allow-hint-icon {
