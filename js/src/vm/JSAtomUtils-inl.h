@@ -115,13 +115,14 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
   return IndexToIdSlow(cx, index, idp);
 }
 
-static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
+static MOZ_ALWAYS_INLINE JSLinearString* IdToString(
+    JSContext* cx, jsid id, gc::Heap heap = gc::Heap::Default) {
   if (id.isString()) {
     return id.toAtom();
   }
 
   if (MOZ_LIKELY(id.isInt())) {
-    return Int32ToString<CanGC>(cx, id.toInt());
+    return Int32ToStringWithHeap<CanGC>(cx, id.toInt(), heap);
   }
 
   RootedValue idv(cx, IdToValue(id));
