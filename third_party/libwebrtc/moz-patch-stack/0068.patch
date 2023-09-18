@@ -1,31 +1,25 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
- the new mac camera backend. r=padenot
+From: Michael Froman <mjfroman@mac.com>
+Date: Wed, 1 Jun 2022 12:47:00 -0500
+Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
+ config.emplace(...)
 
-Also includes:
-Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
-
-Differential Revision: https://phabricator.services.mozilla.com/D163687
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
 ---
- modules/video_capture/video_capture.h | 3 +++
- 1 file changed, 3 insertions(+)
+ modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 04203033b0..6614032299 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -154,6 +154,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-   // Return whether the rotation is applied or left pending.
-   virtual bool GetApplyRotation() = 0;
- 
-+  // Mozilla: TrackingId setter for use in profiler markers.
-+  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
-+
-  protected:
-   ~VideoCaptureModule() override {}
- };
+diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
+index 4c0f5fc5ee..1afac9fb42 100644
+--- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
++++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
+@@ -468,7 +468,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
+   if (!enabled.Get()) {
+     return config;
+   }
+-  config.emplace();
++  config.emplace(Config());
+   config->bandwidth_rampup_upper_bound_factor =
+       bandwidth_rampup_upper_bound_factor.Get();
+   config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
 -- 
-2.34.1
+2.37.3
 

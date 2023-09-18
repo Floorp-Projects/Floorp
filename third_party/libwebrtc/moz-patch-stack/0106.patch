@@ -1,0 +1,31 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Sat, 12 Aug 2023 18:57:00 +0000
+Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
+ ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
+
+rtc::strcpyn second param should be the size of the destination buffer,
+not the size of the source string.  This has been masked because FormFileName
+helpfully adds a trailing path separator if one is missing.
+
+Differential Revision: https://phabricator.services.mozilla.com/D185862
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
+---
+ modules/audio_processing/logging/apm_data_dumper.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
+index 4ab6baad83..76f8b34c0b 100644
+--- a/modules/audio_processing/logging/apm_data_dumper.h
++++ b/modules/audio_processing/logging/apm_data_dumper.h
+@@ -91,7 +91,7 @@ class ApmDataDumper {
+   static void SetOutputDirectory(absl::string_view output_dir) {
+ #if WEBRTC_APM_DEBUG_DUMP == 1
+     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
+-    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
++    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
+ #endif
+   }
+ 
+-- 
+2.37.3
+

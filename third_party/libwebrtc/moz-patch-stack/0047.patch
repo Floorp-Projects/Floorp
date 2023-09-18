@@ -1,32 +1,63 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 20 Aug 2021 13:52:00 +0200
-Subject: Bug 1654112 - Don't check the calling thread in
- webrtc::AudioReceiveStream::GetSources. r=ng
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 16 Apr 2021 17:35:00 -0500
+Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
 
-source_tracker_ is thread safe with its own internal mutex, so this call is safe
-as long as the caller has a guarantee for the lifetime of the
-AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
-
-Upliftable.
-
-Differential Revision: https://phabricator.services.mozilla.com/D123226
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
+Differential Revision: https://phabricator.services.mozilla.com/D113438
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
 ---
- audio/audio_receive_stream.cc | 1 -
- 1 file changed, 1 deletion(-)
+ modules/video_capture/video_capture_impl.h          | 4 +++-
+ rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
+ sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 0a78e2641d..8a3ac93a36 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -367,7 +367,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
- }
+diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
+index a9fdaf6307..005c5c1fde 100644
+--- a/modules/video_capture/video_capture_impl.h
++++ b/modules/video_capture/video_capture_impl.h
+@@ -88,6 +88,9 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   VideoCaptureImpl();
+   ~VideoCaptureImpl() override;
  
- std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
--  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   return source_tracker_.GetSources();
- }
++  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
++  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
++
+   char* _deviceUniqueId;  // current Device unique name;
+   Mutex api_lock_;
+   VideoCaptureCapability _requestedCapability;  // Should be set by platform
+@@ -96,7 +99,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+  private:
+   void UpdateFrameCount();
+   uint32_t CalculateFrameRate(int64_t now_ns);
+-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
+   void DeliverRawFrame(uint8_t* videoFrame,
+                        size_t videoFrameLength,
+                        const VideoCaptureCapability& frameInfo,
+diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
+index 4a0ba9dc09..eac12022ed 100644
+--- a/rtc_base/system/warn_current_thread_is_deadlocked.h
++++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
+@@ -13,7 +13,7 @@
  
+ namespace webrtc {
+ 
+-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
++#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
+ void WarnThatTheCurrentThreadIsProbablyDeadlocked();
+ #else
+ inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
+diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+index 4f97cf74cf..363be347b5 100644
+--- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
++++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+@@ -80,7 +80,7 @@ public class VideoCodecInfo {
+   }
+ 
+   @CalledByNative
+-  Map getParams() {
++  Map<String, String> getParams() {
+     return params;
+   }
+ }
 -- 
-2.34.1
+2.37.3
 

@@ -1,29 +1,66 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
- thread). r=pehrsons,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Tue, 23 May 2023 06:14:00 +0000
+Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
+ r=ng,webrtc-reviewers
 
-This was causing assertions.
+This restores libwebrtc's DesktopCapturer to their upstream state as far as
+the tab capturer is concerned.
 
-Differential Revision: https://phabricator.services.mozilla.com/D179731
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
+Differential Revision: https://phabricator.services.mozilla.com/D174290
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
 ---
- audio/channel_send.cc | 2 --
- 1 file changed, 2 deletions(-)
+ modules/desktop_capture/desktop_capturer.cc | 11 -----------
+ modules/desktop_capture/desktop_capturer.h  |  8 --------
+ 2 files changed, 19 deletions(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 5ee97f290e..f784b8eebc 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -457,8 +457,6 @@ ChannelSend::ChannelSend(
- 
-   int error = audio_coding_->RegisterTransportCallback(this);
-   RTC_DCHECK_EQ(0, error);
--  if (frame_transformer)
--    InitFrameTransformerDelegate(std::move(frame_transformer));
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 1af19a1fd2..7f601821fc 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -128,17 +128,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+   return capturer;
  }
  
- ChannelSend::~ChannelSend() {
+-// static
+-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
+-    const DesktopCaptureOptions& options) {
+-  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
+-  if (capturer && options.detect_updated_region()) {
+-    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+-  }
+-
+-  return capturer;
+-}
+-
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ bool DesktopCapturer::IsRunningUnderWayland() {
+   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index 64f3187f51..5efd2efc0f 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -191,10 +191,6 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
+ 
+-  // Creates a DesktopCapturer instance which targets to capture tab.
+-  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
+-      const DesktopCaptureOptions& options);
+-
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
+ 
+@@ -225,10 +221,6 @@ class RTC_EXPORT DesktopCapturer {
+   // capture screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+       const DesktopCaptureOptions& options);
+-
+-  // Creates a DesktopCapturer instance which targets to capture tabs
+-  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
+-      const DesktopCaptureOptions& options);
+ };
+ 
+ }  // namespace webrtc
 -- 
-2.34.1
+2.37.3
 

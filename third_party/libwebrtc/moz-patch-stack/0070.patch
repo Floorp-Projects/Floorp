@@ -1,49 +1,26 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Thu, 6 Jan 2022 00:16:00 +0000
-Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:17:46 -0500
+Subject: Bug 1772380 - to upstream - ref count this in lambda capture
 
-Differential Revision: https://phabricator.services.mozilla.com/D135061
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
 ---
- video/receive_statistics_proxy.cc   | 9 +++++++--
- video/rtp_video_stream_receiver2.cc | 4 +++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index ab16d8f763..46270d74f9 100644
---- a/video/receive_statistics_proxy.cc
-+++ b/video/receive_statistics_proxy.cc
-@@ -832,8 +832,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
- }
- 
- void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
--  RTC_DCHECK_RUN_ON(&main_thread_);
--  stats_.packets_discarded += packets_discarded;
-+  // Can be called on either the decode queue or the worker thread
-+  // See FrameBuffer2 for more details.
-+  worker_thread_->PostTask(
-+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
-+        RTC_DCHECK_RUN_ON(&main_thread_);
-+        stats_.packets_discarded += packets_discarded;
-+      }));
- }
- 
- void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index dccaa3158f..b5e120b8b7 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1207,7 +1207,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
-     packet_infos_.erase(packet_infos_.begin(),
-                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
-     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
--    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    if (num_packets_cleared > 0) {
-+      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    }
-     reference_finder_->ClearTo(seq_num);
-   }
- }
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 100eb37c2a..7b6c2b1847 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -280,8 +280,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   if (_captureThread.empty()) {
+     quit_ = false;
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+-        [this] {
+-          while (CaptureProcess()) {
++        [self = rtc::scoped_refptr(this)] {
++          while (self->CaptureProcess()) {
+           }
+         },
+         "CaptureThread",
 -- 
-2.34.1
+2.37.3
 

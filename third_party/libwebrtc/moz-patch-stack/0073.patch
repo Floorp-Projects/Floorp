@@ -1,26 +1,52 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 11 Jan 2023 22:42:00 +0000
-Subject: Bug 1800942 - Add DCHECKs to
- TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 24 Oct 2022 13:00:00 -0500
+Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
 
-Differential Revision: https://phabricator.services.mozilla.com/D166536
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
+Add assurance that we will not build task_queue_win.cc to avoid
+possible win32k API usage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D160115
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- modules/video_coding/timing/timestamp_extrapolator.cc | 1 +
- 1 file changed, 1 insertion(+)
+ api/task_queue/BUILD.gn | 5 +++++
+ rtc_base/BUILD.gn       | 4 ++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
-index a90df8bf7f..77e5508a76 100644
---- a/modules/video_coding/timing/timestamp_extrapolator.cc
-+++ b/modules/video_coding/timing/timestamp_extrapolator.cc
-@@ -125,6 +125,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
- absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
-     uint32_t timestamp90khz) const {
-   int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
-+  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index 116a50762e..b9c50c1644 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -31,6 +31,11 @@ rtc_library("task_queue") {
+   ]
+ }
  
-   if (!first_unwrapped_timestamp_) {
-     return absl::nullopt;
++# Mozilla - we want to ensure that rtc_include_tests is set to false
++# to guarantee that default_task_queue_factory is not used so we
++# know that remaining win32k code in task_queue_win.cc is not built.
++# See Bug 1797161 for more info.
++assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
+ if (rtc_include_tests) {
+ rtc_library("task_queue_test") {
+   visibility = [ "*" ]
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 6732520717..86eb42e6e4 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -701,10 +701,14 @@ if (is_mac || is_ios) {
+ if (is_win) {
+   rtc_library("rtc_task_queue_win") {
+     visibility = [ "../api/task_queue:default_task_queue_factory" ]
++# See Bug 1797161 for more info.  Remove from build until win32k
++# usage is removed.
++if (!build_with_mozilla) {
+     sources = [
+       "task_queue_win.cc",
+       "task_queue_win.h",
+     ]
++}
+     deps = [
+       ":checks",
+       ":logging",
 -- 
-2.34.1
+2.37.3
 

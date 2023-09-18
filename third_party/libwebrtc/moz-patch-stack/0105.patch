@@ -1,0 +1,77 @@
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 8 Aug 2023 10:05:00 +0000
+Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
+ to avoid concurrent access r=jib,webrtc-reviewers,mjf
+
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
+
+Differential Revision: https://phabricator.services.mozilla.com/D184386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
+---
+ modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
+ modules/video_capture/linux/pipewire_session.h  |  5 ++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index f628bfc8d5..0229e71cea 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -233,7 +233,10 @@ PipeWireSession::~PipeWireSession() {
+ }
+ 
+ void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
+-  callback_ = callback;
++  {
++    webrtc::MutexLock lock(&callback_lock_);
++    callback_ = callback;
++  }
+ 
+   if (fd != -1) {
+     InitPipeWire(fd);
+@@ -375,6 +378,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
+ }
+ 
+ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
++  webrtc::MutexLock lock(&callback_lock_);
++
+   if (callback_) {
+     callback_->OnInitialized(status);
+     callback_ = nullptr;
+@@ -382,6 +387,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
+ }
+ 
+ void PipeWireSession::Cleanup() {
++  webrtc::MutexLock lock(&callback_lock_);
++  callback_ = nullptr;
++
+   StopPipeWire();
+ }
+ 
+diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
+index 54555edb1d..5f372b3494 100644
+--- a/modules/video_capture/linux/pipewire_session.h
++++ b/modules/video_capture/linux/pipewire_session.h
+@@ -23,6 +23,7 @@
+ #include "modules/video_capture/linux/camera_portal.h"
+ #include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_options.h"
++#include "rtc_base/synchronization/mutex.h"
+ 
+ namespace webrtc {
+ namespace videocapturemodule {
+@@ -115,7 +116,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
+   void Finish(VideoCaptureOptions::Status status);
+   void Cleanup();
+ 
+-  VideoCaptureOptions::Callback* callback_ = nullptr;
++  webrtc::Mutex callback_lock_;
++  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
++      nullptr;
+ 
+   VideoCaptureOptions::Status status_;
+ 
+-- 
+2.37.3
+

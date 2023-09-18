@@ -1,37 +1,148 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Thu, 31 Jan 2019 15:37:00 -0500
-Subject: Bug 1524208 - Calculate stride based upon target_width in
- video_capture_impl.cc; r=pehrsons
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Fri, 5 Jun 2020 11:41:00 +0000
+Subject: Bug 1615191 - P0 - implement remoteTimestamp for
+ RTCRemoteOutboundRtpStreamStats in libwebrtc;r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D18270
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c4467cb132d03d4f3cad4b1b82
+Differential Revision: https://phabricator.services.mozilla.com/D78004
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cd901e96d23e004e4bee19b96c8c2f1ca3b42830
+
+This patch also absorbs two additional patches that collapse into using ms for the remote timestamp:
+Bug 1654112 - Plumb RemoteRTCPSenderInfo through also for audio and change unit to ms. r=ng
+Bug 1654112 - Replace custom upstream code for remote received audio stats with cherry-pick. r=ng
 ---
- modules/video_capture/video_capture_impl.cc | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ call/video_receive_stream.h                  | 1 +
+ modules/rtp_rtcp/source/rtcp_receiver.cc     | 4 +++-
+ modules/rtp_rtcp/source/rtcp_receiver.h      | 3 ++-
+ modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 6 ++++--
+ modules/rtp_rtcp/source/rtp_rtcp_impl.h      | 3 ++-
+ modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 6 ++++--
+ modules/rtp_rtcp/source/rtp_rtcp_impl2.h     | 3 ++-
+ modules/rtp_rtcp/source/rtp_rtcp_interface.h | 5 +++--
+ 8 files changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 0c6e3784a2..9d9a1471e8 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -173,8 +173,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 9abb619d4a..d09fb25f14 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -149,6 +149,7 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
  
--  int stride_y = width;
--  int stride_uv = (width + 1) / 2;
-   int target_width = width;
-   int target_height = abs(height);
+     uint32_t rtcp_sender_packets_sent;
+     uint32_t rtcp_sender_octets_sent;
++    int64_t rtcp_sender_ntp_timestamp_ms;
  
-@@ -190,6 +188,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+     // Timing frame info: all important timestamps for a full lifetime of a
+     // single 'timing frame'.
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index 5c8f1c449b..cf4757a77b 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -372,10 +372,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+ }
  
-+  int stride_y = target_width;
-+  int stride_uv = (target_width + 1) / 2;
-+
-   // Setting absolute height (in case it was negative).
-   // In Windows, the image starts bottom left, instead of top left.
-   // Setting a negative source height, inverts the image (within LibYuv).
+ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                                        uint32_t* octet_count) const {
++                                        uint32_t* octet_count,
++                                        int64_t* ntp_timestamp_ms) const {
+   MutexLock lock(&rtcp_receiver_lock_);
+   *packet_count = remote_sender_packet_count_;
+   *octet_count = remote_sender_octet_count_;
++  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
+ }
+ 
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
+index 2ac08282ae..6099fbf96f 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.h
++++ b/modules/rtp_rtcp/source/rtcp_receiver.h
+@@ -118,7 +118,8 @@ class RTCPReceiver final {
+ 
+   // Get received sender packet and octet counts
+   void RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                            uint32_t* octet_count) const;
++                            uint32_t* octet_count,
++                            int64_t* ntp_timestamp_ms) const;
+ 
+   absl::optional<TimeDelta> AverageRtt() const;
+   absl::optional<TimeDelta> LastRtt() const;
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
+index 6bc0841163..33ba1e79ce 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
++++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
+@@ -502,8 +502,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+ 
+ // Received RTCP report.
+ void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                                             uint32_t* octet_count) const {
+-  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
++                                             uint32_t* octet_count,
++                                             int64_t* ntp_timestamp_ms) const {
++  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
++                                             ntp_timestamp_ms);
+ }
+ 
+ std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
+index 20239aee8e..434d6365b7 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
++++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
+@@ -183,7 +183,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
+       StreamDataCounters* rtx_counters) const override;
+ 
+   void RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                            uint32_t* octet_count) const override;
++                            uint32_t* octet_count,
++                            int64_t* ntp_timestamp_ms) const override;
+ 
+   // A snapshot of the most recent Report Block with additional data of
+   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
+index cfa89e30c2..87496c167a 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
++++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
+@@ -484,8 +484,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+ 
+ // Received RTCP report.
+ void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                                              uint32_t* octet_count) const {
+-  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
++                                             uint32_t* octet_count,
++                                             int64_t* ntp_timestamp_ms) const {
++  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
++                                             ntp_timestamp_ms);
+ }
+ 
+ std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
+index 80a974f95e..ed4b09d485 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
++++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
+@@ -195,7 +195,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
+       StreamDataCounters* rtx_counters) const override;
+ 
+   void RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                            uint32_t* octet_count) const override;
++                            uint32_t* octet_count,
++                            int64_t* ntp_timestamp_ms) const override;
+ 
+   // A snapshot of the most recent Report Block with additional data of
+   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
+index cfffd5d766..05ec339c16 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
++++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
+@@ -395,9 +395,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+       StreamDataCounters* rtx_counters) const = 0;
+ 
+ 
+-  // Returns packet count and octet count from RTCP sender report.
++  // Returns packet count, octet count, and timestamp from RTCP sender report.
+   virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
+-                                    uint32_t* octet_count) const = 0;
++                                    uint32_t* octet_count,
++                                    int64_t* ntp_timestamp_ms) const = 0;
+   // A snapshot of Report Blocks with additional data of interest to statistics.
+   // Within this list, the sender-source SSRC pair is unique and per-pair the
+   // ReportBlockData represents the latest Report Block that was received for
 -- 
-2.34.1
+2.37.3
 

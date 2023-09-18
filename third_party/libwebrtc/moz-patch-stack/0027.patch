@@ -1,90 +1,98 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 8 Jul 2020 17:35:00 +0000
-Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
- device_caps; r=ng
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:16:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Linux. r=dminor
 
-The capabilities field is for the physical device, device_caps is for the
-specific /dev/videoX device that has been opened. The device_caps field is
-only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
-fall back to capabilities if it is not set.
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the Linux part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D82377
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
+Differential Revision: https://phabricator.services.mozilla.com/D46272
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b794139332691f4fbc98b4bfcfdd7
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
- modules/video_capture/linux/device_info_v4l2.h  |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ .../video_capture/linux/device_info_v4l2.cc   | 28 ++-----------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a2435bcd4f..cd0ba6e3df 100644
+index 19b32f16b9..f77d791033 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     struct v4l2_capability cap;
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
--      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (!IsVideoCaptureDevice(&cap)) {
-         continue;
-       }
- 
-@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
-   return false;
+@@ -62,7 +62,7 @@ namespace videocapturemodule {
+ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+ {
+     if (event->mask & IN_CREATE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
+             if (_wd_v4l < 0) {
+@@ -74,25 +74,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+                     DeviceChange();
+                 }
+             }
+-            if (_wd_snd < 0) {
+-                usleep(5*1000);
+-                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-                if (_wd_snd >= 0) {
+-                    DeviceChange();
+-                }
+-            }
+         }
+     } else if (event->mask & IN_DELETE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         }
+     } else if (event->mask & IN_DELETE_SELF) {
+         if (fd == _fd_v4l) {
+             inotify_rm_watch(_fd_v4l, _wd_v4l);
+             _wd_v4l = -1;
+-        } else if (fd == _fd_snd) {
+-            inotify_rm_watch(_fd_snd, _wd_snd);
+-            _wd_snd = -1;
+         } else {
+             assert(false);
+         }
+@@ -159,11 +149,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+                 break;
+             }
+         }
+-        if (EventCheck(_fd_snd) > 0) {
+-            if (HandleEvents(_fd_snd) < 0) {
+-                break;
+-            }
+-        }
+     }
+     return 0;
  }
+@@ -176,11 +161,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
+ void DeviceInfoV4l2::InotifyProcess()
+ {
+     _fd_v4l = inotify_init();
+-    _fd_snd = inotify_init();
+     _fd_dev = inotify_init();
+-    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
++    if (_fd_v4l >= 0 && _fd_dev >= 0) {
+         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
+         ProcessInotifyEvents();
  
-+bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
-+{
-+  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
-+    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
-+  } else {
-+    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
-+  }
-+}
-+
- int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
-   // set image format
-   struct v4l2_format video_fmt;
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 95432a509d..e3c2395f49 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -18,6 +18,8 @@
- #include "rtc_base/platform_thread.h"
- #include <sys/inotify.h>
+@@ -188,16 +171,11 @@ void DeviceInfoV4l2::InotifyProcess()
+           inotify_rm_watch(_fd_v4l, _wd_v4l);
+         }
  
-+struct v4l2_capability;
-+
- namespace webrtc {
- namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+-        if (_wd_snd >= 0) {
+-          inotify_rm_watch(_fd_snd, _wd_snd);
+-        }
+-
+         if (_wd_dev >= 0) {
+           inotify_rm_watch(_fd_dev, _wd_dev);
+         }
  
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
- 
- #ifdef WEBRTC_LINUX
-   void HandleEvent(inotify_event* event, int fd);
+         close(_fd_v4l);
+-        close(_fd_snd);
+         close(_fd_dev);
+     }
+ }
 -- 
-2.34.1
+2.37.3
 

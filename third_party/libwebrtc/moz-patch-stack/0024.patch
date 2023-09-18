@@ -1,28 +1,47 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:04:00 +0000
-Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
+Date: Fri, 29 Mar 2019 18:43:00 +0000
+Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
+ r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D61852
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
+We've hit a number of problems with handling of RGB24 video capture on
+Windows. This adds a check that will ignore any RGB24 capture capabilities
+when determining a best match if there are other capabilities available to
+workaround the problems.
+
+Differential Revision: https://phabricator.services.mozilla.com/D25449
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
 ---
- sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/video_capture/device_info_impl.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-index c08fc4c29b..8e0e40ef70 100644
---- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
-+++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
-     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
+diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
+index 7cccdb51a7..2a6afb3147 100644
+--- a/modules/video_capture/device_info_impl.cc
++++ b/modules/video_capture/device_info_impl.cc
+@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
+   const int32_t numberOfCapabilies =
+       static_cast<int32_t>(_captureCapabilities.size());
  
-     return applyTransformMatrix(cropAndScaleMatrix,
--        (int) Math.round(unscaledWidth * cropWidth / (float) width),
--        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-+        Math.round(unscaledWidth * cropWidth / (float) width),
-+        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-   }
++  bool hasNonRGB24Capability = false;
+   for (int32_t tmp = 0; tmp < numberOfCapabilies;
+        ++tmp)  // Loop through all capabilities
+   {
+     VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (capability.videoType != VideoType::kRGB24) {
++      hasNonRGB24Capability = true;
++    }
++  }
++
++  for (int32_t tmp = 0; tmp < numberOfCapabilies;
++       ++tmp)  // Loop through all capabilities
++  {
++    VideoCaptureCapability& capability = _captureCapabilities[tmp];
++    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
++      continue;
++    }
  
-   /**
+     const int32_t diffWidth = capability.width - requested.width;
+     const int32_t diffHeight = capability.height - requested.height;
 -- 
-2.34.1
+2.37.3
 

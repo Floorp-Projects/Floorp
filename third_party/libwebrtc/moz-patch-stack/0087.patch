@@ -1,31 +1,25 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 4 Jul 2023 08:34:00 +0000
-Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
- pw_stream raw pointer member r=webrtc-reviewers,ng
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 4 Apr 2023 16:34:00 -0500
+Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
+ that gcc is sad about.
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
-
-Differential Revision: https://phabricator.services.mozilla.com/D182671
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
 ---
- modules/video_capture/linux/video_capture_pipewire.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/audio_processing/audio_processing_impl.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index e2c8d1b168..2a58c7d3e0 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-   VideoCaptureCapability frameInfo_;
-   bool started_;
- 
--  struct pw_stream* stream_;
-+  struct pw_stream* stream_ = nullptr;
-   struct spa_hook stream_listener_;
- };
- }  // namespace videocapturemodule
+diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
+index c80cc76a3d..c304453388 100644
+--- a/modules/audio_processing/audio_processing_impl.cc
++++ b/modules/audio_processing/audio_processing_impl.cc
+@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+                   },
+               .adaptive_digital_controller =
+                   {
++                      .enabled = false,
+                       .headroom_db = static_cast<float>(headroom_db.Get()),
+                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
+                       .initial_gain_db =
 -- 
-2.34.1
+2.37.3
 

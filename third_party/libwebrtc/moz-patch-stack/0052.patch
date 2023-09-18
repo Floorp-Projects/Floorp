@@ -1,26 +1,32 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 2 Nov 2021 14:35:00 +0000
-Subject: Bug 1729455 - Ensure the libwebrtc system clock is not used. r=bwc
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Mar 2021 08:53:00 -0600
+Subject: Bug 1654112 - libwebrtc modification: Init some stats that were being
+ passed to us uninitialized. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D128244
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3e8ac168ee3db089dd892bf140df53e15d6f0918
+Differential Revision: https://phabricator.services.mozilla.com/D108673
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c385bb870413b925af48df97aa1f2b80a26e78d2
 ---
- rtc_base/system_time.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ call/video_receive_stream.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/rtc_base/system_time.cc b/rtc_base/system_time.cc
-index 058e6c2990..1a5e447916 100644
---- a/rtc_base/system_time.cc
-+++ b/rtc_base/system_time.cc
-@@ -12,6 +12,8 @@
- // rtc::SystemTimeNanos() must be provided externally.
- #ifndef WEBRTC_EXCLUDE_SYSTEM_TIME
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 2e1dc9a8ee..e2c0a3ba7e 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -148,9 +148,10 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+     RtcpPacketTypeCounter rtcp_packet_type_counts;
+     absl::optional<RtpReceiveStats> rtx_rtp_stats;
  
-+#error Mozilla: Must not use the built-in libwebrtc clock
-+
- #include <stdint.h>
+-    uint32_t rtcp_sender_packets_sent;
+-    uint32_t rtcp_sender_octets_sent;
+-    int64_t rtcp_sender_ntp_timestamp_ms;
++    // Mozilla modification: Init these three.
++    uint32_t rtcp_sender_packets_sent = 0;
++    uint32_t rtcp_sender_octets_sent = 0;
++    int64_t rtcp_sender_ntp_timestamp_ms = 0;
  
- #include <limits>
+     // Timing frame info: all important timestamps for a full lifetime of a
+     // single 'timing frame'.
 -- 
-2.34.1
+2.37.3
 

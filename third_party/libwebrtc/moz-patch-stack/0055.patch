@@ -1,163 +1,32 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Mon, 4 Apr 2022 12:25:26 -0500
-Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
- seperate files
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 20 Aug 2021 13:52:00 +0200
+Subject: Bug 1654112 - Don't check the calling thread in
+ webrtc::AudioReceiveStream::GetSources. r=ng
 
+source_tracker_ is thread safe with its own internal mutex, so this call is safe
+as long as the caller has a guarantee for the lifetime of the
+AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
+
+Upliftable.
+
+Differential Revision: https://phabricator.services.mozilla.com/D123226
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
 ---
- call/BUILD.gn             |  6 ++++++
- call/call.cc              | 13 -------------
- call/call.h               | 13 ++-----------
- call/call_basic_stats.cc  | 20 ++++++++++++++++++++
- call/call_basic_stats.h   | 21 +++++++++++++++++++++
- video/video_send_stream.h |  1 -
- 6 files changed, 49 insertions(+), 25 deletions(-)
- create mode 100644 call/call_basic_stats.cc
- create mode 100644 call/call_basic_stats.h
+ audio/audio_receive_stream.cc | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/call/BUILD.gn b/call/BUILD.gn
-index a85ad0c0d4..20e9241a83 100644
---- a/call/BUILD.gn
-+++ b/call/BUILD.gn
-@@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
-     "syncable.cc",
-     "syncable.h",
-   ]
-+  if (build_with_mozilla) {
-+    sources += [
-+      "call_basic_stats.cc",
-+      "call_basic_stats.h",
-+    ]
-+  }
+diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
+index 0a78e2641d..8a3ac93a36 100644
+--- a/audio/audio_receive_stream.cc
++++ b/audio/audio_receive_stream.cc
+@@ -367,7 +367,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
+ }
  
-   deps = [
-     ":audio_sender_interface",
-diff --git a/call/call.cc b/call/call.cc
-index 46c1dd3b9e..0421a21ee3 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -465,19 +465,6 @@ class Call final : public webrtc::Call,
- };
- }  // namespace internal
+ std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
+-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   return source_tracker_.GetSources();
+ }
  
--std::string Call::Stats::ToString(int64_t time_ms) const {
--  char buf[1024];
--  rtc::SimpleStringBuilder ss(buf);
--  ss << "Call stats: " << time_ms << ", {";
--  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
--  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
--  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
--  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
--  ss << "rtt_ms: " << rtt_ms;
--  ss << '}';
--  return ss.str();
--}
--
- /* Mozilla: Avoid this since it could use GetRealTimeClock().
- Call* Call::Create(const Call::Config& config) {
-   Clock* clock = Clock::GetRealTimeClock();
-diff --git a/call/call.h b/call/call.h
-index 366978392e..42daa95a6c 100644
---- a/call/call.h
-+++ b/call/call.h
-@@ -21,6 +21,7 @@
- #include "api/task_queue/task_queue_base.h"
- #include "call/audio_receive_stream.h"
- #include "call/audio_send_stream.h"
-+#include "call/call_basic_stats.h"
- #include "call/call_config.h"
- #include "call/flexfec_receive_stream.h"
- #include "call/packet_receiver.h"
-@@ -30,7 +31,6 @@
- #include "rtc_base/copy_on_write_buffer.h"
- #include "rtc_base/network/sent_packet.h"
- #include "rtc_base/network_route.h"
--#include "rtc_base/ref_count.h"
- 
- namespace webrtc {
- 
-@@ -47,16 +47,7 @@ namespace webrtc {
- class Call {
-  public:
-   using Config = CallConfig;
--
--  struct Stats {
--    std::string ToString(int64_t time_ms) const;
--
--    int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
--    int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
--    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
--    int64_t pacer_delay_ms = 0;
--    int64_t rtt_ms = -1;
--  };
-+  using Stats = CallBasicStats;
- 
-   static Call* Create(const Call::Config& config);
-   static Call* Create(const Call::Config& config,
-diff --git a/call/call_basic_stats.cc b/call/call_basic_stats.cc
-new file mode 100644
-index 0000000000..74333a663b
---- /dev/null
-+++ b/call/call_basic_stats.cc
-@@ -0,0 +1,20 @@
-+#include "call/call_basic_stats.h"
-+
-+#include "rtc_base/strings/string_builder.h"
-+
-+namespace webrtc {
-+
-+std::string CallBasicStats::ToString(int64_t time_ms) const {
-+  char buf[1024];
-+  rtc::SimpleStringBuilder ss(buf);
-+  ss << "Call stats: " << time_ms << ", {";
-+  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
-+  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
-+  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
-+  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
-+  ss << "rtt_ms: " << rtt_ms;
-+  ss << '}';
-+  return ss.str();
-+}
-+
-+}  // namespace webrtc
-diff --git a/call/call_basic_stats.h b/call/call_basic_stats.h
-new file mode 100644
-index 0000000000..98febe9405
---- /dev/null
-+++ b/call/call_basic_stats.h
-@@ -0,0 +1,21 @@
-+#ifndef CALL_CALL_BASIC_STATS_H_
-+#define CALL_CALL_BASIC_STATS_H_
-+
-+#include <string>
-+
-+namespace webrtc {
-+
-+// named to avoid conflicts with video/call_stats.h
-+struct CallBasicStats {
-+  std::string ToString(int64_t time_ms) const;
-+
-+  int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
-+  int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
-+  int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
-+  int64_t pacer_delay_ms = 0;
-+  int64_t rtt_ms = -1;
-+};
-+
-+}  // namespace webrtc
-+
-+#endif  // CALL_CALL_BASIC_STATS_H_
-diff --git a/video/video_send_stream.h b/video/video_send_stream.h
-index 1f4717fbec..55103ac979 100644
---- a/video/video_send_stream.h
-+++ b/video/video_send_stream.h
-@@ -36,7 +36,6 @@ namespace test {
- class VideoSendStreamPeer;
- }  // namespace test
- 
--class CallStats;
- class IvfFileWriter;
- class RateLimiter;
- class RtpRtcp;
 -- 
-2.34.1
+2.37.3
 

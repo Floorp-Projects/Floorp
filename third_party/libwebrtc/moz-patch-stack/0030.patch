@@ -1,25 +1,29 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Fri, 18 Aug 2023 13:26:37 -0500
-Subject: Bug 1701809: Close dev/video* driver file descriptors after camera
- access on linux. r=ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 9 Oct 2019 20:12:00 +0000
+Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D110589
+Left shifting a negative value results in undefined behaviour. It is safer to
+multiply in this case.
+
+Differential Revision: https://phabricator.services.mozilla.com/D48751
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 1 +
- 1 file changed, 1 insertion(+)
+ modules/third_party/g722/g722_encode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index cd0ba6e3df..c5d33ff9a4 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -330,6 +330,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
-       if (!IsVideoCaptureDevice(&cap)) {
-+        close(fd);
-         continue;
-       }
+diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
+index 10a5bcfe7c..fedf9f5961 100644
+--- a/modules/third_party/g722/g722_encode.c
++++ b/modules/third_party/g722/g722_encode.c
+@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
+     /* Block 4, UPPOL2 */
+     for (i = 0;  i < 3;  i++)
+         s->band[band].sg[i] = s->band[band].p[i] >> 15;
+-    wd1 = saturate(s->band[band].a[1] << 2);
++    wd1 = saturate(s->band[band].a[1] * 4);
  
+     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
+     if (wd2 > 32767)
 -- 
-2.34.1
+2.37.3
 

@@ -1,41 +1,66 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 10 Feb 2021 12:24:00 -0800
-Subject: Bug 1654112 - Use newer thread run callback, and adapt
- PlatformUIThread; r=pehrsons
+From: Randell Jesup <rjesup@wgate.com>
+Date: Sat, 11 Jul 2020 12:31:00 +0000
+Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
+ r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D107879
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
+Also we drop support for an independent-of-scroll/viewport capture, which
+the old Tab Sharing supported, for security reasons (and we don't need it).
+
+Differential Revision: https://phabricator.services.mozilla.com/D80974
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
 ---
- rtc_base/platform_thread.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
+ modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
-index befd61849d..5b7c6884fe 100644
---- a/rtc_base/platform_thread.h
-+++ b/rtc_base/platform_thread.h
-@@ -21,8 +21,13 @@
- #include "absl/types/optional.h"
- #include "rtc_base/platform_thread_types.h"
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 5211f1acec..4baa93cab9 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+   return capturer;
+ }
  
-+#include "rtc_base/deprecated/recursive_critical_section.h"
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
++    const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
++  if (capturer && options.detect_updated_region()) {
++    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
++  }
 +
- namespace rtc {
- 
-+// Bug 1691641
-+class PlatformUIThread;
++  return capturer;
++}
 +
- enum class ThreadPriority {
-   kLow = 1,
-   kNormal,
-@@ -113,6 +118,8 @@ class PlatformThread final {
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ bool DesktopCapturer::IsRunningUnderWayland() {
+   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index f39852b58e..9b667739a8 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
  
-   absl::optional<Handle> handle_;
-   bool joinable_ = false;
-+  // Bug 1691641
-+  friend PlatformUIThread;
++  // Creates a DesktopCapturer instance which targets to capture tab.
++  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
++      const DesktopCaptureOptions& options);
++
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
+ 
+@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
+   // capture screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+       const DesktopCaptureOptions& options);
++
++  // Creates a DesktopCapturer instance which targets to capture tabs
++  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
++      const DesktopCaptureOptions& options);
  };
  
- }  // namespace rtc
+ }  // namespace webrtc
 -- 
-2.34.1
+2.37.3
 

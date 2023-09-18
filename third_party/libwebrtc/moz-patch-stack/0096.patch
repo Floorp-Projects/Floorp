@@ -1,49 +1,36 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 27 Jul 2023 09:49:00 +0000
-Subject: Bug 1841851 - WebRTC backport: PipeWire capturer: increase buffer
- size to avoid buffer overflow r=jib,webrtc-reviewers,mjf
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 22 Jun 2023 16:23:00 +0000
+Subject: Bug 1837918 - libwebrtc update broke the build on
+ OpenBSD;r=mjf,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 8fcc6df79daf1810cd4ecdb8d2ef1d361abfdc9c
-
-Differential Revision: https://phabricator.services.mozilla.com/D183355
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556e1da296eb18eb3d154eb99e
+Differential Revision: https://phabricator.services.mozilla.com/D181791
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
 ---
- .../linux/wayland/shared_screencast_stream.cc               | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ modules/video_capture/video_capture_options.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 17c895088a..0102346036 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
+index c90e035f37..18ec208ec5 100644
+--- a/modules/video_capture/video_capture_options.h
++++ b/modules/video_capture/video_capture_options.h
+@@ -51,7 +51,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
-   that->stream_size_ = DesktopSize(width, height);
+   void Init(Callback* callback);
  
--  uint8_t buffer[1024] = {};
-+  uint8_t buffer[2048] = {};
-   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2() const { return allow_v4l2_; }
+   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
+ #endif
+@@ -64,7 +64,7 @@ class RTC_EXPORT VideoCaptureOptions {
+ #endif
  
-   // Setup buffers and meta header for new format.
-@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
-   {
-     PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
- 
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
- 
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
- 
-@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
- 
-     pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
-                            &pw_stream_events_, this);
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
- 
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
- 
+  private:
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2_ = false;
+ #endif
+ #if defined(WEBRTC_USE_PIPEWIRE)
 -- 
-2.34.1
+2.37.3
 

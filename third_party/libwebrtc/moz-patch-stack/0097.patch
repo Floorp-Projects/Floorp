@@ -1,77 +1,27 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 8 Aug 2023 10:05:00 +0000
-Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
- to avoid concurrent access r=jib,webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
-
-Differential Revision: https://phabricator.services.mozilla.com/D184386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
- modules/video_capture/linux/pipewire_session.h  |  5 ++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ video/video_stream_encoder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index f2680b2816..6cd4b7dcd7 100644
---- a/modules/video_capture/linux/pipewire_session.cc
-+++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
- }
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index c3d855c1c6..eee99f41de 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1395,7 +1395,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
- void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
--  callback_ = callback;
-+  {
-+    webrtc::MutexLock lock(&callback_lock_);
-+    callback_ = callback;
-+  }
- 
-   if (fd != -1) {
-     InitPipeWire(fd);
-@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
- }
- 
- void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
-+  webrtc::MutexLock lock(&callback_lock_);
-+
-   if (callback_) {
-     callback_->OnInitialized(status);
-     callback_ = nullptr;
-@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
- }
- 
- void PipeWireSession::Cleanup() {
-+  webrtc::MutexLock lock(&callback_lock_);
-+  callback_ = nullptr;
-+
-   StopPipeWire();
- }
- 
-diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
-index 7055e50fae..923606b0c3 100644
---- a/modules/video_capture/linux/pipewire_session.h
-+++ b/modules/video_capture/linux/pipewire_session.h
-@@ -23,6 +23,7 @@
- #include "modules/video_capture/linux/camera_portal.h"
- #include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_options.h"
-+#include "rtc_base/synchronization/mutex.h"
- 
- namespace webrtc {
- namespace videocapturemodule {
-@@ -115,7 +116,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
-   void Finish(VideoCaptureOptions::Status status);
-   void Cleanup();
- 
--  VideoCaptureOptions::Callback* callback_ = nullptr;
-+  webrtc::Mutex callback_lock_;
-+  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
-+      nullptr;
- 
-   struct pw_thread_loop* pw_main_loop_ = nullptr;
-   struct pw_context* pw_context_ = nullptr;
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;
 -- 
-2.34.1
+2.37.3
 

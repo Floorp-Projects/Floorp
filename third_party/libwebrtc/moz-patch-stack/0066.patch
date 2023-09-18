@@ -1,34 +1,76 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 24 Oct 2022 14:03:00 -0500
-Subject: Bug 1797161 - pt3 - add static_assert to ensure we don't include
- task_queue_win.cc in Mozilla builds. r?ng!
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 19 May 2022 15:32:32 -0500
+Subject: Bug 1772380 - Build 1766646 - (fix-c89fdd716c) fixes for the
+ refactored PlatformThread API;r?mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D160117
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/50b15e036924203147e34ec20e2689fe4a847645
 ---
- rtc_base/task_queue_win.cc | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ .../video_capture/linux/device_info_v4l2.cc   | 20 ++++++-------------
+ .../video_capture/linux/device_info_v4l2.h    |  3 +--
+ 2 files changed, 7 insertions(+), 16 deletions(-)
 
-diff --git a/rtc_base/task_queue_win.cc b/rtc_base/task_queue_win.cc
-index 7e46d58e27..bf55a25c69 100644
---- a/rtc_base/task_queue_win.cc
-+++ b/rtc_base/task_queue_win.cc
-@@ -8,6 +8,15 @@
-  *  be found in the AUTHORS file in the root of the source tree.
-  */
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index c5d33ff9a4..04caaea592 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -151,11 +151,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+     return 0;
+ }
  
-+// Mozilla - this file should not be included in Mozilla builds until
-+// win32k API usage is removed.  This was once done in Bug 1395259, but
-+// the upstreaming attempt stalled.  Until win32k usage is officially
-+// removed upstream, we have reverted to upstream's version of the file
-+// (to reduce or elminate merge conflicts), and a static assert is
-+// placed here to ensure this file isn't accidentally included in the
-+// Mozilla build.
-+static_assert(false, "This file should not be built, see Bug 1797161.");
-+
- #include "rtc_base/task_queue_win.h"
+-void DeviceInfoV4l2::InotifyEventThread(void* obj)
+-{
+-    static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
+-}
+-
+ void DeviceInfoV4l2::InotifyProcess()
+ {
+     _fd_v4l = inotify_init();
+@@ -181,16 +176,14 @@ void DeviceInfoV4l2::InotifyProcess()
  
- // clang-format off
+ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
+ #ifdef WEBRTC_LINUX
+-    , _inotifyEventThread(new rtc::PlatformThread(
+-                            InotifyEventThread, this, "InotifyEventThread"))
+     , _isShutdown(false)
+ #endif
+ {
+ #ifdef WEBRTC_LINUX
+-    if (_inotifyEventThread)
+-    {
+-        _inotifyEventThread->Start();
+-    }
++  _inotifyEventThread = rtc::PlatformThread::SpawnJoinable(
++      [this] {
++        InotifyProcess();
++      }, "InotifyEventThread");
+ #endif
+ }
+ 
+@@ -202,9 +195,8 @@ DeviceInfoV4l2::~DeviceInfoV4l2() {
+ #ifdef WEBRTC_LINUX
+     _isShutdown = true;
+ 
+-    if (_inotifyEventThread) {
+-        _inotifyEventThread->Stop();
+-        _inotifyEventThread = nullptr;
++    if (!_inotifyEventThread.empty()) {
++      _inotifyEventThread.Finalize();
+     }
+ #endif
+ }
+diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
+index 119cb07ab8..0bec3eb765 100644
+--- a/modules/video_capture/linux/device_info_v4l2.h
++++ b/modules/video_capture/linux/device_info_v4l2.h
+@@ -60,8 +60,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+   int EventCheck(int fd);
+   int HandleEvents(int fd);
+   int ProcessInotifyEvents();
+-  std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
+-  static void InotifyEventThread(void*);
++  rtc::PlatformThread _inotifyEventThread;
+   void InotifyProcess();
+   int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
+   std::atomic<bool> _isShutdown;
 -- 
-2.34.1
+2.37.3
 

@@ -1,96 +1,56 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 17 Sep 2019 06:47:00 +0000
-Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-This restores the code for generating devicechange events that was
-accidentally removed as part of updating the Windows video capture code
-in Bug 1552755.
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46033
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
- .../video_capture/windows/device_info_ds.h    |  3 ++
- 2 files changed, 42 insertions(+)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index d0d274cb02..460ef3b7b9 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,6 +20,29 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
-+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-+{
-+    DeviceInfoDS* pParent;
-+    if (uiMsg == WM_CREATE)
-+    {
-+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
-+    }
-+    else if (uiMsg == WM_DESTROY)
-+    {
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
-+    }
-+    else if (uiMsg == WM_DEVICECHANGE)
-+    {
-+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-+        if (pParent)
-+        {
-+            pParent->DeviceChange();
-+        }
-+    }
-+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
-+}
-+
- // static
- DeviceInfoDS* DeviceInfoDS::Create() {
-   DeviceInfoDS* dsInfo = new DeviceInfoDS();
-@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
-                         << rtc::ToHex(hr);
-     }
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 8b9af35193..76fec13a39 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -357,7 +357,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
    }
-+
-+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
-+  _wndClass = {0};
-+  _wndClass.lpfnWndProc = &WndProc;
-+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
-+  _wndClass.hInstance = _hInstance;
-+
-+  if (RegisterClass(&_wndClass)) {
-+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-+                         NULL, _hInstance, this);
-+  }
+   return true;
  }
- 
- DeviceInfoDS::~DeviceInfoDS() {
-@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
-   if (_CoUninitializeIsRequired) {
-     CoUninitialize();
-   }
-+  if (_hwnd != NULL) {
-+    DestroyWindow(_hwnd);
-+  }
-+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
- }
- 
- int32_t DeviceInfoDS::Init() {
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index 1b52645cde..dc7b9b1a24 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
-   IEnumMoniker* _dsMonikerDevEnum;
-   bool _CoUninitializeIsRequired;
-   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
-+  HWND _hwnd;
-+  WNDCLASS _wndClass;
-+  HINSTANCE _hInstance;
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
 -- 
-2.34.1
+2.37.3
 

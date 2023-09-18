@@ -1,52 +1,70 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 24 Oct 2022 13:00:00 -0500
-Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 28 Apr 2022 10:53:43 -0500
+Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
 
-Add assurance that we will not build task_queue_win.cc to avoid
-possible win32k API usage.
-
-Differential Revision: https://phabricator.services.mozilla.com/D160115
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- api/task_queue/BUILD.gn | 5 +++++
- rtc_base/BUILD.gn       | 4 ++++
- 2 files changed, 9 insertions(+)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 +++
+ common_video/libyuv/webrtc_libyuv.cc        | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index 116a50762e..b9c50c1644 100644
---- a/api/task_queue/BUILD.gn
-+++ b/api/task_queue/BUILD.gn
-@@ -31,6 +31,11 @@ rtc_library("task_queue") {
-   ]
- }
- 
-+# Mozilla - we want to ensure that rtc_include_tests is set to false
-+# to guarantee that default_task_queue_factory is not used so we
-+# know that remaining win32k code in task_queue_win.cc is not built.
-+# See Bug 1797161 for more info.
-+assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
- if (rtc_include_tests) {
- rtc_library("task_queue_test") {
-   visibility = [ "*" ]
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 6732520717..86eb42e6e4 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -701,10 +701,14 @@ if (is_mac || is_ios) {
- if (is_win) {
-   rtc_library("rtc_task_queue_win") {
-     visibility = [ "../api/task_queue:default_task_queue_factory" ]
-+# See Bug 1797161 for more info.  Remove from build until win32k
-+# usage is removed.
-+if (!build_with_mozilla) {
-     sources = [
-       "task_queue_win.cc",
-       "task_queue_win.h",
-     ]
-+}
-     deps = [
-       ":checks",
-       ":logging",
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 68831c70ab..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -35,11 +35,14 @@ enum class VideoType {
+   kBGR24,
+   kARGB,
+   kABGR,
++  kARGB4444,
+   kRGB565,
++  kARGB1555,
+   kYUY2,
+   kYV12,
+   kUYVY,
+   kMJPEG,
++  kNV21,
+   kBGRA,
+   kNV12,
+ };
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 31ba1feca3..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(height, 0);
+   switch (type) {
+     case VideoType::kI420:
++    case VideoType::kNV21:
+     case VideoType::kIYUV:
+     case VideoType::kYV12:
+     case VideoType::kNV12: {
+@@ -31,7 +32,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       int half_height = (height + 1) >> 1;
+       return width * height + half_width * half_height * 2;
+     }
++    case VideoType::kARGB4444:
+     case VideoType::kRGB565:
++    case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+       return width * height * 2;
+@@ -104,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_UYVY;
+     case VideoType::kMJPEG:
+       return libyuv::FOURCC_MJPG;
++    case VideoType::kNV21:
++      return libyuv::FOURCC_NV21;
+     case VideoType::kARGB:
+       return libyuv::FOURCC_ARGB;
+     case VideoType::kBGRA:
+       return libyuv::FOURCC_BGRA;
++    case VideoType::kARGB4444:
++      return libyuv::FOURCC_R444;
++    case VideoType::kARGB1555:
++      return libyuv::FOURCC_RGBO;
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
+   }
 -- 
-2.34.1
+2.37.3
 
