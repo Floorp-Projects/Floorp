@@ -50,6 +50,13 @@ license:
         - python/mozrelease/mozrelease
         - security/mac/hardenedruntime/v1/production/browser.xml
         - security/mac/hardenedruntime/v1/developer/browser.xml
+        - security/mac/hardenedruntime/v2/developer/browser.xml
+        - security/mac/hardenedruntime/v2/developer/media-plugin-helper.xml
+        - security/mac/hardenedruntime/v2/developer/plugin-container.xml
+        - security/mac/hardenedruntime/v2/developer/utility.xml
+        - security/mac/hardenedruntime/v2/production/browser.xml
+        - security/mac/hardenedruntime/v2/production/media-plugin-helper.xml
+        - security/mac/hardenedruntime/v2/production/plugin-container.xml
         - testing/marionette/harness/marionette_harness/www/
         # Browsertime can't handle this script when there's a comment at the top
         - testing/raptor/browsertime/browsertime_benchmark.js

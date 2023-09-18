@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+     Entitlements to apply to the plugin-container.app bundle during
+     codesigning of developer builds.
+-->
+<plist version="1.0">
+  <dict>
+    <!-- Firefox needs to create executable pages without MAP_JIT on x64 -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+
+    <!-- Firefox needs to create executable pages with MAP_JIT on aarch64 -->
+    <key>com.apple.security.cs.allow-jit</key><true/>
+
+    <!-- Allow dyld environment variables for debugging -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+
+    <!-- Allow debuggers to attach to running executables -->
+    <key>com.apple.security.get-task-allow</key><true/>
+
+    <!-- For dev builds only, allow loading third party libraries as a
+         workaround enabling self-signed builds to launch. -->
+    <key>com.apple.security.cs.disable-library-validation</key><true/>
+  </dict>
+</plist>
