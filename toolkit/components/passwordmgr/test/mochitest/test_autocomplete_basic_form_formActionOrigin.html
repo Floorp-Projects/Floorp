@@ -10,30 +10,32 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<p id="display"></p>
-<div id="content"></div>
-<pre id="test">
 Login Manager test: logins with non-matching formActionOrigin appear in autocomplete dropdown
 
+<script>
+const chromeScript = runChecksAfterCommonInit();
+</script>
+<p id="display"></p>
+<!-- we presumably can't hide the content for this test. -->
+<div id="content"></div>
+<pre id="test">
 <script class="testbody" type="text/javascript">
-const formTemplate = `<form id="form1">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`;
+/** Test for Login Manager: multiple login autocomplete. **/
 
 add_setup(async () => {
-  await setStoredLoginsDuringTest(
+  await setStoredLoginsAsync(
     [window.location.origin, "https://differentFormSubmitURL", null, "dfsu1", "dfsp1", "uname", "pword"]
   );
   listenForUnexpectedPopupShown();
 });
 
-add_named_task("form initially empty", async () => {
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "no_saved_logins", "form has not been filled due to no saved logins");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
+add_task(async function test_form1_initial_empty() {
+  const form = createLoginForm();
+
+  await SimpleTest.promiseFocus(window);
+
+  // Make sure initial form is empty.
+  checkLoginForm(form.uname, "", form.pword, "");
   const popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
@@ -42,12 +44,14 @@ add_named_task("form initially empty", async () => {
  * is one with a different formActionOrigin, so the login will appear
  * in the autocomplete popup.
  */
-add_named_task("menu shows logins for different form action origin", async () => {
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "no_saved_logins", "form has not been filled due to no saved logins");
+add_task(async function test_form1_menu_shows_logins_for_different_formActionOrigin() {
+  const form = createLoginForm();
+
+  await SimpleTest.promiseFocus(window);
 
   // Trigger autocomplete popup
+  form.uname.value = "";
+  form.pword.value = "";
   form.uname.focus();
 
   const autocompleteItems = await popupByArrowDown();
@@ -59,15 +63,12 @@ add_named_task("menu shows logins for different form action origin", async () =>
   checkAutoCompleteResults(autocompleteItems, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item
-
-  // value shouldn't update just by selecting
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
 
   synthesizeKey("KEY_Enter");
+  await promiseFormsProcessedInSameProcess();
   await untilAutocompletePopupClosed();
-  is(form.uname.value, "dfsu1", "username is set");
-  is(form.pword.value, "dfsp1", "password is set");
+  checkLoginForm(form.uname, "dfsu1", form.pword, "dfsp1");
 });
 </script>
 </pre>
