@@ -1075,8 +1075,14 @@ nsSocketTransportService::Run() {
   gSocketThread = PR_GetCurrentThread();
 
   {
+    // See bug 1843384:
+    // Avoid blocking the main thread by allocating the PollableEvent outside
+    // the mutex. Still has the potential to hang the socket thread, but the
+    // main thread remains responsive.
+    PollableEvent* pollable = new PollableEvent();
     MutexAutoLock lock(mLock);
-    mPollableEvent.reset(new PollableEvent());
+    mPollableEvent.reset(pollable);
+
     //
     // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
     // or similar software.
