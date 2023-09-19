@@ -765,6 +765,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   padding: 0;
   margin-block: 12px;
   align-items: center;
+  overflow: visible;
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .multi-select-container label {
   font-size: 0.9em;
