@@ -10,9 +10,11 @@ Library("elfhack_inject")
 
 DIST_INSTALL = False
 
-cpu = CONFIG["CPU_ARCH"]
+stem = CONFIG["CPU_ARCH"]
+if CONFIG["OS_TARGET"] == "Android":
+    stem += "-android"
 
-gen_src = "%s.c" % cpu
+gen_src = "%s.c" % stem
 GeneratedFile(
     gen_src, script="copy_source.py", entry_point="copy", inputs=["../inject.c"]
 )
