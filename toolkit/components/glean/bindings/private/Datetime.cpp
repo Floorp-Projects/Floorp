@@ -9,13 +9,10 @@
 #include "jsapi.h"
 #include "js/Date.h"
 #include "nsString.h"
-#include "nsIScriptError.h"
-#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
-#include "nsIClassInfoImpl.h"
-#include "Common.h"
 #include "prtime.h"
 
 namespace mozilla::glean {
@@ -84,31 +81,30 @@ Result<Maybe<PRExplodedTime>, nsCString> DatetimeMetric::TestGetValue(
 
 }  // namespace impl
 
-NS_IMPL_CLASSINFO(GleanDatetime, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(GleanDatetime, nsIGleanDatetime)
-
-NS_IMETHODIMP
-GleanDatetime::Set(PRTime aValue, uint8_t aOptionalArgc) {
-  if (aOptionalArgc == 0) {
-    mDatetime.Set();
-  } else {
-    PRExplodedTime exploded;
-    PR_ExplodeTime(aValue, PR_LocalTimeParameters, &exploded);
-    mDatetime.Set(&exploded);
-  }
-
-  return NS_OK;
+/* virtual */
+JSObject* GleanDatetime::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
+  return dom::GleanDatetime_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                            JS::MutableHandle<JS::Value> aResult) {
-  auto result = mDatetime.TestGetValue(aStorageName);
+void GleanDatetime::Set(const dom::Optional<int64_t>& aValue) {
+  if (aValue.WasPassed()) {
+    PRExplodedTime exploded;
+    PR_ExplodeTime(aValue.Value(), PR_LocalTimeParameters, &exploded);
+    mDatetime.Set(&exploded);
+  } else {
+    mDatetime.Set();
+  }
+}
+
+void GleanDatetime::TestGetValue(JSContext* aCx, const nsACString& aPingName,
+                                 JS::MutableHandle<JS::Value> aResult,
+                                 ErrorResult& aRv) {
+  auto result = mDatetime.TestGetValue(aPingName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+    aRv.ThrowDataError(result.unwrapErr());
+    return;
   }
   auto optresult = result.unwrap();
   if (optresult.isNothing()) {
@@ -120,7 +116,6 @@ GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                                JS::NewDateObject(aCx, JS::TimeClip(millis)));
     aResult.setObject(*root);
   }
-  return NS_OK;
 }
 
 }  // namespace mozilla::glean

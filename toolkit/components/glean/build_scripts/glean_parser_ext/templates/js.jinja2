@@ -44,7 +44,7 @@ static_assert({{ categories|length }} < UINT32_MAX, "Too many metric categories 
 static_assert({{ metric_id_mapping|length }} < {{2 ** (id_bits - id_signal_bits)}}, "Too many metrics generated. Need room for {{id_signal_bits}} signal bits.");
 static_assert({{ metric_type_ids|length }} < {{2 ** type_bits}}, "Too many different metric types.");
 
-already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
+already_AddRefed<GleanMetric> NewMetricFromId(uint32_t id, nsISupports* aParent) {
   uint32_t typeId = GLEAN_TYPE_ID(id);
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
@@ -52,7 +52,7 @@ already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
     {% for (type_name, subtype_name), (type_id, original_type) in metric_type_ids.items() %}
     case {{ type_id }}: /* {{ original_type }} */
     {
-      return MakeAndAddRef<{{type_name}}>(metricId{% if subtype_name|length > 0 %}, {{ type_id }}{% endif %});
+      return MakeAndAddRef<{{type_name}}>(metricId{% if subtype_name|length > 0 %}, {{ type_id }}{% endif %}, aParent);
     }
     {% endfor %}
     default:
@@ -72,14 +72,19 @@ already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
  * @param aSubmetricId - an outparam which is assigned the submetric's SDK-generated submetric id.
  *                       Used only by GIFFT.
  */
-already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
+already_AddRefed<GleanMetric> NewSubMetricFromIds(uint32_t aParentTypeId,
+                                           uint32_t aParentMetricId,
+                                           const nsACString& aLabel,
+                                           uint32_t* aSubmetricId,
+                                           nsISupports* aParent) {
   switch (aParentTypeId) {
     {% for (type_name, subtype_name), (type_id, original_type) in metric_type_ids.items() %}
-    {% if subtype_name|length > 0 %}
+    {# TODO: Remove the subtype inclusion clause when we suport the rest of labeled_* #}
+    {% if subtype_name|length > 0 and original_type in ['labeled_boolean', 'labeled_counter', 'labeled_string'] %}
     case {{ type_id }}: { /* {{ original_type }} */
       auto id = impl::fog_{{original_type}}_get(aParentMetricId, &aLabel);
       *aSubmetricId = id;
-      return MakeAndAddRef<{{subtype_name}}>(id);
+      return MakeAndAddRef<{{subtype_name}}>(id, aParent);
     }
     {% endif %}
     {% endfor %}

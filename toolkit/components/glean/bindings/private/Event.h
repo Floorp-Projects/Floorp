@@ -7,13 +7,20 @@
 #ifndef mozilla_glean_GleanEvent_h
 #define mozilla_glean_GleanEvent_h
 
-#include "nsIGleanMetrics.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Record.h"
 #include "mozilla/glean/bindings/EventGIFFTMap.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/ResultVariant.h"
 
 #include "nsString.h"
 #include "nsTArray.h"
+
+namespace mozilla::dom {
+// forward declaration
+struct GleanEventRecord;
+}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -145,12 +152,19 @@ struct NoExtraKeys {
   }
 };
 
-class GleanEvent final : public nsIGleanEvent {
+class GleanEvent final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANEVENT
+  explicit GleanEvent(uint32_t id, nsISupports* aParent)
+      : GleanMetric(aParent), mEvent(id) {}
 
-  explicit GleanEvent(uint32_t id) : mEvent(id){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void Record(const dom::Optional<dom::Record<nsCString, nsCString>>& aExtra);
+
+  void TestGetValue(const nsACString& aPingName,
+                    dom::Nullable<nsTArray<dom::GleanEventRecord>>& aResult,
+                    ErrorResult& aRv);
 
  private:
   virtual ~GleanEvent() = default;

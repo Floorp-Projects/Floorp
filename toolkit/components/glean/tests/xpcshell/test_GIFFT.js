@@ -117,7 +117,7 @@ add_task(function test_gifft_memory_dist() {
   Glean.testOnlyIpc.aMemoryDist.accumulate(Math.pow(2, 31));
   Assert.throws(
     () => Glean.testOnlyIpc.aMemoryDist.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Did not accumulate correctly"
   );
 });
@@ -278,7 +278,7 @@ add_task(function test_gifft_labeled_counter() {
   Glean.testOnlyIpc.aLabeledCounter["1".repeat(72)].add(3);
   Assert.throws(
     () => Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
 
@@ -345,7 +345,7 @@ add_task(async function test_gifft_labeled_boolean() {
   Glean.testOnly.mirrorsForLabeledBools["1".repeat(72)].set(true);
   Assert.throws(
     () => Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Should throw because of a recording error."
   );
 
@@ -397,7 +397,7 @@ add_task(function test_gifft_numeric_limits() {
   // (chutten blames chutten for his shortsightedness)
   Assert.throws(
     () => Glean.testOnlyIpc.aCounter.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
   Assert.equal(undefined, scalarValue("telemetry.test.mirror_for_counter"));
@@ -422,7 +422,7 @@ add_task(function test_gifft_numeric_limits() {
   // Glean will error on this.
   Assert.throws(
     () => Glean.testOnly.meaningOfLife.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
   // GIFFT doesn't tell Telemetry about the weird value at all.
@@ -445,7 +445,7 @@ add_task(function test_gifft_numeric_limits() {
   Glean.testOnlyIpc.irate.addToDenominator(7);
   Assert.throws(
     () => Glean.testOnlyIpc.irate.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
   Assert.deepEqual(
@@ -462,7 +462,7 @@ add_task(function test_gifft_numeric_limits() {
   Glean.testOnlyIpc.irate.addToDenominator(-7);
   Assert.throws(
     () => Glean.testOnlyIpc.irate.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
   Assert.deepEqual(
@@ -488,7 +488,7 @@ add_task(function test_gifft_numeric_limits() {
   Glean.testOnlyIpc.aTimingDist.testAccumulateRawMillis(Math.pow(2, 32) + 1);
   Assert.throws(
     () => Glean.testOnlyIpc.aTimingDist.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
   let snapshot = Telemetry.getHistogramById(

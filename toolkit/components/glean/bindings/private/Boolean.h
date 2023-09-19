@@ -7,9 +7,11 @@
 #ifndef mozilla_glean_GleanBoolean_h
 #define mozilla_glean_GleanBoolean_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsString.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace glean {
@@ -53,12 +55,18 @@ class BooleanMetric {
 
 }  // namespace impl
 
-class GleanBoolean final : public nsIGleanBoolean {
+class GleanBoolean final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANBOOLEAN
+  explicit GleanBoolean(uint32_t id, nsISupports* aParent)
+      : GleanMetric(aParent), mBoolean(id) {}
 
-  explicit GleanBoolean(uint32_t id) : mBoolean(id){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void Set(bool aValue);
+
+  dom::Nullable<bool> TestGetValue(const nsACString& aPingName,
+                                   ErrorResult& aRv);
 
  private:
   virtual ~GleanBoolean() = default;
