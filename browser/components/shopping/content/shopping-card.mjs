@@ -38,6 +38,7 @@ class ShoppingCard extends MozLitElement {
             <button
               tabindex="-1"
               class="icon chevron-icon ghost-button"
+              aria-labelledby="header"
               @click=${this.handleChevronButtonClick}
             ></button>
           </div>
