@@ -372,7 +372,6 @@ pub enum ComponentDefinedType<'a> {
     Tuple(Tuple<'a>),
     Flags(Flags<'a>),
     Enum(Enum<'a>),
-    Union(Union<'a>),
     Option(OptionType<'a>),
     Result(ResultType<'a>),
     Own(Index<'a>),
@@ -394,8 +393,6 @@ impl<'a> ComponentDefinedType<'a> {
             Ok(Self::Flags(parser.parse()?))
         } else if l.peek::<kw::enum_>()? {
             Ok(Self::Enum(parser.parse()?))
-        } else if l.peek::<kw::union>()? {
-            Ok(Self::Union(parser.parse()?))
         } else if l.peek::<kw::option>()? {
             Ok(Self::Option(parser.parse()?))
         } else if l.peek::<kw::result>()? {
@@ -433,7 +430,6 @@ impl Peek for ComponentDefinedType<'_> {
                     | Some(("tuple", _))
                     | Some(("flags", _))
                     | Some(("enum", _))
-                    | Some(("union", _))
                     | Some(("option", _))
                     | Some(("result", _))
                     | Some(("own", _))
@@ -627,24 +623,6 @@ impl<'a> Parse<'a> for Enum<'a> {
             names.push(parser.parse()?);
         }
         Ok(Self { names })
-    }
-}
-
-/// A union type.
-#[derive(Debug)]
-pub struct Union<'a> {
-    /// The types of the union.
-    pub types: Vec<ComponentValType<'a>>,
-}
-
-impl<'a> Parse<'a> for Union<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        parser.parse::<kw::union>()?;
-        let mut types = Vec::new();
-        while !parser.is_empty() {
-            types.push(parser.parse()?);
-        }
-        Ok(Self { types })
     }
 }
 

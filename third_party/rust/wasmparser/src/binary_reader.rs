@@ -978,8 +978,8 @@ impl<'a> BinaryReader<'a> {
             0xd0 => visitor.visit_ref_null(self.read()?),
             0xd1 => visitor.visit_ref_is_null(),
             0xd2 => visitor.visit_ref_func(self.read_var_u32()?),
-            0xd3 => visitor.visit_ref_as_non_null(),
-            0xd4 => visitor.visit_br_on_null(self.read_var_u32()?),
+            0xd4 => visitor.visit_ref_as_non_null(),
+            0xd5 => visitor.visit_br_on_null(self.read_var_u32()?),
             0xd6 => visitor.visit_br_on_non_null(self.read_var_u32()?),
 
             0xfb => self.visit_0xfb_operator(pos, visitor)?,
@@ -1001,9 +1001,9 @@ impl<'a> BinaryReader<'a> {
     {
         let code = self.read_var_u32()?;
         Ok(match code {
-            0x20 => visitor.visit_i31_new(),
-            0x21 => visitor.visit_i31_get_s(),
-            0x22 => visitor.visit_i31_get_u(),
+            0x1c => visitor.visit_ref_i31(),
+            0x1d => visitor.visit_i31_get_s(),
+            0x1e => visitor.visit_i31_get_u(),
 
             _ => bail!(pos, "unknown 0xfb subopcode: 0x{code:x}"),
         })

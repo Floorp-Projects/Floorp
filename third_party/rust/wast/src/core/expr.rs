@@ -26,6 +26,31 @@ impl<'a> Parse<'a> for Expression<'a> {
     }
 }
 
+impl<'a> Expression<'a> {
+    /// Parse an expression formed from a single folded instruction.
+    ///
+    /// Attempts to parse an expression formed from a single folded instruction.
+    ///
+    /// This method will mutate the state of `parser` after attempting to parse
+    /// the expression. If an error happens then it is likely fatal and
+    /// there is no guarantee of how many tokens have been consumed from
+    /// `parser`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the expression could not be
+    /// parsed. Note that creating an [`crate::Error`] is not exactly a cheap
+    /// operation, so [`crate::Error`] is typically fatal and propagated all the
+    /// way back to the top parse call site.
+    pub fn parse_folded_instruction(parser: Parser<'a>) -> Result<Self> {
+        let mut exprs = ExpressionParser::default();
+        exprs.parse_folded_instruction(parser)?;
+        Ok(Expression {
+            instrs: exprs.instrs.into(),
+        })
+    }
+}
+
 /// Helper struct used to parse an `Expression` with helper methods and such.
 ///
 /// The primary purpose of this is to avoid defining expression parsing as a
@@ -214,6 +239,31 @@ impl<'a> ExpressionParser<'a> {
             }
         }
 
+        Ok(())
+    }
+
+    fn parse_folded_instruction(&mut self, parser: Parser<'a>) -> Result<()> {
+        let mut done = false;
+        while !done {
+            match self.paren(parser)? {
+                Paren::Left => {
+                    self.stack.push(Level::EndWith(parser.parse()?));
+                }
+                Paren::Right => {
+                    let top_instr = match self.stack.pop().unwrap() {
+                        Level::EndWith(i) => i,
+                        _ => panic!("unknown level type"),
+                    };
+                    self.instrs.push(top_instr);
+                    if self.stack.is_empty() {
+                        done = true;
+                    }
+                }
+                Paren::None => {
+                    return Err(parser.error("expected to continue a folded instruction"))
+                }
+            }
+        }
         Ok(())
     }
 
@@ -529,11 +579,11 @@ instructions! {
 
         Drop : [0x1a] : "drop",
         Select(SelectTypes<'a>) : [] : "select",
-        LocalGet(Index<'a>) : [0x20] : "local.get" | "get_local",
-        LocalSet(Index<'a>) : [0x21] : "local.set" | "set_local",
-        LocalTee(Index<'a>) : [0x22] : "local.tee" | "tee_local",
-        GlobalGet(Index<'a>) : [0x23] : "global.get" | "get_global",
-        GlobalSet(Index<'a>) : [0x24] : "global.set" | "set_global",
+        LocalGet(Index<'a>) : [0x20] : "local.get",
+        LocalSet(Index<'a>) : [0x21] : "local.set",
+        LocalTee(Index<'a>) : [0x22] : "local.tee",
+        GlobalGet(Index<'a>) : [0x23] : "global.get",
+        GlobalSet(Index<'a>) : [0x24] : "global.set",
 
         TableGet(TableArg<'a>) : [0x25] : "table.get",
         TableSet(TableArg<'a>) : [0x26] : "table.set",
@@ -563,8 +613,8 @@ instructions! {
         I64Store32(MemArg<4>) : [0x3e] : "i64.store32",
 
         // Lots of bulk memory proposal here as well
-        MemorySize(MemoryArg<'a>) : [0x3f] : "memory.size" | "current_memory",
-        MemoryGrow(MemoryArg<'a>) : [0x40] : "memory.grow" | "grow_memory",
+        MemorySize(MemoryArg<'a>) : [0x3f] : "memory.size",
+        MemoryGrow(MemoryArg<'a>) : [0x40] : "memory.grow",
         MemoryInit(MemoryInit<'a>) : [0xfc, 0x08] : "memory.init",
         MemoryCopy(MemoryCopy<'a>) : [0xfc, 0x0a] : "memory.copy",
         MemoryFill(MemoryArg<'a>) : [0xfc, 0x0b] : "memory.fill",
@@ -582,41 +632,41 @@ instructions! {
         RefFunc(Index<'a>) : [0xd2] : "ref.func",
 
         // function-references proposal
-        RefAsNonNull : [0xd3] : "ref.as_non_null",
-        BrOnNull(Index<'a>) : [0xd4] : "br_on_null",
+        RefAsNonNull : [0xd4] : "ref.as_non_null",
+        BrOnNull(Index<'a>) : [0xd5] : "br_on_null",
         BrOnNonNull(Index<'a>) : [0xd6] : "br_on_non_null",
 
         // gc proposal: eqref
-        RefEq : [0xd5] : "ref.eq",
+        RefEq : [0xd3] : "ref.eq",
 
         // gc proposal: struct
-        StructNew(Index<'a>) : [0xfb, 0x07] : "struct.new",
-        StructNewDefault(Index<'a>) : [0xfb, 0x08] : "struct.new_default",
-        StructGet(StructAccess<'a>) : [0xfb, 0x03] : "struct.get",
-        StructGetS(StructAccess<'a>) : [0xfb, 0x04] : "struct.get_s",
-        StructGetU(StructAccess<'a>) : [0xfb, 0x05] : "struct.get_u",
-        StructSet(StructAccess<'a>) : [0xfb, 0x06] : "struct.set",
+        StructNew(Index<'a>) : [0xfb, 0x00] : "struct.new",
+        StructNewDefault(Index<'a>) : [0xfb, 0x01] : "struct.new_default",
+        StructGet(StructAccess<'a>) : [0xfb, 0x02] : "struct.get",
+        StructGetS(StructAccess<'a>) : [0xfb, 0x03] : "struct.get_s",
+        StructGetU(StructAccess<'a>) : [0xfb, 0x04] : "struct.get_u",
+        StructSet(StructAccess<'a>) : [0xfb, 0x05] : "struct.set",
 
         // gc proposal: array
-        ArrayNew(Index<'a>) : [0xfb, 0x1b] : "array.new",
-        ArrayNewDefault(Index<'a>) : [0xfb, 0x1c] : "array.new_default",
-        ArrayNewFixed(ArrayNewFixed<'a>) : [0xfb, 0x1a] : "array.new_fixed",
-        ArrayNewData(ArrayNewData<'a>) : [0xfb, 0x1d] : "array.new_data",
-        ArrayNewElem(ArrayNewElem<'a>) : [0xfb, 0x1f] : "array.new_elem",
-        ArrayGet(Index<'a>) : [0xfb, 0x13] : "array.get",
-        ArrayGetS(Index<'a>) : [0xfb, 0x14] : "array.get_s",
-        ArrayGetU(Index<'a>) : [0xfb, 0x15] : "array.get_u",
-        ArraySet(Index<'a>) : [0xfb, 0x16] : "array.set",
-        ArrayLen : [0xfb, 0x19] : "array.len",
-        ArrayFill(ArrayFill<'a>) : [0xfb, 0x0f] : "array.fill",
-        ArrayCopy(ArrayCopy<'a>) : [0xfb, 0x18] : "array.copy",
-        ArrayInitData(ArrayInit<'a>) : [0xfb, 0x54] : "array.init_data",
-        ArrayInitElem(ArrayInit<'a>) : [0xfb, 0x55] : "array.init_elem",
+        ArrayNew(Index<'a>) : [0xfb, 0x06] : "array.new",
+        ArrayNewDefault(Index<'a>) : [0xfb, 0x07] : "array.new_default",
+        ArrayNewFixed(ArrayNewFixed<'a>) : [0xfb, 0x08] : "array.new_fixed",
+        ArrayNewData(ArrayNewData<'a>) : [0xfb, 0x09] : "array.new_data",
+        ArrayNewElem(ArrayNewElem<'a>) : [0xfb, 0x0a] : "array.new_elem",
+        ArrayGet(Index<'a>) : [0xfb, 0x0b] : "array.get",
+        ArrayGetS(Index<'a>) : [0xfb, 0x0c] : "array.get_s",
+        ArrayGetU(Index<'a>) : [0xfb, 0x0d] : "array.get_u",
+        ArraySet(Index<'a>) : [0xfb, 0x0e] : "array.set",
+        ArrayLen : [0xfb, 0x0f] : "array.len",
+        ArrayFill(ArrayFill<'a>) : [0xfb, 0x10] : "array.fill",
+        ArrayCopy(ArrayCopy<'a>) : [0xfb, 0x11] : "array.copy",
+        ArrayInitData(ArrayInit<'a>) : [0xfb, 0x12] : "array.init_data",
+        ArrayInitElem(ArrayInit<'a>) : [0xfb, 0x13] : "array.init_elem",
 
         // gc proposal, i31
-        I31New : [0xfb, 0x20] : "i31.new",
-        I31GetS : [0xfb, 0x21] : "i31.get_s",
-        I31GetU : [0xfb, 0x22] : "i31.get_u",
+        RefI31 : [0xfb, 0x1c] : "ref.i31",
+        I31GetS : [0xfb, 0x1d] : "i31.get_s",
+        I31GetU : [0xfb, 0x1e] : "i31.get_u",
 
         // gc proposal, concrete casting
         RefTest(RefTest<'a>) : [] : "ref.test",
@@ -625,8 +675,8 @@ instructions! {
         BrOnCastFail(Box<BrOnCastFail<'a>>) : [] : "br_on_cast_fail",
 
         // gc proposal extern/any coercion operations
-        ExternInternalize : [0xfb, 0x70] : "extern.internalize",
-        ExternExternalize : [0xfb, 0x71] : "extern.externalize",
+        ExternInternalize : [0xfb, 0x1a] : "extern.internalize",
+        ExternExternalize : [0xfb, 0x1b] : "extern.externalize",
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
@@ -739,41 +789,41 @@ instructions! {
         F64Le : [0x65] : "f64.le",
         F64Ge : [0x66] : "f64.ge",
 
-        I32WrapI64 : [0xa7] : "i32.wrap_i64" | "i32.wrap/i64",
-        I32TruncF32S : [0xa8] : "i32.trunc_f32_s" | "i32.trunc_s/f32",
-        I32TruncF32U : [0xa9] : "i32.trunc_f32_u" | "i32.trunc_u/f32",
-        I32TruncF64S : [0xaa] : "i32.trunc_f64_s" | "i32.trunc_s/f64",
-        I32TruncF64U : [0xab] : "i32.trunc_f64_u" | "i32.trunc_u/f64",
-        I64ExtendI32S : [0xac] : "i64.extend_i32_s" | "i64.extend_s/i32",
-        I64ExtendI32U : [0xad] : "i64.extend_i32_u" | "i64.extend_u/i32",
-        I64TruncF32S : [0xae] : "i64.trunc_f32_s" | "i64.trunc_s/f32",
-        I64TruncF32U : [0xaf] : "i64.trunc_f32_u" | "i64.trunc_u/f32",
-        I64TruncF64S : [0xb0] : "i64.trunc_f64_s" | "i64.trunc_s/f64",
-        I64TruncF64U : [0xb1] : "i64.trunc_f64_u" | "i64.trunc_u/f64",
-        F32ConvertI32S : [0xb2] : "f32.convert_i32_s" | "f32.convert_s/i32",
-        F32ConvertI32U : [0xb3] : "f32.convert_i32_u" | "f32.convert_u/i32",
-        F32ConvertI64S : [0xb4] : "f32.convert_i64_s" | "f32.convert_s/i64",
-        F32ConvertI64U : [0xb5] : "f32.convert_i64_u" | "f32.convert_u/i64",
-        F32DemoteF64 : [0xb6] : "f32.demote_f64" | "f32.demote/f64",
-        F64ConvertI32S : [0xb7] : "f64.convert_i32_s" | "f64.convert_s/i32",
-        F64ConvertI32U : [0xb8] : "f64.convert_i32_u" | "f64.convert_u/i32",
-        F64ConvertI64S : [0xb9] : "f64.convert_i64_s" | "f64.convert_s/i64",
-        F64ConvertI64U : [0xba] : "f64.convert_i64_u" | "f64.convert_u/i64",
-        F64PromoteF32 : [0xbb] : "f64.promote_f32" | "f64.promote/f32",
-        I32ReinterpretF32 : [0xbc] : "i32.reinterpret_f32" | "i32.reinterpret/f32",
-        I64ReinterpretF64 : [0xbd] : "i64.reinterpret_f64" | "i64.reinterpret/f64",
-        F32ReinterpretI32 : [0xbe] : "f32.reinterpret_i32" | "f32.reinterpret/i32",
-        F64ReinterpretI64 : [0xbf] : "f64.reinterpret_i64" | "f64.reinterpret/i64",
+        I32WrapI64 : [0xa7] : "i32.wrap_i64",
+        I32TruncF32S : [0xa8] : "i32.trunc_f32_s",
+        I32TruncF32U : [0xa9] : "i32.trunc_f32_u",
+        I32TruncF64S : [0xaa] : "i32.trunc_f64_s",
+        I32TruncF64U : [0xab] : "i32.trunc_f64_u",
+        I64ExtendI32S : [0xac] : "i64.extend_i32_s",
+        I64ExtendI32U : [0xad] : "i64.extend_i32_u",
+        I64TruncF32S : [0xae] : "i64.trunc_f32_s",
+        I64TruncF32U : [0xaf] : "i64.trunc_f32_u",
+        I64TruncF64S : [0xb0] : "i64.trunc_f64_s",
+        I64TruncF64U : [0xb1] : "i64.trunc_f64_u",
+        F32ConvertI32S : [0xb2] : "f32.convert_i32_s",
+        F32ConvertI32U : [0xb3] : "f32.convert_i32_u",
+        F32ConvertI64S : [0xb4] : "f32.convert_i64_s",
+        F32ConvertI64U : [0xb5] : "f32.convert_i64_u",
+        F32DemoteF64 : [0xb6] : "f32.demote_f64",
+        F64ConvertI32S : [0xb7] : "f64.convert_i32_s",
+        F64ConvertI32U : [0xb8] : "f64.convert_i32_u",
+        F64ConvertI64S : [0xb9] : "f64.convert_i64_s",
+        F64ConvertI64U : [0xba] : "f64.convert_i64_u",
+        F64PromoteF32 : [0xbb] : "f64.promote_f32",
+        I32ReinterpretF32 : [0xbc] : "i32.reinterpret_f32",
+        I64ReinterpretF64 : [0xbd] : "i64.reinterpret_f64",
+        F32ReinterpretI32 : [0xbe] : "f32.reinterpret_i32",
+        F64ReinterpretI64 : [0xbf] : "f64.reinterpret_i64",
 
         // non-trapping float to int
-        I32TruncSatF32S : [0xfc, 0x00] : "i32.trunc_sat_f32_s" | "i32.trunc_s:sat/f32",
-        I32TruncSatF32U : [0xfc, 0x01] : "i32.trunc_sat_f32_u" | "i32.trunc_u:sat/f32",
-        I32TruncSatF64S : [0xfc, 0x02] : "i32.trunc_sat_f64_s" | "i32.trunc_s:sat/f64",
-        I32TruncSatF64U : [0xfc, 0x03] : "i32.trunc_sat_f64_u" | "i32.trunc_u:sat/f64",
-        I64TruncSatF32S : [0xfc, 0x04] : "i64.trunc_sat_f32_s" | "i64.trunc_s:sat/f32",
-        I64TruncSatF32U : [0xfc, 0x05] : "i64.trunc_sat_f32_u" | "i64.trunc_u:sat/f32",
-        I64TruncSatF64S : [0xfc, 0x06] : "i64.trunc_sat_f64_s" | "i64.trunc_s:sat/f64",
-        I64TruncSatF64U : [0xfc, 0x07] : "i64.trunc_sat_f64_u" | "i64.trunc_u:sat/f64",
+        I32TruncSatF32S : [0xfc, 0x00] : "i32.trunc_sat_f32_s",
+        I32TruncSatF32U : [0xfc, 0x01] : "i32.trunc_sat_f32_u",
+        I32TruncSatF64S : [0xfc, 0x02] : "i32.trunc_sat_f64_s",
+        I32TruncSatF64U : [0xfc, 0x03] : "i32.trunc_sat_f64_u",
+        I64TruncSatF32S : [0xfc, 0x04] : "i64.trunc_sat_f32_s",
+        I64TruncSatF32U : [0xfc, 0x05] : "i64.trunc_sat_f32_u",
+        I64TruncSatF64S : [0xfc, 0x06] : "i64.trunc_sat_f64_s",
+        I64TruncSatF64U : [0xfc, 0x07] : "i64.trunc_sat_f64_u",
 
         // sign extension proposal
         I32Extend8S : [0xc0] : "i32.extend8_s",
@@ -783,9 +833,9 @@ instructions! {
         I64Extend32S : [0xc4] : "i64.extend32_s",
 
         // atomics proposal
-        MemoryAtomicNotify(MemArg<4>) : [0xfe, 0x00] : "memory.atomic.notify" | "atomic.notify",
-        MemoryAtomicWait32(MemArg<4>) : [0xfe, 0x01] : "memory.atomic.wait32" | "i32.atomic.wait",
-        MemoryAtomicWait64(MemArg<8>) : [0xfe, 0x02] : "memory.atomic.wait64" | "i64.atomic.wait",
+        MemoryAtomicNotify(MemArg<4>) : [0xfe, 0x00] : "memory.atomic.notify",
+        MemoryAtomicWait32(MemArg<4>) : [0xfe, 0x01] : "memory.atomic.wait32",
+        MemoryAtomicWait64(MemArg<8>) : [0xfe, 0x02] : "memory.atomic.wait64",
         AtomicFence : [0xfe, 0x03, 0x00] : "atomic.fence",
 
         I32AtomicLoad(MemArg<4>) : [0xfe, 0x10] : "i32.atomic.load",
@@ -1164,7 +1214,8 @@ impl<'a> Instruction<'a> {
         match self {
             Instruction::MemoryInit(_)
             | Instruction::DataDrop(_)
-            | Instruction::ArrayNewData(_) => true,
+            | Instruction::ArrayNewData(_)
+            | Instruction::ArrayInitData(_) => true,
             _ => false,
         }
     }

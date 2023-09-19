@@ -247,9 +247,37 @@ pub struct WasmFeatures {
     pub memory_control: bool,
     /// The WebAssembly gc proposal
     pub gc: bool,
+    /// Support for the `value` type in the component model proposal.
+    pub component_model_values: bool,
 }
 
 impl WasmFeatures {
+    /// Returns [`WasmFeatures`] with all features enabled.
+    pub fn all() -> Self {
+        WasmFeatures {
+            mutable_global: true,
+            saturating_float_to_int: true,
+            sign_extension: true,
+            reference_types: true,
+            multi_value: true,
+            bulk_memory: true,
+            simd: true,
+            relaxed_simd: true,
+            threads: true,
+            tail_call: true,
+            floats: true,
+            multi_memory: true,
+            exceptions: true,
+            memory64: true,
+            extended_const: true,
+            component_model: true,
+            function_references: true,
+            memory_control: true,
+            gc: true,
+            component_model_values: true,
+        }
+    }
+
     /// NOTE: This only checks that the value type corresponds to the feature set!!
     ///
     /// To check that reference types are valid, we need access to the module
@@ -336,6 +364,7 @@ impl Default for WasmFeatures {
             function_references: false,
             memory_control: false,
             gc: false,
+            component_model_values: false,
 
             // On-by-default features (phase 4 or greater).
             mutable_global: true,
@@ -608,7 +637,8 @@ impl Validator {
                 state
                     .module
                     .assert_mut()
-                    .add_type(def, features, types, offset, false /* checked above */)
+                    .add_types(&def, features, types, offset, true)?;
+                Ok(())
             },
         )
     }
@@ -1062,11 +1092,11 @@ impl Validator {
                 current.instances.reserve(count as usize);
                 Ok(())
             },
-            |components, types, _, instance, offset| {
+            |components, types, features, instance, offset| {
                 components
                     .last_mut()
                     .unwrap()
-                    .add_instance(instance, types, offset)
+                    .add_instance(instance, features, types, offset)
             },
         )
     }
@@ -1082,8 +1112,8 @@ impl Validator {
             section,
             "alias",
             |_, _, _, _| Ok(()), // maximums checked via `add_alias`
-            |components, types, _, alias, offset| -> Result<(), BinaryReaderError> {
-                ComponentState::add_alias(components, alias, types, offset)
+            |components, types, features, alias, offset| -> Result<(), BinaryReaderError> {
+                ComponentState::add_alias(components, alias, features, types, offset)
             },
         )
     }
@@ -1181,6 +1211,7 @@ impl Validator {
             f.func_index,
             &f.arguments,
             f.results,
+            &self.features,
             &self.types,
             range.start,
         )
@@ -1197,11 +1228,11 @@ impl Validator {
             section,
             "import",
             |_, _, _, _| Ok(()), // add_import will check limits
-            |components, types, _, import, offset| {
+            |components, types, features, import, offset| {
                 components
                     .last_mut()
                     .unwrap()
-                    .add_import(import, types, offset)
+                    .add_import(import, features, types, offset)
             },
         )
     }
@@ -1228,12 +1259,13 @@ impl Validator {
                 current.exports.reserve(count as usize);
                 Ok(())
             },
-            |components, types, _, export, offset| {
+            |components, types, features, export, offset| {
                 let current = components.last_mut().unwrap();
-                let ty = current.export_to_entity_type(&export, types, offset)?;
+                let ty = current.export_to_entity_type(&export, features, types, offset)?;
                 current.add_export(
                     export.name,
                     ty,
+                    features,
                     types,
                     offset,
                     false, /* checked above */

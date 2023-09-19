@@ -623,9 +623,23 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasm-encoder]]
+version = "0.33.1"
+when = "2023-09-18"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.wasm-smith]]
 version = "0.12.12"
 when = "2023-07-17"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
+[[publisher.wasm-smith]]
+version = "0.12.17"
+when = "2023-09-18"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
@@ -637,9 +651,23 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasmparser]]
+version = "0.113.1"
+when = "2023-09-18"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.wast]]
 version = "62.0.0"
 when = "2023-07-17"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
+[[publisher.wast]]
+version = "65.0.1"
+when = "2023-09-18"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"

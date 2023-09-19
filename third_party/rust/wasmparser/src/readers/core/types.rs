@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
+use std::fmt::{self, Debug, Write};
+use std::slice;
+
 use crate::limits::{
     MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS, MAX_WASM_STRUCT_FIELDS,
-    MAX_WASM_SUPERTYPES,
+    MAX_WASM_SUPERTYPES, MAX_WASM_TYPES,
 };
 use crate::{BinaryReader, BinaryReaderError, FromReader, Result, SectionLimited};
-use std::fmt::{self, Debug, Write};
 
 /// Represents the types of values in a WebAssembly module.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -54,7 +56,13 @@ const _: () = {
 };
 
 pub(crate) trait Inherits {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType;
 }
@@ -91,20 +99,28 @@ impl ValType {
 
     pub(crate) fn is_valtype_byte(byte: u8) -> bool {
         match byte {
-            0x7F | 0x7E | 0x7D | 0x7C | 0x7B | 0x70 | 0x6F | 0x6B | 0x6C | 0x6E | 0x65 | 0x69
-            | 0x68 | 0x6D | 0x67 | 0x66 | 0x6A => true,
+            0x7F | 0x7E | 0x7D | 0x7C | 0x7B | 0x70 | 0x6F | 0x64 | 0x63 | 0x6E | 0x71 | 0x72
+            | 0x73 | 0x6D | 0x6B | 0x6A | 0x6C => true,
             _ => false,
         }
     }
 }
 
 impl Inherits for ValType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         match (self, other) {
-            (Self::Ref(r1), Self::Ref(r2)) => r1.inherits(r2, type_at),
+            (Self::Ref(r1), Self::Ref(r2)) => {
+                r1.inherits(r2, self_base_idx, other_base_idx, type_at)
+            }
             (
                 s @ (Self::I32 | Self::I64 | Self::F32 | Self::F64 | Self::V128 | Self::Ref(_)),
                 o,
@@ -116,11 +132,11 @@ impl Inherits for ValType {
 impl<'a> FromReader<'a> for StorageType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         match reader.peek()? {
-            0x7A => {
+            0x78 => {
                 reader.position += 1;
                 Ok(StorageType::I8)
             }
-            0x79 => {
+            0x77 => {
                 reader.position += 1;
                 Ok(StorageType::I16)
             }
@@ -152,7 +168,7 @@ impl<'a> FromReader<'a> for ValType {
                 reader.position += 1;
                 Ok(ValType::V128)
             }
-            0x70 | 0x6F | 0x6B | 0x6C | 0x6E | 0x65 | 0x69 | 0x68 | 0x6D | 0x67 | 0x66 | 0x6A => {
+            0x70 | 0x6F | 0x64 | 0x63 | 0x6E | 0x71 | 0x72 | 0x73 | 0x6D | 0x6B | 0x6A | 0x6C => {
                 Ok(ValType::Ref(reader.read()?))
             }
             _ => bail!(reader.original_position(), "invalid value type"),
@@ -535,13 +551,24 @@ impl RefType {
 }
 
 impl Inherits for RefType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         self == other
             || ((other.is_nullable() || !self.is_nullable())
-                && self.heap_type().inherits(&other.heap_type(), type_at))
+                && self.heap_type().inherits(
+                    &other.heap_type(),
+                    self_base_idx,
+                    other_base_idx,
+                    type_at,
+                ))
     }
 }
 
@@ -551,15 +578,15 @@ impl<'a> FromReader<'a> for RefType {
             0x70 => Ok(RefType::FUNC.nullable()),
             0x6F => Ok(RefType::EXTERN.nullable()),
             0x6E => Ok(RefType::ANY.nullable()),
-            0x65 => Ok(RefType::NONE.nullable()),
-            0x69 => Ok(RefType::NOEXTERN.nullable()),
-            0x68 => Ok(RefType::NOFUNC.nullable()),
+            0x71 => Ok(RefType::NONE.nullable()),
+            0x72 => Ok(RefType::NOEXTERN.nullable()),
+            0x73 => Ok(RefType::NOFUNC.nullable()),
             0x6D => Ok(RefType::EQ.nullable()),
-            0x67 => Ok(RefType::STRUCT.nullable()),
-            0x66 => Ok(RefType::ARRAY.nullable()),
-            0x6A => Ok(RefType::I31.nullable()),
-            byte @ (0x6B | 0x6C) => {
-                let nullable = byte == 0x6C;
+            0x6B => Ok(RefType::STRUCT.nullable()),
+            0x6A => Ok(RefType::ARRAY.nullable()),
+            0x6C => Ok(RefType::I31.nullable()),
+            byte @ (0x63 | 0x64) => {
+                let nullable = byte == 0x63;
                 let pos = reader.original_position();
                 RefType::new(nullable, reader.read()?)
                     .ok_or_else(|| crate::BinaryReaderError::new("type index too large", pos))
@@ -630,14 +657,33 @@ pub enum HeapType {
     I31,
 }
 
+fn choose_base(base_idx: Option<u32>, idx: u32) -> Option<u32> {
+    if base_idx == None || idx == base_idx.unwrap() || idx < base_idx.unwrap() {
+        Some(idx)
+    } else {
+        base_idx
+    }
+}
+
 impl Inherits for HeapType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         match (self, other) {
             (HeapType::Indexed(a), HeapType::Indexed(b)) => {
-                a == b || type_at(*a).inherits(type_at(*b), type_at)
+                a == b || {
+                    let a_base = choose_base(self_base_idx, *a);
+                    let b_base = choose_base(other_base_idx, *b);
+                    (a_base == self_base_idx && b_base == other_base_idx)
+                        || type_at(*a).inherits(type_at(*b), a_base, b_base, type_at)
+                }
             }
             (HeapType::Indexed(a), HeapType::Func) => match type_at(*a).structural_type {
                 StructuralType::Func(_) => true,
@@ -708,15 +754,15 @@ impl<'a> FromReader<'a> for HeapType {
                 reader.position += 1;
                 Ok(HeapType::Any)
             }
-            0x65 => {
+            0x71 => {
                 reader.position += 1;
                 Ok(HeapType::None)
             }
-            0x69 => {
+            0x72 => {
                 reader.position += 1;
                 Ok(HeapType::NoExtern)
             }
-            0x68 => {
+            0x73 => {
                 reader.position += 1;
                 Ok(HeapType::NoFunc)
             }
@@ -724,15 +770,15 @@ impl<'a> FromReader<'a> for HeapType {
                 reader.position += 1;
                 Ok(HeapType::Eq)
             }
-            0x67 => {
+            0x6B => {
                 reader.position += 1;
                 Ok(HeapType::Struct)
             }
-            0x66 => {
+            0x6A => {
                 reader.position += 1;
                 Ok(HeapType::Array)
             }
-            0x6A => {
+            0x6C => {
                 reader.position += 1;
                 Ok(HeapType::I31)
             }
@@ -771,15 +817,43 @@ pub struct SubType {
     pub structural_type: StructuralType,
 }
 
+/// Represents a recursive type group in a WebAssembly module.
+#[derive(Debug, Clone)]
+pub enum RecGroup {
+    /// The list of subtypes in the recursive type group.
+    Many(Vec<SubType>),
+    /// A single subtype in the recursive type group.
+    Single(SubType),
+}
+
+impl RecGroup {
+    /// Returns the list of subtypes in the recursive type group.
+    pub fn types(&self) -> &[SubType] {
+        match self {
+            RecGroup::Many(types) => types,
+            RecGroup::Single(ty) => slice::from_ref(ty),
+        }
+    }
+}
+
 impl Inherits for SubType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         !other.is_final
-            && self
-                .structural_type
-                .inherits(&other.structural_type, type_at)
+            && self.structural_type.inherits(
+                &other.structural_type,
+                self_base_idx,
+                other_base_idx,
+                type_at,
+            )
     }
 }
 
@@ -813,14 +887,26 @@ pub struct StructType {
 }
 
 impl Inherits for StructuralType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         match (self, other) {
-            (StructuralType::Func(a), StructuralType::Func(b)) => a.inherits(b, type_at),
-            (StructuralType::Array(a), StructuralType::Array(b)) => a.inherits(b, type_at),
-            (StructuralType::Struct(a), StructuralType::Struct(b)) => a.inherits(b, type_at),
+            (StructuralType::Func(a), StructuralType::Func(b)) => {
+                a.inherits(b, self_base_idx, other_base_idx, type_at)
+            }
+            (StructuralType::Array(a), StructuralType::Array(b)) => {
+                a.inherits(b, self_base_idx, other_base_idx, type_at)
+            }
+            (StructuralType::Struct(a), StructuralType::Struct(b)) => {
+                a.inherits(b, self_base_idx, other_base_idx, type_at)
+            }
             (StructuralType::Func(_), _) => false,
             (StructuralType::Array(_), _) => false,
             (StructuralType::Struct(_), _) => false,
@@ -900,7 +986,13 @@ impl FuncType {
 }
 
 impl Inherits for FuncType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
@@ -912,47 +1004,78 @@ impl Inherits for FuncType {
                 .params()
                 .iter()
                 .zip(other.params())
-                .fold(true, |r, (a, b)| r && b.inherits(a, type_at))
+                .fold(true, |r, (a, b)| r && b.inherits(a, self_base_idx, other_base_idx, type_at))
             && self
                 .results()
                 .iter()
                 .zip(other.results())
-                .fold(true, |r, (a, b)| r && a.inherits(b, type_at))
+                .fold(true, |r, (a, b)| r && a.inherits(b, self_base_idx, other_base_idx, type_at))
     }
 }
 
 impl Inherits for ArrayType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
-        self.0.inherits(&other.0, type_at)
+        self.0
+            .inherits(&other.0, self_base_idx, other_base_idx, type_at)
     }
 }
 
 impl Inherits for FieldType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
-        (other.mutable || !self.mutable) && self.element_type.inherits(&other.element_type, type_at)
+        (other.mutable || !self.mutable)
+            && self.element_type.inherits(
+                &other.element_type,
+                self_base_idx,
+                other_base_idx,
+                type_at,
+            )
     }
 }
 
 impl Inherits for StorageType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
         match (self, other) {
-            (Self::Val(a), Self::Val(b)) => a.inherits(b, type_at),
+            (Self::Val(a), Self::Val(b)) => a.inherits(b, self_base_idx, other_base_idx, type_at),
             (a @ (Self::I8 | Self::I16 | Self::Val(_)), b) => a == b,
         }
     }
 }
 
 impl Inherits for StructType {
-    fn inherits<'a, F>(&self, other: &Self, type_at: &F) -> bool
+    fn inherits<'a, F>(
+        &self,
+        other: &Self,
+        self_base_idx: Option<u32>,
+        other_base_idx: Option<u32>,
+        type_at: &F,
+    ) -> bool
     where
         F: Fn(u32) -> &'a SubType,
     {
@@ -962,7 +1085,9 @@ impl Inherits for StructType {
                 .fields
                 .iter()
                 .zip(other.fields.iter())
-                .fold(true, |r, (a, b)| r && a.inherits(b, type_at))
+                .fold(true, |r, (a, b)| {
+                    r && a.inherits(b, self_base_idx, other_base_idx, type_at)
+                })
     }
 }
 
@@ -1044,7 +1169,31 @@ pub struct TagType {
 }
 
 /// A reader for the type section of a WebAssembly module.
-pub type TypeSectionReader<'a> = SectionLimited<'a, SubType>;
+pub type TypeSectionReader<'a> = SectionLimited<'a, RecGroup>;
+
+impl<'a> TypeSectionReader<'a> {
+    /// Returns an iterator over this type section which will only yield
+    /// function types and any usage of GC types from the GC proposal will
+    /// be translated into an error.
+    pub fn into_iter_err_on_gc_types(self) -> impl Iterator<Item = Result<FuncType>> + 'a {
+        self.into_iter_with_offsets().map(|item| {
+            let (offset, group) = item?;
+            let ty = match group {
+                RecGroup::Single(ty) => ty,
+                RecGroup::Many(_) => bail!(offset, "gc proposal not supported"),
+            };
+            if !ty.is_final || ty.supertype_idx.is_some() {
+                bail!(offset, "gc proposal not supported");
+            }
+            match ty.structural_type {
+                StructuralType::Func(f) => Ok(f),
+                StructuralType::Array(_) | StructuralType::Struct(_) => {
+                    bail!(offset, "gc proposal not supported");
+                }
+            }
+        })
+    }
+}
 
 impl<'a> FromReader<'a> for StructuralType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
@@ -1064,11 +1213,24 @@ fn read_structural_type(
     })
 }
 
+impl<'a> FromReader<'a> for RecGroup {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        Ok(match reader.peek()? {
+            0x4e => {
+                reader.read_u8()?;
+                let types = reader.read_iter(MAX_WASM_TYPES, "rec group types")?;
+                RecGroup::Many(types.collect::<Result<_>>()?)
+            }
+            _ => RecGroup::Single(reader.read()?),
+        })
+    }
+}
+
 impl<'a> FromReader<'a> for SubType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         let pos = reader.original_position();
         Ok(match reader.read_u8()? {
-            opcode @ (0x4e | 0x50) => {
+            opcode @ (0x4f | 0x50) => {
                 let idx_iter = reader.read_iter(MAX_WASM_SUPERTYPES, "supertype idxs")?;
                 let idxs = idx_iter.collect::<Result<Vec<u32>>>()?;
                 if idxs.len() > 1 {
@@ -1078,13 +1240,13 @@ impl<'a> FromReader<'a> for SubType {
                     ));
                 }
                 SubType {
-                    is_final: opcode == 0x4e,
+                    is_final: opcode == 0x4f,
                     supertype_idx: idxs.first().copied(),
                     structural_type: read_structural_type(reader.read_u8()?, reader)?,
                 }
             }
             opcode => SubType {
-                is_final: false,
+                is_final: true,
                 supertype_idx: None,
                 structural_type: read_structural_type(opcode, reader)?,
             },

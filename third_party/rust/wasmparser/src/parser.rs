@@ -424,12 +424,12 @@ impl Parser {
     ///
     /// fn parse(mut reader: impl Read) -> Result<()> {
     ///     let mut buf = Vec::new();
-    ///     let mut parser = Parser::new(0);
+    ///     let mut cur = Parser::new(0);
     ///     let mut eof = false;
     ///     let mut stack = Vec::new();
     ///
     ///     loop {
-    ///         let (payload, consumed) = match parser.parse(&buf, eof)? {
+    ///         let (payload, consumed) = match cur.parse(&buf, eof)? {
     ///             Chunk::NeedMoreData(hint) => {
     ///                 assert!(!eof); // otherwise an error would be returned
     ///
@@ -476,10 +476,8 @@ impl Parser {
     ///             }
     ///
     ///             // Sections for WebAssembly components
-    ///             ModuleSection { .. } => { /* ... */ }
     ///             InstanceSection(_) => { /* ... */ }
     ///             CoreTypeSection(_) => { /* ... */ }
-    ///             ComponentSection { .. } => { /* ... */ }
     ///             ComponentInstanceSection(_) => { /* ... */ }
     ///             ComponentAliasSection(_) => { /* ... */ }
     ///             ComponentTypeSection(_) => { /* ... */ }
@@ -487,6 +485,12 @@ impl Parser {
     ///             ComponentStartSection { .. } => { /* ... */ }
     ///             ComponentImportSection(_) => { /* ... */ }
     ///             ComponentExportSection(_) => { /* ... */ }
+    ///
+    ///             ModuleSection { parser, .. }
+    ///             | ComponentSection { parser, .. } => {
+    ///                 stack.push(cur.clone());
+    ///                 cur = parser.clone();
+    ///             }
     ///
     ///             CustomSection(_) => { /* ... */ }
     ///
@@ -498,7 +502,7 @@ impl Parser {
     ///             // we're done.
     ///             End(_) => {
     ///                 if let Some(parent_parser) = stack.pop() {
-    ///                     parser = parent_parser;
+    ///                     cur = parent_parser;
     ///                 } else {
     ///                     break;
     ///                 }
@@ -804,6 +808,79 @@ impl Parser {
     /// Note that when this function yields sections that provide parsers,
     /// no further action is required for those sections as payloads from
     /// those parsers will be automatically returned.
+    ///
+    /// # Examples
+    ///
+    /// An example of reading a wasm file from a stream (`std::io::Read`) into
+    /// a buffer and then parsing it.
+    ///
+    /// ```
+    /// use std::io::Read;
+    /// use anyhow::Result;
+    /// use wasmparser::{Parser, Chunk, Payload::*};
+    ///
+    /// fn parse(mut reader: impl Read) -> Result<()> {
+    ///     let mut buf = Vec::new();
+    ///     reader.read_to_end(&mut buf)?;
+    ///     let parser = Parser::new(0);
+    ///
+    ///     for payload in parser.parse_all(&buf) {
+    ///         match payload? {
+    ///             // Sections for WebAssembly modules
+    ///             Version { .. } => { /* ... */ }
+    ///             TypeSection(_) => { /* ... */ }
+    ///             ImportSection(_) => { /* ... */ }
+    ///             FunctionSection(_) => { /* ... */ }
+    ///             TableSection(_) => { /* ... */ }
+    ///             MemorySection(_) => { /* ... */ }
+    ///             TagSection(_) => { /* ... */ }
+    ///             GlobalSection(_) => { /* ... */ }
+    ///             ExportSection(_) => { /* ... */ }
+    ///             StartSection { .. } => { /* ... */ }
+    ///             ElementSection(_) => { /* ... */ }
+    ///             DataCountSection { .. } => { /* ... */ }
+    ///             DataSection(_) => { /* ... */ }
+    ///
+    ///             // Here we know how many functions we'll be receiving as
+    ///             // `CodeSectionEntry`, so we can prepare for that, and
+    ///             // afterwards we can parse and handle each function
+    ///             // individually.
+    ///             CodeSectionStart { .. } => { /* ... */ }
+    ///             CodeSectionEntry(body) => {
+    ///                 // here we can iterate over `body` to parse the function
+    ///                 // and its locals
+    ///             }
+    ///
+    ///             // Sections for WebAssembly components
+    ///             ModuleSection { .. } => { /* ... */ }
+    ///             InstanceSection(_) => { /* ... */ }
+    ///             CoreTypeSection(_) => { /* ... */ }
+    ///             ComponentSection { .. } => { /* ... */ }
+    ///             ComponentInstanceSection(_) => { /* ... */ }
+    ///             ComponentAliasSection(_) => { /* ... */ }
+    ///             ComponentTypeSection(_) => { /* ... */ }
+    ///             ComponentCanonicalSection(_) => { /* ... */ }
+    ///             ComponentStartSection { .. } => { /* ... */ }
+    ///             ComponentImportSection(_) => { /* ... */ }
+    ///             ComponentExportSection(_) => { /* ... */ }
+    ///
+    ///             CustomSection(_) => { /* ... */ }
+    ///
+    ///             // most likely you'd return an error here
+    ///             UnknownSection { id, .. } => { /* ... */ }
+    ///
+    ///             // Once we've reached the end of a parser we either resume
+    ///             // at the parent parser or the payload iterator is at its
+    ///             // end and we're done.
+    ///             End(_) => {}
+    ///         }
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    ///
+    /// # parse(&b"\0asm\x01\0\0\0"[..]).unwrap();
+    /// ```
     pub fn parse_all(self, mut data: &[u8]) -> impl Iterator<Item = Result<Payload>> {
         let mut stack = Vec::new();
         let mut cur = self;

@@ -1453,20 +1453,6 @@ impl ComponentBuilder {
         Ok(EnumType { variants })
     }
 
-    fn arbitrary_union_type(&self, u: &mut Unstructured, type_fuel: &mut u32) -> Result<UnionType> {
-        let mut variants = vec![];
-        arbitrary_loop(u, 1, 100, |u| {
-            *type_fuel = type_fuel.saturating_sub(1);
-            if *type_fuel == 0 {
-                return Ok(false);
-            }
-
-            variants.push(self.arbitrary_component_val_type(u)?);
-            Ok(true)
-        })?;
-        Ok(UnionType { variants })
-    }
-
     fn arbitrary_option_type(&self, u: &mut Unstructured) -> Result<OptionType> {
         Ok(OptionType {
             inner_ty: self.arbitrary_component_val_type(u)?,
@@ -1491,7 +1477,7 @@ impl ComponentBuilder {
         u: &mut Unstructured,
         type_fuel: &mut u32,
     ) -> Result<DefinedType> {
-        match u.int_in_range(0..=9)? {
+        match u.int_in_range(0..=8)? {
             0 => Ok(DefinedType::Primitive(
                 self.arbitrary_primitive_val_type(u)?,
             )),
@@ -1505,9 +1491,8 @@ impl ComponentBuilder {
             4 => Ok(DefinedType::Tuple(self.arbitrary_tuple_type(u, type_fuel)?)),
             5 => Ok(DefinedType::Flags(self.arbitrary_flags_type(u, type_fuel)?)),
             6 => Ok(DefinedType::Enum(self.arbitrary_enum_type(u, type_fuel)?)),
-            7 => Ok(DefinedType::Union(self.arbitrary_union_type(u, type_fuel)?)),
-            8 => Ok(DefinedType::Option(self.arbitrary_option_type(u)?)),
-            9 => Ok(DefinedType::Result(self.arbitrary_result_type(u)?)),
+            7 => Ok(DefinedType::Option(self.arbitrary_option_type(u)?)),
+            8 => Ok(DefinedType::Result(self.arbitrary_result_type(u)?)),
             _ => unreachable!(),
         }
     }
@@ -2120,7 +2105,6 @@ enum DefinedType {
     Tuple(TupleType),
     Flags(FlagsType),
     Enum(EnumType),
-    Union(UnionType),
     Option(OptionType),
     Result(ResultType),
 }
@@ -2153,11 +2137,6 @@ struct FlagsType {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct EnumType {
     variants: Vec<KebabString>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-struct UnionType {
-    variants: Vec<ComponentValType>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

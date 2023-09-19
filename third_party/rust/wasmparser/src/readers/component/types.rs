@@ -186,7 +186,7 @@ impl PrimitiveValType {
         })
     }
 
-    pub(crate) fn requires_realloc(&self) -> bool {
+    pub(crate) fn contains_ptr(&self) -> bool {
         matches!(self, Self::String)
     }
 
@@ -470,8 +470,6 @@ pub enum ComponentDefinedType<'a> {
     Flags(Box<[&'a str]>),
     /// The type is an enum with the given tags.
     Enum(Box<[&'a str]>),
-    /// The type is a union of the given value types.
-    Union(Box<[ComponentValType]>),
     /// The type is an option of the given value type.
     Option(ComponentValType),
     /// The type is a result type.
@@ -516,11 +514,7 @@ impl<'a> ComponentDefinedType<'a> {
                     .read_iter(MAX_WASM_ENUM_CASES, "enum cases")?
                     .collect::<Result<_>>()?,
             ),
-            0x6c => ComponentDefinedType::Union(
-                reader
-                    .read_iter(MAX_WASM_UNION_TYPES, "union types")?
-                    .collect::<Result<_>>()?,
-            ),
+            // NOTE: 0x6c (union) removed
             0x6b => ComponentDefinedType::Option(reader.read()?),
             0x6a => ComponentDefinedType::Result {
                 ok: reader.read()?,

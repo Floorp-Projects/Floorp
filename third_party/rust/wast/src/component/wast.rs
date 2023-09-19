@@ -25,7 +25,6 @@ pub enum WastVal<'a> {
     Tuple(Vec<WastVal<'a>>),
     Variant(&'a str, Option<Box<WastVal<'a>>>),
     Enum(&'a str),
-    Union(u32, Box<WastVal<'a>>),
     Option(Option<Box<WastVal<'a>>>),
     Result(Result<Option<Box<WastVal<'a>>>, Option<Box<WastVal<'a>>>>),
     Flags(Vec<&'a str>),
@@ -103,11 +102,6 @@ static CASES: &[(&str, fn(Parser<'_>) -> Result<WastVal<'_>>)] = {
             Ok(Variant(name, payload))
         }),
         ("enum.const", |p| Ok(Enum(p.parse()?))),
-        ("union.const", |p| {
-            let num = p.parse()?;
-            let payload = Box::new(p.parens(|p| p.parse())?);
-            Ok(Union(num, payload))
-        }),
         ("option.none", |_| Ok(Option(None))),
         ("option.some", |p| {
             Ok(Option(Some(Box::new(p.parens(|p| p.parse())?))))

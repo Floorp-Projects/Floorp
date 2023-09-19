@@ -596,15 +596,19 @@ impl<'a> Parse<'a> for StructType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut ret = StructType { fields: Vec::new() };
         while !parser.is_empty() {
-            let field = if parser.peek2::<kw::field>()? {
-                parser.parens(|parser| {
-                    parser.parse::<kw::field>()?;
-                    StructField::parse(parser, true)
-                })
-            } else {
-                StructField::parse(parser, false)
-            };
-            ret.fields.push(field?);
+            parser.parens(|parser| {
+                parser.parse::<kw::field>()?;
+                if parser.peek::<Id>()? {
+                    let field = StructField::parse(parser, true);
+                    ret.fields.push(field?);
+                } else {
+                    while !parser.is_empty() {
+                        let field = StructField::parse(parser, false);
+                        ret.fields.push(field?);
+                    }
+                }
+                Ok(())
+            })?;
         }
         Ok(ret)
     }

@@ -125,7 +125,6 @@ fn encode_defined_type(encoder: ComponentDefinedTypeEncoder, ty: &ComponentDefin
         ComponentDefinedType::Enum(e) => {
             encoder.enum_type(e.names.iter().copied());
         }
-        ComponentDefinedType::Union(u) => encoder.union(u.types.iter()),
         ComponentDefinedType::Option(o) => {
             encoder.option(o.element.as_ref());
         }

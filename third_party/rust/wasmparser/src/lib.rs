@@ -22,6 +22,9 @@
 //! If you need random access to the entire WebAssembly data-structure,
 //! this is not the right library for you. You could however, build such
 //! a data-structure using this library.
+//!
+//! To get started, create a [`Parser`] using [`Parser::new`] and then follow
+//! the examples documented for [`Parser::parse`] or [`Parser::parse_all`].
 
 #![deny(missing_docs)]
 
@@ -313,7 +316,7 @@ macro_rules! for_each_operator {
             // 0xFB prefixed operators
             // Garbage Collection
             // http://github.com/WebAssembly/gc
-            @gc I31New => visit_i31_new
+            @gc RefI31 => visit_ref_i31
             @gc I31GetS => visit_i31_get_s
             @gc I31GetU => visit_i31_get_u
 

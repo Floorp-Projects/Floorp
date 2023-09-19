@@ -124,8 +124,8 @@ impl ValType {
 impl Encode for StorageType {
     fn encode(&self, sink: &mut Vec<u8>) {
         match self {
-            StorageType::I8 => sink.push(0x7A),
-            StorageType::I16 => sink.push(0x79),
+            StorageType::I8 => sink.push(0x78),
+            StorageType::I16 => sink.push(0x77),
             StorageType::Val(vt) => vt.encode(sink),
         }
     }
@@ -183,9 +183,9 @@ impl Encode for RefType {
         }
 
         if self.nullable {
-            sink.push(0x6C);
+            sink.push(0x63);
         } else {
-            sink.push(0x6B);
+            sink.push(0x64);
         }
         self.heap_type.encode(sink);
     }
@@ -231,13 +231,13 @@ impl Encode for HeapType {
             HeapType::Func => sink.push(0x70),
             HeapType::Extern => sink.push(0x6F),
             HeapType::Any => sink.push(0x6E),
-            HeapType::None => sink.push(0x65),
-            HeapType::NoExtern => sink.push(0x69),
-            HeapType::NoFunc => sink.push(0x68),
+            HeapType::None => sink.push(0x71),
+            HeapType::NoExtern => sink.push(0x72),
+            HeapType::NoFunc => sink.push(0x73),
             HeapType::Eq => sink.push(0x6D),
-            HeapType::Struct => sink.push(0x67),
-            HeapType::Array => sink.push(0x66),
-            HeapType::I31 => sink.push(0x6A),
+            HeapType::Struct => sink.push(0x6B),
+            HeapType::Array => sink.push(0x6A),
+            HeapType::I31 => sink.push(0x6C),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
             HeapType::Indexed(i) => i64::from(*i).encode(sink),

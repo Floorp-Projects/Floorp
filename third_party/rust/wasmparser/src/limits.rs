@@ -47,7 +47,6 @@ pub const MAX_WASM_VARIANT_CASES: usize = 1000;
 pub const MAX_WASM_TUPLE_TYPES: usize = 1000;
 pub const MAX_WASM_FLAG_NAMES: usize = 1000;
 pub const MAX_WASM_ENUM_CASES: usize = 1000;
-pub const MAX_WASM_UNION_TYPES: usize = 1000;
 pub const MAX_WASM_INSTANTIATION_EXPORTS: usize = 100_000;
 pub const MAX_WASM_CANONICAL_OPTIONS: usize = 10;
 pub const MAX_WASM_INSTANTIATION_ARGS: usize = 100_000;

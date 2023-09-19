@@ -251,9 +251,6 @@ impl DefinedType {
             Self::Enum(ty) => {
                 enc.enum_type(ty.variants.iter().map(|v| v.as_str()));
             }
-            Self::Union(ty) => {
-                enc.union(ty.variants.iter().copied());
-            }
             Self::Option(ty) => {
                 enc.option(ty.inner_ty);
             }

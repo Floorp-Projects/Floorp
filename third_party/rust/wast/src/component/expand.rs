@@ -555,11 +555,6 @@ impl<'a> Expander<'a> {
                     self.expand_component_val_ty(field);
                 }
             }
-            ComponentDefinedType::Union(u) => {
-                for ty in u.types.iter_mut() {
-                    self.expand_component_val_ty(ty);
-                }
-            }
             ComponentDefinedType::Option(t) => {
                 self.expand_component_val_ty(&mut t.element);
             }
