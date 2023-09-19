@@ -29,12 +29,6 @@ x86_64-apple-darwin)
   arch=x86_64
   export MACOSX_DEPLOYMENT_TARGET=10.12
   ;;
-armv7-linux-android|i686-linux-android)
-  api_level=16
-  ;;
-aarch64-linux-android|x86_64-linux-android)
-  api_level=21
-  ;;
 esac
 
 case "$target" in
@@ -75,6 +69,7 @@ case "$target" in
     arch=${target%-linux-android}
     ;;
   esac
+  api_level=21
   target=$target$api_level
   # These flags are only necessary to pass the cmake tests. They don't end up
   # actually using libgcc, so use an empty library instead of trying to find

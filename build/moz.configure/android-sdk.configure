@@ -46,9 +46,9 @@ def android_sdk_root(value):
     )
 
 
-@depends("--enable-geckoview-lite")
-def android_sdk_version(geckoview_lite):
-    # We support Android SDK version 21 and up by default (16 in lite mode).
+@dependable
+def android_sdk_version():
+    # We support Android SDK version 21 and up by default.
     # See the --enable-android-min-sdk option below.
     #
     # Warning: Before increasing the with-android-min-sdk value, please note several places in
@@ -60,7 +60,7 @@ def android_sdk_version(geckoview_lite):
     return namespace(
         build_tools_version="33.0.1",
         target_sdk_version="33",
-        min_sdk_version="16" if geckoview_lite else "21",
+        min_sdk_version="21",
     )
 
 
