@@ -822,9 +822,6 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
       }
       return Nothing();
     case nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
-      if (!aThirdParty) {
-        return Some(true);
-      }
       if (aIsOnThirdPartySkipList) {
         return Some(true);
       }
@@ -840,10 +837,6 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
 Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
     Document* aDocument, bool aRequestingStorageAccess) {
   MOZ_ASSERT(aDocument);
-
-  if (aDocument->IsTopLevelContentDocument()) {
-    return Some(true);
-  }
 
   if (!aDocument->IsCurrentActiveDocument()) {
     return Some(false);
@@ -867,31 +860,6 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
   RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
   if (!bc) {
     return Some(false);
-  }
-
-  // We check if the document is a first-party document here by testing if the
-  // top-level window is same-origin. In non-Fission mode, we can directly get
-  // the top-level window through the top browsing context since it should be
-  // in-process. And test their principals.
-  //
-  // In fission, if the sub frame's origin differs from the main frame's
-  // origin, they will be in different processes. We use IsInProcess()
-  // check here to deterimine whether they have the same origin. In
-  // non-fission mode, it is always in-process so we need to compare their
-  // principals.
-  if (bc->Top()->IsInProcess()) {
-    nsCOMPtr<nsPIDOMWindowOuter> topOuter = bc->Top()->GetDOMWindow();
-    if (!topOuter) {
-      return Some(false);
-    }
-    nsCOMPtr<Document> topLevelDoc = topOuter->GetExtantDoc();
-    if (!topLevelDoc) {
-      return Some(false);
-    }
-
-    if (topLevelDoc->NodePrincipal()->Equals(aDocument->NodePrincipal())) {
-      return Some(true);
-    }
   }
 
   // Check if NodePrincipal is not null
@@ -923,6 +891,14 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
           "RequestStorageAccessNullPrincipal");
     }
     return Some(false);
+  }
+
+  if (!AntiTrackingUtils::IsThirdPartyDocument(aDocument)) {
+    return Some(true);
+  }
+
+  if (aDocument->IsTopLevelContentDocument()) {
+    return Some(true);
   }
 
   if (aRequestingStorageAccess) {
