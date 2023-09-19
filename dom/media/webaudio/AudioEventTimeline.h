@@ -325,11 +325,12 @@ class AudioEventTimeline {
     return result;
   }
 
-  template <class TimeType>
-  void GetValuesAtTime(TimeType aTime, float* aBuffer, const size_t aSize) {
+  void GetValuesAtTime(int64_t aTime, float* aBuffer, const size_t aSize) {
     MOZ_ASSERT(aBuffer);
     GetValuesAtTimeHelper(aTime, aBuffer, aSize);
   }
+  void GetValuesAtTime(double aTime, float* aBuffer,
+                       const size_t aSize) = delete;
 
   // Return the number of events scheduled
   uint32_t GetEventCount() const { return mEvents.Length(); }
