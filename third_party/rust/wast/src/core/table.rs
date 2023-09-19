@@ -161,7 +161,7 @@ impl<'a> Parse<'a> for Elem<'a> {
         // * `(elem declare ...`
         // * `(elem (table ...`
         // * `(elem (offset ...`
-        // * `(elem (<instr> ...`
+        // * `(elem (<instr> ...` (omitted `offset`)
         let mut table_omitted = false;
         let kind = if parser.peek::<kw::declare>()? {
             parser.parse::<kw::declare>()?;
@@ -186,20 +186,7 @@ impl<'a> Parse<'a> for Elem<'a> {
                 Index::Num(0, span)
             };
 
-            // NB: this is technically not spec-compliant where the spec says
-            // that `(instr)` is equivalent to `(offset instr)` for
-            // single-element offsets. The test suite, however, has offsets of
-            // the form `(instr (instr-arg))` which doesn't seem to follow this.
-            // I don't know whether the test is correct or the spec is correct
-            // so we're left with this for now.
-            //
-            // In theory though this should use `parse_expr_or_single_instr`.
-            let offset = parser.parens(|parser| {
-                if parser.peek::<kw::offset>()? {
-                    parser.parse::<kw::offset>()?;
-                }
-                parser.parse()
-            })?;
+            let offset = parse_expr_or_single_instr::<kw::offset>(parser)?;
             ElemKind::Active { table, offset }
         } else {
             ElemKind::Passive
@@ -289,17 +276,13 @@ fn parse_expr_or_single_instr<'a, T>(parser: Parser<'a>) -> Result<Expression<'a
 where
     T: Parse<'a> + Peek,
 {
-    parser.parens(|parser| {
-        if parser.peek::<T>()? {
+    if parser.peek2::<T>()? {
+        parser.parens(|parser| {
             parser.parse::<T>()?;
             parser.parse()
-        } else {
-            // Without `item` this is "sugar" for a single-instruction
-            // expression.
-            let insn = parser.parse()?;
-            Ok(Expression {
-                instrs: [insn].into(),
-            })
-        }
-    })
+        })
+    } else {
+        // Without `T` this is "sugar" for a single instruction (still possibly folded).
+        Ok(Expression::parse_folded_instruction(parser)?)
+    }
 }

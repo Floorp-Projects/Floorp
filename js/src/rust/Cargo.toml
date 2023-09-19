@@ -21,4 +21,4 @@ mozilla-central-workspace-hack = { version = "0.1", features = ["jsrust"], optio
 jsrust_shared = { path = "./shared" }
 # Workaround for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../mozglue/static/rust" }
-wast = "62.0.0"
+wast = "65.0.1"

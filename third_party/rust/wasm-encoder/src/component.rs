@@ -1,4 +1,5 @@
 mod aliases;
+mod builder;
 mod canonicals;
 mod components;
 mod exports;
@@ -10,6 +11,7 @@ mod start;
 mod types;
 
 pub use self::aliases::*;
+pub use self::builder::*;
 pub use self::canonicals::*;
 pub use self::components::*;
 pub use self::exports::*;

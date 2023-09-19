@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-smith"
-version = "0.12.12"
+version = "0.12.17"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/benches/corpus"]
 description = "A WebAssembly test case generator"
@@ -50,10 +50,10 @@ features = ["derive"]
 optional = true
 
 [dependencies.wasm-encoder]
-version = "0.31.0"
+version = "0.33.1"
 
 [dependencies.wasmparser]
-version = "0.109.0"
+version = "0.113.1"
 
 [dev-dependencies.criterion]
 version = "0.3.3"

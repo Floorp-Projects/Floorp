@@ -523,7 +523,7 @@ pub enum Instruction<'a> {
     RefAsNonNull,
 
     // GC types instructions.
-    I31New,
+    RefI31,
     I31GetS,
     I31GetU,
 
@@ -917,7 +917,7 @@ impl Encode for Instruction<'_> {
                 l.encode(sink);
             }
             Instruction::BrOnNull(l) => {
-                sink.push(0xD4);
+                sink.push(0xD5);
                 l.encode(sink);
             }
             Instruction::BrOnNonNull(l) => {
@@ -1318,20 +1318,20 @@ impl Encode for Instruction<'_> {
                 sink.push(0xd2);
                 f.encode(sink);
             }
-            Instruction::RefAsNonNull => sink.push(0xD3),
+            Instruction::RefAsNonNull => sink.push(0xd4),
 
             // GC instructions.
-            Instruction::I31New => {
+            Instruction::RefI31 => {
                 sink.push(0xfb);
-                sink.push(0x20)
+                sink.push(0x1c)
             }
             Instruction::I31GetS => {
                 sink.push(0xfb);
-                sink.push(0x21)
+                sink.push(0x1d)
             }
             Instruction::I31GetU => {
                 sink.push(0xfb);
-                sink.push(0x22)
+                sink.push(0x1e)
             }
 
             // Bulk memory instructions.

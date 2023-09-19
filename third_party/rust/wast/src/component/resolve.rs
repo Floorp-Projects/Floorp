@@ -454,11 +454,6 @@ impl<'a> Resolver<'a> {
                     self.component_val_type(field)?;
                 }
             }
-            ComponentDefinedType::Union(t) => {
-                for ty in t.types.iter_mut() {
-                    self.component_val_type(ty)?;
-                }
-            }
             ComponentDefinedType::Option(o) => {
                 self.component_val_type(&mut o.element)?;
             }

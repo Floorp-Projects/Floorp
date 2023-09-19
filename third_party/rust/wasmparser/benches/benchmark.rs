@@ -254,6 +254,7 @@ fn define_benchmarks(c: &mut Criterion) {
             function_references: true,
             memory_control: true,
             gc: true,
+            component_model_values: true,
         })
     }
 

@@ -3338,7 +3338,7 @@ where
         self.pop_operand(Some(ValType::I32))?;
         Ok(())
     }
-    fn visit_i31_new(&mut self) -> Self::Output {
+    fn visit_ref_i31(&mut self) -> Self::Output {
         self.pop_operand(Some(ValType::I32))?;
         self.push_operand(ValType::Ref(RefType::I31))
     }

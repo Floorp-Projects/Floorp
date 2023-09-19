@@ -529,7 +529,7 @@ impl<'a> Lexer<'a> {
     /// to figure out which kind of token it is `depending on `ReservedKind`.
     ///
     /// For more information on this method see the clarification at
-    /// https://github.com/WebAssembly/spec/pull/1499 but the general gist is
+    /// <https://github.com/WebAssembly/spec/pull/1499> but the general gist is
     /// that this is parsing the grammar:
     ///
     /// ```text
@@ -923,14 +923,14 @@ impl Token {
 
     /// Returns the keyword this token represents.
     ///
-    /// Should only be used with `TokenKind::Keyword`.
+    /// Should only be used with [`TokenKind::Keyword`].
     pub fn keyword<'a>(&self, s: &'a str) -> &'a str {
         self.src(s)
     }
 
     /// Returns the reserved string this token represents.
     ///
-    /// Should only be used with `TokenKind::Reserved`.
+    /// Should only be used with [`TokenKind::Reserved`].
     pub fn reserved<'a>(&self, s: &'a str) -> &'a str {
         self.src(s)
     }
@@ -940,7 +940,7 @@ impl Token {
     /// This returns either a raw byte slice into the source if that's possible
     /// or an owned representation to handle escaped characters and such.
     ///
-    /// Should only be used with `TokenKind::String`.
+    /// Should only be used with [`TokenKind::String`].
     pub fn string<'a>(&self, s: &'a str) -> Cow<'a, [u8]> {
         let mut ch = self.src(s).chars();
         ch.next().unwrap();
@@ -952,7 +952,7 @@ impl Token {
     /// This will slice up the float token into its component parts and return a
     /// description of the float token in the source.
     ///
-    /// Should only be used with `TokenKind::Float`.
+    /// Should only be used with [`TokenKind::Float`].
     pub fn float<'a>(&self, s: &'a str, kind: FloatKind) -> Float<'a> {
         match kind {
             FloatKind::Inf { negative } => Float::Inf { negative },
@@ -1043,7 +1043,7 @@ impl Token {
     /// This will slice up the integer token into its component parts and
     /// return a description of the integer token in the source.
     ///
-    /// Should only be used with `TokenKind::Integer`.
+    /// Should only be used with [`TokenKind::Integer`].
     pub fn integer<'a>(&self, s: &'a str, kind: IntegerKind) -> Integer<'a> {
         let src = self.src(s);
         let val = match kind.sign {

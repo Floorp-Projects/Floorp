@@ -79,3 +79,11 @@ impl<T: Encode, U: Encode> Encode for (T, U) {
         self.1.encode(e);
     }
 }
+
+impl<T: Encode, U: Encode, V: Encode> Encode for (T, U, V) {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.0.encode(e);
+        self.1.encode(e);
+        self.2.encode(e);
+    }
+}

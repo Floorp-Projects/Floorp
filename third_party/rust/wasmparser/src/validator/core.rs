@@ -1,22 +1,25 @@
 //! State relating to validating a WebAssembly module.
 //!
-use super::{
-    check_max, combine_type_sizes,
-    operators::{ty_to_str, OperatorValidator, OperatorValidatorAllocations},
-    types::{EntityType, Type, TypeAlloc, TypeId, TypeList},
-};
+use std::mem;
+use std::{collections::HashSet, sync::Arc};
+
+use indexmap::IndexMap;
+
 use crate::limits::*;
 use crate::readers::Inherits;
 use crate::validator::core::arc::MaybeOwned;
 use crate::{
     BinaryReaderError, ConstExpr, Data, DataKind, Element, ElementKind, ExternalKind, FuncType,
-    Global, GlobalType, HeapType, MemoryType, RefType, Result, StorageType, StructuralType,
-    SubType, Table, TableInit, TableType, TagType, TypeRef, ValType, VisitOperator, WasmFeatures,
-    WasmModuleResources,
+    Global, GlobalType, HeapType, MemoryType, RecGroup, RefType, Result, StorageType,
+    StructuralType, SubType, Table, TableInit, TableType, TagType, TypeRef, ValType, VisitOperator,
+    WasmFeatures, WasmModuleResources,
 };
-use indexmap::IndexMap;
-use std::mem;
-use std::{collections::HashSet, sync::Arc};
+
+use super::{
+    check_max, combine_type_sizes,
+    operators::{ty_to_str, OperatorValidator, OperatorValidatorAllocations},
+    types::{EntityType, Type, TypeAlloc, TypeId, TypeList},
+};
 
 // Section order for WebAssembly modules.
 //
@@ -493,56 +496,89 @@ pub(crate) struct Module {
 }
 
 impl Module {
-    pub fn add_type(
+    pub fn add_types(
         &mut self,
-        ty: SubType,
+        rec_group: &RecGroup,
         features: &WasmFeatures,
         types: &mut TypeAlloc,
         offset: usize,
         check_limit: bool,
     ) -> Result<()> {
-        if check_limit {
-            check_max(self.types.len(), 1, MAX_WASM_TYPES, "types", offset)?;
+        match rec_group {
+            RecGroup::Single(_) => {}
+            RecGroup::Many(_) => {
+                if !features.gc {
+                    bail!(
+                        offset,
+                        "rec group usage requires `gc` proposal to be enabled"
+                    );
+                }
+            }
         }
-        let ty = self.check_subtype(ty, features, types, offset)?;
+        if check_limit {
+            check_max(
+                self.types.len(),
+                rec_group.types().len() as u32,
+                MAX_WASM_TYPES,
+                "types",
+                offset,
+            )?;
+        }
+        let idx_types: Vec<_> = rec_group
+            .types()
+            .iter()
+            .map(|ty| {
+                let id = types.push_ty(Type::Sub(ty.clone()));
+                if features.gc {
+                    // make types in a rec group resolvable by index before validation:
+                    // this is needed to support recursive types in the GC proposal
+                    self.types.push(id);
+                }
+                (id, ty)
+            })
+            .collect();
 
-        let id = types.push_ty(ty);
-        self.types.push(id);
+        for (id, ty) in idx_types {
+            self.check_subtype(id.index as u32, ty.clone(), features, types, offset)?;
+            if !features.gc {
+                self.types.push(id);
+            }
+        }
         Ok(())
     }
 
     fn check_subtype(
         &mut self,
+        type_index: u32,
         ty: SubType,
         features: &WasmFeatures,
         types: &mut TypeAlloc,
         offset: usize,
     ) -> Result<Type> {
-        if !features.gc && (ty.is_final || ty.supertype_idx.is_some()) {
-            return Err(BinaryReaderError::new(
-                "gc proposal must be enabled to use subtypes",
-                offset,
-            ));
+        if !features.gc && (!ty.is_final || ty.supertype_idx.is_some()) {
+            bail!(offset, "gc proposal must be enabled to use subtypes");
         }
 
         self.check_structural_type(&ty.structural_type, features, offset)?;
 
-        if let Some(type_index) = ty.supertype_idx {
+        if let Some(supertype_index) = ty.supertype_idx {
             // Check the supertype exists, is not final, and the subtype matches it.
-            match self.type_at(types, type_index, offset)? {
+            if supertype_index >= type_index {
+                bail!(
+                    offset,
+                    "unknown type {type_index}: type index out of bounds"
+                );
+            }
+            match self.type_at(types, supertype_index, offset)? {
                 Type::Sub(st) => {
-                    if !&ty.inherits(st, &|idx| self.subtype_at(types, idx, offset).unwrap()) {
-                        return Err(BinaryReaderError::new(
-                            "subtype must match supertype",
-                            offset,
-                        ));
+                    if !&ty.inherits(st, Some(type_index), Some(supertype_index), &|idx| {
+                        self.subtype_at(types, idx, offset).unwrap()
+                    }) {
+                        bail!(offset, "subtype must match supertype");
                     }
                 }
                 _ => {
-                    return Err(BinaryReaderError::new(
-                        "supertype must be a non-final subtype itself",
-                        offset,
-                    ));
+                    bail!(offset, "supertype must be a non-final subtype itself");
                 }
             };
         }
@@ -649,7 +685,7 @@ impl Module {
 
         check_max(len, 0, max, desc, offset)?;
 
-        self.type_size = combine_type_sizes(self.type_size, entity.type_size(), offset)?;
+        self.type_size = combine_type_sizes(self.type_size, entity.info().size(), offset)?;
 
         self.imports
             .entry((import.module.to_string(), import.name.to_string()))
@@ -682,7 +718,7 @@ impl Module {
             check_max(self.exports.len(), 1, MAX_WASM_EXPORTS, "exports", offset)?;
         }
 
-        self.type_size = combine_type_sizes(self.type_size, ty.type_size(), offset)?;
+        self.type_size = combine_type_sizes(self.type_size, ty.info().size(), offset)?;
 
         match self.exports.insert(name.to_string(), ty) {
             Some(_) => Err(format_err!(
@@ -926,7 +962,9 @@ impl Module {
     /// E.g. a non-nullable reference can be assigned to a nullable reference, but not vice versa.
     /// Or an indexed func ref is assignable to a generic func ref, but not vice versa.
     pub(crate) fn matches(&self, ty1: ValType, ty2: ValType, types: &TypeList) -> bool {
-        ty1.inherits(&ty2, &|idx| self.subtype_at(types, idx, 0).unwrap())
+        ty1.inherits(&ty2, None, None, &|idx| {
+            self.subtype_at(types, idx, 0).unwrap()
+        })
     }
 
     fn check_tag_type(

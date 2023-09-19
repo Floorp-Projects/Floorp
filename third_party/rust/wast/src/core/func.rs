@@ -92,27 +92,42 @@ pub struct Local<'a> {
     pub ty: ValType<'a>,
 }
 
+/// Parser for `local` instruction.
+///
+/// A single `local` instruction can generate multiple locals, hence this parser
+pub struct LocalParser<'a> {
+    /// All the locals associated with this `local` instruction.
+    pub locals: Vec<Local<'a>>,
+}
+
+impl<'a> Parse<'a> for LocalParser<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let mut locals = Vec::new();
+        parser.parse::<kw::local>()?;
+        if !parser.is_empty() {
+            let id: Option<_> = parser.parse()?;
+            let name: Option<_> = parser.parse()?;
+            let ty = parser.parse()?;
+            let parse_more = id.is_none() && name.is_none();
+            locals.push(Local { id, name, ty });
+            while parse_more && !parser.is_empty() {
+                locals.push(Local {
+                    id: None,
+                    name: None,
+                    ty: parser.parse()?,
+                });
+            }
+        }
+        Ok(LocalParser { locals })
+    }
+}
+
 impl<'a> Local<'a> {
     pub(crate) fn parse_remainder(parser: Parser<'a>) -> Result<Vec<Local<'a>>> {
         let mut locals = Vec::new();
         while parser.peek2::<kw::local>()? {
             parser.parens(|p| {
-                p.parse::<kw::local>()?;
-                if p.is_empty() {
-                    return Ok(());
-                }
-                let id: Option<_> = p.parse()?;
-                let name: Option<_> = p.parse()?;
-                let ty = p.parse()?;
-                let parse_more = id.is_none() && name.is_none();
-                locals.push(Local { id, name, ty });
-                while parse_more && !p.is_empty() {
-                    locals.push(Local {
-                        id: None,
-                        name: None,
-                        ty: p.parse()?,
-                    });
-                }
+                locals.extend(p.parse::<LocalParser>()?.locals);
                 Ok(())
             })?;
         }

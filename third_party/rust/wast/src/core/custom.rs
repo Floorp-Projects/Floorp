@@ -9,6 +9,8 @@ pub enum Custom<'a> {
     Raw(RawCustomSection<'a>),
     /// A producers custom section.
     Producers(Producers<'a>),
+    /// The `dylink.0` custom section
+    Dylink0(Dylink0<'a>),
 }
 
 impl Custom<'_> {
@@ -17,6 +19,7 @@ impl Custom<'_> {
         match self {
             Custom::Raw(s) => s.place,
             Custom::Producers(_) => CustomPlace::AfterLast,
+            Custom::Dylink0(_) => CustomPlace::BeforeFirst,
         }
     }
 
@@ -25,6 +28,7 @@ impl Custom<'_> {
         match self {
             Custom::Raw(s) => s.name,
             Custom::Producers(_) => "producers",
+            Custom::Dylink0(_) => "dylink.0",
         }
     }
 }
@@ -33,6 +37,8 @@ impl<'a> Parse<'a> for Custom<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         if parser.peek::<annotation::producers>()? {
             Ok(Custom::Producers(parser.parse()?))
+        } else if parser.peek::<annotation::dylink_0>()? {
+            Ok(Custom::Dylink0(parser.parse()?))
         } else {
             Ok(Custom::Raw(parser.parse()?))
         }
@@ -232,5 +238,153 @@ impl<'a> Parse<'a> for Producers<'a> {
             fields.push(("processed-by", processed_by));
         }
         Ok(Producers { fields })
+    }
+}
+
+/// A `dylink.0` custom section
+#[allow(missing_docs)]
+#[derive(Debug)]
+pub struct Dylink0<'a> {
+    pub subsections: Vec<Dylink0Subsection<'a>>,
+}
+
+/// Possible subsections of the `dylink.0` custom section
+#[derive(Debug)]
+#[allow(missing_docs)]
+pub enum Dylink0Subsection<'a> {
+    MemInfo {
+        memory_size: u32,
+        memory_align: u32,
+        table_size: u32,
+        table_align: u32,
+    },
+    Needed(Vec<&'a str>),
+    ExportInfo(Vec<(&'a str, u32)>),
+    ImportInfo(Vec<(&'a str, &'a str, u32)>),
+}
+
+impl<'a> Parse<'a> for Dylink0<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<annotation::dylink_0>()?.0;
+        let mut ret = Dylink0 {
+            subsections: Vec::new(),
+        };
+        while !parser.is_empty() {
+            parser.parens(|p| ret.parse_next(p))?;
+        }
+        Ok(ret)
+    }
+}
+
+impl<'a> Dylink0<'a> {
+    fn parse_next(&mut self, parser: Parser<'a>) -> Result<()> {
+        let mut l = parser.lookahead1();
+        if l.peek::<kw::mem_info>()? {
+            parser.parse::<kw::mem_info>()?;
+            let mut memory_size = 0;
+            let mut memory_align = 0;
+            let mut table_size = 0;
+            let mut table_align = 0;
+            if parser.peek2::<kw::memory>()? {
+                parser.parens(|p| {
+                    p.parse::<kw::memory>()?;
+                    memory_size = p.parse()?;
+                    memory_align = p.parse()?;
+                    Ok(())
+                })?;
+            }
+            if parser.peek2::<kw::table>()? {
+                parser.parens(|p| {
+                    p.parse::<kw::table>()?;
+                    table_size = p.parse()?;
+                    table_align = p.parse()?;
+                    Ok(())
+                })?;
+            }
+            self.subsections.push(Dylink0Subsection::MemInfo {
+                memory_size,
+                memory_align,
+                table_size,
+                table_align,
+            });
+        } else if l.peek::<kw::needed>()? {
+            parser.parse::<kw::needed>()?;
+            let mut names = Vec::new();
+            while !parser.is_empty() {
+                names.push(parser.parse()?);
+            }
+            self.subsections.push(Dylink0Subsection::Needed(names));
+        } else if l.peek::<kw::export_info>()? {
+            parser.parse::<kw::export_info>()?;
+            let name = parser.parse()?;
+            let flags = parse_sym_flags(parser)?;
+            match self.subsections.last_mut() {
+                Some(Dylink0Subsection::ExportInfo(list)) => list.push((name, flags)),
+                _ => self
+                    .subsections
+                    .push(Dylink0Subsection::ExportInfo(vec![(name, flags)])),
+            }
+        } else if l.peek::<kw::import_info>()? {
+            parser.parse::<kw::import_info>()?;
+            let module = parser.parse()?;
+            let name = parser.parse()?;
+            let flags = parse_sym_flags(parser)?;
+            match self.subsections.last_mut() {
+                Some(Dylink0Subsection::ImportInfo(list)) => list.push((module, name, flags)),
+                _ => self
+                    .subsections
+                    .push(Dylink0Subsection::ImportInfo(vec![(module, name, flags)])),
+            }
+        } else {
+            return Err(l.error());
+        }
+        Ok(())
+    }
+}
+
+fn parse_sym_flags(parser: Parser<'_>) -> Result<u32> {
+    let mut flags = 0;
+    while !parser.is_empty() {
+        let mut l = parser.lookahead1();
+        if l.peek::<u32>()? {
+            flags |= parser.parse::<u32>()?;
+            continue;
+        }
+        macro_rules! parse_flags {
+            ($($kw:tt = $val:expr,)*) => {$({
+                custom_keyword!(flag = $kw);
+                if l.peek::<flag>()? {
+                    parser.parse::<flag>()?;
+                    flags |= $val;
+                    continue;
+                }
+            })*};
+        }
+        parse_flags! {
+            "binding-weak" = 1 << 0,
+            "binding-local" = 1 << 1,
+            "visibility-hidden" = 1 << 2,
+            "undefined" = 1 << 4,
+            "exported" = 1 << 5,
+            "explicit-name" = 1 << 6,
+            "no-strip" = 1 << 7,
+        }
+        return Err(l.error());
+    }
+    Ok(flags)
+}
+
+mod flag {}
+
+impl Dylink0Subsection<'_> {
+    /// Returns the byte id of this subsection used to identify it.
+    pub fn id(&self) -> u8 {
+        use Dylink0Subsection::*;
+        match self {
+            MemInfo { .. } => 1,
+            Needed(..) => 2,
+            ExportInfo(..) => 3,
+            ImportInfo(..) => 4,
+        }
     }
 }

@@ -113,6 +113,7 @@ impl<'a> Parse<'a> for Module<'a> {
         let _r = parser.register_annotation("custom");
         let _r = parser.register_annotation("producers");
         let _r = parser.register_annotation("name");
+        let _r = parser.register_annotation("dylink.0");
 
         let span = parser.parse::<kw::module>()?.0;
         let id = parser.parse()?;
@@ -205,7 +206,10 @@ impl<'a> Parse<'a> for ModuleField<'a> {
         if parser.peek::<kw::tag>()? {
             return Ok(ModuleField::Tag(parser.parse()?));
         }
-        if parser.peek::<annotation::custom>()? || parser.peek::<annotation::producers>()? {
+        if parser.peek::<annotation::custom>()?
+            || parser.peek::<annotation::producers>()?
+            || parser.peek::<annotation::dylink_0>()?
+        {
             return Ok(ModuleField::Custom(parser.parse()?));
         }
         Err(parser.error("expected valid module field"))
