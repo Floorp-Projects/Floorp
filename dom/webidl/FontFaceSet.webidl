@@ -28,7 +28,8 @@ callback FontFaceSetForEachCallback = undefined (FontFace value, FontFace key, F
 
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
-[Exposed=(Window,Worker)]
+[Func="FontFaceSet::IsEnabled",
+ Exposed=(Window,Worker)]
 interface FontFaceSet : EventTarget {
   // Bug 1072762 is for the FontFaceSet constructor.
   // constructor(sequence<FontFace> initialFaces);

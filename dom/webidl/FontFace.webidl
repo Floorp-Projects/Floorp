@@ -29,7 +29,10 @@ dictionary FontFaceDescriptors {
 
 enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 
-[Exposed=(Window,Worker)]
+// Bug 1072107 is for exposing this in workers.
+// [Exposed=(Window,Worker)]
+[Func="FontFaceSet::IsEnabled",
+ Exposed=(Window,Worker)]
 interface FontFace {
   [Throws]
   constructor(UTF8String family,

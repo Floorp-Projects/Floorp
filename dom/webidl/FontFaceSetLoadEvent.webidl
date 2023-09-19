@@ -14,7 +14,8 @@ dictionary FontFaceSetLoadEventInit : EventInit {
   sequence<FontFace> fontfaces = [];
 };
 
-[Exposed=(Window,Worker)]
+[Func="FontFaceSet::IsEnabled",
+ Exposed=(Window,Worker)]
 interface FontFaceSetLoadEvent : Event {
   constructor(DOMString type,
               optional FontFaceSetLoadEventInit eventInitDict = {});

@@ -300,13 +300,18 @@ void FontFace::EnsurePromise() {
     return;
   }
 
-  ErrorResult rv;
-  mLoaded = Promise::Create(mParent, rv);
+  // If the pref is not set, don't create the Promise (which the page wouldn't
+  // be able to get to anyway) as it causes the window.FontFace constructor
+  // to be created.
+  if (FontFaceSet::IsEnabled()) {
+    ErrorResult rv;
+    mLoaded = Promise::Create(mParent, rv);
 
-  if (mImpl->Status() == FontFaceLoadStatus::Loaded) {
-    mLoaded->MaybeResolve(this);
-  } else if (mLoadedRejection != NS_OK) {
-    mLoaded->MaybeReject(mLoadedRejection);
+    if (mImpl->Status() == FontFaceLoadStatus::Loaded) {
+      mLoaded->MaybeResolve(this);
+    } else if (mLoadedRejection != NS_OK) {
+      mLoaded->MaybeReject(mLoadedRejection);
+    }
   }
 }
 
