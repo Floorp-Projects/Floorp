@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* all localizable skin settings shall live here */
-
-@import url("chrome://global/skin/design-system/tokens-platform.css");
-@import url("chrome://global/skin/design-system/text-and-typography.css");
+@import url("chrome://global/skin/design-tokens-system.css");
 
 @import url("chrome://global/locale/intl.css");
 @import url("chrome://global/content/widgets.css");
@@ -115,7 +113,7 @@ html|textarea {
 }
 
 .header {
-  font-weight: var(--font-weight-bold);
+  font-weight: bold;
 }
 
 .indent {
@@ -209,8 +207,7 @@ button.text-link .button-text {
   border-radius: 4px;
   color: var(--button-color, inherit);
   background-color: var(--button-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
-  padding: .45em 1em;
-  min-height: 32px;
+  padding: 8px 16px;
   font-weight: 600;
   min-width: 0;
   margin-inline: 8px 0;

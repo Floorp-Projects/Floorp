@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/design-system/tokens-brand.css");
-@import url("chrome://global/skin/design-system/text-and-typography.css");
+@import url("chrome://global/skin/design-tokens-brand.css");
 
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -251,23 +250,37 @@
 }
 
 :root {
+  font: message-box;
   appearance: none;
   background-color: var(--in-content-page-background);
   color: var(--in-content-page-color);
 }
 
 :root:not(.system-font-size) {
-  font-size: var(--font-size-root);
-  line-height: var(--line-height-default);
+  font-size: var(--in-content-font-body-size-base);
 }
 
 html|body {
   margin: 0;
 }
 
+html|h1 {
+  font-size: 2.5em;
+  font-weight: lighter;
+  line-height: 1.2;
+  color: var(--in-content-text-color);
+  margin: 0;
+  margin-bottom: .5em;
+}
+
 html|hr {
   border-style: solid none none none;
   border-color: var(--in-content-border-color);
+}
+
+html|h2 {
+  font-weight: 600;
+  line-height: 1.4em;
 }
 
 .main-content {
@@ -348,7 +361,6 @@ xul|tab[selected]:hover:active {
 
 html|button {
   font: inherit;
-  line-height: var(--button-line-height);
 }
 
 /* xul buttons and menulists */
@@ -358,14 +370,13 @@ html|select,
 html|input[type="color"],
 xul|menulist {
   appearance: none;
-  min-height: var(--button-min-height);
+  min-height: 32px;
   color: var(--in-content-button-text-color);
   border: 1px solid var(--in-content-button-border-color);
   border-radius: 4px;
   background-color: var(--in-content-button-background);
   font-weight: 400;
-  line-height: var(--button-line-height);
-  padding: .45em 1em;
+  padding: 7px 15px;
   text-decoration: none;
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
@@ -373,14 +384,14 @@ xul|menulist {
 }
 
 button {
-  font-weight: var(--button-font-weight);
+  font-weight: 600;
 }
 
 /* Small buttons get sized to 6/12px padding (when adding the 1px border) */
 button.small-button {
-  padding: .25em 1em;
-  font-size: var(--font-size-small);
-  min-height: 28px;
+  padding: 5px 11px;
+  min-height: 24px;
+  font-size: 0.9em;
 }
 
 /* Remove margin added by button.css */
@@ -645,19 +656,16 @@ xul|search-textbox {
 }
 
 xul|search-textbox {
-  min-height: var(--input-text-min-height);
+  min-height: 32px;
   padding-inline: 8px;
 }
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
 html|textarea {
-  box-sizing: border-box;
   font-family: inherit;
   font-size: inherit;
-  line-height: var(--input-text-line-height);
-  padding: .45em;
+  padding: 8px;
   margin: 2px 4px;
-  min-height: var(--input-text-min-height);
 }
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
@@ -1077,6 +1085,9 @@ html|*#categories[last-input-type="mouse"] > html|button.category:focus-visible 
 }
 
 .header-name {
+  font-size: 1.46em;
+  font-weight: 300;
+  line-height: 1.3em;
   margin: 0;
 }
 

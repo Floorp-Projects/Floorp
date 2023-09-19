@@ -44,15 +44,15 @@ class WithCommonStyles extends MozLitElement {
     :host,
     :root {
       font: message-box;
-      font-size: var(--font-size-root);
       appearance: none;
-      background-color: var(--color-canvas);
-      color: var(--text-color);
+      background-color: var(--in-content-page-background);
+      color: var(--in-content-page-color);
       -moz-box-layout: flex;
     }
 
-    :host {
-      font-size: var(--font-size-root);
+    :host,
+    :root:not(.system-font-size) {
+      font-size: 15px;
     }
   `;
 
