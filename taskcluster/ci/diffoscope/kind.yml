@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
+    - artifact-build
     - build
     - toolchain
 

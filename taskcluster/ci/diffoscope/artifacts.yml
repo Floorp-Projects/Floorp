@@ -6,16 +6,47 @@ job-defaults:
     unpack: true
     fail-on-diff: true
     pre-diff-commands:
+        # jogfile.json is only created in artifact builds.
+        - rm -f b/"$RESOURCE_DIR"/jogfile.json
         # Remove noise from differences in line numbers in preprocessor output
         # due to #if/#else branches.
         - sed -i '/^\/\/@line /d' {a,b}/"$RESOURCE_DIR"/browser/defaults/preferences/firefox.js
         # bug 1825141 - telemetry.fog.artifact_build isn't stable between
         # artifact and not-artifact builds, so remove its line if present.
         - sed -i '/telemetry\.fog\.artifact\_build/d' b/"$RESOURCE_DIR"/browser/defaults/preferences/firefox.js
+        # artifact builds are not fed with accepted-mar-channel-ids
+        - sed -i '/ACCEPTED_MAR_CHANNEL_IDS/d' {a,b}/"$RESOURCE_DIR"/update-settings.ini
+    # Extra diffoscope arguments to account for:
+    # - about:buildconfig being expectedly different.
+    extra-args: >-
+        --exclude b/"$RESOURCE_DIR"/chrome/toolkit/content/global/buildconfig.html
     # This is necessary to avoid building the dependencies on every push on autoland
     # A more robust fix for this is https://bugzilla.mozilla.org/show_bug.cgi?id=1643346
     optimization:
         skip-unless-expanded: null
+
+artifact-linux64-validation:
+    symbol: Linux64a
+    new: artifact-build-linux64-artifact/opt
+    original: build-linux64/opt
+
+artifact-macosx64-validation:
+    symbol: Macosx64a
+    new: artifact-build-macosx64-artifact/opt
+    original: build-macosx64/opt
+
+artifact-win64-validation:
+    symbol: Win64a
+    new: artifact-build-win64-artifact/opt
+    original: build-win64/opt
+    # Extra diffoscope arguments to account for:
+    # - about:buildconfig being expectedly different.
+    # - There are some differences in PE metadata in helper.exe because
+    #   it's (re)built in the EME build, and that part of the build is
+    #   not reproducible.
+    extra-args: >-
+        --exclude b/"$RESOURCE_DIR"/chrome/toolkit/content/global/buildconfig.html
+        --exclude b/firefox/uninstall/helper.exe
 
 artifact-win64-aarch64-eme-validation:
     symbol: DWE
