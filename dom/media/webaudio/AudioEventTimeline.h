@@ -114,9 +114,7 @@ inline int64_t AudioTimelineEvent::Time<int64_t>() const {
 class AudioEventTimeline {
  public:
   explicit AudioEventTimeline(float aDefaultValue)
-      : mValue(aDefaultValue),
-        mComputedValue(aDefaultValue),
-        mLastComputedValue(aDefaultValue) {}
+      : mValue(aDefaultValue), mSetTargetStartValue(aDefaultValue) {}
 
   bool ValidateEvent(const AudioTimelineEvent& aEvent, ErrorResult& aRv) const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -238,7 +236,7 @@ class AudioEventTimeline {
   void SetValue(float aValue) {
     // Silently don't change anything if there are any events
     if (mEvents.IsEmpty()) {
-      mLastComputedValue = mComputedValue = mValue = aValue;
+      mSetTargetStartValue = mValue = aValue;
     }
   }
 
@@ -339,7 +337,7 @@ class AudioEventTimeline {
   void CleanupEventsOlderThan(TimeType aTime) {
     while (mEvents.Length() > 1 && aTime > mEvents[1].Time<TimeType>()) {
       if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
-        mLastComputedValue = GetValuesAtTimeHelperInternal(
+        mSetTargetStartValue = GetValuesAtTimeHelperInternal(
             mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
       }
 
@@ -357,7 +355,8 @@ class AudioEventTimeline {
                              const size_t aSize);
 
   template <class TimeType>
-  float GetValueAtTimeOfEvent(const AudioTimelineEvent* aNext);
+  float GetValueAtTimeOfEvent(const AudioTimelineEvent* aEvent,
+                              const AudioTimelineEvent* aPrevious);
 
   template <class TimeType>
   float GetValuesAtTimeHelperInternal(TimeType aTime,
@@ -375,11 +374,9 @@ class AudioEventTimeline {
   // array ends up being a bottleneck.
   nsTArray<AudioTimelineEvent> mEvents;
   float mValue;
-  // This is the value of this AudioParam we computed at the last tick.
-  float mComputedValue;
-  // This is the value of this AudioParam at the last tick of the previous
-  // event.
-  float mLastComputedValue;
+  // This is the value of this AudioParam at the end of the previous
+  // event for SetTarget curves.
+  float mSetTargetStartValue;
 };
 
 }  // namespace dom
