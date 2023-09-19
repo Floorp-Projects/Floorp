@@ -293,6 +293,13 @@ export var BrowserTestUtils = {
    * @return {boolean}
    */
   is_hidden(element) {
+    if (
+      element.nodeType == Node.DOCUMENT_FRAGMENT_NODE &&
+      element.containingShadowRoot == element
+    ) {
+      return BrowserTestUtils.is_hidden(element.getRootNode().host);
+    }
+
     let win = element.ownerGlobal;
     let style = win.getComputedStyle(element);
     if (style.display == "none") {
@@ -322,6 +329,13 @@ export var BrowserTestUtils = {
    * @return {boolean}
    */
   is_visible(element) {
+    if (
+      element.nodeType == Node.DOCUMENT_FRAGMENT_NODE &&
+      element.containingShadowRoot == element
+    ) {
+      return BrowserTestUtils.is_visible(element.getRootNode().host);
+    }
+
     let win = element.ownerGlobal;
     let style = win.getComputedStyle(element);
     if (style.display == "none") {
