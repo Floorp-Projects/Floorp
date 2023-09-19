@@ -350,7 +350,8 @@ jobs:
             webrender-wrench-android-debug: webrender-wrench-android-debug
         fetches:
             webrender-wrench-android-debug:
-                - 'wrench-debug.apk'
+                - artifact: 'wrench-debug.apk'
+                  extract: false
             toolchain:
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
@@ -397,7 +398,8 @@ jobs:
             webrender-wrench-android-release: webrender-wrench-android-release
         fetches:
             webrender-wrench-android-release:
-                - 'wrench-release.apk'
+                - artifact: 'wrench-release.apk'
+                  extract: false
             toolchain:
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
@@ -440,7 +442,8 @@ jobs:
             android-build: build-android-arm/debug
         fetches:
             webrender-wrench-android-debug:
-                - 'wrench-debug.apk'
+                - artifact: 'wrench-debug.apk'
+                  extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
@@ -486,7 +489,8 @@ jobs:
             android-build: build-android-arm/opt
         fetches:
             webrender-wrench-android-release:
-                - 'wrench-release.apk'
+                - artifact: 'wrench-release.apk'
+                  extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
@@ -532,7 +536,8 @@ jobs:
             android-build: build-android-arm/debug
         fetches:
             webrender-wrench-android-debug:
-                - 'wrench-debug.apk'
+                - artifact: 'wrench-debug.apk'
+                  extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
@@ -578,7 +583,8 @@ jobs:
             android-build: build-android-arm/opt
         fetches:
             webrender-wrench-android-release:
-                - 'wrench-release.apk'
+                - artifact: 'wrench-release.apk'
+                  extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
