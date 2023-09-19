@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "api/function_view.h"
+#include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -113,6 +114,14 @@ class RtcEventProcessor {
             iterable.begin(), iterable.end(), handler,
             insertion_order_index_++));
     std::push_heap(event_lists_.begin(), event_lists_.end(), Cmp);
+  }
+
+  template <typename Iterable>
+  void AddEvents(
+      const Iterable& iterable,
+      std::function<void(const typename Iterable::value_type&)> handler,
+      PacketDirection /*not used*/) {
+    AddEvents(iterable, handler);
   }
 
   void ProcessEventsInOrder();
