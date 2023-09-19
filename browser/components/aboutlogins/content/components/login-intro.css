@@ -9,16 +9,12 @@
   align-items: center;
 }
 
-.heading {
-  font-size: 1.5em;
-}
-
 section {
   line-height: 2;
 }
 
 .description {
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   margin-bottom: 0;
 }
 

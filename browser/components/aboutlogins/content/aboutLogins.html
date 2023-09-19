@@ -164,7 +164,7 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/fxaccounts-button.css">
       <div class="logged-out-view">
-        <p class="fxaccounts-extra-text" data-l10n-id="fxaccounts-sign-in-text"></p>
+        <p class="fxaccounts-extra-text text-deemphasized" data-l10n-id="fxaccounts-sign-in-text"></p>
         <button class="fxaccounts-enable-button" data-l10n-id="fxaccounts-sign-in-sync-button"></button>
       </div>
       <div class="logged-in-view">
@@ -186,7 +186,7 @@
           <login-command-button class="create-login-button" l10nId="create-new-login-button" icon="chrome://global/skin/icons/plus.svg" tooltip="" ></login-command-button>
         </div>
       </div>
-      <div class="meta">
+      <div class="meta text-deemphasized">
         <label for="login-sort">
           <span data-l10n-id="login-list-sort-label-text"></span>
           <select id="login-sort">
@@ -219,8 +219,8 @@
       <li class="login-list-item" role="option">
         <img class="favicon" />
         <div class="labels">
-          <span class="title" dir="auto"></span>
-          <span class="username" dir="ltr"></span>
+          <span class="title text-truncated-ellipsis" dir="auto"></span>
+          <span class="username text-deemphasized text-truncated-ellipsis" dir="ltr"></span>
         </div>
         <img class="alert-icon" title="" src=""/>
       </li>
@@ -275,7 +275,7 @@
           </div>
           <div class="header">
             <img class="login-item-favicon" />
-            <h2 class="title">
+            <h2 class="title text-truncated-ellipsis">
               <span class="login-item-title"></span>
               <span class="new-login-title" data-l10n-id="login-item-new-login-title"></span>
             </h2>
@@ -287,7 +287,7 @@
           <form>
             <div class="detail-row">
               <label class="detail-cell">
-                <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
+                <span class="origin-label field-label text-deemphasized" data-l10n-id="login-item-origin-label"></span>
                 <!-- Default text inputs to readonly to reduce jumping of the field
                     size on page load since it always starts readonly. -->
 
@@ -308,7 +308,7 @@
             <div class="detail-grid">
               <div class="detail-row">
                 <label class="detail-cell">
-                  <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
+                  <span class="username-label field-label text-deemphasized" data-l10n-id="login-item-username-label"></span>
                   <input type="text"
                          name="username"
                          data-l10n-id="login-item-username"
@@ -320,7 +320,7 @@
               </div>
               <div class="detail-row">
                 <label class="detail-cell">
-                  <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
+                  <span class="password-label field-label text-deemphasized" data-l10n-id="login-item-password-label"></span>
                   <div class="reveal-password-wrapper">
                     <input type="password"
                            name="password"
