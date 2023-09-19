@@ -226,6 +226,10 @@ RTC_OBJC_EXPORT
 // otherwise they will fail with kRTCAudioSessionErrorLockRequired.
 
 - (BOOL)setCategory:(NSString *)category
+               mode:(NSString *)mode
+            options:(AVAudioSessionCategoryOptions)options
+              error:(NSError **)outError;
+- (BOOL)setCategory:(NSString *)category
         withOptions:(AVAudioSessionCategoryOptions)options
               error:(NSError **)outError;
 - (BOOL)setMode:(NSString *)mode error:(NSError **)outError;
