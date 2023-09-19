@@ -6,7 +6,7 @@
 
 interface nsISupports;
 
-[ChromeOnly, Exposed=Window]
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
 interface GleanCategory {
   /**
    * Get a metric by name.
@@ -17,7 +17,7 @@ interface GleanCategory {
   getter nsISupports (DOMString identifier);
 };
 
-[ChromeOnly, Exposed=Window]
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
 interface GleanImpl {
   /**
    * Get a metric category by name.
@@ -27,7 +27,7 @@ interface GleanImpl {
   getter GleanCategory (DOMString identifier);
 };
 
-[ChromeOnly, Exposed=Window]
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
 interface GleanLabeled {
   /**
    * Get a specific metric for a given label.

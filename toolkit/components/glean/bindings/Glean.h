@@ -8,6 +8,7 @@
 #define mozilla_glean_Glean_h
 
 #include "js/TypeDecls.h"
+#include "nsGlobalWindowInner.h"
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
