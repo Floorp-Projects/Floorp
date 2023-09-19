@@ -5,7 +5,6 @@
         "unpoison-thread-stacks_clang_10.patch",
         "downgrade-mangling-error_clang_12.patch",
         "fuzzing_ccov_build_clang_12.patch",
-        "revert-llvmorg-18-init-3787-gb6a1473f97d3.patch",
         "revert-llvmorg-18-init-3037-g625113402f9f.patch",
         "partial-revert-llvmorg-17-init-17713-gc8e055d485ea.patch",
         "partial-revert-llvmorg-17-init-7686-g244be0b0de19.patch",
