@@ -896,6 +896,9 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
         webrtc::RtpExtension::kRidUri, webrtc::RtpExtension::kRepairedRidUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
+  for (const auto& uri : {webrtc::RtpExtension::kAbsoluteCaptureTimeUri}) {
+    result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kStopped);
+  }
   result.emplace_back(webrtc::RtpExtension::kGenericFrameDescriptorUri00, id++,
                       IsEnabled(trials_, "WebRTC-GenericDescriptorAdvertised")
                           ? webrtc::RtpTransceiverDirection::kSendRecv

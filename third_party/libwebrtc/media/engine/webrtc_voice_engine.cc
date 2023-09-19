@@ -37,6 +37,7 @@
 #include "api/media_types.h"
 #include "api/priority.h"
 #include "api/rtp_headers.h"
+#include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/bitrate_settings.h"
@@ -683,6 +684,9 @@ WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
                           webrtc::RtpExtension::kTransportSequenceNumberUri,
                           webrtc::RtpExtension::kMidUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
+  }
+  for (const auto& uri : {webrtc::RtpExtension::kAbsoluteCaptureTimeUri}) {
+    result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kStopped);
   }
   return result;
 }
