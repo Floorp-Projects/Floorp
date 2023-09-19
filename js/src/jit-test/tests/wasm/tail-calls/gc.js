@@ -171,8 +171,8 @@ assertEq(fns.churn(1200), -1164697516);
 
 wasmValidateText(`(module
   (rec
-    (type $s1 (sub (struct i32)))
-    (type $s2 (sub $s1 (struct i32 f32)))
+    (type $s1 (sub (struct (field i32))))
+    (type $s2 (sub $s1 (struct (field i32 f32))))
   )
   (func (result (ref $s2))
     struct.new_default $s2
@@ -184,8 +184,8 @@ wasmValidateText(`(module
 
 wasmFailValidateText(`(module
   (rec
-    (type $s1 (sub (struct i32)))
-    (type $s2 (sub $s1 (struct i32 f32)))
+    (type $s1 (sub (struct (field i32))))
+    (type $s2 (sub $s1 (struct (field i32 f32))))
   )
   (func (result (ref $s1))
     struct.new_default $s1
@@ -197,8 +197,8 @@ wasmFailValidateText(`(module
 
 wasmValidateText(`(module
   (rec
-    (type $s1 (sub (struct i32)))
-    (type $s2 (sub $s1 (struct i32 f32)))
+    (type $s1 (sub (struct (field i32))))
+    (type $s2 (sub $s1 (struct (field i32 f32))))
   )
   (type $t (func (result (ref $s2))))
   (func (export "f") (param (ref $t)) (result (ref $s1))
@@ -209,8 +209,8 @@ wasmValidateText(`(module
 
 wasmFailValidateText(`(module
   (rec
-    (type $s1 (sub (struct i32)))
-    (type $s2 (sub $s1 (struct i32 f32)))
+    (type $s1 (sub (struct (field i32))))
+    (type $s2 (sub $s1 (struct (field i32 f32))))
   )
   (type $t (func (result (ref $s1))))
   (func (export "f") (param (ref $t)) (result (ref $s2))

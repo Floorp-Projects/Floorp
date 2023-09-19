@@ -79,8 +79,8 @@ wasmEval(moduleWithSections([v2vSigSection]));
 wasmEval(moduleWithSections([sigSection([i2vSig])]));
 wasmEval(moduleWithSections([sigSection([v2vSig, i2vSig])]));
 
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:100}])])), CompileError, /bad type/);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])])), CompileError, /bad type/);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:33}])])), CompileError, /bad type/);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[33], ret:VoidCode}])])), CompileError, /bad type/);
 
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([sigSection([]), declSection([0])])), CompileError, /signature index out of range/);
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([v2vSigSection, declSection([1])])), CompileError, /signature index out of range/);
