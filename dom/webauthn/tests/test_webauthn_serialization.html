@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Tests W3C Web Authentication Data Types Serialization</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Tests W3C Web Authentication Data Types Serialization</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1823782">Mozilla Bug 1823782</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    const { Assert } = SpecialPowers.ChromeUtils.importESModule(
+      "resource://testing-common/Assert.sys.mjs"
+    );
+
+    function arrayBufferEqualsArray(actual, expected, description) {
+      ok(actual instanceof ArrayBuffer, `${description} (actual should be array)`);
+      ok(expected instanceof Array, `${description} (expected should be array)`);
+      is(actual.byteLength, expected.length, `${description} (actual and expected should have same length)`);
+      let actualView = new Uint8Array(actual);
+      for (let i = 0; i < actualView.length; i++) {
+        if (actualView[i] != expected[i]) {
+          throw new Error(`actual and expected differ in byte ${i}: ${actualView[i]} vs ${expected[i]}`);
+        }
+      }
+      ok(true, description);
+    }
+
+    function isEmptyArray(arr, description) {
+      ok(arr instanceof Array, `${description} (expecting Array)`);
+      is(arr.length, 0, `${description} (array should be empty)`);
+    }
+
+    function shouldThrow(func, expectedError, description) {
+      let threw = false;
+      try {
+        func();
+      } catch (e) {
+        is(e.message, expectedError);
+        threw = true;
+      }
+      ok(threw, description);
+    }
+
+    add_task(function test_parseCreationOptionsFromJSON_minimal() {
+      let creationOptionsJSON = {
+        rp: { name: "Example" },
+        user: { id: "-l3qNLTKJng", name: "username", displayName: "display name" },
+        challenge: "XNJTTB3kfqk",
+        pubKeyCredParams: [],
+      };
+      let creationOptions = PublicKeyCredential.parseCreationOptionsFromJSON(creationOptionsJSON);
+      is(Object.getOwnPropertyNames(creationOptions).length, 8, "creation options should have 8 properties");
+      is(creationOptions.rp.id, undefined, "rp.id should be undefined");
+      is(creationOptions.rp.name, "Example", "rp.name should be Example");
+      arrayBufferEqualsArray(creationOptions.user.id, [ 250, 93, 234, 52, 180, 202, 38, 120 ], "user.id should be as expected");
+      is(creationOptions.user.displayName, "display name", "user.displayName should be 'display name'");
+      is(creationOptions.user.name, "username", "user.name should be username");
+      arrayBufferEqualsArray(creationOptions.challenge, [ 92, 210, 83, 76, 29, 228, 126, 169 ], "challenge should be as expected");
+      isEmptyArray(creationOptions.pubKeyCredParams, "pubKeyCredParams should be an empty array");
+      is(creationOptions.timeout, undefined, "timeout should be undefined");
+      isEmptyArray(creationOptions.excludeCredentials, "excludeCredentials should be an empty array");
+      is(creationOptions.authenticatorSelection.authenticatorAttachment, undefined, "authenticatorSelection.authenticatorAttachment should be undefined");
+      is(creationOptions.authenticatorSelection.residentKey, undefined, "creationOptions.authenticatorSelection.residentKey should be undefined");
+      is(creationOptions.authenticatorSelection.requireResidentKey, false, "creationOptions.authenticatorSelection.requireResidentKey should be false");
+      is(creationOptions.authenticatorSelection.userVerification, "preferred", "creationOptions.authenticatorSelection.userVerification should be preferred");
+      is(creationOptions.attestation, "none", "attestation should be none");
+      is(Object.getOwnPropertyNames(creationOptions.extensions).length, 0, "extensions should be an empty object");
+    });
+
+    add_task(function test_parseCreationOptionsFromJSON() {
+      let creationOptionsJSON = {
+        rp: { name: "Example", id: "example.com" },
+        user: { id: "19TVpqBBOAM", name: "username2", displayName: "another display name" },
+        challenge: "dR82FeUh5q4",
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+        timeout: 20000,
+        excludeCredentials: [{ type: "public-key", id: "TeM2k_di7Dk", transports: [ "usb" ]}],
+        authenticatorSelection: { authenticatorAttachment: "platform", residentKey: "required", requireResidentKey: true, userVerification: "discouraged" },
+        hints: ["hybrid"],
+        attestation: "indirect",
+        attestationFormats: ["fido-u2f"],
+        extensions: { appid: "https://www.example.com/appID", hmacCreateSecret: true },
+      };
+      let creationOptions = PublicKeyCredential.parseCreationOptionsFromJSON(creationOptionsJSON);
+      is(Object.getOwnPropertyNames(creationOptions).length, 9, "creation options should have 9 properties");
+      is(creationOptions.rp.name, "Example", "rp.name should be Example");
+      is(creationOptions.rp.id, "example.com", "rp.id should be example.com");
+      arrayBufferEqualsArray(creationOptions.user.id, [ 215, 212, 213, 166, 160, 65, 56, 3 ], "user.id should be as expected");
+      is(creationOptions.user.displayName, "another display name", "user.displayName should be 'another display name'");
+      is(creationOptions.user.name, "username2", "user.name should be username2");
+      arrayBufferEqualsArray(creationOptions.challenge, [ 117, 31, 54, 21, 229, 33, 230, 174 ], "challenge should be as expected");
+      is(creationOptions.pubKeyCredParams.length, 1, "pubKeyCredParams should have one element");
+      is(creationOptions.pubKeyCredParams[0].type, "public-key", "pubKeyCredParams[0].type should be public-key");
+      is(creationOptions.pubKeyCredParams[0].alg, -7, "pubKeyCredParams[0].alg should be -7");
+      is(creationOptions.timeout, 20000, "timeout should be 20000");
+      is(creationOptions.excludeCredentials.length, 1, "excludeCredentials should have one element");
+      is(creationOptions.excludeCredentials[0].type, "public-key", "excludeCredentials[0].type should be public-key");
+      arrayBufferEqualsArray(creationOptions.excludeCredentials[0].id, [ 77, 227, 54, 147, 247, 98, 236, 57 ], "excludeCredentials[0].id should be as expected");
+      is(creationOptions.excludeCredentials[0].transports.length, 1, "excludeCredentials[0].transports should have one element");
+      is(creationOptions.excludeCredentials[0].transports[0], "usb", "excludeCredentials[0].transports[0] should be usb");
+      is(creationOptions.authenticatorSelection.authenticatorAttachment, "platform", "authenticatorSelection.authenticatorAttachment should be platform");
+      is(creationOptions.authenticatorSelection.residentKey, "required", "creationOptions.authenticatorSelection.residentKey should be required");
+      is(creationOptions.authenticatorSelection.requireResidentKey, true, "creationOptions.authenticatorSelection.requireResidentKey should be true");
+      is(creationOptions.authenticatorSelection.userVerification, "discouraged", "creationOptions.authenticatorSelection.userVerification should be discouraged");
+      is(creationOptions.attestation, "indirect", "attestation should be indirect");
+      is(creationOptions.extensions.appid, "https://www.example.com/appID", "extensions.appid should be https://www.example.com/appID");
+      is(creationOptions.extensions.hmacCreateSecret, true, "extensions.hmacCreateSecret should be true");
+    });
+
+    add_task(function test_parseCreationOptionsFromJSON_malformed() {
+      let userIdNotBase64 = {
+        rp: { name: "Example" },
+        user: { id: "/not urlsafe base64+", name: "username", displayName: "display name" },
+        challenge: "XNJTTB3kfqk",
+        pubKeyCredParams: [],
+      };
+      shouldThrow(
+        () => { PublicKeyCredential.parseCreationOptionsFromJSON(userIdNotBase64); },
+        "PublicKeyCredential.parseCreationOptionsFromJSON: could not decode user ID as urlsafe base64",
+        "should get encoding error if user.id is not urlsafe base64"
+      );
+
+      let challengeNotBase64 = {
+        rp: { name: "Example" },
+        user: { id: "-l3qNLTKJng", name: "username", displayName: "display name" },
+        challenge: "this is not urlsafe base64!",
+        pubKeyCredParams: [],
+      };
+      shouldThrow(
+        () => { PublicKeyCredential.parseCreationOptionsFromJSON(challengeNotBase64); },
+        "PublicKeyCredential.parseCreationOptionsFromJSON: could not decode challenge as urlsafe base64",
+        "should get encoding error if challenge is not urlsafe base64"
+      );
+
+      let excludeCredentialsIdNotBase64 = {
+        rp: { name: "Example", id: "example.com" },
+        user: { id: "-l3qNLTKJng", name: "username", displayName: "display name" },
+        challenge: "dR82FeUh5q4",
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+        timeout: 20000,
+        excludeCredentials: [{ type: "public-key", id: "@#$%&^", transports: [ "usb" ]}],
+        authenticatorselection: { authenticatorattachment: "platform", residentkey: "required", requireresidentkey: true, userverification: "discouraged" },
+        hints: ["hybrid"],
+        attestation: "indirect",
+        attestationformats: ["fido-u2f"],
+        extensions: { appid: "https://www.example.com/appid", hmaccreatesecret: true },
+      };
+      shouldThrow(
+        () => { PublicKeyCredential.parseCreationOptionsFromJSON(excludeCredentialsIdNotBase64); },
+        "PublicKeyCredential.parseCreationOptionsFromJSON: could not decode excluded credential ID as urlsafe base64",
+        "should get encoding error if excludeCredentials[0].id is not urlsafe base64"
+      );
+    });
+
+    add_task(function test_parseRequestOptionsFromJSON_minimal() {
+      let requestOptionsJSON = {
+        challenge: "3yW2WHD_jbU",
+      };
+      let requestOptions = PublicKeyCredential.parseRequestOptionsFromJSON(requestOptionsJSON);
+      is(Object.getOwnPropertyNames(requestOptions).length, 4, "request options should have 4 properties");
+      arrayBufferEqualsArray(requestOptions.challenge, [ 223, 37, 182, 88, 112, 255, 141, 181 ], "challenge should be as expected");
+      is(requestOptions.timeout, undefined, "timeout should be undefined");
+      is(requestOptions.rpId, undefined, "rpId should be undefined");
+      isEmptyArray(requestOptions.allowCredentials, "allowCredentials should be an empty array");
+      is(requestOptions.userVerification, "preferred", "userVerification should be preferred");
+      is(Object.getOwnPropertyNames(requestOptions.extensions).length, 0, "extensions should be an empty object");
+    });
+
+    add_task(function test_parseRequestOptionsFromJSON() {
+      let requestOptionsJSON = {
+        challenge: "QAfaZwEQCkQ",
+        timeout: 25000,
+        rpId: "example.com",
+        allowCredentials: [{type: "public-key", id: "BTBXXGuXRTk", transports: ["smart-card"] }],
+        userVerification: "discouraged",
+        hints: ["client-device"],
+        attestation: "enterprise",
+        attestationFormats: ["packed"],
+        extensions: { appid: "https://www.example.com/anotherAppID", hmacCreateSecret: false },
+      };
+      let requestOptions = PublicKeyCredential.parseRequestOptionsFromJSON(requestOptionsJSON);
+      is(Object.getOwnPropertyNames(requestOptions).length, 6, "request options should have 6 properties");
+      arrayBufferEqualsArray(requestOptions.challenge, [ 64, 7, 218, 103, 1, 16, 10, 68 ], "challenge should be as expected");
+      is(requestOptions.timeout, 25000, "timeout should be 25000");
+      is(requestOptions.rpId, "example.com", "rpId should be example.com");
+      is(requestOptions.allowCredentials.length, 1, "allowCredentials should have one element");
+      is(requestOptions.allowCredentials[0].type, "public-key", "allowCredentials[0].type should be public-key");
+      arrayBufferEqualsArray(requestOptions.allowCredentials[0].id, [ 5, 48, 87, 92, 107, 151, 69, 57 ], "allowCredentials[0].id should be as expected");
+      is(requestOptions.allowCredentials[0].transports.length, 1, "allowCredentials[0].transports should have one element");
+      is(requestOptions.allowCredentials[0].transports[0], "smart-card", "allowCredentials[0].transports[0] should be usb");
+      is(requestOptions.userVerification, "discouraged", "userVerification should be discouraged");
+      is(requestOptions.extensions.appid, "https://www.example.com/anotherAppID", "extensions.appid should be https://www.example.com/anotherAppID");
+      is(requestOptions.extensions.hmacCreateSecret, false, "extensions.hmacCreateSecret should be false");
+    });
+
+    add_task(function test_parseRequestOptionsFromJSON_malformed() {
+      let challengeNotBase64 = {
+        challenge: "/not+urlsafe+base64/",
+      };
+      shouldThrow(
+        () => { PublicKeyCredential.parseRequestOptionsFromJSON(challengeNotBase64); },
+        "PublicKeyCredential.parseRequestOptionsFromJSON: could not decode challenge as urlsafe base64",
+        "should get encoding error if challenge is not urlsafe base64"
+      );
+
+      let allowCredentialsIdNotBase64 = {
+        challenge: "QAfaZwEQCkQ",
+        timeout: 25000,
+        rpId: "example.com",
+        allowCredentials: [{type: "public-key", id: "not urlsafe base64", transports: ["smart-card"] }],
+        userVerification: "discouraged",
+        hints: ["client-device"],
+        attestation: "enterprise",
+        attestationFormats: ["packed"],
+        extensions: { appid: "https://www.example.com/anotherAppID", hmacCreateSecret: false },
+      };
+      shouldThrow(
+        () => { PublicKeyCredential.parseRequestOptionsFromJSON(allowCredentialsIdNotBase64); },
+        "PublicKeyCredential.parseRequestOptionsFromJSON: could not decode allowed credential ID as urlsafe base64",
+        "should get encoding error if allowCredentials[0].id is not urlsafe base64"
+      );
+    });
+
+    add_task(async () => {
+      await addVirtualAuthenticator();
+    });
+
+    function isUrlsafeBase64(urlsafeBase64) {
+      try {
+        atob(urlsafeBase64.replace(/_/g, "/").replace(/-/g, "+"));
+        return true;
+      } catch (_) {}
+      return false;
+    }
+
+    add_task(async function test_registrationResponse_toJSON() {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+      let registrationResponse = await navigator.credentials.create({publicKey});
+      let registrationResponseJSON = registrationResponse.toJSON();
+      is(Object.keys(registrationResponseJSON).length, 5, "registrationResponseJSON should have 5 properties");
+      is(registrationResponseJSON.id, registrationResponseJSON.rawId, "registrationResponseJSON.id and rawId should be the same");
+      ok(isUrlsafeBase64(registrationResponseJSON.id), "registrationResponseJSON.id should be urlsafe base64");
+      is(Object.keys(registrationResponseJSON.response).length, 6, "registrationResponseJSON.response should have 6 properties");
+      ok(isUrlsafeBase64(registrationResponseJSON.response.clientDataJSON), "registrationResponseJSON.response.clientDataJSON should be urlsafe base64");
+      ok(isUrlsafeBase64(registrationResponseJSON.response.authenticatorData), "registrationResponseJSON.response.authenticatorData should be urlsafe base64");
+      ok(isUrlsafeBase64(registrationResponseJSON.response.publicKey), "registrationResponseJSON.response.publicKey should be urlsafe base64");
+      ok(isUrlsafeBase64(registrationResponseJSON.response.attestationObject), "registrationResponseJSON.response.attestationObject should be urlsafe base64");
+      is(registrationResponseJSON.response.publicKeyAlgorithm, cose_alg_ECDSA_w_SHA256, "registrationResponseJSON.response.publicKeyAlgorithm should be ECDSA with SHA256 (COSE)");
+      is(registrationResponseJSON.response.transports.length, 1, "registrationResponseJSON.response.transports.length should be 1");
+      is(registrationResponseJSON.response.transports[0], "usb", "registrationResponseJSON.response.transports[0] should be usb");
+      is(registrationResponseJSON.type, "public-key", "registrationResponseJSON.type should be public-key");
+    });
+
+    add_task(async function test_assertionResponse_toJSON() {
+      let registrationRequest = {
+        publicKey: {
+          rp: {id: document.domain, name: "none", icon: "none"},
+          user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+          challenge: crypto.getRandomValues(new Uint8Array(16)),
+          pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+        },
+      };
+      let registrationResponse = await navigator.credentials.create(registrationRequest);
+
+      let assertionRequest = {
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(16)),
+          allowCredentials: [{ type: "public-key", id: registrationResponse.rawId }],
+        },
+      };
+      let assertionResponse = await navigator.credentials.get(assertionRequest);
+      let assertionResponseJSON = assertionResponse.toJSON();
+      is(Object.keys(assertionResponseJSON).length, 5, "assertionResponseJSON should have 5 properties");
+      is(assertionResponseJSON.id, assertionResponseJSON.rawId, "assertionResponseJSON.id and rawId should be the same");
+      ok(isUrlsafeBase64(assertionResponseJSON.id), "assertionResponseJSON.id should be urlsafe base64");
+      is(Object.keys(assertionResponseJSON.response).length, 3, "assertionResponseJSON.response should have 3 properties");
+      ok(isUrlsafeBase64(assertionResponseJSON.response.clientDataJSON), "assertionResponseJSON.response.clientDataJSON should be urlsafe base64");
+      ok(isUrlsafeBase64(assertionResponseJSON.response.authenticatorData), "assertionResponseJSON.response.authenticatorData should be urlsafe base64");
+      ok(isUrlsafeBase64(assertionResponseJSON.response.signature), "assertionResponseJSON.response.signature should be urlsafe base64");
+      is(Object.keys(assertionResponseJSON.clientExtensionResults).length, 0, "assertionResponseJSON.clientExtensionResults should be an empty dictionary");
+      is(assertionResponseJSON.type, "public-key", "assertionResponseJSON.type should be public-key");
+    });
+  </script>
+
+</body>
+</html>

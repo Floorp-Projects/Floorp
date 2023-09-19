@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AuthrsBridge_ffi.h"
-#include "mozilla/dom/WebAuthenticationBinding.h"
-#include "mozilla/dom/AuthenticatorAttestationResponse.h"
-
+#include "mozilla/Base64.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/AuthenticatorAttestationResponse.h"
+#include "mozilla/dom/WebAuthenticationBinding.h"
 
 namespace mozilla::dom {
 
@@ -79,21 +79,28 @@ void AuthenticatorAttestationResponse::SetTransports(
   mTransports.Assign(aTransports);
 }
 
-void AuthenticatorAttestationResponse::GetAuthenticatorData(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+nsresult AuthenticatorAttestationResponse::GetAuthenticatorDataBytes(
+    nsTArray<uint8_t>& aAuthenticatorData) {
   if (!mAttestationObjectParsed) {
     nsresult rv = authrs_webauthn_att_obj_constructor(
         mAttestationObject, /* anonymize */ false,
         getter_AddRefs(mAttestationObjectParsed));
     if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
+      return rv;
     }
   }
-
-  nsTArray<uint8_t> authenticatorData;
   nsresult rv =
-      mAttestationObjectParsed->GetAuthenticatorData(authenticatorData);
+      mAttestationObjectParsed->GetAuthenticatorData(aAuthenticatorData);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+void AuthenticatorAttestationResponse::GetAuthenticatorData(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+  nsTArray<uint8_t> authenticatorData;
+  nsresult rv = GetAuthenticatorDataBytes(authenticatorData);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -108,19 +115,27 @@ void AuthenticatorAttestationResponse::GetAuthenticatorData(
   aValue.set(buffer);
 }
 
-void AuthenticatorAttestationResponse::GetPublicKey(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+nsresult AuthenticatorAttestationResponse::GetPublicKeyBytes(
+    nsTArray<uint8_t>& aPublicKeyBytes) {
   if (!mAttestationObjectParsed) {
     nsresult rv = authrs_webauthn_att_obj_constructor(
-        mAttestationObject, false, getter_AddRefs(mAttestationObjectParsed));
+        mAttestationObject, /* anonymize */ false,
+        getter_AddRefs(mAttestationObjectParsed));
     if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
+      return rv;
     }
   }
+  nsresult rv = mAttestationObjectParsed->GetPublicKey(aPublicKeyBytes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return NS_OK;
+}
 
+void AuthenticatorAttestationResponse::GetPublicKey(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   nsTArray<uint8_t> publicKey;
-  nsresult rv = mAttestationObjectParsed->GetPublicKey(publicKey);
+  nsresult rv = GetPublicKeyBytes(publicKey);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_NOT_AVAILABLE) {
       aValue.set(nullptr);
@@ -153,6 +168,79 @@ COSEAlgorithmIdentifier AuthenticatorAttestationResponse::GetPublicKeyAlgorithm(
   COSEAlgorithmIdentifier alg;
   mAttestationObjectParsed->GetPublicKeyAlgorithm(&alg);
   return alg;
+}
+
+void AuthenticatorAttestationResponse::ToJSON(
+    AuthenticatorAttestationResponseJSON& aJSON, ErrorResult& aError) {
+  nsAutoCString clientDataJSONBase64;
+  nsresult rv = Base64URLEncode(
+      mClientDataJSON.Length(),
+      reinterpret_cast<const uint8_t*>(mClientDataJSON.get()),
+      mozilla::Base64URLEncodePaddingPolicy::Omit, clientDataJSONBase64);
+  // This will only fail if the length is so long that it overflows 32-bits
+  // when calculating the encoded size.
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("clientDataJSON too long");
+    return;
+  }
+  aJSON.mClientDataJSON.Assign(NS_ConvertUTF8toUTF16(clientDataJSONBase64));
+
+  nsTArray<uint8_t> authenticatorData;
+  rv = GetAuthenticatorDataBytes(authenticatorData);
+  if (NS_FAILED(rv)) {
+    aError.ThrowUnknownError("could not get authenticatorData");
+    return;
+  }
+  nsAutoCString authenticatorDataBase64;
+  rv = Base64URLEncode(authenticatorData.Length(), authenticatorData.Elements(),
+                       mozilla::Base64URLEncodePaddingPolicy::Omit,
+                       authenticatorDataBase64);
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("authenticatorData too long");
+    return;
+  }
+  aJSON.mAuthenticatorData.Assign(
+      NS_ConvertUTF8toUTF16(authenticatorDataBase64));
+
+  if (!aJSON.mTransports.Assign(mTransports, mozilla::fallible)) {
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  nsTArray<uint8_t> publicKeyBytes;
+  rv = GetPublicKeyBytes(publicKeyBytes);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString publicKeyBytesBase64;
+    rv = Base64URLEncode(publicKeyBytes.Length(), publicKeyBytes.Elements(),
+                         mozilla::Base64URLEncodePaddingPolicy::Omit,
+                         publicKeyBytesBase64);
+    if (NS_FAILED(rv)) {
+      aError.ThrowDataError("publicKey too long");
+      return;
+    }
+    aJSON.mPublicKey.Construct(NS_ConvertUTF8toUTF16(publicKeyBytesBase64));
+  } else if (rv != NS_ERROR_NOT_AVAILABLE) {
+    aError.ThrowUnknownError("could not get publicKey");
+    return;
+  }
+
+  COSEAlgorithmIdentifier publicKeyAlgorithm = GetPublicKeyAlgorithm(aError);
+  if (aError.Failed()) {
+    aError.ThrowUnknownError("could not get publicKeyAlgorithm");
+    return;
+  }
+  aJSON.mPublicKeyAlgorithm = publicKeyAlgorithm;
+
+  nsAutoCString attestationObjectBase64;
+  rv = Base64URLEncode(
+      mAttestationObject.Length(), mAttestationObject.Elements(),
+      mozilla::Base64URLEncodePaddingPolicy::Omit, attestationObjectBase64);
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("attestationObject too long");
+    return;
+  }
+  aJSON.mAttestationObject.Assign(
+      NS_ConvertUTF8toUTF16(attestationObjectBase64));
 }
 
 }  // namespace mozilla::dom

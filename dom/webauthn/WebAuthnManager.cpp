@@ -717,7 +717,7 @@ void WebAuthnManager::FinishMakeCredential(
   credential->SetId(NS_ConvertASCIItoUTF16(keyHandleBase64Url));
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
-  credential->SetResponse(attestation);
+  credential->SetAttestationResponse(attestation);
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {
@@ -765,7 +765,7 @@ void WebAuthnManager::FinishGetAssertion(
   credential->SetId(NS_ConvertASCIItoUTF16(keyHandleBase64Url));
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
-  credential->SetResponse(assertion);
+  credential->SetAssertionResponse(assertion);
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {

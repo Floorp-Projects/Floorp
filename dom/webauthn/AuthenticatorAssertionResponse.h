@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/WebAuthenticationBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -45,6 +46,8 @@ class AuthenticatorAssertionResponse final : public AuthenticatorResponse {
                      ErrorResult& aRv);
 
   void SetUserHandle(const nsTArray<uint8_t>& aBuffer);
+
+  void ToJSON(AuthenticatorAssertionResponseJSON& aJSON, ErrorResult& aError);
 
  private:
   nsTArray<uint8_t> mAuthenticatorData;
