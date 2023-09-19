@@ -114,9 +114,9 @@ add_task(async function test_startupCache_load_timestamps() {
 
   let gleanMetric = Glean.extensions.startupCacheLoadTime.testGetValue();
   equal(
-    typeof gleanMetric,
-    "undefined",
-    "Expect extensions.startup_cache_load_time Glean metric to be initially undefined"
+    gleanMetric,
+    null,
+    "Expect extensions.startup_cache_load_time Glean metric to be initially null"
   );
 
   // Make sure the _readData has been called and we can expect
