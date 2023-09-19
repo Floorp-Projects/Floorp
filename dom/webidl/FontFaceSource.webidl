@@ -11,6 +11,6 @@
  */
 
 interface mixin FontFaceSource {
-  [Throws]
+  [Func="FontFaceSet::IsEnabled", Throws]
   readonly attribute FontFaceSet fonts;
 };
