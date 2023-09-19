@@ -73,7 +73,7 @@ add_setup(async function () {
 
   await SearchSERPTelemetry.init();
 
-  stub = sinon.stub(SearchSERPCategorization, "logDomains");
+  stub = sinon.stub(SearchSERPCategorization, "dummyLogger");
 
   registerCleanupFunction(async () => {
     stub.restore();
