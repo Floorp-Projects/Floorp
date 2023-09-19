@@ -801,6 +801,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             )
 
             ramMoreThanThreshold.set(isDeviceRamAboveThreshold)
+            deviceTotalRam.set(getDeviceTotalRAM())
         }
 
         with(AndroidAutofill) {
@@ -849,12 +850,27 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    private fun deviceRamApproxMegabytes(): Long {
+    @VisibleForTesting
+    internal fun getDeviceTotalRAM(): Long {
+        val memoryInfo = getMemoryInfo()
+        return if (SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            memoryInfo.advertisedMem
+        } else {
+            memoryInfo.totalMem
+        }
+    }
+
+    @VisibleForTesting
+    internal fun getMemoryInfo(): ActivityManager.MemoryInfo {
         val memoryInfo = ActivityManager.MemoryInfo()
         val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(memoryInfo)
 
-        val deviceRamBytes = memoryInfo.totalMem
+        return memoryInfo
+    }
+
+    private fun deviceRamApproxMegabytes(): Long {
+        val deviceRamBytes = getMemoryInfo().totalMem
         return deviceRamBytes.toRoundedMegabytes()
     }
 

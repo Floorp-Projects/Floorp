@@ -143,6 +143,7 @@ class FenixApplicationTest {
         every { settings.showPocketRecommendationsFeature } returns true
         every { settings.showContileFeature } returns true
         every { application.reportHomeScreenMetrics(settings) } just Runs
+        every { application.getDeviceTotalRAM() } returns 7L
         every { settings.inactiveTabsAreEnabled } returns true
         every { application.isDeviceRamAboveThreshold } returns true
 
@@ -193,6 +194,7 @@ class FenixApplicationTest {
         assertEquals(expectedAppInstallSource, Metrics.installSource.testGetValue())
         assertEquals(true, Metrics.defaultWallpaper.testGetValue())
         assertEquals(true, Metrics.ramMoreThanThreshold.testGetValue())
+        assertEquals(7L, Metrics.deviceTotalRam.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 

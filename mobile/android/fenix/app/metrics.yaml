@@ -2539,6 +2539,28 @@ metrics:
     metadata:
       tags:
         - Experiments
+  device_total_ram:
+    type: quantity
+    lifetime: application
+    description: >
+      The total amount of memory this device in bytes, when available will be
+      MemoryInfo.advertisedMem otherwise it will be MemoryInfo.totalMem.
+      This doesn't represent memory available to the application however.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853967
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2620
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    unit: integer
+    metadata:
+      tags:
+        - Performance
   search_page_load_time:
     type: timing_distribution
     time_unit: millisecond
