@@ -16,8 +16,6 @@
 
 ["document_l10n/test_docl10n_sync.html"]
 
-["document_l10n/test_telemetry.html"]
-
 ["dom_localization/test_attr_sanitized.html"]
 
 ["dom_localization/test_connectRoot.html"]

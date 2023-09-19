@@ -17795,25 +17795,6 @@
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "bug_numbers": [1682555]
   },
-  "L10N_DOCUMENT_INITIAL_TRANSLATION_TIME_US": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "120",
-    "kind": "exponential",
-    "high": 1000000,
-    "n_buckets": 100,
-    "description": "Time it took to perform initial translation of the document (in microseconds)",
-    "alert_emails": ["nordzilla@mozilla.com"],
-    "bug_numbers": [1692064, 1754653],
-    "keyed": true,
-    "keys": [
-      "browser_first_window",
-      "browser_new_window",
-      "about:newtab",
-      "about:home",
-      "about:preferences"
-    ]
-  },
   "HTTPS_RR_PRESENTED": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
