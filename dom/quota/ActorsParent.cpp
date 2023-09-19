@@ -1744,7 +1744,14 @@ void QuotaManager::ShutdownInstance() {
   AssertIsOnBackgroundThread();
 
   if (gInstance) {
+    auto recordTimeDeltaHelper =
+        MakeRefPtr<RecordTimeDeltaHelper>(Telemetry::QM_SHUTDOWN_TIME_V0);
+
+    recordTimeDeltaHelper->Start();
+
     gInstance->Shutdown();
+
+    recordTimeDeltaHelper->End();
 
     gInstance = nullptr;
   } else {
@@ -2357,6 +2364,7 @@ void QuotaManager::Shutdown() {
   };
 
   // Body of the function
+
   ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContext,
                            "dom::quota::QuotaManager::Shutdown"_ns};
 
@@ -6561,7 +6569,7 @@ RecordTimeDeltaHelper::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mInitializedTime.isSome()) {
-    // Keys for QM_QUOTA_INFO_LOAD_TIME_V0:
+    // Keys for QM_QUOTA_INFO_LOAD_TIME_V0 and QM_SHUTDOWN_TIME_V0:
     // Normal: Normal conditions.
     // WasSuspended: There was a OS sleep so that it was suspended.
     // TimeStampErr1: The recorded start time is unexpectedly greater than the

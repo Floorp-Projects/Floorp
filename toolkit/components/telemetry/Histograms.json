@@ -17296,6 +17296,19 @@
     "alert_emails": ["ttung@mozilla.com", "storage-telemetry@mozilla.com"],
     "description": "True if the first initialization attempt succeeded, keyed by the initialization type."
   },
+  "QM_SHUTDOWN_TIME_V0": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "bug_numbers": [1824075],
+    "kind": "exponential",
+    "keyed": true,
+    "high": 60000,
+    "n_buckets": 60,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["jvarga@mozilla.com", "storage-telemetry@mozilla.com"],
+    "description": "Time (ms) for the QuotaManager to shutdown. Keyed by conditions during shutdown, see RecordTimeDeltaHelper::Run in https://searchfox.org/mozilla-central/source/dom/quota/ActorsParent.cpp"
+  },
   "GV_CONTENT_PROCESS_LIFETIME_MS": {
     "record_in_processes": ["main"],
     "products": ["geckoview_streaming"],
