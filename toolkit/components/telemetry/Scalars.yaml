@@ -9231,6 +9231,22 @@ shopping:
       - 'firefox'
     record_in_processes:
       - main
+  product_page_visits:
+    bug_numbers:
+      - 1848160
+    description: >
+      Counts number of visits to a supported retailer product page while
+      enrolled in either the control or treatment branches of the shopping
+      experiment.
+    expires: "122"
+    kind: uint
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 power:
   cpu_time_bogus_values:
