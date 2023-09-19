@@ -147,13 +147,13 @@ let t =
  ;; Generate a 64-bit random number
  (func $rand_i64 (export "rand_i64") (result i64)
    (local $t i64)
-   (local.set $t (i64.extend_u/i32 (call $rand_i16)))
+   (local.set $t (i64.extend_i32_u (call $rand_i16)))
    (local.set $t (i64.shl (local.get $t) (i64.const 16)))
-   (local.set $t (i64.or  (local.get $t) (i64.extend_u/i32 (call $rand_i16))))
+   (local.set $t (i64.or  (local.get $t) (i64.extend_i32_u (call $rand_i16))))
    (local.set $t (i64.shl (local.get $t) (i64.const 16)))
-   (local.set $t (i64.or  (local.get $t) (i64.extend_u/i32 (call $rand_i16))))
+   (local.set $t (i64.or  (local.get $t) (i64.extend_i32_u (call $rand_i16))))
    (local.set $t (i64.shl (local.get $t) (i64.const 16)))
-   (local.set $t (i64.or  (local.get $t) (i64.extend_u/i32 (call $rand_i16))))
+   (local.set $t (i64.or  (local.get $t) (i64.extend_i32_u (call $rand_i16))))
    (local.get $t)
  )
  ;; Generate a 32-bit random float.  This is something of a kludge in as much
@@ -162,11 +162,11 @@ let t =
  ;; there's somewhat less randomness then there would be if we had allowed
  ;; such denorms in.
  (func $rand_f32 (export "rand_f32") (result f32)
-   (f32.convert_s/i32 (call $rand_i32))
+   (f32.convert_i32_s (call $rand_i32))
  )
  ;; And similarly for 64-bit random floats
  (func $rand_f64 (export "rand_f64") (result f64)
-   (f64.convert_s/i64 (call $rand_i64))
+   (f64.convert_i64_s (call $rand_i64))
  )`
 + (simdEnabled ?
 `;; Generate a random 128-bit vector.

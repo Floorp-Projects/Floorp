@@ -42,5 +42,4 @@ function linearModule(min, max, ops, current_memory, grow_memory) {
 }
 
 // Just grow some memory
-wasmFullPass(linearModule(3,5, [["CM", 3]], "current_memory", "grow_memory"), 3); // Old opcode names
 wasmFullPass(linearModule(3,5, [["CM", 3]], "memory.size", "memory.grow"), 3);    // New opcode names

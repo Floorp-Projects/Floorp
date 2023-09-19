@@ -6,7 +6,7 @@ load(libdir + "wasm-binary.js");
 testCached(`(module
     (func $test (param i64) (result f64)
         local.get 0
-        f64.convert_u/i64
+        f64.convert_i64_u
     )
     (func (export "run") (result i32)
         i64.const 1

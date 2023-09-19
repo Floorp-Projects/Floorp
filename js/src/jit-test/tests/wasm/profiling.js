@@ -76,10 +76,10 @@ if (getBuildConfiguration("arm-simulator")) {
         test(`(module
             (func (export "") (param i32) (result i32)
                 local.get 0
-                i64.extend_s/i32
+                i64.extend_i32_s
                 i64.const 0x1a2b3c4d5e6f
                 i64.${op}
-                i32.wrap/i64
+                i32.wrap_i64
             )
         )`,
         this,

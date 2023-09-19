@@ -11,11 +11,11 @@ let bodies = [
     `,
     `
     f64.const 1.7976931348623157e+308
-    i64.trunc_s/f64
+    i64.trunc_f64_s
     `,
     `
     f32.const 3.40282347e+38
-    i32.trunc_s/f32
+    i32.trunc_f32_s
     `
 ];
 

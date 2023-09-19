@@ -61,13 +61,13 @@ for ( let shared of ['shared', ''] ) {
 
     for (let type of ['i32', 'i64']) {
         let text = (shared) => `(module (memory 1 1 ${shared})
-			     (func (result i32) (${type}.atomic.wait (i32.const 0) (${type}.const 1) (i64.const -1)))
+			     (func (result i32) (memory.atomic.wait${type.slice(1)} (i32.const 0) (${type}.const 1) (i64.const -1)))
 			     (export "" (func 0)))`;
         assertEq(valText(text(shared)), true);
     }
 
     let text = (shared) => `(module (memory 1 1 ${shared})
-	     (func (result i32) (atomic.notify (i32.const 0) (i32.const 1)))
+	     (func (result i32) \(memory.atomic.notify (i32.const 0) (i32.const 1)))
 	     (export "" (func 0)))`;
     assertEq(valText(text(shared)), true);
 
@@ -77,7 +77,7 @@ for ( let shared of ['shared', ''] ) {
 			           ['i64',1,false],['i64',2,false],['i64',4,false],['i64',8,true]])
     {
         let text = `(module (memory 1 1 shared)
-		 (func (result i32) (${type}.atomic.wait align=${align} (i32.const 0) (${type}.const 1) (i64.const -1)))
+		 (func (result i32) (memory.atomic.wait${type.slice(1)} align=${align} (i32.const 0) (${type}.const 1) (i64.const -1)))
 		 (export "" (func 0)))`;
         assertEq(valText(text), good);
     }
@@ -86,7 +86,7 @@ for ( let shared of ['shared', ''] ) {
 
     for (let align of [1, 2, 4, 8]) {
         let text = `(module (memory 1 1 shared)
-		 (func (result i32) (atomic.notify align=${align} (i32.const 0) (i32.const 1)))
+		 (func (result i32) \(memory.atomic.notify align=${align} (i32.const 0) (i32.const 1)))
 		 (export "" (func 0)))`;
         assertEq(valText(text), align == 4);
     }
@@ -465,25 +465,25 @@ for ( let shared of ['shared',''] ) {
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
+					 (memory.atomic.wait32 (local.get 0) (i32.const 1) (i64.const -1)))
 					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
+					 (memory.atomic.wait64 (local.get 0) (i64.const 1) (i64.const -1)))
 					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
+					 (memory.atomic.wait32 (local.get 0) (i32.const 1) (i64.const -1)))
 					(export "" (func 0)))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
+					 (memory.atomic.wait64 (local.get 0) (i64.const 1) (i64.const -1)))
 					(export "" (func 0)))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
@@ -493,7 +493,7 @@ assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 for ( let shared of ['shared',''] ) {
     assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 ${shared})
 					(func (param i32) (result i32)
-					 (atomic.notify (local.get 0) (i32.const 1)))
+					 \(memory.atomic.notify (local.get 0) (i32.const 1)))
 					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
@@ -501,7 +501,7 @@ for ( let shared of ['shared',''] ) {
     for (let addr of [1,2,3,5,6,7]) {
         assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 ${shared})
 					    (func (export "f") (param i32) (result i32)
-					     (atomic.notify (local.get 0) (i32.const 1))))`).exports.f(addr),
+					     \(memory.atomic.notify (local.get 0) (i32.const 1))))`).exports.f(addr),
 		           RuntimeError, unaligned);
     }
 }
@@ -510,7 +510,7 @@ for ( let shared of ['shared',''] ) {
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1)
 					(func (param i32) (result i32)
-					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
+					 (memory.atomic.wait32 (local.get 0) (i32.const 1) (i64.const -1)))
 					(export "" (func 0)))`).exports[""](0),
 		   RuntimeError, /atomic wait on non-shared memory/);
 
@@ -519,7 +519,7 @@ assertErrorMessage(() => wasmEvalText(`(module (memory 1 1)
 assertEq(wasmEvalText(`
 (module (memory 1 1)
   (func (export "f") (param i32) (result i32)
-    (atomic.notify (local.get 0) (i32.const 1))))
+    \(memory.atomic.notify (local.get 0) (i32.const 1))))
 `).exports.f(256), 0);
 
 // Ensure alias analysis works even if atomic and non-atomic accesses are
@@ -542,21 +542,21 @@ var nomem = /memory index out of range/;
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (func (result i32)
-    (atomic.notify (i32.const 0) (i32.const 1))))`)),
+    \(memory.atomic.notify (i32.const 0) (i32.const 1))))`)),
                    WebAssembly.CompileError,
                    nomem);
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (func (result i32)
-    (i32.atomic.wait (i32.const 0) (i32.const 1) (i64.const -1))))`)),
+    (memory.atomic.wait32 (i32.const 0) (i32.const 1) (i64.const -1))))`)),
                    WebAssembly.CompileError,
                    nomem);
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (func (result i32)
-    (i64.atomic.wait (i32.const 0) (i64.const 1) (i64.const -1))))`)),
+    (memory.atomic.wait64 (i32.const 0) (i64.const 1) (i64.const -1))))`)),
                    WebAssembly.CompileError,
                    nomem);
 

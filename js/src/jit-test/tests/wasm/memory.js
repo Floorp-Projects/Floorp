@@ -333,7 +333,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                  )
                  (i32.add
                   (local.get 4)
-                  (i32.reinterpret/f32 (local.get 5))
+                  (i32.reinterpret_f32 (local.get 5))
                  )
                 )
                )

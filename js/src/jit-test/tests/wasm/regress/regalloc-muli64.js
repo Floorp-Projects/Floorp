@@ -2,7 +2,7 @@
 assertEq(wasmEvalText(`(module
     (func
         (result i32)
-        (i32.wrap/i64
+        (i32.wrap_i64
             (i64.mul
                 ;; Conditions: rhs == lhs, rhs is not a constant.
                 (i64.add (i64.const 1) (i64.const 10))
