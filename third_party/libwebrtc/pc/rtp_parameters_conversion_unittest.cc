@@ -15,6 +15,7 @@
 #include <string>
 
 #include "api/media_types.h"
+#include "media/base/codec.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -396,11 +397,8 @@ TEST(RtpParametersConversionTest, ToRtcpFeedbackErrors) {
 }
 
 TEST(RtpParametersConversionTest, ToAudioRtpCodecCapability) {
-  cricket::AudioCodec cricket_codec;
-  cricket_codec.name = "foo";
-  cricket_codec.id = 50;
-  cricket_codec.clockrate = 22222;
-  cricket_codec.channels = 4;
+  cricket::AudioCodec cricket_codec =
+      cricket::CreateAudioCodec(50, "foo", 22222, 4);
   cricket_codec.params["foo"] = "bar";
   cricket_codec.feedback_params.Add(cricket::FeedbackParam("transport-cc"));
   RtpCodecCapability codec = ToRtpCodecCapability(cricket_codec);
@@ -468,11 +466,8 @@ TEST(RtpParametersConversionTest, ToRtpEncodingsWithMultipleStreamParams) {
 }
 
 TEST(RtpParametersConversionTest, ToAudioRtpCodecParameters) {
-  cricket::AudioCodec cricket_codec;
-  cricket_codec.name = "foo";
-  cricket_codec.id = 50;
-  cricket_codec.clockrate = 22222;
-  cricket_codec.channels = 4;
+  cricket::AudioCodec cricket_codec =
+      cricket::CreateAudioCodec(50, "foo", 22222, 4);
   cricket_codec.params["foo"] = "bar";
   cricket_codec.feedback_params.Add(cricket::FeedbackParam("transport-cc"));
   RtpCodecParameters codec = ToRtpCodecParameters(cricket_codec);
@@ -518,11 +513,8 @@ TEST(RtpParametersConversionTest, ToVideoRtpCodecParameters) {
 
 // An unknown feedback param should just be ignored.
 TEST(RtpParametersConversionTest, ToRtpCodecCapabilityUnknownFeedbackParam) {
-  cricket::AudioCodec cricket_codec;
-  cricket_codec.name = "foo";
-  cricket_codec.id = 50;
-  cricket_codec.clockrate = 22222;
-  cricket_codec.channels = 4;
+  cricket::AudioCodec cricket_codec =
+      cricket::CreateAudioCodec(50, "foo", 22222, 4);
   cricket_codec.params["foo"] = "bar";
   cricket_codec.feedback_params.Add({"unknown", "param"});
   cricket_codec.feedback_params.Add(cricket::FeedbackParam("transport-cc"));

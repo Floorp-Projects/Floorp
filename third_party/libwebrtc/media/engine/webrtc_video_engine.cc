@@ -46,6 +46,7 @@
 #include "call/rtp_transport_controller_send_interface.h"
 #include "common_video/frame_counts.h"
 #include "common_video/include/quality_limitation_reason.h"
+#include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/rid_description.h"
 #include "media/base/rtp_utils.h"
@@ -259,10 +260,10 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
         if (IsCodecValidForLowerRange(codec) ||
             payload_type_upper >= kLastDynamicPayloadTypeUpperRange) {
           output_codecs.push_back(
-              VideoCodec::CreateRtxCodec(payload_type_lower++, codec.id));
+              cricket::CreateVideoRtxCodec(payload_type_lower++, codec.id));
         } else {
           output_codecs.push_back(
-              VideoCodec::CreateRtxCodec(payload_type_upper++, codec.id));
+              cricket::CreateVideoRtxCodec(payload_type_upper++, codec.id));
         }
       }
     }
@@ -289,7 +290,7 @@ static bool ValidateCodecFormats(const std::vector<VideoCodec>& codecs) {
     if (!codecs[i].ValidateCodecFormat()) {
       return false;
     }
-    if (codecs[i].GetCodecType() == VideoCodec::CODEC_VIDEO) {
+    if (codecs[i].IsMediaCodec()) {
       has_video = true;
     }
   }
@@ -522,7 +523,7 @@ std::vector<VideoCodecSettings> MapCodecs(
   }
 
   std::vector<VideoCodecSettings> video_codecs;
-  std::map<int, VideoCodec::CodecType> payload_codec_type;
+  std::map<int, Codec::ResiliencyType> payload_codec_type;
   // `rtx_mapping` maps video payload type to rtx payload type.
   std::map<int, int> rtx_mapping;
   std::map<int, int> rtx_time_mapping;
@@ -538,10 +539,10 @@ std::vector<VideoCodecSettings> MapCodecs(
                         << in_codec.ToString();
       return {};
     }
-    payload_codec_type[payload_type] = in_codec.GetCodecType();
+    payload_codec_type[payload_type] = in_codec.GetResiliencyType();
 
-    switch (in_codec.GetCodecType()) {
-      case VideoCodec::CODEC_RED: {
+    switch (in_codec.GetResiliencyType()) {
+      case Codec::ResiliencyType::kRed: {
         if (ulpfec_config.red_payload_type != -1) {
           RTC_LOG(LS_ERROR)
               << "Duplicate RED codec: ignoring PT=" << payload_type
@@ -553,7 +554,7 @@ std::vector<VideoCodecSettings> MapCodecs(
         break;
       }
 
-      case VideoCodec::CODEC_ULPFEC: {
+      case Codec::ResiliencyType::kUlpfec: {
         if (ulpfec_config.ulpfec_payload_type != -1) {
           RTC_LOG(LS_ERROR)
               << "Duplicate ULPFEC codec: ignoring PT=" << payload_type
@@ -565,7 +566,7 @@ std::vector<VideoCodecSettings> MapCodecs(
         break;
       }
 
-      case VideoCodec::CODEC_FLEXFEC: {
+      case Codec::ResiliencyType::kFlexfec: {
         if (flexfec_payload_type) {
           RTC_LOG(LS_ERROR)
               << "Duplicate FLEXFEC codec: ignoring PT=" << payload_type
@@ -577,7 +578,7 @@ std::vector<VideoCodecSettings> MapCodecs(
         break;
       }
 
-      case VideoCodec::CODEC_RTX: {
+      case Codec::ResiliencyType::kRtx: {
         int associated_payload_type;
         if (!in_codec.GetParam(kCodecParamAssociatedPayloadType,
                                &associated_payload_type) ||
@@ -595,7 +596,7 @@ std::vector<VideoCodecSettings> MapCodecs(
         break;
       }
 
-      case VideoCodec::CODEC_VIDEO: {
+      case Codec::ResiliencyType::kNone: {
         video_codecs.emplace_back();
         video_codecs.back().codec = in_codec;
         break;
@@ -617,9 +618,9 @@ std::vector<VideoCodecSettings> MapCodecs(
                         << " which is not in the codec list.";
       return {};
     }
-    const VideoCodec::CodecType associated_codec_type = it->second;
-    if (associated_codec_type != VideoCodec::CODEC_VIDEO &&
-        associated_codec_type != VideoCodec::CODEC_RED) {
+    const Codec::ResiliencyType associated_codec_type = it->second;
+    if (associated_codec_type != Codec::ResiliencyType::kNone &&
+        associated_codec_type != Codec::ResiliencyType::kRed) {
       RTC_LOG(LS_ERROR)
           << "RTX PT=" << rtx_payload_type
           << " not mapped to regular video codec or RED codec (PT="

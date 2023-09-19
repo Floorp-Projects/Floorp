@@ -4675,7 +4675,7 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_FALSE(FindCodecById(engine_.send_codecs(), kUnusedPayloadType1));
   EXPECT_FALSE(FindCodecById(engine_.send_codecs(), kUnusedPayloadType2));
   {
-    cricket::VideoCodec rtx_codec = cricket::VideoCodec::CreateRtxCodec(
+    cricket::VideoCodec rtx_codec = cricket::CreateVideoRtxCodec(
         kUnusedPayloadType1, GetEngineCodec("VP8").id);
     cricket::VideoSendParameters parameters;
     parameters.codecs.push_back(GetEngineCodec("VP8"));
@@ -4683,8 +4683,8 @@ TEST_F(WebRtcVideoChannelTest,
     ASSERT_TRUE(channel_->SetSendParameters(parameters));
   }
   {
-    cricket::VideoCodec rtx_codec = cricket::VideoCodec::CreateRtxCodec(
-        kUnusedPayloadType1, kUnusedPayloadType2);
+    cricket::VideoCodec rtx_codec =
+        cricket::CreateVideoRtxCodec(kUnusedPayloadType1, kUnusedPayloadType2);
     cricket::VideoSendParameters parameters;
     parameters.codecs.push_back(GetEngineCodec("VP8"));
     parameters.codecs.push_back(rtx_codec);
@@ -7323,8 +7323,8 @@ void WebRtcVideoChannelTest::TestReceiveUnsignaledSsrcPacket(
   EXPECT_FALSE(FindCodecById(engine_.recv_codecs(), kRedRtxPayloadType));
 
   // Add a RED RTX codec.
-  VideoCodec red_rtx_codec =
-      VideoCodec::CreateRtxCodec(kRedRtxPayloadType, GetEngineCodec("red").id);
+  VideoCodec red_rtx_codec = cricket::CreateVideoRtxCodec(
+      kRedRtxPayloadType, GetEngineCodec("red").id);
   recv_parameters_.codecs.push_back(red_rtx_codec);
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
 

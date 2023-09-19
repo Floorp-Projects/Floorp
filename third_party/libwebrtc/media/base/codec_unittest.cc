@@ -29,8 +29,8 @@ using cricket::VideoCodec;
 class TestCodec : public Codec {
  public:
   TestCodec(int id, const std::string& name, int clockrate)
-      : Codec(id, name, clockrate) {}
-  TestCodec() : Codec() {}
+      : Codec(Type::kAudio, id, name, clockrate) {}
+  TestCodec() : Codec(Type::kAudio) {}
   TestCodec(const TestCodec& c) = default;
   TestCodec& operator=(const TestCodec& c) = default;
 };
@@ -74,6 +74,7 @@ TEST(CodecTest, TestAudioCodecOperators) {
   AudioCodec c2(96, "x", 44100, 20000, 2);
   AudioCodec c3(96, "A", 48000, 20000, 2);
   AudioCodec c4(96, "A", 44100, 10000, 2);
+  c4.bitrate = 10000;
   AudioCodec c5(96, "A", 44100, 20000, 1);
   EXPECT_NE(c0, c1);
   EXPECT_NE(c0, c2);
@@ -180,17 +181,6 @@ TEST(CodecTest, TestVideoCodecOperators) {
   EXPECT_TRUE(c12 != c10);
   EXPECT_TRUE(c12 != c11);
   EXPECT_TRUE(c13 == c10);
-}
-
-TEST(CodecTest, TestVideoCodecIntersectPacketization) {
-  VideoCodec c1;
-  c1.packetization = "raw";
-  VideoCodec c2;
-  c2.packetization = "raw";
-  VideoCodec c3;
-
-  EXPECT_EQ(VideoCodec::IntersectPacketization(c1, c2), "raw");
-  EXPECT_EQ(VideoCodec::IntersectPacketization(c1, c3), absl::nullopt);
 }
 
 TEST(CodecTest, TestVideoCodecEqualsWithDifferentPacketization) {
@@ -351,7 +341,7 @@ TEST(CodecTest, TestH264CodecMatches) {
 }
 
 TEST(CodecTest, TestSetParamGetParamAndRemoveParam) {
-  AudioCodec codec;
+  AudioCodec codec = cricket::CreateAudioCodec(0, "foo", 22222, 2);
   codec.SetParam("a", "1");
   codec.SetParam("b", "x");
 
@@ -397,17 +387,18 @@ TEST(CodecTest, TestGetCodecType) {
   const VideoCodec ulpfec_codec(96, "ulpFeC");
   const VideoCodec flexfec_codec(96, "FlExFeC-03");
   const VideoCodec red_codec(96, "ReD");
-  EXPECT_EQ(VideoCodec::CODEC_VIDEO, codec.GetCodecType());
-  EXPECT_EQ(VideoCodec::CODEC_RTX, rtx_codec.GetCodecType());
-  EXPECT_EQ(VideoCodec::CODEC_ULPFEC, ulpfec_codec.GetCodecType());
-  EXPECT_EQ(VideoCodec::CODEC_FLEXFEC, flexfec_codec.GetCodecType());
-  EXPECT_EQ(VideoCodec::CODEC_RED, red_codec.GetCodecType());
+  EXPECT_TRUE(codec.IsMediaCodec());
+  EXPECT_EQ(codec.GetResiliencyType(), Codec::ResiliencyType::kNone);
+  EXPECT_EQ(rtx_codec.GetResiliencyType(), Codec::ResiliencyType::kRtx);
+  EXPECT_EQ(ulpfec_codec.GetResiliencyType(), Codec::ResiliencyType::kUlpfec);
+  EXPECT_EQ(flexfec_codec.GetResiliencyType(), Codec::ResiliencyType::kFlexfec);
+  EXPECT_EQ(red_codec.GetResiliencyType(), Codec::ResiliencyType::kRed);
 }
 
 TEST(CodecTest, TestCreateRtxCodec) {
-  VideoCodec rtx_codec = VideoCodec::CreateRtxCodec(96, 120);
+  VideoCodec rtx_codec = cricket::CreateVideoRtxCodec(96, 120);
   EXPECT_EQ(96, rtx_codec.id);
-  EXPECT_EQ(VideoCodec::CODEC_RTX, rtx_codec.GetCodecType());
+  EXPECT_EQ(rtx_codec.GetResiliencyType(), Codec::ResiliencyType::kRtx);
   int associated_payload_type;
   ASSERT_TRUE(rtx_codec.GetParam(kCodecParamAssociatedPayloadType,
                                  &associated_payload_type));
