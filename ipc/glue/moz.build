@@ -105,13 +105,13 @@ if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "CrossProcessSemaphore_windows.cpp",
     ]
-elif CONFIG["OS_ARCH"] != "Darwin":
-    UNIFIED_SOURCES += [
-        "CrossProcessSemaphore_posix.cpp",
+elif CONFIG["OS_ARCH"] == "Darwin":
+    SOURCES += [
+        "CrossProcessSemaphore_mach.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        "CrossProcessSemaphore_unimplemented.cpp",
+        "CrossProcessSemaphore_posix.cpp",
     ]
 
 if CONFIG["OS_ARCH"] == "Darwin":
