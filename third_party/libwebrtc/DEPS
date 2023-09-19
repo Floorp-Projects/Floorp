@@ -402,6 +402,17 @@ deps = {
       'condition': 'checkout_android',
   },
 
+  'src/third_party/android_toolchain': {
+    'packages': [
+      {
+        'package': 'chromium/third_party/android_toolchain/r23c/android_toolchain',
+        'version': 'version:2@r23c.cr0',
+      },
+    ],
+    'condition': 'checkout_android',
+    'dep_type': 'cipd',
+  },
+
   'src/third_party/androidx': {
     'packages': [
       {
