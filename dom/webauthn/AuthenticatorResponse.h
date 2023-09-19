@@ -38,9 +38,11 @@ class AuthenticatorResponse : public nsISupports, public nsWrapperCache {
 
   void SetClientDataJSON(const nsCString& aBuffer);
 
+ protected:
+  nsCString mClientDataJSON;
+
  private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
-  nsCString mClientDataJSON;
   JS::Heap<JSObject*> mClientDataJSONCachedObj;
 };
 

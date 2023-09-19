@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Base64.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -113,6 +114,57 @@ void AuthenticatorAssertionResponse::GetUserHandle(
 void AuthenticatorAssertionResponse::SetUserHandle(
     const nsTArray<uint8_t>& aBuffer) {
   mUserHandle.Assign(aBuffer);
+}
+
+void AuthenticatorAssertionResponse::ToJSON(
+    AuthenticatorAssertionResponseJSON& aJSON, ErrorResult& aError) {
+  nsAutoCString clientDataJSONBase64;
+  nsresult rv = Base64URLEncode(
+      mClientDataJSON.Length(),
+      reinterpret_cast<const uint8_t*>(mClientDataJSON.get()),
+      mozilla::Base64URLEncodePaddingPolicy::Omit, clientDataJSONBase64);
+  // This will only fail if the length is so long that it overflows 32-bits
+  // when calculating the encoded size.
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("clientDataJSON too long");
+    return;
+  }
+  aJSON.mClientDataJSON.Assign(NS_ConvertUTF8toUTF16(clientDataJSONBase64));
+
+  nsAutoCString authenticatorDataBase64;
+  rv = Base64URLEncode(
+      mAuthenticatorData.Length(), mAuthenticatorData.Elements(),
+      mozilla::Base64URLEncodePaddingPolicy::Omit, authenticatorDataBase64);
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("authenticatorData too long");
+    return;
+  }
+  aJSON.mAuthenticatorData.Assign(
+      NS_ConvertUTF8toUTF16(authenticatorDataBase64));
+
+  nsAutoCString signatureBase64;
+  rv = Base64URLEncode(mSignature.Length(), mSignature.Elements(),
+                       mozilla::Base64URLEncodePaddingPolicy::Omit,
+                       signatureBase64);
+  if (NS_FAILED(rv)) {
+    aError.ThrowDataError("signature too long");
+    return;
+  }
+  aJSON.mSignature.Assign(NS_ConvertUTF8toUTF16(signatureBase64));
+
+  if (!mUserHandle.IsEmpty()) {
+    nsAutoCString userHandleBase64;
+    rv = Base64URLEncode(mUserHandle.Length(), mUserHandle.Elements(),
+                         mozilla::Base64URLEncodePaddingPolicy::Omit,
+                         userHandleBase64);
+    if (NS_FAILED(rv)) {
+      aError.ThrowDataError("userHandle too long");
+      return;
+    }
+    aJSON.mUserHandle.Construct(NS_ConvertUTF8toUTF16(userHandleBase64));
+  }
+
+  // attestationObject is not currently supported on assertion responses
 }
 
 }  // namespace mozilla::dom
