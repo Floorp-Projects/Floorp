@@ -7,11 +7,16 @@
 #ifndef mozilla_glean_GleanCustomDistribution_h
 #define mozilla_glean_GleanCustomDistribution_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/glean/bindings/DistributionData.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsTArray.h"
+
+namespace mozilla::dom {
+struct GleanDistributionData;
+}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -65,12 +70,19 @@ class CustomDistributionMetric {
 };
 }  // namespace impl
 
-class GleanCustomDistribution final : public nsIGleanCustomDistribution {
+class GleanCustomDistribution final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANCUSTOMDISTRIBUTION
+  explicit GleanCustomDistribution(uint64_t aId, nsISupports* aParent)
+      : GleanMetric(aParent), mCustomDist(aId) {}
 
-  explicit GleanCustomDistribution(uint64_t aId) : mCustomDist(aId){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void AccumulateSamples(const dom::Sequence<int64_t>& aSamples);
+
+  void TestGetValue(const nsACString& aPingName,
+                    dom::Nullable<dom::GleanDistributionData>& aRetval,
+                    ErrorResult& aRv);
 
  private:
   virtual ~GleanCustomDistribution() = default;

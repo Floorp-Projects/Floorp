@@ -22,9 +22,11 @@ class Glean final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Glean)
 
+  explicit Glean(nsIGlobalObject* aGlobal) : mParent(aGlobal) {}
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
-  nsISupports* GetParentObject() { return nullptr; }
+  nsISupports* GetParentObject() { return mParent; }
 
   static bool DefineGlean(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
@@ -42,6 +44,9 @@ class Glean final : public nsISupports, public nsWrapperCache {
    * Allows us to test Artifact Build support flexibly.
    */
   static void TestSetRuntimeMetricsComprehensive(bool aIsComprehensive);
+
+ private:
+  nsCOMPtr<nsISupports> mParent;
 
  protected:
   virtual ~Glean() = default;

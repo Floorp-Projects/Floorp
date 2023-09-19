@@ -42,86 +42,86 @@ static_assert(2 < UINT32_MAX, "Too many metric categories generated.");
 static_assert(23 < 33554432, "Too many metrics generated. Need room for 2 signal bits.");
 static_assert(19 < 32, "Too many different metric types.");
 
-already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
+already_AddRefed<GleanMetric> NewMetricFromId(uint32_t id, nsISupports* aParent) {
   uint32_t typeId = GLEAN_TYPE_ID(id);
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
   switch (typeId) {
     case 1: /* boolean */
     {
-      return MakeAndAddRef<GleanBoolean>(metricId);
+      return MakeAndAddRef<GleanBoolean>(metricId, aParent);
     }
     case 2: /* counter */
     {
-      return MakeAndAddRef<GleanCounter>(metricId);
+      return MakeAndAddRef<GleanCounter>(metricId, aParent);
     }
     case 3: /* custom_distribution */
     {
-      return MakeAndAddRef<GleanCustomDistribution>(metricId);
+      return MakeAndAddRef<GleanCustomDistribution>(metricId, aParent);
     }
     case 4: /* labeled_boolean */
     {
-      return MakeAndAddRef<GleanLabeled>(metricId, 4);
+      return MakeAndAddRef<GleanLabeled>(metricId, 4, aParent);
     }
     case 5: /* labeled_counter */
     {
-      return MakeAndAddRef<GleanLabeled>(metricId, 5);
+      return MakeAndAddRef<GleanLabeled>(metricId, 5, aParent);
     }
     case 6: /* labeled_string */
     {
-      return MakeAndAddRef<GleanLabeled>(metricId, 6);
+      return MakeAndAddRef<GleanLabeled>(metricId, 6, aParent);
     }
     case 7: /* memory_distribution */
     {
-      return MakeAndAddRef<GleanMemoryDistribution>(metricId);
+      return MakeAndAddRef<GleanMemoryDistribution>(metricId, aParent);
     }
     case 8: /* string_list */
     {
-      return MakeAndAddRef<GleanStringList>(metricId);
+      return MakeAndAddRef<GleanStringList>(metricId, aParent);
     }
     case 9: /* string */
     {
-      return MakeAndAddRef<GleanString>(metricId);
+      return MakeAndAddRef<GleanString>(metricId, aParent);
     }
     case 10: /* text */
     {
-      return MakeAndAddRef<GleanText>(metricId);
+      return MakeAndAddRef<GleanText>(metricId, aParent);
     }
     case 11: /* timespan */
     {
-      return MakeAndAddRef<GleanTimespan>(metricId);
+      return MakeAndAddRef<GleanTimespan>(metricId, aParent);
     }
     case 12: /* timing_distribution */
     {
-      return MakeAndAddRef<GleanTimingDistribution>(metricId);
+      return MakeAndAddRef<GleanTimingDistribution>(metricId, aParent);
     }
     case 13: /* datetime */
     {
-      return MakeAndAddRef<GleanDatetime>(metricId);
+      return MakeAndAddRef<GleanDatetime>(metricId, aParent);
     }
     case 14: /* event */
     {
-      return MakeAndAddRef<GleanEvent>(metricId);
+      return MakeAndAddRef<GleanEvent>(metricId, aParent);
     }
     case 15: /* denominator */
     {
-      return MakeAndAddRef<GleanDenominator>(metricId);
+      return MakeAndAddRef<GleanDenominator>(metricId, aParent);
     }
     case 16: /* quantity */
     {
-      return MakeAndAddRef<GleanQuantity>(metricId);
+      return MakeAndAddRef<GleanQuantity>(metricId, aParent);
     }
     case 17: /* rate */
     {
-      return MakeAndAddRef<GleanRate>(metricId);
+      return MakeAndAddRef<GleanRate>(metricId, aParent);
     }
     case 18: /* numerator */
     {
-      return MakeAndAddRef<GleanNumerator>(metricId);
+      return MakeAndAddRef<GleanNumerator>(metricId, aParent);
     }
     case 19: /* uuid */
     {
-      return MakeAndAddRef<GleanUuid>(metricId);
+      return MakeAndAddRef<GleanUuid>(metricId, aParent);
     }
     default:
     MOZ_ASSERT_UNREACHABLE("Invalid type ID reached when trying to instantiate a new metric");
@@ -140,22 +140,26 @@ already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
  * @param aSubmetricId - an outparam which is assigned the submetric's SDK-generated submetric id.
  *                       Used only by GIFFT.
  */
-already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
+already_AddRefed<GleanMetric> NewSubMetricFromIds(uint32_t aParentTypeId,
+                                           uint32_t aParentMetricId,
+                                           const nsACString& aLabel,
+                                           uint32_t* aSubmetricId,
+                                           nsISupports* aParent) {
   switch (aParentTypeId) {
     case 4: { /* labeled_boolean */
       auto id = impl::fog_labeled_boolean_get(aParentMetricId, &aLabel);
       *aSubmetricId = id;
-      return MakeAndAddRef<GleanBoolean>(id);
+      return MakeAndAddRef<GleanBoolean>(id, aParent);
     }
     case 5: { /* labeled_counter */
       auto id = impl::fog_labeled_counter_get(aParentMetricId, &aLabel);
       *aSubmetricId = id;
-      return MakeAndAddRef<GleanCounter>(id);
+      return MakeAndAddRef<GleanCounter>(id, aParent);
     }
     case 6: { /* labeled_string */
       auto id = impl::fog_labeled_string_get(aParentMetricId, &aLabel);
       *aSubmetricId = id;
-      return MakeAndAddRef<GleanString>(id);
+      return MakeAndAddRef<GleanString>(id, aParent);
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Invalid type ID for submetric.");

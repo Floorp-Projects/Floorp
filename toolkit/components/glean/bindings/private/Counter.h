@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanCounter_h
 #define mozilla_glean_GleanCounter_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -52,12 +53,18 @@ class CounterMetric {
 };
 }  // namespace impl
 
-class GleanCounter final : public nsIGleanCounter {
+class GleanCounter final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANCOUNTER
+  explicit GleanCounter(uint32_t id, nsISupports* aParent)
+      : GleanMetric(aParent), mCounter(id) {}
 
-  explicit GleanCounter(uint32_t id) : mCounter(id){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void Add(int32_t aAmount);
+
+  dom::Nullable<int32_t> TestGetValue(const nsACString& aPingName,
+                                      ErrorResult& aRv);
 
  private:
   virtual ~GleanCounter() = default;

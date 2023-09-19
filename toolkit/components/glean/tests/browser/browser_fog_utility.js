@@ -13,7 +13,7 @@ add_task(async () => {
       Services.fog.testResetFOG();
 
       is(
-        undefined,
+        null,
         Glean.testOnlyIpc.aCounter.testGetValue(),
         "Ensure we begin without value."
       );

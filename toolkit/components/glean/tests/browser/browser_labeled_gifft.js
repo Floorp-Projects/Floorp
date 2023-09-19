@@ -33,7 +33,7 @@ add_task(async () => {
   Glean.testOnlyIpc.aLabeledCounter["1".repeat(72)].add(3);
   Assert.throws(
     () => Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Can't get the value when you're error'd"
   );
 
