@@ -36,19 +36,29 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
     let region, title;
     switch (message.name) {
       case "Screenshots:CancelScreenshot":
-        await ScreenshotsUtils.closePanel(browser);
         let { reason } = message.data;
-        ScreenshotsUtils.recordTelemetryEvent("canceled", reason, {});
+        ScreenshotsUtils.cancel(browser, reason);
         break;
       case "Screenshots:CopyScreenshot":
-        await ScreenshotsUtils.closePanel(browser);
+        ScreenshotsUtils.closePanel(browser);
         ({ region } = message.data);
-        ScreenshotsUtils.copyScreenshotFromRegion(region, browser);
+        await ScreenshotsUtils.copyScreenshotFromRegion(region, browser);
+        ScreenshotsUtils.exit(browser);
         break;
       case "Screenshots:DownloadScreenshot":
-        await ScreenshotsUtils.closePanel(browser);
+        ScreenshotsUtils.closePanel(browser);
         ({ title, region } = message.data);
-        ScreenshotsUtils.downloadScreenshotFromRegion(title, region, browser);
+        await ScreenshotsUtils.downloadScreenshotFromRegion(
+          title,
+          region,
+          browser
+        );
+        ScreenshotsUtils.exit(browser);
+        break;
+      case "Screenshots:OverlaySelection":
+        ScreenshotsUtils.setPerBrowserState(browser, {
+          hasOverlaySelection: message.data.hasSelection,
+        });
         break;
       case "Screenshots:ShowPanel":
         ScreenshotsUtils.openPanel(browser);
@@ -63,13 +73,41 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
     // When restoring a crashed tab the browser is null
     let browser = this.browsingContext.topFrameElement;
     if (browser) {
-      ScreenshotsUtils.closePanel(browser);
+      ScreenshotsUtils.exit(browser);
     }
   }
 }
 
+export const UIPhases = {
+  CLOSED: 0, // nothing showing
+  INITIAL: 1, // panel and overlay showing
+  OVERLAYSELECTION: 2, // something selected in the overlay
+  PREVIEW: 3, // preview dialog showing
+};
+
 export var ScreenshotsUtils = {
+  browserToScreenshotsState: new WeakMap(),
   initialized: false,
+
+  /**
+   * Figures out which of various states the screenshots UI is in, for the given browser.
+   * @param browser The selected browser
+   * @returns One of the `UIPhases` constants
+   */
+  getUIPhase(browser) {
+    let perBrowserState = this.browserToScreenshotsState.get(browser);
+    if (perBrowserState?.previewDialog) {
+      return UIPhases.PREVIEW;
+    }
+    const buttonsPanel = this.panelForBrowser(browser);
+    if (buttonsPanel && buttonsPanel.state !== "closed") {
+      return UIPhases.INITIAL;
+    }
+    if (perBrowserState?.hasOverlaySelection) {
+      return UIPhases.OVERLAYSELECTION;
+    }
+    return UIPhases.CLOSED;
+  },
 
   initialize() {
     if (!this.initialized) {
@@ -100,10 +138,10 @@ export var ScreenshotsUtils = {
   },
 
   handleEvent(event) {
-    // We need to add back Escape to hide behavior as we have set noautohide="true"
+    // Escape should cancel and exit
     if (event.type === "keydown" && event.key === "Escape") {
-      this.closePanel(event.view.gBrowser.selectedBrowser, true);
-      this.recordTelemetryEvent("canceled", "escape", {});
+      let browser = event.view.gBrowser.selectedBrowser;
+      this.cancel(browser, "escape");
     }
   },
 
@@ -112,34 +150,27 @@ export var ScreenshotsUtils = {
     let browser = gBrowser.selectedBrowser;
 
     switch (topic) {
-      case "menuitem-screenshot":
-        let success = this.closeDialogBox(browser);
-        if (!success || data === "retry") {
-          // only toggle the buttons if no dialog box is found because
-          // if dialog box is found then the buttons are hidden and we return early
-          // else no dialog box is found and we need to toggle the buttons
-          // or if retry because the dialog box was closed and we need to show the panel
-          this.togglePanelAndOverlay(browser, data);
+      case "menuitem-screenshot": {
+        const uiPhase = this.getUIPhase(browser);
+        if (uiPhase !== UIPhases.CLOSED) {
+          // toggle from already-open to closed
+          this.cancel(browser, data);
+          return;
         }
+        this.start(browser, data);
         break;
-      case "screenshots-take-screenshot":
-        // need to close the preview because screenshot was taken
-        this.closePanel(browser, true);
+      }
+      case "screenshots-take-screenshot": {
+        this.closePanel(browser);
+        this.closeOverlay(browser);
 
         // init UI as a tab dialog box
-        let dialogBox = gBrowser.getTabDialogBox(browser);
-
-        let { dialog } = dialogBox.open(
-          `chrome://browser/content/screenshots/screenshots.html?browsingContextId=${browser.browsingContext.id}`,
-          {
-            features: "resizable=no",
-            sizeTo: "available",
-            allowDuplicateDialogs: false,
-          }
-        );
-        this.doScreenshot(browser, dialog, data);
+        this.openPreviewDialog(browser).then(dialog => {
+          this.doScreenshot(browser, dialog, data);
+        });
+        break;
+      }
     }
-    return null;
   },
 
   /**
@@ -172,20 +203,132 @@ export var ScreenshotsUtils = {
   },
 
   /**
-   * Returns the buttons panel. If the panel doesn't exist, create the panel.
+   * Show the Screenshots UI and start the capture flow
+   * @param browser The current browser.
+   * @param reason [string] Optional reason string passed along when recording telemetry events
+   */
+  start(browser, reason = "") {
+    const uiPhase = this.getUIPhase(browser);
+    switch (uiPhase) {
+      case UIPhases.CLOSED:
+        this.showPanelAndOverlay(browser, reason);
+        break;
+      case UIPhases.INITIAL:
+        // nothing to do, panel & overlay are already open
+        break;
+      case UIPhases.PREVIEW: {
+        this.closeDialogBox(browser);
+        this.showPanelAndOverlay(browser, reason);
+        break;
+      }
+    }
+  },
+
+  /**
+   * Exit the Screenshots UI for the given browser
+   * Closes any of open UI elements (preview dialog, panel, overlay) and cleans up internal state.
+   * @param browser The current browser.
+   */
+  exit(browser) {
+    this.closeDialogBox(browser);
+    this.closePanel(browser);
+    this.closeOverlay(browser);
+    this.browserToScreenshotsState.delete(browser);
+    if (Cu.isInAutomation) {
+      Services.obs.notifyObservers(null, "screenshots-exit");
+    }
+  },
+
+  /**
+   * Cancel/abort the screenshots operation for the given browser
+   * @param browser The current browser.
+   */
+  cancel(browser, reason) {
+    this.recordTelemetryEvent("canceled", reason, {});
+    this.exit(browser);
+  },
+
+  /**
+   * Update internal UI state associated with the given browser
+   * @param browser The current browser.
+   * @param nameValues {object} An object with one or more named property values
+   */
+  setPerBrowserState(browser, nameValues = {}) {
+    if (!this.browserToScreenshotsState.has(browser)) {
+      // we should really have this state already, created when the preview dialog was opened
+      this.browserToScreenshotsState.set(browser, {});
+    }
+    let perBrowserState = this.browserToScreenshotsState.get(browser);
+    Object.assign(perBrowserState, nameValues);
+  },
+
+  /**
+   * Set a flag so we don't try to exit when preview dialog next closes.
+   * @param browser The current browser.
+   * @param reason [string] Optional reason string passed along when recording telemetry events
+   */
+  scheduleRetry(browser, reason) {
+    let perBrowserState = this.browserToScreenshotsState.get(browser);
+    if (!perBrowserState?.closedPromise) {
+      console.warn(
+        "Expected perBrowserState with a closedPromise for the preview dialog"
+      );
+      return;
+    }
+    this.setPerBrowserState(browser, { exitOnPreviewClose: false });
+    perBrowserState?.closedPromise.then(() => {
+      this.start(browser, reason);
+    });
+  },
+
+  /**
+   * Open the tab dialog for preview
+   * @param browser The current browser
+   */
+  async openPreviewDialog(browser) {
+    let dialogBox = browser.ownerGlobal.gBrowser.getTabDialogBox(browser);
+    let { dialog, closedPromise } = await dialogBox.open(
+      `chrome://browser/content/screenshots/screenshots.html?browsingContextId=${browser.browsingContext.id}`,
+      {
+        features: "resizable=no",
+        sizeTo: "available",
+        allowDuplicateDialogs: false,
+      },
+      browser
+    );
+    this.setPerBrowserState(browser, {
+      previewDialog: dialog,
+      exitOnPreviewClose: true,
+      closedPromise: closedPromise.finally(() => {
+        this.onDialogClose(browser);
+      }),
+    });
+    return dialog;
+  },
+
+  /**
+   * Returns the buttons panel for the given browser
    * @param browser The current browser
    * @returns The buttons panel
    */
   panelForBrowser(browser) {
-    let doc = browser.ownerDocument;
-    let buttonsPanel = doc.getElementById("screenshotsPagePanel");
+    return browser.ownerDocument.getElementById("screenshotsPagePanel");
+  },
+
+  /**
+   * Create the buttons container from its template, for this browser
+   * @param browser The current browser
+   * @returns The buttons panel
+   */
+  createPanelForBrowser(browser) {
+    let buttonsPanel = this.panelForBrowser(browser);
     if (!buttonsPanel) {
+      let doc = browser.ownerDocument;
       let template = doc.getElementById("screenshotsPagePanelTemplate");
       let clone = template.content.cloneNode(true);
       template.replaceWith(clone);
-      buttonsPanel = this.panelForBrowser(browser);
     }
-    return buttonsPanel;
+    return this.panelForBrowser(browser);
   },
 
   /**
@@ -213,23 +356,18 @@ export var ScreenshotsUtils = {
   },
 
   /**
-   * Close the panel and call child actor to close the overlay
+   * Close the panel
    * @param browser The current browser
-   * @param {bool} closeOverlay Whether or not to
-   * send a message to the child to close the overly.
-   * Defaults to false. Will be false when called from didDestroy.
    */
-  async closePanel(browser, closeOverlay = false) {
+  closePanel(browser) {
     let buttonsPanel = this.panelForBrowser(browser);
-    if (buttonsPanel && buttonsPanel.state !== "closed") {
+    if (!buttonsPanel) {
+      return;
+    }
+    if (buttonsPanel.state !== "closed") {
       buttonsPanel.hidePopup();
     }
     buttonsPanel.ownerDocument.removeEventListener("keydown", this);
-
-    if (closeOverlay) {
-      let actor = this.getActor(browser);
-      await actor.sendQuery("Screenshots:HideOverlay");
-    }
   },
 
   /**
@@ -238,21 +376,28 @@ export var ScreenshotsUtils = {
    * Otherwise create or display the buttons.
    * @param browser The current browser.
    */
-  async togglePanelAndOverlay(browser, data) {
-    let buttonsPanel = this.panelForBrowser(browser);
-    let isOverlayShowing = await this.getActor(browser).sendQuery(
-      "Screenshots:isOverlayShowing"
-    );
-
-    data = data === "retry" ? "preview_retry" : data;
-    if (buttonsPanel && (isOverlayShowing || buttonsPanel.state !== "closed")) {
-      this.recordTelemetryEvent("canceled", data, {});
-      return this.closePanel(browser, true);
-    }
+  async showPanelAndOverlay(browser, data) {
     let actor = this.getActor(browser);
     actor.sendAsyncMessage("Screenshots:ShowOverlay");
+    this.createPanelForBrowser(browser);
     this.recordTelemetryEvent("started", data, {});
-    return this.openPanel(browser);
+    await this.openPanel(browser);
+  },
+
+  /**
+   * Close the overlay UI, and clear out internal state if there was an overlay selection
+   * The overlay lives in the child document; so although closing is actually async, we assume success.
+   * @param browser The current browser.
+   */
+  closeOverlay(browser) {
+    let actor = this.getActor(browser);
+    actor?.sendAsyncMessage("Screenshots:HideOverlay");
+
+    if (this.browserToScreenshotsState.has(browser)) {
+      this.setPerBrowserState(browser, {
+        hasOverlaySelection: false,
+      });
+    }
   },
 
   /**
@@ -288,12 +433,28 @@ export var ScreenshotsUtils = {
    * @param browser The selected browser
    */
   closeDialogBox(browser) {
-    let dialog = this.getDialog(browser);
-    if (dialog) {
-      dialog.close();
+    let perBrowserState = this.browserToScreenshotsState.get(browser);
+    if (perBrowserState?.previewDialog) {
+      perBrowserState.previewDialog.close();
       return true;
     }
     return false;
+  },
+
+  /**
+   * Callback fired when the preview dialog window closes
+   * Will exit the screenshots UI if the `exitOnPreviewClose` flag is set for this browser
+   * @param browser The associated browser
+   */
+  onDialogClose(browser) {
+    let perBrowserState = this.browserToScreenshotsState.get(browser);
+    if (!perBrowserState) {
+      return;
+    }
+    delete perBrowserState.previewDialog;
+    if (perBrowserState?.exitOnPreviewClose) {
+      this.exit(browser);
+    }
   },
 
   /**
@@ -490,11 +651,9 @@ export var ScreenshotsUtils = {
    */
   async copyScreenshotFromRegion(region, browser) {
     let { canvas, snapshot } = await this.createCanvas(region, browser);
-
     let url = canvas.toDataURL();
 
     this.copyScreenshot(url, browser);
-
     snapshot.close();
 
     this.recordTelemetryEvent("copy", "overlay_copy", {});
@@ -548,11 +707,9 @@ export var ScreenshotsUtils = {
    */
   async downloadScreenshotFromRegion(title, region, browser) {
     let { canvas, snapshot } = await this.createCanvas(region, browser);
-
     let dataUrl = canvas.toDataURL();
 
     await this.downloadScreenshot(title, dataUrl, browser);
-
     snapshot.close();
 
     this.recordTelemetryEvent("download", "overlay_download", {});

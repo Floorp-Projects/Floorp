@@ -120,6 +120,7 @@ add_task(async function test_download_without_filepicker() {
         dialog._frame.contentDocument.getElementById("download");
       ok(downloadButton, "Got the download button");
 
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
       // click download button on dialog box
       downloadButton.click();
 
@@ -129,7 +130,7 @@ add_task(async function test_download_without_filepicker() {
       ok(download.succeeded, "Download should succeed");
 
       await publicDownloads.removeFinished();
-
+      await screenshotExit;
       await assertScreenshotsEvents(SCREENSHOTS_EVENTS);
     }
   );
@@ -168,7 +169,7 @@ add_task(async function test_download_with_filepicker() {
       await helper.dragOverlay(10, 10, 500, 500);
 
       let filePicker = waitForFilePicker();
-
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
       helper.clickDownloadButton();
 
       await filePicker;
@@ -178,8 +179,8 @@ add_task(async function test_download_with_filepicker() {
       let download = await downloadFinishedPromise;
 
       ok(download.succeeded, "Download should succeed");
-
       await publicDownloads.removeFinished();
+      await screenshotExit;
     }
   );
 });

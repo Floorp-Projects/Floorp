@@ -440,6 +440,11 @@ export class ScreenshotsOverlay {
         reason: "overlay_retry",
       });
     }
+    if (newState !== this.#state) {
+      this.#dispatchEvent("Screenshots:OverlaySelection", {
+        hasSelection: newState == "selected",
+      });
+    }
     this.#state = newState;
 
     switch (this.#state) {

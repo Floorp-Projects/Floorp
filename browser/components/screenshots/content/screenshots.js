@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(this, {
 class ScreenshotsUI extends HTMLElement {
   constructor() {
     super();
+    // we get passed the <browser> as a param via TabDialogBox.open()
+    this.openerBrowser = window.arguments[0];
   }
   async connectedCallback() {
     this.initialize();
@@ -67,11 +69,8 @@ class ScreenshotsUI extends HTMLElement {
       event.type == "click" &&
       event.currentTarget == this._retryButton
     ) {
-      Services.obs.notifyObservers(
-        window.parent.ownerGlobal,
-        "menuitem-screenshot",
-        "retry"
-      );
+      ScreenshotsUtils.scheduleRetry(this.openerBrowser, "preview_retry");
+      this.close();
     }
   }
 
@@ -79,23 +78,16 @@ class ScreenshotsUI extends HTMLElement {
     await ScreenshotsUtils.downloadScreenshot(
       null,
       dataUrl,
-      window.parent.ownerGlobal.gBrowser.selectedBrowser
+      this.openerBrowser
     );
-
-    this.close();
-
     ScreenshotsUtils.recordTelemetryEvent("download", "preview_download", {});
+    this.close();
   }
 
   saveToClipboard(dataUrl) {
-    ScreenshotsUtils.copyScreenshot(
-      dataUrl,
-      window.parent.ownerGlobal.gBrowser.selectedBrowser
-    );
-
-    this.close();
-
+    ScreenshotsUtils.copyScreenshot(dataUrl, this.openerBrowser);
     ScreenshotsUtils.recordTelemetryEvent("copy", "preview_copy", {});
+    this.close();
   }
 }
 customElements.define("screenshots-ui", ScreenshotsUI);
