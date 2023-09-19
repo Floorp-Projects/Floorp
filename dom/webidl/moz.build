@@ -587,6 +587,7 @@ WEBIDL_FILES = [
     "GeometryUtils.webidl",
     "GetUserMediaRequest.webidl",
     "Glean.webidl",
+    "GleanMetrics.webidl",
     "GleanPings.webidl",
     "Grid.webidl",
     "Headers.webidl",

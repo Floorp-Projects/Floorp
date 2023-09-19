@@ -1,28 +1,19 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_glean_Ping_h
-#define mozilla_glean_Ping_h
+#include "nsISupports.idl"
 
-#include "mozilla/DataMutex.h"
-#include "mozilla/glean/fog_ffi_generated.h"
-#include "mozilla/Maybe.h"
-#include "nsIGleanPing.h"
-#include "nsString.h"
+[scriptable, function, uuid(e5447f62-4b03-497c-81e9-6ab683d20380)]
+interface nsIGleanPingTestCallback : nsISupports
+{
+  void call(in ACString aReason);
+};
 
-namespace mozilla::glean {
-
-typedef std::function<void(const nsACString& aReason)> PingTestCallback;
-
-namespace impl {
-
-class Ping {
- public:
-  constexpr explicit Ping(uint32_t aId) : mId(aId) {}
-
+[scriptable, uuid(5223a48b-687d-47ff-a629-fd4a72d1ecfa)]
+interface nsIGleanPing : nsISupports
+{
   /**
    * Collect and submit the ping for eventual upload.
    *
@@ -36,14 +27,13 @@ class Ping {
    * it will be queued for upload even if empty.
    *
    * Pings always contain the `ping_info` and `client_info` sections.
-   * See [ping
-   * sections](https://mozilla.github.io/glean/book/user/pings/index.html#ping-sections)
+   * See [ping sections](https://mozilla.github.io/glean/book/user/pings/index.html#ping-sections)
    * for details.
    *
    * @param aReason - Optional. The reason the ping is being submitted.
    *                  Must match one of the configured `reason_codes`.
    */
-  void Submit(const nsACString& aReason = nsCString()) const;
+  void submit([optional] in ACString aReason);
 
   /**
    * **Test-only API**
@@ -52,32 +42,10 @@ class Ping {
    * The provided function is called exactly once before submitting.
    *
    * Note: The callback will be called on any call to submit.
-   * A ping may not be sent afterwards, e.g. if the ping is empty and
-   * `send_if_empty` is `false`
+   * A ping might not be sent afterwards, e.g. if the ping is empty and
+   * `send_if_empty` is `false`.
    *
    * @param aCallback - The callback to call on the next submit.
    */
-  void TestBeforeNextSubmit(PingTestCallback&& aCallback) const;
-
- private:
-  const uint32_t mId;
+  void testBeforeNextSubmit(in nsIGleanPingTestCallback aCallback);
 };
-
-}  // namespace impl
-
-class GleanPing final : public nsIGleanPing {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANPING
-
-  explicit GleanPing(uint32_t aId) : mPing(aId) {}
-
- private:
-  virtual ~GleanPing() = default;
-
-  const impl::Ping mPing;
-};
-
-}  // namespace mozilla::glean
-
-#endif /* mozilla_glean_Ping_h */

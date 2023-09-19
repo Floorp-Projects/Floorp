@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanString_h
 #define mozilla_glean_GleanString_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -55,16 +56,22 @@ class StringMetric {
 };
 }  // namespace impl
 
-class GleanString final : public nsIGleanString {
+class GleanString final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANSTRING
+  explicit GleanString(uint32_t aId, nsISupports* aParent)
+      : GleanMetric(aParent), mString(aId) {}
 
-  explicit GleanString(uint32_t aId) : mString(aId){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
 
- private:
+  void Set(const nsACString& aValue);
+
+  void TestGetValue(const nsACString& aPingName, nsCString& aResult,
+                    ErrorResult& aRv);
+
   virtual ~GleanString() = default;
 
+ private:
   const impl::StringMetric mString;
 };
 

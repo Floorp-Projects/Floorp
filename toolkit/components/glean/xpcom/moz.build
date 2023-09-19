@@ -20,7 +20,7 @@ XPIDL_MODULE = "fog"
 
 XPIDL_SOURCES += [
     "nsIFOG.idl",
-    "nsIGleanMetrics.idl",
+    "nsIGleanPing.idl",
 ]
 
 with Files("**"):

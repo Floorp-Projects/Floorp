@@ -7,12 +7,10 @@
 #include "mozilla/glean/bindings/Boolean.h"
 
 #include "nsString.h"
-#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
-#include "nsIClassInfoImpl.h"
-#include "Common.h"
 
 namespace mozilla::glean {
 
@@ -48,32 +46,26 @@ Result<Maybe<bool>, nsCString> BooleanMetric::TestGetValue(
 
 }  // namespace impl
 
-NS_IMPL_CLASSINFO(GleanBoolean, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(GleanBoolean, nsIGleanBoolean)
-
-NS_IMETHODIMP
-GleanBoolean::Set(bool aValue) {
-  mBoolean.Set(aValue);
-  return NS_OK;
+JSObject* GleanBoolean::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  return dom::GleanBoolean_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-GleanBoolean::TestGetValue(const nsACString& aStorageName,
-                           JS::MutableHandle<JS::Value> aResult) {
-  auto result = mBoolean.TestGetValue(aStorageName);
+void GleanBoolean::Set(bool aValue) { mBoolean.Set(aValue); }
+
+dom::Nullable<bool> GleanBoolean::TestGetValue(const nsACString& aPingName,
+                                               ErrorResult& aRv) {
+  dom::Nullable<bool> ret;
+  auto result = mBoolean.TestGetValue(aPingName);
   if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+    aRv.ThrowDataError(result.unwrapErr());
+    return ret;
   }
   auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
-    aResult.set(JS::UndefinedValue());
-  } else {
-    aResult.set(JS::BooleanValue(optresult.value()));
+  if (!optresult.isNothing()) {
+    ret.SetValue(optresult.value());
   }
-  return NS_OK;
+  return ret;
 }
 
 }  // namespace mozilla::glean

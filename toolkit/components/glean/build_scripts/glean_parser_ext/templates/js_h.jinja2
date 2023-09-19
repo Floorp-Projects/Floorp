@@ -15,6 +15,7 @@ Jinja2 template is not. Please file bugs! #}
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "nsStringFwd.h"
 
 class nsISupports;
@@ -34,7 +35,7 @@ using category_entry_t = uint32_t;
 // characteristics (which hopefully will prove to be enough).
 using metric_entry_t = uint64_t;
 
-already_AddRefed<nsISupports> NewMetricFromId(uint32_t id);
+already_AddRefed<GleanMetric> NewMetricFromId(uint32_t id, nsISupports* aParent);
 
 /**
  * Create a submetric instance for a labeled metric of the provided type and id for the given label.
@@ -47,7 +48,7 @@ already_AddRefed<nsISupports> NewMetricFromId(uint32_t id);
  * @param aSubmetricId - an outparam which is assigned the submetric's SDK-generated submetric id.
  *                       Used only by GIFFT.
  */
-already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId);
+already_AddRefed<GleanMetric> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId, nsISupports* aParent);
 
 /**
  * Get a category's name from the string table.

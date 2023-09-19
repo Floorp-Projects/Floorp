@@ -6,15 +6,13 @@
 
 #include "mozilla/glean/bindings/Text.h"
 
-#include "Common.h"
 #include "jsapi.h"
 #include "js/String.h"
 #include "nsString.h"
-#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
-#include "nsIClassInfoImpl.h"
 
 namespace mozilla::glean {
 
@@ -40,33 +38,27 @@ Result<Maybe<nsCString>, nsCString> TextMetric::TestGetValue(
 
 }  // namespace impl
 
-NS_IMPL_CLASSINFO(GleanText, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(GleanText, nsIGleanText)
-
-NS_IMETHODIMP
-GleanText::Set(const nsACString& aValue) {
-  mText.Set(aValue);
-  return NS_OK;
+/* virtual */
+JSObject* GleanText::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
+  return dom::GleanText_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-GleanText::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                        JS::MutableHandle<JS::Value> aResult) {
-  auto result = mText.TestGetValue(aStorageName);
+void GleanText::Set(const nsACString& aValue) { mText.Set(aValue); }
+
+void GleanText::TestGetValue(const nsACString& aPingName, nsCString& aResult,
+                             ErrorResult& aRv) {
+  auto result = mText.TestGetValue(aPingName);
   if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+    aRv.ThrowDataError(result.unwrapErr());
+    return;
   }
   auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
-    aResult.set(JS::UndefinedValue());
+  if (!optresult.isNothing()) {
+    aResult.Assign(optresult.extract());
   } else {
-    const NS_ConvertUTF8toUTF16 str(optresult.ref());
-    aResult.set(
-        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
+    aResult.SetIsVoid(true);
   }
-  return NS_OK;
 }
+
 }  // namespace mozilla::glean
