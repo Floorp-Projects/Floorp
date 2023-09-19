@@ -100,6 +100,47 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
   );
 };
 
+// Override the open with container function.
+// https://searchfox.org/mozilla-central/source/browser/base/content/browser.js#4885
+openNewUserContextTab = function (event) {
+  let relatedToCurrent = false; //"relatedToCurrent" decide where to open the new tab. Default work as last tab (right side). Floorp use this.
+  let where = "tab";
+  let _OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
+    "floorp.browser.tabs.openNewTabPosition"
+  );
+
+  switch (_OPEN_NEW_TAB_POSITION_PREF) {
+    case 0:
+      // Open the new tab as unrelated to the current tab.
+      relatedToCurrent = false;
+      break;
+    case 1:
+      // Open the new tab as related to the current tab.
+      relatedToCurrent = true;
+      break;
+    default:
+      if (event) {
+        where = whereToOpenLink(event, false, true);
+        switch (where) {
+          case "tab":
+          case "tabshifted":
+            // When accel-click or middle-click are used, open the new tab as
+            // related to the current tab.
+            relatedToCurrent = true;
+            break;
+          case "current":
+            where = "tab";
+            break;
+        }
+      }
+  }
+
+  openTrustedLinkIn(BROWSER_NEW_TAB_URL, "tab", {
+    relatedToCurrent,
+    userContextId: Number(event.target.getAttribute("data-usercontextid")),
+  });
+};
+
 // Override the default newtab url in tabbar. If pref seted.
 // Experimental feature. Malware can change this pref to redirect user to malware site.
 const newtabOverrideURL = "floorp.newtab.overrides.newtaburl";
