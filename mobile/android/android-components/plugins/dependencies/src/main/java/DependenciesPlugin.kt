@@ -46,7 +46,7 @@ object Versions {
     const val leakcanary = "2.12"
 
     // DO NOT MODIFY MANUALLY. This is auto-updated along with GeckoView.
-    const val mozilla_glean = "53.2.0"
+    const val mozilla_glean = "54.0.0"
 
     const val material = "1.9.0"
     const val ksp = "1.0.11"
