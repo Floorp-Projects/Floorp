@@ -55,32 +55,24 @@ def enable_bootstrap(bootstrap):
     return match
 
 
-@depends(developer_options, "--enable-bootstrap", moz_fetches_dir)
-def bootstrap_search_path_order(developer_options, bootstrap, moz_fetches_dir):
+@depends("--enable-bootstrap", moz_fetches_dir)
+def bootstrap_search_path_order(bootstrap, moz_fetches_dir):
+    if not bootstrap and bootstrap.origin != "default":
+        log.debug(
+            "Prioritizing system over mozbuild state dir in "
+            "toolchain paths because you are building with "
+            "bootstrap explicitly disabled."
+        )
+        return "append"
+
     if moz_fetches_dir:
         log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
-        return "prepend"
+    else:
+        log.debug("Prioritizing mozbuild state dir in toolchain paths.")
 
     if bootstrap:
-        log.debug(
-            "Prioritizing mozbuild state dir in toolchain paths because "
-            "bootstrap mode is enabled."
-        )
         return "maybe-prepend"
-
-    if developer_options:
-        log.debug(
-            "Prioritizing mozbuild state dir in toolchain paths because "
-            "you are not building in release mode."
-        )
-        return "prepend"
-
-    log.debug(
-        "Prioritizing system over mozbuild state dir in "
-        "toolchain paths because you are building in "
-        "release mode."
-    )
-    return "append"
+    return "prepend"
 
 
 toolchains_base_dir = moz_fetches_dir | mozbuild_state_path
