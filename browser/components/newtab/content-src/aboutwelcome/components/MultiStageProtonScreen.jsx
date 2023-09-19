@@ -201,10 +201,10 @@ export class ProtonScreen extends React.PureComponent {
     reducedMotionImageURL,
     darkModeReducedMotionImageURL,
     alt = "",
-    height,
     width,
-    marginInline,
+    height,
     marginBlock,
+    marginInline,
     className = "logo-container",
   }) {
     function getLoadingStrategy() {
@@ -337,12 +337,16 @@ export class ProtonScreen extends React.PureComponent {
   }
 
   renderDismissButton() {
+    const { size, marginBlock, marginInline } =
+      this.props.content.dismiss_button;
     return (
       <button
         className="dismiss-button"
         onClick={this.props.handleAction}
         value="dismiss_button"
         data-l10n-id={"spotlight-dialog-close-button"}
+        button-size={size}
+        style={{ marginBlock, marginInline }}
       ></button>
     );
   }
@@ -519,11 +523,16 @@ export class ProtonScreen extends React.PureComponent {
           {includeNoodles ? this.renderNoodles() : null}
           <div
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
-            style={
-              content.background && isCenterPosition
-                ? { background: content.background }
-                : {}
-            }
+            style={{
+              background:
+                content.background && isCenterPosition
+                  ? content.background
+                  : null,
+              width:
+                content.width && content.position !== "split"
+                  ? content.width
+                  : null,
+            }}
           >
             {content.logo ? this.renderPicture(content.logo) : null}
 

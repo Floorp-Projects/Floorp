@@ -34,6 +34,16 @@
   color: var(--fc-color);
   accent-color: var(--fc-accent-color);
   -moz-theme: non-native;
+  --arrow-width: 33.9411px;
+  --arrow-square-size: calc(var(--arrow-width) / sqrt(2));
+  --extra-width-from-rotation: calc(var(--arrow-width) - var(--arrow-square-size));
+  --arrow-visible-height: calc(var(--arrow-width) / 2);
+  --arrow-visible-size: calc(var(--arrow-square-size) / 2);
+  --arrow-center-inset: calc(50% - var(--arrow-visible-size));
+  --arrow-offset: calc(1.5px - var(--arrow-visible-size));
+  --arrow-corner-distance: 12px;
+  --arrow-corner-inset: calc(var(--arrow-corner-distance) + (var(--extra-width-from-rotation) / 2));
+  --arrow-overlap-magnitude: 5px;
 }
 @media (prefers-color-scheme: dark) {
   #feature-callout {
@@ -188,8 +198,10 @@
 }
 panel#feature-callout {
   --panel-color: var(--fc-color);
-  --panel-shadow-margin: 6px;
   --panel-shadow: none;
+  --panel-shadow-margin: 6px;
+  --panel-arrow-space: calc(var(--panel-shadow-margin) + var(--arrow-visible-height) - 1.5px);
+  --panel-margin-offset: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-corner-distance) + (var(--arrow-width) / 2)));
 }
 
 panel#feature-callout::part(content) {
@@ -240,24 +252,27 @@ div#feature-callout.hidden {
 }
 #feature-callout .screen[pos=callout][layout=inline] .section-main .main-content .welcome-text,
 #feature-callout .screen[pos=callout][layout=inline] .section-main .main-content.no-steps .welcome-text {
-  margin-block: 12px 14px;
+  height: 24px;
+  margin-block: 12px;
   margin-inline: 0;
   padding: 0;
+  white-space: nowrap;
 }
 #feature-callout .screen[pos=callout][layout=inline] .section-main .dismiss-button {
   height: 24px;
   width: 24px;
   min-height: 24px;
   min-width: 24px;
-  margin-block: 11px 0;
-  margin-inline: 0 12px;
+  margin: 0;
+  top: calc(50% - 12px);
+  inset-inline-end: 12px;
 }
 #feature-callout .screen[pos=callout] .logo-container {
   display: flex;
   justify-content: center;
 }
 #feature-callout .screen[pos=callout] .logo-container .brand-logo {
-  margin: 30px 45px 0;
+  margin: 0;
 }
 #feature-callout .screen[pos=callout] .logo-container .brand-logo:dir(rtl) {
   transform: rotateY(180deg);
@@ -265,20 +280,18 @@ div#feature-callout.hidden {
 #feature-callout .screen[pos=callout] .welcome-text {
   align-items: baseline;
   text-align: start;
-  margin-inline: 30px;
-  padding: 20px 0 0;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
 }
 #feature-callout .screen[pos=callout] .welcome-text h1,
 #feature-callout .screen[pos=callout] .welcome-text h2 {
-  font-size: 0.8em;
+  font-size: 0.813em;
   margin: 0;
   color: inherit;
 }
 #feature-callout .screen[pos=callout] .welcome-text h1 {
   font-weight: 600;
-}
-#feature-callout .screen[pos=callout] .welcome-text h2 {
-  margin-block: 10px;
 }
 #feature-callout .screen[pos=callout] .welcome-text .inline-icon-container {
   display: flex;
@@ -298,10 +311,11 @@ div#feature-callout.hidden {
   margin: 0;
 }
 #feature-callout .screen[pos=callout] .multi-select-container {
-  margin-inline: 30px;
-  padding: 1em 0 0;
-  font-size: 0.8em;
+  margin-block: 0;
+  font-size: 0.813em;
+  row-gap: 12px;
   color: inherit;
+  overflow: visible;
 }
 #feature-callout .screen[pos=callout] .cta-link {
   background: none;
@@ -333,16 +347,18 @@ div#feature-callout.hidden {
   border: 1px solid var(--fc-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
-  padding-top: 0;
-  padding-bottom: 30px;
+  padding: var(--callout-padding, 24px);
   width: 25em;
+  gap: 16px;
   background-color: var(--fc-background);
+}
+#feature-callout .screen[pos=callout] .section-main .main-content .main-content-inner {
+  gap: 12px;
 }
 #feature-callout .screen[pos=callout] .section-main .main-content .steps {
   height: auto;
   position: absolute;
-  bottom: 42px;
-  margin: 0 30px;
+  bottom: calc(var(--callout-padding, 24px) + 12px);
   padding-block: 0;
 }
 #feature-callout .screen[pos=callout] .section-main .main-content .steps .indicator {
@@ -351,15 +367,29 @@ div#feature-callout.hidden {
 #feature-callout .screen[pos=callout] .section-main .main-content .steps .indicator.current {
   border-color: var(--fc-accent-color);
 }
+#feature-callout .screen[pos=callout] .section-main .main-content .steps:not(.progress-bar) {
+  flex-flow: row nowrap;
+  gap: 8px;
+}
+#feature-callout .screen[pos=callout] .section-main .main-content .steps:not(.progress-bar) .indicator {
+  margin: 0;
+}
 #feature-callout .screen[pos=callout] .section-main .main-content .steps .indicator.current, #feature-callout .screen[pos=callout] .section-main .main-content .steps.progress-bar .indicator.complete {
   border-color: var(--fc-accent-color);
 }
 #feature-callout .screen[pos=callout] .section-main .dismiss-button {
   font-size: 1em;
-  top: 0;
-  margin-block: 10px 0;
-  margin-inline: 0 10px;
+  inset-block: 0 auto;
+  inset-inline: auto 0;
+  margin-block: 16px 0;
+  margin-inline: 0 16px;
   background-color: var(--fc-background);
+}
+#feature-callout .screen[pos=callout] .section-main .dismiss-button[button-size=small] {
+  height: 24px;
+  width: 24px;
+  min-height: 24px;
+  min-width: 24px;
 }
 #feature-callout .screen[pos=callout] .action-buttons {
   display: flex;
@@ -367,13 +397,13 @@ div#feature-callout.hidden {
   align-items: stretch;
   justify-content: end;
   gap: 10px;
-  margin-inline: 30px;
+  margin-top: 4px;
 }
 #feature-callout .screen[pos=callout] .action-buttons .primary,
 #feature-callout .screen[pos=callout] .action-buttons .secondary {
   padding: 4px 16px;
   margin: 0;
-  font-size: 0.8em;
+  font-size: 0.813em;
   font-weight: 600;
   line-height: 16px;
   min-height: 32px;
@@ -436,11 +466,11 @@ div#feature-callout.hidden {
   border: 1px solid var(--fc-primary-button-border-active);
 }
 panel#feature-callout:is([side=top], [side=bottom]):not(.hidden-arrow) {
-  margin-inline: -36px;
+  margin-inline: var(--panel-margin-offset);
 }
 
 panel#feature-callout:is([side=left], [side=right]):not(.hidden-arrow) {
-  margin-block: -36px;
+  margin-block: var(--panel-margin-offset);
 }
 
 panel#feature-callout::part(content) {
@@ -457,8 +487,8 @@ panel#feature-callout::part(content) {
   display: none;
 }
 #feature-callout .arrow {
-  width: 24px;
-  height: 24px;
+  width: var(--arrow-square-size);
+  height: var(--arrow-square-size);
 }
 #feature-callout .shadow-arrow-box {
   z-index: -1;
@@ -477,159 +507,159 @@ panel#feature-callout::part(content) {
   clip-path: var(--fc-arrow-clip-path);
 }
 #feature-callout[arrow-position=top] .arrow-box {
-  top: -11px;
-  inset-inline-start: calc(50% - 12px);
+  top: var(--arrow-offset);
+  inset-inline-start: var(--arrow-center-inset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
 }
 panel#feature-callout[arrow-position=top]::part(content) {
-  margin-top: 23px;
+  margin-top: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=top] {
-  margin-top: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=bottom] .arrow-box {
-  bottom: -11px;
-  inset-inline-start: calc(50% - 12px);
+  bottom: var(--arrow-offset);
+  inset-inline-start: var(--arrow-center-inset);
   --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
 }
 panel#feature-callout[arrow-position=bottom]::part(content) {
-  margin-bottom: 23px;
+  margin-bottom: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=bottom] {
-  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-end] .arrow-box {
-  top: calc(50% - 12px);
-  inset-inline-end: -11px;
+  top: var(--arrow-center-inset);
+  inset-inline-end: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
 }
 panel#feature-callout[arrow-position=inline-end]::part(content) {
-  margin-inline-end: 23px;
+  margin-inline-end: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-end] {
-  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-start] .arrow-box {
-  top: calc(50% - 12px);
-  inset-inline-start: -11px;
+  top: var(--arrow-center-inset);
+  inset-inline-start: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
 }
 panel#feature-callout[arrow-position=inline-start]::part(content) {
-  margin-inline-start: 23px;
+  margin-inline-start: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-start] {
-  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=top-end] .arrow-box {
-  top: -11px;
-  inset-inline-end: 18px;
+  top: var(--arrow-offset);
+  inset-inline-end: var(--arrow-corner-inset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
 }
 panel#feature-callout[arrow-position=top-end]::part(content) {
-  margin-top: 23px;
+  margin-top: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=top-end] {
-  margin-top: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=top-start] .arrow-box {
-  top: -11px;
-  inset-inline-start: 18px;
+  top: var(--arrow-offset);
+  inset-inline-start: var(--arrow-corner-inset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
 }
 panel#feature-callout[arrow-position=top-start]::part(content) {
-  margin-top: 23px;
+  margin-top: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=top-start] {
-  margin-top: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=bottom-end] .arrow-box {
-  bottom: -11px;
-  inset-inline-end: 18px;
+  bottom: var(--arrow-offset);
+  inset-inline-end: var(--arrow-corner-inset);
   --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
 }
 panel#feature-callout[arrow-position=bottom-end]::part(content) {
-  margin-bottom: 23px;
+  margin-bottom: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=bottom-end] {
-  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=bottom-start] .arrow-box {
-  bottom: -11px;
-  inset-inline-start: 18px;
+  bottom: var(--arrow-offset);
+  inset-inline-start: var(--arrow-corner-inset);
   --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
 }
 panel#feature-callout[arrow-position=bottom-start]::part(content) {
-  margin-bottom: 23px;
+  margin-bottom: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=bottom-start] {
-  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-bottom: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-end-top] .arrow-box {
-  top: 18px;
-  inset-inline-end: -11px;
+  top: var(--arrow-corner-inset);
+  inset-inline-end: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
 }
 panel#feature-callout[arrow-position=inline-end-top]::part(content) {
-  margin-inline-end: 23px;
+  margin-inline-end: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-end-top] {
-  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-end-bottom] .arrow-box {
-  bottom: 18px;
-  inset-inline-end: -11px;
+  bottom: var(--arrow-corner-inset);
+  inset-inline-end: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
 }
 panel#feature-callout[arrow-position=inline-end-bottom]::part(content) {
-  margin-inline-end: 23px;
+  margin-inline-end: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-end-bottom] {
-  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-start-top] .arrow-box {
-  top: 18px;
-  inset-inline-start: -11px;
+  top: var(--arrow-corner-inset);
+  inset-inline-start: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
 }
 panel#feature-callout[arrow-position=inline-start-top]::part(content) {
-  margin-inline-start: 23px;
+  margin-inline-start: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-start-top] {
-  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout[arrow-position=inline-start-bottom] .arrow-box {
-  bottom: 18px;
-  inset-inline-start: -11px;
+  bottom: var(--arrow-corner-inset);
+  inset-inline-start: var(--arrow-offset);
   --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
 }
 panel#feature-callout[arrow-position=inline-start-bottom]::part(content) {
-  margin-inline-start: 23px;
+  margin-inline-start: var(--panel-arrow-space);
 }
 
 panel#feature-callout[arrow-position=inline-start-bottom] {
-  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + 5px));
+  margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + var(--arrow-overlap-magnitude)));
 }
 
 #feature-callout:focus-visible .screen[pos=callout] .section-main .main-content {

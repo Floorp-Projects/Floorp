@@ -59,17 +59,18 @@ async function testAboutWelcomeLogoFor(logo = {}) {
   let expected = [
     `.brand-logo[src="${
       logo.imageURL ?? "chrome://branding/content/about-logo.svg"
-    }"][alt=""]${logo.height ? `[style*="height"]` : ""}${
-      logo.alt ? "" : `[role="presentation"]`
-    }`,
+    }"][alt=""]`,
   ];
   let unexpected = [];
-  if (!logo.height) {
-    unexpected.push(`.brand-logo[style*="height"]`);
-  }
-  if (logo.alt) {
-    unexpected.push(`.brand-logo[role="presentation"]`);
-  }
+  (logo.alt ? unexpected : expected).push('.brand-logo[role="presentation"]');
+  (logo.width ? expected : unexpected).push(`.brand-logo[style*="width"]`);
+  (logo.height ? expected : unexpected).push(`.brand-logo[style*="height"]`);
+  (logo.marginBlock ? expected : unexpected).push(
+    `.logo-container[style*="margin-block"]`
+  );
+  (logo.marginInline ? expected : unexpected).push(
+    `.logo-container[style*="margin-inline"]`
+  );
   (logo.darkModeImageURL ? expected : unexpected).push(
     `.logo-container source[media="(prefers-color-scheme: dark)"]${
       logo.darkModeImageURL ? `[srcset="${logo.darkModeImageURL}"]` : ""
@@ -278,6 +279,27 @@ add_task(async function test_aboutwelcome_with_background() {
 });
 
 /**
+ * Test rendering a screen with defined dimensions
+ */
+add_task(async function test_aboutwelcome_with_dimensions() {
+  const TEST_DIMENSIONS_CONTENT = makeTestContent("TEST_DIMENSIONS_STEP", {
+    width: "100px",
+    position: "center",
+  });
+
+  const TEST_DIMENSIONS_JSON = JSON.stringify([TEST_DIMENSIONS_CONTENT]);
+  let browser = await openAboutWelcome(TEST_DIMENSIONS_JSON);
+
+  await test_screen_content(
+    browser,
+    "renders screen with defined dimensions",
+    // Expected selectors:
+    [`div.main-content[style*='width: 100px;']`]
+  );
+  browser.closeBrowser();
+});
+
+/**
  * Test rendering a screen with a dismiss button
  */
 add_task(async function test_aboutwelcome_dismiss_button() {
@@ -286,10 +308,17 @@ add_task(async function test_aboutwelcome_dismiss_button() {
       // Use 2 screens to test that the message is dismissed, not navigated
       [1, 2].map(i =>
         makeTestContent(`TEST_DISMISS_STEP_${i}`, {
-          dismiss_button: { action: { dismiss: true } },
+          dismiss_button: { action: { dismiss: true }, size: "small" },
         })
       )
     )
+  );
+
+  await test_screen_content(
+    browser,
+    "renders screen with dismiss button",
+    // Expected selectors:
+    ['div.section-main button.dismiss-button[button-size="small"]']
   );
 
   // Click dismiss button
@@ -597,7 +626,10 @@ add_task(async function test_aboutwelcome_logo_selection() {
     reducedMotionImageURL: "chrome://branding/content/icon64.png",
     darkModeReducedMotionImageURL: "chrome://branding/content/icon128.png",
     alt: "TEST_LOGO_SELECTION_ALT",
+    width: "16px",
     height: "16px",
+    marginBlock: "0px",
+    marginInline: "0px",
   });
   // Test a screen config with no animated/static logos
   await testAboutWelcomeLogoFor({
