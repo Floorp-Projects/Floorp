@@ -107,8 +107,6 @@ class CompileOrDecodeTask : public mozilla::Task {
   void Cancel();
 
  protected:
-  static constexpr size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
-
   // This mutex is locked during running the task or cancelling task.
   mozilla::Mutex mMutex;
 
