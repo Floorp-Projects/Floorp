@@ -26,7 +26,7 @@ Cr-Branched-From: 2eacbbc03a4a41ea658661225eb1c8fc07884c33-refs/heads/main@{#401
  1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 17befaf445..dc63e8d21e 100644
+index 6596d82167..4874444eae 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
 @@ -5145,11 +5145,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
