@@ -78,6 +78,10 @@ struct hb_hashmap_t
 		hash (0),
 		value () {}
 
+    // Needed for https://github.com/harfbuzz/harfbuzz/issues/4138
+    K& get_key () { return key; }
+    V& get_value () { return value; }
+
     bool is_used () const { return is_used_; }
     void set_used (bool is_used) { is_used_ = is_used; }
     void set_real (bool is_real) { is_real_ = is_real; }
@@ -272,6 +276,11 @@ struct hb_hashmap_t
     uint32_t hash = hb_hash (key);
     return set_with_hash (std::move (key), hash, std::forward<VV> (value), overwrite);
   }
+  bool add (const K &key)
+  {
+    uint32_t hash = hb_hash (key);
+    return set_with_hash (key, hash, item_t::default_value ());
+  }
 
   const V& get_with_hash (const K &key, uint32_t hash) const
   {
@@ -405,23 +414,21 @@ struct hb_hashmap_t
   auto keys_ref () const HB_AUTO_RETURN
   (
     + iter_items ()
-    | hb_map (&item_t::key)
+    | hb_map (&item_t::get_key)
   )
   auto keys () const HB_AUTO_RETURN
   (
-    + iter_items ()
-    | hb_map (&item_t::key)
+    + keys_ref ()
     | hb_map (hb_ridentity)
   )
   auto values_ref () const HB_AUTO_RETURN
   (
     + iter_items ()
-    | hb_map (&item_t::value)
+    | hb_map (&item_t::get_value)
   )
   auto values () const HB_AUTO_RETURN
   (
-    + iter_items ()
-    | hb_map (&item_t::value)
+    + values_ref ()
     | hb_map (hb_ridentity)
   )
 

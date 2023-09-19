@@ -230,7 +230,7 @@ struct VarStoreInstancer
   /* according to the spec, if colr table has varStore but does not have
    * varIdxMap, then an implicit identity mapping is used */
   float operator() (uint32_t varIdx, unsigned short offset = 0) const
-  { return varStore->get_delta (varIdxMap ? varIdxMap->map (VarIdx::add (varIdx, offset)) : varIdx + offset, coords); }
+  { return coords ? varStore->get_delta (varIdxMap ? varIdxMap->map (VarIdx::add (varIdx, offset)) : varIdx + offset, coords) : 0; }
 
   const VariationStore *varStore;
   const DeltaSetIndexMap *varIdxMap;
@@ -424,25 +424,6 @@ struct TupleVariationHeader
   DEFINE_SIZE_MIN (4);
 };
 
-/* not using hb_bytes_t: avoid potential build issues with some compilers */
-struct byte_data_t
-{
-  hb_bytes_t bytes;
-
-  byte_data_t () = default;
-  byte_data_t (const char *p_, unsigned len_) : bytes (hb_bytes_t (p_, len_)) {}
-
-  void fini () { bytes.fini (); }
-
-  bool operator == (const byte_data_t& o) const
-  { return bytes.arrayZ == o.bytes.arrayZ && bytes.length == o.bytes.length; }
-
-  explicit operator bool () const { return bytes.length; }
-
-  void copy (hb_serialize_context_t *c) const
-  { c->embed (bytes.arrayZ, bytes.length); }
-};
-
 enum packed_delta_flag_t
 {
   DELTAS_ARE_ZERO      = 0x80,
@@ -468,16 +449,25 @@ struct tuple_delta_t
   hb_vector_t<char> compiled_tuple_header;
   hb_vector_t<char> compiled_deltas;
 
+  /* compiled peak coords, empty for non-gvar tuples */
+  hb_vector_t<char> compiled_peak_coords;
+
   tuple_delta_t () = default;
   tuple_delta_t (const tuple_delta_t& o) = default;
 
-  tuple_delta_t (tuple_delta_t&& o) : tuple_delta_t ()
+  friend void swap (tuple_delta_t& a, tuple_delta_t& b)
   {
-    axis_tuples = std::move (o.axis_tuples);
-    indices = std::move (o.indices);
-    deltas_x = std::move (o.deltas_x);
-    deltas_y = std::move (o.deltas_y);
+    hb_swap (a.axis_tuples, b.axis_tuples);
+    hb_swap (a.indices, b.indices);
+    hb_swap (a.deltas_x, b.deltas_x);
+    hb_swap (a.deltas_y, b.deltas_y);
+    hb_swap (a.compiled_tuple_header, b.compiled_tuple_header);
+    hb_swap (a.compiled_deltas, b.compiled_deltas);
+    hb_swap (a.compiled_peak_coords, b.compiled_peak_coords);
   }
+
+  tuple_delta_t (tuple_delta_t&& o) : tuple_delta_t ()
+  { hb_swap (*this, o); }
 
   tuple_delta_t& operator = (tuple_delta_t&& o)
   {
@@ -508,6 +498,7 @@ struct tuple_delta_t
       else
       {
         if (!o.indices.arrayZ[i]) continue;
+        indices.arrayZ[i] = true;
         deltas_x[i] = o.deltas_x[i];
         if (deltas_y && o.deltas_y)
           deltas_y[i] = o.deltas_y[i];
@@ -533,7 +524,8 @@ struct tuple_delta_t
     return *this;
   }
 
-  hb_vector_t<tuple_delta_t> change_tuple_var_axis_limit (hb_tag_t axis_tag, Triple axis_limit) const
+  hb_vector_t<tuple_delta_t> change_tuple_var_axis_limit (hb_tag_t axis_tag, Triple axis_limit,
+                                                          TripleDistances axis_triple_distances) const
   {
     hb_vector_t<tuple_delta_t> out;
     Triple *tent;
@@ -553,7 +545,7 @@ struct tuple_delta_t
       return out;
     }
 
-    result_t solutions = rebase_tent (*tent, axis_limit);
+    result_t solutions = rebase_tent (*tent, axis_limit, axis_triple_distances);
     for (auto t : solutions)
     {
       tuple_delta_t new_var = *this;
@@ -569,13 +561,43 @@ struct tuple_delta_t
     return out;
   }
 
+  bool compile_peak_coords (const hb_map_t& axes_index_map,
+                            const hb_map_t& axes_old_index_tag_map)
+  {
+    unsigned axis_count = axes_index_map.get_population ();
+    if (unlikely (!compiled_peak_coords.alloc (axis_count * F2DOT14::static_size)))
+      return false;
+
+    unsigned orig_axis_count = axes_old_index_tag_map.get_population ();
+    for (unsigned i = 0; i < orig_axis_count; i++)
+    {
+      if (!axes_index_map.has (i))
+        continue;
+
+      hb_tag_t axis_tag = axes_old_index_tag_map.get (i);
+      Triple *coords;
+      F2DOT14 peak_coord;
+      if (axis_tuples.has (axis_tag, &coords))
+        peak_coord.set_float (coords->middle);
+      else
+        peak_coord.set_int (0);
+
+      /* push F2DOT14 value into char vector */
+      int16_t val = peak_coord.to_int ();
+      compiled_peak_coords.push (static_cast<char> (val >> 8));
+      compiled_peak_coords.push (static_cast<char> (val & 0xFF));
+    }
+
+    return !compiled_peak_coords.in_error ();
+  }
+
   /* deltas should be compiled already before we compile tuple
    * variation header cause we need to fill in the size of the
    * serialized data for this tuple variation */
-  //TODO(qxliu):add option to use sharedTuples in gvar
   bool compile_tuple_var_header (const hb_map_t& axes_index_map,
                                  unsigned points_data_length,
-                                 const hb_map_t& axes_old_index_tag_map)
+                                 const hb_map_t& axes_old_index_tag_map,
+                                 const hb_hashmap_t<const hb_vector_t<char>*, unsigned>* shared_tuples_idx_map)
   {
     if (!compiled_deltas) return false;
 
@@ -591,14 +613,25 @@ struct tuple_delta_t
     hb_array_t<F2DOT14> coords (p, end - p);
 
     /* encode peak coords */
-    unsigned peak_count = encode_peak_coords(coords, flag, axes_index_map, axes_old_index_tag_map);
-    if (!peak_count) return false;
+    unsigned peak_count = 0;
+    unsigned *shared_tuple_idx;
+    if (shared_tuples_idx_map &&
+        shared_tuples_idx_map->has (&compiled_peak_coords, &shared_tuple_idx))
+    {
+      flag = *shared_tuple_idx;
+    }
+    else
+    {
+      peak_count = encode_peak_coords(coords, flag, axes_index_map, axes_old_index_tag_map);
+      if (!peak_count) return false;
+    }
 
     /* encode interim coords, it's optional so returned num could be 0 */
     unsigned interim_count = encode_interm_coords (coords.sub_array (peak_count), flag, axes_index_map, axes_old_index_tag_map);
 
-    //TODO(qxliu): add option to use shared_points in gvar
-    flag |= TupleVariationHeader::TuppleIndex::PrivatePointNumbers;
+    /* pointdata length = 0 implies "use shared points" */
+    if (points_data_length)
+      flag |= TupleVariationHeader::TuppleIndex::PrivatePointNumbers;
 
     unsigned serialized_data_size = points_data_length + compiled_deltas.length;
     TupleVariationHeader *o = reinterpret_cast<TupleVariationHeader *> (compiled_tuple_header.begin ());
@@ -718,6 +751,8 @@ struct tuple_delta_t
       }
 
       if (j != rounded_deltas.length) return false;
+      /* reset i because we reuse rounded_deltas for deltas_y */
+      i = 0;
       encoded_len += encode_delta_run (i, compiled_deltas.as_array ().sub_array (encoded_len), rounded_deltas);
     }
     return compiled_deltas.resize (encoded_len);
@@ -873,6 +908,7 @@ struct tuple_delta_t
     if (run_length)
     {
       *it++ = (DELTAS_ARE_WORDS | (run_length - 1));
+      encoded_len++;
       while (start < i)
       {
         int16_t delta_val = deltas[start++];
@@ -884,6 +920,111 @@ struct tuple_delta_t
     }
     return encoded_len;
   }
+
+  bool calc_inferred_deltas (const contour_point_vector_t& orig_points)
+  {
+    unsigned point_count = orig_points.length;
+    if (point_count != indices.length)
+      return false;
+
+    unsigned ref_count = 0;
+    hb_vector_t<unsigned> end_points;
+
+    for (unsigned i = 0; i < point_count; i++)
+    {
+      if (indices.arrayZ[i])
+        ref_count++;
+      if (orig_points.arrayZ[i].is_end_point)
+        end_points.push (i);
+    }
+    /* all points are referenced, nothing to do */
+    if (ref_count == point_count)
+      return true;
+    if (unlikely (end_points.in_error ())) return false;
+
+    hb_set_t inferred_idxes;
+    unsigned start_point = 0;
+    for (unsigned end_point : end_points)
+    {
+      /* Check the number of unreferenced points in a contour. If no unref points or no ref points, nothing to do. */
+      unsigned unref_count = 0;
+      for (unsigned i = start_point; i < end_point + 1; i++)
+        unref_count += indices.arrayZ[i];
+      unref_count = (end_point - start_point + 1) - unref_count;
+
+      unsigned j = start_point;
+      if (unref_count == 0 || unref_count > end_point - start_point)
+        goto no_more_gaps;
+      for (;;)
+      {
+        /* Locate the next gap of unreferenced points between two referenced points prev and next.
+         * Note that a gap may wrap around at left (start_point) and/or at right (end_point).
+         */
+        unsigned int prev, next, i;
+        for (;;)
+        {
+          i = j;
+          j = next_index (i, start_point, end_point);
+          if (indices.arrayZ[i] && !indices.arrayZ[j]) break;
+        }
+        prev = j = i;
+        for (;;)
+        {
+          i = j;
+          j = next_index (i, start_point, end_point);
+          if (!indices.arrayZ[i] && indices.arrayZ[j]) break;
+        }
+        next = j;
+       /* Infer deltas for all unref points in the gap between prev and next */
+        i = prev;
+        for (;;)
+        {
+          i = next_index (i, start_point, end_point);
+          if (i == next) break;
+          deltas_x.arrayZ[i] = infer_delta (orig_points.arrayZ[i].x, orig_points.arrayZ[prev].x, orig_points.arrayZ[next].x,
+                                            deltas_x.arrayZ[prev], deltas_x.arrayZ[next]);
+          deltas_y.arrayZ[i] = infer_delta (orig_points.arrayZ[i].y, orig_points.arrayZ[prev].y, orig_points.arrayZ[next].y,
+                                            deltas_y.arrayZ[prev], deltas_y.arrayZ[next]);
+          inferred_idxes.add (i);
+          if (--unref_count == 0) goto no_more_gaps;
+        }
+      }
+    no_more_gaps:
+      start_point = end_point + 1;
+    }
+
+    for (unsigned i = 0; i < point_count; i++)
+    {
+      /* if points are not referenced and deltas are not inferred, set to 0.
+       * reference all points for gvar */
+      if ( !indices[i])
+      {
+        if (!inferred_idxes.has (i))
+        {
+          deltas_x.arrayZ[i] = 0.f;
+          deltas_y.arrayZ[i] = 0.f;
+        }
+        indices[i] = true;
+      }
+    }
+    return true;
+  }
+
+  static float infer_delta (float target_val, float prev_val, float next_val, float prev_delta, float next_delta)
+  {
+    if (prev_val == next_val)
+      return (prev_delta == next_delta) ? prev_delta : 0.f;
+    else if (target_val <= hb_min (prev_val, next_val))
+      return (prev_val < next_val) ? prev_delta : next_delta;
+    else if (target_val >= hb_max (prev_val, next_val))
+      return (prev_val > next_val) ? prev_delta : next_delta;
+
+    float r = (target_val - prev_val) / (next_val - prev_val);
+    return prev_delta + r * (next_delta - prev_delta);
+  }
+
+  static unsigned int next_index (unsigned int i, unsigned int start, unsigned int end)
+  { return (i >= end) ? start : (i + 1); }
 };
 
 struct TupleVariationData
@@ -920,11 +1061,26 @@ struct TupleVariationData
 
     private:
     /* referenced point set->compiled point data map */
-    hb_hashmap_t<const hb_vector_t<bool>*, byte_data_t> point_data_map;
+    hb_hashmap_t<const hb_vector_t<bool>*, hb_bytes_t> point_data_map;
     /* referenced point set-> count map, used in finding shared points */
     hb_hashmap_t<const hb_vector_t<bool>*, unsigned> point_set_count_map;
 
+    /* empty for non-gvar tuples.
+     * shared_points_bytes is just a copy of some value in the point_data_map,
+     * which will be freed during map destruction. Save it for serialization, so
+     * no need to do find_shared_points () again */
+    hb_bytes_t shared_points_bytes;
+
+    /* total compiled byte size as TupleVariationData format, initialized to its
+     * min_size: 4 */
+    unsigned compiled_byte_size = 4;
+
     public:
+    tuple_variations_t () = default;
+    tuple_variations_t (const tuple_variations_t&) = delete;
+    tuple_variations_t& operator=(const tuple_variations_t&) = delete;
+    tuple_variations_t (tuple_variations_t&&) = default;
+    tuple_variations_t& operator=(tuple_variations_t&&) = default;
     ~tuple_variations_t () { fini (); }
     void fini ()
     {
@@ -935,8 +1091,17 @@ struct TupleVariationData
       tuple_vars.fini ();
     }
 
+    explicit operator bool () const { return bool (tuple_vars); }
     unsigned get_var_count () const
-    { return tuple_vars.length; }
+    {
+      unsigned count = tuple_vars.length;
+      if (shared_points_bytes.length)
+        count |= TupleVarCount::SharedPointNumbers;
+      return count;
+    }
+
+    unsigned get_compiled_byte_size () const
+    { return compiled_byte_size; }
 
     bool create_from_tuple_var_data (tuple_iterator_t iterator,
                                      unsigned tuple_var_count,
@@ -1006,16 +1171,22 @@ struct TupleVariationData
       return true;
     }
 
-    void change_tuple_variations_axis_limits (const hb_hashmap_t<hb_tag_t, Triple> *normalized_axes_location)
+    private:
+    void change_tuple_variations_axis_limits (const hb_hashmap_t<hb_tag_t, Triple>& normalized_axes_location,
+                                              const hb_hashmap_t<hb_tag_t, TripleDistances>& axes_triple_distances)
     {
-      for (auto _ : *normalized_axes_location)
+      for (auto _ : normalized_axes_location)
       {
         hb_tag_t axis_tag = _.first;
         Triple axis_limit = _.second;
+        TripleDistances axis_triple_distances{1.f, 1.f};
+        if (axes_triple_distances.has (axis_tag))
+          axis_triple_distances = axes_triple_distances.get (axis_tag);
+
         hb_vector_t<tuple_delta_t> new_vars;
         for (const tuple_delta_t& var : tuple_vars)
         {
-          hb_vector_t<tuple_delta_t> out = var.change_tuple_var_axis_limit (axis_tag, axis_limit);
+          hb_vector_t<tuple_delta_t> out = var.change_tuple_var_axis_limit (axis_tag, axis_limit, axis_triple_distances);
           if (!out) continue;
           unsigned new_len = new_vars.length + out.length;
 
@@ -1034,7 +1205,7 @@ struct TupleVariationData
     void merge_tuple_variations ()
     {
       hb_vector_t<tuple_delta_t> new_vars;
-      hb_hashmap_t<hb_hashmap_t<hb_tag_t, Triple>, unsigned> m;
+      hb_hashmap_t<const hb_hashmap_t<hb_tag_t, Triple>*, unsigned> m;
       unsigned i = 0;
       for (const tuple_delta_t& var : tuple_vars)
       {
@@ -1042,14 +1213,14 @@ struct TupleVariationData
         if (var.axis_tuples.is_empty ()) continue;
 
         unsigned *idx;
-        if (m.has (var.axis_tuples, &idx))
+        if (m.has (&(var.axis_tuples), &idx))
         {
           new_vars[*idx] += var;
         }
         else
         {
           new_vars.push (var);
-          m.set (var.axis_tuples, i);
+          m.set (&(var.axis_tuples), i);
           i++;
         }
       }
@@ -1057,7 +1228,7 @@ struct TupleVariationData
       tuple_vars = std::move (new_vars);
     }
 
-    byte_data_t compile_point_set (const hb_vector_t<bool> &point_indices)
+    hb_bytes_t compile_point_set (const hb_vector_t<bool> &point_indices)
     {
       unsigned num_points = 0;
       for (bool i : point_indices)
@@ -1069,15 +1240,15 @@ struct TupleVariationData
       if (num_points == indices_length)
       {
         char *p = (char *) hb_calloc (1, sizeof (char));
-        if (unlikely (!p)) return byte_data_t ();
+        if (unlikely (!p)) return hb_bytes_t ();
 
-        return byte_data_t (p, 1);
+        return hb_bytes_t (p, 1);
       }
 
       /* allocate enough memories: 2 bytes for count + 3 bytes for each point */
       unsigned num_bytes = 2 + 3 *num_points;
       char *p = (char *) hb_calloc (num_bytes, sizeof (char));
-      if (unlikely (!p)) return byte_data_t ();
+      if (unlikely (!p)) return hb_bytes_t ();
 
       unsigned pos = 0;
       /* binary data starts with the total number of reference points */
@@ -1140,10 +1311,10 @@ struct TupleVariationData
         else
           p[header_pos] = (run_length - 1) | 0x80;
       }
-      return byte_data_t (p, pos);
+      return hb_bytes_t (p, pos);
     }
 
-    /* compile all point set and store byte data in a point_set->byte_data_t hashmap,
+    /* compile all point set and store byte data in a point_set->hb_bytes_t hashmap,
      * also update point_set->count map, which will be used in finding shared
      * point set*/
     bool compile_all_point_sets ()
@@ -1160,8 +1331,8 @@ struct TupleVariationData
           continue;
         }
         
-        byte_data_t compiled_data = compile_point_set (*points_set);
-        if (unlikely (compiled_data == byte_data_t ()))
+        hb_bytes_t compiled_data = compile_point_set (*points_set);
+        if (unlikely (compiled_data == hb_bytes_t ()))
           return false;
         
         if (!point_data_map.set (points_set, compiled_data) ||
@@ -1172,19 +1343,19 @@ struct TupleVariationData
     }
 
     /* find shared points set which saves most bytes */
-    byte_data_t find_shared_points ()
+    hb_bytes_t find_shared_points ()
     {
       unsigned max_saved_bytes = 0;
-      byte_data_t res{};
+      hb_bytes_t res{};
 
       for (const auto& _ : point_data_map.iter ())
       {
         const hb_vector_t<bool>* points_set = _.first;
-        unsigned data_length = _.second.bytes.length;
+        unsigned data_length = _.second.length;
         unsigned *count;
         if (unlikely (!point_set_count_map.has (points_set, &count) ||
                       *count <= 1))
-          return byte_data_t ();
+          return hb_bytes_t ();
 
         unsigned saved_bytes = data_length * ((*count) -1);
         if (saved_bytes > max_saved_bytes)
@@ -1196,31 +1367,61 @@ struct TupleVariationData
       return res;
     }
 
-    void instantiate (const hb_hashmap_t<hb_tag_t, Triple>& normalized_axes_location)
+    bool calc_inferred_deltas (contour_point_vector_t& contour_points)
     {
-      change_tuple_variations_axis_limits (&normalized_axes_location);
+      for (tuple_delta_t& var : tuple_vars)
+        if (!var.calc_inferred_deltas (contour_points))
+          return false;
+      
+      return true;
+    }
+
+    public:
+    bool instantiate (const hb_hashmap_t<hb_tag_t, Triple>& normalized_axes_location,
+                      const hb_hashmap_t<hb_tag_t, TripleDistances>& axes_triple_distances,
+                      contour_point_vector_t* contour_points = nullptr)
+    {
+      if (!tuple_vars) return true;
+      change_tuple_variations_axis_limits (normalized_axes_location, axes_triple_distances);
+      /* compute inferred deltas only for gvar */
+      if (contour_points)
+        if (!calc_inferred_deltas (*contour_points))
+          return false;
+
       merge_tuple_variations ();
+      return !tuple_vars.in_error ();
     }
 
     bool compile_bytes (const hb_map_t& axes_index_map,
-                        const hb_map_t& axes_old_index_tag_map)
+                        const hb_map_t& axes_old_index_tag_map,
+                        bool use_shared_points,
+                        const hb_hashmap_t<const hb_vector_t<char>*, unsigned>* shared_tuples_idx_map = nullptr)
     {
       // compile points set and store data in hashmap
       if (!compile_all_point_sets ())
         return false;
+
+      if (use_shared_points)
+      {
+        shared_points_bytes = find_shared_points ();
+        compiled_byte_size += shared_points_bytes.length;
+      }
       // compile delta and tuple var header for each tuple variation
       for (auto& tuple: tuple_vars)
       {
         const hb_vector_t<bool>* points_set = &(tuple.indices);
-        byte_data_t *points_data;
+        hb_bytes_t *points_data;
         if (unlikely (!point_data_map.has (points_set, &points_data)))
           return false;
 
         if (!tuple.compile_deltas ())
           return false;
 
-        if (!tuple.compile_tuple_var_header (axes_index_map, points_data->bytes.length, axes_old_index_tag_map))
+        unsigned points_data_length = (*points_data != shared_points_bytes) ? points_data->length : 0;
+        if (!tuple.compile_tuple_var_header (axes_index_map, points_data_length, axes_old_index_tag_map,
+                                             shared_tuples_idx_map))
           return false;
+        compiled_byte_size += tuple.compiled_tuple_header.length + points_data_length + tuple.compiled_deltas.length;
       }
       return true;
     }
@@ -1230,28 +1431,39 @@ struct TupleVariationData
       TRACE_SERIALIZE (this);
       for (const auto& tuple: tuple_vars)
       {
-        byte_data_t compiled_bytes {tuple.compiled_tuple_header.arrayZ, tuple.compiled_tuple_header.length};
-        compiled_bytes.copy (c);
+        tuple.compiled_tuple_header.as_array ().copy (c);
         if (c->in_error ()) return_trace (false);
         total_header_len += tuple.compiled_tuple_header.length;
       }
       return_trace (true);
     }
 
-    bool serialize_var_data (hb_serialize_context_t *c) const
+    bool serialize_var_data (hb_serialize_context_t *c, bool is_gvar) const
     {
       TRACE_SERIALIZE (this);
+      if (is_gvar)
+        shared_points_bytes.copy (c);
+
       for (const auto& tuple: tuple_vars)
       {
         const hb_vector_t<bool>* points_set = &(tuple.indices);
-        byte_data_t *point_data;
+        hb_bytes_t *point_data;
         if (!point_data_map.has (points_set, &point_data))
           return_trace (false);
 
-        point_data->copy (c);
-        byte_data_t compiled_bytes {tuple.compiled_deltas.arrayZ, tuple.compiled_deltas.length};
-        compiled_bytes.copy (c);
+        if (!is_gvar || *point_data != shared_points_bytes)
+          point_data->copy (c);
+
+        tuple.compiled_deltas.as_array ().copy (c);
         if (c->in_error ()) return_trace (false);
+      }
+
+      /* padding for gvar */
+      if (is_gvar && (compiled_byte_size % 2))
+      {
+        HBUINT8 pad;
+        pad = 0;
+        if (!c->embed (pad)) return_trace (false);
       }
       return_trace (true);
     }
@@ -1438,9 +1650,12 @@ struct TupleVariationData
 
   bool serialize (hb_serialize_context_t *c,
                   bool is_gvar,
-                  tuple_variations_t& tuple_variations) const
+                  const tuple_variations_t& tuple_variations) const
   {
     TRACE_SERIALIZE (this);
+    /* empty tuple variations, just return and skip serialization. */
+    if (!tuple_variations) return_trace (true);
+
     auto *out = c->start_embed (this);
     if (unlikely (!c->extend_min (out))) return_trace (false);
 
@@ -1456,15 +1671,17 @@ struct TupleVariationData
     if (!is_gvar) data_offset += 4;
     if (!c->check_assign (out->data, data_offset, HB_SERIALIZE_ERROR_INT_OVERFLOW)) return_trace (false);
 
-    return tuple_variations.serialize_var_data (c);
+    return tuple_variations.serialize_var_data (c, is_gvar);
   }
 
   protected:
   struct TupleVarCount : HBUINT16
   {
+    friend struct tuple_variations_t;
     bool has_shared_point_numbers () const { return ((*this) & SharedPointNumbers); }
     unsigned int get_count () const { return (*this) & CountMask; }
     TupleVarCount& operator = (uint16_t i) { HBUINT16::operator= (i); return *this; }
+    explicit operator bool () const { return get_count (); }
 
     protected:
     enum Flags

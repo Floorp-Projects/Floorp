@@ -20,11 +20,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: 8.0.1 (2023-07-12T08:27:25+03:00).
+  release: 8.2.1 (2023-09-18T21:18:49+03:00).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 8.0.1
+  revision: 8.2.1
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/

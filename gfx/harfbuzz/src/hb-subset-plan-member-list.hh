@@ -105,6 +105,8 @@ HB_SUBSET_PLAN_MEMBER (hb_vector_t<int>, normalized_coords)
 
 //user specified axes range map
 HB_SUBSET_PLAN_MEMBER (hb_hashmap_t E(<hb_tag_t, Triple>), user_axes_location)
+//axis->TripleDistances map (distances in the pre-normalized space)
+HB_SUBSET_PLAN_MEMBER (hb_hashmap_t E(<hb_tag_t, TripleDistances>), axes_triple_distances)
 
 //retained old axis index -> new axis index mapping in fvar axis array
 HB_SUBSET_PLAN_MEMBER (hb_map_t, axes_index_map)
@@ -120,6 +122,9 @@ HB_SUBSET_PLAN_MEMBER (mutable hb_hashmap_t E(<hb_codepoint_t, hb_pair_t E(<unsi
 HB_SUBSET_PLAN_MEMBER (mutable hb_vector_t<unsigned>, bounds_width_vec)
 //boundsHeight map: new gid->boundsHeight, boundsHeight=yMax - yMin
 HB_SUBSET_PLAN_MEMBER (mutable hb_vector_t<unsigned>, bounds_height_vec)
+
+//map: new_gid -> contour points vector
+HB_SUBSET_PLAN_MEMBER (mutable hb_hashmap_t E(<hb_codepoint_t, contour_point_vector_t>), new_gid_contour_points_map)
 
 #ifdef HB_EXPERIMENTAL_API
 // name table overrides map: hb_ot_name_record_ids_t-> name string new value or
