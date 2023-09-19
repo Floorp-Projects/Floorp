@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Consulter et modifier les paramètres de vie privée</string>
     <!-- Description for all_urls add-on permission. -->
@@ -170,10 +170,20 @@
     <string name="mozac_feature_addons_successfully_installed">Installation réussie de %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Échec de l’installation de %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Échec de l’installation du module.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error">Ce module complémentaire n’a pas pu être téléchargé à cause d’un échec de connexion.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Ce module complémentaire n’a pas pu être installé car il semble corrompu.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Ce module complémentaire n’a pas pu être installé car il n’a pas été vérifié.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s n’a pas pu être installé car il n’est pas compatible avec %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">%1$s n’a pas pu être installé car il présente un risque élevé de provoquer des problèmes de stabilité ou de sécurité</string>
+    <string name="mozac_feature_addons_blocklisted_1">%1$s n’a pas pu être installé car il risque fortement de provoquer des problèmes de stabilité ou de sécurité.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s n’a pas pu être installé car il présente un risque élevé de provoquer des problèmes de stabilité ou de sécurité</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Activation réussie de %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

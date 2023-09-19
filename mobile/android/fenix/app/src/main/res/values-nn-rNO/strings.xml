@@ -2261,6 +2261,8 @@
     <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Dette vil ta omlag 60 sekund.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Takk for at du rapporterer!</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Info kjem snart</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Analysen er oppdatert</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
