@@ -34,9 +34,7 @@ class AudioParamTimeline : public AudioEventTimeline {
   }
 
   template <class TimeType>
-  float GetValueAtTime(TimeType aTime) {
-    return GetValueAtTime(aTime, 0);
-  }
+  float GetValueAtTime(TimeType aTime);
 
   template <typename TimeType>
   void InsertEvent(const AudioTimelineEvent& aEvent) {
@@ -54,12 +52,6 @@ class AudioParamTimeline : public AudioEventTimeline {
     }
     AudioEventTimeline::InsertEvent<TimeType>(aEvent);
   }
-
-  // Get the value of the AudioParam at time aTime + aCounter.
-  // aCounter here is an offset to aTime if we try to get the value in ticks,
-  // otherwise it should always be zero.  aCounter is meant to be used when
-  template <class TimeType>
-  float GetValueAtTime(TimeType aTime, size_t aCounter);
 
   // Get the values of the AudioParam at time aTime + (0 to aSize).
   // aBuffer must have the correct aSize.
@@ -87,23 +79,20 @@ class AudioParamTimeline : public AudioEventTimeline {
 };
 
 template <>
-inline float AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter) {
-  MOZ_ASSERT(!aCounter);
-
+inline float AudioParamTimeline::GetValueAtTime(double aTime) {
   // Getting an AudioParam value on an AudioNode does not consider input from
   // other AudioNodes, which is managed only on the graph thread.
   return BaseClass::GetValueAtTime(aTime);
 }
 
 template <>
-inline float AudioParamTimeline::GetValueAtTime(int64_t aTime,
-                                                size_t aCounter) {
-  MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
-  MOZ_ASSERT(!aCounter || !HasSimpleValue());
+inline float AudioParamTimeline::GetValueAtTime(int64_t aTime) {
+  // Use GetValuesAtTime() for a-rate parameters.
+  MOZ_ASSERT(aTime % WEBAUDIO_BLOCK_SIZE == 0);
 
   // Mix the value of the AudioParam itself with that of the AudioNode inputs.
-  return BaseClass::GetValueAtTime(static_cast<int64_t>(aTime + aCounter)) +
-         (mTrack ? AudioNodeInputValue(aCounter) : 0.0f);
+  return BaseClass::GetValueAtTime(aTime) +
+         (mTrack ? AudioNodeInputValue(0) : 0.0f);
 }
 
 template <>
