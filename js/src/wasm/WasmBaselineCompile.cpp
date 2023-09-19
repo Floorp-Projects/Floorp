@@ -7528,7 +7528,7 @@ bool BaseCompiler::emitArrayCopy() {
   return emitInstanceCall(SASigArrayCopy);
 }
 
-bool BaseCompiler::emitI31New() {
+bool BaseCompiler::emitRefI31() {
   Nothing value;
   if (!iter_.readConversion(ValType::I32,
                             ValType(RefType::i31().asNonNullable()), &value)) {
@@ -9934,8 +9934,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayLen());
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
-          case uint32_t(GcOp::I31New):
-            CHECK_NEXT(emitI31New());
+          case uint32_t(GcOp::RefI31):
+            CHECK_NEXT(emitRefI31());
           case uint32_t(GcOp::I31GetS):
             CHECK_NEXT(emitI31Get(FieldWideningOp::Signed));
           case uint32_t(GcOp::I31GetU):

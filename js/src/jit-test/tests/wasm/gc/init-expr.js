@@ -106,7 +106,7 @@ assertEq(wasmGcReadField(wasmGcReadField(result, 2), 1), 6);
       (item (struct.new $s (i32.const 123)))
       (item (array.new $a1 (f64.const 234) (i32.const 3)))
       (item (array.new_default $a2 (i32.const 3)))
-      (item (i31.new (i32.const 345)))
+      (item (ref.i31 (i32.const 345)))
     )
     (table $t1 (export "t1") 4 4 anyref)
 
@@ -115,7 +115,7 @@ assertEq(wasmGcReadField(wasmGcReadField(result, 2), 1), 6);
       (item (struct.new $s (i32.const 321)))
       (item (array.new $a1 (f64.const 432) (i32.const 3)))
       (item (array.new_default $a2 (i32.const 3)))
-      (item (i31.new (i32.const 543)))
+      (item (ref.i31 (i32.const 543)))
     ))
 
     (func (export "t1init") (table.init $t1 $e1 (i32.const 0) (i32.const 0) (i32.const 4)))

@@ -59,7 +59,7 @@ const a2 = {
   make: '(array.new_default $a2 (i32.const 10))',
   top: 'anyref',
 };
-const i31 = { name: 'i31', make: '(i31.new (i32.const 123))', top: 'anyref' };
+const i31 = { name: 'i31', make: '(ref.i31 (i32.const 123))', top: 'anyref' };
 const none = { name: 'none', none: true, top: 'anyref' };
 
 const func = { name: 'func', top: 'funcref' };

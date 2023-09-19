@@ -387,7 +387,7 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
             }
             CHECK(evalArrayNewDefault(cx, typeIndex));
           }
-          case uint32_t(GcOp::I31New): {
+          case uint32_t(GcOp::RefI31): {
             CHECK(evalI31New(cx));
           }
           default: {
@@ -593,7 +593,7 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
             }
             break;
           }
-          case uint32_t(GcOp::I31New): {
+          case uint32_t(GcOp::RefI31): {
             Nothing value;
             if (!iter.readConversion(ValType::I32,
                                      ValType(RefType::i31().asNonNullable()),

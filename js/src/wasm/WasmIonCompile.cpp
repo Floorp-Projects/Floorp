@@ -925,7 +925,7 @@ class FunctionCompiler {
 #endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
 #ifdef ENABLE_WASM_GC
-  MDefinition* i31New(MDefinition* input) {
+  MDefinition* refI31(MDefinition* input) {
     auto* ins = MWasmNewI31Ref::New(alloc(), input);
     curBlock_->add(ins);
     return ins;
@@ -7413,7 +7413,7 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
                              numElements, elemSizeDef);
 }
 
-static bool EmitI31New(FunctionCompiler& f) {
+static bool EmitRefI31(FunctionCompiler& f) {
   MDefinition* input;
   if (!f.iter().readConversion(
           ValType::I32, ValType(RefType::i31().asNonNullable()), &input)) {
@@ -7424,7 +7424,7 @@ static bool EmitI31New(FunctionCompiler& f) {
     return true;
   }
 
-  MDefinition* output = f.i31New(input);
+  MDefinition* output = f.refI31(input);
   if (!output) {
     return false;
   }
@@ -8163,8 +8163,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayLen(f));
           case uint32_t(GcOp::ArrayCopy):
             CHECK(EmitArrayCopy(f));
-          case uint32_t(GcOp::I31New):
-            CHECK(EmitI31New(f));
+          case uint32_t(GcOp::RefI31):
+            CHECK(EmitRefI31(f));
           case uint32_t(GcOp::I31GetS):
             CHECK(EmitI31Get(f, FieldWideningOp::Signed));
           case uint32_t(GcOp::I31GetU):
