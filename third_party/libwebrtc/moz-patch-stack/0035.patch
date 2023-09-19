@@ -1025,7 +1025,7 @@ index 8708bcac6b..d769a7ff85 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index bf5a5797cc..65ac6b4f43 100644
+index 0005503341..f2fedb3063 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -288,6 +288,7 @@ rtc_library("sample_counter") {
@@ -1191,7 +1191,7 @@ index bf5a5797cc..65ac6b4f43 100644
    visibility = [ "*" ]
    sources = [
      "helpers.cc",
-@@ -1506,6 +1531,7 @@ rtc_library("ssl") {
+@@ -1507,6 +1532,7 @@ rtc_library("ssl") {
      deps += [ ":win32" ]
    }
  }
@@ -1199,7 +1199,7 @@ index bf5a5797cc..65ac6b4f43 100644
  
  rtc_library("crypt_string") {
    sources = [
-@@ -1515,6 +1541,7 @@ rtc_library("crypt_string") {
+@@ -1516,6 +1542,7 @@ rtc_library("crypt_string") {
  }
  
  rtc_library("http_common") {
@@ -1207,7 +1207,7 @@ index bf5a5797cc..65ac6b4f43 100644
    sources = [
      "http_common.cc",
      "http_common.h",
-@@ -1531,6 +1558,7 @@ rtc_library("http_common") {
+@@ -1532,6 +1559,7 @@ rtc_library("http_common") {
  
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -1215,7 +1215,7 @@ index bf5a5797cc..65ac6b4f43 100644
  
  rtc_source_set("gtest_prod") {
    sources = [ "gtest_prod_util.h" ]
-@@ -2079,7 +2107,7 @@ if (rtc_include_tests) {
+@@ -2080,7 +2108,7 @@ if (rtc_include_tests) {
    }
  }
  
