@@ -178,7 +178,7 @@ enum class GLRenderer {
 
 class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
  public:
-  static MOZ_THREAD_LOCAL(uintptr_t) sCurrentContext;
+  static MOZ_THREAD_LOCAL(const GLContext*) sCurrentContext;
 
   const GLContextDesc mDesc;
 
