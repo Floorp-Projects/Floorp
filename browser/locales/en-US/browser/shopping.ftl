@@ -181,3 +181,15 @@ shopping-survey-next-button-label = Next
 shopping-survey-submit-button-label = Submit
 shopping-survey-terms-link = Terms of use
 shopping-survey-thanks-message = Thanks for your feedback!
+
+## Shopping Feature Callout strings.
+## "price tag" refers to the price tag icon displayed in the address bar to
+## access the feature.
+
+shopping-callout-closed-opted-in-subtitle = Get back to <strong>review checker</strong> whenever you see the price tag.
+
+shopping-callout-pdp-opted-in-title = Are these reviews reliable? Find out fast.
+shopping-callout-pdp-opted-in-subtitle = Open review checker to see an adjusted rating with unreliable reviews removed. Plus, see highlights from recent authentic reviews.
+
+shopping-callout-closed-not-opted-in-title = One click to reliable reviews
+shopping-callout-closed-not-opted-in-subtitle = Give review checker a try whenever you see the price tag. Get insights from real shoppers quickly — before you buy.
