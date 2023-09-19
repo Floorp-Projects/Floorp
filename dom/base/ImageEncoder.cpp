@@ -8,6 +8,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
+#include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -221,19 +222,18 @@ class EncodingRunnable : public Runnable {
 };
 
 /* static */
-nsresult ImageEncoder::ExtractData(nsAString& aType, const nsAString& aOptions,
-                                   const nsIntSize aSize, bool aUsePlaceholder,
-                                   nsICanvasRenderingContextInternal* aContext,
-                                   layers::CanvasRenderer* aRenderer,
-                                   nsIInputStream** aStream) {
+nsresult ImageEncoder::ExtractData(
+    nsAString& aType, const nsAString& aOptions, const nsIntSize aSize,
+    bool aUsePlaceholder, nsICanvasRenderingContextInternal* aContext,
+    OffscreenCanvasDisplayHelper* aOffscreenDisplay, nsIInputStream** aStream) {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
   if (!encoder) {
     return NS_IMAGELIB_ERROR_NO_ENCODER;
   }
 
   return ExtractDataInternal(aType, aOptions, nullptr, 0, aSize,
-                             aUsePlaceholder, nullptr, aContext, aRenderer,
-                             aStream, encoder);
+                             aUsePlaceholder, nullptr, aContext,
+                             aOffscreenDisplay, aStream, encoder);
 }
 
 /* static */
@@ -297,7 +297,7 @@ nsresult ImageEncoder::ExtractDataInternal(
     const nsAString& aType, const nsAString& aOptions, uint8_t* aImageBuffer,
     int32_t aFormat, const nsIntSize aSize, bool aUsePlaceholder,
     layers::Image* aImage, nsICanvasRenderingContextInternal* aContext,
-    layers::CanvasRenderer* aRenderer, nsIInputStream** aStream,
+    OffscreenCanvasDisplayHelper* aOffscreenDisplay, nsIInputStream** aStream,
     imgIEncoder* aEncoder) {
   if (aSize.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
@@ -319,19 +319,19 @@ nsresult ImageEncoder::ExtractDataInternal(
     NS_ConvertUTF16toUTF8 encoderType(aType);
     rv = aContext->GetInputStream(encoderType.get(), aOptions,
                                   getter_AddRefs(imgStream));
-  } else if (aRenderer && !aUsePlaceholder) {
-    MOZ_CRASH("unused?");
+  } else if (aOffscreenDisplay && !aUsePlaceholder) {
     const NS_ConvertUTF16toUTF8 encoderType(aType);
     if (BufferSizeFromDimensions(aSize.width, aSize.height, 4) == 0) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    const auto snapshot = aRenderer->BorrowSnapshot();
+    const RefPtr<SourceSurface> snapshot =
+        aOffscreenDisplay->GetSurfaceSnapshot();
     if (!snapshot) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    const RefPtr<DataSourceSurface> data = snapshot->mSurf->GetDataSurface();
+    const RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
     if (!data) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -345,6 +345,9 @@ nsresult ImageEncoder::ExtractDataInternal(
                                   aSize.width, aSize.height, aSize.width * 4,
                                   imgIEncoder::INPUT_FORMAT_HOSTARGB, aOptions);
       data->Unmap();
+    }
+    if (NS_SUCCEEDED(rv)) {
+      imgStream = aEncoder;
     }
   } else if (aImage && !aUsePlaceholder) {
     // It is safe to convert PlanarYCbCr format from YUV to RGB off-main-thread.
