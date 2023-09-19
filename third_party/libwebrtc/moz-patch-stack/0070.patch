@@ -1,34 +1,81 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 24 Oct 2022 14:03:00 -0500
-Subject: Bug 1797161 - pt3 - add static_assert to ensure we don't include
- task_queue_win.cc in Mozilla builds. r?ng!
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 12 Dec 2022 15:47:00 +0000
+Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
+ to gecko libyuv. r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D160117
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/50b15e036924203147e34ec20e2689fe4a847645
+Differential Revision: https://phabricator.services.mozilla.com/D163682
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
 ---
- rtc_base/task_queue_win.cc | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ BUILD.gn     | 4 ++++
+ sdk/BUILD.gn | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/rtc_base/task_queue_win.cc b/rtc_base/task_queue_win.cc
-index 7e46d58e27..bf55a25c69 100644
---- a/rtc_base/task_queue_win.cc
-+++ b/rtc_base/task_queue_win.cc
-@@ -8,6 +8,15 @@
-  *  be found in the AUTHORS file in the root of the source tree.
-  */
+diff --git a/BUILD.gn b/BUILD.gn
+index f43142e055..72bfb3393c 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -584,6 +584,10 @@ if (!build_with_chromium) {
+       ]
+     }
  
-+// Mozilla - this file should not be included in Mozilla builds until
-+// win32k API usage is removed.  This was once done in Bug 1395259, but
-+// the upstreaming attempt stalled.  Until win32k usage is officially
-+// removed upstream, we have reverted to upstream's version of the file
-+// (to reduce or elminate merge conflicts), and a static assert is
-+// placed here to ensure this file isn't accidentally included in the
-+// Mozilla build.
-+static_assert(false, "This file should not be built, see Bug 1797161.");
++    if (build_with_mozilla && is_mac) {
++      deps += [ "sdk:videocapture_objc" ]
++    }
 +
- #include "rtc_base/task_queue_win.h"
+     if (rtc_enable_protobuf) {
+       deps += [ "logging:rtc_event_log_proto" ]
+     }
+diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
+index ff89b21721..bef4521dc6 100644
+--- a/sdk/BUILD.gn
++++ b/sdk/BUILD.gn
+@@ -461,6 +461,7 @@ if (is_ios || is_mac) {
+       }
+     }
  
- // clang-format off
++    if (!build_with_mozilla) {
+     rtc_library("videosource_objc") {
+       sources = [
+         "objc/api/peerconnection/RTCVideoSource+Private.h",
+@@ -490,6 +491,7 @@ if (is_ios || is_mac) {
+         ":used_from_extension",
+       ]
+     }
++    }
+ 
+     rtc_library("videoframebuffer_objc") {
+       visibility = [ "*" ]
+@@ -522,6 +524,7 @@ if (is_ios || is_mac) {
+       ]
+     }
+ 
++    if (!build_with_mozilla) {
+     rtc_library("opengl_objc") {
+       sources = [
+         "objc/components/renderer/opengl/RTCDefaultShader.h",
+@@ -674,6 +677,7 @@ if (is_ios || is_mac) {
+         ":videoframebuffer_objc",
+       ]
+     }
++    }
+ 
+     rtc_library("videocapture_objc") {
+       visibility = [ "*" ]
+@@ -702,6 +706,7 @@ if (is_ios || is_mac) {
+       ]
+     }
+ 
++    if (!build_with_mozilla) {
+     rtc_library("videocodec_objc") {
+       visibility = [ "*" ]
+       configs += [ "..:no_global_constructors" ]
+@@ -1753,5 +1758,6 @@ if (is_ios || is_mac) {
+         "VideoToolbox.framework",
+       ]
+     }
++    }
+   }
+ }
 -- 
 2.37.3
 
