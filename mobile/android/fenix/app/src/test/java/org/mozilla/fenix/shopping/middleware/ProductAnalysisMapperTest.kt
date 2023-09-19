@@ -107,16 +107,16 @@ class ProductAnalysisMapperTest {
     @Test
     fun `WHEN product analysis is null THEN it is mapped to Error`() {
         val actual = null.toProductReviewState()
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError
 
         assertEquals(expected, actual)
     }
 
     @Test
-    fun `WHEN product id is null THEN it is mapped to Error`() {
+    fun `WHEN product id is null THEN it is mapped to no analysis present`() {
         val actual =
             ProductAnalysisTestData.productAnalysis(productId = null).toProductReviewState()
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()
 
         assertEquals(expected, actual)
     }
@@ -141,7 +141,7 @@ class ProductAnalysisMapperTest {
         }
 
         val actual = randomAnalysis.toProductReviewState()
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError
 
         assertEquals(expected, actual)
     }

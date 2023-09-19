@@ -49,7 +49,22 @@ sealed interface ReviewQualityCheckState : State {
             /**
              * Denotes an error has occurred.
              */
-            object Error : ProductReviewState
+            sealed interface Error : ProductReviewState {
+                /**
+                 * Denotes a network error has occurred.
+                 */
+                object NetworkError : Error
+
+                /**
+                 * Denotes a product is not supported.
+                 */
+                object UnsupportedProductTypeError : Error
+
+                /**
+                 * Denotes a generic error has occurred.
+                 */
+                object GenericError : Error
+            }
 
             /**
              * Denotes no analysis is present for the product the user is browsing.
@@ -91,6 +106,11 @@ sealed interface ReviewQualityCheckState : State {
                 val highlightsFadeVisible: Boolean =
                     highlights != null && showMoreButtonVisible &&
                         highlights.forCompactMode().entries.first().value.size > 1
+
+                val notEnoughReviewsCardVisible: Boolean =
+                    (reviewGrade == null || adjustedRating == null) &&
+                        analysisStatus != AnalysisStatus.NEEDS_ANALYSIS &&
+                        analysisStatus != AnalysisStatus.REANALYZING
 
                 /**
                  * The status of the product analysis.
