@@ -32,6 +32,8 @@ def FindSrcDirPath():
 # Skip these dependencies (list without solution name prefix).
 DONT_AUTOROLL_THESE = [
     'src/examples/androidtests/third_party/gradle',
+    # Disable the roll of 'android_ndk' as it won't appear in chromium DEPS.
+    'src/third_party/android_ndk',
     'src/third_party/mockito/src',
 ]
 
