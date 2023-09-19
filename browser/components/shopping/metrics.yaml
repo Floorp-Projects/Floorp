@@ -427,3 +427,22 @@ shopping:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - events
+
+  surface_powered_by_fakespot_link_clicked:
+    type: event
+    description: |
+      The user clicked the "Fakespot by Mozilla" link in the shopping side
+      bar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853785
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853785
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+

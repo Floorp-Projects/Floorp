@@ -398,6 +398,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "noReviewReliabilityAvailable":
         Glean.shopping.surfaceNoReviewReliabilityAvailable.record();
         break;
+      case "surfacePoweredByFakespotLinkClicked":
+        Glean.shopping.surfacePoweredByFakespotLinkClicked.record();
+        break;
     }
   }
 }
