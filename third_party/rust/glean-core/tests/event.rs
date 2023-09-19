@@ -31,7 +31,7 @@ fn record_properly_records_without_optional_arguments() {
         vec![],
     );
 
-    metric.record_sync(&glean, 1000, HashMap::new());
+    metric.record_sync(&glean, 1000, HashMap::new(), 0);
 
     for store_name in store_names {
         let events = metric.get_value(&glean, &*store_name).unwrap();
@@ -68,7 +68,7 @@ fn record_properly_records_with_optional_arguments() {
     .cloned()
     .collect();
 
-    metric.record_sync(&glean, 1000, extra);
+    metric.record_sync(&glean, 1000, extra, 0);
 
     for store_name in store_names {
         let events = metric.get_value(&glean, &*store_name).unwrap();
@@ -114,7 +114,7 @@ fn snapshot_correctly_clears_the_stores() {
         vec![],
     );
 
-    metric.record_sync(&glean, 1000, HashMap::new());
+    metric.record_sync(&glean, 1000, HashMap::new(), 0);
 
     let snapshot = glean
         .event_storage()
@@ -186,7 +186,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
     for i in 0..510 {
         let mut extra = HashMap::new();
         extra.insert("test_event_number".to_string(), i.to_string());
-        click.record_sync(&glean, i, extra);
+        click.record_sync(&glean, i, extra, 0);
     }
 
     assert_eq!(10, click.get_value(&glean, "events").unwrap().len());
@@ -247,7 +247,7 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
     extra.insert("extra1".into(), test_value.to_string());
     extra.insert("truncatedExtra".into(), test_value_long.clone());
 
-    test_event.record_sync(&glean, 0, extra);
+    test_event.record_sync(&glean, 0, extra, 0);
 
     let snapshot = glean
         .event_storage()
@@ -281,9 +281,9 @@ fn snapshot_sorts_the_timestamps() {
         vec![],
     );
 
-    metric.record_sync(&glean, 1000, HashMap::new());
-    metric.record_sync(&glean, 100, HashMap::new());
-    metric.record_sync(&glean, 10000, HashMap::new());
+    metric.record_sync(&glean, 1000, HashMap::new(), 0);
+    metric.record_sync(&glean, 100, HashMap::new(), 0);
+    metric.record_sync(&glean, 10000, HashMap::new(), 0);
 
     let snapshot = glean
         .event_storage()
@@ -332,7 +332,7 @@ fn ensure_custom_ping_events_dont_overflow() {
     .is_err());
 
     for _ in 0..500 {
-        event.record_sync(&glean, 0, HashMap::new());
+        event.record_sync(&glean, 0, HashMap::new(), 0);
     }
     assert!(test_get_num_recorded_errors(
         &glean,
@@ -342,7 +342,7 @@ fn ensure_custom_ping_events_dont_overflow() {
     .is_err());
 
     // That should top us right up to the limit. Now for going over.
-    event.record_sync(&glean, 0, HashMap::new());
+    event.record_sync(&glean, 0, HashMap::new(), 0);
     assert!(
         test_get_num_recorded_errors(&glean, &event_meta.into(), ErrorType::InvalidOverflow)
             .is_err()
@@ -379,7 +379,7 @@ fn ensure_custom_ping_events_from_multiple_runs_work() {
             .flush_pending_events_on_startup(&glean, false));
         tempdir = dir;
 
-        event.record_sync(&glean, 10, HashMap::new());
+        event.record_sync(&glean, 10, HashMap::new(), 0);
     }
 
     {
@@ -391,7 +391,7 @@ fn ensure_custom_ping_events_from_multiple_runs_work() {
 
         // Gotta use get_timestamp_ms or this event won't happen "after" the injected
         // glean.restarted event from `flush_pending_events_on_startup`.
-        event.record_sync(&glean, get_timestamp_ms(), HashMap::new());
+        event.record_sync(&glean, get_timestamp_ms(), HashMap::new(), 0);
 
         let json = glean
             .event_storage()
@@ -431,7 +431,7 @@ fn event_storage_trimming() {
     {
         let (glean, dir) = new_glean(Some(tempdir));
         tempdir = dir;
-        event.record_sync(&glean, 10, HashMap::new());
+        event.record_sync(&glean, 10, HashMap::new(), 0);
 
         assert_eq!(1, event.get_value(&glean, store_name).unwrap().len());
         assert_eq!(1, event.get_value(&glean, store_name_2).unwrap().len());
@@ -451,4 +451,56 @@ fn event_storage_trimming() {
         assert_eq!(1, event.get_value(&glean, store_name).unwrap().len());
         assert!(event.get_value(&glean, store_name_2).is_none());
     }
+}
+
+#[test]
+fn with_event_timestamps() {
+    use glean_core::{Glean, InternalConfiguration};
+
+    let dir = tempfile::tempdir().unwrap();
+    let cfg = InternalConfiguration {
+        data_path: dir.path().display().to_string(),
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        language_binding_name: "Rust".into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        app_build: "Unknown".into(),
+        use_core_mps: false,
+        trim_data_to_registered_pings: false,
+        log_level: None,
+        rate_limit: None,
+        enable_event_timestamps: true, // Enabling event timestamps
+    };
+    let glean = Glean::new(cfg).unwrap();
+
+    let store_name = "store-name";
+    let event = EventMetric::new(
+        CommonMetricData {
+            name: "name".into(),
+            category: "category".into(),
+            send_in_pings: vec![store_name.into()],
+            lifetime: Lifetime::Ping,
+            ..Default::default()
+        },
+        vec![],
+    );
+
+    event.record_sync(&glean, get_timestamp_ms(), HashMap::new(), 12345);
+
+    let json = glean
+        .event_storage()
+        .snapshot_as_json(&glean, store_name, false)
+        .unwrap();
+    assert_eq!(json.as_array().unwrap().len(), 1);
+    assert_eq!(json[0]["category"], "category");
+    assert_eq!(json[0]["name"], "name");
+
+    let glean_timestamp = json[0]["extra"]["glean_timestamp"]
+        .as_str()
+        .expect("glean_timestamp should exist");
+    let glean_timestamp: i64 = glean_timestamp
+        .parse()
+        .expect("glean_timestamp should be an integer");
+    assert_eq!(12345, glean_timestamp);
 }

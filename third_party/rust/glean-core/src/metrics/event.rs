@@ -12,6 +12,8 @@ use crate::util::truncate_string_at_boundary_with_error;
 use crate::CommonMetricData;
 use crate::Glean;
 
+use chrono::Utc;
+
 const MAX_LENGTH_EXTRA_KEY_VALUE: usize = 500;
 
 /// An event metric.
@@ -68,8 +70,13 @@ impl EventMetric {
     ///             If any key is not allowed, an error is reported and no event is recorded.
     pub fn record_with_time(&self, timestamp: u64, extra: HashMap<String, String>) {
         let metric = self.clone();
+
+        // Precise timestamp based on wallclock. Will be used if `enable_event_timestamps` is true.
+        let now = Utc::now();
+        let precise_timestamp = now.timestamp_millis() as u64;
+
         crate::launch_with_glean(move |glean| {
-            let sent = metric.record_sync(glean, timestamp, extra);
+            let sent = metric.record_sync(glean, timestamp, extra, precise_timestamp);
             if sent {
                 let state = crate::global_state().lock().unwrap();
                 if let Err(e) = state.callbacks.trigger_upload() {
@@ -123,15 +130,24 @@ impl EventMetric {
         glean: &Glean,
         timestamp: u64,
         extra: HashMap<String, String>,
+        precise_timestamp: u64,
     ) -> bool {
         if !self.should_record(glean) {
             return false;
         }
 
-        let extra_strings = match self.validate_extra(glean, extra) {
+        let mut extra_strings = match self.validate_extra(glean, extra) {
             Ok(extra) => extra,
             Err(()) => return false,
         };
+
+        if glean.with_timestamps() {
+            if extra_strings.is_none() {
+                extra_strings.replace(Default::default());
+            }
+            let map = extra_strings.get_or_insert(Default::default());
+            map.insert("glean_timestamp".to_string(), precise_timestamp.to_string());
+        }
 
         glean
             .event_storage()

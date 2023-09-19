@@ -74,6 +74,7 @@ dictionary InternalConfiguration {
     boolean trim_data_to_registered_pings;
     LevelFilter? log_level;
     PingRateLimit? rate_limit;
+    boolean enable_event_timestamps;
 };
 
 // How to specify the rate pings may be uploaded before they are throttled.
