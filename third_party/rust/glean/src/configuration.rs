@@ -40,6 +40,8 @@ pub struct Configuration {
     pub log_level: Option<LevelFilter>,
     /// The rate pings may be uploaded before they are throttled.
     pub rate_limit: Option<crate::PingRateLimit>,
+    /// (Experimental) Whether to add a wallclock timestamp to all events.
+    pub enable_event_timestamps: bool,
 }
 
 /// Configuration builder.
@@ -80,6 +82,8 @@ pub struct Builder {
     /// Optional: The internal ping upload rate limit.
     /// Default: `None`
     pub rate_limit: Option<crate::PingRateLimit>,
+    /// (Experimental) Whether to add a wallclock timestamp to all events.
+    pub enable_event_timestamps: bool,
 }
 
 impl Builder {
@@ -101,6 +105,7 @@ impl Builder {
             trim_data_to_registered_pings: false,
             log_level: None,
             rate_limit: None,
+            enable_event_timestamps: false,
         }
     }
 
@@ -118,6 +123,7 @@ impl Builder {
             trim_data_to_registered_pings: self.trim_data_to_registered_pings,
             log_level: self.log_level,
             rate_limit: self.rate_limit,
+            enable_event_timestamps: self.enable_event_timestamps,
         }
     }
 
@@ -154,6 +160,12 @@ impl Builder {
     /// Set whether Glean should limit its storage to only that of registered pings.
     pub fn with_trim_data_to_registered_pings(mut self, value: bool) -> Self {
         self.trim_data_to_registered_pings = value;
+        self
+    }
+
+    /// Set whether to add a wallclock timestamp to all events (experimental).
+    pub fn with_event_timestamps(mut self, value: bool) -> Self {
+        self.enable_event_timestamps = value;
         self
     }
 }

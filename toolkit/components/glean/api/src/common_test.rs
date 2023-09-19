@@ -41,6 +41,7 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         trim_data_to_registered_pings: false,
         log_level: None,
         rate_limit: None,
+        enable_event_timestamps: false,
     };
 
     let client_info = glean::ClientInfoMetrics {
