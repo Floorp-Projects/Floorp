@@ -5,16 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OffscreenCanvasDisplayHelper.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "nsRFPService.h"
 
 namespace mozilla::dom {
 
@@ -452,6 +455,52 @@ already_AddRefed<layers::Image> OffscreenCanvasDisplayHelper::GetAsImage() {
     return nullptr;
   }
   return MakeAndAddRef<layers::SourceSurfaceImage>(surface);
+}
+
+UniquePtr<uint8_t[]> OffscreenCanvasDisplayHelper::GetImageBuffer(
+    int32_t* aOutFormat, gfx::IntSize* aOutImageSize) {
+  RefPtr<gfx::SourceSurface> surface = GetSurfaceSnapshot();
+  if (!surface) {
+    return nullptr;
+  }
+
+  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+  if (!dataSurface) {
+    return nullptr;
+  }
+
+  *aOutFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+  *aOutImageSize = dataSurface->GetSize();
+
+  UniquePtr<uint8_t[]> imageBuffer = gfx::SurfaceToPackedBGRA(dataSurface);
+  if (!imageBuffer) {
+    return nullptr;
+  }
+
+  bool resistFingerprinting;
+  nsICookieJarSettings* cookieJarSettings = nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mCanvasElement) {
+      Document* doc = mCanvasElement->OwnerDoc();
+      resistFingerprinting =
+          doc->ShouldResistFingerprinting(RFPTarget::CanvasRandomization);
+      if (resistFingerprinting) {
+        cookieJarSettings = doc->CookieJarSettings();
+      }
+    } else {
+      resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
+          "Fallback", RFPTarget::CanvasRandomization);
+    }
+  }
+
+  if (resistFingerprinting) {
+    nsRFPService::RandomizePixels(
+        cookieJarSettings, imageBuffer.get(),
+        dataSurface->GetSize().width * dataSurface->GetSize().height * 4,
+        gfx::SurfaceFormat::A8R8G8B8_UINT32);
+  }
+  return imageBuffer;
 }
 
 }  // namespace mozilla::dom
