@@ -1085,13 +1085,14 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const {
       size,
       marginBlock,
-      marginInline
+      marginInline,
+      label
     } = this.props.content.dismiss_button;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       className: "dismiss-button",
       onClick: this.props.handleAction,
       value: "dismiss_button",
-      "data-l10n-id": "spotlight-dialog-close-button",
+      "data-l10n-id": (label === null || label === void 0 ? void 0 : label.string_id) || "spotlight-dialog-close-button",
       "button-size": size,
       style: {
         marginBlock,

@@ -748,6 +748,10 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .legal-paragraph a {
   text-decoration: underline;
 }
+.onboardingContainer.shopping .screen[pos=split] .section-main .dismiss-button {
+  top: 0;
+  margin: 14px 10px;
+}
 .onboardingContainer.shopping .screen[pos=split] .section-secondary {
   display: none;
 }

@@ -86,6 +86,10 @@ add_task(async function test_showSurvey_Enabled() {
             !content.document.getElementById("multi-stage-message-root").hidden,
             "Survey Message container is shown"
           );
+          ok(
+            content.document.querySelector(".dismiss-button"),
+            "Dismiss button is shown"
+          );
 
           let survey_seen_status = Services.prefs.getBoolPref(
             "browser.shopping.experience2023.survey.hasSeen",
