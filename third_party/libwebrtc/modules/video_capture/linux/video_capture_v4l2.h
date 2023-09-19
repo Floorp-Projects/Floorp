@@ -48,11 +48,8 @@ class VideoCaptureModuleV4L2 : public VideoCaptureImpl {
   int32_t _deviceFd;
 
   int32_t _buffersAllocatedByDevice;
-  int32_t _currentWidth;
-  int32_t _currentHeight;
-  int32_t _currentFrameRate;
+  VideoCaptureCapability configured_capability_;
   bool _captureStarted;
-  VideoType _captureVideoType;
   struct Buffer {
     void* start;
     size_t length;
