@@ -40,6 +40,7 @@ async function testSetup() {
   });
 
   // Reset GLEAN (FOG) telemetry to avoid data bleeding over from other tests.
+  await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
 
   registerCleanupFunction(() => {
@@ -401,15 +402,15 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
 
   let testMetricState = doAssert => {
     for (let label of labels) {
+      let expectedValue = expected[label] ?? null;
       if (doAssert) {
         is(
           Glean.cookieBannersClick.result[label].testGetValue(),
-          expected[label],
+          expectedValue,
           `Counter for label '${label}' has correct state.`
         );
       } else if (
-        Glean.cookieBannersClick.result[label].testGetValue() !==
-        expected[label]
+        Glean.cookieBannersClick.result[label].testGetValue() !== expectedValue
       ) {
         return false;
       }
@@ -432,6 +433,7 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
     // Reset telemetry, even if the test condition above throws. This is to
     // avoid failing subsequent tests in case of a test failure.
     if (resetFOG) {
+      await Services.fog.testFlushAllChildren();
       Services.fog.testResetFOG();
     }
   }
