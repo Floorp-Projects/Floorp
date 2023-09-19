@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include "libavutil/dict.h"
+#include "libavcodec/avcodec.h"
 #ifdef __GNUC__
 #  include <unistd.h>
 #endif
@@ -16,10 +17,29 @@
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
 #include "VideoUtils.h"
+#include "FFmpegLibs.h"
 
 namespace mozilla {
 
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMutex;
+
+static bool IsVideoCodec(AVCodecID aCodecID) {
+  switch (aCodecID) {
+    case AV_CODEC_ID_H264:
+#if LIBAVCODEC_VERSION_MAJOR >= 54
+    case AV_CODEC_ID_VP8:
+#endif
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+    case AV_CODEC_ID_VP9:
+#endif
+#ifdef FFMPEG_AV1_DECODE
+    case AV_CODEC_ID_AV1:
+#endif
+      return true;
+    default:
+      return false;
+  }
+}
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
                                                 AVCodecID aCodecID)
@@ -29,6 +49,7 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
       mFrame(nullptr),
       mExtraData(nullptr),
       mCodecID(aCodecID),
+      mVideoCodec(IsVideoCodec(aCodecID)),
       mTaskQueue(TaskQueue::Create(
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
           "FFmpegDataDecoder")),

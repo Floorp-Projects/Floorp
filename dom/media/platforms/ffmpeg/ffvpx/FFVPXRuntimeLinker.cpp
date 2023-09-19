@@ -45,7 +45,7 @@ static PRLibrary* MozAVLink(nsIFile* aFile) {
   PRLibrary* lib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
 #endif
   if (!lib) {
-    FFMPEG_LOG("unable to load library %s", aFile->HumanReadablePath().get());
+    FFMPEGV_LOG("unable to load library %s", aFile->HumanReadablePath().get());
   }
   return lib;
 }
