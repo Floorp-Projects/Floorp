@@ -35,6 +35,7 @@ export class ShoppingContainer extends MozLitElement {
     userReportedAvailable: { type: Boolean },
     adsEnabled: { type: Boolean },
     adsEnabledByUser: { type: Boolean },
+    isAnalysisInProgress: { type: Boolean },
   };
 
   static get queries() {
@@ -77,9 +78,9 @@ export class ShoppingContainer extends MozLitElement {
     showOnboarding,
     productUrl,
     recommendationData,
-    isPolledRequestDone,
     adsEnabled,
     adsEnabledByUser,
+    isAnalysisInProgress,
   }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
@@ -89,7 +90,7 @@ export class ShoppingContainer extends MozLitElement {
     this.productUrl = productUrl;
     this.recommendationData = recommendationData;
     this.isOffline = !navigator.onLine;
-    this.isPolledRequestDone = isPolledRequestDone;
+    this.isAnalysisInProgress = isAnalysisInProgress;
     this.adsEnabled = adsEnabled;
     this.adsEnabledByUser = adsEnabledByUser;
   }
@@ -101,6 +102,7 @@ export class ShoppingContainer extends MozLitElement {
         break;
       case "NewAnalysisRequested":
       case "ReanalysisRequested":
+        this.isAnalysisInProgress = true;
         this.analysisEvent = {
           type: event.type,
           productUrl: this.productUrl,
@@ -148,7 +150,7 @@ export class ShoppingContainer extends MozLitElement {
     // The user requested an analysis which is not done yet.
     if (
       this.analysisEvent?.productUrl == this.productUrl &&
-      !this.isPolledRequestDone
+      this.isAnalysisInProgress
     ) {
       const isReanalysis = this.analysisEvent.type === "ReanalysisRequested";
       return html`<shopping-message-bar
@@ -308,8 +310,14 @@ export class ShoppingContainer extends MozLitElement {
       content = this.getLoadingTemplate({ animate: false });
       hideFooter = true;
     } else if (!this.data) {
-      content = this.getLoadingTemplate();
-      hideFooter = true;
+      if (this.isAnalysisInProgress) {
+        content = html`<shopping-message-bar
+          type="analysis-in-progress"
+        ></shopping-message-bar>`;
+      } else {
+        content = this.getLoadingTemplate();
+        hideFooter = true;
+      }
     } else {
       content = this.getContentTemplate();
     }

@@ -40,6 +40,14 @@ add_task(async function test_in_progress_analysis_unanalyzed() {
           );
 
           analysisButton.click();
+          await shoppingContainer.updateComplete;
+
+          // Mock the response from analysis status being "pending"
+          shoppingContainer.isAnalysisInProgress = true;
+          // Add data back, as it was unset as due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+
           await messageBarVisiblePromise;
           await shoppingContainer.updateComplete;
 
@@ -96,6 +104,14 @@ add_task(async function test_in_progress_analysis_stale() {
           );
 
           analysisLink.click();
+          await shoppingContainer.updateComplete;
+
+          // Mock the response from analysis status being "pending"
+          shoppingContainer.isAnalysisInProgress = true;
+          // Add data back, as it was unset as due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+
           await messageBarVisiblePromise;
           await shoppingContainer.updateComplete;
 
