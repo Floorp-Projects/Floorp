@@ -19,6 +19,7 @@ RUN apt-get install \
       default-jdk-headless \
       python3-progressbar \
       unzip \
+      xxd \
       zip \
       && \
     sed -i '/en_US.UTF-8/s/^# *//' /etc/locale.gen && \
