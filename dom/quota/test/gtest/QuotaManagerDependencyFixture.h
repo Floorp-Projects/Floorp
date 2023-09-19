@@ -17,9 +17,7 @@ namespace mozilla::dom::quota::test {
 
 class QuotaManagerDependencyFixture : public testing::Test {
  public:
- protected:
   static void InitializeFixture();
-
   static void ShutdownFixture();
 
   static void InitializeStorage();
