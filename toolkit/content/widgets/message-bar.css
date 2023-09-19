@@ -10,11 +10,11 @@
   --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
   --close-fill-color: var(--in-content-icon-color);
   --icon-size: 16px;
-  --close-icon-size: 24px;
+  --close-icon-size: 28px;
 }
 
 :host([message-bar-type=infobar]) {
-  --close-icon-size: 24px;
+  --close-icon-size: 28px;
 }
 
 :host {
@@ -259,10 +259,10 @@
 .notification-content {
   margin: 0;
   margin-inline-start: 8px;
+  padding-block: 3px;
 }
 
 .notification-message {
-  min-height: 16px; /* min-height: 32px with block padding */
   padding-block: 8px;
   margin-inline-end: 20px;
 }
@@ -287,10 +287,8 @@
 }
 
 .notification-button {
-  margin: 4px;
-  /* This is supposed to be 6px but then the buttons are 26px tall by default
-   * on Windows. Drop it down to 4px (with the 1px border) */
-  padding-block: 3px;
+  align-items: center;
+  margin: 0 4px;
 }
 
 .notification-button:first-of-type {
@@ -308,7 +306,7 @@ strong {
 
 .infobar > .icon {
   padding: 0;
-  margin: 8px 0;
+  margin: 10px 0;
 }
 
 .infobar > .icon,
