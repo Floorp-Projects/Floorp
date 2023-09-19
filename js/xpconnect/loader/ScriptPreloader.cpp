@@ -1200,12 +1200,6 @@ bool ScriptPreloader::StartDecodeTask(
   return NS_SUCCEEDED(rv);
 }
 
-static size_t ThreadStackQuotaForSize(size_t size) {
-  // Set the stack quota to 10% less that the actual size.
-  // NOTE: This follows what JS helper thread does.
-  return size_t(double(size) * 0.9);
-}
-
 NS_IMETHODIMP ScriptPreloader::DecodeTask::Run() {
   auto failure = [&]() {
     RefPtr<JS::Stencil> stencil;
@@ -1222,8 +1216,9 @@ NS_IMETHODIMP ScriptPreloader::DecodeTask::Run() {
 
   auto cleanup = MakeScopeExit([&]() { JS::DestroyFrontendContext(fc); });
 
-  size_t stackSize = TaskController::GetThreadStackSize();
-  JS::SetNativeStackQuota(fc, ThreadStackQuotaForSize(stackSize));
+  const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+
+  JS::SetNativeStackQuota(fc, kDefaultStackQuota);
 
   size_t remaining = mDecodingSources.length();
   for (auto& source : mDecodingSources) {

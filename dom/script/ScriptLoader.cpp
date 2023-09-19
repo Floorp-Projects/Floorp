@@ -1827,16 +1827,8 @@ class ScriptOrModuleCompileTask final : public CompileOrDecodeTask {
   }
 
  private:
-  static size_t ThreadStackQuotaForSize(size_t size) {
-    // Set the stack quota to 10% less that the actual size.
-    // NOTE: This follows what JS helper thread does.
-    return size_t(double(size) * 0.9);
-  }
-
   already_AddRefed<JS::Stencil> Compile() {
-    size_t stackSize = TaskController::GetThreadStackSize();
-    JS::SetNativeStackQuota(mFrontendContext,
-                            ThreadStackQuotaForSize(stackSize));
+    JS::SetNativeStackQuota(mFrontendContext, kDefaultStackQuota);
 
     JS::CompilationStorage compileStorage;
     auto compile = [&](auto& source) {
