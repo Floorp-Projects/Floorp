@@ -1550,8 +1550,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 
 .panel-header > h1 {
   flex: auto;
-  font-size: inherit;
-  font-weight: 600;
   margin: 0;
 }
 
