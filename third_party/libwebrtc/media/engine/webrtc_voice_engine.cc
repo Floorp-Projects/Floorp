@@ -433,6 +433,28 @@ rtc::scoped_refptr<webrtc::AudioState> WebRtcVoiceEngine::GetAudioState()
   return audio_state_;
 }
 
+std::unique_ptr<VoiceMediaSendChannelInterface>
+WebRtcVoiceEngine::CreateSendChannel(
+    webrtc::Call* call,
+    const MediaConfig& config,
+    const AudioOptions& options,
+    const webrtc::CryptoOptions& crypto_options,
+    webrtc::AudioCodecPairId codec_pair_id) {
+  return std::make_unique<WebRtcVoiceSendChannel>(
+      this, config, options, crypto_options, call, codec_pair_id);
+}
+
+std::unique_ptr<VoiceMediaReceiveChannelInterface>
+WebRtcVoiceEngine::CreateReceiveChannel(
+    webrtc::Call* call,
+    const MediaConfig& config,
+    const AudioOptions& options,
+    const webrtc::CryptoOptions& crypto_options,
+    webrtc::AudioCodecPairId codec_pair_id) {
+  return std::make_unique<WebRtcVoiceReceiveChannel>(
+      this, config, options, crypto_options, call, codec_pair_id);
+}
+
 VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
     MediaChannel::Role role,
     webrtc::Call* call,
@@ -444,13 +466,13 @@ VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
   std::unique_ptr<VoiceMediaSendChannelInterface> send_channel;
   std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_channel;
   if (role == MediaChannel::Role::kSend || role == MediaChannel::Role::kBoth) {
-    send_channel = std::make_unique<WebRtcVoiceSendChannel>(
-        this, config, options, crypto_options, call, codec_pair_id);
+    send_channel =
+        CreateSendChannel(call, config, options, crypto_options, codec_pair_id);
   }
   if (role == MediaChannel::Role::kReceive ||
       role == MediaChannel::Role::kBoth) {
-    receive_channel = std::make_unique<WebRtcVoiceReceiveChannel>(
-        this, config, options, crypto_options, call, codec_pair_id);
+    receive_channel = CreateReceiveChannel(call, config, options,
+                                           crypto_options, codec_pair_id);
   }
   return new VoiceMediaShimChannel(std::move(send_channel),
                                    std::move(receive_channel));
