@@ -1061,7 +1061,6 @@ static bool ValidateReadPixelsFormatAndType(
 
   ////
 
-  MOZ_ASSERT(gl->IsCurrent());
   const auto implPI = webgl->ValidImplementationColorReadPI(srcUsage);
   if (pi == implPI) return true;
 

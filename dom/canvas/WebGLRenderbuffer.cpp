@@ -24,8 +24,6 @@ static GLenum DepthFormatForDepthStencilEmu(gl::GLContext* gl) {
 }
 
 static GLuint DoCreateRenderbuffer(gl::GLContext* gl) {
-  MOZ_ASSERT(gl->IsCurrent());
-
   GLuint ret = 0;
   gl->fGenRenderbuffers(1, &ret);
   return ret;
