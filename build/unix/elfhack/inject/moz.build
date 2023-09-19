@@ -11,7 +11,7 @@ Library("elfhack_inject")
 DIST_INSTALL = False
 
 stem = CONFIG["CPU_ARCH"]
-if CONFIG["OS_TARGET"] == "Android":
+if CONFIG["RELRHACK"] and CONFIG["OS_TARGET"] == "Android":
     stem += "-android"
 
 gen_src = "%s.c" % stem
