@@ -30,78 +30,16 @@ job-defaults:
         --exclude-directory-metadata=yes
         --exclude-command .--line-numbers
 
-jobs:
-    artifact-win64-aarch64-eme-validation:
-        symbol: DWE
-        new: build-win64-aarch64-eme/opt
-        original: build-win64-aarch64/opt
-        unpack: true
-        fail-on-diff: true
-        pre-diff-commands:
-            # The EME version has extra files under i686/.
-            - rm -rf b/firefox/i686
-            # The i686/ files appear in precomplete, so after removing those references,
-            # we expect the same content as the non-EME build.
-            - sed -i '/i686\//d' b/firefox/precomplete
-            # Remove noise from differences in line numbers in preprocessor output
-            # due to #if/#else branches.
-            - sed -i '/^\/\/@line /d' {a,b}/firefox/browser/defaults/preferences/firefox.js
-            # Removing media.gmp-widevinecdm.* preferences, and setting
-            # browser.eme.ui.enabled to false should give us the same preferences as
-            # the non-EME build.
-            - sed -i '/browser\.eme\.ui\.enabled/s/true/false/;/media\.gmp-widevinecdm\./d' b/firefox/browser/defaults/preferences/firefox.js
-            # bug 1825141 - telemetry.fog.artifact_build isn't stable between
-            # artifact and not-artifact builds, so remove its line if present.
-            - sed -i '/telemetry\.fog\.artifact\_build/d' b/firefox/browser/defaults/preferences/firefox.js
-        # Extra diffoscope arguments to account for:
-        # - about:buildconfig being expectedly different.
-        # - There are some differences in PE metadata in helper.exe because
-        #   it's (re)built in the EME build, and that part of the build is
-        #   not reproducible.
-        extra-args: >-
-            --exclude-directory-metadata=recursive
-            --exclude b/firefox/chrome/toolkit/content/global/buildconfig.html
-            --exclude b/firefox/uninstall/helper.exe
-        # This is necessary to avoid building `build-win64-aarch64` on every push on autoland
-        # A more robust fix for this is https://bugzilla.mozilla.org/show_bug.cgi?id=1643346
-        optimization:
-            skip-unless-expanded: null
-
-    reproducible-linux32:
-        symbol: Linux32
-        new: build-linux-reproduced/opt
-        original: build-linux-shippable/opt
-        fail-on-diff: true
-        run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
-
-    reproducible-linux32-generated-files:
-        symbol: Linux32g
-        artifact: target.generated-files.tar.gz
-        new: build-linux-reproduced/opt
-        original: build-linux-shippable/opt
-        fail-on-diff: true
-        run-on-projects: ['mozilla-central']  # Do not run linux32 on autoland, Bug 1599197
-
-    reproducible-linux64:
-        symbol: Linux64
-        new: build-linux64-reproduced/opt
-        original: build-linux64-shippable/opt
-        fail-on-diff: true
-        run-on-projects: ['mozilla-central']
-
-    reproducible-linux64-generated-files:
-        symbol: Linux64g
-        artifact: target.generated-files.tar.gz
-        new: build-linux64-reproduced/opt
-        original: build-linux64-shippable/opt
-        fail-on-diff: true
-        run-on-projects: ['mozilla-central']
+jobs-from:
+    - artifacts.yml
+    - reproducible.yml
 
 # Make a task for each diff we might want. The following are just examples,
 # Both original and new can point to builds from the full set of tasks or
 # from other sets through an index-search. Other kinds than `build` can be
 # compared (for example, static-analysis), provided you adjust the
 # kind-dependencies above.
+# jobs:
 #     android-build-vs-previous-try:
 #         symbol: A
 #         new: build-android-arm/opt

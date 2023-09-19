@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    fail-on-diff: true
+    run-on-projects: ['mozilla-central']
+
+reproducible-linux32:
+    symbol: Linux32
+    new: build-linux-reproduced/opt
+    original: build-linux-shippable/opt
+
+reproducible-linux32-generated-files:
+    symbol: Linux32g
+    artifact: target.generated-files.tar.gz
+    new: build-linux-reproduced/opt
+    original: build-linux-shippable/opt
+
+reproducible-linux64:
+    symbol: Linux64
+    new: build-linux64-reproduced/opt
+    original: build-linux64-shippable/opt
+
+reproducible-linux64-generated-files:
+    symbol: Linux64g
+    artifact: target.generated-files.tar.gz
+    new: build-linux64-reproduced/opt
+    original: build-linux64-shippable/opt
