@@ -18,7 +18,6 @@
 
 #include "api/array_view.h"
 #include "api/media_types.h"
-#include "api/rtc_error.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/rtp_utils.h"
@@ -81,71 +80,79 @@ RTCErrorOr<cricket::FeedbackParam> ToCricketFeedbackParam(
   RTC_CHECK_NOTREACHED();
 }
 
-RTCErrorOr<cricket::Codec> ToCricketCodec(const RtpCodecParameters& codec) {
-  switch (codec.kind) {
-    case cricket::MEDIA_TYPE_AUDIO:
-      if (codec.kind != cricket::MEDIA_TYPE_AUDIO) {
-        LOG_AND_RETURN_ERROR(
-            RTCErrorType::INVALID_PARAMETER,
-            "Can't use video codec with audio sender or receiver.");
-      }
-      if (!codec.num_channels) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                             "Missing number of channels for audio codec.");
-      }
-      if (*codec.num_channels <= 0) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
-                             "Number of channels must be positive.");
-      }
-      if (!codec.clock_rate) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                             "Missing codec clock rate.");
-      }
-      if (*codec.clock_rate <= 0) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
-                             "Clock rate must be positive.");
-      }
-      break;
-    case cricket::MEDIA_TYPE_VIDEO:
-      if (codec.kind != cricket::MEDIA_TYPE_VIDEO) {
-        LOG_AND_RETURN_ERROR(
-            RTCErrorType::INVALID_PARAMETER,
-            "Can't use audio codec with video sender or receiver.");
-      }
-      if (codec.num_channels) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                             "Video codec shouldn't have num_channels.");
-      }
-      if (!codec.clock_rate) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                             "Missing codec clock rate.");
-      }
-      if (*codec.clock_rate != cricket::kVideoCodecClockrate) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                             "Video clock rate must be 90000.");
-      }
-      break;
-    default:
-      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
-                           "Unknown codec type");
-  }
+template <typename C>
+static RTCErrorOr<C> ToCricketCodecTypeSpecific(
+    const RtpCodecParameters& codec);
 
+template <>
+RTCErrorOr<cricket::AudioCodec> ToCricketCodecTypeSpecific<cricket::AudioCodec>(
+    const RtpCodecParameters& codec) {
+  if (codec.kind != cricket::MEDIA_TYPE_AUDIO) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INVALID_PARAMETER,
+        "Can't use video codec with audio sender or receiver.");
+  }
+  if (!codec.num_channels) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                         "Missing number of channels for audio codec.");
+  }
+  if (*codec.num_channels <= 0) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
+                         "Number of channels must be positive.");
+  }
+  if (!codec.clock_rate) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                         "Missing codec clock rate.");
+  }
+  if (*codec.clock_rate <= 0) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
+                         "Clock rate must be positive.");
+  }
+  return cricket::CreateAudioCodec(0, codec.name, *codec.clock_rate,
+                                   *codec.num_channels);
+}
+
+// Video codecs don't use num_channels or clock_rate, but they should at least
+// be validated to ensure the application isn't trying to do something it
+// doesn't intend to.
+template <>
+RTCErrorOr<cricket::VideoCodec> ToCricketCodecTypeSpecific<cricket::VideoCodec>(
+    const RtpCodecParameters& codec) {
+  if (codec.kind != cricket::MEDIA_TYPE_VIDEO) {
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INVALID_PARAMETER,
+        "Can't use audio codec with video sender or receiver.");
+  }
+  if (codec.num_channels) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                         "Video codec shouldn't have num_channels.");
+  }
+  if (!codec.clock_rate) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                         "Missing codec clock rate.");
+  }
+  if (*codec.clock_rate != cricket::kVideoCodecClockrate) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                         "Video clock rate must be 90000.");
+  }
+  return cricket::CreateVideoCodec(0, codec.name);
+}
+
+template <typename C>
+RTCErrorOr<C> ToCricketCodec(const RtpCodecParameters& codec) {
+  // Start with audio/video specific conversion.
+  RTCErrorOr<C> result = ToCricketCodecTypeSpecific<C>(codec);
+  if (!result.ok()) {
+    return result.MoveError();
+  }
+  C cricket_codec = result.MoveValue();
   if (!cricket::IsValidRtpPayloadType(codec.payload_type)) {
     char buf[40];
     rtc::SimpleStringBuilder sb(buf);
     sb << "Invalid payload type: " << codec.payload_type;
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE, sb.str());
   }
-
-  cricket::Codec cricket_codec = [&]() {
-    if (codec.kind == cricket::MEDIA_TYPE_AUDIO) {
-      return cricket::CreateAudioCodec(codec.payload_type, codec.name,
-                                       *codec.clock_rate, *codec.num_channels);
-    }
-    RTC_DCHECK(codec.kind == cricket::MEDIA_TYPE_VIDEO);
-    return cricket::CreateVideoCodec(codec.payload_type, codec.name);
-  }();
-
+  cricket_codec.id = codec.payload_type;
   for (const RtcpFeedback& feedback : codec.rtcp_feedback) {
     auto result = ToCricketFeedbackParam(feedback);
     if (!result.ok()) {
@@ -157,12 +164,18 @@ RTCErrorOr<cricket::Codec> ToCricketCodec(const RtpCodecParameters& codec) {
   return std::move(cricket_codec);
 }
 
-RTCErrorOr<std::vector<cricket::Codec>> ToCricketCodecs(
+template RTCErrorOr<cricket::AudioCodec> ToCricketCodec(
+    const RtpCodecParameters& codec);
+template RTCErrorOr<cricket::VideoCodec> ToCricketCodec(
+    const RtpCodecParameters& codec);
+
+template <typename C>
+RTCErrorOr<std::vector<C>> ToCricketCodecs(
     const std::vector<RtpCodecParameters>& codecs) {
-  std::vector<cricket::Codec> cricket_codecs;
+  std::vector<C> cricket_codecs;
   std::set<int> seen_payload_types;
   for (const RtpCodecParameters& codec : codecs) {
-    auto result = ToCricketCodec(codec);
+    auto result = ToCricketCodec<C>(codec);
     if (!result.ok()) {
       return result.MoveError();
     }
@@ -176,6 +189,12 @@ RTCErrorOr<std::vector<cricket::Codec>> ToCricketCodecs(
   }
   return std::move(cricket_codecs);
 }
+
+template RTCErrorOr<std::vector<cricket::AudioCodec>> ToCricketCodecs<
+    cricket::AudioCodec>(const std::vector<RtpCodecParameters>& codecs);
+
+template RTCErrorOr<std::vector<cricket::VideoCodec>> ToCricketCodecs<
+    cricket::VideoCodec>(const std::vector<RtpCodecParameters>& codecs);
 
 RTCErrorOr<cricket::StreamParamsVec> ToCricketStreamParamsVec(
     const std::vector<RtpEncodingParameters>& encodings) {
@@ -259,12 +278,51 @@ std::vector<RtpEncodingParameters> ToRtpEncodings(
   return rtp_encodings;
 }
 
-RtpCodecCapability ToRtpCodecCapability(const cricket::Codec& cricket_codec) {
+template <typename C>
+cricket::MediaType KindOfCodec();
+
+template <>
+cricket::MediaType KindOfCodec<cricket::AudioCodec>() {
+  return cricket::MEDIA_TYPE_AUDIO;
+}
+
+template <>
+cricket::MediaType KindOfCodec<cricket::VideoCodec>() {
+  return cricket::MEDIA_TYPE_VIDEO;
+}
+
+template <typename C>
+static void ToRtpCodecCapabilityTypeSpecific(const C& cricket_codec,
+                                             RtpCodecCapability* codec);
+
+template <>
+void ToRtpCodecCapabilityTypeSpecific<cricket::AudioCodec>(
+    const cricket::AudioCodec& cricket_codec,
+    RtpCodecCapability* codec) {
+  codec->num_channels = static_cast<int>(cricket_codec.channels);
+}
+
+template <>
+void ToRtpCodecCapabilityTypeSpecific<cricket::VideoCodec>(
+    const cricket::VideoCodec& cricket_codec,
+    RtpCodecCapability* codec) {
+  if (cricket_codec.scalability_modes.empty() ||
+      (cricket_codec.scalability_modes.size() == 1 &&
+       cricket_codec.scalability_modes[0] == ScalabilityMode::kL1T1)) {
+    // https://w3c.github.io/webrtc-svc/#dom-rtcrtpcodeccapability-scalabilitymodes
+    // If a codec does not support encoding of scalability modes other than
+    // "L1T1", then the scalabilityModes member is not provided.
+    return;
+  }
+
+  codec->scalability_modes = cricket_codec.scalability_modes;
+}
+
+template <typename C>
+RtpCodecCapability ToRtpCodecCapability(const C& cricket_codec) {
   RtpCodecCapability codec;
   codec.name = cricket_codec.name;
-  codec.kind = cricket_codec.type == cricket::Codec::Type::kAudio
-                   ? cricket::MEDIA_TYPE_AUDIO
-                   : cricket::MEDIA_TYPE_VIDEO;
+  codec.kind = KindOfCodec<C>();
   codec.clock_rate.emplace(cricket_codec.clockrate);
   codec.preferred_payload_type.emplace(cricket_codec.id);
   for (const cricket::FeedbackParam& cricket_feedback :
@@ -274,25 +332,37 @@ RtpCodecCapability ToRtpCodecCapability(const cricket::Codec& cricket_codec) {
       codec.rtcp_feedback.push_back(feedback.value());
     }
   }
-  switch (cricket_codec.type) {
-    case cricket::Codec::Type::kAudio:
-      codec.num_channels = static_cast<int>(cricket_codec.channels);
-      break;
-    case cricket::Codec::Type::kVideo:
-      codec.scalability_modes = cricket_codec.scalability_modes;
-      break;
-  }
+  ToRtpCodecCapabilityTypeSpecific(cricket_codec, &codec);
   codec.parameters.insert(cricket_codec.params.begin(),
                           cricket_codec.params.end());
   return codec;
 }
 
-RtpCodecParameters ToRtpCodecParameters(const cricket::Codec& cricket_codec) {
+template RtpCodecCapability ToRtpCodecCapability<cricket::AudioCodec>(
+    const cricket::AudioCodec& cricket_codec);
+template RtpCodecCapability ToRtpCodecCapability<cricket::VideoCodec>(
+    const cricket::VideoCodec& cricket_codec);
+
+template <typename C>
+static void ToRtpCodecParametersTypeSpecific(const C& cricket_codec,
+                                             RtpCodecParameters* codec);
+template <>
+void ToRtpCodecParametersTypeSpecific<cricket::AudioCodec>(
+    const cricket::AudioCodec& cricket_codec,
+    RtpCodecParameters* codec) {
+  codec->num_channels = static_cast<int>(cricket_codec.channels);
+}
+
+template <>
+void ToRtpCodecParametersTypeSpecific<cricket::VideoCodec>(
+    const cricket::VideoCodec& cricket_codec,
+    RtpCodecParameters* codec) {}
+
+template <typename C>
+RtpCodecParameters ToRtpCodecParameters(const C& cricket_codec) {
   RtpCodecParameters codec_param;
   codec_param.name = cricket_codec.name;
-  codec_param.kind = cricket_codec.type == cricket::Codec::Type::kAudio
-                         ? cricket::MEDIA_TYPE_AUDIO
-                         : cricket::MEDIA_TYPE_VIDEO;
+  codec_param.kind = KindOfCodec<C>();
   codec_param.clock_rate.emplace(cricket_codec.clockrate);
   codec_param.payload_type = cricket_codec.id;
   for (const cricket::FeedbackParam& cricket_feedback :
@@ -302,27 +372,26 @@ RtpCodecParameters ToRtpCodecParameters(const cricket::Codec& cricket_codec) {
       codec_param.rtcp_feedback.push_back(feedback.value());
     }
   }
-  switch (cricket_codec.type) {
-    case cricket::Codec::Type::kAudio:
-      codec_param.num_channels = static_cast<int>(cricket_codec.channels);
-      break;
-    case cricket::Codec::Type::kVideo:
-      // Nothing to do.
-      break;
-  }
+  ToRtpCodecParametersTypeSpecific(cricket_codec, &codec_param);
   codec_param.parameters = cricket_codec.params;
   return codec_param;
 }
 
+template RtpCodecParameters ToRtpCodecParameters<cricket::AudioCodec>(
+    const cricket::AudioCodec& cricket_codec);
+template RtpCodecParameters ToRtpCodecParameters<cricket::VideoCodec>(
+    const cricket::VideoCodec& cricket_codec);
+
+template <class C>
 RtpCapabilities ToRtpCapabilities(
-    const std::vector<cricket::Codec>& cricket_codecs,
+    const std::vector<C>& cricket_codecs,
     const cricket::RtpHeaderExtensions& cricket_extensions) {
   RtpCapabilities capabilities;
   bool have_red = false;
   bool have_ulpfec = false;
   bool have_flexfec = false;
   bool have_rtx = false;
-  for (const cricket::Codec& cricket_codec : cricket_codecs) {
+  for (const C& cricket_codec : cricket_codecs) {
     if (cricket_codec.name == cricket::kRedCodecName) {
       have_red = true;
     } else if (cricket_codec.name == cricket::kUlpfecCodecName) {
@@ -359,12 +428,20 @@ RtpCapabilities ToRtpCapabilities(
   return capabilities;
 }
 
+template RtpCapabilities ToRtpCapabilities<cricket::AudioCodec>(
+    const std::vector<cricket::AudioCodec>& cricket_codecs,
+    const cricket::RtpHeaderExtensions& cricket_extensions);
+template RtpCapabilities ToRtpCapabilities<cricket::VideoCodec>(
+    const std::vector<cricket::VideoCodec>& cricket_codecs,
+    const cricket::RtpHeaderExtensions& cricket_extensions);
+
+template <class C>
 RtpParameters ToRtpParameters(
-    const std::vector<cricket::Codec>& cricket_codecs,
+    const std::vector<C>& cricket_codecs,
     const cricket::RtpHeaderExtensions& cricket_extensions,
     const cricket::StreamParamsVec& stream_params) {
   RtpParameters rtp_parameters;
-  for (const cricket::Codec& cricket_codec : cricket_codecs) {
+  for (const C& cricket_codec : cricket_codecs) {
     rtp_parameters.codecs.push_back(ToRtpCodecParameters(cricket_codec));
   }
   for (const RtpExtension& cricket_extension : cricket_extensions) {
@@ -374,5 +451,14 @@ RtpParameters ToRtpParameters(
   rtp_parameters.encodings = ToRtpEncodings(stream_params);
   return rtp_parameters;
 }
+
+template RtpParameters ToRtpParameters<cricket::AudioCodec>(
+    const std::vector<cricket::AudioCodec>& cricket_codecs,
+    const cricket::RtpHeaderExtensions& cricket_extensions,
+    const cricket::StreamParamsVec& stream_params);
+template RtpParameters ToRtpParameters<cricket::VideoCodec>(
+    const std::vector<cricket::VideoCodec>& cricket_codecs,
+    const cricket::RtpHeaderExtensions& cricket_extensions,
+    const cricket::StreamParamsVec& stream_params);
 
 }  // namespace webrtc
