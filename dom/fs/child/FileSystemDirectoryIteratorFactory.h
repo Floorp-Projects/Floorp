@@ -14,9 +14,9 @@ namespace mozilla::dom::fs {
 class FileSystemEntryMetadata;
 
 struct FileSystemDirectoryIteratorFactory {
-  static UniquePtr<mozilla::dom::FileSystemDirectoryIterator::Impl> Create(
-      const FileSystemEntryMetadata& aMetadata,
-      IterableIteratorBase::IteratorType aType);
+  static already_AddRefed<mozilla::dom::FileSystemDirectoryIterator::Impl>
+  Create(const FileSystemEntryMetadata& aMetadata,
+         IterableIteratorBase::IteratorType aType);
 };
 
 }  // namespace mozilla::dom::fs

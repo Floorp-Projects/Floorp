@@ -89,7 +89,7 @@ TEST_F(TestFileSystemDirectoryHandle, isNextPromiseReturned) {
 
   ASSERT_TRUE(dirHandle);
 
-  auto mockIter = MakeUnique<MockFileSystemDirectoryIteratorImpl>();
+  auto mockIter = MakeRefPtr<MockFileSystemDirectoryIteratorImpl>();
   IgnoredErrorResult error;
   EXPECT_CALL(*mockIter, Next(_, _, _))
       .WillOnce(::testing::Return(Promise::Create(mGlobal, error)));

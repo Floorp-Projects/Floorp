@@ -31,9 +31,13 @@ class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
  public:
   class Impl {
    public:
+    NS_INLINE_DECL_REFCOUNTING(Impl)
+
     virtual already_AddRefed<Promise> Next(nsIGlobalObject* aGlobal,
                                            RefPtr<FileSystemManager>& aManager,
                                            ErrorResult& aError) = 0;
+
+   protected:
     virtual ~Impl() = default;
   };
 
@@ -42,7 +46,7 @@ class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
 
   explicit FileSystemDirectoryIterator(nsIGlobalObject* aGlobal,
                                        RefPtr<FileSystemManager>& aManager,
-                                       UniquePtr<Impl> aImpl);
+                                       RefPtr<Impl>& aImpl);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -61,7 +65,7 @@ class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
   RefPtr<FileSystemManager> mManager;
 
  private:
-  UniquePtr<Impl> mImpl;
+  RefPtr<Impl> mImpl;
 };
 
 }  // namespace dom
