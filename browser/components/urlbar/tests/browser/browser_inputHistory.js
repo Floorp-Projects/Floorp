@@ -52,6 +52,30 @@ async function decayInputHistory() {
     .wrappedJSObject.decay();
 }
 
+async function isPageInInputHistory(url) {
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.executeCached(
+    `SELECT 1
+       FROM moz_inputhistory i
+       JOIN moz_places h ON h.id = i.place_id
+       WHERE h.url = :url`,
+    { url }
+  );
+  return rows?.length > 0;
+}
+
+async function isInputHistoryUrlInResults(url) {
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); ++i) {
+    const result = await UrlbarTestUtils.getRowAt(window, i).result;
+    if (result.providerName == "InputHistory") {
+      if (result.payload.url == url) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -545,4 +569,108 @@ add_task(async function test_adaptive_history_in_privatewindow() {
   Assert.ok(hasResult, "Popup has a result for the url.");
 
   await BrowserTestUtils.closeWindow(privateWindow);
+});
+
+add_task(async function test_adaptive_dismiss() {
+  info("Check dismissing an adaptive history result");
+
+  let url1 = "http://site.tld/1";
+  let url2 = "http://site.tld/2";
+
+  info("Sanity check: adaptive history is shown for a normal search.");
+  await PlacesUtils.history.clear();
+  await bumpScore(url1, "site", { visits: 3, picks: 3 }, true);
+  await bumpScore(url2, "site", { visits: 3, picks: 1 }, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "si",
+  });
+  let result = UrlbarTestUtils.getRowAt(window, 1).result;
+  Assert.equal(result.payload.url, url1, "Check result #1 URL");
+  Assert.equal(result.providerName, "InputHistory", "Check result #1 provider");
+  result = UrlbarTestUtils.getRowAt(window, 2).result;
+  Assert.equal(result.payload.url, url2, "Check result #2 URL");
+  Assert.equal(result.providerName, "InputHistory", "Check result #2 provider");
+  let waitForHistoryRemoval =
+    PlacesTestUtils.waitForNotification("page-removed");
+  await UrlbarTestUtils.openResultMenuAndClickItem(window, "dismiss", {
+    resultIndex: 1,
+  });
+  await waitForHistoryRemoval;
+  Assert.ok(
+    gURLBar.view.isOpen,
+    "The view should remain open after clicking the command"
+  );
+
+  Assert.ok(
+    !(await isInputHistoryUrlInResults(url1)),
+    "Check result has been removed"
+  );
+  Assert.strictEqual(
+    await PlacesUtils.history.fetch(url1),
+    null,
+    "The removed page should not be in browsing history"
+  );
+  Assert.ok(
+    !(await isPageInInputHistory(url1)),
+    "The removed page should not be in input history"
+  );
+
+  Assert.ok(
+    await isInputHistoryUrlInResults(url2),
+    "Check result has been retained"
+  );
+  Assert.notStrictEqual(
+    await PlacesUtils.history.fetch(url2),
+    null,
+    "The non removed page should still be in history"
+  );
+  Assert.ok(
+    await isPageInInputHistory(url2),
+    "The non removed page should still be in input history"
+  );
+});
+
+add_task(async function test_bookmarked_adaptive_dismiss() {
+  info("Check dismissing a bookmarked adaptive history result");
+
+  let url = "http://mysite.tld/";
+
+  info("Sanity check: adaptive history is shown for a normal search.");
+  await PlacesUtils.history.clear();
+  await bumpScore(url, "site", { visits: 3, picks: 3 }, true);
+  await PlacesUtils.bookmarks.insert({
+    url,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "si",
+  });
+  let result = UrlbarTestUtils.getRowAt(window, 1).result;
+  Assert.equal(result.payload.url, url, "Check result #1 URL");
+  Assert.equal(result.providerName, "InputHistory", "Check result #1 provider");
+
+  let waitForHistoryRemoval =
+    PlacesTestUtils.waitForNotification("page-removed");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+  await waitForHistoryRemoval;
+  Assert.ok(
+    gURLBar.view.isOpen,
+    "The view should remain open after removing history"
+  );
+
+  Assert.ok(
+    !(await isInputHistoryUrlInResults(url)),
+    "Check result has been removed"
+  );
+  Assert.ok(
+    !(await PlacesUtils.history.hasVisits(url)),
+    "The removed page should not be in browsing history"
+  );
+  Assert.ok(
+    !(await isPageInInputHistory(url)),
+    "The removed page should be in input history"
+  );
 });
