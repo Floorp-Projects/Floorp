@@ -31,10 +31,10 @@ Cr-Branched-From: 2eacbbc03a4a41ea658661225eb1c8fc07884c33-refs/heads/main@{#401
  2 files changed, 31 insertions(+)
 
 diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index 6d041ff0a1..4beb6b0faa 100644
+index 467b8c2755..9bc11997b9 100644
 --- a/pc/webrtc_sdp.cc
 +++ b/pc/webrtc_sdp.cc
-@@ -3542,6 +3542,11 @@ bool ParseSsrcGroupAttribute(absl::string_view line,
+@@ -3545,6 +3545,11 @@ bool ParseSsrcGroupAttribute(absl::string_view line,
      if (!GetValueFromString(line, fields[i], &ssrc, error)) {
        return false;
      }
@@ -47,10 +47,10 @@ index 6d041ff0a1..4beb6b0faa 100644
    }
    ssrc_groups->push_back(SsrcGroup(semantics, ssrcs));
 diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index 0e1e62e53f..b2c751717e 100644
+index e68051447a..1c0c4dde94 100644
 --- a/pc/webrtc_sdp_unittest.cc
 +++ b/pc/webrtc_sdp_unittest.cc
-@@ -5056,3 +5056,29 @@ TEST_F(WebRtcSdpTest, RejectSessionLevelMediaLevelExtmapMixedUsage) {
+@@ -5057,3 +5057,29 @@ TEST_F(WebRtcSdpTest, RejectSessionLevelMediaLevelExtmapMixedUsage) {
    JsepSessionDescription jdesc(kDummyType);
    EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
  }

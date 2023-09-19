@@ -416,9 +416,7 @@ TEST(RtpParametersConversionTest, ToAudioRtpCodecCapability) {
 }
 
 TEST(RtpParametersConversionTest, ToVideoRtpCodecCapability) {
-  cricket::VideoCodec cricket_codec;
-  cricket_codec.name = "VID";
-  cricket_codec.id = 101;
+  cricket::VideoCodec cricket_codec = cricket::CreateVideoCodec(101, "VID");
   cricket_codec.clockrate = 80000;
   cricket_codec.params["foo"] = "bar";
   cricket_codec.params["ANOTHER"] = "param";
@@ -485,9 +483,7 @@ TEST(RtpParametersConversionTest, ToAudioRtpCodecParameters) {
 }
 
 TEST(RtpParametersConversionTest, ToVideoRtpCodecParameters) {
-  cricket::VideoCodec cricket_codec;
-  cricket_codec.name = "VID";
-  cricket_codec.id = 101;
+  cricket::VideoCodec cricket_codec = cricket::CreateVideoCodec(101, "VID");
   cricket_codec.clockrate = 80000;
   cricket_codec.params["foo"] = "bar";
   cricket_codec.params["ANOTHER"] = "param";
@@ -529,35 +525,21 @@ TEST(RtpParametersConversionTest, ToRtpCodecCapabilityUnknownFeedbackParam) {
 // test that the result of ToRtpCodecCapability ends up in the result, and that
 // the "fec" list is assembled correctly.
 TEST(RtpParametersConversionTest, ToRtpCapabilities) {
-  cricket::VideoCodec vp8;
-  vp8.name = "VP8";
-  vp8.id = 101;
+  cricket::VideoCodec vp8 = cricket::CreateVideoCodec(101, "VP8");
   vp8.clockrate = 90000;
 
-  cricket::VideoCodec red;
-  red.name = "red";
-  red.id = 102;
+  cricket::VideoCodec red = cricket::CreateVideoCodec(102, "red");
   red.clockrate = 90000;
 
-  cricket::VideoCodec ulpfec;
-  ulpfec.name = "ulpfec";
-  ulpfec.id = 103;
+  cricket::VideoCodec ulpfec = cricket::CreateVideoCodec(103, "ulpfec");
   ulpfec.clockrate = 90000;
 
-  cricket::VideoCodec flexfec;
-  flexfec.name = "flexfec-03";
-  flexfec.id = 102;
+  cricket::VideoCodec flexfec = cricket::CreateVideoCodec(102, "flexfec-03");
   flexfec.clockrate = 90000;
 
-  cricket::VideoCodec rtx;
-  rtx.name = "rtx";
-  rtx.id = 104;
-  rtx.params.insert({"apt", "101"});
+  cricket::VideoCodec rtx = cricket::CreateVideoRtxCodec(014, 101);
 
-  cricket::VideoCodec rtx2;
-  rtx2.name = "rtx";
-  rtx2.id = 105;
-  rtx2.params.insert({"apt", "109"});
+  cricket::VideoCodec rtx2 = cricket::CreateVideoRtxCodec(105, 109);
 
   RtpCapabilities capabilities = ToRtpCapabilities<cricket::VideoCodec>(
       {vp8, ulpfec, rtx, rtx2}, {{"uri", 1}, {"uri2", 3}});
@@ -588,19 +570,13 @@ TEST(RtpParametersConversionTest, ToRtpCapabilities) {
 }
 
 TEST(RtpParametersConversionTest, ToRtpParameters) {
-  cricket::VideoCodec vp8;
-  vp8.name = "VP8";
-  vp8.id = 101;
+  cricket::VideoCodec vp8 = cricket::CreateVideoCodec(101, "VP8");
   vp8.clockrate = 90000;
 
-  cricket::VideoCodec red;
-  red.name = "red";
-  red.id = 102;
+  cricket::VideoCodec red = cricket::CreateVideoCodec(102, "red");
   red.clockrate = 90000;
 
-  cricket::VideoCodec ulpfec;
-  ulpfec.name = "ulpfec";
-  ulpfec.id = 103;
+  cricket::VideoCodec ulpfec = cricket::CreateVideoCodec(103, "ulpfec");
   ulpfec.clockrate = 90000;
 
   cricket::StreamParamsVec streams;

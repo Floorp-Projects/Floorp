@@ -26,6 +26,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/functional/bind_front.h"
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "api/audio/audio_frame.h"
 #include "api/audio/audio_frame_processor.h"
 #include "api/audio_codecs/audio_codec_pair_id.h"
@@ -144,19 +145,16 @@ bool IsCodec(const AudioCodec& codec, const char* ref_name) {
   return absl::EqualsIgnoreCase(codec.name, ref_name);
 }
 
-bool FindCodec(const std::vector<AudioCodec>& codecs,
-               const AudioCodec& codec,
-               AudioCodec* found_codec,
-               const webrtc::FieldTrialsView* field_trials) {
+absl::optional<AudioCodec> FindCodec(
+    const std::vector<AudioCodec>& codecs,
+    const AudioCodec& codec,
+    const webrtc::FieldTrialsView* field_trials) {
   for (const AudioCodec& c : codecs) {
     if (c.Matches(codec, field_trials)) {
-      if (found_codec != NULL) {
-        *found_codec = c;
-      }
-      return true;
+      return c;
     }
   }
-  return false;
+  return absl::nullopt;
 }
 
 bool VerifyUniquePayloadTypes(const std::vector<AudioCodec>& codecs) {
@@ -1615,12 +1613,12 @@ bool WebRtcVoiceReceiveChannel::SetRecvCodecs(
   for (const AudioCodec& codec : codecs) {
     // Log a warning if a codec's payload type is changing. This used to be
     // treated as an error. It's abnormal, but not really illegal.
-    AudioCodec old_codec;
-    if (FindCodec(recv_codecs_, codec, &old_codec, &call_->trials()) &&
-        old_codec.id != codec.id) {
+    absl::optional<AudioCodec> old_codec =
+        FindCodec(recv_codecs_, codec, &call_->trials());
+    if (old_codec && old_codec->id != codec.id) {
       RTC_LOG(LS_WARNING) << codec.name << " mapped to a second payload type ("
                           << codec.id << ", was already mapped to "
-                          << old_codec.id << ")";
+                          << old_codec->id << ")";
     }
     auto format = AudioCodecToSdpAudioFormat(codec);
     if (!IsCodec(codec, kCnCodecName) && !IsCodec(codec, kDtmfCodecName) &&

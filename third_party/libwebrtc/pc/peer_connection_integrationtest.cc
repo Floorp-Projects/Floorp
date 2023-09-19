@@ -1087,7 +1087,8 @@ void ModifyPayloadTypesAndRemoveMidExtension(
     media->set_rtp_header_extensions(extensions);
     cricket::VideoContentDescription* video = media->as_video();
     ASSERT_TRUE(video != nullptr);
-    std::vector<cricket::VideoCodec> codecs = {{pt++, "VP8"}};
+    std::vector<cricket::VideoCodec> codecs = {
+        cricket::CreateVideoCodec(pt++, "VP8")};
     video->set_codecs(codecs);
   }
 }

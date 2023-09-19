@@ -397,8 +397,8 @@ class VideoMediaShimChannel : public VideoMediaChannel {
   bool SetSendParameters(const VideoSendParameters& params) override {
     return send_impl()->SetSendParameters(params);
   }
-  bool GetSendCodec(VideoCodec* send_codec) override {
-    return send_impl()->GetSendCodec(send_codec);
+  absl::optional<VideoCodec> GetSendCodec() override {
+    return send_impl()->GetSendCodec();
   }
   bool SetSend(bool send) override { return send_impl()->SetSend(send); }
   bool SetVideoSend(

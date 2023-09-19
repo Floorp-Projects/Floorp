@@ -112,34 +112,38 @@ using webrtc::RtpExtension;
 using webrtc::RtpTransceiverDirection;
 
 static const AudioCodec kAudioCodecs1[] = {
-    AudioCodec(103, "ISAC", 16000, -1, 1),
-    AudioCodec(102, "iLBC", 8000, 13300, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
-    AudioCodec(8, "PCMA", 8000, 64000, 1),
-    AudioCodec(117, "red", 8000, 0, 1),
-    AudioCodec(107, "CN", 48000, 0, 1)};
+    cricket::CreateAudioCodec(103, "ISAC", 16000, 1),
+    cricket::CreateAudioCodec(102, "iLBC", 8000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
+    cricket::CreateAudioCodec(8, "PCMA", 8000, 1),
+    cricket::CreateAudioCodec(117, "red", 8000, 1),
+    cricket::CreateAudioCodec(107, "CN", 48000, 1)};
 
 static const AudioCodec kAudioCodecs2[] = {
-    AudioCodec(126, "foo", 16000, 22000, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
-    AudioCodec(127, "iLBC", 8000, 13300, 1),
+    cricket::CreateAudioCodec(126, "foo", 16000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
+    cricket::CreateAudioCodec(127, "iLBC", 8000, 1),
 };
 
 static const AudioCodec kAudioCodecsAnswer[] = {
-    AudioCodec(102, "iLBC", 8000, 13300, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
+    cricket::CreateAudioCodec(102, "iLBC", 8000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
 };
 
-static const VideoCodec kVideoCodecs1[] = {VideoCodec(96, "H264-SVC"),
-                                           VideoCodec(97, "H264")};
+static const VideoCodec kVideoCodecs1[] = {
+    cricket::CreateVideoCodec(96, "H264-SVC"),
+    cricket::CreateVideoCodec(97, "H264")};
 
-static const VideoCodec kVideoCodecs1Reverse[] = {VideoCodec(97, "H264"),
-                                                  VideoCodec(96, "H264-SVC")};
+static const VideoCodec kVideoCodecs1Reverse[] = {
+    cricket::CreateVideoCodec(97, "H264"),
+    cricket::CreateVideoCodec(96, "H264-SVC")};
 
-static const VideoCodec kVideoCodecs2[] = {VideoCodec(126, "H264"),
-                                           VideoCodec(127, "H263")};
+static const VideoCodec kVideoCodecs2[] = {
+    cricket::CreateVideoCodec(126, "H264"),
+    cricket::CreateVideoCodec(127, "H263")};
 
-static const VideoCodec kVideoCodecsAnswer[] = {VideoCodec(97, "H264")};
+static const VideoCodec kVideoCodecsAnswer[] = {
+    cricket::CreateVideoCodec(97, "H264")};
 
 static const RtpExtension kAudioRtpExtension1[] = {
     RtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level", 8),
@@ -1313,10 +1317,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "audio",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {AudioCodec(96, "opus", 48000, -1, 1)};
+  std::vector f1_codecs = {cricket::CreateAudioCodec(96, "opus", 48000, 1)};
   f1_.set_audio_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {AudioCodec(0, "PCMU", 8000, -1, 1)};
+  std::vector f2_codecs = {cricket::CreateAudioCodec(0, "PCMU", 8000, 1)};
   f2_.set_audio_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -1384,10 +1388,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {VideoCodec(96, "H264")};
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264")};
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {VideoCodec(97, "VP8")};
+  std::vector f2_codecs = {cricket::CreateVideoCodec(97, "VP8")};
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -1406,12 +1410,12 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {VideoCodec(96, "H264"),
-                           VideoCodec(118, "flexfec-03")};
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264"),
+                           cricket::CreateVideoCodec(118, "flexfec-03")};
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {VideoCodec(97, "VP8"),
-                           VideoCodec(118, "flexfec-03")};
+  std::vector f2_codecs = {cricket::CreateVideoCodec(97, "VP8"),
+                           cricket::CreateVideoCodec(118, "flexfec-03")};
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -3001,13 +3005,13 @@ TEST_F(MediaSessionDescriptionFactoryTest,
                              &opts);
   // We specifically choose different preferred payload types for VP8 to
   // trigger the issue.
-  cricket::VideoCodec vp8_offerer(100, "VP8");
+  cricket::VideoCodec vp8_offerer = cricket::CreateVideoCodec(100, "VP8");
   cricket::VideoCodec vp8_offerer_rtx =
       cricket::CreateVideoRtxCodec(101, vp8_offerer.id);
-  cricket::VideoCodec vp8_answerer(110, "VP8");
+  cricket::VideoCodec vp8_answerer = cricket::CreateVideoCodec(110, "VP8");
   cricket::VideoCodec vp8_answerer_rtx =
       cricket::CreateVideoRtxCodec(111, vp8_answerer.id);
-  cricket::VideoCodec vp9(120, "VP9");
+  cricket::VideoCodec vp9 = cricket::CreateVideoCodec(120, "VP9");
   cricket::VideoCodec vp9_rtx = cricket::CreateVideoRtxCodec(121, vp9.id);
 
   std::vector<VideoCodec> f1_codecs = {vp8_offerer, vp8_offerer_rtx};
@@ -3153,7 +3157,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, RtxWithoutApt) {
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates RTX without associated payload type parameter.
-  AddRtxCodec(VideoCodec(126, cricket::kRtxCodecName), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoCodec(126, cricket::kRtxCodecName),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
@@ -3310,7 +3315,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateMultipleRtxSsrcs) {
 
   // Use a single real codec, and then add RTX for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
   AddRtxCodec(cricket::CreateVideoRtxCodec(125, 97), &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
@@ -3354,8 +3359,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, GenerateFlexfecSsrc) {
 
   // Use a single real codec, and then add FlexFEC for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
-  f1_codecs.push_back(VideoCodec(118, "flexfec-03"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(118, "flexfec-03"));
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // Ensure that the offer has a single FlexFEC ssrc and that
@@ -3397,8 +3402,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateNoFlexfecSsrcs) {
 
   // Use a single real codec, and then add FlexFEC for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
-  f1_codecs.push_back(VideoCodec(118, "flexfec-03"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(118, "flexfec-03"));
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // Ensure that the offer has no FlexFEC ssrcs for each regular ssrc, and that
@@ -4446,10 +4451,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
        H264MatchCriteriaIncludesPacketizationMode) {
   // Create two H264 codecs with the same profile level ID and different
   // packetization modes.
-  VideoCodec h264_pm0(96, "H264");
+  VideoCodec h264_pm0 = cricket::CreateVideoCodec(96, "H264");
   h264_pm0.params[cricket::kH264FmtpProfileLevelId] = "42c01f";
   h264_pm0.params[cricket::kH264FmtpPacketizationMode] = "0";
-  VideoCodec h264_pm1(97, "H264");
+  VideoCodec h264_pm1 = cricket::CreateVideoCodec(97, "H264");
   h264_pm1.params[cricket::kH264FmtpProfileLevelId] = "42c01f";
   h264_pm1.params[cricket::kH264FmtpPacketizationMode] = "1";
 
@@ -4665,13 +4670,13 @@ void TestAudioCodecsOffer(RtpTransceiverDirection direction) {
 }
 
 static const AudioCodec kOfferAnswerCodecs[] = {
-    AudioCodec(0, "codec0", 16000, -1, 1),
-    AudioCodec(1, "codec1", 8000, 13300, 1),
-    AudioCodec(2, "codec2", 8000, 64000, 1),
-    AudioCodec(3, "codec3", 8000, 64000, 1),
-    AudioCodec(4, "codec4", 8000, 0, 2),
-    AudioCodec(5, "codec5", 32000, 0, 1),
-    AudioCodec(6, "codec6", 48000, 0, 1)};
+    cricket::CreateAudioCodec(0, "codec0", 16000, 1),
+    cricket::CreateAudioCodec(1, "codec1", 8000, 1),
+    cricket::CreateAudioCodec(2, "codec2", 8000, 1),
+    cricket::CreateAudioCodec(3, "codec3", 8000, 1),
+    cricket::CreateAudioCodec(4, "codec4", 8000, 2),
+    cricket::CreateAudioCodec(5, "codec5", 32000, 1),
+    cricket::CreateAudioCodec(6, "codec6", 48000, 1)};
 
 /* The codecs groups below are chosen as per the matrix below. The objective
  * is to have different sets of codecs in the inputs, to get unique sets of
