@@ -2852,31 +2852,6 @@ void PeerConnection::ReportNegotiatedCiphers(
     return;
   }
 
-  if (srtp_crypto_suite != rtc::kSrtpInvalidCryptoSuite) {
-    for (cricket::MediaType media_type : media_types) {
-      switch (media_type) {
-        case cricket::MEDIA_TYPE_AUDIO:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Audio", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        case cricket::MEDIA_TYPE_VIDEO:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Video", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        case cricket::MEDIA_TYPE_DATA:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Data", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        default:
-          RTC_DCHECK_NOTREACHED();
-          continue;
-      }
-    }
-  }
-
   if (ssl_cipher_suite != rtc::kTlsNullWithNullNull) {
     for (cricket::MediaType media_type : media_types) {
       switch (media_type) {

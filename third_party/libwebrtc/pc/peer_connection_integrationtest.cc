@@ -1503,10 +1503,6 @@ TEST_P(PeerConnectionIntegrationTest, Dtls10CipherStatsAndUmaMetrics) {
                    kDefaultTimeout);
   EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(kDefaultSrtpCryptoSuite),
                  caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-  // TODO(bugs.webrtc.org/9456): Fix it.
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                          kDefaultSrtpCryptoSuite));
 }
 
 // Test getting cipher stats and UMA metrics when DTLS 1.2 is negotiated.
@@ -1525,10 +1521,6 @@ TEST_P(PeerConnectionIntegrationTest, Dtls12CipherStatsAndUmaMetrics) {
                    kDefaultTimeout);
   EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(kDefaultSrtpCryptoSuite),
                  caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-  // TODO(bugs.webrtc.org/9456): Fix it.
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                          kDefaultSrtpCryptoSuite));
 }
 
 // Test that DTLS 1.0 can be used if the caller supports DTLS 1.2 and the
