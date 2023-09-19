@@ -18,7 +18,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2f1a0ba74bf71cfa0
  6 files changed, 24 insertions(+), 5 deletions(-)
 
 diff --git a/api/frame_transformer_interface.h b/api/frame_transformer_interface.h
-index 2f7b139f9f..43fedd8595 100644
+index bfe3b0235b..60120d8475 100644
 --- a/api/frame_transformer_interface.h
 +++ b/api/frame_transformer_interface.h
 @@ -57,6 +57,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {

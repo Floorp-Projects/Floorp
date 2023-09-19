@@ -73,6 +73,7 @@ class TransformableAudioFrameInterface : public TransformableFrameInterface {
   // information in the header as needed, for example to compile the list of
   // csrcs.
   virtual const RTPHeader& GetHeader() const = 0;
+  virtual void SetRTPTimestamp(uint32_t timestamp) { RTC_CHECK_NOTREACHED(); }
 
   virtual rtc::ArrayView<const uint32_t> GetContributingSources() const = 0;
 };
