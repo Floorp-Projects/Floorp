@@ -53,7 +53,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           string_id: "onboarding-device-migration-title",
         },
         subtitle: {
-          string_id: "onboarding-device-migration-subtitle",
+          string_id: "onboarding-device-migration-subtitle2",
         },
         primary_button: {
           label: {
