@@ -43,7 +43,7 @@ body {
  */
 .theme-link:visited,
 .cm-s-mozilla .cm-link:visited {
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
 }
 
 .theme-comment,

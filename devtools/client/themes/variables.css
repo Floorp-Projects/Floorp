@@ -168,6 +168,7 @@
   /* Text color */
   --theme-comment: var(--grey-50);
   --theme-body-color: var(--grey-70);
+  --theme-link-color: var(--blue-60);
   --theme-text-color-alt: var(--grey-50);
   --theme-text-color-inactive: var(--grey-40);
   --theme-text-color-error: var(--red-60);
@@ -296,6 +297,7 @@
   /* Text color */
   --theme-comment: var(--grey-45);
   --theme-body-color: var(--grey-40);
+  --theme-link-color: #75bfff;
   --theme-text-color-alt: var(--grey-45);
   --theme-text-color-inactive: var(--grey-50);
   --theme-text-color-error: var(--grey-10);

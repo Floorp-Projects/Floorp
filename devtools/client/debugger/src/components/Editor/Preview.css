@@ -28,7 +28,7 @@
 
 .popover .preview .header .link {
   align-self: flex-end;
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   text-decoration: underline;
 }
 

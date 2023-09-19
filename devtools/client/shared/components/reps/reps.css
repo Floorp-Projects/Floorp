@@ -10,7 +10,7 @@
   --object-color: var(--theme-highlight-blue);
   --caption-color: var(--theme-highlight-blue);
   --location-color: var(--theme-comment);
-  --source-link-color: var(--theme-highlight-blue);
+  --source-link-color: var(--theme-link-color);
   --node-color: var(--theme-highlight-purple);
   --reference-color: var(--theme-highlight-blue);
   --comment-node-color: var(--theme-comment);

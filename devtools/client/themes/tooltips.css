@@ -135,7 +135,7 @@ strong {
 
 .devtools-tooltip-inactive-css .link,
 .devtools-tooltip-css-compatibility .link {
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   cursor: pointer;
 }
 
@@ -879,7 +879,7 @@ strong {
 }
 
 .invoke-confirm .learn-more-link {
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   padding-inline-end: 4px;
   display: flex;
   align-items: center;
