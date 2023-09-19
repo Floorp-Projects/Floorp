@@ -169,7 +169,7 @@ jobs:
                 - name: public/build
                   type: directory
                   path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
+            docker-image: {in-tree: snap-build-core20}
             max-run-time: 9000
         run:
             using: run-task
@@ -191,7 +191,7 @@ jobs:
                 - name: public/build
                   type: directory
                   path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
+            docker-image: {in-tree: snap-build-core20}
             max-run-time: 7200
         run:
             using: run-task
