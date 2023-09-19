@@ -25,6 +25,9 @@
   --fxview-sidebar-width: 288px;
   --fxview-margin-top: 72px;
   --fxview-card-padding-inline: 4px;
+
+  /* copy over newtab background color from activity-stream-[os].css files */
+  --newtab-background-color: #F9F9FB;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,6 +35,9 @@
     --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 80%, white);
     --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 60%, white);
     --fxview-border: #8F8F9D;
+
+    /* copy over newtab colors from activity-stream-[os].css files */
+    --newtab-background-color: #2B2A33;
     --newtab-background-color-secondary: #42414d;
     --newtab-primary-action-background: #00ddff;
   }
