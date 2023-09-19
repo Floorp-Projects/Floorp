@@ -35,7 +35,7 @@ this.search = class extends ExtensionAPI {
     return {
       search: {
         async get() {
-          await Services.search.promiseInitialized;
+          await searchInitialized;
           let visibleEngines = await Services.search.getVisibleEngines();
           let defaultEngine = await Services.search.getDefault();
           return Promise.all(
@@ -69,7 +69,7 @@ this.search = class extends ExtensionAPI {
         },
 
         async search(searchProperties) {
-          await Services.search.promiseInitialized;
+          await searchInitialized;
           let engine;
 
           if (searchProperties.engine) {
@@ -97,7 +97,7 @@ this.search = class extends ExtensionAPI {
         },
 
         async query(queryProperties) {
-          await Services.search.promiseInitialized;
+          await searchInitialized;
 
           let { tab, where } = getTarget({
             tabId: queryProperties.tabId,

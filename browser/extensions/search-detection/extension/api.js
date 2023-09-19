@@ -21,6 +21,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 XPCOMUtils.defineLazyGlobalGetters(this, ["ChannelWrapper"]);
 
+ChromeUtils.defineLazyGetter(this, "searchInitialized", () => {
+  if (Services.search.isInitialized) {
+    return Promise.resolve();
+  }
+
+  return ExtensionUtils.promiseObserved(
+    "browser-search-service",
+    (_, data) => data === "init-complete"
+  );
+});
+
 const SEARCH_TOPIC_ENGINE_MODIFIED = "browser-search-engine-modified";
 
 this.addonsSearchDetection = class extends ExtensionAPI {
@@ -45,7 +56,7 @@ this.addonsSearchDetection = class extends ExtensionAPI {
           const patterns = {};
 
           try {
-            await Services.search.promiseInitialized;
+            await searchInitialized;
             const visibleEngines = await Services.search.getEngines();
 
             visibleEngines.forEach(engine => {
