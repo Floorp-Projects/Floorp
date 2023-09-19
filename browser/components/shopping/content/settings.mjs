@@ -40,6 +40,18 @@ class ShoppingSettings extends MozLitElement {
     RPMSetPref("browser.shopping.experience2023.active", false);
   }
 
+  fakespotLinkClicked(e) {
+    if (e.target.localName == "a" && e.button == 0) {
+      this.dispatchEvent(
+        new CustomEvent("ShoppingTelemetryEvent", {
+          composed: true,
+          bubbles: true,
+          detail: "surfacePoweredByFakespotLinkClicked",
+        })
+      );
+    }
+  }
+
   render() {
     // Whether we show recommendations at all (including offering a user
     // control for them) is controlled via a nimbus-enabled pref.
@@ -87,6 +99,7 @@ class ShoppingSettings extends MozLitElement {
         id="powered-by-fakespot"
         class="deemphasized"
         data-l10n-id="powered-by-fakespot"
+        @click=${this.fakespotLinkClicked}
       >
         <a
           data-l10n-name="fakespot-link"
