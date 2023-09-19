@@ -2171,9 +2171,6 @@ pref("view_source.tab", true);
 pref("toolkit.pageThumbs.minWidth", 280);
 pref("toolkit.pageThumbs.minHeight", 190);
 
-// Enable speech synthesis
-pref("media.webspeech.synth.enabled", true);
-
 pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
