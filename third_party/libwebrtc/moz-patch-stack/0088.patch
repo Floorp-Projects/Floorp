@@ -14,16 +14,16 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index 2cd6cca34b..01ff9c4ac7 100644
+index fe39f1dd92..316fb2449d 100644
 --- a/modules/video_capture/linux/video_capture_pipewire.h
 +++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-   VideoCaptureCapability configured_capability_;
+@@ -50,7 +50,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+       RTC_GUARDED_BY(capture_checker_);
    bool started_ RTC_GUARDED_BY(api_lock_);
  
--  struct pw_stream* stream_;
-+  struct pw_stream* stream_ = nullptr;
-   struct spa_hook stream_listener_;
+-  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_);
++  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
+   struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
  };
  }  // namespace videocapturemodule
 -- 

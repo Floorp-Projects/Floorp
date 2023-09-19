@@ -8,31 +8,29 @@ Unclear what they are guarding.
 Differential Revision: https://phabricator.services.mozilla.com/D178279
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fcd48e81c9c2cb68ea2cb3d44b3574281be2154e
 ---
- modules/video_capture/windows/video_capture_ds.cc | 4 ----
- 1 file changed, 4 deletions(-)
+ modules/video_capture/windows/video_capture_ds.cc | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
-index 8695f76245..b13ac074f8 100644
+index acdf4004f6..37ee0fde01 100644
 --- a/modules/video_capture/windows/video_capture_ds.cc
 +++ b/modules/video_capture/windows/video_capture_ds.cc
-@@ -122,8 +122,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
- }
+@@ -125,7 +125,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
  
  int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+   RTC_DCHECK_RUN_ON(&api_checker_);
 -  MutexLock lock(&api_lock_);
--
+ 
    if (capability != _requestedCapability) {
      DisconnectGraph();
- 
-@@ -146,8 +144,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
- }
+@@ -150,7 +149,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
  
  int32_t VideoCaptureDS::StopCapture() {
+   RTC_DCHECK_RUN_ON(&api_checker_);
 -  MutexLock lock(&api_lock_);
--
+ 
    HRESULT hr = _mediaControl->StopWhenReady();
    if (FAILED(hr)) {
-     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
 -- 
 2.37.3
 

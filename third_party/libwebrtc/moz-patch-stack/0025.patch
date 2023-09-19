@@ -78,7 +78,7 @@ index 23a8f4f3f3..b2c206d775 100644
  #include <string.h>
  #include <sys/ioctl.h>
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 752bb875f5..79acccd303 100644
+index 7a70c2ff88..00cede01cb 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
 @@ -12,7 +12,7 @@
@@ -105,9 +105,9 @@ index 752bb875f5..79acccd303 100644
  
  #include <new>
  #include <string>
-@@ -389,16 +397,13 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
+@@ -405,16 +413,13 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
+   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
  
- bool VideoCaptureModuleV4L2::CaptureProcess() {
    int retVal = 0;
 -  fd_set rSet;
 -  struct timeval timeout;
@@ -127,7 +127,7 @@ index 752bb875f5..79acccd303 100644
  
    {
      MutexLock lock(&capture_lock_);
-@@ -408,12 +413,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
+@@ -424,12 +429,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
      }
  
      if (retVal < 0 && errno != EINTR) {  // continue if interrupted
