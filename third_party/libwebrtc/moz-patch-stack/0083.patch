@@ -1,27 +1,63 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 7 Apr 2023 20:28:00 +0000
-Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 91d5fc2ed6.
+ r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D174978
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
+Upstream commit: https://webrtc.googlesource.com/src/+/91d5fc2ed6ef347d90182868320267d45cf9525b
+    Support more pixel formats in v4l2 camera backend
+
+    These were tested with gstreamer and v4l2loopback, example setup:
+    $ sudo v4l2loopback-ctl add -n BGRA 10
+    $ gst-launch-1.0 videotestsrc pattern=smpte-rp-219 ! \
+      video/x-raw,format=BGRA ! v4l2sink device=/dev/video10 > /dev/null &
+
+    Then conversion was confirmed with video_loopback:
+    $ ./video_loopback --capture_device_index=3 --logs 2>&1 | grep -i \
+      capture
+
+    Bug: webrtc:14830
+    Change-Id: I35c8e453cf7f9a2923935b0ad82477a3144e8c12
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291532
+    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
+    Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39979}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177232
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92dc582fdcf3a2fdb3fcdbcd96080d081de8f8d5
 ---
- video/task_queue_frame_decode_scheduler.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../video_capture/linux/device_info_v4l2.cc    | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index cd109c2932..6dd7b47f17 100644
---- a/video/task_queue_frame_decode_scheduler.cc
-+++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
-     uint32_t rtp,
-     FrameDecodeTiming::FrameSchedule schedule,
-     FrameReleaseCallback cb) {
--  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
-+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-   RTC_DCHECK(!scheduled_rtp_.has_value())
-       << "Can not schedule two frames for release at the same time.";
-   RTC_DCHECK(cb);
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 04caaea592..abd2886f85 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -57,6 +57,24 @@
+ #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+ #endif
+ 
++// These defines are here to support building on kernel 3.16 which some
++// downstream projects, e.g. Firefox, use.
++// TODO(apehrson): Remove them and their undefs when no longer needed.
++#ifndef V4L2_PIX_FMT_ABGR32
++#define ABGR32_OVERRIDE 1
++#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_ARGB32
++#define ARGB32_OVERRIDE 1
++#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_RGBA32
++#define RGBA32_OVERRIDE 1
++#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
++#endif
++
+ namespace webrtc {
+ namespace videocapturemodule {
+ #ifdef WEBRTC_LINUX
 -- 
 2.37.3
 

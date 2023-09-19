@@ -1,49 +1,224 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
 Date: Thu, 6 Jan 2022 00:16:00 +0000
-Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
+Subject: Bug 1748458 - Add TRACE_EVENTs for dropped frames and packets for
+ received video. r=bwc
 
-Differential Revision: https://phabricator.services.mozilla.com/D135061
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
+This lets us see in the profiler how many received frames and packets we decide
+to drop and the reasons why.
+
+Differential Revision: https://phabricator.services.mozilla.com/D135062
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08e252da94c4752eccfd845eef13d8517953cc6a
+
+Also includes:
+
+Bug 1804288 - (fix-de7ae5755b) reimplement Bug 1748458 - Add TRACE_EVENTs for dropped frames and packets for received video. r=pehrsons
+
+Differential Revision: https://phabricator.services.mozilla.com/D163960
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8e9a326a99cd5eaa6e447ff57c01ad9d79a09744
 ---
- video/receive_statistics_proxy.cc   | 9 +++++++--
- video/rtp_video_stream_receiver2.cc | 4 +++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ api/video/frame_buffer.cc               | 33 +++++++++++++++++++++++++
+ video/receive_statistics_proxy.cc       | 11 +++++++++
+ video/rtp_video_stream_receiver2.cc     |  4 +++
+ video/video_stream_buffer_controller.cc |  7 ++++++
+ 4 files changed, 55 insertions(+)
 
+diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
+index 8267b8e6cb..f5d93f5f76 100644
+--- a/api/video/frame_buffer.cc
++++ b/api/video/frame_buffer.cc
+@@ -16,6 +16,7 @@
+ #include "absl/container/inlined_vector.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/numerics/sequence_number_util.h"
++#include "rtc_base/trace_event.h"
+ 
+ namespace webrtc {
+ namespace {
+@@ -68,7 +69,12 @@ FrameBuffer::FrameBuffer(int max_size,
+       decoded_frame_history_(max_decode_history) {}
+ 
+ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
++  const uint32_t ssrc =
++      frame->PacketInfos().empty() ? 0 : frame->PacketInfos()[0].ssrc();
+   if (!ValidReferences(*frame)) {
++    TRACE_EVENT2("webrtc",
++                 "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
++                 "remote_ssrc", ssrc, "frame_id", frame->Id());
+     RTC_DLOG(LS_WARNING) << "Frame " << frame->Id()
+                          << " has invalid references, dropping frame.";
+     return false;
+@@ -78,23 +84,35 @@ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+     if (legacy_frame_id_jump_behavior_ && frame->is_keyframe() &&
+         AheadOf(frame->Timestamp(),
+                 *decoded_frame_history_.GetLastDecodedFrameTimestamp())) {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       RTC_DLOG(LS_WARNING)
+           << "Keyframe " << frame->Id()
+           << " has newer timestamp but older picture id, clearing buffer.";
+       Clear();
+     } else {
+       // Already decoded past this frame.
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Out of order)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       return false;
+     }
+   }
+ 
+   if (frames_.size() == max_size_) {
+     if (frame->is_keyframe()) {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       RTC_DLOG(LS_WARNING) << "Keyframe " << frame->Id()
+                            << " inserted into full buffer, clearing buffer.";
+       Clear();
+     } else {
+       // No space for this frame.
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       return false;
+     }
+   }
+@@ -149,16 +167,31 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
+ 
+ void FrameBuffer::UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
+                                                          FrameIterator end_it) {
++  uint32_t dropped_ssrc = 0;
++  int64_t dropped_frame_id = 0;
+   unsigned int num_discarded_packets = 0;
+   unsigned int num_dropped_frames =
+       std::count_if(begin_it, end_it, [&](const auto& f) {
+         if (f.second.encoded_frame) {
+           const auto& packetInfos = f.second.encoded_frame->PacketInfos();
++          dropped_frame_id = f.first;
++          if (!packetInfos.empty()) {
++            dropped_ssrc = packetInfos[0].ssrc();
++          }
+           num_discarded_packets += packetInfos.size();
+         }
+         return f.second.encoded_frame != nullptr;
+       });
+ 
++  if (num_dropped_frames > 0) {
++    TRACE_EVENT2("webrtc", "FrameBuffer Dropping Old Frames", "remote_ssrc",
++                 dropped_ssrc, "frame_id", dropped_frame_id);
++  }
++  if (num_discarded_packets > 0) {
++    TRACE_EVENT2("webrtc", "FrameBuffer Discarding Old Packets", "remote_ssrc",
++                 dropped_ssrc, "frame_id", dropped_frame_id);
++  }
++
+   num_dropped_frames_ += num_dropped_frames;
+   num_discarded_packets_ += num_discarded_packets;
+ }
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index ae35ee9169..78b541b8f5 100644
+index 78b541b8f5..98eb94786f 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
-@@ -841,8 +841,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
- }
+@@ -20,6 +20,7 @@
+ #include "rtc_base/strings/string_builder.h"
+ #include "rtc_base/thread.h"
+ #include "rtc_base/time_utils.h"
++#include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/clock.h"
+ #include "system_wrappers/include/metrics.h"
+ #include "video/video_receive_stream2.h"
+@@ -802,6 +803,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+                                              VideoContentType content_type) {
+   RTC_DCHECK_RUN_ON(&main_thread_);
  
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnCompleteFrame",
++               "remote_ssrc", remote_ssrc_, "is_keyframe", is_keyframe);
++
+   if (is_keyframe) {
+     ++stats_.frame_counts.key_frames;
+   } else {
+@@ -833,6 +837,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+   // Can be called on either the decode queue or the worker thread
+   // See FrameBuffer2 for more details.
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDroppedFrames",
++               "remote_ssrc", remote_ssrc_, "frames_dropped", frames_dropped);
+   worker_thread_->PostTask(
+       SafeTask(task_safety_.flag(), [frames_dropped, this]() {
+         RTC_DCHECK_RUN_ON(&main_thread_);
+@@ -843,6 +849,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
  void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
--  RTC_DCHECK_RUN_ON(&main_thread_);
--  stats_.packets_discarded += packets_discarded;
-+  // Can be called on either the decode queue or the worker thread
-+  // See FrameBuffer2 for more details.
-+  worker_thread_->PostTask(
-+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
-+        RTC_DCHECK_RUN_ON(&main_thread_);
-+        stats_.packets_discarded += packets_discarded;
-+      }));
+   // Can be called on either the decode queue or the worker thread
+   // See FrameBuffer2 for more details.
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDiscardedPackets",
++               "remote_ssrc", remote_ssrc_, "packets_discarded",
++               packets_discarded);
+   worker_thread_->PostTask(
+       SafeTask(task_safety_.flag(), [packets_discarded, this]() {
+         RTC_DCHECK_RUN_ON(&main_thread_);
+@@ -871,6 +880,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
+ 
+ void ReceiveStatisticsProxy::OnRttUpdate(int64_t avg_rtt_ms) {
+   RTC_DCHECK_RUN_ON(&main_thread_);
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnRttUpdate",
++               "remote_ssrc", remote_ssrc_, "avg_rtt_ms", avg_rtt_ms);
+   avg_rtt_ms_ = avg_rtt_ms;
  }
  
- void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index dccaa3158f..b5e120b8b7 100644
+index b5e120b8b7..f11e37e6b3 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -1207,7 +1207,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
-     packet_infos_.erase(packet_infos_.begin(),
+@@ -44,6 +44,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/strings/string_builder.h"
++#include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/metrics.h"
+ #include "system_wrappers/include/ntp_time.h"
+ 
+@@ -1208,6 +1209,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
                          packet_infos_.upper_bound(unwrapped_rtp_seq_num));
      uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
--    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    if (num_packets_cleared > 0) {
-+      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    }
+     if (num_packets_cleared > 0) {
++      TRACE_EVENT2("webrtc",
++                   "RtpVideoStreamReceiver2::FrameDecoded Cleared Old Packets",
++                   "remote_ssrc", config_.rtp.remote_ssrc, "seq_num", seq_num);
+       vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
+     }
      reference_finder_->ClearTo(seq_num);
-   }
- }
+diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
+index 20588fbcad..9da894ab95 100644
+--- a/video/video_stream_buffer_controller.cc
++++ b/video/video_stream_buffer_controller.cc
+@@ -31,6 +31,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/thread_annotations.h"
++#include "rtc_base/trace_event.h"
+ #include "video/frame_decode_scheduler.h"
+ #include "video/frame_decode_timing.h"
+ #include "video/task_queue_frame_decode_scheduler.h"
+@@ -152,6 +153,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+     std::unique_ptr<EncodedFrame> frame) {
+   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+   FrameMetadata metadata(*frame);
++  const uint32_t ssrc =
++      frame->PacketInfos().empty() ? 0 : frame->PacketInfos()[0].ssrc();
++  const int64_t frameId = frame->Id();
+   int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
+   if (buffer_->InsertFrame(std::move(frame))) {
+     RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
+@@ -162,6 +166,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+                                  *metadata.receive_time);
+     }
+     if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
++      TRACE_EVENT2("webrtc",
++                   "VideoStreamBufferController::InsertFrame Frame Complete",
++                   "remote_ssrc", ssrc, "frame_id", frameId);
+       stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
+                                     metadata.contentType);
+       MaybeScheduleFrameForRelease();
 -- 
 2.37.3
 
