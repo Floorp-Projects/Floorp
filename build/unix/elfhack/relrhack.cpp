@@ -333,6 +333,7 @@ int main(int argc, char* argv[]) {
   std::optional<fs::path> output = std::nullopt;
   std::optional<fs::path> real_linker = std::nullopt;
   bool shared = false;
+  bool is_android = false;
   uint16_t elf_machine = EM_NONE;
   // Scan argv in order to prepare the following:
   // - get the output file. That's the file we may need to adjust.
@@ -361,11 +362,15 @@ int main(int argc, char* argv[]) {
       ++i;
       real_linker = *(++argv);
       continue;
-    } else if (elf_machine == EM_NONE && fs::path(arg).filename() == "crti.o") {
-      crti = i;
-      std::fstream f{std::string(arg), f.binary | f.in};
-      f.exceptions(f.failbit);
-      elf_machine = get_elf_machine(f);
+    } else if (elf_machine == EM_NONE) {
+      auto filename = fs::path(arg).filename();
+      if (filename == "crti.o" || filename == "crtbegin_so.o") {
+        is_android = (filename == "crtbegin_so.o");
+        crti = i;
+        std::fstream f{std::string(arg), f.binary | f.in};
+        f.exceptions(f.failbit);
+        elf_machine = get_elf_machine(f);
+      }
     }
     args.push_back(*argv);
   }
@@ -376,7 +381,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (!crti) {
-    std::cerr << "Could not find crti.o on the command line." << std::endl;
+    std::cerr << "Could not find CRT object on the command line." << std::endl;
     return 1;
   }
 
@@ -414,6 +419,9 @@ int main(int argc, char* argv[]) {
     default:
       std::cerr << "Unsupported target machine type." << std::endl;
       return 1;
+  }
+  if (is_android) {
+    stem += "-android";
   }
 
   if (shared) {

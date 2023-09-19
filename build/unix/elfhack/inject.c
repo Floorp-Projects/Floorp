@@ -212,11 +212,16 @@ static void _relrhack_init(void) {
   }
 }
 
+// The Android CRT doesn't contain an init function.
+#  ifndef ANDROID
 extern __attribute__((visibility("hidden"))) void _init(int argc, char** argv,
                                                         char** env);
+#  endif
 
 void _relrhack_wrap_init(int argc, char** argv, char** env) {
   _relrhack_init();
+#  ifndef ANDROID
   _init(argc, argv, env);
+#  endif
 }
 #endif
