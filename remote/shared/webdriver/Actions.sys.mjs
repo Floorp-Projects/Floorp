@@ -109,10 +109,12 @@ action.State = class {
    */
   getOrAddInputSource(id, newInputSource) {
     let inputSource = this.getInputSource(id);
+
     if (inputSource === undefined) {
       this.inputStateMap.set(id, newInputSource);
       inputSource = newInputSource;
     }
+
     return inputSource;
   }
 
@@ -143,9 +145,11 @@ action.State = class {
    */
   getPointerId(id, type) {
     let pointerId = this.pointerIdMap.get(id);
+
     if (pointerId === undefined) {
       // Reserve pointer ids 0 and 1 for mouse pointers
       const idValues = Array.from(this.pointerIdMap.values());
+
       if (type === "mouse") {
         for (const mouseId of [0, 1]) {
           if (!idValues.includes(mouseId)) {
@@ -154,11 +158,13 @@ action.State = class {
           }
         }
       }
+
       if (pointerId === undefined) {
         pointerId = Math.max(1, ...idValues) + 1;
       }
       this.pointerIdMap.set(id, pointerId);
     }
+
     return pointerId;
   }
 };
@@ -194,23 +200,26 @@ class InputSource {
    */
   static fromJSON(state, actionSequence) {
     const { id, type } = actionSequence;
+
     lazy.assert.string(
       id,
-      lazy.pprint`Expected 'id' to be a string, got ${id}`
+      lazy.pprint`Expected "id" to be a string, got ${id}`
     );
+
     const cls = inputSourceTypes.get(type);
     if (cls === undefined) {
       throw new lazy.error.InvalidArgumentError(
-        lazy.pprint`Unknown action type: ${type}`
+        lazy.pprint`Expected known action type, got ${type}`
       );
     }
 
     const sequenceInputSource = cls.fromJSON(state, actionSequence);
     const inputSource = state.getOrAddInputSource(id, sequenceInputSource);
+
     if (inputSource.type !== type) {
       throw new lazy.error.InvalidArgumentError(
-        `Expected input source ${id} to be type ${inputSource.type}, ` +
-          `got ${type}`
+        lazy.pprint`Expected input source ${id} to be ` +
+          `type ${inputSource.type}, got ${type}`
       );
     }
   }
@@ -224,6 +233,7 @@ class NullInputSource extends InputSource {
 
   static fromJSON(state, actionSequence) {
     const { id } = actionSequence;
+
     return new this(id);
   }
 }
@@ -236,6 +246,7 @@ class KeyInputSource extends InputSource {
 
   constructor(id) {
     super(id);
+
     this.pressed = new Set();
     this.alt = false;
     this.shift = false;
@@ -245,6 +256,7 @@ class KeyInputSource extends InputSource {
 
   static fromJSON(state, actionSequence) {
     const { id } = actionSequence;
+
     return new this(id);
   }
 
@@ -264,9 +276,9 @@ class KeyInputSource extends InputSource {
       this[MODIFIER_NAME_LOOKUP[key]] = value;
     } else {
       throw new lazy.error.InvalidArgumentError(
-        "Expected 'key' to be one of " +
-          Object.keys(MODIFIER_NAME_LOOKUP) +
-          lazy.pprint`, got ${key}`
+        lazy.pprint`Expected "key" to be one of ${Object.keys(
+          MODIFIER_NAME_LOOKUP
+        )}, got ${key}`
       );
     }
   }
@@ -324,6 +336,7 @@ class PointerInputSource extends InputSource {
    */
   constructor(id, pointer) {
     super(id);
+
     this.pointer = pointer;
     this.x = 0;
     this.y = 0;
@@ -374,10 +387,33 @@ class PointerInputSource extends InputSource {
 
   static fromJSON(state, actionSequence) {
     const { id, parameters } = actionSequence;
+    let pointerType = "mouse";
 
-    const pointerType = parameters?.pointerType ?? "mouse";
+    if (parameters !== undefined) {
+      lazy.assert.object(
+        parameters,
+        lazy.pprint`Expected "parameters" to be an object, got ${parameters}`
+      );
+
+      if (parameters.pointerType !== undefined) {
+        pointerType = lazy.assert.string(
+          parameters.pointerType,
+          lazy.pprint(
+            `Expected "pointerType" to be a string, got ${parameters.pointerType}`
+          )
+        );
+
+        if (!["mouse", "pen", "touch"].includes(pointerType)) {
+          throw new lazy.error.InvalidArgumentError(
+            lazy.pprint`Expected "pointerType" to be one of "mouse", "pen", or "touch"`
+          );
+        }
+      }
+    }
+
     const pointerId = state.getPointerId(id, pointerType);
     const pointer = Pointer.fromJSON(pointerId, pointerType);
+
     return new this(id, pointer);
   }
 }
@@ -390,6 +426,7 @@ class WheelInputSource extends InputSource {
 
   static fromJSON(state, actionSequence) {
     const { id } = actionSequence;
+
     return new this(id);
   }
 }
@@ -432,6 +469,7 @@ class Origin {
   getTargetCoordinates(inputSource, coords, win) {
     const [x, y] = coords;
     const origin = this.getOriginCoordinates(inputSource, win);
+
     return [origin.x + x, origin.y + y];
   }
 
@@ -455,7 +493,7 @@ class Origin {
     }
 
     throw new lazy.error.InvalidArgumentError(
-      `Expected 'origin' to be undefined, "viewport", "pointer", ` +
+      `Expected "origin" to be undefined, "viewport", "pointer", ` +
         lazy.pprint`or an element, got: ${origin}`
     );
   }
@@ -479,15 +517,17 @@ class ElementOrigin extends Origin {
    */
   constructor(element) {
     super();
+
     this.element = element;
   }
 
   getOriginCoordinates(inputSource, win) {
     const clientRects = this.element.getClientRects();
+
     // The spec doesn't handle this case; https://github.com/w3c/webdriver/issues/1642
     if (!clientRects.length) {
       throw new lazy.error.MoveTargetOutOfBoundsError(
-        `Origin element is not displayed`
+        lazy.pprint`Origin element ${this.element} is not displayed`
       );
     }
 
@@ -549,11 +589,20 @@ class Action {
    *     attributes are invalid.
    */
   static fromJSON(type, id, actionItem) {
+    lazy.assert.object(
+      actionItem,
+      lazy.pprint`Expected "action" to be an object, got ${actionItem}`
+    );
+
     const subtype = actionItem.type;
     const subtypeMap = actionTypes.get(type);
+
     if (subtypeMap === undefined) {
-      throw new lazy.error.InvalidArgumentError(`Unknown action type: ${type}`);
+      throw new lazy.error.InvalidArgumentError(
+        lazy.pprint`Expected known action type, got ${type}`
+      );
     }
+
     let cls = subtypeMap.get(subtype);
     // Non-device specific actions can happen for any action type
     if (cls === undefined) {
@@ -561,9 +610,10 @@ class Action {
     }
     if (cls === undefined) {
       throw new lazy.error.InvalidArgumentError(
-        `Unknown subtype ${subtype} for type ${type}`
+        lazy.pprint`Expected known subtype for type ${type}, got ${subtype}`
       );
     }
+
     return cls.fromJSON(id, actionItem);
   }
 }
@@ -588,6 +638,7 @@ class PauseAction extends NullAction {
 
   constructor(id, options) {
     super(id);
+
     const { duration } = options;
     this.duration = duration;
   }
@@ -603,20 +654,24 @@ class PauseAction extends NullAction {
    */
   dispatch(state, inputSource, tickDuration, win) {
     const ms = this.duration ?? tickDuration;
+
     lazy.logger.trace(
       ` Dispatch ${this.constructor.name} with ${this.id} ${ms}`
     );
+
     return lazy.Sleep(ms);
   }
 
   static fromJSON(id, actionItem) {
     const { duration } = actionItem;
+
     if (duration !== undefined) {
       lazy.assert.positiveInteger(
         duration,
-        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
+        lazy.pprint`Expected "duration" to be a positive integer, got ${duration}`
       );
     }
+
     return new this(id, { duration });
   }
 }
@@ -633,29 +688,35 @@ class KeyAction extends Action {
 
   constructor(id, options) {
     super(id);
+
     const { value } = options;
     this.value = value;
   }
 
   getEventData(inputSource) {
     let value = this.value;
+
     if (inputSource.shift) {
       value = lazy.keyData.getShiftedKey(value);
     }
+
     return new KeyEventData(value);
   }
 
   static fromJSON(id, actionItem) {
+    const { value } = actionItem;
+
     // TODO countGraphemes
     // TODO key.value could be a single code point like "\uE012"
     // (see rawKey) or "grapheme cluster"
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1496323
-    const value = actionItem.value;
+
     lazy.assert.string(
       value,
-      "Expected 'value' to be a string that represents single code point " +
+      'Expected "value" to be a string that represents single code point ' +
         lazy.pprint`or grapheme cluster, got ${value}`
     );
+
     return new this(id, { value });
   }
 }
@@ -673,10 +734,12 @@ class KeyDownAction extends KeyAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} with ${this.id} ${this.value}`
     );
+
     return new Promise(resolve => {
       const keyEvent = this.getEventData(inputSource);
       keyEvent.repeat = inputSource.isPressed(keyEvent.key);
       inputSource.press(keyEvent.key);
+
       if (keyEvent.key in MODIFIER_NAME_LOOKUP) {
         inputSource.setModState(keyEvent.key, true);
       }
@@ -704,15 +767,19 @@ class KeyUpAction extends KeyAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} with ${this.id} ${this.value}`
     );
+
     return new Promise(resolve => {
       const keyEvent = this.getEventData(inputSource);
+
       if (!inputSource.isPressed(keyEvent.key)) {
         resolve();
         return;
       }
+
       if (keyEvent.key in MODIFIER_NAME_LOOKUP) {
         inputSource.setModState(keyEvent.key, false);
       }
+
       inputSource.release(keyEvent.key);
       keyEvent.update(state, inputSource);
 
@@ -784,68 +851,68 @@ class PointerAction extends Action {
     if (width !== undefined) {
       lazy.assert.positiveInteger(
         width,
-        lazy.pprint`Expected 'width' (${width}) to be >= 0`
+        lazy.pprint`Expected "width" to be a positive integer, got ${width}`
       );
     }
     if (height !== undefined) {
       lazy.assert.positiveInteger(
         height,
-        lazy.pprint`Expected 'height' (${height}) to be >= 0`
+        lazy.pprint`Expected "height" to be a positive integer, got ${height}`
       );
     }
     if (pressure !== undefined) {
       lazy.assert.numberInRange(
         pressure,
         [0, 1],
-        lazy.pprint`Expected 'pressure' (${pressure}) to be in range 0 to 1`
+        lazy.pprint`Expected "pressure" to be in range 0 to 1, got ${pressure}`
       );
     }
     if (tangentialPressure !== undefined) {
       lazy.assert.numberInRange(
         tangentialPressure,
         [-1, 1],
-        lazy.pprint`Expected 'tangentialPressure' (${tangentialPressure}) to be in range -1 to 1`
+        'Expected "tangentialPressure" to be in range -1 to 1, ' +
+          lazy.pprint`got ${tangentialPressure}`
       );
     }
     if (tiltX !== undefined) {
       lazy.assert.integerInRange(
         tiltX,
         [-90, 90],
-        lazy.pprint`Expected 'tiltX' (${tiltX}) to be in range -90 to 90`
+        lazy.pprint`Expected "tiltX" to be in range -90 to 90, got ${tiltX}`
       );
     }
     if (tiltY !== undefined) {
       lazy.assert.integerInRange(
         tiltY,
         [-90, 90],
-        lazy.pprint`Expected 'tiltY' (${tiltY}) to be in range -90 to 90`
+        lazy.pprint`Expected "tiltY" to be in range -90 to 90, got ${tiltY}`
       );
     }
     if (twist !== undefined) {
       lazy.assert.integerInRange(
         twist,
         [0, 359],
-        lazy.pprint`Expected 'twist' (${twist}) to be in range 0 to 359`
+        lazy.pprint`Expected "twist" to be in range 0 to 359, got ${twist}`
       );
     }
     if (altitudeAngle !== undefined) {
       lazy.assert.numberInRange(
         altitudeAngle,
         [0, Math.PI / 2],
-        lazy.pprint`Expected 'altitudeAngle' (${altitudeAngle}) to be in range 0 to ${
-          Math.PI / 2
-        }`
+        'Expected "altitudeAngle" to be in range 0 to ${Math.PI / 2}, ' +
+          lazy.pprint`got ${altitudeAngle}`
       );
     }
     if (azimuthAngle !== undefined) {
       lazy.assert.numberInRange(
         azimuthAngle,
         [0, 2 * Math.PI],
-        lazy.pprint`Expected 'azimuthAngle' (${azimuthAngle}) to be in range 0 to ${
-          2 * Math.PI
-        }`
+        'Expected "azimuthAngle" to be in range 0 to ${2 * Math.PI}, ' +
+          lazy.pprint`got ${azimuthAngle}`
       );
     }
+
     return {
       width,
       height,
@@ -881,6 +948,7 @@ class PointerDownAction extends PointerAction {
 
   constructor(id, options) {
     super(id, options);
+
     const { button } = options;
     this.button = button;
   }
@@ -889,6 +957,7 @@ class PointerDownAction extends PointerAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} ${inputSource.pointer.type} with id: ${this.id} button: ${this.button}`
     );
+
     return new Promise(resolve => {
       if (inputSource.isPressed(this.button)) {
         resolve();
@@ -904,13 +973,16 @@ class PointerDownAction extends PointerAction {
   }
 
   static fromJSON(id, actionItem) {
-    const props = PointerAction.validateCommon(actionItem);
     const { button } = actionItem;
+    const props = PointerAction.validateCommon(actionItem);
+
     lazy.assert.positiveInteger(
       button,
-      lazy.pprint`Expected 'button' (${button}) to be >= 0`
+      lazy.pprint`Expected "button" to be a positive integer, got ${button}`
     );
+
     props.button = button;
+
     return new this(id, props);
   }
 }
@@ -936,6 +1008,7 @@ class PointerUpAction extends PointerAction {
 
   constructor(id, options) {
     super(id, options);
+
     const { button } = options;
     this.button = button;
   }
@@ -944,6 +1017,7 @@ class PointerUpAction extends PointerAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} ${inputSource.pointer.type} with id: ${this.id} button: ${this.button}`
     );
+
     return new Promise(resolve => {
       if (!inputSource.isPressed(this.button)) {
         resolve();
@@ -958,13 +1032,16 @@ class PointerUpAction extends PointerAction {
   }
 
   static fromJSON(id, actionItem) {
-    const props = PointerAction.validateCommon(actionItem);
     const { button } = actionItem;
+    const props = PointerAction.validateCommon(actionItem);
+
     lazy.assert.positiveInteger(
       button,
-      lazy.pprint`Expected 'button' (${button}) to be >= 0`
+      lazy.pprint`Expected "button" to be a positive integer, got ${button}`
     );
+
     props.button = button;
+
     return new this(id, props);
   }
 }
@@ -994,6 +1071,7 @@ class PointerMoveAction extends PointerAction {
 
   constructor(id, options) {
     super(id, options);
+
     const { duration, origin, x, y } = options;
     this.duration = duration;
     this.origin = origin;
@@ -1005,6 +1083,7 @@ class PointerMoveAction extends PointerAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} ${inputSource.pointer.type} with id: ${this.id} x: ${this.x} y: ${this.y}`
     );
+
     const target = this.origin.getTargetCoordinates(
       inputSource,
       [this.x, this.y],
@@ -1036,6 +1115,7 @@ class PointerMoveAction extends PointerAction {
         "PointerMoveAction.performPointerMoveStep requires a single target"
       );
     }
+
     const target = targets[0];
     lazy.logger.trace(
       `PointerMoveAction.performPointerMoveStep ${JSON.stringify(target)}`
@@ -1058,21 +1138,31 @@ class PointerMoveAction extends PointerAction {
   }
 
   static fromJSON(id, actionItem) {
-    const props = PointerAction.validateCommon(actionItem);
     const { duration, origin, x, y } = actionItem;
+
     if (duration !== undefined) {
       lazy.assert.positiveInteger(
         duration,
-        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
+        lazy.pprint`Expected "duration" to be a positive integer, got ${duration}`
       );
     }
+
     const originObject = Origin.fromJSON(origin);
-    lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
-    lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
+    lazy.assert.integer(
+      x,
+      lazy.pprint`Expected "x" to be an integer, got ${x}`
+    );
+    lazy.assert.integer(
+      y,
+      lazy.pprint`Expected "y" to be an integer, got ${y}`
+    );
+    const props = PointerAction.validateCommon(actionItem);
+
     props.duration = duration;
     props.origin = originObject;
     props.x = x;
     props.y = y;
+
     return new this(id, props);
   }
 }
@@ -1101,6 +1191,7 @@ class WheelScrollAction extends WheelAction {
 
   constructor(id, { duration, origin, x, y, deltaX, deltaY }) {
     super(id);
+
     this.duration = duration;
     this.origin = origin;
     this.x = x;
@@ -1112,16 +1203,12 @@ class WheelScrollAction extends WheelAction {
   static fromJSON(id, actionItem) {
     const { duration, origin, x, y, deltaX, deltaY } = actionItem;
 
-    lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
-    lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
-    lazy.assert.integer(
-      deltaX,
-      lazy.pprint`Expected 'deltaX' (${deltaX}) to be an Integer`
-    );
-    lazy.assert.integer(
-      deltaY,
-      lazy.pprint`Expected 'deltaY' (${deltaY}) to be an Integer`
-    );
+    if (duration !== undefined) {
+      lazy.assert.positiveInteger(
+        duration,
+        lazy.pprint`Expected "duration" to be a positive integer, got ${duration}`
+      );
+    }
 
     const originObject = Origin.fromJSON(origin);
     if (originObject instanceof PointerOrigin) {
@@ -1130,12 +1217,22 @@ class WheelScrollAction extends WheelAction {
       );
     }
 
-    if (duration !== undefined) {
-      lazy.assert.positiveInteger(
-        duration,
-        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
-      );
-    }
+    lazy.assert.integer(
+      x,
+      lazy.pprint`Expected "x" to be an Integer, got ${x}`
+    );
+    lazy.assert.integer(
+      y,
+      lazy.pprint`Expected "y" to be an Integer, got ${y}`
+    );
+    lazy.assert.integer(
+      deltaX,
+      lazy.pprint`Expected "deltaX" to be an Integer, got ${deltaX}`
+    );
+    lazy.assert.integer(
+      deltaY,
+      lazy.pprint`Expected "deltaY" to be an Integer, got ${deltaY}`
+    );
 
     return new this(id, {
       duration,
@@ -1151,6 +1248,7 @@ class WheelScrollAction extends WheelAction {
     lazy.logger.trace(
       `Dispatch ${this.constructor.name} with id: ${this.id} deltaX: ${this.deltaX} deltaY: ${this.deltaY}`
     );
+
     const scrollCoordinates = this.origin.getTargetCoordinates(
       inputSource,
       [this.x, this.y],
@@ -1162,6 +1260,7 @@ class WheelScrollAction extends WheelAction {
     const startY = 0;
     // This is an action-local state that holds the amount of scroll completed
     const deltaPosition = [startX, startY];
+
     await moveOverTime(
       [[startX, startY]],
       [[this.deltaX, this.deltaY]],
@@ -1191,6 +1290,7 @@ class WheelScrollAction extends WheelAction {
     if (deltaPosition[0] == this.deltaX && deltaPosition[1] == this.deltaY) {
       return;
     }
+
     const deltaTarget = deltaTargets[0];
     const deltaX = deltaTarget[0] - deltaPosition[0];
     const deltaY = deltaTarget[1] - deltaPosition[1];
@@ -1199,6 +1299,7 @@ class WheelScrollAction extends WheelAction {
       deltaY,
       deltaZ: 0,
     });
+
     lazy.event.synthesizeWheelAtPoint(
       scrollCoordinates[0],
       scrollCoordinates[1],
@@ -1230,6 +1331,7 @@ class TouchActionGroup {
 
   static forType(type) {
     const cls = touchActionGroupTypes.get(type);
+
     return new cls();
   }
 
@@ -1245,6 +1347,7 @@ class TouchActionGroup {
         `Added action of unexpected type, got ${action.subtype}, expected ${this.type}`
       );
     }
+
     this.actions.set(action.id, [inputSource, action]);
   }
 
@@ -1282,6 +1385,7 @@ class PointerDownTouchActionGroup extends TouchActionGroup {
         this.actions.values()
       ).map(x => x[1].id)}`
     );
+
     return new Promise(resolve => {
       if (inputSource !== null) {
         throw new Error(
@@ -1294,8 +1398,10 @@ class PointerDownTouchActionGroup extends TouchActionGroup {
         ([actionInputSource, action]) =>
           !actionInputSource.isPressed(action.button)
       );
+
       if (actions.length) {
         const eventData = new MultiTouchEventData("touchstart");
+
         for (const [actionInputSource, action] of actions) {
           // Skip if already pressed
           eventData.addPointerEventData(actionInputSource, action);
@@ -1320,6 +1426,7 @@ class PointerDownTouchActionGroup extends TouchActionGroup {
         }
         lazy.event.synthesizeMultiTouch(eventData, win);
       }
+
       resolve();
     });
   }
@@ -1338,6 +1445,7 @@ class PointerUpTouchActionGroup extends TouchActionGroup {
         this.actions.values()
       ).map(x => x[1].id)}`
     );
+
     return new Promise(resolve => {
       if (inputSource !== null) {
         throw new Error(
@@ -1350,6 +1458,7 @@ class PointerUpTouchActionGroup extends TouchActionGroup {
         ([actionInputSource, action]) =>
           actionInputSource.isPressed(action.button)
       );
+
       if (actions.length) {
         const eventData = new MultiTouchEventData("touchend");
         for (const [actionInputSource, action] of actions) {
@@ -1359,6 +1468,7 @@ class PointerUpTouchActionGroup extends TouchActionGroup {
         }
         lazy.event.synthesizeMultiTouch(eventData, win);
       }
+
       resolve();
     });
   }
@@ -1385,16 +1495,19 @@ class PointerMoveTouchActionGroup extends TouchActionGroup {
 
     let startCoords = [];
     let targetCoords = [];
+
     for (const [actionInputSource, action] of this.actions.values()) {
       const target = action.origin.getTargetCoordinates(
         actionInputSource,
         [action.x, action.y],
         win
       );
+
       assertInViewPort(target, win);
       startCoords.push([actionInputSource.x, actionInputSource.y]);
       targetCoords.push(target);
     }
+
     // Touch move events must include all depressed touch pointers, even if they are static
     // This can end up generating pointermove events even for static pointers, but Gecko
     // seems to generate a lot of pointermove events anyway, so this seems like the lesser
@@ -1453,6 +1566,7 @@ class PointerMoveTouchActionGroup extends TouchActionGroup {
       ([inputSource, action, target]) =>
         target[0] === inputSource.x && target[1] === inputSource.y
     );
+
     if (reachedTarget) {
       return;
     }
@@ -1464,10 +1578,12 @@ class PointerMoveTouchActionGroup extends TouchActionGroup {
       eventData.addPointerEventData(inputSource, action);
       eventData.update(state, inputSource);
     }
+
     for (const inputSource of staticTouchPointers) {
       eventData.addPointerEventData(inputSource, {});
       eventData.update(state, inputSource);
     }
+
     lazy.event.synthesizeMultiTouch(eventData, win);
   }
 }
@@ -1647,11 +1763,14 @@ class Pointer {
    */
   static fromJSON(pointerId, pointerType) {
     const cls = pointerTypes.get(pointerType);
+
     if (cls === undefined) {
       throw new lazy.error.InvalidArgumentError(
-        `Unknown pointerType: ${pointerType}`
+        'Expected "pointerType" type to be one of ' +
+          lazy.pprint`${pointerTypes}, got ${pointerType}`
       );
     }
+
     return new cls(pointerId);
   }
 }
@@ -1667,6 +1786,7 @@ class MousePointer extends Pointer {
       button: action.button,
     });
     mouseEvent.update(state, inputSource);
+
     if (mouseEvent.ctrlKey) {
       if (lazy.AppInfo.isMac) {
         mouseEvent.button = 2;
@@ -1675,12 +1795,14 @@ class MousePointer extends Pointer {
     } else if (lazy.event.DoubleClickTracker.isClicked()) {
       mouseEvent.clickCount = 2;
     }
+
     lazy.event.synthesizeMouseAtPoint(
       inputSource.x,
       inputSource.y,
       mouseEvent,
       win
     );
+
     if (
       lazy.event.MouseButton.isSecondary(mouseEvent.button) ||
       (mouseEvent.ctrlKey && lazy.AppInfo.isMac)
@@ -1700,9 +1822,11 @@ class MousePointer extends Pointer {
       button: action.button,
     });
     mouseEvent.update(state, inputSource);
+
     if (lazy.event.DoubleClickTracker.isClicked()) {
       mouseEvent.clickCount = 2;
     }
+
     lazy.event.synthesizeMouseAtPoint(
       inputSource.x,
       inputSource.y,
@@ -1714,6 +1838,7 @@ class MousePointer extends Pointer {
   pointerMove(state, inputSource, action, targetX, targetY, win) {
     const mouseEvent = new MouseEventData("mousemove");
     mouseEvent.update(state, inputSource);
+
     lazy.event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
   }
 }
@@ -1758,12 +1883,14 @@ action.Chain = class extends Array {
    */
   dispatch(state, win) {
     let i = 1;
+
     const chainEvents = (async () => {
       for (const tickActions of this) {
         lazy.logger.trace(`Dispatching tick ${i++}/${this.length}`);
         await tickActions.dispatch(state, win);
       }
     })();
+
     return chainEvents;
   }
 
@@ -1779,12 +1906,19 @@ action.Chain = class extends Array {
   static fromJSON(state, actions) {
     lazy.assert.array(
       actions,
-      lazy.pprint`Expected 'actions' to be an array, got ${actions}`
+      lazy.pprint`Expected "actions" to be an array, got ${actions}`
     );
 
     const actionsByTick = new this();
     for (const actionSequence of actions) {
+      lazy.assert.object(
+        actionSequence,
+        'Expected "actions" item to be an object, ' +
+          lazy.pprint`got ${actionSequence}`
+      );
+
       const inputSourceActions = Sequence.fromJSON(state, actionSequence);
+
       for (let i = 0; i < inputSourceActions.length; i++) {
         // new tick
         if (actionsByTick.length < i + 1) {
@@ -1793,6 +1927,7 @@ action.Chain = class extends Array {
         actionsByTick[i].push(inputSourceActions[i]);
       }
     }
+
     return actionsByTick;
   }
 };
@@ -1808,11 +1943,13 @@ class TickActions extends Array {
    */
   getDuration() {
     let max = 0;
+
     for (const action of this) {
       if (action.affectsWallClockTime && action.duration) {
         max = Math.max(action.duration, max);
       }
     }
+
     return max;
   }
 
@@ -1838,6 +1975,7 @@ class TickActions extends Array {
     const pendingEvents = tickActions.map(([inputSource, action]) =>
       action.dispatch(state, inputSource, tickDuration, win)
     );
+
     return Promise.all(pendingEvents);
   }
 
@@ -1859,6 +1997,7 @@ class TickActions extends Array {
   groupTickActions(state) {
     const touchActions = new Map();
     const actions = [];
+
     for (const action of this) {
       const inputSource = state.getInputSource(action.id);
       if (action.type == "pointer" && inputSource.pointer.type === "touch") {
@@ -1876,6 +2015,7 @@ class TickActions extends Array {
         actions.push([inputSource, action]);
       }
     }
+
     return actions;
   }
 }
@@ -1905,7 +2045,7 @@ class Sequence extends Array {
     // type and id get validated in InputSource.fromJSON
     lazy.assert.array(
       actions,
-      "Expected 'actionSequence.actions' to be an array, " +
+      'Expected "actionSequence.actions" to be an array, ' +
         lazy.pprint`got ${actionSequence.actions}`
     );
 
@@ -1954,6 +2094,7 @@ class KeyEventData extends InputEventData {
   constructor(rawKey) {
     super();
     const { key, code, location, printable } = lazy.keyData.getData(rawKey);
+
     this.key = key;
     this.code = code;
     this.location = location;
@@ -1978,6 +2119,7 @@ class KeyEventData extends InputEventData {
 class PointerEventData extends InputEventData {
   constructor(type) {
     super();
+
     this.type = type;
     this.buttons = 0;
   }
@@ -2019,19 +2161,22 @@ class PointerEventData extends InputEventData {
  * Representation of a mouse input event
  *
  * @param {string} type - Event type.
- * @param {number} button - Mouse button number.
+ * @param {object=} options
+ * @param {number} options.button - Mouse button number.
  */
 class MouseEventData extends PointerEventData {
   constructor(type, options = {}) {
     super(type);
+
     const { button = 0 } = options;
-    lazy.assert.positiveInteger(button);
+
     this.button = button;
     this.buttons = 0;
   }
 
   update(state, inputSource) {
     super.update(state, inputSource);
+
     this.id = inputSource.pointer.id;
   }
 }
@@ -2039,16 +2184,18 @@ class MouseEventData extends PointerEventData {
 /**
  * Representation of a wheel scroll event
  *
- * @param {object} options - Named arguments.
+ * @param {object} options
  * @param {number} options.deltaX - Scroll delta X.
  * @param {number} options.deltaY - Scroll delta Y.
  * @param {number} options.deltaY - Scroll delta Z (current always 0).
- * @param {number=} deltaMode - Scroll delta mode (current always 0).
+ * @param {number=} options.deltaMode - Scroll delta mode (current always 0).
  */
 class WheelEventData extends InputEventData {
   constructor(options) {
     super();
+
     const { deltaX, deltaY, deltaZ, deltaMode = 0 } = options;
+
     this.deltaX = deltaX;
     this.deltaY = deltaY;
     this.deltaZ = deltaZ;
@@ -2066,6 +2213,7 @@ class MultiTouchEventData extends PointerEventData {
 
   constructor(type) {
     super(type);
+
     this.id = [];
     this.x = [];
     this.y = [];
@@ -2138,14 +2286,21 @@ class MultiTouchEventData extends PointerEventData {
  */
 function assertInViewPort(target, win) {
   const [x, y] = target;
-  lazy.assert.number(x, `Expected x to be finite number`);
-  lazy.assert.number(y, `Expected y to be finite number`);
+
+  lazy.assert.number(
+    x,
+    lazy.pprint`Expected "x" to be finite number, got ${x}`
+  );
+  lazy.assert.number(
+    y,
+    lazy.pprint`Expected "y" to be finite number, got ${y}`
+  );
+
   // Viewport includes scrollbars if rendered.
   if (x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight) {
     throw new lazy.error.MoveTargetOutOfBoundsError(
-      `(${x}, ${y}) is out of bounds of viewport ` +
-        `width (${win.innerWidth}) ` +
-        `and height (${win.innerHeight})`
+      `Move target (${x}, ${y}) is out of bounds of viewport dimensions ` +
+        `(${win.innerWidth}, ${win.innerHeight})`
     );
   }
 }
