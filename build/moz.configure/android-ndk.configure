@@ -33,12 +33,10 @@ option(
 )
 
 
-@depends(target)
-def min_android_version(target):
-    if target.cpu in ["aarch64", "x86_64"]:
-        # 64-bit support was added in API 21.
-        return "21"
-    return "16"
+@dependable
+def min_android_version():
+    # Sync with android_sdk_version
+    return "21"
 
 
 option(
