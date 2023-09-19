@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/design-system/text-and-typography.css");
+
 :host {
   display: grid;
-  gap: 8px;
+  gap: 4px;
   justify-content: space-between;
   align-items: center;
 }
@@ -18,15 +20,9 @@
   grid-row: 1;
 }
 
-.description-wrapper {
-  color: var(--text-color-deemphasized);
-}
-
 .description-wrapper,
 .description-wrapper ::slotted([slot="support-link"]) {
   grid-row: 2;
-  font-size: var(--in-content-font-body-size-small);
-  line-height: 1.25;
   margin: 0;
   grid-column: 1 / -1;
 }
