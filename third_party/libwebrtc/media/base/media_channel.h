@@ -251,10 +251,6 @@ class MediaSendChannelInterface {
   // TODO(bugs.webrtc.org/13931): Remove when configuration is more sensible
   virtual void SetSendCodecChangedCallback(
       absl::AnyInvocable<void()> callback) = 0;
-
-  // Get the underlying send/receive implementation channel for testing.
-  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
-  virtual MediaChannel* ImplForTesting() = 0;
 };
 
 class MediaReceiveChannelInterface : public Delayable {
@@ -309,9 +305,6 @@ class MediaReceiveChannelInterface : public Delayable {
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface>
           frame_transformer) = 0;
-  // Get the underlying send/receive implementation channel for testing.
-  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
-  virtual MediaChannel* ImplForTesting() = 0;
 };
 
 // The stats information is structured as follows:

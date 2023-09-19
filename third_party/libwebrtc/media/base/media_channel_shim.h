@@ -83,12 +83,6 @@ class VoiceMediaShimChannel : public VoiceMediaChannel {
     }
   }
 
-  // Not really valid for this mode
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-
   // Implementation of MediaBaseChannelInterface
   cricket::MediaType media_type() const override { return MEDIA_TYPE_AUDIO; }
 
@@ -329,12 +323,6 @@ class VideoMediaShimChannel : public VideoMediaChannel {
     if (receive_impl_) {
       receive_impl()->SetInterface(iface);
     }
-  }
-
-  // Not really valid for this mode
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
   }
 
   // Implementation of MediaBaseChannelInterface
