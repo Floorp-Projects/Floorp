@@ -185,8 +185,9 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        nsACString& aSniffedType) {
   const uint32_t clampedLength = std::min(aLength, MAX_BYTES_SNIFFED);
 
-  auto maybeUpdate = mozilla::MakeScopeExit([request = RefPtr{aRequest}]() {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+  auto maybeUpdate = mozilla::MakeScopeExit([channel]() {
     if (channel && XRE_IsParentProcess()) {
       if (RefPtr<mozilla::net::nsHttpChannel> httpChannel =
               do_QueryObject(channel)) {
@@ -198,6 +199,21 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
       }
     };
   });
+
+  // Check if this is a toplevel document served as application/octet-stream
+  // to disable sniffing and allow the file to download. See: Bug 1828441
+  if (channel && XRE_IsParentProcess()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    nsAutoCString mimeType;
+    channel->GetContentType(mimeType);
+    if (mimeType.EqualsLiteral(APPLICATION_OCTET_STREAM) &&
+        loadInfo->GetExternalContentPolicyType() ==
+            ExtContentPolicy::TYPE_DOCUMENT) {
+      aSniffedType.AssignLiteral(APPLICATION_OCTET_STREAM);
+      maybeUpdate.release();
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
 
   for (const auto& currentEntry : sSnifferEntries) {
     if (clampedLength < currentEntry.mLength || currentEntry.mLength == 0) {
