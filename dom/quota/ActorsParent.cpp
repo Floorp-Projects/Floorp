@@ -785,7 +785,9 @@ class StoragePressureRunnable final : public Runnable {
   NS_DECL_NSIRUNNABLE
 };
 
-class RecordQuotaInfoLoadTimeHelper final : public Runnable {
+class RecordTimeDeltaHelper final : public Runnable {
+  const Telemetry::HistogramID mHistogram;
+
   // TimeStamps that are set on the IO thread.
   LazyInitializedOnceNotNull<const TimeStamp> mStartTime;
   LazyInitializedOnceNotNull<const TimeStamp> mEndTime;
@@ -794,15 +796,15 @@ class RecordQuotaInfoLoadTimeHelper final : public Runnable {
   LazyInitializedOnceNotNull<const TimeStamp> mInitializedTime;
 
  public:
-  RecordQuotaInfoLoadTimeHelper()
-      : Runnable("dom::quota::RecordQuotaInfoLoadTimeHelper") {}
+  explicit RecordTimeDeltaHelper(const Telemetry::HistogramID aHistogram)
+      : Runnable("dom::quota::RecordTimeDeltaHelper"), mHistogram(aHistogram) {}
 
   TimeStamp Start();
 
   TimeStamp End();
 
  private:
-  ~RecordQuotaInfoLoadTimeHelper() = default;
+  ~RecordTimeDeltaHelper() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -2641,10 +2643,10 @@ nsresult QuotaManager::LoadQuota() {
         }
       };
 
-  auto recordQuotaInfoLoadTimeHelper =
-      MakeRefPtr<RecordQuotaInfoLoadTimeHelper>();
+  auto recordTimeDeltaHelper =
+      MakeRefPtr<RecordTimeDeltaHelper>(Telemetry::QM_QUOTA_INFO_LOAD_TIME_V0);
 
-  const auto startTime = recordQuotaInfoLoadTimeHelper->Start();
+  const auto startTime = recordTimeDeltaHelper->Start();
 
   auto LoadQuotaFromCache = [&]() -> nsresult {
     QM_TRY_INSPECT(
@@ -2875,7 +2877,7 @@ nsresult QuotaManager::LoadQuota() {
 
   autoRemoveQuota.release();
 
-  const auto endTime = recordQuotaInfoLoadTimeHelper->End();
+  const auto endTime = recordTimeDeltaHelper->End();
 
   if (StaticPrefs::dom_quotaManager_checkQuotaInfoLoadTime() &&
       static_cast<uint32_t>((endTime - startTime).ToMilliseconds()) >=
@@ -6533,7 +6535,7 @@ StoragePressureRunnable::Run() {
   return NS_OK;
 }
 
-TimeStamp RecordQuotaInfoLoadTimeHelper::Start() {
+TimeStamp RecordTimeDeltaHelper::Start() {
   AssertIsOnIOThread();
 
   // XXX: If a OS sleep/wake occur after mStartTime is initialized but before
@@ -6545,7 +6547,7 @@ TimeStamp RecordQuotaInfoLoadTimeHelper::Start() {
   return *mStartTime;
 }
 
-TimeStamp RecordQuotaInfoLoadTimeHelper::End() {
+TimeStamp RecordTimeDeltaHelper::End() {
   AssertIsOnIOThread();
 
   mEndTime.init(TimeStamp::Now());
@@ -6555,7 +6557,7 @@ TimeStamp RecordQuotaInfoLoadTimeHelper::End() {
 }
 
 NS_IMETHODIMP
-RecordQuotaInfoLoadTimeHelper::Run() {
+RecordTimeDeltaHelper::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mInitializedTime.isSome()) {
@@ -6587,8 +6589,7 @@ RecordQuotaInfoLoadTimeHelper::Run() {
       return "Normal"_ns;
     }();
 
-    Telemetry::AccumulateTimeDelta(Telemetry::QM_QUOTA_INFO_LOAD_TIME_V0, key,
-                                   *mStartTime, *mEndTime);
+    Telemetry::AccumulateTimeDelta(mHistogram, key, *mStartTime, *mEndTime);
 
     return NS_OK;
   }
