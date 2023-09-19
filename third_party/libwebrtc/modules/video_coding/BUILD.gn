@@ -710,6 +710,7 @@ rtc_library("webrtc_vp9") {
     "../../api/video_codecs:video_codecs_api",
     "../../common_video",
     "../../media:codec",
+    "../../media:media_constants",
     "../../media:rtc_media_base",
     "../../rtc_base:buffer",
     "../../rtc_base:checks",
