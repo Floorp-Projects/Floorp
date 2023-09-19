@@ -613,7 +613,7 @@ TEST_P(PeerConnectionMediaTest, RawPacketizationSetInOfferAndAnswer) {
   auto* offer_description =
       cricket::GetFirstVideoContentDescription(offer->description());
   for (const auto& codec : offer_description->codecs()) {
-    if (codec.GetCodecType() == cricket::VideoCodec::CODEC_VIDEO) {
+    if (codec.IsMediaCodec()) {
       EXPECT_EQ(codec.packetization, cricket::kPacketizationParamRaw);
     }
   }
@@ -624,7 +624,7 @@ TEST_P(PeerConnectionMediaTest, RawPacketizationSetInOfferAndAnswer) {
   auto* answer_description =
       cricket::GetFirstVideoContentDescription(answer->description());
   for (const auto& codec : answer_description->codecs()) {
-    if (codec.GetCodecType() == cricket::VideoCodec::CODEC_VIDEO) {
+    if (codec.IsMediaCodec()) {
       EXPECT_EQ(codec.packetization, cricket::kPacketizationParamRaw);
     }
   }

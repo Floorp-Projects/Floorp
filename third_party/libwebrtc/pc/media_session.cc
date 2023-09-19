@@ -759,7 +759,9 @@ void NegotiatePacketization(const VideoCodec& local_codec,
                             const VideoCodec& remote_codec,
                             VideoCodec* negotiated_codec) {
   negotiated_codec->packetization =
-      VideoCodec::IntersectPacketization(local_codec, remote_codec);
+      (local_codec.packetization == remote_codec.packetization)
+          ? local_codec.packetization
+          : absl::nullopt;
 }
 
 template <class C>
@@ -2479,7 +2481,7 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
 
   if (session_options.raw_packetization_for_video) {
     for (VideoCodec& codec : filtered_codecs) {
-      if (codec.GetCodecType() == VideoCodec::CODEC_VIDEO) {
+      if (codec.IsMediaCodec()) {
         codec.packetization = kPacketizationParamRaw;
       }
     }
@@ -2812,7 +2814,7 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
 
   if (session_options.raw_packetization_for_video) {
     for (VideoCodec& codec : filtered_codecs) {
-      if (codec.GetCodecType() == VideoCodec::CODEC_VIDEO) {
+      if (codec.IsMediaCodec()) {
         codec.packetization = kPacketizationParamRaw;
       }
     }

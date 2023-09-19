@@ -15,6 +15,7 @@
 #include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/vp9_profile.h"
+#include "media/base/media_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
@@ -114,10 +115,27 @@ bool FeedbackParams::HasDuplicateEntries() const {
   return false;
 }
 
-Codec::Codec(int id, const std::string& name, int clockrate)
-    : id(id), name(name), clockrate(clockrate) {}
+Codec::Codec(Type type, int id, const std::string& name, int clockrate)
+    : Codec(type, id, name, clockrate, 0) {}
+Codec::Codec(Type type,
+             int id,
+             const std::string& name,
+             int clockrate,
+             size_t channels)
+    : type(type),
+      id(id),
+      name(name),
+      clockrate(clockrate),
+      bitrate(0),
+      channels(channels) {}
 
-Codec::Codec() : id(0), clockrate(0) {}
+Codec::Codec(Type type) : Codec(type, 0, "", 0) {}
+
+Codec::Codec(const webrtc::SdpVideoFormat& c)
+    : Codec(Type::kVideo, 0, c.name, kVideoCodecClockrate) {
+  params = c.parameters;
+  scalability_modes = c.scalability_modes;
+}
 
 Codec::Codec(const Codec& c) = default;
 Codec::Codec(Codec&& c) = default;
@@ -126,15 +144,19 @@ Codec& Codec::operator=(const Codec& c) = default;
 Codec& Codec::operator=(Codec&& c) = default;
 
 bool Codec::operator==(const Codec& c) const {
-  return this->id == c.id &&  // id is reserved in objective-c
+  return type == c.type && this->id == c.id &&  // id is reserved in objective-c
          name == c.name && clockrate == c.clockrate && params == c.params &&
-         feedback_params == c.feedback_params;
+         feedback_params == c.feedback_params &&
+         (type == Type::kAudio
+              ? (bitrate == c.bitrate && channels == c.channels)
+              : (packetization == c.packetization));
 }
 
 bool Codec::Matches(const Codec& codec,
                     const webrtc::FieldTrialsView* field_trials) const {
   // Match the codec id/name based on the typical static/dynamic name rules.
   // Matching is case-insensitive.
+
   // We support the ranges [96, 127] and more recently [35, 65].
   // https://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml#rtp-parameters-1
   // Within those ranges we match by codec name, outside by codec id.
@@ -151,9 +173,36 @@ bool Codec::Matches(const Codec& codec,
       (codec.id >= kLowerDynamicRangeMin &&
        codec.id <= kLowerDynamicRangeMax) ||
       (codec.id >= kUpperDynamicRangeMin && codec.id <= kUpperDynamicRangeMax);
-  return is_id_in_dynamic_range && is_codec_id_in_dynamic_range
-             ? (absl::EqualsIgnoreCase(name, codec.name))
-             : (id == codec.id);
+  bool matches_id = is_id_in_dynamic_range && is_codec_id_in_dynamic_range
+                        ? (absl::EqualsIgnoreCase(name, codec.name))
+                        : (id == codec.id);
+
+  auto matches_type_specific = [&]() {
+    switch (type) {
+      case Type::kAudio:
+        // If a nonzero clockrate is specified, it must match the actual
+        // clockrate. If a nonzero bitrate is specified, it must match the
+        // actual bitrate, unless the codec is VBR (0), where we just force the
+        // supplied value. The number of channels must match exactly, with the
+        // exception that channels=0 is treated synonymously as channels=1, per
+        // RFC 4566 section 6: " [The channels] parameter is OPTIONAL and may be
+        // omitted if the number of channels is one."
+        // Preference is ignored.
+        // TODO(juberti): Treat a zero clockrate as 8000Hz, the RTP default
+        // clockrate.
+        return ((codec.clockrate == 0 /*&& clockrate == 8000*/) ||
+                clockrate == codec.clockrate) &&
+               (codec.bitrate == 0 || bitrate <= 0 ||
+                bitrate == codec.bitrate) &&
+               ((codec.channels < 2 && channels < 2) ||
+                channels == codec.channels);
+
+      case Type::kVideo:
+        return IsSameCodecSpecific(name, params, codec.name, codec.params);
+    }
+  };
+
+  return matches_id && matches_type_specific();
 }
 
 bool Codec::MatchesCapability(
@@ -213,79 +262,105 @@ webrtc::RtpCodecParameters Codec::ToCodecParameters() const {
   codec_params.name = name;
   codec_params.clock_rate = clockrate;
   codec_params.parameters.insert(params.begin(), params.end());
+
+  switch (type) {
+    case Type::kAudio: {
+      codec_params.num_channels = static_cast<int>(channels);
+      codec_params.kind = MEDIA_TYPE_AUDIO;
+      break;
+    }
+    case Type::kVideo: {
+      codec_params.kind = MEDIA_TYPE_VIDEO;
+      break;
+    }
+  }
+
   return codec_params;
+}
+
+bool Codec::IsMediaCodec() const {
+  return !IsResiliencyCodec();
+}
+
+bool Codec::IsResiliencyCodec() const {
+  return GetResiliencyType() != ResiliencyType::kNone;
+}
+
+Codec::ResiliencyType Codec::GetResiliencyType() const {
+  if (absl::EqualsIgnoreCase(name, kRedCodecName)) {
+    return ResiliencyType::kRed;
+  }
+  if (absl::EqualsIgnoreCase(name, kUlpfecCodecName)) {
+    return ResiliencyType::kUlpfec;
+  }
+  if (absl::EqualsIgnoreCase(name, kFlexfecCodecName)) {
+    return ResiliencyType::kFlexfec;
+  }
+  if (absl::EqualsIgnoreCase(name, kRtxCodecName)) {
+    return ResiliencyType::kRtx;
+  }
+  return ResiliencyType::kNone;
+}
+
+bool Codec::ValidateCodecFormat() const {
+  if (id < 0 || id > 127) {
+    RTC_LOG(LS_ERROR) << "Codec with invalid payload type: " << ToString();
+    return false;
+  }
+  if (IsResiliencyCodec()) {
+    return true;
+  }
+
+  int min_bitrate = -1;
+  int max_bitrate = -1;
+  if (GetParam(kCodecParamMinBitrate, &min_bitrate) &&
+      GetParam(kCodecParamMaxBitrate, &max_bitrate)) {
+    if (max_bitrate < min_bitrate) {
+      RTC_LOG(LS_ERROR) << "Codec with max < min bitrate: " << ToString();
+      return false;
+    }
+  }
+  return true;
 }
 
 AudioCodec::AudioCodec(int id,
                        const std::string& name,
                        int clockrate,
-                       int bitrate,
+                       int unused_bitrate,
                        size_t channels)
-    : Codec(id, name, clockrate), bitrate(bitrate), channels(channels) {}
+    : Codec(Type::kAudio, id, name, clockrate, channels) {}
 
-AudioCodec::AudioCodec() : Codec(), bitrate(0), channels(0) {}
+AudioCodec::AudioCodec() : Codec(Type::kAudio) {}
 
 AudioCodec::AudioCodec(const AudioCodec& c) = default;
 AudioCodec::AudioCodec(AudioCodec&& c) = default;
 AudioCodec& AudioCodec::operator=(const AudioCodec& c) = default;
 AudioCodec& AudioCodec::operator=(AudioCodec&& c) = default;
 
-bool AudioCodec::operator==(const AudioCodec& c) const {
-  return bitrate == c.bitrate && channels == c.channels && Codec::operator==(c);
-}
-
-bool AudioCodec::Matches(const AudioCodec& codec,
-                         const webrtc::FieldTrialsView* field_trials) const {
-  // If a nonzero clockrate is specified, it must match the actual clockrate.
-  // If a nonzero bitrate is specified, it must match the actual bitrate,
-  // unless the codec is VBR (0), where we just force the supplied value.
-  // The number of channels must match exactly, with the exception
-  // that channels=0 is treated synonymously as channels=1, per RFC
-  // 4566 section 6: " [The channels] parameter is OPTIONAL and may be
-  // omitted if the number of channels is one."
-  // Preference is ignored.
-  // TODO(juberti): Treat a zero clockrate as 8000Hz, the RTP default clockrate.
-  return Codec::Matches(codec, field_trials) &&
-         ((codec.clockrate == 0 /*&& clockrate == 8000*/) ||
-          clockrate == codec.clockrate) &&
-         (codec.bitrate == 0 || bitrate <= 0 || bitrate == codec.bitrate) &&
-         ((codec.channels < 2 && channels < 2) || channels == codec.channels);
-}
-
-std::string AudioCodec::ToString() const {
+std::string Codec::ToString() const {
   char buf[256];
-  rtc::SimpleStringBuilder sb(buf);
-  sb << "AudioCodec[" << id << ":" << name << ":" << clockrate << ":" << bitrate
-     << ":" << channels << "]";
-  return sb.str();
-}
 
-webrtc::RtpCodecParameters AudioCodec::ToCodecParameters() const {
-  webrtc::RtpCodecParameters codec_params = Codec::ToCodecParameters();
-  codec_params.num_channels = static_cast<int>(channels);
-  codec_params.kind = MEDIA_TYPE_AUDIO;
-  return codec_params;
-}
-
-std::string VideoCodec::ToString() const {
-  char buf[256];
   rtc::SimpleStringBuilder sb(buf);
-  sb << "VideoCodec[" << id << ":" << name;
-  if (packetization.has_value()) {
-    sb << ":" << *packetization;
+  switch (type) {
+    case Type::kAudio: {
+      sb << "AudioCodec[" << id << ":" << name << ":" << clockrate << ":"
+         << bitrate << ":" << channels << "]";
+      break;
+    }
+    case Type::kVideo: {
+      sb << "VideoCodec[" << id << ":" << name;
+      if (packetization.has_value()) {
+        sb << ":" << *packetization;
+      }
+      sb << "]";
+      break;
+    }
   }
-  sb << "]";
   return sb.str();
-}
-
-webrtc::RtpCodecParameters VideoCodec::ToCodecParameters() const {
-  webrtc::RtpCodecParameters codec_params = Codec::ToCodecParameters();
-  codec_params.kind = MEDIA_TYPE_VIDEO;
-  return codec_params;
 }
 
 VideoCodec::VideoCodec(int id, const std::string& name)
-    : Codec(id, name, kVideoCodecClockrate) {
+    : Codec(Type::kVideo, id, name, kVideoCodecClockrate) {
   SetDefaultParameters();
 }
 
@@ -293,15 +368,11 @@ VideoCodec::VideoCodec(const std::string& name) : VideoCodec(0 /* id */, name) {
   SetDefaultParameters();
 }
 
-VideoCodec::VideoCodec() : Codec() {
+VideoCodec::VideoCodec() : Codec(Type::kVideo) {
   clockrate = kVideoCodecClockrate;
 }
 
-VideoCodec::VideoCodec(const webrtc::SdpVideoFormat& c)
-    : Codec(0 /* id */, c.name, kVideoCodecClockrate) {
-  params = c.parameters;
-  scalability_modes = c.scalability_modes;
-}
+VideoCodec::VideoCodec(const webrtc::SdpVideoFormat& c) : Codec(c) {}
 
 VideoCodec::VideoCodec(const VideoCodec& c) = default;
 VideoCodec::VideoCodec(VideoCodec&& c) = default;
@@ -318,27 +389,13 @@ void VideoCodec::SetDefaultParameters() {
   }
 }
 
-bool VideoCodec::operator==(const VideoCodec& c) const {
-  return Codec::operator==(c) && packetization == c.packetization;
-}
-
-bool VideoCodec::Matches(const VideoCodec& other,
-                         const webrtc::FieldTrialsView* field_trials) const {
-  return Codec::Matches(other, field_trials) &&
-         IsSameCodecSpecific(name, params, other.name, other.params);
-}
-
-absl::optional<std::string> VideoCodec::IntersectPacketization(
-    const VideoCodec& local_codec,
-    const VideoCodec& remote_codec) {
-  if (local_codec.packetization == remote_codec.packetization) {
-    return local_codec.packetization;
-  }
-  return absl::nullopt;
-}
-
 VideoCodec VideoCodec::CreateRtxCodec(int rtx_payload_type,
                                       int associated_payload_type) {
+  return CreateVideoRtxCodec(rtx_payload_type, associated_payload_type);
+}
+
+VideoCodec CreateVideoRtxCodec(int rtx_payload_type,
+                               int associated_payload_type) {
   VideoCodec rtx_codec(rtx_payload_type, kRtxCodecName);
   rtx_codec.SetParam(kCodecParamAssociatedPayloadType, associated_payload_type);
   return rtx_codec;
@@ -359,28 +416,6 @@ VideoCodec::CodecType VideoCodec::GetCodecType() const {
   }
 
   return CODEC_VIDEO;
-}
-
-bool VideoCodec::ValidateCodecFormat() const {
-  if (id < 0 || id > 127) {
-    RTC_LOG(LS_ERROR) << "Codec with invalid payload type: " << ToString();
-    return false;
-  }
-  if (GetCodecType() != CODEC_VIDEO) {
-    return true;
-  }
-
-  // Video validation from here on.
-  int min_bitrate = -1;
-  int max_bitrate = -1;
-  if (GetParam(kCodecParamMinBitrate, &min_bitrate) &&
-      GetParam(kCodecParamMaxBitrate, &max_bitrate)) {
-    if (max_bitrate < min_bitrate) {
-      RTC_LOG(LS_ERROR) << "Codec with max < min bitrate: " << ToString();
-      return false;
-    }
-  }
-  return true;
 }
 
 bool HasLntf(const Codec& codec) {
@@ -459,6 +494,21 @@ void AddH264ConstrainedBaselineProfileToSupportedFormats(
     RTC_LOG(LS_WARNING) << "Explicitly added H264 constrained baseline to list "
                            "of supported formats.";
   }
+}
+
+AudioCodec CreateAudioCodec(int id,
+                            const std::string& name,
+                            int clockrate,
+                            size_t channels) {
+  return AudioCodec(id, name, clockrate, 0, channels);
+}
+
+VideoCodec CreateVideoCodec(const std::string& name) {
+  return VideoCodec(name);
+}
+
+VideoCodec CreateVideoCodec(int id, const std::string& name) {
+  return VideoCodec(id, name);
 }
 
 }  // namespace cricket
