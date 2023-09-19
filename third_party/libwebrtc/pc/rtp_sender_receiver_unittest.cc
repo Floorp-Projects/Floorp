@@ -149,10 +149,8 @@ class RtpSenderReceiverTest
     RTC_CHECK(voice_media_receive_channel());
     RTC_CHECK(video_media_receive_channel());
     // Create sender channel objects
-    voice_send_channel_ = std::make_unique<cricket::VoiceMediaSendChannel>(
-        voice_media_send_channel());
-    video_send_channel_ = std::make_unique<cricket::VideoMediaSendChannel>(
-        video_media_send_channel());
+    voice_send_channel_ = voice_media_send_channel()->AsVoiceSendChannel();
+    video_send_channel_ = video_media_send_channel()->AsVideoSendChannel();
 
     // Create streams for predefined SSRCs. Streams need to exist in order
     // for the senders and receievers to apply parameters to them.
@@ -227,7 +225,7 @@ class RtpSenderReceiverTest
     ASSERT_TRUE(audio_rtp_sender_->SetTrack(audio_track_.get()));
     EXPECT_CALL(*set_streams_observer, OnSetStreams());
     audio_rtp_sender_->SetStreams({local_stream_->id()});
-    audio_rtp_sender_->SetMediaChannel(voice_send_channel_.get());
+    audio_rtp_sender_->SetMediaChannel(voice_send_channel_);
     audio_rtp_sender_->SetSsrc(kAudioSsrc);
     VerifyVoiceChannelInput();
   }
@@ -554,8 +552,8 @@ class RtpSenderReceiverTest
   std::unique_ptr<cricket::FakeVideoMediaChannel> video_media_send_channel_;
   std::unique_ptr<cricket::FakeVoiceMediaChannel> voice_media_receive_channel_;
   std::unique_ptr<cricket::FakeVideoMediaChannel> video_media_receive_channel_;
-  std::unique_ptr<cricket::VoiceMediaSendChannel> voice_send_channel_;
-  std::unique_ptr<cricket::VideoMediaSendChannel> video_send_channel_;
+  cricket::VoiceMediaSendChannelInterface* voice_send_channel_;
+  cricket::VideoMediaSendChannelInterface* video_send_channel_;
   rtc::scoped_refptr<AudioRtpSender> audio_rtp_sender_;
   rtc::scoped_refptr<VideoRtpSender> video_rtp_sender_;
   rtc::scoped_refptr<AudioRtpReceiver> audio_rtp_receiver_;
