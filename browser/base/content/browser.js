@@ -8379,7 +8379,13 @@ var gPrivateBrowsingUI = {
 
     // Bug 1846583 - hide pocket button in PBM
     if (gUseFeltPrivacyUI) {
-      document.getElementById("save-to-pocket-button").remove();
+      const saveToPocketButton = document.getElementById(
+        "save-to-pocket-button"
+      );
+      if (saveToPocketButton) {
+        saveToPocketButton.remove();
+        document.documentElement.setAttribute("pocketdisabled", "true");
+      }
     }
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
