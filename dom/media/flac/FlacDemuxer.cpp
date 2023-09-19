@@ -746,9 +746,18 @@ TimeUnit FlacTrackDemuxer::FastSeek(const TimeUnit& aTime) {
     iterations++;
     mSource.Seek(SEEK_SET, pivot);
     flac::Frame frame;
-    if (!frame.FindNext(mSource)) {
+    bool found = frame.FindNext(mSource);
+    if (!found) {
       NS_WARNING("We should have found a point");
       break;
+    }
+    if (!frame.IsValid()) {
+      NS_WARNING("Invalid frame after seeking and sync on a frame");
+      break;
+    }
+    // When the rate is 0, the rate from STREAMINFO is to be used.
+    if (frame.Header().Info().mRate == 0) {
+      frame.SetRate(mParser->FirstFrame().Info().mRate);
     }
     timeSeekedTo = frame.Time();
 
@@ -886,7 +895,7 @@ TimeIntervals FlacTrackDemuxer::GetBuffered() {
 }
 
 const flac::Frame& FlacTrackDemuxer::FindNextFrame() {
-  LOGV("FindNext() Begin offset=%" PRId64
+  LOGV("FindNextFrame() Begin offset=%" PRId64
        " mParsedFramesDuration=%f"
        " mTotalFrameLen=%" PRIu64,
        GetResourceOffset(), mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
@@ -902,7 +911,7 @@ const flac::Frame& FlacTrackDemuxer::FindNextFrame() {
                                                mParser->FirstFrame().Offset() +
                                                mParser->CurrentFrame().Size());
 
-    LOGV("FindNext() End time=%f offset=%" PRId64
+    LOGV("FindNextFrame() End time=%f offset=%" PRId64
          " mParsedFramesDuration=%f"
          " mTotalFrameLen=%" PRIu64,
          mParser->CurrentFrame().Time().ToSeconds(), GetResourceOffset(),
