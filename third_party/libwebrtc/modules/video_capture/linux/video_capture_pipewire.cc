@@ -160,6 +160,8 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
                       << spa_strerror(res);
     return -1;
   }
+
+  _requestedCapability = capability;
   return 0;
 }
 
@@ -169,6 +171,8 @@ int32_t VideoCaptureModulePipeWire::StopCapture() {
     pw_stream_destroy(stream_);
     stream_ = nullptr;
   }
+
+  _requestedCapability = VideoCaptureCapability();
   return 0;
 }
 
@@ -178,7 +182,7 @@ bool VideoCaptureModulePipeWire::CaptureStarted() {
 
 int32_t VideoCaptureModulePipeWire::CaptureSettings(
     VideoCaptureCapability& settings) {
-  settings = frameInfo_;
+  settings = _requestedCapability;
 
   return 0;
 }
@@ -207,32 +211,32 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
     case SPA_MEDIA_SUBTYPE_raw: {
       struct spa_video_info_raw f;
       spa_format_video_raw_parse(format, &f);
-      frameInfo_.width = f.size.width;
-      frameInfo_.height = f.size.height;
-      frameInfo_.videoType = PipeWireRawFormatToVideoType(f.format);
-      frameInfo_.maxFPS = f.framerate.num / f.framerate.denom;
+      configured_capability_.width = f.size.width;
+      configured_capability_.height = f.size.height;
+      configured_capability_.videoType = PipeWireRawFormatToVideoType(f.format);
+      configured_capability_.maxFPS = f.framerate.num / f.framerate.denom;
       break;
     }
     case SPA_MEDIA_SUBTYPE_mjpg: {
       struct spa_video_info_mjpg f;
       spa_format_video_mjpg_parse(format, &f);
-      frameInfo_.width = f.size.width;
-      frameInfo_.height = f.size.height;
-      frameInfo_.videoType = VideoType::kMJPEG;
-      frameInfo_.maxFPS = f.framerate.num / f.framerate.denom;
+      configured_capability_.width = f.size.width;
+      configured_capability_.height = f.size.height;
+      configured_capability_.videoType = VideoType::kMJPEG;
+      configured_capability_.maxFPS = f.framerate.num / f.framerate.denom;
       break;
     }
     default:
-      frameInfo_.videoType = VideoType::kUnknown;
+      configured_capability_.videoType = VideoType::kUnknown;
   }
 
-  if (frameInfo_.videoType == VideoType::kUnknown) {
+  if (configured_capability_.videoType == VideoType::kUnknown) {
     RTC_LOG(LS_ERROR) << "Unsupported video format.";
     return;
   }
 
   RTC_LOG(LS_VERBOSE) << "Configured capture format = "
-                      << static_cast<int>(frameInfo_.videoType);
+                      << static_cast<int>(configured_capability_.videoType);
 
   uint8_t buffer[1024] = {};
   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
@@ -246,17 +250,17 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
   if (media_subtype == SPA_MEDIA_SUBTYPE_raw) {
     // Enforce stride without padding.
     size_t stride;
-    switch (frameInfo_.videoType) {
+    switch (configured_capability_.videoType) {
       case VideoType::kI420:
       case VideoType::kNV12:
-        stride = frameInfo_.width;
+        stride = configured_capability_.width;
         break;
       case VideoType::kYUY2:
       case VideoType::kUYVY:
-        stride = frameInfo_.width * 2;
+        stride = configured_capability_.width * 2;
         break;
       case VideoType::kRGB24:
-        stride = frameInfo_.width * 3;
+        stride = configured_capability_.width * 3;
         break;
       default:
         RTC_LOG(LS_ERROR) << "Unsupported video format.";
@@ -353,7 +357,8 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
       RTC_LOG(LS_INFO) << "Dropping corruped frame.";
     } else {
       IncomingFrame(static_cast<unsigned char*>(buffer->buffer->datas[0].data),
-                    buffer->buffer->datas[0].chunk->size, frameInfo_);
+                    buffer->buffer->datas[0].chunk->size,
+                    configured_capability_);
     }
     pw_stream_queue_buffer(stream_, buffer);
   }

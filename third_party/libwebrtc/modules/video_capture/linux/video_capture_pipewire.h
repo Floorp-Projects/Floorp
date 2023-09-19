@@ -45,7 +45,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
 
   rtc::scoped_refptr<PipeWireSession> session_;
   int node_id_;
-  VideoCaptureCapability frameInfo_;
+  VideoCaptureCapability configured_capability_;
   bool started_;
 
   struct pw_stream* stream_ = nullptr;
