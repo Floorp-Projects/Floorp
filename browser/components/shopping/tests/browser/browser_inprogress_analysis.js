@@ -86,10 +86,7 @@ add_task(async function test_in_progress_analysis_stale() {
           let staleMessageBar = shoppingContainer.shoppingMessageBarEl;
           is(staleMessageBar?.type, "stale", "Got stale message-bar");
 
-          let analysisLink = staleMessageBar.reAnalysisLinkEl;
-
-          // Override to prevent page navigation
-          analysisLink.href = undefined;
+          let analysisButton = staleMessageBar.reAnalysisButtonEl;
 
           let messageBarVisiblePromise = ContentTaskUtils.waitForCondition(
             () => {
@@ -103,7 +100,7 @@ add_task(async function test_in_progress_analysis_stale() {
             "Waiting for shopping-message-bar to be visible"
           );
 
-          analysisLink.click();
+          analysisButton.click();
           await shoppingContainer.updateComplete;
 
           // Mock the response from analysis status being "pending"

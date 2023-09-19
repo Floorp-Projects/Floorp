@@ -40,8 +40,8 @@ shopping-letter-grade-tooltip =
 
 ## Strings for the shopping message-bar
 
-shopping-message-bar-warning-stale-analysis-title = Updates available
-shopping-message-bar-warning-stale-analysis-message = Launch the { -fakespot-brand-full-name } analyzer to get updated info in about 60 seconds.
+shopping-message-bar-warning-stale-analysis-message-2 = New info to check
+shopping-message-bar-warning-stale-analysis-button = Check now
 
 shopping-message-bar-generic-error-title2 = No info available right now
 shopping-message-bar-generic-error-message = We’re working to resolve the issue. Please check back soon.
@@ -64,14 +64,6 @@ shopping-message-bar-analysis-in-progress-message2 = This could take about 60 se
 
 shopping-message-bar-page-not-supported-title = We can’t check these reviews
 shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
-
-## The word 'analyzer' when used here reflects what this tool is called on
-## fakespot.com. If possible, a different word should be used for the Fakespot
-## tool (the Fakespot by Mozilla 'analyzer') other than 'checker', which is
-## used in the name of the Firefox feature ('Review checker'). If that is not
-## possible - if these terms are not meaningfully different - that is OK.
-
-shopping-message-bar-warning-stale-analysis-link = Launch analyzer on { -fakespot-website-name }
 
 ## Strings for the product review snippets card
 
