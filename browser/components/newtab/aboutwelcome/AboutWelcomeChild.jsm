@@ -479,6 +479,9 @@ const SHOPPING_MICROSURVEY = {
           action: {
             dismiss: true,
           },
+          label: {
+            string_id: "shopping-onboarding-dialog-close-button",
+          },
         },
         tiles: {
           type: "multiselect",
@@ -557,6 +560,9 @@ const SHOPPING_MICROSURVEY = {
         dismiss_button: {
           action: {
             dismiss: true,
+          },
+          label: {
+            string_id: "shopping-onboarding-dialog-close-button",
           },
         },
         tiles: {

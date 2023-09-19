@@ -25,3 +25,6 @@ shopping-onboarding-body = Using the power of { -fakespot-brand-full-name }, we 
 shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -fakespot-brand-full-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use.</a>
 shopping-onboarding-opt-in-button = Yes, try it
 shopping-onboarding-not-now-button = Not now
+shopping-onboarding-dialog-close-button =
+    .title = Close
+    .aria-label = Close
