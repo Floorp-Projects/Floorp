@@ -127,9 +127,9 @@ bool CrossProcessSemaphore::Wait(const Maybe<TimeDuration>& aWaitTime) {
       return false;
     }
 
-    ts.tv_nsec += (kNsPerMs * aWaitTime->ToMilliseconds());
-    ts.tv_sec += ts.tv_nsec / kNsPerSec;
-    ts.tv_nsec %= kNsPerSec;
+    uint64_t ns = uint64_t(kNsPerMs * aWaitTime->ToMilliseconds()) + ts.tv_nsec;
+    ts.tv_sec += ns / kNsPerSec;
+    ts.tv_nsec = ns % kNsPerSec;
 
     while ((ret = sem_timedwait(mSemaphore, &ts)) == -1 && errno == EINTR) {
     }
