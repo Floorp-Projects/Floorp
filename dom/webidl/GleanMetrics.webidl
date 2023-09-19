@@ -423,7 +423,7 @@ interface GleanEvent : GleanMetric {
    *
    * @param aExtra An (optional) map of extra values.
    */
-  undefined _record(optional record<UTF8String, UTF8String> aExtra);
+  undefined _record(optional record<UTF8String, UTF8String?> aExtra);
 
   /**
    * **Test-only API**
