@@ -83,7 +83,7 @@ function clickReAnalyzeLink(browser, data) {
     let shoppingMessageBar = shoppingContainer.shoppingMessageBarEl;
     await shoppingMessageBar.updateComplete;
 
-    await shoppingMessageBar.onClickAnalysisLink();
+    await shoppingMessageBar.onClickAnalysisButton();
 
     return "clicked";
   });

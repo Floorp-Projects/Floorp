@@ -29,12 +29,12 @@ class ShoppingMessageBar extends MozLitElement {
 
   static get queries() {
     return {
-      reAnalysisLinkEl: "#message-bar-reanalysis-link",
+      reAnalysisButtonEl: "#message-bar-reanalysis-button",
       productAvailableBtnEl: "#message-bar-report-product-available-btn",
     };
   }
 
-  onClickAnalysisLink() {
+  onClickAnalysisButton() {
     this.dispatchEvent(
       new CustomEvent("ReanalysisRequested", {
         bubbles: true,
@@ -60,20 +60,17 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getStaleWarningTemplate() {
-    return html` <message-bar type="warning">
+    return html` <message-bar>
       <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-warning-stale-analysis-title"
-        ></strong>
         <span
-          data-l10n-id="shopping-message-bar-warning-stale-analysis-message"
+          data-l10n-id="shopping-message-bar-warning-stale-analysis-message-2"
         ></span>
-        <a
-          id="message-bar-reanalysis-link"
-          data-l10n-id="shopping-message-bar-warning-stale-analysis-link"
-          @click=${this.onClickAnalysisLink}
-        ></a>
+        <button
+          id="message-bar-reanalysis-button"
+          class="small-button"
+          data-l10n-id="shopping-message-bar-warning-stale-analysis-button"
+          @click=${this.onClickAnalysisButton}
+        ></button>
       </article>
     </message-bar>`;
   }

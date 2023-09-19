@@ -17,6 +17,18 @@
   margin: 0;
 }
 
+:host([type="stale"]) #message-bar-container {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  > :is(span, button) {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+  }
+}
+
 button {
   margin-inline-start: 0;
 }
@@ -37,6 +49,8 @@ message-bar::part(icon) {
   animation: spin 1s infinite linear;
 }
 
-:host([type=reanalysis-in-progress]) message-bar::part(container) {
+:host([type=reanalysis-in-progress]) message-bar::part(container),
+:host([type=stale]) message-bar::part(container) {
+  align-items: center;
   background-color: transparent;
 }
