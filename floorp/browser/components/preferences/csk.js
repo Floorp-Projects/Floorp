@@ -120,6 +120,8 @@ const gCSKPane = {
               const keyboradShortcutObj = utils.getInfoFunctions.getActionKey(action);
               const key = keyboradShortcutObj.key;
               const modifiers = keyboradShortcutObj.modifiers ? keyboradShortcutObj.modifiers : undefined;
+              let changedActions = Services.prefs.getStringPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_CHANGED_ARRAY_PREF, "");
+              let changedActionsArray = changedActions.split(",");
 
               // Disable button if the keyborad shortcut is exist
               const button = document.querySelector(`.csks-button[value="${action}"]`);
@@ -132,6 +134,16 @@ const gCSKPane = {
                 </description>
               `);
               boxItem.after(keyboradShortcutInfo);
+
+              if (changedActionsArray.includes(action)) {
+                let showChangedKeyElement = window.MozXULElement.parseXULToFragment(`
+                  <description class="indent tip-caption csks-box-item-description" data-l10n-id="CSK-keyborad-shortcut-is-changed">
+                  </description>
+                `);
+
+                const descriptionItem = document.querySelector(`.csks-box-item-label[value="${action}"]`);
+                descriptionItem.after(showChangedKeyElement);
+              }
 
               // add l10n
               if(modifiers && key){

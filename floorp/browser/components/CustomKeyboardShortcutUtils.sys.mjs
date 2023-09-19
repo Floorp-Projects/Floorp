@@ -40,6 +40,7 @@ export const EXPORTED_SYMBOLS = ["CustomKeyboardShortcutUtils"];
 export const SHORTCUT_KEY_AND_ACTION_PREF = "floorp.custom.shortcutkeysAndActions";
 export const SHORTCUT_KEY_AND_ACTION_ENABLED_PREF = "floorp.custom.shortcutkeysAndActions.enabled";
 export const SHORTCUT_KEY_DISABLE_FX_DEFAULT_SCKEY_PREF = "floorp.custom.shortcutkeysAndActions.remove.fx.actions";
+export const SHORTCUT_KEY_CHANGED_ARRAY_PREF = "floorp.custom.shortcutkeysAndActions.changed";
 
 export const keyboradShortcutActions = {
 

@@ -179,5 +179,19 @@ function setTitle() {
       return;
     }
 
+    let changedActions = Services.prefs.getStringPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_CHANGED_ARRAY_PREF, "");
+
+    if (changedActions.length) {
+      changedActions = changedActions.split(",");
+    } else {
+      changedActions = [];
+    }
+
+    if (!changedActions.includes(shortcutKeyName)) {
+      changedActions.push(shortcutKeyName);
+
+      Services.prefs.setStringPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_CHANGED_ARRAY_PREF, changedActions.join(","));
+    }
+
     CustomKeyboardShortcutUtils.keyboradShortcutFunctions.preferencesFunctions.addKeyForShortcutAction(shortcutKeyName, keyListInput[0].toLowerCase(), keyCodeResult, modifiersResult);
   }

@@ -18,6 +18,10 @@ const keyboradShortcutConfig = JSON.parse(
 
 const buildShortCutkeyFunctions = {
   init() {
+    Services.prefs.clearUserPref(
+      CustomKeyboardShortcutUtils.SHORTCUT_KEY_CHANGED_ARRAY_PREF
+    );
+
     if (
       Services.prefs.getBoolPref(
         CustomKeyboardShortcutUtils.SHORTCUT_KEY_DISABLE_FX_DEFAULT_SCKEY_PREF,
