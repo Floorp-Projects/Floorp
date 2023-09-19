@@ -1,30 +1,40 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Sat, 12 Aug 2023 18:57:00 +0000
-Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
- ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
+ config r=ng,webrtc-reviewers
 
-rtc::strcpyn second param should be the size of the destination buffer,
-not the size of the source string.  This has been masked because FormFileName
-helpfully adds a trailing path separator if one is missing.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185862
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
+Differential Revision: https://phabricator.services.mozilla.com/D172224
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
 ---
- modules/audio_processing/logging/apm_data_dumper.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
-index 4ab6baad83..76f8b34c0b 100644
---- a/modules/audio_processing/logging/apm_data_dumper.h
-+++ b/modules/audio_processing/logging/apm_data_dumper.h
-@@ -91,7 +91,7 @@ class ApmDataDumper {
-   static void SetOutputDirectory(absl::string_view output_dir) {
- #if WEBRTC_APM_DEBUG_DUMP == 1
-     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
--    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
-+    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
- #endif
-   }
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 0c26e7a7d5..22aa355e44 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -28,6 +28,13 @@
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/time_utils.h"
+ 
++// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
++// We don't want to use dmabuf of known broken systems.
++// See FEATURE_DMABUF for details.
++namespace mozilla::gfx {
++bool IsDMABufEnabled();
++}
++
+ namespace webrtc {
+ 
+ const int kBytesPerPixel = 4;
+@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+   that->modifier_ =
+       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
+   std::vector<const spa_pod*> params;
+-  const int buffer_types = has_modifier
++  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
+                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+                                : (1 << SPA_DATA_MemFd);
  
 -- 
 2.37.3
