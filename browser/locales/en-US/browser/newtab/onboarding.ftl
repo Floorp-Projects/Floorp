@@ -352,5 +352,5 @@ mr2022-onboarding-colorways-image-alt =
 onboarding-device-migration-image-alt =
   .aria-label = A fox on the screen of a laptop computer waving. The laptop has a mouse plugged into it.
 onboarding-device-migration-title = Welcome back!
-onboarding-device-migration-subtitle = Sign in to your { -fxaccount-brand-name(capitalization: "sentence") } to bring your bookmarks, passwords, and history with you on your new device.
+onboarding-device-migration-subtitle2 = Sign in to your account to bring your bookmarks, passwords, and history with you on your new device.
 onboarding-device-migration-primary-button-label = Sign in
