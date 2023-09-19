@@ -108,7 +108,7 @@ deps = {
     'condition': 'not (host_os == "linux" and host_cpu == "arm64")',
   },
 
-  'src/third_party/clang_format/script':
+  'src/third_party/clang-format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@3fa7e3754ef2c795adc6a07acce70f9e9fa5b359',
   'src/buildtools/third_party/libc++/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@055b2e17ae4f0e2c025ad0c7508b01787df17758',
