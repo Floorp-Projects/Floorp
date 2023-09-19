@@ -455,8 +455,11 @@ HRESULT WgcCaptureSession::ProcessFrame() {
   uint8_t* dst_data = current_frame->data();
   uint8_t* prev_data =
       frame_content_can_be_compared ? previous_frame->data() : nullptr;
-  RTC_DCHECK_EQ(map_info.RowPitch, current_frame->stride());
-  const int width_in_bytes = map_info.RowPitch;
+
+  const int width_in_bytes =
+      current_frame->size().width() * DesktopFrame::kBytesPerPixel;
+  RTC_DCHECK_GE(current_frame->stride(), width_in_bytes);
+  RTC_DCHECK_GE(map_info.RowPitch, width_in_bytes);
   const int middle_pixel_offset =
       (image_width / 2) * DesktopFrame::kBytesPerPixel;
   for (int i = 0; i < image_height; i++) {
@@ -466,10 +469,10 @@ HRESULT WgcCaptureSession::ProcessFrame() {
       uint8_t* current_pixel = dst_data + middle_pixel_offset;
       frame_content_has_changed =
           memcmp(previous_pixel, current_pixel, DesktopFrame::kBytesPerPixel);
-      prev_data += width_in_bytes;
+      prev_data += current_frame->stride();
     }
-    dst_data += width_in_bytes;
-    src_data += width_in_bytes;
+    dst_data += current_frame->stride();
+    src_data += map_info.RowPitch;
   }
 
   d3d_context->Unmap(mapped_texture_.Get(), 0);
