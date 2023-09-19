@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c44
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 0c6e3784a2..9d9a1471e8 100644
+index 07b7f3dbec..57926e352c 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -173,8 +173,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
@@ -22,7 +22,7 @@ index 0c6e3784a2..9d9a1471e8 100644
    int target_width = width;
    int target_height = abs(height);
  
-@@ -190,6 +188,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -187,6 +185,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
      }
    }
  
