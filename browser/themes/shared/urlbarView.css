@@ -33,32 +33,22 @@
   --urlbarView-result-button-hover-background-color: color-mix(in srgb, var(--toolbar-field-focus-color) var(--urlbarView-result-button-background-opacity), transparent);
 
   --urlbar-popup-url-color: var(--link-color);
-}
 
-:root:-moz-lwtheme {
-  --urlbar-popup-action-color: rgb(91,91,102);
-  /* Fallback colours for when theme authors don't define lwtheme variables. */
-  --autocomplete-popup-highlight-background: rgb(0, 99, 255);
-  --autocomplete-popup-highlight-color: white;
-}
+  &:-moz-locale-dir(rtl) {
+    --urlbarView-action-slide-in-distance: -200px;
+  }
 
-:root[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-action-color: rgb(191,191,201);
-}
+  &:-moz-lwtheme {
+    --urlbar-popup-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
+    /* Fallback colors for when themes don't specify popup_highlight / popup_highlight_text. */
+    --autocomplete-popup-highlight-background: light-dark(rgb(0, 99, 255), rgb(0, 99, 225));
+    --autocomplete-popup-highlight-color: white;
+  }
 
-:root[lwt-toolbar-field-brighttext] {
-  --autocomplete-popup-highlight-background: rgb(0, 99, 225);
-}
-
-@media (prefers-contrast) {
-  :root {
+  @media (prefers-contrast) {
     --urlbarView-result-button-background-opacity: 100%;
     --urlbarView-secondary-text-color: currentColor;
   }
-}
-
-:root:-moz-locale-dir(rtl) {
-  --urlbarView-action-slide-in-distance: -200px;
 }
 
 /* Align the favicons and titles of rows with standard 16px icons with those
