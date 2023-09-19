@@ -105,8 +105,22 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
 
   // Does initialization that needs to occur on the worker thread.
   void Init() override;
-
   rtc::scoped_refptr<webrtc::AudioState> GetAudioState() const override;
+
+  std::unique_ptr<VoiceMediaSendChannelInterface> CreateSendChannel(
+      webrtc::Call* call,
+      const MediaConfig& config,
+      const AudioOptions& options,
+      const webrtc::CryptoOptions& crypto_options,
+      webrtc::AudioCodecPairId codec_pair_id) override;
+
+  std::unique_ptr<VoiceMediaReceiveChannelInterface> CreateReceiveChannel(
+      webrtc::Call* call,
+      const MediaConfig& config,
+      const AudioOptions& options,
+      const webrtc::CryptoOptions& crypto_options,
+      webrtc::AudioCodecPairId codec_pair_id) override;
+
   VoiceMediaChannel* CreateMediaChannel(
       MediaChannel::Role role,
       webrtc::Call* call,
