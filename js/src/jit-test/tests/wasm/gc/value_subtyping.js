@@ -86,19 +86,19 @@ assertSubtype(
 assertSubtype(
  '(ref 1)',
  '(ref 0)',
- simpleTypeSection(['(struct (ref 0))', '(struct (ref 1))']));
+ simpleTypeSection(['(struct (field (ref 0)))', '(struct (field (ref 1)))']));
 
 // Mutually referential structs
 assertSubtype(
  '(ref 2)',
  '(ref 0)',
  `(rec
-    (type (struct (ref 1)))
-    (type (struct (ref 0)))
+    (type (struct (field (ref 1))))
+    (type (struct (field (ref 0))))
   )
   (rec
-    (type (struct (ref 3)))
-    (type (struct (ref 2)))
+    (type (struct (field (ref 3))))
+    (type (struct (field (ref 2))))
   )`);
 
 // Struct subtypes can have extra fields

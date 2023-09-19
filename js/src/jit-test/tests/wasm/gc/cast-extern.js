@@ -5,7 +5,7 @@ let { refCast, refTest, brOnCast, brOnCastFail } = wasmEvalText(`
   (module
     (; give this struct a unique identity to avoid conflict with
        the struct type defined in wasm.js ;)
-    (type (struct i64 i32 i64 i32))
+    (type (struct (field i64 i32 i64 i32)))
 
     (func (export "refTest") (param externref) (result i32)
       local.get 0

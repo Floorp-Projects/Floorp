@@ -63,8 +63,8 @@ enum class TypeCode {
   F64 = 0x7c,   // SLEB128(-0x04)
   V128 = 0x7b,  // SLEB128(-0x05)
 
-  I8 = 0x7a,   // SLEB128(-0x06)
-  I16 = 0x79,  // SLEB128(-0x07)
+  I8 = 0x78,   // SLEB128(-0x08)
+  I16 = 0x77,  // SLEB128(-0x09)
 
   // A function pointer with any signature
   FuncRef = 0x70,  // SLEB128(-0x10)
@@ -79,28 +79,28 @@ enum class TypeCode {
   EqRef = 0x6d,  // SLEB128(-0x13)
 
   // Type constructor for nullable reference types.
-  NullableRef = 0x6c,  // SLEB128(-0x14)
+  NullableRef = 0x63,  // SLEB128(-0x1D)
 
   // Type constructor for non-nullable reference types.
-  Ref = 0x6b,  // SLEB128(-0x15)
+  Ref = 0x64,  // SLEB128(-0x1C)
 
   // A reference to an unboxed 31-bit integer.
-  I31Ref = 0x6a,  // SLEB128(-0x16)
+  I31Ref = 0x6c,  // SLEB128(-0x14)
 
   // A null reference in the extern hierarchy.
-  NullExternRef = 0x69,  // SLEB128(-0x17)
+  NullExternRef = 0x72,  // SLEB128(-0x0E)
 
   // A null reference in the func hierarchy.
-  NullFuncRef = 0x68,  // SLEB128(-0x18)
+  NullFuncRef = 0x73,  // SLEB128(-0x0D)
 
   // A reference to any struct value.
-  StructRef = 0x67,  // SLEB128(-0x19)
+  StructRef = 0x6b,  // SLEB128(-0x15)
 
   // A reference to any array value.
-  ArrayRef = 0x66,  // SLEB128(-0x1A)
+  ArrayRef = 0x6a,  // SLEB128(-0x16)
 
   // A null reference in the any hierarchy.
-  NullAnyRef = 0x65,  // SLEB128(-0x1B)
+  NullAnyRef = 0x71,  // SLEB128(-0x0F)
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
@@ -118,13 +118,13 @@ enum class TypeCode {
   BlockVoid = 0x40,  // SLEB128(-0x40)
 
   // Type constructor for recursion groups - gc proposal
-  RecGroup = 0x4f,  // SLEB128(-0x31)
+  RecGroup = 0x4e,  // SLEB128(-0x31)
 
   // Type prefix for parent types - gc proposal
   SubNoFinalType = 0x50,  // SLEB128(-0x30)
 
   // Type prefix for final types - gc proposal
-  SubFinalType = 0x4e,  // SLEB128(-0x32)
+  SubFinalType = 0x4f,  // SLEB128(-0x32)
 
   Limit = 0x80
 };
@@ -458,11 +458,11 @@ enum class Op {
   RefFunc = 0xd2,
 
   // Function references
-  RefAsNonNull = 0xd3,
-  BrOnNull = 0xd4,
+  RefAsNonNull = 0xd4,
+  BrOnNull = 0xd5,
 
   // GC (experimental)
-  RefEq = 0xd5,
+  RefEq = 0xd3,
 
   // Function references
   BrOnNonNull = 0xd6,
@@ -482,42 +482,42 @@ inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 // Opcodes in the GC opcode space.
 enum class GcOp {
   // Structure operations
-  StructNew = 0x7,
-  StructNewDefault = 0x8,
-  StructGet = 0x03,
-  StructGetS = 0x04,
-  StructGetU = 0x05,
-  StructSet = 0x06,
+  StructNew = 0x0,
+  StructNewDefault = 0x1,
+  StructGet = 0x02,
+  StructGetS = 0x03,
+  StructGetU = 0x04,
+  StructSet = 0x05,
 
   // Array operations
-  ArrayNew = 0x1b,
-  ArrayNewFixed = 0x1a,
-  ArrayNewDefault = 0x1c,
-  ArrayNewData = 0x1d,
-  ArrayNewElem = 0x1f,
-  ArrayGet = 0x13,
-  ArrayGetS = 0x14,
-  ArrayGetU = 0x15,
-  ArraySet = 0x16,
-  ArrayCopy = 0x18,
-  ArrayLen = 0x19,
-
-  // I31 operations
-  I31New = 0x20,
-  I31GetS = 0x21,
-  I31GetU = 0x22,
+  ArrayNew = 0x6,
+  ArrayNewDefault = 0x7,
+  ArrayNewFixed = 0x8,
+  ArrayNewData = 0x9,
+  ArrayNewElem = 0xa,
+  ArrayGet = 0xb,
+  ArrayGetS = 0xc,
+  ArrayGetU = 0xd,
+  ArraySet = 0xe,
+  ArrayLen = 0xf,
+  ArrayCopy = 0x11,
 
   // Ref operations
-  RefTest = 0x40,
-  RefCast = 0x41,
-  RefTestNull = 0x48,
-  RefCastNull = 0x49,
-  BrOnCast = 0x4e,
-  BrOnCastFail = 0x4f,
+  RefTest = 0x14,
+  RefTestNull = 0x15,
+  RefCast = 0x16,
+  RefCastNull = 0x17,
+  BrOnCast = 0x18,
+  BrOnCastFail = 0x19,
 
   // Extern/any coercion operations
-  ExternInternalize = 0x70,
-  ExternExternalize = 0x71,
+  ExternInternalize = 0x1a,
+  ExternExternalize = 0x1b,
+
+  // I31 operations
+  I31New = 0x1c,
+  I31GetS = 0x1d,
+  I31GetU = 0x1e,
 
   Limit
 };
