@@ -573,8 +573,7 @@ TEST_P(PeerConnectionMediaTest,
 TEST_P(PeerConnectionMediaTest, RawPacketizationNotSetInOffer) {
   std::vector<cricket::VideoCodec> fake_codecs;
   fake_codecs.push_back(cricket::CreateVideoCodec(111, cricket::kVp8CodecName));
-  fake_codecs.push_back(cricket::CreateVideoCodec(112, cricket::kRtxCodecName));
-  fake_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "111";
+  fake_codecs.push_back(cricket::CreateVideoRtxCodec(112, 111));
   fake_codecs.push_back(cricket::CreateVideoCodec(113, cricket::kVp9CodecName));
   fake_codecs.push_back(
       cricket::CreateVideoCodec(114, cricket::kH264CodecName));
@@ -596,8 +595,7 @@ TEST_P(PeerConnectionMediaTest, RawPacketizationNotSetInOffer) {
 TEST_P(PeerConnectionMediaTest, RawPacketizationSetInOfferAndAnswer) {
   std::vector<cricket::VideoCodec> fake_codecs;
   fake_codecs.push_back(cricket::CreateVideoCodec(111, cricket::kVp8CodecName));
-  fake_codecs.push_back(cricket::CreateVideoCodec(112, cricket::kRtxCodecName));
-  fake_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "111";
+  fake_codecs.push_back(cricket::CreateVideoRtxCodec(112, 111));
   fake_codecs.push_back(cricket::CreateVideoCodec(113, cricket::kVp9CodecName));
   fake_codecs.push_back(
       cricket::CreateVideoCodec(114, cricket::kH264CodecName));
@@ -640,8 +638,7 @@ TEST_P(PeerConnectionMediaTest,
        RawPacketizationNotSetInAnswerWhenNotSetInOffer) {
   std::vector<cricket::VideoCodec> fake_codecs;
   fake_codecs.push_back(cricket::CreateVideoCodec(111, cricket::kVp8CodecName));
-  fake_codecs.push_back(cricket::CreateVideoCodec(112, cricket::kRtxCodecName));
-  fake_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "111";
+  fake_codecs.push_back(cricket::CreateVideoRtxCodec(112, 111));
   fake_codecs.push_back(cricket::CreateVideoCodec(113, cricket::kVp9CodecName));
   fake_codecs.push_back(
       cricket::CreateVideoCodec(114, cricket::kH264CodecName));
@@ -1706,10 +1703,8 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
        SetCodecPreferencesAudioRejectsOnlyRtxRedFec) {
   auto fake_engine = std::make_unique<FakeMediaEngine>();
   auto audio_codecs = fake_engine->voice().send_codecs();
-  audio_codecs.push_back(cricket::CreateAudioCodec(
-      audio_codecs.back().id + 1, cricket::kRtxCodecName, 0, 1));
-  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(audio_codecs.back().id - 1);
+  audio_codecs.push_back(cricket::CreateAudioRtxCodec(
+      audio_codecs.back().id + 1, audio_codecs.back().id));
   audio_codecs.push_back(cricket::CreateAudioCodec(
       audio_codecs.back().id + 1, cricket::kRedCodecName, 0, 1));
   audio_codecs.push_back(cricket::CreateAudioCodec(
@@ -1803,10 +1798,8 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
        SetCodecPreferencesVideoRejectsOnlyRtxRedFec) {
   auto fake_engine = std::make_unique<FakeMediaEngine>();
   auto video_codecs = fake_engine->video().send_codecs();
-  video_codecs.push_back(cricket::CreateVideoCodec(video_codecs.back().id + 1,
-                                                   cricket::kRtxCodecName));
-  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(video_codecs.back().id - 1);
+  video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      video_codecs.back().id + 1, video_codecs.back().id));
   video_codecs.push_back(cricket::CreateVideoCodec(video_codecs.back().id + 1,
                                                    cricket::kRedCodecName));
   video_codecs.push_back(cricket::CreateVideoCodec(video_codecs.back().id + 1,
@@ -1913,16 +1906,12 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan, SetCodecPreferencesVideoWithRtx) {
   auto caller_video_codecs = caller_fake_engine->video().send_codecs();
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp8CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp9CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_fake_engine->SetVideoCodecs(caller_video_codecs);
 
   auto caller = CreatePeerConnectionWithVideo(std::move(caller_fake_engine));
@@ -1965,16 +1954,12 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto caller_video_codecs = caller_fake_engine->video().send_codecs();
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp8CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp9CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_fake_engine->SetVideoCodecs(caller_video_codecs);
 
   auto callee_fake_engine = std::make_unique<FakeMediaEngine>();
@@ -2039,16 +2024,12 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto caller_video_codecs = caller_fake_engine->video().send_codecs();
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp8CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_video_codecs.push_back(cricket::CreateVideoCodec(
       caller_video_codecs.back().id + 1, cricket::kVp9CodecName));
-  caller_video_codecs.push_back(cricket::CreateVideoCodec(
-      caller_video_codecs.back().id + 1, cricket::kRtxCodecName));
-  caller_video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] =
-      std::to_string(caller_video_codecs.back().id - 1);
+  caller_video_codecs.push_back(cricket::CreateVideoRtxCodec(
+      caller_video_codecs.back().id + 1, caller_video_codecs.back().id));
   caller_fake_engine->SetVideoCodecs(caller_video_codecs);
 
   auto callee_fake_engine = std::make_unique<FakeMediaEngine>();
@@ -2130,15 +2111,13 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
 
   std::vector<cricket::AudioCodec> audio_codecs;
-  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
-  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
-  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  audio_codecs.emplace_back(cricket::CreateAudioCodec(100, "foo", 0, 1));
+  audio_codecs.emplace_back(cricket::CreateAudioRtxCodec(101, 100));
   fake_engine->SetAudioCodecs(audio_codecs);
 
   std::vector<cricket::VideoCodec> video_codecs;
-  video_codecs.emplace_back(100, "bar");
-  video_codecs.emplace_back(101, cricket::kRtxCodecName);
-  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  video_codecs.emplace_back(cricket::CreateVideoCodec(100, "bar"));
+  video_codecs.emplace_back(cricket::CreateVideoRtxCodec(101, 100));
   fake_engine->SetVideoCodecs(video_codecs);
 
   auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
@@ -2173,15 +2152,13 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
 
   std::vector<cricket::AudioCodec> audio_codecs;
-  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
-  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
-  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  audio_codecs.emplace_back(cricket::CreateAudioCodec(100, "foo", 0, 1));
+  audio_codecs.emplace_back(cricket::CreateAudioRtxCodec(101, 100));
   fake_engine->SetAudioCodecs(audio_codecs);
 
   std::vector<cricket::VideoCodec> video_codecs;
-  video_codecs.emplace_back(100, "bar");
-  video_codecs.emplace_back(101, cricket::kRtxCodecName);
-  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  video_codecs.emplace_back(cricket::CreateVideoCodec(100, "bar"));
+  video_codecs.emplace_back(cricket::CreateVideoRtxCodec(101, 100));
   fake_engine->SetVideoCodecs(video_codecs);
 
   auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
@@ -2220,15 +2197,13 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
 
   std::vector<cricket::AudioCodec> audio_codecs;
-  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
-  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
-  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  audio_codecs.emplace_back(cricket::CreateAudioCodec(100, "foo", 0, 1));
+  audio_codecs.emplace_back(cricket::CreateAudioRtxCodec(101, 100));
   fake_engine->SetAudioCodecs(audio_codecs);
 
   std::vector<cricket::VideoCodec> video_codecs;
-  video_codecs.emplace_back(100, "bar");
-  video_codecs.emplace_back(101, cricket::kRtxCodecName);
-  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  video_codecs.emplace_back(cricket::CreateVideoCodec(100, "bar"));
+  video_codecs.emplace_back(cricket::CreateVideoRtxCodec(101, 100));
   fake_engine->SetVideoCodecs(video_codecs);
 
   auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
