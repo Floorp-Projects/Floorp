@@ -478,11 +478,6 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
   const absl::optional<VideoCodecSettings>& send_codec() const {
     return send_codec_;
   }
-  // Disabled function from interface
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_thread_checker_{
@@ -833,12 +828,6 @@ class WebRtcVideoReceiveChannel : public MediaChannelUtil,
   StreamParams unsignaled_stream_params() {
     RTC_DCHECK_RUN_ON(&thread_checker_);
     return unsignaled_stream_params_;
-  }
-
-  // Disabled function from API
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
   }
   // Variables.
   webrtc::TaskQueueBase* const worker_thread_;

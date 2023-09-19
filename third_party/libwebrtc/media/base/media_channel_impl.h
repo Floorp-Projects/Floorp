@@ -302,10 +302,6 @@ class VideoMediaChannel : public MediaChannel,
   bool HasNetworkInterface() const override {
     return MediaChannel::HasNetworkInterface();
   }
-  MediaChannel* ImplForTesting() override {
-    // This class and its subclasses are not interface classes.
-    RTC_CHECK_NOTREACHED();
-  }
 };
 
 // Base class for implementation classes
@@ -378,13 +374,6 @@ class VoiceMediaChannel : public MediaChannel,
   bool GetStats(VoiceMediaReceiveInfo* info,
                 bool get_and_clear_legacy_stats) override {
     return GetReceiveStats(info, get_and_clear_legacy_stats);
-  }
-
- private:
-  // Functions not implemented on this interface
-  MediaChannel* ImplForTesting() override {
-    // This class and its subclasses are not interface classes.
-    RTC_CHECK_NOTREACHED();
   }
 };
 

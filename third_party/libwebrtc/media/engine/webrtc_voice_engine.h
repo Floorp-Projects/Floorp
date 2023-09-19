@@ -302,10 +302,6 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
       absl::AnyInvocable<void()> callback) override {
     send_codec_changed_callback_ = std::move(callback);
   }
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
 
  private:
   bool SetOptions(const AudioOptions& options);
@@ -457,11 +453,6 @@ class WebRtcVoiceReceiveChannel final
 
   void SetReceiveNackEnabled(bool enabled) override;
   void SetReceiveNonSenderRttEnabled(bool enabled) override;
-
-  MediaChannel* ImplForTesting() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
 
  private:
   bool SetOptions(const AudioOptions& options);
