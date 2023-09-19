@@ -24,6 +24,8 @@ class nsFilePicker : public nsBaseFilePicker {
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
+  NS_IMETHOD IsModeSupported(nsIFilePicker::Mode, JSContext*,
+                             mozilla::dom::Promise**) override;
   NS_IMETHOD AppendFilters(int32_t aFilterMask) override;
   NS_IMETHOD AppendFilter(const nsAString& aTitle,
                           const nsAString& aFilter) override;
