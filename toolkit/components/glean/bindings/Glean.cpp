@@ -25,7 +25,7 @@ namespace mozilla::glean {
 // Threading: Must only be read or written to on the main thread.
 static bool gRuntimeMetricsComprehensive = false;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Glean, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Glean)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Glean)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Glean)
@@ -52,7 +52,7 @@ bool Glean::DefineGlean(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
   JS::Rooted<JS::Value> glean(aCx);
   js::AssertSameCompartment(aCx, aGlobal);
 
-  auto impl = MakeRefPtr<Glean>(global);
+  auto impl = MakeRefPtr<Glean>();
   if (!dom::GetOrCreateDOMReflector(aCx, impl.get(), &glean)) {
     return false;
   }
@@ -69,7 +69,7 @@ already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
   NS_ConvertUTF16toUTF8 categoryName(aName);
   if (JOG::HasCategory(categoryName)) {
     aFound = true;
-    return MakeAndAddRef<Category>(std::move(categoryName), mParent);
+    return MakeAndAddRef<Category>(std::move(categoryName));
   }
 
   if (gRuntimeMetricsComprehensive) {
@@ -87,7 +87,7 @@ already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
 
   aFound = true;
   nsDependentCString name(GetCategoryName(categoryIdx.value()));
-  return MakeAndAddRef<Category>(std::move(name), mParent);
+  return MakeAndAddRef<Category>(std::move(name));
 }
 
 bool Glean::NameIsEnumerable(const nsAString& aName) { return false; }

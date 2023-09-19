@@ -7,10 +7,9 @@
 #ifndef mozilla_glean_GleanDenominator_h
 #define mozilla_glean_GleanDenominator_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -53,18 +52,12 @@ class DenominatorMetric {
 };
 }  // namespace impl
 
-class GleanDenominator final : public GleanMetric {
+class GleanDenominator final : public nsIGleanDenominator {
  public:
-  explicit GleanDenominator(uint32_t id, nsISupports* aParent)
-      : GleanMetric(aParent), mDenominator(id) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANDENOMINATOR
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Add(int32_t aAmount);
-
-  dom::Nullable<int32_t> TestGetValue(const nsACString& aPingName,
-                                      ErrorResult& aRv);
+  explicit GleanDenominator(uint32_t id) : mDenominator(id){};
 
  private:
   virtual ~GleanDenominator() = default;

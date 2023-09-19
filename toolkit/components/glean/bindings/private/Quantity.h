@@ -7,8 +7,7 @@
 #ifndef mozilla_glean_GleanQuantity_h
 #define mozilla_glean_GleanQuantity_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
+#include "nsIGleanMetrics.h"
 #include "nsTString.h"
 #include "nsIScriptError.h"
 
@@ -53,18 +52,12 @@ class QuantityMetric {
 
 }  // namespace impl
 
-class GleanQuantity final : public GleanMetric {
+class GleanQuantity final : public nsIGleanQuantity {
  public:
-  explicit GleanQuantity(uint32_t id, nsISupports* aParent)
-      : GleanMetric(aParent), mQuantity(id) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANQUANTITY
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Set(int64_t aValue);
-
-  dom::Nullable<int64_t> TestGetValue(const nsACString& aPingName,
-                                      ErrorResult& aRv);
+  explicit GleanQuantity(uint32_t id) : mQuantity(id){};
 
  private:
   virtual ~GleanQuantity() = default;

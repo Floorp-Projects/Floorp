@@ -6,11 +6,13 @@
 
 #include "mozilla/glean/bindings/StringList.h"
 
+#include "Common.h"
+#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsIClassInfoImpl.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -51,30 +53,40 @@ Result<Maybe<nsTArray<nsCString>>, nsCString> StringListMetric::TestGetValue(
 
 }  // namespace impl
 
-/* virtual */
-JSObject* GleanStringList::WrapObject(JSContext* aCx,
-                                      JS::Handle<JSObject*> aGivenProto) {
-  return dom::GleanStringList_Binding::Wrap(aCx, this, aGivenProto);
+NS_IMPL_CLASSINFO(GleanStringList, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanStringList, nsIGleanStringList)
+
+NS_IMETHODIMP
+GleanStringList::Add(const nsACString& aValue) {
+  mStringList.Add(aValue);
+  return NS_OK;
 }
 
-void GleanStringList::Add(const nsACString& aValue) { mStringList.Add(aValue); }
-
-void GleanStringList::Set(const dom::Sequence<nsCString>& aValue) {
+NS_IMETHODIMP
+GleanStringList::Set(const nsTArray<nsCString>& aValue) {
   mStringList.Set(aValue);
+  return NS_OK;
 }
 
-void GleanStringList::TestGetValue(const nsACString& aPingName,
-                                   dom::Nullable<nsTArray<nsCString>>& aResult,
-                                   ErrorResult& aRv) {
-  auto result = mStringList.TestGetValue(aPingName);
+NS_IMETHODIMP
+GleanStringList::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
+                              JS::MutableHandle<JS::Value> aResult) {
+  auto result = mStringList.TestGetValue(aStorageName);
   if (result.isErr()) {
-    aRv.ThrowDataError(result.unwrapErr());
-    return;
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
   }
   auto optresult = result.unwrap();
-  if (!optresult.isNothing()) {
-    aResult.SetValue(optresult.extract());
+  if (optresult.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    if (!dom::ToJSValue(aCx, optresult.ref(), aResult)) {
+      return NS_ERROR_FAILURE;
+    }
   }
+  return NS_OK;
 }
 
 }  // namespace mozilla::glean

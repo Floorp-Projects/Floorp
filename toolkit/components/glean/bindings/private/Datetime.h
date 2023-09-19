@@ -7,12 +7,10 @@
 #ifndef mozilla_glean_GleanDatetime_h
 #define mozilla_glean_GleanDatetime_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "nsIGleanMetrics.h"
 #include "nsString.h"
-#include "nsWrapperCache.h"
 #include "prtime.h"
 
 namespace mozilla::glean {
@@ -55,18 +53,12 @@ class DatetimeMetric {
 };
 }  // namespace impl
 
-class GleanDatetime final : public GleanMetric {
+class GleanDatetime final : public nsIGleanDatetime {
  public:
-  explicit GleanDatetime(uint32_t aId, nsISupports* aParent)
-      : GleanMetric(aParent), mDatetime(aId) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANDATETIME
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Set(const dom::Optional<int64_t>& aValue);
-
-  void TestGetValue(JSContext* aCx, const nsACString& aPingName,
-                    JS::MutableHandle<JS::Value> aResult, ErrorResult& aRv);
+  explicit GleanDatetime(uint32_t aId) : mDatetime(aId){};
 
  private:
   virtual ~GleanDatetime() = default;

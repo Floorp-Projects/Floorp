@@ -145,7 +145,7 @@ add_task(
 
     Assert.throws(
       () => Glean.testOnly.mabelsBathroomCounters.__other__.testGetValue(),
-      /DataError/,
+      /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
       "Invalid labels record errors, which throw"
     );
 

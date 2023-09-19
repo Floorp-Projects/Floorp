@@ -7,10 +7,13 @@
 #include "mozilla/glean/bindings/Denominator.h"
 
 #include "nsString.h"
+#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIScriptError.h"
+#include "Common.h"
 
 namespace mozilla::glean {
 
@@ -38,27 +41,32 @@ Result<Maybe<int32_t>, nsCString> DenominatorMetric::TestGetValue(
 
 }  // namespace impl
 
-/* virtual */
-JSObject* GleanDenominator::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto) {
-  return dom::GleanDenominator_Binding::Wrap(aCx, this, aGivenProto);
+NS_IMPL_CLASSINFO(GleanDenominator, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanDenominator, nsIGleanDenominator)
+
+NS_IMETHODIMP
+GleanDenominator::Add(int32_t aAmount) {
+  mDenominator.Add(aAmount);
+  return NS_OK;
 }
 
-void GleanDenominator::Add(int32_t aAmount) { mDenominator.Add(aAmount); }
-
-dom::Nullable<int32_t> GleanDenominator::TestGetValue(
-    const nsACString& aPingName, ErrorResult& aRv) {
-  dom::Nullable<int32_t> ret;
-  auto result = mDenominator.TestGetValue(aPingName);
+NS_IMETHODIMP
+GleanDenominator::TestGetValue(const nsACString& aStorageName,
+                               JS::MutableHandle<JS::Value> aResult) {
+  auto result = mDenominator.TestGetValue(aStorageName);
   if (result.isErr()) {
-    aRv.ThrowDataError(result.unwrapErr());
-    return ret;
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
   }
   auto optresult = result.unwrap();
-  if (!optresult.isNothing()) {
-    ret.SetValue(optresult.value());
+  if (optresult.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::Int32Value(optresult.value()));
   }
-  return ret;
+  return NS_OK;
 }
 
 }  // namespace mozilla::glean

@@ -6,11 +6,13 @@
 
 #include "mozilla/glean/bindings/Quantity.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsIClassInfoImpl.h"
 #include "nsString.h"
+#include "Common.h"
 
 namespace mozilla::glean {
 
@@ -42,27 +44,32 @@ Result<Maybe<int64_t>, nsCString> QuantityMetric::TestGetValue(
 
 }  // namespace impl
 
-/* virtual */
-JSObject* GleanQuantity::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto) {
-  return dom::GleanQuantity_Binding::Wrap(aCx, this, aGivenProto);
+NS_IMPL_CLASSINFO(GleanQuantity, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanQuantity, nsIGleanQuantity)
+
+NS_IMETHODIMP
+GleanQuantity::Set(int64_t aValue) {
+  mQuantity.Set(aValue);
+  return NS_OK;
 }
 
-void GleanQuantity::Set(int64_t aValue) { mQuantity.Set(aValue); }
-
-dom::Nullable<int64_t> GleanQuantity::TestGetValue(const nsACString& aPingName,
-                                                   ErrorResult& aRv) {
-  dom::Nullable<int64_t> ret;
+NS_IMETHODIMP
+GleanQuantity::TestGetValue(const nsACString& aPingName,
+                            JS::MutableHandle<JS::Value> aResult) {
   auto result = mQuantity.TestGetValue(aPingName);
   if (result.isErr()) {
-    aRv.ThrowDataError(result.unwrapErr());
-    return ret;
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
   }
   auto optresult = result.unwrap();
-  if (!optresult.isNothing()) {
-    ret.SetValue(optresult.value());
+  if (optresult.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::DoubleValue(static_cast<double>(optresult.value())));
   }
-  return ret;
+  return NS_OK;
 }
 
 }  // namespace mozilla::glean

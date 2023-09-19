@@ -28,7 +28,6 @@ EXPORTS.mozilla.glean.bindings += [
     "!ScalarGIFFTMap.h",
     "bindings/Category.h",
     "bindings/Glean.h",
-    "bindings/GleanMetric.h",
     "bindings/GleanPings.h",
     "bindings/MetricTypes.h",
     "bindings/private/Boolean.h",
@@ -75,7 +74,6 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 UNIFIED_SOURCES += [
     "bindings/Category.cpp",
     "bindings/Glean.cpp",
-    "bindings/GleanMetric.cpp",
     "bindings/GleanPings.cpp",
     "bindings/jog/JOG.cpp",
     "bindings/private/Boolean.cpp",

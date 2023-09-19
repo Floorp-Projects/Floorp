@@ -6,12 +6,13 @@
 
 #include "mozilla/glean/bindings/Timespan.h"
 
+#include "Common.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/dom/GleanMetricsBinding.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsIClassInfoImpl.h"
 
 namespace mozilla::glean {
 
@@ -83,33 +84,50 @@ Result<Maybe<uint64_t>, nsCString> TimespanMetric::TestGetValue(
 
 }  // namespace impl
 
-/* virtual */
-JSObject* GleanTimespan::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto) {
-  return dom::GleanTimespan_Binding::Wrap(aCx, this, aGivenProto);
+NS_IMPL_CLASSINFO(GleanTimespan, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanTimespan, nsIGleanTimespan)
+
+NS_IMETHODIMP
+GleanTimespan::Start() {
+  mTimespan.Start();
+  return NS_OK;
 }
 
-void GleanTimespan::Start() { mTimespan.Start(); }
+NS_IMETHODIMP
+GleanTimespan::Stop() {
+  mTimespan.Stop();
+  return NS_OK;
+}
 
-void GleanTimespan::Stop() { mTimespan.Stop(); }
+NS_IMETHODIMP
+GleanTimespan::Cancel() {
+  mTimespan.Cancel();
+  return NS_OK;
+}
 
-void GleanTimespan::Cancel() { mTimespan.Cancel(); }
+NS_IMETHODIMP
+GleanTimespan::SetRaw(uint32_t aDuration) {
+  mTimespan.SetRaw(aDuration);
+  return NS_OK;
+}
 
-void GleanTimespan::SetRaw(uint32_t aDuration) { mTimespan.SetRaw(aDuration); }
-
-dom::Nullable<uint64_t> GleanTimespan::TestGetValue(const nsACString& aPingName,
-                                                    ErrorResult& aRv) {
-  dom::Nullable<uint64_t> ret;
-  auto result = mTimespan.TestGetValue(aPingName);
+NS_IMETHODIMP
+GleanTimespan::TestGetValue(const nsACString& aStorageName,
+                            JS::MutableHandle<JS::Value> aResult) {
+  auto result = mTimespan.TestGetValue(aStorageName);
   if (result.isErr()) {
-    aRv.ThrowDataError(result.unwrapErr());
-    return ret;
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
   }
   auto optresult = result.unwrap();
-  if (!optresult.isNothing()) {
-    ret.SetValue(optresult.value());
+  if (optresult.isNothing()) {
+    aResult.set(JS::UndefinedValue());
+  } else {
+    aResult.set(JS::DoubleValue(static_cast<double>(optresult.value())));
   }
-  return ret;
+  return NS_OK;
 }
 
 }  // namespace mozilla::glean

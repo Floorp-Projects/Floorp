@@ -9,8 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
+#include "nsIGleanMetrics.h"
 #include "nsTString.h"
 
 namespace mozilla::glean {
@@ -83,21 +82,12 @@ class TimespanMetric {
 };
 }  // namespace impl
 
-class GleanTimespan final : public GleanMetric {
+class GleanTimespan final : public nsIGleanTimespan {
  public:
-  explicit GleanTimespan(uint32_t aId, nsISupports* aParent)
-      : GleanMetric(aParent), mTimespan(aId) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANTIMESPAN
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Start();
-  void Stop();
-  void Cancel();
-  void SetRaw(uint32_t aDuration);
-
-  dom::Nullable<uint64_t> TestGetValue(const nsACString& aPingName,
-                                       ErrorResult& aRv);
+  explicit GleanTimespan(uint32_t aId) : mTimespan(aId){};
 
  private:
   virtual ~GleanTimespan() = default;

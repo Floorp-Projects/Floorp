@@ -139,9 +139,6 @@ with Files("GeometryUtils.webidl"):
 with Files("GetUserMediaRequest.webidl"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
-with Files("Glean*.webidl"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
-
 with Files("Grid.webidl"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
@@ -586,9 +583,6 @@ WEBIDL_FILES = [
     "GeolocationPositionError.webidl",
     "GeometryUtils.webidl",
     "GetUserMediaRequest.webidl",
-    "Glean.webidl",
-    "GleanMetrics.webidl",
-    "GleanPings.webidl",
     "Grid.webidl",
     "Headers.webidl",
     "Highlight.webidl",
