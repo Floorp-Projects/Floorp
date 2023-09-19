@@ -1,148 +1,68 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Fri, 5 Jun 2020 11:41:00 +0000
-Subject: Bug 1615191 - P0 - implement remoteTimestamp for
- RTCRemoteOutboundRtpStreamStats in libwebrtc;r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 31 Jul 2018 13:32:00 -0400
+Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D78004
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cd901e96d23e004e4bee19b96c8c2f1ca3b42830
-
-This patch also absorbs two additional patches that collapse into using ms for the remote timestamp:
-Bug 1654112 - Plumb RemoteRTCPSenderInfo through also for audio and change unit to ms. r=ng
-Bug 1654112 - Replace custom upstream code for remote received audio stats with cherry-pick. r=ng
+Differential Revision: https://phabricator.services.mozilla.com/D7464
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
 ---
- call/video_receive_stream.h                  | 1 +
- modules/rtp_rtcp/source/rtcp_receiver.cc     | 4 +++-
- modules/rtp_rtcp/source/rtcp_receiver.h      | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 6 ++++--
- modules/rtp_rtcp/source/rtp_rtcp_impl.h      | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 6 ++++--
- modules/rtp_rtcp/source/rtp_rtcp_impl2.h     | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_interface.h | 5 +++--
- 8 files changed, 21 insertions(+), 10 deletions(-)
+ modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
+ modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
+ modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 918429d191..2817c9bd9a 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -153,6 +153,7 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
+index 7e38b5bd08..e4a2cc2fc9 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.h
++++ b/modules/desktop_capture/mac/screen_capturer_mac.h
+@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
  
-     uint32_t rtcp_sender_packets_sent;
-     uint32_t rtcp_sender_octets_sent;
-+    int64_t rtcp_sender_ntp_timestamp_ms;
+   // Start, CaptureFrame and destructor have to called in the same thread.
+   SequenceChecker thread_checker_;
++
++  // Used to force CaptureFrame to update it's screen configuration
++  // and reregister event handlers. This ensure that this
++  // occurs on the ScreenCapture thread. Read and written from
++  // both the VideoCapture thread and ScreenCapture thread.
++  // Protected by desktop_config_monitor_.
++  bool update_screen_configuration_ = false;
+ };
  
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 708ffbbd47..c5b4afefc8 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -361,10 +361,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
- }
+ }  // namespace webrtc
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 8f0c68d48b..8b9af35193 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -263,6 +263,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
+       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
  
- void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                        uint32_t* octet_count) const {
-+                                        uint32_t* octet_count,
-+                                        int64_t* ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
-   *packet_count = remote_sender_packet_count_;
-   *octet_count = remote_sender_octet_count_;
-+  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
- }
+   callback_ = callback;
++  update_screen_configuration_ = false;
+   // Start and operate CGDisplayStream handler all from capture thread.
+   if (!RegisterRefreshAndMoveHandlers()) {
+     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
+@@ -283,7 +284,8 @@ void ScreenCapturerMac::CaptureFrame() {
+   }
  
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 938b641eb5..4ed3efad82 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -118,7 +118,8 @@ class RTCPReceiver final {
+   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
+-  if (!desktop_config_.Equals(new_config)) {
++  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
++    update_screen_configuration_ = false;
+     desktop_config_ = new_config;
+     // If the display configuraiton has changed then refresh capturer data
+     // structures. Occasionally, the refresh and move handlers are lost when
+diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+index 3db4332cd1..512103ab5e 100644
+--- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
++++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+@@ -133,7 +133,7 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
+   NSSize nssize = [nsimage size];  // DIP size
  
-   // Get received sender packet and octet counts
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
+   // No need to caputre cursor image if it's unchanged since last capture.
+-  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
++  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
+   last_cursor_ = nsimage;
  
-   absl::optional<TimeDelta> AverageRtt() const;
-   absl::optional<TimeDelta> LastRtt() const;
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 1edff95826..b360327f27 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -502,8 +502,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
- 
- // Received RTCP report.
- void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                             uint32_t* octet_count) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+                                             uint32_t* octet_count,
-+                                             int64_t* ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
-+                                             ntp_timestamp_ms);
- }
- 
- std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index 5da38a077b..f78a0da41a 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -183,7 +183,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
-       StreamDataCounters* rtx_counters) const override;
- 
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const override;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const override;
- 
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 3b392a1bfb..241ed27a56 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -507,8 +507,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
- 
- // Received RTCP report.
- void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                              uint32_t* octet_count) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+                                             uint32_t* octet_count,
-+                                             int64_t* ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
-+                                             ntp_timestamp_ms);
- }
- 
- std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 1b79915025..f9c77a57b0 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -195,7 +195,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
-       StreamDataCounters* rtx_counters) const override;
- 
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const override;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const override;
- 
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index d60a855b53..7b5ec77f3d 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -388,9 +388,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-       StreamDataCounters* rtx_counters) const = 0;
- 
- 
--  // Returns packet count and octet count from RTCP sender report.
-+  // Returns packet count, octet count, and timestamp from RTCP sender report.
-   virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                    uint32_t* octet_count) const = 0;
-+                                    uint32_t* octet_count,
-+                                    int64_t* ntp_timestamp_ms) const = 0;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
+   DesktopSize size(round(nssize.width * scale),
 -- 
 2.37.3
 

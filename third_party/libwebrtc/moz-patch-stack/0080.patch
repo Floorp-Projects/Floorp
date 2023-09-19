@@ -1,77 +1,34 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Fri, 10 Mar 2023 09:21:00 +0000
-Subject: Bug 1819035 - get EGL display based on the used platform in the
- browser r=webrtc-reviewers,ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 27 Feb 2023 16:22:00 +0000
+Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
+ designated initializer. r=mjf,webrtc-reviewers
 
-Because of a possible misconfiguration or a possible driver issue it
-might happen that the browser will use a different driver on X11 and
-end up using yet another one for wayland/gbm, which might lead to not
-working screen sharing in the better case, but also to a crash in the
-other driver (Nvidia). This adds a check for platform the browser runs
-on, if it's XWayland or Wayland and based on that query EGL display for
-that specific platform, rather than going for the Wayland one only.
+This fixes a build failure in the base-toolchain job with GCC 7.5.0:
+  In file included from Unified_cpp_threading_gn0.cpp:38:0:
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
+       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
+                                                   ^
 
-Differential Revision: https://phabricator.services.mozilla.com/D171858
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
+Differential Revision: https://phabricator.services.mozilla.com/D171057
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
 ---
- .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-index b529077c6d..6a019c64b4 100644
---- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-+++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-@@ -13,6 +13,7 @@
- #include <asm/ioctl.h>
- #include <dlfcn.h>
- #include <fcntl.h>
-+#include <gdk/gdk.h>
- #include <libdrm/drm_fourcc.h>
- #include <linux/types.h>
- #include <spa/param/video/format-utils.h>
-@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
-   }
- }
- 
-+static bool IsWaylandDisplay() {
-+  static auto sGdkWaylandDisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
-+  if (!sGdkWaylandDisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkWaylandDisplayGetType()));
-+}
-+
-+static bool IsX11Display() {
-+  static auto sGdkX11DisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
-+  if (!sGdkX11DisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkX11DisplayGetType()));
-+}
-+
- static void* g_lib_egl = nullptr;
- 
- RTC_NO_SANITIZE("cfi-icall")
-@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
-     return;
-   }
- 
--  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
--                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  if (IsWaylandDisplay()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  } else if (IsX11Display()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  }
- 
-   if (egl_.display == EGL_NO_DISPLAY) {
-     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 2dfdd9a5df..d0053dd82b 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -462,7 +462,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
+   int received = 0;
+   if (read_scm_timestamp_experiment_) {
+     iovec iov = {.iov_base = buffer, .iov_len = length};
+-    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
++    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
+     if (out_addr) {
+       out_addr->Clear();
+       msg.msg_name = addr;
 -- 
 2.37.3
 
