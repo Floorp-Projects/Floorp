@@ -22,7 +22,11 @@ class SurveyExperimentIntegrationTest {
     private val experimentName = "Viewpoint"
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = HomeActivityTestRule(
+        isJumpBackInCFREnabled = false,
+        isPWAsPromptEnabled = false,
+        isTCPCFREnabled = false,
+    )
 
     @Before
     fun setUp() {
@@ -38,7 +42,25 @@ class SurveyExperimentIntegrationTest {
     fun checkSurveyNavigatesCorrectly() {
         browserScreen {
             verifySurveyButton()
-        }.clickSurveyButton {}
+        }.clickSurveyButton {
+            verifyUrl(surveyURL)
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openExperimentsMenu {
+            verifyExperimentExists(experimentName)
+        }
+    }
+
+    @Test
+    fun checkSurveyNoThanksNavigatesCorrectly() {
+        browserScreen {
+            verifySurveyNoThanksButton()
+        }.clickNoThanksSurveyButton {
+            verifyTabCounter("0")
+        }
 
         homeScreen {
         }.openThreeDotMenu {
