@@ -27,7 +27,8 @@ class nsBaseFilePicker : public nsIFilePicker {
 
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
                   nsIFilePicker::Mode aMode) override;
-
+  NS_IMETHOD IsModeSupported(nsIFilePicker::Mode aMode, JSContext* aCx,
+                             mozilla::dom::Promise** aPromise) override;
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
   NS_IMETHOD AppendFilters(int32_t filterMask) override;
   NS_IMETHOD AppendRawFilter(const nsAString& aFilter) override;
