@@ -1757,7 +1757,10 @@ void GeckoMediaPluginServiceParent::ServiceUserCreated(
   MOZ_ASSERT(!mServiceParents.Contains(aServiceParent));
   mServiceParents.AppendElement(aServiceParent);
   if (mServiceParents.Length() == 1) {
-    nsresult rv = GetShutdownBarrier()->AddBlocker(
+    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+    MOZ_RELEASE_ASSERT(barrier);
+
+    nsresult rv = barrier->AddBlocker(
         this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
         u"GeckoMediaPluginServiceParent shutdown"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
@@ -1772,7 +1775,9 @@ void GeckoMediaPluginServiceParent::ServiceUserDestroyed(
   MOZ_ASSERT(mServiceParents.Contains(aServiceParent));
   mServiceParents.RemoveElement(aServiceParent);
   if (mServiceParents.IsEmpty()) {
-    nsresult rv = GetShutdownBarrier()->RemoveBlocker(this);
+    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+    MOZ_RELEASE_ASSERT(barrier);
+    nsresult rv = barrier->RemoveBlocker(this);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
 }
@@ -1951,7 +1956,7 @@ bool GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService) {
   RefPtr<GeckoMediaPluginServiceParent> gmp =
       GeckoMediaPluginServiceParent::GetSingleton();
 
-  if (gmp->mShuttingDown) {
+  if (!gmp || gmp->mShuttingDown) {
     // Shutdown is initiated. There is no point creating a new actor.
     return false;
   }
