@@ -2331,8 +2331,10 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
           writer.guardMultipleShapes(objId, shapeObj);
           success = true;
         } else {
-          Shape* shape = stubInfo->getStubField<Shape*>(firstStub, shapeOffset);
-          writer.guardShape(objId, shape);
+          WeakHeapPtr<Shape*>& ptr =
+              stubInfo->getStubField<StubField::Type::WeakShape>(firstStub,
+                                                                 shapeOffset);
+          writer.guardShape(objId, ptr.unbarrieredGet());
         }
         break;
       }
@@ -2416,8 +2418,8 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
         newShape = PrivateValue(shape);
 
         // Get the shape array from the old stub.
-        JSObject* shapeList =
-            stubInfo->getStubField<JSObject*>(stub, stubShapesOffset);
+        JSObject* shapeList = stubInfo->getStubField<StubField::Type::JSObject>(
+            stub, stubShapesOffset);
         foldedShapes = &shapeList->as<ShapeListObject>();
         MOZ_ASSERT(foldedShapes->compartment() == shape->compartment());
 

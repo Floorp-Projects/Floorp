@@ -74,6 +74,9 @@ class MOZ_STACK_CLASS WarpScriptOracle {
   [[nodiscard]] bool replaceNurseryAndAllocSitePointers(
       ICCacheIRStub* stub, const CacheIRStubInfo* stubInfo,
       uint8_t* stubDataCopy);
+  bool maybeReplaceNurseryPointer(const CacheIRStubInfo* stubInfo,
+                                  uint8_t* stubDataCopy, JSObject* obj,
+                                  size_t offset);
 
  public:
   WarpScriptOracle(JSContext* cx, WarpOracle* oracle, HandleScript script,
@@ -1147,8 +1150,8 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
   // initial heap to use, because the site's state may be mutated by the main
   // thread while we are compiling.
   //
-  // If the stub data contains weak pointers expose them to active JS. This is
-  // necessary as these will now be strong references in the snapshot.
+  // If the stub data contains weak pointers then trigger a read barrier. This
+  // is necessary as these will now be strong references in the snapshot.
   //
   // Also asserts non-object fields don't contain nursery pointers.
 
@@ -1169,17 +1172,14 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::WeakShape: {
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");
-        Shape* shape =
-            stubInfo->getStubField<ICCacheIRStub, Shape*>(stub, offset);
-        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(shape));
+        stubInfo->getStubField<StubField::Type::WeakShape>(stub, offset).get();
         break;
       }
       case StubField::Type::WeakGetterSetter: {
         static_assert(std::is_convertible_v<GetterSetter*, gc::TenuredCell*>,
                       "Code assumes GetterSetters are tenured");
-        GetterSetter* gs =
-            stubInfo->getStubField<ICCacheIRStub, GetterSetter*>(stub, offset);
-        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(gs));
+        stubInfo->getStubField<StubField::Type::WeakGetterSetter>(stub, offset)
+            .get();
         break;
       }
       case StubField::Type::Symbol:
@@ -1189,38 +1189,34 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::WeakBaseScript: {
         static_assert(std::is_convertible_v<BaseScript*, gc::TenuredCell*>,
                       "Code assumes scripts are tenured");
-        BaseScript* script =
-            stubInfo->getStubField<ICCacheIRStub, BaseScript*>(stub, offset);
-        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(script));
+        stubInfo->getStubField<StubField::Type::WeakBaseScript>(stub, offset)
+            .get();
         break;
       }
       case StubField::Type::JitCode:
         static_assert(std::is_convertible_v<JitCode*, gc::TenuredCell*>,
                       "Code assumes JitCodes are tenured");
         break;
-      case StubField::Type::JSObject:
+      case StubField::Type::JSObject: {
+        JSObject* obj =
+            stubInfo->getStubField<StubField::Type::JSObject>(stub, offset);
+        if (!maybeReplaceNurseryPointer(stubInfo, stubDataCopy, obj, offset)) {
+          return false;
+        }
+        break;
+      }
       case StubField::Type::WeakObject: {
         JSObject* obj =
-            stubInfo->getStubField<ICCacheIRStub, JSObject*>(stub, offset);
-        if (fieldType == StubField::Type::WeakObject) {
-          gc::ExposeGCThingToActiveJS(JS::GCCellPtr(obj));
-        }
-        if (IsInsideNursery(obj)) {
-          uint32_t nurseryIndex;
-          if (!oracle_->registerNurseryObject(obj, &nurseryIndex)) {
-            return false;
-          }
-          uintptr_t oldWord = WarpObjectField::fromObject(obj).rawData();
-          uintptr_t newWord =
-              WarpObjectField::fromNurseryIndex(nurseryIndex).rawData();
-          stubInfo->replaceStubRawWord(stubDataCopy, offset, oldWord, newWord);
+            stubInfo->getStubField<StubField::Type::WeakObject>(stub, offset);
+        if (!maybeReplaceNurseryPointer(stubInfo, stubDataCopy, obj, offset)) {
+          return false;
         }
         break;
       }
       case StubField::Type::String: {
 #ifdef DEBUG
         JSString* str =
-            stubInfo->getStubField<ICCacheIRStub, JSString*>(stub, offset);
+            stubInfo->getStubField<StubField::Type::String>(stub, offset);
         MOZ_ASSERT(!IsInsideNursery(str));
 #endif
         break;
@@ -1228,7 +1224,7 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::Id: {
 #ifdef DEBUG
         // jsid never contains nursery-allocated things.
-        jsid id = stubInfo->getStubField<ICCacheIRStub, jsid>(stub, offset);
+        jsid id = stubInfo->getStubField<StubField::Type::Id>(stub, offset);
         MOZ_ASSERT_IF(id.isGCThing(),
                       !IsInsideNursery(id.toGCCellPtr().asCell()));
 #endif
@@ -1236,8 +1232,7 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       }
       case StubField::Type::Value: {
 #ifdef DEBUG
-        Value v =
-            stubInfo->getStubField<ICCacheIRStub, JS::Value>(stub, offset);
+        Value v = stubInfo->getStubField<StubField::Type::Value>(stub, offset);
         MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
 #endif
         break;
@@ -1256,6 +1251,24 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
     field++;
     offset += StubField::sizeInBytes(fieldType);
   }
+}
+
+bool WarpScriptOracle::maybeReplaceNurseryPointer(
+    const CacheIRStubInfo* stubInfo, uint8_t* stubDataCopy, JSObject* obj,
+    size_t offset) {
+  if (!IsInsideNursery(obj)) {
+    return true;
+  }
+
+  uint32_t nurseryIndex;
+  if (!oracle_->registerNurseryObject(obj, &nurseryIndex)) {
+    return false;
+  }
+
+  uintptr_t oldWord = WarpObjectField::fromObject(obj).rawData();
+  uintptr_t newWord = WarpObjectField::fromNurseryIndex(nurseryIndex).rawData();
+  stubInfo->replaceStubRawWord(stubDataCopy, offset, oldWord, newWord);
+  return true;
 }
 
 bool WarpOracle::registerNurseryObject(JSObject* obj, uint32_t* nurseryIndex) {
