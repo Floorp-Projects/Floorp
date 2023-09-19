@@ -127,6 +127,14 @@ add_task(async function test_fog_event_works() {
   Assert.equal("an_event", events[0].name);
   Assert.deepEqual(extra, events[0].extra);
 
+  // Corner case: Event with extra with `undefined` value.
+  // Should pretend that extra key isn't there.
+  extra = { extra1: undefined, extra2: "defined" };
+  Glean.testOnlyIpc.anEvent.record(extra);
+  events = Glean.testOnlyIpc.anEvent.testGetValue();
+  Assert.equal(2, events.length);
+  Assert.deepEqual({ extra2: "defined" }, events[1].extra);
+
   let extra2 = {
     extra1: "can set extras",
     extra2: 37,

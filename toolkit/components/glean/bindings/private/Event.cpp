@@ -48,6 +48,11 @@ void GleanEvent::Record(
   nsTArray<nsCString> extraValues;
   CopyableTArray<Telemetry::EventExtraEntry> telExtras;
   for (const auto& entry : aExtra.Value().Entries()) {
+    if (entry.mValue.IsVoid()) {
+      // Someone passed undefined/null for this value.
+      // Pretend it wasn't here.
+      continue;
+    }
     // We accept camelCase extra keys, but Glean requires snake_case.
     auto snakeKey = camelToSnake(entry.mKey);
 
