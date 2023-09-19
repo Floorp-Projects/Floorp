@@ -1652,7 +1652,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_host.candidate_type = "host";
   expected_a_local_host.priority = 0;
   expected_a_local_host.vpn = true;
-  expected_a_local_host.network_adapter_type = "ethernet";
+  expected_a_local_host.network_adapter_type = RTCNetworkAdapterType::kEthernet;
   expected_a_local_host.foundation = "foundationIsAString";
   expected_a_local_host.username_fragment = "iceusernamefragment";
 
@@ -1685,7 +1685,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_prflx.candidate_type = "prflx";
   expected_a_local_prflx.priority = 2;
   expected_a_local_prflx.vpn = false;
-  expected_a_local_prflx.network_adapter_type = "cellular2g";
+  expected_a_local_prflx.network_adapter_type =
+      RTCNetworkAdapterType::kCellular2g;
   expected_a_local_prflx.foundation = "foundationIsAString";
   expected_a_local_prflx.username_fragment = "iceusernamefragment";
 
@@ -1723,7 +1724,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay.priority = 1;
   expected_a_local_relay.url = "turn:url1";
   expected_a_local_relay.vpn = false;
-  expected_a_local_relay.network_adapter_type = "unknown";
+  expected_a_local_relay.network_adapter_type = RTCNetworkAdapterType::kUnknown;
   expected_a_local_relay.foundation = "foundationIsAString";
   expected_a_local_relay.username_fragment = "iceusernamefragment";
 
@@ -1744,7 +1745,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay_prflx.candidate_type = "prflx";
   expected_a_local_relay_prflx.priority = 1;
   expected_a_local_relay_prflx.vpn = false;
-  expected_a_local_relay_prflx.network_adapter_type = "unknown";
+  expected_a_local_relay_prflx.network_adapter_type =
+      RTCNetworkAdapterType::kUnknown;
   expected_a_local_relay_prflx.foundation = "foundationIsAString";
   expected_a_local_relay_prflx.username_fragment = "iceusernamefragment";
 
@@ -1765,7 +1767,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_host_not_paired.candidate_type = "host";
   expected_a_local_host_not_paired.priority = 0;
   expected_a_local_host_not_paired.vpn = true;
-  expected_a_local_host_not_paired.network_adapter_type = "ethernet";
+  expected_a_local_host_not_paired.network_adapter_type =
+      RTCNetworkAdapterType::kEthernet;
   expected_a_local_host_not_paired.foundation = "foundationIsAString";
   expected_a_local_host_not_paired.username_fragment = "iceusernamefragment";
 
@@ -1784,7 +1787,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_local.candidate_type = "host";
   expected_b_local.priority = 42;
   expected_b_local.vpn = false;
-  expected_b_local.network_adapter_type = "wifi";
+  expected_b_local.network_adapter_type = RTCNetworkAdapterType::kWifi;
   expected_b_local.foundation = "foundationIsAString";
   expected_b_local.username_fragment = "iceusernamefragment";
 
@@ -1941,7 +1944,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
       "Ttransport" + rtc::ToString(cricket::ICE_CANDIDATE_COMPONENT_RTP);
   expected_pair.local_candidate_id = "I" + local_candidate->id();
   expected_pair.remote_candidate_id = "I" + remote_candidate->id();
-  expected_pair.state = "in-progress";
+  expected_pair.state = RTCStatsIceCandidatePairState::kInProgress;
   expected_pair.priority = 5555;
   expected_pair.nominated = false;
   expected_pair.writable = true;
@@ -2040,7 +2043,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_local_candidate.foundation = "foundationIsAString";
   expected_local_candidate.username_fragment = "local_iceusernamefragment";
   expected_local_candidate.vpn = false;
-  expected_local_candidate.network_adapter_type = "wifi";
+  expected_local_candidate.network_adapter_type = RTCNetworkAdapterType::kWifi;
   ASSERT_TRUE(report->Get(expected_local_candidate.id()));
   EXPECT_EQ(expected_local_candidate,
             report->Get(expected_local_candidate.id())
@@ -2748,12 +2751,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   expected_rtp_transport.packets_sent = 1;
   expected_rtp_transport.bytes_received = 1337;
   expected_rtp_transport.packets_received = 4;
-  expected_rtp_transport.dtls_state = "new";
-  expected_rtp_transport.dtls_role = "unknown";
+  expected_rtp_transport.dtls_state = RTCDtlsTransportState::kNew;
+  expected_rtp_transport.dtls_role = RTCDtlsRole::kUnknown;
   expected_rtp_transport.selected_candidate_pair_changes = 1;
-  expected_rtp_transport.ice_role = "unknown";
+  expected_rtp_transport.ice_role = RTCIceRole::kUnknown;
   expected_rtp_transport.ice_local_username_fragment = "thelocalufrag";
-  expected_rtp_transport.ice_state = "new";
+  expected_rtp_transport.ice_state = RTCIceTransportState::kNew;
 
   ASSERT_TRUE(report->Get(expected_rtp_transport.id()));
   EXPECT_EQ(
@@ -2796,12 +2799,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   expected_rtcp_transport.packets_sent = 1;
   expected_rtcp_transport.bytes_received = 42;
   expected_rtcp_transport.packets_received = 4;
-  expected_rtcp_transport.dtls_state = "connecting";
-  expected_rtcp_transport.dtls_role = "unknown";
+  expected_rtcp_transport.dtls_state = RTCDtlsTransportState::kConnecting;
+  expected_rtcp_transport.dtls_role = RTCDtlsRole::kUnknown;
   expected_rtcp_transport.selected_candidate_pair_changes = 0;
-  expected_rtcp_transport.ice_role = "unknown";
+  expected_rtcp_transport.ice_role = RTCIceRole::kUnknown;
   expected_rtcp_transport.ice_local_username_fragment = "thelocalufrag";
-  expected_rtcp_transport.ice_state = "checking";
+  expected_rtcp_transport.ice_state = RTCIceTransportState::kChecking;
 
   expected_rtp_transport.rtcp_transport_stats_id = expected_rtcp_transport.id();
   ASSERT_TRUE(report->Get(expected_rtp_transport.id()));
@@ -2917,19 +2920,19 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStatsWithCrypto) {
   RTCTransportStats expected_rtp_transport(
       "Ttransport" + rtc::ToString(cricket::ICE_CANDIDATE_COMPONENT_RTP),
       report->timestamp());
-  expected_rtp_transport.dtls_state = "connected";
+  expected_rtp_transport.dtls_state = RTCDtlsTransportState::kConnected;
   expected_rtp_transport.selected_candidate_pair_changes = 1;
-  expected_rtp_transport.ice_role = "unknown";
+  expected_rtp_transport.ice_role = RTCIceRole::kUnknown;
   expected_rtp_transport.bytes_sent = 0;
   expected_rtp_transport.bytes_received = 0;
   expected_rtp_transport.packets_sent = 0;
   expected_rtp_transport.packets_received = 0;
-  expected_rtp_transport.ice_role = "controlling";
+  expected_rtp_transport.ice_role = RTCIceRole::kControlling;
   expected_rtp_transport.ice_local_username_fragment = "thelocalufrag";
   expected_rtp_transport.ice_state = "connected";
   // Crypto parameters
   expected_rtp_transport.tls_version = "0203";
-  expected_rtp_transport.dtls_role = "client";
+  expected_rtp_transport.dtls_role = RTCDtlsRole::kClient;
   expected_rtp_transport.dtls_cipher = "TLS_RSA_WITH_AES_128_CBC_SHA";
   expected_rtp_transport.srtp_cipher = "AES_CM_128_HMAC_SHA1_80";
 
