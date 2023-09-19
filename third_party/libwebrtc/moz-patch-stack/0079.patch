@@ -1,28 +1,139 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 8 Feb 2023 08:01:00 +0000
-Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
- r=webrtc-reviewers,bwc
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Mon, 20 Feb 2023 21:25:00 +0000
+Subject: Bug 1817263 - fix OS picker behavior under Wayland r=ng,jib,stransky
 
-Differential Revision: https://phabricator.services.mozilla.com/D169036
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
+Recent WebRTC backports and changes that are about to be backported from
+upstream to Firefox breaks and will break how we work with PipWire based
+desktop capturer. Currently when constructing device list, a fallback to
+ScreenCapturerX11 is used, as we don't call set_allow_pipewire(), which
+wouldn't make a difference anyway. In such case the only thing we need
+is a placeholder for a screen that will request OS level prompt. We also
+need a way to request both screens and windows in one xdg-desktop-portal
+call as recent WebRTC made each type be called separately, therefore the
+introduction of GenericCapturer. Lastly we need to make sure when there
+is a MediaDevice requesting the OS prompt, that it will be checked as
+first.
+
+In order to use unmodified libwebrtc, Firefox would need to rework the
+OS picker to request each type (screens and windows) separately so we
+can just use regular ScreenCapturer and WindowCapturer. This should be
+done ideally the way Chromium does it, where users can actually see
+even the preview of what they picked over xdg-desktop-portal before it
+is actually shared with requesting web page and they also have option
+to make the request again in case they picked a wrong window or screen.
+
+Differential Revision: https://phabricator.services.mozilla.com/D169627
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/acd6266642951aacf8915a56777c780cae9e9af3
 ---
- rtc_base/platform_thread.cc | 3 +++
- 1 file changed, 3 insertions(+)
+ .../desktop_capture/desktop_capture_types.h   |  2 +-
+ modules/desktop_capture/desktop_capturer.cc   | 28 +++++++++++++++++++
+ modules/desktop_capture/desktop_capturer.h    | 13 +++++++++
+ .../linux/wayland/screencast_portal.cc        |  2 ++
+ 4 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 71a9f1b224..bcbb784b97 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
-   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
-   // thread priorities.
-   return true;
-+#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
-+  // Only realtime audio uses realtime scheduling in Firefox.
-+  return true;
- #else
-   const int policy = SCHED_FIFO;
-   const int min_prio = sched_get_priority_min(policy);
+diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
+index 381d1021c4..e777a45f92 100644
+--- a/modules/desktop_capture/desktop_capture_types.h
++++ b/modules/desktop_capture/desktop_capture_types.h
+@@ -19,7 +19,7 @@ typedef int pid_t; // matching what used to be in
+ 
+ namespace webrtc {
+ 
+-enum class CaptureType { kWindow, kScreen };
++enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
+ 
+ // Type used to identify windows on the desktop. Values are platform-specific:
+ //   - On Windows: HWND cast to intptr_t.
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 4baa93cab9..7df6becb4e 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -26,6 +26,10 @@
+ #include "rtc_base/win/windows_version.h"
+ #endif  // defined(RTC_ENABLE_WIN_WGC)
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++#include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
++#endif
++
+ namespace webrtc {
+ 
+ void LogDesktopCapturerFullscreenDetectorUsage() {
+@@ -84,6 +88,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+   return capturer;
+ }
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
++    const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawGenericCapturer(options);
++  if (capturer && options.detect_updated_region()) {
++    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
++  }
++
++  return capturer;
++}
++
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
++    const DesktopCaptureOptions& options) {
++  if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
++    return std::make_unique<BaseCapturerPipeWire>(options,
++                                                  CaptureType::kAnyScreenContent);
++  }
++
++  return nullptr;
++}
++#endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++
+ // static
+ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+     const DesktopCaptureOptions& options) {
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index 9b667739a8..f4e2861025 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -179,6 +179,12 @@ class RTC_EXPORT DesktopCapturer {
+   // The return value if `pos` is out of the scope of the source is undefined.
+   virtual bool IsOccluded(const DesktopVector& pos);
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++  // Creates a DesktopCapturer instance which targets to capture windows and screens.
++  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
++      const DesktopCaptureOptions& options);
++#endif
++
+   // Creates a DesktopCapturer instance which targets to capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
+       const DesktopCaptureOptions& options);
+@@ -207,6 +213,13 @@ class RTC_EXPORT DesktopCapturer {
+   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
+   // the following two functions are protected.
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++  // Creates a platform specific DesktopCapturer instance which targets to
++  // capture windows and screens.
++  static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
++      const DesktopCaptureOptions& options);
++#endif
++
+   // Creates a platform specific DesktopCapturer instance which targets to
+   // capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
+diff --git a/modules/desktop_capture/linux/wayland/screencast_portal.cc b/modules/desktop_capture/linux/wayland/screencast_portal.cc
+index a473802176..61ed84ebb5 100644
+--- a/modules/desktop_capture/linux/wayland/screencast_portal.cc
++++ b/modules/desktop_capture/linux/wayland/screencast_portal.cc
+@@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(
+       return ScreenCastPortal::CaptureSourceType::kScreen;
+     case CaptureType::kWindow:
+       return ScreenCastPortal::CaptureSourceType::kWindow;
++    case CaptureType::kAnyScreenContent:
++      return ScreenCastPortal::CaptureSourceType::kAnyScreenContent;
+   }
+ }
+ 
 -- 
 2.37.3
 
