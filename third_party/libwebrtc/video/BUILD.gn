@@ -841,6 +841,7 @@ if (rtc_include_tests) {
       "../call/adaptation:resource_adaptation_test_utilities",
       "../common_video",
       "../common_video/test:utilities",
+      "../media:codec",
       "../media:media_constants",
       "../media:rtc_audio_video",
       "../media:rtc_internal_video_codecs",
