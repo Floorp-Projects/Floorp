@@ -37,7 +37,7 @@ RUN install-snap.sh core20
 # Snapcraft snap depends on core20 for python3.8 even when we target core22
 RUN install-snap.sh snapcraft
 
-RUN if [ "$SNAP_BASE" != "core20" ]; then install-snap.sh core22; fi
+install-snap.sh core22
 
 ARG SNAP_LIST
 
