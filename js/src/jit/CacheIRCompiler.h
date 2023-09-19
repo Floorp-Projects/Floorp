@@ -1241,65 +1241,6 @@ class MOZ_RAII AutoAvailableFloatRegister {
   operator FloatRegister() const { return reg_; }
 };
 
-// For GC thing fields, map from StubField::Type to the C++ types used.
-template <StubField::Type type>
-struct MapStubFieldToType {};
-template <>
-struct MapStubFieldToType<StubField::Type::Shape> {
-  using RawType = Shape*;
-  using WrappedType = GCPtr<Shape*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::WeakShape> {
-  using RawType = Shape*;
-  using WrappedType = WeakHeapPtr<Shape*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::WeakGetterSetter> {
-  using RawType = GetterSetter*;
-  using WrappedType = WeakHeapPtr<GetterSetter*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::JSObject> {
-  using RawType = JSObject*;
-  using WrappedType = GCPtr<JSObject*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::WeakObject> {
-  using RawType = JSObject*;
-  using WrappedType = WeakHeapPtr<JSObject*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::Symbol> {
-  using RawType = JS::Symbol*;
-  using WrappedType = GCPtr<JS::Symbol*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::String> {
-  using RawType = JSString*;
-  using WrappedType = GCPtr<JSString*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::WeakBaseScript> {
-  using RawType = BaseScript*;
-  using WrappedType = WeakHeapPtr<BaseScript*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::JitCode> {
-  using RawType = JitCode*;
-  using WrappedType = GCPtr<JitCode*>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::Id> {
-  using RawType = jsid;
-  using WrappedType = GCPtr<jsid>;
-};
-template <>
-struct MapStubFieldToType<StubField::Type::Value> {
-  using RawType = Value;
-  using WrappedType = GCPtr<Value>;
-};
-
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
 // of this class.
 //
@@ -1359,17 +1300,15 @@ class CacheIRStubInfo {
                               bool canMakeCalls, uint32_t stubDataOffset,
                               const CacheIRWriter& writer);
 
-  template <class Stub, StubField::Type type>
-  typename MapStubFieldToType<type>::WrappedType& getStubField(
-      Stub* stub, uint32_t offset) const;
+  template <class Stub, class T>
+  js::GCPtr<T>& getStubField(Stub* stub, uint32_t offset) const;
 
   template <class Stub, class T>
   T* getPtrStubField(Stub* stub, uint32_t offset) const;
 
-  template <StubField::Type type>
-  typename MapStubFieldToType<type>::WrappedType& getStubField(
-      ICCacheIRStub* stub, uint32_t offset) const {
-    return getStubField<ICCacheIRStub, type>(stub, offset);
+  template <class T>
+  js::GCPtr<T>& getStubField(ICCacheIRStub* stub, uint32_t offset) const {
+    return getStubField<ICCacheIRStub, T>(stub, offset);
   }
 
   uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
