@@ -1026,7 +1026,8 @@ void CoreTextFontList::ActivateFontsFromDir(
     }
   } while (result != kCFURLEnumeratorEnd);
 
-  CTFontManagerRegisterFontsForURLs(urls, kCTFontManagerScopeProcess, nullptr);
+  CTFontManagerRegisterFontURLs(urls, kCTFontManagerScopeProcess, false,
+                                nullptr);
 }
 
 void CoreTextFontList::ReadSystemFontList(dom::SystemFontList* aList)
