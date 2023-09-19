@@ -7539,7 +7539,9 @@ var WebAuthnPromptHelper = {
       return;
     }
 
-    let mgr = aSubject.QueryInterface(Ci.nsIWebAuthnController);
+    let mgr = aSubject.QueryInterface(
+      data.is_ctap2 ? Ci.nsIWebAuthnController : Ci.nsIU2FTokenManager
+    );
 
     if (data.action == "presence") {
       this.presence_required(mgr, data);

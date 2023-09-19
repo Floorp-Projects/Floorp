@@ -44,22 +44,23 @@ static nsIThread* gWebAuthnBackgroundThread;
 
 // Data for WebAuthn UI prompt notifications.
 static const char16_t kPresencePromptNotification[] =
-    u"{\"action\":\"presence\",\"tid\":%llu,"
+    u"{\"is_ctap2\":true,\"action\":\"presence\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kRegisterDirectPromptNotification[] =
-    u"{\"action\":\"register-direct\",\"tid\":%llu,"
+    u"{\"is_ctap2\":true,\"action\":\"register-direct\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kCancelPromptNotification[] =
-    u"{\"action\":\"cancel\",\"tid\":%llu}";
+    u"{\"is_ctap2\":true,\"action\":\"cancel\",\"tid\":%llu}";
 static const char16_t kSelectSignResultNotification[] =
-    u"{\"action\":\"select-sign-result\",\"tid\":%llu,"
+    u"{\"is_ctap2\":true,\"action\":\"select-sign-result\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu,\"usernames\":[%s]}";
 
 /***********************************************************************
  * U2FManager Implementation
  **********************************************************************/
 
-NS_IMPL_ISUPPORTS(WebAuthnController, nsIWebAuthnController);
+NS_IMPL_ISUPPORTS(WebAuthnController, nsIWebAuthnController,
+                  nsIU2FTokenManager);
 
 WebAuthnController::WebAuthnController() : mTransactionParent(nullptr) {
   MOZ_ASSERT(XRE_IsParentProcess());
