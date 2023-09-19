@@ -18,7 +18,7 @@ const INSTRUCTIONS = [
   "array.set $a_unpacked",
   "array.copy $a_unpacked $a_unpacked",
   "array.len",
-  "i31.new",
+  "ref.i31",
   "i31.get_s",
   "i31.get_u",
   "ref.test structref",

@@ -515,7 +515,7 @@ enum class GcOp {
   ExternExternalize = 0x1b,
 
   // I31 operations
-  I31New = 0x1c,
+  RefI31 = 0x1c,
   I31GetS = 0x1d,
   I31GetU = 0x1e,
 

@@ -334,7 +334,7 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::ArrayLen);
         case GcOp::ArrayCopy:
           WASM_GC_OP(OpKind::ArrayCopy);
-        case GcOp::I31New:
+        case GcOp::RefI31:
         case GcOp::I31GetS:
         case GcOp::I31GetU:
           WASM_GC_OP(OpKind::Conversion);

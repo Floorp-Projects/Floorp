@@ -29,8 +29,8 @@ let identity = (n) => n;
 let {
   castFromAnyref,
   castFromExternref,
-  i31New,
-  i31NewIdentity,
+  refI31,
+  refI31Identity,
   i31GetU,
   i31GetS,
   i31EqualsI31,
@@ -47,34 +47,34 @@ let {
     extern.internalize
     ref.test (ref i31)
   )
-  (func (export "i31New") (param i32) (result anyref)
+  (func (export "refI31") (param i32) (result anyref)
     local.get 0
-    i31.new
+    ref.i31
   )
-  (func (export "i31NewIdentity") (param i32) (result anyref)
+  (func (export "refI31Identity") (param i32) (result anyref)
     local.get 0
-    i31.new
+    ref.i31
     call $identity
   )
   (func (export "i31GetU") (param i32) (result i32)
     local.get 0
-    i31.new
+    ref.i31
     i31.get_u
   )
   (func (export "i31GetS") (param i32) (result i32)
     local.get 0
-    i31.new
+    ref.i31
     i31.get_s
   )
   (func (export "i31EqualsI31") (param i32) (param i32) (result i32)
     (ref.eq
-      (i31.new local.get 0)
-      (i31.new local.get 1)
+      (ref.i31 local.get 0)
+      (ref.i31 local.get 1)
     )
   )
   (func (export "i31EqualsEq") (param i32) (param eqref) (result i32)
     (ref.eq
-      (i31.new local.get 0)
+      (ref.i31 local.get 0)
       local.get 1
     )
   )
@@ -97,8 +97,8 @@ for (let i of InvalidI31Values) {
 // Test that we can roundtrip 31-bit integers through the i31ref type
 // faithfully.
 for (let i of WasmI31refValues) {
-  assertEq(i31New(i), i);
-  assertEq(i31NewIdentity(i), i);
+  assertEq(refI31(i), i);
+  assertEq(refI31Identity(i), i);
   assertEq(i31GetU(i), valueAsI31GetU(i));
   assertEq(i31GetS(i), i);
 }
@@ -106,7 +106,7 @@ for (let i of WasmI31refValues) {
 // Test that i31ref values are truncated when given a 32-bit value
 for (let i of WasmI31refValues) {
   let adjusted = i | 0x80000000;
-  assertEq(i31New(adjusted), i);
+  assertEq(refI31(adjusted), i);
 }
 
 // Test that comparing identical i31 values works
@@ -137,10 +137,10 @@ const bigI32Tests = [
 for (const {input, expected} of bigI32Tests) {
   const { get, getElem } = wasmEvalText(`(module
     (func (export "get") (param i32) (result i32)
-      (i31.get_s (i31.new (local.get 0)))
+      (i31.get_s (ref.i31 (local.get 0)))
     )
 
-    (table i31ref (elem (item (i31.new (i32.const ${input})))))
+    (table i31ref (elem (item (ref.i31 (i32.const ${input})))))
     (func (export "getElem") (result i32)
       (i31.get_s (table.get 0 (i32.const 0)))
     )
