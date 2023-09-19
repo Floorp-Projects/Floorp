@@ -161,8 +161,8 @@ add_task(async () => {
     .forEach(label => {
       Assert.strictEqual(
         cpuTimeByType[label],
-        undefined,
-        `no media was played so the CPU time for ${label} should be undefined`
+        null,
+        `no media was played so the CPU time for ${label} should be null`
       );
     });
 
@@ -255,21 +255,21 @@ add_task(async () => {
   // played in a background tab.
   Assert.strictEqual(
     cpuTimeByType["web.background-perceivable"],
-    undefined,
+    null,
     "CPU time should only be recorded in the web.background-perceivable label"
   );
 
-  // __other__ should be undefined, if it is not, we have a missing label in the metrics.yaml file.
+  // __other__ should be null, if it is not, we have a missing label in the metrics.yaml file.
   Assert.strictEqual(
     cpuTimeByType.__other__,
-    undefined,
+    null,
     "no CPU time should be recorded in the __other__ label"
   );
 
   info("GPU time for each label:");
   let totalGpuTimeByType = undefined;
   for (let label of kGleanProcessTypeLabels) {
-    if (gpuTimeByType[label] !== undefined) {
+    if (gpuTimeByType[label] !== null) {
       totalGpuTimeByType = (totalGpuTimeByType || 0) + gpuTimeByType[label];
     }
     info(`  ${label} = ${gpuTimeByType[label]}`);
@@ -281,10 +281,10 @@ add_task(async () => {
     "The sum of GPU time used by all process types should match totalGpuTimeMs"
   );
 
-  // __other__ should be undefined, if it is not, we have a missing label in the metrics.yaml file.
+  // __other__ should be null, if it is not, we have a missing label in the metrics.yaml file.
   Assert.strictEqual(
     gpuTimeByType.__other__,
-    undefined,
+    null,
     "no GPU time should be recorded in the __other__ label"
   );
 
@@ -318,12 +318,12 @@ add_task(async () => {
     for (let processType of processTypes) {
       Assert.equal(
         Glean.powerCpuMsPerThread[processType][kThreadName].testGetValue(),
-        undefined,
+        null,
         `no CPU time should have been recorded for the ${processType} main thread`
       );
       Assert.equal(
         Glean.powerWakeupsPerThread[processType][kThreadName].testGetValue(),
-        undefined,
+        null,
         `no thread wake ups should have been recorded for the ${processType} main thread`
       );
     }
