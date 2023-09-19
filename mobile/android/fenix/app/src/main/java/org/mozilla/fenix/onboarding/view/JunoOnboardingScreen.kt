@@ -39,7 +39,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.onboarding.JunoOnboardingTelemetryRecorder
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -80,7 +79,6 @@ fun JunoOnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pagesToDisplay.size })
     val isSignedIn: State<Boolean?> = components.backgroundServices.syncStore
         .observeAsComposableState { it.account != null }
-    val telemetryRecorder by lazy { JunoOnboardingTelemetryRecorder() }
     val widgetPinnedFlow: StateFlow<Boolean> = WidgetPinnedState.isPinned
     val isWidgetPinnedState by widgetPinnedFlow.collectAsState()
 
@@ -115,10 +113,6 @@ fun JunoOnboardingScreen(
     LaunchedEffect(isWidgetPinnedState) {
         if (isWidgetPinnedState) {
             scrollToNextPageOrDismiss()
-            telemetryRecorder.onAddSearchWidgetClick(
-                pagesToDisplay.telemetrySequenceId(),
-                pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
-            )
         }
     }
 

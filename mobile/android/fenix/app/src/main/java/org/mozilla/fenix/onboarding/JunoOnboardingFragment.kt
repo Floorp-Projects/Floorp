@@ -157,6 +157,10 @@ class JunoOnboardingFragment : Fragment() {
                 )
             },
             onAddFirefoxWidgetClick = {
+                telemetryRecorder.onAddSearchWidgetClick(
+                    pagesToDisplay.telemetrySequenceId(),
+                    pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
+                )
                 showAddSearchWidgetDialog()
             },
             onSkipFirefoxWidgetClick = {
