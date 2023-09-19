@@ -35,7 +35,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LoadInfo.h"
 #include "nsComponentManagerUtils.h"
@@ -105,13 +104,6 @@ FontFaceSet::~FontFaceSet() {
   MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
 
   Destroy();
-}
-
-/* static */ bool FontFaceSet::IsEnabled() {
-  if (!NS_IsMainThread()) {
-    return StaticPrefs::layout_css_font_loading_api_workers_enabled();
-  }
-  return true;
 }
 
 /* static */ already_AddRefed<FontFaceSet> FontFaceSet::CreateForDocument(
@@ -403,20 +395,18 @@ void FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise() {
   (new AsyncEventDispatcher(this, u"loading"_ns, CanBubble::eNo))
       ->PostDOMEvent();
 
-  if (IsEnabled()) {
-    if (mReady && mReady->State() != Promise::PromiseState::Pending) {
-      if (GetParentObject()) {
-        ErrorResult rv;
-        mReady = Promise::Create(GetParentObject(), rv);
-      }
+  if (mReady && mReady->State() != Promise::PromiseState::Pending) {
+    if (GetParentObject()) {
+      ErrorResult rv;
+      mReady = Promise::Create(GetParentObject(), rv);
     }
-
-    // We may previously have been in a state where all fonts had finished
-    // loading and we'd set mResolveLazilyCreatedReadyPromise to make sure that
-    // if we lazily create mReady for a consumer that we resolve it before
-    // returning it.  We're now loading fonts, so we need to clear that flag.
-    mResolveLazilyCreatedReadyPromise = false;
   }
+
+  // We may previously have been in a state where all fonts had finished
+  // loading and we'd set mResolveLazilyCreatedReadyPromise to make sure that
+  // if we lazily create mReady for a consumer that we resolve it before
+  // returning it.  We're now loading fonts, so we need to clear that flag.
+  mResolveLazilyCreatedReadyPromise = false;
 }
 
 void FontFaceSet::MaybeResolve() {
