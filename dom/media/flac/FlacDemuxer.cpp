@@ -54,8 +54,8 @@ class FrameHeader {
     mVariableBlockSize = br.ReadBit();
 
     // Block size and sample rate codes.
-    int bs_code = br.ReadBits(4);
-    int sr_code = br.ReadBits(4);
+    int bs_code = AssertedCast<int>(br.ReadBits(4));
+    int sr_code = AssertedCast<int>(br.ReadBits(4));
 
     // Channels and decorrelation.
     uint32_t ch_mode = br.ReadBits(4);
@@ -71,7 +71,7 @@ class FrameHeader {
     }
 
     // Bits per sample.
-    int bps_code = br.ReadBits(3);
+    int bps_code = AssertedCast<int>(br.ReadBits(3));
     if (bps_code == 3 || bps_code == 7) {
       // Invalid sample size code.
       return false;
@@ -95,7 +95,8 @@ class FrameHeader {
     if (bs_code == 0) {
       // reserved blocksize code
       return false;
-    } else if (bs_code == 6) {
+    }
+    if (bs_code == 6) {
       mBlocksize = br.ReadBits(8) + 1;
     } else if (bs_code == 7) {
       mBlocksize = br.ReadBits(16) + 1;
@@ -107,8 +108,9 @@ class FrameHeader {
     // 1- coded sample number if blocksize is variable or
     // 2- coded frame number if blocksize is known.
     // A frame is made of Blocksize sample.
-    mIndex = mVariableBlockSize ? frame_or_sample_num
-                                : frame_or_sample_num * mBlocksize;
+    mIndex = mVariableBlockSize
+                 ? AssertedCast<int64_t>(frame_or_sample_num)
+                 : AssertedCast<int64_t>(frame_or_sample_num * mBlocksize);
     mFrameOrSampleNum = static_cast<uint64_t>(frame_or_sample_num);
 
     // Sample rate.
@@ -323,8 +325,8 @@ class Frame {
       // Not a fixed size frame, or nothing to adjust.
       return;
     }
-    mHeader.mIndex =
-        Header().mFrameOrSampleNum * aReferenceFrame.Header().mBlocksize;
+    mHeader.mIndex = AssertedCast<int64_t>(Header().mFrameOrSampleNum *
+                                           aReferenceFrame.Header().mBlocksize);
   }
 
   uint32_t Size() const { return mSize; }
@@ -364,7 +366,7 @@ class Frame {
  private:
   void SetOffset(MediaResourceIndex& aResource, uint64_t aOffset) {
     mOffset = aOffset;
-    aResource.Seek(SEEK_SET, mOffset);
+    aResource.Seek(SEEK_SET, AssertedCast<int64_t>(mOffset));
   }
 
   // The offset to the start of the header.
@@ -453,7 +455,8 @@ class FrameParser {
       aResource.Seek(SEEK_CUR, mNextFrame.Header().Size());
       if (mFrame.IsValid() &&
           mNextFrame.Offset() - mFrame.Offset() < FLAC_MAX_FRAME_SIZE &&
-          !CheckCRC16AtOffset(mFrame.Offset(), mNextFrame.Offset(),
+          !CheckCRC16AtOffset(AssertedCast<int64_t>(mFrame.Offset()),
+                              AssertedCast<int64_t>(mNextFrame.Offset()),
                               aResource)) {
         // The frame doesn't match its CRC or would be too far, skip it..
         continue;
@@ -643,7 +646,8 @@ bool FlacTrackDemuxer::Init() {
   // Find the first frame to fully initialise our parser.
   if (mParser->FindNextFrame(mSource)) {
     // Ensure that the next frame returned will be the first.
-    mSource.Seek(SEEK_SET, mParser->FirstFrame().Offset());
+    mSource.Seek(SEEK_SET,
+                 AssertedCast<int64_t>(mParser->FirstFrame().Offset()));
     mParser->EndFrameSession();
   } else if (!mParser->Info().IsValid() || !mParser->FirstFrame().IsValid()) {
     // We must find at least a frame to determine the metadata.
@@ -675,7 +679,9 @@ UniquePtr<TrackInfo> FlacTrackDemuxer::GetInfo() const {
                        ->mCodecSpecificConfig.is<FlacCodecSpecificData>(),
                "Should get flac specific data from parser");
     return info;
-  } else if (mParser->FirstFrame().Info().IsValid()) {
+  }
+
+  if (mParser->FirstFrame().Info().IsValid()) {
     // Use the first frame header.
     UniquePtr<TrackInfo> info = mParser->FirstFrame().Info().Clone();
     info->mDuration = Duration();
@@ -721,7 +727,8 @@ TimeUnit FlacTrackDemuxer::FastSeek(const TimeUnit& aTime) {
 
   if (aTime <= mParser->FirstFrame().Time()) {
     // We're attempting to seek prior the first frame, return the first frame.
-    mSource.Seek(SEEK_SET, mParser->FirstFrame().Offset());
+    mSource.Seek(SEEK_SET,
+                 AssertedCast<int64_t>(mParser->FirstFrame().Offset()));
     return mParser->FirstFrame().Time();
   }
 
@@ -730,13 +737,14 @@ TimeUnit FlacTrackDemuxer::FastSeek(const TimeUnit& aTime) {
   // Typically, with flac such approximation is typically useless.
 
   // Estimate where the position might be.
-  int64_t pivot =
-      aTime.ToSeconds() * AverageFrameLength() + mParser->FirstFrame().Offset();
+  int64_t pivot = AssertedCast<int64_t>(
+      aTime.ToSeconds() * AverageFrameLength() +
+      AssertedCast<double>(mParser->FirstFrame().Offset()));
 
   // Time in seconds where we can stop seeking and will continue using
   // ScanUntil.
   static const int GAP_THRESHOLD = 5;
-  int64_t first = mParser->FirstFrame().Offset();
+  int64_t first = AssertedCast<int64_t>(mParser->FirstFrame().Offset());
   int64_t last = mSource.GetLength();
   Maybe<uint64_t> lastFoundOffset;
   uint32_t iterations = 0;
@@ -789,7 +797,7 @@ TimeUnit FlacTrackDemuxer::FastSeek(const TimeUnit& aTime) {
   } while (true);
 
   if (lastFoundOffset) {
-    mSource.Seek(SEEK_SET, lastFoundOffset.ref());
+    mSource.Seek(SEEK_SET, AssertedCast<int64_t>(lastFoundOffset.ref()));
   }
 
   return timeSeekedTo;
@@ -808,7 +816,7 @@ TimeUnit FlacTrackDemuxer::ScanUntil(const TimeUnit& aTime) {
   int64_t previousOffset = 0;
   TimeUnit previousTime;
   while (FindNextFrame().IsValid() && mParser->CurrentFrame().Time() < aTime) {
-    previousOffset = mParser->CurrentFrame().Offset();
+    previousOffset = AssertedCast<int64_t>(mParser->CurrentFrame().Offset());
     previousTime = mParser->CurrentFrame().Time();
   }
 
@@ -865,7 +873,8 @@ void FlacTrackDemuxer::Reset() {
   LOG("Reset()");
   MOZ_ASSERT(mParser);
   if (mParser->FirstFrame().IsValid()) {
-    mSource.Seek(SEEK_SET, mParser->FirstFrame().Offset());
+    mSource.Seek(SEEK_SET,
+                 AssertedCast<int64_t>(mParser->FirstFrame().Offset()));
   } else {
     mSource.Seek(SEEK_SET, 0);
   }
@@ -935,7 +944,7 @@ already_AddRefed<MediaRawData> FlacTrackDemuxer::GetNextFrame(
   const uint32_t size = aFrame.Size();
 
   RefPtr<MediaRawData> frame = new MediaRawData();
-  frame->mOffset = offset;
+  frame->mOffset = AssertedCast<int64_t>(offset);
 
   UniquePtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());
   if (!frameWriter->SetSize(size)) {
@@ -943,7 +952,8 @@ already_AddRefed<MediaRawData> FlacTrackDemuxer::GetNextFrame(
     return nullptr;
   }
 
-  const uint32_t read = Read(frameWriter->Data(), offset, size);
+  const uint32_t read = Read(frameWriter->Data(), AssertedCast<int64_t>(offset),
+                             AssertedCast<int32_t>(size));
   if (read != size) {
     LOG("GetNextFrame() Exit read=%u frame->Size=%zu", read, frame->Size());
     return nullptr;
@@ -952,7 +962,7 @@ already_AddRefed<MediaRawData> FlacTrackDemuxer::GetNextFrame(
   frame->mTime = aFrame.Time();
   frame->mDuration = aFrame.Duration();
   frame->mTimecode = frame->mTime;
-  frame->mOffset = aFrame.Offset();
+  frame->mOffset = AssertedCast<int64_t>(aFrame.Offset());
   frame->mKeyframe = true;
 
   MOZ_ASSERT(!frame->mTime.IsNegative());
@@ -972,7 +982,8 @@ uint32_t FlacTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
 
 double FlacTrackDemuxer::AverageFrameLength() const {
   if (mParsedFramesDuration.ToMicroseconds()) {
-    return mTotalFrameLen / mParsedFramesDuration.ToSeconds();
+    return AssertedCast<double>(mTotalFrameLen) /
+           mParsedFramesDuration.ToSeconds();
   }
 
   return 0.0;
