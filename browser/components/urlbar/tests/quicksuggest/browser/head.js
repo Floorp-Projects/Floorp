@@ -628,6 +628,6 @@ function _assertGleanPing(ping) {
   };
   for (const [key, value] of Object.entries(ping.payload)) {
     Assert.ok(key in keymap, `A Glean metric exists for field ${key}`);
-    Assert.equal(value ?? "", keymap[key].testGetValue());
+    Assert.equal(value ?? null, keymap[key].testGetValue());
   }
 }
