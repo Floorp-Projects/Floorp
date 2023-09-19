@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Typography scale */
+:root {
+  font: message-box;
+}
+
+h1,
+h2,
+.heading-large,
+.heading-medium {
+  line-height: var(--line-height-small);
+}
+
+h1,
+.heading-large {
+  font-weight: var(--font-weight-light, var(--font-weight-bold));
+  font-size: var(--font-size-xlarge);
+}
+
+h2,
+.heading-medium {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-large);
+}
+
+/* Text helpers */
+.text-deemphasized {
+  font-size: var(--font-size-small);
+  color: var(--text-color-deemphasized);
+}
+
+.text-truncated-ellipsis {
+  /* Will not work on `display: flex` items
+    unless you wrap its contents with another element that has this class. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
