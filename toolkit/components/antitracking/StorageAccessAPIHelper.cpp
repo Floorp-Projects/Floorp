@@ -840,17 +840,6 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
 Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
     Document* aDocument, bool aRequestingStorageAccess) {
   MOZ_ASSERT(aDocument);
-  // Window doesn't have user activation and we are asking for access -> reject.
-  if (aRequestingStorageAccess) {
-    if (!aDocument->HasValidTransientUserGestureActivation()) {
-      // Report an error to the console for this case
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
-          aDocument, nsContentUtils::eDOM_PROPERTIES,
-          "RequestStorageAccessUserGesture");
-      return Some(false);
-    }
-  }
 
   if (aDocument->IsTopLevelContentDocument()) {
     return Some(true);
@@ -1006,7 +995,7 @@ RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise>
 StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
     dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
     dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-    bool aHasUserInteraction, bool aFrameOnly,
+    bool aHasUserInteraction, bool aRequireUserInteraction, bool aFrameOnly,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
     bool aRequireGrant) {
   MOZ_ASSERT(aDocument);
@@ -1022,7 +1011,8 @@ StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
   // This is a lambda function that has some variables bound to it. It will be
   // called later in CompleteAllowAccessFor inside of AllowAccessFor.
   auto performPermissionGrant = aDocument->CreatePermissionGrantPromise(
-      aInnerWindow, principal, aHasUserInteraction, Nothing(), aFrameOnly);
+      aInnerWindow, principal, aHasUserInteraction, aRequireUserInteraction,
+      Nothing(), aFrameOnly);
 
   // Try to allow access for the given principal.
   return StorageAccessAPIHelper::AllowAccessFor(
