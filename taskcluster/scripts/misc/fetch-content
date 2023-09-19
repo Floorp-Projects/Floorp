@@ -10,6 +10,7 @@ import contextlib
 import datetime
 import gzip
 import hashlib
+import io
 import json
 import lzma
 import multiprocessing
@@ -308,21 +309,41 @@ def gpg_verify_path(path: pathlib.Path, public_key_data: bytes, signature_data: 
             subprocess.run(["gpgconf", "--kill", "gpg-agent"], env=env)
 
 
-def open_tar_stream(path: pathlib.Path):
-    """"""
-    if path.suffix == ".bz2":
-        return bz2.open(str(path), "rb")
-    elif path.suffix in (".gz", ".tgz") :
-        return gzip.open(str(path), "rb")
-    elif path.suffix == ".xz":
-        return lzma.open(str(path), "rb")
-    elif path.suffix == ".zst":
-        dctx = ZstdDecompressor()
-        return dctx.stream_reader(path.open("rb"))
-    elif path.suffix == ".tar":
-        return path.open("rb")
-    else:
-        raise ValueError("unknown archive format for tar file: %s" % path)
+class ArchiveTypeNotSupported(Exception):
+    def __init__(self, path: pathlib.Path):
+        super(Exception, self).__init__("Archive type not supported for %s" % path)
+
+
+def open_stream(path: pathlib.Path):
+    """Attempt to identify a path as an extractable archive by looking at its
+    content."""
+    fh = path.open(mode="rb")
+    magic = fh.read(6)
+    fh.seek(0)
+    if magic[:2] == b"PK":
+        return "zip", fh
+    if magic[:2] == b"\x1f\x8b":
+        fh = gzip.GzipFile(fileobj=fh)
+    elif magic[:3] == b"BZh":
+        fh = bz2.BZ2File(fh)
+    elif magic == b"\xfd7zXZ\x00":
+        fh = lzma.LZMAFile(fh)
+    elif magic[:4] == b"\x28\xb5\x2f\xfd":
+        fh = ZstdDecompressor().stream_reader(fh)
+    fh = io.BufferedReader(fh)
+    try:
+        # A full tar info header is 512 bytes.
+        headers = fh.peek(512)
+        # 257 is the offset of the ustar magic.
+        magic = headers[257 : 257 + 8]
+        # For older unix tar, rely on TarInfo.frombuf's checksum check
+        if magic in (b"ustar\x0000", b"ustar  \x00") or tarfile.TarInfo.frombuf(
+            headers[:512], tarfile.ENCODING, "surrogateescape"
+        ):
+            return "tar", fh
+    except Exception as e:
+        pass
+    raise ArchiveTypeNotSupported(path)
 
 
 def archive_type(path: pathlib.Path):
@@ -335,7 +356,7 @@ def archive_type(path: pathlib.Path):
         return None
 
 
-def extract_archive(path, dest_dir, typ):
+def extract_archive(path, dest_dir):
     """Extract an archive to a destination directory."""
 
     # Resolve paths to absolute variants.
@@ -347,8 +368,8 @@ def extract_archive(path, dest_dir, typ):
 
     # We pipe input to the decompressor program so that we can apply
     # custom decompressors that the program may not know about.
+    typ, ifh = open_stream(path)
     if typ == "tar":
-        ifh = open_tar_stream(path)
         # On Windows, the tar program doesn't support things like symbolic
         # links, while Windows actually support them. The tarfile module in
         # python does. So use that. But since it's significantly slower than
@@ -395,10 +416,8 @@ def repack_archive(
 ):
     assert orig != dest
     log("Repacking as %s" % dest)
-    orig_typ = archive_type(orig)
+    orig_typ, ifh = open_stream(orig)
     typ = archive_type(dest)
-    if not orig_typ:
-        raise Exception("Archive type not supported for %s" % orig.name)
     if not typ:
         raise Exception("Archive type not supported for %s" % dest.name)
 
@@ -424,7 +443,7 @@ def repack_archive(
         ctx = ZstdCompressor()
         if orig_typ == "zip":
             assert typ == "tar"
-            zip = zipfile.ZipFile(orig)
+            zip = zipfile.ZipFile(ifh)
             # Convert the zip stream to a tar on the fly.
             with ctx.stream_writer(fh) as compressor, tarfile.open(
                 fileobj=compressor, mode="w:"
@@ -466,7 +485,6 @@ def repack_archive(
                 raise Exception("Repacking a tar to zip is not supported")
             assert typ == "tar"
 
-            ifh = open_tar_stream(orig)
             if filter:
                 # To apply the filter, we need to open the tar stream and
                 # tweak it.
@@ -509,11 +527,12 @@ def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
     if not extract:
         return
 
-    typ = archive_type(dest_path)
-    if typ:
-        extract_archive(dest_path, dest_dir, typ)
+    try:
+        extract_archive(dest_path, dest_dir)
         log("Removing %s" % dest_path)
         dest_path.unlink()
+    except ArchiveTypeNotSupported:
+        pass
 
 
 def fetch_urls(downloads):
