@@ -93,10 +93,10 @@ index 50937f574d..5da38a077b 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 0687f32352..58f393a2fa 100644
+index d6eddb21b1..3b392a1bfb 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -493,6 +493,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+@@ -506,6 +506,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -109,7 +109,7 @@ index 0687f32352..58f393a2fa 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 1e11713ece..8eaa984f92 100644
+index 06fe5869b6..1b79915025 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -194,6 +194,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
