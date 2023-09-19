@@ -15,7 +15,7 @@
   --cell-border-color: rgba(0,0,0,0.15);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
-  --link-color: var(--blue-60);
+  --link-color: var(--theme-link-color);
   --link-color-active: var(--blue-70);
 }
 

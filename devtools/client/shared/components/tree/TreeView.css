@@ -113,7 +113,7 @@
 /* Learn More link */
 .treeTable .treeValueCell .learn-more-link {
   user-select: none;
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   cursor: pointer;
   margin: 0 5px;
 }

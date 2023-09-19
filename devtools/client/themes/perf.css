@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root.theme-light {
-  /**
-   * Override this variable to match the Photon guidelines and make sure the
-   * links have enough contrast on the background of the onboarding message.
-   * See Bug 1673582 to apply this back to devtools main variable.css file.
-   */
-  --theme-highlight-blue: var(--blue-60);
-}
-
 .perf {
   display: flex;
   flex-direction: column;
@@ -59,7 +50,7 @@
   padding: 0;
   background: none;
   border: none;
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   text-decoration: underline;
   white-space: nowrap;
   cursor: pointer;

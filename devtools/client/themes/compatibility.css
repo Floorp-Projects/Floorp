@@ -130,7 +130,7 @@
 }
 
 .compatibility-issue-item__property {
-  color: var(--theme-highlight-blue);
+  color: var(--theme-link-color);
   unicode-bidi: plaintext;
   display: flex;
   gap: var(--compatibility-base-unit);
