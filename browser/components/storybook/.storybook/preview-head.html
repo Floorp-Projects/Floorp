@@ -1,8 +1,20 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<link rel="stylesheet" href="chrome://global/skin/design-tokens-brand.css" />
+
+<link
+  rel="stylesheet"
+  href="chrome://global/skin/design-system/text-and-typography.css"
+/>
+<link
+  rel="stylesheet"
+  href="chrome://global/skin/design-system/tokens-brand.css"
+/>
+
 <style>
+  :root {
+    font-size: var(--font-size-root);
+  }
   /* Override the default Storybook padding in favour of styles
    provided by our WithCommonStyles wrapper */
   .sb-show-main.sb-main-padded {
@@ -20,10 +32,54 @@
     height: unset;
   }
 
-  panel-item[action="new"]::part(button) {
-    background-image: url("chrome://global/skin/icons/plus.svg");
+  /* Typography preview and design tokens table */
+  table.sb-preview-design-tokens {
+    -moz-osx-font-smoothing: auto;
+    border-collapse: separate;
+    table-layout: fixed;
+    text-align: left;
+    width: 100%;
+
+    & th {
+      background: #ebf5fc;
+    }
+
+    & tr td,
+    & tr th {
+      padding: 8px;
+    }
+
+    & td {
+      background: #ffffff;
+    }
   }
-  panel-item[action="save"]::part(button) {
-    background-image: url("chrome://global/skin/icons/page-portrait.svg");
+
+  td.sb-preview-chrome-typescale {
+    & .docs-story {
+      * {
+        font: message-box;
+      }
+
+      & h1 {
+        font-weight: var(--font-weight-bold) !important;
+      }
+    }
+
+    &.sb-preview-chrome-menu .docs-story * {
+      font: menu;
+    }
+  }
+
+  h1.sb-preview-chrome-typescale {
+    font: message-box;
+    font-weight: var(--font-weight-bold) !important;
+
+    &.sb-preview-chrome-menu {
+      font: menu;
+    }
+  }
+
+  table .sb-preview-font-size-small {
+    font-size: var(--font-size-small);
   }
 </style>
