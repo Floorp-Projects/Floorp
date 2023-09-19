@@ -34,7 +34,6 @@ from html import escape
 # (right after the `third_party/` prefix)
 LIB_TO_LICENSES_DICT = {
     'abseil-cpp': ['third_party/abseil-cpp/LICENSE'],
-    'android_ndk': ['third_party/android_ndk/NOTICE'],
     'android_sdk': ['third_party/android_sdk/LICENSE'],
     'android_toolchain': ['third_party/android_toolchain/NOTICE'],
     'auto': [
