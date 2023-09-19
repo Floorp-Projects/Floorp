@@ -13,6 +13,7 @@ export const CONFIGURABLE_STYLES = [
   "marginInline",
   "paddingBlock",
   "paddingInline",
+  "whiteSpace",
 ];
 const ZAP_SIZE_THRESHOLD = 160;
 
