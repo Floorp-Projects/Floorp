@@ -71,10 +71,15 @@ groupbox[data-category] {
 
 html|h1 {
   margin: 0 0 8px;
+  font-size: 1.46em;
+  font-weight: 300;
+  line-height: 1.3em;
 }
 
 html|h2 {
   margin: 16px 0 4px;
+  font-size: 1.14em;
+  line-height: normal;
 }
 
 description.indent,
@@ -238,7 +243,7 @@ checkbox {
 
 #isDefaultLabel,
 #isNotDefaultLabel {
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
 }
 
 @supports not -moz-bool-pref("browser.migrate.preferences-entrypoint.enabled") {
@@ -462,7 +467,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 }
 
 #homeContentsGroup [data-subcategory] .section-checkbox {
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
 }
 
 #homeContentsGroup [data-subcategory] > vbox menulist {
@@ -628,7 +633,7 @@ html|dialog,
 }
 
 .dialogTitle {
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
   text-align: center;
   user-select: none;
 }

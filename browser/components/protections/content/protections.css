@@ -65,10 +65,12 @@ body[focuseddatatype=cryptominer] {
 }
 
 h2 {
-  font-weight: var(--font-weight-bold);
+  font-weight: 700;
 }
 
 #report-title {
+  font-size: 20px;
+  font-weight: 300;
   margin-block-end: 20px;
 }
 

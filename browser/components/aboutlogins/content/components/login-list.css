@@ -16,6 +16,8 @@
   padding: 0 16px 16px;
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
+  color: var(--text-color-deemphasized);
+  font-size: 0.8em;
 }
 
 .meta > label > span {
@@ -34,7 +36,7 @@
 }
 
 #login-sort > option {
-  font-weight: var(--font-weight-default);
+  font-weight: normal;
 }
 
 .count {
@@ -107,7 +109,7 @@ ol {
   position: sticky;
   top: 0;
   font-size: .85em;
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
   padding: 4px 16px;
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
@@ -136,7 +138,7 @@ ol {
 }
 
 .login-list-item.selected .title {
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
 }
 
 .labels {
@@ -148,6 +150,14 @@ ol {
   justify-content: center;
 }
 
+.title,
+.username {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .favicon {
   height: 16px;
   width: 16px;
@@ -155,6 +165,11 @@ ol {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
+}
+
+.username {
+  font-size: 0.85em;
+  color: var(--text-color-deemphasized);
 }
 
 .alert-icon {

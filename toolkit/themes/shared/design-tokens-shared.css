@@ -5,7 +5,7 @@
 :root,
 :host(.anonymous-content-host) {
   /* Base tokens */
-  /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
+  /* Do not use base tokens directly as they don't carry any meaning. Refer to application tokens below. */
   /** Color **/
   --color-white: #ffffff;
   --color-blue-05: #deeafc;
@@ -43,42 +43,31 @@
   --border-width: 1px;
   --border-interactive-color: unset;
 
+  /** Button **/
+  --button-background-color: unset;
+  --button-background-color-hover: unset;
+  --button-background-color-active: unset;
+  --button-min-height: var(--size-item-large);
+  --button-border-radius: var(--border-radius-small);
+
+  /** Link **/
+  /* Not using --focus-outline-offset for links because that's intended for
+     elements with a background, and we only want a slight offset here while not
+     overlapping adjacent text. */
+  --link-focus-outline-offset: 1px;
+
   /** Color **/
   --color-accent-primary: unset;
   --color-accent-primary-hover: unset;
   --color-accent-primary-active: unset;
   --color-canvas: unset;
 
-  /** Font weight **/
-  --font-weight-default: normal;
-  --font-weight-bold: 600;
-
-  /** Focus outline **/
+  /** Focus Outline **/
   --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
   --focus-outline-color: var(--color-accent-primary);
   --focus-outline-inset: calc(-1 * var(--focus-outline-width));
   --focus-outline-offset: 2px;
   --focus-outline-width: 2px;
-
-  /** Input **/
-  /*** Button ***/
-  --button-background-color: unset;
-  --button-background-color-hover: unset;
-  --button-background-color-active: unset;
-  --button-border-radius: var(--border-radius-small);
-  --button-font-weight: var(--font-weight-bold);
-  --button-line-height: var(--line-height-small);
-  --button-min-height: var(--size-item-large);
-
-  /*** Text ***/
-  --input-text-line-height: var(--button-line-height);
-  --input-text-min-height: var(--button-min-height);
-
-  /** Link **/
-  /* Not using --focus-outline-offset for links because that's intended for
-    elements with a background, and we only want a slight offset here while not
-    overlapping adjacent text. */
-  --link-focus-outline-offset: 1px;
 
   /** Text **/
   --text-color-deemphasized: color-mix(in srgb, currentColor 60%, transparent);
@@ -103,6 +92,9 @@
     --icon-color-success: light-dark(var(--color-green-50), var(--color-green-30));
     --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
     --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
+
+    /* Text */
+    --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
   }
 }
 

@@ -106,6 +106,9 @@ input[type="url"]:read-only {
 .title {
   margin-block: 0;
   flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 input[type = "url"]:focus:not(:-moz-ui-invalid):invalid ~ .tooltip-container {
@@ -213,6 +216,8 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 
 .field-label {
   display: block;
+  font-size: smaller;
+  color: var(--text-color-deemphasized);
   margin-bottom: 8px;
 }
 
@@ -292,20 +297,20 @@ login-command-button {
 }
 
 .alert-title {
-  font-size: var(--font-size-xlarge);
-  font-weight: var(--font-weight-default);
+  font-size: 22px;
+  font-weight: normal;
   line-height: 1em;
   margin-block: 0 12px;
 }
 
 .alert-date {
   display: block;
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
 }
 
 .alert-link:visited,
 .alert-link {
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -331,7 +336,7 @@ login-command-button {
   inset-block-start: 16px;
   inset-inline-end: 32px;
   color: inherit;
-  font-size: var(--font-size-small);
+  font-size: 13px;
 }
 
 .vulnerable-alert > .alert-learn-more-link {
@@ -362,5 +367,5 @@ login-command-button {
 .error-message-link > a:hover:active {
   color: currentColor;
   text-decoration: underline;
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
 }

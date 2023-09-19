@@ -192,6 +192,8 @@ message-bar-stack > * {
 /* List sections */
 
 .list-section-heading {
+  font-size: 17px;
+  font-weight: 600;
   margin-bottom: 16px;
 }
 
@@ -299,7 +301,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .addon-name {
   font-size: 16px;
-  font-weight: var(--font-weight-bold);
+  font-weight: 600;
   line-height: 22px;
   margin: 0;
   margin-inline-end: 8px;
@@ -356,7 +358,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .theme-enable-button {
   min-width: auto;
-  font-size: var(--font-size-small);
+  font-size: 13px;
   min-height: auto;
   height: 24px;
   margin: 0;
