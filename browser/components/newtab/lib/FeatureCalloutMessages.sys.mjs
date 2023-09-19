@@ -652,10 +652,16 @@ const MESSAGES = () => {
             ],
             content: {
               position: "callout",
-              // TODO - Fluent strings
-              subtitle:
-                "Get back to review checker whenever you see the shopping cart.",
-              dismiss_button: { action: { dismiss: true } },
+              subtitle: {
+                string_id: "shopping-callout-closed-opted-in-subtitle",
+                marginInline: "0 40px",
+              },
+              dismiss_button: {
+                action: { dismiss: true },
+                size: "small",
+                marginBlock: "24px 0",
+                marginInline: "0 24px",
+              },
               page_event_listeners: [
                 {
                   params: {
@@ -700,10 +706,18 @@ const MESSAGES = () => {
             ],
             content: {
               position: "callout",
-              title: "One click to reliable reviews",
-              subtitle:
-                "Give review checker a try whenever you see the shopping cart. Get insights from real shoppers quickly — before you buy.",
-              dismiss_button: { action: { dismiss: true } },
+              title: {
+                string_id: "shopping-callout-closed-not-opted-in-title",
+              },
+              subtitle: {
+                string_id: "shopping-callout-closed-not-opted-in-subtitle",
+              },
+              dismiss_button: {
+                action: { dismiss: true },
+                size: "small",
+                marginBlock: "24px 0",
+                marginInline: "0 24px",
+              },
               page_event_listeners: [
                 {
                   params: {
@@ -748,15 +762,22 @@ const MESSAGES = () => {
             ],
             content: {
               position: "callout",
-              title: "Are these reviews reliable? Find out fast.",
-              subtitle:
-                "Open review checker to see an adjusted rating with unreliable reviews removed. Plus, see highlights from recent authentic reviews.",
+              title: { string_id: "shopping-callout-pdp-opted-in-title" },
+              subtitle: { string_id: "shopping-callout-pdp-opted-in-subtitle" },
               logo: {
                 imageURL:
-                  "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
-                height: "162px",
+                  "chrome://browser/content/shopping/assets/ratingLight.avif",
+                darkModeImageURL:
+                  "chrome://browser/content/shopping/assets/ratingDark.avif",
+                height: "245px",
+                marginBlock: "-10px -20px",
               },
-              dismiss_button: { action: { dismiss: true } },
+              dismiss_button: {
+                action: { dismiss: true },
+                size: "small",
+                marginBlock: "24px 0",
+                marginInline: "0 24px",
+              },
               page_event_listeners: [
                 {
                   params: {
