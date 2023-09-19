@@ -24,28 +24,23 @@ static bool Contains(const std::string& str, const std::string& part) {
  * For example strings:
  * https://hackmd.io/Ductv3pQTMej74gbveD4yw
  */
-static std::optional<std::string> ChooseDeviceReplacement(
-    const std::string& str) {
+static std::string ChooseDeviceReplacement(const std::string& str) {
   if (str.find("llvmpipe") == 0) return "llvmpipe";
   if (str.find("Apple") == 0) return "Apple M1";
 
   std::smatch m;
 
   // -
-  // AMD
 
-  {
+  if (Contains(str, "AMD ") || Contains(str, "FirePro") ||
+      Contains(str, "Radeon")) {
     static const std::string RADEON_HD_3000 = "Radeon HD 3200 Graphics";
     static const std::string RADEON_HD_5850 = "Radeon HD 5850";
     static const std::string RADEON_R9_290 = "Radeon R9 200 Series";
-    const auto& RADEON_D3D_FL10_1 = RADEON_HD_3000;
 
-    if (Contains(str, "REMBRANDT")) {  // Mobile 6xxx iGPUs
-      return RADEON_R9_290;
-    }
-    if (Contains(str, "RENOIR")) {  // Desktop 4xxxG iGPUs
-      return RADEON_R9_290;
-    }
+    const auto RADEON_D3D_FL10_1 = RADEON_HD_3000;
+    const auto RADEON_GCN_GEN2 = RADEON_R9_290;  // GCN Gen2
+
     if (Contains(str, "Vega")) {
       return RADEON_R9_290;
     }
@@ -55,7 +50,6 @@ static std::optional<std::string> ChooseDeviceReplacement(
     if (Contains(str, "Fury")) {
       return RADEON_R9_290;
     }
-
     static const std::regex kRadeon(
         "Radeon.*?((R[579X]|HD) )?([0-9][0-9][0-9]+)");
     if (std::regex_search(str, m, kRadeon)) {
@@ -74,24 +68,23 @@ static std::optional<std::string> ChooseDeviceReplacement(
       // R5/7/9/X
       return RADEON_R9_290;
     }
-
     static const std::regex kFirePro("FirePro.*?([VDW])[0-9][0-9][0-9]+");
     if (std::regex_search(str, m, kFirePro)) {
       const auto& vdw = m.str(1);
       if (vdw == "V") {
-        return RADEON_D3D_FL10_1;  // FL10_1
+        return RADEON_HD_3000;  // FL10_1
       }
       return RADEON_R9_290;
     }
 
+    if (Contains(str, "RENOIR")) {
+      return RADEON_R9_290;
+    }
     if (Contains(str, "ARUBA")) {
       return RADEON_HD_5850;
     }
 
-    if (Contains(str, "AMD ") || Contains(str, "FirePro") ||
-        Contains(str, "Radeon")) {
-      return RADEON_D3D_FL10_1;
-    }
+    return RADEON_D3D_FL10_1;
   }
 
   // -
@@ -273,66 +266,53 @@ static std::optional<std::string> ChooseDeviceReplacement(
   static const std::string D3D_WARP = "Microsoft Basic Render Driver";
   if (Contains(str, D3D_WARP)) return str;
 
-  return {};
+  gfxCriticalNote << "Couldn't sanitize RENDERER device: " << str;
+  return "Generic Renderer";
 }
 
 // -
 
-std::string SanitizeRenderer(const std::string& raw_renderer) {
+std::string SanitizeRenderer(const std::string& str) {
   std::smatch m;
 
-  const std::string GENERIC_RENDERER = "Generic Renderer";
+  // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0,
+  // D3D11-27.20.1020.2002)"
+  static const std::regex kReAngle(
+      "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
+  if (std::regex_match(str, m, kReAngle)) {
+    const auto& vendor = m.str(1);
+    const auto& renderer = m.str(2);
+    const auto& d3d_suffix = m.str(3);
 
-  const auto replacementDevice = [&]() -> std::optional<std::string> {
-    // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0,
-    // D3D11-27.20.1020.2002)"
-    static const std::regex kReAngle(
-        "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
-    if (std::regex_match(raw_renderer, m, kReAngle)) {
-      const auto& vendor = m.str(1);
-      const auto& renderer = m.str(2);
-      const auto& d3d_suffix = m.str(3);
-
-      auto renderer2 = ChooseDeviceReplacement(renderer);
-      if (!renderer2) {
-        gfxCriticalNote << "Couldn't sanitize ANGLE renderer \"" << renderer
-                        << "\" from GL_RENDERER \"" << raw_renderer;
-        renderer2 = GENERIC_RENDERER;
-      }
-      return std::string("ANGLE (") + vendor + ", " + *renderer2 + d3d_suffix +
-             ")";
-    } else if (Contains(raw_renderer, "ANGLE")) {
-      gfxCriticalError() << "Failed to parse ANGLE renderer: " << raw_renderer;
-      return {};
-    }
-
-    static const std::regex kReOpenglEngine("(.*) OpenGL Engine");
-    static const std::regex kRePcieSse2("(.*)(/PCIe?/SSE2)");
-    static const std::regex kReStandard("(.*)( [(].*[)])");
-    if (std::regex_match(raw_renderer, m, kReOpenglEngine)) {
-      const auto& dev = m.str(1);
-      return ChooseDeviceReplacement(dev);
-    }
-    if (std::regex_match(raw_renderer, m, kRePcieSse2)) {
-      const auto& dev = m.str(1);
-      return ChooseDeviceReplacement(dev);
-    }
-    if (std::regex_match(raw_renderer, m, kReStandard)) {
-      const auto& dev = m.str(1);
-      return ChooseDeviceReplacement(dev);
-    }
-
-    const auto& dev = raw_renderer;
-    return ChooseDeviceReplacement(dev);
-  }();
-
-  if (!replacementDevice) {
-    gfxCriticalNote << "Couldn't sanitize GL_RENDERER \"" << raw_renderer
-                    << "\"";
-    return GENERIC_RENDERER;
+    const auto renderer2 = ChooseDeviceReplacement(renderer);
+    return std::string("ANGLE (") + vendor + ", " + renderer2 + d3d_suffix +
+           ")";
+  } else if (Contains(str, "ANGLE")) {
+    gfxCriticalError() << "Failed to parse ANGLE renderer: " << str;
   }
 
-  return *replacementDevice + ", or similar";
+  static const std::regex kReOpenglEngine("(.*) OpenGL Engine");
+  static const std::regex kRePcieSse2("(.*)(/PCIe?/SSE2)");
+  static const std::regex kReStandard("(.*)( [(].*[)])");
+  if (std::regex_match(str, m, kReOpenglEngine)) {
+    const auto& dev = m.str(1);
+    const auto dev2 = ChooseDeviceReplacement(dev);
+    return dev2;
+  }
+  if (std::regex_match(str, m, kRePcieSse2)) {
+    const auto& dev = m.str(1);
+    const auto dev2 = ChooseDeviceReplacement(dev);
+    return dev2 + m.str(2);
+  }
+  if (std::regex_match(str, m, kReStandard)) {
+    const auto& dev = m.str(1);
+    const auto dev2 = ChooseDeviceReplacement(dev);
+    return dev2;
+  }
+
+  const auto& dev = str;
+  const auto dev2 = ChooseDeviceReplacement(dev);
+  return dev2;
 }
 
 };  // namespace webgl
