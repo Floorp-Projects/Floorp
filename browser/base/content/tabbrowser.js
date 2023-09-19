@@ -759,7 +759,10 @@
     },
 
     _notifyPinnedStatus(aTab) {
-      aTab.linkedBrowser.browsingContext.isAppTab = aTab.pinned;
+      // browsingContext is expected to not be defined on discarded tabs.
+      if (aTab.linkedBrowser.browsingContext) {
+        aTab.linkedBrowser.browsingContext.isAppTab = aTab.pinned;
+      }
 
       let event = document.createEvent("Events");
       event.initEvent(aTab.pinned ? "TabPinned" : "TabUnpinned", true, false);
