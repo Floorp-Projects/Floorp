@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1db7a958b945838c6
  1 file changed, 28 insertions(+)
 
 diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
-index c448e94385..85120424ea 100644
+index bb1babd7af..7f518c4db3 100644
 --- a/modules/video_capture/linux/video_capture_pipewire.cc
 +++ b/modules/video_capture/linux/video_capture_pipewire.cc
-@@ -282,6 +282,10 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+@@ -284,6 +284,10 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
        &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
        SPA_POD_Id(SPA_META_Header), SPA_PARAM_META_size,
        SPA_POD_Int(sizeof(struct spa_meta_header)))));
@@ -31,7 +31,7 @@ index c448e94385..85120424ea 100644
    pw_stream_update_params(stream_, params.data(), params.size());
  }
  
-@@ -319,12 +323,36 @@ void VideoCaptureModulePipeWire::OnStreamProcess(void* data) {
+@@ -322,12 +326,36 @@ void VideoCaptureModulePipeWire::OnStreamProcess(void* data) {
    that->ProcessBuffers();
  }
  

@@ -177,6 +177,8 @@ int32_t VideoCaptureModulePipeWire::StopCapture() {
 }
 
 bool VideoCaptureModulePipeWire::CaptureStarted() {
+  MutexLock lock(&api_lock_);
+
   return started_;
 }
 
@@ -298,6 +300,7 @@ void VideoCaptureModulePipeWire::OnStreamStateChanged(
       static_cast<VideoCaptureModulePipeWire*>(data);
   RTC_DCHECK(that);
 
+  MutexLock lock(&that->api_lock_);
   switch (state) {
     case PW_STREAM_STATE_STREAMING:
       that->started_ = true;
