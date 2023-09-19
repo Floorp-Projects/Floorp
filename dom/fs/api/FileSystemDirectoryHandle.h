@@ -46,7 +46,7 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
   FileSystemHandleKind Kind() const override;
 
   struct IteratorData {
-    UniquePtr<FileSystemDirectoryIterator::Impl> mImpl;
+    RefPtr<FileSystemDirectoryIterator::Impl> mImpl;
   };
 
   void InitAsyncIteratorData(IteratorData& aData,

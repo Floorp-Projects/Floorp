@@ -23,8 +23,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemDirectoryIterator, mGlobal);
 
 FileSystemDirectoryIterator::FileSystemDirectoryIterator(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    UniquePtr<Impl> aImpl)
-    : mGlobal(aGlobal), mManager(aManager), mImpl(std::move(aImpl)) {}
+    RefPtr<Impl>& aImpl)
+    : mGlobal(aGlobal), mManager(aManager), mImpl(aImpl) {}
 
 // WebIDL Boilerplate
 

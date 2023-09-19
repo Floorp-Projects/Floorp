@@ -16,6 +16,7 @@
 #include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/IterableIterator.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
@@ -117,9 +118,9 @@ class DoubleBufferQueueImpl
     return promise.forget();
   }
 
-  ~DoubleBufferQueueImpl() = default;
-
  protected:
+  ~DoubleBufferQueueImpl() override = default;
+
   void next(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
             RefPtr<Promise> aResult, ErrorResult& aError) {
     LOG_VERBOSE(("next"));
@@ -138,33 +139,38 @@ class DoubleBufferQueueImpl
 
       auto newPage = MakeRefPtr<FileSystemEntryMetadataArray>();
 
-      RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-          [global = nsCOMPtr<nsIGlobalObject>(aGlobal),
-           manager = RefPtr<FileSystemManager>(aManager), newPage, aResult,
-           this](JSContext* aCx, JS::Handle<JS::Value> aValue) mutable {
-            MOZ_ASSERT(0u == mWithinPageIndex);
+      promise->AddCallbacksWithCycleCollectedArgs(
+          [self = RefPtr(this), newPage](
+              JSContext*, JS::Handle<JS::Value>, ErrorResult&,
+              RefPtr<FileSystemManager>& aManager, RefPtr<Promise>& aResult) {
+            MOZ_ASSERT(0u == self->mWithinPageIndex);
             MOZ_ASSERT(newPage->Length() <= PageSize);
 
-            const size_t startPos = mCurrentPageIsLastPage ? 0u : PageSize;
-            if (mData.Length() < 2 * PageSize) {
-              mData.InsertElementsAt(startPos, newPage->Elements(),
-                                     newPage->Length());
+            const size_t startPos =
+                self->mCurrentPageIsLastPage ? 0u : PageSize;
+            if (self->mData.Length() < 2 * PageSize) {
+              self->mData.InsertElementsAt(startPos, newPage->Elements(),
+                                           newPage->Length());
             } else {
-              mData.ReplaceElementsAt(startPos, newPage->Length(),
-                                      newPage->Elements(), newPage->Length());
+              self->mData.ReplaceElementsAt(startPos, newPage->Length(),
+                                            newPage->Elements(),
+                                            newPage->Length());
             }
-            MOZ_ASSERT(mData.Length() <= 2 * PageSize);
-            mWithinPageEnd = newPage->Length();
+            MOZ_ASSERT(self->mData.Length() <= 2 * PageSize);
+            self->mWithinPageEnd = newPage->Length();
 
             Maybe<DataType> value;
             if (0 != newPage->Length()) {
-              nextInternal(value);
+              self->nextInternal(value);
             }
 
-            ResolveValue(global, manager, value, aResult);
+            self->ResolveValue(aResult->GetGlobalObject(), aManager, value,
+                               aResult);
           },
-          [aResult](nsresult aRv) { aResult->MaybeReject(aRv); });
-      promise->AppendNativeHandler(listener);
+          [](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&,
+             RefPtr<FileSystemManager>&,
+             RefPtr<Promise>& aResult) { aResult->MaybeReject(aValue); },
+          aManager, aResult);
 
       FileSystemRequestHandler{}.GetEntries(aManager, mEntryId, mPageNumber,
                                             promise, newPage, aError);
@@ -218,20 +224,21 @@ using UnderlyingQueue = DoubleBufferQueueImpl<ValueResolver<Type>>;
 
 }  // namespace
 
-UniquePtr<mozilla::dom::FileSystemDirectoryIterator::Impl>
+already_AddRefed<mozilla::dom::FileSystemDirectoryIterator::Impl>
 FileSystemDirectoryIteratorFactory::Create(
     const FileSystemEntryMetadata& aMetadata,
     IterableIteratorBase::IteratorType aType) {
   if (IterableIteratorBase::Entries == aType) {
-    return MakeUnique<UnderlyingQueue<IterableIteratorBase::Entries>>(
+    return MakeAndAddRef<UnderlyingQueue<IterableIteratorBase::Entries>>(
         aMetadata);
   }
 
   if (IterableIteratorBase::Values == aType) {
-    return MakeUnique<UnderlyingQueue<IterableIteratorBase::Values>>(aMetadata);
+    return MakeAndAddRef<UnderlyingQueue<IterableIteratorBase::Values>>(
+        aMetadata);
   }
 
-  return MakeUnique<UnderlyingQueue<IterableIteratorBase::Keys>>(aMetadata);
+  return MakeAndAddRef<UnderlyingQueue<IterableIteratorBase::Keys>>(aMetadata);
 }
 
 }  // namespace mozilla::dom::fs
