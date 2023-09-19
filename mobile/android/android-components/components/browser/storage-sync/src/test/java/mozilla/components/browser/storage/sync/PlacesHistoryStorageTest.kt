@@ -545,6 +545,7 @@ class PlacesHistoryStorageTest {
         assertEquals(0, visits.size)
     }
 
+    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1853687")
     @Test
     fun `store can delete by 'range'`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
