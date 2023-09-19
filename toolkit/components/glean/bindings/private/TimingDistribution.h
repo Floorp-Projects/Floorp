@@ -7,12 +7,17 @@
 #ifndef mozilla_glean_GleanTimingDistribution_h
 #define mozilla_glean_GleanTimingDistribution_h
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/glean/bindings/DistributionData.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/TimeStamp.h"
-#include "nsIGleanMetrics.h"
 #include "nsTArray.h"
+
+namespace mozilla::dom {
+struct GleanDistributionData;
+}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -91,12 +96,23 @@ class TimingDistributionMetric {
 };
 }  // namespace impl
 
-class GleanTimingDistribution final : public nsIGleanTimingDistribution {
+class GleanTimingDistribution final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANTIMINGDISTRIBUTION
+  explicit GleanTimingDistribution(uint64_t aId, nsISupports* aParent)
+      : GleanMetric(aParent), mTimingDist(aId) {}
 
-  explicit GleanTimingDistribution(uint64_t aId) : mTimingDist(aId){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  uint64_t Start();
+  void StopAndAccumulate(uint64_t aId);
+  void Cancel(uint64_t aId);
+
+  void TestGetValue(const nsACString& aPingName,
+                    dom::Nullable<dom::GleanDistributionData>& aRetval,
+                    ErrorResult& aRv);
+
+  void TestAccumulateRawMillis(uint64_t aSample);
 
  private:
   virtual ~GleanTimingDistribution() = default;

@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanUrl_h
 #define mozilla_glean_GleanUrl_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -52,12 +53,18 @@ class UrlMetric {
 };
 }  // namespace impl
 
-class GleanUrl final : public nsIGleanUrl {
+class GleanUrl final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANURL
+  explicit GleanUrl(uint32_t aId, nsISupports* aParent)
+      : GleanMetric(aParent), mUrl(aId) {}
 
-  explicit GleanUrl(uint32_t aId) : mUrl(aId){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void Set(const nsACString& aValue);
+
+  void TestGetValue(const nsACString& aPingName, nsCString& aResult,
+                    ErrorResult& aRv);
 
  private:
   virtual ~GleanUrl() = default;

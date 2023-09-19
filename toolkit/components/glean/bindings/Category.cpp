@@ -12,7 +12,7 @@
 
 namespace mozilla::glean {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Category)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Category, mParent)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Category)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Category)
@@ -26,7 +26,7 @@ JSObject* Category::WrapObject(JSContext* aCx,
   return dom::GleanCategory_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
+already_AddRefed<GleanMetric> Category::NamedGetter(const nsAString& aName,
                                                     bool& aFound) {
   aFound = false;
 
@@ -45,8 +45,8 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
     return nullptr;
   }
 
-  aFound = true;
-  return NewMetricFromId(metricIdx.value());
+  aFound = true;  // Should always be true (MOZ_ASSERT_UNREACHABLE-guarded).
+  return NewMetricFromId(metricIdx.value(), mParent);
 }
 
 bool Category::NameIsEnumerable(const nsAString& aName) { return false; }

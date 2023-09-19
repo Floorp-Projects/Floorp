@@ -7,10 +7,15 @@
 #ifndef mozilla_glean_GleanNumerator_h
 #define mozilla_glean_GleanNumerator_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsIGleanMetrics.h"
 #include "nsString.h"
+
+namespace mozilla::dom {
+struct GleanRateData;
+}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -54,12 +59,19 @@ class NumeratorMetric {
 };
 }  // namespace impl
 
-class GleanNumerator final : public nsIGleanNumerator {
+class GleanNumerator final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANNUMERATOR
+  explicit GleanNumerator(uint32_t id, nsISupports* aParent)
+      : GleanMetric(aParent), mNumerator(id) {}
 
-  explicit GleanNumerator(uint32_t id) : mNumerator(id){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void AddToNumerator(int32_t aAmount);
+
+  void TestGetValue(const nsACString& aPingName,
+                    dom::Nullable<dom::GleanRateData>& aResult,
+                    ErrorResult& aRv);
 
  private:
   virtual ~GleanNumerator() = default;

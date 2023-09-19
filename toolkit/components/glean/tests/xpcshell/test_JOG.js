@@ -213,14 +213,6 @@ add_task(async function test_jog_event_works() {
   };
   Assert.deepEqual(expectedExtra, events[0].extra);
 
-  // Quantities need to be non-negative.
-  let extra4 = {
-    extra2: -1,
-  };
-  Glean.jogCat.jogEventWithExtra.record(extra4);
-  events = Glean.jogCat.jogEventWithExtra.testGetValue();
-  Assert.equal(1, events.length, "Recorded one event too many.");
-
   // Invalid extra keys don't crash, the event is not recorded.
   let extra3 = {
     extra1_nonexistent_extra: "this does not crash",
@@ -229,7 +221,7 @@ add_task(async function test_jog_event_works() {
   // And test methods throw appropriately
   Assert.throws(
     () => Glean.jogCat.jogEventWithExtra.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
+    /DataError/
   );
 });
 
@@ -285,10 +277,7 @@ add_task(async function test_jog_custom_distribution_works() {
 
   // Negative values will not be recorded, instead an error is recorded.
   Glean.jogCat.jogCustomDist.accumulateSamples([-7]);
-  Assert.throws(
-    () => Glean.jogCat.jogCustomDist.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
-  );
+  Assert.throws(() => Glean.jogCat.jogCustomDist.testGetValue(), /DataError/);
 });
 
 add_task(async function test_jog_custom_pings() {
@@ -382,7 +371,7 @@ add_task(async function test_jog_labeled_boolean_works() {
   Glean.jogCat.jogLabeledBool["1".repeat(72)].set(true);
   Assert.throws(
     () => Glean.jogCat.jogLabeledBool.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Should throw because of a recording error."
   );
 });
@@ -451,7 +440,7 @@ add_task(async function test_jog_labeled_counter_works() {
   Glean.jogCat.jogLabeledCounter["1".repeat(72)].add(1);
   Assert.throws(
     () => Glean.jogCat.jogLabeledCounter.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Should throw because of a recording error."
   );
 });
@@ -490,7 +479,7 @@ add_task(async function test_jog_labeled_counter_with_static_labels_works() {
   // TODO:(bug 1766515) - This should throw.
   /*Assert.throws(
     () => Glean.jogCat.jogLabeledCounterWithLabels.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    /DataError/,
     "Should throw because of a recording error."
   );*/
   Assert.equal(
@@ -525,7 +514,7 @@ add_task(async function test_jog_labeled_string_works() {
   Glean.jogCat.jogLabeledString["1".repeat(72)].set("valid");
   Assert.throws(
     () => Glean.jogCat.jogLabeledString.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
+    /DataError/
   );
 });
 
@@ -563,7 +552,7 @@ add_task(async function test_jog_labeled_string_with_labels_works() {
   // TODO:(bug 1766515) - This should throw.
   /*Assert.throws(
     () => Glean.jogCat.jogLabeledStringWithLabels.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
+    /DataError/
   );*/
   Assert.equal(
     "valid",

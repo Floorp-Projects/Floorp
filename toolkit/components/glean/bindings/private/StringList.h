@@ -8,7 +8,8 @@
 #define mozilla_glean_GleanStringList_h
 
 #include "mozilla/Maybe.h"
-#include "nsIGleanMetrics.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/glean/bindings/GleanMetric.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -66,12 +67,20 @@ class StringListMetric {
 };
 }  // namespace impl
 
-class GleanStringList final : public nsIGleanStringList {
+class GleanStringList final : public GleanMetric {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGLEANSTRINGLIST
+  explicit GleanStringList(uint32_t aId, nsISupports* aParent)
+      : GleanMetric(aParent), mStringList(aId) {}
 
-  explicit GleanStringList(uint32_t aId) : mStringList(aId){};
+  virtual JSObject* WrapObject(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
+
+  void Add(const nsACString& aValue);
+  void Set(const dom::Sequence<nsCString>& aValue);
+
+  void TestGetValue(const nsACString& aPingName,
+                    dom::Nullable<nsTArray<nsCString>>& aResult,
+                    ErrorResult& aRv);
 
  private:
   virtual ~GleanStringList() = default;

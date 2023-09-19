@@ -1,19 +1,26 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include "nsISupports.idl"
+// The definitions in this file are not sorted.
+// Please add new ones to the bottom.
 
-[scriptable, uuid(d3180fe0-19fa-11eb-8b6f-0800200c9a66)]
-interface nsIGleanBoolean : nsISupports
-{
+/**
+ * Base interface for all metric types to make typing more expressive.
+ */
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanMetric {};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanBoolean : GleanMetric {
   /**
    * Set to the specified boolean value.
    *
    * @param value the value to set.
    */
-  void set(in bool value);
+  undefined set(boolean value);
 
   /**
    * **Test-only API**
@@ -30,14 +37,14 @@ interface nsIGleanBoolean : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  boolean? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(aa15fd20-1e8a-11eb-9bec-0800200c9a66)]
-interface nsIGleanDatetime : nsISupports
-{
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanDatetime : GleanMetric {
   /**
    * Set the datetime to the provided value, or the local now.
    * The internal value will store the local timezone.
@@ -48,13 +55,12 @@ interface nsIGleanDatetime : nsISupports
    * @param aValue The (optional) time value as PRTime (nanoseconds since epoch).
    *        Defaults to local now.
    */
-  [optional_argc]
-  void set([optional] in PRTime aValue);
+  undefined set(optional long long aValue);
 
   /**
    * **Test-only API**
    *
-   * Gets the currently stored value as an integer.
+   * Gets the currently stored value as a Date.
    *
    * This function will attempt to await the last parent-process task (if any)
    * writing to the the metric's storage engine before returning a value.
@@ -67,21 +73,20 @@ interface nsIGleanDatetime : nsISupports
    *        for. Defaults to the first value in `send_in_pings`.
    *
    * @return value of the stored metric as a JS Date with timezone,
-   *         or undefined if there is no value.
+   *         or null if there is no value.
    */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  any testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(05b89d2a-d57c-11ea-82da-3f63399a6f5a)]
-interface nsIGleanCounter : nsISupports
-{
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanCounter : GleanMetric {
   /*
-  * Increases the counter by `amount`.
-  *
-  * @param amount The amount to increase by. Should be positive.
-  */
-  void add(in int32_t amount);
+   * Increases the counter by `amount`.
+   *
+   * @param aAmount The (optional) amount to increase by. Should be positive. Defaults to 1.
+   */
+  undefined add(optional long aAmount = 1);
 
   /**
    * **Test-only API**
@@ -98,21 +103,25 @@ interface nsIGleanCounter : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  long? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(92e14730-9b5f-45a1-b018-f588d0b964d8)]
-interface nsIGleanTimingDistribution : nsISupports
-{
+dictionary GleanDistributionData {
+  required unsigned long long sum;
+  required record<UTF8String, unsigned long long> values;
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanTimingDistribution : GleanMetric {
   /**
    * Starts tracking time for the provided metric.
    *
    * @returns A unique timer id for the new timer
    */
-  [implicit_jscontext]
-  jsval start();
+  unsigned long long start();
 
   /**
    * Stops tracking time for the provided metric and timer id.
@@ -124,7 +133,7 @@ interface nsIGleanTimingDistribution : nsISupports
    * @param aId The TimerId associated with this timing. This allows for
    *            concurrent timing of events associated with different ids.
    */
-  void stopAndAccumulate(in uint64_t aId);
+  undefined stopAndAccumulate(unsigned long long aId);
 
   /**
    * Aborts a previous `start` call. No error is recorded if no `start` was
@@ -132,206 +141,7 @@ interface nsIGleanTimingDistribution : nsISupports
    *
    * @param aId The TimerID whose `start` you wish to abort.
    */
-  void cancel(in uint64_t aId);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a DistributionData.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in ACString aPingName);
-
-  /**
-   * **Test-only API**
-   *
-   * Accumulates a raw numeric sample of milliseconds.
-   *
-   * Test-only until we find a use-case and decent JS Time Duration type.
-   *
-   * @param aSample The sample, in milliseconds, to add.
-   */
-  void testAccumulateRawMillis(in uint64_t aSample);
-};
-
-[scriptable, uuid(eea5ed46-16ba-46cd-bb1f-504581987fe1)]
-interface nsIGleanMemoryDistribution : nsISupports
-{
-  /*
-   * Accumulates the provided sample in the metric.
-   *
-   * @param aSample The sample to be recorded by the metric. The sample is
-   *                assumed to be in the confgured memory unit of the metric.
-   *
-   * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
-   * InvalidValue error is recorded.
-   */
-  void accumulate(in uint64_t aSample);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a DistributionData.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in ACString aPingName);
-};
-
-[scriptable, uuid(45cc016f-c1d5-4d54-aaa5-a802cf65f23b)]
-interface nsIGleanCustomDistribution : nsISupports
-{
-  /*
-   * Accumulates the provided signed samples in the metric.
-   *
-   * @param aSamples - The vector holding the samples to be recorded by the metric.
-   *
-   * Notes: Discards any negative value in `samples`
-   * and report an `ErrorType::InvalidValue` for each of them.
-   */
-  void accumulateSamples(in Array<int64_t> aSamples);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a DistributionData.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in ACString aPingName);
-};
-
-[scriptable, function, uuid(e5447f62-4b03-497c-81e9-6ab683d20380)]
-interface nsIGleanPingTestCallback : nsISupports
-{
-  void call(in ACString aReason);
-};
-
-[scriptable, uuid(5223a48b-687d-47ff-a629-fd4a72d1ecfa)]
-interface nsIGleanPing : nsISupports
-{
-  /**
-   * Collect and submit the ping for eventual upload.
-   *
-   * This will collect all stored data to be included in the ping.
-   * Data with lifetime `ping` will then be reset.
-   *
-   * If the ping is configured with `send_if_empty = false`
-   * and the ping currently contains no content,
-   * it will not be queued for upload.
-   * If the ping is configured with `send_if_empty = true`
-   * it will be queued for upload even if empty.
-   *
-   * Pings always contain the `ping_info` and `client_info` sections.
-   * See [ping sections](https://mozilla.github.io/glean/book/user/pings/index.html#ping-sections)
-   * for details.
-   *
-   * @param aReason - Optional. The reason the ping is being submitted.
-   *                  Must match one of the configured `reason_codes`.
-   */
-  void submit([optional] in ACString aReason);
-
-  /**
-   * **Test-only API**
-   *
-   * Register a callback to be called right before this ping is next submitted.
-   * The provided function is called exactly once before submitting.
-   *
-   * Note: The callback will be called on any call to submit.
-   * A ping might not be sent afterwards, e.g. if the ping is empty and
-   * `send_if_empty` is `false`.
-   *
-   * @param aCallback - The callback to call on the next submit.
-   */
-  void testBeforeNextSubmit(in nsIGleanPingTestCallback aCallback);
-};
-
-[scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
-interface nsIGleanString : nsISupports
-{
-  /*
-  * Set to the specified value.
-  *
-  * @param value The string to set the metric to.
-  */
-  void set(in AUTF8String value);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a string.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
-};
-
-[scriptable, uuid(46751205-2ac7-47dc-91d2-ef4a95ef2af9)]
-interface nsIGleanStringList : nsISupports
-{
-  /**
-   * Adds a new string to the list.
-   *
-   * Truncates the value and logs an error if it is longer than 50 bytes.
-   *
-   * @param value The string to add.
-   */
-  void add(in AUTF8String value);
-
-  /**
-   * Sets to a specific list of strings.
-   *
-   * Truncates the list and logs an error if longer than 20 items.
-   * Truncates any item longer than 50 bytes and logs an error.
-   *
-   * @param value The list of strings to set.
-   */
-  void set(in Array<AUTF8String> value);
+  undefined cancel(unsigned long long aId);
 
   /**
    * **Test-only API**
@@ -348,15 +158,163 @@ interface nsIGleanStringList : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  GleanDistributionData? testGetValue(optional UTF8String aPingName = "");
+
+  /**
+   * **Test-only API**
+   *
+   * Accumulates a raw numeric sample of milliseconds.
+   *
+   * @param aSample The sample, in milliseconds, to add.
+   */
+  [ChromeOnly]
+  undefined testAccumulateRawMillis(unsigned long long aSample);
 };
 
-[scriptable, uuid(2586530c-030f-11eb-93cb-cbf30d25225a)]
-interface nsIGleanTimespan : nsISupports
-{
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanMemoryDistribution : GleanMetric {
+  /**
+   * Accumulates the provided signed sample in the metric.
+   *
+   * @param aSample The sample to be recorded by the metric. The sample is
+   *                assumed to be in the confgured memory unit of the metric.
+   *
+   * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
+   * InvalidValue error is recorded.
+   */
+  undefined accumulate(unsigned long long aSample);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a DistributionData.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  GleanDistributionData? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanCustomDistribution : GleanMetric {
+  /**
+   * Accumulates the provided signed samples in the metric.
+   *
+   * @param aSamples - The vector holding the samples to be recorded by the metric.
+   *
+   * Notes: Discards any negative value in `samples`
+   * and report an `ErrorType::InvalidValue` for each of them.
+   */
+  undefined accumulateSamples(sequence<long long> aSamples);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a DistributionData.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  GleanDistributionData? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanString : GleanMetric {
+  /**
+   * Set the string to the provided value.
+   *
+   * @param aValue The string to set the metric to.
+   */
+  undefined set(UTF8String? aValue);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a string.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  UTF8String? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanStringList : GleanMetric {
+  /**
+   * Adds a new string to the list.
+   *
+   * Truncates the value and logs an error if it is longer than 100 bytes.
+   *
+   * @param value The string to add.
+   */
+  undefined add(UTF8String value);
+
+  /**
+   * Sets the string_list to the provided list of strings.
+   *
+   * Truncates the list and logs an error if longer than 100 items.
+   * Truncates any item longer than 100 bytes and logs an error.
+   *
+   * @param aValue The list of strings to set the metric to.
+   */
+  undefined set(sequence<UTF8String> aValue);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  sequence<UTF8String>? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanTimespan : GleanMetric {
   /**
    * Start tracking time for the provided metric.
    *
@@ -364,7 +322,7 @@ interface nsIGleanTimespan : nsISupports
    * called with no corresponding [stop]): in that case the original
    * start time will be preserved.
    */
-  void start();
+  undefined start();
 
   /**
    * Stop tracking time for the provided metric.
@@ -374,14 +332,14 @@ interface nsIGleanTimespan : nsISupports
    * This will record an error if no [start] was called or there is an already
    * existing value.
    */
-  void stop();
+  undefined stop();
 
   /**
    * Aborts a previous start.
    *
    * Does not record an error if there was no previous call to start.
    */
-  void cancel();
+  undefined cancel();
 
   /**
    * Explicitly sets the timespan value.
@@ -392,127 +350,7 @@ interface nsIGleanTimespan : nsISupports
    * @param aDuration The duration of this timespan, in units matching the
    *        `time_unit` of this metric's definition.
    */
-  void setRaw(in uint32_t aDuration);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as an integer.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  jsval testGetValue([optional] in AUTF8String aPingName);
-};
-
-[scriptable, uuid(395700e7-06f6-46be-adcc-ea58977fda6d)]
-interface nsIGleanUuid : nsISupports
-{
-  /**
-   * Set to the specified value.
-   *
-   * @param aValue The UUID to set the metric to.
-   */
-  void set(in AUTF8String aValue);
-
-  /**
-   * Generate a new random UUID and set the metric to it.
-   */
-  void generateAndSet();
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as an integer.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
-};
-
-[scriptable, uuid(1b01424a-1f55-11eb-92a5-0754f6c3f240)]
-interface nsIGleanEvent : nsISupports
-{
-  /*
-   * Record an event.
-   *
-   * @param aExtra An (optional) map of extra values.
-   */
-  [implicit_jscontext]
-  void record([optional] in jsval aExtra);
-
-  /**
-   * **Test-only API**
-   *
-   * Get a list of currently stored events for this event metric.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   *
-   * The data is an array of objects:
-   *
-   * ```
-   * [
-   *    {
-   *        timestamp: Integer,
-   *        category: String,
-   *        name: String,
-   *        extra: {
-   *          String: String
-   *          ...
-   *        }
-   *    },
-   *    ...
-   * ]
-   * ```
-   *
-   * The difference between event timestamps is in milliseconds
-   * See https://mozilla.github.io/glean/book/user/metrics/event.html for further details.
-   * Due to limitations of numbers in JavaScript, the timestamp will only be accurate up until 2^53.
-   * (This is probably not an issue with the current clock implementation. Probably.)
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
-};
-
-[scriptable, uuid(0558c1b2-2cb1-4e21-a0a0-6a91a35ef219)]
-interface nsIGleanQuantity : nsISupports
-{
-  /**
-   * Set to the specified value.
-   *
-   * @param value the value to set.
-   */
-  void set(in int64_t value);
+  undefined setRaw(unsigned long aDuration);
 
   /**
    * **Test-only API**
@@ -529,20 +367,128 @@ interface nsIGleanQuantity : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  unsigned long long? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(394d9d3b-9e7e-48cc-b76c-a89a51830da3)]
-interface nsIGleanDenominator : nsISupports
-{
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanUuid : GleanMetric {
+  /**
+   * Set to the specified value.
+   *
+   * @param aValue The UUID to set the metric to.
+   */
+  undefined set(UTF8String aValue);
+
+  /**
+   * Generate a new random UUID and set the metric to it.
+   */
+  undefined generateAndSet();
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  UTF8String? testGetValue(optional UTF8String aPingName = "");
+};
+
+dictionary GleanEventRecord {
+  required unsigned long long timestamp;
+  required UTF8String category;
+  required UTF8String name;
+  record<UTF8String, UTF8String> extra;
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanEvent : GleanMetric {
+
   /*
-  * Increases the counter by `amount`.
-  *
-  * @param amount The amount to increase by. Should be positive.
-  */
-  void add(in int32_t amount);
+   * Record an event.
+   *
+   * @param aExtra An (optional) map of extra values.
+   */
+  undefined _record(optional record<UTF8String, UTF8String> aExtra);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   *
+   * The difference between event timestamps is in milliseconds
+   * See https://mozilla.github.io/glean/book/user/metrics/event.html for further details.
+   * Due to limitations of numbers in JavaScript, the timestamp will only be accurate up until 2^53.
+   * (This is probably not an issue with the current clock implementation. Probably.)
+   */
+  [Throws, ChromeOnly]
+  sequence<GleanEventRecord>? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanQuantity : GleanMetric {
+  /**
+   * Set to the specified value.
+   *
+   * @param aValue The value to set the metric to.
+   */
+  undefined set(long long aValue);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  long long? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanDenominator : GleanMetric {
+  /*
+   * Increases the counter by `aAmount`.
+   *
+   * @param aAmount The (optional) amount to increase by. Should be positive. Defaults to 1.
+   */
+  undefined add(optional long aAmount = 1);
 
   /**
    * **Test-only API**
@@ -559,20 +505,25 @@ interface nsIGleanDenominator : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  long? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(153fff71-7edd-49b4-a166-4697aa89c7a1)]
-interface nsIGleanNumerator : nsISupports
-{
+dictionary GleanRateData {
+  required long numerator;
+  required long denominator;
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanNumerator : GleanMetric {
   /*
-  * Increases the numerator by `amount`.
-  *
-  * @param amount The amount to increase by. Should be positive.
-  */
-  void addToNumerator(in int32_t amount);
+   * Increases the numerator by `aAmount`.
+   *
+   * @param aAmount The (optional) amount to increase by. Should be positive. Defaults to 1.
+   */
+  undefined addToNumerator(optional long aAmount = 1);
 
   /**
    * **Test-only API**
@@ -589,28 +540,27 @@ interface nsIGleanNumerator : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  GleanRateData? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(920cf631-2b1e-4efe-ae2e-f03277c3112a)]
-interface nsIGleanRate : nsISupports
-{
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanRate : GleanMetric {
   /*
-  * Increases the numerator by `amount`.
-  *
-  * @param amount The amount to increase by. Should be positive.
-  */
-  void addToNumerator(in int32_t amount);
+   * Increases the numerator by `amount`.
+   *
+   * @param aAmount The (optional) amount to increase by. Should be positive. Defaults to 1.
+   */
+  undefined addToNumerator(optional long aAmount = 1);
 
   /*
-  * Increases the denominator by `amount`.
-  *
-  * @param amount The amount to increase by. Should be positive.
-  */
-  void addToDenominator(in int32_t amount);
+   * Increases the denominator by `amount`.
+   *
+   * @param aAmount The (optional) amount to increase by. Should be positive. Defaults to 1.
+   */
+  undefined addToDenominator(optional long aAmount = 1);
 
   /**
    * **Test-only API**
@@ -627,21 +577,50 @@ interface nsIGleanRate : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  GleanRateData? testGetValue(optional UTF8String aPingName = "");
 };
 
-[scriptable, uuid(a59672c4-bc48-4bfe-8f9c-6f408a59d819)]
-interface nsIGleanUrl : nsISupports
-{
-  /*
-  * Sets to the specified stringified URL.
-  *
-  * @param value The stringified URL to set the metric to.
-  */
-  void set(in AUTF8String value);
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanUrl : GleanMetric {
+  /**
+   * Set to the specified value.
+   *
+   * @param aValue The stringified URL to set the metric to.
+   */
+  undefined set(UTF8String aValue);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or null if there is no value.
+   */
+  [Throws, ChromeOnly]
+  UTF8String? testGetValue(optional UTF8String aPingName = "");
+};
+
+[Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
+interface GleanText : GleanMetric {
+  /**
+   * Set to the provided value.
+   *
+   * @param aValue The text to set the metric to.
+   */
+  undefined set(UTF8String aValue);
 
   /**
    * **Test-only API**
@@ -658,39 +637,8 @@ interface nsIGleanUrl : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or undefined if there is no value.
+   * @return value of the stored metric, or null if there is no value.
    */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
-};
-
-[scriptable, uuid(fafceafb-c3a0-4424-b3b9-b7bd487f6bb4)]
-interface nsIGleanText : nsISupports
-{
-  /*
-  * Set to the specified value.
-  *
-  * @param value The text to set the metric to.
-  */
-  void set(in AUTF8String value);
-
-  /**
-   * **Test-only API**
-   *
-   * Gets the currently stored value as a string.
-   *
-   * This function will attempt to await the last parent-process task (if any)
-   * writing to the the metric's storage engine before returning a value.
-   * This function will not wait for data from child processes.
-   *
-   * This doesn't clear the stored value.
-   * Parent process only. Panics in child processes.
-   *
-   * @param aPingName The (optional) name of the ping to retrieve the metric
-   *        for. Defaults to the first value in `send_in_pings`.
-   *
-   * @return value of the stored metric, or undefined if there is no value.
-   */
-  [implicit_jscontext]
-  jsval testGetValue([optional] in AUTF8String aPingName);
+  [Throws, ChromeOnly]
+  UTF8String? testGetValue(optional UTF8String aPingName = "");
 };

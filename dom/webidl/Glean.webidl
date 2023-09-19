@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface nsISupports;
-
 [Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
 interface GleanCategory {
   /**
@@ -14,7 +12,7 @@ interface GleanCategory {
    * Returns an object of the corresponding metric type,
    * with only the allowed functions available.
    */
-  getter nsISupports (DOMString identifier);
+  getter GleanMetric (DOMString identifier);
 };
 
 [Func="nsGlobalWindowInner::IsGleanNeeded", Exposed=Window]
@@ -41,5 +39,5 @@ interface GleanLabeled {
    * After that, any additional labels will be recorded under the special
    * `OTHER_LABEL` label.
    */
-  getter nsISupports (DOMString identifier);
+  getter GleanMetric (DOMString identifier);
 };
