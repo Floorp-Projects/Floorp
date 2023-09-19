@@ -827,13 +827,11 @@ def eme_choices(target, wmf):
         return ("widevine",)
 
 
-# Widevine is enabled by default in desktop browser builds, except
-# on aarch64 Windows.
-@depends(build_project, eme_choices, target)
-def eme_default(build_project, choices, target):
+# Widevine is enabled by default in desktop browser builds.
+@depends(build_project, eme_choices)
+def eme_default(build_project, choices):
     if build_project == "browser":
-        if target.kernel != "WINNT" or target.cpu != "aarch64":
-            return choices
+        return choices
 
 
 option(
@@ -854,15 +852,6 @@ def eme_modules(value):
 # Fallback to an empty list when eme_choices is empty, setting eme_modules to
 # None.
 set_config("MOZ_EME_MODULES", eme_modules | dependable([]))
-
-
-@depends(eme_modules, target, when=eme_modules)
-def eme_win32_artifact(modules, target):
-    if "widevine" in modules and target.kernel == "WINNT" and target.cpu == "aarch64":
-        return True
-
-
-set_config("MOZ_EME_WIN32_ARTIFACT", eme_win32_artifact)
 
 
 # Media Foundation CDM support

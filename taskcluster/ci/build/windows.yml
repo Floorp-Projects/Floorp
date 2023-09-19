@@ -1429,10 +1429,6 @@ win64-aarch64/opt:
     attributes:
         enable-build-signing: true
         enable-full-crashsymbols: true
-        # We need to package tests in order for the win64-aarch64-eme artifact
-        # build to fetch them, even though no tests run against this task
-        # directly.
-        skip-verify-test-packaging: true
     treeherder:
         platform: windows2012-aarch64/opt
         symbol: B
@@ -1442,7 +1438,6 @@ win64-aarch64/opt:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: aarch64
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -1477,49 +1472,9 @@ win64-aarch64/opt:
     optimization:
         skip-unless-expanded: null
 
-win64-aarch64-eme/opt:
-    description: "AArch64 Win64 Opt w/ EME"
-    index:
-        product: firefox
-        job-name: win64-aarch64-eme-opt
-    treeherder:
-        platform: windows2012-aarch64/opt
-        symbol: Be
-        tier: 1
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: aarch64-eme
-            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
-            USE_ARTIFACT: '1'
-    run:
-        actions: [get-secrets, build]
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-        extra-config:
-            stage_platform: win64-aarch64
-            mozconfig_platform: win64-aarch64
-    dependencies:
-        win32-opt: build-win32/opt
-        win64-aarch64-opt: build-win64-aarch64/opt
-    fetches:
-        toolchain:
-            - linux64-node
-            - linux64-wine
-            - nsis
-        fetch:
-            - upx-3.95-win
-    optimization:
-        skip-unless-expanded: null
-
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
+    use-pgo: win64-shippable/opt
     index:
         product: firefox
         job-name: win64-aarch64-opt
@@ -1527,118 +1482,17 @@ win64-aarch64-shippable/opt:
     attributes:
         shippable: true
         enable-full-crashsymbols: true
-        # Skip the test packaging check because we copy test packages from
-        # another build task rather than generating them in this task.
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: firefox
     treeherder:
         platform: windows2012-aarch64-shippable/opt
-        symbol: B
+        symbol: Bpgo(B)
         tier: 1
-    worker-type: b-linux-gcp
+    run-on-projects: ['release']
+    worker-type: b-linux-xlarge-gcp
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
-            PERFHERDER_EXTRA_OPTIONS: aarch64
-            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
-            USE_ARTIFACT: '1'
-    run:
-        actions: [get-secrets, build]
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-            - taskcluster_nightly.py
-        extra-config:
-            stage_platform: win64-aarch64
-            mozconfig_platform: win64-aarch64
-    dependencies:
-        win32-opt: build-win32-shippable/opt
-        win64-aarch64-opt: build-win64-aarch64-shippable-no-eme/opt
-    fetches:
-        # Abuse fetches to copy the generated-files, langpack, and test
-        # artifacts from the non-eme build directly to the artifacts directory
-        # of this build.
-        win64-aarch64-opt:
-            - artifact: target.test_packages.json
-              extract: false
-              dest: ../artifacts
-            - artifact: target.common.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.cppunittest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.mochitest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.reftest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.talos.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.raptor.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.condprof.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.awsy.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.xpcshell.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.web-platform.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.updater-dep.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.generated-files.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.langpack.xpi
-              extract: false
-              dest: ../artifacts
-        toolchain:
-            - linux64-node
-            - linux64-wine
-            - nsis
-        fetch:
-            - upx-3.95-win
-    optimization:
-        skip-unless-expanded: null
-
-win64-aarch64-shippable-no-eme/opt:
-    description: "AArch64 Win64 Shippable w/o EME"
-    use-pgo: win64-shippable/opt
-    index:
-        product: firefox
-        job-name: win64-aarch64-no-eme-opt
-        type: shippable
-    attributes:
-        enable-full-crashsymbols: true
-        # We need to package tests in order for the actual
-        # win64-aarch64-shippable/opt build to copy them from this task, even
-        # though no tests run against this task directly.
-        skip-verify-test-packaging: true
-    shipping-phase: build
-    shipping-product: firefox
-    treeherder:
-        platform: windows2012-aarch64/opt
-        symbol: Nn
-        tier: 1
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -1652,7 +1506,7 @@ win64-aarch64-shippable-no-eme/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-    run-on-projects: ['all']
+            max_build_output_timeout: 3600
     fetches:
         toolchain:
             - linux64-clang
@@ -1670,11 +1524,10 @@ win64-aarch64-shippable-no-eme/opt:
             - vs
         fetch:
             - upx-3.95-win
-    optimization:
-        skip-unless-expanded: null
 
 win64-aarch64-devedition/opt:
     description: "AArch64 Win64 Dev Edition (shippable)"
+    use-pgo: win64-shippable/opt
     index:
         product: devedition
         job-name: win64-aarch64-opt
@@ -1682,117 +1535,16 @@ win64-aarch64-devedition/opt:
     attributes:
         shippable: true
         enable-full-crashsymbols: true
-        # Skip the test packaging check because we copy test packages from
-        # another build task rather than generating them in this task.
-        skip-verify-test-packaging: true
     shipping-phase: build
     shipping-product: devedition
     treeherder:
         platform: windows2012-aarch64-devedition/opt
-        symbol: B
+        symbol: Bpgo(B)
         tier: 1
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
-            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
-            USE_ARTIFACT: '1'
-    run:
-        actions: [get-secrets, build]
-        options: [append-env-variables-from-configs]
-        script: mozharness/scripts/fx_desktop_build.py
-        secrets: true
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_linux_64_builds.py
-            - taskcluster_nightly.py
-        extra-config:
-            stage_platform: win64-aarch64-devedition
-            mozconfig_platform: win64-aarch64
-        mozconfig-variant: devedition
-    run-on-projects: ['mozilla-beta']
-    dependencies:
-        win32-opt: build-win32-devedition/opt
-        win64-aarch64-opt: build-win64-aarch64-devedition-no-eme/opt
-    fetches:
-        # Abuse fetches to copy the generated-files, langpack, and test
-        # artifacts from the non-eme build directly to the artifacts directory
-        # of this build.
-        win64-aarch64-opt:
-            - artifact: target.test_packages.json
-              extract: false
-              dest: ../artifacts
-            - artifact: target.common.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.cppunittest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.mochitest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.reftest.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.talos.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.raptor.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.condprof.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.awsy.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.xpcshell.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.web-platform.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.updater-dep.tests.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.generated-files.tar.gz
-              extract: false
-              dest: ../artifacts
-            - artifact: target.langpack.xpi
-              extract: false
-              dest: ../artifacts
-        toolchain:
-            - linux64-node
-            - linux64-wine
-            - nsis
-        fetch:
-            - upx-3.95-win
-
-win64-aarch64-devedition-no-eme/opt:
-    description: "AArch64 Win64 Dev Edition w/o EME"
-    use-pgo: win64-shippable/opt
-    index:
-        product: devedition
-        job-name: win64-aarch64-no-eme-opt
-        type: shippable
-    attributes:
-        enable-full-crashsymbols: true
-        # We need to package tests in order for the actual
-        # win64-aarch64-devedition/opt build to copy them from this task, even
-        # though no tests run against this task directly.
-        skip-verify-test-packaging: true
-    shipping-phase: build
-    shipping-product: devedition
-    treeherder:
-        platform: windows2012-aarch64-devedition/opt
-        symbol: Nn
-        tier: 1
-    worker-type: b-linux-gcp
-    worker:
-        max-run-time: 7200
-        env:
-            PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -1806,6 +1558,7 @@ win64-aarch64-devedition-no-eme/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
+            max_build_output_timeout: 3600
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
