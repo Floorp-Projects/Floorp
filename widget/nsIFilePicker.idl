@@ -73,18 +73,6 @@ interface nsIFilePicker : nsISupports
   */
   void init(in mozIDOMWindowProxy parent, in AString title, in nsIFilePicker_Mode mode);
 
-  /**
-   * Returns a Promise that resolves to true if the passed nsIFilePicker mode
-   * is supported on the current platform, and false otherwise. The Promise may
-   * reject if something unexpected occurs while trying to determine if the mode
-   * is supported.
-   *
-   * @param mode
-   * @return Promise<boolean>
-   */
-  [implicit_jscontext]
-  Promise isModeSupported(in nsIFilePicker_Mode mode);
-
  /**
   * Append to the  filter list with things from the predefined list
   *
