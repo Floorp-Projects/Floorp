@@ -23,6 +23,7 @@ namespace mozilla::dom {
 class WebAuthnController final : public nsIWebAuthnController {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIU2FTOKENMANAGER
   NS_DECL_NSIWEBAUTHNCONTROLLER
 
   static void Initialize();

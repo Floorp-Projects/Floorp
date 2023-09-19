@@ -6,15 +6,12 @@
 
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/dom/WebAuthnController.h"
+#include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPrefs_security.h"
 
 #include "nsThreadUtils.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/dom/U2FTokenManager.h"
-#endif
 
 #ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
