@@ -8,6 +8,7 @@
 # Updated for Unicode 13.0 by Andrew Glass 2020-07-28
 # Updated for Unicode 14.0 by Andrew Glass 2021-09-28
 # Updated for Unicode 15.0 by Andrew Glass 2022-09-16
+# Updated for Unicode 15.1 by Andrew Glass 2023-09-14
 
 # ================================================
 # ================================================

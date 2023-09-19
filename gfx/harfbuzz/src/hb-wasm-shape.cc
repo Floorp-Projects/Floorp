@@ -48,7 +48,7 @@
  *
  *   - Build your font's wasm code importing the shared modules with the desired
  *     name. This can be done eg.: __attribute__((import_module("graphite2")))
- *     before each symbol in the the shared-module's headers.
+ *     before each symbol in the shared-module's headers.
  *
  *   - Try shaping your font and hope for the best...
  *

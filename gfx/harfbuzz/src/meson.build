@@ -560,7 +560,7 @@ defs_list = [harfbuzz_def]
 version = '0.@0@.0'.format(hb_version_int)
 
 extra_hb_cpp_args = []
-if cpp.get_argument_syntax() == 'msvc'
+if cpp.get_define('_MSC_FULL_VER') != ''
   if get_option('default_library') != 'static'
     extra_hb_cpp_args += '-DHB_DLL_EXPORT'
   endif
@@ -680,18 +680,31 @@ endif
 if get_option('tests').enabled()
   # TODO: MSVC gives the following,
   # error LNK2019: unresolved external symbol "unsigned __int64 const * const _hb_NullPool"
-  if cpp.get_argument_syntax() != 'msvc'
+  if cpp.get_define('_MSC_FULL_VER') == ''
     noinst_programs = {
       'main': 'main.cc',
+      'test-algs': ['test-algs.cc', 'hb-static.cc'],
       'test-basics': 'test.cc',
+      'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
       'test-buffer-serialize': 'test-buffer-serialize.cc',
+      'test-classdef-graph': ['graph/test-classdef-graph.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
+      'test-instancer-solver': ['test-subset-instancer-solver.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
+      'test-iter': ['test-iter.cc', 'hb-static.cc'],
+      'test-map': ['test-map.cc', 'hb-static.cc'],
+      'test-multimap': ['test-multimap.cc', 'hb-static.cc'],
       'test-ot-meta': 'test-ot-meta.cc',
       'test-ot-name': 'test-ot-name.cc',
       'test-ot-glyphname': 'test-ot-glyphname.cc',
       'test-ot-gpos-size-params': 'test-gpos-size-params.cc',
       'test-ot-gsub-get-alternates': 'test-gsub-get-alternates.cc',
       'test-ot-gsub-would-substitute': 'test-gsub-would-substitute.cc',
+      'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
+      'test-repacker': ['test-repacker.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
+      'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
+      'test-set': ['test-set.cc', 'hb-static.cc'],
+      'test-tuple-varstore': ['test-tuple-varstore.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
       'test-use-table': 'test-use-table.cc',
+      'test-vector': ['test-vector.cc', 'hb-static.cc'],
     }
     foreach name, source : noinst_programs
       executable(name, source,
@@ -704,24 +717,11 @@ if get_option('tests').enabled()
   endif
 
   compiled_tests = {
-    'test-algs': ['test-algs.cc', 'hb-static.cc'],
     'test-array': ['test-array.cc'],
-    'test-iter': ['test-iter.cc', 'hb-static.cc'],
     'test-machinery': ['test-machinery.cc', 'hb-static.cc'],
-    'test-map': ['test-map.cc', 'hb-static.cc'],
-    'test-multimap': ['test-multimap.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
-    'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
-    'test-repacker': ['test-repacker.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
-    'test-classdef-graph': ['graph/test-classdef-graph.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
-    'test-set': ['test-set.cc', 'hb-static.cc'],
-    'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
-    'test-vector': ['test-vector.cc', 'hb-static.cc'],
-    'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
-    'test-instancer-solver': ['test-subset-instancer-solver.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
-    'test-tuple-varstore': ['test-tuple-varstore.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
   }
   foreach name, source : compiled_tests
     if cpp.get_argument_syntax() == 'msvc' and source.contains('hb-static.cc')

@@ -318,7 +318,9 @@ struct MarkBasePosFormat1 : public OT::Layout::GPOS_impl::MarkBasePosFormat1_2<S
   {
     hb_vector_t<class_info_t> class_to_info;
 
-    unsigned class_count= classCount;
+    unsigned class_count = classCount;
+    if (!class_count) return class_to_info;
+
     if (!class_to_info.resize (class_count))
       return hb_vector_t<class_info_t>();
 

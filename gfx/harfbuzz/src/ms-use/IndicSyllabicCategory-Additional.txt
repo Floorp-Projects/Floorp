@@ -6,6 +6,7 @@
 # Updated for Unicode 13.0 by Andrew Glass 2020-07-28
 # Updated for Unicode 14.0 by Andrew Glass 2021-09-25
 # Updated for Unicode 15.0 by Andrew Glass 2022-09-16
+# Updated for Unicode 15.1 by Andrew Glass 2023-09-14
 
 # ================================================
 # OVERRIDES TO ASSIGNED VALUES
@@ -13,7 +14,7 @@
 
 # Indic_Syllabic_Category=Bindu  
 193A          ; Bindu  # Mn       LIMBU SIGN KEMPHRENG
-AA29          ; Bindu  # Mn       CHAM VOWEL SIGN AA
+AA29          ; Bindu  # Mn       CHAM VOWEL SIGN AA
 10A0D         ; Bindu  # Mn       KHAROSHTHI SIGN DOUBLE RING BELOW
 
 # ================================================
@@ -90,11 +91,6 @@ AABD          ; Vowel_Independent # Lo       TAI VIET VOWEL AN
 10F30..10F45  ; Consonant # Lo   [22] SOGDIAN LETTER ALEPH..SOGDIAN INDEPENDENT SHIN
 10F70..10F81  ; Consonant # Lo   [18] OLD UYGHUR LETTER ALEPH..OLD UYGHUR LETTER LESH
 111DA         ; Consonant # Lo        SHARADA EKAM
-#HIEROGLYPHS to be moved to new category
-13000..1342F  ; Consonant # Lo [1071] EGYPTIAN HIEROGLYPH A001..EGYPTIAN HIEROGLYPH V011D
-#For the Begin and End segment to be handled fully correctly, the cluster model needs to be modified.
-13437..13438  ; Consonant # Lo    [2] EGYPTIAN HIEROGLYPH BEGIN SEGMENT..EGYPTIAN HIEROGLYPH END SEGMENT
-13441..13446  ; Consonant # Lo    [6] EGYPTIAN HIEROGLYPH FULL BLANK..HIEROGLYPH WIDE LOST SIGN
 16B00..16B2F  ; Consonant # Lo   [48] PAHAWH HMONG VOWEL KEEB..PAHAWH HMONG CONSONANT CAU
 16F00..16F4A  ; Consonant # Lo   [75] MIAO LETTER PA..MIAO LETTER RTE
 16FE4         ; Consonant # Mn        KHITAN SMALL SCRIPT FILLER          # Avoids Mn pushing this into VOWEL class
@@ -174,9 +170,6 @@ FE00..FE0F    ; Modifying_Letter  # Mn  [16] VARIATION SELECTOR-1..VARIATION SEL
 
 # Indic_Syllabic_Category=Virama
 2D7F          ; Virama              # Mn       TIFINAGH CONSONANT JOINER
-#HIEROGLYPHS to be moved to new category
-13430..13436  ; Virama              # Cf   [7] EGYPTIAN HIEROGLYPH VERTICAL JOINER..EGYPTIAN HIEROGLYPH OVERLAY MIDDLE
-13439..1343B  ; Virama              # Cf   [3] EGYPTIAN HIEROGLYPH INSERT AT MIDDLE..EGYPTIAN HIEROGLYPH INSERT AT BOTTOM
 
 # ================================================
 
@@ -198,9 +191,6 @@ AABD          ; Vowel_Independent   # Lo       TAI VIET VOWEL AN
 # Indic_Syllabic_Category=Cantillation_Mark
 
 1CF8..1CF9    ; Cantillation_Mark   # Mn   [2] VEDIC TONE RING ABOVE..VEDIC TONE DOUBLE RING ABOVE
-#HIEROGLYPHS to be moved to new category
-13440         ; Cantillation_Mark   # Mn       EGYPTIAN HIEROGLYPH MIRROR HORIZONTALLY
-13447..13455  ; Cantillation_Mark   # Mn  [15] EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP START..EGYPTIAN HIEROGLYPH MODIFIER DAMAGED
 
 # ================================================
 
@@ -214,55 +204,58 @@ AABD          ; Vowel_Independent   # Lo       TAI VIET VOWEL AN
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph
-# 13000..1342F ; Hieroglyph          # Lo [1072] EGYPTIAN HIEROGLYPH A001..EGYPTIAN HIEROGLYPH V011D
-# 13441..13446 ; Hieroglyph          # Lo    [6] EGYPTIAN HIEROGLYPH FULL BLANK..HIEROGLYPH WIDE LOST SIGN
+13000..1342F ; Hieroglyph          # Lo [1072] EGYPTIAN HIEROGLYPH A001..EGYPTIAN HIEROGLYPH V011D
+1343C..1343F ; Hieroglyph          # Cf    [4] EGYPTIAN HIEROGLYPH BEGIN ENCLOSURE..END WALLED ENCLOSURE
+13441..13446 ; Hieroglyph          # Lo    [6] EGYPTIAN HIEROGLYPH FULL BLANK..HIEROGLYPH WIDE LOST SIGN
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Joiner
-# 13430..13436 ; Hieroglyph_Joiner   # Cf    [7] EGYPTIAN HIEROGLYPH VERTICAL JOINER..EGYPTIAN HIEROGLYPH OVERLAY MIDDLE
-# 13439..1343B ; Hieroglyph_Joiner   # Cf    [3] EGYPTIAN HIEROGLYPH INSERT AT MIDDLE..EGYPTIAN HIEROGLYPH INSERT AT BOTTOM
+13430..13436 ; Hieroglyph_Joiner   # Cf    [7] EGYPTIAN HIEROGLYPH VERTICAL JOINER..EGYPTIAN HIEROGLYPH OVERLAY MIDDLE
+13439..1343B ; Hieroglyph_Joiner   # Cf    [3] EGYPTIAN HIEROGLYPH INSERT AT MIDDLE..EGYPTIAN HIEROGLYPH INSERT AT BOTTOM
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Mark_Begin
-# 005B        ; Hieroglyph_Mark_Begin  # Ps  LEFT SQUARE BRACKET
-# 007B        ; Hieroglyph_Mark_Begin  # Ps  LEFT CURLY BRACKET
-# 27E6        ; Hieroglyph_Mark_Begin  # Ps  MATHEMATICAL LEFT WHITE SQUARE BRACKET
-# 27E8        ; Hieroglyph_Mark_Begin  # Ps  MATHEMATICAL LEFT ANGLE BRACKET
-# 2E22        ; Hieroglyph_Mark_Begin  # Ps  TOP LEFT HALF BRACKET
-# 2E24        ; Hieroglyph_Mark_Begin  # Ps  BOTTOM LEFT HALF BRACKET
+005B        ; Hieroglyph_Mark_Begin  # Ps  LEFT SQUARE BRACKET
+007B        ; Hieroglyph_Mark_Begin  # Ps  LEFT CURLY BRACKET
+27E6        ; Hieroglyph_Mark_Begin  # Ps  MATHEMATICAL LEFT WHITE SQUARE BRACKET
+27E8        ; Hieroglyph_Mark_Begin  # Ps  MATHEMATICAL LEFT ANGLE BRACKET
+2E22        ; Hieroglyph_Mark_Begin  # Ps  TOP LEFT HALF BRACKET
+2E24        ; Hieroglyph_Mark_Begin  # Ps  BOTTOM LEFT HALF BRACKET
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Mark_End
-# 005D        ; Hieroglyph_Mark_Begin  # Pe  RIGHT SQUARE BRACKET
-# 007D        ; Hieroglyph_Mark_Begin  # Pe  RIGHT CURLY BRACKET
-# 27E7        ; Hieroglyph_Mark_Begin  # Pe  MATHEMATICAL RIGHT WHITE SQUARE BRACKET
-# 27E9        ; Hieroglyph_Mark_Begin  # Pe  MATHEMATICAL RIGHT ANGLE BRACKET
-# 2E23        ; Hieroglyph_Mark_Begin  # Pe  TOP RIGHT HALF BRACKET
-# 2E25        ; Hieroglyph_Mark_Begin  # Pe  BOTTOM RIGHT HALF BRACKET
+005D        ; Hieroglyph_Mark_End  # Pe  RIGHT SQUARE BRACKET
+007D        ; Hieroglyph_Mark_End  # Pe  RIGHT CURLY BRACKET
+27E7        ; Hieroglyph_Mark_End  # Pe  MATHEMATICAL RIGHT WHITE SQUARE BRACKET
+27E9        ; Hieroglyph_Mark_End  # Pe  MATHEMATICAL RIGHT ANGLE BRACKET
+2E23        ; Hieroglyph_Mark_End  # Pe  TOP RIGHT HALF BRACKET
+2E25        ; Hieroglyph_Mark_End  # Pe  BOTTOM RIGHT HALF BRACKET
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Segment_Begin
-# 13437        ; Hieroglyph_Segment_Begin  # Cf  EGYPTIAN HIEROGLYPH BEGIN SEGMENT
+13437        ; Hieroglyph_Segment_Begin  # Cf  EGYPTIAN HIEROGLYPH BEGIN SEGMENT
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Segment_End
-# 13438        ; Hieroglyph_Segment_End    # Cf  EGYPTIAN HIEROGLYPH END SEGMENT 
+13438        ; Hieroglyph_Segment_End    # Cf  EGYPTIAN HIEROGLYPH END SEGMENT 
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Mirror
-# 13440        ; Hieroglyph_Mirror    # Mn       EGYPTIAN HIEROGLYPH MIRROR HORIZONTALLY
+13440        ; Hieroglyph_Mirror    # Mn       EGYPTIAN HIEROGLYPH MIRROR HORIZONTALLY
 
 # ================================================
 
 # USE, Extended_Syllabic_Category=Hieroglyph_Modifier
-# 13447..13455 ; Hieroglyph_Modifier    # Mn  [15] EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP START..EGYPTIAN HIEROGLYPH MODIFIER DAMAGED
+13447..13455 ; Hieroglyph_Modifier    # Mn  [15] EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP START..EGYPTIAN HIEROGLYPH MODIFIER DAMAGED
 
 # ================================================
 
 # eof
+
+

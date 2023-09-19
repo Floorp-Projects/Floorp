@@ -54,6 +54,9 @@ struct hb_priority_queue_t
 
   bool in_error () const { return heap.in_error (); }
 
+#ifndef HB_OPTIMIZE_SIZE
+  HB_ALWAYS_INLINE
+#endif
   void insert (int64_t priority, unsigned value)
   {
     heap.push (item_t (priority, value));
@@ -139,6 +142,7 @@ struct hb_priority_queue_t
     goto repeat;
   }
 
+  HB_ALWAYS_INLINE
   void bubble_up (unsigned index)
   {
     repeat:

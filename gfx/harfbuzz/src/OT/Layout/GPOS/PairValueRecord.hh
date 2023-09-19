@@ -23,7 +23,6 @@ struct PairValueRecord
                                          * followed by for second glyph */
   public:
   DEFINE_SIZE_ARRAY (Types::HBGlyphID::static_size, values);
-  DEFINE_SIZE_MAX (Types::HBGlyphID::static_size + 2 * Value::static_size * 8 * sizeof (ValueFormat));
 
   int cmp (hb_codepoint_t k) const
   { return secondGlyph.cmp (k); }

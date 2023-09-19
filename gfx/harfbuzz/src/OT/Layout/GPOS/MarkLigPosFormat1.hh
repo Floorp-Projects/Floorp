@@ -195,9 +195,10 @@ struct MarkLigPosFormat1_2
     if (!out->markCoverage.serialize_serialize (c->serializer, new_mark_coverage))
       return_trace (false);
 
-    out->markArray.serialize_subset (c, markArray, this,
-                                     (this+markCoverage).iter (),
-                                     &klass_mapping);
+    if (unlikely (!out->markArray.serialize_subset (c, markArray, this,
+						    (this+markCoverage).iter (),
+						    &klass_mapping)))
+      return_trace (false);
 
     auto new_ligature_coverage =
     + hb_iter (this + ligatureCoverage)
@@ -208,10 +209,9 @@ struct MarkLigPosFormat1_2
     if (!out->ligatureCoverage.serialize_serialize (c->serializer, new_ligature_coverage))
       return_trace (false);
 
-    out->ligatureArray.serialize_subset (c, ligatureArray, this,
-                                         hb_iter (this+ligatureCoverage), classCount, &klass_mapping);
-
-    return_trace (true);
+    return_trace (out->ligatureArray.serialize_subset (c, ligatureArray, this,
+						       hb_iter (this+ligatureCoverage),
+						       classCount, &klass_mapping));
   }
 
 };
