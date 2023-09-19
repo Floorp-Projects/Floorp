@@ -669,8 +669,8 @@ class VideoMediaSendChannel : public VideoMediaSendChannelInterface {
   bool SetSendParameters(const VideoSendParameters& params) override {
     return impl()->SetSendParameters(params);
   }
-  bool GetSendCodec(VideoCodec* send_codec) override {
-    return impl()->GetSendCodec(send_codec);
+  absl::optional<VideoCodec> GetSendCodec() override {
+    return impl()->GetSendCodec();
   }
   bool SetSend(bool send) override { return impl()->SetSend(send); }
   bool SetVideoSend(

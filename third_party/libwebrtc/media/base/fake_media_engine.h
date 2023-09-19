@@ -489,7 +489,7 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool AddSendStream(const StreamParams& sp) override;
   bool RemoveSendStream(uint32_t ssrc) override;
 
-  bool GetSendCodec(VideoCodec* send_codec) override;
+  absl::optional<VideoCodec> GetSendCodec() override;
   bool SetSink(uint32_t ssrc,
                rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void SetDefaultSink(

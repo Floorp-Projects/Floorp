@@ -18,6 +18,7 @@
 
 #include "api/array_view.h"
 #include "api/media_types.h"
+#include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/rtp_utils.h"
 #include "rtc_base/checks.h"
@@ -80,13 +81,12 @@ RTCErrorOr<cricket::FeedbackParam> ToCricketFeedbackParam(
 }
 
 template <typename C>
-static RTCError ToCricketCodecTypeSpecific(const RtpCodecParameters& codec,
-                                           C* cricket_codec);
+static RTCErrorOr<C> ToCricketCodecTypeSpecific(
+    const RtpCodecParameters& codec);
 
 template <>
-RTCError ToCricketCodecTypeSpecific<cricket::AudioCodec>(
-    const RtpCodecParameters& codec,
-    cricket::AudioCodec* cricket_codec) {
+RTCErrorOr<cricket::AudioCodec> ToCricketCodecTypeSpecific<cricket::AudioCodec>(
+    const RtpCodecParameters& codec) {
   if (codec.kind != cricket::MEDIA_TYPE_AUDIO) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::INVALID_PARAMETER,
@@ -100,7 +100,6 @@ RTCError ToCricketCodecTypeSpecific<cricket::AudioCodec>(
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
                          "Number of channels must be positive.");
   }
-  cricket_codec->channels = *codec.num_channels;
   if (!codec.clock_rate) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                          "Missing codec clock rate.");
@@ -109,17 +108,16 @@ RTCError ToCricketCodecTypeSpecific<cricket::AudioCodec>(
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
                          "Clock rate must be positive.");
   }
-  cricket_codec->clockrate = *codec.clock_rate;
-  return RTCError::OK();
+  return cricket::CreateAudioCodec(0, codec.name, *codec.clock_rate,
+                                   *codec.num_channels);
 }
 
 // Video codecs don't use num_channels or clock_rate, but they should at least
 // be validated to ensure the application isn't trying to do something it
 // doesn't intend to.
 template <>
-RTCError ToCricketCodecTypeSpecific<cricket::VideoCodec>(
-    const RtpCodecParameters& codec,
-    cricket::VideoCodec*) {
+RTCErrorOr<cricket::VideoCodec> ToCricketCodecTypeSpecific<cricket::VideoCodec>(
+    const RtpCodecParameters& codec) {
   if (codec.kind != cricket::MEDIA_TYPE_VIDEO) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::INVALID_PARAMETER,
@@ -137,18 +135,17 @@ RTCError ToCricketCodecTypeSpecific<cricket::VideoCodec>(
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                          "Video clock rate must be 90000.");
   }
-  return RTCError::OK();
+  return cricket::CreateVideoCodec(0, codec.name);
 }
 
 template <typename C>
 RTCErrorOr<C> ToCricketCodec(const RtpCodecParameters& codec) {
-  C cricket_codec;
   // Start with audio/video specific conversion.
-  RTCError err = ToCricketCodecTypeSpecific(codec, &cricket_codec);
-  if (!err.ok()) {
-    return std::move(err);
+  RTCErrorOr<C> result = ToCricketCodecTypeSpecific<C>(codec);
+  if (!result.ok()) {
+    return result.MoveError();
   }
-  cricket_codec.name = codec.name;
+  C cricket_codec = result.MoveValue();
   if (!cricket::IsValidRtpPayloadType(codec.payload_type)) {
     char buf[40];
     rtc::SimpleStringBuilder sb(buf);

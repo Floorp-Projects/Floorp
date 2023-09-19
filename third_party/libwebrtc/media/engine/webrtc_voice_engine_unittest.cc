@@ -23,6 +23,7 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "call/call.h"
+#include "media/base/codec.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/fake_network_interface.h"
 #include "media/base/fake_rtp.h"
@@ -58,23 +59,24 @@ using webrtc::BitrateConstraints;
 
 constexpr uint32_t kMaxUnsignaledRecvStreams = 4;
 
-const cricket::AudioCodec kPcmuCodec(0, "PCMU", 8000, 64000, 1);
-const cricket::AudioCodec kOpusCodec(111, "opus", 48000, 32000, 2);
-const cricket::AudioCodec kG722CodecVoE(9, "G722", 16000, 64000, 1);
-const cricket::AudioCodec kG722CodecSdp(9, "G722", 8000, 64000, 1);
-const cricket::AudioCodec kCn8000Codec(13, "CN", 8000, 0, 1);
-const cricket::AudioCodec kCn16000Codec(105, "CN", 16000, 0, 1);
-const cricket::AudioCodec kRed48000Codec(112, "RED", 48000, 32000, 2);
-const cricket::AudioCodec kTelephoneEventCodec1(106,
-                                                "telephone-event",
-                                                8000,
-                                                0,
-                                                1);
-const cricket::AudioCodec kTelephoneEventCodec2(107,
-                                                "telephone-event",
-                                                32000,
-                                                0,
-                                                1);
+const cricket::AudioCodec kPcmuCodec =
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1);
+const cricket::AudioCodec kOpusCodec =
+    cricket::CreateAudioCodec(111, "opus", 48000, 2);
+const cricket::AudioCodec kG722CodecVoE =
+    cricket::CreateAudioCodec(9, "G722", 16000, 1);
+const cricket::AudioCodec kG722CodecSdp =
+    cricket::CreateAudioCodec(9, "G722", 8000, 1);
+const cricket::AudioCodec kCn8000Codec =
+    cricket::CreateAudioCodec(13, "CN", 8000, 1);
+const cricket::AudioCodec kCn16000Codec =
+    cricket::CreateAudioCodec(105, "CN", 16000, 1);
+const cricket::AudioCodec kRed48000Codec =
+    cricket::CreateAudioCodec(112, "RED", 48000, 2);
+const cricket::AudioCodec kTelephoneEventCodec1 =
+    cricket::CreateAudioCodec(106, "telephone-event", 8000, 1);
+const cricket::AudioCodec kTelephoneEventCodec2 =
+    cricket::CreateAudioCodec(107, "telephone-event", 32000, 1);
 
 const uint32_t kSsrc0 = 0;
 const uint32_t kSsrc1 = 1;
@@ -908,7 +910,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsUnsupportedCodec) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
   parameters.codecs.push_back(kOpusCodec);
-  parameters.codecs.push_back(cricket::AudioCodec(127, "XYZ", 32000, 0, 1));
+  parameters.codecs.push_back(cricket::CreateAudioCodec(127, "XYZ", 32000, 1));
   EXPECT_FALSE(channel_->SetRecvParameters(parameters));
 }
 
@@ -3869,7 +3871,7 @@ TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
       webrtc::CryptoOptions(), call.get(), webrtc::AudioCodecPairId::Create());
   {
     cricket::AudioSendParameters params;
-    params.codecs.push_back(cricket::AudioCodec(1, "opus", 48000, 32000, 2));
+    params.codecs.push_back(cricket::CreateAudioCodec(1, "opus", 48000, 2));
     params.extensions.push_back(webrtc::RtpExtension(
         webrtc::RtpExtension::kTransportSequenceNumberUri, 1));
     EXPECT_TRUE(channel.SetSendParameters(params));
@@ -3933,7 +3935,8 @@ TEST(WebRtcVoiceEngineTest, CollectRecvCodecs) {
     // Rather than just ASSERTing that there are enough codecs, ensure that we
     // can check the actual values safely, to provide better test results.
     auto get_codec = [&codecs](size_t index) -> const cricket::AudioCodec& {
-      static const cricket::AudioCodec missing_codec(0, "<missing>", 0, 0, 0);
+      static const cricket::AudioCodec missing_codec =
+          cricket::CreateAudioCodec(0, "<missing>", 0, 0);
       if (codecs.size() > index)
         return codecs[index];
       return missing_codec;

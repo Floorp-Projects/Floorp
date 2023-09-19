@@ -220,7 +220,7 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
 
   std::vector<VideoCodec> output_codecs;
   for (const webrtc::SdpVideoFormat& format : supported_formats) {
-    VideoCodec codec(format);
+    VideoCodec codec = cricket::CreateVideoCodec(format);
     bool isFecCodec = absl::EqualsIgnoreCase(codec.name, kUlpfecCodecName) ||
                       absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
 
@@ -597,8 +597,7 @@ std::vector<VideoCodecSettings> MapCodecs(
       }
 
       case Codec::ResiliencyType::kNone: {
-        video_codecs.emplace_back();
-        video_codecs.back().codec = in_codec;
+        video_codecs.emplace_back(in_codec);
         break;
       }
     }
@@ -1513,14 +1512,13 @@ void WebRtcVideoReceiveChannel::ChooseReceiverReportSsrc(
   SetReceiverReportSsrc(*choices.begin());
 }
 
-bool WebRtcVideoSendChannel::GetSendCodec(VideoCodec* codec) {
+absl::optional<VideoCodec> WebRtcVideoSendChannel::GetSendCodec() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (!send_codec()) {
     RTC_LOG(LS_VERBOSE) << "GetSendCodec: No send codec set.";
-    return false;
+    return absl::nullopt;
   }
-  *codec = send_codec()->codec;
-  return true;
+  return send_codec()->codec;
 }
 
 void WebRtcVideoReceiveChannel::SetReceive(bool receive) {
@@ -3692,8 +3690,8 @@ void WebRtcVideoReceiveChannel::WebRtcVideoReceiveStream::UpdateRtxSsrc(
   stream_->UpdateRtxSsrc(ssrc);
 }
 
-VideoCodecSettings::VideoCodecSettings()
-    : flexfec_payload_type(-1), rtx_payload_type(-1) {}
+VideoCodecSettings::VideoCodecSettings(const VideoCodec& codec)
+    : codec(codec), flexfec_payload_type(-1), rtx_payload_type(-1) {}
 
 bool VideoCodecSettings::operator==(const VideoCodecSettings& other) const {
   return codec == other.codec && ulpfec == other.ulpfec &&

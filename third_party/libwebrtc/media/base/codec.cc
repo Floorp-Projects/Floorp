@@ -396,7 +396,10 @@ VideoCodec VideoCodec::CreateRtxCodec(int rtx_payload_type,
 
 VideoCodec CreateVideoRtxCodec(int rtx_payload_type,
                                int associated_payload_type) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   VideoCodec rtx_codec(rtx_payload_type, kRtxCodecName);
+#pragma clang diagnostic pop
   rtx_codec.SetParam(kCodecParamAssociatedPayloadType, associated_payload_type);
   return rtx_codec;
 }
@@ -500,15 +503,31 @@ AudioCodec CreateAudioCodec(int id,
                             const std::string& name,
                             int clockrate,
                             size_t channels) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   return AudioCodec(id, name, clockrate, 0, channels);
+#pragma clang diagnostic pop
 }
 
 VideoCodec CreateVideoCodec(const std::string& name) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   return VideoCodec(name);
+#pragma clang diagnostic pop
 }
 
 VideoCodec CreateVideoCodec(int id, const std::string& name) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   return VideoCodec(id, name);
+#pragma clang diagnostic pop
+}
+
+VideoCodec CreateVideoCodec(const webrtc::SdpVideoFormat& c) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  return VideoCodec(c);
+#pragma clang diagnostic pop
 }
 
 }  // namespace cricket

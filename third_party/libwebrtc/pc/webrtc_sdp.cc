@@ -20,6 +20,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -2617,8 +2618,8 @@ void MaybeCreateStaticPayloadAudioCodecs(const std::vector<int>& fmts,
       std::string encoding_name = kStaticPayloadAudioCodecs[payload_type].name;
       int clock_rate = kStaticPayloadAudioCodecs[payload_type].clockrate;
       size_t channels = kStaticPayloadAudioCodecs[payload_type].channels;
-      media_desc->AddCodec(cricket::AudioCodec(payload_type, encoding_name,
-                                               clock_rate, 0, channels));
+      media_desc->AddCodec(cricket::CreateAudioCodec(
+          payload_type, encoding_name, clock_rate, channels));
     }
   }
 }
@@ -2901,9 +2902,11 @@ T GetCodecWithPayloadType(const std::vector<T>& codecs, int payload_type) {
   if (codec)
     return *codec;
   // Return empty codec with `payload_type`.
-  T ret_val;
-  ret_val.id = payload_type;
-  return ret_val;
+  if constexpr (std::is_same<T, cricket::AudioCodec>::value) {
+    return cricket::CreateAudioCodec(payload_type, "", 0, 0);
+  } else if constexpr (std::is_same<T, cricket::VideoCodec>::value) {
+    return cricket::CreateVideoCodec(payload_type, "");
+  }
 }
 
 // Updates or creates a new codec entry in the media description.
@@ -2972,26 +2975,26 @@ void UpdateVideoCodecPacketization(VideoContentDescription* video_desc,
 }
 
 template <class T>
-bool PopWildcardCodec(std::vector<T>* codecs, T* wildcard_codec) {
+absl::optional<T> PopWildcardCodec(std::vector<T>* codecs) {
   for (auto iter = codecs->begin(); iter != codecs->end(); ++iter) {
     if (iter->id == kWildcardPayloadType) {
-      *wildcard_codec = *iter;
+      T wildcard_codec = *iter;
       codecs->erase(iter);
-      return true;
+      return wildcard_codec;
     }
   }
-  return false;
+  return absl::nullopt;
 }
 
 template <class T>
 void UpdateFromWildcardCodecs(cricket::MediaContentDescriptionImpl<T>* desc) {
   auto codecs = desc->codecs();
-  T wildcard_codec;
-  if (!PopWildcardCodec(&codecs, &wildcard_codec)) {
+  absl::optional<T> wildcard_codec = PopWildcardCodec(&codecs);
+  if (!wildcard_codec) {
     return;
   }
   for (auto& codec : codecs) {
-    AddFeedbackParameters(wildcard_codec.feedback_params, &codec);
+    AddFeedbackParameters(wildcard_codec->feedback_params, &codec);
   }
   desc->set_codecs(codecs);
 }

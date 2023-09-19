@@ -935,7 +935,7 @@ class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
  public:
   virtual bool SetSendParameters(const VideoSendParameters& params) = 0;
   // Gets the currently set codecs/payload types to be used for outgoing media.
-  virtual bool GetSendCodec(VideoCodec* send_codec) = 0;
+  virtual absl::optional<VideoCodec> GetSendCodec() = 0;
   // Starts or stops transmission (and potentially capture) of local video.
   virtual bool SetSend(bool send) = 0;
   // Configure stream for sending and register a source.
