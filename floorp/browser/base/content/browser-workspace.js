@@ -514,11 +514,14 @@ const workspaceFunctions = {
 
       //add icon to workspace
       const oldIcon = workspaceFunctions.iconFunctions.getWorkspaceIcon(label);
-      workspaceFunctions.manageWorkspaceFunctions.addIconToWorkspace(
+      const userContextId = workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label);
+      workspaceFunctions.manageWorkspaceFunctions.addConfigToWorkspace(
         input.value,
-        oldIcon
+        oldIcon,
+        userContextId,
       );
       workspaceFunctions.iconFunctions.deleteIcon(label);
+      workspaceFunctions.containerFunctions.deleteContainer(label);
 
       //rebuild workspace menu
       workspaceFunctions.manageWorkspaceFunctions.rebuildWorkspaceMenu();
@@ -868,8 +871,7 @@ const workspaceFunctions = {
       ).style.listStyleImage = `url(${iconURL})`;
     },
 
-    addIconToWorkspace(workspaceName, iconName, containerName) {
-      // TODO: Change function name to addWorkspaceInfo.
+    addConfigToWorkspace(workspaceName, iconName, containerName) {
       // This function is used to add workspace info to WORKSPACE_INFO_PREF.
 
       if (workspaceName.wrappedJSObject) {
@@ -1023,6 +1025,26 @@ const workspaceFunctions = {
         return 0;
       }
       return Number(settings[targetWorkspaceNumber][workspaceName].container);
+    },
+
+    deleteContainer(workspaceName) {
+      const settings = JSON.parse(
+        Services.prefs.getStringPref(
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF
+        )
+      );
+      const targetWorkspaceNumber =
+        workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
+          workspaceName
+        );
+      if (targetWorkspaceNumber === false) {
+        return;
+      }
+      delete settings[targetWorkspaceNumber][workspaceName].container;
+      Services.prefs.setStringPref(
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF,
+        JSON.stringify(settings)
+      );
     },
   },
 
@@ -1699,8 +1721,8 @@ const startWorkspace = function () {
   );
 
   Services.obs.addObserver(
-    workspaceFunctions.manageWorkspaceFunctions.addIconToWorkspace,
-    "addIconToWorkspace"
+    workspaceFunctions.manageWorkspaceFunctions.addConfigToWorkspace,
+    "addConfigToWorkspace"
   );
 
   // run code

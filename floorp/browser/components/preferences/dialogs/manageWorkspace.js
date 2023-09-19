@@ -96,5 +96,5 @@ function setTitle() {
     const containerNameLabel = document.getElementById("containerName").value;
 
     // Return object with workspace name and icon name
-    Services.obs.notifyObservers({ name: workspaceNameLabel, icon: iconNameLabel, container: containerNameLabel }, "addIconToWorkspace");
+    Services.obs.notifyObservers({ name: workspaceNameLabel, icon: iconNameLabel, container: containerNameLabel }, "addConfigToWorkspace");
   }
