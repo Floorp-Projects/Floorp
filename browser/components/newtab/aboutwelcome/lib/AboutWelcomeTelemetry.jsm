@@ -272,8 +272,7 @@ class AboutWelcomeTelemetry {
               // corresponds to "Not Now"
               Glean.shopping.surfaceNotNowClicked.record();
               break;
-            case "cta_paragraph":
-              // corresponds to "Learn More"
+            case "learn_more":
               Glean.shopping.surfaceLearnMoreClicked.record();
               break;
           }

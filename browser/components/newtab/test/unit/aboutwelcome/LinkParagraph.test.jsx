@@ -1,8 +1,8 @@
 import React from "react";
 import { mount } from "enzyme";
-import { LegalParagraph } from "../../../content-src/aboutwelcome/components/LegalParagraph";
+import { LinkParagraph } from "../../../content-src/aboutwelcome/components/LinkParagraph";
 
-describe("LegalParagraph component", () => {
+describe("LinkParagraph component", () => {
   let sandbox;
   let wrapper;
   let handleAction;
@@ -12,13 +12,14 @@ describe("LegalParagraph component", () => {
     handleAction = sandbox.stub();
 
     wrapper = mount(
-      <LegalParagraph
+      <LinkParagraph
         text_content={{
           text: {
             string_id:
               "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
           },
           link_keys: ["privacy_policy"],
+          font_styles: "legal",
         }}
         handleAction={handleAction}
       />
@@ -29,8 +30,12 @@ describe("LegalParagraph component", () => {
     sandbox.restore();
   });
 
-  it("should render LegalParagraph component", () => {
+  it("should render LinkParagraph component", () => {
     assert.ok(wrapper.exists());
+  });
+
+  it("should render copy with legal style if legal is passed to font_styles", () => {
+    assert.strictEqual(wrapper.find(".legal-paragraph").length, 1);
   });
 
   it("should render one link when only one link id is passed", () => {
@@ -51,6 +56,7 @@ describe("LegalParagraph component", () => {
             "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
         },
         link_keys: ["privacy_policy", "terms_of_use"],
+        font_styles: "legal",
       },
     });
     assert.strictEqual(wrapper.find(".legal-paragraph a").length, 2);
@@ -70,15 +76,27 @@ describe("LegalParagraph component", () => {
     assert.ok(wrapper.find(".legal-paragraph"));
   });
 
-  it("should not render LegalParagraph component if text is not passed", () => {
+  it("should not render LinkParagraph component if text is not passed", () => {
     wrapper.setProps({ text_content: { text: null } });
     assert.ok(wrapper.isEmptyRender());
+  });
+
+  it("should render copy in link style if no font style is passed", () => {
+    wrapper.setProps({
+      text_content: {
+        text: {
+          string_id: "shopping-onboarding-body",
+        },
+        link_keys: ["learn_more"],
+      },
+    });
+    assert.strictEqual(wrapper.find(".link-paragraph").length, 1);
   });
 
   it("should not render links if string_id is not provided", () => {
     wrapper.setProps({
       text_content: { text: { string_id: null } },
     });
-    assert.strictEqual(wrapper.find(".legal-paragraph a").length, 0);
+    assert.strictEqual(wrapper.find(".link-paragraph a").length, 0);
   });
 });

@@ -5,7 +5,7 @@
 import React, { useCallback } from "react";
 import { Localized } from "./MSLocalized";
 
-export const LegalParagraph = props => {
+export const LinkParagraph = props => {
   const { text_content, handleAction } = props;
 
   const handleParagraphAction = useCallback(
@@ -30,9 +30,13 @@ export const LegalParagraph = props => {
     <Localized text={text_content.text}>
       {/* eslint-disable jsx-a11y/no-static-element-interactions */}
       <span
-        className="legal-paragraph"
+        className={
+          text_content.font_styles === "legal"
+            ? "legal-paragraph"
+            : "link-paragraph"
+        }
         onClick={handleParagraphAction}
-        value="legal_paragraph"
+        value="link_paragraph"
         onKeyPress={onKeyPress}
       >
         {/* eslint-disable jsx-a11y/anchor-is-valid */}
