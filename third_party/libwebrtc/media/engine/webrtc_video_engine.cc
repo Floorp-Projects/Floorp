@@ -825,6 +825,27 @@ WebRtcVideoEngine::~WebRtcVideoEngine() {
   RTC_DLOG(LS_INFO) << "WebRtcVideoEngine::~WebRtcVideoEngine";
 }
 
+std::unique_ptr<VideoMediaSendChannelInterface>
+WebRtcVideoEngine::CreateSendChannel(
+    webrtc::Call* call,
+    const MediaConfig& config,
+    const VideoOptions& options,
+    const webrtc::CryptoOptions& crypto_options,
+    webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
+  return std::make_unique<WebRtcVideoSendChannel>(
+      call, config, options, crypto_options, encoder_factory_.get(),
+      decoder_factory_.get(), video_bitrate_allocator_factory);
+}
+std::unique_ptr<VideoMediaReceiveChannelInterface>
+WebRtcVideoEngine::CreateReceiveChannel(
+    webrtc::Call* call,
+    const MediaConfig& config,
+    const VideoOptions& options,
+    const webrtc::CryptoOptions& crypto_options) {
+  return std::make_unique<WebRtcVideoReceiveChannel>(
+      call, config, options, crypto_options, decoder_factory_.get());
+}
+
 VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
     MediaChannel::Role role,
     webrtc::Call* call,
@@ -836,14 +857,13 @@ VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
   std::unique_ptr<VideoMediaSendChannelInterface> send_channel;
   std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel;
   if (role == MediaChannel::Role::kSend || role == MediaChannel::Role::kBoth) {
-    send_channel = std::make_unique<WebRtcVideoSendChannel>(
-        call, config, options, crypto_options, encoder_factory_.get(),
-        decoder_factory_.get(), video_bitrate_allocator_factory);
+    send_channel = CreateSendChannel(call, config, options, crypto_options,
+                                     video_bitrate_allocator_factory);
   }
   if (role == MediaChannel::Role::kReceive ||
       role == MediaChannel::Role::kBoth) {
-    receive_channel = std::make_unique<WebRtcVideoReceiveChannel>(
-        call, config, options, crypto_options, decoder_factory_.get());
+    receive_channel =
+        CreateReceiveChannel(call, config, options, crypto_options);
   }
   return new VideoMediaShimChannel(std::move(send_channel),
                                    std::move(receive_channel));

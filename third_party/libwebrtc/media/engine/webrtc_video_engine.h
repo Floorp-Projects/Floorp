@@ -104,6 +104,19 @@ class WebRtcVideoEngine : public VideoEngineInterface {
 
   ~WebRtcVideoEngine() override;
 
+  std::unique_ptr<VideoMediaSendChannelInterface> CreateSendChannel(
+      webrtc::Call* call,
+      const MediaConfig& config,
+      const VideoOptions& options,
+      const webrtc::CryptoOptions& crypto_options,
+      webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
+      override;
+  std::unique_ptr<VideoMediaReceiveChannelInterface> CreateReceiveChannel(
+      webrtc::Call* call,
+      const MediaConfig& config,
+      const VideoOptions& options,
+      const webrtc::CryptoOptions& crypto_options) override;
+
   VideoMediaChannel* CreateMediaChannel(
       MediaChannel::Role role,
       webrtc::Call* call,
