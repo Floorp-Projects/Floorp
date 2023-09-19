@@ -1,0 +1,12 @@
+<html class="reftest-wait">
+<audio id=a src=1850453.flac controls></audio>
+<script>
+  a.play();
+  a.onplaying = function() {
+    a.currentTime = 0.5;
+  }
+  a.onseeked = function () {
+    document.documentElement.removeAttribute("class")
+  }
+</script>
+</html>
