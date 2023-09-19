@@ -1,85 +1,193 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Thu, 15 Jun 2023 07:21:56 +0200
-Subject: (cherry-pick-branch-heads/5790) [M115] sdp: reject duplicate ssrcs in
- ssrc-groups
+From: philipel <philipel@webrtc.org>
+Date: Tue, 20 Jun 2023 10:29:20 +0200
+Subject: =?UTF-8?q?(cherry-pick-branch-heads/5790)=20[Merge-M115]=C2=A0Sup?=
+ =?UTF-8?q?port=20conversion=20of=20VP9=20non-flexible=20mode=20to=20gener?=
+ =?UTF-8?q?ic=20descriptor=20for=20non-layered=20streams=20only.?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-while not really covered by
-  https://www.rfc-editor.org/rfc/rfc5576.html#section-4.2
-and using the same SSRC for RTX and primary payload may work
-since payload type demuxing *could* be used is not a good idea.
-This also applies to flexfec's FEC-FR.
+When VP9 HW encoders don't provide any metadata a minimal non-flexible mode structure is generated for the stream: (https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:third_party/blink/renderer/platform/peerconnection/rtc_video_encoder.cc;l=1275-1298;drc=f80633b34538615fcb73515ad8c4bc56a748abfe).
 
-For the nonstandard SIM ssrc-group duplicates make no sense.
-This rejects duplicates for unknown ssrc-groups as well.
+(cherry picked from commit 4e0bf2e5a1946b8f94f4b23b57b3e89a25fce65d)
 
-BUG=chromium:1454860
-
-(cherry picked from commit 6a38a3eb38f732b89ca0d8e36c43a434670c4ef5)
-
-Change-Id: I3e86101dbd5d6c4099f2fdb7b4a52d5cd0809c5f
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308820
-Reviewed-by: Taylor Brandstetter <deadbeef@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Cr-Original-Commit-Position: refs/heads/main@{#40292}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/309620
-Cr-Commit-Position: refs/branch-heads/5790@{#4}
+Bug: chromium:1455428, b/286993839, b/287458300
+Change-Id: I72628f20927d685e9c8ba1744126d763896bd804
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/309380
+Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+Reviewed-by: Erik Språng <sprang@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40316}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/309921
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5790@{#5}
 Cr-Branched-From: 2eacbbc03a4a41ea658661225eb1c8fc07884c33-refs/heads/main@{#40122}
 ---
- pc/webrtc_sdp.cc          |  5 +++++
- pc/webrtc_sdp_unittest.cc | 26 ++++++++++++++++++++++++++
- 2 files changed, 31 insertions(+)
+ call/rtp_payload_params.cc          | 47 +++++++++++++++++--------
+ call/rtp_payload_params_unittest.cc | 54 +++++++++++++++++++++++++++++
+ 2 files changed, 87 insertions(+), 14 deletions(-)
 
-diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index 467b8c2755..9bc11997b9 100644
---- a/pc/webrtc_sdp.cc
-+++ b/pc/webrtc_sdp.cc
-@@ -3545,6 +3545,11 @@ bool ParseSsrcGroupAttribute(absl::string_view line,
-     if (!GetValueFromString(line, fields[i], &ssrc, error)) {
-       return false;
-     }
-+    // Reject duplicates. While not forbidden by RFC 5576,
-+    // they don't make sense.
-+    if (absl::c_linear_search(ssrcs, ssrc)) {
-+      return ParseFailed(line, "Duplicate SSRC in ssrc-group", error);
-+    }
-     ssrcs.push_back(ssrc);
+diff --git a/call/rtp_payload_params.cc b/call/rtp_payload_params.cc
+index 18e6d9136b..f0347bc74e 100644
+--- a/call/rtp_payload_params.cc
++++ b/call/rtp_payload_params.cc
+@@ -604,23 +604,42 @@ void RtpPayloadParams::Vp9ToGeneric(const CodecSpecificInfoVP9& vp9_info,
+     // Create the array only if it is ever used.
+     last_vp9_frame_id_.resize(kPictureDiffLimit);
    }
-   ssrc_groups->push_back(SsrcGroup(semantics, ssrcs));
-diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index e68051447a..1c0c4dde94 100644
---- a/pc/webrtc_sdp_unittest.cc
-+++ b/pc/webrtc_sdp_unittest.cc
-@@ -5057,3 +5057,29 @@ TEST_F(WebRtcSdpTest, RejectSessionLevelMediaLevelExtmapMixedUsage) {
-   JsepSessionDescription jdesc(kDummyType);
-   EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
- }
+-  if (vp9_header.inter_layer_predicted && spatial_index > 0) {
+-    result.dependencies.push_back(
+-        last_vp9_frame_id_[vp9_header.picture_id % kPictureDiffLimit]
+-                          [spatial_index - 1]);
+-  }
+-  if (vp9_header.inter_pic_predicted) {
+-    for (size_t i = 0; i < vp9_header.num_ref_pics; ++i) {
+-      // picture_id is 15 bit number that wraps around. Though undeflow may
+-      // produce picture that exceeds 2^15, it is ok because in this
+-      // code block only last 7 bits of the picture_id are used.
+-      uint16_t depend_on = vp9_header.picture_id - vp9_header.pid_diff[i];
 +
-+TEST_F(WebRtcSdpTest, RejectDuplicateSsrcInSsrcGroup) {
-+  std::string sdp =
-+      "v=0\r\n"
-+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
-+      "s=-\r\n"
-+      "t=0 0\r\n"
-+      "a=group:BUNDLE 0\r\n"
-+      "a=fingerprint:sha-1 "
-+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
-+      "a=setup:actpass\r\n"
-+      "a=ice-ufrag:ETEn\r\n"
-+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
-+      "m=video 9 UDP/TLS/RTP/SAVPF 96 97\r\n"
-+      "c=IN IP4 0.0.0.0\r\n"
-+      "a=rtcp-mux\r\n"
-+      "a=sendonly\r\n"
-+      "a=mid:0\r\n"
-+      "a=rtpmap:96 VP8/90000\r\n"
-+      "a=rtpmap:97 rtx/90000\r\n"
-+      "a=fmtp:97 apt=96\r\n"
-+      "a=ssrc-group:FID 1234 1234\r\n"
-+      "a=ssrc:1234 cname:test\r\n";
-+  JsepSessionDescription jdesc(kDummyType);
-+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
++  if (vp9_header.flexible_mode) {
++    if (vp9_header.inter_layer_predicted && spatial_index > 0) {
+       result.dependencies.push_back(
+-          last_vp9_frame_id_[depend_on % kPictureDiffLimit][spatial_index]);
++          last_vp9_frame_id_[vp9_header.picture_id % kPictureDiffLimit]
++                            [spatial_index - 1]);
++    }
++    if (vp9_header.inter_pic_predicted) {
++      for (size_t i = 0; i < vp9_header.num_ref_pics; ++i) {
++        // picture_id is 15 bit number that wraps around. Though undeflow may
++        // produce picture that exceeds 2^15, it is ok because in this
++        // code block only last 7 bits of the picture_id are used.
++        uint16_t depend_on = vp9_header.picture_id - vp9_header.pid_diff[i];
++        result.dependencies.push_back(
++            last_vp9_frame_id_[depend_on % kPictureDiffLimit][spatial_index]);
++      }
++    }
++    last_vp9_frame_id_[vp9_header.picture_id % kPictureDiffLimit]
++                      [spatial_index] = shared_frame_id;
++  } else {
++    // Implementing general conversion logic for non-flexible mode requires some
++    // work and we will almost certainly never need it, so for now support only
++    // non-layerd streams.
++    if (spatial_index > 0 || temporal_index > 0) {
++      // Prefer to generate no generic layering than an inconsistent one.
++      rtp_video_header.generic.reset();
++      return;
++    }
++
++    if (vp9_header.inter_pic_predicted) {
++      // Since we only support non-scalable streams we only need to save the
++      // last frame id.
++      result.dependencies.push_back(last_vp9_frame_id_[0][0]);
+     }
++    last_vp9_frame_id_[0][0] = shared_frame_id;
+   }
+-  last_vp9_frame_id_[vp9_header.picture_id % kPictureDiffLimit][spatial_index] =
+-      shared_frame_id;
+ 
+   result.active_decode_targets =
+       ((uint32_t{1} << num_temporal_layers * num_active_spatial_layers) - 1);
+diff --git a/call/rtp_payload_params_unittest.cc b/call/rtp_payload_params_unittest.cc
+index cfd01018fe..8481b5f93f 100644
+--- a/call/rtp_payload_params_unittest.cc
++++ b/call/rtp_payload_params_unittest.cc
+@@ -567,6 +567,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
+   EncodedImage encoded_image;
+   CodecSpecificInfo codec_info;
+   codec_info.codecType = kVideoCodecVP9;
++  codec_info.codecSpecific.VP9.flexible_mode = true;
+   codec_info.codecSpecific.VP9.num_spatial_layers = 1;
+   codec_info.codecSpecific.VP9.temporal_idx = kNoTemporalIdx;
+   codec_info.codecSpecific.VP9.first_frame_in_picture = true;
+@@ -611,6 +612,55 @@ TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
+   EXPECT_EQ(header.generic->chain_diffs[0], 3 - 1);
+ }
+ 
++TEST(RtpPayloadParamsVp9ToGenericTest, NoScalabilityNonFlexibleMode) {
++  RtpPayloadState state;
++  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
++
++  EncodedImage encoded_image;
++  CodecSpecificInfo codec_info;
++  codec_info.codecType = kVideoCodecVP9;
++  codec_info.codecSpecific.VP9.flexible_mode = false;
++  codec_info.codecSpecific.VP9.num_spatial_layers = 1;
++  codec_info.codecSpecific.VP9.temporal_idx = kNoTemporalIdx;
++  codec_info.codecSpecific.VP9.first_frame_in_picture = true;
++  codec_info.end_of_picture = true;
++
++  // Key frame.
++  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
++  codec_info.codecSpecific.VP9.inter_pic_predicted = false;
++  RTPVideoHeader key_header =
++      params.GetRtpVideoHeader(encoded_image, &codec_info,
++                               /*shared_frame_id=*/1);
++
++  ASSERT_TRUE(key_header.generic);
++  EXPECT_EQ(key_header.generic->spatial_index, 0);
++  EXPECT_EQ(key_header.generic->temporal_index, 0);
++  EXPECT_EQ(key_header.generic->frame_id, 1);
++  ASSERT_THAT(key_header.generic->decode_target_indications, Not(IsEmpty()));
++  EXPECT_EQ(key_header.generic->decode_target_indications[0],
++            DecodeTargetIndication::kSwitch);
++  EXPECT_THAT(key_header.generic->dependencies, IsEmpty());
++  ASSERT_THAT(key_header.generic->chain_diffs, Not(IsEmpty()));
++  EXPECT_EQ(key_header.generic->chain_diffs[0], 0);
++
++  encoded_image._frameType = VideoFrameType::kVideoFrameDelta;
++  codec_info.codecSpecific.VP9.inter_pic_predicted = true;
++  RTPVideoHeader delta_header =
++      params.GetRtpVideoHeader(encoded_image, &codec_info,
++                               /*shared_frame_id=*/3);
++
++  ASSERT_TRUE(delta_header.generic);
++  EXPECT_EQ(delta_header.generic->spatial_index, 0);
++  EXPECT_EQ(delta_header.generic->temporal_index, 0);
++  EXPECT_EQ(delta_header.generic->frame_id, 3);
++  ASSERT_THAT(delta_header.generic->decode_target_indications, Not(IsEmpty()));
++  EXPECT_EQ(delta_header.generic->decode_target_indications[0],
++            DecodeTargetIndication::kSwitch);
++  EXPECT_THAT(delta_header.generic->dependencies, ElementsAre(1));
++  ASSERT_THAT(delta_header.generic->chain_diffs, Not(IsEmpty()));
++  EXPECT_EQ(delta_header.generic->chain_diffs[0], 3 - 1);
 +}
++
+ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
+   // Test with 2 temporal layers structure that is not used by webrtc:
+   //    1---3   5
+@@ -622,6 +672,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
+   EncodedImage image;
+   CodecSpecificInfo info;
+   info.codecType = kVideoCodecVP9;
++  info.codecSpecific.VP9.flexible_mode = true;
+   info.codecSpecific.VP9.num_spatial_layers = 1;
+   info.codecSpecific.VP9.first_frame_in_picture = true;
+   info.end_of_picture = true;
+@@ -732,6 +783,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
+   EncodedImage image;
+   CodecSpecificInfo info;
+   info.codecType = kVideoCodecVP9;
++  info.codecSpecific.VP9.flexible_mode = true;
+   info.codecSpecific.VP9.num_spatial_layers = 1;
+   info.codecSpecific.VP9.first_frame_in_picture = true;
+   info.end_of_picture = true;
+@@ -885,6 +937,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
+   EncodedImage image;
+   CodecSpecificInfo info;
+   info.codecType = kVideoCodecVP9;
++  info.codecSpecific.VP9.flexible_mode = true;
+   info.codecSpecific.VP9.num_spatial_layers = 2;
+   info.codecSpecific.VP9.first_frame_in_picture = true;
+ 
+@@ -993,6 +1046,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest,
+   EncodedImage image;
+   CodecSpecificInfo info;
+   info.codecType = kVideoCodecVP9;
++  info.codecSpecific.VP9.flexible_mode = true;
+   info.codecSpecific.VP9.num_spatial_layers = 1;
+   info.codecSpecific.VP9.first_frame_in_picture = true;
+ 
 -- 
 2.37.3
 
