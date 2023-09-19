@@ -90,7 +90,7 @@ export default class MozToggle extends MozLitElement {
       return html`
         <p
           id="moz-toggle-description"
-          class="description-wrapper"
+          class="description-wrapper text-deemphasized"
           part="description"
         >
           ${this.description} ${this.supportLinkTemplate()}
