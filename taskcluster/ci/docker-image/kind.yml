@@ -263,6 +263,13 @@ jobs:
     decision:
         symbol: I(decision)
         parent: ubuntu2004-base
+    snap-build-core20:
+        symbol: I(snap20-build)
+        parent: ubuntu2004-base
+        definition: snap-coreXX-build
+        args:
+            SNAP_BASE: core20
+            SNAP_LIST: "gnome-3-38-2004-sdk"
     snap-build-core22:
         symbol: I(snap22-build)
         parent: ubuntu2204-base
