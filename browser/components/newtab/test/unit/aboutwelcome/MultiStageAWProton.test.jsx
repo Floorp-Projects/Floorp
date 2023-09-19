@@ -359,7 +359,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
       const imageEl = wrapper.find(".inline-image img");
-      const textEl = wrapper.find(".legal-paragraph");
+      const textEl = wrapper.find(".link-paragraph");
 
       assert.equal(imageEl.length, 2);
       assert.equal(textEl.length, 2);

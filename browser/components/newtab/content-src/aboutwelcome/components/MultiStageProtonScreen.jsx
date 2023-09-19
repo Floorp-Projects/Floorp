@@ -21,7 +21,7 @@ import { OnboardingVideo } from "./OnboardingVideo";
 import { AdditionalCTA } from "./AdditionalCTA";
 import { EmbeddedMigrationWizard } from "./EmbeddedMigrationWizard";
 import { AddonsPicker } from "./AddonsPicker";
-import { LegalParagraph } from "./LegalParagraph";
+import { LinkParagraph } from "./LinkParagraph";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -424,7 +424,7 @@ export class ProtonScreen extends React.PureComponent {
       switch (item.type) {
         case "text":
           elements.push(
-            <LegalParagraph
+            <LinkParagraph
               text_content={item}
               handleAction={this.props.handleAction}
             />

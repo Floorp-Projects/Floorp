@@ -685,7 +685,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text {
   text-align: start;
-  margin-block: 10px;
+  margin-block: 10px 20px;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
   font-size: 1.37em;
@@ -693,8 +693,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   font-weight: 400;
   line-height: 1.5;
 }
-.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h2,
-.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text .cta-paragraph {
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h2 {
   font-size: 0.8em;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary,
@@ -722,16 +721,25 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 .onboardingContainer.shopping .screen[pos=split] .section-secondary {
   display: none;
 }
-.onboardingContainer.shopping .screen[pos=split] .info-text {
+.onboardingContainer.shopping .screen[pos=split] .info-text, .onboardingContainer.shopping .screen[pos=split] .link-paragraph {
   color: #5B5B66;
   font-size: 0.69em;
   margin: 10px auto;
   line-height: 1.5;
 }
 @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
-  .onboardingContainer.shopping .screen[pos=split] .info-text {
+  .onboardingContainer.shopping .screen[pos=split] .info-text, .onboardingContainer.shopping .screen[pos=split] .link-paragraph {
     color: #CFCFD8;
   }
+}
+.onboardingContainer.shopping .screen[pos=split] .link-paragraph {
+  font-size: 0.8em;
+  margin-block: 0 10px;
+  padding-inline: 30px;
+  text-align: start;
+}
+.onboardingContainer.shopping .screen[pos=split] .link-paragraph a {
+  text-decoration: underline;
 }
 
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content {
