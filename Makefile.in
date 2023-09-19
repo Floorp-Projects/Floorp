@@ -188,6 +188,7 @@ buildsymbols: symbolsarchive
 endif # MOZ_ENABLE_FULL_SYMBOLS
 else
 buildsymbols:
+	@echo "Skipping symbols generation because MOZ_CRASHREPORTER is not set."
 endif
 
 uploadsymbols:
