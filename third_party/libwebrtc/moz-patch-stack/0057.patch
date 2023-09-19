@@ -106,10 +106,10 @@ index f78a0da41a..e7bb109527 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index e349f463f6..b437c491fc 100644
+index 241ed27a56..80d388a4fd 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -493,11 +493,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+@@ -506,11 +506,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -127,7 +127,7 @@ index e349f463f6..b437c491fc 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index b3a872ab09..f45053cab0 100644
+index f9c77a57b0..e9da4d4f23 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -196,7 +196,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,

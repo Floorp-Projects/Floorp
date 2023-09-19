@@ -257,7 +257,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   FRIEND_TEST_ALL_PREFIXES(RtpRtcpImpl2Test, RttForReceiverOnly);
 
   struct RtpSenderContext {
-    explicit RtpSenderContext(const RtpRtcpInterface::Configuration& config);
+    explicit RtpSenderContext(TaskQueueBase& worker_queue,
+                              const RtpRtcpInterface::Configuration& config);
     // Storage of packets, for retransmissions and padding, if applicable.
     RtpPacketHistory packet_history;
     SequenceChecker sequencing_checker;

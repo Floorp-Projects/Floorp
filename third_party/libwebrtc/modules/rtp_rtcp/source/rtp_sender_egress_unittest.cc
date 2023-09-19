@@ -465,7 +465,9 @@ TEST_F(RtpSenderEgressTest, ReportsFecRate) {
   }
 
   EXPECT_NEAR(
-      (sender->GetSendRates()[RtpPacketMediaType::kForwardErrorCorrection])
+      (sender->GetSendRates(
+           time_controller_.GetClock()
+               ->CurrentTime())[RtpPacketMediaType::kForwardErrorCorrection])
           .bps(),
       (total_fec_data_sent / (kTimeBetweenPackets * kNumPackets)).bps(), 500);
 }
