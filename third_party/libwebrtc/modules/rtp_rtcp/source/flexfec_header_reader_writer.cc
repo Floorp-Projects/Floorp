@@ -49,17 +49,6 @@ constexpr size_t kHeaderSizes[] = {
     kBaseHeaderSize + kStreamSpecificHeaderSize + kFlexfecPacketMaskSizes[1],
     kBaseHeaderSize + kStreamSpecificHeaderSize + kFlexfecPacketMaskSizes[2]};
 
-// We currently only support single-stream protection.
-// TODO(brandtr): Update this when we support multistream protection.
-constexpr uint8_t kSsrcCount = 1;
-
-// There are three reserved bytes that MUST be set to zero in the header.
-constexpr uint32_t kReservedBits = 0;
-
-// TODO(brandtr): Update this when we support multistream protection.
-constexpr size_t kPacketMaskOffset =
-    kBaseHeaderSize + kStreamSpecificHeaderSize;
-
 // Here we count the K-bits as belonging to the packet mask.
 // This can be used in conjunction with FlexfecHeaderWriter::MinPacketMaskSize,
 // which calculates a bound on the needed packet mask size including K-bits,
@@ -255,78 +244,84 @@ size_t FlexfecHeaderWriter::FecHeaderSize(size_t packet_mask_size) const {
 // FecHeaderSize(), so in this function we can be sure that we are
 // writing in space that is intended for the header.
 //
-// TODO(brandtr): Update this function when we support offset-based masks,
-// retransmissions, and protecting multiple SSRCs.
+// TODO(brandtr): Update this function when we support offset-based masks
+// and retransmissions.
 void FlexfecHeaderWriter::FinalizeFecHeader(
     rtc::ArrayView<const ProtectedStream> protected_streams,
     ForwardErrorCorrection::Packet& fec_packet) const {
-  // TODO(bugs.webrtc.org/15002): Iterate over all streams and update FlexFEC
-  // header accordingly.
-  RTC_CHECK_EQ(protected_streams.size(), 1);
-  uint32_t media_ssrc = protected_streams[0].ssrc;
-  uint16_t seq_num_base = protected_streams[0].seq_num_base;
-  const uint8_t* packet_mask = protected_streams[0].packet_mask.data();
-  size_t packet_mask_size = protected_streams[0].packet_mask.size();
-
   uint8_t* data = fec_packet.data.MutableData();
-  data[0] &= 0x7f;  // Clear R bit.
-  data[0] &= 0xbf;  // Clear F bit.
-  ByteWriter<uint8_t>::WriteBigEndian(&data[8], kSsrcCount);
-  ByteWriter<uint32_t, 3>::WriteBigEndian(&data[9], kReservedBits);
-  ByteWriter<uint32_t>::WriteBigEndian(&data[12], media_ssrc);
-  ByteWriter<uint16_t>::WriteBigEndian(&data[16], seq_num_base);
-  // Adapt ULPFEC packet mask to FlexFEC header.
-  //
-  // We treat the mask parts as unsigned integers with host order endianness
-  // in order to simplify the bit shifting between bytes.
-  uint8_t* const written_packet_mask = data + kPacketMaskOffset;
-  if (packet_mask_size == kUlpfecPacketMaskSizeLBitSet) {
-    // The packet mask is 48 bits long.
-    uint16_t tmp_mask_part0 =
-        ByteReader<uint16_t>::ReadBigEndian(&packet_mask[0]);
-    uint32_t tmp_mask_part1 =
-        ByteReader<uint32_t>::ReadBigEndian(&packet_mask[2]);
+  *data &= 0x7f;  // Clear R bit.
+  *data &= 0xbf;  // Clear F bit.
 
-    tmp_mask_part0 >>= 1;  // Shift, thus clearing K-bit 0.
-    ByteWriter<uint16_t>::WriteBigEndian(&written_packet_mask[0],
-                                         tmp_mask_part0);
-    tmp_mask_part1 >>= 2;  // Shift, thus clearing K-bit 1 and bit 15.
-    ByteWriter<uint32_t>::WriteBigEndian(&written_packet_mask[2],
-                                         tmp_mask_part1);
-    bool bit15 = (packet_mask[1] & 0x01) != 0;
-    if (bit15)
-      written_packet_mask[2] |= 0x40;  // Set bit 15.
-    bool bit46 = (packet_mask[5] & 0x02) != 0;
-    bool bit47 = (packet_mask[5] & 0x01) != 0;
-    if (!bit46 && !bit47) {
-      written_packet_mask[2] |= 0x80;  // Set K-bit 1.
-    } else {
-      memset(&written_packet_mask[6], 0, 8);  // Clear all trailing bits.
-      written_packet_mask[6] |= 0x80;         // Set K-bit 2.
-      if (bit46)
-        written_packet_mask[6] |= 0x40;  // Set bit 46.
-      if (bit47)
-        written_packet_mask[6] |= 0x20;  // Set bit 47.
-    }
-  } else if (packet_mask_size == kUlpfecPacketMaskSizeLBitClear) {
-    // The packet mask is 16 bits long.
-    uint16_t tmp_mask_part0 =
-        ByteReader<uint16_t>::ReadBigEndian(&packet_mask[0]);
+  // First seq_num will be in byte index 8
+  // (See FEC header schematic in flexfec_header_reader_writer.h.)
+  uint8_t* write_at = data + 8;
+  for (const ProtectedStream& protected_stream : protected_streams) {
+    ByteWriter<uint16_t>::WriteBigEndian(write_at,
+                                         protected_stream.seq_num_base);
+    write_at += kStreamSpecificHeaderSize;
+    // Adapt ULPFEC packet mask to FlexFEC header.
+    //
+    // We treat the mask parts as unsigned integers with host order endianness
+    // in order to simplify the bit shifting between bytes.
+    if (protected_stream.packet_mask.size() == kUlpfecPacketMaskSizeLBitSet) {
+      // The packet mask is 48 bits long.
+      uint16_t tmp_mask_part0 =
+          ByteReader<uint16_t>::ReadBigEndian(&protected_stream.packet_mask[0]);
+      uint32_t tmp_mask_part1 =
+          ByteReader<uint32_t>::ReadBigEndian(&protected_stream.packet_mask[2]);
 
-    tmp_mask_part0 >>= 1;  // Shift, thus clearing K-bit 0.
-    ByteWriter<uint16_t>::WriteBigEndian(&written_packet_mask[0],
-                                         tmp_mask_part0);
-    bool bit15 = (packet_mask[1] & 0x01) != 0;
-    if (!bit15) {
-      written_packet_mask[0] |= 0x80;  // Set K-bit 0.
+      tmp_mask_part0 >>= 1;  // Shift, thus clearing K-bit 0.
+      ByteWriter<uint16_t>::WriteBigEndian(write_at, tmp_mask_part0);
+      write_at += kFlexfecPacketMaskSizes[0];
+      tmp_mask_part1 >>= 2;  // Shift, thus clearing K-bit 1 and bit 15.
+      ByteWriter<uint32_t>::WriteBigEndian(write_at, tmp_mask_part1);
+
+      bool bit15 = (protected_stream.packet_mask[1] & 0x01) != 0;
+      if (bit15)
+        *write_at |= 0x40;  // Set bit 15.
+
+      bool bit46 = (protected_stream.packet_mask[5] & 0x02) != 0;
+      bool bit47 = (protected_stream.packet_mask[5] & 0x01) != 0;
+      if (!bit46 && !bit47) {
+        *write_at |= 0x80;  // Set K-bit 1.
+        write_at += kFlexfecPacketMaskSizes[1] - kFlexfecPacketMaskSizes[0];
+      } else {
+        write_at += kFlexfecPacketMaskSizes[1] - kFlexfecPacketMaskSizes[0];
+        // Clear all trailing bits.
+        memset(write_at, 0,
+               kFlexfecPacketMaskSizes[2] - kFlexfecPacketMaskSizes[1]);
+        if (bit46)
+          *write_at |= 0x80;  // Set bit 46.
+        if (bit47)
+          *write_at |= 0x40;  // Set bit 47.
+        write_at += kFlexfecPacketMaskSizes[2] - kFlexfecPacketMaskSizes[1];
+      }
+    } else if (protected_stream.packet_mask.size() ==
+               kUlpfecPacketMaskSizeLBitClear) {
+      // The packet mask is 16 bits long.
+      uint16_t tmp_mask_part0 =
+          ByteReader<uint16_t>::ReadBigEndian(&protected_stream.packet_mask[0]);
+
+      tmp_mask_part0 >>= 1;  // Shift, thus clearing K-bit 0.
+      ByteWriter<uint16_t>::WriteBigEndian(write_at, tmp_mask_part0);
+      bool bit15 = (protected_stream.packet_mask[1] & 0x01) != 0;
+      if (!bit15) {
+        *write_at |= 0x80;  // Set K-bit 0.
+        write_at += kFlexfecPacketMaskSizes[0];
+      } else {
+        write_at += kFlexfecPacketMaskSizes[0];
+        // Clear all trailing bits.
+        memset(write_at, 0U,
+               kFlexfecPacketMaskSizes[1] - kFlexfecPacketMaskSizes[0]);
+        *write_at |= 0x80;  // Set K-bit 1.
+        *write_at |= 0x40;  // Set bit 15.
+        write_at += kFlexfecPacketMaskSizes[1] - kFlexfecPacketMaskSizes[0];
+      }
     } else {
-      memset(&written_packet_mask[2], 0U, 4);  // Clear all trailing bits.
-      written_packet_mask[2] |= 0x80;          // Set K-bit 1.
-      written_packet_mask[2] |= 0x40;          // Set bit 15.
+      RTC_DCHECK_NOTREACHED() << "Incorrect packet mask size: "
+                              << protected_stream.packet_mask.size() << ".";
     }
-  } else {
-    RTC_DCHECK_NOTREACHED()
-        << "Incorrect packet mask size: " << packet_mask_size << ".";
   }
 }
 
