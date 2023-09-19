@@ -558,9 +558,14 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
   MOZ_ASSERT(aParentContext->IsInProcess());
 
   // Let's inform the parent window and the other windows having the
-  // same tracking origin about the storage permission is granted.
-  StorageAccessAPIHelper::UpdateAllowAccessOnCurrentProcess(aParentContext,
-                                                            aTrackingOrigin);
+  // same tracking origin about the storage permission is granted
+  // if it is not a frame-only permission grant which does not propogate.
+  if (aReason != ContentBlockingNotifier::StorageAccessPermissionGrantedReason::
+                     eStorageAccessAPI ||
+      !StaticPrefs::dom_storage_access_frame_only()) {
+    StorageAccessAPIHelper::UpdateAllowAccessOnCurrentProcess(aParentContext,
+                                                              aTrackingOrigin);
+  }
 
   // Let's inform the parent window.
   nsCOMPtr<nsPIDOMWindowInner> parentInner =
@@ -641,9 +646,12 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
 
   // If the permission is granted on a first-party window, also have to update
   // the permission to all the other windows with the same tracking origin (in
-  // the same tab), if any.
-  StorageAccessAPIHelper::UpdateAllowAccessOnParentProcess(aParentContext,
-                                                           trackingOrigin);
+  // the same tab), if any, only it is not a frame-only permission grant which
+  // does not propogate.
+  if (!aFrameOnly) {
+    StorageAccessAPIHelper::UpdateAllowAccessOnParentProcess(aParentContext,
+                                                             trackingOrigin);
+  }
 
   return StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
       wgp->DocumentPrincipal(), aTrackingPrincipal, aAllowMode, aFrameOnly,

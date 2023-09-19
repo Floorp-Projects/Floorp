@@ -81,14 +81,14 @@ async function createTrackerFrame(params, count, callback) {
   }
 }
 
-async function testPermission(browser, block, params) {
+async function testPermission(browser, block, params, frameNumber) {
   await SpecialPowers.spawn(
     browser,
-    [block, params],
-    async function (block, params) {
+    [block, params, frameNumber],
+    async function (block, params, frameNumber) {
       for (let i = 0; ; i++) {
         let ifr = content.document.getElementById("ifr" + i);
-        if (!ifr) {
+        if (!ifr || (frameNumber !== undefined && i != frameNumber)) {
           break;
         }
 
@@ -209,8 +209,8 @@ add_task(async function testPermissionGrantedOn3rdParty() {
   // 4. The fourth tab is opened by the first tab but with a different top-level url).
   //    The tab has one tracker iframe, said E.
   //
-  // This test grants permission on iframe A, which then should propagate storage
-  // permission to iframe B & C, but not D, E
+  // This test grants permission on iframe A, which then should not propagate storage
+  // permission to iframe B, C, D, E
 
   info("Creating the first tab");
   let tab1 = await createTab(top, 2, null, params);
@@ -264,11 +264,12 @@ add_task(async function testPermissionGrantedOn3rdParty() {
     });
   });
 
-  info("Both iframs of the first tab should have stroage permission");
-  await testPermission(browser1, false /* block */, params);
+  info("Second iframe of the first tab should not have stroage permission");
+  await testPermission(browser1, false /* block */, params, 0);
+  await testPermission(browser1, true /* block */, params, 1);
 
-  info("The iframe of the second tab should have storage permission");
-  await testPermission(browser2, false /* block */, params);
+  info("The iframe of the second tab should not have storage permission");
+  await testPermission(browser2, true /* block */, params);
 
   info("The iframe of the third tab should not have storage permission");
   await testPermission(browser3, true /* block */, params);
