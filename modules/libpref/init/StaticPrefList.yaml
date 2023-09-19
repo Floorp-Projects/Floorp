@@ -10280,7 +10280,7 @@
 #ifdef MOZ_WEBSPEECH
 -   name: media.webspeech.synth.enabled
     type: bool
-    value: false
+    value: true
     mirror: always
 #endif  # MOZ_WEBSPEECH
 

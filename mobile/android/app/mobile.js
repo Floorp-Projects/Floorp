@@ -237,9 +237,6 @@ pref("media.video-queue.send-to-compositor-size", 1);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
-// Enable WebSpeech speech synthesis
-pref("media.webspeech.synth.enabled", true);
-
 // OpenH264 is visible in about:plugins, and enabled, by default.
 pref("media.gmp-gmpopenh264.visible", true);
 pref("media.gmp-gmpopenh264.enabled", true);
