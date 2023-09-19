@@ -408,6 +408,16 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
 }
 
 - (BOOL)setCategory:(NSString *)category
+               mode:(NSString *)mode
+            options:(AVAudioSessionCategoryOptions)options
+              error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  return [self.session setCategory:category mode:mode options:options error:outError];
+}
+
+- (BOOL)setCategory:(NSString *)category
         withOptions:(AVAudioSessionCategoryOptions)options
               error:(NSError **)outError {
   if (![self checkLock:outError]) {
