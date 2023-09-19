@@ -760,10 +760,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // the event object alive.
   mozilla::dom::Event* mEvent;
 
-  // A boolean flag indicating whether storage access is granted for the
-  // current window and that it is currently being used by this window.
-  bool mUsingStorageAccess;
-
   // The WindowGlobalChild actor for this window.
   //
   // This will be non-null during the full lifetime of the window, initialized
