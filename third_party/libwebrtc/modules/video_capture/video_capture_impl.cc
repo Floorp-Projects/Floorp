@@ -26,6 +26,7 @@ namespace webrtc {
 namespace videocapturemodule {
 
 const char* VideoCaptureImpl::CurrentDeviceName() const {
+  RTC_DCHECK_RUN_ON(&api_checker_);
   return _deviceUniqueId;
 }
 
@@ -88,6 +89,7 @@ VideoCaptureImpl::VideoCaptureImpl()
 }
 
 VideoCaptureImpl::~VideoCaptureImpl() {
+  RTC_DCHECK_RUN_ON(&api_checker_);
   if (_deviceUniqueId)
     delete[] _deviceUniqueId;
 }
@@ -125,6 +127,8 @@ int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
 }
 
 int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
   for (auto dataCallBack : _dataCallBacks) {
@@ -138,6 +142,8 @@ void VideoCaptureImpl::DeliverRawFrame(uint8_t* videoFrame,
                                        size_t videoFrameLength,
                                        const VideoCaptureCapability& frameInfo,
                                        int64_t captureTime) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   UpdateFrameCount();
   _rawDataCallBack->OnRawFrame(videoFrame, videoFrameLength, frameInfo,
                                _rotateFrame, captureTime);
@@ -147,6 +153,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
                                         size_t videoFrameLength,
                                         const VideoCaptureCapability& frameInfo,
                                         int64_t captureTime /*=0*/) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
   MutexLock lock(&api_lock_);
 
   const int32_t width = frameInfo.width;
@@ -257,6 +264,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
 
 int32_t VideoCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
+  RTC_DCHECK_RUN_ON(&api_checker_);
   _requestedCapability = capability;
   return -1;
 }
@@ -292,6 +300,8 @@ bool VideoCaptureImpl::GetApplyRotation() {
 }
 
 void VideoCaptureImpl::UpdateFrameCount() {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   if (_incomingFrameTimesNanos[0] / rtc::kNumNanosecsPerMicrosec == 0) {
     // first no shift
   } else {
@@ -304,6 +314,8 @@ void VideoCaptureImpl::UpdateFrameCount() {
 }
 
 uint32_t VideoCaptureImpl::CalculateFrameRate(int64_t now_ns) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   int32_t num = 0;
   int32_t nrOfFrames = 0;
   for (num = 1; num < (kFrameRateCountHistorySize - 1); ++num) {

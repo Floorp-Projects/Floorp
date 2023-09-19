@@ -51,10 +51,15 @@ VideoCaptureModulePipeWire::VideoCaptureModulePipeWire(
     : VideoCaptureImpl(), session_(options->pipewire_session()) {}
 
 VideoCaptureModulePipeWire::~VideoCaptureModulePipeWire() {
+  RTC_DCHECK_RUN_ON(&api_checker_);
+
   StopCapture();
 }
 
 int32_t VideoCaptureModulePipeWire::Init(const char* deviceUniqueId) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+  RTC_DCHECK_RUN_ON(&api_checker_);
+
   absl::optional<int> id;
   id = rtc::StringToNumber<int>(deviceUniqueId);
   if (id == absl::nullopt)
@@ -113,6 +118,9 @@ static spa_pod* BuildFormat(spa_pod_builder* builder,
 
 int32_t VideoCaptureModulePipeWire::StartCapture(
     const VideoCaptureCapability& capability) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+  RTC_DCHECK_RUN_ON(&api_checker_);
+
   uint8_t buffer[1024] = {};
 
   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
@@ -166,6 +174,9 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
 }
 
 int32_t VideoCaptureModulePipeWire::StopCapture() {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+  RTC_DCHECK_RUN_ON(&api_checker_);
+
   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
   if (stream_) {
     pw_stream_destroy(stream_);
@@ -177,6 +188,7 @@ int32_t VideoCaptureModulePipeWire::StopCapture() {
 }
 
 bool VideoCaptureModulePipeWire::CaptureStarted() {
+  RTC_DCHECK_RUN_ON(&api_checker_);
   MutexLock lock(&api_lock_);
 
   return started_;
@@ -184,6 +196,8 @@ bool VideoCaptureModulePipeWire::CaptureStarted() {
 
 int32_t VideoCaptureModulePipeWire::CaptureSettings(
     VideoCaptureCapability& settings) {
+  RTC_DCHECK_RUN_ON(&api_checker_);
+
   settings = _requestedCapability;
 
   return 0;
@@ -196,12 +210,15 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
   VideoCaptureModulePipeWire* that =
       static_cast<VideoCaptureModulePipeWire*>(data);
   RTC_DCHECK(that);
+  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
 
   if (format && id == SPA_PARAM_Format)
     that->OnFormatChanged(format);
 }
 
 void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   uint32_t media_type, media_subtype;
 
   if (spa_format_parse(format, &media_type, &media_subtype) < 0) {
@@ -299,6 +316,7 @@ void VideoCaptureModulePipeWire::OnStreamStateChanged(
   VideoCaptureModulePipeWire* that =
       static_cast<VideoCaptureModulePipeWire*>(data);
   RTC_DCHECK(that);
+  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
 
   MutexLock lock(&that->api_lock_);
   switch (state) {
@@ -323,6 +341,7 @@ void VideoCaptureModulePipeWire::OnStreamProcess(void* data) {
   VideoCaptureModulePipeWire* that =
       static_cast<VideoCaptureModulePipeWire*>(data);
   RTC_DCHECK(that);
+  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
   that->ProcessBuffers();
 }
 
@@ -340,6 +359,8 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
 }
 
 void VideoCaptureModulePipeWire::ProcessBuffers() {
+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+
   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
     struct spa_meta_header* h;
     h = static_cast<struct spa_meta_header*>(

@@ -7,10 +7,10 @@ Subject: Bug 1772380 - to upstream - ref count this in lambda capture
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 79acccd303..49aa7f1c1a 100644
+index 00cede01cb..d6813b13fd 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -288,8 +288,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+@@ -296,8 +296,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
    if (_captureThread.empty()) {
      quit_ = false;
      _captureThread = rtc::PlatformThread::SpawnJoinable(
