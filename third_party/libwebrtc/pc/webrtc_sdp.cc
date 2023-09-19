@@ -2897,16 +2897,14 @@ void AddFeedbackParameters(const cricket::FeedbackParams& feedback_params,
 // is no Codec associated with that payload type it returns an empty codec
 // with that payload type.
 template <class T>
-T GetCodecWithPayloadType(cricket::MediaType type,
-                          const std::vector<T>& codecs,
-                          int payload_type) {
+T GetCodecWithPayloadType(const std::vector<T>& codecs, int payload_type) {
   const T* codec = FindCodecById(codecs, payload_type);
   if (codec)
     return *codec;
   // Return empty codec with `payload_type`.
-  if (type == cricket::MEDIA_TYPE_AUDIO) {
+  if constexpr (std::is_same<T, cricket::AudioCodec>::value) {
     return cricket::CreateAudioCodec(payload_type, "", 0, 0);
-  } else {
+  } else if constexpr (std::is_same<T, cricket::VideoCodec>::value) {
     return cricket::CreateVideoCodec(payload_type, "");
   }
 }
@@ -2939,8 +2937,7 @@ void UpdateCodec(MediaContentDescription* content_desc,
                  int payload_type,
                  const cricket::CodecParameterMap& parameters) {
   // Codec might already have been populated (from rtpmap).
-  U new_codec = GetCodecWithPayloadType(content_desc->type(),
-                                        static_cast<T*>(content_desc)->codecs(),
+  U new_codec = GetCodecWithPayloadType(static_cast<T*>(content_desc)->codecs(),
                                         payload_type);
   AddParameters(parameters, &new_codec);
   AddOrReplaceCodec<T, U>(content_desc, new_codec);
@@ -2953,8 +2950,7 @@ void UpdateCodec(MediaContentDescription* content_desc,
                  int payload_type,
                  const cricket::FeedbackParam& feedback_param) {
   // Codec might already have been populated (from rtpmap).
-  U new_codec = GetCodecWithPayloadType(content_desc->type(),
-                                        static_cast<T*>(content_desc)->codecs(),
+  U new_codec = GetCodecWithPayloadType(static_cast<T*>(content_desc)->codecs(),
                                         payload_type);
   AddFeedbackParameter(feedback_param, &new_codec);
   AddOrReplaceCodec<T, U>(content_desc, new_codec);
@@ -2971,8 +2967,8 @@ void UpdateVideoCodecPacketization(VideoContentDescription* video_desc,
   }
 
   // Codec might already have been populated (from rtpmap).
-  cricket::VideoCodec codec = GetCodecWithPayloadType(
-      video_desc->type(), video_desc->codecs(), payload_type);
+  cricket::VideoCodec codec =
+      GetCodecWithPayloadType(video_desc->codecs(), payload_type);
   codec.packetization = std::string(packetization);
   AddOrReplaceCodec<VideoContentDescription, cricket::VideoCodec>(video_desc,
                                                                   codec);
@@ -3601,8 +3597,8 @@ void UpdateCodec(int payload_type,
                  AudioContentDescription* audio_desc) {
   // Codec may already be populated with (only) optional parameters
   // (from an fmtp).
-  cricket::AudioCodec codec = GetCodecWithPayloadType(
-      audio_desc->type(), audio_desc->codecs(), payload_type);
+  cricket::AudioCodec codec =
+      GetCodecWithPayloadType(audio_desc->codecs(), payload_type);
   codec.name = std::string(name);
   codec.clockrate = clockrate;
   codec.bitrate = bitrate;
@@ -3618,8 +3614,8 @@ void UpdateCodec(int payload_type,
                  VideoContentDescription* video_desc) {
   // Codec may already be populated with (only) optional parameters
   // (from an fmtp).
-  cricket::VideoCodec codec = GetCodecWithPayloadType(
-      video_desc->type(), video_desc->codecs(), payload_type);
+  cricket::VideoCodec codec =
+      GetCodecWithPayloadType(video_desc->codecs(), payload_type);
   codec.name = std::string(name);
   AddOrReplaceCodec<VideoContentDescription, cricket::VideoCodec>(video_desc,
                                                                   codec);

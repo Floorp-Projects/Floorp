@@ -82,8 +82,14 @@ TEST(CodecTest, TestAudioCodecOperators) {
   EXPECT_NE(c0, c4);
   EXPECT_NE(c0, c5);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  AudioCodec c7;
+#pragma clang diagnostic pop
   AudioCodec c8 = cricket::CreateAudioCodec(0, "", 0, 0);
   AudioCodec c9 = c0;
+  EXPECT_EQ(c8, c7);
+  EXPECT_NE(c9, c7);
   EXPECT_EQ(c9, c0);
 
   AudioCodec c10(c0);
@@ -156,8 +162,14 @@ TEST(CodecTest, TestVideoCodecOperators) {
   EXPECT_TRUE(c0 != c1);
   EXPECT_TRUE(c0 != c2);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  VideoCodec c7;
+#pragma clang diagnostic pop
   VideoCodec c8 = cricket::CreateVideoCodec(0, "");
   VideoCodec c9 = c0;
+  EXPECT_TRUE(c8 == c7);
+  EXPECT_TRUE(c9 != c7);
   EXPECT_TRUE(c9 == c0);
 
   VideoCodec c10(c0);
