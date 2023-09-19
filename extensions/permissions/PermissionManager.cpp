@@ -604,8 +604,8 @@ bool IsPersistentExpire(uint32_t aExpire, const nsACString& aType) {
 }
 
 nsresult NotifySecondaryKeyPermissionUpdateInContentProcess(
-    const nsACString& aType, uint32_t aPermission,
-    const nsACString& aSecondaryKey, nsIPrincipal* aTopPrincipal) {
+    const nsACString& aType, const nsACString& aSecondaryKey,
+    nsIPrincipal* aTopPrincipal) {
   NS_ENSURE_ARG_POINTER(aTopPrincipal);
   MOZ_ASSERT(XRE_IsParentProcess());
   AutoTArray<RefPtr<BrowsingContextGroup>, 5> bcGroups;
@@ -636,7 +636,7 @@ nsresult NotifySecondaryKeyPermissionUpdateInContentProcess(
             if (!wgp) {
               continue;
             }
-            bool success = wgp->SendNotifyPermissionChange(aType, aPermission);
+            bool success = wgp->SendNotifyPermissionChange(aType);
             Unused << NS_WARN_IF(!success);
           }
         }
@@ -1833,8 +1833,8 @@ nsresult PermissionManager::AddInternal(
     nsAutoCString secondaryKey;
     isSecondaryKeyed = GetSecondaryKey(aType, secondaryKey);
     if (isSecondaryKeyed) {
-      NotifySecondaryKeyPermissionUpdateInContentProcess(
-          aType, aPermission, secondaryKey, aPrincipal);
+      NotifySecondaryKeyPermissionUpdateInContentProcess(aType, secondaryKey,
+                                                         aPrincipal);
     }
 
     nsTArray<ContentParent*> cplist;
@@ -3439,7 +3439,6 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
 
   nsTArray<std::pair<nsCString, nsCString>> pairs;
   nsCOMPtr<nsIPrincipal> prin = aPrincipal;
-
   while (prin) {
     // Add the pair to the list
     std::pair<nsCString, nsCString>* pair =
@@ -3460,17 +3459,6 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
     Unused << GetOriginFromPrincipal(prin, false, pair->second);
     prin = prin->GetNextSubDomainPrincipal();
     // Get the next subdomain principal and loop back around.
-  }
-
-  // We need to add the Site to the keys of interest here.
-  // This allows site-scoped permissions to propogate
-  // even when the origin has a non-standard port.
-  nsCString siteKey;
-  nsresult rv = GetKeyForPrincipal(aPrincipal, false, true, siteKey);
-  if (NS_SUCCEEDED(rv) && !siteKey.IsEmpty()) {
-    std::pair<nsCString, nsCString>* pair =
-        pairs.AppendElement(std::make_pair(siteKey, ""_ns));
-    Unused << GetSiteFromPrincipal(aPrincipal, false, pair->second);
   }
 
   MOZ_ASSERT(pairs.Length() >= 1,

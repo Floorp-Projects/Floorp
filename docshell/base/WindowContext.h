@@ -51,9 +51,6 @@ class BrowsingContextGroup;
   /* Whether this window's channel has been marked as a third-party      \
    * tracking resource */                                                \
   FIELD(IsThirdPartyTrackingResourceWindow, bool)                        \
-  /* Whether this window is using its unpartitioned cookies due to       \
-   * the Storage Access API */                                           \
-  FIELD(UsingStorageAccess, bool)                                        \
   FIELD(ShouldResistFingerprinting, bool)                                \
   FIELD(IsSecureContext, bool)                                           \
   FIELD(IsOriginalFrameSource, bool)                                     \
@@ -269,8 +266,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
               const bool& aIsThirdPartyTrackingResourceWindow,
               ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_UsingStorageAccess>,
-              const bool& aUsingStorageAccess, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
               const bool& aShouldResistFingerprinting, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
