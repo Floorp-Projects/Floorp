@@ -190,8 +190,8 @@ class PeerConnectionWrapperForBundleTest : public PeerConnectionWrapper {
     for (auto* pair_stats :
          report->GetStatsOfType<RTCIceCandidatePairStats>()) {
       if (*pair_stats->remote_candidate_id == matching_candidate_id) {
-        if (*pair_stats->state == RTCStatsIceCandidatePairState::kInProgress ||
-            *pair_stats->state == RTCStatsIceCandidatePairState::kSucceeded) {
+        if (*pair_stats->state == "in-progress" ||
+            *pair_stats->state == "succeeded") {
           return true;
         }
       }
