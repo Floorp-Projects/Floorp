@@ -1,63 +1,38 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 91d5fc2ed6.
- r=webrtc-reviewers,mjf
+Date: Wed, 17 May 2023 08:25:00 +0000
+Subject: Bug 1830945 - Do not lock in VideoCaptureDS::{Start|Stop}Capture.
+ r=padenot
 
-Upstream commit: https://webrtc.googlesource.com/src/+/91d5fc2ed6ef347d90182868320267d45cf9525b
-    Support more pixel formats in v4l2 camera backend
+Unclear what they are guarding.
 
-    These were tested with gstreamer and v4l2loopback, example setup:
-    $ sudo v4l2loopback-ctl add -n BGRA 10
-    $ gst-launch-1.0 videotestsrc pattern=smpte-rp-219 ! \
-      video/x-raw,format=BGRA ! v4l2sink device=/dev/video10 > /dev/null &
-
-    Then conversion was confirmed with video_loopback:
-    $ ./video_loopback --capture_device_index=3 --logs 2>&1 | grep -i \
-      capture
-
-    Bug: webrtc:14830
-    Change-Id: I35c8e453cf7f9a2923935b0ad82477a3144e8c12
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291532
-    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
-    Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39979}
-
-Differential Revision: https://phabricator.services.mozilla.com/D177232
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92dc582fdcf3a2fdb3fcdbcd96080d081de8f8d5
+Differential Revision: https://phabricator.services.mozilla.com/D178279
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fcd48e81c9c2cb68ea2cb3d44b3574281be2154e
 ---
- .../video_capture/linux/device_info_v4l2.cc    | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ modules/video_capture/windows/video_capture_ds.cc | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 04caaea592..abd2886f85 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -57,6 +57,24 @@
- #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
- #endif
+diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
+index 8695f76245..b13ac074f8 100644
+--- a/modules/video_capture/windows/video_capture_ds.cc
++++ b/modules/video_capture/windows/video_capture_ds.cc
+@@ -122,8 +122,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
+ }
  
-+// These defines are here to support building on kernel 3.16 which some
-+// downstream projects, e.g. Firefox, use.
-+// TODO(apehrson): Remove them and their undefs when no longer needed.
-+#ifndef V4L2_PIX_FMT_ABGR32
-+#define ABGR32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_ARGB32
-+#define ARGB32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_RGBA32
-+#define RGBA32_OVERRIDE 1
-+#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
-+#endif
-+
- namespace webrtc {
- namespace videocapturemodule {
- #ifdef WEBRTC_LINUX
+ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+-  MutexLock lock(&api_lock_);
+-
+   if (capability != _requestedCapability) {
+     DisconnectGraph();
+ 
+@@ -146,8 +144,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+ }
+ 
+ int32_t VideoCaptureDS::StopCapture() {
+-  MutexLock lock(&api_lock_);
+-
+   HRESULT hr = _mediaControl->StopWhenReady();
+   if (FAILED(hr)) {
+     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
 -- 
 2.37.3
 

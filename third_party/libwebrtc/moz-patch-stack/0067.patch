@@ -1,27 +1,26 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Tue, 21 Jun 2022 11:11:09 -0500
-Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
- r=mjf,firefox-build-system-reviewers,ahochheiden
+Date: Tue, 21 Jun 2022 11:17:46 -0500
+Subject: Bug 1772380 - to upstream - ref count this in lambda capture
 
 ---
- build_overrides/build.gni | 4 ++++
- 1 file changed, 4 insertions(+)
+ modules/video_capture/linux/video_capture_v4l2.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/build_overrides/build.gni b/build_overrides/build.gni
-index 900367d0e1..e427ebba8e 100644
---- a/build_overrides/build.gni
-+++ b/build_overrides/build.gni
-@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
-   use_system_xcode = _result == 0
- }
- 
-+use_system_xcode = false
-+xcode_version = "10.15"
-+mac_xcode_version = "default"
-+
- declare_args() {
-   # WebRTC doesn't depend on //base from production code but only for testing
-   # purposes. In any case, it doesn't depend on //third_party/perfetto which
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 7198472d47..317c12c0ff 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -290,8 +290,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   if (_captureThread.empty()) {
+     quit_ = false;
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+-        [this] {
+-          while (CaptureProcess()) {
++        [self = rtc::scoped_refptr(this)] {
++          while (self->CaptureProcess()) {
+           }
+         },
+         "CaptureThread",
 -- 
 2.37.3
 
