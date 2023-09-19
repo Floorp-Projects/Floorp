@@ -47,6 +47,19 @@ add_task(async function test_showSurvey_Enabled() {
               "shopping-container"
             ).wrappedJSObject;
           shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+          // Manually send data update event, as it isn't set due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          let mockObj = {
+            data: mockData,
+            productUrl: "https://example.com/product/1234",
+          };
+          let evt = new content.CustomEvent("Update", {
+            bubbles: true,
+            detail: Cu.cloneInto(mockObj, content),
+          });
+          content.document.dispatchEvent(evt);
+
           await shoppingContainer.updateComplete;
 
           let childActor = content.windowGlobalChild.getExistingActor(
@@ -114,6 +127,19 @@ add_task(async function test_showSurvey_Disabled() {
               "shopping-container"
             ).wrappedJSObject;
           shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+          // Manually send data update event, as it isn't set due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          let mockObj = {
+            data: mockData,
+            productUrl: "https://example.com/product/1234",
+          };
+          let evt = new content.CustomEvent("Update", {
+            bubbles: true,
+            detail: Cu.cloneInto(mockObj, content),
+          });
+          content.document.dispatchEvent(evt);
+
           await shoppingContainer.updateComplete;
 
           let childActor = content.windowGlobalChild.getExistingActor(
