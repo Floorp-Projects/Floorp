@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { PrivateContainer } = ChromeUtils.importESModule(
-   "resource:///modules/PrivateContainer.sys.mjs"
+  "resource:///modules/PrivateContainer.sys.mjs"
 );
- 
+
 if (Services.prefs.getBoolPref("floorp.privateContainer.enabled", false)) {
   // Create a private container.
   PrivateContainer.Functions.StartupCreatePrivateContainer();
@@ -17,104 +17,60 @@ if (Services.prefs.getBoolPref("floorp.privateContainer.enabled", false)) {
     addPrivateContainerModifyCSS();
 
     gBrowser.tabContainer.addEventListener(
-        "TabClose",
-        removeDataIfPrivateContainerTabNotExist
-      );
+      "TabClose",
+      removeDataIfPrivateContainerTabNotExist
+    );
 
-      gBrowser.tabContainer.addEventListener(
-        "TabOpen",
-        handleTabModifications
-      );
-      gBrowser.tabContainer.addEventListener(
-        "TabClose",
-        handleTabModifications
-      );
-      gBrowser.tabContainer.addEventListener(
-        "TabMove",
-        handleTabModifications
-      );
-      gBrowser.tabContainer.addEventListener(
-        "TabSelect",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "TabAttrModified",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "TabHide",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "TabShow",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "TabPinned",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "TabUnpinned",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "transitionend",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "dblclick",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "click",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "click",
-        handleTabModifications,
-        true
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "keydown",
-        handleTabModifications,
-        { mozSystemGroup: true }
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "dragstart",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "dragover",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "drop",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "dragend",
-        handleTabModifications
-      );
-    
-      gBrowser.tabContainer.addEventListener(
-        "dragleave",
-        handleTabModifications
-      );
+    gBrowser.tabContainer.addEventListener("TabOpen", handleTabModifications);
+    gBrowser.tabContainer.addEventListener("TabClose", handleTabModifications);
+    gBrowser.tabContainer.addEventListener("TabMove", handleTabModifications);
+    gBrowser.tabContainer.addEventListener("TabSelect", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener(
+      "TabAttrModified",
+      handleTabModifications
+    );
+
+    gBrowser.tabContainer.addEventListener("TabHide", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("TabShow", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("TabPinned", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener(
+      "TabUnpinned",
+      handleTabModifications
+    );
+
+    gBrowser.tabContainer.addEventListener(
+      "transitionend",
+      handleTabModifications
+    );
+
+    gBrowser.tabContainer.addEventListener("dblclick", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("click", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener(
+      "click",
+      handleTabModifications,
+      true
+    );
+
+    gBrowser.tabContainer.addEventListener("keydown", handleTabModifications, {
+      mozSystemGroup: true,
     });
+
+    gBrowser.tabContainer.addEventListener("dragstart", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("dragover", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("drop", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("dragend", handleTabModifications);
+
+    gBrowser.tabContainer.addEventListener("dragleave", handleTabModifications);
+  });
 }
 
 function checkPrivateContainerTabExist() {
@@ -133,26 +89,28 @@ function checkPrivateContainerTabExist() {
 }
 
 function removeDataIfPrivateContainerTabNotExist() {
-    let privateContainerUserContextID = PrivateContainer.Functions.getPrivateContainerUserContextId();
-    window.setTimeout(() => {
-        if (!checkPrivateContainerTabExist()) {
-            PrivateContainer.Functions.removePrivateContainerData();
-        }
+  let privateContainerUserContextID =
+    PrivateContainer.Functions.getPrivateContainerUserContextId();
+  window.setTimeout(() => {
+    if (!checkPrivateContainerTabExist()) {
+      PrivateContainer.Functions.removePrivateContainerData();
+    }
 
-        let tabs = gBrowser.tabs;
-        let result = [];
-        for (let i = 0; i < tabs.length; i++) {
-          if (tabs[i].userContextId === privateContainerUserContextID) {
-            result.push(tabs[i]);
-          }
-        }
-        return result;
-    }, 400);
+    let tabs = gBrowser.tabs;
+    let result = [];
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].userContextId === privateContainerUserContextID) {
+        result.push(tabs[i]);
+      }
+    }
+    return result;
+  }, 400);
 }
 
 function checkOpendPrivateContainerTab() {
-  let privateContainerUserContextID = PrivateContainer.Functions.getPrivateContainerUserContextId();
-  
+  let privateContainerUserContextID =
+    PrivateContainer.Functions.getPrivateContainerUserContextId();
+
   let tabs = gBrowser.tabs;
   let result = [];
   for (let i = 0; i < tabs.length; i++) {
@@ -174,7 +132,8 @@ function applyDoNotSaveHistoryToTab(tab) {
 }
 
 function checkTabIsPrivateContainer(tab) {
-  let privateContainerUserContextID = PrivateContainer.Functions.getPrivateContainerUserContextId();
+  let privateContainerUserContextID =
+    PrivateContainer.Functions.getPrivateContainerUserContextId();
   return tab.userContextId === privateContainerUserContextID;
 }
 

@@ -39,7 +39,10 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
   let _OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
     "floorp.browser.tabs.openNewTabPosition"
   );
-  let workspaceEnabled = Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF, false);
+  let workspaceEnabled = Services.prefs.getBoolPref(
+    WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF,
+    false
+  );
 
   switch (_OPEN_NEW_TAB_POSITION_PREF) {
     case 0:
@@ -84,7 +87,12 @@ BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
         openTrustedLinkIn(url, where, {
           relatedToCurrent,
           resolveOnNewTabCreated: resolve,
-          userContextId: workspaceEnabled ? Services.prefs.getIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF) : 0,
+          userContextId: workspaceEnabled
+            ? Services.prefs.getIntPref(
+                WorkspaceUtils.workspacesPreferences
+                  .WORKSPACE_CONTAINER_USERCONTEXTID_PREF
+              )
+            : 0,
         });
       }),
     },
@@ -105,9 +113,13 @@ if (Services.prefs.getStringPref(newtabOverrideURL, "") != "") {
 // https://searchfox.org/mozilla-esr115/source/browser/base/content/browser.js#3004
 
 BrowserTryToCloseWindow = function (event) {
-    let { setTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-    if (WindowIsClosing(event)) {
-      if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled", true)) {
+  let { setTimeout } = ChromeUtils.importESModule(
+    "resource://gre/modules/Timer.sys.mjs"
+  );
+  if (WindowIsClosing(event)) {
+    if (
+      Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled", true)
+    ) {
       document
         .querySelectorAll(
           `.webpanels[src='chrome://browser/content/browser.xhtml']`
@@ -115,12 +127,12 @@ BrowserTryToCloseWindow = function (event) {
         .forEach(function (e) {
           e.remove();
         });
-        setTimeout(function () {
-          console.info("BMS add-on is enabled. delay closing window.");
-          window.close();
-        }, 500);
-      } else {
+      setTimeout(function () {
+        console.info("BMS add-on is enabled. delay closing window.");
         window.close();
-      }
-    } // WindowIsClosing does all the necessary checks
+      }, 500);
+    } else {
+      window.close();
+    }
+  } // WindowIsClosing does all the necessary checks
 };

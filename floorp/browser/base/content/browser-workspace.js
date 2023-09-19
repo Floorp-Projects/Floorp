@@ -514,11 +514,12 @@ const workspaceFunctions = {
 
       //add icon to workspace
       const oldIcon = workspaceFunctions.iconFunctions.getWorkspaceIcon(label);
-      const userContextId = workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label);
+      const userContextId =
+        workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label);
       workspaceFunctions.manageWorkspaceFunctions.addConfigToWorkspace(
         input.value,
         oldIcon,
-        userContextId,
+        userContextId
       );
       workspaceFunctions.iconFunctions.deleteIcon(label);
       workspaceFunctions.containerFunctions.deleteContainer(label);
@@ -757,9 +758,19 @@ const workspaceFunctions = {
 
     changeWorkspace(label) {
       let tabs = gBrowser.tabs;
-      
-      if (Services.prefs.getIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF) != workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label)) {
-        Services.prefs.setIntPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CONTAINER_USERCONTEXTID_PREF, workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label));
+
+      if (
+        Services.prefs.getIntPref(
+          WorkspaceUtils.workspacesPreferences
+            .WORKSPACE_CONTAINER_USERCONTEXTID_PREF
+        ) !=
+        workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label)
+      ) {
+        Services.prefs.setIntPref(
+          WorkspaceUtils.workspacesPreferences
+            .WORKSPACE_CONTAINER_USERCONTEXTID_PREF,
+          workspaceFunctions.containerFunctions.getWorkspaceUserContextId(label)
+        );
       }
 
       Services.prefs.setStringPref(
@@ -917,7 +928,8 @@ const workspaceFunctions = {
         settings.push(settingObject);
       } else {
         settings[targetWorkspaceNumber][workspaceName].icon = iconURL;
-        settings[targetWorkspaceNumber][workspaceName].container = containerName;
+        settings[targetWorkspaceNumber][workspaceName].container =
+          containerName;
       }
 
       Services.prefs.setStringPref(
@@ -927,7 +939,11 @@ const workspaceFunctions = {
 
       //rebuild workspace menu
       workspaceFunctions.manageWorkspaceFunctions.rebuildWorkspaceMenu();
-      workspaceFunctions.manageWorkspaceFunctions.changeWorkspace(Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF));
+      workspaceFunctions.manageWorkspaceFunctions.changeWorkspace(
+        Services.prefs.getStringPref(
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
+        )
+      );
     },
   },
 
@@ -1704,7 +1720,11 @@ const setEvenyListeners = function () {
 };
 
 const startWorkspace = function () {
-  if (!Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF)) {
+  if (
+    !Services.prefs.getBoolPref(
+      WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF
+    )
+  ) {
     return;
   }
   let list = Services.wm.getEnumerator("navigator:browser");
