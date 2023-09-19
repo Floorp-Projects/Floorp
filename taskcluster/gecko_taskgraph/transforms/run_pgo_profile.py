@@ -28,7 +28,7 @@ def run_profile_data(config, jobs):
         else:
             artifact = "target.tar.bz2"
         job.setdefault("fetches", {})[instr] = [
-            artifact,
+            {"artifact": artifact, "extract": not artifact.endswith((".dmg", ".apk"))},
             "target.crashreporter-symbols.zip",
         ]
         yield job
