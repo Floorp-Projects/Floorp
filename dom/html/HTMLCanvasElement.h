@@ -356,7 +356,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   RefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
   RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
-  RefPtr<CanvasRenderer> mCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<OffscreenCanvasDisplayHelper> mOffscreenDisplay;
   RefPtr<layers::ImageContainer> mImageContainer;
