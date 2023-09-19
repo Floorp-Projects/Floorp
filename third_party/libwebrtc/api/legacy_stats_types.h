@@ -333,6 +333,12 @@ class RTC_EXPORT StatsReport {
     bool bool_val() const;
     const Id& id_val() const;
 
+// TODO(bugs.webrtc.org/15241): remove this definition once downstream
+// definitions of StatsReport::Value::id_val() have been deleted.
+#ifndef WEBRTC_DEFINES_STATSREPORT_VALUE_ID_VAL
+#define WEBRTC_DEFINES_STATSREPORT_VALUE_ID_VAL
+#endif  // WEBRTC_DEFINES_STATSREPORT_VALUE_ID_VAL
+
     // Returns the string representation of `name`.
     const char* display_name() const;
 
