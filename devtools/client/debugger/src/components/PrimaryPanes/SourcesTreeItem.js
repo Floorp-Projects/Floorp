@@ -12,7 +12,6 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import {
   getGeneratedSourceByURL,
-  getFirstSourceActorForGeneratedSource,
   isSourceOverridden,
   getHideIgnoredSources,
 } from "../../selectors";
@@ -34,7 +33,6 @@ class SourceTreeItem extends Component {
       focused: PropTypes.bool.isRequired,
       hasMatchingGeneratedSource: PropTypes.bool.isRequired,
       item: PropTypes.object.isRequired,
-      getFirstSourceActorForGeneratedSource: PropTypes.func.isRequired,
       selectSourceItem: PropTypes.func.isRequired,
       setExpanded: PropTypes.func.isRequired,
       getParent: PropTypes.func.isRequired,
@@ -239,16 +237,11 @@ const mapStateToProps = (state, props) => {
     const { source } = item;
     return {
       hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
-      getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
-        getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
       isOverridden: isSourceOverridden(state, source),
       hideIgnoredSources: getHideIgnoredSources(state),
     };
   }
-  return {
-    getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
-      getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
-  };
+  return {};
 };
 
 export default connect(mapStateToProps, {
