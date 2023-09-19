@@ -418,9 +418,8 @@ void FlushAllChildData(
     promises.EmplaceBack(socketParent->SendFlushFOGData());
   }
 
-  {
-    RefPtr<mozilla::gmp::GeckoMediaPluginServiceParent> gmps(
-        mozilla::gmp::GeckoMediaPluginServiceParent::GetSingleton());
+  if (RefPtr<mozilla::gmp::GeckoMediaPluginServiceParent> gmps =
+          mozilla::gmp::GeckoMediaPluginServiceParent::GetSingleton()) {
     // There can be multiple Gecko Media Plugin processes, but iterating
     // through them requires locking a mutex and the IPCs need to be sent
     // from a different thread, so it's better to let the

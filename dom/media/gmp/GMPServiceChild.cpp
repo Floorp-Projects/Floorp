@@ -427,15 +427,20 @@ nsresult GeckoMediaPluginServiceChild::AddShutdownBlocker() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnGMPThread,
              "No call paths should add blockers once we're shutting down!");
-#ifdef DEBUG
   MOZ_ASSERT(!mShutdownBlockerAdded, "Should only add blocker once!");
-  mShutdownBlockerAdded = true;
-#endif
   GMP_LOG_DEBUG("%s::%s ", __CLASS__, __FUNCTION__);
 
-  nsresult rv = GetShutdownBarrier()->AddBlocker(
-      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      kShutdownBlockerName);
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+  if (NS_WARN_IF(!barrier)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv =
+      barrier->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                          __LINE__, kShutdownBlockerName);
+#ifdef DEBUG
+  mShutdownBlockerAdded = NS_SUCCEEDED(rv);
+#endif
   return rv;
 }
 
@@ -449,7 +454,12 @@ void GeckoMediaPluginServiceChild::RemoveShutdownBlocker() {
       "GeckoMediaPluginServiceChild::"
       "RemoveShutdownBlocker",
       [this, self = RefPtr<GeckoMediaPluginServiceChild>(this)]() {
-        nsresult rv = GetShutdownBarrier()->RemoveBlocker(this);
+        nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+        if (NS_WARN_IF(!barrier)) {
+          return;
+        }
+
+        nsresult rv = barrier->RemoveBlocker(this);
         MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
       }));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -520,6 +530,7 @@ class OpenPGMPServiceChild : public mozilla::Runnable {
   NS_IMETHOD Run() override {
     RefPtr<GeckoMediaPluginServiceChild> gmp =
         GeckoMediaPluginServiceChild::GetSingleton();
+    MOZ_RELEASE_ASSERT(gmp);
     MOZ_ASSERT(!gmp->mServiceChild);
     if (mEndpoint.Bind(mGMPServiceChild.get())) {
       gmp->SetServiceChild(std::move(mGMPServiceChild));
@@ -538,6 +549,10 @@ class OpenPGMPServiceChild : public mozilla::Runnable {
 bool GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService) {
   RefPtr<GeckoMediaPluginServiceChild> gmp =
       GeckoMediaPluginServiceChild::GetSingleton();
+  if (NS_WARN_IF(!gmp)) {
+    return false;
+  }
+
   MOZ_ASSERT(!gmp->mServiceChild);
 
   RefPtr<GMPServiceChild> serviceChild(new GMPServiceChild());
