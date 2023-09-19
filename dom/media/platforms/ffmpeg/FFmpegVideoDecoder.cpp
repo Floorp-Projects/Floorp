@@ -99,43 +99,43 @@ using media::TimeUnit;
  */
 static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
                                        const AVPixelFormat* aFormats) {
-  FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
+  FFMPEGV_LOG("Choosing FFmpeg pixel format for video decoding.");
   for (; *aFormats > -1; aFormats++) {
     switch (*aFormats) {
       case AV_PIX_FMT_YUV420P:
-        FFMPEG_LOG("Requesting pixel format YUV420P.");
+        FFMPEGV_LOG("Requesting pixel format YUV420P.");
         return AV_PIX_FMT_YUV420P;
       case AV_PIX_FMT_YUVJ420P:
-        FFMPEG_LOG("Requesting pixel format YUVJ420P.");
+        FFMPEGV_LOG("Requesting pixel format YUVJ420P.");
         return AV_PIX_FMT_YUVJ420P;
       case AV_PIX_FMT_YUV420P10LE:
-        FFMPEG_LOG("Requesting pixel format YUV420P10LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV420P10LE.");
         return AV_PIX_FMT_YUV420P10LE;
       case AV_PIX_FMT_YUV422P:
-        FFMPEG_LOG("Requesting pixel format YUV422P.");
+        FFMPEGV_LOG("Requesting pixel format YUV422P.");
         return AV_PIX_FMT_YUV422P;
       case AV_PIX_FMT_YUV422P10LE:
-        FFMPEG_LOG("Requesting pixel format YUV422P10LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV422P10LE.");
         return AV_PIX_FMT_YUV422P10LE;
       case AV_PIX_FMT_YUV444P:
-        FFMPEG_LOG("Requesting pixel format YUV444P.");
+        FFMPEGV_LOG("Requesting pixel format YUV444P.");
         return AV_PIX_FMT_YUV444P;
       case AV_PIX_FMT_YUV444P10LE:
-        FFMPEG_LOG("Requesting pixel format YUV444P10LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV444P10LE.");
         return AV_PIX_FMT_YUV444P10LE;
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       case AV_PIX_FMT_YUV420P12LE:
-        FFMPEG_LOG("Requesting pixel format YUV420P12LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV420P12LE.");
         return AV_PIX_FMT_YUV420P12LE;
       case AV_PIX_FMT_YUV422P12LE:
-        FFMPEG_LOG("Requesting pixel format YUV422P12LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV422P12LE.");
         return AV_PIX_FMT_YUV422P12LE;
       case AV_PIX_FMT_YUV444P12LE:
-        FFMPEG_LOG("Requesting pixel format YUV444P12LE.");
+        FFMPEGV_LOG("Requesting pixel format YUV444P12LE.");
         return AV_PIX_FMT_YUV444P12LE;
 #endif
       case AV_PIX_FMT_GBRP:
-        FFMPEG_LOG("Requesting pixel format GBRP.");
+        FFMPEGV_LOG("Requesting pixel format GBRP.");
         return AV_PIX_FMT_GBRP;
       default:
         break;
@@ -149,11 +149,11 @@ static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
 #ifdef MOZ_USE_HWDECODE
 static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
                                             const AVPixelFormat* aFormats) {
-  FFMPEG_LOG("Choosing FFmpeg pixel format for VA-API video decoding.");
+  FFMPEGV_LOG("Choosing FFmpeg pixel format for VA-API video decoding.");
   for (; *aFormats > -1; aFormats++) {
     switch (*aFormats) {
       case AV_PIX_FMT_VAAPI_VLD:
-        FFMPEG_LOG("Requesting pixel format VAAPI_VLD");
+        FFMPEGV_LOG("Requesting pixel format VAAPI_VLD");
         return AV_PIX_FMT_VAAPI_VLD;
       default:
         break;
@@ -165,11 +165,11 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
 
 static AVPixelFormat ChooseV4L2PixelFormat(AVCodecContext* aCodecContext,
                                            const AVPixelFormat* aFormats) {
-  FFMPEG_LOG("Choosing FFmpeg pixel format for V4L2 video decoding.");
+  FFMPEGV_LOG("Choosing FFmpeg pixel format for V4L2 video decoding.");
   for (; *aFormats > -1; aFormats++) {
     switch (*aFormats) {
       case AV_PIX_FMT_DRM_PRIME:
-        FFMPEG_LOG("Requesting pixel format DRM PRIME");
+        FFMPEGV_LOG("Requesting pixel format DRM PRIME");
         return AV_PIX_FMT_DRM_PRIME;
       default:
         break;
@@ -270,10 +270,10 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 }
 
 void FFmpegVideoDecoder<LIBAV_VER>::AdjustHWDecodeLogging() {
-  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug)) {
     mLib->av_log_set_level(AV_LOG_DEBUG);
     setenv("LIBVA_MESSAGING_LEVEL", "1", false);
-  } else if (MOZ_LOG_TEST(sPDMLog, LogLevel::Info)) {
+  } else if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Info)) {
     setenv("LIBVA_MESSAGING_LEVEL", "2", false);
   } else {
     setenv("LIBVA_MESSAGING_LEVEL", "0", false);

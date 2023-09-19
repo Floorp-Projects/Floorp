@@ -64,6 +64,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   AVFrame* mFrame;
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;  // set in constructor
+  bool mVideoCodec;
 
  protected:
   virtual ~FFmpegDataDecoder();

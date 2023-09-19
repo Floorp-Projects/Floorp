@@ -106,7 +106,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
       version = AV_FUNC_60;
       break;
     default:
-      FFMPEG_LOG("Unknown avcodec version: %d", macro);
+      FFMPEGV_LOG("Unknown avcodec version: %d", macro);
       Unlink();
       return isFFMpeg ? ((macro > 57) ? LinkResult::UnknownFutureFFMpegVersion
                                       : LinkResult::UnknownOlderFFMpegVersion)
@@ -128,7 +128,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 #define AV_FUNC_OPTION(func, ver)                           \
   AV_FUNC_OPTION_SILENT(func, ver)                          \
   if ((ver)&version && (func) == (decltype(func))nullptr) { \
-    FFMPEG_LOG("Couldn't load function " #func);            \
+    FFMPEGP_LOG("Couldn't load function " #func);           \
   }
 
 #define AV_FUNC(func, ver)                              \
@@ -255,7 +255,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 
 #  define VAD_FUNC_OPTION_SILENT(func)                                 \
     if (!((func) = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
-      FFMPEG_LOG("Couldn't load function " #func);                     \
+      FFMPEGP_LOG("Couldn't load function " #func);                    \
     }
 
   // mVALibDrm is optional and may not be present.
@@ -319,7 +319,7 @@ void FFmpegLibWrapper::LinkVAAPILibs() {
   lspec.value.pathname = libDrm;
   mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
   if (!mVALibDrm) {
-    FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
+    FFMPEGP_LOG("VA-API support: Missing or old %s library.\n", libDrm);
     return;
   }
 
@@ -332,7 +332,7 @@ void FFmpegLibWrapper::LinkVAAPILibs() {
     mVALib = nullptr;
   }
   if (!mVALib) {
-    FFMPEG_LOG("VA-API support: Missing or old %s library.\n", lib);
+    FFMPEGP_LOG("VA-API support: Missing or old %s library.\n", lib);
   }
 }
 #endif
