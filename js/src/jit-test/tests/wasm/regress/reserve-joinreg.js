@@ -3,8 +3,8 @@
 wasmEvalText(
 `(module
   (func $func0 (param $arg0 i32) (result i32) (local $var0 i64)
-  (local.set $var0 (i64.extend_u/i32 (local.get $arg0)))
-  (i32.wrap/i64
+  (local.set $var0 (i64.extend_i32_u (local.get $arg0)))
+  (i32.wrap_i64
    (i64.add
     (block (result i64)
       (block $label1

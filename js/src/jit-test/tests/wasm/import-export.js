@@ -389,7 +389,7 @@ assertEq(e4.baz, e4.tbl.get(2));
 
 var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (local.get 0) (i64.const 10))) (export "exp" (func $exp)))');
 var e1 = new Instance(new Module(code1)).exports;
-var code2 = wasmTextToBinary('(module (import "a" "b" (func $i (param i64) (result i64))) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" (func $f)))');
+var code2 = wasmTextToBinary('(module (import "a" "b" (func $i (param i64) (result i64))) (func $f (result i32) (i32.wrap_i64 (call $i (i64.const 42)))) (export "f" (func $f)))');
 var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
 assertEq(e2.f(), 52);
 

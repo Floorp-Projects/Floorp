@@ -58,7 +58,7 @@ wasmRunWithDebugger(
           local.set $var5
           local.get $var4
           local.get $var0
-          f32.convert_s/i32
+          f32.convert_i32_s
           f32.add
           local.set $var4
           local.get $var3
@@ -80,13 +80,13 @@ wasmRunWithDebugger(
         end $label1
       end
       local.get $var2
-      i32.wrap/i64
+      i32.wrap_i64
       local.set $var1
       local.get $var4
-      i32.trunc_s/f32
+      i32.trunc_f32_s
       local.set $var7
       local.get $var5
-      i32.trunc_s/f64
+      i32.trunc_f64_s
       local.set $var8
     end $label0
     local.get $var7

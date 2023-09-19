@@ -176,7 +176,7 @@ if (getJitCompilerOptions()["ion.warmup.trigger"] === 0)
     gc();
 
 // Test MTest's GVN branch inversion.
-var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i32.eqz (i32.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
+var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i32.eqz (i32.trunc_f32_s (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
 assertEq(testTrunc(0), 0);
 assertEq(testTrunc(13.37), 1);
 
@@ -376,7 +376,7 @@ wasmAssert(`(module (func $run (param i64) (result i64) (local i64) (local.set 1
            [{ type: 'i64', func: '$run', args: ['i64.const 2'], expected: 2048}]);
 
 // Test MTest's GVN branch inversion.
-var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i64.eqz (i64.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
+var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i64.eqz (i64.trunc_f32_s (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
 assertEq(testTrunc(0), 0);
 assertEq(testTrunc(13.37), 1);
 

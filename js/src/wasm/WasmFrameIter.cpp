@@ -1575,21 +1575,21 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::UModI64:
       return "call to native i64.rem_u (in wasm)";
     case SymbolicAddress::TruncateDoubleToUint64:
-      return "call to native i64.trunc_u/f64 (in wasm)";
+      return "call to native i64.trunc_f64_u (in wasm)";
     case SymbolicAddress::TruncateDoubleToInt64:
-      return "call to native i64.trunc_s/f64 (in wasm)";
+      return "call to native i64.trunc_f64_s (in wasm)";
     case SymbolicAddress::SaturatingTruncateDoubleToUint64:
-      return "call to native i64.trunc_u:sat/f64 (in wasm)";
+      return "call to native i64.trunc_sat_f64_u (in wasm)";
     case SymbolicAddress::SaturatingTruncateDoubleToInt64:
-      return "call to native i64.trunc_s:sat/f64 (in wasm)";
+      return "call to native i64.trunc_sat_f64_s (in wasm)";
     case SymbolicAddress::Uint64ToDouble:
-      return "call to native f64.convert_u/i64 (in wasm)";
+      return "call to native f64.convert_i64_u (in wasm)";
     case SymbolicAddress::Uint64ToFloat32:
-      return "call to native f32.convert_u/i64 (in wasm)";
+      return "call to native f32.convert_i64_u (in wasm)";
     case SymbolicAddress::Int64ToDouble:
-      return "call to native f64.convert_s/i64 (in wasm)";
+      return "call to native f64.convert_i64_s (in wasm)";
     case SymbolicAddress::Int64ToFloat32:
-      return "call to native f32.convert_s/i64 (in wasm)";
+      return "call to native f32.convert_i64_s (in wasm)";
 #if defined(JS_CODEGEN_ARM)
     case SymbolicAddress::aeabi_idivmod:
       return "call to native i32.div_s (in wasm)";

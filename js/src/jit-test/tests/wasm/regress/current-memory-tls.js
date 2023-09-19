@@ -17,7 +17,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
     (func $maybeGrow (param $i i32) (local $smem i32)
      ;; get memory.size in number of bytes, not pages.
      memory.size
-     i64.extend_u/i32
+     i64.extend_i32_u
      i64.const 65536
      i64.mul
 
@@ -26,21 +26,21 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
      i32.const 3
      i32.add
      local.tee $i
-     i64.extend_u/i32
+     i64.extend_i32_u
 
      ;; if the memory is too small, grow it.
      i64.le_u
      if
          ;; get the floor of the accessed *page* index.
          local.get $i
-         i64.extend_u/i32
+         i64.extend_i32_u
          i64.const 65536
          i64.div_u
 
          ;; subtract to that the size of the current memory in pages;
          ;; that's the amount of pages we want to grow, minus one.
          memory.size
-         i64.extend_u/i32
+         i64.extend_i32_u
 
          i64.sub
 
@@ -49,7 +49,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
          i64.add
 
          ;; get back to i32 and grow memory.
-         i32.wrap/i64
+         i32.wrap_i64
          memory.grow
          drop
      end

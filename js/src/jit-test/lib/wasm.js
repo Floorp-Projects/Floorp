@@ -134,7 +134,7 @@ function _augmentSrc(src, assertions) {
             switch (type) {
                 case 'f32':
                     newSrc += `
-         i32.reinterpret/f32
+         i32.reinterpret_f32
          ${(function () {
              if (expected == 'nan:arithmetic') {
                expected = '0x7FC00000';
@@ -147,7 +147,7 @@ function _augmentSrc(src, assertions) {
                     break;
                 case 'f64':
                     newSrc += `
-         i64.reinterpret/f64
+         i64.reinterpret_f64
          ${(function () {
              if (expected == 'nan:arithmetic') {
                expected = '0x7FF8000000000000';

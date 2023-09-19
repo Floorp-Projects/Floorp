@@ -10,7 +10,7 @@ try {
                 i64.const 0
                 local.get 0
                 drop
-                i32.wrap/i64
+                i32.wrap_i64
                 f64.const 0
                 f64.const 0
                 i32.const 0

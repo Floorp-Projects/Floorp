@@ -25,7 +25,7 @@ let txt =
           (local.set $tmp32 (i32.or  (global.get $ind32) (global.get $dir32)))
 
           (local.set $sum
-            (i32.sub (local.get $sum) (i32.xor (i32.wrap/i64 (local.get $tmp64))
+            (i32.sub (local.get $sum) (i32.xor (i32.wrap_i64 (local.get $tmp64))
                                                (local.get $tmp32))))
 
           (local.set $loopctr
