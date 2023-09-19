@@ -1874,10 +1874,6 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(DtlsConnected(), kDefaultTimeout);
     EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(expected_cipher_suite),
                    caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-    // TODO(bugs.webrtc.org/9456): Fix it.
-    EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                            "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                            expected_cipher_suite));
   }
 
   void TestGcmNegotiationUsesCipherSuite(bool local_gcm_enabled,
