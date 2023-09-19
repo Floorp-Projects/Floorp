@@ -56,6 +56,11 @@ const gCSKPane = {
       }
     };
 
+    let rebootButton = document.getElementById("reboot-browser-CSK-button");
+    function reboot() {
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+    }
+    
     async function removeShortcutKey(actionName){
       let l10n = new Localization(["browser/floorp.ftl"], true);
       const prompts = Services.prompt;
@@ -78,6 +83,7 @@ const gCSKPane = {
     }
 
     restoreDefaultButton.addEventListener("click", restoreDefault);
+    rebootButton.addEventListener("click", reboot);
 
     const allActionType = utils.getInfoFunctions.getAllActionType();
 
