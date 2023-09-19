@@ -2412,7 +2412,7 @@ def security_hardening_cflags(
             if (
                 c_compiler.type == "clang"
                 and c_compiler.version >= "11.0.1"
-                and target.os not in ("WINNT", "OSX")
+                and target.os not in ("WINNT", "OSX", "OpenBSD")
                 and target.cpu in ("x86", "x86_64", "ppc64", "s390x")
             ):
                 flags.append("-fstack-clash-protection")
