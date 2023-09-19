@@ -30,4 +30,14 @@ interface AddonsManagerAdapterDelegate {
      * @param unsupportedAddons The list of unsupported [Addon].
      */
     fun onNotYetSupportedSectionClicked(unsupportedAddons: List<Addon>) = Unit
+
+    /**
+     * Handler to determine whether to show the "find more add-ons" button in the add-ons manager.
+     */
+    fun shouldShowFindMoreAddonsButton(): Boolean = false
+
+    /**
+     * Handler for when the "find more add-ons" button is clicked.
+     */
+    fun onFindMoreAddonsButtonClicked() = Unit
 }

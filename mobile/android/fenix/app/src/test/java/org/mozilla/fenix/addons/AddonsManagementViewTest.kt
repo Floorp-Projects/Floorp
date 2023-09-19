@@ -31,10 +31,13 @@ class AddonsManagementViewTest {
     private var showPermissionDialog: (Addon) -> Unit = { permissionDialogDisplayed = true }
     private var permissionDialogDisplayed = false
 
+    private var onMoreAddonsButtonClicked: () -> Unit = { moreAddonsButtonClicked = true }
+    private var moreAddonsButtonClicked = false
+
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        managementView = AddonsManagementView(navController, showPermissionDialog)
+        managementView = AddonsManagementView(navController, showPermissionDialog, onMoreAddonsButtonClicked)
     }
 
     @Test
@@ -127,5 +130,11 @@ class AddonsManagementViewTest {
         verify {
             navController.navigate(directionsEq(expected))
         }
+    }
+
+    @Test
+    fun `onFindMoreAddonsButtonClicked calls onMoreAddonsButtonClicked`() {
+        managementView.onFindMoreAddonsButtonClicked()
+        assertTrue(moreAddonsButtonClicked)
     }
 }

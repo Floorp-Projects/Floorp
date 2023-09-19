@@ -33,6 +33,7 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.CustomViewHolder.AddonViewHolder
+import mozilla.components.feature.addons.ui.CustomViewHolder.FooterViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.SectionViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionViewHolder
 import mozilla.components.support.base.log.logger.Logger
@@ -43,6 +44,7 @@ import mozilla.components.ui.icons.R as iconsR
 private const val VIEW_HOLDER_TYPE_SECTION = 0
 private const val VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION = 1
 private const val VIEW_HOLDER_TYPE_ADDON = 2
+private const val VIEW_HOLDER_TYPE_FOOTER = 3
 
 /**
  * An adapter for displaying add-on items. This will display information related to the state of
@@ -83,6 +85,7 @@ class AddonsManagerAdapter(
             VIEW_HOLDER_TYPE_ADDON -> createAddonViewHolder(parent)
             VIEW_HOLDER_TYPE_SECTION -> createSectionViewHolder(parent)
             VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION -> createUnsupportedSectionViewHolder(parent)
+            VIEW_HOLDER_TYPE_FOOTER -> createFooterSectionViewHolder(parent)
             else -> throw IllegalArgumentException("Unrecognized viewType")
         }
     }
@@ -94,6 +97,17 @@ class AddonsManagerAdapter(
         val titleView = view.findViewById<TextView>(R.id.title)
         val divider = view.findViewById<View>(R.id.divider)
         return SectionViewHolder(view, titleView, divider)
+    }
+
+    private fun createFooterSectionViewHolder(parent: ViewGroup): CustomViewHolder {
+        val context = parent.context
+        val inflater = LayoutInflater.from(context)
+        val view = inflater.inflate(
+            R.layout.mozac_feature_addons_footer_section_item,
+            parent,
+            false,
+        )
+        return FooterViewHolder(view)
     }
 
     private fun createUnsupportedSectionViewHolder(parent: ViewGroup): CustomViewHolder {
@@ -140,6 +154,7 @@ class AddonsManagerAdapter(
             is Addon -> VIEW_HOLDER_TYPE_ADDON
             is Section -> VIEW_HOLDER_TYPE_SECTION
             is NotYetSupportedSection -> VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION
+            is FooterSection -> VIEW_HOLDER_TYPE_FOOTER
             else -> throw IllegalArgumentException("items[position] has unrecognized type")
         }
     }
@@ -154,6 +169,7 @@ class AddonsManagerAdapter(
                 holder,
                 item as NotYetSupportedSection,
             )
+            is FooterViewHolder -> bindFooterButton(holder)
         }
     }
 
@@ -189,6 +205,15 @@ class AddonsManagerAdapter(
 
         holder.itemView.setOnClickListener {
             addonsManagerDelegate.onNotYetSupportedSectionClicked(unsupportedAddons)
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun bindFooterButton(
+        holder: FooterViewHolder,
+    ) {
+        holder.itemView.setOnClickListener {
+            addonsManagerDelegate.onFindMoreAddonsButtonClicked()
         }
     }
 
@@ -329,6 +354,10 @@ class AddonsManagerAdapter(
             itemsWithSections.add(NotYetSupportedSection(R.string.mozac_feature_addons_unavailable_section))
         }
 
+        if (addonsManagerDelegate.shouldShowFindMoreAddonsButton()) {
+            itemsWithSections.add(FooterSection)
+        }
+
         return itemsWithSections
     }
 
@@ -337,6 +366,9 @@ class AddonsManagerAdapter(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal data class NotYetSupportedSection(@StringRes val title: Int)
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal object FooterSection
 
     /**
      * Allows to customize how items should look like.

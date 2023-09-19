@@ -539,4 +539,37 @@ class AddonsManagerAdapterTest {
         unsupportedSectionViewHolder.itemView.performClick()
         verify(addonsManagerAdapterDelegate).onNotYetSupportedSectionClicked(unsupportedAddons)
     }
+
+    @Test
+    fun bindFooterButton() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+        val view = View(testContext)
+        val viewHolder = CustomViewHolder.FooterViewHolder(view)
+        adapter.bindFooterButton(viewHolder)
+
+        viewHolder.itemView.performClick()
+        verify(addonsManagerAdapterDelegate).onFindMoreAddonsButtonClicked()
+    }
+
+    @Test
+    fun testFindMoreAddonsButtonIsHidden() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        whenever(addonsManagerAdapterDelegate.shouldShowFindMoreAddonsButton()).thenReturn(false)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        val itemsWithSections = adapter.createListWithSections(emptyList())
+        assertTrue(itemsWithSections.isEmpty())
+    }
+
+    @Test
+    fun testFindMoreAddonsButtonIsVisible() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        whenever(addonsManagerAdapterDelegate.shouldShowFindMoreAddonsButton()).thenReturn(true)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        val itemsWithSections = adapter.createListWithSections(emptyList())
+        assertFalse(itemsWithSections.isEmpty())
+        assertEquals(AddonsManagerAdapter.FooterSection, itemsWithSections.last())
+    }
 }

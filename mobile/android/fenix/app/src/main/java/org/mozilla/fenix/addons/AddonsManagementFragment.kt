@@ -26,8 +26,10 @@ import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentAddOnsManagementBinding
@@ -98,6 +100,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         val managementView = AddonsManagementView(
             navController = findNavController(),
             onInstallButtonClicked = ::installAddon,
+            onMoreAddonsButtonClicked = ::openAMO,
         )
 
         val recyclerView = binding?.addOnsList
@@ -257,7 +260,20 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         }
     }
 
+    private fun openAMO() {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = AMO_HOMEPAGE_FOR_ANDROID,
+            newTab = true,
+            from = BrowserDirection.FromGlobal,
+        )
+    }
+
     companion object {
         private const val BUNDLE_KEY_INSTALL_EXTERNAL_ADDON_COMPLETE = "INSTALL_EXTERNAL_ADDON_COMPLETE"
+
+        // This is locale-less on purpose so that the content negotiation happens on the AMO side because the current
+        // user language might not be supported by AMO and/or the language might not be exactly what AMO is expecting
+        // (e.g. `en` instead of `en-US`).
+        private const val AMO_HOMEPAGE_FOR_ANDROID = "https://addons.mozilla.org/android/"
     }
 }
