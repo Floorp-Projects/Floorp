@@ -30,10 +30,10 @@ index 372fe211d0..918429d191 100644
      // single 'timing frame'.
      absl::optional<webrtc::TimingFrameInfo> timing_frame_info;
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index c4371388be..5ddf6fa6a8 100644
+index dd9d2664ed..708ffbbd47 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -369,6 +369,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -360,6 +360,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
    return last_xr_rtis;
  }
  
@@ -48,7 +48,7 @@ index c4371388be..5ddf6fa6a8 100644
    std::vector<ReportBlockData> result;
    MutexLock lock(&rtcp_receiver_lock_);
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index e5e0ab1692..4adf58520a 100644
+index b0978690ab..938b641eb5 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
 @@ -116,6 +116,10 @@ class RTCPReceiver final {
@@ -63,7 +63,7 @@ index e5e0ab1692..4adf58520a 100644
    absl::optional<TimeDelta> LastRtt() const;
  
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index f2cb9db6cc..a0dcb971c4 100644
+index ab5d419648..1edff95826 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -501,6 +501,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(

@@ -33,10 +33,10 @@ index 918429d191..2817c9bd9a 100644
      // Timing frame info: all important timestamps for a full lifetime of a
      // single 'timing frame'.
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 5ddf6fa6a8..1163d5dee5 100644
+index 708ffbbd47..c5b4afefc8 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -370,10 +370,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -361,10 +361,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
  }
  
  void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
@@ -51,7 +51,7 @@ index 5ddf6fa6a8..1163d5dee5 100644
  
  std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 4adf58520a..04f993bf8f 100644
+index 938b641eb5..4ed3efad82 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
 @@ -118,7 +118,8 @@ class RTCPReceiver final {
@@ -65,7 +65,7 @@ index 4adf58520a..04f993bf8f 100644
    absl::optional<TimeDelta> AverageRtt() const;
    absl::optional<TimeDelta> LastRtt() const;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index a0dcb971c4..76690c414f 100644
+index 1edff95826..b360327f27 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -502,8 +502,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(

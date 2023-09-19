@@ -141,10 +141,10 @@ void ModuleRtpRtcpImpl::Process() {
     }
   } else {
     // Report rtt from receiver.
-    if (process_rtt) {
-      int64_t rtt_ms;
-      if (rtt_stats_ && rtcp_receiver_.GetAndResetXrRrRtt(&rtt_ms)) {
-        rtt_stats_->OnRttUpdate(rtt_ms);
+    if (process_rtt && rtt_stats_ != nullptr) {
+      absl::optional<TimeDelta> rtt = rtcp_receiver_.GetAndResetXrRrRtt();
+      if (rtt.has_value()) {
+        rtt_stats_->OnRttUpdate(rtt->ms());
       }
     }
   }
