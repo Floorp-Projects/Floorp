@@ -1476,29 +1476,28 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // T::MediaChannel is either FakeVoiceMediaChannel or FakeVideoMediaChannel.
   typename T::MediaChannel* media_send_channel1_impl() {
     RTC_DCHECK(channel1_);
-    RTC_DCHECK(channel1_->media_send_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel1_->media_send_channel()->ImplForTesting());
+        channel1_->media_send_channel());
   }
 
   typename T::MediaChannel* media_send_channel2_impl() {
     RTC_DCHECK(channel2_);
     RTC_DCHECK(channel2_->media_send_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel2_->media_send_channel()->ImplForTesting());
+        channel2_->media_send_channel());
   }
   typename T::MediaChannel* media_receive_channel1_impl() {
     RTC_DCHECK(channel1_);
     RTC_DCHECK(channel1_->media_receive_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel1_->media_receive_channel()->ImplForTesting());
+        channel1_->media_receive_channel());
   }
 
   typename T::MediaChannel* media_receive_channel2_impl() {
     RTC_DCHECK(channel2_);
     RTC_DCHECK(channel2_->media_receive_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel2_->media_receive_channel()->ImplForTesting());
+        channel2_->media_receive_channel());
   }
 
   rtc::AutoThread main_thread_;

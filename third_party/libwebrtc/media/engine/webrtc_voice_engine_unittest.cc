@@ -237,9 +237,8 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
         cricket::MediaChannel::Role::kBoth, &call_, cricket::MediaConfig(),
         cricket::AudioOptions(), webrtc::CryptoOptions(),
         webrtc::AudioCodecPairId::Create());
-    send_channel_ = std::make_unique<cricket::VoiceMediaSendChannel>(channel_);
-    receive_channel_ =
-        std::make_unique<cricket::VoiceMediaReceiveChannel>(channel_);
+    send_channel_ = channel_->AsVoiceSendChannel();
+    receive_channel_ = channel_->AsVoiceReceiveChannel();
     return (channel_ != nullptr);
   }
 
@@ -832,8 +831,8 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   cricket::FakeCall call_;
   std::unique_ptr<cricket::WebRtcVoiceEngine> engine_;
   cricket::VoiceMediaChannel* channel_ = nullptr;
-  std::unique_ptr<cricket::VoiceMediaSendChannel> send_channel_;
-  std::unique_ptr<cricket::VoiceMediaReceiveChannel> receive_channel_;
+  cricket::VoiceMediaSendChannelInterface* send_channel_;
+  cricket::VoiceMediaReceiveChannelInterface* receive_channel_;
   cricket::AudioSendParameters send_parameters_;
   cricket::AudioRecvParameters recv_parameters_;
   FakeAudioSource fake_source_;
