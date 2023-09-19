@@ -81,8 +81,11 @@ void UtilityAudioDecoderParent::WMFPreloadForSandbox() {
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   // mfplat.dll and mf.dll will be preloaded by
   // wmf::MediaFoundationInitializer::HasInitialized()
+
+#  if defined(NS_FREE_PERMANENT_DATA)
   // WMF Shutdown requires this or it will badly crash
   UtilityProcessImpl::LoadLibraryOrCrash(L"ole32.dll");
+#  endif  // defined(NS_FREE_PERMANENT_DATA)
 
   auto rv = wmf::MediaFoundationInitializer::HasInitialized();
   if (!rv) {
