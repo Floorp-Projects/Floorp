@@ -5832,9 +5832,7 @@ void nsIFrame::MarkIntrinsicISizesDirty() {
     nsFontInflationData::MarkFontInflationDataTextDirty(this);
   }
 
-  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
-    RemoveProperty(nsGridContainerFrame::CachedBAxisMeasurement::Prop());
-  }
+  RemoveProperty(nsGridContainerFrame::CachedBAxisMeasurement::Prop());
 }
 
 void nsIFrame::MarkSubtreeDirty() {

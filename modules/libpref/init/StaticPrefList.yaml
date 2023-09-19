@@ -8416,12 +8416,6 @@
   mirror: always
   rust: true
 
-# Is support for caching an grid item's block axis measurement enabled?
-- name: layout.css.grid-item-baxis-measurement.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for CSS masonry layout enabled?
 - name: layout.css.grid-template-masonry-value.enabled
   type: RelaxedAtomicBool
