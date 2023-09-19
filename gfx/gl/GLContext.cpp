@@ -66,7 +66,8 @@ namespace gl {
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-MOZ_THREAD_LOCAL(uintptr_t) GLContext::sCurrentContext;
+// Zero-initialized after init().
+MOZ_THREAD_LOCAL(const GLContext*) GLContext::sCurrentContext;
 
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 // clang-format off
@@ -284,10 +285,7 @@ GLContext::GLContext(const GLContextDesc& desc, GLContext* sharedContext,
       mSharedContext(sharedContext),
       mOwningThreadId(Some(PlatformThread::CurrentId())),
       mWorkAroundDriverBugs(
-          StaticPrefs::gfx_work_around_driver_bugs_AtStartup()) {
-  MOZ_ALWAYS_TRUE(sCurrentContext.init());
-  sCurrentContext.set(0);
-}
+          StaticPrefs::gfx_work_around_driver_bugs_AtStartup()) {}
 
 GLContext::~GLContext() {
   NS_ASSERTION(
@@ -303,6 +301,11 @@ GLContext::~GLContext() {
     ReportOutstandingNames();
   }
 #endif
+  // Ensure we clear sCurrentContext if we were the last context set and avoid
+  // the memory getting reused.
+  if (sCurrentContext.init() && sCurrentContext.get() == this) {
+    sCurrentContext.set(nullptr);
+  }
 }
 
 /*static*/
@@ -2419,8 +2422,8 @@ bool GLContext::MakeCurrent(bool aForce) const {
 
   if (MOZ_LIKELY(!aForce)) {
     bool isCurrent;
-    if (mUseTLSIsCurrent) {
-      isCurrent = (sCurrentContext.get() == reinterpret_cast<uintptr_t>(this));
+    if (mUseTLSIsCurrent && sCurrentContext.init()) {
+      isCurrent = (sCurrentContext.get() == this);
     } else {
       isCurrent = IsCurrentImpl();
     }
@@ -2439,7 +2442,9 @@ bool GLContext::MakeCurrent(bool aForce) const {
   }
   if (!MakeCurrentImpl()) return false;
 
-  sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
+  if (sCurrentContext.init()) {
+    sCurrentContext.set(this);
+  }
   return true;
 }
 
