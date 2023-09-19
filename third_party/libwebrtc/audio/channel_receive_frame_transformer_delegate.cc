@@ -46,6 +46,10 @@ class TransformableIncomingAudioFrame
   }
   Direction GetDirection() const override { return Direction::kReceiver; }
 
+  const absl::optional<uint16_t> SequenceNumber() const override {
+    return header_.sequenceNumber;
+  }
+
  private:
   rtc::Buffer payload_;
   RTPHeader header_;

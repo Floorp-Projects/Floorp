@@ -73,9 +73,17 @@ class TransformableAudioFrameInterface : public TransformableFrameInterface {
   // Exposes the frame header, enabling the interface clients to use the
   // information in the header as needed, for example to compile the list of
   // csrcs.
+  // TODO(crbug.com/1453226): Deprecate and remove once callers have migrated to
+  // the getters for specific fields.
   virtual const RTPHeader& GetHeader() const = 0;
 
   virtual rtc::ArrayView<const uint32_t> GetContributingSources() const = 0;
+
+  // TODO(crbug.com/1453226): Change this to pure virtual after it
+  // is implemented everywhere.
+  virtual const absl::optional<uint16_t> SequenceNumber() const {
+    return absl::nullopt;
+  }
 };
 
 // Objects implement this interface to be notified with the transformed frame.
