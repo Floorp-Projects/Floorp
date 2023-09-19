@@ -9,7 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "mozilla/dom/BindingDeclarations.h"
+#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -57,19 +57,12 @@ class UuidMetric {
 };
 }  // namespace impl
 
-class GleanUuid final : public GleanMetric {
+class GleanUuid final : public nsIGleanUuid {
  public:
-  explicit GleanUuid(uint32_t aId, nsISupports* aParent)
-      : GleanMetric(aParent), mUuid(aId) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANUUID
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Set(const nsACString& aValue);
-  void GenerateAndSet();
-
-  void TestGetValue(const nsACString& aPingName, nsCString& aResult,
-                    ErrorResult& aRv);
+  explicit GleanUuid(uint32_t aId) : mUuid(aId){};
 
  private:
   virtual ~GleanUuid() = default;

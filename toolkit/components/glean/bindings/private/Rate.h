@@ -7,15 +7,10 @@
 #ifndef mozilla_glean_GleanRate_h
 #define mozilla_glean_GleanRate_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "nsIGleanMetrics.h"
 #include "nsString.h"
-
-namespace mozilla::dom {
-struct GleanRateData;
-}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -64,20 +59,12 @@ class RateMetric {
 };
 }  // namespace impl
 
-class GleanRate final : public GleanMetric {
+class GleanRate final : public nsIGleanRate {
  public:
-  explicit GleanRate(uint32_t id, nsISupports* aParent)
-      : GleanMetric(aParent), mRate(id) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANRATE
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void AddToNumerator(int32_t aAmount);
-  void AddToDenominator(int32_t aAmount);
-
-  void TestGetValue(const nsACString& aPingName,
-                    dom::Nullable<dom::GleanRateData>& aResult,
-                    ErrorResult& aRv);
+  explicit GleanRate(uint32_t id) : mRate(id){};
 
  private:
   virtual ~GleanRate() = default;

@@ -7,6 +7,7 @@
 #ifndef mozilla_glean_Labeled_h
 #define mozilla_glean_Labeled_h
 
+#include "nsIGleanMetrics.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -230,15 +231,19 @@ class Labeled<StringMetric, DynamicLabel> {
 
 }  // namespace impl
 
-class GleanLabeled final : public GleanMetric {
+class GleanLabeled final : public nsISupports, public nsWrapperCache {
  public:
-  explicit GleanLabeled(uint32_t aId, uint32_t aTypeId, nsISupports* aParent)
-      : GleanMetric(aParent), mId(aId), mTypeId(aTypeId) {}
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(GleanLabeled)
 
   JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override final;
+                       JS::Handle<JSObject*> aGivenProto) override;
+  nsISupports* GetParentObject() { return nullptr; }
 
-  already_AddRefed<GleanMetric> NamedGetter(const nsAString& aName,
+  explicit GleanLabeled(uint32_t aId, uint32_t aTypeId)
+      : mId(aId), mTypeId(aTypeId){};
+
+  already_AddRefed<nsISupports> NamedGetter(const nsAString& aName,
                                             bool& aFound);
   bool NameIsEnumerable(const nsAString& aName);
   void GetSupportedNames(nsTArray<nsString>& aNames);

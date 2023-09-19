@@ -902,7 +902,7 @@ export var BackgroundUpdate = {
     for (const [key, value] of Object.entries(this.REASON)) {
       if (reasons.includes(value)) {
         try {
-          // `testGetValue` throws a `DataError` in case
+          // `testGetValue` throws `NS_ERROR_LOSS_OF_SIGNIFICANT_DATA` in case
           // of `InvalidOverflow` and other outstanding errors.
           Glean.backgroundUpdate.reasonsToNotUpdate.testGetValue();
           Glean.backgroundUpdate.reasonsToNotUpdate.add(key);

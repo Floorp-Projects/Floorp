@@ -7,10 +7,9 @@
 #ifndef mozilla_glean_GleanText_h
 #define mozilla_glean_GleanText_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -32,18 +31,12 @@ class TextMetric {
 
 }  // namespace impl
 
-class GleanText final : public GleanMetric {
+class GleanText final : public nsIGleanText {
  public:
-  explicit GleanText(uint32_t aId, nsISupports* aParent)
-      : GleanMetric(aParent), mText(aId) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANTEXT
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Set(const nsACString& aValue);
-
-  void TestGetValue(const nsACString& aPingName, nsCString& aResult,
-                    ErrorResult& aRv);
+  explicit GleanText(uint32_t aId) : mText(aId){};
 
  private:
   virtual ~GleanText() = default;

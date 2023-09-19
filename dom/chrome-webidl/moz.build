@@ -28,6 +28,9 @@ with Files("MatchPattern.webidl"):
 with Files("WebExtension*.webidl"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
+with Files("Glean*.webidl"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
 with Files("IOUtils.webidl"):
     BUG_COMPONENT = ("Toolkit", "IOUtils and PathUtils")
 
@@ -106,3 +109,8 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesEvent.webidl",
         "PlacesObservers.webidl",
     ]
+
+WEBIDL_FILES += [
+    "Glean.webidl",
+    "GleanPings.webidl",
+]

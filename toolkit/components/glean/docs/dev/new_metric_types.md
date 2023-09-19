@@ -29,7 +29,7 @@ Put another way, what shape of storage will this take up in the
     and send a stream of high-precision samples across IPC.
 
 To implement IPC support in a metric type,
-we split FOG's Rust implementation of the metric into three pieces:
+we split the metric into three pieces:
 1. An umbrella `enum` with the name `MetricTypeMetric`.
     * It has a `Child` and a `Parent` variant.
     * It is IPC-aware and is responsible for
@@ -160,27 +160,32 @@ Each metric type has six pieces you'll need to cover:
 ### 3. IDL
 
 - Duplicate the public API (including its docs) to
-  {searchfox}`dom/webidl/GleanMetrics.webidl`
-  with the name `GleanX` (e.g. `GleanCounter`).
-    - Inherit from `GleanMetric`.
-    - The naming style for methods here is `lowerCamelCase`.
-    - If the metric method is a reserved word, prepend it with a `_`.
-    - Web IDL bindings use
-      [their own mapping for types](/dom/webIdlBindings/index.html)
-      If you choose ones that most closely resemble the C++ types,
-      you'll make your life easier.
+  [`xpcom/nsIGleanMetrics.idl`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcom/nsIGleanMetrics.idl)
+  with the name `nsIGleanX` (e.g. `nsIGleanCounter`).
+    - Inherit from `nsISupports`.
+    - The naming style for members here is `lowerCamelCase`.
+      You'll need a
+      [GUID](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Generating_GUIDs)
+      because this is XPCOM, but you'll only need the canonical form since we're only exposing to JS.
+    - The `testGetValue` method will return a
+      `jsval` to permit it to return `undefined` when there is no value.
 
 ### 4. JS Impl
 
-- Implement the `GleanX` (e.g. `GleanCounter`) type
-  in the same header and `.cpp` as `XMetric` in
-  {searchfox}`toolkit/components/glean/bindings/private/`
-    - It should own an instance of and delegate method implementations to `XMetric`.
+- Add an `nsIGleanX`-deriving, `XMetric`-owning type called
+  `GleanX` (e.g. `GleanCounter`) in the same header and `.cpp` as `XMetric` in
+  [`bindings/private/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/private/).
+    - Don't declare any methods beyond a ctor
+      (takes a `uint32_t` metric id, init-constructs a `impl::XMetric` member)
+      and dtor (`default`): the IDL will do the rest so long as you remember to add
+      `NS_DECL_ISUPPORTS` and `NS_DECL_NSIGLEANX`.
     - In the definition of `GleanX`, member identifiers are back to
-      `CamelCase`.
-    - Test-only methods can throw `DataError` on failure.
-    - Review the [Web IDL Bindings documentation](/dom/webIdlBindings/index.html)
-      for help with optional, nullable, and non-primitive types.
+      `CamelCase` and need macros like `NS_IMETHODIMP`.
+      Delegate operations to the owned `XMetric`, returning
+      `NS_OK` no matter what in non-test methods.
+    - Test-only methods can return `NS_ERROR` codes on failures,
+      but mostly return `NS_OK` and use `undefined` in the
+      `JS::MutableHandleValue` result to signal no value.
 
 ### 6. Tests
 
@@ -261,7 +266,7 @@ There are four pieces to this:
 
 #### JS
 
-- Already handled for you since the JS types all inherit from `GleanMetric`
+- Already handled for you since the JS types all inherit from `nsISupports`
   and the JS template knows to add your new type to `NewSubMetricFromIds(...)`
   (see `GleanLabeled::NamedGetter` if you're curious).
 

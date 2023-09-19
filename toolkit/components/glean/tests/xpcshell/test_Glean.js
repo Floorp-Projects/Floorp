@@ -33,12 +33,6 @@ add_task(function test_fog_counter_works() {
 });
 
 add_task(async function test_fog_string_works() {
-  Assert.equal(null, Glean.testOnly.cheesyString.testGetValue());
-
-  // Setting `undefined` will be ignored.
-  Glean.testOnly.cheesyString.set(undefined);
-  Assert.equal(null, Glean.testOnly.cheesyString.testGetValue());
-
   const value = "a cheesy string!";
   Glean.testOnly.cheesyString.set(value);
 
@@ -80,7 +74,7 @@ add_task(async function test_fog_timespan_throws_on_stop_wout_start() {
   Glean.testOnly.canWeTimeIt.stop();
   Assert.throws(
     () => Glean.testOnly.canWeTimeIt.testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because stop was called without start."
   );
 });
@@ -127,14 +121,6 @@ add_task(async function test_fog_event_works() {
   Assert.equal("an_event", events[0].name);
   Assert.deepEqual(extra, events[0].extra);
 
-  // Corner case: Event with extra with `undefined` value.
-  // Should pretend that extra key isn't there.
-  extra = { extra1: undefined, extra2: "defined" };
-  Glean.testOnlyIpc.anEvent.record(extra);
-  events = Glean.testOnlyIpc.anEvent.testGetValue();
-  Assert.equal(2, events.length);
-  Assert.deepEqual({ extra2: "defined" }, events[1].extra);
-
   let extra2 = {
     extra1: "can set extras",
     extra2: 37,
@@ -151,6 +137,16 @@ add_task(async function test_fog_event_works() {
     extra3_longer_name: "false",
   };
   Assert.deepEqual(expectedExtra, events[0].extra);
+
+  // Quantities need to be non-negative.
+  // This does not record a Glean error.
+  let extra4 = {
+    extra2: -1,
+  };
+  Glean.testOnlyIpc.eventWithExtra.record(extra4);
+  events = Glean.testOnlyIpc.eventWithExtra.testGetValue();
+  // Unchanged number of events
+  Assert.equal(1, events.length, "Recorded one event too many.");
 
   // camelCase extras work.
   let extra5 = {
@@ -172,7 +168,7 @@ add_task(async function test_fog_event_works() {
   Glean.testOnlyIpc.eventWithExtra.record(extra3);
   Assert.throws(
     () => Glean.testOnlyIpc.eventWithExtra.testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of a recording error."
   );
 });
@@ -208,7 +204,7 @@ add_task(async function test_fog_custom_distribution_works() {
   Glean.testOnlyIpc.aCustomDist.accumulateSamples([-7]);
   Assert.throws(
     () => Glean.testOnlyIpc.aCustomDist.testGetValue(),
-    /DataError/
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
   );
 });
 
@@ -304,14 +300,14 @@ add_task(async function test_fog_labels_conform() {
   Glean.testOnly.mabelsLabelMaker[veryLong].set("seventy-two");
   Assert.throws(
     () => Glean.testOnly.mabelsLabelMaker[veryLong].testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of an invalid label."
   );
   // This test should _now_ throw because we are calling data after an invalid
   // label has been set.
   Assert.throws(
     () => Glean.testOnly.mabelsLabelMaker["dot.separated"].testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of an invalid label."
   );
 });
@@ -340,7 +336,7 @@ add_task(async function test_fog_labeled_boolean_works() {
   Glean.testOnly.mabelsLikeBalloons["1".repeat(72)].set(true);
   Assert.throws(
     () => Glean.testOnly.mabelsLikeBalloons.__other__.testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of a recording error."
   );
 });
@@ -369,7 +365,7 @@ add_task(async function test_fog_labeled_counter_works() {
   Glean.testOnly.mabelsKitchenCounters["1".repeat(72)].add(1);
   Assert.throws(
     () => Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue(),
-    /DataError/,
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of a recording error."
   );
 });
@@ -398,7 +394,7 @@ add_task(async function test_fog_labeled_string_works() {
   Glean.testOnly.mabelsBalloonStrings["1".repeat(72)].set("valid");
   Assert.throws(
     () => Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue(),
-    /DataError/
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
   );
 });
 

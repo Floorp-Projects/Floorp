@@ -7,15 +7,10 @@
 #ifndef mozilla_glean_GleanMemoryDistribution_h
 #define mozilla_glean_GleanMemoryDistribution_h
 
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/glean/bindings/DistributionData.h"
-#include "mozilla/glean/bindings/GleanMetric.h"
 #include "mozilla/Maybe.h"
+#include "nsIGleanMetrics.h"
 #include "nsTArray.h"
-
-namespace mozilla::dom {
-struct GleanDistributionData;
-}  // namespace mozilla::dom
 
 namespace mozilla::glean {
 
@@ -61,19 +56,12 @@ class MemoryDistributionMetric {
 };
 }  // namespace impl
 
-class GleanMemoryDistribution final : public GleanMetric {
+class GleanMemoryDistribution final : public nsIGleanMemoryDistribution {
  public:
-  explicit GleanMemoryDistribution(uint64_t aId, nsISupports* aParent)
-      : GleanMetric(aParent), mMemoryDist(aId) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGLEANMEMORYDISTRIBUTION
 
-  virtual JSObject* WrapObject(
-      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
-
-  void Accumulate(uint64_t aSample);
-
-  void TestGetValue(const nsACString& aPingName,
-                    dom::Nullable<dom::GleanDistributionData>& aRetval,
-                    ErrorResult& aRv);
+  explicit GleanMemoryDistribution(uint64_t aId) : mMemoryDist(aId){};
 
  private:
   virtual ~GleanMemoryDistribution() = default;
