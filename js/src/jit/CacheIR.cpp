@@ -134,7 +134,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
 
 #ifdef DEBUG
 void CacheIRWriter::assertSameCompartment(JSObject* obj) {
-  cx_->debugOnlyCheck(obj);
+  MOZ_ASSERT(cx_->compartment() == obj->compartment());
 }
 void CacheIRWriter::assertSameZone(Shape* shape) {
   MOZ_ASSERT(cx_->zone() == shape->zone());
