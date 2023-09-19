@@ -1856,10 +1856,17 @@ class ScriptCompileTask final : public Task {
   }
 
  private:
+  static size_t ThreadStackQuotaForSize(size_t size) {
+    // Set the stack quota to 10% less that the actual size.
+    // NOTE: This follows what JS helper thread does.
+    return size_t(double(size) * 0.9);
+  }
+
   void Compile() {
     // NOTE: The stack limit must be set from the same thread that compiles.
-    const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
-    JS::SetNativeStackQuota(mFrontendContext, kDefaultStackQuota);
+    size_t stackSize = TaskController::GetThreadStackSize();
+    JS::SetNativeStackQuota(mFrontendContext,
+                            ThreadStackQuotaForSize(stackSize));
 
     JS::SourceText<Utf8Unit> srcBuf;
     if (NS_WARN_IF(!srcBuf.init(mFrontendContext, mText.get(), mTextLength,
