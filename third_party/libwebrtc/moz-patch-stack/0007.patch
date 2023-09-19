@@ -1340,7 +1340,7 @@ index 563ef5abd2..e085ac2df8 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index ef1300f9b6..184e865365 100644
+index 3864ffa17e..18f9c49656 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -76,7 +76,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1405,7 +1405,7 @@ index ef1300f9b6..184e865365 100644
    }
  
    return 0;
-@@ -210,7 +221,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -207,7 +218,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
        buffer.get()->StrideV(), 0, 0,  // No Cropping
        width, height, target_width, target_height, rotation_mode,
        ConvertVideoType(frameInfo.videoType));
@@ -1414,7 +1414,7 @@ index ef1300f9b6..184e865365 100644
      RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
                        << static_cast<int>(frameInfo.videoType) << "to I420.";
      return -1;
-@@ -225,6 +236,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -222,6 +233,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
            .build();
    captureFrame.set_ntp_time_ms(captureTime);
  
