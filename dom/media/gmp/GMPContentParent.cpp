@@ -118,7 +118,9 @@ void GMPContentParent::CloseIfUnused() {
       toClose = this;
       RefPtr<GeckoMediaPluginServiceChild> gmp(
           GeckoMediaPluginServiceChild::GetSingleton());
-      gmp->RemoveGMPContentParent(toClose);
+      if (gmp) {
+        gmp->RemoveGMPContentParent(toClose);
+      }
     }
     NS_DispatchToCurrentThread(NewRunnableMethod(
         "gmp::GMPContentParent::Close", toClose, &GMPContentParent::Close));

@@ -22,7 +22,9 @@ void GMPCrashHelperHolder::MaybeDisconnect(bool aAbnormalShutdown) {
   if (!aAbnormalShutdown) {
     RefPtr<gmp::GeckoMediaPluginService> service(
         gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
-    service->DisconnectCrashHelper(GetCrashHelper());
+    if (service) {
+      service->DisconnectCrashHelper(GetCrashHelper());
+    }
   }
 }
 
