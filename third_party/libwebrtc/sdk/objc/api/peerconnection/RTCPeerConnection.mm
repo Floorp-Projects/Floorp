@@ -371,7 +371,7 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
     _nativeConstraints = constraints.nativeConstraints;
     CopyConstraintsIntoRtcConfiguration(_nativeConstraints.get(), config.get());
 
-    webrtc::PeerConnectionDependencies deps = std::move(*dependencies.release());
+    webrtc::PeerConnectionDependencies deps = std::move(*dependencies);
     deps.observer = _observer.get();
     auto result = factory.nativeFactory->CreatePeerConnectionOrError(*config, std::move(deps));
 
