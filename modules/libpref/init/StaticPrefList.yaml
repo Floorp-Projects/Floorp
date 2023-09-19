@@ -8432,7 +8432,7 @@
 # Is support for :has() enabled?
 - name: layout.css.has-selector.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
