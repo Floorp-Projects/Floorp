@@ -13,7 +13,7 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-XPIDL_SOURCES += ["nsIU2FTokenManager.idl", "nsIWebAuthnController.idl"]
+XPIDL_SOURCES += ["nsIWebAuthnController.idl"]
 
 XPIDL_MODULE = "dom_webauthn"
 
@@ -22,7 +22,6 @@ EXPORTS.mozilla.dom += [
     "AuthenticatorAttestationResponse.h",
     "AuthenticatorResponse.h",
     "PublicKeyCredential.h",
-    "U2FTokenManager.h",
     "U2FTokenTransport.h",
     "WebAuthnController.h",
     "WebAuthnManager.h",
@@ -40,7 +39,6 @@ UNIFIED_SOURCES += [
     "AuthrsTransport.cpp",
     "CtapArgs.cpp",
     "PublicKeyCredential.cpp",
-    "U2FTokenManager.cpp",
     "WebAuthnController.cpp",
     "WebAuthnManager.cpp",
     "WebAuthnManagerBase.cpp",
@@ -68,9 +66,11 @@ USE_LIBS += [
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     EXPORTS.mozilla.dom += [
         "AndroidWebAuthnTokenManager.h",
+        "U2FTokenManager.h",
     ]
     UNIFIED_SOURCES += [
         "AndroidWebAuthnTokenManager.cpp",
+        "U2FTokenManager.cpp",
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":

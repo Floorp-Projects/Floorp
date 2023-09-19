@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_U2FTokenManager_h
 #define mozilla_dom_U2FTokenManager_h
 
-#include "nsIU2FTokenManager.h"
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/Tainting.h"
@@ -27,11 +26,8 @@ namespace mozilla::dom {
 class U2FSoftTokenManager;
 class WebAuthnTransactionParent;
 
-class U2FTokenManager final : public nsIU2FTokenManager {
+class U2FTokenManager final {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIU2FTOKENMANAGER
-
   static U2FTokenManager* Get();
   void Register(PWebAuthnTransactionParent* aTransactionParent,
                 const uint64_t& aTransactionId,
@@ -44,56 +40,21 @@ class U2FTokenManager final : public nsIU2FTokenManager {
   void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);
   static void Initialize();
 
-  Maybe<nsString> GetCurrentOrigin() {
-    if (mPendingRegisterInfo.isSome()) {
-      return Some(mPendingRegisterInfo.value().Origin());
-    }
-
-    if (mPendingSignInfo.isSome()) {
-      return Some(mPendingSignInfo.value().Origin());
-    }
-    return Nothing();
-  }
-
-  uint64_t GetCurrentTransactionId() { return mLastTransactionId; }
-
-  bool CurrentTransactionIsRegister() { return mPendingRegisterInfo.isSome(); }
-
-  bool CurrentTransactionIsSign() { return mPendingSignInfo.isSome(); }
-
-  // Sends a "webauthn-prompt" observer notification with the given data.
-  template <typename... T>
-  void SendPromptNotification(const char16_t* aFormat, T... aArgs);
-  // The main thread runnable function for "SendPromptNotification".
-  void RunSendPromptNotification(const nsString& aJSON);
-
- private:
   U2FTokenManager();
   ~U2FTokenManager() = default;
+
+ private:
   RefPtr<U2FTokenTransport> GetTokenManagerImpl();
-  void AbortTransaction(const uint64_t& aTransactionId, const nsresult& aError,
-                        bool shouldCancelActiveDialog);
+  void AbortTransaction(const uint64_t& aTransactionId, const nsresult& aError);
   void AbortOngoingTransaction();
-  void ClearTransaction(bool send_cancel);
-  // Step two of "Register", kicking off the actual transaction.
-  void DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
-                  bool aForceNoneAttestation);
-  void DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo);
+  void ClearTransaction();
   void MaybeConfirmRegister(const uint64_t& aTransactionId,
                             const WebAuthnMakeCredentialResult& aResult);
   void MaybeAbortRegister(const uint64_t& aTransactionId,
-                          const nsresult& aError,
-                          bool shouldCancelActiveDialog);
+                          const nsresult& aError);
   void MaybeConfirmSign(const uint64_t& aTransactionId,
                         const WebAuthnGetAssertionResult& aResult);
-  void MaybeAbortSign(const uint64_t& aTransactionId, const nsresult& aError,
-                      bool shouldCancelActiveDialog);
-  // The main thread runnable function for "nsIU2FTokenManager.ResumeRegister".
-  void RunResumeRegister(uint64_t aTransactionId, bool aForceNoneAttestation);
-  void RunResumeSign(uint64_t aTransactionId);
-  void RunResumeWithSelectedSignResult(uint64_t aTransactionId, uint64_t idx);
-  // The main thread runnable function for "nsIU2FTokenManager.Cancel".
-  void RunCancel(uint64_t aTransactionId);
+  void MaybeAbortSign(const uint64_t& aTransactionId, const nsresult& aError);
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
@@ -105,11 +66,6 @@ class U2FTokenManager final : public nsIU2FTokenManager {
   // guards any cancel messages to ensure we don't cancel newer transactions
   // due to a stale message.
   uint64_t mLastTransactionId;
-  // Pending registration info while we wait for user input.
-  Maybe<WebAuthnMakeCredentialInfo> mPendingRegisterInfo;
-  // Pending registration info while we wait for user input.
-  Maybe<WebAuthnGetAssertionInfo> mPendingSignInfo;
-  nsTArray<WebAuthnGetAssertionResultWrapper> mPendingSignResults;
 };
 
 }  // namespace mozilla::dom

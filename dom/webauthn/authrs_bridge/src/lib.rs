@@ -47,7 +47,7 @@ use test_token::TestTokenManager;
 
 fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
-        r#"{{"is_ctap2":true,"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
+        r#"{{"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
     )
 }
 
@@ -58,7 +58,7 @@ fn make_uv_invalid_error_prompt(
     retries: i64,
 ) -> String {
     format!(
-        r#"{{"is_ctap2":true,"action":"uv-invalid","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"retriesLeft":{retries}}}"#,
+        r#"{{"action":"uv-invalid","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"retriesLeft":{retries}}}"#,
     )
 }
 
@@ -70,7 +70,7 @@ fn make_pin_required_prompt(
     retries: i64,
 ) -> String {
     format!(
-        r#"{{"is_ctap2":true,"action":"pin-required","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"wasInvalid":{was_invalid},"retriesLeft":{retries}}}"#,
+        r#"{{"action":"pin-required","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"wasInvalid":{was_invalid},"retriesLeft":{retries}}}"#,
     )
 }
 
