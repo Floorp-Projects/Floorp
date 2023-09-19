@@ -1663,9 +1663,13 @@ shopping2023:
     the shopping feature.
   variables:
     enabled:
-      description: True if the experience is enabled
+      description: True if the experience is enabled (experimental treatment group)
       type: boolean
       fallbackPref: browser.shopping.experience2023.enabled
+    control:
+      description: True if the experiment is enabled but experience is disabled (experimental control group)
+      type: boolean
+      fallbackPref: browser.shopping.experience2023.control
     adsEnabled:
       description: True if showing recommended products is enabled
       type: boolean
