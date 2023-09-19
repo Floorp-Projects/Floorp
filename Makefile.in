@@ -113,13 +113,6 @@ endif
 recurse_artifact:
 	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install$(if $(MOZ_ARTIFACT_BUILD_SYMBOLS), --symbols$(addprefix =,$(filter full,$(MOZ_ARTIFACT_BUILD_SYMBOLS)))) $(if $(ENABLE_TESTS),,--no-tests) $(verbose_flag)
 
-ifdef MOZ_EME_WIN32_ARTIFACT
-recurse_win32-artifact:
-	rm -rf $(DIST)/i686
-	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install --job win32-opt --no-tests --distdir $(DIST)/i686 $(verbose_flag)
-	mv $(DIST)/i686/bin/* $(DIST)/i686
-endif
-
 ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
 recurse_android-fat-aar-artifact:
 	$(call py_action,fat_aar,\

@@ -71,11 +71,6 @@ browser/features/webcompat@mozilla.org/shims/empty-shim.txt
 removed-files
 #endif
 
-#ifdef MOZ_EME_WIN32_ARTIFACT
-gmp-clearkey/0.1/manifest.json
-i686/gmp-clearkey/0.1/manifest.json
-#endif
-
 # Bug 1496075 - Switch searchplugins to Web Extensions
 browser/chrome/browser/search-extensions/amazon/favicon.ico
 browser/chrome/browser/search-extensions/amazondotcn/favicon.ico
