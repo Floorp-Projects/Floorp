@@ -475,17 +475,6 @@ static const struct EVInfo kEVInfos[] = {
     "CYP0",
   },
   {
-    // CN = Autoridad de Certificacion Firmaprofesional CIF A62634068, C = ES
-    "1.3.6.1.4.1.13177.10.1.3.10",
-    "Firmaprofesional EV OID",
-    { 0x04, 0x04, 0x80, 0x28, 0xBF, 0x1F, 0x28, 0x64, 0xD4, 0x8F, 0x9A,
-      0xD4, 0xD8, 0x32, 0x94, 0x36, 0x6A, 0x82, 0x88, 0x56, 0x55, 0x3F,
-      0x3B, 0x14, 0x30, 0x3F, 0x90, 0x14, 0x7F, 0x5D, 0x40, 0xEF },
-    "MFExCzAJBgNVBAYTAkVTMUIwQAYDVQQDDDlBdXRvcmlkYWQgZGUgQ2VydGlmaWNh"
-    "Y2lvbiBGaXJtYXByb2Zlc2lvbmFsIENJRiBBNjI2MzQwNjg=",
-    "U+w77vuySF8=",
-  },
-  {
     // CN = TWCA Global Root CA, OU = Root CA, O = TAIWAN-CA, C = TW
     "1.3.6.1.4.1.40869.1.1.22.3",
     "TWCA EV OID",
