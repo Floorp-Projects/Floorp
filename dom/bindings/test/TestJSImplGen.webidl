@@ -508,7 +508,10 @@ interface TestJSImplInterface {
   //undefined passUnionWithInterfaces((TestJSImplInterface or TestExternalInterface) arg);
   //undefined passUnionWithInterfacesAndNullable((TestJSImplInterface? or TestExternalInterface) arg);
   //undefined passUnionWithSequence((sequence<object> or long) arg);
-  undefined passUnionWithArrayBuffer((ArrayBuffer or long) arg);
+  undefined passUnionWithArrayBuffer((UTF8String or ArrayBuffer) arg);
+  undefined passUnionWithArrayBufferOrNull((UTF8String or ArrayBuffer?) arg);
+  undefined passUnionWithTypedArrays((ArrayBufferView or ArrayBuffer) arg);
+  undefined passUnionWithTypedArraysOrNull((ArrayBufferView or ArrayBuffer?) arg);
   undefined passUnionWithString((DOMString or object) arg);
   // Using an enum in a union.  Note that we use some enum not declared in our
   // binding file, because UnionTypes.h will need to include the binding header

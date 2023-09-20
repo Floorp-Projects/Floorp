@@ -13448,7 +13448,6 @@ class CGUnionStruct(CGThing):
 
         enumValuesNoUninit = [x for x in enumValues if x != "eUninitialized"]
 
-        bases = [ClassBase("AllOwningUnionBase")] if self.ownsMembers else []
         enums = [
             ClassGroup(
                 [
@@ -13463,9 +13462,37 @@ class CGUnionStruct(CGThing):
                 ]
             )
         ]
+
+        bases = [
+            ClassBase("AllOwningUnionBase" if self.ownsMembers else "AllUnionBase")
+        ]
+
+        typeAliases = []
+        bufferSourceTypes = [
+            t.name for t in self.type.flatMemberTypes if t.isBufferSource()
+        ]
+        if len(bufferSourceTypes) > 0:
+            bases.append(ClassBase("UnionWithTypedArraysBase"))
+            memberTypesCount = len(self.type.flatMemberTypes)
+            if self.type.hasNullableType:
+                memberTypesCount += 1
+
+            typeAliases = [
+                ClassUsingDeclaration(
+                    "ApplyToTypedArrays",
+                    "binding_detail::ApplyToTypedArraysHelper<%s, %s, %s>"
+                    % (
+                        selfName,
+                        toStringBool(memberTypesCount > len(bufferSourceTypes)),
+                        ", ".join(bufferSourceTypes),
+                    ),
+                )
+            ]
+
         return CGClass(
             selfName,
             bases=bases,
+            typeAliases=typeAliases,
             members=members,
             constructors=constructors,
             methods=methods,
@@ -13680,6 +13707,29 @@ class ClassMethod(ClassItem):
 
 
 class ClassUsingDeclaration(ClassItem):
+    """
+    Used for declaring an alias for a type in a CGClass
+
+    name is the name of the alias
+
+    type is the type to declare an alias of
+
+    visibility determines the visibility of the alias (public,
+    protected, private), defaults to public.
+    """
+
+    def __init__(self, name, type, visibility="public"):
+        self.type = type
+        ClassItem.__init__(self, name, visibility)
+
+    def declare(self, cgClass):
+        return "using %s = %s;\n\n" % (self.name, self.type)
+
+    def define(self, cgClass):
+        return ""
+
+
+class ClassUsingFromBaseDeclaration(ClassItem):
     """
     Used for importing a name from a base class into a CGClass
 
@@ -13992,6 +14042,7 @@ class CGClass(CGThing):
         self,
         name,
         bases=[],
+        typeAliases=[],
         members=[],
         constructors=[],
         destructor=None,
@@ -14010,6 +14061,7 @@ class CGClass(CGThing):
         CGThing.__init__(self)
         self.name = name
         self.bases = bases
+        self.typeAliases = typeAliases
         self.members = members
         self.constructors = constructors
         # We store our single destructor in a list, since all of our
@@ -14125,6 +14177,7 @@ class CGClass(CGThing):
             disallowedCopyConstructors = []
 
         order = [
+            self.typeAliases,
             self.enums,
             self.unions,
             self.members,
@@ -16468,7 +16521,9 @@ class CGDOMJSProxyHandler(CGClass):
         methods = [
             CGDOMJSProxyHandler_getOwnPropDescriptor(descriptor),
             CGDOMJSProxyHandler_defineProperty(descriptor),
-            ClassUsingDeclaration("mozilla::dom::DOMProxyHandler", "defineProperty"),
+            ClassUsingFromBaseDeclaration(
+                "mozilla::dom::DOMProxyHandler", "defineProperty"
+            ),
             CGDOMJSProxyHandler_ownPropNames(descriptor),
             CGDOMJSProxyHandler_hasOwn(descriptor),
             CGDOMJSProxyHandler_get(descriptor),
@@ -16510,7 +16565,7 @@ class CGDOMJSProxyHandler(CGClass):
                     CGDOMJSProxyHandler_definePropertySameOrigin(descriptor),
                     CGDOMJSProxyHandler_set(descriptor),
                     CGDOMJSProxyHandler_EnsureHolder(descriptor),
-                    ClassUsingDeclaration(
+                    ClassUsingFromBaseDeclaration(
                         "MaybeCrossOriginObjectMixins", "EnsureHolder"
                     ),
                 ]
@@ -20670,7 +20725,7 @@ class CGJSImplClass(CGBindingImplClass):
                 override=True,
                 body=body,
             ),
-            ClassUsingDeclaration(parentClass, methodName),
+            ClassUsingFromBaseDeclaration(parentClass, methodName),
         ]
 
 
