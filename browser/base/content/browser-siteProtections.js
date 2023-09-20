@@ -2067,7 +2067,7 @@ var gProtectionsHandler = {
       case "browser:purge-session-history":
         // We need to update the earliest recorded date if history has been
         // cleared.
-        this._hasEarliestRecord = false;
+        this._earliestRecordedDate = 0;
         this.maybeUpdateEarliestRecordedDateTooltip();
         break;
     }
@@ -2290,11 +2290,22 @@ var gProtectionsHandler = {
   },
 
   setTrackersBlockedCounter(trackerCount) {
-    document.l10n.setAttributes(
-      this._protectionsPopupTrackersCounterDescription,
-      "protections-footer-blocked-tracker-counter",
-      { trackerCount, date: 0 }
-    );
+    if (this._earliestRecordedDate) {
+      document.l10n.setAttributes(
+        this._protectionsPopupTrackersCounterDescription,
+        "protections-footer-blocked-tracker-counter",
+        { trackerCount, date: this._earliestRecordedDate }
+      );
+    } else {
+      document.l10n.setAttributes(
+        this._protectionsPopupTrackersCounterDescription,
+        "protections-footer-blocked-tracker-counter-no-tooltip",
+        { trackerCount }
+      );
+      this._protectionsPopupTrackersCounterDescription.removeAttribute(
+        "tooltiptext"
+      );
+    }
 
     // Show the counter if the number of tracker is not zero.
     this._protectionsPopupTrackersCounterBox.toggleAttribute(
@@ -2588,7 +2599,7 @@ var gProtectionsHandler = {
   async maybeUpdateEarliestRecordedDateTooltip(trackerCount) {
     // If we've already updated or the popup isn't in the DOM yet, don't bother
     // doing this:
-    if (this._hasEarliestRecord || !this._protectionsPopup) {
+    if (this._earliestRecordedDate || !this._protectionsPopup) {
       return;
     }
 
@@ -2605,7 +2616,7 @@ var gProtectionsHandler = {
         "protections-footer-blocked-tracker-counter",
         { trackerCount, date }
       );
-      this._hasEarliestRecord = true;
+      this._earliestRecordedDate = date;
     }
   },
 };
