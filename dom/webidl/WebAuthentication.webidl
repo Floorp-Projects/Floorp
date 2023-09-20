@@ -70,17 +70,15 @@ dictionary AuthenticatorAssertionResponseJSON {
 
 [GenerateConversionToJS]
 dictionary AuthenticationExtensionsClientOutputsJSON {
-    // FIDO AppID Extension (appid)
-    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
-    boolean appid;
-
-    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
-    boolean hmacCreateSecret;
 };
 
 [SecureContext]
 partial interface PublicKeyCredential {
     [NewObject] static Promise<boolean> isUserVerifyingPlatformAuthenticatorAvailable();
+};
+
+[SecureContext]
+partial interface PublicKeyCredential {
     // isExternalCTAP2SecurityKeySupported is non-standard; see Bug 1526023
     [NewObject] static Promise<boolean> isExternalCTAP2SecurityKeySupported();
 };
@@ -117,13 +115,6 @@ dictionary PublicKeyCredentialDescriptorJSON {
 };
 
 dictionary AuthenticationExtensionsClientInputsJSON {
-    // FIDO AppID Extension (appid)
-    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
-    USVString appid;
-
-    // hmac-secret
-    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
-    boolean hmacCreateSecret;
 };
 
 [SecureContext]
@@ -218,25 +209,10 @@ dictionary PublicKeyCredentialRequestOptions {
     AuthenticationExtensionsClientInputs extensions = {};
 };
 
-// TODO - Use partial dictionaries when bug 1436329 is fixed.
 dictionary AuthenticationExtensionsClientInputs {
-    // FIDO AppID Extension (appid)
-    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
-    USVString appid;
-
-    // hmac-secret
-    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
-    boolean hmacCreateSecret;
 };
 
-// TODO - Use partial dictionaries when bug 1436329 is fixed.
 dictionary AuthenticationExtensionsClientOutputs {
-    // FIDO AppID Extension (appid)
-    // <https://w3c.github.io/webauthn/#sctn-appid-extension>
-    boolean appid;
-
-    // <https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#sctn-hmac-secret-extension>
-    boolean hmacCreateSecret;
 };
 
 typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
@@ -268,16 +244,52 @@ typedef sequence<AAGUID>      AuthenticatorSelectionList;
 
 typedef BufferSource      AAGUID;
 
-/*
-// FIDO AppID Extension (appid)
-// <https://w3c.github.io/webauthn/#sctn-appid-extension>
 partial dictionary AuthenticationExtensionsClientInputs {
     USVString appid;
 };
 
-// FIDO AppID Extension (appid)
-// <https://w3c.github.io/webauthn/#sctn-appid-extension>
 partial dictionary AuthenticationExtensionsClientOutputs {
-  boolean appid;
+    boolean appid;
 };
-*/
+
+// The spec does not define any partial dictionaries that modify
+// AuthenticationExtensionsClientInputsJSON, but this seems to be an error. All changes to
+// AuthenticationExtensionsClientInputs must be accompanied by changes to
+// AuthenticationExtensionsClientInputsJSON for parseCreationOptionsFromJSON and
+// parseRequestOptionsFromJSON to function correctly.
+// (see: https://github.com/w3c/webauthn/issues/1968).
+partial dictionary AuthenticationExtensionsClientInputsJSON {
+    USVString appid;
+};
+
+// We also deviate from the spec by mirroring changes to AuthenticationExtensionsClientOutputs in
+// AuthenticationExtensionsClientOutputsJSON.
+partial dictionary AuthenticationExtensionsClientOutputsJSON {
+    boolean appid;
+};
+
+/*
+ * CTAP2 Extensions
+ * <https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#sctn-defined-extensions>
+ */
+
+// hmac-secret
+// <https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#sctn-hmac-secret-extension>
+// note: we don't support hmac-secret in get(), so we only define the create()
+// inputs and outputs here.
+
+partial dictionary AuthenticationExtensionsClientInputs {
+    boolean hmacCreateSecret;
+};
+
+partial dictionary AuthenticationExtensionsClientOutputs {
+    boolean hmacCreateSecret;
+};
+
+partial dictionary AuthenticationExtensionsClientInputsJSON {
+    boolean hmacCreateSecret;
+};
+
+partial dictionary AuthenticationExtensionsClientOutputsJSON {
+    boolean hmacCreateSecret;
+};
