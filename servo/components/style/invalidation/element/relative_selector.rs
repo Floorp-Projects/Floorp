@@ -257,6 +257,10 @@ where
             self.add_dependency(dependency, element, *scope);
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.invalidations.is_empty()
+    }
 }
 
 impl<'a, E> RelativeSelectorInvalidator<'a, E>
@@ -267,9 +271,9 @@ where
     pub fn invalidate_relative_selectors_for_this<F>(
         self,
         stylist: &'a Stylist,
-        gather_dependencies: F,
+        mut gather_dependencies: F,
     ) where
-        F: Fn(
+        F: FnMut(
             &E,
             &Option<E>,
             &'a CascadeData,
@@ -291,6 +295,9 @@ where
                 &mut collector,
             );
         });
+        if collector.is_empty() {
+            return;
+        }
         self.invalidate_from_dependencies(collector.get());
     }
 
@@ -329,6 +336,9 @@ where
                     collector.collect_all_dependencies_for_element(descendant, &scope, self.quirks_mode, map, accept);
                 });
             }
+        }
+        if collector.is_empty() {
+            return;
         }
         self.invalidate_from_dependencies(collector.get());
     }

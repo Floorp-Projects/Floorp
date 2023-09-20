@@ -7496,8 +7496,8 @@ fn process_relative_selector_invalidations(
         None => return,
         Some(s) => s,
     };
-    let state_changes = ElementWrapper::new(*element, snapshot_table).state_changes();
-    let classes_changed = classes_changed(element, snapshot_table);
+    let mut states = None;
+    let mut classes = None;
 
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
     let invalidator = RelativeSelectorInvalidator {
@@ -7512,6 +7512,8 @@ fn process_relative_selector_invalidations(
         &data.stylist,
         |element, scope, data, quirks_mode, collector| {
             let invalidation_map = data.relative_selector_invalidation_map();
+            let states = *states.get_or_insert_with(|| ElementWrapper::new(*element, snapshot_table).state_changes());
+            let classes = classes.get_or_insert_with(|| classes_changed(element, snapshot_table));
             if snapshot.id_changed() {
                 relative_selector_dependencies_for_id(
                     element.id().map(|id| id.as_ptr().cast_const()).unwrap_or(ptr::null()),
@@ -7523,13 +7525,13 @@ fn process_relative_selector_invalidations(
                     collector,
                 );
             }
-            relative_selector_dependencies_for_class(&classes_changed, element, scope, quirks_mode, invalidation_map, collector);
+            relative_selector_dependencies_for_class(&classes, element, scope, quirks_mode, invalidation_map, collector);
             snapshot.each_attr_changed(|attr| add_relative_selector_attribute_dependency(element, &scope, invalidation_map, attr, collector));
             invalidation_map
                 .map
                 .state_affecting_selectors
-                .lookup_with_additional(*element, quirks_mode, None, &[], state_changes, |dependency| {
-                    if !dependency.state.intersects(state_changes) {
+                .lookup_with_additional(*element, quirks_mode, None, &[], states, |dependency| {
+                    if !dependency.state.intersects(states) {
                         return true;
                     }
                     collector.add_dependency(&dependency.dep, *element, *scope);
