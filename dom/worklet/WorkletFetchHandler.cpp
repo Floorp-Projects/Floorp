@@ -98,8 +98,8 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   // is "not-parser-inserted", credentials mode is credentials mode, referrer
   // policy is the empty string, and fetch priority is "auto".
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      CORSMode::CORS_NONE, ReferrerPolicy::_empty, /* aNonce = */ u""_ns,
-      RequestPriority::Auto, ParserMetadata::NotParserInserted,
+      CORSMode::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
+      ParserMetadata::NotParserInserted,
       /*triggeringPrincipal*/ nullptr);
 
   WorkletModuleLoader* moduleLoader =
@@ -114,9 +114,9 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
 
   // Part of Step 2. This sets the Top-level flag to true
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      mURI, fetchOptions, SRIMetadata(), mReferrer, loadContext,
-      true,  /* is top level */
-      false, /* is dynamic import */
+      mURI, ReferrerPolicy::_empty, fetchOptions, SRIMetadata(), mReferrer,
+      loadContext, true, /* is top level */
+      false,             /* is dynamic import */
       moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(mURI),
       nullptr);
 

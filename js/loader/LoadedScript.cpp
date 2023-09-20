@@ -35,9 +35,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
-LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-                           nsIURI* aBaseURL)
-    : mKind(aKind), mFetchOptions(aFetchOptions), mBaseURL(aBaseURL) {
+LoadedScript::LoadedScript(ScriptKind aKind,
+                           mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+    : mKind(aKind),
+      mReferrerPolicy(aReferrerPolicy),
+      mFetchOptions(aFetchOptions),
+      mBaseURL(aBaseURL) {
   MOZ_ASSERT(mFetchOptions);
   MOZ_ASSERT(mBaseURL);
 }
@@ -87,16 +91,20 @@ void HostReleaseTopLevelScript(const JS::Value& aPrivate) {
 // EventScript
 //////////////////////////////////////////////////////////////
 
-EventScript::EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eEvent, aFetchOptions, aBaseURL) {}
+EventScript::EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                         ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+    : LoadedScript(ScriptKind::eEvent, aReferrerPolicy, aFetchOptions,
+                   aBaseURL) {}
 
 //////////////////////////////////////////////////////////////
 // ClassicScript
 //////////////////////////////////////////////////////////////
 
-ClassicScript::ClassicScript(ScriptFetchOptions* aFetchOptions,
+ClassicScript::ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                             ScriptFetchOptions* aFetchOptions,
                              nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eClassic, aFetchOptions, aBaseURL) {}
+    : LoadedScript(ScriptKind::eClassic, aReferrerPolicy, aFetchOptions,
+                   aBaseURL) {}
 
 //////////////////////////////////////////////////////////////
 // ModuleScript
@@ -121,8 +129,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleScript, LoadedScript)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mErrorToRethrow)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL),
+ModuleScript::ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                           ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
+    : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions,
+                   aBaseURL),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());

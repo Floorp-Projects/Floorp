@@ -54,9 +54,9 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
       new WorkerLoadContext(WorkerLoadContext::Kind::StaticImport, clientInfo,
                             aParent->GetWorkerLoadContext()->mScriptLoader);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, loadContext,
-      false, /* is top level */
-      false, /* is dynamic import */
+      aURI, aParent->ReferrerPolicy(), aParent->mFetchOptions, SRIMetadata(),
+      aParent->mURI, loadContext, false, /* is top level */
+      false,                             /* is dynamic import */
       this, aParent->mVisitedSet, aParent->GetRootModule());
 
   request->mURL = request->mURI->GetSpecOrDefault();
@@ -115,10 +115,8 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     // string, parser metadata is "not-parser-inserted", credentials mode is
     // "same-origin", referrer policy is the empty string, and fetch priority is
     // "auto".
-    ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
     options = new ScriptFetchOptions(
-        CORSMode::CORS_NONE, referrerPolicy,
-        /* aNonce = */ u""_ns, RequestPriority::Auto,
+        CORSMode::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
         JS::loader::ParserMetadata::NotParserInserted, nullptr);
     baseURL = GetBaseURI();
   }
@@ -129,8 +127,9 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
       new WorkerLoadContext(WorkerLoadContext::Kind::DynamicImport, clientInfo,
                             GetCurrentScriptLoader());
 
+  ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, options, SRIMetadata(), baseURL, context, true,
+      aURI, referrerPolicy, options, SRIMetadata(), baseURL, context, true,
       /* is top level */ true, /* is dynamic import */
       this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 

@@ -1806,10 +1806,9 @@ nsresult mozJSModuleLoader::ImportESModule(
       mModuleLoader->GetGlobalObject()->PrincipalOrNull();
   MOZ_ASSERT(principal);
 
-  RefPtr<ScriptFetchOptions> options =
-      new ScriptFetchOptions(CORS_NONE, dom::ReferrerPolicy::No_referrer,
-                             /* aNonce = */ u""_ns, dom::RequestPriority::Auto,
-                             ParserMetadata::NotParserInserted, principal);
+  RefPtr<ScriptFetchOptions> options = new ScriptFetchOptions(
+      CORS_NONE, /* aNonce = */ u""_ns, dom::RequestPriority::Auto,
+      ParserMetadata::NotParserInserted, principal);
 
   RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
   context->mSkipCheck = aSkipCheck;
@@ -1818,7 +1817,7 @@ nsresult mozJSModuleLoader::ImportESModule(
       ModuleLoadRequest::NewVisitedSetForTopLevelImport(uri);
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      uri, options, dom::SRIMetadata(),
+      uri, dom::ReferrerPolicy::No_referrer, options, dom::SRIMetadata(),
       /* aReferrer = */ nullptr, context,
       /* aIsTopLevel = */ true,
       /* aIsDynamicImport = */ false, mModuleLoader, visitedSet, nullptr);

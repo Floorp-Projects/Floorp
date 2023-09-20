@@ -645,15 +645,16 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // is "not-parser-inserted", credentials mode is credentials mode, referrer
   // policy is the empty string, and fetch priority is "auto".
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      CORSMode::CORS_NONE, referrerPolicy, /* aNonce = */ u""_ns,
-      RequestPriority::Auto, ParserMetadata::NotParserInserted, nullptr);
+      CORSMode::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
+      ParserMetadata::NotParserInserted, nullptr);
 
   RefPtr<ScriptLoadRequest> request = nullptr;
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic ||
       IsDebuggerScript()) {
-    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
-                                    SRIMetadata(), nullptr,  // mReferrer
+    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, referrerPolicy,
+                                    fetchOptions, SRIMetadata(),
+                                    nullptr,  // mReferrer
                                     loadContext);
   } else {
     // Implements part of "To fetch a worklet/module worker script graph"
@@ -685,7 +686,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
-        uri, fetchOptions, SRIMetadata(), referrer, loadContext,
+        uri, referrerPolicy, fetchOptions, SRIMetadata(), referrer, loadContext,
         true,  /* is top level */
         false, /* is dynamic import */
         moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(uri),
@@ -1209,8 +1210,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     } else {
       requestBaseURI = aRequest->mBaseURL;
     }
-    classicScript =
-        new JS::loader::ClassicScript(aRequest->mFetchOptions, requestBaseURI);
+    classicScript = new JS::loader::ClassicScript(
+        aRequest->ReferrerPolicy(), aRequest->mFetchOptions, requestBaseURI);
   }
 
   JS::Rooted<JSScript*> script(aCx);

@@ -256,11 +256,12 @@ nsresult ModuleLoader::CompileFetchedModule(
 
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
-    ScriptLoadContext* aContext) {
+    nsIURI* aURI, ReferrerPolicy aReferrerPolicy,
+    ScriptFetchOptions* aFetchOptions, const SRIMetadata& aIntegrity,
+    nsIURI* aReferrer, ScriptLoader* aLoader, ScriptLoadContext* aContext) {
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aFetchOptions, aIntegrity, aReferrer, aContext, true,
+      aURI, aReferrerPolicy, aFetchOptions, aIntegrity, aReferrer, aContext,
+      true,
       /* is top level */ false, /* is dynamic import */
       aLoader->GetModuleLoader(),
       ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
@@ -277,9 +278,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   newContext->mScriptMode = aParent->GetScriptLoadContext()->mScriptMode;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, newContext,
-      false, /* is top level */
-      false, /* is dynamic import */
+      aURI, aParent->ReferrerPolicy(), aParent->mFetchOptions, SRIMetadata(),
+      aParent->mURI, newContext, false, /* is top level */
+      false,                            /* is dynamic import */
       aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
 
   return request.forget();
@@ -295,12 +296,14 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   RefPtr<ScriptFetchOptions> options = nullptr;
   nsIURI* baseURL = nullptr;
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
+  ReferrerPolicy referrerPolicy;
 
   if (aMaybeActiveScript) {
     // https://html.spec.whatwg.org/multipage/webappapis.html#hostloadimportedmodule
     // Step 6.3. Set fetchOptions to the new descendant script fetch options for
     // referencingScript's fetch options.
     options = aMaybeActiveScript->GetFetchOptions();
+    referrerPolicy = aMaybeActiveScript->ReferrerPolicy();
     baseURL = aMaybeActiveScript->BaseURL();
   } else {
     // We don't have a referencing script so fall back on using
@@ -324,9 +327,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     // "same-origin", referrer policy is the empty string, and fetch priority is
     // "auto".
     options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, document->GetReferrerPolicy(),
-        /* aNonce = */ u""_ns, RequestPriority::Auto,
+        mozilla::CORS_NONE, /* aNonce = */ u""_ns, RequestPriority::Auto,
         ParserMetadata::NotParserInserted, principal, nullptr);
+    referrerPolicy = document->GetReferrerPolicy();
     baseURL = document->GetDocBaseURI();
   }
 
@@ -334,7 +337,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   context->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, options, SRIMetadata(), baseURL, context, true,
+      aURI, referrerPolicy, options, SRIMetadata(), baseURL, context, true,
       /* is top level */ true, /* is dynamic import */
       this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
 
