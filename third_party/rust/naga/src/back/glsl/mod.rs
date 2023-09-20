@@ -72,6 +72,9 @@ pub const SUPPORTED_ES_VERSIONS: &[u16] = &[300, 310, 320];
 /// of detail for bounds checking in `ImageLoad`
 const CLAMPED_LOD_SUFFIX: &str = "_clamped_lod";
 
+pub(crate) const MODF_FUNCTION: &str = "naga_modf";
+pub(crate) const FREXP_FUNCTION: &str = "naga_frexp";
+
 /// Mapping between resources and bindings.
 pub type BindingMap = std::collections::BTreeMap<crate::ResourceBinding, u8>;
 
@@ -333,6 +336,12 @@ struct VaryingName<'a> {
 impl fmt::Display for VaryingName<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.binding {
+            crate::Binding::Location {
+                second_blend_source: true,
+                ..
+            } => {
+                write!(f, "_fs2p_location1",)
+            }
             crate::Binding::Location { location, .. } => {
                 let prefix = match (self.stage, self.output) {
                     (ShaderStage::Compute, _) => unreachable!(),
@@ -622,6 +631,53 @@ impl<'a, W: Write> Writer<'a, W> {
                     self.write_struct_body(handle, members)?;
                     writeln!(self.out, ";")?;
                 }
+            }
+        }
+
+        // Write functions to create special types.
+        for (type_key, struct_ty) in self.module.special_types.predeclared_types.iter() {
+            match type_key {
+                &crate::PredeclaredType::ModfResult { size, width }
+                | &crate::PredeclaredType::FrexpResult { size, width } => {
+                    let arg_type_name_owner;
+                    let arg_type_name = if let Some(size) = size {
+                        arg_type_name_owner =
+                            format!("{}vec{}", if width == 8 { "d" } else { "" }, size as u8);
+                        &arg_type_name_owner
+                    } else if width == 8 {
+                        "double"
+                    } else {
+                        "float"
+                    };
+
+                    let other_type_name_owner;
+                    let (defined_func_name, called_func_name, other_type_name) =
+                        if matches!(type_key, &crate::PredeclaredType::ModfResult { .. }) {
+                            (MODF_FUNCTION, "modf", arg_type_name)
+                        } else {
+                            let other_type_name = if let Some(size) = size {
+                                other_type_name_owner = format!("ivec{}", size as u8);
+                                &other_type_name_owner
+                            } else {
+                                "int"
+                            };
+                            (FREXP_FUNCTION, "frexp", other_type_name)
+                        };
+
+                    let struct_name = &self.names[&NameKey::Type(*struct_ty)];
+
+                    writeln!(self.out)?;
+                    writeln!(
+                        self.out,
+                        "{} {defined_func_name}({arg_type_name} arg) {{
+    {other_type_name} other;
+    {arg_type_name} fract = {called_func_name}(arg, other);
+    return {}(fract, other);
+}}",
+                        struct_name, struct_name
+                    )?;
+                }
+                &crate::PredeclaredType::AtomicCompareExchangeWeakResult { .. } => {}
             }
         }
 
@@ -1235,12 +1291,13 @@ impl<'a, W: Write> Writer<'a, W> {
             Some(binding) => binding,
         };
 
-        let (location, interpolation, sampling) = match *binding {
+        let (location, interpolation, sampling, second_blend_source) = match *binding {
             crate::Binding::Location {
                 location,
                 interpolation,
                 sampling,
-            } => (location, interpolation, sampling),
+                second_blend_source,
+            } => (location, interpolation, sampling, second_blend_source),
             crate::Binding::BuiltIn(built_in) => {
                 if let crate::BuiltIn::Position { invariant: true } = built_in {
                     match (self.options.version, self.entry_point.stage) {
@@ -1281,7 +1338,11 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Write the I/O locations, if allowed
         if self.options.version.supports_explicit_locations() || !emit_interpolation_and_auxiliary {
-            write!(self.out, "layout(location = {location}) ")?;
+            if second_blend_source {
+                write!(self.out, "layout(location = {location}, index = 1) ")?;
+            } else {
+                write!(self.out, "layout(location = {location}) ")?;
+            }
         }
 
         // Write the interpolation qualifier.
@@ -1318,6 +1379,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 location,
                 interpolation: None,
                 sampling: None,
+                second_blend_source,
             },
             stage: self.entry_point.stage,
             output,
@@ -2985,8 +3047,8 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Round => "roundEven",
                     Mf::Fract => "fract",
                     Mf::Trunc => "trunc",
-                    Mf::Modf => "modf",
-                    Mf::Frexp => "frexp",
+                    Mf::Modf => MODF_FUNCTION,
+                    Mf::Frexp => FREXP_FUNCTION,
                     Mf::Ldexp => "ldexp",
                     // exponent
                     Mf::Exp => "exp",

@@ -388,12 +388,79 @@ fn parse_expressions() {
 }
 
 #[test]
+fn binary_expression_mixed_scalar_and_vector_operands() {
+    for (operand, expect_splat) in [
+        ('<', false),
+        ('>', false),
+        ('&', false),
+        ('|', false),
+        ('+', true),
+        ('-', true),
+        ('*', false),
+        ('/', true),
+        ('%', true),
+    ] {
+        let module = parse_str(&format!(
+            "
+            const some_vec = vec3<f32>(1.0, 1.0, 1.0);
+            @fragment
+            fn main() -> @location(0) vec4<f32> {{
+                if (all(1.0 {operand} some_vec)) {{
+                    return vec4(0.0);
+                }}
+                return vec4(1.0);
+            }}
+            "
+        ))
+        .unwrap();
+
+        let expressions = &&module.entry_points[0].function.expressions;
+
+        let found_expressions = expressions
+            .iter()
+            .filter(|&(_, e)| {
+                if let crate::Expression::Binary { left, .. } = *e {
+                    matches!(
+                        (expect_splat, &expressions[left]),
+                        (false, &crate::Expression::Literal(crate::Literal::F32(..)))
+                            | (true, &crate::Expression::Splat { .. })
+                    )
+                } else {
+                    false
+                }
+            })
+            .count();
+
+        assert_eq!(found_expressions, 1);
+    }
+
+    let module = parse_str(
+        "@fragment
+        fn main(mat: mat3x3<f32>) {
+            let vec = vec3<f32>(1.0, 1.0, 1.0);
+            let result = mat / vec;
+        }",
+    )
+    .unwrap();
+    let expressions = &&module.entry_points[0].function.expressions;
+    let found_splat = expressions.iter().any(|(_, e)| {
+        if let crate::Expression::Binary { left, .. } = *e {
+            matches!(&expressions[left], &crate::Expression::Splat { .. })
+        } else {
+            false
+        }
+    });
+    assert!(!found_splat, "'mat / vec' should not be splatted");
+}
+
+#[test]
 fn parse_pointers() {
     parse_str(
-        "fn foo() {
+        "fn foo(a: ptr<private, f32>) -> f32 { return *a; }
+    fn bar() {
         var x: f32 = 1.0;
         let px = &x;
-        let py = frexp(0.5, px);
+        let py = foo(px);
     }",
     )
     .unwrap();
@@ -534,6 +601,7 @@ fn parse_repeated_attributes() {
         ("size(16)", template_struct),
         ("vertex", template_stage),
         ("early_depth_test(less_equal)", template_resource),
+        ("workgroup_size(1)", template_stage),
     ] {
         let shader = template.replace("__REPLACE__", &format!("@{attribute} @{attribute}"));
         let name_length = attribute.rfind('(').unwrap_or(attribute.len()) as u32;
@@ -547,4 +615,19 @@ fn parse_repeated_attributes() {
             Error::RepeatedAttribute(span) if span == expected_span
         ));
     }
+}
+
+#[test]
+fn parse_missing_workgroup_size() {
+    use crate::{
+        front::wgsl::{error::Error, Frontend},
+        Span,
+    };
+
+    let shader = "@compute fn vs() -> vec4<f32> { return vec4<f32>(0.0); }";
+    let result = Frontend::new().inner(shader);
+    assert!(matches!(
+        result.unwrap_err(),
+        Error::MissingWorkgroupSize(span) if span == Span::new(1, 8)
+    ));
 }

@@ -64,7 +64,7 @@ optional = true
 [dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "7a19f3af909202c7eafd36633b5584bfbb353ecb"
+rev = "cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -83,7 +83,7 @@ env_logger = "0.10"
 [dev-dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "7a19f3af909202c7eafd36633b5584bfbb353ecb"
+rev = "cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]

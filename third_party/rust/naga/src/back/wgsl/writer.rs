@@ -17,6 +17,7 @@ enum Attribute {
     Invariant,
     Interpolate(Option<crate::Interpolation>, Option<crate::Sampling>),
     Location(u32),
+    SecondBlendSource,
     Stage(ShaderStage),
     WorkGroupSize([u32; 3]),
 }
@@ -96,6 +97,14 @@ impl<W: Write> Writer<W> {
         self.ep_results.clear();
     }
 
+    fn is_builtin_wgsl_struct(&self, module: &Module, handle: Handle<crate::Type>) -> bool {
+        module
+            .special_types
+            .predeclared_types
+            .values()
+            .any(|t| *t == handle)
+    }
+
     pub fn write(&mut self, module: &Module, info: &valid::ModuleInfo) -> BackendResult {
         self.reset(module);
 
@@ -108,13 +117,13 @@ impl<W: Write> Writer<W> {
 
         // Write all structs
         for (handle, ty) in module.types.iter() {
-            if let TypeInner::Struct {
-                ref members,
-                span: _,
-            } = ty.inner
-            {
-                self.write_struct(module, handle, members)?;
-                writeln!(self.out)?;
+            if let TypeInner::Struct { ref members, .. } = ty.inner {
+                {
+                    if !self.is_builtin_wgsl_struct(module, handle) {
+                        self.write_struct(module, handle, members)?;
+                        writeln!(self.out)?;
+                    }
+                }
             }
         }
 
@@ -319,6 +328,7 @@ impl<W: Write> Writer<W> {
         for attribute in attributes {
             match *attribute {
                 Attribute::Location(id) => write!(self.out, "@location({id}) ")?,
+                Attribute::SecondBlendSource => write!(self.out, "@second_blend_source ")?,
                 Attribute::BuiltIn(builtin_attrib) => {
                     let builtin = builtin_str(builtin_attrib)?;
                     write!(self.out, "@builtin({builtin}) ")?;
@@ -1917,8 +1927,19 @@ fn map_binding_to_attribute(binding: &crate::Binding) -> Vec<Attribute> {
             location,
             interpolation,
             sampling,
+            second_blend_source: false,
         } => vec![
             Attribute::Location(location),
+            Attribute::Interpolate(interpolation, sampling),
+        ],
+        crate::Binding::Location {
+            location,
+            interpolation,
+            sampling,
+            second_blend_source: true,
+        } => vec![
+            Attribute::Location(location),
+            Attribute::SecondBlendSource,
             Attribute::Interpolate(interpolation, sampling),
         ],
     }

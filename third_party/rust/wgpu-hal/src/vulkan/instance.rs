@@ -152,12 +152,11 @@ unsafe extern "system" fn debug_utils_messenger_callback(
 }
 
 impl super::Swapchain {
+    /// # Safety
+    ///
+    /// - The device must have been made idle before calling this function.
     unsafe fn release_resources(self, device: &ash::Device) -> Self {
         profiling::scope!("Swapchain::release_resources");
-        {
-            profiling::scope!("vkDeviceWaitIdle");
-            let _ = unsafe { device.device_wait_idle() };
-        };
         unsafe { device.destroy_fence(self.fence, None) };
         self
     }
@@ -186,7 +185,20 @@ impl super::Instance {
         &self.shared
     }
 
-    pub fn required_extensions(
+    /// Return the instance extension names wgpu would like to enable.
+    ///
+    /// Return a vector of the names of instance extensions actually available
+    /// on `entry` that wgpu would like to enable.
+    ///
+    /// The `driver_api_version` argument should be the instance's Vulkan API
+    /// version, as obtained from `vkEnumerateInstanceVersion`. This is the same
+    /// space of values as the `VK_API_VERSION` constants.
+    ///
+    /// Note that wgpu can function without many of these extensions (for
+    /// example, `VK_KHR_wayland_surface` is certainly not going to be available
+    /// everywhere), but if one of these extensions is available at all, wgpu
+    /// assumes that it has been enabled.
+    pub fn desired_extensions(
         entry: &ash::Entry,
         _driver_api_version: u32,
         flags: crate::InstanceFlags,
@@ -265,7 +277,7 @@ impl super::Instance {
     ///
     /// - `raw_instance` must be created from `entry`
     /// - `raw_instance` must be created respecting `driver_api_version`, `extensions` and `flags`
-    /// - `extensions` must be a superset of `required_extensions()` and must be created from the
+    /// - `extensions` must be a superset of `desired_extensions()` and must be created from the
     ///   same entry, driver_api_version and flags.
     /// - `android_sdk_version` is ignored and can be `0` for all platforms besides Android
     ///
@@ -592,7 +604,7 @@ impl crate::Instance<super::Api> for super::Instance {
                 },
             );
 
-        let extensions = Self::required_extensions(&entry, driver_api_version, desc.flags)?;
+        let extensions = Self::desired_extensions(&entry, driver_api_version, desc.flags)?;
 
         let instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
             log::info!("enumerate_instance_layer_properties: {:?}", e);
@@ -786,13 +798,22 @@ impl crate::Instance<super::Api> for super::Instance {
                 if exposed.info.device_type == wgt::DeviceType::IntegratedGpu
                     && exposed.info.vendor == db::intel::VENDOR
                 {
-                    // See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
-                    log::warn!(
-                        "Disabling presentation on '{}' (id {:?}) because of NV Optimus (on Linux)",
-                        exposed.info.name,
-                        exposed.adapter.raw
-                    );
-                    exposed.adapter.private_caps.can_present = false;
+                    // Check if mesa driver and version less than 21.2
+                    if let Some(version) = exposed.info.driver_info.split_once("Mesa ").map(|s| {
+                        s.1.rsplit_once('.')
+                            .map(|v| v.0.parse::<f32>().unwrap_or_default())
+                            .unwrap_or_default()
+                    }) {
+                        if version < 21.2 {
+                            // See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
+                            log::warn!(
+                                "Disabling presentation on '{}' (id {:?}) due to NV Optimus and Intel Mesa < v21.2",
+                                exposed.info.name,
+                                exposed.adapter.raw
+                            );
+                            exposed.adapter.private_caps.can_present = false;
+                        }
+                    }
                 }
             }
         }
@@ -807,6 +828,7 @@ impl crate::Surface<super::Api> for super::Surface {
         device: &super::Device,
         config: &crate::SurfaceConfiguration,
     ) -> Result<(), crate::SurfaceError> {
+        // Safety: `configure`'s contract guarantees there are no resources derived from the swapchain in use.
         let old = self
             .swapchain
             .take()
@@ -820,6 +842,7 @@ impl crate::Surface<super::Api> for super::Surface {
 
     unsafe fn unconfigure(&mut self, device: &super::Device) {
         if let Some(sc) = self.swapchain.take() {
+            // Safety: `unconfigure`'s contract guarantees there are no resources derived from the swapchain in use.
             let swapchain = unsafe { sc.release_resources(&device.shared.raw) };
             unsafe { swapchain.functor.destroy_swapchain(swapchain.raw, None) };
         }

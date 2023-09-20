@@ -504,22 +504,29 @@ impl<'source, 'temp, 'out> ExpressionContext<'source, 'temp, 'out> {
     }
 
     /// Insert splats, if needed by the non-'*' operations.
+    ///
+    /// See the "Binary arithmetic expressions with mixed scalar and vector operands"
+    /// table in the WebGPU Shading Language specification for relevant operators.
+    ///
+    /// Multiply is not handled here as backends are expected to handle vec*scalar
+    /// operations, so inserting splats into the IR increases size needlessly.
     fn binary_op_splat(
         &mut self,
         op: crate::BinaryOperator,
         left: &mut Handle<crate::Expression>,
         right: &mut Handle<crate::Expression>,
     ) -> Result<(), Error<'source>> {
-        if op != crate::BinaryOperator::Multiply {
+        if matches!(
+            op,
+            crate::BinaryOperator::Add
+                | crate::BinaryOperator::Subtract
+                | crate::BinaryOperator::Divide
+                | crate::BinaryOperator::Modulo
+        ) {
             self.grow_types(*left)?.grow_types(*right)?;
 
-            let left_size = match *self.resolved_inner(*left) {
-                crate::TypeInner::Vector { size, .. } => Some(size),
-                _ => None,
-            };
-
-            match (left_size, self.resolved_inner(*right)) {
-                (Some(size), &crate::TypeInner::Scalar { .. }) => {
+            match (self.resolved_inner(*left), self.resolved_inner(*right)) {
+                (&crate::TypeInner::Vector { size, .. }, &crate::TypeInner::Scalar { .. }) => {
                     *right = self.append_expression(
                         crate::Expression::Splat {
                             size,
@@ -528,7 +535,7 @@ impl<'source, 'temp, 'out> ExpressionContext<'source, 'temp, 'out> {
                         self.get_expression_span(*right),
                     );
                 }
-                (None, &crate::TypeInner::Vector { size, .. }) => {
+                (&crate::TypeInner::Scalar { .. }, &crate::TypeInner::Vector { size, .. }) => {
                     *left = self.append_expression(
                         crate::Expression::Splat { size, value: *left },
                         self.get_expression_span(*left),
@@ -967,7 +974,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                 name: f.name.name.to_string(),
                 stage: entry.stage,
                 early_depth_test: entry.early_depth_test,
-                workgroup_size: entry.workgroup_size,
+                workgroup_size: entry.workgroup_size.unwrap_or([0, 0, 0]),
                 function,
             });
             Ok(LoweredGlobalDecl::EntryPoint)
@@ -1689,7 +1696,26 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     let argument = self.expression(args.next()?, ctx.reborrow())?;
                     args.finish()?;
 
-                    crate::Expression::Relational { fun, argument }
+                    // Check for no-op all(bool) and any(bool):
+                    let argument_unmodified = matches!(
+                        fun,
+                        crate::RelationalFunction::All | crate::RelationalFunction::Any
+                    ) && {
+                        ctx.grow_types(argument)?;
+                        matches!(
+                            ctx.resolved_inner(argument),
+                            &crate::TypeInner::Scalar {
+                                kind: crate::ScalarKind::Bool,
+                                ..
+                            }
+                        )
+                    };
+
+                    if argument_unmodified {
+                        return Ok(Some(argument));
+                    } else {
+                        crate::Expression::Relational { fun, argument }
+                    }
                 } else if let Some((axis, ctrl)) = conv::map_derivative(function.name) {
                     let mut args = ctx.prepare_args(arguments, 1, span);
                     let expr = self.expression(args.next()?, ctx.reborrow())?;
@@ -1718,6 +1744,25 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                         .transpose()?;
 
                     args.finish()?;
+
+                    if fun == crate::MathFunction::Modf || fun == crate::MathFunction::Frexp {
+                        ctx.grow_types(arg)?;
+                        if let Some((size, width)) = match *ctx.resolved_inner(arg) {
+                            crate::TypeInner::Scalar { width, .. } => Some((None, width)),
+                            crate::TypeInner::Vector { size, width, .. } => {
+                                Some((Some(size), width))
+                            }
+                            _ => None,
+                        } {
+                            ctx.module.generate_predeclared_type(
+                                if fun == crate::MathFunction::Modf {
+                                    crate::PredeclaredType::ModfResult { size, width }
+                                } else {
+                                    crate::PredeclaredType::FrexpResult { size, width }
+                                },
+                            );
+                        }
+                    }
 
                     crate::Expression::Math {
                         fun,
@@ -1854,10 +1899,12 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                             let expression = match *ctx.resolved_inner(value) {
                                 crate::TypeInner::Scalar { kind, width } => {
                                     crate::Expression::AtomicResult {
-                                        //TODO: cache this to avoid generating duplicate types
-                                        ty: ctx
-                                            .module
-                                            .generate_atomic_compare_exchange_result(kind, width),
+                                        ty: ctx.module.generate_predeclared_type(
+                                            crate::PredeclaredType::AtomicCompareExchangeWeakResult {
+                                                kind,
+                                                width,
+                                            },
+                                        ),
                                         comparison: true,
                                     }
                                 }
