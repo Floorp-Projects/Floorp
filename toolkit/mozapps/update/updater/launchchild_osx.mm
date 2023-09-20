@@ -86,31 +86,72 @@ bool IsBinaryArmExecutable(const char* executablePath) {
 
   return isArmExecutable;
 }
+
+// Returns true if the executable provided in |executablePath| should be
+// launched with a preference for arm64. After updating from an x64 version
+// running under Rosetta, if the update is to a universal binary with arm64
+// support we want to switch to arm64 execution mode. Returns true if those
+// conditions are met and the arch(1) utility at |archPath| is executable.
+// It should be safe to always launch with arch and fallback to x64, but we
+// limit its use to the only scenario it is necessary to minimize risk.
+bool ShouldPreferArmLaunch(const char* archPath, const char* executablePath) {
+  // If not running under Rosetta, we are not on arm64 hardware.
+  if (!IsProcessRosettaTranslated()) {
+    return false;
+  }
+
+  // Ensure the arch(1) utility is present and executable.
+  NSFileManager* fileMgr = [NSFileManager defaultManager];
+  NSString* archPathString = [NSString stringWithUTF8String:archPath];
+  if (![fileMgr isExecutableFileAtPath:archPathString]) {
+    return false;
+  }
+
+  // Ensure the binary can be run natively on arm64.
+  return IsBinaryArmExecutable(executablePath);
+}
 #endif  // __x86_64__
 
 void LaunchChild(int argc, const char** argv) {
   MacAutoreleasePool pool;
 
   @try {
-    NSString* launchPath = [NSString stringWithUTF8String:argv[0]];
-    NSMutableArray* arguments = [NSMutableArray arrayWithCapacity:argc - 1];
+    bool preferArmLaunch = false;
+
+#if defined(__x86_64__)
+    // When running under Rosetta, child processes inherit the architecture
+    // preference of their parent and therefore universal binaries launched
+    // by an emulated x64 process will launch in x64 mode. If we are running
+    // under Rosetta, launch the child process with a preference for arm64 so
+    // that we will switch to arm64 execution if we have just updated from
+    // x64 to a universal build. This includes if we were already a universal
+    // build and the user is intentionally running under Rosetta.
+    preferArmLaunch = ShouldPreferArmLaunch(ARCH_PATH, argv[0]);
+#endif  // __x86_64__
+
+    NSString* launchPath;
+    NSMutableArray* arguments;
+
+    if (preferArmLaunch) {
+      launchPath = [NSString stringWithUTF8String:ARCH_PATH];
+
+      // Size the arguments array to include all the arguments
+      // in |argv| plus two arguments to pass to the arch(1) utility.
+      arguments = [NSMutableArray arrayWithCapacity:argc + 2];
+      [arguments addObject:[NSString stringWithUTF8String:"-arm64"]];
+      [arguments addObject:[NSString stringWithUTF8String:"-x86_64"]];
+
+      // Add the first argument from |argv|. The rest are added below.
+      [arguments addObject:[NSString stringWithUTF8String:argv[0]]];
+    } else {
+      launchPath = [NSString stringWithUTF8String:argv[0]];
+      arguments = [NSMutableArray arrayWithCapacity:argc - 1];
+    }
 
     for (int i = 1; i < argc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:argv[i]]];
     }
-    NSWorkspaceOpenConfiguration* config =
-        [NSWorkspaceOpenConfiguration configuration];
-    [config setArguments:arguments];
-    [config setCreatesNewApplicationInstance:YES];
-
-    [[NSWorkspace sharedWorkspace]
-        openApplicationAtURL:[NSURL URLWithString:launchPath]
-               configuration:config
-           completionHandler:^(NSRunningApplication* child, NSError* error) {
-             if (error) {
-               NSLog(@"Failed to run: %@", error);
-             }
-           }];
+    [NSTask launchedTaskWithLaunchPath:launchPath arguments:arguments];
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
