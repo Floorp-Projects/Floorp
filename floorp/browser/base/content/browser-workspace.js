@@ -307,9 +307,18 @@ const workspaceFunctions = {
       let workspaceAll = Services.prefs
         .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
+        
       for (let i = 0; i < workspaceAll.length; i++) {
         let label = workspaceAll[i];
         workspaceFunctions.WorkspaceContextMenu.addWorkspaceElemToMenu(label);
+        
+        // Check if workspace tabs are exist
+        if (!workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceTabsAreExist(workspaceAll[i])) {
+          workspaceFunctions.manageWorkspaceFunctions.deleteworkspace(
+            workspaceAll[i]
+          );
+          continue;
+        }
       }
 
       // Add attribute to tab
@@ -832,6 +841,18 @@ const workspaceFunctions = {
         }
       }
       return count;
+    },
+
+    checkWorkspaceTabsAreExist(name) {
+      const tabs = gBrowser.tabs;
+      for (let i = 0; i < tabs.length; i++) {
+        let tab = tabs[i];
+        let tabWorkspace = tab.getAttribute("floorpWorkspace");
+        if (tabWorkspace == name) {
+          return true;
+        }
+      }
+      return false;
     },
 
     checkWorkspaceInfoExist(name) {
