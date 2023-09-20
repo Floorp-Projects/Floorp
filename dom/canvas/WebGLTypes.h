@@ -951,6 +951,7 @@ class Element;
 class ImageBitmap;
 class ImageData;
 class OffscreenCanvas;
+class VideoFrame;
 }  // namespace dom
 
 struct TexImageSource {
@@ -964,6 +965,8 @@ struct TexImageSource {
   const dom::ImageData* mImageData = nullptr;
 
   const dom::OffscreenCanvas* mOffscreenCanvas = nullptr;
+
+  const dom::VideoFrame* mVideoFrame = nullptr;
 
   const dom::Element* mDomElem = nullptr;
   ErrorResult* mOut_error = nullptr;

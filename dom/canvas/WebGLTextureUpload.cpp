@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebGLTextureUpload.h"
 #include "WebGLTexture.h"
 
 #include <algorithm>
@@ -36,6 +37,15 @@
 
 namespace mozilla {
 namespace webgl {
+
+// The canvas spec says that drawImage should draw the first frame of
+// animated images. The webgl spec doesn't mention the issue, so we do the
+// same as drawImage.
+static constexpr uint32_t kDefaultSurfaceFromElementFlags =
+    nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
+    nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR |
+    nsLayoutUtils::SFE_EXACT_SIZE_SURFACE |
+    nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
 
 Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, Maybe<uvec3> size,
                                          const dom::ImageBitmap& imageBitmap,
@@ -119,44 +129,19 @@ Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
     return {};
   }
 
-  // The canvas spec says that drawImage should draw the first frame of
-  // animated images. The webgl spec doesn't mention the issue, so we do the
-  // same as drawImage.
-  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
   auto sfer = nsLayoutUtils::SurfaceFromOffscreenCanvas(
-      const_cast<dom::OffscreenCanvas*>(&canvas), flags);
+      const_cast<dom::OffscreenCanvas*>(&canvas),
+      kDefaultSurfaceFromElementFlags);
+  return FromSurfaceFromElementResult(webgl, target, size, sfer, out_error);
+}
 
-  RefPtr<gfx::DataSourceSurface> dataSurf;
-  if (sfer.GetSourceSurface()) {
-    dataSurf = sfer.GetSourceSurface()->GetDataSurface();
-  }
-
-  if (!dataSurf) {
-    webgl.EnqueueWarning("Resource has no data (yet?). Uploading zeros.");
-    if (!size) {
-      size.emplace(0, 0, 1);
-    }
-    return Some(
-        TexUnpackBlobDesc{target, size.value(), gfxAlphaType::NonPremult});
-  }
-
-  // We checked this above before we requested the surface.
-  MOZ_RELEASE_ASSERT(!sfer.mIsWriteOnly);
-
-  uvec2 canvasSize = *uvec2::FromSize(dataSurf->GetSize());
-  if (!size) {
-    size.emplace(canvasSize.x, canvasSize.y, 1);
-  }
-
-  return Some(TexUnpackBlobDesc{target,
-                                size.value(),
-                                sfer.mAlphaType,
-                                {},
-                                {},
-                                Some(canvasSize),
-                                {},
-                                {},
-                                dataSurf});
+Maybe<webgl::TexUnpackBlobDesc> FromVideoFrame(
+    const ClientWebGLContext& webgl, const GLenum target, Maybe<uvec3> size,
+    const dom::VideoFrame& videoFrame, ErrorResult* const out_error) {
+  auto sfer = nsLayoutUtils::SurfaceFromVideoFrame(
+      const_cast<dom::VideoFrame*>(&videoFrame),
+      kDefaultSurfaceFromElementFlags);
+  return FromSurfaceFromElementResult(webgl, target, size, sfer, out_error);
 }
 
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
@@ -173,13 +158,7 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
     }
   }
 
-  // The canvas spec says that drawImage should draw the first frame of
-  // animated images. The webgl spec doesn't mention the issue, so we do the
-  // same as drawImage.
-  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
-                   nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR |
-                   nsLayoutUtils::SFE_EXACT_SIZE_SURFACE |
-                   nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
+  uint32_t flags = kDefaultSurfaceFromElementFlags;
   const auto& unpacking = webgl.State().mPixelUnpackState;
   if (unpacking.colorspaceConversion == LOCAL_GL_NONE) {
     flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
@@ -188,9 +167,12 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
   RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr;  // Don't care for now.
   auto sfer = nsLayoutUtils::SurfaceFromElement(
       const_cast<dom::Element*>(&elem), flags, idealDrawTarget);
+  return FromSurfaceFromElementResult(webgl, target, size, sfer, out_error);
+}
 
-  //////
-
+Maybe<webgl::TexUnpackBlobDesc> FromSurfaceFromElementResult(
+    const ClientWebGLContext& webgl, const GLenum target, Maybe<uvec3> size,
+    SurfaceFromElementResult& sfer, ErrorResult* const out_error) {
   uvec2 elemSize;
 
   const auto& layersImage = sfer.mLayersImage;
