@@ -117,6 +117,7 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
     return base;
   }
   JS::UniqueChars release();
+  JSString* releaseJS(JSContext* cx);
 
   // Attempt to reserve len + 1 space (for a trailing nullptr byte). If the
   // attempt succeeds, return a pointer to the start of that space and adjust
