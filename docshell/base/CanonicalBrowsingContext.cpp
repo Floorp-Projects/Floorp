@@ -381,9 +381,7 @@ void CanonicalBrowsingContext::ReplacedBy(
     aNewContext->SetChildSHistory(childSHistory);
   }
 
-  if (mozilla::SessionHistoryInParent()) {
-    BackgroundSessionStorageManager::PropagateManager(Id(), aNewContext->Id());
-  }
+  BackgroundSessionStorageManager::PropagateManager(Id(), aNewContext->Id());
 
   // Transfer the ownership of the priority active status from the old context
   // to the new context.

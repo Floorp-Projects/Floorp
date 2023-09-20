@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1790666
+-->
+<head>
+  <title>Test for Bug 1790666</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1790666">Mozilla Bug 1790666</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    async function singleTest(testValue, description) {
+      info(`Starting test: ${description}`);
+
+      let bc = new BroadcastChannel("testChannel");
+      let promise = new Promise(resolve => {
+        bc.addEventListener("message", event => {
+          info(`received message from testChannel: ${event.data}`);
+          resolve(event.data);
+        }, { once: true });
+      });
+
+      info("Opening pop-up");
+      let popup = window.open("", "_blank");
+      popup.sessionStorage.setItem("testItem", testValue);
+
+      info("Navigating pop-up to COOP page");
+      popup.location = new URL("file_sessionstorage_across_coop.html", window.location);
+
+      let newValue = await promise;
+      is(newValue, testValue, "Value matches expected value");
+    }
+
+    add_task(async function() {
+      // Cross-Origin-Opener-Policy is only supported in secure contexts, so
+      // make the test a secure context.
+      await SpecialPowers.pushPrefEnv({
+        "set": [["dom.securecontext.allowlist", "mochi.test"]],
+      });
+
+      await singleTest("short test value", "short test value");
+
+      let longValue = "A".repeat(SpecialPowers.getIntPref("browser.sessionstore.dom_storage_limit") * 2);
+      await singleTest(longValue, "long test value");
+    });
+  </script>
+</pre>
+</body>
+</html>

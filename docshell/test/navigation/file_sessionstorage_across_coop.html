@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      addEventListener("load", () => {
+        let bc = new BroadcastChannel("testChannel");
+        bc.postMessage(sessionStorage.getItem("testItem"));
+        window.close();
+      });
+    </script>
+  </body>
+</html>
