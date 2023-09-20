@@ -269,55 +269,43 @@ already_AddRefed<Promise> GamepadServiceTest::NewPoseMove(
                     GamepadCapabilityFlags::Cap_AngularAcceleration |
                     GamepadCapabilityFlags::Cap_LinearAcceleration;
   if (!aOrient.IsNull()) {
-    const Float32Array& value = aOrient.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 4);
-    poseState.orientation[0] = value.Data()[0];
-    poseState.orientation[1] = value.Data()[1];
-    poseState.orientation[2] = value.Data()[2];
-    poseState.orientation[3] = value.Data()[3];
+    DebugOnly<bool> ok = aOrient.Value().CopyDataTo(poseState.orientation);
+    MOZ_ASSERT(
+        ok, "aOrient.Value().Length() != ArrayLength(poseState.orientation)");
     poseState.isOrientationValid = true;
   }
   if (!aPos.IsNull()) {
-    const Float32Array& value = aPos.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 3);
-    poseState.position[0] = value.Data()[0];
-    poseState.position[1] = value.Data()[1];
-    poseState.position[2] = value.Data()[2];
+    DebugOnly<bool> ok = aPos.Value().CopyDataTo(poseState.position);
+    MOZ_ASSERT(ok, "aPos.Value().Length() != ArrayLength(poseState.position)");
     poseState.isPositionValid = true;
   }
   if (!aAngVelocity.IsNull()) {
-    const Float32Array& value = aAngVelocity.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 3);
-    poseState.angularVelocity[0] = value.Data()[0];
-    poseState.angularVelocity[1] = value.Data()[1];
-    poseState.angularVelocity[2] = value.Data()[2];
+    DebugOnly<bool> ok =
+        aAngVelocity.Value().CopyDataTo(poseState.angularVelocity);
+    MOZ_ASSERT(ok,
+               "aAngVelocity.Value().Length() != "
+               "ArrayLength(poseState.angularVelocity)");
   }
   if (!aAngAcceleration.IsNull()) {
-    const Float32Array& value = aAngAcceleration.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 3);
-    poseState.angularAcceleration[0] = value.Data()[0];
-    poseState.angularAcceleration[1] = value.Data()[1];
-    poseState.angularAcceleration[2] = value.Data()[2];
+    DebugOnly<bool> ok =
+        aAngAcceleration.Value().CopyDataTo(poseState.angularAcceleration);
+    MOZ_ASSERT(ok,
+               "aAngAcceleration.Value().Length() != "
+               "ArrayLength(poseState.angularAcceleration)");
   }
   if (!aLinVelocity.IsNull()) {
-    const Float32Array& value = aLinVelocity.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 3);
-    poseState.linearVelocity[0] = value.Data()[0];
-    poseState.linearVelocity[1] = value.Data()[1];
-    poseState.linearVelocity[2] = value.Data()[2];
+    DebugOnly<bool> ok =
+        aLinVelocity.Value().CopyDataTo(poseState.linearVelocity);
+    MOZ_ASSERT(ok,
+               "aLinVelocity.Value().Length() != "
+               "ArrayLength(poseState.linearVelocity)");
   }
   if (!aLinAcceleration.IsNull()) {
-    const Float32Array& value = aLinAcceleration.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 3);
-    poseState.linearAcceleration[0] = value.Data()[0];
-    poseState.linearAcceleration[1] = value.Data()[1];
-    poseState.linearAcceleration[2] = value.Data()[2];
+    DebugOnly<bool> ok =
+        aLinAcceleration.Value().CopyDataTo(poseState.linearAcceleration);
+    MOZ_ASSERT(ok,
+               "aLinAcceleration.Value().Length() != "
+               "ArrayLength(poseState.linearAcceleration)");
   }
 
   GamepadPoseInformation a(poseState);
@@ -350,18 +338,13 @@ already_AddRefed<Promise> GamepadServiceTest::NewTouch(
   GamepadTouchState touchState;
   touchState.touchId = aTouchId;
   touchState.surfaceId = aSurfaceId;
-  const Float32Array& value = aPos;
-  value.ComputeState();
-  MOZ_ASSERT(value.Length() == 2);
-  touchState.position[0] = value.Data()[0];
-  touchState.position[1] = value.Data()[1];
+  DebugOnly<bool> ok = aPos.CopyDataTo(touchState.position);
+  MOZ_ASSERT(ok, "aPos.Length() != ArrayLength(touchState.position)");
 
   if (!aSurfDim.IsNull()) {
-    const Float32Array& value = aSurfDim.Value();
-    value.ComputeState();
-    MOZ_ASSERT(value.Length() == 2);
-    touchState.surfaceDimensions[0] = value.Data()[0];
-    touchState.surfaceDimensions[1] = value.Data()[1];
+    ok = aSurfDim.Value().CopyDataTo(touchState.surfaceDimensions);
+    MOZ_ASSERT(
+        ok, "aSurfDim.Length() != ArrayLength(touchState.surfaceDimensions)");
     touchState.isSurfaceDimensionsValid = true;
   }
 
