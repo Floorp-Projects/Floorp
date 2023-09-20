@@ -5313,8 +5313,7 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   event.mModifiers = aMouseUpEvent->mModifiers;
   event.mButtons = aMouseUpEvent->mButtons;
   event.mTimeStamp = aMouseUpEvent->mTimeStamp;
-  event.mFlags.mOnlyChromeDispatch =
-      aNoContentDispatch && !aMouseUpEvent->mUseLegacyNonPrimaryDispatch;
+  event.mFlags.mOnlyChromeDispatch = aNoContentDispatch;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
   event.mButton = aMouseUpEvent->mButton;
   event.pointerId = aMouseUpEvent->pointerId;
