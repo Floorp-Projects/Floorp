@@ -44,13 +44,8 @@ ArrayData GetArrayBufferViewOrArrayBufferData(
 void CopyArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
     nsTArray<uint8_t>& aOutData) {
-  JS::AutoCheckCannotGC nogc;
-  ArrayData data = GetArrayBufferViewOrArrayBufferData(aBufferOrView);
   aOutData.Clear();
-  if (!data.IsValid()) {
-    return;
-  }
-  aOutData.AppendElements(data.mData, data.mLength);
+  Unused << dom::AppendTypedArrayDataTo(aBufferOrView, aOutData);
 }
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {

@@ -23,12 +23,6 @@ class PushUtil final {
   PushUtil() = delete;
 
  public:
-  static bool CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
-                                     nsTArray<uint8_t>& aArray);
-
-  static bool CopyArrayBufferViewToArray(const ArrayBufferView& aView,
-                                         nsTArray<uint8_t>& aArray);
-
   static bool CopyBufferSourceToArray(
       const OwningArrayBufferViewOrArrayBuffer& aSource,
       nsTArray<uint8_t>& aArray);
