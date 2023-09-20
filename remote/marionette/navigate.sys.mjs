@@ -415,7 +415,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       "XULFrameLoaderCreated",
       onBrowsingContextChanged
     );
-    driver.promptListener?.off(onPromptOpened);
+    driver.promptListener?.off("opened", onPromptOpened);
     unloadTimer?.cancel();
 
     lazy.EventDispatcher.off("page-load", onNavigation);
