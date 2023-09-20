@@ -1285,6 +1285,12 @@ class BrowsingContextModule extends Module {
   #onPromptOpened = async (eventName, data) => {
     if (this.#subscribedEvents.has("browsingContext.userPromptOpened")) {
       const { contentBrowser, prompt } = data;
+
+      // Do not send opened event for unsupported prompt types.
+      if (!(prompt.promptType in UserPromptType)) {
+        return;
+      }
+
       const contextId = lazy.TabManager.getIdForBrowser(contentBrowser);
       // This event is emitted from the parent process but for a given browsing
       // context. Set the event's contextInfo to the message handler corresponding
