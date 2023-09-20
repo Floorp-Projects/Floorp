@@ -920,10 +920,6 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
 
 void EffectCompositor::NoteElementForReducing(
     const NonOwningAnimationTarget& aTarget) {
-  if (!StaticPrefs::dom_animations_api_autoremove_enabled()) {
-    return;
-  }
-
   Unused << mElementsToReduce.put(
       OwningAnimationTarget{aTarget.mElement, aTarget.mPseudoType});
 }

@@ -2169,20 +2169,8 @@
   value: true
   mirror: always
 
-# Is support for automatically removing replaced filling animations enabled?
-- name: dom.animations-api.autoremove.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for composite operations from the Web Animations API enabled?
 - name: dom.animations-api.compositing.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for the core interfaces of Web Animations API enabled?
-- name: dom.animations-api.core.enabled
   type: bool
   value: true
   mirror: always
@@ -2190,13 +2178,6 @@
 # Is support for Document.getAnimations() and Element.getAnimations()
 # supported?
 - name: dom.animations-api.getAnimations.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for animations from the Web Animations API without 0%/100%
-# keyframes enabled?
-- name: dom.animations-api.implicit-keyframes.enabled
   type: bool
   value: true
   mirror: always

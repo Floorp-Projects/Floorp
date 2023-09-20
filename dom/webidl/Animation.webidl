@@ -21,7 +21,7 @@ interface Animation : EventTarget {
               optional AnimationTimeline? timeline);
 
   attribute DOMString id;
-  [Func="Document::IsWebAnimationsEnabled", Pure]
+  [Pure]
   attribute AnimationEffect? effect;
   // Bug 1676794. Drop BinaryName once we support ScrollTimeline interface.
   [Func="Document::AreWebAnimationsTimelinesEnabled",
@@ -38,15 +38,13 @@ interface Animation : EventTarget {
   readonly attribute AnimationPlayState playState;
   [BinaryName="pendingFromJS"]
   readonly attribute boolean            pending;
-  [Pref="dom.animations-api.autoremove.enabled"]
   readonly attribute AnimationReplaceState replaceState;
-  [Func="Document::IsWebAnimationsEnabled", Throws]
+  [Throws]
   readonly attribute Promise<Animation> ready;
-  [Func="Document::IsWebAnimationsEnabled", Throws]
+  [Throws]
   readonly attribute Promise<Animation> finished;
            attribute EventHandler       onfinish;
            attribute EventHandler       oncancel;
-  [Pref="dom.animations-api.autoremove.enabled"]
            attribute EventHandler       onremove;
   undefined cancel();
   [Throws]
@@ -58,9 +56,8 @@ interface Animation : EventTarget {
   undefined updatePlaybackRate (double playbackRate);
   [Throws]
   undefined reverse();
-  [Pref="dom.animations-api.autoremove.enabled"]
   undefined persist();
-  [CEReactions, Pref="dom.animations-api.autoremove.enabled", Throws]
+  [CEReactions, Throws]
   undefined commitStyles();
 };
 

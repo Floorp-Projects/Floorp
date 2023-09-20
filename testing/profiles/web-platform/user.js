@@ -50,9 +50,6 @@ user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.update.enabled", false);
 // Automatically unload beforeunload alerts
 user_pref("dom.disable_beforeunload", true);
-// Enable implicit keyframes since the common animation interpolation test
-// function assumes this is available.
-user_pref("dom.animations-api.implicit-keyframes.enabled", true);
 // Disable high DPI
 user_pref("layout.css.devPixelsPerPx", "1.0");
 // Enable the parallel styling code.

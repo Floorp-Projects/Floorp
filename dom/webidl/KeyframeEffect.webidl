@@ -25,9 +25,7 @@ dictionary KeyframeEffectOptions : EffectTiming {
 
 // KeyframeEffect should run in the caller's compartment to do custom
 // processing on the `keyframes` object.
-[Func="Document::IsWebAnimationsEnabled",
- RunConstructorInCallerCompartment,
- Exposed=Window]
+[RunConstructorInCallerCompartment, Exposed=Window]
 interface KeyframeEffect : AnimationEffect {
   [Throws]
   constructor(Element? target,

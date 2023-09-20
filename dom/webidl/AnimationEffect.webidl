@@ -55,8 +55,7 @@ dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double?  currentIteration = null;
 };
 
-[Func="Document::IsWebAnimationsEnabled",
- Exposed=Window]
+[Exposed=Window]
 interface AnimationEffect {
   EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]

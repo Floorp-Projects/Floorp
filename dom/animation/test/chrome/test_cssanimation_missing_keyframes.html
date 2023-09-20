@@ -52,22 +52,15 @@ const gTests = [
   },
 ];
 
-SpecialPowers.pushPrefEnv(
-  { set: [["dom.animations-api.core.enabled", true]] },
-  function() {
-    gTests.forEach(function(subtest) {
-      test(function(t) {
-        const div = addDiv(t);
-        div.style.animation = `${ subtest.animationName } 1000s`;
-        const animation = div.getAnimations()[0];
-        assert_properties_equal(animation.effect.getProperties(),
-                                subtest.expected);
-      }, subtest.desc);
-    });
-
-    done();
-  }
-);
+gTests.forEach(function(subtest) {
+  test(function(t) {
+    const div = addDiv(t);
+    div.style.animation = `${ subtest.animationName } 1000s`;
+    const animation = div.getAnimations()[0];
+    assert_properties_equal(animation.effect.getProperties(),
+                            subtest.expected);
+  }, subtest.desc);
+});
 
 </script>
 </body>

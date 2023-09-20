@@ -73,9 +73,7 @@ const enableAnimationFeatures = function () {
     SpecialPowers.pushPrefEnv(
       {
         set: [
-          ["dom.animations-api.core.enabled", true],
           ["dom.animations-api.getAnimations.enabled", true],
-          ["dom.animations-api.implicit-keyframes.enabled", true],
           ["dom.animations-api.timelines.enabled", true],
         ],
       },

@@ -23,7 +23,6 @@
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For FastBaseKeyframe etc.
 #include "mozilla/dom/BindingCallContext.h"
-#include "mozilla/dom/Document.h"  // For Document::AreWebAnimationsImplicitKeyframesEnabled
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h"  // For PropertyValuesPair etc.
 #include "mozilla/dom/KeyframeEffectBinding.h"
@@ -182,9 +181,6 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
     JSContext* aCx, dom::Document* aDocument, JS::Handle<JS::Value> aValue,
     nsTArray<Keyframe>& aResult, ErrorResult& aRv);
 
-static bool HasImplicitKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                                      dom::Document* aDocument);
-
 static void DistributeRange(const Range<Keyframe>& aRange);
 
 // ------------------------------------------------------------------
@@ -228,13 +224,6 @@ nsTArray<Keyframe> KeyframeUtils::GetKeyframesFromObject(
     MOZ_ASSERT(keyframes.IsEmpty(),
                "Should not set any keyframes when there is an error");
     return keyframes;
-  }
-
-  if (!dom::Document::AreWebAnimationsImplicitKeyframesEnabled(aCx, nullptr) &&
-      HasImplicitKeyframeValues(keyframes, aDocument)) {
-    keyframes.Clear();
-    aRv.ThrowNotSupportedError(
-        "Animation to or from an underlying value is not yet supported");
   }
 
   return keyframes;
@@ -756,12 +745,6 @@ static AnimationProperty* HandleMissingInitialKeyframe(
   MOZ_ASSERT(aEntry.mOffset != 0.0f,
              "The offset of the entry should not be 0.0");
 
-  // If the preference for implicit keyframes is not enabled, don't fill in the
-  // missing keyframe.
-  if (!StaticPrefs::dom_animations_api_implicit_keyframes_enabled()) {
-    return nullptr;
-  }
-
   AnimationProperty* result = aResult.AppendElement();
   result->mProperty = aEntry.mProperty;
 
@@ -775,17 +758,6 @@ static void HandleMissingFinalKeyframe(
     AnimationProperty* aCurrentAnimationProperty) {
   MOZ_ASSERT(aEntry.mOffset != 1.0f,
              "The offset of the entry should not be 1.0");
-
-  // If the preference for implicit keyframes is not enabled, don't fill
-  // in the missing keyframe.
-  if (!StaticPrefs::dom_animations_api_implicit_keyframes_enabled()) {
-    // If we have already appended a new entry for the property so we have to
-    // remove it.
-    if (aCurrentAnimationProperty) {
-      aResult.RemoveLastElement();
-    }
-    return;
-  }
 
   // If |aCurrentAnimationProperty| is nullptr, that means this is the first
   // entry for the property, we have to append a new AnimationProperty for this
@@ -1009,15 +981,6 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
       continue;
     }
 
-    // If we only have one value, we should animate from the underlying value
-    // but not if the pref for supporting implicit keyframes is disabled.
-    if (!StaticPrefs::dom_animations_api_implicit_keyframes_enabled() &&
-        count == 1) {
-      aRv.ThrowNotSupportedError(
-          "Animation to or from an underlying value is not yet supported");
-      return;
-    }
-
     size_t n = pair.mValues.Length() - 1;
     size_t i = 0;
 
@@ -1167,71 +1130,6 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
       }
     }
   }
-}
-
-/**
- * Returns true if the supplied set of keyframes has keyframe values for
- * any property for which it does not also supply a value for the 0% and 100%
- * offsets. The check is not entirely accurate but should detect most common
- * cases.
- *
- * @param aKeyframes The set of keyframes to analyze.
- * @param aDocument The document to use when parsing keyframes so we can
- *   try to detect where we have an invalid value at 0%/100%.
- */
-static bool HasImplicitKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                                      dom::Document* aDocument) {
-  // We are looking to see if that every property referenced in |aKeyframes|
-  // has a valid property at offset 0.0 and 1.0. The check as to whether a
-  // property is valid or not, however, is not precise. We only check if the
-  // property can be parsed, NOT whether it can also be converted to a
-  // StyleAnimationValue since doing that requires a target element bound to
-  // a document which we might not always have at the point where we want to
-  // perform this check.
-  //
-  // This is only a temporary measure until we ship implicit keyframes and
-  // remove the corresponding pref.
-  // So as long as this check catches most cases, and we don't do anything
-  // horrible in one of the cases we can't detect, it should be sufficient.
-
-  nsCSSPropertyIDSet properties;               // All properties encountered.
-  nsCSSPropertyIDSet propertiesWithFromValue;  // Those with a defined 0% value.
-  nsCSSPropertyIDSet propertiesWithToValue;  // Those with a defined 100% value.
-
-  auto addToPropertySets = [&](nsCSSPropertyID aProperty, double aOffset) {
-    properties.AddProperty(aProperty);
-    if (aOffset == 0.0) {
-      propertiesWithFromValue.AddProperty(aProperty);
-    } else if (aOffset == 1.0) {
-      propertiesWithToValue.AddProperty(aProperty);
-    }
-  };
-
-  for (size_t i = 0, len = aKeyframes.Length(); i < len; i++) {
-    const Keyframe& frame = aKeyframes[i];
-
-    // We won't have called DistributeKeyframes when this is called so
-    // we can't use frame.mComputedOffset. Instead we do a rough version
-    // of that algorithm that substitutes null offsets with 0.0 for the first
-    // frame, 1.0 for the last frame, and 0.5 for everything else.
-    double computedOffset = i == len - 1 ? 1.0 : i == 0 ? 0.0 : 0.5;
-    double offsetToUse = frame.mOffset ? frame.mOffset.value() : computedOffset;
-
-    for (const PropertyValuePair& pair : frame.mPropertyValues) {
-      if (nsCSSProps::IsShorthand(pair.mProperty)) {
-        MOZ_ASSERT(pair.mServoDeclarationBlock);
-        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(prop, pair.mProperty,
-                                             CSSEnabledState::ForAllContent) {
-          addToPropertySets(*prop, offsetToUse);
-        }
-      } else {
-        addToPropertySets(pair.mProperty, offsetToUse);
-      }
-    }
-  }
-
-  return !propertiesWithFromValue.Equals(properties) ||
-         !propertiesWithToValue.Equals(properties);
 }
 
 /**
