@@ -33,6 +33,7 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
+  width: 100%;
 }
 
 :host([type="accordion"]) #label-wrapper {
@@ -43,6 +44,10 @@ button {
   color: var(--in-content-text-color);
   font-size: 1em;
   margin: 0;
+}
+
+slot[name="rating"] {
+  font-size: 12px;
 }
 
 #content {
