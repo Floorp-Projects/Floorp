@@ -1063,7 +1063,10 @@ static const unsigned PageMask = ((1u << PageBits) - 1);
 
 // These limits are agreed upon with other engines for consistency.
 
+static const unsigned MaxRecGroups = 1000000;
 static const unsigned MaxTypes = 1000000;
+static const unsigned MaxSubTypingDepth = 63;
+static const unsigned MaxTags = 1000000;
 static const unsigned MaxFuncs = 1000000;
 static const unsigned MaxTables = 100000;
 static const unsigned MaxMemories = 100000;
@@ -1079,19 +1082,13 @@ static const unsigned MaxTableLength = 10000000;
 static const unsigned MaxLocals = 50000;
 static const unsigned MaxParams = 1000;
 static const unsigned MaxResults = 1000;
-static const unsigned MaxStructFields = 2000;
+static const unsigned MaxStructFields = 10000;
 static const uint64_t MaxMemory32LimitField = uint64_t(1) << 16;
 static const uint64_t MaxMemory64LimitField = uint64_t(1) << 48;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
-
-// These limits pertain to our WebAssembly implementation only, but may make
-// sense to get into the shared limits spec eventually.
-
-static const unsigned MaxRecGroups = 1000000;
-static const unsigned MaxSubTypingDepth = 31;
-static const unsigned MaxTags = 1000000;
+static const unsigned MaxArrayNewFixedElements = 10000;
 
 // Maximum payload size, in bytes, of a gc-proposal Array.  Puts it fairly
 // close to 2^31 without exposing us to potential danger at the signed-i32

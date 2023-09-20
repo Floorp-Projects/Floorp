@@ -691,14 +691,14 @@ function structNewOfManyFields(numFields) {
 }
 
 {
-    // 2000 fields is allowable
-    let exports = wasmEvalText(structNewOfManyFields(2000)).exports;
+    // 10_000 fields is allowable
+    let exports = wasmEvalText(structNewOfManyFields(10000)).exports;
     let s = exports.create();
     assertEq(s, s);
 }
 {
-    // but 2001 is not
-    assertErrorMessage(() => wasmEvalText(structNewOfManyFields(2001)),
+    // but 10_001 is not
+    assertErrorMessage(() => wasmEvalText(structNewOfManyFields(10001)),
                        WebAssembly.CompileError,
                        /too many fields in struct/);
 }
