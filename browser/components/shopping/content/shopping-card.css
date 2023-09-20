@@ -19,6 +19,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 8px 12px;
+  position: relative;
 }
 
 button {
@@ -59,7 +60,7 @@ slot[name="rating"] {
   align-items: center;
   justify-content: center;
   padding: 8px 0;
-  border-top: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-border-color);
 }
 
 details > summary {
@@ -97,10 +98,8 @@ details[open] .chevron-icon {
   bottom: 0;
   text-align: center;
   padding-block: 12px 8px;
-}
-
-.show-more {
-  position: relative;
+  left: 0;
+  right: 0;
 }
 
 .show-more[expanded="false"]  {
