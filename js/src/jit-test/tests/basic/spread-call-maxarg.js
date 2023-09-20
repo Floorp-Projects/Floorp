@@ -1,5 +1,7 @@
+var config = getBuildConfiguration();
+
 // FIXME: ASAN and debug builds run this too slowly for now.
-if (!getBuildConfiguration("debug") && !getBuildConfiguration("asan")) {
+if (!config.debug && !config.asan) {
     let longArray = [];
     longArray.length = getMaxArgs() + 1;
     let shortArray = [];
