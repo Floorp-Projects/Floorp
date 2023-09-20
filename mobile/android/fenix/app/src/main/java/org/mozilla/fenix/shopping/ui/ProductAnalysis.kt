@@ -66,8 +66,8 @@ fun ProductAnalysis(
     onOptOutClick: () -> Unit,
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onReviewGradeLearnMoreClick: (String) -> Unit,
-    onFooterLinkClick: (String) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
+    onFooterLinkClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(

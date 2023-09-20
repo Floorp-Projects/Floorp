@@ -45,9 +45,9 @@ const val PLACEHOLDER_URL = "www.fakespot.com"
 @Composable
 fun ReviewQualityCheckContextualOnboarding(
     retailers: List<ProductVendor>,
-    onLearnMoreClick: (String) -> Unit,
-    onPrivacyPolicyClick: (String) -> Unit,
-    onTermsOfUseClick: (String) -> Unit,
+    onLearnMoreClick: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit,
+    onTermsOfUseClick: () -> Unit,
     onPrimaryButtonClick: () -> Unit,
     onSecondaryButtonClick: () -> Unit,
 ) {
@@ -85,7 +85,9 @@ fun ReviewQualityCheckContextualOnboarding(
                 LinkTextState(
                     text = learnMoreText,
                     url = PLACEHOLDER_URL,
-                    onClick = onLearnMoreClick,
+                    onClick = {
+                        onLearnMoreClick()
+                    },
                 ),
             ),
             style = FirefoxTheme.typography.body2.copy(
@@ -107,12 +109,16 @@ fun ReviewQualityCheckContextualOnboarding(
                 LinkTextState(
                     text = privacyPolicyText,
                     url = PLACEHOLDER_URL,
-                    onClick = onPrivacyPolicyClick,
+                    onClick = {
+                        onPrivacyPolicyClick()
+                    },
                 ),
                 LinkTextState(
                     text = termsOfUseText,
                     url = PLACEHOLDER_URL,
-                    onClick = onTermsOfUseClick,
+                    onClick = {
+                        onTermsOfUseClick()
+                    },
                 ),
             ),
             style = FirefoxTheme.typography.caption

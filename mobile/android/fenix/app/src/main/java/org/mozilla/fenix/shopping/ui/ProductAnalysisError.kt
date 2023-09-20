@@ -37,10 +37,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun ProductAnalysisError(
     error: ProductReviewState.Error,
     productRecommendationsEnabled: Boolean?,
-    onReviewGradeLearnMoreClick: (String) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onFooterLinkClick: (String) -> Unit,
+    onFooterLinkClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(

@@ -18,8 +18,6 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
-private const val FOOTER_LINK = "http://fakespot.com/"
-
 /**
  * Review Quality Check footer with an embedded link to navigate to Fakespot.com.
  *
@@ -27,7 +25,7 @@ private const val FOOTER_LINK = "http://fakespot.com/"
  */
 @Composable
 fun ReviewQualityCheckFooter(
-    onLinkClick: (String) -> Unit,
+    onLinkClick: () -> Unit,
 ) {
     val poweredByLinkText = stringResource(
         id = R.string.review_quality_check_powered_by_link,
@@ -42,8 +40,10 @@ fun ReviewQualityCheckFooter(
         linkTextStates = listOf(
             LinkTextState(
                 text = poweredByLinkText,
-                url = FOOTER_LINK,
-                onClick = onLinkClick,
+                url = "",
+                onClick = {
+                    onLinkClick()
+                },
             ),
         ),
         style = FirefoxTheme.typography.body2.copy(

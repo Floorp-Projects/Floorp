@@ -25,7 +25,6 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
  * @param onRequestDismiss Invoked when a user action requests dismissal of the bottom sheet.
  * @param modifier The modifier to be applied to the Composable.
  */
-@Suppress("LongMethod")
 @Composable
 fun ReviewQualityCheckBottomSheet(
     store: ReviewQualityCheckStore,
@@ -47,26 +46,17 @@ fun ReviewQualityCheckBottomSheet(
                     onPrimaryButtonClick = {
                         store.dispatch(ReviewQualityCheckAction.OptIn)
                     },
-                    onLearnMoreClick = { url ->
-                        store.dispatch(
-                            ReviewQualityCheckAction.OpenLink(
-                                ReviewQualityCheckState.LinkType.ExternalLink(url),
-                            ),
-                        )
+                    onLearnMoreClick = {
+                        onRequestDismiss()
+                        store.dispatch(ReviewQualityCheckAction.OpenOnboardingLearnMoreLink)
                     },
-                    onPrivacyPolicyClick = { url ->
-                        store.dispatch(
-                            ReviewQualityCheckAction.OpenLink(
-                                ReviewQualityCheckState.LinkType.ExternalLink(url),
-                            ),
-                        )
+                    onPrivacyPolicyClick = {
+                        onRequestDismiss()
+                        store.dispatch(ReviewQualityCheckAction.OpenOnboardingPrivacyPolicyLink)
                     },
-                    onTermsOfUseClick = { url ->
-                        store.dispatch(
-                            ReviewQualityCheckAction.OpenLink(
-                                ReviewQualityCheckState.LinkType.ExternalLink(url),
-                            ),
-                        )
+                    onTermsOfUseClick = {
+                        onRequestDismiss()
+                        store.dispatch(ReviewQualityCheckAction.OpenOnboardingTermsLink)
                     },
                     onSecondaryButtonClick = onRequestDismiss,
                 )
@@ -85,19 +75,13 @@ fun ReviewQualityCheckBottomSheet(
                     onProductRecommendationsEnabledStateChange = {
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },
-                    onReviewGradeLearnMoreClick = { url ->
-                        store.dispatch(
-                            ReviewQualityCheckAction.OpenLink(
-                                ReviewQualityCheckState.LinkType.ExternalLink(url),
-                            ),
-                        )
+                    onReviewGradeLearnMoreClick = {
+                        onRequestDismiss()
+                        store.dispatch(ReviewQualityCheckAction.OpenExplainerLearnMoreLink)
                     },
-                    onFooterLinkClick = { url ->
-                        store.dispatch(
-                            ReviewQualityCheckAction.OpenLink(
-                                ReviewQualityCheckState.LinkType.ExternalLink(url),
-                            ),
-                        )
+                    onFooterLinkClick = {
+                        onRequestDismiss()
+                        store.dispatch(ReviewQualityCheckAction.OpenPoweredByLink)
                     },
                 )
             }
@@ -120,8 +104,8 @@ private fun ProductReview(
     onOptOutClick: () -> Unit,
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onReviewGradeLearnMoreClick: (String) -> Unit,
-    onFooterLinkClick: (String) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
+    onFooterLinkClick: () -> Unit,
 ) {
     Crossfade(
         targetState = state.productReviewState,

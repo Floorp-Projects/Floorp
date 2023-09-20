@@ -85,7 +85,27 @@ sealed interface ReviewQualityCheckAction : Action {
     object ReanalyzeProduct : NetworkAction, UpdateAction
 
     /**
-     * Triggered when opening a link from the review quality check feature.
+     * Triggered when the user clicks on learn more link on the explainer card.
      */
-    data class OpenLink(val link: ReviewQualityCheckState.LinkType) : NavigationMiddlewareAction
+    object OpenExplainerLearnMoreLink : NavigationMiddlewareAction
+
+    /**
+     * Triggered when the user clicks on the "Powered by" link in the footer.
+     */
+    object OpenPoweredByLink : NavigationMiddlewareAction
+
+    /**
+     * Triggered when the user clicks on learn more link on the opt in card.
+     */
+    object OpenOnboardingLearnMoreLink : NavigationMiddlewareAction
+
+    /**
+     * Triggered when the user clicks on terms and conditions link on the opt in card.
+     */
+    object OpenOnboardingTermsLink : NavigationMiddlewareAction
+
+    /**
+     * Triggered when the user clicks on privacy policy link on the opt in card.
+     */
+    object OpenOnboardingPrivacyPolicyLink : NavigationMiddlewareAction
 }

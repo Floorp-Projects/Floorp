@@ -52,7 +52,7 @@ fun NoAnalysis(
     isAnalyzing: Boolean,
     productRecommendationsEnabled: Boolean?,
     onAnalyzeClick: () -> Unit,
-    onReviewGradeLearnMoreClick: (String) -> Unit,
+    onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,

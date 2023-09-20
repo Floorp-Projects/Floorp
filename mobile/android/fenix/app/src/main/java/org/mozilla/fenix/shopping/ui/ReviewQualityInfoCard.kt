@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -26,7 +25,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.parseHtml
-import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -39,7 +37,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun ReviewQualityInfoCard(
     modifier: Modifier = Modifier,
-    onLearnMoreClick: (String) -> Unit,
+    onLearnMoreClick: () -> Unit,
 ) {
     ReviewQualityCheckExpandableCard(
         title = stringResource(id = R.string.review_quality_check_explanation_title),
@@ -56,7 +54,7 @@ fun ReviewQualityInfoCard(
 @Composable
 private fun ReviewQualityInfo(
     modifier: Modifier = Modifier,
-    onLearnMoreClick: (String) -> Unit,
+    onLearnMoreClick: () -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -81,7 +79,6 @@ private fun ReviewQualityInfo(
             stringResource(R.string.shopping_product_name),
         )
         val text = stringResource(R.string.review_quality_check_info_learn_more, link)
-        val context = LocalContext.current
         val linkStartIndex = text.indexOf(link)
         val linkEndIndex = linkStartIndex + link.length
         ClickableSubstringLink(
@@ -89,15 +86,7 @@ private fun ReviewQualityInfo(
             textStyle = FirefoxTheme.typography.body2,
             clickableStartIndex = linkStartIndex,
             clickableEndIndex = linkEndIndex,
-            onClick = {
-                onLearnMoreClick(
-                    // Placeholder Sumo page
-                    SupportUtils.getSumoURLForTopic(
-                        context,
-                        SupportUtils.SumoTopic.HELP,
-                    ),
-                )
-            },
+            onClick = onLearnMoreClick,
         )
 
         ReviewGradingScaleInfo(

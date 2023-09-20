@@ -7,6 +7,7 @@ package org.mozilla.fenix.shopping.di
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.shopping.middleware.DefaultNetworkChecker
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckService
@@ -27,21 +28,22 @@ object ReviewQualityCheckMiddlewareProvider {
      * @param settings The [Settings] instance to use.
      * @param browserStore The [BrowserStore] instance to access state.
      * @param context The [Context] instance to use.
-     * @param openLink Opens a link. The callback is invoked with the URL [String] parameter and
-     * whether or not it should open in a new or the currently selected tab [Boolean] parameter.
      * @param scope The [CoroutineScope] to use for launching coroutines.
      */
     fun provideMiddleware(
         settings: Settings,
         browserStore: BrowserStore,
         context: Context,
-        openLink: (String, Boolean) -> Unit,
         scope: CoroutineScope,
     ): List<ReviewQualityCheckMiddleware> =
         listOf(
             providePreferencesMiddleware(settings, scope),
             provideNetworkMiddleware(browserStore, context, scope),
-            provideNavigationMiddleware(openLink, scope),
+            provideNavigationMiddleware(
+                TabsUseCases.SelectOrAddUseCase(browserStore),
+                context,
+                scope,
+            ),
         )
 
     private fun providePreferencesMiddleware(
@@ -63,10 +65,12 @@ object ReviewQualityCheckMiddlewareProvider {
     )
 
     private fun provideNavigationMiddleware(
-        openLink: (String, Boolean) -> Unit,
+        selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
+        context: Context,
         scope: CoroutineScope,
     ) = ReviewQualityCheckNavigationMiddleware(
-        openLink = openLink,
+        selectOrAddUseCase = selectOrAddUseCase,
+        context = context,
         scope = scope,
     )
 }
