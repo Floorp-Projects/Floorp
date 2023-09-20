@@ -231,17 +231,6 @@ enum class WasmFeatureStage {
     /* shell flag         */ "test-serialization",                      \
     /* preference name    */ "test-serialization")                      \
   FEATURE(                                                              \
-    /* capitalized name   */ FinalTypes,                                \
-    /* lower case name    */ finalTypes,                                \
-    /* stage              */ WasmFeatureStage::Experimental,            \
-    /* compile predicate  */ 1,                                         \
-    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
-    /* flag predicate     */ true,                                      \
-    /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ false,                                     \
-    /* shell flag         */ "final-types",                             \
-    /* preference name    */ "final_types")                             \
-  FEATURE(                                                              \
     /* capitalized name   */ TestMetadata,                              \
     /* lower case name    */ testMetadata,                              \
     /* stage              */ WasmFeatureStage::Experimental,            \
