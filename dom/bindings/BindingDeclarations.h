@@ -71,31 +71,32 @@ struct DictionaryBase {
   bool IsAnyMemberPresent() const { return mIsAnyMemberPresent; }
 };
 
+template <class T>
+constexpr bool is_dom_dictionary = std::is_base_of_v<DictionaryBase, T>;
+
 template <typename T>
-inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
-ImplCycleCollectionUnlink(T& aDictionary) {
+inline std::enable_if_t<is_dom_dictionary<T>, void> ImplCycleCollectionUnlink(
+    T& aDictionary) {
   aDictionary.UnlinkForCC();
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            T& aDictionary, const char* aName,
-                            uint32_t aFlags = 0) {
+inline std::enable_if_t<is_dom_dictionary<T>, void> ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, T& aDictionary,
+    const char* aName, uint32_t aFlags = 0) {
   aDictionary.TraverseForCC(aCallback, aFlags);
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
-ImplCycleCollectionUnlink(UniquePtr<T>& aDictionary) {
+inline std::enable_if_t<is_dom_dictionary<T>, void> ImplCycleCollectionUnlink(
+    UniquePtr<T>& aDictionary) {
   aDictionary.reset();
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            UniquePtr<T>& aDictionary, const char* aName,
-                            uint32_t aFlags = 0) {
+inline std::enable_if_t<is_dom_dictionary<T>, void> ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, UniquePtr<T>& aDictionary,
+    const char* aName, uint32_t aFlags = 0) {
   if (aDictionary) {
     ImplCycleCollectionTraverse(aCallback, *aDictionary, aName, aFlags);
   }
@@ -105,10 +106,30 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 // detect typed array/buffer/view template arguments.
 struct AllTypedArraysBase {};
 
+template <class T>
+constexpr bool is_dom_typed_array = std::is_base_of_v<AllTypedArraysBase, T>;
+
+// Struct that serves as a base class for all unions.
+// Particularly useful so we can use std::is_base_of to detect union
+// template arguments.
+struct AllUnionBase {};
+
+template <class T>
+constexpr bool is_dom_union = std::is_base_of_v<AllUnionBase, T>;
+
 // Struct that serves as a base class for all owning unions.
 // Particularly useful so we can use std::is_base_of to detect owning union
 // template arguments.
-struct AllOwningUnionBase {};
+struct AllOwningUnionBase : public AllUnionBase {};
+
+template <class T>
+constexpr bool is_dom_owning_union = std::is_base_of_v<AllOwningUnionBase, T>;
+
+struct UnionWithTypedArraysBase {};
+
+template <class T>
+constexpr bool is_dom_union_with_typedarray_members =
+    std::is_base_of_v<UnionWithTypedArraysBase, T>;
 
 struct EnumEntry {
   const char* value;
