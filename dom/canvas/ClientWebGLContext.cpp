@@ -36,6 +36,7 @@
 #include "TexUnpackBlob.h"
 #include "WebGLMethodDispatcher.h"
 #include "WebGLChild.h"
+#include "WebGLTextureUpload.h"
 #include "WebGLValidateStrings.h"
 
 namespace mozilla {
@@ -4186,22 +4187,6 @@ void ClientWebGLContext::TexStorage(uint8_t funcDims, GLenum texTarget,
                          internalFormat, CastUvec3(size));
 }
 
-namespace webgl {
-// TODO: Move these definitions into statics here.
-Maybe<webgl::TexUnpackBlobDesc> FromImageBitmap(
-    GLenum target, Maybe<uvec3> size, const dom::ImageBitmap& imageBitmap,
-    ErrorResult* const out_rv);
-
-Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
-    const ClientWebGLContext&, GLenum target, Maybe<uvec3> size,
-    const dom::OffscreenCanvas& src, ErrorResult* const out_error);
-
-Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
-                                            GLenum target, Maybe<uvec3> size,
-                                            const dom::Element& src,
-                                            ErrorResult* const out_error);
-}  // namespace webgl
-
 // -
 
 void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
@@ -4364,6 +4349,11 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     if (src.mOffscreenCanvas) {
       return webgl::FromOffscreenCanvas(
           *this, imageTarget, size, *(src.mOffscreenCanvas), src.mOut_error);
+    }
+
+    if (src.mVideoFrame) {
+      return webgl::FromVideoFrame(*this, imageTarget, size, *(src.mVideoFrame),
+                                   src.mOut_error);
     }
 
     if (src.mDomElem) {

@@ -731,6 +731,12 @@ struct TexImageSourceAdapter final : public TexImageSource {
     mOut_error = out_error;
   }
 
+  TexImageSourceAdapter(const dom::VideoFrame* videoFrame,
+                        ErrorResult* const out_error) {
+    mVideoFrame = videoFrame;
+    mOut_error = out_error;
+  }
+
   TexImageSourceAdapter(const dom::Element* domElem,
                         ErrorResult* const out_error) {
     mDomElem = domElem;
