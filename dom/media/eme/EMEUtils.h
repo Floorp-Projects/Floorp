@@ -47,36 +47,6 @@ void CopyArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
     nsTArray<uint8_t>& aOutData);
 
-struct ArrayData {
-  explicit ArrayData(const uint8_t* aData, size_t aLength)
-      : mData(aData), mLength(aLength) {}
-  const uint8_t* mData;
-  const size_t mLength;
-  bool IsValid() const { return mData != nullptr && mLength != 0; }
-  bool operator==(const nsTArray<uint8_t>& aOther) const {
-    return mLength == aOther.Length() &&
-           memcmp(mData, aOther.Elements(), mLength) == 0;
-  }
-};
-
-// Helper function to extract data coming in from JS in an
-// (ArrayBuffer or ArrayBufferView) IDL typed function argument.
-//
-// Be *very* careful with this!
-//
-// Only use returned ArrayData inside the lifetime of the
-// ArrayBufferViewOrArrayBuffer; the ArrayData struct does not contain
-// a copy of the data!
-//
-// And do *not* call out to anything that could call into JavaScript,
-// while the ArrayData is live, as then all bets about the data not changing
-// are off! No calls into JS, no calls into JS-implemented WebIDL or XPIDL,
-// nothing. Beware!
-//
-// Only call this on a properly initialized ArrayBufferViewOrArrayBuffer.
-ArrayData GetArrayBufferViewOrArrayBufferData(
-    const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView);
-
 nsString KeySystemToProxyName(const nsAString& aKeySystem);
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem);

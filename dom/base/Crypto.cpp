@@ -40,11 +40,9 @@ JSObject* Crypto::WrapObject(JSContext* aCx,
 void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
                              JS::MutableHandle<JSObject*> aRetval,
                              ErrorResult& aRv) {
-  JS::Rooted<JSObject*> view(aCx, aArray.Obj());
-
   // Throw if the wrong type of ArrayBufferView is passed in
   // (Part of the Web Crypto API spec)
-  switch (JS_GetArrayBufferViewType(view)) {
+  switch (aArray.Type()) {
     case js::Scalar::Int8:
     case js::Scalar::Uint8:
     case js::Scalar::Uint8Clamped:
@@ -60,17 +58,6 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
       return;
   }
 
-  aArray.ComputeState();
-  uint32_t dataLen = aArray.Length();
-  if (dataLen == 0) {
-    NS_WARNING("ArrayBufferView length is 0, cannot continue");
-    aRetval.set(view);
-    return;
-  } else if (dataLen > 65536) {
-    aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
-    return;
-  }
-
   nsCOMPtr<nsIRandomGenerator> randomGenerator =
       do_GetService("@mozilla.org/security/random-generator;1");
   if (!randomGenerator) {
@@ -78,14 +65,27 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     return;
   }
 
-  nsresult rv =
-      randomGenerator->GenerateRandomBytesInto(aArray.Data(), dataLen);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
-    return;
-  }
+  aArray.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    if (aData.Length() == 0) {
+      NS_WARNING("ArrayBufferView length is 0, cannot continue");
+      aRetval.set(aArray.Obj());
+      return;
+    }
 
-  aRetval.set(view);
+    if (aData.Length() > 65536) {
+      aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+      return;
+    }
+
+    nsresult rv = randomGenerator->GenerateRandomBytesInto(aData.Elements(),
+                                                           aData.Length());
+    if (NS_FAILED(rv)) {
+      aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
+      return;
+    }
+
+    aRetval.set(aArray.Obj());
+  });
 }
 
 void Crypto::RandomUUID(nsACString& aRetVal) {

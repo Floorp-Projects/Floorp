@@ -104,20 +104,11 @@ void TextDecoder::Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
     DecodeNative(nullptr, aOptions.mStream, aOutDecodedString, aRv);
     return;
   }
-  const ArrayBufferViewOrArrayBuffer& buf = aBuffer.Value();
-  uint8_t* data;
-  uint32_t length;
-  if (buf.IsArrayBufferView()) {
-    buf.GetAsArrayBufferView().ComputeState();
-    data = buf.GetAsArrayBufferView().Data();
-    length = buf.GetAsArrayBufferView().Length();
-  } else {
-    MOZ_ASSERT(buf.IsArrayBuffer());
-    buf.GetAsArrayBuffer().ComputeState();
-    data = buf.GetAsArrayBuffer().Data();
-    length = buf.GetAsArrayBuffer().Length();
-  }
-  DecodeNative(Span(data, length), aOptions.mStream, aOutDecodedString, aRv);
+
+  ProcessTypedArrays(aBuffer.Value(), [&](const Span<uint8_t>& aData,
+                                          JS::AutoCheckCannotGC&&) {
+    DecodeNative(aData, aOptions.mStream, aOutDecodedString, aRv);
+  });
 }
 
 void TextDecoderCommon::GetEncoding(nsAString& aEncoding) {

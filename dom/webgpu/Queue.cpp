@@ -56,123 +56,49 @@ already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {
   return promise.forget();
 }
 
-// Get the base address and length of part of a `BufferSource`.
-//
-// Given `aBufferSource` and an offset `aDataOffset` and optional length
-// `aSizeOrRemainder` describing the range of its contents we want to see, check
-// all arguments and set `aDataContents` and `aContentsSize` to a pointer to the
-// bytes and a length. Report errors in `aRv`.
-//
-// If `ASizeOrRemainder` was not passed, return a view from the starting offset
-// to the end of `aBufferSource`.
-//
-// On success, the returned `aDataContents` is never `nullptr`. If the
-// `ArrayBuffer` is detached, return a pointer to a dummy buffer and set
-// `aContentsSize` to zero.
-//
-// The `aBufferSource` argument is a WebIDL `BufferSource`, which WebGPU methods
-// use anywhere they accept a block of raw bytes. WebIDL defines `BufferSource`
-// as:
-//
-//     typedef (ArrayBufferView or ArrayBuffer) BufferSource;
-//
-// This appears in Gecko code as `dom::ArrayBufferViewOrArrayBuffer`.
-static void GetBufferSourceDataAndSize(
-    const dom::ArrayBufferViewOrArrayBuffer& aBufferSource,
-    uint64_t aDataOffset, const dom::Optional<uint64_t>& aSizeOrRemainder,
-    uint8_t*& aDataContents, uint64_t& aContentsSize, const char* aOffsetName,
-    ErrorResult& aRv) {
-  uint64_t dataSize = 0;
-  uint8_t* dataContents = nullptr;
-  if (aBufferSource.IsArrayBufferView()) {
-    const auto& view = aBufferSource.GetAsArrayBufferView();
-    view.ComputeState();
-    dataSize = view.Length();
-    dataContents = view.Data();
-  }
-  if (aBufferSource.IsArrayBuffer()) {
-    const auto& ab = aBufferSource.GetAsArrayBuffer();
-    ab.ComputeState();
-    dataSize = ab.Length();
-    dataContents = ab.Data();
-  }
-
-  if (aDataOffset > dataSize) {
-    aRv.ThrowOperationError(
-        nsPrintfCString("%s is greater than data length", aOffsetName));
-    return;
-  }
-
-  uint64_t contentsSize = 0;
-  if (aSizeOrRemainder.WasPassed()) {
-    contentsSize = aSizeOrRemainder.Value();
-  } else {
-    // We already know that aDataOffset <= length, so this cannot underflow.
-    contentsSize = dataSize - aDataOffset;
-  }
-
-  // This could be folded into the if above, but it's nice to make it
-  // obvious that the check always occurs.
-  // We already know that aDataOffset <= length, so this cannot underflow.
-  if (contentsSize > dataSize - aDataOffset) {
-    aRv.ThrowOperationError(
-        nsPrintfCString("%s + size is greater than data length", aOffsetName));
-    return;
-  }
-
-  if (!dataContents) {
-    // Passing `nullptr` as either the source or destination to
-    // `memcpy` is undefined behavior, even when the count is zero:
-    //
-    // https://en.cppreference.com/w/cpp/string/byte/memcpy
-    //
-    // We can either make callers responsible for checking the pointer
-    // before calling `memcpy`, or we can have it point to a
-    // permanently-live `static` dummy byte, so that the copies are
-    // harmless. The latter seems less error-prone.
-    static uint8_t dummy;
-    dataContents = &dummy;
-    MOZ_RELEASE_ASSERT(contentsSize == 0);
-  }
-  aDataContents = dataContents;
-  aContentsSize = contentsSize;
-}
-
 void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
                         const dom::ArrayBufferViewOrArrayBuffer& aData,
                         uint64_t aDataOffset,
                         const dom::Optional<uint64_t>& aSize,
                         ErrorResult& aRv) {
-  uint8_t* dataContents = nullptr;
-  uint64_t contentsSize = 0;
-  GetBufferSourceDataAndSize(aData, aDataOffset, aSize, dataContents,
-                             contentsSize, "dataOffset", aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  dom::ProcessTypedArraysFixed(aData, [&](const Span<const uint8_t>& aData) {
+    uint64_t length = aData.Length();
+    const auto checkedSize = aSize.WasPassed()
+                                 ? CheckedInt<size_t>(aSize.Value())
+                                 : CheckedInt<size_t>(length) - aDataOffset;
+    if (!checkedSize.isValid()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
 
-  if (contentsSize % 4 != 0) {
-    aRv.ThrowAbortError("Byte size must be a multiple of 4");
-    return;
-  }
+    const auto& size = checkedSize.value();
+    if (aDataOffset + size > length) {
+      aRv.ThrowAbortError(nsPrintfCString("Wrong data size %" PRIuPTR, size));
+      return;
+    }
 
-  auto alloc =
-      mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(contentsSize);
-  if (alloc.isNothing()) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
+    if (size % 4 != 0) {
+      aRv.ThrowAbortError("Byte size must be a multiple of 4");
+      return;
+    }
 
-  auto handle = std::move(alloc.ref().first);
-  auto mapping = std::move(alloc.ref().second);
+    auto alloc = mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+    if (alloc.isNothing()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
 
-  memcpy(mapping.Bytes().data(), dataContents + aDataOffset, contentsSize);
-  ipc::ByteBuf bb;
-  ffi::wgpu_queue_write_buffer(aBuffer.mId, aBufferOffset, ToFFI(&bb));
-  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(handle))) {
-    MOZ_CRASH("IPC failure");
-  }
+    auto handle = std::move(alloc.ref().first);
+    auto mapping = std::move(alloc.ref().second);
+
+    memcpy(mapping.Bytes().data(), aData.Elements() + aDataOffset, size);
+    ipc::ByteBuf bb;
+    ffi::wgpu_queue_write_buffer(aBuffer.mId, aBufferOffset, ToFFI(&bb));
+    if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                       std::move(handle))) {
+      MOZ_CRASH("IPC failure");
+    }
+  });
 }
 
 void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
@@ -187,40 +113,39 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   ffi::WGPUExtent3d extent = {};
   ConvertExtent3DToFFI(aSize, &extent);
 
-  uint8_t* dataContents = nullptr;
-  uint64_t contentsSize = 0;
-  GetBufferSourceDataAndSize(aData, aDataLayout.mOffset,
-                             dom::Optional<uint64_t>(), dataContents,
-                             contentsSize, "dataLayout.offset", aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+  dom::ProcessTypedArraysFixed(aData, [&](const Span<const uint8_t>& aData) {
+    if (aData.IsEmpty()) {
+      aRv.ThrowAbortError("Input size cannot be zero.");
+      return;
+    }
 
-  if (!contentsSize) {
-    aRv.ThrowAbortError("Input size cannot be zero.");
-    return;
-  }
-  MOZ_ASSERT(dataContents != nullptr);
+    const auto checkedSize =
+        CheckedInt<size_t>(aData.Length()) - aDataLayout.mOffset;
+    if (!checkedSize.isValid()) {
+      aRv.ThrowAbortError("Offset is higher than the size");
+      return;
+    }
+    const auto size = checkedSize.value();
 
-  auto alloc =
-      mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(contentsSize);
-  if (alloc.isNothing()) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
+    auto alloc = mozilla::ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+    if (alloc.isNothing()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
 
-  auto handle = std::move(alloc.ref().first);
-  auto mapping = std::move(alloc.ref().second);
+    auto handle = std::move(alloc.ref().first);
+    auto mapping = std::move(alloc.ref().second);
 
-  memcpy(mapping.Bytes().data(), dataContents + aDataLayout.mOffset,
-         contentsSize);
+    memcpy(mapping.Bytes().data(), aData.Elements() + aDataLayout.mOffset,
+           size);
 
-  ipc::ByteBuf bb;
-  ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
-  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(handle))) {
-    MOZ_CRASH("IPC failure");
-  }
+    ipc::ByteBuf bb;
+    ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
+    if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                       std::move(handle))) {
+      MOZ_CRASH("IPC failure");
+    }
+  });
 }
 
 static WebGLTexelFormat ToWebGLTexelFormat(gfx::SurfaceFormat aFormat) {

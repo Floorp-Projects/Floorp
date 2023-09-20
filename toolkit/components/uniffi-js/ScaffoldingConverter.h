@@ -139,9 +139,7 @@ class ScaffoldingConverter<RustBuffer> {
       return Err("Bad argument type"_ns);
     }
 
-    const dom::ArrayBuffer& arrayBuf = aValue.GetAsArrayBuffer();
-    arrayBuf.ComputeState();
-    return OwnedRustBuffer::FromArrayBuffer(arrayBuf);
+    return OwnedRustBuffer::FromArrayBuffer(aValue.GetAsArrayBuffer());
   }
 
   static RustBuffer IntoRust(OwnedRustBuffer&& aValue) {

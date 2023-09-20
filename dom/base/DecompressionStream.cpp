@@ -14,6 +14,7 @@
 #include "mozilla/dom/TextDecoderStream.h"
 #include "mozilla/dom/TransformStream.h"
 #include "mozilla/dom/TransformerCallbackHelpers.h"
+#include "mozilla/dom/UnionTypes.h"
 
 #include "ZLibHelper.h"
 
@@ -54,16 +55,21 @@ class DecompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
     // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
 
     // Step 1: If chunk is not a BufferSource type, then throw a TypeError.
-    // (ExtractSpanFromBufferSource does it)
-    Span<const uint8_t> input = ExtractSpanFromBufferSource(cx, aChunk, aRv);
-    if (aRv.Failed()) {
+    RootedUnion<OwningArrayBufferViewOrArrayBuffer> bufferSource(cx);
+    if (!bufferSource.Init(cx, aChunk)) {
+      aRv.MightThrowJSException();
+      aRv.StealExceptionFromJSContext(cx);
       return;
     }
 
     // Step 2: Let buffer be the result of decompressing chunk with ds's format
     // and context. If this results in an error, then throw a TypeError.
     // Step 3 - 5: (Done in CompressAndEnqueue)
-    DecompressAndEnqueue(cx, input, ZLibFlush::No, aController, aRv);
+    ProcessTypedArraysFixed(
+        bufferSource,
+        [&](const Span<uint8_t>& aData) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+          DecompressAndEnqueue(cx, aData, ZLibFlush::No, aController, aRv);
+        });
   }
 
   // Step 4 of

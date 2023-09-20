@@ -83,6 +83,8 @@ class MediaKeyStatusMap final : public nsISupports, public nsWrapperCache {
     MediaKeyStatus mStatus;
   };
 
+  const KeyStatus* FindKey(const ArrayBufferViewOrArrayBuffer& aKey) const;
+
   nsTArray<KeyStatus> mStatuses;
 };
 

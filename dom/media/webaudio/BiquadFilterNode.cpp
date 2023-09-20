@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BiquadFilterNode.h"
+#include <algorithm>
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
@@ -304,46 +305,54 @@ void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
                                             const Float32Array& aMagResponse,
                                             const Float32Array& aPhaseResponse,
                                             ErrorResult& aRv) {
-  aFrequencyHz.ComputeState();
-  aMagResponse.ComputeState();
-  aPhaseResponse.ComputeState();
-
-  if (!(aFrequencyHz.Length() == aMagResponse.Length() &&
-        aMagResponse.Length() == aPhaseResponse.Length())) {
-    aRv.ThrowInvalidAccessError("Parameter lengths must match");
-    return;
-  }
-
-  uint32_t length = aFrequencyHz.Length();
-  if (!length) {
-    return;
-  }
-
-  auto frequencies = MakeUnique<float[]>(length);
-  float* frequencyHz = aFrequencyHz.Data();
-  const double nyquist = Context()->SampleRate() * 0.5;
-
-  // Normalize the frequencies
-  for (uint32_t i = 0; i < length; ++i) {
-    if (frequencyHz[i] >= 0 && frequencyHz[i] <= nyquist) {
-      frequencies[i] = static_cast<float>(frequencyHz[i] / nyquist);
-    } else {
-      frequencies[i] = std::numeric_limits<float>::quiet_NaN();
-    }
-  }
-
+  UniquePtr<float[]> frequencies;
+  size_t length;
   const double currentTime = Context()->CurrentTime();
+  aFrequencyHz.ProcessData([&](const Span<float>& aFrequencyData,
+                               JS::AutoCheckCannotGC&&) {
+    aMagResponse.ProcessData([&](const Span<float>& aMagData,
+                                 JS::AutoCheckCannotGC&&) {
+      aPhaseResponse.ProcessData([&](const Span<float>& aPhaseData,
+                                     JS::AutoCheckCannotGC&&) {
+        length = aFrequencyData.Length();
+        if (length != aMagData.Length() || length != aPhaseData.Length()) {
+          aRv.ThrowInvalidAccessError("Parameter lengths must match");
+          return;
+        }
 
-  double freq = mFrequency->GetValueAtTime(currentTime);
-  double q = mQ->GetValueAtTime(currentTime);
-  double gain = mGain->GetValueAtTime(currentTime);
-  double detune = mDetune->GetValueAtTime(currentTime);
+        if (length == 0) {
+          return;
+        }
 
-  WebCore::Biquad biquad;
-  SetParamsOnBiquad(biquad, Context()->SampleRate(), mType, freq, q, gain,
-                    detune);
-  biquad.getFrequencyResponse(int(length), frequencies.get(),
-                              aMagResponse.Data(), aPhaseResponse.Data());
+        frequencies = MakeUniqueForOverwriteFallible<float[]>(length);
+        if (!frequencies) {
+          aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+          return;
+        }
+
+        const double nyquist = Context()->SampleRate() * 0.5;
+        std::transform(aFrequencyData.begin(), aFrequencyData.end(),
+                       frequencies.get(), [&](float aFrequency) {
+                         if (aFrequency >= 0 && aFrequency <= nyquist) {
+                           return static_cast<float>(aFrequency / nyquist);
+                         }
+
+                         return std::numeric_limits<float>::quiet_NaN();
+                       });
+
+        double freq = mFrequency->GetValueAtTime(currentTime);
+        double q = mQ->GetValueAtTime(currentTime);
+        double gain = mGain->GetValueAtTime(currentTime);
+        double detune = mDetune->GetValueAtTime(currentTime);
+
+        WebCore::Biquad biquad;
+        SetParamsOnBiquad(biquad, Context()->SampleRate(), mType, freq, q, gain,
+                          detune);
+        biquad.getFrequencyResponse(int(length), frequencies.get(),
+                                    aMagData.Elements(), aPhaseData.Elements());
+      });
+    });
+  });
 }
 
 }  // namespace mozilla::dom
