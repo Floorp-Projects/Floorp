@@ -598,6 +598,10 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
   return Ok();
 }
 
+using RecGroupIndexMap =
+    HashMap<const RecGroup*, uint32_t, PointerHasher<const RecGroup*>,
+            SystemAllocPolicy>;
+
 template <CoderMode mode>
 CoderResult CodeTypeContext(Coder<mode>& coder,
                             CoderArg<mode, TypeContext> item) {
@@ -614,6 +618,22 @@ CoderResult CodeTypeContext(Coder<mode>& coder,
     // Decode each recursion group
     for (uint32_t recGroupIndex = 0; recGroupIndex < numRecGroups;
          recGroupIndex++) {
+      // Decode if this recursion group is equivalent to a previous recursion
+      // group
+      uint32_t canonRecGroupIndex;
+      MOZ_TRY(CodePod(coder, &canonRecGroupIndex));
+      MOZ_RELEASE_ASSERT(canonRecGroupIndex <= recGroupIndex);
+
+      // If the decoded index is not ours, we must re-use the previous decoded
+      // recursion group.
+      if (canonRecGroupIndex != recGroupIndex) {
+        SharedRecGroup recGroup = item->groups()[canonRecGroupIndex];
+        if (!item->addRecGroup(recGroup)) {
+          return Err(OutOfMemory());
+        }
+        continue;
+      }
+
       // Decode the number of types in the recursion group
       uint32_t numTypes;
       MOZ_TRY(CodePod(coder, &numTypes));
@@ -639,9 +659,44 @@ CoderResult CodeTypeContext(Coder<mode>& coder,
     uint32_t numRecGroups = item->groups().length();
     MOZ_TRY(CodePod(coder, &numRecGroups));
 
+    // We must be careful to only encode every unique recursion group only once
+    // and in module order. The reason for this is that encoding type def
+    // references uses the module type index map, which only stores the first
+    // type index a type was canonicalized to.
+    //
+    // Using this map to encode both recursion groups would turn the following
+    // type section from:
+    //
+    // 0: (type (struct (field 0)))
+    // 1: (type (struct (field 1))) ;; identical to 0
+    //
+    // into:
+    //
+    // 0: (type (struct (field 0)))
+    // 1: (type (struct (field 0))) ;; not identical to 0!
+    RecGroupIndexMap canonRecGroups;
+
     // Encode each recursion group
     for (uint32_t groupIndex = 0; groupIndex < numRecGroups; groupIndex++) {
       SharedRecGroup group = item->groups()[groupIndex];
+
+      // Find the index of the first time this recursion group was encoded, or
+      // set it to this index if it hasn't been encoded.
+      RecGroupIndexMap::AddPtr canonRecGroupIndex =
+          canonRecGroups.lookupForAdd(group.get());
+      if (!canonRecGroupIndex) {
+        if (!canonRecGroups.add(canonRecGroupIndex, group.get(), groupIndex)) {
+          return Err(OutOfMemory());
+        }
+      }
+
+      // Encode the canon index for this recursion group
+      MOZ_TRY(CodePod(coder, &canonRecGroupIndex->value()));
+
+      // Don't encode this recursion group if we've already encoded it
+      if (canonRecGroupIndex->value() != groupIndex) {
+        continue;
+      }
 
       // Encode the number of types in the recursion group
       uint32_t numTypes = group->numTypes();

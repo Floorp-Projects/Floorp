@@ -1137,24 +1137,14 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     MOZ_ASSERT(!pendingRecGroup_);
 
     // Create the group and add it to the list of groups
-    pendingRecGroup_ = RecGroup::allocate(numTypes);
-    if (!pendingRecGroup_ || !recGroups_.append(pendingRecGroup_)) {
+    MutableRecGroup recGroup = RecGroup::allocate(numTypes);
+    if (!recGroup || !addRecGroup(recGroup)) {
       return nullptr;
     }
 
-    // Store the types of the group into our index space maps. These may get
-    // overwritten when we finish this group and canonicalize it. We need to do
-    // this before finishing, because these entries will be used by decoding
-    // and error printing.
-    for (uint32_t groupTypeIndex = 0; groupTypeIndex < numTypes;
-         groupTypeIndex++) {
-      const TypeDef* typeDef = &pendingRecGroup_->type(groupTypeIndex);
-      uint32_t typeIndex = types_.length();
-      if (!types_.append(typeDef) || !moduleIndices_.put(typeDef, typeIndex)) {
-        return nullptr;
-      }
-    }
-    return pendingRecGroup_;
+    // Store this group for later use in endRecGroup
+    pendingRecGroup_ = recGroup;
+    return recGroup;
   }
 
   // Finish creation of a recursion group after type definitions have been
@@ -1208,6 +1198,33 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
       }
     }
 
+    return true;
+  }
+
+  // Finish creation of a recursion group after type definitions have been
+  // initialized. This must be paired with `startGroup`.
+  [[nodiscard]] bool addRecGroup(SharedRecGroup recGroup) {
+    // We must not have a pending group
+    MOZ_ASSERT(!pendingRecGroup_);
+
+    // Add it to the list of groups
+    if (!recGroups_.append(recGroup)) {
+      return false;
+    }
+
+    // Store the types of the group into our index space maps. These may get
+    // overwritten if this group is being added by `startRecGroup` and we
+    // overwrite it with a canonical group in `endRecGroup`. We need to do
+    // this before finishing though, because these entries will be used by
+    // decoding and error printing.
+    for (uint32_t groupTypeIndex = 0; groupTypeIndex < recGroup->numTypes();
+         groupTypeIndex++) {
+      const TypeDef* typeDef = &recGroup->type(groupTypeIndex);
+      uint32_t typeIndex = types_.length();
+      if (!types_.append(typeDef) || !moduleIndices_.put(typeDef, typeIndex)) {
+        return false;
+      }
+    }
     return true;
   }
 
