@@ -466,7 +466,8 @@ def test(command_context, what, extra_args, **log_args):
         if res:
             status = res
 
-    log.shutdown()
+    if not log.has_shutdown:
+        log.shutdown()
     return status
 
 
