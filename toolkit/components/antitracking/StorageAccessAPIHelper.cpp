@@ -558,14 +558,9 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
   MOZ_ASSERT(aParentContext->IsInProcess());
 
   // Let's inform the parent window and the other windows having the
-  // same tracking origin about the storage permission is granted
-  // if it is not a frame-only permission grant which does not propogate.
-  if (aReason != ContentBlockingNotifier::StorageAccessPermissionGrantedReason::
-                     eStorageAccessAPI ||
-      !StaticPrefs::dom_storage_access_frame_only()) {
-    StorageAccessAPIHelper::UpdateAllowAccessOnCurrentProcess(aParentContext,
-                                                              aTrackingOrigin);
-  }
+  // same tracking origin about the storage permission is granted.
+  StorageAccessAPIHelper::UpdateAllowAccessOnCurrentProcess(aParentContext,
+                                                            aTrackingOrigin);
 
   // Let's inform the parent window.
   nsCOMPtr<nsPIDOMWindowInner> parentInner =
@@ -646,12 +641,9 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
 
   // If the permission is granted on a first-party window, also have to update
   // the permission to all the other windows with the same tracking origin (in
-  // the same tab), if any, only it is not a frame-only permission grant which
-  // does not propogate.
-  if (!aFrameOnly) {
-    StorageAccessAPIHelper::UpdateAllowAccessOnParentProcess(aParentContext,
-                                                             trackingOrigin);
-  }
+  // the same tab), if any.
+  StorageAccessAPIHelper::UpdateAllowAccessOnParentProcess(aParentContext,
+                                                           trackingOrigin);
 
   return StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
       wgp->DocumentPrincipal(), aTrackingPrincipal, aAllowMode, aFrameOnly,
@@ -830,6 +822,9 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
       }
       return Nothing();
     case nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+      if (!aThirdParty) {
+        return Some(true);
+      }
       if (aIsOnThirdPartySkipList) {
         return Some(true);
       }
@@ -845,9 +840,20 @@ Maybe<bool> StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
 Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
     Document* aDocument, bool aRequestingStorageAccess) {
   MOZ_ASSERT(aDocument);
+  // Window doesn't have user activation and we are asking for access -> reject.
+  if (aRequestingStorageAccess) {
+    if (!aDocument->HasValidTransientUserGestureActivation()) {
+      // Report an error to the console for this case
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, nsLiteralCString("requestStorageAccess"),
+          aDocument, nsContentUtils::eDOM_PROPERTIES,
+          "RequestStorageAccessUserGesture");
+      return Some(false);
+    }
+  }
 
-  if (!aDocument->IsCurrentActiveDocument()) {
-    return Some(false);
+  if (aDocument->IsTopLevelContentDocument()) {
+    return Some(true);
   }
 
   if (aRequestingStorageAccess) {
@@ -868,6 +874,31 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
   RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
   if (!bc) {
     return Some(false);
+  }
+
+  // We check if the document is a first-party document here by testing if the
+  // top-level window is same-origin. In non-Fission mode, we can directly get
+  // the top-level window through the top browsing context since it should be
+  // in-process. And test their principals.
+  //
+  // In fission, if the sub frame's origin differs from the main frame's
+  // origin, they will be in different processes. We use IsInProcess()
+  // check here to deterimine whether they have the same origin. In
+  // non-fission mode, it is always in-process so we need to compare their
+  // principals.
+  if (bc->Top()->IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> topOuter = bc->Top()->GetDOMWindow();
+    if (!topOuter) {
+      return Some(false);
+    }
+    nsCOMPtr<Document> topLevelDoc = topOuter->GetExtantDoc();
+    if (!topLevelDoc) {
+      return Some(false);
+    }
+
+    if (topLevelDoc->NodePrincipal()->Equals(aDocument->NodePrincipal())) {
+      return Some(true);
+    }
   }
 
   // Check if NodePrincipal is not null
@@ -899,14 +930,6 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
           "RequestStorageAccessNullPrincipal");
     }
     return Some(false);
-  }
-
-  if (!AntiTrackingUtils::IsThirdPartyDocument(aDocument)) {
-    return Some(true);
-  }
-
-  if (aDocument->IsTopLevelContentDocument()) {
-    return Some(true);
   }
 
   if (aRequestingStorageAccess) {
@@ -983,7 +1006,7 @@ RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise>
 StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
     dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
     dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-    bool aHasUserInteraction, bool aRequireUserInteraction, bool aFrameOnly,
+    bool aHasUserInteraction, bool aFrameOnly,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
     bool aRequireGrant) {
   MOZ_ASSERT(aDocument);
@@ -999,8 +1022,7 @@ StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
   // This is a lambda function that has some variables bound to it. It will be
   // called later in CompleteAllowAccessFor inside of AllowAccessFor.
   auto performPermissionGrant = aDocument->CreatePermissionGrantPromise(
-      aInnerWindow, principal, aHasUserInteraction, aRequireUserInteraction,
-      Nothing(), aFrameOnly);
+      aInnerWindow, principal, aHasUserInteraction, Nothing(), aFrameOnly);
 
   // Try to allow access for the given principal.
   return StorageAccessAPIHelper::AllowAccessFor(

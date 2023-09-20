@@ -639,7 +639,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
       mozilla::TaskCategory aCategory) const = 0;
 
   void SaveStorageAccessPermissionGranted();
-  void SaveStorageAccessPermissionRevoked();
 
   bool UsingStorageAccess();
 
@@ -760,6 +759,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // The event dispatch code sets and unsets this while keeping
   // the event object alive.
   mozilla::dom::Event* mEvent;
+
+  // A boolean flag indicating whether storage access is granted for the
+  // current window and that it is currently being used by this window.
+  bool mUsingStorageAccess;
 
   // The WindowGlobalChild actor for this window.
   //

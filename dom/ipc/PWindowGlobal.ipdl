@@ -220,7 +220,7 @@ parent:
                                       CookieStruct[] cookies);
 
 child:
-  async NotifyPermissionChange(nsCString type, uint32_t permission);
+  async NotifyPermissionChange(nsCString type);
 };
 
 } // namespace dom
