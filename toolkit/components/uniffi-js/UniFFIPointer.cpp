@@ -39,18 +39,23 @@ already_AddRefed<UniFFIPointer> UniFFIPointer::Read(
     const UniFFIPointerType* aType, ErrorResult& aError) {
   MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info,
           ("[UniFFI] Reading Pointer from buffer"));
-  aArrayBuff.ComputeState();
 
-  CheckedUint32 position = aPosition;
-  CheckedUint32 end = position + 8;
-  if (!end.isValid() || end.value() > aArrayBuff.Length()) {
+  uint8_t data_ptr[8];
+  if (!aArrayBuff.CopyDataTo(
+          data_ptr,
+          [aPosition](size_t aLength) -> Maybe<std::pair<size_t, size_t>> {
+            CheckedUint32 end = aPosition + 8;
+            if (!end.isValid() || end.value() > aLength) {
+              return Nothing();
+            }
+            return Some(std::make_pair(aPosition, 8));
+          })) {
     aError.ThrowRangeError("position is out of range");
     return nullptr;
   }
+
   // in Rust and Write(), a pointer is converted to a void* then written as u64
   // BigEndian we do the reverse here
-  uint8_t* data_ptr = aArrayBuff.Data() +
-                      aPosition;  // Pointer arithmetic, move by position bytes
   void* ptr = (void*)mozilla::BigEndian::readUint64(data_ptr);
   return UniFFIPointer::Create(ptr, aType);
 }
