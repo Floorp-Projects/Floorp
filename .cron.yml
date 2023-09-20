@@ -15,9 +15,9 @@ jobs:
           by-project:
               # No default
               mozilla-beta:
-                  - {weekday: 'Sunday', hour: 21, minute: 0}
-                  - {weekday: 'Tuesday', hour: 21, minute: 0}
-                  - {weekday: 'Thursday', hour: 21, minute: 0}
+                  - {weekday: 'Monday', hour: 13, minute: 0}
+                  - {weekday: 'Wednesday', hour: 13, minute: 0}
+                  - {weekday: 'Friday', hour: 13, minute: 0}
 
     - name: nightly-desktop
       job:
@@ -312,11 +312,10 @@ jobs:
           - mozilla-beta
       when:
           by-project:
-              # 3h15m before launch of `nightly-desktop`
               autoland: [{hour: 6, minute: 45}, {hour: 18, minute: 45}]
               mozilla-central: []
-              # 3h15m before launch of `daily-releases`
-              mozilla-beta: [{hour: 17, minute: 45}]
+              # 4h before launch of `daily-releases`
+              mozilla-beta: [{hour: 9, minute: 00}]
               # No default
 
     - name: system-symbols
