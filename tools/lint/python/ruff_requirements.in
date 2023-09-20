@@ -1,1 +1,2 @@
 ruff
+pkgutil-resolve-name==1.3.10 ; python_version < '3.9'
