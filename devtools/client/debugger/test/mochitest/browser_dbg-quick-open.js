@@ -27,10 +27,13 @@ add_task(async function () {
   );
   await waitForSources(dbg, ...injectedSources);
 
-  info("test opening and closing");
+  info("Test opening and closing");
   await quickOpen(dbg, "");
+  // Only the first 100 results are shown in the  quick open menu
+  await waitForResults(dbg, injectedSources.slice(0, 100));
+  is(resultCount(dbg), 100, "100 file results");
   pressKey(dbg, "Escape");
-  assertDisabled(dbg);
+  assertQuickOpenDisabled(dbg);
 
   info("Testing the number of results for source search");
   await quickOpen(dbg, "sw");
@@ -77,7 +80,7 @@ add_task(async function () {
   await quickOpen(dbg, "sw");
   await waitForResults(dbg, [undefined, undefined]);
   pressKey(dbg, "Tab");
-  assertDisabled(dbg);
+  assertQuickOpenDisabled(dbg);
 
   info("Testing function search");
   await quickOpen(dbg, "", "quickOpenFunc");
@@ -89,7 +92,7 @@ add_task(async function () {
   is(resultCount(dbg), 0, "no functions with 'x' in name");
 
   pressKey(dbg, "Escape");
-  assertDisabled(dbg);
+  assertQuickOpenDisabled(dbg);
 
   info("Testing goto line:column");
   assertLine(dbg, 0);
@@ -109,11 +112,11 @@ add_task(async function () {
   assertLine(dbg, 5);
 });
 
-function assertEnabled(dbg) {
+function assertQuickOpenEnabled(dbg) {
   is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
 }
 
-function assertDisabled(dbg) {
+function assertQuickOpenDisabled(dbg) {
   is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
 }
 
@@ -139,7 +142,7 @@ function resultCount(dbg) {
 
 async function quickOpen(dbg, query, shortcut = "quickOpen") {
   pressKey(dbg, shortcut);
-  assertEnabled(dbg);
+  assertQuickOpenEnabled(dbg);
   query !== "" && type(dbg, query);
 }
 
