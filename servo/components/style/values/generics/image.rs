@@ -10,7 +10,6 @@ use crate::color::mix::ColorInterpolationMethod;
 use crate::custom_properties;
 use crate::values::generics::position::PositionComponent;
 use crate::values::generics::Optional;
-use crate::values::specified::box_::Appearance;
 use crate::values::serialize_atom_identifier;
 use crate::Atom;
 use crate::Zero;
@@ -54,11 +53,6 @@ pub enum GenericImage<G, MozImageRect, ImageUrl, Color, Percentage, Resolution> 
     /// and store images directly inside of cross-fade instead of
     /// boxing them there.
     CrossFade(Box<GenericCrossFade<Self, Color, Percentage>>),
-
-    /// A `-moz-themed-background(<appearance>)`
-    #[cfg(feature = "gecko")]
-    #[css(skip)]
-    MozThemed(Appearance),
 
     /// An `image-set()` function.
     ImageSet(#[compute(field_bound)] Box<GenericImageSet<Self, Resolution>>),
@@ -458,12 +452,6 @@ where
             Image::Element(ref selector) => {
                 dest.write_str("-moz-element(#")?;
                 serialize_atom_identifier(selector, dest)?;
-                dest.write_char(')')
-            },
-            #[cfg(feature = "gecko")]
-            Image::MozThemed(ref appearance) => {
-                dest.write_str("-moz-themed(")?;
-                appearance.to_css(dest)?;
                 dest.write_char(')')
             },
             Image::ImageSet(ref is) => is.to_css(dest),
