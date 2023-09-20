@@ -19,14 +19,14 @@ g
 dx sv
 "#,
     expected_statements = r#"
-sv               : { len=0x2 } [Type: smallvec::SmallVec<array$<i32,4> >]
+sv               : { len=0x2 is_inline=true } [Type: smallvec::SmallVec<array$<i32,4> >]
     [<Raw View>]     [Type: smallvec::SmallVec<array$<i32,4> >]
     [capacity]       : 4
     [len]            : 0x2 [Type: unsigned __int64]
     [0]              : 1 [Type: int]
     [1]              : 2 [Type: int]
 
-sv               : { len=0x5 } [Type: smallvec::SmallVec<array$<i32,4> >]
+sv               : { len=0x5 is_inline=false } [Type: smallvec::SmallVec<array$<i32,4> >]
     [<Raw View>]     [Type: smallvec::SmallVec<array$<i32,4> >]
     [capacity]       : 0x8 [Type: unsigned __int64]
     [len]            : 0x5 [Type: unsigned __int64]
@@ -36,7 +36,7 @@ sv               : { len=0x5 } [Type: smallvec::SmallVec<array$<i32,4> >]
     [3]              : 4 [Type: int]
     [4]              : 5 [Type: int]
 
-sv               : { len=0x5 } [Type: smallvec::SmallVec<array$<i32,4> >]
+sv               : { len=0x5 is_inline=false } [Type: smallvec::SmallVec<array$<i32,4> >]
     [<Raw View>]     [Type: smallvec::SmallVec<array$<i32,4> >]
     [capacity]       : 0x8 [Type: unsigned __int64]
     [len]            : 0x5 [Type: unsigned __int64]

@@ -469,6 +469,13 @@ user-id = 2017
 user-login = "mbrubeck"
 user-name = "Matt Brubeck"
 
+[[publisher.smallvec]]
+version = "1.11.1"
+when = "2023-09-20"
+user-id = 2017
+user-login = "mbrubeck"
+user-name = "Matt Brubeck"
+
 [[publisher.syn]]
 version = "2.0.18"
 when = "2023-05-26"
