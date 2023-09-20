@@ -163,10 +163,6 @@ panel-item::part(button):hover:active {
   background-color: var(--fxview-element-background-active);
 }
 
-panel-list {
-  overflow-y: visible;
-}
-
 fxview-category-navigation {
   overflow-y: auto;
 }
