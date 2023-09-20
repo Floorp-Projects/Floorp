@@ -557,23 +557,23 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
       return nsILoadInfo::HasStoragePermission;
     }
   } else if (!bc->IsTop()) {
-    // For subframe resources, check if the document has storage access
-    // and that the resource being loaded is same-site to the page.
-    WindowContext* wc = bc->GetCurrentWindowContext();
-    if (!wc) {
+    // Only check the frame only permission if the channel is not in the top
+    // browsing context.
+    RefPtr<nsEffectiveTLDService> etld = nsEffectiveTLDService::GetInstance();
+    if (!etld) {
       return nsILoadInfo::NoStoragePermission;
     }
-    WindowGlobalParent* wgp = wc->Canonical();
-    if (!wgp) {
+    nsCString trackingSite;
+    rv = etld->GetSite(trackingURI, trackingSite);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return nsILoadInfo::NoStoragePermission;
     }
-    nsIPrincipal* framePrincipal = wgp->DocumentPrincipal();
-    if (!framePrincipal) {
-      return nsILoadInfo::NoStoragePermission;
-    }
-    bool isThirdParty = true;
-    nsresult rv = framePrincipal->IsThirdPartyURI(trackingURI, &isThirdParty);
-    if (NS_SUCCEEDED(rv) && wc->GetUsingStorageAccess() && !isThirdParty) {
+    nsAutoCString type;
+    AntiTrackingUtils::CreateStorageFramePermissionKey(trackingSite, type);
+
+    if (AntiTrackingUtils::CheckStoragePermission(
+            targetPrincipal, type, NS_UsePrivateBrowsing(aChannel),
+            &unusedReason, unusedReason)) {
       return nsILoadInfo::HasStoragePermission;
     }
   }

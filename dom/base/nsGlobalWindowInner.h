@@ -1097,9 +1097,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsIPrincipal* GetClientPrincipal();
 
   // This method is called if this window loads a 3rd party tracking resource
-  // and the storage is just been changed. The window can reset the partitioned
+  // and the storage is just been granted. The window can reset the partitioned
   // storage objects and switch to the first party cookie jar.
-  void StorageAccessPermissionChanged();
+  void StorageAccessPermissionGranted();
 
  protected:
   static void NotifyDOMWindowDestroyed(nsGlobalWindowInner* aWindow);
