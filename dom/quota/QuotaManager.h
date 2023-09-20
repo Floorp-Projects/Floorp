@@ -78,9 +78,11 @@ class UniversalDirectoryLock;
 
 class QuotaManager final : public BackgroundThreadObject {
   friend class CanonicalQuotaObject;
+  friend class ClearStorageOp;
   friend class DirectoryLockImpl;
   friend class GroupInfo;
   friend class OriginInfo;
+  friend class ShutdownStorageOp;
 
   using PrincipalInfo = mozilla::ipc::PrincipalInfo;
   using DirectoryLockTable =
@@ -614,6 +616,8 @@ class QuotaManager final : public BackgroundThreadObject {
   }
 
   DirectoryLockTable& GetDirectoryLockTable(PersistenceType aPersistenceType);
+
+  void ClearDirectoryLockTables();
 
   bool IsSanitizedOriginValid(const nsACString& aSanitizedOrigin);
 
