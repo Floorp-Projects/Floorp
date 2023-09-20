@@ -2505,46 +2505,6 @@ nsresult nsNavHistoryQueryResultNode::OnPageRemovedVisits(
   return NS_OK;
 }
 
-nsresult nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI) {
-  nsNavHistoryResult* result = GetResult();
-  NS_ENSURE_STATE(result);
-  nsAutoCString spec;
-  nsresult rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool onlyOneEntry =
-      mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
-
-  nsCOMArray<nsNavHistoryResultNode> matches;
-  RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
-
-  if (matches.Count() == 0 && mHasSearchTerms) {
-    return isQuerySearchTermsMatching(mQuery, this) ? Refresh() : NS_OK;
-  }
-
-  for (int32_t i = 0; i < matches.Count(); ++i) {
-    nsNavHistoryResultNode* node = matches[i];
-    // Force a tags update before checking the node.
-    node->mTags.SetIsVoid(true);
-    nsAutoString tags;
-    rv = node->GetTags(tags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // It's possible now this node does not respect anymore the conditions.
-    // In such a case it should be removed.
-    if (mHasSearchTerms && !isQuerySearchTermsMatching(mQuery, node)) {
-      nsNavHistoryContainerResultNode* parent = node->mParent;
-      // URI nodes should always have parents
-      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
-      int32_t childIndex = parent->FindChild(node);
-      NS_ASSERTION(childIndex >= 0, "Child not found in parent");
-      parent->RemoveChildAt(childIndex);
-    } else {
-      NOTIFY_RESULT_OBSERVERS(result, NodeTagsChanged(node));
-    }
-  }
-
-  return NS_OK;
-}
-
 /**
  * These are the bookmark observer functions for query nodes.  They listen
  * for bookmark events and refresh the results if we have any dependence on
@@ -2602,11 +2562,48 @@ nsresult nsNavHistoryQueryResultNode::OnItemTagsChanged(int64_t aItemId,
   nsresult rv = nsNavHistoryResultNode::OnItemTagsChanged(aItemId, aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+
+  // Check whether aURL is actually URI.
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NotifyIfTagsChanged(uri);
+  nsAutoCString spec;
+  rv = uri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  bool onlyOneEntry =
+      mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
+
+  nsCOMArray<nsNavHistoryResultNode> matches;
+  RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
+
+  if (matches.Count() == 0 && mHasSearchTerms) {
+    return isQuerySearchTermsMatching(mQuery, this) ? Refresh() : NS_OK;
+  }
+
+  for (int32_t i = 0; i < matches.Count(); ++i) {
+    nsNavHistoryResultNode* node = matches[i];
+    // Force a tags update before checking the node.
+    node->mTags.SetIsVoid(true);
+    nsAutoString tags;
+    rv = node->GetTags(tags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // It's possible now this node does not respect anymore the conditions.
+    // In such a case it should be removed.
+    if (mHasSearchTerms && !isQuerySearchTermsMatching(mQuery, node)) {
+      nsNavHistoryContainerResultNode* parent = node->mParent;
+      // URI nodes should always have parents
+      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+      int32_t childIndex = parent->FindChild(node);
+      NS_ASSERTION(childIndex >= 0, "Child not found in parent");
+      parent->RemoveChildAt(childIndex);
+    } else {
+      NOTIFY_RESULT_OBSERVERS(result, NodeTagsChanged(node));
+    }
+  }
+
   return NS_OK;
 }
 
