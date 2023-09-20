@@ -473,56 +473,57 @@
 
 /* Row label (a.k.a. group label) */
 
-.urlbarView-row[label]::before {
-  content: attr(label);
-  display: block;
-  /* Remove the label from the document flow so it doesn't affect the row
-     selection and hover states. */
-  position: absolute;
-  /* `top` controls how far the label is from the main part of the row. */
-  top: calc(-1.27em - 2px);
-  margin-inline-start: var(--urlbarView-item-inline-padding);
-  font-size: 0.8em;
-  /* The color and opacity of labels is the same as the "This time, search with"
-     text in the search shortcuts. See `.search-panel-header > label` in
-     searchbar.css. */
-  color: var(--toolbar-field-focus-color);
-  opacity: 0.6;
-  pointer-events: none;
-}
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[label]::before {
-  /* Same as `.search-panel-header > label` in searchbar.css */
-  opacity: 1;
-}
-
 .urlbarView-row[label] {
   position: relative;
   /* `margin-block-start` controls how far the main part of the row is from the
      main part of the previous row. */
   margin-block-start: calc(1.46em + 4px);
+
+  &::before {
+    content: attr(label);
+    display: block;
+    /* Remove the label from the document flow so it doesn't affect the row
+       selection and hover states. */
+    position: absolute;
+    /* `top` controls how far the label is from the main part of the row. */
+    top: calc(-1.27em - 2px);
+    margin-inline-start: var(--urlbarView-item-inline-padding);
+    font-size: 0.8em;
+    /* The color and opacity of labels is the same as the "This time, search with"
+       text in the search shortcuts. See `.search-panel-header > label` in
+       searchbar.css. */
+    color: var(--toolbar-field-focus-color);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  :root[lwt-toolbar-field-focus-brighttext] &::before {
+    /* Same as `.search-panel-header > label` in searchbar.css */
+    opacity: 1;
+  }
 }
 
 /* Feedback acknowledgment */
 
-.urlbarView-row[feedback-acknowledgment]::after {
-  content: attr(feedback-acknowledgment);
-  display: flex;
-  align-items: center;
-  position: absolute;
-  bottom: 0.72em;
-  font-size: var(--urlbarView-small-font-size);
-  margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--urlbarView-icon-margin-start));
-  padding-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-icon-margin-end));
-  background-image: url("chrome://branding/content/icon32.png");
-  background-repeat: no-repeat;
-  background-position: 0 center;
-  background-size: var(--urlbarView-favicon-width);
-  min-height: var(--urlbarView-favicon-width);
-}
-
 .urlbarView-row[feedback-acknowledgment] {
   position: relative;
   padding-bottom: 1.94em;
+
+  &::after {
+    content: attr(feedback-acknowledgment);
+    display: flex;
+    align-items: center;
+    position: absolute;
+    bottom: 0.72em;
+    font-size: var(--urlbarView-small-font-size);
+    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--urlbarView-icon-margin-start));
+    padding-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-icon-margin-end));
+    background-image: url("chrome://branding/content/icon32.png");
+    background-repeat: no-repeat;
+    background-position: 0 center;
+    background-size: var(--urlbarView-favicon-width);
+    min-height: var(--urlbarView-favicon-width);
+  }
 }
 
 /* Title */
@@ -535,22 +536,23 @@
 }
 
 /* Tail suggestions */
+
 .urlbarView-tail-prefix {
   display: none;
   justify-content: flex-end;
   white-space: pre;
-}
 
-.urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-tail-prefix {
-  display: inline-flex;
-}
+  .urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    display: inline-flex;
+  }
 
-.urlbarView-tail-prefix > .urlbarView-tail-prefix-string {
-  visibility: hidden;
-}
+  > .urlbarView-tail-prefix-string {
+    visibility: hidden;
+  }
 
-.urlbarView-tail-prefix > .urlbarView-tail-prefix-char {
-  position: absolute;
+  > .urlbarView-tail-prefix-char {
+    position: absolute;
+  }
 }
 
 /* Title separator */
