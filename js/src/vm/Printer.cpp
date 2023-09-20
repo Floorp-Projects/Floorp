@@ -141,11 +141,12 @@ void Sprinter::checkInvariants() const {
 }
 
 UniqueChars Sprinter::release() {
-  checkInvariants();
   if (hadOOM_) {
+    forwardOutOfMemory();
     return nullptr;
   }
 
+  checkInvariants();
   char* str = base;
   base = nullptr;
   offset = size = 0;
@@ -153,6 +154,60 @@ UniqueChars Sprinter::release() {
   initialized = false;
 #endif
   return UniqueChars(str);
+}
+
+JSString* Sprinter::releaseJS(JSContext* cx) {
+  if (hadOOM_) {
+    MOZ_ASSERT_IF(maybeCx, maybeCx == cx);
+    forwardOutOfMemory();
+    return nullptr;
+  }
+
+  checkInvariants();
+
+  // Extract Sprinter data.
+  size_t len = length();
+  UniqueChars str(base);
+
+  // Reset Sprinter.
+  base = nullptr;
+  offset = 0;
+  size = 0;
+#ifdef DEBUG
+  initialized = false;
+#endif
+
+  // Convert extracted data to a JSString, reusing the current buffer whenever
+  // possible.
+  JS::UTF8Chars utf8(str.get(), len);
+  JS::SmallestEncoding encoding = JS::FindSmallestEncoding(utf8);
+  if (encoding == JS::SmallestEncoding::ASCII) {
+    UniqueLatin1Chars latin1(reinterpret_cast<JS::Latin1Char*>(str.release()));
+    return js::NewString<js::CanGC>(cx, std::move(latin1), len);
+  }
+
+  size_t length;
+  if (encoding == JS::SmallestEncoding::Latin1) {
+    UniqueLatin1Chars latin1(
+        UTF8CharsToNewLatin1CharsZ(cx, utf8, &length, js::StringBufferArena)
+            .get());
+    if (!latin1) {
+      return nullptr;
+    }
+
+    return js::NewString<js::CanGC>(cx, std::move(latin1), length);
+  }
+
+  MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
+
+  UniqueTwoByteChars utf16(
+      UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length, js::StringBufferArena)
+          .get());
+  if (!utf16) {
+    return nullptr;
+  }
+
+  return js::NewString<js::CanGC>(cx, std::move(utf16), length);
 }
 
 char* Sprinter::reserve(size_t len) {
