@@ -27,7 +27,7 @@ add_task(async function test_contentscript() {
     let ctx = canvas.getContext("2d");
     ctx.fillStyle = "green";
     ctx.fillRect(0, 0, 100, 100);
-    let data = ctx.getImageData(0, 0, 50, 50);
+    let data = ctx.getImageData(50, 50, 1, 1);
 
     browser.test.sendMessage("data-color", data.data[1]);
   }
