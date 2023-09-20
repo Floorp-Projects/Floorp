@@ -913,10 +913,14 @@ void InliningRoot::trace(JSTracer* trc) {
   }
 }
 
-void InliningRoot::traceWeak(JSTracer* trc) {
+bool InliningRoot::traceWeak(JSTracer* trc) {
+  bool allSurvived = true;
   for (auto& inlinedScript : inlinedScripts_) {
-    inlinedScript->traceWeak(trc);
+    if (!inlinedScript->traceWeak(trc)) {
+      allSurvived = false;
+    }
   }
+  return allSurvived;
 }
 
 void InliningRoot::purgeOptimizedStubs(Zone* zone) {

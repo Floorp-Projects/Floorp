@@ -83,7 +83,7 @@ class InliningRoot {
   JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
 
   void trace(JSTracer* trc);
-  void traceWeak(JSTracer* trc);
+  bool traceWeak(JSTracer* trc);
 
   bool addInlinedScript(js::UniquePtr<ICScript> icScript);
 

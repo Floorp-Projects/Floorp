@@ -203,7 +203,9 @@ void JitScript::traceWeak(JSTracer* trc) {
   }
 
   if (hasInliningRoot()) {
-    inliningRoot()->traceWeak(trc);
+    if (!inliningRoot()->traceWeak(trc)) {
+      notePurgedStubs();
+    }
   }
 
   if (hasIonScript()) {
