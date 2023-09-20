@@ -114,7 +114,6 @@ DIRS += [
 IPDL_SOURCES += [
     "GMPTypes.ipdlh",
     "PChromiumCDM.ipdl",
-    "PGMP.ipdl",
     "PGMPService.ipdl",
     "PGMPStorage.ipdl",
     "PGMPTimer.ipdl",
@@ -123,6 +122,7 @@ IPDL_SOURCES += [
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
+    "PGMP.ipdl",
     "PGMPContent.ipdl",
 ]
 
