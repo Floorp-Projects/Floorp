@@ -155,11 +155,15 @@ fn build_configuration(
 
     extern "C" {
         fn FOG_MaxPingLimit() -> u32;
+        fn FOG_EventTimestampsEnabled() -> bool;
     }
 
     // SAFETY NOTE: Safe because it returns a primitive by value.
     let pings_per_interval = unsafe { FOG_MaxPingLimit() };
     metrics::fog::max_pings_per_minute.set(pings_per_interval.into());
+
+    // SAFETY NOTE: Safe because it returns a primitive by value.
+    let enable_event_timestamps = unsafe { FOG_EventTimestampsEnabled() };
 
     let rate_limit = Some(glean::PingRateLimit {
         seconds_per_interval: 60,
@@ -178,7 +182,7 @@ fn build_configuration(
         trim_data_to_registered_pings: true,
         log_level: None,
         rate_limit,
-        enable_event_timestamps: false,
+        enable_event_timestamps,
     };
 
     Ok((configuration, client_info))
