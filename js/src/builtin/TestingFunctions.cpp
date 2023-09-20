@@ -5687,6 +5687,28 @@ static bool DetachArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool EnsureNonInline(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "ensureNonInline() requires a single argument");
+    return false;
+  }
+
+  if (!args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "ensureNonInline must be passed an object");
+    return false;
+  }
+
+  RootedObject obj(cx, &args[0].toObject());
+  if (!JS::EnsureNonInlineArrayBufferOrView(cx, obj)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool JSONStringify(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -9497,6 +9519,11 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "     1 - fail during readTransfer() hook\n"
 "     2 - fail during read() hook\n"
 "  Set the log to null to clear it."),
+
+    JS_FN_HELP("ensureNonInline", EnsureNonInline, 1, 0,
+"ensureNonInline(view or buffer)",
+"  Ensure that the memory for the given ArrayBuffer or ArrayBufferView\n"
+"  is not inline."),
 
     JS_FN_HELP("JSONStringify", JSONStringify, 4, 0,
 "JSONStringify(value, behavior)",
