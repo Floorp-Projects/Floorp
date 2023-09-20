@@ -32,11 +32,6 @@ jobs:
         pre-commands:
             - apt-get update
             - apt-get install -y --no-install-recommends curl mercurial python3-pip
-    ubuntu2210:
-        image: ubuntu:kinetic
-        pre-commands:
-            - apt-get update
-            - apt-get install -y --no-install-recommends curl mercurial python3-pip
     ubuntu2304:
         image: ubuntu:lunar
         pre-commands:
