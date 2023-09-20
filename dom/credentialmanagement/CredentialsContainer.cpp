@@ -144,6 +144,8 @@ already_AddRefed<Promise> CredentialsContainer::Get(
     return CreateAndRejectWithNotSupported(mParent, aRv);
   }
 
+  bool conditionallyMediated =
+      aOptions.mMediation == CredentialMediationRequirement::Conditional;
   if (aOptions.mPublicKey.WasPassed() &&
       StaticPrefs::security_webauth_webauthn()) {
     MOZ_ASSERT(mParent);
@@ -151,6 +153,18 @@ already_AddRefed<Promise> CredentialsContainer::Get(
             mParent->GetExtantDoc(), u"publickey-credentials-get"_ns) ||
         !IsInActiveTab(mParent)) {
       return CreateAndRejectWithNotAllowed(mParent, aRv);
+    }
+
+    if (conditionallyMediated) {
+      // Conditional mediation for WebAuthn Get() will be implemented in
+      // Bug 1838932.
+      RefPtr<Promise> promise = CreatePromise(mParent, aRv);
+      if (!promise) {
+        return nullptr;
+      }
+      promise->MaybeRejectWithTypeError<MSG_INVALID_ENUM_VALUE>(
+          "mediation", "conditional", "CredentialMediationRequirement");
+      return promise.forget();
     }
 
     EnsureWebAuthnManager();
@@ -161,6 +175,15 @@ already_AddRefed<Promise> CredentialsContainer::Get(
   if (aOptions.mIdentity.WasPassed() &&
       StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
     RefPtr<Promise> promise = CreatePromise(mParent, aRv);
+    if (!promise) {
+      return nullptr;
+    }
+
+    if (conditionallyMediated) {
+      promise->MaybeRejectWithTypeError<MSG_INVALID_ENUM_VALUE>(
+          "mediation", "conditional", "CredentialMediationRequirement");
+      return promise.forget();
+    }
 
     if (mActiveIdentityRequest) {
       promise->MaybeRejectWithInvalidStateError(

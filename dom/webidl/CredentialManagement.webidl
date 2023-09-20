@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/credential-management-1/
+ * https://w3c.github.io/webappsec-credential-management/
  * and
  * https://w3c.github.io/webauthn/
  * and
@@ -30,6 +30,8 @@ interface CredentialsContainer {
 };
 
 dictionary CredentialRequestOptions {
+  CredentialMediationRequirement mediation = "optional";
+  AbortSignal signal;
   // This is taken from the partial definition in
   // https://w3c.github.io/webauthn/#sctn-credentialrequestoptions-extension
   [Pref="security.webauth.webauthn"]
@@ -38,7 +40,13 @@ dictionary CredentialRequestOptions {
   // https://fedidcg.github.io/FedCM/#browser-api-credential-request-options
   [Pref="dom.security.credentialmanagement.identity.enabled"]
   IdentityCredentialRequestOptions identity;
-  AbortSignal signal;
+};
+
+enum CredentialMediationRequirement {
+  "silent",
+  "optional",
+  "conditional",
+  "required"
 };
 
 dictionary CredentialCreationOptions {
