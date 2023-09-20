@@ -234,7 +234,11 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
     bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
     TRY_FUZZY_QUERY_STRING="^build-"
     echo_log "Starting try builds with '$TRY_FUZZY_QUERY_STRING'"
-    ./mach try fuzzy --full -q $TRY_FUZZY_QUERY_STRING 2>&1| tee -a $LOOP_OUTPUT_LOG
+    echo_log "Note - this step can take a long time (occasionally in the 10min range)"
+    # Show the time used for this command, and don't let it fail if the
+    # command times out so the script continues running.  This command
+    # can take quite long, occasionally 10min.
+    time ./mach try fuzzy --full -q $TRY_FUZZY_QUERY_STRING 2>&1| tee -a $LOOP_OUTPUT_LOG || true
   fi
 fi
 ERROR_HELP=""
