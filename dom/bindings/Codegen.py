@@ -8960,10 +8960,6 @@ def wrapArgIntoCurrentCompartment(arg, value, isMember=True):
     return wrap
 
 
-def needsContainsHack(m):
-    return m.getExtendedAttribute("ReturnValueNeedsContainsHack")
-
-
 def needsCallerType(m):
     return m.getExtendedAttribute("NeedsCallerType")
 
@@ -9577,23 +9573,6 @@ class CGPerSignatureCall(CGThing):
             # the compartment we do our conversion in but after we've finished
             # the initial conversion into args.rval().
             postConversionSteps = ""
-            if needsContainsHack(self.idlNode):
-                # Define a .contains on the object that has the same value as
-                # .includes; needed for backwards compat in extensions as we
-                # migrate some DOMStringLists to FrozenArray.
-                postConversionSteps += dedent(
-                    """
-                    if (args.rval().isObject() && nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
-                      JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());
-                      JS::Rooted<JS::Value> includesVal(cx);
-                      if (!JS_GetProperty(cx, rvalObj, "includes", &includesVal) ||
-                          !JS_DefineProperty(cx, rvalObj, "contains", includesVal, JSPROP_ENUMERATE)) {
-                        return false;
-                      }
-                    }
-
-                    """
-                )
             if self.idlNode.getExtendedAttribute("Frozen"):
                 assert (
                     self.idlNode.type.isSequence() or self.idlNode.type.isDictionary()
@@ -18883,7 +18862,7 @@ class CGBindingRoot(CGThing):
 
             return (
                 any(
-                    isChromeOnly(a) or needsContainsHack(a) or needsCallerType(a)
+                    isChromeOnly(a) or needsCallerType(a)
                     for a in desc.interface.members
                 )
                 or desc.interface.getExtendedAttribute("ChromeOnly") is not None

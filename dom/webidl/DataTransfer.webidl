@@ -19,9 +19,7 @@ interface DataTransfer {
 
   undefined setDragImage(Element image, long x, long y);
 
-  // ReturnValueNeedsContainsHack on .types because lots of extension
-  // code was expecting .contains() back when it was a DOMStringList.
-  [Pure, Cached, Frozen, NeedsCallerType, ReturnValueNeedsContainsHack]
+  [Frozen, Cached, Pure, NeedsCallerType]
   readonly attribute sequence<DOMString> types;
   [Throws, NeedsSubjectPrincipal]
   DOMString getData(DOMString format);

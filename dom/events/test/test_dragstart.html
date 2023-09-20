@@ -61,7 +61,7 @@ function afterDragTests()
   sendMouseEventsForDrag("link");
   sendMouseEventsForDrag("image");
 
-//  disable testing input dragging for now, as it doesn't seem to be testable 
+//  disable testing input dragging for now, as it doesn't seem to be testable
 //  draggable = $("input");
 //  draggable.setSelectionRange(0, 4);
 //  synthesizeMouse(draggable, 8, 8, { type: "mousedown" });
@@ -188,7 +188,7 @@ function test_DataTransfer(dt)
   var types = dt.types;
   ok(Array.isArray(types), "empty types is an Array");
   // The above test fails if we have SpecialPowers.wrap(dt).types instead of dt.types
-  // because chrome consumers get the 'ReturnValueNeedsContainsHack'.
+  // because dt.types will be wrapped and become a proxy.
   // So wrap with special powers after the test
   dt = SpecialPowers.wrap(dt);
   checkTypes(dt, [], 0, "empty");
