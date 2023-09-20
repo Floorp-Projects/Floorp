@@ -26,15 +26,28 @@ void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid) {
     for (int i = 1; i < aArgc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:aArgv[i]]];
     }
-    NSTask* child = [NSTask launchedTaskWithLaunchPath:launchPath
-                                             arguments:arguments];
-    if (aPid) {
-      *aPid = [child processIdentifier];
-      // We used to use waitpid to wait for the process to terminate. This is
-      // incompatible with NSTask and we wait for the process to exit here
-      // instead.
-      [child waitUntilExit];
-    }
+    __block dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    NSWorkspaceOpenConfiguration* config =
+        [NSWorkspaceOpenConfiguration configuration];
+    [config setArguments:arguments];
+    [config setCreatesNewApplicationInstance:YES];
+
+    [[NSWorkspace sharedWorkspace]
+        openApplicationAtURL:[NSURL URLWithString:launchPath]
+               configuration:config
+           completionHandler:^(NSRunningApplication* child, NSError* error) {
+             if (error) {
+               NSLog(@"Failed to run: %@", error);
+             }
+
+             if (aPid) {
+               *aPid = [child processIdentifier];
+             }
+             dispatch_semaphore_signal(semaphore);
+           }];
+
+    // We use a semaphore to wait for the application to launch.
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
