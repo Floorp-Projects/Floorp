@@ -446,6 +446,7 @@ const SHOPPING_MICROSURVEY = {
   template: "multistage",
   backdrop: "transparent",
   transitions: true,
+  UTMTerm: "survey",
   screens: [
     {
       id: "SHOPPING_MICROSURVEY_SCREEN_1",
@@ -474,6 +475,20 @@ const SHOPPING_MICROSURVEY = {
             navigate: true,
           },
           disabled: "hasActiveMultiSelect",
+        },
+        additional_button: {
+          label: {
+            string_id: "shopping-survey-terms-link",
+          },
+          style: "link",
+          flow: "column",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/about/legal/terms/mozilla/?utm_source=review-checker&utm_campaign=terms-of-use-screen-1&utm_medium=in-product",
+              where: "tab",
+            },
+          },
         },
         dismiss_button: {
           action: {
@@ -556,6 +571,20 @@ const SHOPPING_MICROSURVEY = {
             navigate: true,
           },
           disabled: "hasActiveMultiSelect",
+        },
+        additional_button: {
+          label: {
+            string_id: "shopping-survey-terms-link",
+          },
+          style: "link",
+          flow: "column",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/about/legal/terms/mozilla/?utm_source=review-checker&utm_campaign=terms-of-use-screen-2&utm_medium=in-product",
+              where: "tab",
+            },
+          },
         },
         dismiss_button: {
           action: {
