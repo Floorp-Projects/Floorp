@@ -22,8 +22,9 @@ class MOZ_RAII LockGuard {
 
  public:
   explicit LockGuard(Mutex& aLock) : lock(aLock) { lock.lock(); }
-
   ~LockGuard() { lock.unlock(); }
+
+  LockGuard(const LockGuard& other) = delete;
 };
 
 template <typename Mutex>
@@ -34,8 +35,9 @@ class MOZ_RAII UnlockGuard {
   explicit UnlockGuard(LockGuard<Mutex>& aGuard) : lock(aGuard.lock) {
     lock.unlock();
   }
-
   ~UnlockGuard() { lock.lock(); }
+
+  UnlockGuard(const UnlockGuard& other) = delete;
 };
 
 }  // namespace js

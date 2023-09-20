@@ -67,6 +67,7 @@ class Mutex {
   void lock();
   bool tryLock();
   void unlock();
+  bool isOwnedByCurrentThread() const;
   void assertOwnedByCurrentThread() const;
 #else
   static bool Init() { return true; }

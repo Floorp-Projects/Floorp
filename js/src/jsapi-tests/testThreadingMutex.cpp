@@ -9,25 +9,41 @@
 #include "threading/LockGuard.h"
 #include "vm/MutexIDs.h"
 
+#ifdef DEBUG
+#  define DEBUG_CHECK(x) CHECK(x)
+#else
+#  define DEBUG_CHECK(x)
+#endif
+
 BEGIN_TEST(testThreadingMutex) {
   js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
+  DEBUG_CHECK(!mutex.isOwnedByCurrentThread());
   mutex.lock();
+  DEBUG_CHECK(mutex.isOwnedByCurrentThread());
   mutex.unlock();
+  DEBUG_CHECK(!mutex.isOwnedByCurrentThread());
   return true;
 }
 END_TEST(testThreadingMutex)
 
 BEGIN_TEST(testThreadingLockGuard) {
   js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
-  js::LockGuard<js::Mutex> guard(mutex);
+  DEBUG_CHECK(!mutex.isOwnedByCurrentThread());
+  js::LockGuard guard(mutex);
+  DEBUG_CHECK(mutex.isOwnedByCurrentThread());
   return true;
 }
 END_TEST(testThreadingLockGuard)
 
 BEGIN_TEST(testThreadingUnlockGuard) {
   js::Mutex mutex MOZ_UNANNOTATED(js::mutexid::TestMutex);
-  js::LockGuard<js::Mutex> guard(mutex);
-  js::UnlockGuard<js::Mutex> unguard(guard);
+  DEBUG_CHECK(!mutex.isOwnedByCurrentThread());
+  js::LockGuard guard(mutex);
+  DEBUG_CHECK(mutex.isOwnedByCurrentThread());
+  js::UnlockGuard unguard(guard);
+  DEBUG_CHECK(!mutex.isOwnedByCurrentThread());
   return true;
 }
 END_TEST(testThreadingUnlockGuard)
+
+#undef DEBUG_CHECK
