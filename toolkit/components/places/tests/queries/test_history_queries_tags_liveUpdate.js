@@ -121,11 +121,11 @@ add_task(function history_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      Assert.equal(node.tags, "");
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      Assert.equal(node.tags, "");
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      Assert.equal(node.tags, "");
+      Assert.equal(node.tags, null);
     }
   });
 });

@@ -1513,7 +1513,15 @@ nsresult nsNavBookmarks::QueryFolderChildren(
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
       "SELECT h.id, h.url, b.title, h.rev_host, h.visit_count, "
       "h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, "
-      "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
+      "b.parent, "
+      "(SELECT GROUP_CONCAT(pp.title) "
+      " FROM moz_bookmarks bb "
+      " JOIN moz_bookmarks pp ON bb.parent = pp.id "
+      " JOIN moz_bookmarks gg ON pp.parent = gg.id AND gg.guid = "
+      "'" TAGS_ROOT_GUID
+      "'"
+      " WHERE bb.fk = h.id), "
+      "h.frecency, h.hidden, h.guid, null, null, null, "
       "b.guid, b.position, b.type, b.fk "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "

@@ -32,7 +32,7 @@ function createTestData() {
       title: "amo",
       tags: ["moz"],
       visitCount: 3,
-      inQuery: true,
+      inQuery: false,
     },
     {
       uri: "http://moilla.com/",

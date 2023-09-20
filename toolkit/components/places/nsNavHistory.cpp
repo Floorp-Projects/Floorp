@@ -187,10 +187,10 @@ static void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
                                       nsTArray<nsString>* aTerms);
 
 void GetTagsSqlFragment(int64_t aTagsFolder, const nsACString& aRelation,
-                        bool aHasSearchTerms, nsACString& _sqlFragment) {
-  if (!aHasSearchTerms)
+                        const uint16_t aQueryType, nsACString& _sqlFragment) {
+  if (aQueryType != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
     _sqlFragment.AssignLiteral("null");
-  else {
+  } else {
     // This subquery DOES NOT order tags for performance reasons.
     _sqlFragment.Assign(
         nsLiteralCString("(SELECT GROUP_CONCAT(t_t.title, ',') "
@@ -778,8 +778,7 @@ class PlacesSQLQueryBuilder {
   PlacesSQLQueryBuilder(const nsCString& aConditions,
                         const RefPtr<nsNavHistoryQuery>& aQuery,
                         const RefPtr<nsNavHistoryQueryOptions>& aOptions,
-                        bool aUseLimit, nsNavHistory::StringHash& aAddParams,
-                        bool aHasSearchTerms);
+                        bool aUseLimit, nsNavHistory::StringHash& aAddParams);
 
   nsresult GetQueryString(nsCString& aQueryString);
 
@@ -807,7 +806,6 @@ class PlacesSQLQueryBuilder {
 
   const nsCString& mConditions;
   bool mUseLimit;
-  bool mHasSearchTerms;
 
   uint16_t mResultType;
   uint16_t mQueryType;
@@ -826,10 +824,9 @@ class PlacesSQLQueryBuilder {
 PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
     const nsCString& aConditions, const RefPtr<nsNavHistoryQuery>& aQuery,
     const RefPtr<nsNavHistoryQueryOptions>& aOptions, bool aUseLimit,
-    nsNavHistory::StringHash& aAddParams, bool aHasSearchTerms)
+    nsNavHistory::StringHash& aAddParams)
     : mConditions(aConditions),
       mUseLimit(aUseLimit),
-      mHasSearchTerms(aHasSearchTerms),
       mResultType(aOptions->ResultType()),
       mQueryType(aOptions->QueryType()),
       mIncludeHidden(aOptions->IncludeHidden()),
@@ -914,10 +911,9 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
   nsAutoCString tagsSqlFragment;
 
   switch (mQueryType) {
-    case nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY:
-      GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mHasSearchTerms,
+    case nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY: {
+      GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mQueryType,
                          tagsSqlFragment);
-
       mQueryString = nsLiteralCString(
                          "SELECT h.id, h.url, h.title AS page_title, "
                          "h.rev_host, h.visit_count, "
@@ -933,10 +929,9 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
                          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
                          "{ADDITIONAL_CONDITIONS} ");
       break;
-
-    case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS:
-
-      GetTagsSqlFragment(history->GetTagsFolder(), "b.fk"_ns, mHasSearchTerms,
+    }
+    case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS: {
+      GetTagsSqlFragment(history->GetTagsFolder(), "b.fk"_ns, mQueryType,
                          tagsSqlFragment);
       mQueryString =
           nsLiteralCString(
@@ -959,9 +954,10 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
               "hash('place', 'prefix_hi') "
               "{ADDITIONAL_CONDITIONS}");
       break;
-
-    default:
+    }
+    default: {
       return NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
   return NS_OK;
 }
@@ -970,7 +966,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsVisit() {
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   nsAutoCString tagsSqlFragment;
-  GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mHasSearchTerms,
+  GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mQueryType,
                      tagsSqlFragment);
   mQueryString =
       nsLiteralCString(
@@ -1540,10 +1536,8 @@ nsresult nsNavHistory::ConstructQueryString(
           sortingMode <= nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING,
       "Invalid sortingMode found while building query!");
 
-  bool hasSearchTerms = !aQuery->SearchTerms().IsEmpty();
-
   nsAutoCString tagsSqlFragment;
-  GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, hasSearchTerms,
+  GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, aOptions->QueryType(),
                      tagsSqlFragment);
 
   if (IsOptimizableHistoryQuery(
@@ -1610,8 +1604,8 @@ nsresult nsNavHistory::ConstructQueryString(
   // using FilterResultSet()
   bool useLimitClause = !NeedToFilterResultSet(aQuery, aOptions);
 
-  PlacesSQLQueryBuilder queryStringBuilder(
-      conditions, aQuery, aOptions, useLimitClause, aAddParams, hasSearchTerms);
+  PlacesSQLQueryBuilder queryStringBuilder(conditions, aQuery, aOptions,
+                                           useLimitClause, aAddParams);
   rv = queryStringBuilder.GetQueryString(queryString);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2510,9 +2504,7 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
     nsAutoString tags;
     rv = aRow->GetString(kGetInfoIndex_ItemTags, tags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!tags.IsVoid()) {
-      resultNode->mTags.Assign(tags);
-    }
+    resultNode->SetTags(tags);
 
     rv = aRow->GetUTF8String(kGetInfoIndex_Guid, resultNode->mPageGuid);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2527,8 +2519,7 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
     nsAutoString tags;
     rv = aRow->GetString(kGetInfoIndex_ItemTags, tags);
-    if (!tags.IsVoid()) resultNode->mTags.Assign(tags);
-
+    resultNode->SetTags(tags);
     rv = aRow->GetUTF8String(kGetInfoIndex_Guid, resultNode->mPageGuid);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -56,7 +56,7 @@ var testData = [
 
   // Test www. style URI is included, with a tag
   {
-    isInQuery: true,
+    isInQuery: false,
     isVisit: true,
     isDetails: true,
     isTag: true,
