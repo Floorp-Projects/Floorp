@@ -216,7 +216,8 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
 
         // We don't map use element width/height currently. We can remove this
         // test when we do.
-        if (propId != eCSSProperty_UNKNOWN) {
+        if (propId != eCSSProperty_UNKNOWN &&
+            lengthInfo.mValues[i].IsAnimated()) {
           dest->SMILOverrideStyle()->SetSMILValue(propId,
                                                   lengthInfo.mValues[i]);
         }
@@ -245,8 +246,10 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
     }
     if (const auto* pathSegList = GetAnimPathSegList()) {
       *dest->GetAnimPathSegList() = *pathSegList;
-      dest->SMILOverrideStyle()->SetSMILValue(nsCSSPropertyID::eCSSProperty_d,
-                                              *pathSegList);
+      if (pathSegList->IsAnimating()) {
+        dest->SMILOverrideStyle()->SetSMILValue(nsCSSPropertyID::eCSSProperty_d,
+                                                *pathSegList);
+      }
     }
     if (const auto* transformList = GetAnimatedTransformList()) {
       *dest->GetAnimatedTransformList(DO_ALLOCATE) = *transformList;
