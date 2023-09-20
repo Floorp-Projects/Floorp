@@ -112,19 +112,10 @@ import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHO
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToLong
 
-/**
- * The actual RAM threshold is 2GB.
- *
- * To enable simpler reporting, we want to use the device's 'advertised' RAM.
- * As [ActivityManager.MemoryInfo.totalMem] is not the device's 'advertised' RAM spec & we cannot
- * access [ActivityManager.MemoryInfo.advertisedMem] across all Android versions, we will use a
- * proxy value of 1.6GB. This is based on 1.5GB with a small 'excess' buffer. We assert that all
- * values above this proxy value are 2GB or more.
- */
-private const val RAM_THRESHOLD_PROXY_GB = 1.6F
-
-private const val RAM_THRESHOLD_BYTES = RAM_THRESHOLD_PROXY_GB * (1e+9).toLong()
+private const val RAM_THRESHOLD_MEGABYTES = 1024
+private const val BYTES_TO_MEGABYTES_CONVERSION = 1024.0 * 1024.0
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -855,15 +846,18 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    private fun deviceRamBytes(): Long {
+    private fun deviceRamApproxMegabytes(): Long {
         val memoryInfo = ActivityManager.MemoryInfo()
         val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(memoryInfo)
 
-        return memoryInfo.totalMem
+        val deviceRamBytes = memoryInfo.totalMem
+        return deviceRamBytes.toRoundedMegabytes()
     }
 
-    private fun isDeviceRamAboveThreshold() = deviceRamBytes() > RAM_THRESHOLD_BYTES
+    private fun Long.toRoundedMegabytes(): Long = (this / BYTES_TO_MEGABYTES_CONVERSION).roundToLong()
+
+    private fun isDeviceRamAboveThreshold() = deviceRamApproxMegabytes() > RAM_THRESHOLD_MEGABYTES
 
     @Suppress("ComplexMethod")
     private fun setPreferenceMetrics(
