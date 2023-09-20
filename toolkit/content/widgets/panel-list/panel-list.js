@@ -63,14 +63,6 @@
       this.toggleAttribute("open", val);
     }
 
-    get stayOpen() {
-      return this.hasAttribute("stay-open");
-    }
-
-    set stayOpen(val) {
-      this.toggleAttribute("stay-open", val);
-    }
-
     getTargetForEvent(event) {
       if (!event) {
         return null;
@@ -85,17 +77,13 @@
       return event._savedComposedTarget || event.target;
     }
 
-    show(triggeringEvent, target) {
+    show(triggeringEvent) {
       this.triggeringEvent = triggeringEvent;
-      this.lastAnchorNode =
-        target || this.getTargetForEvent(this.triggeringEvent);
-
+      this.lastAnchorNode = this.getTargetForEvent(this.triggeringEvent);
       this.wasOpenedByKeyboard =
         triggeringEvent &&
         (triggeringEvent.inputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
-          triggeringEvent.inputSource == MouseEvent.MOZ_SOURCE_UNKNOWN ||
-          triggeringEvent.code == "ArrowRight" ||
-          triggeringEvent.code == "ArrowLeft");
+          triggeringEvent.inputSource == MouseEvent.MOZ_SOURCE_UNKNOWN);
       this.open = true;
 
       if (this.parentIsXULPanel()) {
@@ -124,7 +112,7 @@
       }
     }
 
-    hide(triggeringEvent, { force = false } = {}, eventTarget) {
+    hide(triggeringEvent, { force = false } = {}) {
       // It's possible this is being used in an unprivileged context, in which
       // case it won't have access to Services / Services will be undeclared.
       const autohideDisabled = this.hasServices()
@@ -148,18 +136,18 @@
         panel.hidePopup();
       }
 
-      let target = eventTarget || this.getTargetForEvent(openingEvent);
+      let target = this.getTargetForEvent(openingEvent);
       // Refocus the button that opened the menu if we have one.
       if (target && this.wasOpenedByKeyboard) {
         target.focus();
       }
     }
 
-    toggle(triggeringEvent, target = null) {
+    toggle(triggeringEvent) {
       if (this.open) {
-        this.hide(triggeringEvent, { force: true }, target);
+        this.hide(triggeringEvent, { force: true });
       } else {
-        this.show(triggeringEvent, target);
+        this.show(triggeringEvent);
       }
     }
 
@@ -288,15 +276,12 @@
     }
 
     addHideListeners() {
-      if (this.hasAttribute("stay-open") && !this.lastAnchorNode.hasSubmenu) {
+      if (this.hasAttribute("stay-open")) {
         // This is intended for inspection in Storybook.
         return;
       }
       // Hide when a panel-item is clicked in the list.
       this.addEventListener("click", this);
-      // Allows submenus to stopPropagation when focus is already in the menu
-      this.addEventListener("keydown", this);
-      // We need Escape/Tab/ArrowDown to work when opened with the mouse.
       document.addEventListener("keydown", this);
       // Hide when a click is initiated outside the panel.
       document.addEventListener("mousedown", this);
@@ -315,7 +300,6 @@
 
     removeHideListeners() {
       this.removeEventListener("click", this);
-      this.removeEventListener("keydown", this);
       document.removeEventListener("keydown", this);
       document.removeEventListener("mousedown", this);
       document.removeEventListener("focusin", this);
@@ -373,15 +357,19 @@
             // Don't scroll the page or let the regular tab order take effect.
             e.preventDefault();
 
-            // Prevents the host panel list from responding to these events while
-            // the submenu is active.
-            e.stopPropagation();
-
             // Keep moving to the next/previous element sibling until we find a
             // panel-item that isn't hidden.
             let moveForward =
               e.key === "ArrowDown" || (e.key === "Tab" && !e.shiftKey);
 
+            // If the menu is opened with the mouse, the active element might be
+            // somewhere else in the document. In that case we should ignore it
+            // to avoid walking unrelated DOM nodes.
+            this.focusWalker.currentNode = this.contains(
+              this.getRootNode().activeElement
+            )
+              ? this.getRootNode().activeElement
+              : this;
             let nextItem = moveForward
               ? this.focusWalker.nextNode()
               : this.focusWalker.previousNode();
@@ -470,70 +458,18 @@
       }
       return this._focusWalker;
     }
-    async setSubmenuAlign() {
-      const hostElement =
-        this.lastAnchorNode.parentElement || this.getRootNode().host;
-      // The showing attribute allows layout of the panel while remaining hidden
-      // from the user until alignment is set.
-      this.setAttribute("showing", "true");
-
-      // Wait for a layout flush, then find the bounds.
-      let { anchorWidth, anchorTop, panelTop } = await new Promise(resolve => {
-        requestAnimationFrame(() => {
-          // It's possible this is being used in a context where windowUtils is
-          // not available. In that case, fallback to using the element.
-          let getBounds = el =>
-            window.windowUtils
-              ? window.windowUtils.getBoundsWithoutFlushing(el)
-              : el.getBoundingClientRect();
-          let anchorBounds = getBounds(this.lastAnchorNode);
-          let panelBounds = getBounds(hostElement);
-          resolve({
-            anchorWidth: anchorBounds.width,
-            anchorTop: anchorBounds.top,
-            panelTop: panelBounds.top,
-          });
-        });
-      });
-
-      let align = hostElement.getAttribute("align");
-
-      if (align == "right") {
-        this.style.right = `${anchorWidth}px`;
-        this.style.left = "";
-      } else {
-        this.style.left = `${anchorWidth}px`;
-        this.style.right = "";
-      }
-
-      let topOffset =
-        anchorTop -
-        panelTop -
-        (parseFloat(window.getComputedStyle(this)?.paddingTop) || 0);
-      this.style.top = `${topOffset}px`;
-
-      this.removeAttribute("showing");
-    }
 
     async onShow() {
       this.sendEvent("showing");
       this.addHideListeners();
-
-      if (this.lastAnchorNode?.hasSubmenu) {
-        await this.setSubmenuAlign();
-      } else {
-        await this.setAlign();
-      }
-
-      // Always reset this regardless of how the panel list is opened
-      // so the first child will be focusable.
-      this.focusWalker.currentNode = this;
+      await this.setAlign();
 
       // Wait until the next paint for the alignment to be set and panel to be
       // visible.
       requestAnimationFrame(() => {
         if (this.wasOpenedByKeyboard) {
           // Focus the first focusable panel-item if opened by keyboard.
+          this.focusWalker.currentNode = this;
           this.focusWalker.nextNode();
         }
 
@@ -578,11 +514,11 @@
       this.button = document.createElement("button");
       this.button.setAttribute("role", "menuitem");
       this.button.setAttribute("part", "button");
+
       // Use a XUL label element if possible to show the accesskey.
       this.label = document.createXULElement
         ? document.createXULElement("label")
         : document.createElement("span");
-
       this.button.appendChild(this.label);
 
       let supportLinkSlot = document.createElement("slot");
@@ -591,39 +527,15 @@
       this.#defaultSlot = document.createElement("slot");
       this.#defaultSlot.style.display = "none";
 
-      if (this.hasSubmenu) {
-        this.icon = document.createElement("div");
-        this.icon.setAttribute("class", "submenu-icon");
-        this.label.setAttribute("class", "submenu-label");
-
-        this.button.setAttribute("class", "submenu-container");
-        this.button.appendChild(this.icon);
-
-        this.submenuSlot = document.createElement("slot");
-        this.submenuSlot.name = "submenu";
-
-        this.shadowRoot.append(
-          style,
-          this.button,
-          this.#defaultSlot,
-          this.submenuSlot
-        );
-      } else {
-        this.shadowRoot.append(
-          style,
-          this.button,
-          supportLinkSlot,
-          this.#defaultSlot
-        );
-      }
+      this.shadowRoot.append(
+        style,
+        this.button,
+        supportLinkSlot,
+        this.#defaultSlot
+      );
     }
 
     connectedCallback() {
-      if (!this._l10nRootConnected && document.l10n) {
-        document.l10n.connectRoot(this.shadowRoot);
-        this._l10nRootConnected = true;
-      }
-
       if (!this.#initialized) {
         this.#initialized = true;
         // When click listeners are added to the panel-item it creates a node in
@@ -641,48 +553,22 @@
           childList: true,
           subtree: true,
         });
-
-        if (this.hasSubmenu) {
-          this.setSubmenuContents();
-        }
       }
 
-      this.panel =
-        this.getRootNode()?.host?.closest("panel-list") ||
-        this.closest("panel-list");
+      this.panel = this.closest("panel-list");
 
       if (this.panel) {
         this.panel.addEventListener("hidden", this);
         this.panel.addEventListener("shown", this);
       }
-      if (this.hasSubmenu) {
-        this.addEventListener("mouseenter", this);
-        this.addEventListener("mouseleave", this);
-        this.addEventListener("keydown", this);
-      }
     }
 
     disconnectedCallback() {
-      if (this._l10nRootConnected) {
-        document.l10n.disconnectRoot(this.shadowRoot);
-        this._l10nRootConnected = false;
-      }
-
       if (this.panel) {
         this.panel.removeEventListener("hidden", this);
         this.panel.removeEventListener("shown", this);
         this.panel = null;
       }
-
-      if (this.hasSubmenu) {
-        this.removeEventListener("mouseenter", this);
-        this.removeEventListener("mouseleave", this);
-        this.removeEventListener("keydown", this);
-      }
-    }
-
-    get hasSubmenu() {
-      return this.hasAttribute("submenu");
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -720,11 +606,6 @@
         .join("");
     }
 
-    setSubmenuContents() {
-      this.submenuPanel = this.submenuSlot.assignedNodes()[0];
-      this.shadowRoot.append(this.submenuPanel);
-    }
-
     get disabled() {
       return this.button.hasAttribute("disabled");
     }
@@ -745,17 +626,6 @@
       this.button.focus();
     }
 
-    setArrowKeyRTL() {
-      let arrowOpenKey = "ArrowRight";
-      let arrowCloseKey = "ArrowLeft";
-
-      if (this.submenuPanel.isDocumentRTL()) {
-        arrowOpenKey = "ArrowLeft";
-        arrowCloseKey = "ArrowRight";
-      }
-      return [arrowOpenKey, arrowCloseKey];
-    }
-
     handleEvent(e) {
       // Bug 1588156 - Accesskey is not ignored for hidden non-input elements.
       // Since the accesskey won't be ignored, we need to remove it ourselves
@@ -772,21 +642,6 @@
             this._accessKey = this.accessKey;
             this._modifyingAccessKey = true;
             this.accessKey = "";
-          }
-          break;
-        case "mouseenter":
-        case "mouseleave":
-          this.submenuPanel.toggle(e);
-          break;
-        case "keydown":
-          let [arrowOpenKey, arrowCloseKey] = this.setArrowKeyRTL();
-          if (e.key === arrowOpenKey) {
-            this.submenuPanel.show(e, e.target);
-            e.stopPropagation();
-          }
-          if (e.key === arrowCloseKey) {
-            this.submenuPanel.hide(e, { force: true }, e.target);
-            e.stopPropagation();
           }
           break;
       }
