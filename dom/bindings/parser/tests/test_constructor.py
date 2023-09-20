@@ -264,7 +264,7 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface TestFuncConstructor {
-            [Func="Document::IsWebAnimationsEnabled"] constructor();
+            [Func="Document::IsWebAnimationsGetAnimationsEnabled"] constructor();
         };
     """
     )
@@ -277,7 +277,7 @@ def WebIDLTest(parser, harness):
         "::TestFuncConstructor::constructor",
         "constructor",
         [("TestFuncConstructor (Wrapper)", [])],
-        func=["Document::IsWebAnimationsEnabled"],
+        func=["Document::IsWebAnimationsGetAnimationsEnabled"],
     )
 
     parser = parser.reset()
@@ -286,7 +286,7 @@ def WebIDLTest(parser, harness):
             "\n"
             "    interface TestPrefChromeOnlySCFuncConstructor {\n"
             '        [ChromeOnly, Pref="dom.webidl.test1", SecureContext, '
-            'Func="Document::IsWebAnimationsEnabled"]\n'
+            'Func="Document::IsWebAnimationsGetAnimationsEnabled"]\n'
             "        constructor();\n"
             "    };\n"
         )
@@ -300,7 +300,7 @@ def WebIDLTest(parser, harness):
         "::TestPrefChromeOnlySCFuncConstructor::constructor",
         "constructor",
         [("TestPrefChromeOnlySCFuncConstructor (Wrapper)", [])],
-        func=["Document::IsWebAnimationsEnabled"],
+        func=["Document::IsWebAnimationsGetAnimationsEnabled"],
         pref=["dom.webidl.test1"],
         chromeOnly=True,
         secureContext=True,

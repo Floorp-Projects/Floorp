@@ -648,18 +648,5 @@ promise_test(async t => {
     'records after tidying up end'
   );
 }, 'Animations automatically removed are reported');
-
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  {
-    set: [
-      ["dom.animations-api.autoremove.enabled", true],
-      ["dom.animations-api.implicit-keyframes.enabled", true],
-    ],
-  },
-  function() {
-    runTest();
-    done();
-  }
-);
+runTest();
 </script>

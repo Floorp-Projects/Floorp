@@ -14,30 +14,21 @@
 <script>
 'use strict';
 
-SpecialPowers.pushPrefEnv(
-  {
-    set: [['dom.animations-api.core.enabled', true]],
-  },
-  function() {
-    test(t => {
-      const div = addDiv(t);
-      const animation = div.animate(
-        { all: ['unset', 'unset'] },
-        100 * MS_PER_SEC
-      );
-      // Flush styles since getProperties does not.
-      getComputedStyle(div).opacity;
+test(t => {
+  const div = addDiv(t);
+  const animation = div.animate(
+    { all: ['unset', 'unset'] },
+    100 * MS_PER_SEC
+  );
+  // Flush styles since getProperties does not.
+  getComputedStyle(div).opacity;
 
-      const properties = animation.effect.getProperties();
-      assert_false(
-        properties.some(property => property.property === 'display'),
-        'Should not have a property for display'
-      );
-    });
-
-    done();
-  }
-);
+  const properties = animation.effect.getProperties();
+  assert_false(
+    properties.some(property => property.property === 'display'),
+    'Should not have a property for display'
+  );
+});
 
 </script>
 </body>

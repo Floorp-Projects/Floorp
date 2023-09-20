@@ -441,7 +441,7 @@ load 1308848-1.html
 load 1308848-2.html
 load 1338772-1.html
 load 1340571.html
-pref(dom.animations-api.implicit-keyframes.enabled,true) load 1343139-1.html
+load 1343139-1.html
 asserts-if(Android,0-3) load 1343606.html # bug 1642521
 load 1343937.html
 load 1352380.html

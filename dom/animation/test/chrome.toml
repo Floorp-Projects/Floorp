@@ -1,6 +1,5 @@
 [DEFAULT]
 prefs = [
-  "dom.animations-api.autoremove.enabled=true",
   "dom.animations-api.compositing.enabled=true",
   "dom.animations.mainthread-synchronization-with-geometric-animations=true",
   "gfx.omta.background-color=true",
@@ -42,6 +41,3 @@ support-files = [
 ["chrome/test_mutation_observer_for_element_removal_in_shadow_tree.html"]
 
 ["chrome/test_running_on_compositor.html"]
-
-["chrome/test_simulate_compute_values_failure.html"]
-skip-if = ["!debug"]

@@ -247,9 +247,6 @@ function waitForFrame() {
 
 /**
  * Waits for a requestAnimationFrame callback in the next refresh driver tick.
- * Note that the 'dom.animations-api.core.enabled' and
- * 'dom.animations-api.timelines.enabled' prefs should be true to use this
- * function.
  */
 function waitForNextFrame(aWindow = window) {
   const timeAtStart = aWindow.document.timeline.currentTime;
