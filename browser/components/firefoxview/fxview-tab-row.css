@@ -51,20 +51,6 @@
   background-color: var(--fxviewtabrow-element-background-active);
 }
 
-.fxview-tab-row-header {
-  margin-top: 8px;
-  cursor: inherit;
-  font-weight: 600;
-  grid-template-columns: min-content 1fr;
-  gap: 0 16px;
-}
-
-.fxview-tab-row-header:hover,
-.fxview-tab-row-header:hover:active {
-  color: inherit;
-  background-color: inherit;
-}
-
 @media (prefers-contrast) {
   .fxview-tab-row-main,
   .fxview-tab-row-main:hover,
@@ -93,10 +79,6 @@
 .fxview-tab-row-title {
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.fxview-tab-row-main:hover:not(.fxview-tab-row-header) .fxview-tab-row-title {
-  text-decoration-line: underline;
 }
 
 .fxview-tab-row-url {

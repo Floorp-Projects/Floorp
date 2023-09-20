@@ -15,11 +15,7 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
 
-import {
-  html,
-  ifDefined,
-  when,
-} from "chrome://global/content/vendor/lit.all.mjs";
+import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
@@ -301,7 +297,7 @@ class SyncedTabsInView extends ViewPage {
     return html`<card-container
       shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
     >
-      <h3 slot="header">
+      <h3 slot="header" class="device-header">
         <span class="icon ${deviceType}" role="presentation"></span>
         ${deviceName}
       </h3>
@@ -315,32 +311,13 @@ class SyncedTabsInView extends ViewPage {
 
   deviceTemplate(deviceName, deviceType, tabs) {
     let tabItems = this.getTabItems(tabs);
-    if (this.recentBrowsing) {
-      /* Insert device at the beginning of the tabs array */
-      let icon;
-      switch (deviceType) {
-        case "phone":
-          icon = "chrome://browser/skin/device-phone.svg";
-          break;
-        case "desktop":
-          icon = "chrome://browser/skin/device-desktop.svg";
-          break;
-        case "tablet":
-          icon = "chrome://browser/skin/device-tablet.svg";
-          break;
-      }
-      tabItems.unshift({
-        icon,
-        title: deviceName,
-      });
-    }
-    return html`${when(
-        !this.recentBrowsing,
-        () => html`<h3 slot="header">
-          <span class="icon ${deviceType}" role="presentation"></span>
-          ${deviceName}
-        </h3>`
-      )}
+    return html`<h3
+        slot=${!this.recentBrowsing ? "header" : null}
+        class="device-header"
+      >
+        <span class="icon ${deviceType}" role="presentation"></span>
+        ${deviceName}
+      </h3>
       <fxview-tab-list
         slot="main"
         class="with-context-menu"
@@ -350,13 +327,6 @@ class SyncedTabsInView extends ViewPage {
         @fxview-tab-list-primary-action=${this.onOpenLink}
         @fxview-tab-list-secondary-action=${this.onContextMenu}
       >
-        ${when(
-          this.recentBrowsing,
-          () => html`<h3 slot="header">
-            <span class="icon ${deviceType}" role="presentation"></span>
-            ${deviceName}
-          </h3>`
-        )}
         ${this.panelListTemplate()}
       </fxview-tab-list>`;
   }
