@@ -1267,8 +1267,8 @@ class Document : public nsINode,
 
   StorageAccessAPIHelper::PerformPermissionGrant CreatePermissionGrantPromise(
       nsPIDOMWindowInner* aInnerWindow, nsIPrincipal* aPrincipal,
-      bool aHasUserInteraction, bool aRequireUserInteraction,
-      const Maybe<nsCString>& aTopLevelBaseDomain, bool aFrameOnly);
+      bool aHasUserInteraction, const Maybe<nsCString>& aTopLevelBaseDomain,
+      bool aFrameOnly);
 
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 

@@ -7461,7 +7461,7 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
   mSharedWorkers.RemoveElement(aSharedWorker);
 }
 
-void nsGlobalWindowInner::StorageAccessPermissionChanged() {
+void nsGlobalWindowInner::StorageAccessPermissionGranted() {
   // Invalidate cached StorageAllowed field so that calls to GetLocalStorage
   // give us the updated localStorage object.
   ClearStorageAllowedCache();
@@ -7644,31 +7644,12 @@ const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
 }
 
 void nsPIDOMWindowInner::SaveStorageAccessPermissionGranted() {
-  WindowContext* wc = GetWindowContext();
-  if (wc) {
-    Unused << wc->SetUsingStorageAccess(true);
-  }
+  mUsingStorageAccess = true;
 
-  nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged();
+  nsGlobalWindowInner::Cast(this)->StorageAccessPermissionGranted();
 }
 
-void nsPIDOMWindowInner::SaveStorageAccessPermissionRevoked() {
-  WindowContext* wc = GetWindowContext();
-  if (wc) {
-    Unused << wc->SetUsingStorageAccess(false);
-  }
-
-  nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged();
-}
-
-bool nsPIDOMWindowInner::UsingStorageAccess() {
-  WindowContext* wc = GetWindowContext();
-  if (!wc) {
-    return false;
-  }
-
-  return wc->GetUsingStorageAccess();
-}
+bool nsPIDOMWindowInner::UsingStorageAccess() { return mUsingStorageAccess; }
 
 nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
                                        WindowGlobalChild* aActor)
@@ -7693,6 +7674,7 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mNumOfIndexedDBDatabases(0),
       mNumOfOpenWebSockets(0),
       mEvent(nullptr),
+      mUsingStorageAccess(false),
       mWindowGlobalChild(aActor),
       mWasSuspendedByGroup(false) {
   MOZ_ASSERT(aOuterWindow);
