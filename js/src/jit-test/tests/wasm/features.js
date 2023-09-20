@@ -22,7 +22,7 @@
 // NOTE2: Keep this file in sync with:
 //        `dom/worklet/tests/worklet_audioWorklet_WASM_features.js`.
 
-let release_or_beta = getBuildConfiguration("release_or_beta");
+let { release_or_beta } = getBuildConfiguration();
 let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
