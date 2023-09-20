@@ -68,8 +68,6 @@ namespace mozilla::dom::quota {
 
 using namespace mozilla::ipc;
 
-namespace {
-
 class FinalizeOriginEvictionOp : public OriginOperationBase {
   nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
@@ -617,8 +615,6 @@ class ListOriginsOp final : public QuotaRequestBase,
   void CloseDirectory() override;
 };
 
-}  // namespace
-
 RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks) {
@@ -795,6 +791,8 @@ nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("SaveOriginAccessTimeOp::DoDirectoryWork", OTHER);
 
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
+
   QM_TRY_INSPECT(const auto& file,
                  aQuotaManager.GetOriginDirectory(mOriginMetadata));
 
@@ -872,6 +870,12 @@ void ClearPrivateRepositoryOp::CloseDirectory() {
 
 RefPtr<BoolPromise> ShutdownStorageOp::OpenDirectory() {
   AssertIsOnOwningThread();
+
+  // Clear directory lock tables (which also saves origin access time) before
+  // acquiring the exclusive lock below. Otherwise, saving of origin access
+  // time would be scheduled after storage shutdown and that would initialize
+  // storage again in the end.
+  mQuotaManager->ClearDirectoryLockTables();
 
   mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
       Nullable<PersistenceType>(), OriginScope::FromNull(),
@@ -1605,6 +1609,12 @@ void ClearStorageOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
 
 RefPtr<BoolPromise> ClearStorageOp::OpenDirectory() {
   AssertIsOnOwningThread();
+
+  // Clear directory lock tables (which also saves origin access time) before
+  // acquiring the exclusive lock below. Otherwise, saving of origin access
+  // time would be scheduled after storage clearing and that would initialize
+  // storage again in the end.
+  mQuotaManager->ClearDirectoryLockTables();
 
   mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
       Nullable<PersistenceType>(), OriginScope::FromNull(),
