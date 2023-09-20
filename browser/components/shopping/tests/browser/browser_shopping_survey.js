@@ -42,6 +42,12 @@ add_task(async function test_showSurvey_Enabled() {
         browser,
         [MOCK_ANALYZED_PRODUCT_RESPONSE],
         async mockData => {
+          const { TestUtils } = ChromeUtils.importESModule(
+            "resource://testing-common/TestUtils.sys.mjs"
+          );
+          let surveyPrefChanged = TestUtils.waitForPrefChange(
+            "browser.shopping.experience2023.survey.hasSeen"
+          );
           let shoppingContainer =
             content.document.querySelector(
               "shopping-container"
@@ -61,6 +67,7 @@ add_task(async function test_showSurvey_Enabled() {
           content.document.dispatchEvent(evt);
 
           await shoppingContainer.updateComplete;
+          await surveyPrefChanged;
 
           let childActor = content.windowGlobalChild.getExistingActor(
             "AboutWelcomeShopping"
