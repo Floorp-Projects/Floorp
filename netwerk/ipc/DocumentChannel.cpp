@@ -308,8 +308,9 @@ NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 
   MOZ_CRASH_UNSAFE_PRINTF(
       "DocumentChannel::SetLoadFlags: Don't set flags after creation "
-      "(differing flags %x)",
-      mLoadFlags ^ aLoadFlags);
+      "(differing flags %x != %x)",
+      (mLoadFlags ^ aLoadFlags) & mLoadFlags,
+      (mLoadFlags ^ aLoadFlags) & aLoadFlags);
 }
 
 NS_IMETHODIMP DocumentChannel::GetOriginalURI(nsIURI** aOriginalURI) {
