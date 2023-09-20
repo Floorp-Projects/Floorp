@@ -622,18 +622,27 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       result.MoveBy(frame->GetOffsetTo(boundingFrame));
     }
 
-    if (boundingFrame->GetRect().IsEmpty()) {
-      // boundingFrame might be the first in an ib-split-sibling chain. If its
-      // rect is empty, GetAllInFlowRectsUnion might exclude its origin. For
-      // example, if boundingFrame is empty with an origin of (0, -840) but
-      // has a non-empty ib-split-sibling with (0, 0), the union rect will
-      // originate at (0, 0). This means the bounds returned for our parent
-      // Accessible might be offset from boundingFrame's rect. Since result is
-      // currently relative to boundingFrame's rect, we might need to adjust it
-      // to make it parent relative.
+    if (nsLayoutUtils::GetNextContinuationOrIBSplitSibling(boundingFrame)) {
+      // Constructing a bounding box across a frame that has an IB split means
+      // the origin is likely be different from that of boundingFrame.
+      // Descendants will need their parent-relative bounds adjusted
+      // accordingly, since parent-relative bounds are constructed to the
+      // bounding box of the entire element and not each individual IB split
+      // frame. In the case that boundingFrame's rect is empty,
+      // GetAllInFlowRectsUnion might exclude its origin. For example, if
+      // boundingFrame is empty with an origin of (0, -840) but has a non-empty
+      // ib-split-sibling with (0, 0), the union rect will originate at (0, 0).
+      // This means the bounds returned for our parent Accessible might be
+      // offset from boundingFrame's rect. Since result is currently relative to
+      // boundingFrame's rect, we might need to adjust it to make it parent
+      // relative.
       nsRect boundingUnion =
           nsLayoutUtils::GetAllInFlowRectsUnion(boundingFrame, boundingFrame);
       if (!boundingUnion.IsEmpty()) {
+        // The origin of boundingUnion is relative to boundingFrame, meaning
+        // when we call MoveBy on result with this value we're offsetting
+        // `result` by the distance boundingFrame's origin was moved to
+        // construct its bounding box.
         result.MoveBy(-boundingUnion.TopLeft());
       } else {
         // Since GetAllInFlowRectsUnion returned an empty rect on our parent
