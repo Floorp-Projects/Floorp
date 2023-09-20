@@ -85,10 +85,5 @@ async function setup(isXOrigin) {
     );
     await SpecialPowers.wrap(document).requestStorageAccess();
   }
-  SpecialPowers.pushPrefEnv(
-    {
-      set: [["dom.storageManager.enabled", true]],
-    },
-    runTest
-  );
+  runTest();
 }

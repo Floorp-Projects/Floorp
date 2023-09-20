@@ -19,7 +19,6 @@
 async function test_background_storagePersist(EXTENSION_ID) {
   await SpecialPowers.pushPrefEnv({
     "set": [
-      ["dom.storageManager.enabled", true],
       ["dom.storageManager.prompt.testing", false],
       ["dom.storageManager.prompt.testing.allow", false],
     ],

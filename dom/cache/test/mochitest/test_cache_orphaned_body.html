@@ -88,8 +88,7 @@ function gc() {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true],
-          ["dom.storageManager.enabled", true]]
+          ["dom.quotaManager.testing", true]]
 }, function() {
   var name = "orphanedBodyOwner";
   var cache = null;

@@ -7,7 +7,6 @@ loadScript("dom/quota/test/common/system.js");
 
 function enableStorageTesting() {
   Services.prefs.setBoolPref("dom.quotaManager.testing", true);
-  Services.prefs.setBoolPref("dom.storageManager.enabled", true);
   Services.prefs.setBoolPref("dom.simpleDB.enabled", true);
   if (Services.appinfo.OS === "WINNT") {
     Services.prefs.setBoolPref("dom.quotaManager.useDOSDevicePathSyntax", true);
@@ -16,7 +15,6 @@ function enableStorageTesting() {
 
 function resetStorageTesting() {
   Services.prefs.clearUserPref("dom.quotaManager.testing");
-  Services.prefs.clearUserPref("dom.storageManager.enabled");
   Services.prefs.clearUserPref("dom.simpleDB.enabled");
   if (Services.appinfo.OS === "WINNT") {
     Services.prefs.clearUserPref("dom.quotaManager.useDOSDevicePathSyntax");

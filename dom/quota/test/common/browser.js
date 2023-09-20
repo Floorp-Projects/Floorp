@@ -23,7 +23,6 @@ function addTest(testFunction) {
 async function enableStorageTesting() {
   const prefsToSet = [
     ["dom.quotaManager.testing", true],
-    ["dom.storageManager.enabled", true],
     ["dom.simpleDB.enabled", true],
   ];
   if (Services.appinfo.OS === "WINNT") {

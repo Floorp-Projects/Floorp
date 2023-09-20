@@ -8,7 +8,6 @@ loadScript("dom/quota/test/common/content.js");
 async function enableStorageTesting() {
   let prefsToSet = [
     ["dom.quotaManager.testing", true],
-    ["dom.storageManager.enabled", true],
     ["dom.simpleDB.enabled", true],
   ];
   if (SpecialPowers.Services.appinfo.OS === "WINNT") {

@@ -8,9 +8,7 @@
  *
  */
 
-[SecureContext,
- Exposed=(Window,Worker),
- Pref="dom.storageManager.enabled"]
+[SecureContext, Exposed=(Window,Worker)]
 interface StorageManager {
   [NewObject]
   Promise<boolean> persisted();
