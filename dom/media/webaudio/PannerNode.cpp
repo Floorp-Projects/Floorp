@@ -461,10 +461,10 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
   if (mPositionX.HasSimpleValue() && mPositionY.HasSimpleValue() &&
       mPositionZ.HasSimpleValue() && mOrientationX.HasSimpleValue() &&
       mOrientationY.HasSimpleValue() && mOrientationZ.HasSimpleValue()) {
-    ThreeDPoint position = ConvertAudioParamTimelineTo3DP(
-        mPositionX, mPositionY, mPositionZ, tick);
-    ThreeDPoint orientation = ConvertAudioParamTimelineTo3DP(
-        mOrientationX, mOrientationY, mOrientationZ, tick);
+    ThreeDPoint position(mPositionX.GetValue(), mPositionY.GetValue(),
+                         mPositionZ.GetValue());
+    ThreeDPoint orientation(mOrientationX.GetValue(), mOrientationY.GetValue(),
+                            mOrientationZ.GetValue());
     if (!orientation.IsZero()) {
       orientation.Normalize();
     }
@@ -523,32 +523,32 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
     if (!mPositionX.HasSimpleValue()) {
       mPositionX.GetValuesAtTime(tick, positionX, WEBAUDIO_BLOCK_SIZE);
     } else {
-      positionX[0] = mPositionX.GetValueAtTime(tick);
+      positionX[0] = mPositionX.GetValue();
     }
     if (!mPositionY.HasSimpleValue()) {
       mPositionY.GetValuesAtTime(tick, positionY, WEBAUDIO_BLOCK_SIZE);
     } else {
-      positionY[0] = mPositionY.GetValueAtTime(tick);
+      positionY[0] = mPositionY.GetValue();
     }
     if (!mPositionZ.HasSimpleValue()) {
       mPositionZ.GetValuesAtTime(tick, positionZ, WEBAUDIO_BLOCK_SIZE);
     } else {
-      positionZ[0] = mPositionZ.GetValueAtTime(tick);
+      positionZ[0] = mPositionZ.GetValue();
     }
     if (!mOrientationX.HasSimpleValue()) {
       mOrientationX.GetValuesAtTime(tick, orientationX, WEBAUDIO_BLOCK_SIZE);
     } else {
-      orientationX[0] = mOrientationX.GetValueAtTime(tick);
+      orientationX[0] = mOrientationX.GetValue();
     }
     if (!mOrientationY.HasSimpleValue()) {
       mOrientationY.GetValuesAtTime(tick, orientationY, WEBAUDIO_BLOCK_SIZE);
     } else {
-      orientationY[0] = mOrientationY.GetValueAtTime(tick);
+      orientationY[0] = mOrientationY.GetValue();
     }
     if (!mOrientationZ.HasSimpleValue()) {
       mOrientationZ.GetValuesAtTime(tick, orientationZ, WEBAUDIO_BLOCK_SIZE);
     } else {
-      orientationZ[0] = mOrientationZ.GetValueAtTime(tick);
+      orientationZ[0] = mOrientationZ.GetValue();
     }
 
     float buffer[3 * WEBAUDIO_BLOCK_SIZE + 4];
