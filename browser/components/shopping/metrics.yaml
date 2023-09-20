@@ -428,6 +428,24 @@ shopping:
     send_in_pings:
       - events
 
+  surface_stale_analysis_shown:
+    type: event
+    description: |
+      The user was shown the dialogue box indicating that analysis of a product
+      was stale. No information about the product is included.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854223
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854223
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
   product_page_visits:
     type: counter
     description: |

@@ -201,6 +201,15 @@ class ShoppingMessageBar extends MozLitElement {
       this.type
     )();
     if (messageBarTemplate) {
+      if (this.type == "stale") {
+        this.dispatchEvent(
+          new CustomEvent("ShoppingTelemetryEvent", {
+            bubbles: true,
+            composed: true,
+            detail: "staleAnalysisShown",
+          })
+        );
+      }
       return html`
         <link
           rel="stylesheet"
