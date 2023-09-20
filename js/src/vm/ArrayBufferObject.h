@@ -124,6 +124,8 @@ class ArrayBufferObjectMaybeShared : public NativeObject {
   inline bool isDetached() const;
   inline SharedMem<uint8_t*> dataPointerEither();
 
+  inline bool pinLength(bool pin);
+
   // WebAssembly support:
   // Note: the eventual goal is to remove this from ArrayBuffer and have
   // (Shared)ArrayBuffers alias memory owned by some wasm::Memory object.
@@ -236,6 +238,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     // INLINE_DATA buffer is used with asm.js, it's silently rewritten into a
     // MALLOCED buffer which *can* be prepared.)
     FOR_ASMJS = 0b10'0000,
+
+    // The length is temporarily pinned, so it should not be detached. In the
+    // future, this will also prevent GrowableArrayBuffer/ResizeableArrayBuffer
+    // from modifying the length while this is set.
+    PINNED_LENGTH = 0b100'0000
   };
 
   static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
@@ -400,6 +407,15 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   bool addView(JSContext* cx, ArrayBufferViewObject* view);
 
+  // Pin or unpin the length. Returns whether pinned status was changed.
+  bool pinLength(bool pin) {
+    if (bool(flags() & PINNED_LENGTH) == pin) {
+      return false;
+    }
+    setFlags(flags() ^ PINNED_LENGTH);
+    return true;
+  }
+
   // Detach this buffer from its original memory.  (This necessarily makes
   // views of this buffer unusable for modifying that original memory.)
   static void detach(JSContext* cx, Handle<ArrayBufferObject*> buffer);
@@ -452,6 +468,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   bool isExternal() const { return bufferKind() == EXTERNAL; }
 
   bool isDetached() const { return flags() & DETACHED; }
+  bool isLengthPinned() const { return flags() & PINNED_LENGTH; }
   bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
   // Only WASM and asm.js buffers have a non-undefined [[ArrayBufferDetachKey]].
@@ -497,7 +514,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   uint32_t flags() const;
   void setFlags(uint32_t flags);
 
-  void setIsDetached() { setFlags(flags() | DETACHED); }
+  void setIsDetached() {
+    MOZ_ASSERT(!(flags() & PINNED_LENGTH));
+    setFlags(flags() | DETACHED);
+  }
   void setIsPreparedForAsmJS() {
     MOZ_ASSERT(!isWasm());
     MOZ_ASSERT(!hasUserOwnedData());
@@ -513,6 +533,13 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setDataPointer(contents);
   }
 };
+
+inline bool ArrayBufferObjectMaybeShared::pinLength(bool pin) {
+  if (is<ArrayBufferObject>()) {
+    return as<ArrayBufferObject>().pinLength(pin);
+  }
+  return false;  // Cannot pin or unpin shared array buffers.
+}
 
 // Create a buffer for a wasm memory, whose type is determined by
 // memory.indexType().

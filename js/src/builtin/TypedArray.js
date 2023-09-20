@@ -9,18 +9,19 @@ function ViewedArrayBufferIfReified(tarray) {
 
   var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
   assert(
-    buf === null ||
+    buf === false ||
+      buf === true ||
       (IsObject(buf) &&
         (GuardToArrayBuffer(buf) !== null ||
           GuardToSharedArrayBuffer(buf) !== null)),
     "unexpected value in buffer slot"
   );
-  return buf;
+  return IsObject(buf) ? buf : null;
 }
 
 function IsDetachedBuffer(buffer) {
-  // A typed array with a null buffer has never had its buffer exposed to
-  // become detached.
+  // A typed array with a null buffer has never had its buffer exposed,
+  // and so cannot have become detached.
   if (buffer === null) {
     return false;
   }

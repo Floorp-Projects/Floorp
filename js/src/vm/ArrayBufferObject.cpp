@@ -681,6 +681,7 @@ void ArrayBufferObject::detach(JSContext* cx,
                                Handle<ArrayBufferObject*> buffer) {
   cx->check(buffer);
   MOZ_ASSERT(!buffer->isPreparedForAsmJS());
+  MOZ_ASSERT(!buffer->isLengthPinned());
 
   // Update all views of the buffer to account for the buffer having been
   // detached, and clear the buffer's data and list of views.
@@ -1332,6 +1333,10 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
 ArrayBufferObject* ArrayBufferObject::wasmGrowToPagesInPlace(
     wasm::IndexType t, Pages newPages, Handle<ArrayBufferObject*> oldBuf,
     JSContext* cx) {
+  if (oldBuf->isLengthPinned()) {
+    return nullptr;
+  }
+
   CheckStealPreconditions(oldBuf, cx);
 
   MOZ_ASSERT(oldBuf->isWasm());
@@ -1390,6 +1395,9 @@ ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
     JSContext* cx) {
   // On failure, do not throw and ensure that the original buffer is
   // unmodified and valid.
+  if (oldBuf->isLengthPinned()) {
+    return nullptr;
+  }
 
   // Check that the new pages is within our allowable range. This will
   // simultaneously check against the maximum specified in source and our
@@ -1825,6 +1833,9 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
 /* static */ uint8_t* ArrayBufferObject::stealMallocedContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
+  if (buffer->isLengthPinned()) {
+    return nullptr;
+  }
   CheckStealPreconditions(buffer, cx);
 
   switch (buffer->bufferKind()) {
@@ -1880,6 +1891,12 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 /* static */ ArrayBufferObject::BufferContents
 ArrayBufferObject::extractStructuredCloneContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
+  if (buffer->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
+    return BufferContents::createFailed();
+  }
+
   CheckStealPreconditions(buffer, cx);
 
   BufferContents contents = buffer->contents();
@@ -2190,6 +2207,11 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   if (unwrappedBuffer->hasDefinedDetachKey()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_NO_TRANSFER);
+    return false;
+  }
+  if (unwrappedBuffer->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
     return false;
   }
 
