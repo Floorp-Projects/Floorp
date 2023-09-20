@@ -228,11 +228,11 @@ class TaskGraphGenerator:
         """
         return self._run_until("graph_config")
 
-    def _load_kinds(self, graph_config, target_kind=None):
-        if target_kind:
+    def _load_kinds(self, graph_config, target_kinds=None):
+        if target_kinds:
             # docker-image is an implicit dependency that never appears in
             # kind-dependencies.
-            queue = [target_kind, "docker-image"]
+            queue = target_kinds + ["docker-image"]
             seen_kinds = set()
             while queue:
                 kind_name = queue.pop()
@@ -279,16 +279,15 @@ class TaskGraphGenerator:
         logger.info("Loading kinds")
         # put the kinds into a graph and sort topologically so that kinds are loaded
         # in post-order
-        if parameters.get("target-kind"):
-            target_kind = parameters["target-kind"]
+        target_kinds = sorted(parameters.get("target-kinds", []))
+        if target_kinds:
             logger.info(
-                "Limiting kinds to {target_kind} and dependencies".format(
-                    target_kind=target_kind
+                "Limiting kinds to following kinds and dependencies: {}".format(
+                    ", ".join(target_kinds)
                 )
             )
         kinds = {
-            kind.name: kind
-            for kind in self._load_kinds(graph_config, parameters.get("target-kind"))
+            kind.name: kind for kind in self._load_kinds(graph_config, target_kinds)
         }
         verifications("kinds", kinds)
 
@@ -298,8 +297,10 @@ class TaskGraphGenerator:
                 edges.add((kind.name, dep, "kind-dependency"))
         kind_graph = Graph(set(kinds), edges)
 
-        if parameters.get("target-kind"):
-            kind_graph = kind_graph.transitive_closure({target_kind, "docker-image"})
+        if target_kinds:
+            kind_graph = kind_graph.transitive_closure(
+                set(target_kinds) | {"docker-image"}
+            )
 
         logger.info("Generating full task set")
         all_tasks = {}
@@ -440,7 +441,7 @@ def load_tasks_for_kind(parameters, kind, root_dir=None):
     """
     # make parameters read-write
     parameters = dict(parameters)
-    parameters["target-kind"] = kind
+    parameters["target-kinds"] = [kind]
     parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
     tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
     return {

@@ -11,6 +11,7 @@ from datetime import datetime
 from io import BytesIO
 from pprint import pformat
 from subprocess import CalledProcessError
+from unittest.mock import Mock
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -54,7 +55,7 @@ base_schema = Schema(
         Required("pushdate"): int,
         Required("pushlog_id"): str,
         Required("repository_type"): str,
-        # target-kind is not included, since it should never be
+        # target-kinds is not included, since it should never be
         # used at run-time
         Required("target_tasks_method"): str,
         Required("tasks_for"): str,
@@ -79,7 +80,13 @@ def get_version(repo_path):
 
 def _get_defaults(repo_root=None):
     repo_path = repo_root or os.getcwd()
-    repo = get_repository(repo_path)
+    try:
+        repo = get_repository(repo_path)
+    except RuntimeError:
+        # Use fake values if no repo is detected.
+        repo = Mock(branch="", head_rev="", tool="git")
+        repo.get_url.return_value = ""
+
     try:
         repo_url = repo.get_url()
         parsed_url = mozilla_repo_urls.parse(repo_url)
