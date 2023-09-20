@@ -148,7 +148,7 @@
   flex-grow: 0;
   flex-shrink: 0;
 
-  .urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > &,
+  .urlbarView[action-override] .urlbarView-row[has-url] > .urlbarView-row-inner > &,
   .urlbarView-row[has-url]:not([type$=tab]) > .urlbarView-row-inner > &,
   .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > & {
     /* We prioritize icons + title + action over the url, so they can grow freely,
@@ -190,7 +190,7 @@
 
     /* Note: switchtab entries show the url only in override mode,
        remotetab and sponsored ones only when selected or :hover. */
-    .urlbarView[actionoverride] &[has-url],
+    .urlbarView[action-override] &[has-url],
     &[has-url]:not([type$=tab], [sponsored]),
     &[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]),
     &[type=tabtosearch] {
@@ -629,7 +629,7 @@
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
-.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
+.urlbarView:not([action-override]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   /* Use visibility:collapse instead of display:none since the latter can
      confuse the overflow state of title and url elements when their content
      changes while they're hidden. */
@@ -640,7 +640,7 @@
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-action,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
+.urlbarView[action-override] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   display: none;
 }
 
@@ -667,7 +667,7 @@
 }
 
 .urlbarView-row[type=remotetab]:not([selected], :hover),
-.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] {
+.urlbarView:not([action-override]) .urlbarView-row[type=switchtab] {
   > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator::before {
     /* We make the title separator transparent so it stays in the accessibility
        tree. We want screen readers to pause between the result title and the

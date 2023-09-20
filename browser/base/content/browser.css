@@ -654,7 +654,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-#urlbar[actiontype="switchtab"][actionoverride] > #urlbar-input-container > #urlbar-label-box,
+#urlbar[actiontype="switchtab"][action-override] > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"], [actiontype="extension"], [searchmode]) > #urlbar-input-container > #urlbar-label-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
