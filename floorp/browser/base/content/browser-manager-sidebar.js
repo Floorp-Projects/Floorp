@@ -476,7 +476,7 @@ const bmsController = {
         let webpanelElem = window.MozXULElement.parseXULToFragment(`
               <browser 
                 id="webpanel${webpanel_id}"
-                class="webpanels${isFloorp ? " isFloorp" : " isWeb"}"
+                class="webpanels ${isFloorp ? "isFloorp" : "isWeb"} ${webpanelURL.slice(0, 9) == "extension" ? "isExtension" : ""}"
                 flex="1"
                 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                 disablehistory="true"
