@@ -119,8 +119,9 @@ WordRange WordBreaker::FindWord(const nsAString& aText, uint32_t aPos) {
         capi::ICU4XWordSegmenter_create_auto(mozilla::intl::GetDataProvider());
     MOZ_ASSERT(result.is_ok);
     ICU4XWordSegmenter segmenter(result.ok);
-    ICU4XWordBreakIteratorUtf16 iterator = segmenter.segment_utf16(
-        diplomat::span((const uint16_t*)aText.BeginReading(), aText.Length()));
+    ICU4XWordBreakIteratorUtf16 iterator =
+        segmenter.segment_utf16(diplomat::span<const uint16_t>(
+            (const uint16_t*)aText.BeginReading(), aText.Length()));
 
     uint32_t previousPos = 0;
     while (true) {
