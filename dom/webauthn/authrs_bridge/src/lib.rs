@@ -127,6 +127,17 @@ impl CtapRegisterResult {
         Ok(thin_vec![nsString::from("usb")])
     }
 
+    xpcom_method!(get_cred_props_rk => GetCredPropsRk() -> bool);
+    fn get_cred_props_rk(&self) -> Result<bool, nsresult> {
+        let result = self.result.as_ref().or(Err(NS_ERROR_FAILURE))?;
+        let cred_props = result
+            .extensions
+            .cred_props
+            .as_ref()
+            .ok_or(NS_ERROR_NOT_AVAILABLE)?;
+        Ok(cred_props.rk)
+    }
+
     xpcom_method!(get_status => GetStatus() -> nsresult);
     fn get_status(&self) -> Result<nsresult, nsresult> {
         match &self.result {
@@ -576,6 +587,9 @@ impl AuthrsTransport {
             .to_result()?;
         let none_attestation = attestation_conveyance_preference.eq("none");
 
+        let mut cred_props = false;
+        unsafe { args.GetCredProps(&mut cred_props) }.to_result()?;
+
         // TODO(Bug 1593571) - Add this to the extensions
         // let mut hmac_create_secret = None;
         // let mut maybe_hmac_create_secret = false;
@@ -600,7 +614,10 @@ impl AuthrsTransport {
             exclude_list,
             user_verification_req,
             resident_key_req,
-            extensions: Default::default(),
+            extensions: AuthenticationExtensionsClientInputs {
+                cred_props: Some(cred_props),
+                ..Default::default()
+            },
             pin: None,
             use_ctap1_fallback: !static_prefs::pref!("security.webauthn.ctap2"),
         };

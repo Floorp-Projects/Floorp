@@ -43,6 +43,7 @@ interface nsICtapRegisterArgs : nsISupports {
     // WebAuthn AuthenticationExtensionsClientInputs. That's not feasible here.
     // So we define a getter for each supported extension input and use the
     // return code to signal presence.
+    [must_use] readonly attribute bool credProps;
     [must_use] readonly attribute bool hmacCreateSecret;
 
     // Options.
@@ -122,6 +123,8 @@ interface nsICtapRegisterResult : nsISupports {
 
     // bug 1593571
     // readonly attribute bool hmacCreateSecret;
+
+    readonly attribute bool credPropsRk;
 };
 
 [uuid(91e41be0-ed73-4a10-b55e-3312319bfddf)]
