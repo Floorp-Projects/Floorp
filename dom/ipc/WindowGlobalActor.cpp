@@ -150,6 +150,8 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
     nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
     fields.Get<Indexes::IDX_IsOriginalFrameSource>() =
         loadInfo->GetOriginalFrameSrcLoad();
+    fields.Get<Indexes::IDX_UsingStorageAccess>() =
+        loadInfo->GetStoragePermission() != nsILoadInfo::NoStoragePermission;
 
     channel->GetSecurityInfo(getter_AddRefs(securityInfo));
   }
