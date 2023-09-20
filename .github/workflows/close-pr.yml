@@ -1,17 +1,20 @@
 name: close pull request
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened]
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: "README.txt"
+          sparse-checkout-cone-mode: false
       - name: close
         env:
           GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
         run: |
-          PR=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
-          gh pr close $PR --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
-          gh pr lock $PR
+          gh pr close ${{ env.PR }} --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
+          gh pr lock ${{ env.PR }}
