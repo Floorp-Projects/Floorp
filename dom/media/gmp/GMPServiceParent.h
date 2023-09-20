@@ -82,16 +82,6 @@ class GeckoMediaPluginServiceParent final
 
   void SendFlushFOGData(nsTArray<RefPtr<FlushFOGDataPromise>>& promises);
 
-#if defined(XP_WIN)
-  using GetUntrustedModulesDataPromise =
-      PGMPParent::GetUntrustedModulesDataPromise;
-
-  void SendGetUntrustedModulesData(
-      nsTArray<RefPtr<GetUntrustedModulesDataPromise>>& promises);
-
-  void SendUnblockUntrustedModulesThread();
-#endif
-
   /*
    * ** Test-only Method **
    *

@@ -8,8 +8,6 @@
 
 #include <windows.h>
 
-#include "GMPPlatform.h"
-#include "GMPServiceParent.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
@@ -83,11 +81,9 @@ bool UntrustedModulesProcessor::IsSupportedProcessType() {
       return Telemetry::CanRecordReleaseData();
     case GeckoProcessType_RDD:
     case GeckoProcessType_Utility:
-    case GeckoProcessType_GMPlugin:
-      // For GMPlugin, RDD and Utility process, we check the telemetry settings
-      // in RDDChild::Init() / UtilityProcessChild::Init() / GMPChild::Init()
-      // running in the browser process because CanRecordReleaseData() always
-      // returns false here.
+      // For RDD and Utility process, we check the telemetry settings in
+      // RDDChild::Init() / UtilityProcessChild::Init() running in the browser
+      // process because CanRecordReleaseData() always returns false here.
       return true;
     default:
       return false;
@@ -200,10 +196,6 @@ NS_IMETHODIMP UntrustedModulesProcessor::Observe(nsISupports* aSubject,
         if (auto* proc = rddMgr->GetRDDChild()) {
           Unused << proc->SendUnblockUntrustedModulesThread();
         }
-      }
-      if (RefPtr<gmp::GeckoMediaPluginServiceParent> gmps =
-              gmp::GeckoMediaPluginServiceParent::GetSingleton()) {
-        gmps->SendUnblockUntrustedModulesThread();
       }
     }
 
@@ -766,10 +758,6 @@ UntrustedModulesProcessor::SendGetModulesTrust(ModulePaths&& aModules,
       return ::mozilla::SendGetModulesTrust(
           ipc::UtilityProcessChild::GetSingleton().get(), std::move(aModules),
           runNormal);
-    }
-    case GeckoProcessType_GMPlugin: {
-      return ::mozilla::gmp::SendGetModulesTrust(std::move(aModules),
-                                                 runNormal);
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");
