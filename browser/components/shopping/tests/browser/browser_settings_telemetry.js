@@ -8,7 +8,10 @@
  */
 add_task(async function test_shopping_settings() {
   await SpecialPowers.pushPrefEnv({
-    set: [["toolkit.telemetry.testing.overridePreRelease", true]],
+    set: [
+      ["toolkit.telemetry.testing.overridePreRelease", true],
+      ["browser.shopping.experience2023.optedIn", 0],
+    ],
   });
 
   let opt_in_status = Services.prefs.getIntPref(
