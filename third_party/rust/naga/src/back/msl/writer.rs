@@ -32,6 +32,9 @@ const RAY_QUERY_FIELD_INTERSECTION: &str = "intersection";
 const RAY_QUERY_FIELD_READY: &str = "ready";
 const RAY_QUERY_FUN_MAP_INTERSECTION: &str = "_map_intersection_type";
 
+pub(crate) const MODF_FUNCTION: &str = "naga_modf";
+pub(crate) const FREXP_FUNCTION: &str = "naga_frexp";
+
 /// Write the Metal name for a Naga numeric type: scalar, vector, or matrix.
 ///
 /// The `sizes` slice determines whether this function writes a
@@ -1181,6 +1184,31 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    /// Emit code for the sign(i32) expression.
+    ///
+    fn put_isign(
+        &mut self,
+        arg: Handle<crate::Expression>,
+        context: &ExpressionContext,
+    ) -> BackendResult {
+        write!(self.out, "{NAMESPACE}::select({NAMESPACE}::select(")?;
+        match context.resolve_type(arg) {
+            &crate::TypeInner::Vector { size, .. } => {
+                let size = back::vector_size_str(size);
+                write!(self.out, "int{size}(-1), int{size}(1)")?;
+            }
+            _ => {
+                write!(self.out, "-1, 1")?;
+            }
+        }
+        write!(self.out, ", (")?;
+        self.put_expression(arg, context, true)?;
+        write!(self.out, " > 0)), 0, (")?;
+        self.put_expression(arg, context, true)?;
+        write!(self.out, " == 0))")?;
+        Ok(())
+    }
+
     fn put_const_expression(
         &mut self,
         expr_handle: Handle<crate::Expression>,
@@ -1644,8 +1672,9 @@ impl<W: Write> Writer<W> {
             } => {
                 use crate::MathFunction as Mf;
 
-                let scalar_argument = match *context.resolve_type(arg) {
-                    crate::TypeInner::Scalar { .. } => true,
+                let arg_type = context.resolve_type(arg);
+                let scalar_argument = match arg_type {
+                    &crate::TypeInner::Scalar { .. } => true,
                     _ => false,
                 };
 
@@ -1678,8 +1707,8 @@ impl<W: Write> Writer<W> {
                     Mf::Round => "rint",
                     Mf::Fract => "fract",
                     Mf::Trunc => "trunc",
-                    Mf::Modf => "modf",
-                    Mf::Frexp => "frexp",
+                    Mf::Modf => MODF_FUNCTION,
+                    Mf::Frexp => FREXP_FUNCTION,
                     Mf::Ldexp => "ldexp",
                     // exponent
                     Mf::Exp => "exp",
@@ -1710,7 +1739,12 @@ impl<W: Write> Writer<W> {
                     Mf::Reflect => "reflect",
                     Mf::Refract => "refract",
                     // computational
-                    Mf::Sign => "sign",
+                    Mf::Sign => match arg_type.scalar_kind() {
+                        Some(crate::ScalarKind::Sint) => {
+                            return self.put_isign(arg, context);
+                        }
+                        _ => "sign",
+                    },
                     Mf::Fma => "fma",
                     Mf::Mix => "mix",
                     Mf::Step => "step",
@@ -1813,6 +1847,9 @@ impl<W: Write> Writer<W> {
                     write!(self.out, "((")?;
                     self.put_expression(arg, context, false)?;
                     write!(self.out, ") * 57.295779513082322865)")?;
+                } else if fun == Mf::Modf || fun == Mf::Frexp {
+                    write!(self.out, "{fun_name}")?;
+                    self.put_call_parameters(iter::once(arg), context)?;
                 } else {
                     write!(self.out, "{NAMESPACE}::{fun_name}")?;
                     self.put_call_parameters(
@@ -2416,6 +2453,16 @@ impl<W: Write> Writer<W> {
                     }
                     crate::MathFunction::FindMsb => {
                         self.need_bake_expressions.insert(arg);
+                    }
+                    crate::MathFunction::Sign => {
+                        // WGSL's `sign` function works also on signed ints, but Metal's only
+                        // works on floating points, so we emit inline code for integer `sign`
+                        // calls. But that code uses each argument 2 times (see `put_isign`),
+                        // so to avoid duplicated evaluation, we must bake the argument.
+                        let inner = context.resolve_type(expr_handle);
+                        if inner.scalar_kind() == Some(crate::ScalarKind::Sint) {
+                            self.need_bake_expressions.insert(arg);
+                        }
                     }
                     _ => {}
                 }
@@ -3236,6 +3283,57 @@ impl<W: Write> Writer<W> {
                 }
             }
         }
+
+        // Write functions to create special types.
+        for (type_key, struct_ty) in module.special_types.predeclared_types.iter() {
+            match type_key {
+                &crate::PredeclaredType::ModfResult { size, width }
+                | &crate::PredeclaredType::FrexpResult { size, width } => {
+                    let arg_type_name_owner;
+                    let arg_type_name = if let Some(size) = size {
+                        arg_type_name_owner = format!(
+                            "{NAMESPACE}::{}{}",
+                            if width == 8 { "double" } else { "float" },
+                            size as u8
+                        );
+                        &arg_type_name_owner
+                    } else if width == 8 {
+                        "double"
+                    } else {
+                        "float"
+                    };
+
+                    let other_type_name_owner;
+                    let (defined_func_name, called_func_name, other_type_name) =
+                        if matches!(type_key, &crate::PredeclaredType::ModfResult { .. }) {
+                            (MODF_FUNCTION, "modf", arg_type_name)
+                        } else {
+                            let other_type_name = if let Some(size) = size {
+                                other_type_name_owner = format!("int{}", size as u8);
+                                &other_type_name_owner
+                            } else {
+                                "int"
+                            };
+                            (FREXP_FUNCTION, "frexp", other_type_name)
+                        };
+
+                    let struct_name = &self.names[&NameKey::Type(*struct_ty)];
+
+                    writeln!(self.out)?;
+                    writeln!(
+                        self.out,
+                        "{} {defined_func_name}({arg_type_name} arg) {{
+    {other_type_name} other;
+    {arg_type_name} fract = {NAMESPACE}::{called_func_name}(arg, other);
+    return {}{{ fract, other }};
+}}",
+                        struct_name, struct_name
+                    )?;
+                }
+                &crate::PredeclaredType::AtomicCompareExchangeWeakResult { .. } => {}
+            }
+        }
+
         Ok(())
     }
 

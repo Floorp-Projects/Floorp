@@ -2284,6 +2284,11 @@ criteria = "safe-to-deploy"
 delta = "0.12.0@git:b99d58ea435090e561377949f428bce2c18451bb -> 0.12.0@git:76003dc0035d53a474d366dcdf49d2e4d12e921f"
 
 [[audits.naga]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.13.0@git:7a19f3af909202c7eafd36633b5584bfbb353ecb -> 0.13.0@git:cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
+
+[[audits.naga]]
 who = "Erich Gubler <egubler@mozilla.com"
 criteria = "safe-to-deploy"
 delta = "0.13.0@git:bac2d82a430fbfcf100ee22b7c3bc12f3d593079 -> 0.13.0@git:7a19f3af909202c7eafd36633b5584bfbb353ecb"
@@ -3993,6 +3998,11 @@ criteria = "safe-to-deploy"
 delta = "0.17.0@git:09b010b26af6876ce84991576a168a572172f08d -> 0.17.0@git:7c6b85756237f77bfe8d6231dfc7a1412ff662b6"
 
 [[audits.wgpu-core]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:332cd0325da52675432830870584ec9766679c34 -> 0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+
+[[audits.wgpu-core]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:7c6b85756237f77bfe8d6231dfc7a1412ff662b6 -> 0.17.0@git:332cd0325da52675432830870584ec9766679c34"
@@ -4101,6 +4111,11 @@ criteria = "safe-to-deploy"
 delta = "0.17.0@git:09b010b26af6876ce84991576a168a572172f08d -> 0.17.0@git:7c6b85756237f77bfe8d6231dfc7a1412ff662b6"
 
 [[audits.wgpu-hal]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:332cd0325da52675432830870584ec9766679c34 -> 0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+
+[[audits.wgpu-hal]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:7c6b85756237f77bfe8d6231dfc7a1412ff662b6 -> 0.17.0@git:332cd0325da52675432830870584ec9766679c34"
@@ -4207,6 +4222,11 @@ delta = "0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5 -> 0.16.0@git:dcad7
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:09b010b26af6876ce84991576a168a572172f08d -> 0.17.0@git:7c6b85756237f77bfe8d6231dfc7a1412ff662b6"
+
+[[audits.wgpu-types]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:332cd0325da52675432830870584ec9766679c34 -> 0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
 
 [[audits.wgpu-types]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
