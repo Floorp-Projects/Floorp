@@ -45,7 +45,7 @@ setuptools==51.2.0
 six==1.13.0
 slugid==2.0.0
 taskcluster==44.2.2
-taskcluster-taskgraph==6.2.1
+taskcluster-taskgraph==6.3.0
 taskcluster-urls==13.0.1
 toml==0.10.2
 tomlkit==0.11.8

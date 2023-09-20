@@ -138,7 +138,7 @@ def format_taskgraph(options, parameters, logfile=None):
     if isinstance(parameters, str):
         parameters = parameters_loader(
             parameters,
-            overrides={"target-kind": options.get("target_kind")},
+            overrides={"target-kinds": options.get("target_kinds")},
             strict=False,
         )
 
@@ -193,7 +193,7 @@ def generate_taskgraph(options, parameters, logdir):
         return 0
 
     futures = {}
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=options["max_workers"]) as executor:
         for spec in parameters:
             f = executor.submit(format_taskgraph, options, spec, logfile(spec))
             futures[f] = spec
@@ -322,8 +322,11 @@ def generate_taskgraph(options, parameters, logdir):
     "used multiple times.",
 )
 @argument(
+    "-k",
     "--target-kind",
-    default=None,
+    dest="target_kinds",
+    action="append",
+    default=[],
     help="only return tasks that are of the given kind, or their dependencies.",
 )
 @argument(
@@ -341,6 +344,15 @@ def generate_taskgraph(options, parameters, logdir):
     help="Generate and diff the current taskgraph against another revision. "
     "Without args the base revision will be used. A revision specifier such as "
     "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
+)
+@argument(
+    "-j",
+    "--max-workers",
+    dest="max_workers",
+    default=None,
+    type=int,
+    help="The maximum number of workers to use for parallel operations such as"
+    "when multiple parameters files are passed.",
 )
 def show_taskgraph(options):
     from taskgraph.parameters import Parameters, parameters_loader
@@ -383,7 +395,7 @@ def show_taskgraph(options):
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
         overrides = {
-            "target-kind": options.get("target_kind"),
+            "target-kinds": options.get("target_kinds"),
         }
         parameters = [
             parameters_loader(None, strict=False, overrides=overrides)
