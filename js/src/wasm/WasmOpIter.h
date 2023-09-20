@@ -3680,6 +3680,12 @@ inline bool OpIter<Policy>::readRefCast(bool nullable, RefType* sourceType,
 // `values` will be nonempty after the call, and its last entry will be the
 // type that causes a branch (rt1\rt2 or rt2, depending).
 
+enum class BrOnCastFlags : uint8_t {
+  SourceNullable = 0x1,
+  DestNullable = 0x1 << 1,
+  AllowedMask = uint8_t(SourceNullable) | uint8_t(DestNullable),
+};
+
 template <typename Policy>
 inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
                                          uint32_t* labelRelativeDepth,
@@ -3692,8 +3698,11 @@ inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
   if (!readFixedU8(&flags)) {
     return fail("unable to read br_on_cast flags");
   }
-  bool sourceNullable = flags & (1 << 0);
-  bool destNullable = flags & (1 << 1);
+  if ((flags & ~uint8_t(BrOnCastFlags::AllowedMask)) != 0) {
+    return fail("invalid br_on_cast flags");
+  }
+  bool sourceNullable = flags & uint8_t(BrOnCastFlags::SourceNullable);
+  bool destNullable = flags & uint8_t(BrOnCastFlags::DestNullable);
 
   if (!readVarU32(labelRelativeDepth)) {
     return fail("unable to read br_on_cast depth");
@@ -3754,7 +3763,7 @@ inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
   if (!popWithType(immediateSourceType, &inputValue, &inputType)) {
     return false;
   }
-  *sourceType = inputType.valTypeOr(RefType::any()).refType();
+  *sourceType = inputType.valTypeOr(immediateSourceType).refType();
   infalliblePush(TypeAndValue(typeOnFallthrough, inputValue));
 
   // Create a copy of the branch target type, with the relevant value slot
