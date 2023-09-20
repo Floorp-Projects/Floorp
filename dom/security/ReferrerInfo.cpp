@@ -1405,13 +1405,6 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
     return NS_OK;
   }
 
-  // Don't send referrer when the request is cross-origin and policy is
-  // "same-origin".
-  if (mPolicy == ReferrerPolicy::Same_origin &&
-      IsCrossOriginRequest(aChannel)) {
-    return NS_OK;
-  }
-
   // Strip away any fragment per RFC 2616 section 14.36
   // and Referrer Policy section 6.3.5.
   if (!referrer) {
@@ -1446,6 +1439,13 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
   // This is required by Referrer Policy stripping algorithm.
   nsCOMPtr<nsIURI> exposableURI = nsIOService::CreateExposableURI(referrer);
   referrer = exposableURI;
+
+  // Don't send referrer when the request is cross-origin and policy is
+  // "same-origin".
+  if (mPolicy == ReferrerPolicy::Same_origin &&
+      IsReferrerCrossOrigin(aChannel, referrer)) {
+    return NS_OK;
+  }
 
   TrimmingPolicy trimmingPolicy = ComputeTrimmingPolicy(aChannel, referrer);
 
