@@ -17,14 +17,14 @@ use crate::values::generics::image::{
 use crate::values::generics::image::{GradientFlags, PaintWorklet};
 use crate::values::generics::position::Position as GenericPosition;
 use crate::values::generics::NonNegative;
-use crate::values::specified::position::{
-    HorizontalPositionKeyword, Position, PositionComponent, Side, VerticalPositionKeyword,
-};
+use crate::values::specified::position::{HorizontalPositionKeyword, VerticalPositionKeyword};
+use crate::values::specified::position::{Position, PositionComponent, Side};
 use crate::values::specified::url::SpecifiedImageUrl;
 use crate::values::specified::{
-    Angle, AngleOrPercentage, Appearance, Color, Length, LengthPercentage, NonNegativeLength,
-    NonNegativeLengthPercentage, Number, NumberOrPercentage, Percentage, Resolution,
+    Angle, AngleOrPercentage, Color, Length, LengthPercentage, NonNegativeLength,
+    NonNegativeLengthPercentage, Resolution,
 };
+use crate::values::specified::{Number, NumberOrPercentage, Percentage};
 use crate::Atom;
 use cssparser::{Delimiter, Parser, Token};
 use selectors::parser::SelectorParseErrorKind;
@@ -268,8 +268,6 @@ impl Image {
                 "-moz-image-rect" => Self::Rect(Box::new(MozImageRect::parse_args(context, input, cors_mode)?)),
                 #[cfg(feature = "gecko")]
                 "-moz-element" => Self::Element(Self::parse_element(input)?),
-                #[cfg(feature = "gecko")]
-                "-moz-themed" if context.chrome_rules_enabled() => Self::MozThemed(Appearance::parse(context, input)?),
                 _ => return Err(input.new_custom_error(StyleParseErrorKind::UnexpectedFunction(function))),
             })
         })
