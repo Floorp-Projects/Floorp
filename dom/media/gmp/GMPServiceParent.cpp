@@ -31,6 +31,9 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#if defined(XP_WIN)
+#  include "mozilla/UntrustedModulesData.h"
+#endif
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -710,6 +713,67 @@ void GeckoMediaPluginServiceParent::SendFlushFOGData(
         NS_DISPATCH_NORMAL);
   }
 }
+
+#if defined(XP_WIN)
+void GeckoMediaPluginServiceParent::SendGetUntrustedModulesData(
+    nsTArray<RefPtr<GetUntrustedModulesDataPromise>>& promises) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+
+  for (const RefPtr<GMPParent>& gmp : mPlugins) {
+    if (gmp->State() != GMPState::Loaded) {
+      // Plugins that are not in the Loaded state have no process attached to
+      // them, and any IPC we would attempt to send them would be ignored (or
+      // result in a warning on debug builds).
+      continue;
+    }
+    RefPtr<GetUntrustedModulesDataPromise::Private> promise =
+        new GetUntrustedModulesDataPromise::Private(__func__);
+    // Direct dispatch will resolve the promise on the same thread, which is
+    // faster; IPC will move execution back to the main thread.
+    promise->UseDirectTaskDispatch(__func__);
+    promises.EmplaceBack(promise);
+
+    mGMPThread->Dispatch(
+        NewRunnableMethod<ipc::ResolveCallback<Maybe<UntrustedModulesData>>&&,
+                          ipc::RejectCallback&&>(
+            "GMPParent::SendGetUntrustedModulesData", gmp,
+            static_cast<void (GMPParent::*)(
+                mozilla::ipc::ResolveCallback<Maybe<UntrustedModulesData>>&&
+                    aResolve,
+                mozilla::ipc::RejectCallback&& aReject)>(
+                &GMPParent::SendGetUntrustedModulesData),
+
+            [promise](Maybe<UntrustedModulesData>&& aValue) {
+              promise->Resolve(std::move(aValue), __func__);
+            },
+            [promise](ipc::ResponseRejectReason&& aReason) {
+              promise->Reject(std::move(aReason), __func__);
+            }),
+        NS_DISPATCH_NORMAL);
+  }
+}
+
+void GeckoMediaPluginServiceParent::SendUnblockUntrustedModulesThread() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+
+  for (const RefPtr<GMPParent>& gmp : mPlugins) {
+    if (gmp->State() != GMPState::Loaded) {
+      // Plugins that are not in the Loaded state have no process attached to
+      // them, and any IPC we would attempt to send them would be ignored (or
+      // result in a warning on debug builds).
+      continue;
+    }
+
+    mGMPThread->Dispatch(
+        NewRunnableMethod<>("GMPParent::SendUnblockUntrustedModulesThread", gmp,
+                            static_cast<bool (GMPParent::*)()>(
+                                &GMPParent::SendUnblockUntrustedModulesThread)),
+        NS_DISPATCH_NORMAL);
+  }
+}
+#endif
 
 RefPtr<PGMPParent::TestTriggerMetricsPromise>
 GeckoMediaPluginServiceParent::TestTriggerMetrics() {

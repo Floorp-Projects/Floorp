@@ -6,6 +6,7 @@
 
 #include "UntrustedModules.h"
 
+#include "GMPServiceParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/SocketProcessParent.h"
@@ -147,6 +148,17 @@ MultiGetUntrustedModulesData::GetUntrustedModuleLoadEvents() {
     for (RefPtr<ipc::UtilityProcessParent>& parent :
          utilityManager->GetAllProcessesProcessParent()) {
       AddPending(parent->SendGetUntrustedModulesData());
+    }
+  }
+
+  if (RefPtr<gmp::GeckoMediaPluginServiceParent> gmps =
+          gmp::GeckoMediaPluginServiceParent::GetSingleton()) {
+    nsTArray<RefPtr<
+        gmp::GeckoMediaPluginServiceParent::GetUntrustedModulesDataPromise>>
+        promises;
+    gmps->SendGetUntrustedModulesData(promises);
+    for (auto& promise : promises) {
+      AddPending(std::move(promise));
     }
   }
 

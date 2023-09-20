@@ -44,6 +44,7 @@
 #include "prio.h"
 #ifdef XP_WIN
 #  include <stdlib.h>  // for _exit()
+#  include "mozilla/WinDllServices.h"
 #  include "WinUtils.h"
 #else
 #  include <unistd.h>  // for _exit()
@@ -755,6 +756,38 @@ mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
                   : "Not profiling - SendShutdownProfile (resolved)"_ns);
   return IPC_OK();
 }
+
+#if defined(XP_WIN)
+mozilla::ipc::IPCResult GMPChild::RecvInitDllServices(
+    const bool& aCanRecordReleaseTelemetry,
+    const bool& aIsReadyForBackgroundProcessing) {
+  if (aCanRecordReleaseTelemetry) {
+    RefPtr<DllServices> dllSvc(DllServices::Get());
+    dllSvc->StartUntrustedModulesProcessor(aIsReadyForBackgroundProcessing);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPChild::RecvGetUntrustedModulesData(
+    GetUntrustedModulesDataResolver&& aResolver) {
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->GetUntrustedModulesData()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aResolver](Maybe<UntrustedModulesData>&& aData) {
+        aResolver(std::move(aData));
+      },
+      [aResolver](nsresult aReason) { aResolver(Nothing()); });
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPChild::RecvUnblockUntrustedModulesThread() {
+  if (nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService()) {
+    obs->NotifyObservers(nullptr, "unblock-untrusted-modules-thread", nullptr);
+  }
+  return IPC_OK();
+}
+#endif  // defined(XP_WIN)
 
 }  // namespace gmp
 }  // namespace mozilla
