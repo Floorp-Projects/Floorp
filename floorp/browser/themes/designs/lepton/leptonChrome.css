@@ -13646,5 +13646,13 @@
     #deleteWebpanelMenu {
       --menuitem-image: url("chrome://global/skin/icons/delete.svg");
     }
+    
+    /* Temporary Lepton Injection*/
+    #context_toggleToPrivateContainer {
+      --menuitem-image: url("chrome://browser/skin/lepton/private-favicon.svg");      
+    }
+    #open_in_private_container {
+      --menuitem-image: url("chrome://browser/skin/lepton/private-favicon.svg");
+    }
   }
 }
