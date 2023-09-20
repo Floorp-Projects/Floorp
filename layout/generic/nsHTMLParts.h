@@ -48,7 +48,7 @@ nsBlockFrame* NS_NewBlockFrame(mozilla::PresShell* aPresShell,
 // attribute of its *grandparent* content node.
 nsresult NS_NewAttributeContent(nsNodeInfoManager* aNodeInfoManager,
                                 int32_t aNameSpaceID, nsAtom* aAttrName,
-                                nsIContent** aResult);
+                                nsAtom* aFallback, nsIContent** aResult);
 
 // Create a basic area frame but the GetFrameForPoint is overridden to always
 // return the option frame

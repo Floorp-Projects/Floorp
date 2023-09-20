@@ -1562,9 +1562,11 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
         ToLowerCaseASCII(attrName);
       }
 
+      RefPtr<nsAtom> fallback = attr.fallback.AsAtom();
+
       nsCOMPtr<nsIContent> content;
       NS_NewAttributeContent(mDocument->NodeInfoManager(), attrNameSpace,
-                             attrName, getter_AddRefs(content));
+                             attrName, fallback, getter_AddRefs(content));
       aAddChild(content);
       return;
     }
@@ -1618,7 +1620,8 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
         // Easy path: just return a regular value attribute content.
         nsCOMPtr<nsIContent> content;
         NS_NewAttributeContent(mDocument->NodeInfoManager(), kNameSpaceID_None,
-                               nsGkAtoms::value, getter_AddRefs(content));
+                               nsGkAtoms::value, nsGkAtoms::_empty,
+                               getter_AddRefs(content));
         aAddChild(content);
         return;
       }
@@ -1708,7 +1711,8 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
       if (aOriginatingElement.HasAttr(nsGkAtoms::alt)) {
         nsCOMPtr<nsIContent> content;
         NS_NewAttributeContent(mDocument->NodeInfoManager(), kNameSpaceID_None,
-                               nsGkAtoms::alt, getter_AddRefs(content));
+                               nsGkAtoms::alt, nsGkAtoms::_empty,
+                               getter_AddRefs(content));
         aAddChild(content);
         return;
       }
@@ -1718,7 +1722,7 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
           nsCOMPtr<nsIContent> content;
           NS_NewAttributeContent(mDocument->NodeInfoManager(),
                                  kNameSpaceID_None, nsGkAtoms::value,
-                                 getter_AddRefs(content));
+                                 nsGkAtoms::_empty, getter_AddRefs(content));
           aAddChild(content);
           return;
         }

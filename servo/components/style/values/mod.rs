@@ -189,6 +189,15 @@ impl cssparser::ToCss for AtomString {
     }
 }
 
+impl style_traits::ToCss for AtomString {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        cssparser::ToCss::to_css(self, dest)
+    }
+}
+
 impl PrecomputedHash for AtomString {
     #[inline]
     fn precomputed_hash(&self) -> u32 {
