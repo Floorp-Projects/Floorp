@@ -84,13 +84,25 @@ fun ProductAnalysis(
                 ReanalysisInProgressCard()
             }
 
-            AnalysisStatus.COMPLETED -> {
-                // TBD
-            }
-
             AnalysisStatus.UP_TO_DATE -> {
                 // no-op
             }
+        }
+
+        if (productAnalysis.notEnoughReviewsCardVisible) {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(id = R.string.review_quality_check_no_reviews_warning_title),
+                description = stringResource(id = R.string.review_quality_check_no_reviews_warning_body),
+                type = ReviewQualityCheckInfoType.Info,
+                modifier = Modifier.fillMaxWidth(),
+                icon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.mozac_ic_information_fill_24),
+                        contentDescription = null,
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                },
+            )
         }
 
         if (productAnalysis.reviewGrade != null) {
@@ -447,9 +459,6 @@ private class ProductAnalysisPreviewModelParameterProvider :
             ),
             ProductAnalysisPreviewModel(
                 analysisStatus = AnalysisStatus.REANALYZING,
-            ),
-            ProductAnalysisPreviewModel(
-                analysisStatus = AnalysisStatus.COMPLETED,
             ),
             ProductAnalysisPreviewModel(
                 reviewGrade = null,

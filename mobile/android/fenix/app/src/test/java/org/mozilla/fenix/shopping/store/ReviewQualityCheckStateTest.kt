@@ -228,7 +228,7 @@ class ReviewQualityCheckStateTest {
         val analysisWithoutGrade = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
             adjustedRating = 3.2f,
-            analysisStatus = AnalysisStatus.COMPLETED,
+            analysisStatus = AnalysisStatus.UP_TO_DATE,
         )
 
         val analysisWithoutRatings = ProductAnalysisTestData.analysisPresent(

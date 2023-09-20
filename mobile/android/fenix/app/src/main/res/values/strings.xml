@@ -2163,9 +2163,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Check now</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Not enough reviews yet</string>
+    <string name="review_quality_check_no_reviews_warning_title">Not enough reviews yet</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">When this product has more reviews, we’ll be able to check their quality.</string>
+    <string name="review_quality_check_no_reviews_warning_body">When this product has more reviews, we’ll be able to check their quality.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Product is not available</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2183,9 +2183,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">We should have info about this product’s reviews within 24 hours. Please check back.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">We can’t check these reviews</string>
+    <string name="review_quality_check_not_analyzable_info_title">We can’t check these reviews</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Info coming soon</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2195,13 +2195,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Got it</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">No info available right now</string>
+    <string name="review_quality_check_generic_error_title">No info available right now</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">We’re working to resolve the issue. Please check back soon.</string>
+    <string name="review_quality_check_generic_error_body">We’re working to resolve the issue. Please check back soon.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">No network connection</string>
+    <string name="review_quality_check_no_connection_title">No network connection</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Check your network connection and then try reloading the page.</string>
+    <string name="review_quality_check_no_connection_body">Check your network connection and then try reloading the page.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">No info about these reviews yet</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->

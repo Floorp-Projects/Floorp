@@ -116,7 +116,7 @@ sealed interface ReviewQualityCheckState : State {
                  * The status of the product analysis.
                  */
                 enum class AnalysisStatus {
-                    NEEDS_ANALYSIS, REANALYZING, UP_TO_DATE, COMPLETED
+                    NEEDS_ANALYSIS, REANALYZING, UP_TO_DATE
                 }
             }
         }

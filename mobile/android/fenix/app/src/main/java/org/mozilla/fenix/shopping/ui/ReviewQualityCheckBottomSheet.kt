@@ -119,6 +119,7 @@ private fun ProductReview(
 
             is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
                 ProductAnalysisError(
+                    error = productReviewState,
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,
