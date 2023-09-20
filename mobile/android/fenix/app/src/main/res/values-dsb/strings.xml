@@ -2260,9 +2260,9 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pógódnośenjow</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pógódnośenjow</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Kontrola kwalitu pógódnośenjow</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">To mógło na 60 sekundow traś.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">To mógło na 60 sekundow traś.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Wjeliki źěk za powěźeńku!</string>
 
@@ -2289,11 +2289,11 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Pśeglědajśo swój seśowy zwisk a wopytajśo pón bok znowego zacytaś.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Hyšći žedne informacije wó toś tych pógódnośenjach</string>
+    <string name="review_quality_check_no_analysis_title">Hyšći žedne informacije wó toś tych pógódnośenjach</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Aby zgónił, lěc pógódnośenja toś togo produkta su spušćobne, kontrolěrujśo kwalitu pógódnośenjow. Trajo jano na 60 sekundow.</string>
+    <string name="review_quality_check_no_analysis_body">Aby zgónił, lěc pógódnośenja toś togo produkta su spušćobne, kontrolěrujśo kwalitu pógódnośenjow. Trajo jano na 60 sekundow.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Kwalitu pógódnośenjow kontrolěrowaś</string>
+    <string name="review_quality_check_no_analysis_link">Kwalitu pógódnośenjow kontrolěrowaś</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Cytajśo naš dowěry gódny pśewodnik wó pógódnośenjach produktow</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2323,9 +2323,9 @@ To buźo jano pomagaś, kwalitu pógódnośenjow pósuźiś, nic kwalitu produkt
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Kontrolu kwality pógódnośenjow wócyniś</string>
+    <string name="review_quality_check_open_handle_content_description">Kontrolu pógódnośenjow wócyniś</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Kontrolu kwality pógódnośenjow zacyniś</string>
+    <string name="review_quality_check_close_handle_content_description">Kontrolu pógódnośenjow zacyniś</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s z 5 gwězdkow</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

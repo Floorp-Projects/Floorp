@@ -2313,9 +2313,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">리뷰 품질 확인 중</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">리뷰 품질 확인 중</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">리뷰 품질 확인 중</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">이 작업은 약 60초 정도 걸릴 수 있습니다.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">이 작업은 약 60초 정도 걸릴 수 있습니다.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">보고해 주셔서 감사합니다!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2341,11 +2341,11 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">네트워크 연결을 확인한 후 페이지를 새로 고침해 보세요.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">이 리뷰에 대한 정보가 아직 없음</string>
+    <string name="review_quality_check_no_analysis_title">이 리뷰에 대한 정보가 아직 없음</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">이 제품의 리뷰가 신뢰할 수 있는지 확인하려면 리뷰 품질을 확인하세요. 약 60초밖에 걸리지 않습니다.</string>
+    <string name="review_quality_check_no_analysis_body">이 제품의 리뷰가 신뢰할 수 있는지 확인하려면 리뷰 품질을 확인하세요. 약 60초밖에 걸리지 않습니다.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">리뷰 품질 확인</string>
+    <string name="review_quality_check_no_analysis_link">리뷰 품질 확인</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">제품 리뷰에 대한 신뢰할 수 있는 가이드를 사용해 보세요</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2376,9 +2376,9 @@
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
 
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">리뷰 품질 확인 열기</string>
+    <string name="review_quality_check_open_handle_content_description">리뷰 검사기 열기</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">리뷰 품질 확인 닫기</string>
+    <string name="review_quality_check_close_handle_content_description">리뷰 검사기 닫기</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">별 5개 중 %1$s개</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

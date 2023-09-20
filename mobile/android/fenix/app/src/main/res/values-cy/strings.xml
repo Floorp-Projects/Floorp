@@ -2235,7 +2235,7 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Hysbyseb gan %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources">Mae’r gwiriwr adolygiadau yn cael ei bweru gan %s.</string>
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Mae’r gwiriwr adolygiadau yn cael ei bweru gan %s.</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s gan Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2255,9 +2255,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Gwirio ansawdd adolygiadau</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Gwirio ansawdd adolygiadau</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Gwirio ansawdd adolygiadau</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Gall hyn gymryd tua 60 eiliad.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Gall hyn gymryd tua 60 eiliad.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Diolch am adrodd!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2283,11 +2283,11 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Gwiriwch eich cysylltiad rhwydwaith ac yna ceisiwch ail-lwytho’r dudalen.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Dim gwybodaeth am yr adolygiadau hyn eto</string>
+    <string name="review_quality_check_no_analysis_title">Dim gwybodaeth am yr adolygiadau hyn eto</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">I wybod a yw adolygiadau’r cynnyrch hwn yn ddibynadwy, gwiriwch ansawdd yr adolygiadau. Dim ond tua 60 eiliad y mae’n ei gymryd.</string>
+    <string name="review_quality_check_no_analysis_body">I wybod a yw adolygiadau’r cynnyrch hwn yn ddibynadwy, gwiriwch ansawdd yr adolygiadau. Dim ond tua 60 eiliad y mae’n ei gymryd.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Gwirio ansawdd yr adolygiad</string>
+    <string name="review_quality_check_no_analysis_link">Gwirio ansawdd yr adolygiad</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Rhowch gynnig ar ein canllaw dibynadwy i adolygiadau cynnyrch</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2317,9 +2317,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Agor y gwiriwr ansawdd adolygiadau</string>
+    <string name="review_quality_check_open_handle_content_description">Agor y gwiriwr adolygiadau</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Cau’r gwiriwr ansawdd adolygiadau</string>
+    <string name="review_quality_check_close_handle_content_description">Cau gwiriwr adolygu</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s allan o 5 seren</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

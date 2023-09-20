@@ -2224,6 +2224,8 @@
     <string name="review_quality_check_highlights_title">Kohokohdat viimeaikaisista arvosteluista</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Kuinka määritämme arvostelun laadun</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Käytämme Mozillan %s-tekoälytekniikkaa tuotearvioiden luotettavuuden tarkistamiseen. Tämä auttaa arvioimaan vain arvostelun laatua, ei tuotteen laatua. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Annamme kunkin tuotteen arvosteluille <b>kirjainarvosanan</b> A:sta F:ään.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->

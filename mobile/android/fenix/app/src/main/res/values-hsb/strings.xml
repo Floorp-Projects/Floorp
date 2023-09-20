@@ -2266,9 +2266,9 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pohódnoćenjow</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontrola kwalitu pohódnoćenjow</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Kontrola kwalitu pohódnoćenjow</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">To móhło na 60 sekundow trać.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">To móhło na 60 sekundow trać.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Wulki dźak za zdźělenku!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2294,11 +2294,11 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Přepruwujće swój syćowy zwisk a spytajće potom stronu znowa začitać.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Hišće žane informacije wo tutych pohódnoćenjach</string>
+    <string name="review_quality_check_no_analysis_title">Hišće žane informacije wo tutych pohódnoćenjach</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Zo byšće zhonił, hač pohódnoćenja tutoho produkta su spušćomne, kontrolujće kwalitu pohódnoćenjow. Traje jenož na 60 sekundow.</string>
+    <string name="review_quality_check_no_analysis_body">Zo byšće zhonił, hač pohódnoćenja tutoho produkta su spušćomne, kontrolujće kwalitu pohódnoćenjow. Traje jenož na 60 sekundow.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Kwalitu pohódnoćenjow kontrolować</string>
+    <string name="review_quality_check_no_analysis_link">Kwalitu pohódnoćenjow kontrolować</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Čitajće naš dowěry hódny přewodnik wo pohódnoćenjach produktow</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2328,9 +2328,9 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Kontrolu kwality pohódnoćenjow wočinić</string>
+    <string name="review_quality_check_open_handle_content_description">Kontrolu pohódnoćenjow wočinić</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Kontrolu kwality pohódnoćenjow začinić</string>
+    <string name="review_quality_check_close_handle_content_description">Kontrolu pohódnoćenjow začinić</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s z 5 hwěžkow</string>
 

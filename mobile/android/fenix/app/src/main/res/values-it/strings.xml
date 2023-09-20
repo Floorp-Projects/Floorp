@@ -2337,7 +2337,7 @@
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Per sapere se le recensioni di questo prodotto sono affidabili, verificane la qualità. Ci vogliono solo circa 60 secondi.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Verifica qualità della recensioni</string>
+    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Verifica qualità recensioni</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Prova la nostra guida per ottenere affidabili recensioni di prodotti</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
