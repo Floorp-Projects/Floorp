@@ -403,8 +403,9 @@ impl VirtualFidoDevice for TestToken {
         Ok(AuthenticatorInfo {
             versions: self.versions.clone(),
             options: AuthenticatorOptions {
-                pin_uv_auth_token: Some(true),
-                user_verification: Some(true),
+                resident_key: self.has_resident_key,
+                pin_uv_auth_token: Some(self.has_user_verification),
+                user_verification: Some(self.has_user_verification),
                 ..Default::default()
             },
             ..Default::default()

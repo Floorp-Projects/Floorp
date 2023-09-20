@@ -174,8 +174,6 @@ void WinWebAuthnManager::Register(
   ClearTransaction();
   mTransactionParent = aTransactionParent;
 
-  WEBAUTHN_EXTENSION rgExtension[1] = {};
-  DWORD cExtensions = 0;
   BOOL HmacCreateSecret = FALSE;
 
   // RP Information
@@ -309,6 +307,13 @@ void WinWebAuthnManager::Register(
     winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
   }
 
+  bool requestedCredProps = FALSE;
+
+  // The number of entries in rgExtension should match the number of supported
+  // extensions.
+  // Supported extensions: credProps, hmac-secret.
+  WEBAUTHN_EXTENSION rgExtension[2] = {};
+  DWORD cExtensions = 0;
   if (aInfo.Extensions().Length() >
       (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
     nsresult aError = NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -316,6 +321,9 @@ void WinWebAuthnManager::Register(
     return;
   }
   for (const WebAuthnExtension& ext : aInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionCredProps) {
+      requestedCredProps = ext.get_WebAuthnExtensionCredProps().credProps();
+    }
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
       HmacCreateSecret =
           ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret() == true;
@@ -475,6 +483,16 @@ void WinWebAuthnManager::Register(
           }
         }
       }
+    }
+
+    // WEBAUTHN_CREDENTIAL_ATTESTATION structs of version >= 4 always include a
+    // flag to indicate whether a resident key was created. We copy that flag to
+    // the credProps extension output only if the RP requested the credProps
+    // extension.
+    if (requestedCredProps && pWebAuthNCredentialAttestation->dwVersion >=
+                                  WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_4) {
+      BOOL rk = pWebAuthNCredentialAttestation->bResidentKey;
+      extensions.AppendElement(WebAuthnExtensionResultCredProps(rk == TRUE));
     }
 
     nsTArray<nsString> transports;

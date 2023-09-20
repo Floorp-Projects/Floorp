@@ -89,6 +89,21 @@ CtapRegisterArgs::GetExcludeList(nsTArray<nsTArray<uint8_t> >& aExcludeList) {
 }
 
 NS_IMETHODIMP
+CtapRegisterArgs::GetCredProps(bool* aCredProps) {
+  mozilla::ipc::AssertIsOnBackgroundThread();
+
+  *aCredProps = false;
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionCredProps) {
+      *aCredProps = ext.get_WebAuthnExtensionCredProps().credProps();
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
