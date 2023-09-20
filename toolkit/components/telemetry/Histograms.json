@@ -8779,17 +8779,6 @@
     "keyed": true,
     "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser. The time for users to unlock Keychain on macOS is included in this time."
   },
-  "FXVIEW_HISTORY_CUMULATIVE_SORT_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "alert_emails": ["firefoxview@mozilla.com"],
-    "releaseChannelCollection": "opt-in",
-    "bug_numbers": [1833674],
-    "kind": "enumerated",
-    "n_values": 20,
-    "description": "Cumulative no. of sort updates performed before selecting a history link in Firefox View."
-  },
   "PWMGR_IMPORT_LOGINS_FROM_FILE_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
