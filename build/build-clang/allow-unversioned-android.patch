@@ -1,0 +1,36 @@
+diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
+index 31245964c4ba..dbdccd95bb4f 100644
+--- a/clang/lib/Driver/ToolChain.cpp
++++ b/clang/lib/Driver/ToolChain.cpp
+@@ -689,7 +689,6 @@ ToolChain::getFallbackAndroidTargetPath(StringRef BaseDir) const {
+   unsigned BestVersion = 0;
+ 
+   SmallString<32> TripleDir;
+-  bool UsingUnversionedDir = false;
+   std::error_code EC;
+   for (llvm::vfs::directory_iterator LI = getVFS().dir_begin(BaseDir, EC), LE;
+        !EC && LI != LE; LI = LI.increment(EC)) {
+@@ -698,14 +697,12 @@ ToolChain::getFallbackAndroidTargetPath(StringRef BaseDir) const {
+     if (DirNameSuffix.consume_front(TripleWithoutLevelStr)) {
+       if (DirNameSuffix.empty() && TripleDir.empty()) {
+         TripleDir = DirName;
+-        UsingUnversionedDir = true;
+       } else {
+         unsigned Version;
+         if (!DirNameSuffix.getAsInteger(10, Version) && Version > BestVersion &&
+             Version < TripleVersion) {
+           BestVersion = Version;
+           TripleDir = DirName;
+-          UsingUnversionedDir = false;
+         }
+       }
+     }
+@@ -716,8 +713,6 @@ ToolChain::getFallbackAndroidTargetPath(StringRef BaseDir) const {
+ 
+   SmallString<128> P(BaseDir);
+   llvm::sys::path::append(P, TripleDir);
+-  if (UsingUnversionedDir)
+-    D.Diag(diag::warn_android_unversioned_fallback) << P << getTripleString();
+   return std::string(P);
+ }
+ 
