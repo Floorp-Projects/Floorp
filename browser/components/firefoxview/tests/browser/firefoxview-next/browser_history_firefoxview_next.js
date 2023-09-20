@@ -13,6 +13,10 @@ const { ProfileAge } = ChromeUtils.importESModule(
 const HAS_IMPORTED_HISTORY_PREF = "browser.migrate.interactions.history";
 const IMPORT_HISTORY_DISMISSED_PREF =
   "browser.tabs.firefox-view.importHistory.dismissed";
+const HISTORY_EVENT = [["firefoxview_next", "history", "visits", undefined]];
+const SHOW_ALL_HISTORY_EVENT = [
+  ["firefoxview_next", "show_all_history", "tabs", undefined],
+];
 
 const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
@@ -39,11 +43,89 @@ function isElInViewport(element) {
   );
 }
 
+async function historyComponentReady(historyComponent) {
+  await TestUtils.waitForCondition(
+    () =>
+      [...historyComponent.allHistoryItems.values()].reduce(
+        (acc, { length }) => acc + length,
+        0
+      ) === 24
+  );
+
+  let expected = historyComponent.historyMapByDate.length;
+  let actual = historyComponent.cards.length;
+
+  is(expected, actual, `Total number of cards should be ${expected}`);
+}
+
 async function openFirefoxView(win) {
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#firefox-view-button",
     { type: "mousedown" },
     win.browsingContext
+  );
+}
+
+async function historyTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for history firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    HISTORY_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
+async function sortHistoryTelemetry(sortHistoryEvent) {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for sort_history firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    sortHistoryEvent,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
+async function showAllHistoryTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for show_all_history firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    SHOW_ALL_HISTORY_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
   );
 }
 
@@ -94,26 +176,10 @@ add_task(async function test_list_ordering() {
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
-    await TestUtils.waitForCondition(
-      () =>
-        [...historyComponent.allHistoryItems.values()].reduce(
-          (acc, { length }) => acc + length,
-          0
-        ) === 24
-    );
 
-    let expectedNumOfCards = historyComponent.historyMapByDate.length;
+    await historyComponentReady(historyComponent);
 
-    let cards = historyComponent.cards;
-    let actualNumOfCards = cards.length;
-
-    is(
-      expectedNumOfCards,
-      actualNumOfCards,
-      `Total number of cards should be ${expectedNumOfCards}`
-    );
-
-    let firstCard = cards[0];
+    let firstCard = historyComponent.cards[0];
 
     info("The first card should have a header for 'Today'.");
     await BrowserTestUtils.waitForMutationCondition(
@@ -124,12 +190,34 @@ add_task(async function test_list_ordering() {
           .id === "firefoxview-history-date-today"
     );
 
-    // Test number of cards when sorted by site/domain
-    historyComponent.sortOption = "site";
-    await historyComponent.updateHistoryData();
-    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    // Select first history item in first card
+    await clearAllParentTelemetryEvents();
+    let firstHistoryLink = historyComponent.lists[0].rowEls[0].mainEl;
+    await EventUtils.synthesizeMouseAtCenter(firstHistoryLink, {}, content);
+    await historyTelemetry();
+    await switchToFxViewTab(browser.ownerGlobal);
 
-    expectedNumOfCards = historyComponent.historyMapBySite.length;
+    // Test number of cards when sorted by site/domain
+    await clearAllParentTelemetryEvents();
+    let sortHistoryEvent = [
+      [
+        "firefoxview_next",
+        "sort_history",
+        "tabs",
+        undefined,
+        { sort_type: "site" },
+      ],
+    ];
+    // Select sort by site option
+    await EventUtils.synthesizeMouseAtCenter(
+      historyComponent.sortInputs[1],
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    await sortHistoryTelemetry(sortHistoryEvent);
+
+    let expectedNumOfCards = historyComponent.historyMapBySite.length;
 
     info(`Total number of cards should be ${expectedNumOfCards}`);
     await BrowserTestUtils.waitForMutationCondition(
@@ -137,7 +225,30 @@ add_task(async function test_list_ordering() {
       { childList: true, subtree: true },
       () => expectedNumOfCards === historyComponent.cards.length
     );
-    gBrowser.removeTab(gBrowser.selectedTab);
+
+    await clearAllParentTelemetryEvents();
+    sortHistoryEvent = [
+      [
+        "firefoxview_next",
+        "sort_history",
+        "tabs",
+        undefined,
+        { sort_type: "date" },
+      ],
+    ];
+    // Select sort by date option
+    await EventUtils.synthesizeMouseAtCenter(
+      historyComponent.sortInputs[0],
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    await sortHistoryTelemetry(sortHistoryEvent);
+
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
   });
 });
 
@@ -270,5 +381,89 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
     );
 
     BrowserTestUtils.removeTab(tab);
+  });
+});
+
+add_task(async function test_show_all_history_telemetry() {
+  await PlacesUtils.history.clear();
+  await addHistoryItems(today);
+  await addHistoryItems(yesterday);
+  await addHistoryItems(twoDaysAgo);
+  await addHistoryItems(threeDaysAgo);
+  await addHistoryItems(fourDaysAgo);
+  await addHistoryItems(oneMonthAgo);
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+
+    navigateToCategory(document, "history");
+
+    let historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await historyComponentReady(historyComponent);
+
+    await clearAllParentTelemetryEvents();
+    let showAllHistoryBtn = historyComponent.showAllHistoryBtn;
+    showAllHistoryBtn.scrollIntoView();
+    await EventUtils.synthesizeMouseAtCenter(showAllHistoryBtn, {}, content);
+    await showAllHistoryTelemetry();
+
+    // Make sure library window is shown
+    await TestUtils.waitForCondition(() =>
+      Services.wm.getMostRecentWindow("Places:Organizer")
+    );
+    let library = Services.wm.getMostRecentWindow("Places:Organizer");
+    await BrowserTestUtils.closeWindow(library);
+    gBrowser.removeTab(gBrowser.selectedTab);
+  });
+});
+
+add_task(async function test_cumulative_sort_telemetry() {
+  await PlacesUtils.history.clear();
+  await addHistoryItems(today);
+  await addHistoryItems(yesterday);
+  await addHistoryItems(twoDaysAgo);
+  await addHistoryItems(threeDaysAgo);
+  await addHistoryItems(fourDaysAgo);
+  await addHistoryItems(oneMonthAgo);
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+
+    navigateToCategory(document, "history");
+
+    let historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await historyComponentReady(historyComponent);
+
+    let cumulativeSortCountHistogram = Services.telemetry.getHistogramById(
+      "FXVIEW_HISTORY_CUMULATIVE_SORT_COUNT"
+    );
+    cumulativeSortCountHistogram.clear();
+
+    // Select sort by site option
+    await EventUtils.synthesizeMouseAtCenter(
+      historyComponent.sortInputs[1],
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    // Select sort by date option
+    await EventUtils.synthesizeMouseAtCenter(
+      historyComponent.sortInputs[0],
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+
+    let firstHistoryLink = historyComponent.lists[0].rowEls[0].mainEl;
+    await EventUtils.synthesizeMouseAtCenter(firstHistoryLink, {}, content);
+    TelemetryTestUtils.assertHistogram(cumulativeSortCountHistogram, 2, 1);
+
+    cumulativeSortCountHistogram.clear();
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
   });
 });
