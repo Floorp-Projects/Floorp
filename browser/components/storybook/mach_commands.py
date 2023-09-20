@@ -2,17 +2,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import subprocess
+import threading
+import time
+
 import mozpack.path as mozpath
-from mach.decorators import Command, SubCommand
+from mach.decorators import Command, CommandArgument, SubCommand
 
 
 @Command(
     "storybook",
     category="misc",
-    description="Start the Storybook server. This will install npm dependencies, if necessary.",
+    description="Start the Storybook server and launch the site in a local build of Firefox. This will install npm dependencies, if necessary.",
 )
-def storybook_server(command_context):
+@CommandArgument(
+    "--no-open",
+    action="store_true",
+    help="Start the Storybook server without opening a local Firefox build.",
+)
+def storybook_server(command_context, no_open=False):
     ensure_env(command_context)
+    if not no_open:
+        start_browser_thread = threading.Thread(
+            target=start_browser, args=(command_context,)
+        )
+        start_browser_thread.start()
     return run_npm(command_context, args=["run", "storybook"])
 
 
@@ -34,8 +48,17 @@ def storybook_launch(command_context):
         command_context,
         "run",
         argv=["http://localhost:5703"],
-        setpref=["svg.context-properties.content.enabled=true"],
+        setpref=[
+            "svg.context-properties.content.enabled=true",
+            "layout.css.light-dark.enabled=true",
+        ],
     )
+
+
+def start_browser(command_context):
+    # This delay is used to avoid launching the browser before the Storybook server has started.
+    time.sleep(5)
+    subprocess.run(run_mach(command_context, "storybook", subcommand="launch"))
 
 
 def build_storybook_manifest(command_context):
