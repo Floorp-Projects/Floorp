@@ -92,7 +92,6 @@ interface mixin NavigatorContentUtils {
 
 [SecureContext]
 interface mixin NavigatorStorage {
-  [Pref="dom.storageManager.enabled"]
   readonly attribute StorageManager storage;
 };
 

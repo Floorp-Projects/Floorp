@@ -29,11 +29,7 @@ export function setStoragePrefs(optionalPrefsToSet) {
 }
 
 export function clearStoragePrefs(optionalPrefsToClear) {
-  const prefsToClear = [
-    "dom.quotaManager.testing",
-    "dom.simpleDB.enabled",
-    "dom.storageManager.enabled",
-  ];
+  const prefsToClear = ["dom.quotaManager.testing", "dom.simpleDB.enabled"];
 
   if (Services.appinfo.OS === "WINNT") {
     prefsToClear.push("dom.quotaManager.useDOSDevicePathSyntax");

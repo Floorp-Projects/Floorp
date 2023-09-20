@@ -3972,12 +3972,6 @@
   value: true
   mirror: always
 
-# Whether the Storage API is enabled.
-- name: dom.storageManager.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether the File System API is enabled
 - name: dom.fs.enabled
   type: RelaxedAtomicBool
