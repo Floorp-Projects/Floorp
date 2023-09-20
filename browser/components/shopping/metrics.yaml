@@ -428,6 +428,26 @@ shopping:
     send_in_pings:
       - events
 
+  product_page_visits:
+    type: counter
+    description: |
+      Counts number of visits to a supported retailer product page
+      while enrolled in either the control or treatment branches
+      of the shopping experiment.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848160
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848160
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - metrics
+    telemetry_mirror: SHOPPING_PRODUCT_PAGE_VISITS
+
   surface_powered_by_fakespot_link_clicked:
     type: event
     description: |
