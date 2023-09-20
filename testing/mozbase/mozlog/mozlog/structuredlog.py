@@ -244,6 +244,11 @@ class StructuredLogger(object):
         return rv
 
     @property
+    def has_shutdown(self):
+        """Property indicating whether the logger has been shutdown"""
+        return self._state.has_shutdown
+
+    @property
     def handlers(self):
         """A list of handlers that will be called when a
         message is logged from this logger"""
