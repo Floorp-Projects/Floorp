@@ -1161,6 +1161,9 @@ glean:
 gleanInternalSdk:
   description: "The Glean internal SDK feature intended only for internal Glean Team use"
   hasExposure: false
+  # Some variables are used through the C++ API and thus require pref-storage.
+  # We rely on those values at Glean.init time, which happens at startup.
+  isEarlyStartup: true
   variables:
     finalInactive:
       type: "boolean"
@@ -1175,6 +1178,9 @@ gleanInternalSdk:
       type: int
       description: >-
         Maximum number of pings that can be sent in a 60 second interval
+    enableEventTimestamps:
+      type: "boolean"
+      description: "Enables precise event timestamps for Glean events"
 
 majorRelease2022:
   description: Major Release 2022

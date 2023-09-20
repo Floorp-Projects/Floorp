@@ -122,6 +122,13 @@ extern "C" uint32_t FOG_MaxPingLimit(void) {
                                 "gleanMaxPingsPerMinute"_ns, 15);
 }
 
+// This allows us to pass whether to enable precise event timestamps to Rust.
+// Default is false.
+extern "C" bool FOG_EventTimestampsEnabled(void) {
+  return NimbusFeatures::GetBool("gleanInternalSdk"_ns,
+                                 "enableEventTimestamps"_ns, false);
+}
+
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride,
                    const nsACString& aAppIdOverride) {
