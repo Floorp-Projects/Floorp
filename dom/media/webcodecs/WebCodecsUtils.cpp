@@ -85,15 +85,15 @@ static std::tuple<JS::ArrayBufferOrView, size_t, size_t> GetArrayBufferInfo(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
   if (aBuffer.IsArrayBuffer()) {
     const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
-    buffer.ComputeState();
-    CheckedInt<size_t> byteLength(buffer.Length());
-    byteLength *= sizeof(JS::ArrayBuffer::DataType);
-    return byteLength.isValid()
-               ? std::make_tuple(
-                     JS::ArrayBufferOrView::fromObject(buffer.Obj()), (size_t)0,
-                     byteLength.value())
-               : std::make_tuple(JS::ArrayBufferOrView::fromObject(nullptr),
-                                 (size_t)0, (size_t)0);
+    size_t length;
+    {
+      bool isShared;
+      uint8_t* data;
+      JS::GetArrayBufferMaybeSharedLengthAndData(buffer.Obj(), &length,
+                                                 &isShared, &data);
+    }
+    return std::make_tuple(JS::ArrayBufferOrView::fromObject(buffer.Obj()),
+                           (size_t)0, length);
   }
 
   MOZ_ASSERT(aBuffer.IsArrayBufferView());
