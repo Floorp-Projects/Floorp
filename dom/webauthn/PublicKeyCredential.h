@@ -49,6 +49,9 @@ class PublicKeyCredential final : public Credential {
   IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal,
                                                 ErrorResult& aError);
 
+  static already_AddRefed<Promise> IsConditionalMediationAvailable(
+      GlobalObject& aGlobal, ErrorResult& aError);
+
   static already_AddRefed<Promise> IsExternalCTAP2SecurityKeySupported(
       GlobalObject& aGlobal, ErrorResult& aError);
 
