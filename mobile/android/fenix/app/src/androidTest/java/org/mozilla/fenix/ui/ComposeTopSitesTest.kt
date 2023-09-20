@@ -16,7 +16,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.generateRandomString
@@ -46,9 +45,6 @@ class ComposeTopSitesTest {
                 composeTopSitesEnabled = true,
             ),
         ) { it.activity }
-
-    @get:Rule
-    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {

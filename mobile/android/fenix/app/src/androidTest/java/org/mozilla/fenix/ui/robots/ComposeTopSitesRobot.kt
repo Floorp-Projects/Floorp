@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.widget.EditText
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasAnyChild
@@ -18,15 +17,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.matcher.ViewMatchers
-import org.hamcrest.CoreMatchers
-import org.hamcrest.Matchers
-import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.home.topsites.TopSitesTestTag
 
 /**
@@ -40,7 +37,6 @@ class ComposeTopSitesRobot(private val composeTestRule: HomeActivityComposeTestR
     @OptIn(ExperimentalTestApi::class)
     fun verifyExistingTopSiteItem(vararg titles: String) {
         titles.forEach { title ->
-            itemContainingText(title).waitForExists(waitingTime)
             composeTestRule.waitUntilAtLeastOneExists(hasText(title), waitingTime)
             composeTestRule.topSiteItem(title).assertExists()
         }
@@ -110,15 +106,12 @@ class ComposeTopSitesRobot(private val composeTestRule: HomeActivityComposeTestR
             interact: ComposeTopSitesRobot.() -> Unit,
         ): Transition {
             composeTestRule.contextMenuItemRename().performClick()
-            Espresso.onView(
-                Matchers.allOf(
-                    ViewMatchers.withId(R.id.top_site_title),
-                    CoreMatchers.instanceOf(EditText::class.java),
-                ),
-            )
-                .perform(ViewActions.replaceText(title))
-            Espresso.onView(ViewMatchers.withId(android.R.id.button1))
-                .perform((ViewActions.click()))
+            itemWithResId("$packageName:id/top_site_title")
+                .also {
+                    it.waitForExists(waitingTimeShort)
+                    it.setText(title)
+                }
+            itemWithResIdContainingText("android:id/button1", "OK").click()
 
             ComposeTopSitesRobot(composeTestRule).interact()
             return Transition(composeTestRule)
