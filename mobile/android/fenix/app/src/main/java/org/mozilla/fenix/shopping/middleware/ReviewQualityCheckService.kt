@@ -30,7 +30,7 @@ interface ReviewQualityCheckService {
  *
  * @property browserStore Reference to the application's [BrowserStore] to access state.
  */
-class ReviewQualityCheckServiceImpl(
+class DefaultReviewQualityCheckService(
     private val browserStore: BrowserStore,
 ) : ReviewQualityCheckService {
 

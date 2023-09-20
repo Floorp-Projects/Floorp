@@ -23,7 +23,7 @@ interface NetworkChecker {
 /**
  * @see [NetworkChecker].
  */
-class NetworkCheckerImpl(private val context: Context) : NetworkChecker {
+class DefaultNetworkChecker(private val context: Context) : NetworkChecker {
 
     private val connectivityManager by lazy { context.getSystemService<ConnectivityManager>() }
 

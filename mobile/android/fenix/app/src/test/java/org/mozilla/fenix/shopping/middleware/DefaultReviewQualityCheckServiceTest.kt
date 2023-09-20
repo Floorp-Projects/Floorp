@@ -19,7 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doAnswer
 
-class ReviewQualityCheckServiceImplTest {
+class DefaultReviewQualityCheckServiceTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -45,7 +45,7 @@ class ReviewQualityCheckServiceImplTest {
                 selectedTabId = tab.id,
             )
 
-            val tested = ReviewQualityCheckServiceImpl(BrowserStore(browserState))
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
 
             val actual = tested.fetchProductReview()
 
@@ -72,7 +72,7 @@ class ReviewQualityCheckServiceImplTest {
                 selectedTabId = tab.id,
             )
 
-            val tested = ReviewQualityCheckServiceImpl(BrowserStore(browserState))
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
 
             assertNull(tested.fetchProductReview())
         }
@@ -101,7 +101,7 @@ class ReviewQualityCheckServiceImplTest {
             selectedTabId = tab2.id,
         )
 
-        val tested = ReviewQualityCheckServiceImpl(BrowserStore(browserState))
+        val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
 
         val actual = tested.fetchProductReview()
 

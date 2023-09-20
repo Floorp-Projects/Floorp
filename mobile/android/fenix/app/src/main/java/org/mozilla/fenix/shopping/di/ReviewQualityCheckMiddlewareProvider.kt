@@ -7,12 +7,12 @@ package org.mozilla.fenix.shopping.di
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.state.store.BrowserStore
-import org.mozilla.fenix.shopping.middleware.NetworkCheckerImpl
+import org.mozilla.fenix.shopping.middleware.DefaultNetworkChecker
+import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckPreferences
+import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckService
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckNavigationMiddleware
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckNetworkMiddleware
-import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferencesImpl
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferencesMiddleware
-import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckServiceImpl
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.utils.Settings
 
@@ -48,7 +48,7 @@ object ReviewQualityCheckMiddlewareProvider {
         settings: Settings,
         scope: CoroutineScope,
     ) = ReviewQualityCheckPreferencesMiddleware(
-        reviewQualityCheckPreferences = ReviewQualityCheckPreferencesImpl(settings),
+        reviewQualityCheckPreferences = DefaultReviewQualityCheckPreferences(settings),
         scope = scope,
     )
 
@@ -57,8 +57,8 @@ object ReviewQualityCheckMiddlewareProvider {
         context: Context,
         scope: CoroutineScope,
     ) = ReviewQualityCheckNetworkMiddleware(
-        reviewQualityCheckService = ReviewQualityCheckServiceImpl(browserStore),
-        networkChecker = NetworkCheckerImpl(context),
+        reviewQualityCheckService = DefaultReviewQualityCheckService(browserStore),
+        networkChecker = DefaultNetworkChecker(context),
         scope = scope,
     )
 

@@ -46,7 +46,7 @@ interface ReviewQualityCheckPreferences {
  *
  * @param settings The [Settings] instance to use.
  */
-class ReviewQualityCheckPreferencesImpl(
+class DefaultReviewQualityCheckPreferences(
     private val settings: Settings,
 ) : ReviewQualityCheckPreferences {
 
