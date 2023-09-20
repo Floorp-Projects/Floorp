@@ -210,26 +210,22 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
       }
     }
 
-    else if (data.IsArrayBuffer()) {
-      const ArrayBuffer& buffer = data.GetAsArrayBuffer();
-      buffer.ComputeState();
-      aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
-      if (aRv.Failed()) {
-        return;
-      }
-    }
-
-    else if (data.IsArrayBufferView()) {
-      const ArrayBufferView& buffer = data.GetAsArrayBufferView();
-      buffer.ComputeState();
-      aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
-      if (aRv.Failed()) {
-        return;
-      }
-    }
-
     else {
-      MOZ_CRASH("Impossible blob data type.");
+      auto blobData = CreateFromTypedArrayData<Vector<uint8_t>>(data);
+      if (blobData.isNothing()) {
+        MOZ_CRASH("Impossible blob data type.");
+      }
+
+      if (!blobData.ref()) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+
+        return;
+      }
+
+      aRv = blobSet.AppendVector(blobData.ref().extract());
+      if (aRv.Failed()) {
+        return;
+      }
     }
   }
 
