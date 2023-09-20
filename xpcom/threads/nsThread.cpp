@@ -312,32 +312,11 @@ struct ThreadInitData {
 
 }  // namespace
 
-/* static */ mozilla::OffTheBooksMutex& nsThread::ThreadListMutex() {
-  static StaticLocalAutoPtr<OffTheBooksMutex> sMutex(
-      new OffTheBooksMutex("nsThread::ThreadListMutex"));
-  return *sMutex;
-}
-
-/* static */ LinkedList<nsThread>& nsThread::ThreadList() {
-  static StaticLocalAutoPtr<LinkedList<nsThread>> sList(
-      new LinkedList<nsThread>());
-  return *sList;
-}
-
-/* static */
-nsThreadEnumerator nsThread::Enumerate() { return {}; }
-
-void nsThread::AddToThreadList() {
-  OffTheBooksMutexAutoLock mal(ThreadListMutex());
-  MOZ_ASSERT(!isInList());
-
-  ThreadList().insertBack(this);
-}
-
 void nsThread::MaybeRemoveFromThreadList() {
-  OffTheBooksMutexAutoLock mal(ThreadListMutex());
+  nsThreadManager& tm = nsThreadManager::get();
+  OffTheBooksMutexAutoLock mal(tm.ThreadListMutex());
   if (isInList()) {
-    removeFrom(ThreadList());
+    removeFrom(tm.ThreadList());
   }
 }
 
@@ -541,7 +520,6 @@ void nsThread::InitCommon() {
   }
 
   InitThreadLocalVariables();
-  AddToThreadList();
 }
 
 //-----------------------------------------------------------------------------
@@ -621,21 +599,37 @@ nsresult nsThread::Init(const nsACString& aName) {
 
   SetThreadNameInternal(aName);
 
-  mShutdownRequired = true;
-
-  UniquePtr<ThreadInitData> initData(
-      new ThreadInitData{this, nsCString(aName)});
-
   PRThread* thread = nullptr;
-  // ThreadFunc is responsible for setting mThread
-  if (!(thread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, initData.get(),
-                                 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                                 PR_JOINABLE_THREAD, mStackSize))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  // The created thread now owns initData, so release our ownership of it.
-  Unused << initData.release();
+  nsThreadManager& tm = nsThreadManager::get();
+  {
+    OffTheBooksMutexAutoLock lock(tm.ThreadListMutex());
+    if (!tm.AllowNewXPCOMThreadsLocked()) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // We need to fully start the thread while holding the thread list lock, as
+    // the next acquire of the lock could try to shut down this thread (e.g.
+    // during xpcom shutdown), which would hang if `PR_CreateThread` failed.
+
+    UniquePtr<ThreadInitData> initData(
+        new ThreadInitData{this, nsCString(aName)});
+
+    // ThreadFunc is responsible for setting mThread
+    if (!(thread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, initData.get(),
+                                   PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                                   PR_JOINABLE_THREAD, mStackSize))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // The created thread now owns initData, so release our ownership of it.
+    Unused << initData.release();
+
+    // The thread has successfully started, so we can mark it as requiring
+    // shutdown & add it to the thread list.
+    mShutdownRequired = true;
+    tm.ThreadList().insertBack(this);
+  }
 
   // Note: we set these both here and inside ThreadFunc, to what should be
   // the same value. This is because calls within ThreadFunc need these values
@@ -649,10 +643,21 @@ nsresult nsThread::Init(const nsACString& aName) {
 
 nsresult nsThread::InitCurrentThread() {
   mThread = PR_GetCurrentThread();
+
+  nsThreadManager& tm = nsThreadManager::get();
+  {
+    OffTheBooksMutexAutoLock lock(tm.ThreadListMutex());
+    // NOTE: We don't check AllowNewXPCOMThreads here, as threads initialized
+    // this way do not need shutdown, so are OK to create after nsThreadManager
+    // shutdown. In addition, the main thread is initialized this way, which
+    // happens before AllowNewXPCOMThreads begins to return true.
+    tm.ThreadList().insertBack(this);
+  }
+
   SetupCurrentThreadForChaosMode();
   InitCommon();
 
-  nsThreadManager::get().RegisterCurrentThread(*this);
+  tm.RegisterCurrentThread(*this);
   return NS_OK;
 }
 
@@ -818,8 +823,6 @@ nsThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
     return NS_ERROR_UNEXPECTED;
   }
   MOZ_ASSERT(mThread);
-
-  MaybeRemoveFromThreadList();
 
   RefPtr<nsThread> currentThread = nsThreadManager::get().GetCurrentThread();
 
