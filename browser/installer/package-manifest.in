@@ -452,5 +452,5 @@ bin/libfreebl_64int_3.so
 
 #ifdef MOZ_ARTIFACT_BUILDS
 ; Test workers unpack artifact build packages and need `jogfile.json`
-@BINPATH@/jogfile.json
+@RESPATH@/jogfile.json
 #endif
