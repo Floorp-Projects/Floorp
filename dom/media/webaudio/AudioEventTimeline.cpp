@@ -105,6 +105,22 @@ AudioTimelineEvent::~AudioTimelineEvent() {
   }
 }
 
+template <class TimeType>
+void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
+  while (mEvents.Length() > 1 && aTime > mEvents[1].Time<TimeType>()) {
+    if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
+      mSetTargetStartValue = GetValuesAtTimeHelperInternal(
+          mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
+    }
+
+    MOZ_ASSERT(!mEvents[0].mTrack,
+               "AudioParam tracks should never be destroyed on the real-time "
+               "thread.");
+    JS::AutoSuppressGCAnalysis suppress;
+    mEvents.RemoveElementAt(0);
+  }
+}
+
 // This method computes the AudioParam value at a given time based on the event
 // timeline
 template <class TimeType>

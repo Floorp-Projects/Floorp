@@ -334,20 +334,7 @@ class AudioEventTimeline {
   uint32_t GetEventCount() const { return mEvents.Length(); }
 
   template <class TimeType>
-  void CleanupEventsOlderThan(TimeType aTime) {
-    while (mEvents.Length() > 1 && aTime > mEvents[1].Time<TimeType>()) {
-      if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
-        mSetTargetStartValue = GetValuesAtTimeHelperInternal(
-            mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
-      }
-
-      MOZ_ASSERT(!mEvents[0].mTrack,
-                 "AudioParam tracks should never be destroyed on the real-time "
-                 "thread.");
-      JS::AutoSuppressGCAnalysis suppress;
-      mEvents.RemoveElementAt(0);
-    }
-  }
+  void CleanupEventsOlderThan(TimeType aTime);
 
  private:
   template <class TimeType>
