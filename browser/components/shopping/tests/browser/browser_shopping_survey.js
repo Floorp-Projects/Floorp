@@ -3,6 +3,10 @@
 
 "use strict";
 
+const currentTime = Date.now() / 1000;
+const time25HrsAgo = currentTime - 25 * 60 * 60;
+const time1HrAgo = currentTime - 1 * 60 * 60;
+
 add_task(async function test_setup() {
   await BrowserTestUtils.withNewTab(
     {
@@ -30,6 +34,7 @@ add_task(async function test_showSurvey_Enabled() {
       ["browser.shopping.experience2023.survey.enabled", true],
       ["browser.shopping.experience2023.survey.hasSeen", false],
       ["browser.shopping.experience2023.survey.pdpVisits", 5],
+      ["browser.shopping.experience2023.survey.optedInTime", time25HrsAgo],
     ],
   });
   await BrowserTestUtils.withNewTab(
@@ -121,6 +126,7 @@ add_task(async function test_showSurvey_Disabled() {
       ["browser.shopping.experience2023.survey.enabled", false],
       ["browser.shopping.experience2023.survey.hasSeen", false],
       ["browser.shopping.experience2023.survey.pdpVisits", 5],
+      ["browser.shopping.experience2023.survey.optedInTime", time25HrsAgo],
     ],
   });
   await BrowserTestUtils.withNewTab(
@@ -167,6 +173,62 @@ add_task(async function test_showSurvey_Disabled() {
           ok(
             !childActor.showMicroSurvey,
             "Show Survey targeting conditions are not met"
+          );
+          ok(
+            content.document.getElementById("multi-stage-message-root").hidden,
+            "Survey Message container is hidden"
+          );
+
+          childActor.resetChildStates();
+        }
+      );
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Test to check survey display logic respects 24 hours after Opt-in rule
+ */
+add_task(async function test_24_hr_since_optin_rule() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.optedIn", 1],
+      ["browser.shopping.experience2023.survey.enabled", true],
+      ["browser.shopping.experience2023.survey.hasSeen", false],
+      ["browser.shopping.experience2023.survey.pdpVisits", 5],
+      ["browser.shopping.experience2023.survey.optedInTime", time1HrAgo],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+          await shoppingContainer.updateComplete;
+
+          let childActor = content.windowGlobalChild.getExistingActor(
+            "AboutWelcomeShopping"
+          );
+
+          let surveyScreen = content.document.querySelector(
+            "shopping-container .screen.SHOPPING_MICROSURVEY_SCREEN_1"
+          );
+
+          ok(!surveyScreen, "Survey screen is not rendered");
+          ok(
+            !childActor.showMicroSurvey,
+            "Show Survey 24 hours after opt in conditions are not met"
           );
           ok(
             content.document.getElementById("multi-stage-message-root").hidden,
