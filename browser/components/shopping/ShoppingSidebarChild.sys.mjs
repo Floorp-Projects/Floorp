@@ -401,6 +401,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "surfacePoweredByFakespotLinkClicked":
         Glean.shopping.surfacePoweredByFakespotLinkClicked.record();
         break;
+      case "staleAnalysisShown":
+        Glean.shopping.surfaceStaleAnalysisShown.record();
+        break;
     }
   }
 }
