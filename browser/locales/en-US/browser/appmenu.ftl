@@ -105,7 +105,7 @@ appmenu-remote-tabs-unverified = Your account needs to be verified.
 appmenuitem-fxa-toolbar-sync-now2 = Sync now
 appmenuitem-fxa-sign-in = Sign in to { -brand-product-name }
 appmenuitem-fxa-manage-account = Manage account
-appmenu-fxa-header2 = { -fxaccount-brand-name(capitalization: "sentence") }
+appmenu-account-header = Account
 # Variables
 # $time (string) - Localized relative time since last sync (e.g. 1 second ago,
 # 3 hours ago, etc.)
