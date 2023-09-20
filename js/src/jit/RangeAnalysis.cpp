@@ -1963,7 +1963,8 @@ bool RangeAnalysis::analyzeLoop(MBasicBlock* header) {
     if (!str) {
       return false;
     }
-    JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s", str.get());
+    JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s",
+            str.get());
   }
 #endif
 
