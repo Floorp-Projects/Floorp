@@ -79,7 +79,7 @@ async function assertTagsVisibility(libraryDocument, expectedVisible) {
 
   // Check the cell.
   const tree = libraryDocument.getElementById("placeContent");
-  const expectedCellText = expectedVisible ? TEST_TAG : "";
+  const expectedCellText = expectedVisible ? TEST_TAG : null;
   Assert.equal(
     tree.view.getCellText(0, tree.columns.placesContentTags),
     expectedCellText
