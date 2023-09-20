@@ -639,6 +639,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
       mozilla::TaskCategory aCategory) const = 0;
 
   void SaveStorageAccessPermissionGranted();
+  void SaveStorageAccessPermissionRevoked();
 
   bool UsingStorageAccess();
 
