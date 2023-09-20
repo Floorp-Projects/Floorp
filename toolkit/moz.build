@@ -30,6 +30,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         if CONFIG["MOZ_NOTIFICATION_SERVER"]:
             DIRS += ["mozapps/notificationserver"]
 
+    if CONFIG["CC_TYPE"] == "clang-cl" or CONFIG["MOZ_ARTIFACT_BUILDS"]:
         # Default Browser Agent relies on Windows toast notifications, so should
         # also not be built with mingw.
         if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
