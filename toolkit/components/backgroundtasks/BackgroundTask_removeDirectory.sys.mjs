@@ -207,7 +207,10 @@ async function cleanupOtherDirectories(
   while (entries.hasMoreElements()) {
     let entry = entries.nextFile;
 
-    if (!entry.leafName.endsWith(otherFoldersSuffix)) {
+    if (
+      otherFoldersSuffix !== "*" &&
+      !entry.leafName.endsWith(otherFoldersSuffix)
+    ) {
       continue;
     }
 
@@ -268,6 +271,7 @@ async function cleanupOtherDirectories(
 // otherFoldersSuffix - [optional] The suffix of directories that should be removed
 //                      When not empty, this task will also attempt to remove all directories in
 //                      the parent dir that end with this suffix
+//                      As a special command, "*" will remove all subdirectories.
 // testSleep - [optional] A test-only argument to sleep for a given milliseconds before removal.
 //             This exists to test whether a long-running task can survive.
 // metricsId - [optional] The identifier for Glean metrics, in PascalCase.
