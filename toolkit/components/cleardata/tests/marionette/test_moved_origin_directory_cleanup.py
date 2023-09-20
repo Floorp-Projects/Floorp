@@ -22,6 +22,9 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
             Path(self.marionette.profile_path) / "storage" / "to-be-removed" / "foo"
         )
         self.moved_origin_directory.mkdir(parents=True, exist_ok=True)
+        self.to_be_removed_directory = (
+            Path(self.marionette.profile_path) / "storage" / "to-be-removed"
+        )
 
         # Add a cookie to get a principal to be cleaned up
         with self.marionette.using_context("chrome"):
@@ -102,6 +105,10 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
         Wait(self.marionette).until(
             lambda _: not self.moved_origin_directory.exists(),
             message="to-be-removed subdirectory must disappear",
+        )
+        self.assertTrue(
+            self.to_be_removed_directory.exists(),
+            "to-be-removed parent directory should still be alive",
         )
 
     def test_ensure_no_cleanup_when_disabled(self):
