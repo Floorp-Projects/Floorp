@@ -250,8 +250,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
              aSample->mDuration.ToString().get(),
              mLib->av_get_sample_fmt_name(mFrame->format));
 
-  uint32_t numChannels = mCodecContext->channels;
-  uint32_t samplingRate = mCodecContext->sample_rate;
+  uint32_t numChannels = mAudioInfo.mChannels;
+  uint32_t samplingRate = mAudioInfo.mRate;
 
   AlignedAudioBuffer audio =
       CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples);
