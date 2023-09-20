@@ -24,9 +24,7 @@
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Attributes.h"
-#include "mozilla/ClearOnShutdown.h"  // RunOnShutdown
-#include "mozilla/EventQueue.h"       // EventQueuePriority
-#include "mozilla/LinkedList.h"
+#include "mozilla/EventQueue.h"  // EventQueuePriority
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -43,38 +41,12 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class AsyncScriptCompileTask final
-    : public Task,
-      public LinkedListElement<AsyncScriptCompileTask> {
-  static LinkedList<AsyncScriptCompileTask> sOngoingTaskList;
-  static bool sIsShutdownRegistered;
-
-  static void RegisterTask(AsyncScriptCompileTask* aTask) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!sIsShutdownRegistered) {
-      sIsShutdownRegistered = true;
-
-      RunOnShutdown([] {
-        fprintf(stderr, "@@@@ AsyncScriptCompileTask RunOnShutdown\n");
-        for (auto* task = sOngoingTaskList.getFirst(); task;
-             task = task->getNext()) {
-          task->Cancel();
-        }
-      });
-    }
-
-    sOngoingTaskList.insertBack(aTask);
-  }
-
+class AsyncScriptCompileTask final : public Task {
  public:
   explicit AsyncScriptCompileTask(JS::SourceText<Utf8Unit>&& aSrcBuf)
       : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
         mOptions(JS::OwningCompileOptions::ForFrontendContext()),
-        mSrcBuf(std::move(aSrcBuf)),
-        mMutex("AsyncScriptCompileTask") {
-    RegisterTask(this);
-  }
+        mSrcBuf(std::move(aSrcBuf)) {}
 
   ~AsyncScriptCompileTask() {
     if (mFrontendContext) {
@@ -113,28 +85,8 @@ class AsyncScriptCompileTask final
                                                 mSrcBuf, compileStorage);
   }
 
-  // Cancel the task.
-  // If the task is already running, this waits for the task to finish.
-  void Cancel() {
-    fprintf(stderr, "@@@@ AsyncScriptCompileTask Cancel\n");
-
-    MOZ_ASSERT(NS_IsMainThread());
-
-    MutexAutoLock lock(mMutex);
-
-    mIsCancelled = true;
-
-    mStencil = nullptr;
-  }
-
  public:
   bool Run() override {
-    MutexAutoLock lock(mMutex);
-
-    if (mIsCancelled) {
-      return true;
-    }
-
     Compile();
     return true;
   }
@@ -181,16 +133,7 @@ class AsyncScriptCompileTask final
   RefPtr<JS::Stencil> mStencil;
 
   JS::SourceText<Utf8Unit> mSrcBuf;
-
-  // This mutex is locked during running the task or cancelling task.
-  mozilla::Mutex mMutex;
-
-  bool mIsCancelled = false;
 };
-
-/* static */ LinkedList<AsyncScriptCompileTask>
-    AsyncScriptCompileTask::sOngoingTaskList;
-/* static */ bool AsyncScriptCompileTask::sIsShutdownRegistered = false;
 
 class AsyncScriptCompiler;
 
