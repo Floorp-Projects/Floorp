@@ -521,6 +521,7 @@ class alignas(uintptr_t) JitScript final
   }
 
 #ifdef DEBUG
+  bool hasPurgedStubs() const { return hasPurgedStubs_; }
   bool hasFailedICHash() const { return failedICHash_.isSome(); }
   mozilla::HashNumber getFailedICHash() { return failedICHash_.extract(); }
   void setFailedICHash(mozilla::HashNumber hash) {
