@@ -198,17 +198,6 @@ function test() {
   isnot(languages1, languages2.wrappedJSObject,
         "Must have distinct arrays no matter how we slice it");
 
-  // Check that DataTransfer's .types has the hack to alias contains()
-  // to includes().
-  var dataTransfer = new win.DataTransfer();
-  is(dataTransfer.types.contains, dataTransfer.types.includes,
-     "Should have contains() set up as an alias to includes()");
-  // Waive Xrays on the dataTransfer itself, since the .types we get is
-  // different over Xrays vs not.
-  is(dataTransfer.wrappedJSObject.types.contains, undefined,
-     "Underlying object should not have contains() set up as an alias to " +
-     "includes()");
-
   // Check that deleters work correctly in the [OverrideBuiltins] case.
   elem = win.document.documentElement;
   var dataset = elem.dataset;

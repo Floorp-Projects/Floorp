@@ -5719,7 +5719,6 @@ class IDLAttribute(IDLInterfaceMember):
             or identifier == "SetterNeedsSubjectPrincipal"
             or identifier == "GetterNeedsSubjectPrincipal"
             or identifier == "NeedsCallerType"
-            or identifier == "ReturnValueNeedsContainsHack"
             or identifier == "BinaryName"
             or identifier == "NonEnumerable"
             or identifier == "BindingTemplate"
