@@ -171,6 +171,12 @@ class ReferrerInfo : public nsIReferrerInfo {
   static bool IsCrossOriginRequest(nsIHttpChannel* aChannel);
 
   /**
+   * Returns true if aReferrer's origin and aChannel's URI are cross-origin.
+   */
+  static bool IsReferrerCrossOrigin(nsIHttpChannel* aChannel,
+                                    nsIURI* aReferrer);
+
+  /**
    * Returns true if the given channel is cross-site request.
    */
   static bool IsCrossSiteRequest(nsIHttpChannel* aChannel);
@@ -328,7 +334,8 @@ class ReferrerInfo : public nsIReferrerInfo {
    * This function is called when we already made sure a nonempty referrer is
    * allowed to send.
    */
-  TrimmingPolicy ComputeTrimmingPolicy(nsIHttpChannel* aChannel) const;
+  TrimmingPolicy ComputeTrimmingPolicy(nsIHttpChannel* aChannel,
+                                       nsIURI* aReferrer) const;
 
   // HttpBaseChannel could access IsInitialized() and ComputeReferrer();
   friend class mozilla::net::HttpBaseChannel;
