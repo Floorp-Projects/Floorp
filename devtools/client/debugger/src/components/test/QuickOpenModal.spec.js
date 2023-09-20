@@ -36,7 +36,7 @@ function generateModal(propOverrides, renderType = "shallow") {
     searchType: "sources",
     displayedSources: [],
     blackBoxRanges: {},
-    tabUrls: [],
+    openedTabUrls: [],
     selectSpecificLocation: jest.fn(),
     setQuickOpenQuery: jest.fn(),
     highlightLineRange: jest.fn(),
@@ -140,7 +140,7 @@ describe("QuickOpenModal", () => {
             displayURL: getDisplayURL("mozilla.com"),
           },
         ],
-        tabUrls: ["mozilla.com"],
+        openedTabUrls: ["mozilla.com"],
       },
       "shallow"
     );

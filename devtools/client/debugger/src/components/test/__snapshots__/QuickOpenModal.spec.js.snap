@@ -21,6 +21,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query="@"
     searchType="functions"
     selectSpecificLocation={[MockFunction]}
@@ -33,7 +34,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -197,6 +197,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query="#"
     searchType="variables"
     selectSpecificLocation={[MockFunction]}
@@ -209,7 +210,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -357,6 +357,7 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
@@ -368,7 +369,6 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -559,6 +559,7 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
   enabled={true}
   highlightLineRange={[MockFunction]}
   isOriginal={false}
+  openedTabUrls={Array []}
   query=":abc"
   searchType="goto"
   selectSpecificLocation={[MockFunction]}
@@ -571,7 +572,6 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
     }
   }
   symbolsLoading={false}
-  tabUrls={Array []}
   thread="FakeThread"
   toggleShortcutsModal={[MockFunction]}
 >
@@ -723,6 +723,7 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query="dasdasdas"
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
@@ -734,7 +735,6 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -883,6 +883,7 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=":2222"
     searchType="goto"
     selectSpecificLocation={[MockFunction]}
@@ -894,7 +895,6 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -1047,6 +1047,7 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=""
     searchType="other"
     selectSpecificLocation={[MockFunction]}
@@ -1058,7 +1059,6 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -1222,6 +1222,7 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=":22k22"
     searchType="goto"
     selectSpecificLocation={[MockFunction]}
@@ -1233,7 +1234,6 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -1386,6 +1386,7 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
     enabled={true}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query="test"
     searchType="other"
     selectSpecificLocation={[MockFunction]}
@@ -1397,7 +1398,6 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   >
@@ -1580,6 +1580,7 @@ exports[`QuickOpenModal updateResults on enable 1`] = `
     enabled={false}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
@@ -1591,7 +1592,6 @@ exports[`QuickOpenModal updateResults on enable 1`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   />
@@ -1620,6 +1620,7 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
     enabled={false}
     highlightLineRange={[MockFunction]}
     isOriginal={false}
+    openedTabUrls={Array []}
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
@@ -1631,7 +1632,6 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
       }
     }
     symbolsLoading={false}
-    tabUrls={Array []}
     thread="FakeThread"
     toggleShortcutsModal={[MockFunction]}
   />
