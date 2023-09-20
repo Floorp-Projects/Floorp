@@ -19,7 +19,7 @@ fn main() {
 
     let mixer = Mixer::new(&input_channels, &output_channels);
 
-    mixer.mix(&input_buffer.as_slice(), &mut output_buffer.as_mut_slice());
+    mixer.mix(input_buffer.as_slice(), output_buffer.as_mut_slice());
     println!("{:?} is mixed to {:?}", input_buffer, output_buffer);
 
     // i16
@@ -45,6 +45,6 @@ fn main() {
 
     let mixer = Mixer::new(&input_channels, &output_channels);
 
-    mixer.mix(&input_buffer.as_slice(), &mut output_buffer.as_mut_slice());
+    mixer.mix(input_buffer.as_slice(), output_buffer.as_mut_slice());
     println!("{:?} is mixed to {:?}", input_buffer, output_buffer);
 }

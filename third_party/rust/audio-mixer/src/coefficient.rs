@@ -383,10 +383,10 @@ where
     ) -> Vec<Vec<f64>> {
         let mut matrix = Vec::with_capacity(output_channels.len());
         for output_channel in output_channels {
-            let output_channel_index = output_channel.clone().number();
+            let output_channel_index = (*output_channel).number();
             let mut coefficients = Vec::with_capacity(input_channels.len());
             for input_channel in input_channels {
-                let input_channel_index = input_channel.clone().number();
+                let input_channel_index = (*input_channel).number();
                 coefficients.push(source[output_channel_index][input_channel_index]);
             }
             matrix.push(coefficients);
@@ -420,6 +420,8 @@ pub trait MixingCoefficient {
     // Precheck if overflow occurs when converting value from Self::Coef type to Self type.
     fn would_overflow_from_coefficient_value(coefficient: &[Vec<f64>]) -> Option<bool>;
 
+    // Convert f32 (Self) -> f32 (Self::Coef) or i16 (Self) -> i32 (Self::Coef)
+    #[allow(clippy::wrong_self_convention)]
     fn to_coefficient_value(value: Self) -> Self::Coef;
     fn from_coefficient_value(value: Self::Coef, would_overflow: Option<bool>) -> Self;
 }

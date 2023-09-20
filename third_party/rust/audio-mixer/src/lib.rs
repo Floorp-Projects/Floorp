@@ -72,10 +72,10 @@ where
     }
 
     pub fn input_channels(&self) -> &[Channel] {
-        &self.coefficient.input_channels()
+        self.coefficient.input_channels()
     }
 
     pub fn output_channels(&self) -> &[Channel] {
-        &self.coefficient.output_channels()
+        self.coefficient.output_channels()
     }
 }

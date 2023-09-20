@@ -633,6 +633,11 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "audio-mixer is a Mozilla-developed package."
 
+[[audits.audio-mixer]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.1.3"
+
 [[audits.authenticator]]
 who = "John M. Schanck <jschanck@mozilla.com>"
 criteria = "safe-to-deploy"
