@@ -457,12 +457,12 @@ UniqueChars LAllocation::toString() const {
             break;
           case MIRType::String:
             // If a JSContext is a available, output the actual string
-            if (JSContext* maybeCx = TlsContext.get()) {
-              Sprinter spr(maybeCx);
+            if (JSContext* cx = TlsContext.get()) {
+              Sprinter spr(cx);
               if (!spr.init()) {
                 oomUnsafe.crash("LAllocation::toString()");
               }
-              spr.putString(c->toString());
+              spr.putString(cx, c->toString());
               buf = spr.release();
             } else {
               buf = JS_smprintf("string");

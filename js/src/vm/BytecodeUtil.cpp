@@ -1288,7 +1288,7 @@ static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
       ReportOutOfMemory(cx);
       return false;
     }
-    sp->putString(str);
+    sp->putString(cx, str);
     if (i > 1) {
       sp->put(", ");
     }
@@ -2177,7 +2177,7 @@ bool ExpressionDecompiler::write(JSString* str) {
   if (str == cx->names().dot_newTarget_) {
     return write("new.target");
   }
-  sprinter.putString(str);
+  sprinter.putString(cx, str);
   return true;
 }
 
