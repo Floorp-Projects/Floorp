@@ -7,7 +7,14 @@ import atexit
 import os
 import sys
 
-from run_operations import get_last_line, run_git, run_hg, update_resume_state
+from filter_git_changes import filter_git_changes
+from run_operations import (
+    get_last_line,
+    run_git,
+    run_hg,
+    run_shell,
+    update_resume_state,
+)
 from save_patch_stack import save_patch_stack
 from vendor_and_commit import vendor_and_commit
 
@@ -246,6 +253,31 @@ if __name__ == "__main__":
             args.log_path,
             os.path.join(args.tmp_path, "cherry-pick-commit_msg.txt"),
         )
+
+        # get the files changed from the newly vendored cherry-pick
+        # commit in mercurial
+        cmd = "hg status --change tip --exclude '**/README.*'"
+        stdout_lines = run_shell(cmd)  # run_shell to allow file wildcard
+        print("Mercurial changes:\n{}".format(stdout_lines))
+        hg_file_change_cnt = len(stdout_lines)
+
+        # get the files changed from the original cherry-picked patch in
+        # our github repo (moz-libwebrtc)
+        git_paths_changed = filter_git_changes(args.repo_path, args.commit_sha, None)
+        print("github changes:\n{}".format(git_paths_changed))
+        git_file_change_cnt = len(git_paths_changed)
+
+        error_help = (
+            "Vendoring the cherry-pick of commit {} has failed due to mismatched\n"
+            "changed file counts between mercurial ({}) and git ({}).\n"
+            "This may be because the mozilla patch-stack was not verified after\n"
+            "running restore_patch_stack.py.  After reconciling the changes in\n"
+            "the newly committed mercurial patch, please re-run {} to complete\n"
+            "the cherry-pick processing."
+        ).format(args.commit_sha, hg_file_change_cnt, git_file_change_cnt, script_name)
+        if hg_file_change_cnt != git_file_change_cnt:
+            sys.exit(1)
+        error_help = None
 
     if len(resume_state) == 0 or resume_state == "resume4":
         resume_state = ""
