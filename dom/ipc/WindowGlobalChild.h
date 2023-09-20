@@ -201,8 +201,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
       dom::SessionStoreRestoreData* aData,
       RestoreTabContentResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvNotifyPermissionChange(const nsCString& aType,
-                                                     uint32_t aPermission);
+  mozilla::ipc::IPCResult RecvNotifyPermissionChange(const nsCString& aType);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
