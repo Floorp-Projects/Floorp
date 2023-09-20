@@ -3352,10 +3352,14 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
   if (!readVarU32(numElements)) {
     return false;
   }
-  // Don't resize `values` so as to hold `numElements`.  If `numElements` is
-  // absurdly large, this will will take a large amount of time and memory,
-  // which will be wasted because `popWithType` in the loop below will soon
-  // start failing anyway.
+
+  if (*numElements > MaxArrayNewFixedElements) {
+    return fail("too many array.new_fixed elements");
+  }
+
+  if (!values->reserve(*numElements)) {
+    return false;
+  }
 
   ValType widenedElementType = arrayType.elementType_.widenToValType();
   for (uint32_t i = 0; i < *numElements; i++) {
@@ -3363,9 +3367,7 @@ inline bool OpIter<Policy>::readArrayNewFixed(uint32_t* typeIndex,
     if (!popWithType(widenedElementType, &v)) {
       return false;
     }
-    if (!values->append(v)) {
-      return false;
-    }
+    values->infallibleAppend(v);
   }
 
   return push(RefType::fromTypeDef(&typeDef, false));

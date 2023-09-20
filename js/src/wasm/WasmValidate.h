@@ -242,11 +242,13 @@ class NothingVector {
   Nothing unused_;
 
  public:
+  bool reserve(size_t size) { return true; }
   bool resize(size_t length) { return true; }
   Nothing& operator[](size_t) { return unused_; }
   Nothing& back() { return unused_; }
   size_t length() const { return 0; }
   bool append(Nothing& nothing) { return true; }
+  void infallibleAppend(Nothing& nothing) {}
 };
 
 struct ValidatingPolicy {
