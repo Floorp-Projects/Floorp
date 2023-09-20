@@ -70,3 +70,27 @@ button:focus-visible {
 button:disabled {
   opacity: 0.4;
 }
+
+.submenu-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.submenu-icon {
+  display: inline-block;
+  background-image: url("chrome://global/skin/icons/arrow-right.svg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  fill: currentColor;
+  width: var(--size-item-small);
+  height: var(--size-item-small);
+  flex: 1 1 auto;
+
+  &:dir(rtl) {
+    background-image: url("chrome://global/skin/icons/arrow-left.svg");
+  }
+}
+
+.submenu-label {
+  flex: 90% 1 0;
+}
