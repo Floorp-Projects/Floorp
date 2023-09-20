@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIU2FTokenManager.idl"
 
 typedef long COSEAlgorithmIdentifier;
 
@@ -179,11 +178,15 @@ interface nsICtapSignResult : nsISupports {
 //      3) return results to the content process.
 //
 [scriptable, uuid(c0744f48-ad64-11ed-b515-cf5149f4d6a6)]
-interface nsIWebAuthnController : nsIU2FTokenManager
+interface nsIWebAuthnController : nsISupports
 {
     // Prompt callbacks
     void pinCallback(in uint64_t aTransactionId, in ACString aPin);
     void signatureSelectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
+    void resumeRegister(in uint64_t aTransactionID, in bool aForceNoneAttestation);
+
+    // Cancel the transaction with the given ID.
+    void cancel(in uint64_t aTransactionID);
 
     // Authenticator callbacks
     [noscript] void sendPromptNotificationPreformatted(in uint64_t aTransactionId, in ACString aJSON);
