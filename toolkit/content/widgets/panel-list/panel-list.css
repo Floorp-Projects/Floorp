@@ -23,8 +23,11 @@
   white-space: nowrap;
   cursor: default;
   overflow-y: auto;
-  max-height: 100%;
   box-sizing: border-box;
+}
+
+:host(:not([slot=submenu])) {
+  max-height: 100%;
 }
 
 :host([stay-open]) {
