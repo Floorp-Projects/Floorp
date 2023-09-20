@@ -7,7 +7,7 @@ import atexit
 import os
 import sys
 
-from run_operations import get_last_line, run_git, update_resume_state
+from run_operations import get_last_line, run_git, run_hg, update_resume_state
 from save_patch_stack import save_patch_stack
 from vendor_and_commit import vendor_and_commit
 
@@ -167,6 +167,15 @@ if __name__ == "__main__":
         help='reviewers for cherry-picked patch (like "ng,mjf")',
     )
     args = parser.parse_args()
+
+    # make sure the mercurial repo is clean before beginning
+    error_help = (
+        "There are modified or untracked files in the mercurial repo.\n"
+        "Please start with a clean repo before running {}"
+    ).format(script_name)
+    stdout_lines = run_hg("hg status")
+    if len(stdout_lines) != 0:
+        sys.exit(1)
 
     # make sure the github repo exists
     error_help = (
