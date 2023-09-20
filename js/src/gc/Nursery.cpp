@@ -931,7 +931,11 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
 
   printProfileDurations(profileDurations_, sprinter);
 
-  fputs(sprinter.string(), stats().profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), stats().profileFile());
 }
 
 void js::Nursery::printProfileHeader() {
@@ -958,7 +962,11 @@ void js::Nursery::printProfileHeader() {
     return;
   }
 
-  fputs(sprinter.string(), stats().profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), stats().profileFile());
 }
 
 // static
@@ -1026,7 +1034,11 @@ void js::Nursery::printTotalProfileTimes() {
     return;
   }
 
-  fputs(sprinter.string(), stats().profileFile());
+  JS::UniqueChars str = sprinter.release();
+  if (!str) {
+    return;
+  }
+  fputs(str.get(), stats().profileFile());
 }
 
 void js::Nursery::maybeClearProfileDurations() {
