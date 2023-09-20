@@ -30,6 +30,7 @@ namespace mozilla {
 
 using media::DecodeSupport;
 using media::DecodeSupportSet;
+using media::MCSInfo;
 using media::MediaCodec;
 
 bool AppleDecoderModule::sInitialized = false;
@@ -111,20 +112,32 @@ DecodeSupportSet AppleDecoderModule::Supports(
   if (trackInfo.IsAudio()) {
     return SupportsMimeType(trackInfo.mMimeType, aDiagnostics);
   }
-  bool checkSupport = trackInfo.GetAsVideoInfo() &&
-                      IsVideoSupported(*trackInfo.GetAsVideoInfo());
-  if (checkSupport) {
-    if (trackInfo.mMimeType == "video/vp9" &&
-        CanCreateHWDecoder(MediaCodec::VP9)) {
-      return DecodeSupport::HardwareDecode;
-    }
-    if (trackInfo.mMimeType == "video/avc" &&
-        CanCreateHWDecoder(MediaCodec::H264)) {
-      return DecodeSupport::HardwareDecode;
-    }
-    return DecodeSupport::SoftwareDecode;
+  const bool checkSupport = trackInfo.GetAsVideoInfo() &&
+                            IsVideoSupported(*trackInfo.GetAsVideoInfo());
+  DecodeSupportSet dss{};
+  if (!checkSupport) {
+    return dss;
   }
-  return DecodeSupportSet{};
+  const MediaCodec codec =
+      MCSInfo::GetMediaCodecFromMimeType(trackInfo.mMimeType);
+  if (CanCreateHWDecoder(codec)) {
+    dss += DecodeSupport::HardwareDecode;
+  }
+  switch (codec) {
+    case MediaCodec::VP8:
+      [[fallthrough]];
+    case MediaCodec::VP9:
+      if (StaticPrefs::media_ffvpx_enabled() &&
+          StaticPrefs::media_rdd_vpx_enabled() &&
+          StaticPrefs::media_utility_ffvpx_enabled()) {
+        dss += DecodeSupport::SoftwareDecode;
+      }
+      break;
+    default:
+      dss += DecodeSupport::SoftwareDecode;
+      break;
+  }
+  return dss;
 }
 
 bool AppleDecoderModule::IsVideoSupported(
