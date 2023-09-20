@@ -255,6 +255,7 @@ class SyncedTabsInView extends ViewPage {
         where = "tab";
       }
       currentWindow.openTrustedLinkIn(event.originalTarget.url, where);
+      Services.telemetry.recordEvent("firefoxview_next", "synced_tabs", "tabs");
     }
   }
 

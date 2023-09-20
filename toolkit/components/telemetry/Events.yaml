@@ -4073,6 +4073,50 @@ firefoxview_next:
       - 1852036
     expiry_version: "never"
     release_channel_collection: opt-out
+  fxa_continue:
+    objects: ["sync"]
+    description: >
+      Recorded when button to sign in or sign up is clicked
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1833671
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  fxa_mobile:
+    objects: ["sync"]
+    description: >
+      Recorded when the 'Try Firefox for mobile' button is clicked
+    extra_keys:
+      has_devices: True if user has other devices signed into sync
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1833671
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  synced_tabs:
+    objects: ["tabs"]
+    description: >
+      Recorded when a synced tab is clicked
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1833671
+    expiry_version: "never"
+    release_channel_collection: opt-out
 
 search:
   engine:
