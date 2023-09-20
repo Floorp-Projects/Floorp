@@ -1178,3 +1178,9 @@ async function formAutofillResult(formId) {
     );
   });
 }
+
+function sendFakeAutocompleteEvent(element) {
+  const acEvent = document.createEvent("HTMLEvents");
+  acEvent.initEvent("DOMAutoComplete", true, false);
+  element.dispatchEvent(acEvent);
+}
