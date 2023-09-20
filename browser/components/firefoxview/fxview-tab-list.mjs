@@ -6,7 +6,6 @@ import {
   html,
   ifDefined,
   styleMap,
-  classMap,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -464,10 +463,7 @@ export class FxviewTabRow extends MozLitElement {
       />
       <a
         .href=${ifDefined(this.url)}
-        class=${classMap({
-          "fxview-tab-row-main": true,
-          "fxview-tab-row-header": !this.url,
-        })}
+        class="fxview-tab-row-main"
         id="fxview-tab-row-main"
         tabindex=${this.active &&
         this.currentActiveElementId === "fxview-tab-row-main"

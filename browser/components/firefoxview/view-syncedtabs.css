@@ -5,8 +5,6 @@
  @import url("chrome://global/skin/in-content/common.css");
 
 .icon {
-  vertical-align: bottom;
-  margin-inline-end: 5px;
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -33,8 +31,28 @@ h2 {
   align-items: center;
 }
 
+h3.device-header {
+  display: grid;
+  align-items: center;
+  cursor: inherit;
+  font-weight: 600;
+  grid-template-columns: min-content 1fr;
+  gap: 0 16px;
+  margin: 0;
+}
+
+h3.device-header:not([slot=header]) {
+  margin-block: 0.7em;
+  margin-inline: 0.5em 0;
+  font-size: 1em;
+}
+
+h3.device-header:not([slot=header]):not(:first-child) {
+  margin-block-start: 1.6em;
+}
+
 .notabs {
-  margin-top: 15px;
+  margin-block-start: 1em;
   color: var(--fxview-text-secondary-color);
 }
 
