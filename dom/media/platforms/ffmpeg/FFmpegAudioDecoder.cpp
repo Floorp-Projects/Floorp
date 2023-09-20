@@ -252,7 +252,12 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
 
   uint32_t numChannels = mCodecContext->channels;
   uint32_t samplingRate = mCodecContext->sample_rate;
-
+  if (!numChannels) {
+    numChannels = mAudioInfo.mChannels;
+  }
+  if (!samplingRate) {
+    samplingRate = mAudioInfo.mRate;
+  }
   AlignedAudioBuffer audio =
       CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples);
   if (!audio) {
