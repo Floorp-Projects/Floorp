@@ -588,6 +588,27 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `WHEN opening a app scheme uri without a host WITH package installed THEN try to redirect`() {
+        val context = createContext(urlToPackages = arrayOf(Triple("my.scheme", appPackage, "")), default = true, installedApps = listOf(appPackage))
+
+        var subject = AppLinksUseCases(context, { false })
+        var redirect = subject.interceptedAppLinkRedirect("my.scheme")
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+
+        subject = AppLinksUseCases(context, { true })
+        redirect = subject.interceptedAppLinkRedirect("my.scheme")
+        assertTrue(redirect.hasExternalApp())
+        assertFalse(redirect.hasFallback())
+        assertNull(redirect.marketplaceIntent)
+        assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+    }
+
+    @Test
     fun `Failed to parse uri should not cause a crash`() {
         val context = createContext()
         val subject = AppLinksUseCases(context, { true })
