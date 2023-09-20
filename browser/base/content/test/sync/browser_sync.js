@@ -624,7 +624,7 @@ function checkPanelHeader() {
   let fxaPanelView = PanelMultiView.getViewNode(document, "PanelUI-fxa");
   is(
     fxaPanelView.getAttribute("title"),
-    gSync.fluentStrings.formatValueSync("appmenu-fxa-header2"),
+    gSync.fluentStrings.formatValueSync("appmenu-account-header"),
     "Panel title is correct"
   );
 }

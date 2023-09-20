@@ -1066,7 +1066,7 @@ var gSync = {
     appMenuLabel.classList.add("subviewbutton-nav");
     fxaPanelView.setAttribute(
       "title",
-      this.fluentStrings.formatValueSync("appmenu-fxa-header2")
+      this.fluentStrings.formatValueSync("appmenu-account-header")
     );
     appMenuStatus.removeAttribute("tooltiptext");
   },
@@ -1702,7 +1702,7 @@ var gSync = {
     };
 
     let [title, body, button, checkbox] = await document.l10n.formatValues([
-      { id: "fxa-signout-dialog2-title" },
+      { id: "fxa-signout-dialog-title2" },
       { id: "fxa-signout-dialog-body" },
       { id: "fxa-signout-dialog2-button" },
       { id: "fxa-signout-dialog2-checkbox" },
