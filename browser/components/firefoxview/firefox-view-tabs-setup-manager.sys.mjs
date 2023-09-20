@@ -54,6 +54,10 @@ function openTabInWindow(window, url) {
   switchToTabHavingURI(url, true, {});
 }
 
+function isFirefoxViewNext(window) {
+  return window.location.pathname === "firefoxview-next";
+}
+
 export const TabsSetupFlowManager = new (class {
   constructor() {
     this.QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
@@ -617,7 +621,10 @@ export const TabsSetupFlowManager = new (class {
       );
     this.didFxaTabOpen = true;
     openTabInWindow(window, url, true);
-    Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);
+    const category = isFirefoxViewNext(window)
+      ? "firefoxview_next"
+      : "firefoxview";
+    Services.telemetry.recordEvent(category, "fxa_continue", "sync", null);
   }
 
   async openFxAPairDevice(window) {
@@ -626,7 +633,10 @@ export const TabsSetupFlowManager = new (class {
     });
     this.didFxaTabOpen = true;
     openTabInWindow(window, url, true);
-    Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
+    const category = isFirefoxViewNext(window)
+      ? "firefoxview_next"
+      : "firefoxview";
+    Services.telemetry.recordEvent(category, "fxa_mobile", "sync", null, {
       has_devices: this.secondaryDeviceConnected.toString(),
     });
   }

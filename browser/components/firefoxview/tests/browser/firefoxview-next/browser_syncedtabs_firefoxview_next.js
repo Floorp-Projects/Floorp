@@ -40,6 +40,29 @@ add_task(async function test_unconfigured_initial_state() {
       emptyState.getAttribute("headerlabel").includes("syncedtabs-signin"),
       "Signin message is shown"
     );
+
+    // Test telemetry for signing into Firefox Accounts.
+    await clearAllParentTelemetryEvents();
+    EventUtils.synthesizeMouseAtCenter(
+      emptyState.querySelector(`button[data-action="sign-in"]`),
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(
+      () =>
+        Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+        ).parent?.length >= 1,
+      "Waiting for fxa_continue firefoxview_next telemetry event.",
+      200,
+      100
+    );
+    TelemetryTestUtils.assertEvents(
+      [["firefoxview_next", "fxa_continue", "sync"]],
+      { category: "firefoxview_next" },
+      { clear: true, process: "parent" }
+    );
+    await BrowserTestUtils.removeTab(browser.ownerGlobal.gBrowser.selectedTab);
   });
   await tearDown(sandbox);
 });
@@ -73,6 +96,29 @@ add_task(async function test_signed_in() {
       emptyState.getAttribute("headerlabel").includes("syncedtabs-adddevice"),
       "Add device message is shown"
     );
+
+    // Test telemetry for adding a device.
+    await clearAllParentTelemetryEvents();
+    EventUtils.synthesizeMouseAtCenter(
+      emptyState.querySelector(`button[data-action="add-device"]`),
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(
+      () =>
+        Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+        ).parent?.length >= 1,
+      "Waiting for fxa_mobile firefoxview_next telemetry event.",
+      200,
+      100
+    );
+    TelemetryTestUtils.assertEvents(
+      [["firefoxview_next", "fxa_mobile", "sync"]],
+      { category: "firefoxview_next" },
+      { clear: true, process: "parent" }
+    );
+    await BrowserTestUtils.removeTab(browser.ownerGlobal.gBrowser.selectedTab);
   });
   await tearDown(sandbox);
 });
@@ -264,6 +310,24 @@ add_task(async function test_tabs() {
     is(tabRow2.length, 2, "Correct number of rows are dispayed.");
     ok(tabRow1[0].shadowRoot.textContent.includes, "The Guardian");
     ok(tabRow1[1].shadowRoot.textContent.includes, "The Times");
+
+    // Test telemetry for opening a tab.
+    await clearAllParentTelemetryEvents();
+    EventUtils.synthesizeMouseAtCenter(tabRow1[0], {}, browser.contentWindow);
+    await TestUtils.waitForCondition(
+      () =>
+        Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+        ).parent?.length >= 1,
+      "Waiting for synced_tabs firefoxview_next telemetry event.",
+      200,
+      100
+    );
+    TelemetryTestUtils.assertEvents(
+      [["firefoxview_next", "synced_tabs", "tabs"]],
+      { category: "firefoxview_next" },
+      { clear: true, process: "parent" }
+    );
   });
   await tearDown(sandbox);
 });
