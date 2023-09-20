@@ -5,6 +5,7 @@
 import argparse
 import atexit
 import os
+import shutil
 import sys
 
 from filter_git_changes import filter_git_changes
@@ -15,12 +16,11 @@ from run_operations import (
     run_shell,
     update_resume_state,
 )
-from save_patch_stack import save_patch_stack
 from vendor_and_commit import vendor_and_commit
 
 # This script cherry-picks an upstream commit with the appropriate
-# commit message, add the no-op commit tracking file for the when we
-# vendor the upstream commit later, and updates our saved patch-stack.
+# commit message, and adds the no-op commit tracking file for the when
+# we vendor the upstream commit later.
 
 error_help = None
 script_name = os.path.basename(__file__)
@@ -92,13 +92,17 @@ def write_noop_tracking_file(
     github_sha,
     bug_number,
 ):
-    noop_filename = os.path.join(
-        args.state_path, "{}.no-op-cherry-pick-msg".format(github_sha)
-    )
+    noop_basename = "{}.no-op-cherry-pick-msg".format(github_sha)
+    noop_filename = os.path.join(args.state_path, noop_basename)
     print("noop_filename: {}".format(noop_filename))
     with open(noop_filename, "w") as ofile:
         ofile.write("We cherry-picked this in bug {}".format(bug_number))
         ofile.write("\n")
+    shutil.copy(noop_filename, args.patch_path)
+    cmd = "hg add {}".format(os.path.join(args.patch_path, noop_basename))
+    run_hg(cmd)
+    cmd = "hg amend {}".format(os.path.join(args.patch_path, noop_basename))
+    run_hg(cmd)
 
 
 if __name__ == "__main__":
@@ -157,11 +161,6 @@ if __name__ == "__main__":
         type=int,
         required=True,
         help="integer Bugzilla number (example: 1800920)",
-    )
-    parser.add_argument(
-        "--target-branch-head",
-        required=True,
-        help="target branch head for fast-forward, should match MOZ_TARGET_UPSTREAM_BRANCH_HEAD in config_env",
     )
     parser.add_argument(
         "--patch-path",
@@ -281,26 +280,11 @@ if __name__ == "__main__":
 
     if len(resume_state) == 0 or resume_state == "resume4":
         resume_state = ""
-        update_resume_state("resume5", resume_state_filename)
+        update_resume_state("", resume_state_filename)
         print("-------")
         print("------- write the noop tracking file")
         print("-------")
         write_noop_tracking_file(args.commit_sha, args.commit_bug_number)
-
-    if len(resume_state) == 0 or resume_state == "resume5":
-        resume_state = ""
-        update_resume_state("", resume_state_filename)
-        print("-------")
-        print("------- save the patch stack")
-        print("-------")
-        save_patch_stack(
-            args.repo_path,
-            args.branch,
-            os.path.abspath(args.patch_path),
-            args.state_path,
-            args.target_branch_head,
-            None,
-        )
 
     # unregister the exit handler so the normal exit doesn't falsely
     # report as an error.
