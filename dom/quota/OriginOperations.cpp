@@ -68,6 +68,21 @@ namespace mozilla::dom::quota {
 
 using namespace mozilla::ipc;
 
+template <class Base>
+class OpenStorageDirectoryHelper : public Base {
+ protected:
+  OpenStorageDirectoryHelper(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+                             const char* aName)
+      : Base(std::move(aQuotaManager), aName) {}
+
+  RefPtr<BoolPromise> OpenStorageDirectory(
+      const Nullable<PersistenceType>& aPersistenceType,
+      const OriginScope& aOriginScope,
+      const Nullable<Client::Type>& aClientType, bool aExclusive);
+
+  RefPtr<UniversalDirectoryLock> mDirectoryLock;
+};
+
 class FinalizeOriginEvictionOp : public OriginOperationBase {
   nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
@@ -90,17 +105,17 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   virtual void UnblockOpen() override;
 };
 
-class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
+class SaveOriginAccessTimeOp
+    : public OpenStorageDirectoryHelper<NormalOriginOperationBase> {
   const OriginMetadata mOriginMetadata;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
   int64_t mTimestamp;
 
  public:
   SaveOriginAccessTimeOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                          const OriginMetadata& aOriginMetadata,
                          int64_t aTimestamp)
-      : NormalOriginOperationBase(std::move(aQuotaManager),
-                                  "dom::quota::SaveOriginAccessTimeOp"),
+      : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                   "dom::quota::SaveOriginAccessTimeOp"),
         mOriginMetadata(aOriginMetadata),
         mTimestamp(aTimestamp) {
     AssertIsOnOwningThread();
@@ -118,14 +133,13 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   void CloseDirectory() override;
 };
 
-class ClearPrivateRepositoryOp : public ResolvableNormalOriginOp<bool> {
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
-
+class ClearPrivateRepositoryOp
+    : public OpenStorageDirectoryHelper<ResolvableNormalOriginOp<bool>> {
  public:
   explicit ClearPrivateRepositoryOp(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
-      : ResolvableNormalOriginOp(std::move(aQuotaManager),
-                                 "dom::quota::ClearPrivateRepositoryOp") {
+      : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                   "dom::quota::ClearPrivateRepositoryOp") {
     AssertIsOnOwningThread();
   }
 
@@ -191,11 +205,11 @@ class TraverseRepositoryHelper {
                                  const PersistenceType aPersistenceType) = 0;
 };
 
-class GetUsageOp final : public QuotaUsageRequestBase,
-                         public TraverseRepositoryHelper {
+class GetUsageOp final
+    : public OpenStorageDirectoryHelper<QuotaUsageRequestBase>,
+      public TraverseRepositoryHelper {
   nsTArray<OriginUsage> mOriginUsages;
   nsTHashMap<nsCStringHashKey, uint32_t> mOriginUsagesIndex;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
   bool mGetAll;
 
@@ -227,10 +241,10 @@ class GetUsageOp final : public QuotaUsageRequestBase,
   void CloseDirectory() override;
 };
 
-class GetOriginUsageOp final : public QuotaUsageRequestBase {
+class GetOriginUsageOp final
+    : public OpenStorageDirectoryHelper<QuotaUsageRequestBase> {
   const OriginUsageParams mParams;
   PrincipalMetadata mPrincipalMetadata;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
   uint64_t mUsage;
   uint64_t mFileUsage;
   bool mFromMemory;
@@ -400,12 +414,12 @@ class InitializeTemporaryOriginOp final : public InitializeOriginRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class GetFullOriginMetadataOp : public QuotaRequestBase {
+class GetFullOriginMetadataOp
+    : public OpenStorageDirectoryHelper<QuotaRequestBase> {
   const GetFullOriginMetadataParams mParams;
   // XXX Consider wrapping with LazyInitializedOnce
   OriginMetadata mOriginMetadata;
   Maybe<FullOriginMetadata> mMaybeFullOriginMetadata;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
   GetFullOriginMetadataOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -423,9 +437,8 @@ class GetFullOriginMetadataOp : public QuotaRequestBase {
   void CloseDirectory() override;
 };
 
-class ClearStorageOp final : public ResolvableNormalOriginOp<bool> {
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
-
+class ClearStorageOp final
+    : public OpenStorageDirectoryHelper<ResolvableNormalOriginOp<bool>> {
  public:
   explicit ClearStorageOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
 
@@ -445,16 +458,15 @@ class ClearStorageOp final : public ResolvableNormalOriginOp<bool> {
   void CloseDirectory() override;
 };
 
-class ClearRequestBase : public QuotaRequestBase {
+class ClearRequestBase : public OpenStorageDirectoryHelper<QuotaRequestBase> {
  protected:
   OriginScope mOriginScope;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
   Nullable<PersistenceType> mPersistenceType;
   Nullable<Client::Type> mClientType;
 
   ClearRequestBase(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                    const char* aName)
-      : QuotaRequestBase(std::move(aQuotaManager), aName) {
+      : OpenStorageDirectoryHelper(std::move(aQuotaManager), aName) {
     AssertIsOnOwningThread();
   }
 
@@ -517,9 +529,8 @@ class ResetOriginOp final : public QuotaRequestBase {
   void CloseDirectory() override;
 };
 
-class PersistRequestBase : public QuotaRequestBase {
+class PersistRequestBase : public OpenStorageDirectoryHelper<QuotaRequestBase> {
   const PrincipalInfo mPrincipalInfo;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  protected:
   PrincipalMetadata mPrincipalMetadata;
@@ -564,11 +575,10 @@ class PersistOp final : public PersistRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class EstimateOp final : public QuotaRequestBase {
+class EstimateOp final : public OpenStorageDirectoryHelper<QuotaRequestBase> {
   const EstimateParams mParams;
   OriginMetadata mOriginMetadata;
   std::pair<uint64_t, uint64_t> mUsageAndLimit;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
   EstimateOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -588,11 +598,10 @@ class EstimateOp final : public QuotaRequestBase {
   void CloseDirectory() override;
 };
 
-class ListOriginsOp final : public QuotaRequestBase,
+class ListOriginsOp final : public OpenStorageDirectoryHelper<QuotaRequestBase>,
                             public TraverseRepositoryHelper {
   // XXX Bug 1521541 will make each origin has it's own state.
   nsTArray<nsCString> mOrigins;
-  RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
   explicit ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
@@ -744,6 +753,28 @@ RefPtr<QuotaRequestBase> CreateListOriginsOp(
   return MakeRefPtr<ListOriginsOp>(std::move(aQuotaManager));
 }
 
+template <class Base>
+RefPtr<BoolPromise> OpenStorageDirectoryHelper<Base>::OpenStorageDirectory(
+    const Nullable<PersistenceType>& aPersistenceType,
+    const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
+    bool aExclusive) {
+  return Base::mQuotaManager
+      ->OpenStorageDirectory(aPersistenceType, aOriginScope, aClientType,
+                             aExclusive)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](
+                 UniversalDirectoryLockPromise::ResolveOrRejectValue&& aValue) {
+               if (aValue.IsReject()) {
+                 return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                     __func__);
+               }
+
+               self->mDirectoryLock = std::move(aValue.ResolveValue());
+
+               return BoolPromise::CreateAndResolve(true, __func__);
+             });
+}
+
 RefPtr<BoolPromise> FinalizeOriginEvictionOp::Open() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mLocks.IsEmpty());
@@ -778,20 +809,18 @@ void FinalizeOriginEvictionOp::UnblockOpen() {
 RefPtr<BoolPromise> SaveOriginAccessTimeOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(mOriginMetadata.mPersistenceType),
       OriginScope::FromOrigin(mOriginMetadata.mOrigin),
-      Nullable<Client::Type>(), /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
 }
 
 nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("SaveOriginAccessTimeOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   QM_TRY_INSPECT(const auto& file,
                  aQuotaManager.GetOriginDirectory(mOriginMetadata));
@@ -828,21 +857,18 @@ void SaveOriginAccessTimeOp::CloseDirectory() {
 RefPtr<BoolPromise> ClearPrivateRepositoryOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
       OriginScope::FromNull(), Nullable<Client::Type>(),
       /* aExclusive */ true);
-
-  return mDirectoryLock->Acquire();
 }
 
 nsresult ClearPrivateRepositoryOp::DoDirectoryWork(
     QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("ClearPrivateRepositoryOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   QM_TRY_INSPECT(
       const auto& directory,
@@ -966,7 +992,8 @@ nsresult TraverseRepositoryHelper::TraverseRepository(
 
 GetUsageOp::GetUsageOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                        const UsageRequestParams& aParams)
-    : QuotaUsageRequestBase(std::move(aQuotaManager), "dom::quota::GetUsageOp"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::GetUsageOp"),
       mGetAll(aParams.get_AllUsageParams().getAll()) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
@@ -1058,20 +1085,16 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
 RefPtr<BoolPromise> GetUsageOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      Nullable<PersistenceType>(), OriginScope::FromNull(),
-      Nullable<Client::Type>(),
-      /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+  return OpenStorageDirectory(Nullable<PersistenceType>(),
+                              OriginScope::FromNull(), Nullable<Client::Type>(),
+                              /* aExclusive */ false);
 }
 
 nsresult GetUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("GetUsageOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   nsresult rv;
 
@@ -1115,8 +1138,8 @@ void GetUsageOp::CloseDirectory() {
 GetOriginUsageOp::GetOriginUsageOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const UsageRequestParams& aParams)
-    : QuotaUsageRequestBase(std::move(aQuotaManager),
-                            "dom::quota::GetOriginUsageOp"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::GetOriginUsageOp"),
       mParams(aParams.get_OriginUsageParams()),
       mUsage(0),
       mFileUsage(0) {
@@ -1142,23 +1165,20 @@ nsresult GetOriginUsageOp::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> GetOriginUsageOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(),
       OriginScope::FromOrigin(mPrincipalMetadata.mOrigin),
       Nullable<Client::Type>(),
       /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
 }
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
   MOZ_ASSERT(mUsage == 0);
   MOZ_ASSERT(mFileUsage == 0);
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   if (mFromMemory) {
     // Ensure temporary storage is initialized. If temporary storage hasn't been
@@ -1491,8 +1511,8 @@ void InitializeTemporaryOriginOp::GetResponse(RequestResponse& aResponse) {
 GetFullOriginMetadataOp::GetFullOriginMetadataOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const GetFullOriginMetadataParams& aParams)
-    : QuotaRequestBase(std::move(aQuotaManager),
-                       "dom::quota::GetFullOriginMetadataOp"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::GetFullOriginMetadataOp"),
       mParams(aParams) {
   AssertIsOnOwningThread();
 }
@@ -1514,21 +1534,18 @@ nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> GetFullOriginMetadataOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(mOriginMetadata.mPersistenceType),
       OriginScope::FromOrigin(mOriginMetadata.mOrigin),
       Nullable<Client::Type>(),
       /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
 }
 
 nsresult GetFullOriginMetadataOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("GetFullOriginMetadataOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   // Ensure temporary storage is initialized. If temporary storage hasn't
   // been initialized yet, the method will initialize it by traversing the
@@ -1559,8 +1576,8 @@ void GetFullOriginMetadataOp::CloseDirectory() {
 
 ClearStorageOp::ClearStorageOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
-    : ResolvableNormalOriginOp(std::move(aQuotaManager),
-                               "dom::quota::ClearStorageOp") {
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::ClearStorageOp") {
   AssertIsOnOwningThread();
 }
 
@@ -1616,20 +1633,16 @@ RefPtr<BoolPromise> ClearStorageOp::OpenDirectory() {
   // storage again in the end.
   mQuotaManager->ClearDirectoryLockTables();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      Nullable<PersistenceType>(), OriginScope::FromNull(),
-      Nullable<Client::Type>(),
-      /* aExclusive */ true);
-
-  return mDirectoryLock->Acquire();
+  return OpenStorageDirectory(Nullable<PersistenceType>(),
+                              OriginScope::FromNull(), Nullable<Client::Type>(),
+                              /* aExclusive */ true);
 }
 
 nsresult ClearStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("ClearStorageOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   DeleteFiles(aQuotaManager);
 
@@ -1874,18 +1887,15 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
 RefPtr<BoolPromise> ClearRequestBase::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      mPersistenceType, mOriginScope, mClientType, /* aExclusive */ true);
-
-  return mDirectoryLock->Acquire();
+  return OpenStorageDirectory(mPersistenceType, mOriginScope, mClientType,
+                              /* aExclusive */ true);
 }
 
 nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("ClearRequestBase::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   if (mPersistenceType.IsNull()) {
     for (const PersistenceType type : kAllPersistenceTypes) {
@@ -2009,8 +2019,8 @@ void ResetOriginOp::CloseDirectory() {
 PersistRequestBase::PersistRequestBase(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const PrincipalInfo& aPrincipalInfo)
-    : QuotaRequestBase(std::move(aQuotaManager),
-                       "dom::quota::PersistRequestBase"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::PersistRequestBase"),
       mPrincipalInfo(aPrincipalInfo) {
   AssertIsOnOwningThread();
 }
@@ -2031,12 +2041,11 @@ nsresult PersistRequestBase::DoInit(QuotaManager& aQuotaManager) {
 RefPtr<BoolPromise> PersistRequestBase::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(PERSISTENCE_TYPE_DEFAULT),
       OriginScope::FromOrigin(mPrincipalMetadata.mOrigin),
-      Nullable<Client::Type>(), /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
 }
 
 void PersistRequestBase::CloseDirectory() {
@@ -2055,10 +2064,9 @@ PersistedOp::PersistedOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
 
 nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("PersistedOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   const OriginMetadata originMetadata = {mPrincipalMetadata,
                                          PERSISTENCE_TYPE_DEFAULT};
@@ -2111,13 +2119,12 @@ PersistOp::PersistOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
 
 nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   const OriginMetadata originMetadata = {mPrincipalMetadata,
                                          PERSISTENCE_TYPE_DEFAULT};
 
   AUTO_PROFILER_LABEL("PersistOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   // Update directory metadata on disk first. Then, create/update the originInfo
   // if needed.
@@ -2183,7 +2190,8 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
 
 EstimateOp::EstimateOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                        const EstimateParams& aParams)
-    : QuotaRequestBase(std::move(aQuotaManager), "dom::quota::EstimateOp"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::EstimateOp"),
       mParams(aParams) {
   AssertIsOnOwningThread();
 }
@@ -2206,21 +2214,18 @@ RefPtr<BoolPromise> EstimateOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
   // XXX In theory, we should be locking entire group, not just one origin.
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
+  return OpenStorageDirectory(
       Nullable<PersistenceType>(mOriginMetadata.mPersistenceType),
       OriginScope::FromOrigin(mOriginMetadata.mOrigin),
       Nullable<Client::Type>(),
       /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
 }
 
 nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("EstimateOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   // Ensure temporary storage is initialized. If temporary storage hasn't been
   // initialized yet, the method will initialize it by traversing the
@@ -2252,7 +2257,8 @@ void EstimateOp::CloseDirectory() {
 }
 
 ListOriginsOp::ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
-    : QuotaRequestBase(std::move(aQuotaManager), "dom::quota::ListOriginsOp"),
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::ListOriginsOp"),
       TraverseRepositoryHelper() {
   AssertIsOnOwningThread();
 }
@@ -2260,19 +2266,16 @@ ListOriginsOp::ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
 RefPtr<BoolPromise> ListOriginsOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      Nullable<PersistenceType>(), OriginScope::FromNull(),
-      Nullable<Client::Type>(), /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+  return OpenStorageDirectory(Nullable<PersistenceType>(),
+                              OriginScope::FromNull(), Nullable<Client::Type>(),
+                              /* aExclusive */ false);
 }
 
 nsresult ListOriginsOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
+  aQuotaManager.AssertStorageIsInitializedInternal();
 
   AUTO_PROFILER_LABEL("ListOriginsOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitializedInternal()));
 
   for (const PersistenceType type : kAllPersistenceTypes) {
     QM_TRY(MOZ_TO_RESULT(TraverseRepository(aQuotaManager, type)));
