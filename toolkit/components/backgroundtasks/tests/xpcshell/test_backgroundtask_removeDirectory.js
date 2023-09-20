@@ -243,3 +243,59 @@ add_task(async function test_aLotOfTasks() {
     equal(dirs[i].exists(), false, `leaf${i}.abc should not exist`);
   }
 });
+
+add_task(async function test_suffix() {
+  // Make sure only the directories with the specified suffix will be removed
+
+  let leaf = do_get_profile();
+  leaf.append(LEAF_NAME);
+  leaf.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+
+  let abc = do_get_profile();
+  abc.append("foo.abc");
+  abc.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+  equal(abc.exists(), true);
+
+  let bcd = do_get_profile();
+  bcd.append("foo.bcd");
+  bcd.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+  equal(bcd.exists(), true);
+
+  // XXX: This should be able to skip passing LEAF_NAME (passing "" instead),
+  // but bug 1853920 and bug 1853921 causes incorrect arguments in that case.
+  let task = do_backgroundtask("removeDirectory", {
+    extraArgs: [do_get_profile().path, LEAF_NAME, "10", ".abc"],
+  });
+
+  let exitCode = await task;
+  equal(exitCode, EXIT_CODE.SUCCESS);
+  equal(abc.exists(), false);
+  equal(bcd.exists(), true);
+});
+
+add_task(async function test_suffix_wildcard() {
+  // wildcard as a suffix should remove every subdirectories
+
+  let leaf = do_get_profile();
+  leaf.append(LEAF_NAME);
+  leaf.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+
+  let abc = do_get_profile();
+  abc.append("foo.abc");
+  abc.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+
+  let cde = do_get_profile();
+  cde.append("foo.cde");
+  cde.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+
+  // XXX: This should be able to skip passing LEAF_NAME (passing "" instead),
+  // but bug 1853920 and bug 1853921 causes incorrect arguments in that case.
+  let task = do_backgroundtask("removeDirectory", {
+    extraArgs: [do_get_profile().path, LEAF_NAME, "10", "*"],
+  });
+
+  let exitCode = await task;
+  equal(exitCode, EXIT_CODE.SUCCESS);
+  equal(cde.exists(), false);
+  equal(cde.exists(), false);
+});
