@@ -5,6 +5,11 @@
 
 #include "nsIInputStream.idl"
 
+%{C++
+#include "mozilla/UniquePtr.h"
+%}
+native Bytes(mozilla::UniquePtr<uint8_t[]>);
+
 /**
  * nsIArrayBufferInputStream
  *
@@ -21,5 +26,15 @@ interface nsIArrayBufferInputStream : nsIInputStream
      * @param byteOffset - stream data offset
      * @param byteLen - stream data length
      */
+    [binaryname(SetDataFromJS)]
     void setData(in jsval buffer, in uint64_t byteOffset, in uint64_t byteLen);
+
+    /**
+     * SetData - assign data to the input stream.
+     *
+     * @param aBytes  - stream data
+     * @param byteLen - stream data length
+     */
+    [noscript, nostdcall, binaryname(SetData)]
+    void setDataNative(in Bytes bytes, in uint64_t byteLen);
 };

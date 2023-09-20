@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "ErrorList.h"
+#include "TypedArray.h"
 #include "js/ArrayBuffer.h"
 #include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
 #include "js/JSON.h"
@@ -526,9 +527,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
         nsCOMPtr<nsIFile> file = new nsLocalFile();
         REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-        aData.ComputeState();
-        auto buf =
-            Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
+        Maybe<Buffer<uint8_t>> buf = aData.CreateFromData<Buffer<uint8_t>>();
         if (buf.isNothing()) {
           promise->MaybeRejectWithOperationError(
               "Out of memory: Could not allocate buffer while writing to file");
@@ -543,7 +542,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
-            [file = std::move(file), buf = std::move(*buf),
+            [file = std::move(file), buf = buf.extract(),
              opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
       });
 }

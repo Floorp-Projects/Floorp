@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/EncodedVideoChunk.h"
+#include <utility>
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 
 #include "MediaData.h"

@@ -21,18 +21,21 @@
 
 namespace mozilla::dom {
 
-static nsresult GetBufferDataAsStream(
-    const uint8_t* aData, uint32_t aDataLength, nsIInputStream** aResult,
-    uint64_t* aContentLength, nsACString& aContentType, nsACString& aCharset) {
+static nsresult GetBufferDataAsStream(Vector<uint8_t>&& aData,
+                                      nsIInputStream** aResult,
+                                      uint64_t* aContentLength,
+                                      nsACString& aContentType,
+                                      nsACString& aCharset) {
   aContentType.SetIsVoid(true);
   aCharset.Truncate();
 
-  *aContentLength = aDataLength;
-  const char* data = reinterpret_cast<const char*>(aData);
+  *aContentLength = aData.length();
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(stream), Span(data, aDataLength), NS_ASSIGNMENT_COPY);
+      getter_AddRefs(stream),
+      AsChars(Span(aData.extractOrCopyRawBuffer(), *aContentLength)),
+      NS_ASSIGNMENT_ADOPT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   stream.forget(aResult);
@@ -44,20 +47,24 @@ template <>
 nsresult BodyExtractor<const ArrayBuffer>::GetAsStream(
     nsIInputStream** aResult, uint64_t* aContentLength,
     nsACString& aContentTypeWithCharset, nsACString& aCharset) const {
-  mBody->ComputeState();
-  return GetBufferDataAsStream(mBody->Data(), mBody->Length(), aResult,
-                               aContentLength, aContentTypeWithCharset,
-                               aCharset);
+  Maybe<Vector<uint8_t>> body = mBody->CreateFromData<Vector<uint8_t>>();
+  if (body.isNothing()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return GetBufferDataAsStream(body.extract(), aResult, aContentLength,
+                               aContentTypeWithCharset, aCharset);
 }
 
 template <>
 nsresult BodyExtractor<const ArrayBufferView>::GetAsStream(
     nsIInputStream** aResult, uint64_t* aContentLength,
     nsACString& aContentTypeWithCharset, nsACString& aCharset) const {
-  mBody->ComputeState();
-  return GetBufferDataAsStream(mBody->Data(), mBody->Length(), aResult,
-                               aContentLength, aContentTypeWithCharset,
-                               aCharset);
+  Maybe<Vector<uint8_t>> body = mBody->CreateFromData<Vector<uint8_t>>();
+  if (body.isNothing()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return GetBufferDataAsStream(body.extract(), aResult, aContentLength,
+                               aContentTypeWithCharset, aCharset);
 }
 
 template <>
