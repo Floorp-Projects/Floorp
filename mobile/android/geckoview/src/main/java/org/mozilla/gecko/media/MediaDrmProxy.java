@@ -206,8 +206,7 @@ public final class MediaDrmProxy {
 
   @WrapForJNI(calledFrom = "gecko")
   public static MediaDrmProxy create(final String keySystem, final Callbacks nativeCallbacks) {
-    final MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
-    return proxy;
+    return new MediaDrmProxy(keySystem, nativeCallbacks);
   }
 
   MediaDrmProxy(final String keySystem, final Callbacks nativeCallbacks) {

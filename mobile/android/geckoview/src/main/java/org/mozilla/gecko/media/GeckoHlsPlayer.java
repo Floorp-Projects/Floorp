@@ -837,19 +837,17 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         return null;
       }
     }
-    final GeckoVideoInfo vInfo =
-        new GeckoVideoInfo(
-            fmt.width,
-            fmt.height,
-            fmt.width,
-            fmt.height,
-            fmt.rotationDegrees,
-            fmt.stereoMode,
-            getDuration(),
-            fmt.sampleMimeType,
-            null,
-            null);
-    return vInfo;
+    return new GeckoVideoInfo(
+        fmt.width,
+        fmt.height,
+        fmt.width,
+        fmt.height,
+        fmt.rotationDegrees,
+        fmt.stereoMode,
+        getDuration(),
+        fmt.sampleMimeType,
+        null,
+        null);
   }
 
   // Called on MFR's TaskQueue
@@ -882,10 +880,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     assertTrue(!MimeTypes.AUDIO_RAW.equals(fmt.sampleMimeType));
     // For HLS content, csd-0 is enough.
     final byte[] csd = fmt.initializationData.isEmpty() ? null : fmt.initializationData.get(0);
-    final GeckoAudioInfo aInfo =
-        new GeckoAudioInfo(
-            fmt.sampleRate, fmt.channelCount, 16, 0, getDuration(), fmt.sampleMimeType, csd);
-    return aInfo;
+    return new GeckoAudioInfo(
+        fmt.sampleRate, fmt.channelCount, 16, 0, getDuration(), fmt.sampleMimeType, csd);
   }
 
   // Called on HLSDemuxer's TaskQueue
@@ -953,9 +949,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
   // Called on HLSDemuxer's TaskQueue
   @Override
   public synchronized long getNextKeyFrameTime() {
-    final long nextKeyFrameTime =
-        mVRenderer != null ? mVRenderer.getNextKeyFrameTime() : Long.MAX_VALUE;
-    return nextKeyFrameTime;
+    return mVRenderer != null ? mVRenderer.getNextKeyFrameTime() : Long.MAX_VALUE;
   }
 
   // Called on Gecko's main thread.

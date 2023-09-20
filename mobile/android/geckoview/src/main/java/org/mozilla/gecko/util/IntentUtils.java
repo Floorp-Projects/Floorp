@@ -45,10 +45,8 @@ public class IntentUtils {
    * @return The corresponding normalized Uri.
    */
   public static Uri normalizeUri(final String aUri) {
-    final Uri normUri =
-        normalizeUriScheme(
-            aUri.indexOf(':') >= 0 ? Uri.parse(aUri) : new Uri.Builder().scheme(aUri).build());
-    return normUri;
+    return normalizeUriScheme(
+        aUri.indexOf(':') >= 0 ? Uri.parse(aUri) : new Uri.Builder().scheme(aUri).build());
   }
 
   public static boolean isUriSafeForScheme(final String aUri) {

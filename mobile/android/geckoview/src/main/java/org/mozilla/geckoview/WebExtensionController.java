@@ -87,17 +87,14 @@ public class WebExtensionController {
       final GeckoBundle bundle = new GeckoBundle(1);
       bundle.putString("extensionId", id);
 
-      final GeckoResult<WebExtension> pending =
-          EventDispatcher.getInstance()
-              .queryBundle("GeckoView:WebExtension:Get", bundle)
-              .map(
-                  extensionBundle -> {
-                    final WebExtension ext = mObserver.onNewExtension(extensionBundle);
-                    mData.put(ext.id, ext);
-                    return ext;
-                  });
-
-      return pending;
+      return EventDispatcher.getInstance()
+          .queryBundle("GeckoView:WebExtension:Get", bundle)
+          .map(
+              extensionBundle -> {
+                final WebExtension ext = mObserver.onNewExtension(extensionBundle);
+                mData.put(ext.id, ext);
+                return ext;
+              });
     }
 
     public void setObserver(final Observer observer) {
