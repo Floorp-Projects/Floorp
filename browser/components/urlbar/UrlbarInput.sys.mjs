@@ -1026,7 +1026,7 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
-        if (this.hasAttribute("actionoverride")) {
+        if (this.hasAttribute("action-override")) {
           where = "current";
           break;
         }
@@ -2543,8 +2543,8 @@ export class UrlbarInput {
     ) {
       if (event.type == "keydown") {
         this._actionOverrideKeyCount++;
-        this.setAttribute("actionoverride", "true");
-        this.view.panel.setAttribute("actionoverride", "true");
+        this.toggleAttribute("action-override", true);
+        this.view.panel.setAttribute("action-override", true);
       } else if (
         this._actionOverrideKeyCount &&
         --this._actionOverrideKeyCount == 0
@@ -2556,8 +2556,8 @@ export class UrlbarInput {
 
   _clearActionOverride() {
     this._actionOverrideKeyCount = 0;
-    this.removeAttribute("actionoverride");
-    this.view.panel.removeAttribute("actionoverride");
+    this.removeAttribute("action-override");
+    this.view.panel.removeAttribute("action-override");
   }
 
   /**

@@ -78,7 +78,7 @@ add_task(async function test_switchtab_override() {
     EventUtils.synthesizeKey("KEY_Shift", { type: "keyup" });
   });
 
-  let attribute = "actionoverride";
+  let attribute = "action-override";
   Assert.ok(
     gURLBar.view.panel.hasAttribute(attribute),
     "We should be overriding"
