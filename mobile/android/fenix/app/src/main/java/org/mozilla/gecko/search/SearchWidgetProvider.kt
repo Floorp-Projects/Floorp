@@ -21,6 +21,7 @@ import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
+import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
@@ -37,11 +38,13 @@ class SearchWidgetProvider : AppWidgetProvider() {
     // The existing name replicates the name and package we used in Fennec.
 
     override fun onEnabled(context: Context) {
-        context.settings().addSearchWidgetInstalled(1)
+        context.settings().setSearchWidgetInstalled(true)
+        Metrics.searchWidgetInstalled.set(true)
     }
 
-    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        context.settings().addSearchWidgetInstalled(-appWidgetIds.size)
+    override fun onDisabled(context: Context) {
+        context.settings().setSearchWidgetInstalled(false)
+        Metrics.searchWidgetInstalled.set(false)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {

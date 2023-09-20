@@ -1211,19 +1211,21 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
-    fun addSearchWidgetInstalled(count: Int) {
+    /**
+     * Used in [SearchWidgetProvider] to update when the search widget
+     * exists on home screen or if it has been removed completely.
+     */
+    fun setSearchWidgetInstalled(installed: Boolean) {
         val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed)
-        val newValue = preferences.getInt(key, 0) + count
         preferences.edit()
-            .putInt(key, newValue)
+            .putBoolean(key, installed)
             .apply()
     }
 
-    val searchWidgetInstalled: Boolean
-        get() = 0 < preferences.getInt(
-            appContext.getPreferenceKey(R.string.pref_key_search_widget_installed),
-            0,
-        )
+    val searchWidgetInstalled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_installed),
+        default = false,
+    )
 
     fun incrementNumTimesPrivateModeOpened() = numTimesPrivateModeOpened.increment()
 
