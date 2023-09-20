@@ -2389,7 +2389,7 @@ void WebSocket::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   AssertIsOnTargetThread();
 
   static_assert(
-      sizeof(std::remove_reference<decltype(aData)>::type::element_type) == 1,
+      sizeof(std::remove_reference_t<decltype(aData)>::element_type) == 1,
       "byte-sized data required");
 
   nsCString msgString;
@@ -2404,7 +2404,7 @@ void WebSocket::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   AssertIsOnTargetThread();
 
   static_assert(
-      sizeof(std::remove_reference<decltype(aData)>::type::element_type) == 1,
+      sizeof(std::remove_reference_t<decltype(aData)>::element_type) == 1,
       "byte-sized data required");
 
   nsCString msgString;

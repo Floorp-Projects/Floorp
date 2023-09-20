@@ -2775,51 +2775,51 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
     return aRv.ThrowOperationError("SyncReadFile is closed");
   }
 
-  aDestArray.ComputeState();
-
-  auto rangeEnd = CheckedInt64(aOffset) + aDestArray.Length();
-  if (!rangeEnd.isValid()) {
-    return aRv.ThrowOperationError("Requested range overflows i64");
-  }
-
-  if (rangeEnd.value() > mSize) {
-    return aRv.ThrowOperationError(
-        "Requested range overflows SyncReadFile size");
-  }
-
-  uint32_t readLen{aDestArray.Length()};
-  if (readLen == 0) {
-    return;
-  }
-
-  if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
-    return aRv.ThrowOperationError(
-        FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
-  }
-
-  Span<char> toRead(reinterpret_cast<char*>(aDestArray.Data()), readLen);
-
-  uint32_t totalRead = 0;
-  while (totalRead != readLen) {
-    // Read no more than INT32_MAX on each call to mStream->Read, otherwise it
-    // returns an error.
-    uint32_t bytesToReadThisChunk =
-        std::min<uint32_t>(readLen - totalRead, INT32_MAX);
-
-    uint32_t bytesRead = 0;
-    if (nsresult rv =
-            mStream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
-        NS_FAILED(rv)) {
-      return aRv.ThrowOperationError(FormatErrorMessage(
-          rv, "Encountered an unexpected error while reading file stream"));
+  aDestArray.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    auto rangeEnd = CheckedInt64(aOffset) + aData.Length();
+    if (!rangeEnd.isValid()) {
+      return aRv.ThrowOperationError("Requested range overflows i64");
     }
-    if (bytesRead == 0) {
+
+    if (rangeEnd.value() > mSize) {
       return aRv.ThrowOperationError(
-          "Reading stopped before the entire array was filled");
+          "Requested range overflows SyncReadFile size");
     }
-    totalRead += bytesRead;
-    toRead = toRead.From(bytesRead);
-  }
+
+    size_t readLen{aData.Length()};
+    if (readLen == 0) {
+      return;
+    }
+
+    if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+      return aRv.ThrowOperationError(
+          FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
+    }
+
+    Span<char> toRead = AsWritableChars(aData);
+
+    size_t totalRead = 0;
+    while (totalRead != readLen) {
+      // Read no more than INT32_MAX on each call to mStream->Read,
+      // otherwise it returns an error.
+      uint32_t bytesToReadThisChunk =
+          std::min(readLen - totalRead, size_t(INT32_MAX));
+
+      uint32_t bytesRead = 0;
+      if (nsresult rv = mStream->Read(toRead.Elements(), bytesToReadThisChunk,
+                                      &bytesRead);
+          NS_FAILED(rv)) {
+        return aRv.ThrowOperationError(FormatErrorMessage(
+            rv, "Encountered an unexpected error while reading file stream"));
+      }
+      if (bytesRead == 0) {
+        return aRv.ThrowOperationError(
+            "Reading stopped before the entire array was filled");
+      }
+      totalRead += bytesRead;
+      toRead = toRead.From(bytesRead);
+    }
+  });
 }
 
 void SyncReadFile::Close() { mStream = nullptr; }

@@ -536,24 +536,18 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     return 0;
   };
 
-  const auto dataSpan = [&aBuffer]() {
-    if (aBuffer.IsArrayBuffer()) {
-      const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
-      buffer.ComputeState();
-      return Span{buffer.Data(), buffer.Length()};
+  // Handle seek before read ('at')
+  const auto at = [&aOptions]() -> uint64_t {
+    if (aOptions.mAt.WasPassed()) {
+      return aOptions.mAt.Value();
     }
-    MOZ_ASSERT(aBuffer.IsArrayBufferView());
-    const ArrayBufferView& buffer = aBuffer.GetAsArrayBufferView();
-    buffer.ComputeState();
-    return Span{buffer.Data(), buffer.Length()};
+    // Spec says default for at is 0 (2.6)
+    return 0;
   }();
 
-  CheckedInt<int64_t> offset = 0;
-  if (aOptions.mAt.WasPassed()) {
-    // Handle seek before read ('at')
-    offset = CheckedInt<int64_t>(aOptions.mAt.Value());
-    QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
-  }
+  const auto offset = CheckedInt<int64_t>(at);
+  QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
+
   AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
 
   nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
@@ -565,72 +559,73 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
 
   uint64_t totalCount = 0;
 
-  InvokeAsync(
-      mIOTaskQueue, __func__,
-      [selfHolder = fs::TargetPtrHolder(this), dataSpan,
-       use_offset = aOptions.mAt.WasPassed(), offset, aRead, &totalCount]() {
-        QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
-               CreateAndRejectBoolPromise);
-
-        if (use_offset) {
-          LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
-                       offset.value()));
-
-          QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
-                     nsISeekableStream::NS_SEEK_SET, offset.value())),
+  ProcessTypedArraysFixed(aBuffer, [&](const Span<uint8_t> aData) {
+    InvokeAsync(
+        mIOTaskQueue, __func__,
+        [selfHolder = fs::TargetPtrHolder(this), aData,
+         use_offset = aOptions.mAt.WasPassed(), offset, aRead, syncLoopTarget,
+         &totalCount]() {
+          QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
                  CreateAndRejectBoolPromise);
-        }
+          if (use_offset) {
+            LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
+                         offset.value()));
 
-        nsCOMPtr<nsIInputStream> inputStream;
-        nsCOMPtr<nsIOutputStream> outputStream;
+            QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
+                       nsISeekableStream::NS_SEEK_SET, offset.value())),
+                   CreateAndRejectBoolPromise);
+          }
 
-        if (aRead) {
-          LOG_VERBOSE(("%p: Reading %zu bytes", selfHolder->mStream.get(),
-                       dataSpan.Length()));
+          nsCOMPtr<nsIInputStream> inputStream;
+          nsCOMPtr<nsIOutputStream> outputStream;
 
-          inputStream = selfHolder->mStream->InputStream();
+          if (aRead) {
+            LOG_VERBOSE(("%p: Reading %zu bytes", selfHolder->mStream.get(),
+                         aData.Length()));
 
-          outputStream =
-              FixedBufferOutputStream::Create(AsWritableChars(dataSpan));
-        } else {
-          LOG_VERBOSE(("%p: Writing %zu bytes", selfHolder->mStream.get(),
-                       dataSpan.Length()));
+            inputStream = selfHolder->mStream->InputStream();
+            outputStream =
+                FixedBufferOutputStream::Create(AsWritableChars(aData));
+          } else {
+            LOG_VERBOSE(("%p: Writing %zu bytes", selfHolder->mStream.get(),
+                         aData.Length()));
 
-          QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(
-                     getter_AddRefs(inputStream), AsChars(dataSpan),
-                     NS_ASSIGNMENT_DEPEND)),
+            QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(
+                       getter_AddRefs(inputStream), AsChars(aData),
+                       NS_ASSIGNMENT_DEPEND)),
+                   CreateAndRejectBoolPromise);
+
+            outputStream = selfHolder->mStream->OutputStream();
+          }
+
+          auto promiseHolder = MakeUnique<MozPromiseHolder<BoolPromise>>();
+          RefPtr<BoolPromise> promise = promiseHolder->Ensure(__func__);
+
+          QM_TRY(MOZ_TO_RESULT(fs::AsyncCopy(
+                     inputStream, outputStream, GetCurrentSerialEventTarget(),
+                     aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
+                           : NS_ASYNCCOPY_VIA_READSEGMENTS,
+                     /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
+                     [&totalCount](uint32_t count) { totalCount += count; },
+                     [promiseHolder = std::move(promiseHolder)](nsresult rv) {
+                       promiseHolder->ResolveIfExists(true, __func__);
+                     })),
                  CreateAndRejectBoolPromise);
 
-          outputStream = selfHolder->mStream->OutputStream();
-        }
+          return promise;
+        })
+        ->Then(syncLoopTarget, __func__,
+               [this, &syncLoopTarget](
+                   const BoolPromise::ResolveOrRejectValue& aValue) {
+                 MOZ_ASSERT(mWorkerRef);
 
-        auto promiseHolder = MakeUnique<MozPromiseHolder<BoolPromise>>();
-        RefPtr<BoolPromise> promise = promiseHolder->Ensure(__func__);
+                 mWorkerRef->Private()->AssertIsOnWorkerThread();
 
-        QM_TRY(MOZ_TO_RESULT(fs::AsyncCopy(
-                   inputStream, outputStream, GetCurrentSerialEventTarget(),
-                   aRead ? NS_ASYNCCOPY_VIA_WRITESEGMENTS
-                         : NS_ASYNCCOPY_VIA_READSEGMENTS,
-                   /* aCloseSource */ !aRead, /* aCloseSink */ aRead,
-                   [&totalCount](uint32_t count) { totalCount += count; },
-                   [promiseHolder = std::move(promiseHolder)](nsresult rv) {
-                     promiseHolder->ResolveIfExists(true, __func__);
-                   })),
-               CreateAndRejectBoolPromise);
+                 mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
+               });
 
-        return promise;
-      })
-      ->Then(syncLoopTarget, __func__,
-             [this, &syncLoopTarget](
-                 const BoolPromise::ResolveOrRejectValue& aValue) {
-               MOZ_ASSERT(mWorkerRef);
-
-               mWorkerRef->Private()->AssertIsOnWorkerThread();
-
-               mWorkerRef->Private()->StopSyncLoop(syncLoopTarget, NS_OK);
-             });
-
-  MOZ_ALWAYS_SUCCEEDS(syncLoop.Run());
+    MOZ_ALWAYS_SUCCEEDS(syncLoop.Run());
+  });
 
   return totalCount;
 }

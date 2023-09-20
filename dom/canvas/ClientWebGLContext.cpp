@@ -14,6 +14,7 @@
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebGLContextEvent.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/EnumeratedRange.h"
@@ -432,6 +433,44 @@ void ClientWebGLContext::Run(Args&&... args) const {
   }
   const auto& destBytes = *maybeDest;
   webgl::Serialize(destBytes, id, args...);
+}
+
+template <typename MethodType, MethodType method, typename... Args>
+void ClientWebGLContext::RunWithGCData(JS::AutoCheckCannotGC&& aNoGC,
+                                       Args&&... args) const {
+  // Hold a strong-ref to prevent LoseContext=>UAF.
+  //
+  // Note that `aNoGC` must be reset after the GC data is done being used and
+  // before the `notLost` destructor runs, since it could GC.
+  const auto notLost = mNotLost;
+  if (IsContextLost()) {
+    aNoGC.reset();  // GC data will not be used.
+    return;
+  }
+
+  const auto& inProcess = notLost->inProcess;
+  if (inProcess) {
+    (inProcess.get()->*method)(std::forward<Args>(args)...);
+    aNoGC.reset();  // Done with any GC data
+    return;
+  }
+
+  const auto& child = notLost->outOfProcess;
+
+  const auto id = IdByMethod<MethodType, method>();
+
+  const auto info = webgl::SerializationInfo(id, args...);
+  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
+                                                     info.alignmentOverhead);
+  if (!maybeDest) {
+    aNoGC.reset();  // GC data will not be used.
+    JsWarning("Failed to allocate internal command buffer.");
+    OnContextLoss(webgl::ContextLossReason::None);
+    return;
+  }
+  const auto& destBytes = *maybeDest;
+  webgl::Serialize(destBytes, id, args...);
+  aNoGC.reset();  // Done with any GC data
 }
 
 // -------------------------------------------------------------------------
@@ -2873,13 +2912,14 @@ void ClientWebGLContext::Clear(GLbitfield mask) {
 void ClientWebGLContext::ClearBufferTv(const GLenum buffer,
                                        const GLint drawBuffer,
                                        const webgl::AttribBaseType type,
-                                       const Range<const uint8_t>& view,
+                                       JS::AutoCheckCannotGC&& nogc,
+                                       const Span<const uint8_t>& view,
                                        const GLuint srcElemOffset) {
-  const FuncScope funcScope(*this, "clearBufferu?[fi]v");
   if (IsContextLost()) return;
 
   const auto byteOffset = CheckedInt<size_t>(srcElemOffset) * sizeof(float);
-  if (!byteOffset.isValid() || byteOffset.value() > view.length()) {
+  if (!byteOffset.isValid() || byteOffset.value() > view.Length()) {
+    nogc.reset();
     EnqueueError(LOCAL_GL_INVALID_VALUE, "`srcOffset` too large for `values`.");
     return;
   }
@@ -2900,17 +2940,20 @@ void ClientWebGLContext::ClearBufferTv(const GLenum buffer,
       break;
 
     default:
+      nogc.reset();
       EnqueueError_ArgEnum("buffer", buffer);
       return;
   }
 
   const auto requiredBytes = byteOffset + dataSize;
-  if (!requiredBytes.isValid() || requiredBytes.value() > view.length()) {
+  if (!requiredBytes.isValid() || requiredBytes.value() > view.Length()) {
+    nogc.reset();
     EnqueueError(LOCAL_GL_INVALID_VALUE, "`values` too small.");
     return;
   }
 
-  memcpy(data.data.data(), view.begin().get() + byteOffset.value(), dataSize);
+  memcpy(data.data.data(), view.data() + byteOffset.value(), dataSize);
+  nogc.reset();  // Done with `view`.
   Run<RPROC(ClearBufferTv)>(buffer, drawBuffer, data);
 
   AfterDrawCall();
@@ -3356,6 +3399,14 @@ void ClientWebGLContext::BindBufferRangeImpl(const GLenum target,
                               size);
 }
 
+static inline size_t SizeOfViewElem(const dom::ArrayBufferView& view) {
+  const auto& elemType = view.Type();
+  if (elemType == js::Scalar::MaxTypedArrayViewType)  // DataViews.
+    return 1;
+
+  return js::Scalar::byteSize(elemType);
+}
+
 void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
                                           const dom::ArrayBufferView& dstData,
                                           GLuint dstElemOffset,
@@ -3366,42 +3417,44 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
       mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
   if (!ValidateNonNegative("srcByteOffset", srcByteOffset)) return;
 
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(dstData, dstElemOffset, dstElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-  const auto destView = Range<uint8_t>{bytes, byteLen};
+  size_t elemSize = SizeOfViewElem(dstData);
+  dstData.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    const auto& destView =
+        ValidateArrayBufferView(aData, elemSize, dstElemOffset,
+                                dstElemCountOverride, LOCAL_GL_INVALID_VALUE);
+    if (!destView) {
+      return;
+    }
 
-  const auto& inProcessContext = notLost->inProcess;
-  if (inProcessContext) {
-    inProcessContext->GetBufferSubData(target, srcByteOffset, destView);
-    return;
-  }
+    const auto& inProcessContext = notLost->inProcess;
+    if (inProcessContext) {
+      inProcessContext->GetBufferSubData(target, srcByteOffset, *destView);
+      return;
+    }
 
-  const auto& child = notLost->outOfProcess;
-  child->FlushPendingCmds();
-  mozilla::ipc::Shmem rawShmem;
-  if (!child->SendGetBufferSubData(target, srcByteOffset, destView.length(),
-                                   &rawShmem)) {
-    return;
-  }
-  const webgl::RaiiShmem shmem{child, rawShmem};
-  if (!shmem) {
-    EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "Failed to map in sub data buffer.");
-    return;
-  }
+    const auto& child = notLost->outOfProcess;
+    child->FlushPendingCmds();
+    mozilla::ipc::Shmem rawShmem;
+    if (!child->SendGetBufferSubData(target, srcByteOffset, destView->length(),
+                                     &rawShmem)) {
+      return;
+    }
+    const webgl::RaiiShmem shmem{child, rawShmem};
+    if (!shmem) {
+      EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "Failed to map in sub data buffer.");
+      return;
+    }
 
-  const auto shmemView = shmem.ByteRange();
-  MOZ_RELEASE_ASSERT(shmemView.length() == 1 + destView.length());
+    const auto shmemView = shmem.ByteRange();
+    MOZ_RELEASE_ASSERT(shmemView.length() == 1 + destView->length());
 
-  const auto ok = bool(*(shmemView.begin().get()));
-  const auto srcView =
-      Range<const uint8_t>{shmemView.begin() + 1, shmemView.end()};
-  if (ok) {
-    Memcpy(destView.begin(), srcView.begin(), srcView.length());
-  }
+    const auto ok = bool(*(shmemView.begin().get()));
+    const auto srcView =
+        Range<const uint8_t>{shmemView.begin() + 1, shmemView.end()};
+    if (ok) {
+      Memcpy(destView->begin(), srcView.begin(), srcView.length());
+    }
+  });
 }
 
 ////
@@ -3428,9 +3481,9 @@ void ClientWebGLContext::BufferData(
   if (!ValidateNonNull("src", maybeSrc)) return;
   const auto& src = maybeSrc.Value();
 
-  src.ComputeState();
-  const auto range = Range<const uint8_t>{src.Data(), src.Length()};
-  Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
+  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    Run<RPROC(BufferData)>(target, RawBuffer<>(aData), usage);
+  });
 }
 
 void ClientWebGLContext::BufferData(GLenum target,
@@ -3438,14 +3491,16 @@ void ClientWebGLContext::BufferData(GLenum target,
                                     GLenum usage, GLuint srcElemOffset,
                                     GLuint srcElemCountOverride) {
   const FuncScope funcScope(*this, "bufferData");
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-  const auto range = Range<const uint8_t>{bytes, byteLen};
-  Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
+  size_t elemSize = SizeOfViewElem(src);
+  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    const auto& range =
+        ValidateArrayBufferView(aData, elemSize, srcElemOffset,
+                                srcElemCountOverride, LOCAL_GL_INVALID_VALUE);
+    if (!range) {
+      return;
+    }
+    Run<RPROC(BufferData)>(target, RawBuffer<>(*range), usage);
+  });
 }
 
 void ClientWebGLContext::RawBufferData(GLenum target, const uint8_t* srcBytes,
@@ -3473,10 +3528,10 @@ void ClientWebGLContext::BufferSubData(GLenum target,
                                        WebGLsizeiptr dstByteOffset,
                                        const dom::ArrayBuffer& src) {
   const FuncScope funcScope(*this, "bufferSubData");
-  src.ComputeState();
-  const auto range = Range<const uint8_t>{src.Data(), src.Length()};
-  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range),
-                            /* unsynchronized */ false);
+  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(aData),
+                              /* unsynchronized */ false);
+  });
 }
 
 void ClientWebGLContext::BufferSubData(GLenum target,
@@ -3485,15 +3540,17 @@ void ClientWebGLContext::BufferSubData(GLenum target,
                                        GLuint srcElemOffset,
                                        GLuint srcElemCountOverride) {
   const FuncScope funcScope(*this, "bufferSubData");
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-  const auto range = Range<const uint8_t>{bytes, byteLen};
-  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range),
-                            /* unsynchronized */ false);
+  size_t elemSize = SizeOfViewElem(src);
+  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    const auto& range =
+        ValidateArrayBufferView(aData, elemSize, srcElemOffset,
+                                srcElemCountOverride, LOCAL_GL_INVALID_VALUE);
+    if (!range) {
+      return;
+    }
+    Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(*range),
+                              /* unsynchronized */ false);
+  });
 }
 
 void ClientWebGLContext::CopyBufferSubData(GLenum readTarget,
@@ -4082,19 +4139,11 @@ Range<T> SubRange(const Range<T>& full, const size_t offset,
   return Range<T>{newBegin, newBegin + length};
 }
 
-static inline size_t SizeOfViewElem(const dom::ArrayBufferView& view) {
-  const auto& elemType = view.Type();
-  if (elemType == js::Scalar::MaxTypedArrayViewType)  // DataViews.
-    return 1;
-
-  return js::Scalar::byteSize(elemType);
-}
-
-Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
+Maybe<Range<const uint8_t>> GetRangeFromData(const Span<uint8_t>& data,
+                                             size_t bytesPerElem,
                                              GLuint elemOffset,
                                              GLuint elemCountOverride) {
-  const auto byteRange = MakeRangeAbv(view);  // In bytes.
-  const auto bytesPerElem = SizeOfViewElem(view);
+  const auto byteRange = Range(data);  // In bytes.
 
   auto elemCount = byteRange.length() / bytesPerElem;
   if (elemOffset > elemCount) return {};
@@ -4200,15 +4249,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
-  // Demarcate the region within which GC is disallowed. Typed arrays can move
-  // their data during a GC, so this will allow the rooting hazard analysis to
-  // report if a GC is possible while any data pointers extracted from the
-  // typed array are still live.
-  dom::Uint8ClampedArray scopedArr;
-  const auto reset = MakeScopeExit([&] {
-    scopedArr.Reset();  // (For the hazard analysis) Done with the data.
-  });
-
   // -
   bool isDataUpload = false;
   auto desc = [&]() -> Maybe<webgl::TexUnpackBlobDesc> {
@@ -4240,17 +4280,23 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
           break;
       }
 
-      const auto range = GetRangeFromView(view, src.mViewElemOffset,
-                                          src.mViewElemLengthOverride);
-      if (!range) {
-        EnqueueError(LOCAL_GL_INVALID_OPERATION, "`source` too small.");
-        return {};
-      }
-      return Some(webgl::TexUnpackBlobDesc{imageTarget,
-                                           size.value(),
-                                           gfxAlphaType::NonPremult,
-                                           Some(RawBuffer<>{*range}),
-                                           {}});
+      return view.ProcessData(
+          [&](const Span<uint8_t>& aData,
+              JS::AutoCheckCannotGC&& nogc) -> Maybe<webgl::TexUnpackBlobDesc> {
+            const auto range = GetRangeFromData(aData, SizeOfViewElem(view),
+                                                src.mViewElemOffset,
+                                                src.mViewElemLengthOverride);
+            if (!range) {
+              nogc.reset();
+              EnqueueError(LOCAL_GL_INVALID_OPERATION, "`source` too small.");
+              return {};
+            }
+            return Some(webgl::TexUnpackBlobDesc{imageTarget,
+                                                 size.value(),
+                                                 gfxAlphaType::NonPremult,
+                                                 Some(RawBuffer<>{*range}),
+                                                 {}});
+          });
     }
 
     if (src.mImageBitmap) {
@@ -4260,50 +4306,59 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
     if (src.mImageData) {
       const auto& imageData = *src.mImageData;
+      dom::Uint8ClampedArray scopedArr;
       MOZ_RELEASE_ASSERT(scopedArr.Init(imageData.GetDataObject()));
-      scopedArr.ComputeState();
-      const auto dataSize = scopedArr.Length();
-      const auto data = reinterpret_cast<uint8_t*>(scopedArr.Data());
-      if (!data) {
-        // Neutered, e.g. via Transfer
-        EnqueueError(LOCAL_GL_INVALID_VALUE,
-                     "ImageData.data.buffer is Detached. (Maybe you Transfered "
-                     "it to a Worker?");
-        return {};
-      }
 
-      // -
+      return scopedArr.ProcessData(
+          [&](const Span<uint8_t>& aData,
+              JS::AutoCheckCannotGC&& nogc) -> Maybe<webgl::TexUnpackBlobDesc> {
+            const auto dataSize = aData.Length();
+            const auto data = aData.Elements();
+            if (dataSize == 0) {
+              nogc.reset();  // aData will not be used.
+              EnqueueError(
+                  LOCAL_GL_INVALID_VALUE,
+                  "ImageData.data.buffer is Detached. (Maybe you Transfered "
+                  "it to a Worker?");
+              return {};
+            }
 
-      const gfx::IntSize imageSize(imageData.Width(), imageData.Height());
-      const auto sizeFromDims =
-          CheckedInt<size_t>(imageSize.width) * imageSize.height * 4;
-      MOZ_RELEASE_ASSERT(sizeFromDims.isValid() &&
-                         sizeFromDims.value() == dataSize);
+            // -
 
-      const RefPtr<gfx::DataSourceSurface> surf =
-          gfx::Factory::CreateWrappingDataSourceSurface(
-              data, imageSize.width * 4, imageSize,
-              gfx::SurfaceFormat::R8G8B8A8);
-      MOZ_ASSERT(surf);
+            const gfx::IntSize imageSize(imageData.Width(), imageData.Height());
+            const auto sizeFromDims =
+                CheckedInt<size_t>(imageSize.width) * imageSize.height * 4;
+            MOZ_RELEASE_ASSERT(sizeFromDims.isValid() &&
+                               sizeFromDims.value() == dataSize);
 
-      // -
+            const RefPtr<gfx::DataSourceSurface> surf =
+                gfx::Factory::CreateWrappingDataSourceSurface(
+                    data, imageSize.width * 4, imageSize,
+                    gfx::SurfaceFormat::R8G8B8A8);
+            MOZ_ASSERT(surf);
 
-      const auto imageUSize = *uvec2::FromSize(imageSize);
-      const auto concreteSize =
-          size.valueOr(uvec3{imageUSize.x, imageUSize.y, 1});
+            // -
 
-      // WhatWG "HTML Living Standard" (30 October 2015):
-      // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned
-      // as non-premultiplied alpha values."
-      return Some(webgl::TexUnpackBlobDesc{imageTarget,
-                                           concreteSize,
-                                           gfxAlphaType::NonPremult,
-                                           {},
-                                           {},
-                                           Some(imageUSize),
-                                           nullptr,
-                                           {},
-                                           surf});
+            const auto imageUSize = *uvec2::FromSize(imageSize);
+            const auto concreteSize =
+                size.valueOr(uvec3{imageUSize.x, imageUSize.y, 1});
+
+            // WhatWG "HTML Living Standard" (30 October 2015):
+            // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be
+            // returned as non-premultiplied alpha values."
+            auto result =
+                Some(webgl::TexUnpackBlobDesc{imageTarget,
+                                              concreteSize,
+                                              gfxAlphaType::NonPremult,
+                                              {},
+                                              {},
+                                              Some(imageUSize),
+                                              nullptr,
+                                              {},
+                                              surf});
+            nogc.reset();  // Done with aData
+            return result;
+          });
     }
 
     if (src.mOffscreenCanvas) {
@@ -4563,29 +4618,40 @@ void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
     return;
   }
 
-  RawBuffer<> range;
-  Maybe<uint64_t> pboOffset;
   if (src.mView) {
-    const auto maybe = GetRangeFromView(*src.mView, src.mViewElemOffset,
-                                        src.mViewElemLengthOverride);
-    if (!maybe) {
-      EnqueueError(LOCAL_GL_INVALID_VALUE, "`source` too small.");
+    src.mView->ProcessData([&](const Span<uint8_t>& aData,
+                               JS::AutoCheckCannotGC&& aNoGC) {
+      const auto range =
+          GetRangeFromData(aData, SizeOfViewElem(*src.mView),
+                           src.mViewElemOffset, src.mViewElemLengthOverride);
+      if (!range) {
+        aNoGC.reset();
+        EnqueueError(LOCAL_GL_INVALID_VALUE, "`source` too small.");
+        return;
+      }
+
+      // We don't need to shrink `range` because valid calls require
+      // `range` to match requirements exactly.
+
+      RunWithGCData<RPROC(CompressedTexImage)>(
+          std::move(aNoGC), sub, imageTarget, static_cast<uint32_t>(level),
+          format, CastUvec3(offset), CastUvec3(isize), RawBuffer<>{*range},
+          static_cast<uint32_t>(pboImageSize), Maybe<uint64_t>());
       return;
-    }
-    range = RawBuffer<>{*maybe};
-  } else if (src.mPboOffset) {
-    if (!ValidateNonNegative("offset", *src.mPboOffset)) return;
-    pboOffset = Some(*src.mPboOffset);
-  } else {
+    });
+    return;
+  }
+  if (!src.mPboOffset) {
     MOZ_CRASH("impossible");
   }
-
-  // We don't need to shrink `range` because valid calls require `range` to
-  // match requirements exactly.
+  if (!ValidateNonNegative("offset", *src.mPboOffset)) {
+    return;
+  }
 
   Run<RPROC(CompressedTexImage)>(
       sub, imageTarget, static_cast<uint32_t>(level), format, CastUvec3(offset),
-      CastUvec3(isize), range, static_cast<uint32_t>(pboImageSize), pboOffset);
+      CastUvec3(isize), RawBuffer<>(), static_cast<uint32_t>(pboImageSize),
+      Some(*src.mPboOffset));
 }
 
 void ClientWebGLContext::CopyTexImage(uint8_t funcDims, GLenum imageTarget,
@@ -4762,13 +4828,21 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
                                      const WebGLUniformLocationJS* const loc,
                                      bool transpose,
                                      const Range<const uint8_t>& bytes,
+                                     JS::AutoCheckCannotGC&& nogc,
                                      GLuint elemOffset,
                                      GLuint elemCountOverride) const {
+  // FuncScope::~FuncScope() can GC in a failure case, so all `return`
+  // statements need to `nogc.reset()` up until the `nogc` is consumed by
+  // `RunWithGCData`.
   const FuncScope funcScope(*this, "uniform setter");
-  if (IsContextLost()) return;
+  if (IsContextLost()) {
+    nogc.reset();
+    return;
+  }
 
   const auto& activeLinkResult = GetActiveLinkResult();
   if (!activeLinkResult) {
+    nogc.reset();
     EnqueueError(LOCAL_GL_INVALID_OPERATION, "No active linked Program.");
     return;
   }
@@ -4777,12 +4851,14 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
 
   auto availCount = bytes.length() / sizeof(float);
   if (elemOffset > availCount) {
+    nogc.reset();
     EnqueueError(LOCAL_GL_INVALID_VALUE, "`elemOffset` too large for `data`.");
     return;
   }
   availCount -= elemOffset;
   if (elemCountOverride) {
     if (elemCountOverride > availCount) {
+      nogc.reset();
       EnqueueError(LOCAL_GL_INVALID_VALUE,
                    "`elemCountOverride` too large for `data`.");
       return;
@@ -4794,6 +4870,7 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
 
   const auto channels = ElemTypeComponents(funcElemType);
   if (!availCount || availCount % channels != 0) {
+    nogc.reset();
     EnqueueError(LOCAL_GL_INVALID_VALUE,
                  "`values` length (%u) must be a positive "
                  "integer multiple of size of %s.",
@@ -4806,12 +4883,16 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
   uint32_t locId = -1;
   if (MOZ_LIKELY(loc)) {
     locId = loc->mLocation;
-    if (!loc->ValidateUsable(*this, "location")) return;
+    if (!loc->ValidateUsable(*this, "location")) {
+      nogc.reset();
+      return;
+    }
 
     // -
 
     const auto& reqLinkInfo = loc->mParent.lock();
     if (reqLinkInfo.get() != activeLinkResult) {
+      nogc.reset();
       EnqueueError(LOCAL_GL_INVALID_OPERATION,
                    "UniformLocation is not from the current active Program.");
       return;
@@ -4831,6 +4912,7 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
       }
       validSetters.pop_back();  // Cheekily discard the extra trailing '/'.
 
+      nogc.reset();
       EnqueueError(LOCAL_GL_INVALID_OPERATION,
                    "Uniform's `type` requires uniform setter of type %s.",
                    validSetters.c_str());
@@ -4844,7 +4926,8 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
       reinterpret_cast<const webgl::UniformDataVal*>(bytes.begin().get()) +
       elemOffset;
   const auto range = Range{begin, availCount};
-  Run<RPROC(UniformData)>(locId, transpose, RawBuffer{range});
+  RunWithGCData<RPROC(UniformData)>(std::move(nogc), locId, transpose,
+                                    RawBuffer{range});
 }
 
 // -
@@ -5044,21 +5127,20 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     return;
   }
 
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(dstData, dstElemOffset, 0,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
+  size_t elemSize = SizeOfViewElem(dstData);
+  dstData.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    const auto& range = ValidateArrayBufferView(aData, elemSize, dstElemOffset,
+                                                0, LOCAL_GL_INVALID_VALUE);
+    if (!range) {
+      return;
+    }
 
-  const auto desc = webgl::ReadPixelsDesc{{x, y},
-                                          *uvec2::From(width, height),
-                                          {format, type},
-                                          state.mPixelPackState};
-  const auto range = Range<uint8_t>(bytes, byteLen);
-  if (!DoReadPixels(desc, range)) {
-    return;
-  }
+    const auto desc = webgl::ReadPixelsDesc{{x, y},
+                                            *uvec2::From(width, height),
+                                            {format, type},
+                                            state.mPixelPackState};
+    (void)DoReadPixels(desc, *range);
+  });
 }
 
 bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
@@ -6566,34 +6648,26 @@ const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
 
 // ---------------------------
 
-bool ClientWebGLContext::ValidateArrayBufferView(
-    const dom::ArrayBufferView& view, GLuint elemOffset,
-    GLuint elemCountOverride, const GLenum errorEnum, uint8_t** const out_bytes,
-    size_t* const out_byteLen) const {
-  view.ComputeState();
-  uint8_t* const bytes = view.Data();
-  const size_t byteLen = view.Length();
-
-  const auto& elemSize = SizeOfViewElem(view);
-
-  size_t elemCount = byteLen / elemSize;
+Maybe<Range<uint8_t>> ClientWebGLContext::ValidateArrayBufferView(
+    const Span<uint8_t>& bytes, size_t elemSize, GLuint elemOffset,
+    GLuint elemCountOverride, const GLenum errorEnum) const {
+  size_t elemCount = bytes.Length() / elemSize;
   if (elemOffset > elemCount) {
     EnqueueError(errorEnum, "Invalid offset into ArrayBufferView.");
-    return false;
+    return Nothing();
   }
   elemCount -= elemOffset;
 
   if (elemCountOverride) {
     if (elemCountOverride > elemCount) {
       EnqueueError(errorEnum, "Invalid sub-length for ArrayBufferView.");
-      return false;
+      return Nothing();
     }
     elemCount = elemCountOverride;
   }
 
-  *out_bytes = bytes + (elemOffset * elemSize);
-  *out_byteLen = elemCount * elemSize;
-  return true;
+  return Some(Range<uint8_t>(
+      bytes.Subspan(elemOffset * elemSize, elemCount * elemSize)));
 }
 
 // ---------------------------

@@ -120,8 +120,9 @@ already_AddRefed<Document> DOMParser::ParseFromSafeString(const nsAString& aStr,
 already_AddRefed<Document> DOMParser::ParseFromBuffer(const Uint8Array& aBuf,
                                                       SupportedType aType,
                                                       ErrorResult& aRv) {
-  aBuf.ComputeState();
-  return ParseFromBuffer(Span(aBuf.Data(), aBuf.Length()), aType, aRv);
+  return aBuf.ProcessFixedData([&](const Span<uint8_t>& aData) {
+    return ParseFromBuffer(aData, aType, aRv);
+  });
 }
 
 already_AddRefed<Document> DOMParser::ParseFromBuffer(Span<const uint8_t> aBuf,
