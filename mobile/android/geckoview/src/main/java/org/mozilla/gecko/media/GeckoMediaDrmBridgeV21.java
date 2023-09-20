@@ -765,7 +765,6 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
   private String getCDMUserAgent() {
     // This user agent is found and hard-coded in Android(L) source code and
     // Chromium project. Not sure if it's gonna change in the future.
-    final String ua = "Widevine CDM v1.0";
-    return ua;
+    return "Widevine CDM v1.0";
   }
 }

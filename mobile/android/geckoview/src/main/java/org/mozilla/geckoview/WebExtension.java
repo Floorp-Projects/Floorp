@@ -2758,16 +2758,13 @@ public class WebExtension {
 
       final boolean saveAs = optionsBundle.getBoolean("saveAs");
 
-      final WebExtension.DownloadRequest request =
-          new WebExtension.DownloadRequest.Builder(mainRequest)
-              .filename(optionsBundle.getString("filename"))
-              .downloadFlags(downloadFlags)
-              .conflictAction(conflictActionFlags)
-              .saveAs(saveAs)
-              .allowHttpErrors(allowHttpErrors)
-              .build();
-
-      return request;
+      return new Builder(mainRequest)
+          .filename(optionsBundle.getString("filename"))
+          .downloadFlags(downloadFlags)
+          .conflictAction(conflictActionFlags)
+          .saveAs(saveAs)
+          .allowHttpErrors(allowHttpErrors)
+          .build();
     }
 
     /* package */ static class Builder {

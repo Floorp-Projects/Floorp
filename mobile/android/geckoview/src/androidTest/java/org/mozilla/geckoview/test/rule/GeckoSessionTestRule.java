@@ -2479,8 +2479,7 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   public boolean getActive(final @NonNull GeckoSession session) {
-    final Boolean isActive = (Boolean) webExtensionApiCall(session, "GetActive", null);
-    return isActive;
+    return (Boolean) webExtensionApiCall(session, "GetActive", null);
   }
 
   public void triggerCookieBannerDetected(final @NonNull GeckoSession session) {

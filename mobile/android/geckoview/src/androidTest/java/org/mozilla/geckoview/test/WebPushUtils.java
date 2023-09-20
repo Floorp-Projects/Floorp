@@ -153,9 +153,8 @@ import java.security.spec.InvalidKeySpecException;
       final ECPoint point = new ECPoint(x, y);
       final ECPublicKeySpec spec = new ECPublicKeySpec(point, getP256Spec());
       final KeyFactory factory = KeyFactory.getInstance("EC");
-      final ECPublicKey key = (ECPublicKey) factory.generatePublic(spec);
 
-      return key;
+      return (ECPublicKey) factory.generatePublic(spec);
     } catch (final NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     } catch (final InvalidKeySpecException e) {
