@@ -40,7 +40,7 @@ if (Services.prefs.getBoolPref("floorp.privateContainer.enabled", false)) {
       "openWithPrivateContainer(gContextMenu.linkURL);",
       "context-openlink",
       function () {
-        document.getElementById("bsb-context-link-add").hidden =
+        document.getElementById("open_in_private_container").hidden =
           document.getElementById("context-openlink").hidden;
       }
     );
