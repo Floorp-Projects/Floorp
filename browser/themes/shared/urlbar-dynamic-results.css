@@ -21,7 +21,7 @@
   }
 
   &:not([selected]) > .urlbarView-no-wrap > .urlbarView-favicon {
-    color: var(--urlbar-popup-url-color);
+    color: var(--link-color);
   }
 }
 

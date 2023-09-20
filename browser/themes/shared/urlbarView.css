@@ -32,8 +32,6 @@
   --urlbarView-result-button-hover-color: var(--toolbar-field-focus-background-color);
   --urlbarView-result-button-hover-background-color: color-mix(in srgb, var(--toolbar-field-focus-color) var(--urlbarView-result-button-background-opacity), transparent);
 
-  --urlbar-popup-url-color: var(--link-color);
-
   &:-moz-locale-dir(rtl) {
     --urlbarView-action-slide-in-distance: -200px;
   }
@@ -271,7 +269,7 @@
     /* We use the URL color for this icon to inherit its accessibility
        properties, like adapting to high contrast modes. We also want to ensure
        contrast from the result highlight. */
-    color: var(--urlbar-popup-url-color);
+    color: var(--link-color);
     -moz-context-properties: fill;
   }
 }
@@ -611,7 +609,7 @@
 }
 
 .urlbarView-url {
-  color: var(--urlbar-popup-url-color);
+  color: var(--link-color);
   /* Increase line-height to avoid cutting overhanging glyphs due to masking on
      the element */
   line-height: 1.4;
