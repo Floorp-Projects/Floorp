@@ -222,6 +222,7 @@ Then complete these steps:
 After a successful build, you may resume this script.
 "
 echo_log "Modified BUILD.gn (or webrtc.gni) files: $MODIFIED_BUILD_RELATED_FILE_CNT"
+MOZ_BUILD_CHANGE_CNT=0
 if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   echo_log "Regenerate build files"
   ./mach python python/mozbuild/mozbuild/gn_processor.py \
@@ -232,13 +233,6 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   if [ "x$MOZ_BUILD_CHANGE_CNT" != "x0" ]; then
     echo_log "Detected modified moz.build files, commiting"
     bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
-    TRY_FUZZY_QUERY_STRING="^build-"
-    echo_log "Starting try builds with '$TRY_FUZZY_QUERY_STRING'"
-    echo_log "Note - this step can take a long time (occasionally in the 10min range)"
-    # Show the time used for this command, and don't let it fail if the
-    # command times out so the script continues running.  This command
-    # can take quite long, occasionally 10min.
-    time ./mach try fuzzy --full -q $TRY_FUZZY_QUERY_STRING 2>&1| tee -a $LOOP_OUTPUT_LOG || true
   fi
 fi
 ERROR_HELP=""
@@ -253,6 +247,19 @@ running this script with the following command:
 echo_log "Test build"
 ./mach build 2>&1| tee -a $LOOP_OUTPUT_LOG
 ERROR_HELP=""
+
+# If we've committed moz.build changes, spin up try builds.
+if [ "x$MOZ_BUILD_CHANGE_CNT" != "x0" ]; then
+  TRY_FUZZY_QUERY_STRING="^build-"
+  CURRENT_TIME=`date`
+  echo_log "Starting try builds with '$TRY_FUZZY_QUERY_STRING' at $CURRENT_TIME"
+  echo_log "Note - this step can take a long time (occasionally in the 10min range)"
+  echo_log "       with little or no feedback."
+  # Show the time used for this command, and don't let it fail if the
+  # command times out so the script continues running.  This command
+  # can take quite long, occasionally 10min.
+  (time ./mach try fuzzy --full -q $TRY_FUZZY_QUERY_STRING) 2>&1| tee -a $LOOP_OUTPUT_LOG || true
+fi
 
 if [ ! "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
 if [ $MOZ_LIBWEBRTC_NEXT_BASE = $MOZ_STOP_AFTER_COMMIT ]; then
