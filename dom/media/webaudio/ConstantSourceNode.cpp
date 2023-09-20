@@ -106,7 +106,7 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
           std::min<TrackTime>(WEBAUDIO_BLOCK_SIZE, mStop - ticks) - writeOffset;
 
       if (mOffset.HasSimpleValue()) {
-        float value = mOffset.GetValueAtTime(ticks);
+        float value = mOffset.GetValue();
         std::fill_n(output + writeOffset, count, value);
       } else {
         mOffset.GetValuesAtTime(ticks + writeOffset, output + writeOffset,
