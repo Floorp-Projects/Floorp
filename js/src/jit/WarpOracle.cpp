@@ -1075,6 +1075,11 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
 
   WarpScriptSnapshot* scriptSnapshot = maybeScriptSnapshot.unwrap();
   oracle_->addScriptSnapshot(scriptSnapshot, icScript, targetScript->length());
+#ifdef DEBUG
+  if (!isTrialInlined && targetScript->jitScript()->hasPurgedStubs()) {
+    oracle_->ignoreFailedICHash();
+  }
+#endif
 
   if (!AddOpSnapshot<WarpInlinedCall>(alloc_, snapshots, offset,
                                       cacheIRSnapshot, scriptSnapshot, info)) {
@@ -1082,6 +1087,10 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
   }
   fallbackStub->setUsedByTranspiler();
   return true;
+}
+
+void WarpOracle::ignoreFailedICHash() {
+  outerScript_->jitScript()->notePurgedStubs();
 }
 
 struct TypeFrequency {
