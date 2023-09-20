@@ -30,7 +30,12 @@ DllServices* DllServices::Get() {
   static StaticLocalRefPtr<DllServices> sInstance(
       []() -> already_AddRefed<DllServices> {
         RefPtr<DllServices> dllSvc(new DllServices());
-        dllSvc->EnableFull();
+        // Full DLL services require XPCOM, which GMP doesn't have
+        if (XRE_IsGMPluginProcess()) {
+          dllSvc->EnableBasic();
+        } else {
+          dllSvc->EnableFull();
+        }
 
         auto setClearOnShutdown = [ptr = &sInstance]() -> void {
           ClearOnShutdown(ptr);
@@ -75,6 +80,10 @@ RefPtr<UntrustedModulesPromise> DllServices::GetUntrustedModulesData() {
 }
 
 void DllServices::DisableFull() {
+  if (XRE_IsGMPluginProcess()) {
+    return;
+  }
+
   if (mUntrustedModulesProcessor) {
     mUntrustedModulesProcessor->Disable();
   }

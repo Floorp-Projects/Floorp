@@ -39,7 +39,6 @@
 #include "runnable_utils.h"
 #ifdef XP_WIN
 #  include "mozilla/FileUtilsWin.h"
-#  include "mozilla/WinDllServices.h"
 #  include "WMFDecoderModule.h"
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
@@ -299,23 +298,13 @@ class NotifyGMPProcessLoadedTask : public Runnable {
     }
 #endif
 
-    nsCOMPtr<nsISerialEventTarget> gmpEventTarget =
-        mGMPParent->GMPEventTarget();
-    if (NS_WARN_IF(!gmpEventTarget)) {
-      return NS_ERROR_FAILURE;
-    }
-
-#if defined(XP_WIN)
-    RefPtr<DllServices> dllSvc(DllServices::Get());
-    bool isReadyForBackgroundProcessing =
-        dllSvc->IsReadyForBackgroundProcessing();
-    gmpEventTarget->Dispatch(NewRunnableMethod<bool, bool>(
-        "GMPParent::SendInitDllServices", mGMPParent,
-        &GMPParent::SendInitDllServices, isReadyForBackgroundProcessing,
-        Telemetry::CanRecordReleaseData()));
-#endif
-
     if (canProfile) {
+      nsCOMPtr<nsISerialEventTarget> gmpEventTarget =
+          mGMPParent->GMPEventTarget();
+      if (!gmpEventTarget) {
+        return NS_ERROR_FAILURE;
+      }
+
       ipc::Endpoint<PProfilerChild> profilerParent(
           ProfilerParent::CreateForProcess(mProcessId));
 
@@ -441,49 +430,6 @@ mozilla::ipc::IPCResult GMPParent::RecvFOGData(ByteBuf&& aBuf) {
   glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
-
-#if defined(XP_WIN)
-mozilla::ipc::IPCResult GMPParent::RecvGetModulesTrust(
-    ModulePaths&& aModPaths, bool aRunAtNormalPriority,
-    GetModulesTrustResolver&& aResolver) {
-  class ModulesTrustRunnable final : public Runnable {
-   public:
-    ModulesTrustRunnable(ModulePaths&& aModPaths, bool aRunAtNormalPriority,
-                         GetModulesTrustResolver&& aResolver)
-        : Runnable("GMPParent::RecvGetModulesTrust::ModulesTrustRunnable"),
-          mModPaths(std::move(aModPaths)),
-          mResolver(std::move(aResolver)),
-          mEventTarget(GetCurrentSerialEventTarget()),
-          mRunAtNormalPriority(aRunAtNormalPriority) {}
-
-    NS_IMETHOD Run() override {
-      RefPtr<DllServices> dllSvc(DllServices::Get());
-      dllSvc->GetModulesTrust(std::move(mModPaths), mRunAtNormalPriority)
-          ->Then(
-              mEventTarget, __func__,
-              [self = RefPtr{this}](ModulesMapResult&& aResult) {
-                self->mResolver(Some(ModulesMapResult(std::move(aResult))));
-              },
-              [self = RefPtr{this}](nsresult aRv) {
-                self->mResolver(Nothing());
-              });
-      return NS_OK;
-    }
-
-   private:
-    ~ModulesTrustRunnable() override = default;
-
-    ModulePaths mModPaths;
-    GetModulesTrustResolver mResolver;
-    nsCOMPtr<nsISerialEventTarget> mEventTarget;
-    bool mRunAtNormalPriority;
-  };
-
-  NS_DispatchToMainThread(MakeAndAddRef<ModulesTrustRunnable>(
-      std::move(aModPaths), aRunAtNormalPriority, std::move(aResolver)));
-  return IPC_OK();
-}
-#endif  // defined(XP_WIN)
 
 void GMPParent::CloseIfUnused() {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
