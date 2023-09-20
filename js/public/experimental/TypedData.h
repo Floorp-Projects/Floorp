@@ -289,6 +289,18 @@ JS_PUBLIC_API bool IsLargeArrayBufferView(JSObject* obj);
  */
 JS_PUBLIC_API bool PinArrayBufferOrViewLength(JSObject* obj, bool pin);
 
+/*
+ * Given an ArrayBuffer or view, make sure its contents are not stored inline
+ * so that the data is safe for use even if a GC moves the owning object.
+ *
+ * Note that this by itself does not make it safe to use the data pointer
+ * if JS can run or the ArrayBuffer can be detached in any way. Consider using
+ * this in conjunction with PinArrayBufferOrViewLength, which will cause any
+ * potentially invalidating operations to fail.
+ */
+JS_PUBLIC_API bool EnsureNonInlineArrayBufferOrView(JSContext* cx,
+                                                    JSObject* obj);
+
 namespace detail {
 
 // Map from eg Uint8Clamped -> uint8_t, Uint8 -> uint8_t, or Float64 ->
