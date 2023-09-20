@@ -325,7 +325,6 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
     CloseAndRelease(aCx, NS_ERROR_DOM_WRONG_TYPE_ERR);
     return;
   }
-  chunk.ComputeState();
 
   MOZ_DIAGNOSTIC_ASSERT(mBuffer.IsEmpty());
 
@@ -333,13 +332,13 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   // FIXME: We could sometimes avoid this copy by trying to write `chunk`
   // directly into `mPipeOut` eagerly, and only filling `mBuffer` if there isn't
   // enough space in the pipe's buffer.
-  if (!mBuffer.AppendElements(chunk.Data(), chunk.Length(), fallible)) {
+  if (!chunk.AppendDataTo(mBuffer)) {
     CloseAndRelease(aCx, NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
   mBufferOffset = 0;
-  mBufferRemaining = chunk.Length();
+  mBufferRemaining = mBuffer.Length();
 
   nsresult rv = WriteBuffer();
   if (NS_WARN_IF(NS_FAILED(rv))) {

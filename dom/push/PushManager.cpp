@@ -522,18 +522,10 @@ nsresult PushManager::NormalizeAppServerKey(
       return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
     }
     aAppServerKey = decodedKey;
-  } else if (aSource.IsArrayBuffer()) {
-    if (!PushUtil::CopyArrayBufferToArray(aSource.GetAsArrayBuffer(),
-                                          aAppServerKey)) {
-      return NS_ERROR_DOM_PUSH_INVALID_KEY_ERR;
-    }
-  } else if (aSource.IsArrayBufferView()) {
-    if (!PushUtil::CopyArrayBufferViewToArray(aSource.GetAsArrayBufferView(),
-                                              aAppServerKey)) {
-      return NS_ERROR_DOM_PUSH_INVALID_KEY_ERR;
-    }
   } else {
-    MOZ_CRASH("Uninitialized union: expected string, buffer, or view");
+    if (!AppendTypedArrayDataTo(aSource, aAppServerKey)) {
+      return NS_ERROR_DOM_PUSH_INVALID_KEY_ERR;
+    }
   }
   if (aAppServerKey.IsEmpty()) {
     return NS_ERROR_DOM_PUSH_INVALID_KEY_ERR;

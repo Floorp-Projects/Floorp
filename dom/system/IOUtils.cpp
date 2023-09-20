@@ -1033,10 +1033,9 @@ already_AddRefed<Promise> IOUtils::SetMacXAttr(GlobalObject& aGlobal,
         nsCOMPtr<nsIFile> file = new nsLocalFile();
         REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-        aValue.ComputeState();
         nsTArray<uint8_t> value;
 
-        if (!value.AppendElements(aValue.Data(), aValue.Length(), fallible)) {
+        if (!aValue.AppendDataTo(value)) {
           RejectJSPromise(
               promise,
               IOError(NS_ERROR_OUT_OF_MEMORY)
@@ -2834,10 +2833,9 @@ static nsCString FromUnixString(const IOUtils::UnixString& aString) {
     return aString.GetAsUTF8String();
   }
   if (aString.IsUint8Array()) {
-    const auto& u8a = aString.GetAsUint8Array();
-    u8a.ComputeState();
-    // Cast to deal with char signedness
-    return nsCString(reinterpret_cast<const char*>(u8a.Data()), u8a.Length());
+    nsCString data;
+    Unused << aString.GetAsUint8Array().AppendDataTo(data);
+    return data;
   }
   MOZ_CRASH("unreachable");
 }
