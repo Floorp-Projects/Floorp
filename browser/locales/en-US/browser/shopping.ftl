@@ -185,3 +185,22 @@ shopping-callout-pdp-opted-in-subtitle = Open review checker to see an adjusted 
 
 shopping-callout-closed-not-opted-in-title = One click to reliable reviews
 shopping-callout-closed-not-opted-in-subtitle = Give review checker a try whenever you see the price tag. Get insights from real shoppers quickly — before you buy.
+
+## Onboarding message strings.
+
+shopping-onboarding-headline = Try our trusted guide to product reviews
+
+# Dynamic subtitle. Sites are limited to Amazon, Walmart or Best Buy.
+# Variables:
+#   $currentSite (str) - The current shopping page name
+#   $secondSite (str) - A second shopping page name
+#   $thirdSite (str) - A third shopping page name
+shopping-onboarding-dynamic-subtitle = See how reliable product reviews are on <b>{ $currentSite }</b> before you buy. Review checker, an experimental feature from { -vendor-short-name }, is built right into { -brand-product-name } — and it works on <b>{ $secondSite }</b> and <b>{ $thirdSite }</b>, too.
+
+shopping-onboarding-body = Using the power of { -fakespot-brand-full-name }, we help you avoid biased and inauthentic reviews. Our AI model is always improving to protect you as you shop. <a data-l10n-name="learn_more">Learn more</a>
+shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -fakespot-brand-full-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use.</a>
+shopping-onboarding-opt-in-button = Yes, try it
+shopping-onboarding-not-now-button = Not now
+shopping-onboarding-dialog-close-button =
+    .title = Close
+    .aria-label = Close
