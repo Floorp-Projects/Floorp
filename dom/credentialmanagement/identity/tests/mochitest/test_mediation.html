@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mediation Test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    var err;
+    setupTest("mediation").then(
+      function () {
+        return navigator.credentials.get({
+          identity: {
+            providers: [{
+              configURL: "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_manifest.sjs",
+              clientId: "mochitest",
+              nonce: "nonce"
+            }]
+          },
+          mediation: "conditional"
+        });
+      }
+    ).catch((e) => {
+      err = e;
+    }).finally(() => {
+      ok(err instanceof TypeError, err.message);
+      SimpleTest.finish();
+    })
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">This verifies that conditional mediation is not supported.</div>
+<pre id="test"></pre>
+</body>
+</html>
