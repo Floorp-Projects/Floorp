@@ -7535,13 +7535,6 @@
     mirror: always
 #endif // defined(ENABLE_WASM_GC)
 
-#if defined(ENABLE_WASM_GC)
--   name: javascript.options.wasm_final_types
-    type: bool
-    value: false
-    mirror: always
-#endif // defined(ENABLE_WASM_GC)
-
 #if defined(ENABLE_WASM_MEMORY_CONTROL)
 -   name: javascript.options.wasm_memory_control
     type: bool
