@@ -6461,6 +6461,16 @@ nsresult ContentParent::TransmitPermissionsForPrincipal(
     EnsurePermissionsByKey(pair.first, pair.second);
   }
 
+  // We need to add the Site to the secondary keys of interest here.
+  // This allows site-scoped permission updates to propogate when the
+  // port is non-standard.
+  nsAutoCString siteKey;
+  nsresult rv =
+      PermissionManager::GetKeyForPrincipal(aPrincipal, false, true, siteKey);
+  if (NS_SUCCEEDED(rv) && !siteKey.IsEmpty()) {
+    mActiveSecondaryPermissionKeys.EnsureInserted(siteKey);
+  }
+
   return NS_OK;
 }
 
@@ -6553,6 +6563,11 @@ void ContentParent::EnsurePermissionsByKey(const nsACString& aKey,
 bool ContentParent::NeedsPermissionsUpdate(
     const nsACString& aPermissionKey) const {
   return mActivePermissionKeys.Contains(aPermissionKey);
+}
+
+bool ContentParent::NeedsSecondaryKeyPermissionsUpdate(
+    const nsACString& aPermissionKey) const {
+  return mActiveSecondaryPermissionKeys.Contains(aPermissionKey);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAccumulateChildHistograms(
