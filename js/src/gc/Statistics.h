@@ -497,7 +497,7 @@ struct Statistics {
   const char* formatGCFlags(const SliceData& slice);
   const char* formatBudget(const SliceData& slice);
   const char* formatTotalSlices();
-  static bool printProfileTimes(const ProfileDurations& times,
+  static void printProfileTimes(const ProfileDurations& times,
                                 Sprinter& sprinter);
 };
 
