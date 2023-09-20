@@ -1,0 +1,9 @@
+<html class="reftest-wait">
+<audio id=a src=1839193.adts controls></audio>
+<script>
+  a.play();
+  a.onerror = a.onended = () => {
+    document.documentElement.removeAttribute("class")
+  }
+</script>
+</html>
