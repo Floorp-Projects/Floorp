@@ -9,6 +9,12 @@ include protocol PGMPTimer;
 include protocol PGMPStorage;
 include protocol PProfiler;
 
+#if defined(XP_WIN)
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+#endif
+
 include "mozilla/ipc/ByteBufUtils.h";
 include "GMPParent.h";
 include "GMPChild.h";
@@ -36,6 +42,11 @@ parent:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FOGData(ByteBuf buf);
 
+#if defined(XP_WIN)
+  async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+      returns (ModulesMapResult? modMapResult);
+#endif  // defined(XP_WIN)
+
 child:
   async CrashPluginNow();
   [Nested=inside_sync] sync StartPlugin(nsString adapter);
@@ -50,6 +61,20 @@ child:
   // Used in tests and ping assembly. Buffer contains bincoded Rust structs.
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FlushFOGData() returns (ByteBuf buf);
+
+#if defined(XP_WIN)
+  async InitDllServices(bool canRecordReleaseTelemetry,
+                        bool aIsReadyForBackgroundProcessing);
+
+  async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+  /**
+  * This method is used to notify a child process to start
+  * processing module loading events in UntrustedModulesProcessor.
+  * This should be called when the parent process has gone idle.
+  */
+  async UnblockUntrustedModulesThread();
+#endif  // defined(XP_WIN)
 
   // Test-only method.
   // Asks the GMP process to trigger test-only instrumentation.

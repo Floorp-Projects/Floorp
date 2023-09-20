@@ -13,6 +13,10 @@
 #include "base/time.h"
 #include "mozilla/ReentrantMonitor.h"
 
+#ifdef XP_WIN
+#  include "mozilla/UntrustedModulesProcessor.h"
+#endif
+
 #include <ctime>
 
 namespace mozilla::gmp {
@@ -216,6 +220,17 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     sChild->SendFOGData(std::move(buf));
   }
 }
+
+#ifdef XP_WIN
+RefPtr<PGMPChild::GetModulesTrustPromise> SendGetModulesTrust(
+    ModulePaths&& aModules, bool aRunAtNormalPriority) {
+  if (!sChild) {
+    return PGMPChild::GetModulesTrustPromise::CreateAndReject(
+        ipc::ResponseRejectReason::SendError, __func__);
+  }
+  return sChild->SendGetModulesTrust(std::move(aModules), aRunAtNormalPriority);
+}
+#endif
 
 GMPThreadImpl::GMPThreadImpl() : mMutex("GMPThreadImpl"), mThread("GMPThread") {
   MOZ_COUNT_CTOR(GMPThread);
