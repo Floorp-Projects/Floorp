@@ -7,19 +7,6 @@
 DIST_INSTALL = False
 DIRS += ["inject"]
 
-if not CONFIG["CROSS_COMPILE"]:
-    SOURCES += [
-        "dummy.c",
-    ]
-    SOURCES["dummy.c"].flags += ["-fno-lto"]
-
-SOURCES += [
-    "test-array.c",
-    "test-ctors.c",
-]
-SOURCES["test-array.c"].flags += ["-fno-lto"]
-SOURCES["test-ctors.c"].flags += ["-fno-lto"]
-
 if CONFIG["RELRHACK"]:
     HOST_SOURCES += [
         "relrhack.cpp",
@@ -35,6 +22,19 @@ else:
     ]
 
     HostProgram("elfhack")
+
+    if not CONFIG["CROSS_COMPILE"]:
+        SOURCES += [
+            "dummy.c",
+        ]
+        SOURCES["dummy.c"].flags += ["-fno-lto"]
+
+    SOURCES += [
+        "test-array.c",
+        "test-ctors.c",
+    ]
+    SOURCES["test-array.c"].flags += ["-fno-lto"]
+    SOURCES["test-ctors.c"].flags += ["-fno-lto"]
 
 NO_PGO = True
 
