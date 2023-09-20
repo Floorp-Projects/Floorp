@@ -1,8 +1,10 @@
 # Storybook for Firefox
 
-[Storybook](https://storybook.js.org/) is a component library to document our
-design system, reusable components, and any specific components you might want
-to test with dummy data. [Take a look at our Storybook instance!](https://firefoxux.github.io/firefox-desktop-components/?path=/story/docs-reusable-widgets--page)
+[Storybook](https://storybook.js.org/) is an interactive tool that creates a
+playground for UI components. We use Storybook to document our design system,
+reusable components, and any specific components you might want to test with
+dummy data. [Take a look at our Storybook
+instance!](https://firefoxux.github.io/firefox-desktop-components/?path=/story/docs-reusable-widgets--page)
 
 ## Background
 
@@ -27,7 +29,8 @@ commands, or with your personal npm/node that happens to be compatible.
 This is the recommended approach for installing dependencies and running
 Storybook locally.
 
-To install dependencies and start Storybook, just run:
+To install dependencies, start the Storybook server, and launch the Storybook
+site in a local build of Firefox, just run:
 
 ```sh
 # This uses npm ci under the hood to install the package-lock.json exactly.
@@ -35,22 +38,42 @@ To install dependencies and start Storybook, just run:
 ```
 
 This single command will first install any missing dependencies then start the
-local Storybook server. You should run your local build to test in Storybook
-since `chrome://` URLs are currently being pulled from the running browser, so any
-changes to common-shared.css for example will come from your build.
+local Storybook server. It will also start your local browser and point it to
+`http://localhost:5703` while enabling certain preferences to ensure components
+display as expected (specifically `svg.context-properties.content.enabled` and
+`layout.css.light-dark.enabled`).
+
+It's necessary to use your local build to test in Storybook since `chrome://`
+URLs are currently being pulled from the running browser, so any changes to
+common-shared.css for example will come from your build.
 
 The Storybook server will continue running and will watch for component file
-changes. To access your local Storybook preview you can use the `launch`
-subcommand:
+changes.
+
+#### Alternative mach commands
+
+Although running `./mach storybook` is the most convenient way to interact with
+Storybook locally it is also possible to run separate commands to start the
+Storybook server and run your local build with the necessary prefs.
+
+If you only want to start the Storybook server - for example in cases where you
+already have a local build running - you can pass a `--no-open` flag to `./mach
+storybook`:
+
+```sh
+# Start the storybook server without launching a local Firefox build.
+./mach storybook --no-open
+```
+
+If you just want to spin up a local build of Firefox with the required prefs
+enabled you can use the `launch` subcommand:
 
 ```sh
 # In another terminal:
 ./mach storybook launch
 ```
 
-This will run your local browser and point it at `http://localhost:5703`. The
-`launch` subcommand will also enable SVG context-properties so the `fill` CSS
-property works in storybook.
+This will run your local browser and point it at `http://localhost:5703`.
 
 Alternatively, you can simply navigate to `http://localhost:5703/` or run:
 
@@ -59,9 +82,8 @@ Alternatively, you can simply navigate to `http://localhost:5703/` or run:
 ./mach run http://localhost:5703/
 ```
 
-although with these options SVG context-properties won't be enabled, so what's
-displayed in Storybook may not exactly reflect how components will look when
-used in Firefox.
+although with this option certain prefs won't be enabled, so what's displayed in
+Storybook may not exactly reflect how components will look when used in Firefox.
 
 ### Personal npm
 
