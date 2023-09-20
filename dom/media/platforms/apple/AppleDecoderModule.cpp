@@ -28,6 +28,10 @@ extern Boolean VTIsHardwareDecodeSupported(CMVideoCodecType codecType)
 
 namespace mozilla {
 
+using media::DecodeSupport;
+using media::DecodeSupportSet;
+using media::MediaCodec;
+
 bool AppleDecoderModule::sInitialized = false;
 bool AppleDecoderModule::sCanUseVP9Decoder = false;
 
@@ -39,7 +43,7 @@ void AppleDecoderModule::Init() {
 
   sInitialized = true;
   if (RegisterSupplementalVP9Decoder()) {
-    sCanUseVP9Decoder = CanCreateHWDecoder(media::MediaCodec::VP9);
+    sCanUseVP9Decoder = CanCreateHWDecoder(MediaCodec::VP9);
   }
 }
 
@@ -75,19 +79,19 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
-media::DecodeSupportSet AppleDecoderModule::SupportsMimeType(
+DecodeSupportSet AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool checkSupport = (aMimeType.EqualsLiteral("audio/mpeg") &&
                        !StaticPrefs::media_ffvpx_mp3_enabled()) ||
                       aMimeType.EqualsLiteral("audio/mp4a-latm") ||
                       MP4Decoder::IsH264(aMimeType) ||
                       VPXDecoder::IsVP9(aMimeType);
-  media::DecodeSupportSet supportType{};
+  DecodeSupportSet supportType{};
 
   if (checkSupport) {
     UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
     if (trackInfo && trackInfo->IsAudio()) {
-      supportType = media::DecodeSupport::SoftwareDecode;
+      supportType = DecodeSupport::SoftwareDecode;
     } else if (trackInfo && trackInfo->IsVideo()) {
       supportType = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
     }
@@ -100,7 +104,7 @@ media::DecodeSupportSet AppleDecoderModule::SupportsMimeType(
   return supportType;
 }
 
-media::DecodeSupportSet AppleDecoderModule::Supports(
+DecodeSupportSet AppleDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
   const auto& trackInfo = aParams.mConfig;
@@ -111,16 +115,16 @@ media::DecodeSupportSet AppleDecoderModule::Supports(
                       IsVideoSupported(*trackInfo.GetAsVideoInfo());
   if (checkSupport) {
     if (trackInfo.mMimeType == "video/vp9" &&
-        CanCreateHWDecoder(media::MediaCodec::VP9)) {
-      return media::DecodeSupport::HardwareDecode;
+        CanCreateHWDecoder(MediaCodec::VP9)) {
+      return DecodeSupport::HardwareDecode;
     }
     if (trackInfo.mMimeType == "video/avc" &&
-        CanCreateHWDecoder(media::MediaCodec::H264)) {
-      return media::DecodeSupport::HardwareDecode;
+        CanCreateHWDecoder(MediaCodec::H264)) {
+      return DecodeSupport::HardwareDecode;
     }
-    return media::DecodeSupport::SoftwareDecode;
+    return DecodeSupport::SoftwareDecode;
   }
-  return media::DecodeSupportSet{};
+  return DecodeSupportSet{};
 }
 
 bool AppleDecoderModule::IsVideoSupported(
@@ -159,7 +163,7 @@ bool AppleDecoderModule::IsVideoSupported(
 }
 
 /* static */
-bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
+bool AppleDecoderModule::CanCreateHWDecoder(MediaCodec aCodec) {
   // Check whether HW decode should even be enabled
   if (!gfx::gfxVars::CanUseHardwareVideoDecoding()) {
     return false;
@@ -172,12 +176,12 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
     return false;
   }
   switch (aCodec) {
-    case media::MediaCodec::VP9:
+    case MediaCodec::VP9:
       info.mMimeType = "video/vp9";
       VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
       vtReportsSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9);
       break;
-    case media::MediaCodec::H264:
+    case MediaCodec::H264:
       // 1806391 - H264 hardware decode check crashes on 10.12 - 10.14
       if (__builtin_available(macos 10.15, *)) {
         info.mMimeType = "video/avc";
@@ -204,7 +208,7 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
     // we assume that the earlier VTIsHardwareDecodeSupported call is correct.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1716196#c7
     bool hwSupport = decoder->IsHardwareAccelerated(failureReason) ||
-                     aCodec == media::MediaCodec::H264;
+                     aCodec == MediaCodec::H264;
     if (!hwSupport) {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("Apple HW decode failure: '%s'", failureReason.BeginReading()));
