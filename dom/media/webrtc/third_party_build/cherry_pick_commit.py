@@ -5,6 +5,7 @@
 import argparse
 import atexit
 import os
+import sys
 
 from run_operations import get_last_line, run_git, update_resume_state
 from save_patch_stack import save_patch_stack
@@ -166,6 +167,15 @@ if __name__ == "__main__":
         help='reviewers for cherry-picked patch (like "ng,mjf")',
     )
     args = parser.parse_args()
+
+    # make sure the github repo exists
+    error_help = (
+        "No moz-libwebrtc github repo found at {}\n"
+        "Please run restore_patch_stack.py before running {}"
+    ).format(args.repo_path, script_name)
+    if not os.path.exists(args.repo_path):
+        sys.exit(1)
+    error_help = None
 
     commit_message_filename = os.path.join(args.tmp_path, "cherry-pick-commit_msg.txt")
 
