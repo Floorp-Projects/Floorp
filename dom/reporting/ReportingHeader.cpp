@@ -546,15 +546,10 @@ void ReportingHeader::GetEndpointForReportInternal(
 
   uint32_t randomNumber = 0;
 
-  uint8_t* buffer;
-  nsresult rv =
-      randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
+  nsresult rv = randomGenerator->GenerateRandomBytesInto(randomNumber);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-
-  memcpy(&randomNumber, buffer, sizeof(randomNumber));
-  free(buffer);
 
   totalWeight = randomNumber % totalWeight;
 

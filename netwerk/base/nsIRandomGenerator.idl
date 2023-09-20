@@ -4,6 +4,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include <type_traits>
+%}
+
 /**
  * Interface used to generate random data.
  *
@@ -21,4 +25,22 @@ interface nsIRandomGenerator : nsISupports {
    */
   void generateRandomBytes(in unsigned long aLength,
                            [retval, array, size_is(aLength)] out octet aBuffer);
+
+  /**
+   * Fills aBuffer with random bytes.
+   *
+   * @param aBuffer
+   *        A buffer to fill with random bytes.
+   * @param aLength
+   *        Length of aBuffer.
+   */
+  void generateRandomBytesInto([array, size_is(aLength)] in octet aBuffer,
+                               in unsigned long aLength);
+
+%{C++
+  template<typename T>
+  std::enable_if_t<!std::is_pointer_v<T>, nsresult> GenerateRandomBytesInto(T& aResult) {
+    return GenerateRandomBytesInto(reinterpret_cast<uint8_t*>(&aResult), sizeof(T));
+  }
+%}
 };

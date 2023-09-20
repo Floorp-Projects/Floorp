@@ -78,16 +78,12 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     return;
   }
 
-  uint8_t* buf;
-  nsresult rv = randomGenerator->GenerateRandomBytes(dataLen, &buf);
-  if (NS_FAILED(rv) || !buf) {
+  nsresult rv =
+      randomGenerator->GenerateRandomBytesInto(aArray.Data(), dataLen);
+  if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
     return;
   }
-
-  // Copy random bytes to ABV.
-  memcpy(aArray.Data(), buf, dataLen);
-  free(buf);
 
   aRetval.set(view);
 }
