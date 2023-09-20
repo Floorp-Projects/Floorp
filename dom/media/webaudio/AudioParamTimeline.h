@@ -36,6 +36,11 @@ class AudioParamTimeline : public AudioEventTimeline {
   template <class TimeType>
   float GetValueAtTime(TimeType aTime);
 
+  // Prefer this method over GetValueAtTime() only if HasSimpleValue() is
+  // known false.
+  float GetComplexValueAtTime(int64_t aTime);
+  float GetComplexValueAtTime(double aTime) = delete;
+
   template <typename TimeType>
   void InsertEvent(const AudioTimelineEvent& aEvent) {
     if (aEvent.mType == AudioTimelineEvent::Cancel) {
@@ -89,6 +94,14 @@ inline float AudioParamTimeline::GetValueAtTime(double aTime) {
 template <>
 inline float AudioParamTimeline::GetValueAtTime(int64_t aTime) {
   // Use GetValuesAtTime() for a-rate parameters.
+  MOZ_ASSERT(aTime % WEBAUDIO_BLOCK_SIZE == 0);
+  if (HasSimpleValue()) {
+    return GetValue();
+  }
+  return GetComplexValueAtTime(aTime);
+}
+
+inline float AudioParamTimeline::GetComplexValueAtTime(int64_t aTime) {
   MOZ_ASSERT(aTime % WEBAUDIO_BLOCK_SIZE == 0);
 
   // Mix the value of the AudioParam itself with that of the AudioNode inputs.
