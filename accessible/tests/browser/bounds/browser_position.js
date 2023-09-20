@@ -101,3 +101,35 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, remoteIframe: true }
 );
+
+/**
+ * Test the bounds of items in an inline list with content that offsets the
+ * origin of the list's bounding box (creating an IB split within the UL frame).
+ */
+addAccessibleTask(
+  `
+  <style>
+    ul,li {
+      display:inline;
+      list-style-type:none;
+      list-style-position:inside;
+      margin:0;
+      padding:0;
+    }
+    </style>
+    <div id="container" style="background:green; max-width: 400px;">List of information: <ul id="list"><li id="one">item one</li> | <li id="two">item two</li> | <li id="three">item three</li> | <li id="four">item four</li> | <li id="five">item five</li></ul></div>
+  `,
+  async function (browser, docAcc) {
+    await testBoundsWithContent(docAcc, "list", browser);
+    await testBoundsWithContent(docAcc, "one", browser);
+    await testBoundsWithContent(docAcc, "two", browser);
+    await testBoundsWithContent(docAcc, "three", browser);
+    await testBoundsWithContent(docAcc, "four", browser);
+    await testBoundsWithContent(docAcc, "five", browser);
+  },
+  {
+    chrome: true,
+    topLevel: true,
+    iframe: true,
+  }
+);
