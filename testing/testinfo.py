@@ -20,6 +20,7 @@ from mozfile import which
 from moztest.resolve import TestManifestLoader, TestResolver
 
 REFERER = "https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Test-Info"
+MAX_DAYS = 30
 
 
 class TestInfo(object):
@@ -359,8 +360,8 @@ class TestInfoReport(TestInfo):
 
     def get_runcount_data(self, start, end):
         # TODO: use start/end properly
-        runcounts = self.get_runcounts()
-        runcounts = self.squash_runcounts(runcounts, days=30)
+        runcounts = self.get_runcounts(days=MAX_DAYS)
+        runcounts = self.squash_runcounts(runcounts, days=MAX_DAYS)
         return runcounts
 
     def get_testinfoall_index_url(self):
@@ -384,11 +385,12 @@ class TestInfoReport(TestInfo):
                 break
         return url
 
-    def get_runcounts(self):
+    def get_runcounts(self, days=MAX_DAYS):
         testrundata = {}
         # get historical data from test-info job artifact; if missing get fresh
         try:
             url = self.get_testinfoall_index_url()
+            print("INFO: requesting runcounts url: %s" % url)
             r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
             r.raise_for_status()
             testrundata = r.json()
@@ -399,7 +401,7 @@ class TestInfoReport(TestInfo):
         endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=1
         )
-        startday = endday - datetime.timedelta(days=30)
+        startday = endday - datetime.timedelta(days=days)
         while startday < endday:
             nextday = startday + datetime.timedelta(days=1)
             retries = 2
@@ -415,6 +417,7 @@ class TestInfoReport(TestInfo):
                         nextday.date(),
                     )
                     try:
+                        print("INFO: requesting groupsummary url: %s" % url)
                         r = requests.get(
                             url, headers={"User-agent": "mach-test-info/1.0"}
                         )
@@ -436,7 +439,7 @@ class TestInfoReport(TestInfo):
 
         return testrundata
 
-    def squash_runcounts(self, runcounts, days=30):
+    def squash_runcounts(self, runcounts, days=MAX_DAYS):
         # squash all testrundata together into 1 big happy family for the last X days
         endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=1
@@ -451,7 +454,11 @@ class TestInfoReport(TestInfo):
             if datetime.date.fromisoformat(datekey) < oldest.date():
                 continue
 
-            jtn = runcounts[datekey]["job_type_names"]
+            jtn = runcounts[datekey].get("job_type_names", {})
+            if not jtn:
+                print("Warning: Missing job type names from date: %s" % datekey)
+                continue
+
             for m in runcounts[datekey]["manifests"]:
                 man_name = list(m.keys())[0]
 
@@ -585,7 +592,10 @@ class TestInfoReport(TestInfo):
         display_keys = set(display_keys)
         ifd = self.get_intermittent_failure_data(start, end)
 
-        if show_testruns:
+        if show_testruns and os.environ.get("GECKO_HEAD_REPOSITORY", "") in [
+            "https://hg.mozilla.org/mozilla-central",
+            "https://hg.mozilla.org/try",
+        ]:
             runcount = self.get_runcount_data(start, end)
 
         print("Finding tests...")
