@@ -736,18 +736,17 @@ const QuotaCleaner = {
   },
 
   async cleanupAfterDeletionAtShutdown() {
-    const storageDir = PathUtils.join(
+    const toBeRemovedDir = PathUtils.join(
       PathUtils.profileDir,
-      Services.prefs.getStringPref("dom.quotaManager.storageName")
+      Services.prefs.getStringPref("dom.quotaManager.storageName"),
+      "to-be-removed"
     );
 
     if (
       !AppConstants.MOZ_BACKGROUNDTASKS ||
       !Services.prefs.getBoolPref("dom.quotaManager.backgroundTask.enabled")
     ) {
-      await IOUtils.remove(PathUtils.join(storageDir, "to-be-removed"), {
-        recursive: true,
-      });
+      await IOUtils.remove(toBeRemovedDir, { recursive: true });
       return;
     }
 
@@ -756,10 +755,10 @@ const QuotaCleaner = {
     );
 
     runner.removeDirectoryInDetachedProcess(
-      storageDir,
-      "to-be-removed",
-      "0",
+      toBeRemovedDir,
       "",
+      "0",
+      "*", // wildcard
       "Quota"
     );
   },
