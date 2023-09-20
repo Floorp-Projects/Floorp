@@ -744,8 +744,6 @@ class nsNavHistoryQueryResultNode final
   virtual uint16_t GetSortType() override;
   virtual void RecursiveSort(SortComparator aComparator) override;
 
-  nsresult NotifyIfTagsChanged(nsIURI* aURI);
-
   uint32_t mBatchChanges;
 
   // Tracks transition type filters.
