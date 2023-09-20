@@ -8,10 +8,8 @@
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsEscape.h"
@@ -22,115 +20,29 @@
 #include "mozilla/Telemetry.h"
 #include "WebAuthnEnumStrings.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
-#endif
+#include "mozilla/dom/AndroidWebAuthnTokenManager.h"
 
-#define PREF_WEBAUTHN_USBTOKEN_ENABLED \
-  "security.webauth.webauthn_enable_usbtoken"
-#define PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION \
-  "security.webauth.webauthn_testing_allow_direct_attestation"
-#define PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED \
-  "security.webauth.webauthn_enable_android_fido2"
 namespace mozilla::dom {
 
 /***********************************************************************
  * Statics
  **********************************************************************/
 
-class U2FPrefManager;
-
 namespace {
 static mozilla::LazyLogModule gU2FTokenManagerLog("u2fkeymanager");
-StaticRefPtr<U2FTokenManager> gU2FTokenManager;
-StaticRefPtr<U2FPrefManager> gPrefManager;
+StaticAutoPtr<U2FTokenManager> gU2FTokenManager;
 static nsIThread* gBackgroundThread;
 }  // namespace
-
-// Data for WebAuthn UI prompt notifications.
-static const char16_t kPresencePromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"presence\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kRegisterDirectPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"register-direct\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kCancelPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"cancel\",\"tid\":%llu}";
-
-class U2FPrefManager final : public nsIObserver {
- private:
-  U2FPrefManager() : mPrefMutex("U2FPrefManager Mutex") { UpdateValues(); }
-  ~U2FPrefManager() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-
-  static U2FPrefManager* GetOrCreate() {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (!gPrefManager) {
-      gPrefManager = new U2FPrefManager();
-      Preferences::AddStrongObserver(gPrefManager,
-                                     PREF_WEBAUTHN_USBTOKEN_ENABLED);
-      Preferences::AddStrongObserver(gPrefManager,
-                                     PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
-      Preferences::AddStrongObserver(gPrefManager,
-                                     PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
-      ClearOnShutdown(&gPrefManager, ShutdownPhase::XPCOMShutdownThreads);
-    }
-    return gPrefManager;
-  }
-
-  static U2FPrefManager* Get() { return gPrefManager; }
-
-  bool GetAndroidFido2Enabled() {
-    MutexAutoLock lock(mPrefMutex);
-    return mAndroidFido2Enabled;
-  }
-
-  bool GetAllowDirectAttestationForTesting() {
-    MutexAutoLock lock(mPrefMutex);
-    return mAllowDirectAttestation;
-  }
-
-  NS_IMETHODIMP
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override {
-    UpdateValues();
-    return NS_OK;
-  }
-
- private:
-  void UpdateValues() {
-    MOZ_ASSERT(NS_IsMainThread());
-    MutexAutoLock lock(mPrefMutex);
-    mUsbTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_USBTOKEN_ENABLED);
-    mAndroidFido2Enabled =
-        Preferences::GetBool(PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
-    mAllowDirectAttestation =
-        Preferences::GetBool(PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
-  }
-
-  Mutex mPrefMutex MOZ_UNANNOTATED;
-  bool mUsbTokenEnabled;
-  bool mAndroidFido2Enabled;
-  bool mAllowDirectAttestation;
-};
-
-NS_IMPL_ISUPPORTS(U2FPrefManager, nsIObserver);
 
 /***********************************************************************
  * U2FManager Implementation
  **********************************************************************/
-
-NS_IMPL_ISUPPORTS(U2FTokenManager, nsIU2FTokenManager);
 
 U2FTokenManager::U2FTokenManager()
     : mTransactionParent(nullptr), mLastTransactionId(0) {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Create on the main thread to make sure ClearOnShutdown() works.
   MOZ_ASSERT(NS_IsMainThread());
-  // Create the preference manager while we're initializing.
-  U2FPrefManager::GetOrCreate();
 }
 
 // static
@@ -153,10 +65,9 @@ U2FTokenManager* U2FTokenManager::Get() {
 }
 
 void U2FTokenManager::AbortTransaction(const uint64_t& aTransactionId,
-                                       const nsresult& aError,
-                                       bool shouldCancelActiveDialog) {
+                                       const nsresult& aError) {
   Unused << mTransactionParent->SendAbort(aTransactionId, aError);
-  ClearTransaction(shouldCancelActiveDialog);
+  ClearTransaction();
 }
 
 void U2FTokenManager::AbortOngoingTransaction() {
@@ -165,7 +76,7 @@ void U2FTokenManager::AbortOngoingTransaction() {
     Unused << mTransactionParent->SendAbort(mLastTransactionId,
                                             NS_ERROR_DOM_ABORT_ERR);
   }
-  ClearTransaction(true);
+  ClearTransaction();
 }
 
 void U2FTokenManager::MaybeClearTransaction(
@@ -173,15 +84,11 @@ void U2FTokenManager::MaybeClearTransaction(
   // Only clear if we've been requested to do so by our current transaction
   // parent.
   if (mTransactionParent == aParent) {
-    ClearTransaction(true);
+    ClearTransaction();
   }
 }
 
-void U2FTokenManager::ClearTransaction(bool send_cancel) {
-  if (mLastTransactionId && send_cancel) {
-    // Remove any prompts we might be showing for the current transaction.
-    SendPromptNotification(kCancelPromptNotificationU2F, mLastTransactionId);
-  }
+void U2FTokenManager::ClearTransaction() {
   mTransactionParent = nullptr;
 
   // Drop managers at the end of all transactions
@@ -196,44 +103,9 @@ void U2FTokenManager::ClearTransaction(bool send_cancel) {
 
   // Clear transaction id.
   mLastTransactionId = 0;
-
-  // Forget any pending registration.
-  mPendingRegisterInfo.reset();
-  mPendingSignInfo.reset();
-  mPendingSignResults.Clear();
-}
-
-template <typename... T>
-void U2FTokenManager::SendPromptNotification(const char16_t* aFormat,
-                                             T... aArgs) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
-  nsAutoString json;
-  nsTextFormatter::ssprintf(json, aFormat, aArgs...);
-
-  nsCOMPtr<nsIRunnable> r(NewRunnableMethod<nsString>(
-      "U2FTokenManager::RunSendPromptNotification", this,
-      &U2FTokenManager::RunSendPromptNotification, json));
-
-  MOZ_ALWAYS_SUCCEEDS(GetMainThreadSerialEventTarget()->Dispatch(
-      r.forget(), NS_DISPATCH_NORMAL));
-}
-
-void U2FTokenManager::RunSendPromptNotification(const nsString& aJSON) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (NS_WARN_IF(!os)) {
-    return;
-  }
-
-  nsCOMPtr<nsIU2FTokenManager> self = this;
-  MOZ_ALWAYS_SUCCEEDS(
-      os->NotifyObservers(self, "webauthn-prompt", aJSON.get()));
 }
 
 RefPtr<U2FTokenTransport> U2FTokenManager::GetTokenManagerImpl() {
-  MOZ_ASSERT(U2FPrefManager::Get());
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   if (mTokenManagerImpl) {
@@ -245,14 +117,7 @@ RefPtr<U2FTokenTransport> U2FTokenManager::GetTokenManagerImpl() {
     MOZ_ASSERT(gBackgroundThread, "This should never be null!");
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, prefer the platform support if enabled.
-  if (U2FPrefManager::Get()->GetAndroidFido2Enabled()) {
-    return AndroidWebAuthnTokenManager::GetInstance();
-  }
-#endif
-
-  return nullptr;
+  return AndroidWebAuthnTokenManager::GetInstance();
 }
 
 void U2FTokenManager::Register(
@@ -266,68 +131,19 @@ void U2FTokenManager::Register(
   mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
   mLastTransactionId = aTransactionId;
 
-  // Determine whether direct attestation was requested.
-  bool noneAttestationRequested = true;
-
-// On Android, let's always reject direct attestations until we have a
-// mechanism to solicit user consent, from Bug 1550164
-#ifndef MOZ_WIDGET_ANDROID
-  // The default attestation type is "none", so set
-  // noneAttestationRequested=false only if the RP's preference matches one of
-  // the other known types. This needs to be reviewed if values are added to
-  // the AttestationConveyancePreference enum.
-  const nsString& attestation =
-      aTransactionInfo.attestationConveyancePreference();
-  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-  if (attestation.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
-      attestation.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT) ||
-      attestation.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
-    noneAttestationRequested = false;
-  }
-#endif  // not MOZ_WIDGET_ANDROID
-
-  // Start a register request immediately if direct attestation
-  // wasn't requested or the test pref is set.
-  if (noneAttestationRequested ||
-      U2FPrefManager::Get()->GetAllowDirectAttestationForTesting()) {
-    MOZ_ASSERT(mPendingRegisterInfo.isNothing());
-    mPendingRegisterInfo = Some(aTransactionInfo);
-    DoRegister(aTransactionInfo, noneAttestationRequested);
-    return;
-  }
-
-  // If the RP request direct attestation, ask the user for permission and
-  // store the transaction info until the user proceeds or cancels.
-  NS_ConvertUTF16toUTF8 origin(aTransactionInfo.Origin());
-  SendPromptNotification(kRegisterDirectPromptNotificationU2F, aTransactionId,
-                         origin.get(), aTransactionInfo.BrowsingContextId());
-
-  MOZ_ASSERT(mPendingRegisterInfo.isNothing());
-  mPendingRegisterInfo = Some(aTransactionInfo);
-}
-
-void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
-                                 bool aForceNoneAttestation) {
   mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLastTransactionId > 0);
 
-  // Show a prompt that lets the user cancel the ongoing transaction.
-  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-  SendPromptNotification(kPresencePromptNotificationU2F, mLastTransactionId,
-                         origin.get(), aInfo.BrowsingContextId(), "false");
-
   uint64_t tid = mLastTransactionId;
 
-  mTokenManagerImpl->Register(aInfo, aForceNoneAttestation)
+  mTokenManagerImpl
+      ->Register(aTransactionInfo, /* aForceNoneAttestation */ true)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [tid](WebAuthnMakeCredentialResult&& aResult) {
@@ -339,14 +155,9 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
           [tid](nsresult rv) {
             MOZ_ASSERT(NS_FAILED(rv));
             U2FTokenManager* mgr = U2FTokenManager::Get();
-            bool shouldCancelActiveDialog = true;
-            if (rv == NS_ERROR_DOM_OPERATION_ERR) {
-              // PIN-related errors. Let the dialog show to inform the user
-              shouldCancelActiveDialog = false;
-            }
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FRegisterAbort"_ns, 1);
-            mgr->MaybeAbortRegister(tid, rv, shouldCancelActiveDialog);
+            mgr->MaybeAbortRegister(tid, rv);
           })
       ->Track(mRegisterPromise);
 }
@@ -358,15 +169,14 @@ void U2FTokenManager::MaybeConfirmRegister(
   mRegisterPromise.Complete();
 
   Unused << mTransactionParent->SendConfirmRegister(aTransactionId, aResult);
-  ClearTransaction(true);
+  ClearTransaction();
 }
 
 void U2FTokenManager::MaybeAbortRegister(const uint64_t& aTransactionId,
-                                         const nsresult& aError,
-                                         bool shouldCancelActiveDialog) {
+                                         const nsresult& aError) {
   MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mRegisterPromise.Complete();
-  AbortTransaction(aTransactionId, aError, shouldCancelActiveDialog);
+  AbortTransaction(aTransactionId, aError);
 }
 
 void U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
@@ -379,31 +189,20 @@ void U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
   mLastTransactionId = aTransactionId;
-  mPendingSignInfo = Some(aTransactionInfo);
-  DoSign(aTransactionInfo);
-}
 
-void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
   mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLastTransactionId > 0);
   uint64_t tid = mLastTransactionId;
 
-  NS_ConvertUTF16toUTF8 origin(aTransactionInfo.Origin());
-  uint64_t browserCtxId = aTransactionInfo.BrowsingContextId();
-
-  // Show a prompt that lets the user cancel the ongoing transaction.
-  SendPromptNotification(kPresencePromptNotificationU2F, tid, origin.get(),
-                         browserCtxId, "false");
-
   mTokenManagerImpl->Sign(aTransactionInfo)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [tid, origin](nsTArray<WebAuthnGetAssertionResultWrapper>&& aResult) {
+          [tid](nsTArray<WebAuthnGetAssertionResultWrapper>&& aResult) {
             U2FTokenManager* mgr = U2FTokenManager::Get();
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FSignFinish"_ns, 1);
@@ -415,14 +214,9 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
           [tid](nsresult rv) {
             MOZ_ASSERT(NS_FAILED(rv));
             U2FTokenManager* mgr = U2FTokenManager::Get();
-            bool shouldCancelActiveDialog = true;
-            if (rv == NS_ERROR_DOM_OPERATION_ERR) {
-              // PIN-related errors. Let the dialog show to inform the user
-              shouldCancelActiveDialog = false;
-            }
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FSignAbort"_ns, 1);
-            mgr->MaybeAbortSign(tid, rv, shouldCancelActiveDialog);
+            mgr->MaybeAbortSign(tid, rv);
           })
       ->Track(mSignPromise);
 }
@@ -433,15 +227,14 @@ void U2FTokenManager::MaybeConfirmSign(
   mSignPromise.Complete();
 
   Unused << mTransactionParent->SendConfirmSign(aTransactionId, aResult);
-  ClearTransaction(true);
+  ClearTransaction();
 }
 
 void U2FTokenManager::MaybeAbortSign(const uint64_t& aTransactionId,
-                                     const nsresult& aError,
-                                     bool shouldCancelActiveDialog) {
+                                     const nsresult& aError) {
   MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mSignPromise.Complete();
-  AbortTransaction(aTransactionId, aError, shouldCancelActiveDialog);
+  AbortTransaction(aTransactionId, aError);
 }
 
 void U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent,
@@ -455,88 +248,7 @@ void U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent,
   }
 
   mTokenManagerImpl->Cancel();
-  ClearTransaction(true);
-}
-
-// nsIU2FTokenManager
-
-NS_IMETHODIMP
-U2FTokenManager::ResumeRegister(uint64_t aTransactionId,
-                                bool aForceNoneAttestation) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gBackgroundThread) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIRunnable> r(NewRunnableMethod<uint64_t, bool>(
-      "U2FTokenManager::RunResumeRegister", this,
-      &U2FTokenManager::RunResumeRegister, aTransactionId,
-      aForceNoneAttestation));
-
-  return gBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-}
-
-void U2FTokenManager::RunResumeRegister(uint64_t aTransactionId,
-                                        bool aForceNoneAttestation) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
-  if (NS_WARN_IF(mPendingRegisterInfo.isNothing())) {
-    return;
-  }
-
-  if (mLastTransactionId != aTransactionId) {
-    return;
-  }
-
-  // Resume registration and cleanup.
-  DoRegister(mPendingRegisterInfo.ref(), aForceNoneAttestation);
-}
-
-void U2FTokenManager::RunResumeSign(uint64_t aTransactionId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
-  if (NS_WARN_IF(mPendingSignInfo.isNothing())) {
-    return;
-  }
-
-  if (mLastTransactionId != aTransactionId) {
-    return;
-  }
-
-  // Resume sign and cleanup.
-  DoSign(mPendingSignInfo.ref());
-}
-
-NS_IMETHODIMP
-U2FTokenManager::Cancel(uint64_t aTransactionId) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gBackgroundThread) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIRunnable> r(
-      NewRunnableMethod<uint64_t>("U2FTokenManager::RunCancel", this,
-                                  &U2FTokenManager::RunCancel, aTransactionId));
-
-  return gBackgroundThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-}
-
-void U2FTokenManager::RunCancel(uint64_t aTransactionId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
-  if (mLastTransactionId != aTransactionId) {
-    return;
-  }
-
-  // Cancel the request.
-  mTokenManagerImpl->Cancel();
-
-  // Reject the promise.
-  AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+  ClearTransaction();
 }
 
 }  // namespace mozilla::dom
