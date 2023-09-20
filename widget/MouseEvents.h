@@ -205,7 +205,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mContextMenuTrigger(eNormal),
         mClickCount(0),
         mIgnoreRootScrollFrame(false),
-        mUseLegacyNonPrimaryDispatch(false),
         mClickEventPrevented(false) {}
 
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
@@ -217,7 +216,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mContextMenuTrigger(eNormal),
         mClickCount(0),
         mIgnoreRootScrollFrame(false),
-        mUseLegacyNonPrimaryDispatch(false),
         mClickEventPrevented(false) {}
 
 #ifdef DEBUG
@@ -237,7 +235,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mContextMenuTrigger(aContextMenuTrigger),
         mClickCount(0),
         mIgnoreRootScrollFrame(false),
-        mUseLegacyNonPrimaryDispatch(false),
         mClickEventPrevented(false) {
     if (aMessage == eContextMenu) {
       mButton = (mContextMenuTrigger == eNormal) ? MouseButton::eSecondary
@@ -288,10 +285,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool mIgnoreRootScrollFrame;
 
-  // Indicates whether the event should dispatch click events for non-primary
-  // mouse buttons on window and document.
-  bool mUseLegacyNonPrimaryDispatch;
-
   // Whether the event shouldn't cause click event.
   bool mClickEventPrevented;
 
@@ -302,7 +295,6 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
     mExitFrom = aEvent.mExitFrom;
     mClickCount = aEvent.mClickCount;
     mIgnoreRootScrollFrame = aEvent.mIgnoreRootScrollFrame;
-    mUseLegacyNonPrimaryDispatch = aEvent.mUseLegacyNonPrimaryDispatch;
     mClickEventPrevented = aEvent.mClickEventPrevented;
   }
 
