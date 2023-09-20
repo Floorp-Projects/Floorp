@@ -1848,6 +1848,24 @@ cookieBannerHandling:
       setPref: cookiebanners.ui.desktop.enabled
       description: Enables the cookie banner desktop UI.
 
+backgroundThreads:
+  description: Prefs to control MacOS thread priorities for power savings.
+  owner: kwright@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    use_low_power:
+      description: >-
+        Use the MacOS QoS libraries to deprioritize select threads.
+      type: boolean
+      setPref: threads.use_low_power.enabled
+    lower_mainthread_priority_in_background:
+      description: >-
+        When a browsing context is put in the background and isn't actively playing
+        media, deprioritize its main thread.
+      type: boolean
+      setPref: threads.lower_mainthread_priority_in_background.enabled
+
 feltPrivacy:
   description: Prefs for Felt Privacy v1 experiments
   owner: cmeador@mozilla.com
