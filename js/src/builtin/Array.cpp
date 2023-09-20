@@ -5343,7 +5343,7 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   // optimizable, set to disabled now, and clear it later when we succeed.
   state_ = State::Disabled;
 
-  // Look up Array.prototype[@@iterator] and ensure it's a data property.
+  // Look up Array.prototype.constructor and ensure it's a data property.
   Maybe<PropertyInfo> ctorProp =
       arrayProto->lookup(cx, NameToId(cx->names().constructor));
   if (ctorProp.isNothing() || !ctorProp->isDataProperty()) {
