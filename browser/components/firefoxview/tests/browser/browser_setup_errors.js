@@ -27,12 +27,6 @@ async function setupWithDesktopDevices(state = UIState.STATUS_SIGNED_IN) {
   return sandbox;
 }
 
-function promiseSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"].getService(
-    Ci.nsISupports
-  ).wrappedJSObject;
-  return service.whenLoaded();
-}
 async function tearDown(sandbox) {
   sandbox?.restore();
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
