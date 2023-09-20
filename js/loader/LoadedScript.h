@@ -25,12 +25,13 @@ class EventScript;
 
 class LoadedScript : public nsISupports {
   ScriptKind mKind;
+  const mozilla::dom::ReferrerPolicy mReferrerPolicy;
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mBaseURL;
 
  protected:
-  LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-               nsIURI* aBaseURL);
+  LoadedScript(ScriptKind aKind, mozilla::dom::ReferrerPolicy aReferrerPolicy,
+               ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
 
   virtual ~LoadedScript();
 
@@ -48,6 +49,10 @@ class LoadedScript : public nsISupports {
   // Used to propagate Fetch Options to child modules
   ScriptFetchOptions* GetFetchOptions() const { return mFetchOptions; }
 
+  mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
+    return mReferrerPolicy;
+  }
+
   nsIURI* BaseURL() const { return mBaseURL; }
 
   void AssociateWithScript(JSScript* aScript);
@@ -57,14 +62,16 @@ class ClassicScript final : public LoadedScript {
   ~ClassicScript() = default;
 
  public:
-  ClassicScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  ClassicScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
 };
 
 class EventScript final : public LoadedScript {
   ~EventScript() = default;
 
  public:
-  EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  EventScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+              ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
 };
 
 // A single module script. May be used to satisfy multiple load requests.
@@ -82,7 +89,8 @@ class ModuleScript final : public LoadedScript {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleScript,
                                                          LoadedScript)
 
-  ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+               ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
 
   void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);

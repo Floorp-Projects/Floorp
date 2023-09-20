@@ -53,13 +53,14 @@ VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 }
 
 ModuleLoadRequest::ModuleLoadRequest(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+    nsIURI* aURI, mozilla::dom::ReferrerPolicy aReferrerPolicy,
+    ScriptFetchOptions* aFetchOptions,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
     LoadContextBase* aContext, bool aIsTopLevel, bool aIsDynamicImport,
     ModuleLoaderBase* aLoader, VisitedURLSet* aVisitedSet,
     ModuleLoadRequest* aRootModule)
-    : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
-                        aReferrer, aContext),
+    : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
+                        aFetchOptions, aIntegrity, aReferrer, aContext),
       mIsTopLevel(aIsTopLevel),
       mIsDynamicImport(aIsDynamicImport),
       mLoader(aLoader),

@@ -950,21 +950,22 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     ParserMetadata aParserMetadata) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
-  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, aNonce, aRequestPriority, aParserMetadata,
-      aTriggeringPrincipal, domElement);
+  RefPtr<ScriptFetchOptions> fetchOptions =
+      new ScriptFetchOptions(aCORSMode, aNonce, aRequestPriority,
+                             aParserMetadata, aTriggeringPrincipal, domElement);
   RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
 
   if (aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap) {
-    RefPtr<ScriptLoadRequest> aRequest = new ScriptLoadRequest(
-        aKind, aURI, fetchOptions, aIntegrity, referrer, context);
+    RefPtr<ScriptLoadRequest> aRequest =
+        new ScriptLoadRequest(aKind, aURI, aReferrerPolicy, fetchOptions,
+                              aIntegrity, referrer, context);
 
     return aRequest.forget();
   }
 
   MOZ_ASSERT(aKind == ScriptKind::eModule);
   RefPtr<ModuleLoadRequest> aRequest = ModuleLoader::CreateTopLevel(
-      aURI, fetchOptions, aIntegrity, referrer, this, context);
+      aURI, aReferrerPolicy, fetchOptions, aIntegrity, referrer, this, context);
   return aRequest.forget();
 }
 
@@ -2703,8 +2704,8 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
 
   // Create a ClassicScript object and associate it with the JSScript.
-  RefPtr<ClassicScript> classicScript =
-      new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
+  RefPtr<ClassicScript> classicScript = new ClassicScript(
+      aRequest->ReferrerPolicy(), aRequest->mFetchOptions, aRequest->mBaseURL);
   JS::Rooted<JS::Value> classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
