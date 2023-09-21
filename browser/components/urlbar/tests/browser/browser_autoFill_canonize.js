@@ -41,6 +41,7 @@ add_task(async function () {
     uri: "http://example.com/",
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   });
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   await test_autocomplete({
     desc: "ENTER on the autofilled part should use autofill",
