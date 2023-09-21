@@ -594,8 +594,8 @@ if (project.hasProperty("coverage")) {
 
             dependsOn(["test${variant.name.capitalize()}UnitTest"])
             reports {
-                html.enabled true
-                xml.enabled true
+                html.required = true
+                xml.required = true
             }
 
             def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
