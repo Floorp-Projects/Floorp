@@ -845,6 +845,10 @@ Maybe<bool> StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(
     return Some(true);
   }
 
+  if (!aDocument->IsCurrentActiveDocument()) {
+    return Some(false);
+  }
+
   if (aRequestingStorageAccess) {
     // Perform a Permission Policy Request
     dom::FeaturePolicy* policy = aDocument->FeaturePolicy();
