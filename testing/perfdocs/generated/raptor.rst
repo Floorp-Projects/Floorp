@@ -2488,11 +2488,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ❌
-      * - **browsertime-benchmark-safari-speedometer3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-macosx1300-64-shippable-qr/opt**
@@ -2833,11 +2828,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
-        - ❌
-      * - **browsertime-benchmark-safari-speedometer3**
-        - ❌
-        - ❌
-        - ❌
         - ❌
 
 
@@ -4317,7 +4307,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :lth and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose gecko profiler**: true
    * **gecko profile entries**: 8000000
@@ -4460,6 +4450,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ❌
         - ✅
+        - ❌
+      * - **browsertime-benchmark-wasm-safari-wasm-godot**
+        - ❌
+        - ❌
+        - ❌
         - ❌
 
 
@@ -5685,7 +5680,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :padenot and Media Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
    * **expose gecko profiler**: true
    * **gecko profile entries**: 4000000
@@ -5829,6 +5824,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
         - ✅
         - ✅
+      * - **browsertime-benchmark-safari-webaudio**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -13489,11 +13489,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-live-safari-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -13892,6 +13887,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-fandom**
         - ❌
         - ❌
         - ❌
@@ -14643,6 +14643,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-google-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-google-mail**
         - ❌
         - ❌
         - ❌
@@ -16262,6 +16267,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-imgur**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-imgur**
         - ❌
         - ❌
         - ❌
@@ -18700,11 +18710,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-live-safari-outlook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -21029,11 +21034,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-live-safari-twitter**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -22265,6 +22265,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-yahoo-mail**
         - ❌
         - ❌
         - ❌
@@ -29011,11 +29016,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
-      * - **browsertime-tp6-live-safari-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -33459,11 +33459,6 @@ These tests aren't used in standard testing, they are only used in the Raptor un
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-live-safari-facebook**
         - ❌
         - ❌
         - ❌
