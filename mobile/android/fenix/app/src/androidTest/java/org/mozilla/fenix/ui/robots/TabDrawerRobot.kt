@@ -40,7 +40,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -296,12 +295,6 @@ class TabDrawerRobot {
         assertItemContainingTextExists(
             itemContainingText(getStringResource(R.string.synced_tabs_sign_in_message)),
             itemContainingText(getStringResource(R.string.sync_sign_in)),
-        )
-        assertItemWithResIdAndDescriptionExists(
-            itemWithResIdAndDescription(
-                "$packageName:id/new_tab_button",
-                getStringResource(R.string.resync_button_content_description),
-            ),
         )
     }
 

@@ -48,6 +48,7 @@ class FloatingActionButtonBindingTest {
             tabsTrayStore,
             actionButton,
             interactor,
+            true,
         )
 
         fabBinding.start()
@@ -65,6 +66,7 @@ class FloatingActionButtonBindingTest {
             tabsTrayStore,
             actionButton,
             interactor,
+            true,
         )
 
         fabBinding.start()
@@ -82,6 +84,7 @@ class FloatingActionButtonBindingTest {
             tabsTrayStore,
             actionButton,
             interactor,
+            true,
         )
 
         fabBinding.start()
@@ -93,12 +96,31 @@ class FloatingActionButtonBindingTest {
     }
 
     @Test
+    fun `GIVEN the selected tab page is sync WHEN the user is not signed in THEN extend and show is called`() {
+        val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
+        val fabBinding = FloatingActionButtonBinding(
+            tabsTrayStore,
+            actionButton,
+            interactor,
+            false,
+        )
+
+        fabBinding.start()
+
+        verify(exactly = 0) { actionButton.extend() }
+        verify(exactly = 0) { actionButton.show() }
+        verify(exactly = 0) { actionButton.shrink() }
+        verify(exactly = 1) { actionButton.hide() }
+    }
+
+    @Test
     fun `WHEN selected page is updated THEN button is updated`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
             tabsTrayStore,
             actionButton,
             interactor,
+            true,
         )
 
         fabBinding.start()

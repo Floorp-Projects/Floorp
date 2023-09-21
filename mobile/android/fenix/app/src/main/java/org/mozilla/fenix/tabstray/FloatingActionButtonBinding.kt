@@ -21,6 +21,7 @@ class FloatingActionButtonBinding(
     store: TabsTrayStore,
     private val actionButton: ExtendedFloatingActionButton,
     private val interactor: TabsTrayFabInteractor,
+    private val isSignedIn: Boolean,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
@@ -62,20 +63,25 @@ class FloatingActionButtonBinding(
                 }
             }
             Page.SyncedTabs -> {
-                actionButton.apply {
-                    setText(
-                        when (syncing) {
-                            true -> R.string.sync_syncing_in_progress
-                            false -> R.string.tab_drawer_fab_sync
-                        },
-                    )
-                    contentDescription = context.getString(R.string.resync_button_content_description)
-                    extend()
-                    show()
-                    setIconResource(R.drawable.ic_fab_sync)
-                    setOnClickListener {
-                        interactor.onSyncedTabsFabClicked()
+                if (isSignedIn) {
+                    actionButton.apply {
+                        setText(
+                            when (syncing) {
+                                true -> R.string.sync_syncing_in_progress
+                                false -> R.string.tab_drawer_fab_sync
+                            },
+                        )
+                        contentDescription =
+                            context.getString(R.string.resync_button_content_description)
+                        extend()
+                        show()
+                        setIconResource(R.drawable.ic_fab_sync)
+                        setOnClickListener {
+                            interactor.onSyncedTabsFabClicked()
+                        }
                     }
+                } else {
+                    actionButton.hide()
                 }
             }
         }

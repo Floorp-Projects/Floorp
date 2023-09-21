@@ -313,6 +313,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                     TabsTrayFab(
                         tabsTrayStore = tabsTrayStore,
+                        isSignedIn = requireContext().settings().signedInFxaAccount,
                         onNormalTabsFabClicked = tabsTrayInteractor::onNormalTabsFabClicked,
                         onPrivateTabsFabClicked = tabsTrayInteractor::onPrivateTabsFabClicked,
                         onSyncedTabsFabClicked = tabsTrayInteractor::onSyncedTabsFabClicked,
@@ -463,6 +464,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     store = tabsTrayStore,
                     actionButton = fabButtonBinding.newTabButton,
                     interactor = tabsTrayInteractor,
+                    isSignedIn = requireContext().settings().signedInFxaAccount,
                 ),
                 owner = this,
                 view = view,

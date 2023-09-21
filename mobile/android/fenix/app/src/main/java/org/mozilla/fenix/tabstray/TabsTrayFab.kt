@@ -22,6 +22,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Floating action button for tabs tray.
  *
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
+ * @param isSignedIn Used to know when to show the SYNC FAB when [Page.SyncedTabs] is displayed.
  * @param onNormalTabsFabClicked Invoked when the fab is clicked in [Page.NormalTabs].
  * @param onPrivateTabsFabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
@@ -29,6 +30,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun TabsTrayFab(
     tabsTrayStore: TabsTrayStore,
+    isSignedIn: Boolean,
     onNormalTabsFabClicked: () -> Unit,
     onPrivateTabsFabClicked: () -> Unit,
     onSyncedTabsFabClicked: () -> Unit,
@@ -75,7 +77,7 @@ fun TabsTrayFab(
         }
     }
 
-    if (isInNormalMode) {
+    if (isInNormalMode && !(currentPage == Page.SyncedTabs && !isSignedIn)) {
         FloatingActionButton(
             icon = icon,
             modifier = Modifier
@@ -99,7 +101,13 @@ private fun TabsTraySyncFabPreview() {
     )
 
     FirefoxTheme {
-        TabsTrayFab(store, {}, {}, {})
+        TabsTrayFab(
+            tabsTrayStore = store,
+            isSignedIn = true,
+            onNormalTabsFabClicked = {},
+            onPrivateTabsFabClicked = {},
+            onSyncedTabsFabClicked = {},
+        )
     }
 }
 
@@ -112,6 +120,12 @@ private fun TabsTrayPrivateFabPreview() {
         ),
     )
     FirefoxTheme {
-        TabsTrayFab(store, {}, {}, {})
+        TabsTrayFab(
+            tabsTrayStore = store,
+            isSignedIn = true,
+            onNormalTabsFabClicked = {},
+            onPrivateTabsFabClicked = {},
+            onSyncedTabsFabClicked = {},
+        )
     }
 }
