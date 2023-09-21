@@ -11,13 +11,10 @@ Services.prefs.setBoolPref(
   false
 );
 
-const {
-  request_count_checking,
-  test_hint_preload_internal,
-  test_hint_preload,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
-);
+const { request_count_checking, test_preload_url, test_hint_preload } =
+  ChromeUtils.importESModule(
+    "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
+  );
 
 // TODO testing:
 //  * Abort main document load while early hint is still loading -> early hint should be aborted
@@ -32,6 +29,22 @@ add_task(async function test_103_preload_disabled() {
     { hinted: 0, normal: 1 }
   );
   Services.prefs.setBoolPref("network.early-hints.enabled", true);
+});
+
+add_task(async function test_103_font_disabled() {
+  let url =
+    "https://example.com/browser/netwerk/test/browser/early_hint_asset_html.sjs?hinted=1&as=font";
+  Services.prefs.setBoolPref("gfx.downloadable_fonts.enabled", false);
+  await test_preload_url("font_loading_disabled", url, {
+    hinted: 0,
+    normal: 0,
+  });
+  Services.prefs.setBoolPref("gfx.downloadable_fonts.enabled", true);
+  await test_preload_url("font_loading_enabled", url, {
+    hinted: 1,
+    normal: 0,
+  });
+  Services.prefs.clearUserPref("gfx.downloadable_fonts.enabled");
 });
 
 // Preload with same origin in secure context with mochitest http proxy

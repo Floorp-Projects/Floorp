@@ -10,6 +10,7 @@
 #include "HttpChannelParent.h"
 #include "MainThreadUtils.h"
 #include "NeckoCommon.h"
+#include "gfxPlatform.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -216,6 +217,11 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   if (destination == ASDestination::DESTINATION_INVALID && !aIsModulepreload) {
     // return early when it's definitly not an asset type we preload
     // would be caught later as well, e.g. when creating the PreloadHashKey
+    return;
+  }
+
+  if (destination == ASDestination::DESTINATION_FONT &&
+      !gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
     return;
   }
 
