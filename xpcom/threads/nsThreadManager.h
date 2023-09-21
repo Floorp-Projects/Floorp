@@ -86,22 +86,6 @@ class nsThreadManager : public nsIThreadManager {
 
   nsIThread* GetMainThreadWeak() { return mMainThread; }
 
-  // Low level methods for interacting with the global thread list. Be very
-  // careful when holding `ThreadListMutex()` as no new threads can be started
-  // while it is held.
-  mozilla::OffTheBooksMutex& ThreadListMutex() MOZ_RETURN_CAPABILITY(mMutex) {
-    return mMutex;
-  }
-
-  bool AllowNewXPCOMThreads() MOZ_EXCLUDES(mMutex);
-  bool AllowNewXPCOMThreadsLocked() MOZ_REQUIRES(mMutex) {
-    return mState == State::eActive;
-  }
-
-  mozilla::LinkedList<nsThread>& ThreadList() MOZ_REQUIRES(mMutex) {
-    return mThreadList;
-  }
-
  private:
   nsThreadManager();
 
@@ -112,34 +96,14 @@ class nsThreadManager : public nsIThreadManager {
 
   static void ReleaseThread(void* aData);
 
-  enum class State : uint8_t {
-    // The thread manager has yet to be initialized.
-    eUninit,
-    // The thread manager is active, and operating normally.
-    eActive,
-    // The thread manager is in XPCOM shutdown. New calls to NS_NewNamedThread
-    // will fail, as all XPCOM threads are required to be shutting down.
-    eShutdown,
-  };
-
   unsigned mCurThreadIndex;  // thread-local-storage index
+  RefPtr<mozilla::IdleTaskManager> mIdleTaskManager;
   RefPtr<nsThread> mMainThread;
-
-  mutable mozilla::OffTheBooksMutex mMutex;
-
-  // Current state in the thread manager's lifecycle. See docs above.
-  State mState MOZ_GUARDED_BY(mMutex);
-
-  // Global list of active nsThread instances, including both explicitly and
-  // implicitly created threads.
-  //
-  // NOTE: New entries to this list _may_ be added after mAllowNewThreads has
-  // been cleared, but only for implicitly created thread wrappers which are
-  // not shut down during XPCOM shutdown.
-  mozilla::LinkedList<nsThread> mThreadList MOZ_GUARDED_BY(mMutex);
+  PRThread* mMainPRThread;
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent> mInitialized;
 
   // Shared event target used for background runnables.
-  RefPtr<BackgroundEventTarget> mBackgroundEventTarget MOZ_GUARDED_BY(mMutex);
+  RefPtr<BackgroundEventTarget> mBackgroundEventTarget;
 };
 
 #define NS_THREADMANAGER_CID                         \
