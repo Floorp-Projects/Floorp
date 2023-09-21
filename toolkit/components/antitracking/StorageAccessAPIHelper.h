@@ -166,7 +166,7 @@ class StorageAccessAPIHelper final {
   RequestStorageAccessAsyncHelper(
       dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-      bool aHasUserInteraction, bool aFrameOnly,
+      bool aHasUserInteraction, bool aRequireUserInteraction, bool aFrameOnly,
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
       bool aRequireGrant);
 
