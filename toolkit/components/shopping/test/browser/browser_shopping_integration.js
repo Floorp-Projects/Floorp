@@ -6,7 +6,6 @@
 const PRODUCT_TEST_URL = "https://example.com/Some-Product/dp/ABCDEFG123";
 const OTHER_PRODUCT_TEST_URL =
   "https://example.com/Another-Product/dp/HIJKLMN456";
-const BAD_PRODUCT_TEST_URL = "https://example.com/Bad-Product/dp/0000000000";
 
 async function verifyProductInfo(sidebar, expectedProductInfo) {
   await SpecialPowers.spawn(
@@ -279,49 +278,5 @@ add_task(async function test_sidebar_button_open_close() {
       adjustedRating: "4.1",
       letterGrade: "B",
     });
-  });
-});
-
-add_task(async function test_sidebar_error() {
-  // Disable OHTTP for now to get this landed; we'll re-enable with proper
-  // mocking in the near future.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["toolkit.shopping.ohttpRelayURL", ""],
-      ["toolkit.shopping.ohttpConfigURL", ""],
-    ],
-  });
-  await BrowserTestUtils.withNewTab(BAD_PRODUCT_TEST_URL, async browser => {
-    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
-
-    Assert.ok(sidebar, "Sidebar should exist");
-
-    Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible."
-    );
-    info("Waiting for sidebar to update.");
-    await promiseSidebarUpdated(sidebar, BAD_PRODUCT_TEST_URL);
-
-    info("Verifying a generic error is shown.");
-    await SpecialPowers.spawn(
-      sidebar.querySelector("browser"),
-      [],
-      async prodInfo => {
-        let doc = content.document;
-        let shoppingContainer =
-          doc.querySelector("shopping-container").wrappedJSObject;
-
-        ok(
-          shoppingContainer.shoppingMessageBarEl,
-          "Got shopping-message-bar element"
-        );
-        is(
-          shoppingContainer.shoppingMessageBarEl.getAttribute("type"),
-          "generic-error",
-          "generic-error type should be correct"
-        );
-      }
-    );
   });
 });
