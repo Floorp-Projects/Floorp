@@ -516,10 +516,10 @@
     TimeDuration::FromSeconds(60))                                             \
                                                                                \
   /*                                                                           \
-   * JSGC_PARALLEL_MARKING_THRESHOLD_KB                                        \
+   * JSGC_PARALLEL_MARKING_THRESHOLD_MB                                        \
    */                                                                          \
-  _(JSGC_PARALLEL_MARKING_THRESHOLD_KB, size_t, parallelMarkingThresholdBytes, \
-    ConvertKB, NoCheck, 10 * 1024 * 1024)
+  _(JSGC_PARALLEL_MARKING_THRESHOLD_MB, size_t, parallelMarkingThresholdBytes, \
+    ConvertMB, NoCheck, 10 * 1024 * 1024)
 
 namespace js {
 

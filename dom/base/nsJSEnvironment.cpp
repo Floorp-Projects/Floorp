@@ -2087,8 +2087,8 @@ void nsJSContext::EnsureStatics() {
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_parallel_marking_threshold_kb",
-      (void*)JSGC_PARALLEL_MARKING_THRESHOLD_KB);
+      "javascript.options.mem.gc_parallel_marking_threshold_mb",
+      (void*)JSGC_PARALLEL_MARKING_THRESHOLD_MB);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryGCSliceTimePrefChangedCallback,

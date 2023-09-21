@@ -477,9 +477,9 @@ typedef enum JSGCParamKey {
   /**
    * The heap size above which to use parallel marking.
    *
-   * Default: ParallelMarkingThresholdKB
+   * Default: ParallelMarkingThresholdMB
    */
-  JSGC_PARALLEL_MARKING_THRESHOLD_KB = 50,
+  JSGC_PARALLEL_MARKING_THRESHOLD_MB = 50,
 } JSGCParamKey;
 
 /*
