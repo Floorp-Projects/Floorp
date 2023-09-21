@@ -404,6 +404,12 @@ class ContentParent final : public PContentParent,
 
   bool NeedsPermissionsUpdate(const nsACString& aPermissionKey) const;
 
+  // Getter for which permission keys should signal that a content
+  // process needs to know about the change of a permission with this as the
+  // secondary key, like for 3rdPartyFrameStorage^https://secondary.com
+  bool NeedsSecondaryKeyPermissionsUpdate(
+      const nsACString& aPermissionKey) const;
+
   // Manage pending load states which have been sent to this process, and are
   // expected to be used to start a load imminently.
   already_AddRefed<nsDocShellLoadState> TakePendingLoadStateForId(
@@ -1592,6 +1598,7 @@ class ContentParent final : public PContentParent,
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
   nsTHashSet<nsCString> mActivePermissionKeys;
+  nsTHashSet<nsCString> mActiveSecondaryPermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
 
