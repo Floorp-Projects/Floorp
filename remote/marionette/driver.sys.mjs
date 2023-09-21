@@ -3350,7 +3350,13 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
     `state is ${state}, expected "granted", "denied", or "prompt"`
   )(state);
 
-  lazy.permissions.set(descriptor, state, oneRealm);
+  lazy.permissions.set(
+    descriptor,
+    state,
+    oneRealm,
+    this.getBrowsingContext(),
+    this.getBrowsingContext({ top: true })
+  );
 };
 
 /**
