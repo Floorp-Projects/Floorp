@@ -1372,7 +1372,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   // mTextInputListener grabs TextControlState::mTextListener because if
   // TextControlState is unbind from the frame, it's released.
   RefPtr<TextInputListener> const mTextInputListener;
-  nsString mSettingValue;
+  nsAutoString mSettingValue;
   const nsAString* mOldValue = nullptr;
   ValueSetterOptions mValueSetterOptions;
   TextControlAction const mTextControlAction;
@@ -2544,9 +2544,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
 }
 
 bool TextControlState::ValueEquals(const nsAString& aValue) const {
-  // We can avoid copying string buffer in many cases.  Therefore, we should
-  // use nsString rather than nsAutoString here.
-  nsString value;
+  nsAutoString value;
   GetValue(value, true, /* aForDisplay = */ true);
   return aValue.Equals(value);
 }
