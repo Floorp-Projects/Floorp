@@ -100,21 +100,9 @@ class WebAuthnController final : public nsIWebAuthnController {
 
   class Transaction {
    public:
-    Transaction(uint64_t aTransactionId, const nsTArray<uint8_t>& aRpIdHash,
-                const Maybe<nsTArray<uint8_t>>& aAppIdHash,
-                const nsCString& aClientDataJSON)
-        : mTransactionId(aTransactionId),
-          mRpIdHash(aRpIdHash.Clone()),
-          mClientDataJSON(aClientDataJSON) {
-      if (aAppIdHash.isSome()) {
-        mAppIdHash = Some(aAppIdHash.ref().Clone());
-      } else {
-        mAppIdHash = Nothing();
-      }
-    }
+    Transaction(uint64_t aTransactionId, const nsCString& aClientDataJSON)
+        : mTransactionId(aTransactionId), mClientDataJSON(aClientDataJSON) {}
     uint64_t mTransactionId;
-    nsTArray<uint8_t> mRpIdHash;
-    Maybe<nsTArray<uint8_t>> mAppIdHash;
     nsCString mClientDataJSON;
     bool mCredProps;
   };
