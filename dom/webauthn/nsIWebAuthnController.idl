@@ -194,7 +194,7 @@ interface nsIWebAuthnController : nsISupports
     // Authenticator callbacks
     [noscript] void sendPromptNotificationPreformatted(in uint64_t aTransactionId, in ACString aJSON);
     [noscript] void finishRegister(in uint64_t aTransactionId, in nsICtapRegisterResult aResult);
-    [noscript] void finishSign(in uint64_t aTransactionId, in Array<nsICtapSignResult> aResult);
+    [noscript] void finishSign(in uint64_t aTransactionId, in nsICtapSignResult aResult);
 };
 
 [scriptable, uuid(6c4ecd9f-57c0-4d7d-8080-bf6e4d499f8f)]
@@ -263,6 +263,7 @@ interface nsIWebAuthnTransport : nsISupports
 
     // These are prompt callbacks but they're not intended to be called directly from
     // JavaScript---they are proxied through the nsIWebAuthnController first.
+    [noscript] void selectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
     [noscript] void pinCallback(in uint64_t aTransactionId, in ACString aPin);
     [noscript] void cancel();
 };

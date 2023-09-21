@@ -21,7 +21,7 @@ add_task(async function test_appid() {
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
-  await promiseWebAuthnMakeCredential(tab, "none", {})
+  await promiseWebAuthnMakeCredential(tab)
     .then(arrivingHereIsBad)
     .catch(expectSecurityError);
 

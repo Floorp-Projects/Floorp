@@ -333,6 +333,7 @@ dependencies = [
  "nsstring",
  "rand",
  "serde_cbor",
+ "serde_json",
  "static_prefs",
  "thin-vec",
  "xpcom",

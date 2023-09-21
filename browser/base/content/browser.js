@@ -7655,7 +7655,7 @@ var WebAuthnPromptHelper = {
     let secondaryActions = [];
     for (let i = 0; i < usernames.length; i++) {
       secondaryActions.push({
-        label: unescape(decodeURIComponent(usernames[i])),
+        label: usernames[i],
         accessKey: i.toString(),
         callback(aState) {
           mgr.signatureSelectionCallback(tid, i);
