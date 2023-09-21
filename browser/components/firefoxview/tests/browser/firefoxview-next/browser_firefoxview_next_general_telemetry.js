@@ -230,7 +230,11 @@ add_task(async function test_context_menu_telemetry() {
     await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
-    let copyLinkOption = panelList.children[1];
+    let copyLinkOption = panelList.querySelector(
+      "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
+    );
+    ok(copyLinkOption, "Copy link panel item exists");
+
     let contextMenuEvent = [
       [
         "firefoxview_next",

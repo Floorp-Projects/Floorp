@@ -3,6 +3,8 @@
 
 /* import-globals-from ../head.js */
 
+requestLongerTimeout(2);
+
 ChromeUtils.defineESModuleGetters(globalThis, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
@@ -16,26 +18,6 @@ const DISMISS_CLOSED_TAB_EVENT = [
   ["firefoxview_next", "dismiss_closed_tab", "tabs", undefined],
 ];
 const initialTab = gBrowser.selectedTab;
-
-function isElInViewport(element) {
-  const boundingRect = element.getBoundingClientRect();
-  return (
-    boundingRect.top >= 0 &&
-    boundingRect.left >= 0 &&
-    boundingRect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
-    boundingRect.right <=
-      (window.innerWidth || document.documentElement.clientWidth)
-  );
-}
-
-async function openFirefoxView(win) {
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#firefox-view-button",
-    { type: "mousedown" },
-    win.browsingContext
-  );
-}
 
 async function waitForRecentlyClosedTabsList(doc) {
   let recentlyClosedComponent = doc.querySelector(
@@ -313,7 +295,7 @@ add_task(async function test_list_updates() {
     );
     SessionStore.undoCloseById(closedTabItem.closedId);
     await promiseClosedObjectsChanged;
-    await openFirefoxView(window);
+    await clickFirefoxViewButton(window);
 
     // we expect the last item to be removed
     expectedURLs.pop();
@@ -339,7 +321,7 @@ add_task(async function test_list_updates() {
     );
     SessionStore.forgetClosedWindowById(closedTabItem.sourceClosedId);
     await promiseClosedObjectsChanged;
-    await openFirefoxView(window);
+    await clickFirefoxViewButton(window);
 
     listItems = listElem.rowEls;
     expectedURLs.shift(); // we expect to have removed the firsts URL from the list
@@ -378,7 +360,7 @@ add_task(async function test_restore_tab() {
     await clearAllParentTelemetryEvents();
     await restore_tab(closeTabItem, browser, closeTabItem.url);
     await recentlyClosedTelemetry();
-    await openFirefoxView(window);
+    await clickFirefoxViewButton(window);
 
     listItems = listElem.rowEls;
     is(listItems.length, 3, "Three tabs are shown in the list.");
@@ -387,7 +369,7 @@ add_task(async function test_restore_tab() {
     await clearAllParentTelemetryEvents();
     await restore_tab(closeTabItem, browser, closeTabItem.url);
     await recentlyClosedTelemetry();
-    await openFirefoxView(window);
+    await clickFirefoxViewButton(window);
 
     listItems = listElem.rowEls;
     is(listItems.length, 2, "Two tabs are shown in the list.");
