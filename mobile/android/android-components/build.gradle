@@ -1,7 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 buildscript {
@@ -86,7 +89,7 @@ subprojects {
     apply plugin: 'jacoco'
 
     // Enable Kotlin warnings as errors for all modules
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    tasks.withType(KotlinCompile).all {
         kotlinOptions.allWarningsAsErrors = true
     }
 
@@ -226,7 +229,7 @@ subprojects {
                     targetCompatibility JavaVersion.VERSION_17
                 }
 
-                tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+                tasks.withType(KotlinCompile).all {
                     kotlinOptions {
                         jvmTarget = "17"
                         freeCompilerArgs += [
@@ -302,7 +305,7 @@ detekt {
     }
 }
 
-tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
+tasks.withType(Detekt).configureEach() {
     // Custom detekt rules should be build before
     // See https://arturbosch.github.io/detekt/extensions.html#pitfalls
     dependsOn(":tooling-detekt:assemble")
@@ -322,7 +325,7 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
 }
 
 // Apply same path exclusions as for the main task
-tasks.withType(io.gitlab.arturbosch.detekt.DetektCreateBaselineTask).configureEach() {
+tasks.withType(DetektCreateBaselineTask).configureEach() {
     exclude "**/src/androidTest/**"
     exclude "**/src/test/**"
     exclude "**/test/src/**"
