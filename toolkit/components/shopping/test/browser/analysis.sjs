@@ -26,12 +26,6 @@ function handleRequest(request, response) {
   var body = getPostBody(request.bodyInputStream);
   let requestData = JSON.parse(body);
   let productDetails = gResponses.get(requestData.product_id);
-  if (!productDetails) {
-    response.setStatusLine(request.httpVersion, 400, "Bad Request");
-    productDetails = {
-      status: 400,
-      error: "Bad Request",
-    };
-  }
+
   response.write(JSON.stringify(productDetails));
 }
