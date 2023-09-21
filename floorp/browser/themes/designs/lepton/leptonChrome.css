@@ -746,7 +746,7 @@
     }
   }
   @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
-    :root:not(:-moz-lwtheme) {
+    :root:is(#main-window):not(:-moz-lwtheme) {
       --arrowpanel-border-color: var(--win-bgcolor) !important;
       --panel-separator-color: var(--win-bgcolor) !important;
     }
@@ -829,13 +829,13 @@
     (-moz-os-version: windows-win10) and (prefers-color-scheme: dark),
     (-moz-platform: windows-win10) and (-moz-toolbar-prefers-color-scheme: dark),
     (-moz-platform: windows-win10) and (prefers-color-scheme: dark) {
-    .sidebar-panel[style="--newtab-background-color: rgba(43, 42, 51, 1); --newtab-text-primary-color: rgba(251, 251, 254, 1); --lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"],
-    body[lwt-sidebar][style="--newtab-background-color: rgba(43, 42, 51, 1); --newtab-text-primary-color: rgba(251, 251, 254, 1); --lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"],
-    .sidebar-panel[style="--newtab-background-color: rgb(43, 42, 51); --newtab-text-primary-color: rgba(251, 251, 254, 1); --lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"],
-    body[lwt-sidebar][style="--newtab-background-color: rgb(43, 42, 51); --newtab-text-primary-color: rgba(251, 251, 254, 1); --lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"] {
+    .sidebar-panel[style*="--lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"],
+    html[lwt-sidebar][style*="--lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"],
+    body[lwt-sidebar][style*="--lwt-sidebar-background-color: rgb(56, 56, 61); --lwt-sidebar-text-color: rgba(249, 249, 250, 1);"] {
       /* Only darkmode has more: --newtab-background-color-secondary: rgba(66, 65, 77, 1); */
       --lwt-sidebar-background-color: var(--win-sidebar-bgcolor) !important;
       --lwt-sidebar-text-color: var(--win-text-color) !important;
+      --panel-separator-color: var(--win-border-color) !important;
     }
   }
   @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
@@ -2166,6 +2166,10 @@
     --input-color: var(--arrowpanel-color, FieldText);
   }
   /*== Sidebar - Field Color ===================================================*/
+  html[lwt-sidebar] body {
+    background-color: var(--lwt-sidebar-background-color, Field) !important;
+    color: var(--lwt-sidebar-text-color, FieldText) !important;
+  }
   .sidebar-panel #search-box,
   xul|search-textbox.tabsFilter {
     --input-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
@@ -4199,6 +4203,12 @@
   :root {
     --tab-block-margin: 2px !important; /* New version of --proton-tab-block-margin */
   }
+  #tabbrowser-tabs[orient="vertical"] {
+    --tab-block-margin: 4px !important;
+  }
+  #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab {
+    margin-block: -1px !important;
+  }
 }
 @supports -moz-bool-pref("userChrome.tab.photon_like_padding") {
   :root {
@@ -4355,8 +4365,11 @@
       .tabbrowser-tab[pinned] {
         padding-inline: 1px !important;
       }
-      .tabbrowser-tab:not([pinned]) {
+      .tabbrowser-tab:not([pinned]):not(:first-of-type) {
         margin-inline: -1px !important;
+      }
+      .tabbrowser-tab:not([pinned]):first-of-type {
+        margin-inline-end: -1px !important;
       }
     }
     @supports not -moz-bool-pref("userChrome.tabbar.multi_row") {
@@ -9134,6 +9147,9 @@
   #sidebar {
     display: block;
   }
+  #main-window > body > box {
+    z-index: 2 !important;
+  }
 }
 @supports -moz-bool-pref("userChrome.sidebar.overlap") {
   #sidebar-box[positionend="true"] {
@@ -9665,10 +9681,10 @@
     counter-increment: tab-counts;
   }
   .tabbrowser-tab:not([hidden="true"])[pinned="true"] .tab-label-container::before {
-    content: " " counter(tab-counts);
+    content: " " counter(tab-counts);
   }
   .tabbrowser-tab:not([hidden="true"]):not([pinned="true"]) .tab-label-container::before {
-    content: counter(tab-counts) ": ";
+    content: counter(tab-counts) ": ";
   }
   .tabbrowser-tab:not([hidden="true"]) .tab-label-container {
     display: grid;
@@ -9901,12 +9917,12 @@
     /* Based on https://github.com/MrOtherGuy/firefox-csshacks/blob/master/chrome/centered_tab_label.css */
     .tab-label-container {
       display: grid;
-      justify-content: safe center;
-      align-items: safe center;
     }
     .tab-label,
     .tab-secondary-label {
       overflow: clip;
+      justify-self: safe center;
+      align-self: safe center;
     }
     .tabbrowser-tab[selected]:not(:hover) .tab-label-container:not([textoverflow]),
     .tabbrowser-tab:not(:hover, [pinned]) .tab-label-container:not([textoverflow]) {
@@ -11661,7 +11677,8 @@
         #bookmarksMenuPopup,
         #menu_ToolsPopup,
         #windowPopup,
-        #menu_HelpPopup
+        #menu_HelpPopup,
+        #usercssloader-menupopup
       )
       menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
     menupopup:is(
@@ -11673,7 +11690,8 @@
         #bookmarksMenuPopup,
         #menu_ToolsPopup,
         #windowPopup,
-        #menu_HelpPopup
+        #menu_HelpPopup,
+        #usercssloader-menupopup
       )
       menu:not(.menu-iconic, .in-menulist, [checked="true"]),
     menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
@@ -11743,7 +11761,8 @@
         #bookmarksMenuPopup,
         #menu_ToolsPopup,
         #windowPopup,
-        #menu_HelpPopup
+        #menu_HelpPopup,
+        #usercssloader-menupopup
       )
       menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
     menupopup:is(
@@ -11755,7 +11774,8 @@
         #bookmarksMenuPopup,
         #menu_ToolsPopup,
         #windowPopup,
-        #menu_HelpPopup
+        #menu_HelpPopup,
+        #usercssloader-menupopup
       )
       menu:not(.menu-iconic, .in-menulist, [checked="true"]),
     menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
@@ -11798,7 +11818,7 @@
           calc(3px + var(--context-menu-background-padding-default)) center !important;
         padding-inline-start: calc(19px + var(--context-menu-background-padding-default)) !important;
       }
-      #main-menubar > menu > menupopup {
+      #main-menubar > menu menupopup {
         --menuitem-image: none; /* Prevent Image Inheritance */
       }
       @supports not -moz-bool-pref("userChrome.padding.global_menubar") {
@@ -11837,7 +11857,8 @@
           #bookmarksMenuPopup,
           #menu_ToolsPopup,
           #windowPopup,
-          #menu_HelpPopup
+          #menu_HelpPopup,
+          #usercssloader-menupopup
         )
         menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
       menupopup:is(
@@ -11849,7 +11870,8 @@
           #bookmarksMenuPopup,
           #menu_ToolsPopup,
           #windowPopup,
-          #menu_HelpPopup
+          #menu_HelpPopup,
+          #usercssloader-menupopup
         )
         menu:not(.menu-iconic, .in-menulist, [checked="true"]),
       menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
@@ -11906,7 +11928,8 @@
               #bookmarksMenuPopup,
               #menu_ToolsPopup,
               #windowPopup,
-              #menu_HelpPopup
+              #menu_HelpPopup,
+              #usercssloader-menupopup
             )
             menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
           menupopup:is(
@@ -11918,7 +11941,8 @@
               #bookmarksMenuPopup,
               #menu_ToolsPopup,
               #windowPopup,
-              #menu_HelpPopup
+              #menu_HelpPopup,
+              #usercssloader-menupopup
             )
             menu:not(.menu-iconic, .in-menulist, [checked="true"]),
           menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
@@ -12085,7 +12109,8 @@
           #bookmarksMenuPopup,
           #menu_ToolsPopup,
           #windowPopup,
-          #menu_HelpPopup
+          #menu_HelpPopup,
+          #usercssloader-menupopup
         )
         menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
       menupopup:is(
@@ -12097,7 +12122,8 @@
           #bookmarksMenuPopup,
           #menu_ToolsPopup,
           #windowPopup,
-          #menu_HelpPopup
+          #menu_HelpPopup,
+          #usercssloader-menupopup
         )
         menu:not(.menu-iconic, .in-menulist, [checked="true"]),
       menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
@@ -12167,7 +12193,8 @@
             #bookmarksMenuPopup,
             #menu_ToolsPopup,
             #windowPopup,
-            #menu_HelpPopup
+            #menu_HelpPopup,
+            #usercssloader-menupopup
           )
           menuitem:not(.menuitem-iconic, .bookmark-item),
         menupopup:is(
@@ -12179,7 +12206,8 @@
             #bookmarksMenuPopup,
             #menu_ToolsPopup,
             #windowPopup,
-            #menu_HelpPopup
+            #menu_HelpPopup,
+            #usercssloader-menupopup
           )
           menu:not(.menu-iconic) {
           list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
@@ -13004,6 +13032,10 @@
         /* checkbox */
         --menuitem-image: url("chrome://global/skin/icons/blocked.svg");
       }
+      menuitem[data-l10n-id="popup-show-popup-menuitem"] {
+        /* checkbox */
+        --menuitem-image: url("chrome://browser/skin/lepton/eye-show.svg");
+      }
       /*= autohide-context =========================================================*/
       #autohide-context > menuitem[data-l10n-id="full-screen-autohide"] {
         /* checkbox */
@@ -13622,12 +13654,33 @@
       list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
     }
     #openprofiledir {
-      list-style-image: url("chrome://browser/skin/lepton//folder.svg");
+      list-style-image: url("chrome://browser/skin/lepton/folder.svg");
     }
   }
   @supports -moz-bool-pref("userChrome.icon.menu") {
+    #toggle_sharemode {
+      --menuitem-image: url("chrome://branding/content/about-logo-private.png");
+    }
     #usercssloader-menu {
       --menuitem-image: url("chrome://browser/skin/lepton/developer.svg");
+    }
+    #usercssloader-menupopup > menu[data-l10n-id="css-menu"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/document-css.svg");
+    }
+    #usercssloader-submenupopup > menuitem[data-l10n-id="rebuild-css"] {
+      --menuitem-image: url("chrome://global/skin/icons/reload.svg");
+    }
+    #usercssloader-submenupopup > menuitem[data-l10n-id="make-browsercss-file"] {
+      --menuitem-image: url("chrome://global/skin/icons/edit.svg");
+    }
+    #usercssloader-submenupopup > menuitem[data-l10n-id="open-css-folder"] {
+      --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+    }
+    #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userChromeCss-editor"] {
+      --menuitem-image: url("chrome://browser/skin/window.svg");
+    }
+    #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userContentCss-editor"] {
+      --menuitem-image: url("chrome://global/skin/icons/page-portrait.svg");
     }
     #toggle_statusBar {
       --menuitem-image: url("chrome://browser/skin/lepton/pulse-square.svg");
