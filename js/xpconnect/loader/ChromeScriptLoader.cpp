@@ -24,8 +24,11 @@
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Attributes.h"
-#include "mozilla/EventQueue.h"  // EventQueuePriority
+#include "mozilla/ClearOnShutdown.h"  // RunOnShutdown
+#include "mozilla/EventQueue.h"       // EventQueuePriority
+#include "mozilla/Mutex.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -33,7 +36,9 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/RefPtr.h"          // RefPtr
 #include "mozilla/TaskController.h"  // TaskController, Task
-#include "mozilla//Utf8.h"           // Utf8Unit
+#include "mozilla/ThreadSafety.h"    // MOZ_GUARDED_BY
+#include "mozilla/Utf8.h"            // Utf8Unit
+#include "mozilla/Vector.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -42,19 +47,59 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 class AsyncScriptCompileTask final : public Task {
+  static mozilla::StaticMutex sOngoingTasksMutex;
+  static Vector<AsyncScriptCompileTask*> sOngoingTasks
+      MOZ_GUARDED_BY(sOngoingTasksMutex);
+  static bool sIsShutdownRegistered;
+
+  // Compilation tasks should be cancelled before calling JS_ShutDown, in order
+  // to avoid keeping JS::Stencil and SharedImmutableString pointers alive
+  // beyond it.
+  //
+  // Cancel all ongoing tasks at ShutdownPhase::XPCOMShutdownFinal, which
+  // happens before calling JS_ShutDown.
+  static bool RegisterTask(AsyncScriptCompileTask* aTask) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!sIsShutdownRegistered) {
+      sIsShutdownRegistered = true;
+
+      RunOnShutdown([] {
+        StaticMutexAutoLock lock(sOngoingTasksMutex);
+        for (auto* task : sOngoingTasks) {
+          task->Cancel();
+        }
+      });
+    }
+
+    StaticMutexAutoLock lock(sOngoingTasksMutex);
+    return sOngoingTasks.append(aTask);
+  }
+
+  static void UnregisterTask(const AsyncScriptCompileTask* aTask) {
+    StaticMutexAutoLock lock(sOngoingTasksMutex);
+    sOngoingTasks.eraseIfEqual(aTask);
+  }
+
  public:
   explicit AsyncScriptCompileTask(JS::SourceText<Utf8Unit>&& aSrcBuf)
       : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
         mOptions(JS::OwningCompileOptions::ForFrontendContext()),
-        mSrcBuf(std::move(aSrcBuf)) {}
+        mSrcBuf(std::move(aSrcBuf)),
+        mMutex("AsyncScriptCompileTask") {}
 
   ~AsyncScriptCompileTask() {
     if (mFrontendContext) {
       JS::DestroyFrontendContext(mFrontendContext);
     }
+    UnregisterTask(this);
   }
 
   bool Init(const JS::OwningCompileOptions& aOptions) {
+    if (!RegisterTask(this)) {
+      return false;
+    }
+
     mFrontendContext = JS::NewFrontendContext();
     if (!mFrontendContext) {
       return false;
@@ -85,8 +130,26 @@ class AsyncScriptCompileTask final : public Task {
                                                 mSrcBuf, compileStorage);
   }
 
+  // Cancel the task.
+  // If the task is already running, this waits for the task to finish.
+  void Cancel() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    MutexAutoLock lock(mMutex);
+
+    mIsCancelled = true;
+
+    mStencil = nullptr;
+  }
+
  public:
   bool Run() override {
+    MutexAutoLock lock(mMutex);
+
+    if (mIsCancelled) {
+      return true;
+    }
+
     Compile();
     return true;
   }
@@ -133,7 +196,17 @@ class AsyncScriptCompileTask final : public Task {
   RefPtr<JS::Stencil> mStencil;
 
   JS::SourceText<Utf8Unit> mSrcBuf;
+
+  // This mutex is locked during running the task or cancelling task.
+  mozilla::Mutex mMutex;
+
+  bool mIsCancelled MOZ_GUARDED_BY(mMutex) = false;
 };
+
+/* static */ mozilla::StaticMutex AsyncScriptCompileTask::sOngoingTasksMutex;
+/* static */ Vector<AsyncScriptCompileTask*>
+    AsyncScriptCompileTask::sOngoingTasks;
+/* static */ bool AsyncScriptCompileTask::sIsShutdownRegistered = false;
 
 class AsyncScriptCompiler;
 
