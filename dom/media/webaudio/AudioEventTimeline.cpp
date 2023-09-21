@@ -61,8 +61,13 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
     : mType(aType),
       mCurve(nullptr),
       mTimeConstant(aTimeConstant),
-      mDuration(aDuration),
-      mTime(aTime) {
+      mDuration(aDuration)
+#ifdef DEBUG
+      ,
+      mTimeIsInTicks(false)
+#endif
+{
+  mTime = aTime;
   if (aType == AudioTimelineEvent::SetValueCurve) {
     SetCurveParams(aCurve, aCurveLength);
   } else {
@@ -75,8 +80,14 @@ AudioTimelineEvent::AudioTimelineEvent(AudioNodeTrack* aTrack)
       mCurve(nullptr),
       mTrack(aTrack),
       mTimeConstant(0.0),
-      mDuration(0.0),
-      mTime(0.0) {}
+      mDuration(0.0)
+#ifdef DEBUG
+      ,
+      mTimeIsInTicks(false)
+#endif
+      ,
+      mTime(0.0) {
+}
 
 AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs) {
   PodCopy(this, &rhs, 1);
