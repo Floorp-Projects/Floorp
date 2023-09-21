@@ -58,7 +58,7 @@ import {
   lineAtHeight,
   toSourceLine,
   getDocument,
-  scrollToColumn,
+  scrollToPosition,
   toEditorPosition,
   getSourceLocationFromMouseEvent,
   hasDocument,
@@ -141,8 +141,8 @@ class Editor extends PureComponent {
 
     const shouldUpdateText =
       nextProps.selectedSource !== this.props.selectedSource ||
-      nextProps.selectedSourceTextContent !==
-        this.props.selectedSourceTextContent ||
+      nextProps.selectedSourceTextContent?.value !==
+        this.props.selectedSourceTextContent?.value ||
       nextProps.symbols !== this.props.symbols;
 
     const shouldUpdateSize =
@@ -500,25 +500,21 @@ class Editor extends PureComponent {
   }
 
   shouldScrollToLocation(nextProps, editor) {
-    const { selectedLocation, selectedSource, selectedSourceTextContent } =
-      this.props;
     if (
-      !editor ||
-      !nextProps.selectedSource ||
-      !nextProps.selectedLocation ||
-      !nextProps.selectedLocation.line ||
+      !nextProps.selectedLocation?.line ||
       !nextProps.selectedSourceTextContent
     ) {
       return false;
     }
 
-    const isFirstLoad =
-      (!selectedSource || !selectedSourceTextContent) &&
-      nextProps.selectedSourceTextContent;
+    const { selectedLocation, selectedSourceTextContent } = this.props;
+    const contentChanged =
+      !selectedSourceTextContent?.value &&
+      nextProps.selectedSourceTextContent?.value;
     const locationChanged = selectedLocation !== nextProps.selectedLocation;
     const symbolsChanged = nextProps.symbols != this.props.symbols;
 
-    return isFirstLoad || locationChanged || symbolsChanged;
+    return contentChanged || locationChanged || symbolsChanged;
   }
 
   scrollToLocation(nextProps, editor) {
@@ -532,7 +528,7 @@ class Editor extends PureComponent {
       column = Math.max(column, getIndentation(lineText));
     }
 
-    scrollToColumn(editor.codeMirror, line, column);
+    scrollToPosition(editor.codeMirror, line, column);
   }
 
   setText(props, editor) {

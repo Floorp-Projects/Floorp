@@ -7,7 +7,7 @@ import {
   toEditorPosition,
   toEditorRange,
   toSourceLine,
-  scrollToColumn,
+  scrollToPosition,
   markText,
   lineAtHeight,
   getSourceLocationFromMouseEvent,
@@ -97,9 +97,9 @@ const codeMirror = {
 
 const editor = { codeMirror };
 
-describe("scrollToColumn", () => {
+describe("scrollToPosition", () => {
   it("calls codemirror APIs charCoords, getScrollerElement, scrollTo", () => {
-    scrollToColumn(codeMirror, 60, 123);
+    scrollToPosition(codeMirror, 60, 123);
     expect(codeMirror.charCoords).toHaveBeenCalledWith(
       { line: 60, ch: 123 },
       "local"

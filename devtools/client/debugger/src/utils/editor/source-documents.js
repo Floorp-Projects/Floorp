@@ -78,14 +78,15 @@ export function clearEditor(editor) {
 }
 
 export function showLoading(editor) {
+  // Create the "loading message" document only once
   let doc = getDocument("loading");
-
-  if (doc) {
-    editor.replaceDocument(doc);
-  } else {
+  if (!doc) {
     doc = editor.createDocument(L10N.getStr("loadingText"), { name: "text" });
     setDocument("loading", doc);
   }
+  // `createDocument` won't be used right away in the editor, we still need to
+  // explicitely update it
+  editor.replaceDocument(doc);
 }
 
 export function showErrorMessage(editor, msg) {
