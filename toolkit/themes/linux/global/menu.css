@@ -23,9 +23,9 @@ menucaption {
   border-radius: calc(var(--panel-border-radius) / 2);
   align-items: center;
   flex-shrink: 0;
+  list-style-image: none;
   padding: 4px 6px;
   max-width: 42em;
-  list-style-image: none;
 }
 
 menu:where([_moz-menuactive]:not([disabled="true"])),
