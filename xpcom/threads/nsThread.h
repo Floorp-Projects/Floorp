@@ -43,6 +43,7 @@ class Array;
 using mozilla::NotNull;
 
 class nsIRunnable;
+class nsThreadEnumerator;
 class nsThreadShutdownContext;
 
 // See https://www.w3.org/TR/longtasks
@@ -227,6 +228,8 @@ class nsThread : public nsIThreadInternal,
 
   size_t SizeOfEventQueues(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  static nsThreadEnumerator Enumerate();
+
   void SetUseHangMonitor(bool aValue) {
     MOZ_ASSERT(IsOnCurrentThread());
     mUseHangMonitor = aValue;
@@ -237,6 +240,8 @@ class nsThread : public nsIThreadInternal,
 
  protected:
   friend class nsThreadShutdownEvent;
+
+  friend class nsThreadEnumerator;
 
   virtual ~nsThread();
 
@@ -254,6 +259,10 @@ class nsThread : public nsIThreadInternal,
   friend class nsThreadManager;
   friend class nsThreadPool;
 
+  static mozilla::OffTheBooksMutex& ThreadListMutex();
+  static mozilla::LinkedList<nsThread>& ThreadList();
+
+  void AddToThreadList();
   void MaybeRemoveFromThreadList();
 
   // Whether or not these members have a value determines whether the nsThread
@@ -347,6 +356,17 @@ class nsThreadShutdownContext final : public nsIThreadShutdown {
   mozilla::Mutex mJoiningThreadMutex;
   RefPtr<nsThread> mJoiningThread MOZ_GUARDED_BY(mJoiningThreadMutex);
   bool mThreadLeaked MOZ_GUARDED_BY(mJoiningThreadMutex) = false;
+};
+
+class MOZ_STACK_CLASS nsThreadEnumerator final {
+ public:
+  nsThreadEnumerator() = default;
+
+  auto begin() { return nsThread::ThreadList().begin(); }
+  auto end() { return nsThread::ThreadList().end(); }
+
+ private:
+  mozilla::OffTheBooksMutexAutoLock mMal{nsThread::ThreadListMutex()};
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM && \
