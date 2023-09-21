@@ -549,8 +549,8 @@ IPCResult WindowGlobalChild::RecvRawMessage(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalChild::RecvNotifyPermissionChange(
-    const nsCString& aType) {
+IPCResult WindowGlobalChild::RecvNotifyPermissionChange(const nsCString& aType,
+                                                        uint32_t aPermission) {
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   NS_ENSURE_TRUE(observerService,
                  IPC_FAIL(this, "Failed to get observer service"));
@@ -558,6 +558,13 @@ IPCResult WindowGlobalChild::RecvNotifyPermissionChange(
       static_cast<nsPIDOMWindowInner*>(this->GetWindowGlobal());
   observerService->NotifyObservers(notifyTarget, "perm-changed-notify-only",
                                    NS_ConvertUTF8toUTF16(aType).get());
+  // We only need to handle the revoked permission case here. The permission
+  // grant case is handled via the Storage Access API code.
+  if (this->GetWindowGlobal() &&
+      this->GetWindowGlobal()->UsingStorageAccess() &&
+      aPermission != nsIPermissionManager::ALLOW_ACTION) {
+    this->GetWindowGlobal()->SaveStorageAccessPermissionRevoked();
+  }
   return IPC_OK();
 }
 
