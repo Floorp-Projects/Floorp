@@ -12,34 +12,6 @@
 
 /* ::::: menu/menuitem ::::: */
 
-menupopup,
-menubar {
-  font: menu;
-}
-
-menu,
-menuitem,
-menucaption {
-  border-radius: calc(var(--panel-border-radius) / 2);
-  align-items: center;
-  flex-shrink: 0;
-  list-style-image: none;
-  padding: 4px 6px;
-  max-width: 42em;
-}
-
-menu:where([_moz-menuactive]:not([disabled="true"])),
-menuitem:where([_moz-menuactive]:not([disabled="true"])) {
-  color: -moz-menuhovertext;
-  background-color: -moz-menuhover;
-}
-
-menu:where([disabled="true"]),
-menuitem:where([disabled="true"]),
-menucaption:where([disabled="true"]) {
-  color: GrayText;
-}
-
 menubar > menu {
   color: inherit;
   background-color: transparent;
