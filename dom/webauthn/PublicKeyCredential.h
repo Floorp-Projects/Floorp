@@ -63,8 +63,6 @@ class PublicKeyCredential final : public Credential {
 
   void SetClientExtensionResultAppId(bool aResult);
 
-  void SetClientExtensionResultCredPropsRk(bool aResult);
-
   void SetClientExtensionResultHmacSecret(bool aHmacCreateSecret);
 
   static void ParseCreationOptionsFromJSON(

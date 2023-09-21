@@ -201,10 +201,6 @@ void PublicKeyCredential::ToJSON(JSContext* aCx,
       return;
     }
     // TODO(bug 1810851): authenticatorAttachment
-    if (mClientExtensionOutputs.mCredProps.WasPassed()) {
-      json.mClientExtensionResults.mCredProps.Construct(
-          mClientExtensionOutputs.mCredProps.Value());
-    }
     if (mClientExtensionOutputs.mHmacCreateSecret.WasPassed()) {
       json.mClientExtensionResults.mHmacCreateSecret.Construct(
           mClientExtensionOutputs.mHmacCreateSecret.Value());
@@ -243,12 +239,6 @@ void PublicKeyCredential::ToJSON(JSContext* aCx,
 void PublicKeyCredential::SetClientExtensionResultAppId(bool aResult) {
   mClientExtensionOutputs.mAppid.Construct();
   mClientExtensionOutputs.mAppid.Value() = aResult;
-}
-
-void PublicKeyCredential::SetClientExtensionResultCredPropsRk(bool aResult) {
-  mClientExtensionOutputs.mCredProps.Construct();
-  mClientExtensionOutputs.mCredProps.Value().mRk.Construct();
-  mClientExtensionOutputs.mCredProps.Value().mRk.Value() = aResult;
 }
 
 void PublicKeyCredential::SetClientExtensionResultHmacSecret(
@@ -332,10 +322,6 @@ void PublicKeyCredential::ParseCreationOptionsFromJSON(
       aResult.mExtensions.mAppid.Construct(
           aOptions.mExtensions.Value().mAppid.Value());
     }
-    if (aOptions.mExtensions.Value().mCredProps.WasPassed()) {
-      aResult.mExtensions.mCredProps.Construct(
-          aOptions.mExtensions.Value().mCredProps.Value());
-    }
     if (aOptions.mExtensions.Value().mHmacCreateSecret.WasPassed()) {
       aResult.mExtensions.mHmacCreateSecret.Construct(
           aOptions.mExtensions.Value().mHmacCreateSecret.Value());
@@ -388,10 +374,6 @@ void PublicKeyCredential::ParseRequestOptionsFromJSON(
     if (aOptions.mExtensions.Value().mAppid.WasPassed()) {
       aResult.mExtensions.mAppid.Construct(
           aOptions.mExtensions.Value().mAppid.Value());
-    }
-    if (aOptions.mExtensions.Value().mCredProps.WasPassed()) {
-      aResult.mExtensions.mCredProps.Construct(
-          aOptions.mExtensions.Value().mCredProps.Value());
     }
     if (aOptions.mExtensions.Value().mHmacCreateSecret.WasPassed()) {
       aResult.mExtensions.mHmacCreateSecret.Construct(

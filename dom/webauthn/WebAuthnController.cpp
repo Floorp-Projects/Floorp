@@ -416,16 +416,6 @@ void WebAuthnController::RunFinishRegister(
   }
 
   nsTArray<WebAuthnExtensionResult> extensions;
-  bool credPropsRk;
-  rv = aResult->GetCredPropsRk(&credPropsRk);
-  if (rv != NS_ERROR_NOT_AVAILABLE) {
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
-      return;
-    }
-    extensions.AppendElement(WebAuthnExtensionResultCredProps(credPropsRk));
-  }
-
   WebAuthnMakeCredentialResult result(clientDataJson, attObj, credentialId,
                                       transports, extensions);
 
