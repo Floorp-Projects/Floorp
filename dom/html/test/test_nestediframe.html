@@ -35,9 +35,8 @@ var recursion;
 if (!location.href.includes("#")) {
   recursion = 1;
 } else {
-  recursion = parseInt(localStorage.recursion) + 1;
+  recursion = parseInt(location.href.split("#")[1]) + 1;
 }
-localStorage.recursion = "" + recursion;
 
 var ifr = document.createElement('iframe');
 ifr.src = location.href.split("#")[0] + "#" + recursion;
