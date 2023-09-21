@@ -5461,7 +5461,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
   if (srcSurf) {
     gfx::Rect sourceRect(aSx, aSy, aSw, aSh);
-    if (element == mCanvasElement) {
+    if ((element && element == mCanvasElement) ||
+        (offscreenCanvas && offscreenCanvas == mOffscreenCanvas)) {
       // srcSurf is a snapshot of mTarget. If we draw to mTarget now, we'll
       // trigger a COW copy of the whole canvas into srcSurf. That's a huge
       // waste if sourceRect doesn't cover the whole canvas.
