@@ -67,12 +67,4 @@ interface nsICookieNotification : nsISupports {
      * BrowsingContext associated with browsingContextId. May be nullptr.
      */
     [infallible] readonly attribute BrowsingContext browsingContext;
-
-    /**
-     * Whether the cookie modified is considered third-party
-     * relative to the top level context.
-     * This flag only applies if cookie != null.
-     * May also be false for non web callers.
-     */
-    [infallible] readonly attribute boolean isThirdPartyCookie;
 };

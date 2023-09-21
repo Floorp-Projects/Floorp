@@ -24,14 +24,12 @@ class CookieNotification final : public nsICookieNotification {
   explicit CookieNotification(nsICookieNotification::Action aAction,
                               nsICookie* aCookie, const nsACString& aBaseDomain,
                               nsIArray* aBatchDeletedCookies = nullptr,
-                              uint64_t aBrowsingContextId = 0,
-                              bool aIsThirdPartyCookie = false)
+                              uint64_t aBrowsingContextId = 0)
       : mAction(aAction),
         mCookie(aCookie),
         mBaseDomain(aBaseDomain),
         mBatchDeletedCookies(aBatchDeletedCookies),
-        mBrowsingContextId(aBrowsingContextId),
-        mIsThirdPartyCookie(aIsThirdPartyCookie){};
+        mBrowsingContextId(aBrowsingContextId){};
 
  private:
   nsICookieNotification::Action mAction;
@@ -39,7 +37,6 @@ class CookieNotification final : public nsICookieNotification {
   nsCString mBaseDomain;
   nsCOMPtr<nsIArray> mBatchDeletedCookies;
   uint64_t mBrowsingContextId = 0;
-  bool mIsThirdPartyCookie = false;
 
   ~CookieNotification() = default;
 };

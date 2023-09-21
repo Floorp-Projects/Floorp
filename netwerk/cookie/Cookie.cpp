@@ -214,6 +214,10 @@ Cookie::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) {
   return NS_OK;
 }
 
+const OriginAttributes& Cookie::OriginAttributesNative() {
+  return mOriginAttributes;
+}
+
 const Cookie& Cookie::AsCookie() { return *this; }
 
 const nsCString& Cookie::GetFilePath() {

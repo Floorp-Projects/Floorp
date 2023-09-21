@@ -55,12 +55,6 @@ CookieNotification::GetBrowsingContext(dom::BrowsingContext** aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CookieNotification::GetIsThirdPartyCookie(bool* aResult) {
-  *aResult = mIsThirdPartyCookie;
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS(CookieNotification, nsICookieNotification)
 
 }  // namespace mozilla::net
