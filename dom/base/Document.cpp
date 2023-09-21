@@ -12496,8 +12496,8 @@ void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
     return;
   }
 
-  nsCOMPtr<nsISpeculativeConnect> speculator =
-      mozilla::components::IO::Service();
+  nsCOMPtr<nsISpeculativeConnect> speculator(
+      do_QueryInterface(nsContentUtils::GetIOService()));
   if (!speculator) {
     return;
   }

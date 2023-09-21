@@ -176,10 +176,8 @@ static bool CanHandleURI(nsIURI* aURI) {
     return false;
   }
 
-  nsCOMPtr<nsIIOService> ios = mozilla::components::IO::Service();
-  if (!ios) {
-    return false;
-  }
+  nsIIOService* ios = nsContentUtils::GetIOService();
+  if (!ios) return false;
 
   nsCOMPtr<nsIProtocolHandler> handler;
   ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));

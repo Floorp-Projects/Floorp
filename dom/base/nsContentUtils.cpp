@@ -424,6 +424,7 @@ nsIXPConnect* nsContentUtils::sXPConnect;
 nsIScriptSecurityManager* nsContentUtils::sSecurityManager;
 nsIPrincipal* nsContentUtils::sSystemPrincipal;
 nsIPrincipal* nsContentUtils::sNullSubjectPrincipal;
+nsIIOService* nsContentUtils::sIOService;
 nsIConsoleService* nsContentUtils::sConsoleService;
 
 static nsTHashMap<RefPtr<nsAtom>, EventNameMapping>* sAtomEventTable;
@@ -802,6 +803,13 @@ nsresult nsContentUtils::Init() {
   }
 
   nullPrincipal.forget(&sNullSubjectPrincipal);
+
+  nsresult rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
+  if (NS_FAILED(rv)) {
+    // This makes life easier, but we can live without it.
+
+    sIOService = nullptr;
+  }
 
   if (!InitializeEventTable()) return NS_ERROR_FAILURE;
 
@@ -1872,6 +1880,7 @@ void nsContentUtils::Shutdown() {
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sSystemPrincipal);
   NS_IF_RELEASE(sNullSubjectPrincipal);
+  NS_IF_RELEASE(sIOService);
 
   sBidiKeyboard = nullptr;
 
@@ -2075,15 +2084,8 @@ bool nsContentUtils::IsAbsoluteURL(const nsACString& aURL) {
     return true;
   }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service(&rv);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
   uint32_t flags;
-  if (NS_SUCCEEDED(io->GetProtocolFlags(scheme.get(), &flags))) {
+  if (NS_SUCCEEDED(sIOService->GetProtocolFlags(scheme.get(), &flags))) {
     return flags & nsIProtocolHandler::URI_NORELATIVE;
   }
 
@@ -6253,7 +6255,7 @@ bool nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
 /* static */
 bool nsContentUtils::URIIsLocalFile(nsIURI* aURI) {
   bool isFile;
-  nsCOMPtr<nsINetUtil> util = mozilla::components::IO::Service();
+  nsCOMPtr<nsINetUtil> util = do_QueryInterface(sIOService);
 
   // Important: we do NOT test the entire URI chain here!
   return util &&
