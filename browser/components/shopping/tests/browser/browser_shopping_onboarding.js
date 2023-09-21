@@ -546,3 +546,66 @@ add_task(async function test_onboarding_auto_activate_not_now() {
     "Shopping sidebar should auto-activate a second time if all conditions are met"
   );
 });
+
+/**
+ * Test to check onboarding message is not shown for user
+ * after a user opt-out and opt back in after seeing survey
+ */
+
+add_task(async function test_hideOnboarding_OptIn_AfterSurveySeen() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.optedIn", 0],
+      ["browser.shopping.experience2023.survey.enabled", true],
+      ["browser.shopping.experience2023.survey.hasSeen", true],
+      ["browser.shopping.experience2023.survey.pdpVisits", 5],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let actor =
+        gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getExistingActor(
+          "ShoppingSidebar"
+        );
+      actor.updateProductURL("https://example.com/product/B09TJGHL5F");
+
+      await SpecialPowers.spawn(browser, [], async () => {
+        let shoppingContainer = await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector("shopping-container"),
+          "shopping-container"
+        );
+
+        ok(
+          !content.document.getElementById("multi-stage-message-root").hidden,
+          "opt-in message is shown"
+        );
+
+        const { TestUtils } = ChromeUtils.importESModule(
+          "resource://testing-common/TestUtils.sys.mjs"
+        );
+
+        let optedInPrefChanged = TestUtils.waitForPrefChange(
+          "browser.shopping.experience2023.optedIn",
+          value => value === 1
+        );
+        await SpecialPowers.pushPrefEnv({
+          set: [["browser.shopping.experience2023.optedIn", 1]],
+        });
+        await optedInPrefChanged;
+        await shoppingContainer.wrappedJSObject.updateComplete;
+
+        ok(
+          content.document.getElementById("multi-stage-message-root").hidden,
+          "opt-in message is hidden"
+        );
+        await SpecialPowers.popPrefEnv();
+      });
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
