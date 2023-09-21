@@ -53,6 +53,7 @@
 #include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/VideoFrame.h"
+#include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -7261,10 +7262,23 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromVideoFrame(
     result.mIntrinsicSize = displaySize;
   }
 
-  // TODO(aosmond): Presumably we can do better than assuming premultiplied.
-  // Depending on how the VideoFrame was created, we may have had more
-  // information about its transpancy status.
   result.mAlphaType = gfxAlphaType::Premult;
+  Nullable<VideoPixelFormat> format = aVideoFrame->GetFormat();
+  if (!format.IsNull()) {
+    switch (format.Value()) {
+      case VideoPixelFormat::I420:
+      case VideoPixelFormat::I422:
+      case VideoPixelFormat::I444:
+      case VideoPixelFormat::NV12:
+      case VideoPixelFormat::RGBX:
+      case VideoPixelFormat::BGRX:
+        result.mAlphaType = gfxAlphaType::Opaque;
+        break;
+      default:
+        break;
+    }
+  }
+
   result.mHasSize = true;
 
   // We shouldn't have a VideoFrame if either of these is true.
