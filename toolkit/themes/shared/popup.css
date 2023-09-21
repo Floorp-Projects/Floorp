@@ -35,6 +35,7 @@ panel {
   @media (-moz-platform: windows) {
     --panel-border-radius: 4px;
     --panel-padding-block: 4px;
+    --nested-margin: -10px;
   }
 
   @media (-moz-platform: linux) or (-moz-platform: windows) {
@@ -102,7 +103,7 @@ panel {
   }
 }
 
-@media (-moz-platform: linux) or (-moz-platform: windows) {
+@media (-moz-platform: linux) {
   menupopup {
     /* Also apply the padding in the inline axis for menus */
     --panel-padding: var(--panel-padding-block);
@@ -127,6 +128,11 @@ panel {
   menupopup > menu {
     padding-block: 0.5em;
     padding-inline-start: 1em;
+  }
+  menupopup > menu > menupopup {
+    /* TODO: Somehow unify with Linux and macOS above? */
+    margin-top: var(--nested-margin);
+    margin-inline-start: var(--nested-margin);
   }
 }
 

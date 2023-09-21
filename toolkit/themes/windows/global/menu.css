@@ -12,6 +12,38 @@
 
 /* ::::: menu/menuitem ::::: */
 
+menupopup,
+menubar {
+  font: menu;
+}
+
+menu,
+menuitem,
+menucaption {
+  flex-shrink: 0;
+  align-items: center;
+  list-style-image: none;
+}
+
+menu:where([disabled="true"]),
+menuitem:where([disabled="true"]),
+menu:where([_moz-menuactive="true"][disabled="true"]),
+menuitem:where([_moz-menuactive="true"][disabled="true"]) {
+  color: GrayText;
+  text-shadow: none;
+}
+
+menu:where([_moz-menuactive="true"][disabled="true"]),
+menuitem:where([_moz-menuactive="true"][disabled="true"]) {
+  background-color: -moz-menuhoverdisabled;
+}
+
+menuitem[default="true"],
+menuitem.spell-suggestion,
+menucaption {
+  font-weight: bold;
+}
+
 menubar > menu:-moz-window-inactive {
   color: ThreeDShadow;
 }
@@ -91,6 +123,20 @@ menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
 
 .menubar-text {
   margin: 1px 6px 2px !important;
+}
+
+/* ::::: menu/menuitems in popups ::::: */
+
+menupopup > menu,
+menupopup > menuitem,
+menupopup > menucaption {
+  max-width: 42em;
+}
+
+menu:where([_moz-menuactive="true"]:not([disabled="true"])),
+menuitem:where([_moz-menuactive="true"]:not([disabled="true"])) {
+  background-color: -moz-menuhover;
+  color: -moz-menuhovertext;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
