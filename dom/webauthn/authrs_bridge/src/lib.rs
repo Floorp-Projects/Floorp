@@ -10,13 +10,12 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
-    crypto::COSEKeyType,
     ctap2::attestation::AttestationObject,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
         AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
-        PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, User,
-        UserVerificationRequirement,
+        PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
+        ResidentKeyRequirement, UserVerificationRequirement,
     },
     errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
@@ -171,11 +170,11 @@ impl WebAuthnAttObj {
         let Some(credential_data) = &self.att_obj.auth_data.credential_data else {
             return Err(NS_ERROR_FAILURE);
         };
-        // We only support encoding (some) EC2 keys in DER SPKI format.
-        let COSEKeyType::EC2(ref key) = credential_data.credential_public_key.key else {
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        };
-        Ok(key.der_spki().or(Err(NS_ERROR_NOT_AVAILABLE))?.into())
+        Ok(credential_data
+            .credential_public_key
+            .der_spki()
+            .or(Err(NS_ERROR_NOT_AVAILABLE))?
+            .into())
     }
 
     xpcom_method!(get_public_key_algorithm => GetPublicKeyAlgorithm() -> i32);
@@ -333,14 +332,12 @@ impl Controller {
                     .query_interface::<nsICtapSignResult>(),
             ),
             Ok(result) => {
-                for assertion in result.assertions {
-                    assertions.push(
-                        CtapSignResult::allocate(InitCtapSignResult {
-                            result: Ok(assertion),
-                        })
-                        .query_interface::<nsICtapSignResult>(),
-                    );
-                }
+                assertions.push(
+                    CtapSignResult::allocate(InitCtapSignResult {
+                        result: Ok(result.assertion),
+                    })
+                    .query_interface::<nsICtapSignResult>(),
+                );
             }
         }
 
@@ -439,6 +436,9 @@ fn status_callback(
             }
             Ok(StatusUpdate::InteractiveManagement(_)) => {
                 debug!("STATUS: interactive management");
+            }
+            Ok(StatusUpdate::SelectResultNotice(_, _)) => {
+                // The selection prompt will be added in Bug 1854016
             }
             Err(RecvError) => {
                 debug!("STATUS: end");
@@ -605,7 +605,7 @@ impl AuthrsTransport {
                 name: None,
             },
             origin: origin.to_string(),
-            user: User {
+            user: PublicKeyCredentialUserEntity {
                 id: user_id.to_vec(),
                 name: Some(user_name.to_string()),
                 display_name: None,
@@ -783,10 +783,8 @@ impl AuthrsTransport {
                     // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
                     // "May be omitted if the allowList has exactly one credential." If we had
                     // a unique allowed credential, then copy its descriptor to the output.
-                    if let Ok(Some(assertion)) =
-                        result.as_mut().map(|result| result.assertions.first_mut())
-                    {
-                        assertion.credentials = uniq_allowed_cred;
+                    if let Ok(inner) = result.as_mut() {
+                        inner.assertion.credentials = uniq_allowed_cred;
                     }
                 }
                 let _ = controller.finish_sign(tid, result);

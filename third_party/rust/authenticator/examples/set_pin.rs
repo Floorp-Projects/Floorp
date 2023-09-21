@@ -114,6 +114,9 @@ fn main() {
             Ok(StatusUpdate::PinUvError(e)) => {
                 panic!("Unexpected error: {:?}", e)
             }
+            Ok(StatusUpdate::SelectResultNotice(_, _)) => {
+                panic!("Unexpected select device notice")
+            }
             Err(RecvError) => {
                 println!("STATUS: end");
                 return;

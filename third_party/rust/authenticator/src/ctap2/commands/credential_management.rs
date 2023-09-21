@@ -2,7 +2,8 @@ use super::{Command, CommandError, PinUvAuthCommand, RequestCtap2, StatusCode};
 use crate::{
     crypto::{COSEKey, PinUvAuthParam, PinUvAuthToken},
     ctap2::server::{
-        PublicKeyCredentialDescriptor, RelyingParty, RpIdHash, User, UserVerificationRequirement,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingParty, RpIdHash,
+        UserVerificationRequirement,
     },
     errors::AuthenticatorError,
     transport::errors::HIDError,
@@ -21,7 +22,7 @@ use std::fmt;
 struct CredManagementParams {
     rp_id_hash: Option<RpIdHash>, // RP ID SHA-256 hash
     credential_id: Option<PublicKeyCredentialDescriptor>, // Credential Identifier
-    user: Option<User>,           // User Entity
+    user: Option<PublicKeyCredentialUserEntity>, // User Entity
 }
 
 impl CredManagementParams {
@@ -68,7 +69,7 @@ pub(crate) enum CredManagementCommand {
     EnumerateCredentialsBegin(RpIdHash),
     EnumerateCredentialsGetNextCredential,
     DeleteCredential(PublicKeyCredentialDescriptor),
-    UpdateUserInformation((PublicKeyCredentialDescriptor, User)),
+    UpdateUserInformation((PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity)),
 }
 
 impl CredManagementCommand {
@@ -157,7 +158,7 @@ pub struct CredentialManagementResponse {
     /// Total number of RPs present on the authenticator
     pub total_rps: Option<u64>,
     /// User Information
-    pub user: Option<User>,
+    pub user: Option<PublicKeyCredentialUserEntity>,
     /// Credential ID
     pub credential_id: Option<PublicKeyCredentialDescriptor>,
     /// Public key of the credential.
@@ -182,7 +183,7 @@ pub struct CredentialRpListEntry {
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct CredentialListEntry {
     /// User Information
-    pub user: User,
+    pub user: PublicKeyCredentialUserEntity,
     /// Credential ID
     pub credential_id: PublicKeyCredentialDescriptor,
     /// Public key of the credential.

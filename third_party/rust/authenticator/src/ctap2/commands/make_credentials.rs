@@ -15,7 +15,8 @@ use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::server::{
     AuthenticationExtensionsClientInputs, AuthenticationExtensionsClientOutputs,
     CredentialProtectionPolicy, PublicKeyCredentialDescriptor, PublicKeyCredentialParameters,
-    RelyingParty, RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
+    PublicKeyCredentialUserEntity, RelyingParty, RelyingPartyWrapper, RpIdHash,
+    UserVerificationRequirement,
 };
 use crate::ctap2::utils::{read_byte, serde_parse_err};
 use crate::errors::AuthenticatorError;
@@ -260,7 +261,7 @@ pub struct MakeCredentials {
     pub client_data_hash: ClientDataHash,
     pub rp: RelyingPartyWrapper,
     // Note(baloo): If none -> ctap1
-    pub user: Option<User>,
+    pub user: Option<PublicKeyCredentialUserEntity>,
     pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
     pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
 
@@ -281,7 +282,7 @@ impl MakeCredentials {
     pub fn new(
         client_data_hash: ClientDataHash,
         rp: RelyingPartyWrapper,
-        user: Option<User>,
+        user: Option<PublicKeyCredentialUserEntity>,
         pub_cred_params: Vec<PublicKeyCredentialParameters>,
         exclude_list: Vec<PublicKeyCredentialDescriptor>,
         options: MakeCredentialsOptions,
@@ -564,7 +565,7 @@ pub(crate) fn dummy_make_credentials_cmd() -> MakeCredentials {
             id: String::from("make.me.blink"),
             ..Default::default()
         }),
-        Some(User {
+        Some(PublicKeyCredentialUserEntity {
             id: vec![0],
             name: Some(String::from("make.me.blink")),
             ..Default::default()
@@ -597,7 +598,8 @@ pub mod test {
     use crate::ctap2::commands::{RequestCtap1, RequestCtap2};
     use crate::ctap2::server::RpIdHash;
     use crate::ctap2::server::{
-        PublicKeyCredentialParameters, RelyingParty, RelyingPartyWrapper, User,
+        PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
+        RelyingPartyWrapper,
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
@@ -620,7 +622,7 @@ pub mod test {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
             }),
-            Some(User {
+            Some(PublicKeyCredentialUserEntity {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
                     .unwrap(),
@@ -677,7 +679,7 @@ pub mod test {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
             }),
-            Some(User {
+            Some(PublicKeyCredentialUserEntity {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
                     .unwrap(),

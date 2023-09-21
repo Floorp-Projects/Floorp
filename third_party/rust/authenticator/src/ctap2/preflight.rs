@@ -161,13 +161,12 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
         );
         silent_assert.set_pin_uv_auth_param(pin_uv_auth_token.clone())?;
         match dev.send_msg(&silent_assert) {
-            Ok(response) => {
+            Ok(mut response) => {
                 // This chunk contains a key_handle that is already known to the device.
                 // Filter out all credentials the device returned. Those are valid.
                 let credential_ids = response
-                    .assertions
-                    .iter()
-                    .filter_map(|a| a.credentials.clone())
+                    .iter_mut()
+                    .filter_map(|result| result.assertion.credentials.take())
                     .collect();
                 // Replace credential_id_list with the valid credentials
                 final_list = credential_ids;

@@ -50,6 +50,13 @@ user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
 
+[[publisher.authenticator]]
+version = "0.4.0-alpha.22"
+when = "2023-09-19"
+user-id = 175410
+user-login = "jschanck"
+user-name = "John Schanck"
+
 [[publisher.bhttp]]
 version = "0.3.1"
 when = "2023-02-23"

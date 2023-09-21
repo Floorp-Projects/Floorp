@@ -345,7 +345,7 @@ where
 pub trait VirtualFidoDevice: FidoDevice {
     fn check_key_handle(&self, req: &CheckKeyHandle) -> Result<(), HIDError>;
     fn client_pin(&self, req: &ClientPIN) -> Result<ClientPinResponse, HIDError>;
-    fn get_assertion(&self, req: &GetAssertion) -> Result<GetAssertionResult, HIDError>;
+    fn get_assertion(&self, req: &GetAssertion) -> Result<Vec<GetAssertionResult>, HIDError>;
     fn get_info(&self) -> Result<AuthenticatorInfo, HIDError>;
     fn get_version(&self, req: &GetVersion) -> Result<U2FInfo, HIDError>;
     fn make_credentials(&self, req: &MakeCredentials) -> Result<MakeCredentialsResult, HIDError>;

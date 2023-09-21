@@ -13,7 +13,7 @@ use crate::ctap2::commands::get_next_assertion::GetNextAssertion;
 use crate::ctap2::commands::make_credentials::UserVerification;
 use crate::ctap2::server::{
     AuthenticationExtensionsClientInputs, AuthenticationExtensionsClientOutputs,
-    PublicKeyCredentialDescriptor, RelyingPartyWrapper, RpIdHash, User,
+    PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingPartyWrapper, RpIdHash,
     UserVerificationRequirement,
 };
 use crate::ctap2::utils::{read_be_u32, read_byte};
@@ -195,14 +195,10 @@ impl GetAssertion {
         // Handle extensions whose outputs are not encoded in the authenticator data.
         // 1. appId
         if let Some(app_id) = &self.extensions.app_id {
-            result.extensions.app_id = result
-                .assertions
-                .first()
-                .map(|assertion| {
-                    assertion.auth_data.rp_id_hash
-                        == RelyingPartyWrapper::from(app_id.as_str()).hash()
-                })
-                .or(Some(false));
+            result.extensions.app_id = Some(
+                result.assertion.auth_data.rp_id_hash
+                    == RelyingPartyWrapper::from(app_id.as_str()).hash(),
+            );
         }
     }
 }
@@ -307,7 +303,7 @@ impl Serialize for GetAssertion {
 }
 
 impl RequestCtap1 for GetAssertion {
-    type Output = GetAssertionResult;
+    type Output = Vec<GetAssertionResult>;
     type AdditionalInfo = PublicKeyCredentialDescriptor;
 
     fn ctap1_format(&self) -> Result<(Vec<u8>, Self::AdditionalInfo), HIDError> {
@@ -358,24 +354,27 @@ impl RequestCtap1 for GetAssertion {
             return Err(Retryable::Error(HIDError::ApduStatus(err)));
         }
 
-        let mut output = GetAssertionResult::from_ctap1(input, &self.rp.hash(), add_info)
+        let mut result = GetAssertionResult::from_ctap1(input, &self.rp.hash(), add_info)
             .map_err(|e| Retryable::Error(HIDError::Command(e)))?;
-        self.finalize_result(&mut output);
-        Ok(output)
+        self.finalize_result(&mut result);
+        // Although there's only one result, we return a vector for consistency with CTAP2.
+        Ok(vec![result])
     }
 
     fn send_to_virtual_device<Dev: VirtualFidoDevice>(
         &self,
         dev: &mut Dev,
     ) -> Result<Self::Output, HIDError> {
-        let mut output = dev.get_assertion(self)?;
-        self.finalize_result(&mut output);
-        Ok(output)
+        let mut results = dev.get_assertion(self)?;
+        for result in results.iter_mut() {
+            self.finalize_result(result);
+        }
+        Ok(results)
     }
 }
 
 impl RequestCtap2 for GetAssertion {
-    type Output = GetAssertionResult;
+    type Output = Vec<GetAssertionResult>;
 
     fn command(&self) -> Command {
         Command::GetAssertion
@@ -411,22 +410,27 @@ impl RequestCtap2 for GetAssertion {
             let assertion: GetAssertionResponse =
                 from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
             let number_of_credentials = assertion.number_of_credentials.unwrap_or(1);
-            let mut assertions = Vec::with_capacity(number_of_credentials);
-            assertions.push(assertion.into());
+
+            let mut results = Vec::with_capacity(number_of_credentials);
+            results.push(GetAssertionResult {
+                assertion: assertion.into(),
+                extensions: Default::default(),
+            });
 
             let msg = GetNextAssertion;
             // We already have one, so skipping 0
             for _ in 1..number_of_credentials {
-                let new_cred = dev.send_cbor(&msg)?;
-                assertions.push(new_cred.into());
+                let assertion = dev.send_cbor(&msg)?;
+                results.push(GetAssertionResult {
+                    assertion: assertion.into(),
+                    extensions: Default::default(),
+                });
             }
 
-            let mut output = GetAssertionResult {
-                assertions,
-                extensions: Default::default(),
-            };
-            self.finalize_result(&mut output);
-            Ok(output)
+            for result in results.iter_mut() {
+                self.finalize_result(result);
+            }
+            Ok(results)
         } else {
             let data: Value = from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
             Err(CommandError::StatusCode(status, Some(data)).into())
@@ -437,9 +441,11 @@ impl RequestCtap2 for GetAssertion {
         &self,
         dev: &mut Dev,
     ) -> Result<Self::Output, HIDError> {
-        let mut output = dev.get_assertion(self)?;
-        self.finalize_result(&mut output);
-        Ok(output)
+        let mut results = dev.get_assertion(self)?;
+        for result in results.iter_mut() {
+            self.finalize_result(result);
+        }
+        Ok(results)
     }
 }
 
@@ -449,7 +455,7 @@ pub struct Assertion {
                                                              * mandatory in CTAP2.1 */
     pub auth_data: AuthenticatorData,
     pub signature: Vec<u8>,
-    pub user: Option<User>,
+    pub user: Option<PublicKeyCredentialUserEntity>,
 }
 
 impl From<GetAssertionResponse> for Assertion {
@@ -465,7 +471,7 @@ impl From<GetAssertionResponse> for Assertion {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct GetAssertionResult {
-    pub assertions: Vec<Assertion>,
+    pub assertion: Assertion,
     pub extensions: AuthenticationExtensionsClientOutputs,
 }
 
@@ -501,22 +507,9 @@ impl GetAssertionResult {
         };
 
         Ok(GetAssertionResult {
-            assertions: vec![assertion],
+            assertion,
             extensions: Default::default(),
         })
-    }
-
-    pub fn u2f_sign_data(&self) -> Vec<u8> {
-        if let Some(first) = self.assertions.first() {
-            let mut res = Vec::new();
-            res.push(first.auth_data.flags.bits());
-            res.extend(first.auth_data.counter.to_be_bytes());
-            res.extend(&first.signature);
-            res
-            // first.signature.clone()
-        } else {
-            Vec::new()
-        }
     }
 }
 
@@ -524,7 +517,7 @@ pub struct GetAssertionResponse {
     pub credentials: Option<PublicKeyCredentialDescriptor>,
     pub auth_data: AuthenticatorData,
     pub signature: Vec<u8>,
-    pub user: Option<User>,
+    pub user: Option<PublicKeyCredentialUserEntity>,
     pub number_of_credentials: Option<usize>,
 }
 
@@ -628,7 +621,8 @@ pub mod test {
         do_credential_list_filtering_ctap1, do_credential_list_filtering_ctap2,
     };
     use crate::ctap2::server::{
-        PublicKeyCredentialDescriptor, RelyingParty, RelyingPartyWrapper, RpIdHash, Transport, User,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingParty,
+        RelyingPartyWrapper, RpIdHash, Transport,
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
@@ -778,7 +772,7 @@ pub mod test {
                 0x47, 0xf1, 0x8d, 0xb4, 0x74, 0xc7, 0x47, 0x90, 0xea, 0xab, 0xb1, 0x44, 0x11, 0xe7,
                 0xa0,
             ],
-            user: Some(User {
+            user: Some(PublicKeyCredentialUserEntity {
                 id: vec![
                     0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02,
                     0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02,
@@ -790,10 +784,10 @@ pub mod test {
             auth_data: expected_auth_data,
         };
 
-        let expected = GetAssertionResult {
-            assertions: vec![expected_assertion],
+        let expected = vec![GetAssertionResult {
+            assertion: expected_assertion,
             extensions: Default::default(),
-        };
+        }];
         let response = device.send_cbor(&assertion).unwrap();
         assert_eq!(response, expected);
     }
@@ -925,10 +919,10 @@ pub mod test {
             auth_data: expected_auth_data,
         };
 
-        let expected = GetAssertionResult {
-            assertions: vec![expected_assertion],
+        let expected = vec![GetAssertionResult {
+            assertion: expected_assertion,
             extensions: Default::default(),
-        };
+        }];
         assert_eq!(response, expected);
     }
 
@@ -1069,10 +1063,10 @@ pub mod test {
             auth_data: expected_auth_data,
         };
 
-        let expected = GetAssertionResult {
-            assertions: vec![expected_assertion],
+        let expected = vec![GetAssertionResult {
+            assertion: expected_assertion,
             extensions: Default::default(),
-        };
+        }];
         assert_eq!(response, expected);
     }
 
@@ -1337,7 +1331,7 @@ pub mod test {
         let resp = GetAssertionResult::from_ctap1(&sample, &rp_hash, &add_info)
             .expect("could not handle response");
         assert_eq!(
-            resp.assertions[0].auth_data.flags,
+            resp.assertion.auth_data.flags,
             AuthenticatorDataFlags::USER_PRESENT | AuthenticatorDataFlags::RESERVED_1
         );
     }
