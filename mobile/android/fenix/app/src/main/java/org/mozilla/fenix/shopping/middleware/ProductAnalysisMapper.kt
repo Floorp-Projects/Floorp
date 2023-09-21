@@ -27,7 +27,11 @@ fun ProductAnalysis?.toProductReviewState(): ProductReviewState =
 
 private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
     if (productId == null) {
-        ProductReviewState.NoAnalysisPresent()
+        if (needsAnalysis) {
+            ProductReviewState.NoAnalysisPresent()
+        } else {
+            ProductReviewState.Error.GenericError
+        }
     } else {
         val mappedRating = adjustedRating.toFloatOrNull()
         val mappedGrade = grade?.toGrade()

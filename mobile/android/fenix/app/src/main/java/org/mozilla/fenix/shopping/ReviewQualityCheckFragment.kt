@@ -35,7 +35,7 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
             middleware = ReviewQualityCheckMiddlewareProvider.provideMiddleware(
                 settings = requireComponents.settings,
                 browserStore = requireComponents.core.store,
-                context = requireContext(),
+                context = requireContext().applicationContext,
                 openLink = { link, shouldOpenInNewTab ->
                     (requireActivity() as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = link,

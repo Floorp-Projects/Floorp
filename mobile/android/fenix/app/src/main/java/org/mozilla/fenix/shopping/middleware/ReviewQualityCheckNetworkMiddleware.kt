@@ -6,14 +6,15 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.FetchProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.RetryProductAnalysis
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 
 /**
  * Middleware that handles network requests for the review quality check feature.
@@ -26,7 +27,7 @@ class ReviewQualityCheckNetworkMiddleware(
     private val reviewQualityCheckService: ReviewQualityCheckService,
     private val networkChecker: NetworkChecker,
     private val scope: CoroutineScope,
-) : Middleware<ReviewQualityCheckState, ReviewQualityCheckAction> {
+) : ReviewQualityCheckMiddleware {
 
     override fun invoke(
         context: MiddlewareContext<ReviewQualityCheckState, ReviewQualityCheckAction>,
@@ -46,21 +47,73 @@ class ReviewQualityCheckNetworkMiddleware(
         store: Store<ReviewQualityCheckState, ReviewQualityCheckAction>,
         action: ReviewQualityCheckAction.NetworkAction,
     ) {
-        when (action) {
-            FetchProductAnalysis, RetryProductAnalysis -> {
-                scope.launch {
-                    val productReviewState = if (networkChecker.isConnected()) {
-                        reviewQualityCheckService.fetchProductReview().toProductReviewState()
-                    } else {
-                        ProductReviewState.Error.NetworkError
+        if (!networkChecker.isConnected()) {
+            store.updateProductReviewState(ProductReviewState.Error.NetworkError)
+            return
+        }
+
+        scope.launch {
+            when (action) {
+                FetchProductAnalysis, RetryProductAnalysis -> {
+                    val productReviewState = fetchAnalysis()
+                    store.updateProductReviewState(productReviewState)
+                }
+
+                ReviewQualityCheckAction.ReanalyzeProduct -> {
+                    val reanalysis = reviewQualityCheckService.reanalyzeProduct()
+
+                    if (reanalysis == null) {
+                        store.updateProductReviewState(ProductReviewState.Error.GenericError)
+                        return@launch
                     }
-                    store.dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState))
+
+                    val status = pollForAnalysisStatus()
+
+                    if (status == null ||
+                        status == AnalysisStatusDto.PENDING ||
+                        status == AnalysisStatusDto.IN_PROGRESS
+                    ) {
+                        // poll failed, reset to previous state
+                        val state = store.state
+                        if (state is ReviewQualityCheckState.OptedIn) {
+                            if (state.productReviewState is ProductReviewState.NoAnalysisPresent) {
+                                store.updateProductReviewState(ProductReviewState.NoAnalysisPresent())
+                            } else if (state.productReviewState is ProductReviewState.AnalysisPresent) {
+                                store.updateProductReviewState(
+                                    state.productReviewState.copy(
+                                        analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+                                    ),
+                                )
+                            }
+                        }
+                    } else {
+                        // poll succeeded, update state
+                        store.updateProductReviewState(status.toProductReviewState())
+                    }
                 }
             }
-
-            ReviewQualityCheckAction.ReanalyzeProduct -> {
-                // Bug 1853311 - Integrate analyze and analysis_status
-            }
         }
+    }
+
+    private suspend fun fetchAnalysis(): ProductReviewState =
+        reviewQualityCheckService.fetchProductReview().toProductReviewState()
+
+    private suspend fun pollForAnalysisStatus(): AnalysisStatusDto? =
+        retry(
+            predicate = { it == AnalysisStatusDto.PENDING || it == AnalysisStatusDto.IN_PROGRESS },
+            block = { reviewQualityCheckService.analysisStatus() },
+        )
+
+    private suspend fun AnalysisStatusDto.toProductReviewState(): ProductReviewState =
+        when (this) {
+            AnalysisStatusDto.COMPLETED -> fetchAnalysis()
+            AnalysisStatusDto.NOT_ANALYZABLE -> ProductReviewState.Error.UnsupportedProductTypeError
+            else -> ProductReviewState.Error.GenericError
+        }
+
+    private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.updateProductReviewState(
+        productReviewState: ProductReviewState,
+    ) {
+        dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState))
     }
 }
