@@ -2332,9 +2332,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       this.origCoordUnits = this.coordUnits;
     }
     const values = definition.split(" round ");
-    const offsets = splitCoords(values[0]).map(
-      this.convertCoordsToPercent.bind(this)
-    );
+    const offsets = splitCoords(values[0]);
 
     let top, left, right, bottom;
     // The offsets, like margin/padding/border, are in order: top, right, bottom, left.
@@ -2353,6 +2351,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       bottom = offsets[2];
       left = offsets[3];
     }
+
+    top = this.convertCoordsToPercentFromCurrentDimension(top, "height");
+    bottom = this.convertCoordsToPercentFromCurrentDimension(bottom, "height");
+    left = this.convertCoordsToPercentFromCurrentDimension(left, "width");
+    right = this.convertCoordsToPercentFromCurrentDimension(right, "width");
 
     // maxX/maxY are found by subtracting the right/bottom edges from 100
     // (the width/height of the element in %)
@@ -2412,9 +2415,32 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     return { top, left, right, bottom };
   }
 
+  /**
+   * This uses the index to decide whether to use width or height for the
+   * computation. See `convertCoordsToPercentFromCurrentDimension()` if you
+   * need to specify width or height.
+   * @param {Number} coord a single coordinate
+   * @param {Number} i the index of its position in the function
+   * @returns {Number} the coordinate as a percentage value
+   */
   convertCoordsToPercent(coord, i) {
     const { width, height } = this.currentDimensions;
     const size = i % 2 === 0 ? width : height;
+    if (coord.includes("calc(")) {
+      return evalCalcExpression(coord.substring(5, coord.length - 1), size);
+    }
+    return coordToPercent(coord, size);
+  }
+
+  /**
+   * Converts a value to percent based on the specified dimension.
+   * @param {Number} coord a single coordinate
+   * @param {Number} currentDimensionProperty the dimension ("width" or
+   *        "height") to base the calculation off of
+   * @returns {Number} the coordinate as a percentage value
+   */
+  convertCoordsToPercentFromCurrentDimension(coord, currentDimensionProperty) {
+    const size = this.currentDimensions[currentDimensionProperty];
     if (coord.includes("calc(")) {
       return evalCalcExpression(coord.substring(5, coord.length - 1), size);
     }
