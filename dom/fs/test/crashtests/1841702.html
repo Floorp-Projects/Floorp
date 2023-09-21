@@ -5,6 +5,7 @@ self.onmessage = async function(e) {
     await a.createWritable({})
 }
 </script>
+
 <script>
 window.addEventListener("load", async () => {
     let a = await self.clientInformation.storage.getDirectory()
