@@ -20,4 +20,5 @@ RUN apt-get update && \
       wget \
       zip \
       lsb-release \
-      gperf
+      gperf \
+      procps
