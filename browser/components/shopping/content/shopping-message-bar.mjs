@@ -76,7 +76,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getGenericErrorTemplate() {
-    return html` <message-bar type="error">
+    return html`<message-bar>
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
@@ -88,7 +88,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getNotEnoughReviewsTemplate() {
-    return html` <message-bar type="warning">
+    return html`<message-bar>
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
@@ -102,7 +102,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getProductNotAvailableTemplate() {
-    return html`<message-bar type="warning">
+    return html`<message-bar>
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
@@ -136,7 +136,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getProductNotAvailableReportedTemplate() {
-    return html`<message-bar type="warning">
+    return html`<message-bar>
       <article id="message-bar-container" aria-labelledby="header">
         <strong
           id="header"
