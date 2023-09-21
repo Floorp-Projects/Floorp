@@ -95,6 +95,13 @@ add_task(async function test_showSurvey_Enabled() {
             "Show Survey targeting conditions met"
           );
           ok(
+            content.document
+              .getElementById("steps")
+              .getAttribute("data-l10n-id") ===
+              "shopping-onboarding-welcome-steps-indicator-label",
+            "Steps indicator has appropriate fluent ID"
+          );
+          ok(
             !content.document.getElementById("multi-stage-message-root").hidden,
             "Survey Message container is shown"
           );
