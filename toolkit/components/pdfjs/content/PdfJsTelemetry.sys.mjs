@@ -21,9 +21,29 @@ export const PdfJsTelemetry = {
   onTimeToView(ms) {
     Glean.pdfjs.timeToView.accumulateSamples([ms]);
   },
-  onEditing(type) {
-    if (["ink", "freetext", "stamp", "print", "save"].includes(type)) {
-      Glean.pdfjs.editing[type].add(1);
+  onEditing({ subtype, data }) {
+    if (!data) {
+      return;
+    }
+    if (!subtype && data.type) {
+      Glean.pdfjs.editing[data.type].add(1);
+      return;
+    }
+
+    if (subtype !== "stamp") {
+      return;
+    }
+
+    Glean.pdfjs.stamp[data.action].add(1);
+    for (const key of [
+      "alt_text_keyboard",
+      "alt_text_decorative",
+      "alt_text_description",
+      "alt_text_edit",
+    ]) {
+      if (data[key]) {
+        Glean.pdfjs.stamp[key].add(1);
+      }
     }
   },
   onButtons(id) {

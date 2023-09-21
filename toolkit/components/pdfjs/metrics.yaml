@@ -32,6 +32,29 @@ pdfjs:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
     expires: never
+  stamp:
+    type: labeled_counter
+    labels:
+      - inserted_image
+      - alt_text_save
+      - alt_text_cancel
+      - alt_text_hover
+      - alt_text_edit
+      - alt_text_description
+      - alt_text_decorative
+      - alt_text_keyboard
+    description: >
+      Counts the number of times some PDF editing features are used.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853960
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853960#c1
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
+    expires: never
   buttons:
     type: labeled_counter
     labels:
