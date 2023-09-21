@@ -93,10 +93,15 @@
     // Flush pending file deletions before checking usage.
     flushPendingFileDeletions();
 
-    getCurrentUsage(grabFileUsageAndContinueHandler);
-    let endUsage = yield undefined;
+    yield* assertEventuallyWithGC(
+      function* () {
+        getCurrentUsage(grabFileUsageAndContinueHandler);
+        let endUsage = yield undefined;
 
-    is(endUsage, startUsage, "OS files deleted");
+        return endUsage == startUsage;
+      },
+      "OS files deleted"
+    );
 
     finishTest();
   }

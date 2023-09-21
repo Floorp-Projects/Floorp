@@ -313,7 +313,11 @@ function scheduleGC() {
 function* assertEventuallyWithGC(conditionFunctor, message) {
   const maxGC = 100;
   for (let i = 0; i < maxGC; ++i) {
-    if (conditionFunctor()) {
+    let result =
+      conditionFunctor.constructor.name === "GeneratorFunction"
+        ? yield* conditionFunctor()
+        : conditionFunctor();
+    if (result) {
       ok(true, message + " (after " + i + " garbage collections)");
       return;
     }
