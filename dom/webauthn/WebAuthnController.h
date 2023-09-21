@@ -104,8 +104,7 @@ class WebAuthnController final : public nsIWebAuthnController {
    public:
     Transaction(uint64_t aTransactionId, const nsTArray<uint8_t>& aRpIdHash,
                 const Maybe<nsTArray<uint8_t>>& aAppIdHash,
-                const nsCString& aClientDataJSON,
-                bool aForceNoneAttestation = false)
+                const nsCString& aClientDataJSON)
         : mTransactionId(aTransactionId),
           mRpIdHash(aRpIdHash.Clone()),
           mClientDataJSON(aClientDataJSON) {
@@ -119,6 +118,7 @@ class WebAuthnController final : public nsIWebAuthnController {
     nsTArray<uint8_t> mRpIdHash;
     Maybe<nsTArray<uint8_t>> mAppIdHash;
     nsCString mClientDataJSON;
+    bool mCredProps;
   };
 
   Maybe<Transaction> mTransaction;

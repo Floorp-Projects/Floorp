@@ -153,6 +153,22 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 
         const WebAuthnAuthenticatorSelection& sel =
             aInfo.AuthenticatorSelection();
+
+        // Get extensions
+        bool requestedCredProps = false;
+        for (const WebAuthnExtension& ext : aInfo.Extensions()) {
+          if (ext.type() == WebAuthnExtension::TWebAuthnExtensionCredProps) {
+            requestedCredProps =
+                ext.get_WebAuthnExtensionCredProps().credProps();
+          }
+          if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+            GECKOBUNDLE_PUT(
+                extensionsBundle, "fidoAppId",
+                jni::StringParam(
+                    ext.get_WebAuthnExtensionAppId().appIdentifier()));
+          }
+        }
+
         // Unfortunately, GMS's FIDO2 API has no option for Passkey. If using
         // residentKey, credential will be synced with Passkey via Google
         // account or credential provider service. So this is experimental.
@@ -160,6 +176,13 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                 security_webauthn_webauthn_enable_android_fido2_residentkey()) {
           GECKOBUNDLE_PUT(authSelBundle, "residentKey",
                           jni::StringParam(sel.residentKey()));
+          if (requestedCredProps) {
+            // In WebAuthnTokenManager.java we set the "requireResidentKey"
+            // parameter to true if and only if "residentKey" here is
+            // "required". This determines the credProps extension output.
+            self->mRegisterCredPropsRk.emplace(sel.residentKey().EqualsLiteral(
+                MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED));
+          }
         }
 
         if (sel.userVerificationRequirement().EqualsLiteral(
@@ -180,16 +203,6 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
                   MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
             GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
                             java::sdk::Integer::ValueOf(1));
-          }
-        }
-
-        // Get extensions
-        for (const WebAuthnExtension& ext : aInfo.Extensions()) {
-          if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-            GECKOBUNDLE_PUT(
-                extensionsBundle, "fidoAppId",
-                jni::StringParam(
-                    ext.get_WebAuthnExtensionAppId().appIdentifier()));
           }
         }
 
@@ -261,6 +274,10 @@ void AndroidWebAuthnTokenManager::HandleRegisterResult(
         [self = RefPtr<AndroidWebAuthnTokenManager>(this),
          aResult = std::move(aResult)]() {
           nsTArray<WebAuthnExtensionResult> extensions;
+          if (self->mRegisterCredPropsRk.isSome()) {
+            extensions.AppendElement(WebAuthnExtensionResultCredProps(
+                self->mRegisterCredPropsRk.value()));
+          }
           WebAuthnMakeCredentialResult result(
               aResult.mClientDataJSON, aResult.mAttObj, aResult.mKeyHandle,
               aResult.mTransports, extensions);
