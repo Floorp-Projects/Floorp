@@ -1112,5 +1112,49 @@ uint8_t Http3ErrorToWebTransportError(uint64_t aErrorCode) {
   return 0;
 }
 
+ConnectionCloseReason ToCloseReason(nsresult aErrorCode) {
+  if (NS_SUCCEEDED(aErrorCode)) {
+    return ConnectionCloseReason::OK;
+  }
+
+  if (aErrorCode == NS_ERROR_UNKNOWN_HOST) {
+    return ConnectionCloseReason::DNS_ERROR;
+  }
+  if (aErrorCode == NS_ERROR_NET_RESET) {
+    return ConnectionCloseReason::NET_RESET;
+  }
+  if (aErrorCode == NS_ERROR_CONNECTION_REFUSED) {
+    return ConnectionCloseReason::NET_REFUSED;
+  }
+  if (aErrorCode == NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED) {
+    return ConnectionCloseReason::SOCKET_ADDRESS_NOT_SUPPORTED;
+  }
+  if (aErrorCode == NS_ERROR_NET_TIMEOUT) {
+    return ConnectionCloseReason::NET_TIMEOUT;
+  }
+  if (aErrorCode == NS_ERROR_OUT_OF_MEMORY) {
+    return ConnectionCloseReason::OUT_OF_MEMORY;
+  }
+  if (aErrorCode == NS_ERROR_SOCKET_ADDRESS_IN_USE) {
+    return ConnectionCloseReason::SOCKET_ADDRESS_IN_USE;
+  }
+  if (aErrorCode == NS_BINDING_ABORTED) {
+    return ConnectionCloseReason::BINDING_ABORTED;
+  }
+  if (aErrorCode == NS_BINDING_REDIRECTED) {
+    return ConnectionCloseReason::BINDING_REDIRECTED;
+  }
+  if (aErrorCode == NS_ERROR_ABORT) {
+    return ConnectionCloseReason::ERROR_ABORT;
+  }
+
+  int32_t code = -1 * NS_ERROR_GET_CODE(aErrorCode);
+  if (mozilla::psm::IsNSSErrorCode(code)) {
+    return ConnectionCloseReason::SECURITY_ERROR;
+  }
+
+  return ConnectionCloseReason::OTHER_NET_ERROR;
+}
+
 }  // namespace net
 }  // namespace mozilla

@@ -60,5 +60,42 @@ void HttpConnectionBase::SetTrafficCategory(HttpTrafficCategory aCategory) {
   Unused << mTrafficCategory.AppendElement(aCategory);
 }
 
+void HttpConnectionBase::ChangeConnectionState(ConnectionState aState) {
+  LOG(("HttpConnectionBase::ChangeConnectionState this=%p (%d->%d)", this,
+       static_cast<uint32_t>(mConnectionState), static_cast<uint32_t>(aState)));
+
+  // The state can't move backward.
+  if (aState <= mConnectionState) {
+    return;
+  }
+
+  mConnectionState = aState;
+}
+
+void HttpConnectionBase::RecordConnectionCloseTelemetry(nsresult aReason) {
+  /**
+   *
+   * The returned telemetry key has the format:
+   * "Version_EndToEndSSL_IsTrrServiceChannel_ExperienceState_ConnectionState"
+   *
+   * - Version: The HTTP version of the connection.
+   * - EndToEndSSL: Indicates whether SSL encryption is end-to-end.
+   * - IsTrrServiceChannel: Specifies if the connection is used to send TRR
+   *    requests.
+   * - ExperienceState: ConnectionExperienceState
+   * - ConnectionState: The connection state before closing.
+   */
+  auto key = nsPrintfCString("%d_%d_%d_%d_%d", static_cast<uint32_t>(Version()),
+                             mConnInfo->EndToEndSSL(),
+                             mConnInfo->GetIsTrrServiceChannel(),
+                             static_cast<uint32_t>(mExperienceState),
+                             static_cast<uint32_t>(mConnectionState));
+  SetCloseReason(ToCloseReason(aReason));
+  LOG(("RecordConnectionCloseTelemetry key=%s reason=%d\n", key.get(),
+       static_cast<uint32_t>(mCloseReason)));
+  Telemetry::Accumulate(Telemetry::HTTP_CONNECTION_CLOSE_REASON, key,
+                        static_cast<uint32_t>(mCloseReason));
+}
+
 }  // namespace net
 }  // namespace mozilla

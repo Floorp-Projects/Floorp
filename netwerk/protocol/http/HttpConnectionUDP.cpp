@@ -67,6 +67,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     // SetSecurityCallbacks.
     mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
         "HttpConnectionUDP::mCallbacks", callbacks, false);
+    SetCloseReason(ToCloseReason(mErrorBeforeConnect));
     return mErrorBeforeConnect;
   }
 
@@ -160,6 +161,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     return rv;
   }
 
+  ChangeConnectionState(ConnectionState::INITED);
   // See explanation for non-strictness of this operation in
   // SetSecurityCallbacks.
   mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
@@ -185,6 +187,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
         caps));
 
   if (!mExperienced && !trans->IsNullTransaction()) {
+    mHasFirstHttpTransaction = true;
     // For QUIC we have HttpConnecitonUDP before the actual connection
     // has been establish so wait for TLS handshake to be finished before
     // we mark the connection 'experienced'.
@@ -222,6 +225,11 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
     return NS_ERROR_FAILURE;
   }
 
+  if (mHasFirstHttpTransaction && mExperienced) {
+    mHasFirstHttpTransaction = false;
+    mExperienceState |= ConnectionExperienceState::Experienced;
+  }
+
   Unused << ResumeSend();
   return NS_OK;
 }
@@ -231,6 +239,11 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
        static_cast<uint32_t>(reason)));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (mConnectionState != ConnectionState::CLOSED) {
+    RecordConnectionCloseTelemetry(reason);
+    ChangeConnectionState(ConnectionState::CLOSED);
+  }
 
   if (mForceSendTimer) {
     mForceSendTimer->Cancel();
@@ -536,6 +549,14 @@ NS_INTERFACE_MAP_BEGIN(HttpConnectionUDP)
   NS_INTERFACE_MAP_ENTRY(HttpConnectionBase)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpConnectionUDP)
 NS_INTERFACE_MAP_END
+
+void HttpConnectionUDP::NotifyDataRead() {
+  mExperienceState |= ConnectionExperienceState::First_Response_Received;
+}
+
+void HttpConnectionUDP::NotifyDataWrite() {
+  mExperienceState |= ConnectionExperienceState::First_Request_Sent;
+}
 
 // called on the socket transport thread
 nsresult HttpConnectionUDP::RecvData() {
