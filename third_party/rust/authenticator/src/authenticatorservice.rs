@@ -5,8 +5,8 @@
 use crate::ctap2::commands::client_pin::Pin;
 use crate::ctap2::server::{
     AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
-    PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, User,
-    UserVerificationRequirement,
+    PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
+    ResidentKeyRequirement, UserVerificationRequirement,
 };
 use crate::errors::*;
 use crate::manager::Manager;
@@ -18,7 +18,7 @@ pub struct RegisterArgs {
     pub client_data_hash: [u8; 32],
     pub relying_party: RelyingParty,
     pub origin: String,
-    pub user: User,
+    pub user: PublicKeyCredentialUserEntity,
     pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
     pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
     pub user_verification_req: UserVerificationRequirement,
@@ -318,7 +318,8 @@ mod tests {
     use super::{AuthenticatorService, AuthenticatorTransport, Pin, RegisterArgs, SignArgs};
     use crate::consts::PARAMETER_SIZE;
     use crate::ctap2::server::{
-        RelyingParty, ResidentKeyRequirement, User, UserVerificationRequirement,
+        PublicKeyCredentialUserEntity, RelyingParty, ResidentKeyRequirement,
+        UserVerificationRequirement,
     };
     use crate::errors::AuthenticatorError;
     use crate::statecallback::StateCallback;
@@ -439,7 +440,7 @@ mod tests {
                         name: None,
                     },
                     origin: "example.com".to_string(),
-                    user: User {
+                    user: PublicKeyCredentialUserEntity {
                         id: "user_id".as_bytes().to_vec(),
                         name: Some("A. User".to_string()),
                         display_name: None,
@@ -515,7 +516,7 @@ mod tests {
                         name: None,
                     },
                     origin: "example.com".to_string(),
-                    user: User {
+                    user: PublicKeyCredentialUserEntity {
                         id: "user_id".as_bytes().to_vec(),
                         name: Some("A. User".to_string()),
                         display_name: None,
@@ -610,7 +611,7 @@ mod tests {
                         name: None,
                     },
                     origin: "example.com".to_string(),
-                    user: User {
+                    user: PublicKeyCredentialUserEntity {
                         id: "user_id".as_bytes().to_vec(),
                         name: Some("A. User".to_string()),
                         display_name: None,

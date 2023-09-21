@@ -1,4 +1,4 @@
-use super::{CryptoError, DER_OID_P256_BYTES};
+use super::CryptoError;
 use nss_gk_api::p11::{
     PK11Origin, PK11_CreateContextBySymKey, PK11_Decrypt, PK11_DigestFinal, PK11_DigestOp,
     PK11_Encrypt, PK11_ExportDERPrivateKeyInfo, PK11_GenerateKeyPairWithOpFlags,
@@ -17,11 +17,7 @@ use std::convert::TryFrom;
 use std::os::raw::{c_int, c_uint};
 use std::ptr;
 
-const DER_TAG_INTEGER: u8 = 0x02;
-const DER_TAG_SEQUENCE: u8 = 0x30;
-
-#[cfg(test)]
-use super::DER_OID_EC_PUBLIC_KEY_BYTES;
+use super::der;
 
 #[cfg(test)]
 use nss_gk_api::p11::PK11_VerifyWithMechanism;
@@ -33,118 +29,6 @@ impl From<nss_gk_api::Error> for CryptoError {
 }
 
 pub type Result<T> = std::result::Result<T, CryptoError>;
-
-// DER encode a pair of 32 byte unsigned integers as an RFC 3279 Ecdsa-Sig-Value.
-//   Ecdsa-Sig-Value  ::=  SEQUENCE  {
-//        r     INTEGER,
-//        s     INTEGER }.
-fn encode_der_p256_sig(r: &[u8], s: &[u8]) -> Result<Vec<u8>> {
-    if r.len() != 32 || s.len() != 32 {
-        return Err(CryptoError::MalformedInput);
-    }
-    // Each of the inputs is no more than 32 bytes as an unsigned integer. So each is no more than
-    // 33 bytes as a signed integer and no more than 35 bytes with tag and length.  The surrounding
-    // tag and length for the SEQUENCE has length 2, so the output is no more than 72 bytes.
-    let mut out = Vec::with_capacity(72);
-    out.push(DER_TAG_SEQUENCE);
-    out.push(0xaa); // placeholder for final length
-
-    let encode_u256 = |out: &mut Vec<u8>, r: &[u8]| {
-        // trim leading zeros, leaving a single zero if the input is the zero vector.
-        let mut r = r;
-        while r.len() > 1 && r[0] == 0 {
-            r = &r[1..];
-        }
-        out.push(DER_TAG_INTEGER);
-        if r[0] & 0x80 != 0 {
-            // Pad with a zero byte to avoid r being interpreted as a negative value.
-            out.push((r.len() + 1) as u8);
-            out.push(0x00);
-        } else {
-            out.push(r.len() as u8);
-        }
-        out.extend_from_slice(r);
-    };
-
-    encode_u256(&mut out, r);
-    encode_u256(&mut out, s);
-
-    // Write the length of the sequence
-    out[1] = (out.len() - 2) as u8;
-
-    Ok(out)
-}
-
-// Given "tag || len || value || rest" where tag and len are of length one, len is in [0, 127],
-// and value is of length len, returns (value, rest)
-#[cfg(test)]
-fn der_expect_tag_with_short_len(tag: u8, z: &[u8]) -> Result<(&[u8], &[u8])> {
-    if z.is_empty() {
-        return Err(CryptoError::MalformedInput);
-    }
-    let (h, z) = z.split_at(1);
-    if h[0] != tag || z.is_empty() {
-        return Err(CryptoError::MalformedInput);
-    }
-    let (h, z) = z.split_at(1);
-    if h[0] >= 0x80 || h[0] as usize > z.len() {
-        return Err(CryptoError::MalformedInput);
-    }
-    Ok(z.split_at(h[0] as usize))
-}
-
-// Given a DER encoded RFC 3279 Ecdsa-Sig-Value,
-//   Ecdsa-Sig-Value  ::=  SEQUENCE  {
-//        r     INTEGER,
-//        s     INTEGER },
-// with r and s < 2^256, returns a 64 byte array containing
-// r and s encoded as 32 byte zero-padded big endian unsigned
-// integers
-#[cfg(test)]
-fn decode_der_p256_sig(z: &[u8]) -> Result<Vec<u8>> {
-    // Strip the tag and length.
-    let (z, rest) = der_expect_tag_with_short_len(DER_TAG_SEQUENCE, z)?;
-
-    // The input should not have any trailing data.
-    if !rest.is_empty() {
-        return Err(CryptoError::MalformedInput);
-    }
-
-    let read_u256 = |z| -> Result<(&[u8], &[u8])> {
-        let (r, z) = der_expect_tag_with_short_len(DER_TAG_INTEGER, z)?;
-        // We're expecting r < 2^256, so no more than 33 bytes as a signed integer.
-        if r.is_empty() || r.len() > 33 {
-            return Err(CryptoError::MalformedInput);
-        }
-        // If it is 33 bytes the leading byte must be zero.
-        if r.len() == 33 && r[0] != 0 {
-            return Err(CryptoError::MalformedInput);
-        }
-        // Ensure r is no more than 32 bytes.
-        if r.len() == 33 {
-            Ok((&r[1..], z))
-        } else {
-            Ok((r, z))
-        }
-    };
-
-    let (r, z) = read_u256(z)?;
-    let (s, z) = read_u256(z)?;
-
-    // We should have consumed the entire buffer
-    if !z.is_empty() {
-        return Err(CryptoError::MalformedInput);
-    }
-
-    // Left pad each integer with zeros to length 32 and concatenate the results
-    let mut out = vec![0u8; 64];
-    {
-        let (r_out, s_out) = out.split_at_mut(32);
-        r_out[32 - r.len()..].copy_from_slice(r);
-        s_out[32 - s.len()..].copy_from_slice(s);
-    }
-    Ok(out)
-}
 
 fn nss_public_key_from_der_spki(spki: &[u8]) -> Result<PublicKey> {
     // TODO: replace this with an nss-gk-api function
@@ -186,7 +70,8 @@ fn generate_p256_nss() -> Result<(PrivateKey, PublicKey)> {
     // Hard-coding the P256 OID here is easier than extracting a group name from peer_public and
     // comparing it with P256. We'll fail in `PK11_GenerateKeyPairWithOpFlags` if peer_public is on
     // the wrong curve.
-    let mut oid = SECItemBorrowed::wrap(DER_OID_P256_BYTES);
+    let oid_bytes = der::object_id(der::OID_SECP256R1_BYTES)?;
+    let mut oid = SECItemBorrowed::wrap(&oid_bytes);
     let oid_ptr: *mut SECItem = oid.as_mut();
 
     let slot = Slot::internal()?;
@@ -270,7 +155,7 @@ pub fn ecdsa_p256_sha256_sign_raw(private: &[u8], data: &[u8]) -> Result<Vec<u8>
     }
 
     let (r, s) = signature_buf.split_at(32);
-    encode_der_p256_sig(r, s)
+    der::sequence(&[&der::integer(r)?, &der::integer(s)?])
 }
 
 /// Ephemeral ECDH over P256. Takes a DER SubjectPublicKeyInfo that encodes a public key. Generates
@@ -498,65 +383,63 @@ pub fn test_ecdh_p256_raw(
 
     let peer_public = nss_public_key_from_der_spki(peer_spki)?;
 
-    /* NSS has no mechanism to import a raw elliptic curve coordinate as a private key.
-     * We need to encode it in a key storage format such as PKCS#8. To avoid a dependency
-     * on an ASN.1 encoder for this test, we'll do it manually. */
-    let pkcs8_private_key_info_version = &[0x02, 0x01, 0x00];
-    let rfc5915_ec_private_key_version = &[0x02, 0x01, 0x01];
+    // NSS has no mechanism to import a raw elliptic curve coordinate as a private key.
+    // We need to encode it in an RFC 5208 PrivateKeyInfo:
+    //
+    //   PrivateKeyInfo ::= SEQUENCE {
+    //     version                   Version,
+    //     privateKeyAlgorithm       PrivateKeyAlgorithmIdentifier,
+    //     privateKey                PrivateKey,
+    //     attributes           [0]  IMPLICIT Attributes OPTIONAL }
+    //
+    //    Version ::= INTEGER
+    //    PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+    //    PrivateKey ::= OCTET STRING
+    //    Attributes ::= SET OF Attribute
+    //
+    // The privateKey field will contain an RFC 5915 ECPrivateKey:
+    //   ECPrivateKey ::= SEQUENCE {
+    //     version        INTEGER { ecPrivkeyVer1(1) } (ecPrivkeyVer1),
+    //     privateKey     OCTET STRING,
+    //     parameters [0] ECParameters {{ NamedCurve }} OPTIONAL,
+    //     publicKey  [1] BIT STRING OPTIONAL
+    //   }
 
-    let (curve_oid, seq_len, alg_len, attr_len, ecpriv_len, param_len, spk_len) = (
-        DER_OID_P256_BYTES,
-        [0x81, 0x87].as_slice(),
-        [0x13].as_slice(),
-        [0x6d].as_slice(),
-        [0x6b].as_slice(),
-        [0x44].as_slice(),
-        [0x42].as_slice(),
-    );
-
-    let priv_len = client_private.len() as u8; // < 127
-
-    let mut pkcs8_priv: Vec<u8> = vec![];
-    // RFC 5208 PrivateKeyInfo
-    pkcs8_priv.push(0x30);
-    pkcs8_priv.extend_from_slice(seq_len);
-    //      Integer (0)
-    pkcs8_priv.extend_from_slice(pkcs8_private_key_info_version);
-    //      AlgorithmIdentifier
-    pkcs8_priv.push(0x30);
-    pkcs8_priv.extend_from_slice(alg_len);
-    //          ObjectIdentifier
-    pkcs8_priv.extend_from_slice(DER_OID_EC_PUBLIC_KEY_BYTES);
-    //          RFC 5480 ECParameters
-    pkcs8_priv.extend_from_slice(curve_oid);
-    //      Attributes
-    pkcs8_priv.push(0x04);
-    pkcs8_priv.extend_from_slice(attr_len);
-    //      RFC 5915 ECPrivateKey
-    pkcs8_priv.push(0x30);
-    pkcs8_priv.extend_from_slice(ecpriv_len);
-    pkcs8_priv.extend_from_slice(rfc5915_ec_private_key_version);
-    pkcs8_priv.push(0x04);
-    pkcs8_priv.push(priv_len);
-    pkcs8_priv.extend_from_slice(client_private);
-    pkcs8_priv.push(0xa1);
-    pkcs8_priv.extend_from_slice(param_len);
-    pkcs8_priv.push(0x03);
-    pkcs8_priv.extend_from_slice(spk_len);
-    pkcs8_priv.push(0x0);
-    pkcs8_priv.push(0x04); // SEC 1 encoded uncompressed point
-    pkcs8_priv.extend_from_slice(client_public_x);
-    pkcs8_priv.extend_from_slice(client_public_y);
+    // PrivateKeyInfo
+    let priv_key_info = der::sequence(&[
+        // version
+        &der::integer(&[0x00])?,
+        // privateKeyAlgorithm
+        &der::sequence(&[
+            &der::object_id(der::OID_EC_PUBLIC_KEY_BYTES)?,
+            &der::object_id(der::OID_SECP256R1_BYTES)?,
+        ])?,
+        // privateKey
+        &der::octet_string(
+            // ECPrivateKey
+            &der::sequence(&[
+                // version
+                &der::integer(&[0x01])?,
+                // privateKey
+                &der::octet_string(client_private)?,
+                // publicKey
+                &der::context_specific_explicit_tag(
+                    1, // publicKey
+                    &der::bit_string(&[&[0x04], client_public_x, client_public_y].concat())?,
+                )?,
+            ])?,
+        )?,
+    ])?;
 
     // Now we can import the private key.
     let slot = Slot::internal()?;
-    let mut pkcs8_priv_item = SECItemBorrowed::wrap(&pkcs8_priv);
-    let pkcs8_priv_item_ptr: *mut SECItem = pkcs8_priv_item.as_mut();
+    let mut priv_key_info_item = SECItemBorrowed::wrap(&priv_key_info);
+    let priv_key_info_item_ptr: *mut SECItem = priv_key_info_item.as_mut();
     let mut client_private_ptr = ptr::null_mut();
     unsafe {
         PK11_ImportDERPrivateKeyInfoAndReturnKey(
             *slot,
-            pkcs8_priv_item_ptr,
+            priv_key_info_item_ptr,
             ptr::null_mut(),
             ptr::null_mut(),
             PR_FALSE,
@@ -581,7 +464,7 @@ pub fn test_ecdsa_p256_sha256_verify_raw(
 ) -> Result<()> {
     nss_gk_api::init();
 
-    let signature = decode_der_p256_sig(signature)?;
+    let signature = der::read_p256_sig(signature)?;
     let public = nss_public_key_from_der_spki(public)?;
     unsafe {
         PK11_VerifyWithMechanism(

@@ -7,8 +7,9 @@ use authenticator::{
     crypto::COSEAlgorithm,
     ctap2::commands::StatusCode,
     ctap2::server::{
-        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-        ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters,
+        PublicKeyCredentialUserEntity, RelyingParty, ResidentKeyRequirement, Transport,
+        UserVerificationRequirement,
     },
     errors::{AuthenticatorError, CommandError, HIDError, UnsupportedOption},
     statecallback::StateCallback,
@@ -127,6 +128,9 @@ fn main() {
             Ok(StatusUpdate::PinUvError(e)) => {
                 panic!("Unexpected error: {:?}", e)
             }
+            Ok(StatusUpdate::SelectResultNotice(_, _)) => {
+                panic!("Unexpected select device notice")
+            }
             Err(RecvError) => {
                 println!("STATUS: end");
                 return;
@@ -134,7 +138,7 @@ fn main() {
         }
     });
 
-    let user = User {
+    let user = PublicKeyCredentialUserEntity {
         id: "user_id".as_bytes().to_vec(),
         name: Some("A. User".to_string()),
         display_name: None,

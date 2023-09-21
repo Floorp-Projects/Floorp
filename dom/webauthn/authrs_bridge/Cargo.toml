@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Martin Sirringhaus", "John Schanck"]
 
 [dependencies]
-authenticator = { version = "0.4.0-alpha.21", features = ["gecko"] }
+authenticator = { version = "0.4.0-alpha.22", features = ["gecko"] }
 base64 = "^0.21"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }

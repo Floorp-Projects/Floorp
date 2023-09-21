@@ -296,9 +296,9 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.4.0-alpha.21"
+version = "0.4.0-alpha.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0e925f7f169517290d746d6080fccc3d49605eb7ea8f0394fc3fbd6e2c31ab3"
+checksum = "2a46aebc9de6a88556552bc40e5ffbd479705cc0ab46fee0dec476dc2886eb13"
 dependencies = [
  "base64 0.21.3",
  "bitflags 1.3.2",

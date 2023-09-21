@@ -7,8 +7,8 @@ use authenticator::{
     crypto::COSEAlgorithm,
     ctap2::server::{
         AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
-        PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, Transport, User,
-        UserVerificationRequirement,
+        PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
+        ResidentKeyRequirement, Transport, UserVerificationRequirement,
     },
     statecallback::StateCallback,
     Pin, StatusPinUv, StatusUpdate,
@@ -16,7 +16,8 @@ use authenticator::{
 use getopts::Options;
 use sha2::{Digest, Sha256};
 use std::sync::mpsc::{channel, RecvError};
-use std::{env, thread};
+use std::{env, io, thread};
+use std::io::Write;
 
 fn print_usage(program: &str, opts: Options) {
     println!("------------------------------------------------------------------------");
@@ -26,6 +27,37 @@ fn print_usage(program: &str, opts: Options) {
     println!("------------------------------------------------------------------------");
     let brief = format!("Usage: {program} [options]");
     print!("{}", opts.usage(&brief));
+}
+
+fn ask_user_choice(choices: &[PublicKeyCredentialUserEntity]) -> Option<usize> {
+    for (idx, op) in choices.iter().enumerate() {
+        println!("({idx}) \"{}\"", op.name.as_ref().unwrap());
+    }
+    println!("({}) Cancel", choices.len());
+
+    let mut input = String::new();
+    loop {
+        input.clear();
+        print!("Your choice: ");
+        io::stdout()
+            .lock()
+            .flush()
+            .expect("Failed to flush stdout!");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("error: unable to read user input");
+        if let Ok(idx) = input.trim().parse::<usize>() {
+            if idx < choices.len() {
+                // Add a newline in case of success for better separation of in/output
+                println!();
+                return Some(idx);
+            } else if idx == choices.len() {
+                println!();
+                return None;
+            }
+            println!("invalid input");
+        }
+    }
 }
 
 fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms: u64) {
@@ -98,6 +130,9 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
             Ok(StatusUpdate::PinUvError(e)) => {
                 panic!("Unexpected error: {:?}", e)
             }
+            Ok(StatusUpdate::SelectResultNotice(_, _)) => {
+                panic!("Unexpected select result notice")
+            }
             Err(RecvError) => {
                 println!("STATUS: end");
                 return;
@@ -105,7 +140,7 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
         }
     });
 
-    let user = User {
+    let user = PublicKeyCredentialUserEntity {
         id: username.as_bytes().to_vec(),
         name: Some(username.to_string()),
         display_name: None,
@@ -181,6 +216,10 @@ fn main() {
         "timeout in seconds",
         "SEC",
     );
+    opts.optflag(
+        "s",
+        "skip_reg",
+        "Skip registration");
 
     opts.optflag("h", "help", "print this help menu");
     let matches = match opts.parse(&args[1..]) {
@@ -208,8 +247,10 @@ fn main() {
         }
     };
 
-    for username in &["A. User", "A. Nother", "Dr. Who"] {
-        register_user(&mut manager, username, timeout_ms)
+    if !matches.opt_present("skip_reg") {
+        for username in &["A. User", "A. Nother", "Dr. Who"] {
+            register_user(&mut manager, username, timeout_ms)
+        }
     }
 
     println!();
@@ -278,6 +319,11 @@ fn main() {
             Ok(StatusUpdate::PinUvError(e)) => {
                 panic!("Unexpected error: {:?}", e)
             }
+            Ok(StatusUpdate::SelectResultNotice(index_sender, users)) => {
+                println!("Multiple signatures returned. Select one or cancel.");
+                let idx = ask_user_choice(&users);
+                index_sender.send(idx).expect("Failed to send choice");
+            }
             Err(RecvError) => {
                 println!("STATUS: end");
                 return;
@@ -322,11 +368,7 @@ fn main() {
                 println!("Found credentials:");
                 println!(
                     "{:?}",
-                    assertion_object
-                        .assertions
-                        .iter()
-                        .map(|x| x.user.clone().unwrap().name.unwrap()) // Unwrapping here, as these shouldn't fail
-                        .collect::<Vec<_>>()
+                    assertion_object.assertion.user.clone().unwrap().name.unwrap() // Unwrapping here, as these shouldn't fail
                 );
                 println!("-----------------------------------------------------------------");
                 println!("Done.");
