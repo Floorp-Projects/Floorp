@@ -2258,9 +2258,9 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Beoardielingskwaliteit kontrolearje</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Beoardielingskwaliteit kontrolearje</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Beoardielingskwaliteit kontrolearje</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Dit kin ûngefear 60 sekonden duorje.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Dit kin ûngefear 60 sekonden duorje.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Tank foar it melden!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2286,11 +2286,11 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Kontrolearje jo netwurkferbining en probearje dan de side opnij te laden.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Noch gjin ynfo oer dizze beoardielingen</string>
+    <string name="review_quality_check_no_analysis_title">Noch gjin ynfo oer dizze beoardielingen</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Kontrolearje de beoardielingskwaliteit om te ûntdekken oft de beoardielingen fan dit produkt betrouber binne. It duorret mar ûngefear 60 sekonden.</string>
+    <string name="review_quality_check_no_analysis_body">Kontrolearje de beoardielingskwaliteit om te ûntdekken oft de beoardielingen fan dit produkt betrouber binne. It duorret mar ûngefear 60 sekonden.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Beoardielingskwaliteit kontrolearje</string>
+    <string name="review_quality_check_no_analysis_link">Beoardielingskwaliteit kontrolearje</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Probearje ús fertroude gids foar produktbeoardielingen</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2321,9 +2321,9 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Beoardielingskwaliteitskontrôle iepenje</string>
+    <string name="review_quality_check_open_handle_content_description">Beoardielingskontrôle iepenje</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Beoardielingskwaliteitskontrôle slute</string>
+    <string name="review_quality_check_close_handle_content_description">Beoardielingskontrôle slute</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s fan 5 stjerren</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

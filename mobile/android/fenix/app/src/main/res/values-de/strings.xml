@@ -2291,9 +2291,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Qualität der Bewertung wird überprüft</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Qualität der Bewertung wird überprüft</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Qualität der Bewertung wird überprüft</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Dies kann etwa 60 Sekunden dauern.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Dies kann etwa 60 Sekunden dauern.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Danke für die Meldung!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2319,11 +2319,11 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie dann, die Seite neu zu laden.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Noch keine Informationen zu diesen Bewertungen</string>
+    <string name="review_quality_check_no_analysis_title">Noch keine Informationen zu diesen Bewertungen</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Um zu wissen, ob die Bewertungen dieses Produkts zuverlässig sind, überprüfen Sie die Qualität der Bewertungen. Es dauert nur etwa 60 Sekunden.</string>
+    <string name="review_quality_check_no_analysis_body">Um zu wissen, ob die Bewertungen dieses Produkts zuverlässig sind, überprüfen Sie die Qualität der Bewertungen. Es dauert nur etwa 60 Sekunden.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Qualität der Bewertung überprüfen</string>
+    <string name="review_quality_check_no_analysis_link">Qualität der Bewertung überprüfen</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Lesen Sie unseren vertrauenswürdigen Leitfaden zur Produktbewertung</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2353,9 +2353,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Qualitätskontrolle der Bewertungen öffnen</string>
+    <string name="review_quality_check_open_handle_content_description">Rezensionsprüfer öffnen</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Qualitätskontrolle der Bewertungen schließen</string>
+    <string name="review_quality_check_close_handle_content_description">Rezensionsprüfer schliessen</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s von 5 Sternen</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

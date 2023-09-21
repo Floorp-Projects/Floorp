@@ -2293,9 +2293,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">正在檢查評論品質</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">正在檢查評論品質</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">正在檢查評論品質</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">可能需要 60 秒左右的時間。</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">可能需要 60 秒左右的時間。</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">感謝您回報！</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2321,11 +2321,11 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">請檢查您的網路連線是否正常，然後嘗試重新載入頁面。</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">還沒有這些評論的相關資訊</string>
+    <string name="review_quality_check_no_analysis_title">還沒有這些評論的相關資訊</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">可檢查商品評論的品質來了解此商品的評論是否可靠，只需約 60 秒即可完成。</string>
+    <string name="review_quality_check_no_analysis_body">可檢查商品評論的品質來了解此商品的評論是否可靠，只需約 60 秒即可完成。</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">檢查評論品質</string>
+    <string name="review_quality_check_no_analysis_link">檢查評論品質</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">試用我們可信任的商品評論</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2355,9 +2355,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta 測試版</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">開啟商品評論檢查</string>
+    <string name="review_quality_check_open_handle_content_description">開啟商品評論檢查器</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">關閉商品評論檢查</string>
+    <string name="review_quality_check_close_handle_content_description">關閉商品評論檢查器</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s 顆星，滿分 5 顆星</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

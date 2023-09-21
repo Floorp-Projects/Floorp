@@ -63,7 +63,7 @@
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>დაკავშირება წარმატებული იყო, მაგრამ მოულოდნელად გაწყდა მონაცემთა გადმოტანისას. გთხოვთ, კვლავ სცადოთ.</p>
 <ul>
-        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა ცოტა ხანში.</li>
         <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
       </ul>]]></string>
 
@@ -84,7 +84,7 @@
 
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა ცოტა ხანში.</li>
         <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
       </ul>]]></string>
 
@@ -126,7 +126,7 @@
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>ქსელური ბმა გაწყდა კავშირის შეთანხმებისას. გთხოვთ კვლავ სცადოთ.</p>
       <ul>
-        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა, ცოტა ხანში.</li>
+        <li>საიტი დროებით მიუწვდომელი ან გადატვირთულია. სცადეთ ხელახლა ცოტა ხანში.</li>
         <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>
       </ul>]]></string>
 

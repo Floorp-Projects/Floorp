@@ -2359,7 +2359,7 @@
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">개인정보처리방침</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use">이용 약관</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">사용 약관</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">사용해보기</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->

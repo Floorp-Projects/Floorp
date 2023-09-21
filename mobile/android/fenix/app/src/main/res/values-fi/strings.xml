@@ -2269,9 +2269,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Tarkistetaan arvostelun laatua</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Tämä voi kestää noin 60 sekuntia.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Tämä voi kestää noin 60 sekuntia.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Kiitos ilmoituksesta!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2297,9 +2297,9 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Tarkista verkkoyhteytesi ja yritä sitten ladata sivu uudelleen.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Näistä arvosteluista ei ole vielä tietoa</string>
+    <string name="review_quality_check_no_analysis_title">Näistä arvosteluista ei ole vielä tietoa</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Tarkista arvostelun laatu</string>
+    <string name="review_quality_check_no_analysis_link">Tarkista arvostelun laatu</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Lue lisää</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
@@ -2315,9 +2315,9 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Avaa arvostelujen tarkistus</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Avaa arvostelun laaduntarkistus</string>
+    <string name="review_quality_check_open_handle_content_description">Avaa arvostelujen tarkistus</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Sulje arvostelun laaduntarkistus</string>
+    <string name="review_quality_check_close_handle_content_description">Sulje arvostelujen tarkistus</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s/5 tähteä</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

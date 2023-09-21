@@ -2268,9 +2268,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontroluje sa kvalita recenzií</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Kontroluje sa kvalita recenzií</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Kontroluje sa kvalita recenzií</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Môže to trvať asi 60 sekúnd.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Môže to trvať asi 60 sekúnd.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Ďakujeme za nahlásenie!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2296,12 +2296,12 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Skontrolujte pripojenie k sieti a potom skúste stránku znova načítať.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Zatiaľ žiadne informácie o týchto recenziách</string>
+    <string name="review_quality_check_no_analysis_title">Zatiaľ žiadne informácie o týchto recenziách</string>
 
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Ak chcete vedieť, či sú recenzie tohto produktu spoľahlivé, skontrolujte kvalitu recenzií. Trvá to len asi 60 sekúnd.</string>
+    <string name="review_quality_check_no_analysis_body">Ak chcete vedieť, či sú recenzie tohto produktu spoľahlivé, skontrolujte kvalitu recenzií. Trvá to len asi 60 sekúnd.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Skontrolovať kvalitu recenzií</string>
+    <string name="review_quality_check_no_analysis_link">Skontrolovať kvalitu recenzií</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Vyskúšajte nášho dôveryhodného sprievodcu recenziami produktov</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2331,9 +2331,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Otvoriť kontrolu kvality recenzií</string>
+    <string name="review_quality_check_open_handle_content_description">Otvoriť Kontrolu recenzií</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Zavrieť kontrolu kvality recenzií</string>
+    <string name="review_quality_check_close_handle_content_description">Zavrieť Kontrolu recenzií</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s z 5 hviezdičiek</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

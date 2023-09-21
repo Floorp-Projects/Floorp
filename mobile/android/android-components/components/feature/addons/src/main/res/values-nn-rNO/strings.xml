@@ -181,6 +181,8 @@
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">Klarte ikkje å installere %1$s fordi den ikkje er kompatibel med %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">Klarte ikkje å installere %1$s fordi det er stor risiko for at det kan lage stabilitets og sikkerheitsproblem.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">Kan ikkje installere %1$s fordi ho har høg risko for å lage stabilitets- eller sikkerheitsproblem</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s vart aktivert</string>
