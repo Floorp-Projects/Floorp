@@ -95,7 +95,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun windowDotPrintAvailableTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
             mainSession.waitForPageStop()
@@ -193,7 +192,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun basicWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // CSS rules render this blue on screen and orange on print
             mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
@@ -213,7 +211,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun statusWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // CSS rules render this blue on screen and orange on print
             mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
@@ -245,7 +242,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun staticContextWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // CSS rules render this blue on screen and orange on print
             // Print button removes content after printing to test if it froze a static page for printing
@@ -266,7 +262,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun iframeWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // Main frame CSS rules render red on screen and green on print
             // iframe CSS rules render blue on screen and orange on print
@@ -288,7 +283,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun contentIframeWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // Main frame CSS rules render red on screen and green on print
             // iframe CSS rules render blue on screen and orange on print
@@ -306,7 +300,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun contentPDFWindowDotPrintTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // CSS rules render this blue on screen and orange on print
             mainSession.loadTestPath(ORANGE_PDF_PATH)
@@ -326,7 +319,6 @@ class PrintDelegateTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun availableCanonicalBrowsingContext() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
         activityRule.scenario.onActivity { activity ->
             // CSS rules render this blue on screen and orange on print
             mainSession.loadTestPath(ORANGE_PDF_PATH)
