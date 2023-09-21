@@ -50,3 +50,68 @@ menuseparator::before {
    */
   overflow: clip;
 }
+
+@media (-moz-platform: windows) or (-moz-platform: linux) {
+  menupopup,
+  menubar {
+    font: menu;
+  }
+}
+
+@media (-moz-platform: macos) {
+  menupopup {
+    /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
+    font: -moz-pull-down-menu;
+  }
+}
+
+menu,
+menuitem,
+menucaption {
+  border-radius: calc(var(--panel-border-radius) / 2);
+  align-items: center;
+  flex-shrink: 0;
+  list-style-image: none;
+  max-width: 42em;
+
+  @media (-moz-platform: linux) {
+    padding: 4px 6px;
+  }
+
+  @media (-moz-platform: macos) {
+    appearance: auto;
+    -moz-default-appearance: menuitem;
+    -moz-font-smoothing-background-color: -moz-mac-menuitem;
+    padding: 2px 21px;
+    border-radius: 0;
+  }
+}
+
+menu,
+menuitem {
+  &:where([disabled="true"]) {
+    color: GrayText;
+    text-shadow: none;
+
+    @media (-moz-platform: macos) {
+      /* TODO: -moz-mac-menutextdisable isn't color-scheme aware, maybe we can
+       * just use GrayText and remove this declaration */
+      color: -moz-mac-menutextdisable;
+      -moz-font-smoothing-background-color: -moz-mac-menuitem;
+    }
+  }
+
+  &:where([_moz-menuactive]:not([disabled="true"])) {
+    color: -moz-menuhovertext;
+    background-color: -moz-menuhover;
+  }
+
+  &:where([_moz-menuactive="true"][disabled="true"]) {
+    background-color: -moz-menuhoverdisabled;
+  }
+}
+
+menuitem:is([default="true"], .spell-suggestion),
+menucaption {
+  font-weight: bold;
+}
