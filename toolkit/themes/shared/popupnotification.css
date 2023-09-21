@@ -72,6 +72,14 @@ popupnotificationcontent {
   display: none;
 }
 
+@media (-moz-platform: windows) {
+  /* Swap the primary and secondary action, because Windows
+   * platform conventions put the primary action on the left. */
+  .panel-footer > .popup-notification-primary-button:not([default]) {
+    order: -1;
+  }
+}
+
 .popup-notification-secondary-button:not([dropmarkerhidden="true"]) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
