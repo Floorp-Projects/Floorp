@@ -287,29 +287,14 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
 
   autoDelete.release();
 
-  FileSystemWritableFileStream::Create(aPromise->GetParentObject(), aManager,
-                                       actor, std::move(params),
-                                       std::move(metadata))
+  FileSystemWritableFileStream::Create(
+      aPromise->GetParentObject(), aManager, actor, std::move(params),
+      std::move(metadata), std::move(buildWorkerRef))
       ->Then(GetCurrentSerialEventTarget(), __func__,
-             [buildWorkerRef,
-              aPromise](CreatePromise::ResolveOrRejectValue&& aValue) {
+             [aPromise](CreatePromise::ResolveOrRejectValue&& aValue) {
                if (aValue.IsResolve()) {
                  RefPtr<FileSystemWritableFileStream> stream =
                      aValue.ResolveValue();
-
-                 if (buildWorkerRef) {
-                   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-                       buildWorkerRef->Private(),
-                       "FileSystemWritableFileStream", [stream]() {
-                         if (stream->IsOpen()) {
-                           // We don't need the promise, we just begin the
-                           // closing process.
-                           Unused << stream->BeginAbort();
-                         }
-                       });
-
-                   stream->SetWorkerRef(std::move(workerRef));
-                 }
 
                  aPromise->MaybeResolve(stream);
                  return;
