@@ -87,7 +87,7 @@ export function toSourceLine(sourceId, line) {
   return isWasm(sourceId) ? lineToWasmOffset(sourceId, line) : line + 1;
 }
 
-export function scrollToColumn(codeMirror, line, column) {
+export function scrollToPosition(codeMirror, line, column) {
   const { top, left } = codeMirror.charCoords({ line, ch: column }, "local");
 
   if (!isVisible(codeMirror, top, left)) {
