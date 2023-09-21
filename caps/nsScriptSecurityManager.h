@@ -135,7 +135,7 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   static std::atomic<bool> sStrictFileOriginPolicy;
 
-  static mozilla::StaticRefPtr<nsIIOService> sIOService;
+  static nsIIOService* sIOService;
   static nsIStringBundle* sStrBundle;
 };
 
