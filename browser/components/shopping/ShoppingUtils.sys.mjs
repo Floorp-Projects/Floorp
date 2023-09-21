@@ -55,9 +55,10 @@ export const ShoppingUtils = {
     if (this.initialized) {
       return;
     }
+    this.onNimbusUpdate = this.onNimbusUpdate.bind(this);
 
     if (!this.registered) {
-      lazy.NimbusFeatures.shopping2023.onUpdate(ShoppingUtils.onNimbusUpdate);
+      lazy.NimbusFeatures.shopping2023.onUpdate(this.onNimbusUpdate);
       this._updateNimbusVariables();
       this.registered = true;
     }
