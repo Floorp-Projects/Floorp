@@ -826,8 +826,6 @@ class nsContentUtils {
   // element.
   static bool InProlog(nsINode* aNode);
 
-  static nsIIOService* GetIOService() { return sIOService; }
-
   static nsIBidiKeyboard* GetBidiKeyboard();
 
   /**
@@ -3522,8 +3520,6 @@ class nsContentUtils {
   static nsIScriptSecurityManager* sSecurityManager;
   static nsIPrincipal* sSystemPrincipal;
   static nsIPrincipal* sNullSubjectPrincipal;
-
-  static nsIIOService* sIOService;
 
   static nsIConsoleService* sConsoleService;
 
