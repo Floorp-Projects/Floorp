@@ -1,0 +1,7 @@
+[DEFAULT]
+
+["browser_nested_link_clicks.js"]
+
+["browser_untrusted_click_event.js"]
+support-files = ["click.html"]
+

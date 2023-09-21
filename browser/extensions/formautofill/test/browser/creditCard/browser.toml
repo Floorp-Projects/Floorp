@@ -1,0 +1,115 @@
+[DEFAULT]
+prefs = [
+  "extensions.formautofill.creditCards.enabled=true",
+  "extensions.formautofill.reauth.enabled=true",
+  "toolkit.telemetry.ipcBatchTimeout=0", # lower the interval for event telemetry in the content process to update the parent process
+]
+support-files = [
+  "../head.js",
+  "!/browser/extensions/formautofill/test/fixtures/autocomplete_basic.html",
+  "../../fixtures/autocomplete_creditcard_basic.html",
+  "../../fixtures/autocomplete_creditcard_iframe.html",
+  "../../fixtures/autocomplete_creditcard_cc_exp_field.html",
+  "../../fixtures/without_autocomplete_creditcard_basic.html",
+  "head_cc.js",
+]
+
+["browser_anti_clickjacking.js"]
+skip-if = ["!debug && os == 'mac'"] # perma-fail see Bug 1600059
+
+["browser_creditCard_doorhanger_action.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_display.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_fields.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_iframe.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_logo.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_not_shown.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_doorhanger_sync.js"]
+skip-if = [
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
+]
+
+["browser_creditCard_dropdown_layout.js"]
+skip-if = [
+  "os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
+]
+
+["browser_creditCard_fill_cancel_login.js"]
+skip-if = [
+  "!debug && os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
+]
+
+["browser_creditCard_heuristics.js"]
+skip-if = ["apple_silicon && !debug"] # Bug 1714221
+
+["browser_creditCard_heuristics_autofill_name.js"]
+skip-if = ["apple_silicon && !debug"] # Bug 1714221
+
+["browser_creditCard_heuristics_cc_type.js"]
+skip-if = ["apple_silicon && !debug"] # Bug 1714221
+
+["browser_creditCard_submission_autodetect_type.js"]
+skip-if = ["apple_silicon && !debug"]
+
+["browser_creditCard_submission_normalized.js"]
+skip-if = ["apple_silicon && !debug"]
+
+["browser_creditCard_telemetry.js"]
+skip-if = [
+  "apple_silicon && !debug", # Bug 1714221
+]
+
+["browser_editCreditCardDialog.js"]
+skip-if = [
+  "os == 'mac'",   # perma-fail see Bug 1600059
+  "os == 'linux'", # perma-fail see Bug 1600059
+  "os == 'win'",   # perma-fail see Bug 1600059
+]
+
+["browser_insecure_form.js"]
+skip-if = [
+  "os == 'mac'",   # bug 1456284
+  "os == 'linux'", # bug 1456284
+  "os == 'win'",   # bug 1456284
+]
+
+["browser_manageCreditCardsDialog.js"]
+skip-if = [
+  "os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
+]

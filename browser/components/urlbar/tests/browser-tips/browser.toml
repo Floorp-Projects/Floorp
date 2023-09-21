@@ -1,0 +1,32 @@
+[DEFAULT]
+support-files = ["head.js"]
+prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
+
+["browser_interventions.js"]
+
+["browser_picks.js"]
+
+["browser_searchTips.js"]
+support-files = [
+  "../browser/slow-page.sjs",
+  "slow-page.html",
+]
+https_first_disabled = true
+
+["browser_searchTips_interaction.js"]
+https_first_disabled = true
+
+["browser_selection.js"]
+
+["browser_updateAsk.js"]
+skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
+
+["browser_updateRefresh.js"]
+skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
+
+["browser_updateRestart.js"]
+skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
+
+["browser_updateWeb.js"]
+skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
+

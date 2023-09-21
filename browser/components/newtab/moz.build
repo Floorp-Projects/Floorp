@@ -8,8 +8,8 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/abouthomecache/browser.ini",
-    "test/browser/browser.ini",
+    "test/browser/abouthomecache/browser.toml",
+    "test/browser/browser.toml",
 ]
 
 TESTING_JS_MODULES += [

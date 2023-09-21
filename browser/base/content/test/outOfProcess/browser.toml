@@ -1,0 +1,19 @@
+[DEFAULT]
+support-files = [
+  "file_base.html",
+  "file_frame1.html",
+  "file_frame2.html",
+  "file_innerframe.html",
+  "head.js",
+]
+
+["browser_basic_outofprocess.js"]
+
+["browser_controller.js"]
+skip-if = [
+  "os == 'linux' && bits == 64", # Bug 1663506
+  "os == 'mac' && debug", # Bug 1663506
+  "os == 'win' && bits == 64", # Bug 1663506
+]
+
+["browser_promisefocus.js"]

@@ -22,12 +22,12 @@ with Files("preferences/**"):
 BROWSER_CHROME_MANIFESTS += [
     # Each test is in it's own directory so it gets run in a clean profile with
     # run-by-dir.
-    "controlCenter/browser.ini",
-    "devtools/browser.ini",
-    "permissionPrompts/browser.ini",
-    "preferences/browser.ini",
-    "primaryUI/browser.ini",
-    "tests/browser/browser.ini",
+    "controlCenter/browser.toml",
+    "devtools/browser.toml",
+    "permissionPrompts/browser.toml",
+    "preferences/browser.toml",
+    "primaryUI/browser.toml",
+    "tests/browser/browser.toml",
 ]
 
 TEST_DIRS += [

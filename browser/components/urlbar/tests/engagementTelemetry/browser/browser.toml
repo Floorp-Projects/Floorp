@@ -1,0 +1,88 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[DEFAULT]
+support-files = [
+  "head.js",
+  "head-search_engine_default_id.js",
+  "head-exposure.js",
+  "head-groups.js",
+  "head-interaction.js",
+  "head-n_chars_n_words.js",
+  "head-sap.js",
+  "head-search_mode.js",
+  "../../browser-tips/head.js",
+  "../../ext/browser/head.js",
+  "../../ext/api.js",
+  "../../ext/schema.json",
+]
+prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
+
+["browser_glean_telemetry_abandonment_groups.js"]
+
+["browser_glean_telemetry_abandonment_interaction.js"]
+
+["browser_glean_telemetry_abandonment_interaction_persisted_search_terms_disabled.js"]
+
+["browser_glean_telemetry_abandonment_interaction_persisted_search_terms_enabled.js"]
+
+["browser_glean_telemetry_abandonment_n_chars_n_words.js"]
+
+["browser_glean_telemetry_abandonment_sap.js"]
+
+["browser_glean_telemetry_abandonment_search_engine_default_id.js"]
+
+["browser_glean_telemetry_abandonment_search_mode.js"]
+
+["browser_glean_telemetry_abandonment_tips.js"]
+
+["browser_glean_telemetry_engagement_edge_cases.js"]
+
+["browser_glean_telemetry_engagement_groups.js"]
+
+["browser_glean_telemetry_engagement_interaction.js"]
+
+["browser_glean_telemetry_engagement_interaction_persisted_search_terms_disabled.js"]
+
+["browser_glean_telemetry_engagement_interaction_persisted_search_terms_enabled.js"]
+
+["browser_glean_telemetry_engagement_n_chars_n_words.js"]
+
+["browser_glean_telemetry_engagement_sap.js"]
+
+["browser_glean_telemetry_engagement_search_engine_default_id.js"]
+
+["browser_glean_telemetry_engagement_search_mode.js"]
+
+["browser_glean_telemetry_engagement_selected_result.js"]
+support-files = ["../../../../search/test/browser/trendingSuggestionEngine.sjs"]
+skip-if = ["verify"] # Bug 1852375 - MerinoTestUtils.initWeather() doesn't play well with pushPrefEnv()
+
+["browser_glean_telemetry_engagement_tips.js"]
+
+["browser_glean_telemetry_engagement_type.js"]
+
+["browser_glean_telemetry_exposure.js"]
+
+["browser_glean_telemetry_impression_groups.js"]
+
+["browser_glean_telemetry_impression_interaction.js"]
+
+["browser_glean_telemetry_impression_interaction_persisted_search_terms_disabled.js"]
+
+["browser_glean_telemetry_impression_interaction_persisted_search_terms_enabled.js"]
+
+["browser_glean_telemetry_impression_n_chars_n_words.js"]
+
+["browser_glean_telemetry_impression_preferences.js"]
+
+["browser_glean_telemetry_impression_sap.js"]
+
+["browser_glean_telemetry_impression_search_engine_default_id.js"]
+
+["browser_glean_telemetry_impression_search_mode.js"]
+
+["browser_glean_telemetry_impression_timing.js"]
+
+["browser_glean_telemetry_record_preferences.js"]

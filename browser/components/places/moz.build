@@ -9,8 +9,8 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser/browser.ini",
-    "tests/browser/interactions/browser.ini",
+    "tests/browser/browser.toml",
+    "tests/browser/interactions/browser.toml",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

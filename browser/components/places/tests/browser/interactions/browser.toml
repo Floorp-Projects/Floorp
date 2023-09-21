@@ -1,0 +1,32 @@
+[DEFAULT]
+prefs = [
+  "browser.places.interactions.enabled=true",
+  "browser.places.interactions.log=true",
+  "browser.places.interactions.scrolling_timeout_ms=50",
+  "general.smoothScroll=false",
+]
+
+support-files = [
+  "head.js",
+  "../keyword_form.html",
+  "scrolling.html",
+  "scrolling_subframe.html",
+]
+
+["browser_interactions_blocklist.js"]
+
+["browser_interactions_referrer.js"]
+
+["browser_interactions_scrolling.js"]
+skip-if = ["apple_silicon && fission"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_interactions_scrolling_dom_history.js"]
+skip-if = ["os == 'mac'"] # Bug 1756157: Randomly times out on macOS
+
+["browser_interactions_typing.js"]
+
+["browser_interactions_typing_dom_history.js"]
+
+["browser_interactions_view_time.js"]
+
+["browser_interactions_view_time_dom_history.js"]

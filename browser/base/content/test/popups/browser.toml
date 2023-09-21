@@ -1,0 +1,93 @@
+[DEFAULT]
+support-files = [
+  "head.js",
+  "popup_blocker_a.html", # used as dummy file
+]
+
+["browser_popupUI.js"]
+
+["browser_popup_blocker.js"]
+support-files = [
+  "popup_blocker.html",
+  "popup_blocker_a.html",
+  "popup_blocker_b.html",
+  "popup_blocker_10_popups.html",
+]
+skip-if = [
+  "(os == 'linux')", # Frequent bug 1081925 and bug 1125520 failures
+  "debug",
+]
+
+["browser_popup_blocker_frames.js"]
+https_first_disabled = true
+support-files = [
+  "popup_blocker.html",
+  "popup_blocker_a.html",
+  "popup_blocker_b.html",
+]
+
+["browser_popup_blocker_identity_block.js"]
+https_first_disabled = true
+support-files = [
+  "popup_blocker2.html",
+  "popup_blocker_a.html",
+]
+
+["browser_popup_blocker_iframes.js"]
+https_first_disabled = true
+support-files = [
+  "popup_blocker.html",
+  "popup_blocker_frame.html",
+  "popup_blocker_a.html",
+  "popup_blocker_b.html",
+]
+skip-if = [
+  "debug", # This test triggers Bug 1578794 due to opening many popups.
+]
+
+["browser_popup_close_main_window.js"]
+
+["browser_popup_frames.js"]
+https_first_disabled = true
+support-files = [
+  "popup_blocker.html",
+  "popup_blocker_a.html",
+  "popup_blocker_b.html",
+]
+
+["browser_popup_inner_outer_size.js"]
+
+["browser_popup_linux_move.js"]
+run-if = ["os == 'linux' && !headless"] # subset of other move tests
+
+["browser_popup_linux_resize.js"]
+run-if = ["os == 'linux' && !headless"] # subset of other resize tests
+
+["browser_popup_move.js"]
+skip-if = ["os == 'linux' && !headless"] # Wayland doesn't like moving windows, X11/XWayland unreliable current positions
+
+["browser_popup_move_instant.js"]
+skip-if = ["os == 'linux' && !headless"] # Wayland doesn't like moving windows, X11/XWayland unreliable current positions
+
+["browser_popup_new_window_resize.js"]
+
+["browser_popup_new_window_size.js"]
+support-files = ["popup_size.html"]
+
+["browser_popup_resize.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes
+
+["browser_popup_resize_instant.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes
+
+["browser_popup_resize_repeat.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes
+
+["browser_popup_resize_repeat_instant.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes
+
+["browser_popup_resize_revert.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes
+
+["browser_popup_resize_revert_instant.js"]
+skip-if = ["os == 'linux' && !headless"] # outdated current sizes

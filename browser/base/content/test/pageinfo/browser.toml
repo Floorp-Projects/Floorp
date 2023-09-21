@@ -1,0 +1,34 @@
+[DEFAULT]
+
+["browser_pageinfo_firstPartyIsolation.js"]
+support-files = [
+  "image.html",
+  "../general/audio.ogg",
+  "../general/moz.png",
+  "../general/video.ogg",
+]
+
+["browser_pageinfo_iframe_media.js"]
+support-files = ["iframes.html"]
+
+["browser_pageinfo_image_info.js"]
+skip-if = ["os == 'linux'"] # bug 1161699
+
+["browser_pageinfo_images.js"]
+support-files = ["all_images.html"]
+
+["browser_pageinfo_permissions.js"]
+
+["browser_pageinfo_rtl.js"]
+
+["browser_pageinfo_security.js"]
+https_first_disabled = true
+support-files = ["../general/moz.png"]
+
+["browser_pageinfo_separate_private.js"]
+
+["browser_pageinfo_svg_image.js"]
+support-files = [
+  "svg_image.html",
+  "../general/title_test.svg",
+]

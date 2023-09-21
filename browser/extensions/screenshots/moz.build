@@ -57,4 +57,4 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["selector"] += [
 
 # AUTOMATIC INSERTION END
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]

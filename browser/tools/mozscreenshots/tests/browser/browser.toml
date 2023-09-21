@@ -1,0 +1,10 @@
+[DEFAULT]
+subsuite = "screenshots"
+support-files = ["../../head.js"]
+
+["browser_boundingbox.js"]
+
+["browser_screenshots.js"]
+
+["browser_screenshots_cropping.js"]
+

@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[DEFAULT]
+support-files = ["head.js"]
+prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
+
+["browser_appendSpanCount.js"]
+
+["browser_noUpdateResultsFromOtherProviders.js"]
+
+["browser_suggestedIndex_10_search_10_url.js"]
+
+["browser_suggestedIndex_10_search_5_url.js"]
+
+["browser_suggestedIndex_10_url_10_search.js"]
+
+["browser_suggestedIndex_10_url_5_search.js"]
+
+["browser_suggestedIndex_5_search_10_url.js"]
+
+["browser_suggestedIndex_5_search_5_url.js"]
+
+["browser_suggestedIndex_5_url_10_search.js"]
+
+["browser_suggestedIndex_5_url_5_search.js"]

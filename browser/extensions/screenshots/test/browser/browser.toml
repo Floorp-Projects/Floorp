@@ -1,0 +1,24 @@
+[DEFAULT]
+prefs = ["extensions.screenshots.disabled=false",] # The Screenshots extension is disabled by default in Mochitests. We re-enable it here, since it's a more realistic configuration.
+
+["browser_screenshot_button.js"]
+
+["browser_screenshots_dimensions.js"]
+https_first_disabled = true
+# Bug 1714237 Disabled on tsan due to timeouts interacting with the UI
+# Bug 1714210 Disabled on headless which doesnt support image data on the clipboard
+skip-if = [
+  "headless || tsan",
+  "os == 'win'", # Bug 1714295
+  "os == 'linux' && bits == 64", # Bug 1714295
+]
+
+["browser_screenshots_download.js"]
+
+["browser_screenshots_injection.js"]
+
+support-files = [
+  "head.js",
+  "injection-page.html",
+  "green2vh.html",
+]

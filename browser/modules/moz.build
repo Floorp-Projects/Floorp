@@ -115,8 +115,8 @@ with Files("ZoomUI.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.ini",
-    "test/browser/formValidation/browser.ini",
+    "test/browser/browser.toml",
+    "test/browser/formValidation/browser.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 

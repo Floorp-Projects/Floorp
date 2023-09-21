@@ -74,12 +74,12 @@ TESTING_JS_MODULES += [
     "tests/UrlbarTestUtils.sys.mjs",
 ]
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser-tips/browser.ini",
-    "tests/browser-updateResults/browser.ini",
-    "tests/browser/browser.ini",
-    "tests/engagementTelemetry/browser/browser.ini",
-    "tests/ext/browser/browser.ini",
-    "tests/quicksuggest/browser/browser.ini",
+    "tests/browser-tips/browser.toml",
+    "tests/browser-updateResults/browser.toml",
+    "tests/browser/browser.toml",
+    "tests/engagementTelemetry/browser/browser.toml",
+    "tests/ext/browser/browser.toml",
+    "tests/quicksuggest/browser/browser.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += [
     "tests/quicksuggest/unit/xpcshell.ini",

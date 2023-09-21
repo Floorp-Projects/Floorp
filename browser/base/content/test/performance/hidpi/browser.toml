@@ -1,0 +1,8 @@
+[DEFAULT]
+prefs = [
+  "browser.startup.recordImages=true",
+  "layout.css.devPixelsPerPx='2'",
+]
+
+["../browser_startup_images.js"]
+skip-if = ["!debug"]

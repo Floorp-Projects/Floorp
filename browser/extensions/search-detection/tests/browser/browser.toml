@@ -1,0 +1,8 @@
+[DEFAULT]
+support-files = ["redirect.sjs"]
+
+["browser_client_side_redirection.js"]
+
+["browser_extension_loaded.js"]
+
+["browser_server_side_redirection.js"]

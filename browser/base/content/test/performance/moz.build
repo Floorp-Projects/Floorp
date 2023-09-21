@@ -6,10 +6,10 @@
 
 
 BROWSER_CHROME_MANIFESTS += [
-    "browser.ini",
-    "hidpi/browser.ini",
-    "io/browser.ini",
-    "lowdpi/browser.ini",
+    "browser.toml",
+    "hidpi/browser.toml",
+    "io/browser.toml",
+    "lowdpi/browser.toml",
 ]
 
 TESTING_JS_MODULES += [
