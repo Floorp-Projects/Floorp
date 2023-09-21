@@ -213,21 +213,8 @@ void WebAuthnController::Register(
   AbortOngoingTransaction();
   mTransactionParent = aTransactionParent;
 
-  /* We could refactor to defer the hashing here */
-  nsTArray<uint8_t> rpIdHash, clientDataHash;
-  NS_ConvertUTF16toUTF8 rpId(aInfo.RpId());
-  nsresult rv = BuildTransactionHashes(rpId, aInfo.ClientDataJSON(), rpIdHash,
-                                       clientDataHash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // We haven't set mTransaction yet, so we can't use AbortTransaction
-    Unused << mTransactionParent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return;
-  }
-
   // Hold on to any state that we need to finish the transaction.
-  mTransaction = Some(
-      Transaction(aTransactionId, rpIdHash, Nothing(), aInfo.ClientDataJSON()));
+  mTransaction = Some(Transaction(aTransactionId, aInfo.ClientDataJSON()));
 
   MOZ_ASSERT(mPendingRegisterInfo.isNothing());
   mPendingRegisterInfo = Some(aInfo);
@@ -446,37 +433,8 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
   AbortOngoingTransaction();
   mTransactionParent = aTransactionParent;
 
-  /* We could refactor to defer the hashing here */
-  nsTArray<uint8_t> rpIdHash, clientDataHash;
-  NS_ConvertUTF16toUTF8 rpId(aInfo.RpId());
-  nsresult rv = BuildTransactionHashes(rpId, aInfo.ClientDataJSON(), rpIdHash,
-                                       clientDataHash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // We haven't set mTransaction yet, so we can't use AbortTransaction
-    Unused << mTransactionParent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_UNKNOWN_ERR);
-    return;
-  }
-
-  Maybe<nsTArray<uint8_t>> maybeAppIdHash = Nothing();
-  for (const WebAuthnExtension& ext : aInfo.Extensions()) {
-    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-      nsTArray<uint8_t> appIdHash;
-      rv = HashCString(NS_ConvertUTF16toUTF8(
-                           ext.get_WebAuthnExtensionAppId().appIdentifier()),
-                       appIdHash);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        Unused << mTransactionParent->SendAbort(aTransactionId,
-                                                NS_ERROR_DOM_UNKNOWN_ERR);
-        return;
-      }
-      maybeAppIdHash = Some(std::move(appIdHash));
-    }
-  }
-
   // Hold on to any state that we need to finish the transaction.
-  mTransaction = Some(Transaction(aTransactionId, rpIdHash, maybeAppIdHash,
-                                  aInfo.ClientDataJSON()));
+  mTransaction = Some(Transaction(aTransactionId, aInfo.ClientDataJSON()));
 
   mPendingSignInfo = Some(aInfo);
 
@@ -495,8 +453,8 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  rv = mTransportImpl->GetAssertion(mTransaction.ref().mTransactionId,
-                                    aInfo.BrowsingContextId(), args.get());
+  nsresult rv = mTransportImpl->GetAssertion(
+      mTransaction.ref().mTransactionId, aInfo.BrowsingContextId(), args.get());
   if (NS_FAILED(rv)) {
     AbortTransaction(mTransaction.ref().mTransactionId,
                      NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
@@ -571,19 +529,17 @@ void WebAuthnController::RunFinishSign(
     return;
   }
 
-  nsTArray<uint8_t> rpIdHash;
-  rv = aResult->GetRpIdHash(rpIdHash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
-    return;
-  }
-
   nsTArray<uint8_t> userHandle;
   Unused << aResult->GetUserHandle(userHandle);  // optional
 
   nsTArray<WebAuthnExtensionResult> extensions;
-  if (mTransaction.ref().mAppIdHash.isSome()) {
-    bool usedAppId = (rpIdHash == mTransaction.ref().mAppIdHash.ref());
+  bool usedAppId;
+  rv = aResult->GetUsedAppId(&usedAppId);
+  if (rv != NS_ERROR_NOT_AVAILABLE) {
+    if (NS_FAILED(rv)) {
+      AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+      return;
+    }
     extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
   }
 

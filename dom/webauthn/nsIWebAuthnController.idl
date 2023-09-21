@@ -165,12 +165,8 @@ interface nsICtapSignResult : nsISupports {
     // returned from authenticatorGetAssertion. (Optional)
     [must_use] readonly attribute ACString userName;
 
-    // The SHA-256 hash of the RP ID of the requester. Used to
-    // implement the FIDO AppID extension.
-    readonly attribute Array<octet> rpIdHash;
-
-    // bug 1593571
-    // readonly attribute bool hmacCreateSecret;
+    // appId field of AuthenticationExtensionsClientOutputs (Optional)
+    [must_use] readonly attribute bool usedAppId;
 };
 
 // The nsIWebAuthnController interface coordinates interactions between the user

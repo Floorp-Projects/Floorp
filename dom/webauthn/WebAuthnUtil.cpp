@@ -153,30 +153,4 @@ nsresult HashCString(const nsACString& aIn, /* out */ nsTArray<uint8_t>& aOut) {
   return NS_OK;
 }
 
-nsresult BuildTransactionHashes(const nsCString& aRpId,
-                                const nsCString& aClientDataJSON,
-                                /* out */ nsTArray<uint8_t>& aRpIdHash,
-                                /* out */ nsTArray<uint8_t>& aClientDataHash) {
-  nsresult srv;
-  nsCOMPtr<nsICryptoHash> hashService =
-      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
-  if (NS_FAILED(srv)) {
-    return srv;
-  }
-
-  aRpIdHash.SetLength(SHA256_LENGTH);
-  srv = HashCString(hashService, aRpId, aRpIdHash);
-  if (NS_WARN_IF(NS_FAILED(srv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aClientDataHash.SetLength(SHA256_LENGTH);
-  srv = HashCString(hashService, aClientDataJSON, aClientDataHash);
-  if (NS_WARN_IF(NS_FAILED(srv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 }  // namespace mozilla::dom

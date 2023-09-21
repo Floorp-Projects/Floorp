@@ -255,10 +255,11 @@ impl CtapSignResult {
         Ok(nsCString::from(name))
     }
 
-    xpcom_method!(get_rp_id_hash => GetRpIdHash() -> ThinVec<u8>);
-    fn get_rp_id_hash(&self) -> Result<ThinVec<u8>, nsresult> {
+    xpcom_method!(get_used_app_id => GetUsedAppId() -> bool);
+    fn get_used_app_id(&self) -> Result<bool, nsresult> {
         let inner = self.result.as_ref().or(Err(NS_ERROR_FAILURE))?;
-        Ok(inner.assertion.auth_data.rp_id_hash.0.into())
+        let app_id = inner.extensions.app_id.ok_or(NS_ERROR_NOT_AVAILABLE)?;
+        Ok(app_id)
     }
 
     xpcom_method!(get_status => GetStatus() -> nsresult);
