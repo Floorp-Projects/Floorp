@@ -7,7 +7,7 @@
 with Files("*"):
     BUG_COMPONENT = ("Firefox", "Downloads Panel")
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]
 

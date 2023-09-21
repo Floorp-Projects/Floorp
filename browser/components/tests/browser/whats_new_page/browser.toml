@@ -1,0 +1,21 @@
+[DEFAULT]
+skip-if = [
+  "verify",
+  "os == 'win' && msix", # Updater is disabled in MSIX builds; what's new pages therefore have no meaning.
+]
+reason = "This is a startup test. Verify runs tests multiple times after startup."
+support-files = [
+  "active-update.xml",
+  "updates/0/update.status",
+  "config_localhost_update_url.json",
+]
+prefs = [
+  "app.update.altUpdateDirPath='<test-root>/browser/components/tests/browser/whats_new_page'",
+  "app.update.disabledForTesting=false",
+  "browser.aboutwelcome.enabled=false",
+  "browser.startup.homepage_override.mstone='60.0'",
+  "browser.startup.upgradeDialog.enabled=false",
+  "browser.policies.alternatePath='<test-root>/browser/components/tests/browser/whats_new_page/config_localhost_update_url.json'",
+]
+
+["browser_whats_new_page.js"]

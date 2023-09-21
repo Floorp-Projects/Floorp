@@ -5,7 +5,7 @@
 EXTRA_JS_MODULES += ["UITour.sys.mjs", "UITourChild.sys.mjs", "UITourParent.sys.mjs"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser.ini",
+    "test/browser.toml",
 ]
 
 SPHINX_TREES["docs"] = "docs"

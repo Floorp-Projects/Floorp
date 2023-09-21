@@ -1,0 +1,7 @@
+[DEFAULT]
+prefs = ["browser.policies.alternatePath='<test-root>/browser/components/enterprisepolicies/tests/browser/managedbookmarks/managedbookmarks.json'"]
+support-files = ["managedbookmarks.json"]
+
+skip-if = ["os == 'linux'"] # Popup timeout issue - see Bug 1742167
+
+["browser_policy_managedbookmarks.js"]

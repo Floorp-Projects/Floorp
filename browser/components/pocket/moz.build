@@ -8,9 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Pocket")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser.ini",
-    "test/unit/browser.ini",
-    "test/unit/panels/browser.ini",
+    "test/browser.toml",
+    "test/unit/browser.toml",
+    "test/unit/panels/browser.toml",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

@@ -12,9 +12,9 @@ EXTRA_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.ini",
-    "test/browser/google_codes/browser.ini",
-    "test/browser/telemetry/browser.ini",
+    "test/browser/browser.toml",
+    "test/browser/google_codes/browser.toml",
+    "test/browser/telemetry/browser.toml",
 ]
 
 MARIONETTE_LAYOUT_MANIFESTS += ["test/marionette/manifest.ini"]

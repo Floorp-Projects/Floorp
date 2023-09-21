@@ -1,0 +1,31 @@
+[DEFAULT]
+head = "head.js"
+
+["browser_cleanFlow.js"]
+skip-if = ["socketprocess_networking"]
+
+["browser_dirtyEnable.js"]
+
+["browser_doorhangerUserReject.js"]
+
+["browser_platformDetection.js"]
+
+["browser_policyOverride.js"]
+
+["browser_providerSteering.js"]
+
+["browser_remoteSettings_newProfile.js"]
+skip-if = ["os == 'win' && bits == 32"] # Bug 1713464
+
+["browser_remoteSettings_rollout.js"]
+skip-if = ["os == 'win' && bits == 32"] # Bug 1713464
+
+["browser_rollback.js"]
+
+["browser_throttle_heuristics.js"]
+
+["browser_trrSelect.js"]
+
+["browser_trrSelection_disable.js"]
+
+["browser_userInterference.js"]

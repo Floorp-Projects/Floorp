@@ -90,5 +90,5 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.ini",
+    "test/browser/browser.toml",
 ]

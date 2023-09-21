@@ -10,7 +10,7 @@ MARIONETTE_UNIT_MANIFESTS += ["tests/marionette/manifest.ini"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 SPHINX_TREES["docs"] = "docs"
 

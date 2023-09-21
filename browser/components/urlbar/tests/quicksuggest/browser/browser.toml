@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[DEFAULT]
+support-files = [
+  "head.js",
+  "searchSuggestionEngine.xml",
+  "searchSuggestionEngine.sjs",
+  "subdialog.xhtml",
+]
+prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
+
+["browser_quicksuggest.js"]
+
+["browser_quicksuggest_addons.js"]
+
+["browser_quicksuggest_block.js"]
+
+["browser_quicksuggest_configuration.js"]
+
+["browser_quicksuggest_indexes.js"]
+
+["browser_quicksuggest_mdn.js"]
+
+["browser_quicksuggest_merinoSessions.js"]
+
+["browser_quicksuggest_onboardingDialog.js"]
+skip-if = ["os == 'linux' && bits == 64"] # Bug 1773830
+
+["browser_quicksuggest_pocket.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_dynamicWikipedia.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_impressionEdgeCases.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_navigationalSuggestions.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_nonsponsored.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_other.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_sponsored.js"]
+tags = "search-telemetry"
+
+["browser_telemetry_weather.js"]
+tags = "search-telemetry"
+
+["browser_weather.js"]

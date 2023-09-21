@@ -1,0 +1,29 @@
+[DEFAULT]
+# These tests can be prone to intermittent failures on slower systems.
+# Since the specific flavor doesn't matter from a correctness standpoint,
+# just skip the tests on sanitizer, debug and OS X verify builds.
+skip-if = [
+  "asan",
+  "tsan",
+  "debug",
+  "verify && os == 'mac'",
+]
+support-files = ["head.js"]
+
+["browser_all_files_referenced.js"]
+skip-if = ["verify && bits == 32"] # Causes OOMs when run repeatedly
+
+["browser_misused_characters_in_strings.js"]
+support-files = ["bug1262648_string_with_newlines.dtd"]
+skip-if = ["os == 'win' && msix"] # Permafail on MSIX packages due to it running on files it shouldn't.
+
+["browser_parsable_css.js"]
+support-files = ["dummy_page.html"]
+skip-if = ["os == 'win' && msix"] # Permafail on MSIX packages due to it running on files it shouldn't.
+
+["browser_parsable_script.js"]
+skip-if = ["ccov && os == 'linux'"] # https://bugzilla.mozilla.org/show_bug.cgi?id=1608081
+
+["browser_sentence_case_strings.js"]
+
+["browser_title_case_menus.js"]

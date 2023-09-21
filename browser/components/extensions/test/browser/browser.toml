@@ -1,0 +1,702 @@
+[DEFAULT]
+tags = "webextensions"
+prefs = [
+  "browser.sessionstore.closedTabsFromAllWindows=true",
+  "browser.sessionstore.closedTabsFromClosedWindows=true",
+  "dom.ipc.keepProcessesAlive.extension=1", # We don't want to reset this at the end of the test, so that we don't have to spawn a new extension child process for each test unit.
+  "dom.animations-api.core.enabled=true",
+  "dom.animations-api.timelines.enabled=true",
+  "javascript.options.asyncstack_capture_debuggee_only=false",
+]
+support-files = [
+  "head.js",
+  "head_devtools.js",
+  "silence.ogg",
+  "head_browserAction.js",
+  "head_pageAction.js",
+  "head_sessions.js",
+  "head_unified_extensions.js",
+  "head_webNavigation.js",
+  "context.html",
+  "context_frame.html",
+  "ctxmenu-image.png",
+  "context_with_redirect.html",
+  "context_tabs_onUpdated_page.html",
+  "context_tabs_onUpdated_iframe.html",
+  "file_dataTransfer_files.html",
+  "file_find_frames.html",
+  "file_popup_api_injection_a.html",
+  "file_popup_api_injection_b.html",
+  "file_iframe_document.html",
+  "file_inspectedwindow_eval.html",
+  "file_inspectedwindow_reload_target.sjs",
+  "file_slowed_document.sjs",
+  "file_bypass_cache.sjs",
+  "file_dummy.html",
+  "file_title.html",
+  "file_with_xorigin_frame.html",
+  "file_with_example_com_frame.html",
+  "webNav_createdTarget.html",
+  "webNav_createdTargetSource.html",
+  "webNav_createdTargetSource_subframe.html",
+  "redirect_to.sjs",
+  "search-engines/*",
+  "searchSuggestionEngine.xml",
+  "searchSuggestionEngine.sjs",
+  "empty.xpi",
+  "../../../../../toolkit/components/extensions/test/mochitest/head_webrequest.js",
+  "../../../../../toolkit/components/extensions/test/mochitest/redirection.sjs",
+  "../../../../../toolkit/components/reader/test/readerModeNonArticle.html",
+  "../../../../../toolkit/components/reader/test/readerModeArticle.html",
+]
+skip-if = ["os == 'linux' && asan"] # Bug 1721945 - Software WebRender
+
+["browser_AMBrowserExtensionsImport.js"]
+
+["browser_ExtensionControlledPopup.js"]
+
+["browser_ext_action_popup_allowed_urls.js"]
+
+["browser_ext_activeScript.js"]
+
+["browser_ext_addon_debugging_netmonitor.js"]
+
+["browser_ext_autocompletepopup.js"]
+disabled = "bug 1438663 # same focus issue as Bug 1438663"
+
+["browser_ext_autoplayInBackground.js"]
+
+["browser_ext_browserAction_activeTab.js"]
+
+["browser_ext_browserAction_area.js"]
+
+["browser_ext_browserAction_click_types.js"]
+
+["browser_ext_browserAction_context.js"]
+https_first_disabled = true
+skip-if = [
+  "os == 'linux' && debug", # Bug 1504096
+  "os == 'linux' && socketprocess_networking",
+]
+
+["browser_ext_browserAction_contextMenu.js"]
+skip-if = ["os == 'linux'"] # bug 1369197
+
+["browser_ext_browserAction_disabled.js"]
+
+["browser_ext_browserAction_experiment.js"]
+
+["browser_ext_browserAction_getUserSettings.js"]
+
+["browser_ext_browserAction_incognito.js"]
+
+["browser_ext_browserAction_keyclick.js"]
+
+["browser_ext_browserAction_pageAction_icon.js"]
+
+["browser_ext_browserAction_pageAction_icon_permissions.js"]
+
+["browser_ext_browserAction_popup.js"]
+
+["browser_ext_browserAction_popup_port.js"]
+
+["browser_ext_browserAction_popup_preload.js"]
+skip-if = [
+  "os == 'win' && !debug",
+  "verify && debug && os == 'mac'", # bug 1352668
+]
+
+["browser_ext_browserAction_popup_preload_smoketest.js"]
+skip-if = ["debug"] # Bug 1746047
+
+["browser_ext_browserAction_popup_resize.js"]
+
+["browser_ext_browserAction_popup_resize_bottom.js"]
+skip-if = ["debug"] # Bug 1522164
+
+["browser_ext_browserAction_simple.js"]
+
+["browser_ext_browserAction_telemetry.js"]
+
+["browser_ext_browserAction_theme_icons.js"]
+
+["browser_ext_browsingData_cookieStoreId.js"]
+
+["browser_ext_browsingData_formData.js"]
+
+["browser_ext_browsingData_history.js"]
+
+["browser_ext_chrome_settings_overrides_home.js"]
+
+["browser_ext_commands_execute_browser_action.js"]
+
+["browser_ext_commands_execute_page_action.js"]
+skip-if = [
+  "verify && os == 'linux'",
+  "verify && os == 'mac'",
+]
+
+["browser_ext_commands_execute_sidebar_action.js"]
+
+["browser_ext_commands_getAll.js"]
+
+["browser_ext_commands_onChanged.js"]
+
+["browser_ext_commands_onCommand.js"]
+skip-if = ["debug"] # bug 1553577
+
+["browser_ext_commands_update.js"]
+
+["browser_ext_connect_and_move_tabs.js"]
+
+["browser_ext_contentscript_animate.js"]
+
+["browser_ext_contentscript_connect.js"]
+
+["browser_ext_contentscript_cross_docGroup_adoption.js"]
+https_first_disabled = true
+
+["browser_ext_contentscript_cross_docGroup_adoption_xhr.js"]
+https_first_disabled = true
+
+["browser_ext_contentscript_dataTransfer_files.js"]
+
+["browser_ext_contentscript_in_parent.js"]
+
+["browser_ext_contentscript_incognito.js"]
+
+["browser_ext_contentscript_nontab_connect.js"]
+
+["browser_ext_contentscript_sender_url.js"]
+skip-if = ["debug"] # The nature of the reduced STR test triggers an unrelated debug assertion in DOM IPC code, see bug 1736590.
+
+["browser_ext_contextMenus.js"]
+support-files = [ "!/browser/components/places/tests/browser/head.js"]
+
+["browser_ext_contextMenus_bookmarks.js"]
+support-files = [ "!/browser/components/places/tests/browser/head.js"]
+
+["browser_ext_contextMenus_checkboxes.js"]
+
+["browser_ext_contextMenus_commands.js"]
+
+["browser_ext_contextMenus_icons.js"]
+
+["browser_ext_contextMenus_onclick.js"]
+https_first_disabled = true
+
+["browser_ext_contextMenus_radioGroups.js"]
+
+["browser_ext_contextMenus_srcUrl_redirect.js"]
+
+["browser_ext_contextMenus_targetUrlPatterns.js"]
+skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_ext_contextMenus_uninstall.js"]
+
+["browser_ext_contextMenus_urlPatterns.js"]
+
+["browser_ext_currentWindow.js"]
+
+["browser_ext_devtools_inspectedWindow.js"]
+
+["browser_ext_devtools_inspectedWindow_eval_bindings.js"]
+
+["browser_ext_devtools_inspectedWindow_eval_file.js"]
+
+["browser_ext_devtools_inspectedWindow_reload.js"]
+
+["browser_ext_devtools_inspectedWindow_targetSwitch.js"]
+
+["browser_ext_devtools_network.js"]
+https_first_disabled = true
+
+["browser_ext_devtools_network_targetSwitch.js"]
+https_first_disabled = true
+
+["browser_ext_devtools_optional.js"]
+
+["browser_ext_devtools_page.js"]
+
+["browser_ext_devtools_page_incognito.js"]
+
+["browser_ext_devtools_panel.js"]
+
+["browser_ext_devtools_panels_elements.js"]
+
+["browser_ext_devtools_panels_elements_sidebar.js"]
+support-files = ["../../../../../devtools/client/inspector/extensions/test/head_devtools_inspector_sidebar.js"]
+
+["browser_ext_find.js"]
+https_first_disabled = true
+skip-if = [
+  "verify && os == 'linux'",
+  "verify && os == 'mac'",
+]
+
+["browser_ext_getViews.js"]
+
+["browser_ext_history_redirect.js"]
+
+["browser_ext_identity_indication.js"]
+
+["browser_ext_incognito_popup.js"]
+
+["browser_ext_incognito_views.js"]
+skip-if = [
+  "apple_silicon && !fission", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "win10_2004 && bits == 32 && debug", # Bug 1727925
+]
+
+["browser_ext_lastError.js"]
+
+["browser_ext_management.js"]
+
+["browser_ext_menus.js"]
+https_first_disabled = true
+
+["browser_ext_menus_accesskey.js"]
+
+["browser_ext_menus_activeTab.js"]
+
+["browser_ext_menus_capture_secondary_click.js"]
+
+["browser_ext_menus_errors.js"]
+
+["browser_ext_menus_event_order.js"]
+
+["browser_ext_menus_eventpage.js"]
+
+["browser_ext_menus_events.js"]
+
+["browser_ext_menus_events_after_context_destroy.js"]
+
+["browser_ext_menus_incognito.js"]
+
+["browser_ext_menus_refresh.js"]
+
+["browser_ext_menus_replace_menu.js"]
+
+["browser_ext_menus_replace_menu_context.js"]
+https_first_disabled = true
+
+["browser_ext_menus_replace_menu_permissions.js"]
+
+["browser_ext_menus_targetElement.js"]
+
+["browser_ext_menus_targetElement_extension.js"]
+skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_ext_menus_targetElement_shadow.js"]
+
+["browser_ext_menus_viewType.js"]
+skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_ext_menus_visible.js"]
+
+["browser_ext_mousewheel_zoom.js"]
+
+["browser_ext_nontab_process_switch.js"]
+https_first_disabled = true
+
+["browser_ext_omnibox.js"]
+
+["browser_ext_openPanel.js"]
+skip-if = [
+  "verify && !debug && os == 'linux'",
+  "verify && !debug && os == 'mac'",
+]
+
+["browser_ext_optionsPage_browser_style.js"]
+
+["browser_ext_optionsPage_links_open_in_tabs.js"]
+
+["browser_ext_optionsPage_modals.js"]
+
+["browser_ext_optionsPage_popups.js"]
+
+["browser_ext_optionsPage_privileges.js"]
+https_first_disabled = true
+
+["browser_ext_originControls.js"]
+
+["browser_ext_pageAction_activeTab.js"]
+
+["browser_ext_pageAction_click_types.js"]
+
+["browser_ext_pageAction_context.js"]
+https_first_disabled = true
+skip-if = ["verify && !debug && os == 'linux'"]
+
+["browser_ext_pageAction_contextMenu.js"]
+
+["browser_ext_pageAction_popup.js"]
+
+["browser_ext_pageAction_popup_resize.js"]
+skip-if = ["verify && debug && os == 'mac'"]
+
+["browser_ext_pageAction_show_matches.js"]
+https_first_disabled = true
+
+["browser_ext_pageAction_simple.js"]
+
+["browser_ext_pageAction_telemetry.js"]
+
+["browser_ext_pageAction_title.js"]
+
+["browser_ext_persistent_storage_permission_indication.js"]
+
+["browser_ext_popup_api_injection.js"]
+
+["browser_ext_popup_background.js"]
+
+["browser_ext_popup_corners.js"]
+
+["browser_ext_popup_focus.js"]
+
+["browser_ext_popup_links_open_in_tabs.js"]
+
+["browser_ext_popup_requestPermission.js"]
+
+["browser_ext_popup_select.js"]
+skip-if = [
+  "debug", # FIXME: re-enable on debug build (bug 1442822)
+  "os != 'win'",
+]
+
+["browser_ext_popup_select_in_oopif.js"]
+skip-if = ["os == 'linux' && swgl && fission && tsan"] # high frequency intermittent
+
+["browser_ext_popup_sendMessage.js"]
+
+["browser_ext_popup_shutdown.js"]
+
+["browser_ext_port_disconnect_on_crash.js"]
+https_first_disabled = true
+skip-if = ["!crashreporter"]
+
+["browser_ext_port_disconnect_on_window_close.js"]
+
+["browser_ext_reload_manifest_cache.js"]
+
+["browser_ext_request_permissions.js"]
+
+["browser_ext_runtime_openOptionsPage.js"]
+
+["browser_ext_runtime_openOptionsPage_uninstall.js"]
+
+["browser_ext_runtime_setUninstallURL.js"]
+
+["browser_ext_search.js"]
+
+["browser_ext_search_favicon.js"]
+
+["browser_ext_search_query.js"]
+
+["browser_ext_sessions_forgetClosedTab.js"]
+
+["browser_ext_sessions_forgetClosedWindow.js"]
+
+["browser_ext_sessions_getRecentlyClosed.js"]
+https_first_disabled = true
+
+["browser_ext_sessions_getRecentlyClosed_private.js"]
+
+["browser_ext_sessions_getRecentlyClosed_tabs.js"]
+support-files = [
+  "file_has_non_web_controlled_blank_page_link.html",
+  "wait-a-bit.sjs",
+]
+
+["browser_ext_sessions_incognito.js"]
+
+["browser_ext_sessions_restore.js"]
+
+["browser_ext_sessions_restoreTab.js"]
+https_first_disabled = true
+
+["browser_ext_sessions_restore_private.js"]
+
+["browser_ext_sessions_window_tab_value.js"]
+https_first_disabled = true
+skip-if = ["debug"] # Bug 1394984 disable debug builds on all platforms
+
+["browser_ext_settings_overrides_default_search.js"]
+
+["browser_ext_sidebarAction.js"]
+
+["browser_ext_sidebarAction_browser_style.js"]
+
+["browser_ext_sidebarAction_click.js"]
+
+["browser_ext_sidebarAction_context.js"]
+
+["browser_ext_sidebarAction_contextMenu.js"]
+skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_ext_sidebarAction_httpAuth.js"]
+support-files = ["authenticate.sjs"]
+
+["browser_ext_sidebarAction_incognito.js"]
+skip-if = ["true"] # Bug 1575369
+
+["browser_ext_sidebarAction_runtime.js"]
+
+["browser_ext_sidebarAction_tabs.js"]
+
+["browser_ext_sidebarAction_windows.js"]
+
+["browser_ext_sidebar_requestPermission.js"]
+
+["browser_ext_simple.js"]
+
+["browser_ext_slow_script.js"]
+https_first_disabled = true
+skip-if = [
+  "debug",
+  "asan",
+]
+
+["browser_ext_tab_runtimeConnect.js"]
+
+["browser_ext_tabs_attention.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_audio.js"]
+
+["browser_ext_tabs_autoDiscardable.js"]
+
+["browser_ext_tabs_containerIsolation.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_cookieStoreId.js"]
+
+["browser_ext_tabs_create.js"]
+
+["browser_ext_tabs_create_invalid_url.js"]
+
+["browser_ext_tabs_create_url.js"]
+
+["browser_ext_tabs_discard.js"]
+
+["browser_ext_tabs_discard_reversed.js"]
+https_first_disabled = true
+skip-if = [
+  "os == 'mac'", # Bug 1722607
+  "win10_2004 && debug", # high frequency intermittent Bug 1722607
+  "os == 'linux' && debug", #Bug 1722607
+]
+
+["browser_ext_tabs_discarded.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_duplicate.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_events.js"]
+
+["browser_ext_tabs_events_order.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_executeScript.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_executeScript_about_blank.js"]
+
+["browser_ext_tabs_executeScript_bad.js"]
+
+["browser_ext_tabs_executeScript_file.js"]
+
+["browser_ext_tabs_executeScript_good.js"]
+
+["browser_ext_tabs_executeScript_multiple.js"]
+
+["browser_ext_tabs_executeScript_no_create.js"]
+
+["browser_ext_tabs_executeScript_runAt.js"]
+
+["browser_ext_tabs_getCurrent.js"]
+
+["browser_ext_tabs_goBack_goForward.js"]
+
+["browser_ext_tabs_hide.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_hide_update.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_highlight.js"]
+
+["browser_ext_tabs_incognito_not_allowed.js"]
+
+["browser_ext_tabs_insertCSS.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_lastAccessed.js"]
+
+["browser_ext_tabs_lazy.js"]
+
+["browser_ext_tabs_move_array.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_move_array_multiple_windows.js"]
+
+["browser_ext_tabs_move_discarded.js"]
+
+["browser_ext_tabs_move_window.js"]
+skip-if = ["win10_2009 && debug"] # Bug 1730374
+
+["browser_ext_tabs_move_window_multiple.js"]
+
+["browser_ext_tabs_move_window_pinned.js"]
+
+["browser_ext_tabs_onCreated.js"]
+
+["browser_ext_tabs_onHighlighted.js"]
+
+["browser_ext_tabs_onUpdated.js"]
+
+["browser_ext_tabs_onUpdated_filter.js"]
+
+["browser_ext_tabs_opener.js"]
+
+["browser_ext_tabs_printPreview.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_query.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_readerMode.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_reload.js"]
+
+["browser_ext_tabs_reload_bypass_cache.js"]
+
+["browser_ext_tabs_remove.js"]
+
+["browser_ext_tabs_removeCSS.js"]
+
+["browser_ext_tabs_saveAsPDF.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_sendMessage.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_sharingState.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_successors.js"]
+
+["browser_ext_tabs_update.js"]
+
+["browser_ext_tabs_update_highlighted.js"]
+
+["browser_ext_tabs_update_url.js"]
+
+["browser_ext_tabs_warmup.js"]
+https_first_disabled = true
+
+["browser_ext_tabs_zoom.js"]
+
+["browser_ext_themes_validation.js"]
+
+["browser_ext_topSites.js"]
+
+["browser_ext_url_overrides_newtab.js"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04'", # Bug 1651261
+  "win10_2004 && asan", # Bug 1723573
+  "win10_2004 && debug", # Bug 1723573
+  "win11_2009 && asan", # Bug 1797751
+  "win11_2009 && debug", # Bug 1797751
+]
+
+["browser_ext_urlbar.js"]
+https_first_disabled = true
+
+["browser_ext_user_events.js"]
+
+["browser_ext_webNavigation_containerIsolation.js"]
+https_first_disabled = true
+
+["browser_ext_webNavigation_frameId0.js"]
+
+["browser_ext_webNavigation_getFrames.js"]
+
+["browser_ext_webNavigation_onCreatedNavigationTarget.js"]
+
+["browser_ext_webNavigation_onCreatedNavigationTarget_contextmenu.js"]
+
+["browser_ext_webNavigation_onCreatedNavigationTarget_named_window.js"]
+
+["browser_ext_webNavigation_onCreatedNavigationTarget_subframe_window_open.js"]
+
+["browser_ext_webNavigation_onCreatedNavigationTarget_window_open.js"]
+
+["browser_ext_webNavigation_urlbar_transitions.js"]
+https_first_disabled = true
+
+["browser_ext_webRequest.js"]
+
+["browser_ext_webRequest_error_after_stopped_or_closed.js"]
+
+["browser_ext_webrtc.js"]
+skip-if = ["os == 'mac'"] # Bug 1565738
+
+["browser_ext_windows.js"]
+https_first_disabled = true
+
+["browser_ext_windows_allowScriptsToClose.js"]
+https_first_disabled = true
+
+["browser_ext_windows_create.js"]
+skip-if = ["verify && os == 'mac'"]
+tags = "fullscreen"
+
+["browser_ext_windows_create_cookieStoreId.js"]
+
+["browser_ext_windows_create_params.js"]
+
+["browser_ext_windows_create_tabId.js"]
+https_first_disabled = true
+
+["browser_ext_windows_create_url.js"]
+
+["browser_ext_windows_events.js"]
+
+["browser_ext_windows_incognito.js"]
+
+["browser_ext_windows_remove.js"]
+
+["browser_ext_windows_size.js"]
+skip-if = [
+  "os == 'mac'",
+  "os == 'linux' && os_version == '18.04' && debug", # Fails when windows are randomly opened in fullscreen mode, Bug 1638027
+]
+
+["browser_ext_windows_update.js"]
+skip-if = [
+  "verify && os == 'mac'",
+  "os == 'mac' && os_version == '10.15' && debug", # Bug 1780998
+  "os == 'linux' && os_version == '18.04'", # Bug 1533982 for linux1804
+]
+tags = "fullscreen"
+
+["browser_toolbar_prefers_color_scheme.js"]
+
+["browser_unified_extensions.js"]
+
+["browser_unified_extensions_accessibility.js"]
+
+["browser_unified_extensions_context_menu.js"]
+skip-if = ["true"]  #Bug 1800712
+
+["browser_unified_extensions_cui.js"]
+
+["browser_unified_extensions_doorhangers.js"]
+
+["browser_unified_extensions_messages.js"]
+
+["browser_unified_extensions_overflowable_toolbar.js"]
+tags = "overflowable-toolbar"

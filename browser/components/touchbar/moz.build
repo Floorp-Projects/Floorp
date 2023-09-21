@@ -5,7 +5,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 EXTRA_JS_MODULES += [
     "MacTouchBar.sys.mjs",

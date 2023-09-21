@@ -1,0 +1,141 @@
+[DEFAULT]
+tags = "search-telemetry"
+support-files = ["head.js"]
+
+["browser_search_glean_serp_telemetry_enabled_by_nimbus_variable.js"]
+support-files = ["searchTelemetryAd.html"]
+
+["browser_search_telemetry_abandonment.js"]
+support-files = [
+  "searchTelemetry.html",
+  "searchTelemetryAd.html",
+  "searchTelemetryAd_components_text.html",
+]
+
+["browser_search_telemetry_aboutHome.js"]
+
+["browser_search_telemetry_adImpression_component.js"]
+support-files = [
+  "searchTelemetryAd_components_carousel.html",
+  "searchTelemetryAd_components_carousel_below_the_fold.html",
+  "searchTelemetryAd_components_carousel_doubled.html",
+  "searchTelemetryAd_components_carousel_first_element_non_visible.html",
+  "searchTelemetryAd_components_carousel_hidden.html",
+  "searchTelemetryAd_components_carousel_outer_container.html",
+  "searchTelemetryAd_components_text.html",
+  "searchTelemetryAd_components_visibility.html",
+  "serp.css",
+]
+
+["browser_search_telemetry_categorization_timing.js"]
+
+["browser_search_telemetry_content.js"]
+
+["browser_search_telemetry_domain_categorization_extraction.js"]
+support-files = ["searchTelemetryDomainExtraction.html"]
+
+["browser_search_telemetry_domain_categorization_reporting.js"]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
+
+["browser_search_telemetry_engagement_cached.js"]
+support-files = [
+  "cacheable.html",
+  "cacheable.html^headers^",
+  "searchTelemetryAd_components_text.html",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_cached_serp.js"]
+support-files = [
+  "searchTelemetryAd_searchbox.html",
+  "searchTelemetryAd_searchbox.html^headers^",
+]
+
+["browser_search_telemetry_engagement_content.js"]
+support-files = [
+  "searchTelemetryAd_searchbox_with_content.html",
+  "searchTelemetryAd_searchbox_with_content.html^headers^",
+  "searchTelemetryAd_searchbox_with_content_redirect.html",
+  "searchTelemetryAd_searchbox_with_content_redirect.html^headers^",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_multiple_tabs.js"]
+support-files = [
+  "searchTelemetryAd_searchbox_with_content.html",
+  "searchTelemetryAd_searchbox_with_content.html^headers^",
+]
+
+["browser_search_telemetry_engagement_non_ad.js"]
+support-files = [
+  "searchTelemetryAd_searchbox_with_content.html",
+  "searchTelemetryAd_searchbox_with_content.html^headers^",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_query_params.js"]
+support-files = [
+  "searchTelemetryAd_components_query_parameters.html",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_redirect.js"]
+support-files = [
+  "redirect_ad.sjs",
+  "redirect_final.sjs",
+  "redirect_once.sjs",
+  "redirect_thrice.sjs",
+  "redirect_twice.sjs",
+  "searchTelemetryAd_components_text.html",
+  "searchTelemetryAd_nonAdsLink_redirect.html",
+  "searchTelemetryAd_nonAdsLink_redirect.html^headers^",
+  "searchTelemetryAd_nonAdsLink_redirect_nonTopLoaded.html",
+  "searchTelemetryAd_nonAdsLink_redirect_nonTopLoaded.html^headers^",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_target.js"]
+support-files = [
+  "searchTelemetryAd_components_text.html",
+  "searchTelemetryAd_searchbox.html",
+  "searchTelemetryAd_searchbox.html^headers^",
+  "serp.css",
+]
+
+["browser_search_telemetry_searchbar.js"]
+https_first_disabled = true
+support-files = [
+  "slow_loading_page_with_ads_on_load_event.html",
+  "slow_loading_page_with_ads.html",
+  "slow_loading_page_with_ads.sjs",
+  "telemetrySearchSuggestions.sjs",
+  "telemetrySearchSuggestions.xml",
+]
+
+["browser_search_telemetry_shopping.js"]
+support-files = ["searchTelemetryAd_shopping.html"]
+
+["browser_search_telemetry_sources.js"]
+support-files = [
+  "searchTelemetry.html",
+  "searchTelemetryAd.html",
+]
+
+["browser_search_telemetry_sources_ads.js"]
+support-files = [
+  "searchTelemetry.html",
+  "searchTelemetryAd.html",
+  "searchTelemetryAd_dataAttributes.html",
+  "searchTelemetryAd_dataAttributes_href.html",
+  "searchTelemetryAd_dataAttributes_none.html",
+]
+
+["browser_search_telemetry_sources_in_content.js"]
+support-files = ["searchTelemetryAd_searchbox_with_content.html"]
+
+["browser_search_telemetry_sources_navigation.js"]
+support-files = [
+  "searchTelemetry.html",
+  "searchTelemetryAd.html",
+]
+
