@@ -33,6 +33,24 @@ class nsHttpHandler;
 class ASpdySession;
 class Http3WebTransportSession;
 
+enum class ConnectionState : uint32_t {
+  HALF_OPEN = 0,
+  INITED,
+  TLS_HANDSHAKING,
+  ZERORTT,
+  TRANSFERING,
+  CLOSED
+};
+
+enum class ConnectionExperienceState : uint32_t {
+  Not_Experienced = 0,
+  First_Request_Sent = (1 << 0),
+  First_Response_Received = (1 << 1),
+  Experienced = (1 << 2),
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ConnectionExperienceState);
+
 // 1dcc863e-db90-4652-a1fe-13fea0b54e46
 #define HTTPCONNECTIONBASE_IID                       \
   {                                                  \
@@ -148,6 +166,15 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual bool GetEchConfigUsed() = 0;
   virtual PRIntervalTime LastWriteTime() = 0;
 
+  void ChangeConnectionState(ConnectionState aState);
+  void SetCloseReason(ConnectionCloseReason aReason) {
+    if (mCloseReason == ConnectionCloseReason::UNSET) {
+      mCloseReason = aReason;
+    }
+  }
+
+  void RecordConnectionCloseTelemetry(nsresult aReason);
+
  protected:
   // The capabailities associated with the most recent transaction
   uint32_t mTransactionCaps{0};
@@ -155,6 +182,8 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   RefPtr<nsHttpConnectionInfo> mConnInfo;
 
   bool mExperienced{false};
+  // Used to track whether this connection is serving the first request.
+  bool mHasFirstHttpTransaction{false};
 
   bool mBootstrappedTimingsSet{false};
   TimingStruct mBootstrappedTimings;
@@ -165,6 +194,14 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   nsTArray<HttpTrafficCategory> mTrafficCategory;
   PRIntervalTime mRtt{0};
   nsresult mErrorBeforeConnect = NS_OK;
+
+  ConnectionState mConnectionState = ConnectionState::HALF_OPEN;
+
+  // Represent if the connection has served more than one request.
+  ConnectionExperienceState mExperienceState =
+      ConnectionExperienceState::Not_Experienced;
+
+  ConnectionCloseReason mCloseReason = ConnectionCloseReason::UNSET;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)

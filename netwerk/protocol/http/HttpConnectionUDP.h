@@ -88,6 +88,9 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   TRRSkippedReason TRRSkipReason() override;
   bool GetEchConfigUsed() override { return false; }
 
+  void NotifyDataRead();
+  void NotifyDataWrite();
+
  private:
   [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
   nsresult RecvData();
