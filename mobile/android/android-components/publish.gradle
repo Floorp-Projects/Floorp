@@ -28,7 +28,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
 
     tasks.register('sourcesJar', Jar) {
         from android.sourceSets.main.java.srcDirs
-        classifier = 'sources'
+        archiveClassifier = 'sources'
     }
 
     afterEvaluate {
