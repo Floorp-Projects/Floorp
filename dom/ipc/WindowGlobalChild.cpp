@@ -219,6 +219,8 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
     nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
     txn.SetIsOriginalFrameSource(loadInfo->GetOriginalFrameSrcLoad());
+    txn.SetUsingStorageAccess(loadInfo->GetStoragePermission() !=
+                              nsILoadInfo::NoStoragePermission);
   } else {
     txn.SetIsOriginalFrameSource(false);
   }
