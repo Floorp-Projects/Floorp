@@ -2,6 +2,55 @@
   "data": [
     {
       "click": {
+        "optIn": ".implicit_privacy_prompt > .close_btn_thick",
+        "presence": ".implicit_privacy_prompt"
+      },
+      "schema": 1694908806092,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "HASSEENNOTICE",
+            "value": "TRUE"
+          },
+          {
+            "name": "CONSENTMGR",
+            "value": "c1:0%7Cc3:0%7Cc5:0%7Cc6:0%7Cc7:0%7Cc8:0"
+          }
+        ]
+      },
+      "domains": [
+        "ups.com"
+      ],
+      "id": "f462b0ee-4d17-4dcb-a951-1a23249227f6",
+      "last_modified": 1695037595332
+    },
+    {
+      "click": {},
+      "schema": 1694908806092,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "CONSENT",
+            "path": "/",
+            "value": "PENDING+742",
+            "sameSite": 0
+          },
+          {
+            "name": "SOCS",
+            "path": "/",
+            "value": "CAESNQgDEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjMwOTEyLjA4X3AwGgJlbiACGgYIgOCTqAY",
+            "sameSite": 0
+          }
+        ]
+      },
+      "domains": [
+        "youtube.com"
+      ],
+      "id": "788ed05e-cf93-41a8-b2e5-c5571d855232",
+      "last_modified": 1695037595328
+    },
+    {
+      "click": {
         "optIn": "#footer_tc_privacy_button",
         "optOut": "#footer_tc_privacy_button_2",
         "presence": ".tc-privacy-wrapper.tc-privacy-override.tc-privacy-wrapper"
@@ -5625,31 +5674,6 @@
       "last_modified": 1670498157351
     },
     {
-      "click": {},
-      "schema": 1670460527205,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "CONSENT",
-            "path": "/",
-            "value": "PENDING",
-            "sameSite": 0
-          },
-          {
-            "name": "SOCS",
-            "path": "/",
-            "value": "CAESEwgDEgk0Njk1NTcxMzUaAmVuIAEaBgiA1JWYBg",
-            "sameSite": 0
-          }
-        ]
-      },
-      "domains": [
-        "youtube.com"
-      ],
-      "id": "788ed05e-cf93-41a8-b2e5-c5571d855232",
-      "last_modified": 1670498157344
-    },
-    {
       "click": {
         "optIn": "div.global-alert-banner button[action-type=ACCEPT]",
         "optOut": "div.global-alert-banner button[action-type=DENY]",
@@ -7828,5 +7852,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1690359097318
+  "timestamp": 1695037595332
 }
