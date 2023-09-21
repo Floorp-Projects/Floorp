@@ -7,26 +7,36 @@
 
 "use strict";
 
+function waitForElementsWithSelector(dbg, selector) {
+  return waitFor(() => {
+    const elems = findAllElementsWithSelector(dbg, selector);
+    if (!elems.length) {
+      return false;
+    }
+    return elems;
+  });
+}
+
 add_task(async function () {
   const dbg = await initDebugger("doc-exception-position.html");
 
   await selectSource(dbg, "exception-position-1.js");
-  let elems = findAllElementsWithSelector(dbg, ".mark-text-exception");
+  let elems = await waitForElementsWithSelector(dbg, ".mark-text-exception");
   is(elems.length, 1);
   is(elems[0].textContent, "a1");
 
   await selectSource(dbg, "exception-position-2.js");
-  elems = findAllElementsWithSelector(dbg, ".mark-text-exception");
+  elems = await waitForElementsWithSelector(dbg, ".mark-text-exception");
   is(elems.length, 1);
   is(elems[0].textContent, "a2");
 
   await selectSource(dbg, "exception-position-3.js");
-  elems = findAllElementsWithSelector(dbg, ".mark-text-exception");
+  elems = await waitForElementsWithSelector(dbg, ".mark-text-exception");
   is(elems.length, 1);
   is(elems[0].textContent, "a3");
 
   await selectSource(dbg, "exception-position-4.js");
-  elems = findAllElementsWithSelector(dbg, ".mark-text-exception");
+  elems = await waitForElementsWithSelector(dbg, ".mark-text-exception");
   is(elems.length, 1);
   is(elems[0].textContent, "a4");
 });
