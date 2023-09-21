@@ -10182,8 +10182,8 @@ var ShoppingSidebarManager = {
     button.hidden = !isCurrentBrowserProduct;
     button.setAttribute("shoppingsidebaropen", !!this.isActive);
     let l10nId = this.isActive
-      ? "shopping-sidebar-close-button"
-      : "shopping-sidebar-open-button";
+      ? "shopping-sidebar-close-button2"
+      : "shopping-sidebar-open-button2";
     document.l10n.setAttributes(button, l10nId);
   },
 
