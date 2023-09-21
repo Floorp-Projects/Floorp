@@ -230,12 +230,8 @@ subprojects {
                 }
 
                 tasks.withType(KotlinCompile).all {
-                    kotlinOptions {
-                        jvmTarget = "17"
-                        freeCompilerArgs += [
-                            "-opt-in=kotlin.RequiresOptIn"
-                        ]
-                    }
+                    kotlinOptions.jvmTarget = "17"
+                    kotlinOptions.freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
                 }
             }
 

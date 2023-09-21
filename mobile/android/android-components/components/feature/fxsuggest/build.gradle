@@ -26,9 +26,7 @@ android {
 }
 
 tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        freeCompilerArgs += '-opt-in=kotlin.ExperimentalUnsignedTypes'
-    }
+    kotlinOptions.freeCompilerArgs += '-opt-in=kotlin.ExperimentalUnsignedTypes'
 }
 
 dependencies {
