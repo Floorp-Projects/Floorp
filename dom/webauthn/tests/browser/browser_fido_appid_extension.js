@@ -19,7 +19,9 @@ add_task(async function test_appid() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // The FIDO AppId extension can't be used for MakeCredential.
-  await promiseWebAuthnMakeCredential(tab, "none", { appid: gAppId })
+  await promiseWebAuthnMakeCredential(tab, "none", "discouraged", {
+    appid: gAppId,
+  })
     .then(arrivingHereIsBad)
     .catch(expectNotSupportedError);
 

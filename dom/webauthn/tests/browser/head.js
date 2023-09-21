@@ -121,12 +121,13 @@ function expectError(aType) {
 function promiseWebAuthnMakeCredential(
   tab,
   attestation = "none",
+  residentKey = "discouraged",
   extensions = {}
 ) {
   return ContentTask.spawn(
     tab.linkedBrowser,
-    [attestation, extensions],
-    ([attestation, extensions]) => {
+    [attestation, residentKey, extensions],
+    ([attestation, residentKey, extensions]) => {
       const cose_alg_ECDSA_w_SHA256 = -7;
 
       let challenge = content.crypto.getRandomValues(new Uint8Array(16));
@@ -146,6 +147,10 @@ function promiseWebAuthnMakeCredential(
           displayName: "none",
         },
         pubKeyCredParams,
+        authenticatorSelection: {
+          authenticatorAttachment: "cross-platform",
+          residentKey,
+        },
         extensions,
         attestation,
         challenge,
@@ -199,6 +204,21 @@ function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
         });
     }
   );
+}
+
+function promiseWebAuthnGetAssertionDiscoverable(tab, extensions = {}) {
+  return ContentTask.spawn(tab.linkedBrowser, [extensions], ([extensions]) => {
+    let challenge = content.crypto.getRandomValues(new Uint8Array(16));
+
+    let publicKey = {
+      challenge,
+      extensions,
+      rpId: content.document.domain,
+      allowCredentials: [],
+    };
+
+    return content.navigator.credentials.get({ publicKey });
+  });
 }
 
 function checkRpIdHash(rpIdHash, hostname) {
