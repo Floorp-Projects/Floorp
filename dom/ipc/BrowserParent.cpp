@@ -1417,6 +1417,7 @@ void BrowserParent::MouseEnterIntoWidget() {
     // become the current cursor.  When we mouseexit, we stop.
     mRemoteTargetSetsCursor = true;
     widget->SetCursor(mCursor);
+    EventStateManager::ClearCursorSettingManager();
   }
 
   // Mark that we have missed a mouse enter event, so that
@@ -1449,13 +1450,13 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
 
   aEvent.mRefPoint = TransformParentToChild(aEvent.mRefPoint);
 
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
     // When we mouseenter the remote target, the remote target's cursor should
     // become the current cursor.  When we mouseexit, we stop.
     if (eMouseEnterIntoWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = true;
       widget->SetCursor(mCursor);
+      EventStateManager::ClearCursorSettingManager();
     } else if (eMouseExitFromWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = false;
     }

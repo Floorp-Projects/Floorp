@@ -304,7 +304,7 @@ static uint32_t sESMInstanceCount = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
 int16_t EventStateManager::sCurrentMouseBtn = MouseButton::eNotPressed;
 EventStateManager* EventStateManager::sActiveESM = nullptr;
-Document* EventStateManager::sMouseOverDocument = nullptr;
+EventStateManager* EventStateManager::sCursorSettingManager = nullptr;
 AutoWeakFrame EventStateManager::sLastDragOverFrame = nullptr;
 LayoutDeviceIntPoint EventStateManager::sPreLockPoint =
     LayoutDeviceIntPoint(0, 0);
@@ -396,8 +396,8 @@ EventStateManager::~EventStateManager() {
     KillClickHoldTimer();
   }
 
-  if (mDocument == sMouseOverDocument) {
-    sMouseOverDocument = nullptr;
+  if (sCursorSettingManager == this) {
+    sCursorSettingManager = nullptr;
   }
 
   --sESMInstanceCount;
@@ -4324,7 +4324,7 @@ void EventStateManager::ClearCachedWidgetCursor(nsIFrame* aTargetFrame) {
 }
 
 void EventStateManager::StartHidingCursorWhileTyping(nsIWidget* aWidget) {
-  if (mHidingCursorWhileTyping) {
+  if (mHidingCursorWhileTyping || sCursorSettingManager != this) {
     return;
   }
   mHidingCursorWhileTyping = true;
@@ -4338,7 +4338,7 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
                                       nsIWidget* aWidget, bool aLockCursor) {
   EnsureDocument(mPresContext);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
-  sMouseOverDocument = mDocument.get();
+  sCursorSettingManager = this;
 
   NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
   if (aLockCursor) {
