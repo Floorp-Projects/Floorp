@@ -141,10 +141,11 @@ const char kPrefLoggingProfiler[] =
 #undef IDB_PREF_LOGGING_BRANCH_ROOT
 #undef IDB_PREF_BRANCH_ROOT
 
-StaticRefPtr<IndexedDatabaseManager> gDBManager;
+StaticMutex gDBManagerMutex;
+StaticRefPtr<IndexedDatabaseManager> gDBManager MOZ_GUARDED_BY(gDBManagerMutex);
+bool gInitialized MOZ_GUARDED_BY(gDBManagerMutex) = false;
+bool gClosed MOZ_GUARDED_BY(gDBManagerMutex) = false;
 
-Atomic<bool> gInitialized(false);
-Atomic<bool> gClosed(false);
 Atomic<int32_t> gDataThresholdBytes(0);
 Atomic<int32_t> gMaxSerializedMsgSize(0);
 Atomic<int32_t> gMaxPreloadExtraRecords(0);
@@ -226,7 +227,9 @@ Atomic<IndexedDatabaseManager::LoggingMode>
 IndexedDatabaseManager* IndexedDatabaseManager::GetOrCreate() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (IsClosed()) {
+  StaticMutexAutoLock lock(gDBManagerMutex);
+
+  if (gClosed) {
     NS_ERROR("Calling GetOrCreate() after shutdown!");
     return nullptr;
   }
@@ -234,17 +237,23 @@ IndexedDatabaseManager* IndexedDatabaseManager::GetOrCreate() {
   if (!gDBManager) {
     sIsMainProcess = XRE_IsParentProcess();
 
+    if (gInitialized) {
+      NS_ERROR("Initialized more than once?!");
+    }
+
     RefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
-    QM_TRY(MOZ_TO_RESULT(instance->Init()), nullptr);
+    {
+      StaticMutexAutoUnlock unlock(gDBManagerMutex);
 
-    if (gInitialized.exchange(true)) {
-      NS_ERROR("Initialized more than once?!");
+      QM_TRY(MOZ_TO_RESULT(instance->Init()), nullptr);
     }
 
     gDBManager = instance;
 
     ClearOnShutdown(&gDBManager);
+
+    gInitialized = true;
   }
 
   return gDBManager;
@@ -252,6 +261,8 @@ IndexedDatabaseManager* IndexedDatabaseManager::GetOrCreate() {
 
 // static
 IndexedDatabaseManager* IndexedDatabaseManager::Get() {
+  StaticMutexAutoLock lock(gDBManagerMutex);
+
   // Does not return an owning reference.
   return gDBManager;
 }
@@ -308,10 +319,16 @@ nsresult IndexedDatabaseManager::Init() {
 }
 
 void IndexedDatabaseManager::Destroy() {
-  // Setting the closed flag prevents the service from being recreated.
-  // Don't set it though if there's no real instance created.
-  if (gInitialized && gClosed.exchange(true)) {
-    NS_ERROR("Shutdown more than once?!");
+  {
+    StaticMutexAutoLock lock(gDBManagerMutex);
+
+    // Setting the closed flag prevents the service from being recreated.
+    // Don't set it though if there's no real instance created.
+    if (gInitialized && gClosed) {
+      NS_ERROR("Shutdown more than once?!");
+    }
+
+    gClosed = true;
   }
 
   Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
@@ -389,12 +406,16 @@ bool IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
 }
 
 // static
-bool IndexedDatabaseManager::IsClosed() { return gClosed; }
+bool IndexedDatabaseManager::IsClosed() {
+  StaticMutexAutoLock lock(gDBManagerMutex);
+
+  return gClosed;
+}
 
 #ifdef DEBUG
 // static
 bool IndexedDatabaseManager::IsMainProcess() {
-  NS_ASSERTION(gDBManager,
+  NS_ASSERTION(Get(),
                "IsMainProcess() called before indexedDB has been initialized!");
   NS_ASSERTION((XRE_IsParentProcess()) == sIsMainProcess,
                "XRE_GetProcessType changed its tune!");
@@ -403,7 +424,7 @@ bool IndexedDatabaseManager::IsMainProcess() {
 
 // static
 IndexedDatabaseManager::LoggingMode IndexedDatabaseManager::GetLoggingMode() {
-  MOZ_ASSERT(gDBManager,
+  MOZ_ASSERT(Get(),
              "GetLoggingMode called before IndexedDatabaseManager has been "
              "initialized!");
 
@@ -412,7 +433,7 @@ IndexedDatabaseManager::LoggingMode IndexedDatabaseManager::GetLoggingMode() {
 
 // static
 mozilla::LogModule* IndexedDatabaseManager::GetLoggingModule() {
-  MOZ_ASSERT(gDBManager,
+  MOZ_ASSERT(Get(),
              "GetLoggingModule called before IndexedDatabaseManager has been "
              "initialized!");
 
@@ -423,7 +444,7 @@ mozilla::LogModule* IndexedDatabaseManager::GetLoggingModule() {
 
 // static
 bool IndexedDatabaseManager::FullSynchronous() {
-  MOZ_ASSERT(gDBManager,
+  MOZ_ASSERT(Get(),
              "FullSynchronous() called before indexedDB has been initialized!");
 
   return sFullSynchronousMode;
@@ -431,7 +452,7 @@ bool IndexedDatabaseManager::FullSynchronous() {
 
 // static
 uint32_t IndexedDatabaseManager::DataThreshold() {
-  MOZ_ASSERT(gDBManager,
+  MOZ_ASSERT(Get(),
              "DataThreshold() called before indexedDB has been initialized!");
 
   return gDataThresholdBytes;
@@ -440,7 +461,7 @@ uint32_t IndexedDatabaseManager::DataThreshold() {
 // static
 uint32_t IndexedDatabaseManager::MaxSerializedMsgSize() {
   MOZ_ASSERT(
-      gDBManager,
+      Get(),
       "MaxSerializedMsgSize() called before indexedDB has been initialized!");
   MOZ_ASSERT(gMaxSerializedMsgSize > 0);
 
@@ -449,7 +470,7 @@ uint32_t IndexedDatabaseManager::MaxSerializedMsgSize() {
 
 // static
 int32_t IndexedDatabaseManager::MaxPreloadExtraRecords() {
-  MOZ_ASSERT(gDBManager,
+  MOZ_ASSERT(Get(),
              "MaxPreloadExtraRecords() called before indexedDB has been "
              "initialized!");
 
