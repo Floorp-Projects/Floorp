@@ -256,6 +256,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
           isAnalysisInProgress = false;
         }
         data = await this.#product.requestAnalysis();
+        if (!data) {
+          throw new Error("request failed");
+        }
       } catch (err) {
         console.error("Failed to fetch product analysis data", err);
         data = { error: err };
