@@ -2347,11 +2347,6 @@
   value: false
   mirror: always
 
-- name: dom.enable_window_print
-  type: bool
-  value: true
-  mirror: always
-
 # Only intended for fuzzing purposes, this will break mozPrintCallback, etc.
 - name: dom.window_print.fuzzing.block_while_printing
   type: bool
