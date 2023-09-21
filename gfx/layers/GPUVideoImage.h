@@ -57,6 +57,8 @@ class GPUVideoImage final : public Image {
 
   virtual ~GPUVideoImage() = default;
 
+  GPUVideoImage* AsGPUVideoImage() override { return this; }
+
   gfx::IntSize GetSize() const override { return mSize; }
 
   gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
