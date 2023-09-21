@@ -326,15 +326,15 @@ browsertime-benchmark:
                             - ares6
                             - [assorted-dom, dom]
                             - [jetstream2, js2]
-                            # - [matrix-react-bench, mrb] (Bug 1802922)
+                            # - [matrix-react-bench, mrb] Perma fails on osx 10.15.x machines (Bug 1807754)
                             - [motionmark-animometer, mm-a]
                             - [motionmark-htmlsuite, mm-h]
                             - [speedometer, sp]
-                            - [speedometer3, sp3]
+                            # - [speedometer3, sp3] Perma fails on osx 10.15.x machines (Bug 1809535)
                             - [stylebench, sb]
                             - [sunspider, ss]
                             - [unity-webgl, ugl]
-                            # - [webaudio, wa] (Bug 1802922)
+                            - [webaudio, wa]
                         custom-car:
                             - [speedometer, sp]
                             - [speedometer3, sp3]
@@ -427,7 +427,7 @@ browsertime-benchmark:
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
     raptor:
-        apps: [firefox, chrome, chromium]  # Safari depends on Bug 1802922
+        apps: [firefox, chrome, chromium, safari]
         subtests:
             by-app:
                 firefox:
@@ -437,6 +437,9 @@ browsertime-benchmark-wasm:
                     - [wasm-misc, wm]
                     - [wasm-misc-baseline, wm-b]
                     - [wasm-misc-optimizing, wm-i]
+                safari:
+                    # - [wasm-misc, wm] Perma fails (Bug 1809533)
+                    - [wasm-godot, godot]
                 default:
                     - [wasm-misc, wm]
                     - [wasm-godot, godot]
@@ -534,28 +537,28 @@ browsertime-tp6-live:
                     - amazon
                     - [bing-search, bing]
                     - ebay
-                    - [facebook, fb]
-                    # - fandom (Bug 1802922)
+                    # - [facebook, fb] Perma fails on osx 10.15.7
+                    - fandom
                     - [google-docs, gdocs]
-                    # - [google-mail, gmail] (Bug 1802922)
+                    - [google-mail, gmail]
                     - [google-search, gsearch]
                     - [google-slides, gslides]
                     - imdb
-                    # - imgur (Bug 1802922)
-                    # - instagram (see bug 1736999)
+                    - imgur
+                    # - instagram # (see bug 1736999)
                     - linkedin
                     - microsoft
-                    # - netflix (Bug 1802922)
+                    # - netflix # Perma fails on osx 10.15.7 (Bug 1802922)
                     # - office (site loads blank page if not signed in)
-                    - outlook
+                    # - outlook Perma fails on osx 10.15.7
                     - paypal
                     - pinterest
                     - reddit
                     - tumblr
                     - twitch
-                    - twitter
+                    # - twitter Perma fails on osx 10.15.7
                     - wikipedia
-                    # - yahoo-mail (Bug 1802922)
+                    - yahoo-mail
                     - youtube
                 chrome:
                     - amazon
