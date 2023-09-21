@@ -769,8 +769,7 @@ const MESSAGES = () => {
                   "chrome://browser/content/shopping/assets/ratingLight.avif",
                 darkModeImageURL:
                   "chrome://browser/content/shopping/assets/ratingDark.avif",
-                height: "245px",
-                marginBlock: "-10px -20px",
+                height: "216px",
               },
               dismiss_button: {
                 action: { dismiss: true },
