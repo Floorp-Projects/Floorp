@@ -8,6 +8,8 @@ kind-dependencies:
     # We want to test the signed version of a build, to make sure
     # any startup problems or crashes caused by signing are caught
     # This means we depend on a different kind depending on the platform
+    # non-system python
+    - toolchain
     # linux
     - build-signing
     # mac
@@ -36,7 +38,7 @@ job-defaults:
         symbol: SUT
         kind: test
         tier: 1
-    use-system-python: true
+    use-system-python: false
 
 jobs:
     linux32:
