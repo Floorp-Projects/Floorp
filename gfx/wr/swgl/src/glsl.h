@@ -753,6 +753,8 @@ Float fract(Float v) { return v - floor(v); }
 
 vec2 fract(vec2 v) { return vec2(fract(v.x), fract(v.y)); }
 
+vec2_scalar fract(vec2_scalar v) { return vec2_scalar(fract(v.x), fract(v.y)); }
+
 // X derivatives can be approximated by dFdx(x) = x[1] - x[0].
 // Y derivatives are not easily available since we operate in terms of X spans
 // only. To work around, assume dFdy(p.x) = dFdx(p.y), which only holds for
