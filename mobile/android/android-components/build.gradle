@@ -89,11 +89,11 @@ subprojects {
     apply plugin: 'jacoco'
 
     // Enable Kotlin warnings as errors for all modules
-    tasks.withType(KotlinCompile).all {
+    tasks.withType(KotlinCompile).configureEach {
         kotlinOptions.allWarningsAsErrors = true
     }
 
-    project.configurations.all {
+    project.configurations.configureEach {
         // Dependencies can't depend on a different major version of Glean than A-C itself.
         resolutionStrategy.eachDependency { details ->
             if (details.requested.group == 'org.mozilla.telemetry'
@@ -229,7 +229,7 @@ subprojects {
                     targetCompatibility JavaVersion.VERSION_17
                 }
 
-                tasks.withType(KotlinCompile).all {
+                tasks.withType(KotlinCompile).configureEach {
                     kotlinOptions.jvmTarget = "17"
                     kotlinOptions.freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
                 }

@@ -19,11 +19,11 @@ repositories {
     mavenLocal()
 }
 
-configurations.all { config ->
+configurations.configureEach { config ->
     if (config.isCanBeResolved()) {
         config.resolutionStrategy { strategy ->
             dependencySubstitution {
-                all { dependency ->
+                configureEach { dependency ->
                     if (!(dependency.requested instanceof ModuleComponentSelector)) {
                         // We only care about substituting for a module, not a project.
                         return
