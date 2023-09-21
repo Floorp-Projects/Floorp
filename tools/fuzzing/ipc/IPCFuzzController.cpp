@@ -135,7 +135,7 @@ void IPCFuzzController::OnActorConnected(IProtocol* protocol) {
     // Use this actor for the next 5 messages
     useLastActor = 5;
   } else {
-    MOZ_FUZZING_NYX_PRINT("WARNING: No port name on actor?!\n");
+    MOZ_FUZZING_NYX_DEBUG("WARNING: No port name on actor?!\n");
   }
 }
 
@@ -144,8 +144,10 @@ void IPCFuzzController::OnActorDestroyed(IProtocol* protocol) {
     return;
   }
 
+#ifdef FUZZ_DEBUG
   MOZ_FUZZING_NYX_PRINTF("INFO: [OnActorDestroyed] ActorID %d Protocol: %s\n",
                          protocol->Id(), protocol->GetProtocolName());
+#endif
 
   MessageChannel* channel = protocol->ToplevelProtocol()->GetIPCChannel();
 
