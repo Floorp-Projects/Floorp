@@ -36,17 +36,17 @@ export default {
     fluent: `
 shopping-message-bar-warning-stale-analysis-message-2 = New info to check
 shopping-message-bar-warning-stale-analysis-button = Check now
-shopping-message-bar-generic-error-title = Something went wrong
-shopping-message-bar-generic-error-message = Couldn't load information. Please try again later.
+shopping-message-bar-generic-error-title2 = No info available right now
+shopping-message-bar-generic-error-message = We’re working to resolve the issue. Please check back soon.
 shopping-message-bar-warning-not-enough-reviews-title = Not enough reviews yet
-shopping-message-bar-warning-not-enough-reviews-message = When this product has more reviews, we’ll be able to analyze them.
+shopping-message-bar-warning-not-enough-reviews-message2 = When this product has more reviews, we’ll be able to check their quality.
 shopping-message-bar-warning-product-not-available-title = Product is not available
-shopping-message-bar-warning-product-not-available-message = If you see that this product is back in stock, report it to us and we’ll work on updating the analysis.
+shopping-message-bar-warning-product-not-available-message2 = If you see this product is back in stock, report it and we’ll work on checking the reviews.
 shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
 shopping-message-bar-thanks-for-reporting-title = Thanks for reporting!
-shopping-message-bar-thanks-for-reporting-message = We should have an updated analysis within 24 hours. Please check back.
-shopping-message-bar-warning-product-not-available-reported-title = Analysis coming soon
-shopping-message-bar-warning-product-not-available-reported-message = An updated analysis should be ready within 24 hours. Please check back.
+shopping-message-bar-thanks-for-reporting-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
+shopping-message-bar-warning-product-not-available-reported-title2 = Info coming soon
+shopping-message-bar-warning-product-not-available-reported-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
 shopping-message-bar-analysis-in-progress-title2 = Checking review quality
 shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
 shopping-message-bar-page-not-supported-title = We can't check these reviews
