@@ -284,7 +284,7 @@ static bool GetColorFromImagePattern(const GValue* aValue, nscolor* aColor) {
     return false;
   }
 
-  auto pattern = static_cast<cairo_pattern_t*>(g_value_get_boxed(aValue));
+  auto* pattern = static_cast<cairo_pattern_t*>(g_value_get_boxed(aValue));
   if (!pattern) {
     return false;
   }
@@ -1594,26 +1594,14 @@ void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
   }
 }
 
-static nscolor GetBackgroundColor(
-    GtkStyleContext* aStyle, nscolor aForForegroundColor,
-    GtkStateFlags aState = GTK_STATE_FLAG_NORMAL,
-    nscolor aOverBackgroundColor = NS_TRANSPARENT) {
-  GdkRGBA gdkColor;
-  gtk_style_context_get_background_color(aStyle, aState, &gdkColor);
-  nscolor color = GDK_RGBA_TO_NS_RGBA(gdkColor);
-  if (NS_GET_A(color)) {
-    if (color != aOverBackgroundColor) {
-      return color;
-    }
-  }
-
-  // Try to synthesize a color from a background-image.
+static bool GetColorFromBackgroundImage(GtkStyleContext* aStyle,
+                                        nscolor aForForegroundColor,
+                                        GtkStateFlags aState, nscolor* aColor) {
   GValue value = G_VALUE_INIT;
   gtk_style_context_get_property(aStyle, "background-image", aState, &value);
   auto cleanup = MakeScopeExit([&] { g_value_unset(&value); });
-
-  if (GetColorFromImagePattern(&value, &color)) {
-    return color;
+  if (GetColorFromImagePattern(&value, aColor)) {
+    return true;
   }
 
   {
@@ -1624,13 +1612,40 @@ static nscolor GetBackgroundColor(
       // Return the one with more contrast.
       // TODO(emilio): This could do interpolation or what not but seems
       // overkill.
-      return NS_LUMINOSITY_DIFFERENCE(l, aForForegroundColor) >
-                     NS_LUMINOSITY_DIFFERENCE(d, aForForegroundColor)
-                 ? l
-                 : d;
+      if (NS_LUMINOSITY_DIFFERENCE(l, aForForegroundColor) >
+          NS_LUMINOSITY_DIFFERENCE(d, aForForegroundColor)) {
+        *aColor = l;
+      } else {
+        *aColor = d;
+      }
+      return true;
     }
   }
 
+  return false;
+}
+
+static nscolor GetBackgroundColor(
+    GtkStyleContext* aStyle, nscolor aForForegroundColor,
+    GtkStateFlags aState = GTK_STATE_FLAG_NORMAL,
+    nscolor aOverBackgroundColor = NS_TRANSPARENT) {
+  // Try to synthesize a color from a background-image.
+  nscolor imageColor = NS_TRANSPARENT;
+  if (GetColorFromBackgroundImage(aStyle, aForForegroundColor, aState,
+                                  &imageColor)) {
+    if (NS_GET_A(imageColor) == 255) {
+      return imageColor;
+    }
+  }
+
+  GdkRGBA gdkColor;
+  gtk_style_context_get_background_color(aStyle, aState, &gdkColor);
+  nscolor bgColor = GDK_RGBA_TO_NS_RGBA(gdkColor);
+  // background-image paints over background-color.
+  const nscolor finalColor = NS_ComposeColors(bgColor, imageColor);
+  if (finalColor != aOverBackgroundColor) {
+    return finalColor;
+  }
   return NS_TRANSPARENT;
 }
 
