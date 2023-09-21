@@ -20,8 +20,9 @@ menubar {
 menu,
 menuitem,
 menucaption {
-  flex-shrink: 0;
+  border-radius: calc(var(--panel-border-radius) / 2);
   align-items: center;
+  flex-shrink: 0;
   list-style-image: none;
 }
 
