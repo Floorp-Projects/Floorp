@@ -11,11 +11,16 @@
  */
 
 %{C++
-namespace mozilla::net {
-class Cookie;
+namespace mozilla {
+  class OriginAttributes;
+
+  namespace net {
+    class Cookie;
+  }
 }
 %}
 
+[ref] native const_OriginAttributes(const mozilla::OriginAttributes);
 [ref] native const_Cookie(const mozilla::net::Cookie);
 
 typedef long nsCookieStatus;
@@ -87,6 +92,12 @@ interface nsICookie : nsISupports {
      */
     [implicit_jscontext]
     readonly attribute jsval originAttributes;
+
+    /**
+     * Native getter for origin attributes
+     */
+    [noscript, notxpcom, nostdcall, binaryname(OriginAttributesNative)]
+    const_OriginAttributes OriginAttributesNative();
 
     [noscript, notxpcom, nostdcall, binaryname(AsCookie)]
     const_Cookie AsCookie();

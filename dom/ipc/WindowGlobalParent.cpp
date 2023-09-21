@@ -1641,38 +1641,8 @@ IPCResult WindowGlobalParent::RecvSetCookies(
   NS_ENSURE_TRUE(csParent, IPC_OK());
   auto* cs = static_cast<net::CookieServiceParent*>(csParent);
 
-  dom::BrowsingContext* browsingContext = GetBrowsingContext();
-
-  bool isThirdPartyCookie = false;
-  uint64_t browsingContextId = 0;
-
-  if (browsingContext && !browsingContext->IsDiscarded()) {
-    browsingContextId = browsingContext->Id();
-
-    // Check if the cookies being set are third-party to the top level. We do
-    // this by comparing the top level principals base domain with aBaseDomain.
-    if (!browsingContext->IsTop()) {
-      dom::BrowsingContext* topBC = browsingContext->Top();
-      MOZ_ASSERT(topBC);
-
-      RefPtr<WindowGlobalParent> topWGP =
-          topBC->Canonical()->GetEmbedderWindowGlobal();
-
-      if (!NS_WARN_IF(!topWGP)) {
-        nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
-        MOZ_ASSERT(topPrincipal);
-        nsAutoCString topBaseDomain;
-        nsresult rv = topPrincipal->GetBaseDomain(topBaseDomain);
-
-        if (!NS_WARN_IF(NS_FAILED(rv))) {
-          isThirdPartyCookie = aBaseDomain.Equals(topBaseDomain);
-        }
-      }
-    }
-  }
-
   return cs->SetCookies(aBaseDomain, aOriginAttributes, aHost, aFromHttp,
-                        aCookies, browsingContextId, isThirdPartyCookie);
+                        aCookies, GetBrowsingContext());
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,

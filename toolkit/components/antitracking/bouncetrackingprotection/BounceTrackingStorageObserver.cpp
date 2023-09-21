@@ -69,9 +69,16 @@ BounceTrackingStorageObserver::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  if (!browsingContext->IsTop() && notification->GetIsThirdPartyCookie()) {
+  // Check if the cookie is partitioned. Partitioned cookies can not be used for
+  // bounce tracking.
+  nsCOMPtr<nsICookie> cookie;
+  rv = notification->GetCookie(getter_AddRefs(cookie));
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(cookie);
+
+  if (!cookie->OriginAttributesNative().mPartitionKey.IsEmpty()) {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
-            ("Not top or same-site with top."));
+            ("Skipping partitioned cookie."));
     return NS_OK;
   }
 
