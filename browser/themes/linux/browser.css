@@ -87,9 +87,15 @@
   }
 
   @media (-moz-gtk-csd-rounded-bottom-corners) {
-    body {
-      border-bottom-left-radius: env(-moz-gtk-csd-titlebar-radius);
-      border-bottom-right-radius: env(-moz-gtk-csd-titlebar-radius);
+    #navigator-toolbox {
+      /* The body clip below covers this. */
+      border-radius: 0;
+    }
+
+    body,
+    dialog::backdrop {
+      /* Use an uniform clip to allow WebRender to optimize it better */
+      border-radius: env(-moz-gtk-csd-titlebar-radius);
     }
   }
 }
