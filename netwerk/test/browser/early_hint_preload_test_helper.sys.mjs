@@ -129,3 +129,31 @@ export async function test_preload_hint_and_request(input, expected_results) {
   gBrowser.removeCurrentTab();
   Services.cache2.clear();
 }
+
+// simple loading of one url and then checking the request count against the
+// passed expected count
+export async function test_preload_url(testName, url, expectedRequestCount) {
+  // reset the count
+  let headers = new Headers();
+  headers.append("X-Early-Hint-Count-Start", "");
+  await fetch(
+    "http://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs",
+    { headers }
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url,
+      waitForLoad: true,
+    },
+    async function () {}
+  );
+
+  let gotRequestCount = await fetch(
+    "http://example.com/browser/netwerk/test/browser/early_hint_pixel_count.sjs"
+  ).then(response => response.json());
+
+  await request_count_checking(testName, gotRequestCount, expectedRequestCount);
+  Services.cache2.clear();
+}
