@@ -631,7 +631,7 @@ nsresult NotifySecondaryKeyPermissionUpdateInContentProcess(
           if (!cp) {
             continue;
           }
-          if (cp->NeedsPermissionsUpdate(aSecondaryKey)) {
+          if (cp->NeedsSecondaryKeyPermissionsUpdate(aSecondaryKey)) {
             WindowGlobalParent* wgp = cbc->GetCurrentWindowGlobal();
             if (!wgp) {
               continue;
@@ -3439,6 +3439,7 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
 
   nsTArray<std::pair<nsCString, nsCString>> pairs;
   nsCOMPtr<nsIPrincipal> prin = aPrincipal;
+
   while (prin) {
     // Add the pair to the list
     std::pair<nsCString, nsCString>* pair =
