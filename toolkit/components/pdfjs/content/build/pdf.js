@@ -946,7 +946,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.11.63',
+    apiVersion: '3.11.131',
     data,
     password,
     disableAutoFetch,
@@ -2574,9 +2574,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.11.63';
+const version = '3.11.131';
 exports.version = version;
-const build = '586d3add4';
+const build = 'a7894a4d7';
 exports.build = build;
 
 /***/ }),
@@ -2756,6 +2756,11 @@ exports.AnnotationEditor = void 0;
 var _tools = __w_pdfjs_require__(5);
 var _util = __w_pdfjs_require__(1);
 class AnnotationEditor {
+  #altText = "";
+  #altTextDecorative = false;
+  #altTextButton = null;
+  #altTextTooltip = null;
+  #altTextTooltipTimeout = null;
   #keepAspectRatio = false;
   #resizersDiv = null;
   #boundFocusin = this.focusin.bind(this);
@@ -2766,11 +2771,13 @@ class AnnotationEditor {
   _initialOptions = Object.create(null);
   _uiManager = null;
   _focusEventsAllowed = true;
+  _l10nPromise = null;
   #isDraggable = false;
   #zIndex = AnnotationEditor._zIndex++;
   static _borderLineWidth = -1;
   static _colorManager = new _tools.ColorManager();
   static _zIndex = 1;
+  static SMALL_EDITOR_SIZE = 0;
   constructor(parameters) {
     if (this.constructor === AnnotationEditor) {
       (0, _util.unreachable)("Cannot initialize AnnotationEditor.");
@@ -2805,6 +2812,9 @@ class AnnotationEditor {
     this.isAttachedToDOM = false;
     this.deleted = false;
   }
+  get editorType() {
+    return Object.getPrototypeOf(this).constructor._type;
+  }
   static get _defaultLineColor() {
     return (0, _util.shadow)(this, "_defaultLineColor", this._colorManager.getHexCode("CanvasText"));
   }
@@ -2818,7 +2828,13 @@ class AnnotationEditor {
     fakeEditor.deleted = true;
     fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
   }
-  static initialize(_l10n) {
+  static initialize(l10n, options = null) {
+    AnnotationEditor._l10nPromise ||= new Map(["editor_alt_text_button_label", "editor_alt_text_edit_button_label", "editor_alt_text_decorative_tooltip"].map(str => [str, l10n.get(str)]));
+    if (options?.strings) {
+      for (const str of options.strings) {
+        AnnotationEditor._l10nPromise.set(str, l10n.get(str));
+      }
+    }
     if (AnnotationEditor._borderLineWidth !== -1) {
       return;
     }
@@ -3091,6 +3107,7 @@ class AnnotationEditor {
     if (!this.#keepAspectRatio) {
       this.div.style.height = `${(100 * height / parentHeight).toFixed(2)}%`;
     }
+    this.#altTextButton?.classList.toggle("small", width < AnnotationEditor.SMALL_EDITOR_SIZE || height < AnnotationEditor.SMALL_EDITOR_SIZE);
   }
   fixDims() {
     const {
@@ -3286,6 +3303,95 @@ class AnnotationEditor {
     this.setDims(parentWidth * newWidth, parentHeight * newHeight);
     this.fixAndSetPosition();
   }
+  addAltTextButton() {
+    if (this.#altTextButton) {
+      return;
+    }
+    const altText = this.#altTextButton = document.createElement("button");
+    altText.className = "altText";
+    AnnotationEditor._l10nPromise.get("editor_alt_text_button_label").then(msg => {
+      altText.textContent = msg;
+      altText.setAttribute("aria-label", msg);
+    });
+    altText.tabIndex = "0";
+    altText.addEventListener("click", event => {
+      event.preventDefault();
+      this._uiManager.editAltText(this);
+    }, {
+      capture: true
+    });
+    altText.addEventListener("keydown", event => {
+      if (event.target === altText && event.key === "Enter") {
+        event.preventDefault();
+        this._uiManager.editAltText(this);
+      }
+    });
+    this.#setAltTextButtonState();
+    this.div.append(altText);
+    if (!AnnotationEditor.SMALL_EDITOR_SIZE) {
+      const PERCENT = 40;
+      AnnotationEditor.SMALL_EDITOR_SIZE = Math.min(128, Math.round(altText.getBoundingClientRect().width * (1 + PERCENT / 100)));
+    }
+  }
+  async #setAltTextButtonState() {
+    const button = this.#altTextButton;
+    if (!button || !this.#altTextDecorative && !this.#altText) {
+      return;
+    }
+    AnnotationEditor._l10nPromise.get("editor_alt_text_edit_button_label").then(msg => {
+      button.setAttribute("aria-label", msg);
+    });
+    let tooltip = this.#altTextTooltip;
+    if (!tooltip) {
+      this.#altTextTooltip = tooltip = document.createElement("span");
+      tooltip.className = "tooltip";
+      tooltip.setAttribute("role", "tooltip");
+      const id = tooltip.id = `alt-text-tooltip-${this.id}`;
+      button.append(tooltip);
+      button.setAttribute("aria-describedby", id);
+      const DELAY_TO_SHOW_TOOLTIP = 100;
+      button.addEventListener("mouseenter", () => {
+        this.#altTextTooltipTimeout = setTimeout(() => {
+          this.#altTextTooltipTimeout = null;
+          this.#altTextTooltip.classList.add("show");
+          this._uiManager._eventBus.dispatch("reporttelemetry", {
+            source: this,
+            details: {
+              type: "editing",
+              subtype: this.editorType,
+              data: {
+                action: "alt_text_tooltip"
+              }
+            }
+          });
+        }, DELAY_TO_SHOW_TOOLTIP);
+      });
+      button.addEventListener("mouseleave", () => {
+        clearTimeout(this.#altTextTooltipTimeout);
+        this.#altTextTooltipTimeout = null;
+        this.#altTextTooltip?.classList.remove("show");
+      });
+    }
+    button.classList.add("done");
+    tooltip.innerText = this.#altTextDecorative ? await AnnotationEditor._l10nPromise.get("editor_alt_text_decorative_tooltip") : this.#altText;
+  }
+  getClientDimensions() {
+    return this.div.getBoundingClientRect();
+  }
+  get altTextData() {
+    return {
+      altText: this.#altText,
+      decorative: this.#altTextDecorative
+    };
+  }
+  set altTextData({
+    altText,
+    decorative
+  }) {
+    this.#altText = altText;
+    this.#altTextDecorative = decorative;
+    this.#setAltTextButtonState();
+  }
   render() {
     this.div = document.createElement("div");
     this.div.setAttribute("data-editor-rotation", (360 - this.rotation) % 360);
@@ -3478,8 +3584,16 @@ class AnnotationEditor {
     }
   }
   updateParams(type, value) {}
-  disableEditing() {}
-  enableEditing() {}
+  disableEditing() {
+    if (this.#altTextButton) {
+      this.#altTextButton.hidden = true;
+    }
+  }
+  enableEditing() {
+    if (this.#altTextButton) {
+      this.#altTextButton.hidden = false;
+    }
+  }
   enterInEditMode() {}
   get contentDiv() {
     return this.div;
@@ -3867,6 +3981,7 @@ class AnnotationEditorUIManager {
   #activeEditor = null;
   #allEditors = new Map();
   #allLayers = new Map();
+  #altTextManager = null;
   #annotationStorage = null;
   #commandManager = new CommandManager();
   #currentPageIndex = 0;
@@ -3874,7 +3989,6 @@ class AnnotationEditorUIManager {
   #draggingEditors = null;
   #editorTypes = null;
   #editorsToRescale = new Set();
-  #eventBus = null;
   #filterFactory = null;
   #idManager = new IdManager();
   #isEnabled = false;
@@ -3942,14 +4056,15 @@ class AnnotationEditorUIManager {
       checker: arrowChecker
     }]]));
   }
-  constructor(container, viewer, eventBus, pdfDocument, pageColors) {
+  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors) {
     this.#container = container;
     this.#viewer = viewer;
-    this.#eventBus = eventBus;
-    this.#eventBus._on("editingaction", this.#boundOnEditingAction);
-    this.#eventBus._on("pagechanging", this.#boundOnPageChanging);
-    this.#eventBus._on("scalechanging", this.#boundOnScaleChanging);
-    this.#eventBus._on("rotationchanging", this.#boundOnRotationChanging);
+    this.#altTextManager = altTextManager;
+    this._eventBus = eventBus;
+    this._eventBus._on("editingaction", this.#boundOnEditingAction);
+    this._eventBus._on("pagechanging", this.#boundOnPageChanging);
+    this._eventBus._on("scalechanging", this.#boundOnScaleChanging);
+    this._eventBus._on("rotationchanging", this.#boundOnRotationChanging);
     this.#annotationStorage = pdfDocument.annotationStorage;
     this.#filterFactory = pdfDocument.filterFactory;
     this.#pageColors = pageColors;
@@ -3961,10 +4076,10 @@ class AnnotationEditorUIManager {
   destroy() {
     this.#removeKeyboardManager();
     this.#removeFocusManager();
-    this.#eventBus._off("editingaction", this.#boundOnEditingAction);
-    this.#eventBus._off("pagechanging", this.#boundOnPageChanging);
-    this.#eventBus._off("scalechanging", this.#boundOnScaleChanging);
-    this.#eventBus._off("rotationchanging", this.#boundOnRotationChanging);
+    this._eventBus._off("editingaction", this.#boundOnEditingAction);
+    this._eventBus._off("pagechanging", this.#boundOnPageChanging);
+    this._eventBus._off("scalechanging", this.#boundOnScaleChanging);
+    this._eventBus._off("rotationchanging", this.#boundOnRotationChanging);
     for (const layer of this.#allLayers.values()) {
       layer.destroy();
     }
@@ -3974,9 +4089,16 @@ class AnnotationEditorUIManager {
     this.#activeEditor = null;
     this.#selectedEditors.clear();
     this.#commandManager.destroy();
+    this.#altTextManager.destroy();
   }
   get hcmFilter() {
     return (0, _util.shadow)(this, "hcmFilter", this.#pageColors ? this.#filterFactory.addHCMFilter(this.#pageColors.foreground, this.#pageColors.background) : "none");
+  }
+  get direction() {
+    return (0, _util.shadow)(this, "direction", getComputedStyle(this.#container).direction);
+  }
+  editAltText(editor) {
+    this.#altTextManager?.editAltText(this, editor);
   }
   onPageChanging({
     pageNumber
@@ -4085,6 +4207,14 @@ class AnnotationEditorUIManager {
     document.removeEventListener("cut", this.#boundCut);
     document.removeEventListener("paste", this.#boundPaste);
   }
+  addEditListeners() {
+    this.#addKeyboardManager();
+    this.#addCopyPasteListeners();
+  }
+  removeEditListeners() {
+    this.#removeKeyboardManager();
+    this.#removeCopyPasteListeners();
+  }
   copy(event) {
     event.preventDefault();
     this.#activeEditor?.commitOrRemove();
@@ -4177,14 +4307,14 @@ class AnnotationEditorUIManager {
   #dispatchUpdateStates(details) {
     const hasChanged = Object.entries(details).some(([key, value]) => this.#previousStates[key] !== value);
     if (hasChanged) {
-      this.#eventBus.dispatch("annotationeditorstateschanged", {
+      this._eventBus.dispatch("annotationeditorstateschanged", {
         source: this,
         details: Object.assign(this.#previousStates, details)
       });
     }
   }
   #dispatchUpdateUI(details) {
-    this.#eventBus.dispatch("annotationeditorparamschanged", {
+    this._eventBus.dispatch("annotationeditorparamschanged", {
       source: this,
       details
     });
@@ -4274,7 +4404,7 @@ class AnnotationEditorUIManager {
     if (mode === this.#mode) {
       return;
     }
-    this.#eventBus.dispatch("switchannotationeditormode", {
+    this._eventBus.dispatch("switchannotationeditormode", {
       source: this,
       mode
     });
@@ -10454,7 +10584,6 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   #fontSize;
   #initialData = null;
   static _freeTextDefaultContent = "";
-  static _l10nPromise;
   static _internalPadding = 0;
   static _defaultColor = null;
   static _defaultFontSize = 10;
@@ -10501,8 +10630,9 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.#fontSize = params.fontSize || FreeTextEditor._defaultFontSize;
   }
   static initialize(l10n) {
-    super.initialize(l10n);
-    this._l10nPromise = new Map(["free_text2_default_content", "editor_free_text2_aria_label"].map(str => [str, l10n.get(str)]));
+    _editor.AnnotationEditor.initialize(l10n, {
+      strings: ["free_text2_default_content", "editor_free_text2_aria_label"]
+    });
     const style = getComputedStyle(document.documentElement);
     this._internalPadding = parseFloat(style.getPropertyValue("--freetext-padding"));
   }
@@ -10774,8 +10904,8 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.editorDiv.className = "internal";
     this.editorDiv.setAttribute("id", this.#editorDivId);
     this.enableEditing();
-    FreeTextEditor._l10nPromise.get("editor_free_text2_aria_label").then(msg => this.editorDiv?.setAttribute("aria-label", msg));
-    FreeTextEditor._l10nPromise.get("free_text2_default_content").then(msg => this.editorDiv?.setAttribute("default-content", msg));
+    _editor.AnnotationEditor._l10nPromise.get("editor_free_text2_aria_label").then(msg => this.editorDiv?.setAttribute("aria-label", msg));
+    _editor.AnnotationEditor._l10nPromise.get("free_text2_default_content").then(msg => this.editorDiv?.setAttribute("default-content", msg));
     this.editorDiv.contentEditable = true;
     const {
       style
@@ -13655,7 +13785,6 @@ class InkEditor extends _editor.AnnotationEditor {
   static _defaultColor = null;
   static _defaultOpacity = 1;
   static _defaultThickness = 1;
-  static _l10nPromise;
   static _type = "ink";
   constructor(params) {
     super({
@@ -13676,8 +13805,9 @@ class InkEditor extends _editor.AnnotationEditor {
     this._willKeepAspectRatio = true;
   }
   static initialize(l10n) {
-    super.initialize(l10n);
-    this._l10nPromise = new Map(["editor_ink_canvas_aria_label", "editor_ink2_aria_label"].map(str => [str, l10n.get(str)]));
+    _editor.AnnotationEditor.initialize(l10n, {
+      strings: ["editor_ink_canvas_aria_label", "editor_ink2_aria_label"]
+    });
   }
   static updateDefaultParams(type, value) {
     switch (type) {
@@ -14100,7 +14230,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.canvas.height = 0;
     this.canvas.className = "inkEditorCanvas";
-    InkEditor._l10nPromise.get("editor_ink_canvas_aria_label").then(msg => this.canvas?.setAttribute("aria-label", msg));
+    _editor.AnnotationEditor._l10nPromise.get("editor_ink_canvas_aria_label").then(msg => this.canvas?.setAttribute("aria-label", msg));
     this.div.append(this.canvas);
     this.ctx = this.canvas.getContext("2d");
   }
@@ -14126,7 +14256,7 @@ class InkEditor extends _editor.AnnotationEditor {
       baseY = this.y;
     }
     super.render();
-    InkEditor._l10nPromise.get("editor_ink2_aria_label").then(msg => this.div?.setAttribute("aria-label", msg));
+    _editor.AnnotationEditor._l10nPromise.get("editor_ink2_aria_label").then(msg => this.div?.setAttribute("aria-label", msg));
     const [x, y, w, h] = this.#getInitialBBox();
     this.setAt(x, y, 0, 0);
     this.setDims(w, h);
@@ -14454,6 +14584,9 @@ class StampEditor extends _editor.AnnotationEditor {
     this.#bitmapUrl = params.bitmapUrl;
     this.#bitmapFile = params.bitmapFile;
   }
+  static initialize(l10n) {
+    _editor.AnnotationEditor.initialize(l10n);
+  }
   static get supportedTypes() {
     const types = ["apng", "avif", "bmp", "gif", "jpeg", "png", "svg+xml", "webp", "x-icon"];
     return (0, _util.shadow)(this, "supportedTypes", types.map(type => `image/${type}`));
@@ -14620,6 +14753,17 @@ class StampEditor extends _editor.AnnotationEditor {
       this.parent.addUndoableEditor(this);
       this.#hasBeenAddedInUndoStack = true;
     }
+    this._uiManager._eventBus.dispatch("reporttelemetry", {
+      source: this,
+      details: {
+        type: "editing",
+        subtype: this.editorType,
+        data: {
+          action: "inserted_image"
+        }
+      }
+    });
+    this.addAltTextButton();
   }
   #setDimensions(width, height) {
     const [parentWidth, parentHeight] = this.parentDimensions;
@@ -14725,7 +14869,8 @@ class StampEditor extends _editor.AnnotationEditor {
       rect,
       bitmapUrl,
       bitmapId,
-      isSvg
+      isSvg,
+      accessibilityData
     } = data;
     if (bitmapId && uiManager.imageManager.isValidId(bitmapId)) {
       editor.#bitmapId = bitmapId;
@@ -14736,6 +14881,9 @@ class StampEditor extends _editor.AnnotationEditor {
     const [parentWidth, parentHeight] = editor.pageDimensions;
     editor.width = (rect[2] - rect[0]) / parentWidth;
     editor.height = (rect[3] - rect[1]) / parentHeight;
+    if (accessibilityData) {
+      editor.altTextData = accessibilityData;
+    }
     return editor;
   }
   serialize(isForCopying = false, context = null) {
@@ -14753,7 +14901,18 @@ class StampEditor extends _editor.AnnotationEditor {
     };
     if (isForCopying) {
       serialized.bitmapUrl = this.#serializeBitmap(true);
+      serialized.accessibilityData = this.altTextData;
       return serialized;
+    }
+    const {
+      decorative,
+      altText
+    } = this.altTextData;
+    if (!decorative && altText) {
+      serialized.accessibilityData = {
+        type: "Figure",
+        alt: altText
+      };
     }
     if (context === null) {
       return serialized;
@@ -15077,8 +15236,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.11.63';
-const pdfjsBuild = '586d3add4';
+const pdfjsVersion = '3.11.131';
+const pdfjsBuild = 'a7894a4d7';
 })();
 
 /******/ 	return __webpack_exports__;

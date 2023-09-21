@@ -413,6 +413,49 @@ See https://github.com/adobe-type-tools/cmap-resources
             <button id="documentPropertiesClose" class="dialogButton"><span data-l10n-id="document_properties_close">Close</span></button>
           </div>
         </dialog>
+        <dialog id="altTextDialog" aria-labelledby="dialogLabel" aria-describedby="dialogDescription">
+          <div id="altTextContainer">
+            <div id="overallDescription">
+              <span id="dialogLabel" data-l10n-id="editor_alt_text_dialog_label" class="title">Choose an option</span>
+              <span id="dialogDescription" data-l10n-id="editor_alt_text_dialog_description">
+                Alt text (alternative text) helps when people can’t see the image or when it doesn’t load.
+              </span>
+            </div>
+            <div id="addDescription">
+              <div class="radio">
+                <div class="radioButton">
+                  <input type="radio" id="descriptionButton" name="altTextOption" tabindex="0" aria-describedby="descriptionAreaLabel" checked>
+                  <label for="descriptionButton" data-l10n-id="editor_alt_text_add_description_label">Add a description</label>
+                </div>
+                <div class="radioLabel">
+                  <span id="descriptionAreaLabel" data-l10n-id="editor_alt_text_add_description_description">
+                    Aim for 1-2 sentences that describe the subject, setting, or actions.
+                  </span>
+                </div>
+              </div>
+              <div class="descriptionArea">
+                <textarea id="descriptionTextarea" placeholder="For example, “A young man sits down at a table to eat a meal”" aria-labelledby="descriptionAreaLabel" data-l10n-id="editor_alt_text_textarea" tabindex="0"></textarea>
+              </div>
+            </div>
+            <div id="markAsDecorative">
+              <div class="radio">
+                <div class="radioButton">
+                  <input type="radio" id="decorativeButton" name="altTextOption" aria-describedby="decorativeLabel">
+                  <label for="decorativeButton" data-l10n-id="editor_alt_text_mark_decorative_label">Mark as decorative</label>
+                </div>
+                <div class="radioLabel">
+                  <span id="decorativeLabel" data-l10n-id="editor_alt_text_mark_decorative_description">
+                    This is used for ornamental images, like borders or watermarks.
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div id="buttons">
+              <button id="altTextCancel" tabindex="0"><span data-l10n-id="editor_alt_text_cancel_button">Cancel</span></button>
+              <button id="altTextSave" tabindex="0" disabled><span data-l10n-id="editor_alt_text_save_button">Save</span></button>
+            </div>
+          </div>
+        </dialog>
       </div>  <!-- dialogContainer -->
 
     </div> <!-- outerContainer -->

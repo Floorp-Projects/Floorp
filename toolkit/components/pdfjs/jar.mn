@@ -33,4 +33,5 @@ pdfjs.jar:
  content/web/images/	(content/web/images/cursor*.svg)
  content/web/images/	(content/web/images/findbar*.svg)
  content/web/images/	(content/web/images/loading*.svg)
+ content/web/images/	(content/web/images/altText*.svg)
 #endif
