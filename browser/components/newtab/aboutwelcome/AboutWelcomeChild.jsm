@@ -454,6 +454,9 @@ const SHOPPING_MICROSURVEY = {
       content: {
         position: "split",
         layout: "survey",
+        steps_indicator: {
+          string_id: "shopping-onboarding-welcome-steps-indicator-label",
+        },
         title: {
           string_id: "shopping-survey-headline",
         },
@@ -550,6 +553,9 @@ const SHOPPING_MICROSURVEY = {
       content: {
         position: "split",
         layout: "survey",
+        steps_indicator: {
+          string_id: "shopping-onboarding-welcome-steps-indicator-label",
+        },
         title: {
           string_id: "shopping-survey-headline",
         },

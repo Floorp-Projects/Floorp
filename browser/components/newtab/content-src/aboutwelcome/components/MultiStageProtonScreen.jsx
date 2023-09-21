@@ -359,7 +359,10 @@ export class ProtonScreen extends React.PureComponent {
       <div
         id="steps"
         className={`steps${content.progress_bar ? " progress-bar" : ""}`}
-        data-l10n-id={"onboarding-welcome-steps-indicator-label"}
+        data-l10n-id={
+          content.steps_indicator?.string_id ||
+          "onboarding-welcome-steps-indicator-label"
+        }
         data-l10n-args={JSON.stringify({
           current: currentStep,
           total: total ?? 0,

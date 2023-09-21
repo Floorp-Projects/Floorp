@@ -204,3 +204,10 @@ shopping-onboarding-not-now-button = Not now
 shopping-onboarding-dialog-close-button =
     .title = Close
     .aria-label = Close
+
+# Aria-label to make the "steps" of the shopping onboarding container visible to screen readers.
+# Variables:
+#   $current (Int) - Number of the current page
+#   $total (Int) - Total number of pages
+shopping-onboarding-welcome-steps-indicator-label =
+    .aria-label = Progress: step { $current } of { $total }
