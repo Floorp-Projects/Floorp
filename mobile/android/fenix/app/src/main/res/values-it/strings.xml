@@ -2339,7 +2339,7 @@
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Verifica qualità recensioni</string>
     <!-- Headline for review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_title">Prova la nostra guida per ottenere affidabili recensioni di prodotti</string>
+    <string name="review_quality_check_contextual_onboarding_title">Prova la nostra guida alle recensioni di prodotti</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">Scopri quanto sono affidabili le recensioni dei prodotti su %1$s prima di acquistarli. Verifica recensioni, una funzione sperimentale di %2$s, è integrata direttamente nel browser. Funziona anche su %3$s e %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2347,13 +2347,13 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ulteriori informazioni</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Selezionando “Sì, provalo” accetti l’%2$s e i %3$s di %1$s by Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption">Selezionando “Sì, provala” accetti l’%2$s e i %3$s di %1$s by Mozilla.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">informativa sulla privacy</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use">termini di utilizzo</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use">condizioni di utilizzo del servizio</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_primary_button_text">Sì, provalo</string>
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Sì, provala</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Non ora</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->

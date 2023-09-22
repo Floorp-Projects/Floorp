@@ -2251,6 +2251,16 @@
     <string name="review_quality_check_highlights_title">Mba’e iporãva marandu’i osẽramóvare</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Mba’éichapa jaikuaáta marandu’i iporãha</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Roipuru tembipurupyahu IA %s Mozilla rupive rohesa’ỹijo hag̃ua iporãpa marandu’i apopyregua. Ñehesa’ỹijo oipytyvõta roha’ã hag̃ua marandu’i porãngue, ndaha’éi apopyre porãngue.</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Rome’ẽ marandu’i peteĩteĩva apopyrépe <strong>papapy tai ndive</strong> A guive F peve.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Hechajey jeroviaha. Roguerovia marandu’i ouha joguaharaitégui ohejáva umi marandu’i oñanduháicha ha ñaña’ỹre.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Roikuaa oĩha marandu’i jeroviaha ha jerovia’ỹha.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Marandu’i jerovia’iveha. Roikuaa marandu’i ikatuha japu térã ou hechajeyhára iñañávagui.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Eikuaave ko’ãvare %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2292,6 +2302,8 @@
     <string name="review_quality_check_analysis_in_progress_warning_body">Kóva ipukukuaa 60 aravo’ive rupi.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">¡Aguyje emomarandúre!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Ndorohechajeykuaái ko marandu’i.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Marandu ojeporupotáma</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->

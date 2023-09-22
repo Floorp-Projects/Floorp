@@ -2272,9 +2272,9 @@
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Перевірка якості відгуку</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Перевірка якості відгуку</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Перевірка якості відгуку</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Це може тривати близько 60 секунд.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Це може тривати близько 60 секунд.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Дякуємо за повідомлення!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
@@ -2300,11 +2300,11 @@
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Перевірте зʼєднання з мережею, а потім спробуйте перезавантажити сторінку.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Ще немає інформації про ці відгуки</string>
+    <string name="review_quality_check_no_analysis_title">Ще немає інформації про ці відгуки</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Щоб дізнатися, чи надійні відгуки про цей товар, перевірте їхню якість. Це триватиме лише близько 60 секунд.</string>
+    <string name="review_quality_check_no_analysis_body">Щоб дізнатися, чи надійні відгуки про цей товар, перевірте їхню якість. Це триватиме лише близько 60 секунд.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Перевірити якість відгуку</string>
+    <string name="review_quality_check_no_analysis_link">Перевірити якість відгуку</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Спробуйте наш надійний путівник відгуками про товари</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2335,9 +2335,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Бета</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Відкрити перевірку якості відгуків</string>
+    <string name="review_quality_check_open_handle_content_description">Відкрити засіб перевірки відгуків</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Закрити перевірку якості відгуків</string>
+    <string name="review_quality_check_close_handle_content_description">Закрити засіб перевірки відгуків</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s із 5 зірок</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

@@ -65,6 +65,19 @@
        ስለግል አሰሳ የተለመዱ አፈ ታሪኮች
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">በዚህ መሳሪያ ላይ ምንም ዱካ አትተዉ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">ሁሉንም የግል መስኮቶችዎን ሲዘጉ %1$s ኩኪዎችዎን፣ ታሪክዎን እና የድረ-ገፅ ውሂብዎን ይሰርዛል። %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">የእኔን እንቅስቃሴ ማን ማየት ይችላል?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">አንዴ መታ በማድረግ ቀጣዩን የግል ትር አስጀምር።</string>
@@ -86,6 +99,11 @@
     <string name="tcp_cfr_message">የእኛ በጣም ኃይለኛ የግላዊነት ባህሪ ግን የድረ-ገጽ ተሻጋሪ መከታተያዎችን ያገላል።</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">ስለ አጠቃላይ የኩኪ ጥበቃ ይወቁ</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">አዲስ የግል ክፍለ ጊዜ ለመጀመር እዚህ ይንኩ። ታሪክዎን ፣ ኩኪዎችን - ሁሉንም ነገር ይሰርዙ።</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">የካሜራ ፈቃድ ያስፈልጋል። ወደ አንድሮይድ ቅንብሮች ይሂዱ፣ ፈቃዶችን ይንኩ እና ፍቀድን ይንኩ።</string>
@@ -220,6 +238,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">የመነሻ ማያ ገጽ</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">የአሰሳ ታሪክን አጥፋ</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">የተመረጠ ቋንቋ</string>
@@ -340,6 +361,18 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ማሳወቂያዎችን ያብሩ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">የFirefox መፈለጊያ መግብርን ይሞክሩ</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Firefox በመነሻ ማያ ገፅ ሲኖር፣ ድረ-ገፅ ተሻጋሪ መከታተያወችን የሚያግድ ፣ ግላዊነትን የሚያስቀድም አሳሽ በቀላሉ ማግኘት ይችላሉ።</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">የFirefox መግብርን ያክሉ</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1307,6 +1340,8 @@
     <string name="snackbar_private_tab_closed">የግል ትር ተዘግቷል</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">የግል ትሮች ተዘግተዋል</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">የግል አሰሳ ውሂብ ተሰርዟል</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ቀልብስ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -2117,6 +2152,144 @@
     <string name="experiments_snackbar">ውሂብ ለመላክ ቴሌሜትሪ ያንቁ።</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ወደ ቅንብሮች ይሂዱ</string>
+
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name">የግምገማ አረጋጋጭ</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">አስተማማኝ ግምገማዎች</string>
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">አስተማማኝ እና የማይታመኑ ግምገማዎች ድብልቅ</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">የማይታመኑ ግምገማዎች</string>
+    <!-- Text for title presenting the reliability of a product's reviews. -->
+    <string name="review_quality_check_grade_title">እነዚህ ግምገማዎች ምን ያህል አስተማማኝ ናቸው?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">የተስተካከለ ደረጃ</string>
+    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
+    <string name="review_quality_check_adjusted_rating_description">የማይታመኑ ግምገማዎች ተወግደዋል</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">ከቅርብ ግዜ ግምገማዎች ዋና ዋናዎቹ</string>
+    <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
+    <string name="review_quality_check_explanation_title">የግምገማ ጥራትን እንዴት እንደምንወስን</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">የምርት ግምገማዎችን አስተማማኝነት ለማረጋገጥ AI ቴክኖሎጂን ከ%s በMozilla እንጠቀማለን። ይህ እርስዎ የግምገማ ጥራትን ብቻ እንጂ የምርት ጥራትን እንዲገመግሙ አይረዳወትም።</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[የእያንዳንዱን ምርት ግምገማዎች በ<b>ፊደል ደረጃ</b> ከሀ እስከ ረ እንመድባለን።]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">አስተማማኝ ግምገማዎች። ግምገማዎቹ ሐቀኛ፣ አድልዎ የለሽ ግምገማዎችን ትተው ከወጡ እውነተኛ ደንበኞች ሊሆኑ እንደሚችሉ እናምናለን።</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">አስተማማኝ እና የማይታመኑ ግምገማዎች ድብልቅ እንዳለ እናምናለን።</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">የማይታመኑ ግምገማዎች። ግምገማዎቹ የሐሰት ወይም አድሏዊ ከሆኑ ገምጋሚዎች ናቸው ብለን እናምናለን።</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[የ<b>የተስተካከለ ደረጃ</b> አስተማማኝ ናቸው ብለን ባመንባቸው ግምገማዎች ላይ ብቻ የተመሰረተ ነው።]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>ዋና ዋናዎቹ</b> አስተማማኝ ናቸው ብለን የምናምንባቸው ባለፉት 80 ቀናት ውስጥ ከ%s ግምገማዎች የተገኙ ናቸው።]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">ስለ%s የበለጠ ይወቁ።</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">%s በሞዚላ እንዴት የግምገማ ጥራት እንደሚወስን</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">ቅንብሮች</string>
+    <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
+    <string name="review_quality_check_settings_recommended_products">በግምገማ አረጋጋጭ ውስጥ ማስታወቂያዎችን አሳይ</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">የበለጠ ለማወቅ</string>
+    <!-- Text for turning sidebar off button from review quality check settings section. -->
+    <string name="review_quality_check_settings_turn_off">የግምገማ አረጋጋጭን ያጥፉ</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">ሊታሰብበት የሚገባ ተጨማሪ</string>
+    <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">ማስታወቂያ በ%s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">የግምገማ አረጋጋጭ የተጎላበተው በ%s ነው።</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">የግምገማ አረጋጋጭ የተጎላበተው በ%s ነው</string>
+    <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s በሞዚላ</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">አሁን ያረጋግጡ</string>
+    <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_title">እስካሁን በቂ ግምገማዎች የሉም</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">ይህ ምርት ተጨማሪ ግምገማዎች ሲኖረው ጥራታቸውን ማረጋገጥ እንችላለን።</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">ምርቱ አይገኝም</string>
+
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">ይህ ምርት ወደ ክምችት እንደተመለሰ ካዩ፣ ሪፖርት ያድርጉት እና ግምገማዎቹን ለማየት እንሰራለን።</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">ይህ ምርት ወደ ክምችት መመለሱን ሪፖርት ያድርጉ</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">የግምገማ ጥራት በመፈተሽ ላይ</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title">የግምገማ ጥራት በመፈተሽ ላይ</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">ይህ ወደ 60 ሰከንድ ሊወስድ ይችላል።</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">ሪፖርት ስላደረጉ እናመሰግናለን!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">እነዚህን ግምገማዎች ማረጋገጥ አንችልም</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">መረጃ በቅርቡ ይመጣል</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">በ24 ሰዓታት ውስጥ ስለዚህ ምርት ግምገማዎች መረጃ ሊኖረን ይገባል። እባክዎን ተመልሰው ያረጋግጡ።</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">ትንታኔው ወቅታዊ ነው</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">ገባኝ</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title">አሁን ምንም መረጃ የለም</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body">ችግሩን ለመፍታት እየሰራን ነው። እባክዎ በቅርቡ ተመልሰው ያረጋግጡ።</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title">ምንም የአውታረ መረብ ግንኙነት የለም</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">የአውታረ መረብ ግንኙነትዎን ያረጋግጡ እና ከዚያ ገጹን እንደገና ለመጫን ይሞክሩ።</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">ስለእነዚህ ግምገማዎች እስካሁን ምንም መረጃ የለም</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">የዚህ ምርት ግምገማዎች አስተማማኝ መሆናቸውን ለማወቅ የግምገማውን ጥራት ያረጋግጡ። ወደ 60 ሰከንድ ብቻ ነው የሚወስደው።</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link">የግምገማውን ጥራት ያረጋግጡ</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">የበለጠ ለማወቅ</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">የግላዊነት ፖሊሲ</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">የአጠቃቀም መመሪያ</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">አሁን አይሆንም</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">ከመግዛትዎ በፊት — የዚህን ምርት ግምገማዎች ማመን እንደሚችሉ ይወቁ።</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">የግምገማ አረጋጋጭን ይሞክሩት</string>
+
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">እነዚህ ግምገማዎች አስተማማኝ ናቸው? የተስተካከለ ደረጃን ለማየት አሁን ያረጋግጡ።</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">የግምገማ አረጋጋጭን ይክፈቱ</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_open_handle_content_description">የግምገማ አረጋጋጭን ይክፈቱ</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_close_handle_content_description">የግምገማ አረጋጋጭን ዝጋ</string>
+    <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
+    <string name="review_quality_check_star_rating_content_description">%1$s ከ5 ኮከቦች</string>
+    <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
+    <string name="review_quality_check_highlights_show_less">ያነሰ አሳይ</string>
+    <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
+    <string name="review_quality_check_highlights_show_more">ተጨማሪ አሳይ</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">ጥራት</string>
+    <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
+    <string name="review_quality_check_highlights_type_price">ዋጋ</string>
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">ማጓጓዣ</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">ማሸጊያ እና ገፅታ</string>
+    <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
+    <string name="review_quality_check_highlights_type_competitiveness">ተወዳዳሪነት</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

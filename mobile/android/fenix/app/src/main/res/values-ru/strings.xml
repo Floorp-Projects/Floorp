@@ -195,7 +195,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дополнения</string>
     <!-- Browser menu button that opens account settings -->
-    <string name="browser_menu_account_settings">Ваша учётка</string>
+    <string name="browser_menu_account_settings">Ваш аккаунт</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Дополнения отсутствуют</string>
     <!-- Browser menu button that sends a user to help articles -->
