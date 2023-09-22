@@ -26,13 +26,11 @@ export var TabManager = {
     const browsers = [];
 
     for (const win of this.windows) {
-      const tabBrowser = this.getTabBrowser(win);
-
-      if (tabBrowser && tabBrowser.tabs) {
-        const contentBrowsers = tabBrowser.tabs.map(tab => {
-          return this.getBrowserForTab(tab);
-        });
-        browsers.push(...contentBrowsers);
+      for (const tab of this.getTabsForWindow(win)) {
+        const contentBrowser = this.getBrowserForTab(tab);
+        if (contentBrowser !== null) {
+          browsers.push(contentBrowser);
+        }
       }
     }
 
@@ -57,16 +55,12 @@ export var TabManager = {
     const browserIds = [];
 
     for (const win of this.windows) {
-      const tabBrowser = this.getTabBrowser(win);
-
       // Only return handles for browser windows
-      if (tabBrowser && tabBrowser.tabs) {
-        for (const tab of tabBrowser.tabs) {
-          const contentBrowser = this.getBrowserForTab(tab);
-          const winId = this.getIdForBrowser(contentBrowser);
-          if (winId !== null) {
-            browserIds.push(winId);
-          }
+      for (const tab of this.getTabsForWindow(win)) {
+        const contentBrowser = this.getBrowserForTab(tab);
+        const winId = this.getIdForBrowser(contentBrowser);
+        if (winId !== null) {
+          browserIds.push(winId);
         }
       }
     }
@@ -143,11 +137,11 @@ export var TabManager = {
       window = this.getWindowForTab(referenceTab);
     }
 
-    const tabBrowser = this.getTabBrowser(window);
     if (referenceTab != null) {
-      index = tabBrowser.tabs.indexOf(referenceTab) + 1;
+      index = this.getTabsForWindow(window).indexOf(referenceTab) + 1;
     }
 
+    const tabBrowser = this.getTabBrowser(window);
     const tab = await tabBrowser.addTab("about:blank", {
       index,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -177,13 +171,10 @@ export var TabManager = {
    */
   getBrowserById(id) {
     for (const win of this.windows) {
-      const tabBrowser = this.getTabBrowser(win);
-      if (tabBrowser && tabBrowser.tabs) {
-        for (let i = 0; i < tabBrowser.tabs.length; ++i) {
-          const contentBrowser = this.getBrowserForTab(tabBrowser.tabs[i]);
-          if (this.getIdForBrowser(contentBrowser) == id) {
-            return contentBrowser;
-          }
+      for (const tab of this.getTabsForWindow(win)) {
+        const contentBrowser = this.getBrowserForTab(tab);
+        if (this.getIdForBrowser(contentBrowser) == id) {
+          return contentBrowser;
         }
       }
     }
@@ -286,12 +277,8 @@ export var TabManager = {
     let count = 0;
     for (const win of this.windows) {
       // For browser windows count the tabs. Otherwise take the window itself.
-      const tabbrowser = this.getTabBrowser(win);
-      if (tabbrowser?.tabs) {
-        count += tabbrowser.tabs.length;
-      } else {
-        count += 1;
-      }
+      const tabsLength = this.getTabsForWindow(win).length;
+      count += tabsLength ? tabsLength : 1;
     }
     return count;
   },
