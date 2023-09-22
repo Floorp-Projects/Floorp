@@ -528,3 +528,24 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 #select-floorp__tst {
   display: none;
 }
+
+#tabbrowser-tabpanels {
+  display: flex !important;
+}
+
+#tabbrowser-tabpanels > * {
+  flex: 0;
+}
+
+.deck-selected {
+  flex: 1 !important;
+  order: 1 !important;
+}
+
+.deck-selected[splitview="right"] {
+  order: 3 !important;
+}
+
+.deck-selected[splitview="left"] {
+  order: 0 !important;
+}

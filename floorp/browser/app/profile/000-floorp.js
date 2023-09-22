@@ -163,8 +163,11 @@ pref("floorp.newtab.overrides.newtaburl", "");
 //Portable
 pref("floorp.portable.isUpdate", false);
 
+// privateContainer
 pref("floorp.privateContainer.enabled", true);
 
+// Split View
+pref("floorp.browser.splitView.enabled", true);
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //ブックマークツールバー

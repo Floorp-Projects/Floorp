@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-manager-sidebar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-splitView.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-toolbar-features.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-statusbar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);
