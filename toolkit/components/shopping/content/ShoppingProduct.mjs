@@ -424,8 +424,8 @@ export class ShoppingProduct {
       console.error(error);
     }
 
-    // Retry failed results and 500 errors.
-    if (!result || (!responseOk && responseStatus >= 500)) {
+    // Retry 500 errors.
+    if (!responseOk && responseStatus >= 500) {
       failCount++;
       // Make sure we still want to retry
       if (failCount > maxRetries) {
