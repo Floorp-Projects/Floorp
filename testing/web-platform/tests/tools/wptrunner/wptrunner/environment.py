@@ -280,8 +280,13 @@ class TestEnvironment:
             if not pending:
                 return
             time.sleep(each_sleep_secs)
-        raise OSError("Servers failed to start: %s" %
-                      ", ".join("%s:%s" % item for item in failed))
+        if failed:
+            failures = ", ".join(f"{scheme}:{port}" for scheme, port in failed)
+            msg = f"Servers failed to start: {failures}"
+        else:
+            pending = ", ".join(f"{scheme}:{port}" for scheme, port in pending)
+            msg = f"Timed out wait for servers to start: {pending}"
+        raise OSError(msg)
 
     def test_servers(self):
         failed = []
@@ -304,7 +309,7 @@ class TestEnvironment:
                     try:
                         s.connect((host, port))
                     except OSError:
-                        pending.append((host, port))
+                        pending.append((scheme, port))
                     finally:
                         s.close()
 
