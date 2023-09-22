@@ -94,22 +94,57 @@ AudioTimelineEvent::~AudioTimelineEvent() {
   }
 }
 
+template <class TimeType>
+float AudioEventTimeline::ComputeSetTargetStartValue(
+    const AudioTimelineEvent* aPreviousEvent, TimeType aTime) {
+  mSetTargetStartTime = aTime;
+  mSetTargetStartValue =
+      GetValuesAtTimeHelperInternal(aTime, aPreviousEvent, nullptr);
+  return mSetTargetStartValue;
+}
+
 template void AudioEventTimeline::CleanupEventsOlderThan(double);
 template void AudioEventTimeline::CleanupEventsOlderThan(int64_t);
 template <class TimeType>
 void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
-  while (mEvents.Length() > 1 && aTime > mEvents[1].Time<TimeType>()) {
-    if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
-      mSetTargetStartValue = GetValuesAtTimeHelperInternal(
-          mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
-    }
+  auto TimeOf =
+      [](const decltype(mEvents)::const_iterator& aEvent) -> TimeType {
+    return aEvent->Time<TimeType>();
+  };
 
-    MOZ_ASSERT(!mEvents[0].mTrack,
+  // Find first event to keep.  Keep one event prior to aTime.
+  auto begin = mEvents.cbegin();
+  auto end = mEvents.cend();
+  auto event = begin + 1;
+  for (; event < end && aTime > TimeOf(event); ++event) {
+    MOZ_ASSERT(!(event - 1)->mTrack,
                "AudioParam tracks should never be destroyed on the real-time "
                "thread.");
-    JS::AutoSuppressGCAnalysis suppress;
-    mEvents.RemoveElementAt(0);
   }
+  auto firstToKeep = event - 1;
+  if (firstToKeep == begin) {
+    return;
+  }
+
+  // If the firstToKeep event is a SetTarget, then set its initial value if
+  // not already set.  First find the most recent event where the value at the
+  // end time of the event is known, either from the event or for SetTarget
+  // events because it has already been calculated.  This may not have been
+  // calculated if GetValuesAtTime() was not called for the start time of the
+  // SetTarget event.
+  for (event = firstToKeep;
+       event > begin && event->mType == AudioTimelineEvent::SetTarget &&
+       TimeOf(event) > mSetTargetStartTime.Get<TimeType>();
+       --event) {
+  }
+  // Compute SetTarget start times.
+  for (; event < firstToKeep; ++event) {
+    MOZ_ASSERT((event + 1)->mType == AudioTimelineEvent::SetTarget);
+    ComputeSetTargetStartValue(&*event, TimeOf(event + 1));
+  }
+
+  JS::AutoSuppressGCAnalysis suppress;  // for null mTrack
+  mEvents.RemoveElementsRange(begin, firstToKeep);
 }
 
 // This method computes the AudioParam value at a given time based on the event
@@ -184,9 +219,7 @@ float AudioEventTimeline::GetValueAtTimeOfEvent(
   switch (aEvent->mType) {
     case AudioTimelineEvent::SetTarget:
       // Start the curve, from the last value of the previous event.
-      mSetTargetStartValue =
-          GetValuesAtTimeHelperInternal(time, aPrevious, nullptr);
-      return mSetTargetStartValue;
+      return ComputeSetTargetStartValue(aPrevious, time);
     case AudioTimelineEvent::SetValueCurve:
       // SetValueCurve events can be handled no matter what their event
       // node is (if they have one)
