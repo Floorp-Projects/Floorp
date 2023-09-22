@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+@import 'chrome://global/skin/design-system/tokens-brand.css';
 #feature-callout {
   --fc-background: var(--fc-background-light, #fff);
   --fc-color: var(--fc-color-light, rgb(21, 20, 26));
@@ -938,10 +939,6 @@ html {
   height: 100%;
   min-height: 500px;
   overflow: hidden;
-  --link-color: var(--in-content-primary-button-background);
-  --link-color-hover: var(--in-content-primary-button-background-hover);
-  --link-color-active: var(--in-content-primary-button-background-active);
-  --link-color-visited: var(--link-color);
 }
 .onboardingContainer .screen.light-text {
   --in-content-page-color: rgb(251, 251, 254);
@@ -1104,6 +1101,11 @@ html {
 .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.cta-link:active {
   color: var(--link-color-active);
 }
+@media (prefers-contrast) {
+  .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.cta-link:active {
+    text-decoration: none;
+  }
+}
 .onboardingContainer .screen[pos=center].addons-picker .main-content .additional-cta.secondary:hover {
   background-color: var(--in-content-button-background-hover);
 }
@@ -1186,6 +1188,11 @@ html {
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:active {
   color: var(--link-color-active);
+}
+@media (prefers-contrast) {
+  .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:active {
+    text-decoration: none;
+  }
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta.top button {
   color: #FFF;
@@ -1306,6 +1313,11 @@ html {
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
   color: var(--link-color-active);
+}
+@media (prefers-contrast) {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
+    text-decoration: none;
+  }
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
   background-color: var(--in-content-button-background-hover);
@@ -1680,6 +1692,11 @@ html {
 .onboardingContainer .text-link:active {
   color: var(--link-color-active);
 }
+@media (prefers-contrast) {
+  .onboardingContainer .text-link:active {
+    text-decoration: none;
+  }
+}
 .onboardingContainer .welcome-text {
   display: flex;
   flex-direction: column;
@@ -1955,6 +1972,11 @@ html {
 }
 .onboardingContainer .mobile-downloads .email-link:active {
   color: var(--link-color-active);
+}
+@media (prefers-contrast) {
+  .onboardingContainer .mobile-downloads .email-link:active {
+    text-decoration: none;
+  }
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
   background: none;
