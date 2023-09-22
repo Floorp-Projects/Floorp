@@ -16,7 +16,7 @@ test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX)
 	@echo === Use --disable-elf-hack until this is fixed.
 	@echo ===
 	# Fail if the library doesn't have $(DT_TYPE) .dynamic info
-	$(READELF) -d $@ | grep '($(DT_TYPE))'
+	$(READELF) -d $@ | grep '\b$(DT_TYPE)\b'
 	@rm -f $@.bak
 	$(CURDIR)/elfhack -b -f $@
 	# Fail if the backup file doesn't exist
