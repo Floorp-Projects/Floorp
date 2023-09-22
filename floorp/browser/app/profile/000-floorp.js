@@ -167,7 +167,7 @@ pref("floorp.portable.isUpdate", false);
 pref("floorp.privateContainer.enabled", true);
 
 // Split View
-pref("floorp.browser.splitView.enabled", true);
+pref("floorp.browser.splitView.enabled", false);
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //ブックマークツールバー
