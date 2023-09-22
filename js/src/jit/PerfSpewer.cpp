@@ -1019,13 +1019,63 @@ void PerfSpewer::saveProfile(JitCode* code, UniqueChars& desc,
   CollectJitCodeInfo(desc, code, profilerRecord, lock);
 }
 
+IonICPerfSpewer::IonICPerfSpewer(jsbytecode* pc) {
+  if (!opcodes_.emplaceBack(pc)) {
+    AutoLockPerfSpewer lock;
+    opcodes_.clear();
+    DisablePerfSpewer(lock);
+  }
+}
+
+void IonICPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                            JS::JitCodeRecord* profilerRecord,
+                                            AutoLockPerfSpewer& lock) {
+#ifdef JS_ION_PERF
+  MOZ_ASSERT(opcodes_.length() == 1);
+  jsbytecode* pc = opcodes_[0].bytecodepc;
+
+  if (!pc) {
+    return;
+  }
+
+  const char* filename = script->filename();
+  if (!filename) {
+    return;
+  }
+
+  if (!IsPerfProfiling() || !FileExists(filename)) {
+    return;
+  }
+
+  JitDumpDebugRecord debug_record = {};
+  uint64_t n_records = 1;
+
+  debug_record.header.id = JIT_CODE_DEBUG_INFO;
+  debug_record.header.total_size =
+      sizeof(debug_record) +
+      n_records * (sizeof(JitDumpDebugEntry) + strlen(filename) + 1);
+
+  debug_record.header.timestamp = GetMonotonicTimestamp();
+  debug_record.code_addr = uint64_t(code->raw());
+  debug_record.nr_entry = n_records;
+
+  WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
+
+  uint32_t lineno;
+  JS::LimitedColumnNumberZeroOrigin colno;
+  lineno = PCToLineNumber(script, pc, &colno);
+
+  WriteJitDumpDebugEntry(uint64_t(code->raw()), filename, lineno, colno, lock);
+#endif
+}
+
 void IonICPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
                                   JitCode* code, const char* stubName) {
   if (!PerfEnabled()) {
     return;
   }
   UniqueChars desc = GetFunctionDesc("IonIC", cx, script, stubName);
-  PerfSpewer::saveProfile(code, desc, nullptr);
+  PerfSpewer::saveProfile(code, desc, script);
 }
 
 void BaselineICPerfSpewer::saveProfile(JitCode* code, const char* stubName) {

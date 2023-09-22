@@ -54,7 +54,8 @@ IonCacheIRCompiler::IonCacheIRCompiler(JSContext* cx, TempAllocator& alloc,
       ic_(ic),
       ionScript_(ionScript),
       savedLiveRegs_(false),
-      localTracingSlots_(0) {
+      localTracingSlots_(0),
+      perfSpewer_(ic->pc()) {
   MOZ_ASSERT(ic_);
   MOZ_ASSERT(ionScript_);
 }
