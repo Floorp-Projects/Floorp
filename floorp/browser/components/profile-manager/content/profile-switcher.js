@@ -167,7 +167,7 @@ function display(profileData) {
     let currentProfile = document.createElement("description");
     currentProfile.className = "current";
     currentProfile.classList.add("tip-caption");
-    document.l10n.setAttributes(currentProfile, "profiles-current-profile");
+    document.l10n.setAttributes(currentProfile, "floorp-profiles-in-use");
     div.appendChild(currentProfile);
   } else if (profileData.isInUse) {
     let currentProfile = document.createElement("description");
