@@ -1522,9 +1522,6 @@ void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
 }
 
 bool PresShell::FixUpFocus() {
-  if (!StaticPrefs::dom_focus_fixup()) {
-    return false;
-  }
   if (NS_WARN_IF(!mDocument)) {
     return false;
   }
