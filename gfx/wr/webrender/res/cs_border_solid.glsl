@@ -15,7 +15,7 @@ flat varying mediump vec4 vColor1;
 
 // A point + tangent defining the line where the edge
 // transition occurs. Used for corners only.
-flat varying mediump vec4 vColorLine;
+flat varying highp vec4 vColorLine;
 
 // A boolean indicating that we should be mixing between edge colors.
 // Packed in to a vector to work around bug 1630356.
