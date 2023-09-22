@@ -403,6 +403,10 @@ class AudioEventTimeline {
 
   static bool IsValid(double value) { return std::isfinite(value); }
 
+  template <class TimeType>
+  float ComputeSetTargetStartValue(const AudioTimelineEvent* aPreviousEvent,
+                                   TimeType aTime);
+
   // This is a sorted array of the events in the timeline.  Queries of this
   // data structure should probably be more frequent than modifications to it,
   // and that is the reason why we're using a simple array as the data
@@ -413,6 +417,7 @@ class AudioEventTimeline {
   // This is the value of this AudioParam at the end of the previous
   // event for SetTarget curves.
   float mSetTargetStartValue;
+  AudioTimelineEvent::TimeUnion mSetTargetStartTime;
 };
 
 }  // namespace dom
