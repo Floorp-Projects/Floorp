@@ -75,7 +75,7 @@ class ComposeHistoryTest {
     }
 
     @Test
-    fun noHistoryItemsInCacheTest() {
+    fun verifyEmptyHistoryMenuTest() {
         homeScreen {
         }.openThreeDotMenu {
             verifyHistoryButton()
@@ -87,8 +87,9 @@ class ComposeHistoryTest {
 
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
+    @SmokeTest
     @Test
-    fun visitedUrlHistoryTest() {
+    fun verifyHistoryMenuWithHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -104,6 +105,7 @@ class ComposeHistoryTest {
                 verifyVisitedTimeTitle()
                 verifyFirstTestPageTitle("Test_Page_1")
                 verifyTestPageUrl(firstWebPage.url)
+                verifyDeleteHistoryItemButton("Test_Page_1")
             }
         }
     }
@@ -125,50 +127,6 @@ class ComposeHistoryTest {
             }
             verifyDeleteSnackbarText("Deleted")
             verifyEmptyHistoryView()
-        }
-    }
-
-    @Test
-    fun undoDeleteHistoryItemTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            mDevice.waitForIdle()
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyHistoryListExists()
-            registerAndCleanupIdlingResources(
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1),
-            ) {
-                clickDeleteHistoryButton(firstWebPage.url.toString())
-            }
-            verifyUndoDeleteSnackBarButton()
-            clickUndoDeleteButton()
-            verifyHistoryItemExists(true, firstWebPage.url.toString())
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun cancelDeleteAllHistoryTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            mDevice.waitForIdle()
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyHistoryListExists()
-            registerAndCleanupIdlingResources(
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1),
-            ) {
-                clickDeleteAllHistoryButton()
-            }
-            verifyDeleteConfirmationMessage()
-            selectEverythingOption()
-            cancelDeleteHistory()
-            verifyHistoryItemExists(true, firstWebPage.url.toString())
         }
     }
 
@@ -226,7 +184,7 @@ class ComposeHistoryTest {
 
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
-    fun openHistoryInNewTabTest() {
+    fun openMultipleSelectedHistoryItemsInANewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -255,7 +213,7 @@ class ComposeHistoryTest {
     }
 
     @Test
-    fun openHistoryInPrivateTabTest() {
+    fun openMultipleSelectedHistoryItemsInPrivateTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -280,7 +238,7 @@ class ComposeHistoryTest {
     }
 
     @Test
-    fun deleteMultipleSelectionTest() {
+    fun deleteMultipleSelectedHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
@@ -314,7 +272,7 @@ class ComposeHistoryTest {
     }
 
     @Test
-    fun shareButtonTest() {
+    fun shareMultipleSelectedHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

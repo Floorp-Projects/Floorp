@@ -82,6 +82,9 @@ class HistoryRobot {
         deleteButton(item).click()
     }
 
+    fun verifyDeleteHistoryItemButton(historyItemTitle: String) =
+        deleteButton(historyItemTitle).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
     fun clickDeleteAllHistoryButton() = deleteButton().click()
 
     fun selectEverythingOption() = deleteHistoryEverythingOption().click()
