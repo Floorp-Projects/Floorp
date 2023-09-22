@@ -118,6 +118,26 @@ using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ThreadsafeContentParentHandle;
 
+// A PBackgroundParent is a normal "content" actor if both the parent
+// side lives in the parent process and it either connects in-process, or
+// to a content process.
+static bool IsContentActor(PBackgroundParent* aActor) {
+  return XRE_IsParentProcess() &&
+         (!BackgroundParent::IsOtherProcessActor(aActor) ||
+          BackgroundParent::GetContentParentHandle(aActor));
+}
+
+// The parent side of socket bridge actors is always in the socket process.
+static bool IsSocketBridgeActor(PBackgroundParent* aActor) {
+  return XRE_IsSocketProcess();
+}
+
+// The parent side of socket actors is the parent process, and it must
+// not have a content process.
+static bool IsSocketActor(PBackgroundParent* aActor) {
+  return XRE_IsParentProcess() && !IsContentActor(aActor);
+}
+
 BackgroundParentImpl::BackgroundParentImpl() {
   AssertIsInMainOrSocketProcess();
 
@@ -139,6 +159,10 @@ void BackgroundParentImpl::ActorDestroy(ActorDestroyReason aWhy) {
 already_AddRefed<net::PBackgroundDataBridgeParent>
 BackgroundParentImpl::AllocPBackgroundDataBridgeParent(
     const uint64_t& aChannelID) {
+  if (!IsSocketBridgeActor(this)) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(XRE_IsSocketProcess(), "Should be in socket process");
   AssertIsOnBackgroundThread();
 
@@ -149,6 +173,10 @@ BackgroundParentImpl::AllocPBackgroundDataBridgeParent(
 
 BackgroundParentImpl::PBackgroundTestParent*
 BackgroundParentImpl::AllocPBackgroundTestParent(const nsACString& aTestArg) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -157,6 +185,10 @@ BackgroundParentImpl::AllocPBackgroundTestParent(const nsACString& aTestArg) {
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBackgroundTestConstructor(
     PBackgroundTestParent* aActor, const nsACString& aTestArg) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -180,6 +212,10 @@ bool BackgroundParentImpl::DeallocPBackgroundTestParent(
 auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
     const LoggingInfo& aLoggingInfo)
     -> already_AddRefed<PBackgroundIDBFactoryParent> {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   using mozilla::dom::indexedDB::AllocPBackgroundIDBFactoryParent;
 
   AssertIsInMainOrSocketProcess();
@@ -191,6 +227,10 @@ auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
     PBackgroundIDBFactoryParent* aActor, const LoggingInfo& aLoggingInfo) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   using mozilla::dom::indexedDB::RecvPBackgroundIDBFactoryConstructor;
 
   AssertIsInMainOrSocketProcess();
@@ -205,6 +245,10 @@ BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
 
 auto BackgroundParentImpl::AllocPBackgroundIndexedDBUtilsParent()
     -> PBackgroundIndexedDBUtilsParent* {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -222,6 +266,10 @@ bool BackgroundParentImpl::DeallocPBackgroundIndexedDBUtilsParent(
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvFlushPendingFileDeletions() {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -235,6 +283,10 @@ BackgroundParentImpl::PBackgroundSDBConnectionParent*
 BackgroundParentImpl::AllocPBackgroundSDBConnectionParent(
     const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -247,6 +299,10 @@ BackgroundParentImpl::RecvPBackgroundSDBConnectionConstructor(
     PBackgroundSDBConnectionParent* aActor,
     const PersistenceType& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -271,6 +327,10 @@ BackgroundParentImpl::PBackgroundLSDatabaseParent*
 BackgroundParentImpl::AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
     const uint64_t& aDatastoreId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -282,6 +342,10 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundLSDatabaseConstructor(
     PBackgroundLSDatabaseParent* aActor, const PrincipalInfo& aPrincipalInfo,
     const uint32_t& aPrivateBrowsingId, const uint64_t& aDatastoreId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -305,6 +369,10 @@ bool BackgroundParentImpl::DeallocPBackgroundLSDatabaseParent(
 BackgroundParentImpl::PBackgroundLSObserverParent*
 BackgroundParentImpl::AllocPBackgroundLSObserverParent(
     const uint64_t& aObserverId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -314,6 +382,10 @@ BackgroundParentImpl::AllocPBackgroundLSObserverParent(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundLSObserverConstructor(
     PBackgroundLSObserverParent* aActor, const uint64_t& aObserverId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -337,6 +409,10 @@ bool BackgroundParentImpl::DeallocPBackgroundLSObserverParent(
 BackgroundParentImpl::PBackgroundLSRequestParent*
 BackgroundParentImpl::AllocPBackgroundLSRequestParent(
     const LSRequestParams& aParams) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -346,6 +422,10 @@ BackgroundParentImpl::AllocPBackgroundLSRequestParent(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundLSRequestConstructor(
     PBackgroundLSRequestParent* aActor, const LSRequestParams& aParams) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -368,6 +448,10 @@ bool BackgroundParentImpl::DeallocPBackgroundLSRequestParent(
 BackgroundParentImpl::PBackgroundLSSimpleRequestParent*
 BackgroundParentImpl::AllocPBackgroundLSSimpleRequestParent(
     const LSSimpleRequestParams& aParams) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -378,6 +462,10 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundLSSimpleRequestConstructor(
     PBackgroundLSSimpleRequestParent* aActor,
     const LSSimpleRequestParams& aParams) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -402,6 +490,10 @@ BackgroundParentImpl::PBackgroundLocalStorageCacheParent*
 BackgroundParentImpl::AllocPBackgroundLocalStorageCacheParent(
     const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,
     const uint32_t& aPrivateBrowsingId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -414,6 +506,10 @@ BackgroundParentImpl::RecvPBackgroundLocalStorageCacheConstructor(
     PBackgroundLocalStorageCacheParent* aActor,
     const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,
     const uint32_t& aPrivateBrowsingId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -434,6 +530,10 @@ bool BackgroundParentImpl::DeallocPBackgroundLocalStorageCacheParent(
 auto BackgroundParentImpl::AllocPBackgroundStorageParent(
     const nsAString& aProfilePath, const uint32_t& aPrivateBrowsingId)
     -> PBackgroundStorageParent* {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -444,6 +544,10 @@ auto BackgroundParentImpl::AllocPBackgroundStorageParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBackgroundStorageConstructor(
     PBackgroundStorageParent* aActor, const nsAString& aProfilePath,
     const uint32_t& aPrivateBrowsingId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -464,6 +568,10 @@ bool BackgroundParentImpl::DeallocPBackgroundStorageParent(
 already_AddRefed<BackgroundParentImpl::PBackgroundSessionStorageManagerParent>
 BackgroundParentImpl::AllocPBackgroundSessionStorageManagerParent(
     const uint64_t& aTopContextId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -472,6 +580,10 @@ BackgroundParentImpl::AllocPBackgroundSessionStorageManagerParent(
 
 already_AddRefed<mozilla::dom::PBackgroundSessionStorageServiceParent>
 BackgroundParentImpl::AllocPBackgroundSessionStorageServiceParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -482,6 +594,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateFileSystemManagerParent(
     const PrincipalInfo& aPrincipalInfo,
     Endpoint<PFileSystemManagerParent>&& aParentEndpoint,
     CreateFileSystemManagerParentResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
@@ -496,6 +612,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateWebTransportParent(
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     CreateWebTransportParentResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
@@ -510,6 +630,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateWebTransportParent(
 
 already_AddRefed<PIdleSchedulerParent>
 BackgroundParentImpl::AllocPIdleSchedulerParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsOnBackgroundThread();
   RefPtr<IdleSchedulerParent> actor = new IdleSchedulerParent();
   return actor.forget();
@@ -518,6 +642,10 @@ BackgroundParentImpl::AllocPIdleSchedulerParent() {
 dom::PRemoteWorkerControllerParent*
 BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
     const dom::RemoteWorkerData& aRemoteWorkerData) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<dom::RemoteWorkerControllerParent> actor =
       new dom::RemoteWorkerControllerParent(aRemoteWorkerData);
   return actor.forget().take();
@@ -526,6 +654,10 @@ BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
 IPCResult BackgroundParentImpl::RecvPRemoteWorkerControllerConstructor(
     dom::PRemoteWorkerControllerParent* aActor,
     const dom::RemoteWorkerData& aRemoteWorkerData) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   MOZ_ASSERT(aActor);
 
   return IPC_OK();
@@ -540,11 +672,19 @@ bool BackgroundParentImpl::DeallocPRemoteWorkerControllerParent(
 
 already_AddRefed<dom::PRemoteWorkerServiceParent>
 BackgroundParentImpl::AllocPRemoteWorkerServiceParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<dom::RemoteWorkerServiceParent>();
 }
 
 IPCResult BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(
     PRemoteWorkerServiceParent* aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   mozilla::dom::RemoteWorkerServiceParent* actor =
       static_cast<mozilla::dom::RemoteWorkerServiceParent*>(aActor);
 
@@ -563,6 +703,10 @@ mozilla::dom::PSharedWorkerParent*
 BackgroundParentImpl::AllocPSharedWorkerParent(
     const mozilla::dom::RemoteWorkerData& aData, const uint64_t& aWindowID,
     const mozilla::dom::MessagePortIdentifier& aPortIdentifier) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<dom::SharedWorkerParent> agent =
       new mozilla::dom::SharedWorkerParent();
   return agent.forget().take();
@@ -572,6 +716,10 @@ IPCResult BackgroundParentImpl::RecvPSharedWorkerConstructor(
     PSharedWorkerParent* aActor, const mozilla::dom::RemoteWorkerData& aData,
     const uint64_t& aWindowID,
     const mozilla::dom::MessagePortIdentifier& aPortIdentifier) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   mozilla::dom::SharedWorkerParent* actor =
       static_cast<mozilla::dom::SharedWorkerParent*>(aActor);
   actor->Initialize(aData, aWindowID, aPortIdentifier);
@@ -589,6 +737,10 @@ dom::PFileCreatorParent* BackgroundParentImpl::AllocPFileCreatorParent(
     const nsAString& aFullPath, const nsAString& aType, const nsAString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<dom::FileCreatorParent> actor = new dom::FileCreatorParent();
   return actor.forget().take();
 }
@@ -598,6 +750,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
     const nsAString& aType, const nsAString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   bool isFileRemoteType = false;
 
   // If the ContentParentHandle is null we are dealing with a same-process
@@ -633,11 +789,19 @@ bool BackgroundParentImpl::DeallocPFileCreatorParent(
 
 dom::PTemporaryIPCBlobParent*
 BackgroundParentImpl::AllocPTemporaryIPCBlobParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return new dom::TemporaryIPCBlobParent();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPTemporaryIPCBlobConstructor(
     dom::PTemporaryIPCBlobParent* aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   dom::TemporaryIPCBlobParent* actor =
       static_cast<dom::TemporaryIPCBlobParent*>(aActor);
   return actor->CreateAndShareFile();
@@ -651,6 +815,10 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
 
 already_AddRefed<BackgroundParentImpl::PVsyncParent>
 BackgroundParentImpl::AllocPVsyncParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -663,6 +831,10 @@ BackgroundParentImpl::AllocPVsyncParent() {
 }
 
 camera::PCamerasParent* BackgroundParentImpl::AllocPCamerasParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -678,6 +850,10 @@ camera::PCamerasParent* BackgroundParentImpl::AllocPCamerasParent() {
 #ifdef MOZ_WEBRTC
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPCamerasConstructor(
     camera::PCamerasParent* aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -701,6 +877,10 @@ bool BackgroundParentImpl::DeallocPCamerasParent(
 auto BackgroundParentImpl::AllocPUDPSocketParent(
     const Maybe<PrincipalInfo>& /* unused */, const nsACString& /* unused */)
     -> PUDPSocketParent* {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
 
   return p.forget().take();
@@ -709,6 +889,10 @@ auto BackgroundParentImpl::AllocPUDPSocketParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPUDPSocketConstructor(
     PUDPSocketParent* aActor, const Maybe<PrincipalInfo>& aOptionalPrincipal,
     const nsACString& aFilter) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -750,6 +934,10 @@ BackgroundParentImpl::AllocPVerifySSLServerCertParent(
     const Maybe<ByteArray>& aSctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
     const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
+  if (!IsSocketActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<mozilla::psm::VerifySSLServerCertParent> parent =
       new mozilla::psm::VerifySSLServerCertParent();
   return parent.forget();
@@ -764,6 +952,10 @@ BackgroundParentImpl::RecvPVerifySSLServerCertConstructor(
     const Maybe<ByteArray>& aSctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
     const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
+  if (!IsSocketActor(this)) {
+    return IPC_FAIL(this, "must be a socket actor");
+  }
+
   mozilla::psm::VerifySSLServerCertParent* authCert =
       static_cast<mozilla::psm::VerifySSLServerCertParent*>(aActor);
   if (!authCert->Dispatch(std::move(aPeerCertChain), aHostName, aPort,
@@ -781,6 +973,10 @@ BackgroundParentImpl::AllocPSelectTLSClientAuthCertParent(
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
     const nsTArray<ByteArray>& aCANames) {
+  if (!IsSocketActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<mozilla::psm::SelectTLSClientAuthCertParent> parent =
       new mozilla::psm::SelectTLSClientAuthCertParent();
   return parent.forget();
@@ -792,6 +988,10 @@ BackgroundParentImpl::RecvPSelectTLSClientAuthCertConstructor(
     const OriginAttributes& aOriginAttributes, const int32_t& aPort,
     const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
     const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames) {
+  if (!IsSocketActor(this)) {
+    return IPC_FAIL(this, "must be a socket actor");
+  }
+
   mozilla::psm::SelectTLSClientAuthCertParent* selectTLSClientAuthCertParent =
       static_cast<mozilla::psm::SelectTLSClientAuthCertParent*>(actor);
   if (!selectTLSClientAuthCertParent->Dispatch(
@@ -806,6 +1006,10 @@ mozilla::dom::PBroadcastChannelParent*
 BackgroundParentImpl::AllocPBroadcastChannelParent(
     const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,
     const nsAString& aChannel) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -881,6 +1085,10 @@ class CheckPrincipalRunnable final : public Runnable {
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBroadcastChannelConstructor(
     PBroadcastChannelParent* actor, const PrincipalInfo& aPrincipalInfo,
     const nsACString& aOrigin, const nsAString& aChannel) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -911,6 +1119,10 @@ bool BackgroundParentImpl::DeallocPBroadcastChannelParent(
 
 mozilla::dom::PServiceWorkerManagerParent*
 BackgroundParentImpl::AllocPServiceWorkerManagerParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -933,6 +1145,10 @@ bool BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -951,12 +1167,20 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() {
 already_AddRefed<PCacheStorageParent>
 BackgroundParentImpl::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return dom::cache::AllocPCacheStorageParent(this, aNamespace, aPrincipalInfo);
 }
 
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(
     const nsID& aUUID, const nsID& aDestinationUUID,
     const uint32_t& aSequenceID) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -966,6 +1190,10 @@ PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPMessagePortConstructor(
     PMessagePortParent* aActor, const nsID& aUUID, const nsID& aDestinationUUID,
     const uint32_t& aSequenceID) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -978,6 +1206,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPMessagePortConstructor(
 
 already_AddRefed<psm::PIPCClientCertsParent>
 BackgroundParentImpl::AllocPIPCClientCertsParent() {
+  if (!IsSocketActor(this)) {
+    return nullptr;
+  }
+
   // This should only be called in the parent process with the socket process
   // as the child process, not any content processes, hence the check that the
   // child ID be 0.
@@ -1004,6 +1236,10 @@ bool BackgroundParentImpl::DeallocPMessagePortParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvMessagePortForceClose(
     const nsID& aUUID, const nsID& aDestinationUUID,
     const uint32_t& aSequenceID) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1015,6 +1251,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvMessagePortForceClose(
 }
 
 BackgroundParentImpl::PQuotaParent* BackgroundParentImpl::AllocPQuotaParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1030,6 +1270,10 @@ bool BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor) {
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvShutdownQuotaManager() {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1045,6 +1289,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvShutdownQuotaManager() {
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvShutdownBackgroundSessionStorageManagers() {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1061,6 +1309,10 @@ BackgroundParentImpl::RecvShutdownBackgroundSessionStorageManagers() {
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPropagateBackgroundSessionStorageManager(
     const uint64_t& aCurrentTopContextId, const uint64_t& aTargetTopContextId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1077,6 +1329,10 @@ BackgroundParentImpl::RecvPropagateBackgroundSessionStorageManager(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvRemoveBackgroundSessionStorageManager(
     const uint64_t& aTopContextId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1094,6 +1350,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
     const uint64_t& aTopContextId, const uint32_t& aSizeLimit,
     const bool& aCancelSessionStoreTimer,
     GetSessionStorageManagerDataResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
@@ -1113,6 +1373,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvGetSessionStorageManagerData(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvLoadSessionStorageManagerData(
     const uint64_t& aTopContextId,
     nsTArray<mozilla::dom::SSCacheCopy>&& aOriginCacheCopy) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
@@ -1131,6 +1395,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvLoadSessionStorageManagerData(
 already_AddRefed<dom::PFileSystemRequestParent>
 BackgroundParentImpl::AllocPFileSystemRequestParent(
     const FileSystemParams& aParams) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1145,6 +1413,10 @@ BackgroundParentImpl::AllocPFileSystemRequestParent(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileSystemRequestConstructor(
     PFileSystemRequestParent* aActor, const FileSystemParams& params) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   static_cast<FileSystemRequestParent*>(aActor)->Start();
   return IPC_OK();
 }
@@ -1152,16 +1424,28 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileSystemRequestConstructor(
 // Gamepad API Background IPC
 already_AddRefed<dom::PGamepadEventChannelParent>
 BackgroundParentImpl::AllocPGamepadEventChannelParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return dom::GamepadEventChannelParent::Create();
 }
 
 already_AddRefed<dom::PGamepadTestChannelParent>
 BackgroundParentImpl::AllocPGamepadTestChannelParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return dom::GamepadTestChannelParent::Create();
 }
 
 dom::PWebAuthnTransactionParent*
 BackgroundParentImpl::AllocPWebAuthnTransactionParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return new dom::WebAuthnTransactionParent();
 }
 
@@ -1175,6 +1459,10 @@ bool BackgroundParentImpl::DeallocPWebAuthnTransactionParent(
 already_AddRefed<net::PHttpBackgroundChannelParent>
 BackgroundParentImpl::AllocPHttpBackgroundChannelParent(
     const uint64_t& aChannelId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1186,6 +1474,10 @@ BackgroundParentImpl::AllocPHttpBackgroundChannelParent(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
     net::PHttpBackgroundChannelParent* aActor, const uint64_t& aChannelId) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   MOZ_ASSERT(aActor);
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
@@ -1203,6 +1495,10 @@ BackgroundParentImpl::RecvPHttpBackgroundChannelConstructor(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIPort(
     Endpoint<PMIDIPortParent>&& aEndpoint, const MIDIPortInfo& aPortInfo,
     const bool& aSysexEnabled) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1222,6 +1518,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIPort(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIManager(
     Endpoint<PMIDIManagerParent>&& aEndpoint) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1242,6 +1542,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateMIDIManager(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
     HasMIDIDeviceResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
@@ -1261,6 +1565,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvHasMIDIDevice(
 
 mozilla::dom::PClientManagerParent*
 BackgroundParentImpl::AllocPClientManagerParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return mozilla::dom::AllocClientManagerParent();
 }
 
@@ -1271,18 +1579,30 @@ bool BackgroundParentImpl::DeallocPClientManagerParent(
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPClientManagerConstructor(
     mozilla::dom::PClientManagerParent* aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   mozilla::dom::InitClientManagerParent(aActor);
   return IPC_OK();
 }
 
 IPCResult BackgroundParentImpl::RecvStorageActivity(
     const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   dom::StorageActivityService::SendActivity(aPrincipalInfo);
   return IPC_OK();
 }
 
 IPCResult BackgroundParentImpl::RecvPServiceWorkerManagerConstructor(
     PServiceWorkerManagerParent* const aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   // Only the parent process is allowed to construct this actor.
   if (BackgroundParent::IsOtherProcessActor(this)) {
     return IPC_FAIL_NO_REASON(aActor);
@@ -1293,24 +1613,40 @@ IPCResult BackgroundParentImpl::RecvPServiceWorkerManagerConstructor(
 already_AddRefed<PServiceWorkerParent>
 BackgroundParentImpl::AllocPServiceWorkerParent(
     const IPCServiceWorkerDescriptor&) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<ServiceWorkerParent>();
 }
 
 IPCResult BackgroundParentImpl::RecvPServiceWorkerConstructor(
     PServiceWorkerParent* aActor,
     const IPCServiceWorkerDescriptor& aDescriptor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   dom::InitServiceWorkerParent(aActor, aDescriptor);
   return IPC_OK();
 }
 
 already_AddRefed<PServiceWorkerContainerParent>
 BackgroundParentImpl::AllocPServiceWorkerContainerParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<mozilla::dom::ServiceWorkerContainerParent>();
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPServiceWorkerContainerConstructor(
     PServiceWorkerContainerParent* aActor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   dom::InitServiceWorkerContainerParent(aActor);
   return IPC_OK();
 }
@@ -1318,6 +1654,10 @@ BackgroundParentImpl::RecvPServiceWorkerContainerConstructor(
 already_AddRefed<PServiceWorkerRegistrationParent>
 BackgroundParentImpl::AllocPServiceWorkerRegistrationParent(
     const IPCServiceWorkerRegistrationDescriptor&) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<mozilla::dom::ServiceWorkerRegistrationParent>();
 }
 
@@ -1325,6 +1665,10 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPServiceWorkerRegistrationConstructor(
     PServiceWorkerRegistrationParent* aActor,
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   dom::InitServiceWorkerRegistrationParent(aActor, aDescriptor);
   return IPC_OK();
 }
@@ -1332,6 +1676,10 @@ BackgroundParentImpl::RecvPServiceWorkerRegistrationConstructor(
 dom::PEndpointForReportParent*
 BackgroundParentImpl::AllocPEndpointForReportParent(
     const nsAString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   RefPtr<dom::EndpointForReportParent> actor =
       new dom::EndpointForReportParent();
   return actor.forget().take();
@@ -1340,6 +1688,10 @@ BackgroundParentImpl::AllocPEndpointForReportParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
     PEndpointForReportParent* aActor, const nsAString& aGroupName,
     const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   static_cast<dom::EndpointForReportParent*>(aActor)->Run(aGroupName,
                                                           aPrincipalInfo);
   return IPC_OK();
@@ -1348,6 +1700,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPEndpointForReportConstructor(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
     EnsureRDDProcessAndCreateBridgeResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   RDDProcessManager* rdd = RDDProcessManager::Get();
   using Type = std::tuple<const nsresult&,
                           Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
@@ -1375,6 +1731,10 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
     const RemoteDecodeIn& aLocation,
     EnsureUtilityProcessAndCreateBridgeResolver&& aResolver) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   base::ProcessId otherPid = OtherPid();
   nsCOMPtr<nsISerialEventTarget> managerThread = GetCurrentSerialEventTarget();
   if (!managerThread) {
@@ -1426,6 +1786,10 @@ bool BackgroundParentImpl::DeallocPEndpointForReportParent(
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvRemoveEndpoint(
     const nsAString& aGroupName, const nsACString& aEndpointURL,
     const PrincipalInfo& aPrincipalInfo) {
+  if (!IsContentActor(this)) {
+    return IPC_FAIL(this, "must be a content actor");
+  }
+
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "BackgroundParentImpl::RecvRemoveEndpoint(",
       [aGroupName = nsString(aGroupName),
@@ -1439,6 +1803,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvRemoveEndpoint(
 
 dom::PMediaTransportParent* BackgroundParentImpl::AllocPMediaTransportParent() {
 #ifdef MOZ_WEBRTC
+  if (!IsSocketBridgeActor(this)) {
+    return nullptr;
+  }
+
   return new MediaTransportParent;
 #else
   return nullptr;
@@ -1456,17 +1824,29 @@ bool BackgroundParentImpl::DeallocPMediaTransportParent(
 already_AddRefed<dom::locks::PLockManagerParent>
 BackgroundParentImpl::AllocPLockManagerParent(
     const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
                                                                aClientId);
 }
 
 already_AddRefed<dom::PFetchParent> BackgroundParentImpl::AllocPFetchParent() {
+  if (!IsContentActor(this)) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<dom::FetchParent>();
 }
 
 already_AddRefed<mozilla::net::PWebSocketConnectionParent>
 BackgroundParentImpl::AllocPWebSocketConnectionParent(
     const uint32_t& aListenerId) {
+  if (!IsSocketActor(this)) {
+    return nullptr;
+  }
+
   Maybe<nsCOMPtr<nsIHttpUpgradeListener>> listener =
       net::HttpConnectionMgrParent::GetAndRemoveHttpUpgradeListener(
           aListenerId);
@@ -1482,6 +1862,10 @@ BackgroundParentImpl::AllocPWebSocketConnectionParent(
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPWebSocketConnectionConstructor(
     PWebSocketConnectionParent* actor, const uint32_t& aListenerId) {
+  if (!IsSocketActor(this)) {
+    return IPC_FAIL(this, "must be a socket actor");
+  }
+
   return IPC_OK();
 }
 

@@ -2458,16 +2458,14 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     // counter if we have already been transpiled.
     stub->resetEnteredCount();
     JSScript* owningScript = nullptr;
-    if (outerScript == cx->lastStubFoldingBailoutChild_.ref()) {
-      MOZ_ASSERT(cx->lastStubFoldingBailoutParent_);
-      owningScript = cx->lastStubFoldingBailoutParent_;
+    if (cx->zone()->jitZone()->hasStubFoldingBailoutData(outerScript)) {
+      owningScript = cx->zone()->jitZone()->stubFoldingBailoutParent();
     } else {
       owningScript = icScript->isInlined()
                          ? icScript->inliningRoot()->owningScript()
                          : outerScript;
     }
-    cx->lastStubFoldingBailoutChild_ = nullptr;
-    cx->lastStubFoldingBailoutParent_ = nullptr;
+    cx->zone()->jitZone()->clearStubFoldingBailoutData();
     if (stub->usedByTranspiler() && owningScript->hasIonScript()) {
       owningScript->ionScript()->resetNumFixableBailouts();
     }

@@ -321,7 +321,14 @@ class NotificationWorkerRunnable : public MainThreadWorkerRunnable {
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();
     aWorkerPrivate->ModifyBusyCountFromWorker(true);
-    WorkerRunInternal(aWorkerPrivate);
+    // WorkerScope might start dying at the moment. And WorkerRunInternal()
+    // should not be executed once WorkerScope is dying, since
+    // WorkerRunInternal() might access resources which already been freed
+    // during WorkerRef::Notify().
+    if (aWorkerPrivate->GlobalScope() &&
+        !aWorkerPrivate->GlobalScope()->IsDying()) {
+      WorkerRunInternal(aWorkerPrivate);
+    }
     return true;
   }
 
@@ -359,6 +366,18 @@ class ReleaseNotificationRunnable final : public NotificationWorkerRunnable {
   explicit ReleaseNotificationRunnable(Notification* aNotification)
       : NotificationWorkerRunnable(aNotification->mWorkerPrivate),
         mNotification(aNotification) {}
+
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    aWorkerPrivate->ModifyBusyCountFromWorker(true);
+    // ReleaseNotificationRunnable is only used in StrongWorkerRef's shutdown
+    // callback. At the moment, it is supposed to executing
+    // mNotification->ReleaseObject() safely even though the corresponding
+    // WorkerScope::IsDying() is true. It is unlike other
+    // NotificationWorkerRunnable.
+    WorkerRunInternal(aWorkerPrivate);
+    return true;
+  }
 
   void WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override {
     mNotification->ReleaseObject();

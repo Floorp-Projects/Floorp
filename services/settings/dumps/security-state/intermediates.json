@@ -16939,24 +16939,6 @@
       "last_modified": 1665579462816
     },
     {
-      "schema": 1665168562462,
-      "derHash": "wOixwZXN/3tRN7mtNROmEgsdv/SeXgqM6jJzvI12GHc=",
-      "subject": "CN=GTS CA 1D8,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUQ4",
-      "whitelist": false,
-      "attachment": {
-        "hash": "23221c6ed9628d81a79e372ff9859ef64f9e0a7d1f53905dd13114b43c27dd57",
-        "size": 1983,
-        "filename": "mUFSYMsHjQfuKreux8LMbu2mDG1gOrS6liNZfT3dSSc=.pem",
-        "location": "security-state-staging/intermediates/ce7eaa9e-9715-44b6-92f1-d5153c612c45.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mUFSYMsHjQfuKreux8LMbu2mDG1gOrS6liNZfT3dSSc=",
-      "crlite_enrolled": false,
-      "id": "1c20b468-bf2d-47d2-9cea-453988ea0622",
-      "last_modified": 1665169023266
-    },
-    {
       "schema": 1665168563351,
       "derHash": "g0tb5r1mpAT2j27J3hweXFcj3aZafT9m+2IJlp2IVNg=",
       "subject": "CN=GTS CA 2D4,O=Google Trust Services LLC,C=US",
@@ -16991,24 +16973,6 @@
       "crlite_enrolled": false,
       "id": "a7696b55-65d3-4838-b71b-8a845e20e08c",
       "last_modified": 1665169023249
-    },
-    {
-      "schema": 1665168565158,
-      "derHash": "V74y0GOICfHLfGtY1Xz/rrmXdLHwtX1qNwiSOVSlSCQ=",
-      "subject": "CN=GTS CA 2D3,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "51c94f773aed17ce6f1afbdda4cb9425d8a0804b4c6c9f53777c2da6c713a5ba",
-        "size": 1142,
-        "filename": "NqKkrnUJcS9kqNTlWGRTYYSR8gm9VdeCq0trowfI1Co=.pem",
-        "location": "security-state-staging/intermediates/5968045a-5794-4b92-9623-94947253e464.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NqKkrnUJcS9kqNTlWGRTYYSR8gm9VdeCq0trowfI1Co=",
-      "crlite_enrolled": false,
-      "id": "66edf7de-f474-4b21-8358-3fbbf721abdc",
-      "last_modified": 1665169023241
     },
     {
       "schema": 1664891326687,
@@ -23761,24 +23725,6 @@
       "last_modified": 1646513861708
     },
     {
-      "schema": 1646513357696,
-      "derHash": "rPcY34OOZABRd30ZR/UWIOjYBLoYZVOuUvyYEbXTS4s=",
-      "subject": "CN=SSL.com Root Certification Authority RSA,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MHwxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTEwLwYDVQQDDChTU0wuY29tIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgUlNB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0be6061408140698708a3d3cb24d39ad6416effde544c39b9e52f40a1b6fe9cf",
-        "size": 2085,
-        "filename": "0cRTd-vc1hjNFlHcLgLCHXUeWqn80bNDH_bs9qMTSPo=.pem",
-        "location": "security-state-staging/intermediates/a9cbcbd0-800f-442e-8f52-903325a5ee23.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0cRTd+vc1hjNFlHcLgLCHXUeWqn80bNDH/bs9qMTSPo=",
-      "crlite_enrolled": false,
-      "id": "60def2d8-d623-4952-91b9-30913d09f7b4",
-      "last_modified": 1646513861696
-    },
-    {
       "schema": 1646513358832,
       "derHash": "BrlyKmmcV9/xhp9DC0ebtutJquEYTqycUyXBM0o06kw=",
       "subject": "CN=SSL.com Root Certification Authority ECC,O=SSL Corporation,L=Houston,ST=Texas,C=US",
@@ -23795,24 +23741,6 @@
       "crlite_enrolled": false,
       "id": "3ecf65b2-97c8-4b50-a416-2032e8bdbdf7",
       "last_modified": 1646513861683
-    },
-    {
-      "schema": 1646513358090,
-      "derHash": "uXF28htu1kYJJnstGiqfrwxN69RGRNyF62rphvyGfVY=",
-      "subject": "CN=SSL.com EV Root Certification Authority RSA R2,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJVUzEOMAwGA1UECAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xGDAWBgNVBAoMD1NTTCBDb3Jwb3JhdGlvbjE3MDUGA1UEAwwuU1NMLmNvbSBFViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "26b0eb0f7d0c63890a8cb3bac26790139d109c65e18753a461b28633c51c86e3",
-        "size": 2093,
-        "filename": "fNZ8JI9p2D_C-bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=.pem",
-        "location": "security-state-staging/intermediates/cbc009ee-d95a-4c1a-b665-8d351c2f25cd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "fNZ8JI9p2D/C+bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=",
-      "crlite_enrolled": false,
-      "id": "7b426af5-c32a-4108-a18c-9f524b01f83a",
-      "last_modified": 1646513861670
     },
     {
       "schema": 1646513358478,
@@ -29089,5 +29017,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1693407423723
+  "timestamp": 1694703423238
 }

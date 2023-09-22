@@ -1173,6 +1173,9 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
     desc = surf->ToSurfaceDescriptor();
   }
   if (!desc) {
+    if (surf && surf->mDesc.type != gl::SharedSurfaceType::Basic) {
+      return onFailure();
+    }
     // If we can't serialize to a surface descriptor, then we need to create
     // a buffer to read back into that will become the remote texture.
     auto data = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(

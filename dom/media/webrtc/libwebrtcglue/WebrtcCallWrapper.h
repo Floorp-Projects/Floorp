@@ -92,7 +92,7 @@ class WebrtcCallWrapper {
 
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
-  std::set<MediaSessionConduit*> mConduits;
+  std::set<RefPtr<MediaSessionConduit>> mConduits;
   RTCStatsTimestampMakerRealtimeClock mClock;
   UniquePtr<media::ShutdownBlockingTicket> mShutdownTicket;
 

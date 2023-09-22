@@ -21,6 +21,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
+#include "jit/JitZone.h"
 #include "jit/RematerializedFrame.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/Simulator.h"
@@ -1918,8 +1919,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
         // inner script and the outer script, so that we can properly track if
         // we add a new case to the folded stub and avoid invalidating the
         // outer script.
-        cx->lastStubFoldingBailoutChild_ = innerScript;
-        cx->lastStubFoldingBailoutParent_ = outerScript;
+        cx->zone()->jitZone()->noteStubFoldingBailout(innerScript, outerScript);
       }
       break;
 

@@ -4,18 +4,18 @@
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
 
-html {
+:root {
   height: 100%;
   box-sizing: border-box;
-}
-
-body {
-  height: 100%;
-  margin: 0;
   font: message-box;
   background-color: Field;
   color: FieldText;
   user-select: none;
+}
+
+body {
+  margin: 0;
+  height: 100%;
 }
 
 /* The content-container holds the non-scrollable header and the scrollable
@@ -243,7 +243,7 @@ body {
   margin: 0 auto;
 }
 
-body[lwt-sidebar] .deck .instructions {
+:root[lwt-sidebar] .deck .instructions {
   color: inherit;
   opacity: .6;
 }
@@ -287,26 +287,26 @@ body[lwt-sidebar] .deck .instructions {
 
 /* Themed sidebars */
 
-body[lwt-sidebar] {
+:root[lwt-sidebar] {
   background-color: var(--lwt-sidebar-background-color);
   color: var(--lwt-sidebar-text-color);
   scrollbar-color: rgba(204,204,204,.5) rgba(230,230,235,.5);
 }
 
-body[lwt-sidebar-brighttext] {
+:root[lwt-sidebar-brighttext] {
   scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
 }
 
-body[lwt-sidebar] .item.selected > .item-title-container {
+:root[lwt-sidebar] .item.selected > .item-title-container {
   background-color: hsla(0,0%,80%,.3);
   color: inherit;
 }
 
-body[lwt-sidebar-brighttext] .item.selected > .item-title-container {
+:root[lwt-sidebar-brighttext] .item.selected > .item-title-container {
   background-color: rgba(249,249,250,.1);
 }
 
-body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
+:root[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
   background-color: var(--lwt-sidebar-highlight-background-color);
   color: var(--lwt-sidebar-highlight-text-color);
 }
@@ -320,7 +320,7 @@ body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
 
 /* Platform specific styling */
 @media (-moz-platform: macos) {
-  body {
+  :root {
      /* let the -moz-appearance of the sidebar shine through */
     background-color: transparent;
   }
@@ -336,13 +336,13 @@ body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
     margin: 0;
   }
 
-  body:not([lwt-sidebar]) .item.selected:not(:focus) > .item-title-container {
+  :root:not([lwt-sidebar]) .item.selected:not(:focus) > .item-title-container {
     appearance: auto;
     -moz-default-appearance: -moz-mac-source-list-selection;
     -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
   }
 
-  body:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
+  :root:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
     appearance: auto;
     -moz-default-appearance: -moz-mac-active-source-list-selection;
     -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
