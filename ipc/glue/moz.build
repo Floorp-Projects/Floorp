@@ -125,9 +125,19 @@ else:
 if CONFIG["OS_ARCH"] == "Linux":
     UNIFIED_SOURCES += [
         "ProcessUtils_linux.cpp",
+        "SetProcessTitle.cpp",
+    ]
+    EXPORTS.mozilla.ipc += [
+        "SetProcessTitle.h",
     ]
 elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
-    UNIFIED_SOURCES += ["ProcessUtils_bsd.cpp"]
+    UNIFIED_SOURCES += [
+        "ProcessUtils_bsd.cpp",
+        "SetProcessTitle.cpp",
+    ]
+    EXPORTS.ipc += [
+        "SetProcessTitle.h",
+    ]
 elif CONFIG["OS_ARCH"] == "Darwin":
     UNIFIED_SOURCES += ["ProcessUtils_mac.mm"]
 else:
