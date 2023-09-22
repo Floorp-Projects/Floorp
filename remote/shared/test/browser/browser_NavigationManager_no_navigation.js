@@ -14,6 +14,7 @@ add_task(async function testDocumentOpenWriteClose() {
   const onEvent = (name, data) => events.push({ name, data });
 
   const navigationManager = new NavigationManager();
+  navigationManager.on("location-changed", onEvent);
   navigationManager.on("navigation-started", onEvent);
   navigationManager.on("navigation-stopped", onEvent);
 
@@ -52,6 +53,7 @@ add_task(async function testDocumentOpenWriteClose() {
   // document.open/write/close is identical to same-url + same-hash navigations.
   todo_is(events.length, 2, "Recorded navigation events");
 
+  navigationManager.off("location-changed", onEvent);
   navigationManager.off("navigation-started", onEvent);
   navigationManager.off("navigation-stopped", onEvent);
   navigationManager.stopMonitoring();
