@@ -1509,7 +1509,7 @@
     "testIdPattern": "[click.spec] Page.click should click the button after navigation",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"]
+    "expectations": ["PASS"]
   },
   {
     "testIdPattern": "[click.spec] Page.click should click the button if window.Node is removed",

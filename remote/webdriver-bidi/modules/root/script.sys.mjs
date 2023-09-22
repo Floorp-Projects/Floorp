@@ -751,6 +751,27 @@ class ScriptModule extends Module {
       .filter(realm => realm.context !== null);
   }
 
+  #onRealmCreated = (eventName, { realmInfo }) => {
+    // This event is emitted from the parent process but for a given browsing
+    // context. Set the event's contextInfo to the message handler corresponding
+    // to this browsing context.
+    const contextInfo = {
+      contextId: realmInfo.context.id,
+      type: lazy.WindowGlobalMessageHandler.type,
+    };
+
+    // Resolve browsing context to a TabManager id.
+    const context = lazy.TabManager.getIdForBrowsingContext(realmInfo.context);
+
+    // Don not emit the event, if the browsing context is gone.
+    if (context === null) {
+      return;
+    }
+
+    realmInfo.context = context;
+    this.emitEvent("script.realmCreated", realmInfo, contextInfo);
+  };
+
   #onRealmDestroyed = (eventName, { realm, context }) => {
     // This event is emitted from the parent process but for a given browsing
     // context. Set the event's contextInfo to the message handler corresponding
@@ -762,6 +783,18 @@ class ScriptModule extends Module {
 
     this.emitEvent("script.realmDestroyed", { realm }, contextInfo);
   };
+
+  #startListingOnRealmCreated() {
+    if (!this.#subscribedEvents.has("script.realmCreated")) {
+      this.messageHandler.on("realm-created", this.#onRealmCreated);
+    }
+  }
+
+  #stopListingOnRealmCreated() {
+    if (this.#subscribedEvents.has("script.realmCreated")) {
+      this.messageHandler.off("realm-created", this.#onRealmCreated);
+    }
+  }
 
   #startListingOnRealmDestroyed() {
     if (!this.#subscribedEvents.has("script.realmDestroyed")) {
@@ -777,6 +810,11 @@ class ScriptModule extends Module {
 
   #subscribeEvent(event) {
     switch (event) {
+      case "script.realmCreated": {
+        this.#startListingOnRealmCreated();
+        this.#subscribedEvents.add(event);
+        break;
+      }
       case "script.realmDestroyed": {
         this.#startListingOnRealmDestroyed();
         this.#subscribedEvents.add(event);
@@ -787,6 +825,11 @@ class ScriptModule extends Module {
 
   #unsubscribeEvent(event) {
     switch (event) {
+      case "script.realmCreated": {
+        this.#stopListingOnRealmCreated();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
       case "script.realmDestroyed": {
         this.#stopListingOnRealmDestroyed();
         this.#subscribedEvents.delete(event);
@@ -821,7 +864,7 @@ class ScriptModule extends Module {
   }
 
   static get supportedEvents() {
-    return ["script.message", "script.realmDestroyed"];
+    return ["script.message", "script.realmCreated", "script.realmDestroyed"];
   }
 }
 
