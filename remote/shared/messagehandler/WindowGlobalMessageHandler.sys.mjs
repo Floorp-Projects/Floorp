@@ -116,7 +116,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     });
 
     this.emitEvent("realm-created", {
-      realmId: realm.id,
+      realmInfo: realm.getInfo(),
       innerWindowId: this.innerWindowId,
     });
 
