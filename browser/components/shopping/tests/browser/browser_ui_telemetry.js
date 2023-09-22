@@ -6,6 +6,16 @@
 const CONTENT_PAGE = "https://example.com";
 const PRODUCT_PAGE = "https://example.com/product/B09TJGHL5F";
 
+function assertEventMatches(gleanEvent, requiredValues) {
+  let limitedEvent = Object.assign({}, gleanEvent);
+  for (let k of Object.keys(limitedEvent)) {
+    if (!requiredValues.hasOwnProperty(k)) {
+      delete limitedEvent[k];
+    }
+  }
+  return Assert.deepEqual(limitedEvent, requiredValues);
+}
+
 add_task(async function test_shopping_reanalysis_event() {
   // testFlushAllChildren() is necessary to deal with the event being
   // recorded in content, but calling testGetValue() in parent.
@@ -23,11 +33,21 @@ add_task(async function test_shopping_reanalysis_event() {
   );
 
   await Services.fog.testFlushAllChildren();
-  var events = Glean.shopping.surfaceReanalyzeClicked.testGetValue();
+  var staleAnalysisEvents =
+    Glean.shopping.surfaceStaleAnalysisShown.testGetValue();
 
-  Assert.greater(events.length, 0);
-  Assert.equal(events[0].category, "shopping");
-  Assert.equal(events[0].name, "surface_reanalyze_clicked");
+  assertEventMatches(staleAnalysisEvents[0], {
+    category: "shopping",
+    name: "surface_stale_analysis_shown",
+  });
+
+  var reanalysisRequestedEvents =
+    Glean.shopping.surfaceReanalyzeClicked.testGetValue();
+
+  assertEventMatches(reanalysisRequestedEvents[0], {
+    category: "shopping",
+    name: "surface_reanalyze_clicked",
+  });
 });
 
 add_task(async function test_shopping_UI_chevron_clicks() {
