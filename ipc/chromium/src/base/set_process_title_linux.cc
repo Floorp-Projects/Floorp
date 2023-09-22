@@ -5,6 +5,8 @@
 // This file implements BSD-style setproctitle() for Linux.
 // It is written such that it can easily be compiled outside Chromium.
 //
+// (This copy has been modified for use in the Mozilla codebase.)
+//
 // The Linux kernel sets up two locations in memory to pass arguments and
 // environment variables to processes. First, there are two char* arrays stored
 // one after another: argv and environ. A pointer to argv is passed to main(),
@@ -22,10 +24,10 @@
 // done. If it has been overwritten, the kernel will scan up to the size of
 // a page looking for another.
 //
-// Thus to change the process title, we must move any environment variables out
-// of the way to make room for a potentially longer title, and then overwrite
-// the memory pointed to by argv[0] with a single replacement string, making
-// sure its size does not exceed the available space.
+// Thus to change the process title, we must move any arguments and environment
+// variables out of the way to make room for a potentially longer title, and
+// then overwrite the memory pointed to by argv[0] with a single replacement
+// string, making sure its size does not exceed the available space.
 //
 // See the following kernel commit for the details of the contract between
 // kernel and setproctitle:
@@ -37,8 +39,11 @@
 // this position within the glibc project, leaving applications caught in the
 // middle. (Also, only a very few applications need or want this anyway.)
 
-#include "content/common/set_process_title_linux.h"
+#include "base/set_process_title_linux.h"
 
+#include "mozilla/UniquePtrExtensions.h"
+
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -48,9 +53,6 @@
 
 #include <string>
 #include <vector>
-
-#include "base/files/file_util.h"
-#include "base/no_destructor.h"
 
 extern char** environ;
 
@@ -73,8 +75,9 @@ void setproctitle(const char* fmt, ...) {
 
   // Sanity check before we try and set the process title.
   // The BSD version allows a null fmt to restore the original title.
-  if (!g_orig_argv0 || !fmt)
+  if (!g_orig_argv0 || !fmt) {
     return;
+  }
 
   // The title can be up to the end of envp.
   const size_t avail_size = g_envp_end - g_argv_start - 1;
@@ -90,12 +93,26 @@ void setproctitle(const char* fmt, ...) {
     memset(g_argv_start, 0, avail_size + 1);
     g_argv_end[-1] = '.';
 
-    std::string cmdline;
-    if (!base::ReadFileToString(base::FilePath("/proc/self/cmdline"),
-                                &cmdline)) {
+    mozilla::UniqueFileHandle fd(
+        open("/proc/self/cmdline", O_RDONLY | O_CLOEXEC));
+    if (!fd) {
       return false;
     }
-    return cmdline.size() >= 2;
+
+    // We just want to see if there are at least 2 bytes in the file;
+    // we don't need to read the whole contents.  Short reads probably
+    // aren't possible given how this procfs node is implemented, but
+    // it's not much more code to handle it anyway.
+    char buf[2];
+    ssize_t total_read = 0;
+    while (total_read < 2) {
+      ssize_t rd = read(fd.get(), buf, 2);
+      if (rd <= 0) {
+        return false;
+      }
+      total_read += rd;
+    }
+    return true;
   }();
 
   memset(g_argv_start, 0, avail_size + 1);
@@ -106,8 +123,9 @@ void setproctitle(const char* fmt, ...) {
     size = vsnprintf(g_argv_start, avail_size, &fmt[1], ap);
   } else {
     size = snprintf(g_argv_start, avail_size, "%s ", g_orig_argv0);
-    if (size < avail_size)
+    if (size < avail_size) {
       size += vsnprintf(&g_argv_start[size], avail_size - size, fmt, ap);
+    }
   }
   va_end(ap);
 
@@ -123,56 +141,65 @@ void setproctitle(const char* fmt, ...) {
   // initial argv. In that case, just leave the remaining bytes filled with
   // null characters.
   const size_t argv_size = g_argv_end - g_argv_start - 1;
-  if (!buggy_kernel && size < argv_size)
+  if (!buggy_kernel && size < argv_size) {
     g_argv_end[-1] = '.';
+  }
 }
 
 // A version of this built into glibc would not need this function, since
 // it could stash the argv pointer in __libc_start_main(). But we need it.
-void setproctitle_init(const char** main_argv) {
+void setproctitle_init(char** main_argv) {
   static bool init_called = false;
-  if (init_called)
+  if (init_called) {
     return;
+  }
   init_called = true;
 
-  if (!main_argv)
+  if (!main_argv) {
     return;
+  }
 
   // Verify that the memory layout matches expectation.
-  char** argv = const_cast<char**>(main_argv);
+  char** const argv = main_argv;
   char* argv_start = argv[0];
   char* p = argv_start;
   for (size_t i = 0; argv[i]; ++i) {
-    if (p != argv[i])
+    if (p != argv[i]) {
       return;
+    }
     p += strlen(p) + 1;
   }
   char* argv_end = p;
   size_t environ_size = 0;
   for (size_t i = 0; environ[i]; ++i, ++environ_size) {
-    if (p != environ[i])
+    if (p != environ[i]) {
       return;
+    }
     p += strlen(p) + 1;
   }
   char* envp_end = p;
 
-  // Move the environment out of the way. Note that we are moving the values,
-  // not the environment array itself. Also note that we preallocate the entire
-  // vector, because a string's underlying data pointer is not stable under
-  // move operations, which could otherwise occur if building up the vector
-  // incrementally.
-  static base::NoDestructor<std::vector<std::string>> environ_copy(
-      environ_size);
+  // Copy the arg and env strings into the heap.  Leak Sanitizer
+  // doesn't seem to object to these strdup()s; if it ever does, we
+  // can always ensure the pointers are reachable from globals or add
+  // a suppresion for this function.
+  //
+  // Note that Chromium's version of this code didn't copy the
+  // arguments; this is probably because they access args via the
+  // CommandLine class, which copies into a std::vector<std::string>,
+  // but in general that's not a safe assumption for Gecko.
+  for (size_t i = 0; argv[i]; ++i) {
+    argv[i] = strdup(argv[i]);
+  }
   for (size_t i = 0; environ[i]; ++i) {
-    (*environ_copy)[i] = environ[i];
-    environ[i] = &(*environ_copy)[i][0];
+    environ[i] = strdup(environ[i]);
   }
 
-  if (!argv[0])
+  if (!argv[0]) {
     return;
+  }
 
-  static base::NoDestructor<std::string> argv0_storage(argv[0]);
-  g_orig_argv0 = argv0_storage->data();
+  g_orig_argv0 = argv[0];
   g_argv_start = argv_start;
   g_argv_end = argv_end;
   g_envp_end = envp_end;

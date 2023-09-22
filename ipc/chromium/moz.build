@@ -102,6 +102,7 @@ if os_bsd:
 if os_linux:
     SOURCES += [
         "src/base/process_util_linux.cc",
+        "src/base/set_process_title_linux.cc",
         "src/base/time_posix.cc",
     ]
     if CONFIG["OS_TARGET"] == "Android":
