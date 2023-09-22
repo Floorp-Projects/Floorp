@@ -484,24 +484,3 @@ shopping:
     send_in_pings:
       - events
 
-  address_bar_feature_callout_displayed:
-    type: event
-    description: |
-      The user was shown the feature callout for the Shopping component.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854376
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854376
-    data_sensitivity:
-      - interaction
-    expires: 122
-    notification_emails:
-      - betling@mozilla.com
-      - fx-desktop-shopping-eng@mozilla.com
-    send_in_pings:
-      - events
-    extra_keys:
-      configuration:
-        description: >
-          Message id for the version of the feature callout shown.
-        type: string
