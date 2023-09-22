@@ -17,86 +17,73 @@ ChromeUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
 
 testEngine_setup();
 
-add_task(
-  {
-    pref_set: [["browser.urlbar.suggest.quickactions", false]],
-  },
-  async function test_autofill() {
-    const origin = "example.com";
-    let context = createContext(origin.substring(0, 2), { isPrivate: false });
-    await check_results({
-      context,
-      matches: [
-        makeSearchResult(context, {
-          engineName: "Suggestions",
-          heuristic: true,
-        }),
-      ],
-    });
-    // Add many visits.
-    const url = `https://${origin}/`;
-    await PlacesTestUtils.addVisits(new Array(10).fill(url));
-    Assert.equal(
-      await PlacesUtils.metadata.get("origin_alt_frecency_threshold", 0),
-      0,
-      "Check there's no threshold initially"
-    );
-    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-    Assert.greater(
-      await PlacesUtils.metadata.get("origin_alt_frecency_threshold", 0),
-      0,
-      "Check a threshold has been calculated"
-    );
-    await check_results({
-      context,
-      autofilled: `${origin}/`,
-      completed: url,
-      matches: [
-        makeVisitResult(context, {
-          uri: url,
-          title: `test visit for ${url}`,
-          heuristic: true,
-        }),
-      ],
-    });
-    await PlacesUtils.history.clear();
-  }
-);
-
-add_task(
-  {
-    pref_set: [["browser.urlbar.suggest.quickactions", false]],
-  },
-  async function test_autofill_www() {
-    const origin = "example.com";
-    // Add many visits.
-    const url = `https://www.${origin}/`;
-    await PlacesTestUtils.addVisits(new Array(10).fill(url));
-    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-
-    let context = createContext(origin.substring(0, 2), { isPrivate: false });
-    await check_results({
-      context,
-      autofilled: `${origin}/`,
-      completed: url,
-      matches: [
-        makeVisitResult(context, {
-          uri: url,
-          title: `test visit for ${url}`,
-          heuristic: true,
-        }),
-      ],
-    });
-    await PlacesUtils.history.clear();
-  }
-);
-
-add_task(
-  {
-    pref_set: [
-      ["browser.urlbar.suggest.quickactions", false],
-      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
+add_task(async function test_autofill() {
+  const origin = "example.com";
+  let context = createContext(origin.substring(0, 2), { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: "Suggestions",
+        heuristic: true,
+      }),
     ],
+  });
+  // Add many visits.
+  const url = `https://${origin}/`;
+  await PlacesTestUtils.addVisits(new Array(10).fill(url));
+  Assert.equal(
+    await PlacesUtils.metadata.get("origin_alt_frecency_threshold", 0),
+    0,
+    "Check there's no threshold initially"
+  );
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  Assert.greater(
+    await PlacesUtils.metadata.get("origin_alt_frecency_threshold", 0),
+    0,
+    "Check a threshold has been calculated"
+  );
+  await check_results({
+    context,
+    autofilled: `${origin}/`,
+    completed: url,
+    matches: [
+      makeVisitResult(context, {
+        uri: url,
+        title: `test visit for ${url}`,
+        heuristic: true,
+      }),
+    ],
+  });
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function test_autofill_www() {
+  const origin = "example.com";
+  // Add many visits.
+  const url = `https://www.${origin}/`;
+  await PlacesTestUtils.addVisits(new Array(10).fill(url));
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
+  let context = createContext(origin.substring(0, 2), { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: `${origin}/`,
+    completed: url,
+    matches: [
+      makeVisitResult(context, {
+        uri: url,
+        title: `test visit for ${url}`,
+        heuristic: true,
+      }),
+    ],
+  });
+  await PlacesUtils.history.clear();
+});
+
+add_task(
+  {
+    pref_set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
   },
   async function test_autofill_prefix_priority() {
     const origin = "localhost";
@@ -130,114 +117,156 @@ add_task(
   }
 );
 
-add_task(
-  {
-    pref_set: [["browser.urlbar.suggest.quickactions", false]],
-  },
-  async function test_autofill_threshold() {
-    async function getOriginAltFrecency(origin) {
-      let db = await PlacesUtils.promiseDBConnection();
-      let rows = await db.execute(
-        "SELECT alt_frecency FROM moz_origins WHERE host = :origin",
-        { origin }
-      );
-      return rows?.[0].getResultByName("alt_frecency");
-    }
-    async function getThreshold() {
-      let db = await PlacesUtils.promiseDBConnection();
-      let rows = await db.execute("SELECT avg(alt_frecency) FROM moz_origins");
-      return rows[0].getResultByIndex(0);
-    }
+add_task(async function test_autofill_threshold() {
+  await PlacesTestUtils.addVisits(new Array(10).fill("https://example.com/"));
+  // Add more visits to the same origins to differenciate the frecency scores.
+  await PlacesTestUtils.addVisits([
+    "https://example.com/2",
+    "https://example.com/3",
+  ]);
+  await PlacesTestUtils.addVisits("https://somethingelse.org/");
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
-    await PlacesTestUtils.addVisits(new Array(10).fill("https://example.com/"));
-    // Add more visits to the same origins to differenciate the frecency scores.
-    await PlacesTestUtils.addVisits([
-      "https://example.com/2",
-      "https://example.com/3",
-    ]);
-    await PlacesTestUtils.addVisits("https://somethingelse.org/");
-    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  let threshold = await PlacesUtils.metadata.get(
+    "origin_alt_frecency_threshold",
+    0
+  );
+  Assert.greater(
+    threshold,
+    await PlacesTestUtils.getDatabaseValue("moz_origins", "alt_frecency", {
+      host: "somethingelse.org",
+    }),
+    "Check mozilla.org has a lower frecency than the threshold"
+  );
+  Assert.equal(
+    threshold,
+    await PlacesTestUtils.getDatabaseValue("moz_origins", "avg(alt_frecency)"),
+    "Check the threshold has been calculared correctly"
+  );
 
-    let threshold = await PlacesUtils.metadata.get(
-      "origin_alt_frecency_threshold",
+  let engine = Services.search.defaultEngine;
+  let context = createContext("so", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        heuristic: true,
+        query: "so",
+        engineName: engine.name,
+      }),
+      makeVisitResult(context, {
+        uri: "https://somethingelse.org/",
+        title: "test visit for https://somethingelse.org/",
+      }),
+    ],
+  });
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function test_autofill_cutoff() {
+  // Add many visits older than the default 90 days cutoff.
+  const visitDate = new Date(Date.now() - 120 * 86400000);
+  await PlacesTestUtils.addVisits(
+    new Array(10).fill("https://example.com/").map(url => ({ url, visitDate }))
+  );
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
+  Assert.strictEqual(
+    await PlacesTestUtils.getDatabaseValue("moz_origins", "alt_frecency", {
+      host: "example.com",
+    }),
+    null,
+    "Check example.com has a NULL frecency"
+  );
+
+  let engine = Services.search.defaultEngine;
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        heuristic: true,
+        query: "ex",
+        engineName: engine.name,
+      }),
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "test visit for https://example.com/",
+      }),
+    ],
+  });
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function test_autofill_threshold_www() {
+  // Only one visit to the non-www origin, many to the www. version. We expect
+  // example.com to autofill even if its frecency is small, because the overall
+  // frecency for both origins should be considered.
+  await PlacesTestUtils.addVisits("https://example.com/");
+  await PlacesTestUtils.addVisits(
+    new Array(10).fill("https://www.example.com/")
+  );
+  await PlacesTestUtils.addVisits(
+    new Array(10).fill("https://www.somethingelse.org/")
+  );
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
+  let threshold = await PlacesUtils.metadata.get(
+    "origin_alt_frecency_threshold",
+    0
+  );
+  let frecencyOfExampleCom = await PlacesTestUtils.getDatabaseValue(
+    "moz_origins",
+    "alt_frecency",
+    {
+      host: "example.com",
+    }
+  );
+  let frecencyOfWwwExampleCom = await PlacesTestUtils.getDatabaseValue(
+    "moz_origins",
+    "alt_frecency",
+    {
+      host: "www.example.com",
+    }
+  );
+  Assert.greater(
+    threshold,
+    frecencyOfExampleCom,
+    "example.com frecency is lower than the threshold"
+  );
+  Assert.greater(
+    frecencyOfWwwExampleCom,
+    threshold,
+    "www.example.com frecency is higher than the threshold"
+  );
+
+  // We used to wrongly use the average between the 2 domains, so check also
+  // the average would not autofill.
+  Assert.greater(
+    threshold,
+    [frecencyOfExampleCom, frecencyOfWwwExampleCom].reduce(
+      (acc, v, i, arr) => acc + v / arr.length,
       0
-    );
-    Assert.greater(
-      threshold,
-      await getOriginAltFrecency("somethingelse.org"),
-      "Check mozilla.org has a lower frecency than the threshold"
-    );
-    Assert.equal(
-      threshold,
-      await getThreshold(),
-      "Check the threshold has been calculared correctly"
-    );
+    ),
+    "Check frecency average is lower than the threshold"
+  );
 
-    let engine = Services.search.defaultEngine;
-    let context = createContext("so", { isPrivate: false });
-    await check_results({
-      context,
-      matches: [
-        makeSearchResult(context, {
-          heuristic: true,
-          query: "so",
-          engineName: engine.name,
-        }),
-        makeVisitResult(context, {
-          uri: "https://somethingelse.org/",
-          title: "test visit for https://somethingelse.org/",
-        }),
-      ],
-    });
-    await PlacesUtils.history.clear();
-  }
-);
-
-add_task(
-  {
-    pref_set: [["browser.urlbar.suggest.quickactions", false]],
-  },
-  async function test_autofill_cutoff() {
-    async function getOriginAltFrecency(origin) {
-      let db = await PlacesUtils.promiseDBConnection();
-      let rows = await db.execute(
-        "SELECT alt_frecency FROM moz_origins WHERE host = :origin",
-        { origin }
-      );
-      return rows?.[0].getResultByName("alt_frecency");
-    }
-
-    // Add many visits older than the default 90 days cutoff.
-    const visitDate = new Date(Date.now() - 120 * 86400000);
-    await PlacesTestUtils.addVisits(
-      new Array(10)
-        .fill("https://example.com/")
-        .map(url => ({ url, visitDate }))
-    );
-    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-
-    Assert.strictEqual(
-      await getOriginAltFrecency("example.com"),
-      null,
-      "Check example.com has a NULL frecency"
-    );
-
-    let engine = Services.search.defaultEngine;
-    let context = createContext("ex", { isPrivate: false });
-    await check_results({
-      context,
-      matches: [
-        makeSearchResult(context, {
-          heuristic: true,
-          query: "ex",
-          engineName: engine.name,
-        }),
-        makeVisitResult(context, {
-          uri: "https://example.com/",
-          title: "test visit for https://example.com/",
-        }),
-      ],
-    });
-    await PlacesUtils.history.clear();
-  }
-);
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "example.com/",
+    completed: "https://www.example.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://www.example.com/",
+        title: "test visit for https://www.example.com/",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "test visit for https://example.com/",
+      }),
+    ],
+  });
+  await PlacesUtils.history.clear();
+});
