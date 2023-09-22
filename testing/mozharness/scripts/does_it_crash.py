@@ -109,15 +109,17 @@ class DoesItCrash(BaseScript):
 
     def kill(self, proc):
         is_win = os.name == "nt"
-        if is_win:
-            proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            os.killpg(proc.pid, signal.SIGKILL)
-        try:
-            proc.wait(5)
-            self.log("process terminated")
-        except subprocess.TimeoutExpired:
-            self.error("unable to terminate process!")
+        for retry in range(3):
+            if is_win:
+                proc.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                os.killpg(proc.pid, signal.SIGKILL)
+            try:
+                proc.wait(5)
+                self.log("process terminated")
+                break
+            except subprocess.TimeoutExpired:
+                self.error("unable to terminate process!")
 
     def run_thing(self):
         self.timed_out = False
