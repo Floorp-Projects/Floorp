@@ -238,7 +238,7 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
     const AudioTimelineEvent* aNext) {
   // If the requested time is before all of the existing events
   if (!aPrevious) {
-    return mValue;
+    return mDefaultValue;
   }
 
   // If this event is a curve event, this returns the end time of the curve.
