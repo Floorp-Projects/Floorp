@@ -35,57 +35,63 @@ class MediaSessionFullscreenFeature(
             flow.map {
                 it.tabs + it.customTabs
             }.map { tab ->
-                tab.filter { it.mediaSessionState != null && it.mediaSessionState!!.fullscreen }
-            }.distinctUntilChanged().collect { states ->
-                processFullscreen(states)
-                processDeviceSleepMode(states)
+                tab.firstOrNull { it.mediaSessionState?.fullscreen == true }
+            }.distinctUntilChanged { old, new ->
+                old.hasSameOrientationInformationAs(new)
+            }.collect { state ->
+                // There should only be one fullscreen session.
+                if (state == null) {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+                    activity.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    return@collect
+                }
+
+                if (store.state.findCustomTabOrSelectedTab(tabId)?.id == state.id) {
+                    setOrientationForTabState(state)
+                }
+                setDeviceSleepModeForTabState(state)
             }
         }
     }
 
     @Suppress("SourceLockedOrientationActivity") // We deliberately want to lock the orientation here.
-    private fun processFullscreen(sessionStates: List<SessionState>) {
-        /* there should only be one fullscreen session */
-        val activeState = sessionStates.firstOrNull()
-        if (activeState == null || activeState.mediaSessionState?.fullscreen != true) {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-            return
-        }
+    private fun setOrientationForTabState(activeTabState: SessionState) {
+        when (activeTabState.mediaSessionState?.elementMetadata?.portrait) {
+            true ->
+                activity.requestedOrientation =
+                    ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 
-        if (store.state.findCustomTabOrSelectedTab(tabId)?.id == activeState.id) {
-            when (activeState.mediaSessionState?.elementMetadata?.portrait) {
-                true ->
+            false ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                } else {
                     activity.requestedOrientation =
-                        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-                false ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    } else {
-                        activity.requestedOrientation =
-                            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                    }
-                else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-            }
+                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                }
+
+            null -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
         }
     }
 
-    private fun processDeviceSleepMode(sessionStates: List<SessionState>) {
-        val activeTabState = sessionStates.firstOrNull()
-        if (activeTabState == null || activeTabState.mediaSessionState?.fullscreen != true) {
-            activity.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            return
-        }
+    private fun setDeviceSleepModeForTabState(activeTabState: SessionState) {
         activeTabState.mediaSessionState?.let {
             when (activeTabState.mediaSessionState?.playbackState) {
                 MediaSession.PlaybackState.PLAYING -> {
                     activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
+
                 else -> {
                     activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
         }
     }
+
+    private fun SessionState?.hasSameOrientationInformationAs(other: SessionState?): Boolean =
+        this?.mediaSessionState?.fullscreen == other?.mediaSessionState?.fullscreen &&
+            this?.mediaSessionState?.playbackState == other?.mediaSessionState?.playbackState &&
+            this?.mediaSessionState?.elementMetadata == other?.mediaSessionState?.elementMetadata &&
+            this?.content?.pictureInPictureEnabled == other?.content?.pictureInPictureEnabled
 
     override fun stop() {
         scope?.cancel()
