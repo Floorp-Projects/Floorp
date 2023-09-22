@@ -60,9 +60,7 @@ fi
 
 if [ "${TRY}" = "1" ]; then
   # shellcheck disable=SC2016
-  sed -ri 's|hg clone \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
-else
-  sed -ri "s|hg clone |hg clone --stream |g" snapcraft.yaml
+  sed -ri 's|hg clone --stream \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
 fi
 
 if [ "${DEBUG}" = "1" ]; then
