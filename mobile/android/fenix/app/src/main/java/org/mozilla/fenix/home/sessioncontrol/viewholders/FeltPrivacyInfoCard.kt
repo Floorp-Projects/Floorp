@@ -58,10 +58,12 @@ fun FeltPrivacyModeInfoCard(
                     stringResource(id = R.string.app_name),
                     stringResource(id = R.string.felt_privacy_info_card_subtitle_link_text),
                 ),
-                linkTextState = LinkTextState(
-                    text = stringResource(id = R.string.felt_privacy_info_card_subtitle_link_text),
-                    url = "",
-                    onClick = { onLearnMoreClick() },
+                linkTextStates = listOf(
+                    LinkTextState(
+                        text = stringResource(id = R.string.felt_privacy_info_card_subtitle_link_text),
+                        url = "",
+                        onClick = { onLearnMoreClick() },
+                    ),
                 ),
                 style = FirefoxTheme.typography.body2.copy(
                     color = FirefoxTheme.colors.textPrimary,

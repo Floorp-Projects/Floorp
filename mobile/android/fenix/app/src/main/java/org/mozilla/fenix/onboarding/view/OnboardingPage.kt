@@ -155,7 +155,7 @@ private fun DescriptionText(
     if (linkTextState != null && description.contains(linkTextState.text, ignoreCase = true)) {
         LinkText(
             text = description,
-            linkTextState = linkTextState,
+            linkTextStates = listOf(linkTextState),
         )
     } else {
         Text(

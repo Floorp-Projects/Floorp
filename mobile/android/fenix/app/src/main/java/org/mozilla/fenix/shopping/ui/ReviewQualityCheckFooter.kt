@@ -39,10 +39,12 @@ fun ReviewQualityCheckFooter(
             id = R.string.review_quality_check_powered_by_2,
             poweredByLinkText,
         ),
-        linkTextState = LinkTextState(
-            text = poweredByLinkText,
-            url = FOOTER_LINK,
-            onClick = onLinkClick,
+        linkTextStates = listOf(
+            LinkTextState(
+                text = poweredByLinkText,
+                url = FOOTER_LINK,
+                onClick = onLinkClick,
+            ),
         ),
         style = FirefoxTheme.typography.body2.copy(
             color = FirefoxTheme.colors.textPrimary,
