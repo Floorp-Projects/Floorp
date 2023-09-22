@@ -89,19 +89,7 @@ add_task(async function () {
     await SpecialPowers.spawn(browser, [], async function () {
       let openInsecureButton = content.document.getElementById("openInsecure");
       ok(openInsecureButton != null, "openInsecureButton should exist.");
-      info("Waiting for openInsecureButton to be enabled.");
-      function callback() {
-        if (!openInsecureButton.inert) {
-          info("openInsecureButton was enabled, clicking it.");
-          observer.disconnect();
-          content.setTimeout(() => {
-            openInsecureButton.click();
-          });
-        }
-      }
-      const observer = new content.MutationObserver(callback);
-      observer.observe(openInsecureButton, { attributes: true });
-      callback();
+      openInsecureButton.click();
     });
 
     await pageShownPromise;
