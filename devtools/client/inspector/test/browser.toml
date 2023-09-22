@@ -1,0 +1,442 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "doc_inspector_add_node.html",
+  "doc_inspector_breadcrumbs.html",
+  "doc_inspector_breadcrumbs_visibility.html",
+  "doc_inspector_csp.html",
+  "doc_inspector_csp.html^headers^",
+  "doc_inspector_delete-selected-node-01.html",
+  "doc_inspector_delete-selected-node-02.html",
+  "doc_inspector_embed.html",
+  "doc_inspector_eyedropper_disabled.xhtml",
+  "doc_inspector_fission_frame_navigation.html",
+  "doc_inspector_highlight_after_transition.html",
+  "doc_inspector_highlighter-comments.html",
+  "doc_inspector_highlighter-geometry_01.html",
+  "doc_inspector_highlighter-geometry_02.html",
+  "doc_inspector_highlighter_cssshapes.html",
+  "doc_inspector_highlighter_cssshapes-percent.html",
+  "doc_inspector_highlighter_cssshapes_iframe.html",
+  "doc_inspector_highlighter_csstransform.html",
+  "doc_inspector_highlighter_dom.html",
+  "doc_inspector_highlighter_inline.html",
+  "doc_inspector_highlighter.html",
+  "doc_inspector_highlighter_rect.html",
+  "doc_inspector_highlighter_rect_iframe.html",
+  "doc_inspector_highlighter_scroll.html",
+  "doc_inspector_highlighter_custom_element.xhtml",
+  "doc_inspector_infobar_01.html",
+  "doc_inspector_infobar_02.html",
+  "doc_inspector_infobar_03.html",
+  "doc_inspector_infobar_04.html",
+  "doc_inspector_infobar_textnode.html",
+  "doc_inspector_long-divs.html",
+  "doc_inspector_menu.html",
+  "doc_inspector_outerhtml.html",
+  "doc_inspector_pane-toggle-layout-invariant.html",
+  "doc_inspector_reload_xul.xhtml",
+  "doc_inspector_remove-iframe-during-load.html",
+  "doc_inspector_search.html",
+  "doc_inspector_search-iframes.html",
+  "doc_inspector_search-reserved.html",
+  "doc_inspector_search-suggestions.html",
+  "doc_inspector_search-svg.html",
+  "doc_inspector_select-last-selected-01.html",
+  "doc_inspector_select-last-selected-02.html",
+  "doc_inspector_svg.svg",
+  "head.js",
+  "img_browser_inspector_highlighter-eyedropper-image.png",
+  "shared-head.js",
+  "sjs_slow-loading-image.sjs",
+  "style_inspector_eyedropper_ruleview.css",
+  "style_inspector_csp.css",
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+  "!/devtools/client/debugger/test/mochitest/shared-head.js",
+  "!/devtools/client/shared/test/highlighter-test-actor.js",
+]
+
+["browser_inspector_addNode_01.js"]
+
+["browser_inspector_addNode_02.js"]
+
+["browser_inspector_addNode_03.js"]
+
+["browser_inspector_addSidebarTab.js"]
+
+["browser_inspector_breadcrumbs.js"]
+
+["browser_inspector_breadcrumbs_highlight_hover.js"]
+
+["browser_inspector_breadcrumbs_keybinding.js"]
+
+["browser_inspector_breadcrumbs_keyboard_trap.js"]
+skip-if = ["os == 'mac'"] # Full keyboard navigation on OSX only works if Full Keyboard Access setting is set to All Control in System Keyboard Preferences
+
+["browser_inspector_breadcrumbs_mutations.js"]
+
+["browser_inspector_breadcrumbs_namespaced.js"]
+
+["browser_inspector_breadcrumbs_shadowdom.js"]
+
+["browser_inspector_breadcrumbs_visibility.js"]
+
+["browser_inspector_delete-selected-node-01.js"]
+
+["browser_inspector_delete-selected-node-02.js"]
+
+["browser_inspector_delete-selected-node-03.js"]
+
+["browser_inspector_delete_node_in_frame.js"]
+
+["browser_inspector_destroy-after-navigation.js"]
+
+["browser_inspector_destroy-before-ready.js"]
+
+["browser_inspector_expand-collapse.js"]
+
+["browser_inspector_eyedropper_ruleview.js"]
+
+["browser_inspector_fission_frame.js"]
+
+["browser_inspector_fission_frame_navigation.js"]
+
+["browser_inspector_fission_switch_target.js"]
+
+["browser_inspector_highlighter-01.js"]
+
+["browser_inspector_highlighter-02.js"]
+
+["browser_inspector_highlighter-03.js"]
+
+["browser_inspector_highlighter-04.js"]
+
+["browser_inspector_highlighter-05.js"]
+
+["browser_inspector_highlighter-06.js"]
+
+["browser_inspector_highlighter-07.js"]
+
+["browser_inspector_highlighter-08.js"]
+
+["browser_inspector_highlighter-autohide-config_01.js"]
+
+["browser_inspector_highlighter-autohide-config_02.js"]
+
+["browser_inspector_highlighter-autohide-config_03.js"]
+
+["browser_inspector_highlighter-autohide.js"]
+
+["browser_inspector_highlighter-by-type.js"]
+
+["browser_inspector_highlighter-cancel.js"]
+
+["browser_inspector_highlighter-comments.js"]
+
+["browser_inspector_highlighter-cssgrid_01.js"]
+
+["browser_inspector_highlighter-cssgrid_02.js"]
+
+["browser_inspector_highlighter-cssshape_01.js"]
+
+["browser_inspector_highlighter-cssshape_02.js"]
+
+["browser_inspector_highlighter-cssshape_03.js"]
+
+["browser_inspector_highlighter-cssshape_04.js"]
+skip-if = [
+  "os == 'win' && asan", # Bug 1453214
+  "os == 'win' && debug", # Bug 1453214
+  "os == 'linux'", # Bug 1453214
+  "os == 'mac' && debug", # high frequency intermittent, bug 1453214
+]
+
+["browser_inspector_highlighter-cssshape_05.js"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_06-scale.js"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_06-translate.js"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_07.js"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_iframe_01.js"]
+skip-if = ["verify && debug"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_offset-path.js"]
+fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+
+["browser_inspector_highlighter-cssshape_percent.js"]
+
+["browser_inspector_highlighter-csstransform_01.js"]
+
+["browser_inspector_highlighter-csstransform_02.js"]
+
+["browser_inspector_highlighter-custom-element.js"]
+
+["browser_inspector_highlighter-embed.js"]
+
+["browser_inspector_highlighter-eyedropper-clipboard.js"]
+
+["browser_inspector_highlighter-eyedropper-csp.js"]
+
+["browser_inspector_highlighter-eyedropper-events.js"]
+skip-if = ["os == 'win'"] # bug 1413442
+
+["browser_inspector_highlighter-eyedropper-frames.js"]
+
+["browser_inspector_highlighter-eyedropper-image.js"]
+
+["browser_inspector_highlighter-eyedropper-label.js"]
+
+["browser_inspector_highlighter-eyedropper-show-hide.js"]
+
+["browser_inspector_highlighter-eyedropper-xul.js"]
+
+["browser_inspector_highlighter-eyedropper-zoom.js"]
+
+["browser_inspector_highlighter-geometry_01.js"]
+
+["browser_inspector_highlighter-geometry_02.js"]
+
+["browser_inspector_highlighter-geometry_03.js"]
+
+["browser_inspector_highlighter-geometry_04.js"]
+
+["browser_inspector_highlighter-geometry_05.js"]
+
+["browser_inspector_highlighter-geometry_06.js"]
+
+["browser_inspector_highlighter-geometry_hide_on_interaction.js"]
+
+["browser_inspector_highlighter-geometry_iframe.js"]
+
+["browser_inspector_highlighter-hover_01.js"]
+
+["browser_inspector_highlighter-hover_02.js"]
+
+["browser_inspector_highlighter-hover_03.js"]
+
+["browser_inspector_highlighter-iframes_01.js"]
+
+["browser_inspector_highlighter-iframes_02.js"]
+
+["browser_inspector_highlighter-inline.js"]
+
+["browser_inspector_highlighter-keybinding_01.js"]
+
+["browser_inspector_highlighter-keybinding_02.js"]
+
+["browser_inspector_highlighter-keybinding_03.js"]
+
+["browser_inspector_highlighter-keybinding_04.js"]
+
+["browser_inspector_highlighter-keybinding_separate-window.js"]
+
+["browser_inspector_highlighter-measure-keybinding.js"]
+
+["browser_inspector_highlighter-measure_01.js"]
+
+["browser_inspector_highlighter-measure_02.js"]
+
+["browser_inspector_highlighter-measure_03.js"]
+
+["browser_inspector_highlighter-measure_04.js"]
+
+["browser_inspector_highlighter-options.js"]
+
+["browser_inspector_highlighter-preview.js"]
+
+["browser_inspector_highlighter-reduced-motion-message.js"]
+
+["browser_inspector_highlighter-reduced-motion.js"]
+
+["browser_inspector_highlighter-reload.js"]
+
+["browser_inspector_highlighter-rulers_01.js"]
+
+["browser_inspector_highlighter-rulers_02.js"]
+
+["browser_inspector_highlighter-rulers_03.js"]
+skip-if = ["os == 'win' && !debug"] # Bug 1449754
+
+["browser_inspector_highlighter-selector_01.js"]
+
+["browser_inspector_highlighter-selector_02.js"]
+
+["browser_inspector_highlighter-zoom.js"]
+
+["browser_inspector_iframe-navigation.js"]
+
+["browser_inspector_iframe-picker-bfcache-navigation.js"]
+
+["browser_inspector_iframe-picker.js"]
+
+["browser_inspector_infobar_01.js"]
+
+["browser_inspector_infobar_02.js"]
+
+["browser_inspector_infobar_03.js"]
+
+["browser_inspector_infobar_04.js"]
+
+["browser_inspector_infobar_05.js"]
+
+["browser_inspector_infobar_textnode.js"]
+
+["browser_inspector_initialization.js"]
+skip-if = ["debug"] # Bug 1250058 - Docshell leak on debug
+
+["browser_inspector_inspect-object-element.js"]
+
+["browser_inspector_inspect_loading_document.js"]
+
+["browser_inspector_inspect_mutated_node.js"]
+skip-if = ["win10_2004"] # Bug 1723573
+
+["browser_inspector_inspect_node_contextmenu.js"]
+
+["browser_inspector_inspect_node_contextmenu_nested.js"]
+
+["browser_inspector_inspect_parent_process_page.js"]
+
+["browser_inspector_invalidate.js"]
+
+["browser_inspector_keyboard-shortcuts-copy-outerhtml.js"]
+
+["browser_inspector_keyboard-shortcuts.js"]
+
+["browser_inspector_menu-01-sensitivity.js"]
+
+["browser_inspector_menu-03-paste-items-svg.js"]
+
+["browser_inspector_menu-03-paste-items.js"]
+
+["browser_inspector_menu-04-use-in-console.js"]
+
+["browser_inspector_menu-05-attribute-items.js"]
+
+["browser_inspector_menu-06-other.js"]
+
+["browser_inspector_navigate_to_errors.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+
+["browser_inspector_navigation.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+
+["browser_inspector_open_on_neterror.js"]
+
+["browser_inspector_pane-toggle-01.js"]
+
+["browser_inspector_pane-toggle-02.js"]
+
+["browser_inspector_pane-toggle-03.js"]
+
+["browser_inspector_pane-toggle-04.js"]
+
+["browser_inspector_pane-toggle-05.js"]
+
+["browser_inspector_pane-toggle-layout-invariant.js"]
+
+["browser_inspector_pane_state_restore.js"]
+
+["browser_inspector_picker-reset-reference.js"]
+
+["browser_inspector_picker-shift-key.js"]
+
+["browser_inspector_picker-stop-on-eyedropper.js"]
+
+["browser_inspector_picker-stop-on-tool-change.js"]
+
+["browser_inspector_picker-useragent-widget.js"]
+
+["browser_inspector_portrait_mode.js"]
+
+["browser_inspector_pseudoclass-lock.js"]
+
+["browser_inspector_pseudoclass-menu.js"]
+
+["browser_inspector_reload-01.js"]
+
+["browser_inspector_reload-02.js"]
+
+["browser_inspector_reload_iframe.js"]
+
+["browser_inspector_reload_invalid_iframe.js"]
+
+["browser_inspector_reload_missing-iframe-node.js"]
+
+["browser_inspector_reload_nested_iframe.js"]
+
+["browser_inspector_reload_shadow_dom.js"]
+
+["browser_inspector_reload_xul.js"]
+
+["browser_inspector_remove-iframe-during-load.js"]
+
+["browser_inspector_search-01.js"]
+
+["browser_inspector_search-02.js"]
+
+["browser_inspector_search-03.js"]
+
+["browser_inspector_search-04.js"]
+
+["browser_inspector_search-05.js"]
+
+["browser_inspector_search-06.js"]
+
+["browser_inspector_search-07.js"]
+
+["browser_inspector_search-08.js"]
+
+["browser_inspector_search-09.js"]
+
+["browser_inspector_search-10.js"]
+
+["browser_inspector_search-clear.js"]
+
+["browser_inspector_search-filter_context-menu.js"]
+
+["browser_inspector_search-label.js"]
+
+["browser_inspector_search-navigation.js"]
+
+["browser_inspector_search-reserved.js"]
+
+["browser_inspector_search-selection.js"]
+
+["browser_inspector_search-sidebar.js"]
+
+["browser_inspector_search-suggests-ids-and-classes.js"]
+
+["browser_inspector_search_keyboard_shortcut_conflict.js"]
+
+["browser_inspector_search_keyboard_trap.js"]
+
+["browser_inspector_select-last-selected.js"]
+
+["browser_inspector_sidebarstate.js"]
+
+["browser_inspector_startup.js"]
+
+["browser_inspector_switch-to-inspector-on-pick.js"]
+skip-if = ["apple_catalina && !debug"] # Bug 1713158
+
+["browser_inspector_textbox-menu.js"]
+
+["browser_inspector_textbox-menu_reopen_toolbox.js"]
+
+["browser_inspector_use-in-console-conflict.js"]

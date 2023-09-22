@@ -1,0 +1,26 @@
+[DEFAULT]
+subsuite = "media-bc"
+prefs = ["gfx.font_loader.delay=0"]
+support-files = [
+  "file_empty_page.html",
+  "file_media.html",
+  "../av1.mp4",
+  "../bipbop_short_vp8.webm",
+  "../bunny_hd_5s.mp4",
+  "../eme_standalone.js",
+  "../gizmo.mp4",
+  "../gizmo.webm",
+  "../sintel-short-clearkey-subsample-encrypted-video.webm",
+  "../small-shot.flac",
+  "../small-shot.m4a",
+  "../small-shot.mp3",
+  "../small-shot.ogg",
+  "../TestPatternHDR.mp4",
+]
+
+["browser_encrypted_play_time_telemetry.js"]
+skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_tab_visibility_and_play_time.js"]
+
+["browser_telemetry_video_hardware_decoding_support.js"]

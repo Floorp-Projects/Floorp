@@ -1,0 +1,54 @@
+[DEFAULT]
+tags = "fullscreen"
+head = "head.js"
+support-files = [
+  "dummy_page.html",
+  "file_fullscreen-api-keys.html",
+  "file_fullscreen-iframe-inner.html",
+  "file_fullscreen-iframe-middle.html",
+  "file_fullscreen-iframe-top.html",
+  "file_fullscreen-newtab.html",
+  "fullscreen_helpers.js",
+]
+
+["browser_fullscreen-api-keys.js"]
+
+["browser_fullscreen-bug-1798219.js"]
+skip-if = ["!nightly_build"] # Bug 1818608
+support-files = [
+  "file_fullscreen-bug-1798219.html",
+  "file_fullscreen-bug-1798219-2.html",
+]
+
+["browser_fullscreen-contextmenu-esc.js"]
+
+["browser_fullscreen-document-mutation-navigation.js"]
+
+["browser_fullscreen-document-mutation-race.js"]
+
+["browser_fullscreen-document-mutation.js"]
+
+["browser_fullscreen-navigation-history-race.js"]
+
+["browser_fullscreen-navigation-history.js"]
+
+["browser_fullscreen-navigation-race.js"]
+
+["browser_fullscreen-navigation.js"]
+
+["browser_fullscreen-newtab.js"]
+skip-if = [
+  "os == 'mac'", # Bug 1494843
+  "os == 'linux' && bits == 64 && os_version == '18.04'",  # Bug 1601460
+]
+
+["browser_fullscreen-sizemode.js"]
+
+["browser_fullscreen-tab-close-race.js"]
+
+["browser_fullscreen-tab-close.js"]
+
+["browser_fullscreen-window-open-race.js"]
+skip-if = ["os == 'mac'"] # test is checking for synchronous fullscreen completion
+
+["browser_fullscreen_exit_on_external_protocol.js"]

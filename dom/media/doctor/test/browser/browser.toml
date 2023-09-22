@@ -1,0 +1,7 @@
+[DEFAULT]
+subsuite = "media-bc"
+tags = "decoderdoctor"
+
+["browser_decoderDoctor.js"]
+
+["browser_doctor_notification.js"]

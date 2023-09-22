@@ -1,0 +1,93 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "array_json.json",
+  "array_json.json^headers^",
+  "csp_json.json",
+  "csp_json.json^headers^",
+  "doc_with_json_in_iframe.html",
+  "empty.html",
+  "head.js",
+  "invalid_json.json",
+  "invalid_json.json^headers^",
+  "manifest_json.json",
+  "manifest_json.json^headers^",
+  "passthrough-sw.js",
+  "simple_json.json",
+  "simple_json.json^headers^",
+  "valid_json.json",
+  "valid_json.json^headers^",
+  "!/devtools/client/framework/test/head.js",
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+]
+
+["browser_json_refresh.js"]
+
+["browser_jsonview_bug_1380828.js"]
+
+["browser_jsonview_chunked_json.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+support-files = ["chunked_json.sjs"]
+
+["browser_jsonview_content_type.js"]
+
+["browser_jsonview_copy_headers.js"]
+
+["browser_jsonview_copy_json.js"]
+
+["browser_jsonview_copy_rawdata.js"]
+
+["browser_jsonview_csp_json.js"]
+
+["browser_jsonview_data_blocking.js"]
+
+["browser_jsonview_empty_object.js"]
+
+["browser_jsonview_encoding.js"]
+
+["browser_jsonview_expand_collapse.js"]
+skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1794904
+
+["browser_jsonview_filter.js"]
+
+["browser_jsonview_filter_clear.js"]
+
+["browser_jsonview_iframes_ignored.js"]
+
+["browser_jsonview_ignore_charset.js"]
+
+["browser_jsonview_initial_focus.js"]
+
+["browser_jsonview_invalid_json.js"]
+
+["browser_jsonview_manifest.js"]
+
+["browser_jsonview_nojs.js"]
+
+["browser_jsonview_nul.js"]
+
+["browser_jsonview_object-type.js"]
+
+["browser_jsonview_row_selection.js"]
+
+["browser_jsonview_save_json.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+support-files = ["!/toolkit/content/tests/browser/common/mockTransfer.js"]
+
+["browser_jsonview_serviceworker.js"]
+
+["browser_jsonview_slash.js"]
+
+["browser_jsonview_theme.js"]
+
+["browser_jsonview_url_linkification.js"]
+
+["browser_jsonview_valid_json.js"]

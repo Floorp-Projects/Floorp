@@ -1,0 +1,10 @@
+[DEFAULT]
+support-files = [
+  "file_CrossSiteXHR_server.sjs",
+  "file_CrossSiteXHR_inner.html",
+  "file_cors_logging_test.html",
+  "file_bug1456721.html",
+  "bug1456721.sjs",
+]
+
+["browser_CORS-console-warnings.js"]

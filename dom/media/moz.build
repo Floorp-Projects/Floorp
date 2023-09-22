@@ -94,10 +94,10 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "mediacontrol/tests/browser/browser.ini",
-    "mediasession/test/browser.ini",
-    "test/browser/browser.ini",
-    "test/browser/wmfme/browser.ini",
+    "mediacontrol/tests/browser/browser.toml",
+    "mediasession/test/browser.toml",
+    "test/browser/browser.toml",
+    "test/browser/wmfme/browser.toml",
 ]
 
 if CONFIG["MOZ_WEBRTC"]:

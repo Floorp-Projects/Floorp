@@ -1,0 +1,37 @@
+[DEFAULT]
+subsuite = "media-bc"
+tags = "autoplay"
+support-files = [
+  "../../../test/gizmo.mp4",
+  "audio.ogg",
+  "file_empty.html",
+  "file_mediaplayback_frame.html",
+  "file_nonAutoplayAudio.html",
+  "file_video.html",
+  "head.js",
+]
+
+["browser_autoplay_policy_detection_click_to_play.js"]
+
+["browser_autoplay_policy_detection_global_and_site_sticky.js"]
+
+["browser_autoplay_policy_detection_global_sticky.js"]
+
+["browser_autoplay_policy_play_twice.js"]
+
+["browser_autoplay_policy_request_permission.js"]
+https_first_disabled = true
+
+["browser_autoplay_policy_touchScroll.js"]
+https_first_disabled = true
+
+["browser_autoplay_policy_user_gestures.js"]
+https_first_disabled = true
+
+["browser_autoplay_policy_webRTC_permission.js"]
+
+["browser_autoplay_policy_web_audio.js"]
+
+["browser_autoplay_policy_web_audio_with_gum.js"]
+
+["browser_autoplay_videoDocument.js"]

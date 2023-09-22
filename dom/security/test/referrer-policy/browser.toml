@@ -1,0 +1,6 @@
+[DEFAULT]
+support-files = ["referrer_page.sjs"]
+
+["browser_referrer_disallow_cross_site_relaxing.js"]
+
+["browser_referrer_telemetry.js"]

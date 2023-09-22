@@ -15,4 +15,4 @@ DevToolsModules(
     "worker.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]

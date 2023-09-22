@@ -49,5 +49,5 @@ FINAL_LIBRARY = "xul"
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Web Payments")
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]

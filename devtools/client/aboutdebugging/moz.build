@@ -13,7 +13,7 @@ DIRS += [
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 
 with Files("**"):

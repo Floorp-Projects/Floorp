@@ -33,7 +33,7 @@ LOCAL_INCLUDES += [
     "/dom/ipc",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]

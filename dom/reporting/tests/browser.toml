@@ -1,0 +1,7 @@
+[DEFAULT]
+support-files = [
+  "delivering.sjs",
+  "empty.html",
+]
+
+["browser_cleanup.js"]

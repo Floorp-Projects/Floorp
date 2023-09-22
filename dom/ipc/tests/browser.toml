@@ -1,0 +1,90 @@
+[DEFAULT]
+support-files = [
+  "file_disableScript.html",
+  "file_domainPolicy_base.html",
+  "file_cancel_content_js.html",
+  "../../media/test/short.mp4",
+  "../../media/test/owl.mp3",
+]
+
+["browser_CrashService_crash.js"]
+skip-if = ["!crashreporter"]
+
+["browser_ProcessPriorityManager.js"]
+# The Process Priority Manager is only enabled for Windows, Linux, and MacOS so far.
+# Bug 1522879.
+# However, you can still run browser_ProcessPriorityManager.js locally on other
+# OSes. This will test the priority manager infrastructure but not actually
+# change the priority.
+skip-if = ["os == 'android'"]
+support-files = [
+  "file_cross_frame.html",
+  "file_dummy.html",
+  "../../tests/browser/file_coop_coep.html",
+  "../../tests/browser/file_coop_coep.html^headers^",
+]
+
+["browser_bug1646088.js"]
+support-files = ["file_dummy.html"]
+
+["browser_bug1686194.js"]
+support-files = ["file_dummy.html"]
+
+["browser_cancel_content_js.js"]
+
+["browser_child_clipboard_restricted.js"]
+
+["browser_content_shutdown_with_endless_js.js"]
+support-files = [
+  "file_endless_js.html",
+  "file_dummy.html",
+]
+
+["browser_crash_oopiframe.js"]
+skip-if = [
+  "!crashreporter",
+  "verify",
+  "os == 'win'", # Bug 1775837
+  "os == 'linux'", # Bug 1775837
+]
+
+["browser_domainPolicy.js"]
+
+["browser_gc_schedule.js"]
+# This test is timing sensitive, timing changes due to asan/tsan/debugging
+# can upset it.
+skip-if = [
+  "verify",
+  "asan",
+  "tsan",
+  "debug",
+  "os != 'linux'",
+  "bits != 64",
+]
+
+["browser_hide_tooltip.js"]
+
+["browser_layers_unloaded_while_interruptingJS.js"]
+
+["browser_memory_distribution_telemetry.js"]
+skip-if = ["true"]
+
+["browser_pbrowser_creation_failure.js"]
+
+["browser_subframesPreferUsed.js"]
+
+["browser_very_fission.js"]
+support-files = ["file_dummy.html"]
+run-if = ["widget == 'gtk'"]
+
+["browser_wpi_isolate_everything.js"]
+support-files = ["browser_wpi_base.js"]
+
+["browser_wpi_isolate_high_value.js"]
+skip-if = ["!fission"] # Only relevant for fission
+support-files = ["browser_wpi_base.js"]
+
+["browser_wpi_isolate_nothing.js"]
+skip-if = ["apple_catalina && debug"] # Bug 1741763; high frequency intermittent; leaked 2 windows
+
+support-files = ["browser_wpi_base.js"]

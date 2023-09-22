@@ -1,0 +1,32 @@
+[DEFAULT]
+support-files = ["head.js"]
+
+["browser_contentWindow.js"]
+
+["browser_crash_report.js"]
+
+["browser_destroy_callbacks.js"]
+skip-if = ["!debug && os == 'mac'"] #Bug 1604538
+
+["browser_event_listener.js"]
+support-files = ["file_dummyChromePage.html"]
+
+["browser_getActor.js"]
+
+["browser_getActor_filter.js"]
+
+["browser_observer_notification.js"]
+support-files = [
+  "file_mediaPlayback.html",
+  "audio.ogg",
+]
+
+["browser_process_childid.js"]
+
+["browser_registerWindowActor.js"]
+
+["browser_sendAsyncMessage.js"]
+
+["browser_sendQuery.js"]
+
+["browser_uri_combination.js"]

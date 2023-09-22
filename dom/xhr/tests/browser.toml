@@ -1,0 +1,18 @@
+[DEFAULT]
+support-files = ["browser_xhr_onchange_leak.html"]
+
+["browser_blobFromFile.js"]
+
+["browser_sync_xhr_event_handing_switch_bcg.js"]
+support-files = [
+  "empty.html",
+  "empty_parent.html",
+  "slow.sjs",
+]
+
+["browser_temporaryFile.js"]
+support-files = ["temporaryFileBlob.sjs"]
+
+["browser_xhr_onchange_leak.js"]
+
+["browser_xhr_substituted_protocol_responseURL.js"]

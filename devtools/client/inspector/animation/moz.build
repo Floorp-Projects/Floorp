@@ -4,7 +4,7 @@
 
 DIRS += ["actions", "components", "reducers", "utils"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 
 DevToolsModules("animation.js", "current-time-timer.js")
 

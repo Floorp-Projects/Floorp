@@ -73,4 +73,4 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]

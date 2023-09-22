@@ -1,0 +1,36 @@
+[DEFAULT]
+prefs = ["dom.security.https_first=false"]
+support-files = [
+  "download_page.html",
+  "download_server.sjs",
+]
+
+["browser_auto_upgrading_identity.js"]
+support-files = [
+  "auto_upgrading_identity.html",
+  "auto_upgrading_identity.png",
+]
+
+["browser_csp_block_all_mixedcontent_and_mixed_content_display_upgrade.js"]
+support-files = [
+  "file_csp_block_all_mixedcontent_and_mixed_content_display_upgrade.html",
+  "pass.png",
+  "test.ogv",
+  "test.wav",
+]
+
+["browser_mixed_content_auth_download.js"]
+support-files = [
+  "file_auth_download_page.html",
+  "file_auth_download_server.sjs",
+]
+
+["browser_mixed_content_auto_upgrade_display_console.js"]
+support-files = ["file_mixed_content_auto_upgrade_display_console.html"]
+
+["browser_test_mixed_content_download.js"]
+skip-if = [
+  "win10_2004 && debug", # Bug 1723573
+  "win11_2009", # Bug 1784764
+  "os == 'linux' && !debug", # Bug 1784764
+]

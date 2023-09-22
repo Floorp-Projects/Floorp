@@ -1,0 +1,7 @@
+[DEFAULT]
+support-files = ["empty.html"]
+
+["browser_ipcBlob.js"]
+
+["browser_ipcBlob_temporary.js"]
+support-files = ["temporary.sjs"]

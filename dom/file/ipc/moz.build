@@ -65,5 +65,5 @@ FINAL_LIBRARY = "xul"
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]

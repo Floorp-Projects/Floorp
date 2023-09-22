@@ -88,5 +88,5 @@ if CONFIG["OS_TARGET"] == "WINNT":
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser/browser.ini",
+    "tests/browser/browser.toml",
 ]

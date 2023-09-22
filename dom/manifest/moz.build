@@ -18,4 +18,4 @@ EXTRA_JS_MODULES += [
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]

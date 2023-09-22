@@ -32,7 +32,7 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
