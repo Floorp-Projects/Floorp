@@ -4,5 +4,6 @@
 
 :root {
   --in-content-page-background: light-dark(#f9f9fb, #2b2a33);
+  --shopping-header-background: var(--in-content-page-background);
   font: menu;
 }

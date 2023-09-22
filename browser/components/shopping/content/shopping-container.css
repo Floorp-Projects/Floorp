@@ -23,8 +23,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  background-color: var(--shopping-header-background);
+  box-sizing: border-box;
   padding-block: 16px 8px;
   padding-inline: 16px 8px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 2;
 }
 
 #shopping-header {
@@ -36,6 +42,10 @@
 #shopping-header-title {
   font-weight: 600;
   margin: 0;
+}
+
+.shopping-header-overflow {
+  box-shadow: 0 1px 2px 0 rgba(58, 57, 68, 0.20);
 }
 
 #beta-marker {
@@ -57,11 +67,11 @@
   background-image: url("chrome://global/skin/icons/close.svg");
   background-repeat: no-repeat;
   background-position: center;
+  margin-inline-end: 0;
 }
 
 #content {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   align-items: stretch;
