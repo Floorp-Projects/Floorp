@@ -163,7 +163,7 @@ inline int64_t AudioTimelineEvent::TimeUnion::Get<int64_t>() const {
 class AudioEventTimeline {
  public:
   explicit AudioEventTimeline(float aDefaultValue)
-      : mValue(aDefaultValue), mSetTargetStartValue(aDefaultValue) {}
+      : mDefaultValue(aDefaultValue), mSetTargetStartValue(aDefaultValue) {}
 
   bool ValidateEvent(const AudioTimelineEvent& aEvent, ErrorResult& aRv) const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -240,7 +240,7 @@ class AudioEventTimeline {
           return false;
         }
       } else {
-        if (mValue <= 0.f) {
+        if (mDefaultValue <= 0.f) {
           // XXXbz I see no mention of SyntaxError in the Web Audio API spec
           aRv.ThrowSyntaxError("Our value must be positive");
           return false;
@@ -279,13 +279,16 @@ class AudioEventTimeline {
   float GetValue() const {
     // This method should only be called if HasSimpleValue() returns true
     MOZ_ASSERT(HasSimpleValue());
-    return mValue;
+    return mDefaultValue;
   }
 
   void SetValue(float aValue) {
+    // FIXME: bug 1308435
+    // A spec change means this should instead behave like setValueAtTime().
+
     // Silently don't change anything if there are any events
     if (mEvents.IsEmpty()) {
-      mSetTargetStartValue = mValue = aValue;
+      mSetTargetStartValue = mDefaultValue = aValue;
     }
   }
 
@@ -413,7 +416,7 @@ class AudioEventTimeline {
   // structure. We can optimize this in the future if the performance of the
   // array ends up being a bottleneck.
   nsTArray<AudioTimelineEvent> mEvents;
-  float mValue;
+  float mDefaultValue;
   // This is the value of this AudioParam at the end of the previous
   // event for SetTarget curves.
   float mSetTargetStartValue;
