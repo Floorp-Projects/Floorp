@@ -146,8 +146,6 @@
                     android:host="urls_bookmarks"/>
                 <data android:scheme="${deepLinkScheme}"
                     android:host="urls_history"/>
-                <data android:scheme="${deepLinkScheme}"
-                    android:host="test_deferred_deep_link"/>
             </intent-filter>
         </activity>
 
