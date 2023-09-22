@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root,
-body {
-  margin: 0;
-  padding: 0;
+:root {
   --in-content-page-background: light-dark(#f9f9fb, #2b2a33);
+  font: menu;
 }
