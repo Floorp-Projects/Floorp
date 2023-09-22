@@ -1798,13 +1798,13 @@ backgroundUpdate:
     the feature can impact Firefox behaviour and the user experience.
   isEarlyStartup: false
   variables:
-    allowUpdatesForUnelevatedInstallations:
+    enableUpdatesForUnelevatedInstallations:
       description: >-
         Allow the background update process to download and apply updates when
         the Mozilla Maintenance Service is unavailable but the installation
         directory can be written.
       type: boolean
-      fallbackPref: app.update.background.allowUpdatesForUnelevatedInstallations
+      setPref: app.update.background.allowUpdatesForUnelevatedInstallations
 
 bookmarks:
   description: Prefs to control aspects of the bookmarks system.

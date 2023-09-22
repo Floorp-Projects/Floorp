@@ -6,12 +6,6 @@
 
 "use strict";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
-
 const { BackgroundUpdate } = ChromeUtils.importESModule(
   "resource://gre/modules/BackgroundUpdate.sys.mjs"
 );
@@ -239,39 +233,11 @@ add_task(async function test_reasons_update_manual_update_only() {
   Assert.ok(!result.includes(REASON.MANUAL_UPDATE_ONLY));
 });
 
-// Ensure that we are starting on a clean machine without the service registry
-// key. Enable and disable the Nimbus feature that allows the background
-// updater to operate on unelevated installations, verifying that the
-// appropriate reason to not update is (respectively, is not) reported.
-add_task(
-  {
-    skip_if: () => AppConstants.platform != "win",
-  },
-  async function test_unelevated_nimbus_default() {
-    // Default is disabled.
-    Assert.equal(
-      false,
-      lazy.NimbusFeatures.backgroundUpdate.getVariable(
-        "allowUpdatesForUnelevatedInstallations"
-      ),
-      "default is disabled"
-    );
-
-    let r = await reasons();
-    Assert.ok(
-      r.includes(BackgroundUpdate.REASON.SERVICE_REGISTRY_KEY_MISSING),
-      `SERVICE_REGISTRY_KEY_MISSING in ${JSON.stringify(r)}`
-    );
-  }
-);
-
 add_task(
   {
     skip_if: () => AppConstants.platform != "win",
   },
   async function test_unelevated_nimbus_enabled() {
-    let r;
-
     // Enable feature.
     Services.prefs.setBoolPref(
       "app.update.background.allowUpdatesForUnelevatedInstallations",
@@ -284,7 +250,7 @@ add_task(
     });
 
     // execute!
-    r = await reasons();
+    let r = await reasons();
     Assert.ok(
       !r.includes(BackgroundUpdate.REASON.SERVICE_REGISTRY_KEY_MISSING),
       `no SERVICE_REGISTRY_KEY_MISSING in ${JSON.stringify(r)}`
