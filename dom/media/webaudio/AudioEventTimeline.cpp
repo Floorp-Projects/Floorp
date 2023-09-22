@@ -276,48 +276,26 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
                                  aTime);
   }
 
-  // If the requested time is after all of the existing events
-  if (!aNext) {
-    switch (aPrevious->mType) {
-      case AudioTimelineEvent::SetValueAtTime:
+  // Handle the cases where our range ends up in a ramp event
+  if (aNext) {
+    switch (aNext->mType) {
       case AudioTimelineEvent::LinearRamp:
+        return LinearInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
+                                 TimeOf(aNext), ValueOf(aNext), aTime);
+
       case AudioTimelineEvent::ExponentialRamp:
-        // The value will be constant after the last event
-        return aPrevious->mValue;
-      case AudioTimelineEvent::SetValueCurve:
-        return ExtractValueFromCurve(aPrevious->Time<TimeType>(),
-                                     aPrevious->mCurve, aPrevious->mCurveLength,
-                                     aPrevious->mDuration, aTime);
+        return ExponentialInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
+                                      TimeOf(aNext), ValueOf(aNext), aTime);
+
+      case AudioTimelineEvent::SetValueAtTime:
       case AudioTimelineEvent::SetTarget:
-        MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
+      case AudioTimelineEvent::SetValueCurve:
+        break;
       case AudioTimelineEvent::SetValue:
       case AudioTimelineEvent::Cancel:
       case AudioTimelineEvent::Track:
         MOZ_ASSERT(false, "Should have been handled earlier.");
     }
-    MOZ_ASSERT(false, "unreached");
-  }
-
-  // Finally, handle the case where we have both a previous and a next event
-
-  // First, handle the case where our range ends up in a ramp event
-  switch (aNext->mType) {
-    case AudioTimelineEvent::LinearRamp:
-      return LinearInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
-                               TimeOf(aNext), ValueOf(aNext), aTime);
-
-    case AudioTimelineEvent::ExponentialRamp:
-      return ExponentialInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
-                                    TimeOf(aNext), ValueOf(aNext), aTime);
-
-    case AudioTimelineEvent::SetValueAtTime:
-    case AudioTimelineEvent::SetTarget:
-    case AudioTimelineEvent::SetValueCurve:
-      break;
-    case AudioTimelineEvent::SetValue:
-    case AudioTimelineEvent::Cancel:
-    case AudioTimelineEvent::Track:
-      MOZ_ASSERT(false, "Should have been handled earlier.");
   }
 
   // Now handle all other cases
