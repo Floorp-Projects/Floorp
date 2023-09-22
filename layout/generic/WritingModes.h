@@ -1342,6 +1342,15 @@ class LogicalMargin {
   }
 
   /**
+   * Return a LogicalPoint representing an offset to the start-sides, i.e.
+   * inline-start and block-start.
+   */
+  LogicalPoint StartOffset(WritingMode aWritingMode) const {
+    CHECK_WRITING_MODE(aWritingMode);
+    return LogicalPoint(aWritingMode, IStart(), BStart());
+  }
+
+  /**
    * Accessors for physical margins, using our writing mode to convert from
    * logical values.
    */
