@@ -15,7 +15,6 @@ import org.mozilla.fenix.selection.SelectionHolder
  * Adapter for the list of visited pages, that uses Paging 3 versions of the Paging library.
  */
 class HistoryAdapter(
-    private val historyInteractor: HistoryInteractor,
     private val store: HistoryFragmentStore,
     private val onEmptyStateChanged: (Boolean) -> Unit,
 ) : PagingDataAdapter<History, HistoryListItemViewHolder>(historyDiffCallback),
@@ -41,7 +40,6 @@ class HistoryAdapter(
 
         return HistoryListItemViewHolder(
             view = view,
-            historyInteractor = historyInteractor,
             selectionHolder = this,
             store = store,
         )

@@ -65,11 +65,6 @@ object FeatureFlags {
     const val unifiedSearchSettings = true
 
     /**
-     * Enables the lib-state HistoryFragment refactor
-     */
-    val historyFragmentLibStateRefactor = Config.channel.isNightlyOrDebug
-
-    /**
      * Allows users to enable translations.
      * Preference to fully enable translations is pref_key_enable_translations.
      */
