@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
@@ -71,6 +72,12 @@ class HistoryNavigationMiddleware(
                             else -> Unit
                         }
                     }
+                }
+                is HistoryFragmentAction.SearchClicked -> {
+                    navController.navigateSafe(
+                        R.id.historyFragment,
+                        HistoryFragmentDirections.actionGlobalSearchDialog(null),
+                    )
                 }
                 else -> Unit
             }

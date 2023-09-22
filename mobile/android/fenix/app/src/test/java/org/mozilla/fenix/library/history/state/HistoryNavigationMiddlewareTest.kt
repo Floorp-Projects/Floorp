@@ -19,6 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
@@ -167,5 +168,24 @@ class HistoryNavigationMiddlewareTest {
         advanceUntilIdle()
 
         assertTrue(onBackPressed)
+    }
+
+    @Test
+    fun `WHEN search is clicked THEN search navigated to`() = runTest {
+        val navController = mock<NavController>()
+        val middleware = HistoryNavigationMiddleware(
+            navController = navController,
+            openToBrowser = { },
+            onBackPressed = { },
+            scope = this,
+        )
+
+        val store =
+            HistoryFragmentStore(HistoryFragmentState.initial, middleware = listOf(middleware))
+
+        store.dispatch(HistoryFragmentAction.SearchClicked).joinBlocking()
+        advanceUntilIdle()
+
+        verify(navController).navigateSafe(R.id.historyFragment, HistoryFragmentDirections.actionGlobalSearchDialog(null))
     }
 }
