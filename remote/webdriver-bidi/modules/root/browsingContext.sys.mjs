@@ -1312,6 +1312,29 @@ class BrowsingContextModule extends Module {
     }
   };
 
+  #onNavigationStarted = async (eventName, data) => {
+    const { navigableId, navigationId, url } = data;
+    const context = this.#getBrowsingContext(navigableId);
+
+    if (this.#subscribedEvents.has("browsingContext.navigationStarted")) {
+      const contextInfo = {
+        contextId: context.id,
+        type: lazy.WindowGlobalMessageHandler.type,
+      };
+
+      this.emitEvent(
+        "browsingContext.navigationStarted",
+        {
+          context: navigableId,
+          navigation: navigationId,
+          timestamp: Date.now(),
+          url,
+        },
+        contextInfo
+      );
+    }
+  };
+
   #startListeningLocationChanged() {
     if (!this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
       this.messageHandler.navigationManager.on(
@@ -1326,6 +1349,24 @@ class BrowsingContextModule extends Module {
       this.messageHandler.navigationManager.off(
         "location-changed",
         this.#onLocationChange
+      );
+    }
+  }
+
+  #startListeningNavigationStarted() {
+    if (!this.#subscribedEvents.has("browsingContext.navigationStarted")) {
+      this.messageHandler.navigationManager.on(
+        "navigation-started",
+        this.#onNavigationStarted
+      );
+    }
+  }
+
+  #stopListeningNavigationStarted() {
+    if (this.#subscribedEvents.has("browsingContext.navigationStarted")) {
+      this.messageHandler.navigationManager.off(
+        "navigation-started",
+        this.#onNavigationStarted
       );
     }
   }
@@ -1354,11 +1395,12 @@ class BrowsingContextModule extends Module {
         this.#subscribedEvents.add(event);
         break;
       }
-      case "browsingContext.userPromptClosed": {
-        this.#promptListener.startListening();
+      case "browsingContext.navigationStarted": {
+        this.#startListeningNavigationStarted();
         this.#subscribedEvents.add(event);
         break;
       }
+      case "browsingContext.userPromptClosed":
       case "browsingContext.userPromptOpened": {
         this.#promptListener.startListening();
         this.#subscribedEvents.add(event);
@@ -1376,6 +1418,11 @@ class BrowsingContextModule extends Module {
       }
       case "browsingContext.fragmentNavigated": {
         this.#stopListeningLocationChanged();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
+      case "browsingContext.navigationStarted": {
+        this.#stopListeningNavigationStarted();
         this.#subscribedEvents.delete(event);
         break;
       }
@@ -1422,6 +1469,7 @@ class BrowsingContextModule extends Module {
       "browsingContext.domContentLoaded",
       "browsingContext.fragmentNavigated",
       "browsingContext.load",
+      "browsingContext.navigationStarted",
       "browsingContext.userPromptClosed",
       "browsingContext.userPromptOpened",
     ];
