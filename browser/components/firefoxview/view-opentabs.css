@@ -7,14 +7,19 @@
   gap: 1em;
 }
 
-.one-column {
+[card-count="one"] {
   grid-template-columns: 1fr;
 }
 
-.two-columns {
+[card-count="two"] {
   grid-template-columns: repeat(2, 1fr);
 }
 
-.three-columns {
+[card-count="three-or-more"] {
   grid-template-columns: repeat(3, 1fr);
+
+  @media (max-width: 85rem) {
+    /* Switch to 2-column layout on narrow viewports */
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
