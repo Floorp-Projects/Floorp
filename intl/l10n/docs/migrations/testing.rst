@@ -26,8 +26,23 @@ as actual migration. Finally it analyzes the commits, and checks if any
 migrations were actually run and the bug number in the commit message matches
 the migration name.
 
-It will also show the diff between the migrated files and the reference, ignoring
-blank lines.
+At the end of the execution, the output will include a diff if there are
+differences between the migrated files and the reference content (blank lines
+are automatically ignored). There are cases where a diff is still expected, even
+if the recipe is correct:
+
+- If the patch includes new strings that are not being migrated, the diff
+  output will show these as removals. This occurs because the migration recipe
+  test contains the latest version of strings from :bash:`gecko-strings` with
+  only migrations applied, while the reference file contains all string changes
+  being introduced by the patch.
+- If there are pending changes to FTL files included in the recipe that landed
+  in the last few days, and haven't been pushed to :bash:`gecko-strings` yet
+  (they're in :bash:`gecko-strings-quarantine`), these will show up as
+  additions.
+
+If a diff is displayed and the patch doesn't fall into the highlighted cases,
+there may be an issue with the migration recipe.
 
 You can inspect the generated repository further by looking at
 
