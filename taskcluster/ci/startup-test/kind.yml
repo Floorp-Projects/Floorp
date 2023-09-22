@@ -31,7 +31,7 @@ job-defaults:
     worker:
         max-run-time: 3600
     run:
-        sparse-profile: mozharness
+        sparse-profile: startup-test
     attributes:
         build_type: opt
     treeherder:
