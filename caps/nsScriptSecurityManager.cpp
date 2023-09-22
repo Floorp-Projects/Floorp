@@ -79,7 +79,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIIOService* nsScriptSecurityManager::sIOService = nullptr;
+StaticRefPtr<nsIIOService> nsScriptSecurityManager::sIOService;
 std::atomic<bool> nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 
 namespace {
@@ -1549,9 +1549,12 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 }
 
 nsresult nsScriptSecurityManager::Init() {
-  nsresult rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsresult rv;
+  RefPtr<nsIIOService> io = mozilla::components::IO::Service(&rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  sIOService = std::move(io);
   InitPrefs();
 
   // Create our system principal singleton
@@ -1597,7 +1600,7 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void) {
 }
 
 void nsScriptSecurityManager::Shutdown() {
-  NS_IF_RELEASE(sIOService);
+  sIOService = nullptr;
   BundleHelper::Shutdown();
   SystemPrincipal::Shutdown();
 }
