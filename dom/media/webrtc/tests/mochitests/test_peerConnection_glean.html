@@ -24,8 +24,6 @@ async function getAllWarningRates() {
     await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue(),
     warnNoTransactionid:
     await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue(),
-    warnStaleTransactionid:
-    await GleanTest.rtcrtpsenderSetparameters.warnStaleTransactionid.testGetValue(),
   };
 }
 
@@ -239,53 +237,6 @@ const tests = [
     newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
 
     is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to missing transactionId in setParameters");
-    is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
-  },
-
-  async function checkBadSetParametersStaleTransactionIdWarning() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnStaleTransactionid.testGetValue();
-    let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameStaleTransactionid["example.com"].testGetValue() || 0;
-
-    let params = sender.getParameters();
-    // Cause transactionId to be stale
-    await pc.createOffer();
-    // ...but make sure there is a recent getParameters call
-    sender.getParameters();
-    await sender.setParameters(params);
-
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.warnStaleTransactionid.testGetValue();
-    let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameStaleTransactionid["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to stale transactionId in setParameters");
-
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
-    } else {
-      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
-    }
-
-    oldRate = newRate;
-    oldBlameCount = newBlameCount;
-
-    // Glean should only record the warning once per sender!
-    params = sender.getParameters();
-    // Cause transactionId to be stale
-    await pc.createOffer();
-    // ...but make sure there is a recent getParameters call
-    sender.getParameters();
-    await sender.setParameters(params);
-
-    newRate = await GleanTest.rtcrtpsenderSetparameters.warnStaleTransactionid.testGetValue();
-    newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameStaleTransactionid["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to stale transactionId in setParameters");
     is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
   },
 
