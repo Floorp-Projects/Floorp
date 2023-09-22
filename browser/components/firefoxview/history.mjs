@@ -105,6 +105,8 @@ class HistoryInView extends ViewPage {
     migrationWizardDialog: "#migrationWizardDialog",
     emptyState: "fxview-empty-state",
     lists: { all: "fxview-tab-list" },
+    showAllHistoryBtn: ".show-all-history-button",
+    sortInputs: { all: "input[name=history-sort-option]" },
     panelList: "panel-list",
   };
 
@@ -190,6 +192,15 @@ class HistoryInView extends ViewPage {
   }
 
   onPrimaryAction(e) {
+    // Record telemetry
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "history",
+      "visits",
+      null,
+      {}
+    );
+
     let currentWindow = this.getWindow();
     if (currentWindow.openTrustedLinkIn) {
       let where = lazy.BrowserUtils.whereToOpenLink(
@@ -216,10 +227,28 @@ class HistoryInView extends ViewPage {
 
   async onChangeSortOption(e) {
     this.sortOption = e.target.value;
-    this.updateHistoryData();
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "sort_history",
+      "tabs",
+      null,
+      {
+        sort_type: this.sortOption,
+      }
+    );
+    await this.updateHistoryData();
   }
 
   showAllHistory() {
+    // Record telemetry
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "show_all_history",
+      "tabs",
+      null,
+      {}
+    );
+
     // Open History view in Library window
     this.getWindow().PlacesCommandHook.showPlacesOrganizer("History");
   }
@@ -474,6 +503,7 @@ class HistoryInView extends ViewPage {
         ?hidden=${!this.allHistoryItems.size}
       >
         <button
+          class="show-all-history-button"
           data-l10n-id="firefoxview-show-all-history"
           @click=${this.showAllHistory}
         ></button>
