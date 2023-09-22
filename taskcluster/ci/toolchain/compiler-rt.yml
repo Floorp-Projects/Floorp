@@ -10,6 +10,25 @@ job-defaults:
         using: toolchain-script
         script: build-compiler-rt.sh
 
+wasm32-wasi-compiler-rt-8.0:
+    description: "wasm32-wasi Compiler-rt for Clang 8 toolchain build"
+    treeherder:
+        symbol: TL(wasi-crt-8)
+    worker-type: b-linux-xlarge-gcp
+    run:
+        script: build-compiler-rt-wasi.sh
+        arguments:
+            - wasi-sdk-11.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk-11.patch
+        toolchain-artifact: public/build/compiler-rt-wasm32-wasi.tar.zst
+    fetches:
+        fetch:
+            - clang-8.0
+            - wasi-sdk-11
+        toolchain:
+            - linux64-clang-8.0-raw
+
 android-aarch64-compiler-rt-16:
     description: "android aarch64 Compiler-rt for Clang 16 toolchain build"
     treeherder:

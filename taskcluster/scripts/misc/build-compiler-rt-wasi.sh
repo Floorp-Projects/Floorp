@@ -25,7 +25,7 @@ ln -s llvm-ar build/install/wasi/bin/ar
 # Build compiler-rt
 make \
   LLVM_PROJ_DIR=$LLVM_PROJ_DIR \
-  PREFIX=/wasi \
+  PREFIX=$(grep -q BUILD_PREFIX Makefile || echo $PWD/build/install)/wasi \
   build/compiler-rt.BUILT \
   -j$(nproc)
 

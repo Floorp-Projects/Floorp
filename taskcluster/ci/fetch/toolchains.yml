@@ -388,6 +388,13 @@ rust-1.72.1:
         repo: https://github.com/rust-lang/rust/
         revision: d5c2e9c342b358556da91d61ed4133f6f50fc0c3
 
+wasi-sdk-11:
+    description: wasi-sdk-11 source code
+    fetch:
+        type: git
+        repo: https://github.com/WebAssembly/wasi-sdk
+        revision: ceabbfe181599bca83d81e087a229797e472c09c
+
 wasi-sdk:
     description: wasi-sdk-20 source code
     fetch:

@@ -10,10 +10,10 @@ job-defaults:
         resources:
             - 'build/build-clang/build-clang.py'
 
-linux64-clang-8.0:
+linux64-clang-8.0-raw:
     description: "Clang 8.0 toolchain build"
     treeherder:
-        symbol: TL(clang-8.0)
+        symbol: TL(clang-8.0-raw)
     worker-type: b-linux-large-gcp
     run:
         script: build-clang.sh
@@ -26,12 +26,27 @@ linux64-clang-8.0:
             - 'build/build-clang/clang-8.0.json'
             - 'build/build-clang/2stages.json'
         toolchain-artifact: public/build/clang.tar.zst
-        toolchain-alias: linux64-clang-base
     fetches:
         fetch:
             - clang-8.0
         toolchain:
             - linux64-toolchain-sysroot
+
+linux64-clang-8.0:
+    description: "Clang 8.0 toolchain build"
+    treeherder:
+        symbol: TL(clang-8.0)
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 600
+    run:
+        script: repack-clang.sh
+        toolchain-alias: linux64-clang-base
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        toolchain:
+            - linux64-clang-8.0-raw
+            - wasm32-wasi-compiler-rt-8.0
 
 linux64-clang-14-stage1:
     description: "Clang 14 toolchain build"

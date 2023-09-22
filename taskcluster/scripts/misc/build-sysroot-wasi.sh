@@ -29,7 +29,7 @@ ln -s llvm-ar build/install/wasi/bin/ar
 do_make() {
   make \
     LLVM_PROJ_DIR=$LLVM_PROJ_DIR \
-    PREFIX=/wasi \
+    PREFIX=$(grep -q BUILD_PREFIX Makefile || echo $PWD/build/install)/wasi \
     -j$(nproc) \
     $1
 }
@@ -43,6 +43,9 @@ do_make build/wasi-libc.BUILT
 touch build/compiler-rt.BUILT
 
 do_make build/libcxx.BUILT
+if grep -q build/libcxxabi.BUILT Makefile; then
+    do_make build/libcxxabi.BUILT
+fi
 
 mv build/install/wasi/share/wasi-sysroot $sysroot
 tar --zstd -cf $artifact $sysroot
