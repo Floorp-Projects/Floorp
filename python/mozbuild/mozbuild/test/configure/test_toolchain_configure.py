@@ -173,8 +173,8 @@ CLANG_3_3 = CLANG("3.3.0") + DEFAULT_C99
 CLANGXX_3_3 = CLANGXX("3.3.0")
 CLANG_4_0 = CLANG("4.0.2") + DEFAULT_C11
 CLANGXX_4_0 = CLANGXX("4.0.2") + SUPPORTS_GNUXX1Z
-CLANG_7_0 = CLANG("7.0.0") + DEFAULT_C11
-CLANGXX_7_0 = CLANGXX("7.0.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17
+CLANG_8_0 = CLANG("8.0.0") + DEFAULT_C11
+CLANGXX_8_0 = CLANGXX("8.0.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17
 XCODE_CLANG_3_3 = (
     CLANG("5.0")
     + DEFAULT_C99
@@ -188,12 +188,12 @@ XCODE_CLANG_4_0 = CLANG("9.0.0") + DEFAULT_C11 + {"__apple_build_version__": "1"
 XCODE_CLANGXX_4_0 = (
     CLANGXX("9.0.0") + SUPPORTS_GNUXX1Z + {"__apple_build_version__": "1"}
 )
-XCODE_CLANG_7_0 = CLANG("10.0.1") + DEFAULT_C11 + {"__apple_build_version__": "1"}
-XCODE_CLANGXX_7_0 = (
-    CLANGXX("10.0.1") + SUPPORTS_GNUXX17 + {"__apple_build_version__": "1"}
+XCODE_CLANG_8_0 = CLANG("11.0.1") + DEFAULT_C11 + {"__apple_build_version__": "1"}
+XCODE_CLANGXX_8_0 = (
+    CLANGXX("11.0.1") + SUPPORTS_GNUXX17 + {"__apple_build_version__": "1"}
 )
-DEFAULT_CLANG = CLANG_7_0
-DEFAULT_CLANGXX = CLANGXX_7_0
+DEFAULT_CLANG = CLANG_8_0
+DEFAULT_CLANGXX = CLANGXX_8_0
 
 
 def CLANG_PLATFORM(gcc_platform):
@@ -445,8 +445,8 @@ class LinuxToolchainTest(BaseToolchainTest):
         "/usr/bin/g++-10": GXX_10 + GCC_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang": DEFAULT_CLANG + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang++": DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_LINUX,
-        "/usr/bin/clang-7.0": CLANG_7_0 + CLANG_PLATFORM_X86_64_LINUX,
-        "/usr/bin/clang++-7.0": CLANGXX_7_0 + CLANG_PLATFORM_X86_64_LINUX,
+        "/usr/bin/clang-8.0": CLANG_8_0 + CLANG_PLATFORM_X86_64_LINUX,
+        "/usr/bin/clang++-8.0": CLANGXX_8_0 + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang-4.0": CLANG_4_0 + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang++-4.0": CLANGXX_4_0 + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang-3.3": CLANG_3_3 + CLANG_PLATFORM_X86_64_LINUX,
@@ -481,33 +481,33 @@ class LinuxToolchainTest(BaseToolchainTest):
     DEFAULT_GXX_RESULT = GXX_8_RESULT + {"compiler": "/usr/bin/g++"}
 
     CLANG_3_3_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 3.3.0)."
+        "Only clang/llvm 8.0 or newer is supported (found version 3.3.0)."
     )
     CLANGXX_3_3_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 3.3.0)."
+        "Only clang/llvm 8.0 or newer is supported (found version 3.3.0)."
     )
     CLANG_4_0_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.2)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.2)."
     )
     CLANGXX_4_0_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.2)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.2)."
     )
-    CLANG_7_0_RESULT = CompilerResult(
+    CLANG_8_0_RESULT = CompilerResult(
         flags=["-std=gnu99"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
-        compiler="/usr/bin/clang-7.0",
+        compiler="/usr/bin/clang-8.0",
         language="C",
     )
-    CLANGXX_7_0_RESULT = CompilerResult(
+    CLANGXX_8_0_RESULT = CompilerResult(
         flags=["-std=gnu++17"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
-        compiler="/usr/bin/clang++-7.0",
+        compiler="/usr/bin/clang++-8.0",
         language="C++",
     )
-    DEFAULT_CLANG_RESULT = CLANG_7_0_RESULT + {"compiler": "/usr/bin/clang"}
-    DEFAULT_CLANGXX_RESULT = CLANGXX_7_0_RESULT + {"compiler": "/usr/bin/clang++"}
+    DEFAULT_CLANG_RESULT = CLANG_8_0_RESULT + {"compiler": "/usr/bin/clang"}
+    DEFAULT_CLANGXX_RESULT = CLANGXX_8_0_RESULT + {"compiler": "/usr/bin/clang++"}
 
     def test_default(self):
         # We'll try clang and gcc, and find clang first.
@@ -657,10 +657,10 @@ class LinuxToolchainTest(BaseToolchainTest):
         self.do_toolchain_test(
             self.PATHS,
             {
-                "c_compiler": self.CLANG_7_0_RESULT,
-                "cxx_compiler": self.CLANGXX_7_0_RESULT,
+                "c_compiler": self.CLANG_8_0_RESULT,
+                "cxx_compiler": self.CLANGXX_8_0_RESULT,
             },
-            environ={"CC": "clang-7.0"},
+            environ={"CC": "clang-8.0"},
         )
 
     def test_unsupported_clang(self):
@@ -845,8 +845,8 @@ class OSXToolchainTest(BaseToolchainTest):
         "/usr/bin/g++-5": GXX_5 + GCC_PLATFORM_X86_64_OSX,
         "/usr/bin/gcc-8": GCC_8 + GCC_PLATFORM_X86_64_OSX,
         "/usr/bin/g++-8": GXX_8 + GCC_PLATFORM_X86_64_OSX,
-        "/usr/bin/clang": XCODE_CLANG_7_0 + CLANG_PLATFORM_X86_64_OSX,
-        "/usr/bin/clang++": XCODE_CLANGXX_7_0 + CLANG_PLATFORM_X86_64_OSX,
+        "/usr/bin/clang": XCODE_CLANG_8_0 + CLANG_PLATFORM_X86_64_OSX,
+        "/usr/bin/clang++": XCODE_CLANGXX_8_0 + CLANG_PLATFORM_X86_64_OSX,
         "/usr/bin/clang-4.0": XCODE_CLANG_4_0 + CLANG_PLATFORM_X86_64_OSX,
         "/usr/bin/clang++-4.0": XCODE_CLANGXX_4_0 + CLANG_PLATFORM_X86_64_OSX,
         "/usr/bin/clang-3.3": XCODE_CLANG_3_3 + CLANG_PLATFORM_X86_64_OSX,
@@ -854,27 +854,27 @@ class OSXToolchainTest(BaseToolchainTest):
         "/usr/bin/xcrun": xcrun,
     }
     CLANG_3_3_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.0.or.less)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.0.or.less)."
     )
     CLANGXX_3_3_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.0.or.less)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.0.or.less)."
     )
     CLANG_4_0_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.0.or.less)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.0.or.less)."
     )
     CLANGXX_4_0_RESULT = (
-        "Only clang/llvm 7.0 or newer is supported (found version 4.0.0.or.less)."
+        "Only clang/llvm 8.0 or newer is supported (found version 4.0.0.or.less)."
     )
     DEFAULT_CLANG_RESULT = CompilerResult(
         flags=["-std=gnu99"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
         compiler="/usr/bin/clang",
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
         flags=["-stdlib=libc++", "-std=gnu++17"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
         compiler="/usr/bin/clang++",
         language="C++",
@@ -973,8 +973,8 @@ class MingwToolchainTest(BaseToolchainTest):
         "/usr/bin/g++-7": GXX_7 + GCC_PLATFORM_X86_WIN + MINGW32,
         "/usr/bin/clang": DEFAULT_CLANG + CLANG_PLATFORM_X86_WIN,
         "/usr/bin/clang++": DEFAULT_CLANGXX + CLANG_PLATFORM_X86_WIN,
-        "/usr/bin/clang-7.0": CLANG_7_0 + CLANG_PLATFORM_X86_WIN,
-        "/usr/bin/clang++-7.0": CLANGXX_7_0 + CLANG_PLATFORM_X86_WIN,
+        "/usr/bin/clang-8.0": CLANG_8_0 + CLANG_PLATFORM_X86_WIN,
+        "/usr/bin/clang++-8.0": CLANGXX_8_0 + CLANG_PLATFORM_X86_WIN,
         "/usr/bin/clang-4.0": CLANG_4_0 + CLANG_PLATFORM_X86_WIN,
         "/usr/bin/clang++-4.0": CLANGXX_4_0 + CLANG_PLATFORM_X86_WIN,
         "/usr/bin/clang-3.3": CLANG_3_3 + CLANG_PLATFORM_X86_WIN,
@@ -1111,8 +1111,8 @@ class Mingw64ToolchainTest(MingwToolchainTest):
         "/usr/bin/g++-7": GXX_7 + GCC_PLATFORM_X86_64_WIN + MINGW32,
         "/usr/bin/clang": DEFAULT_CLANG + CLANG_PLATFORM_X86_64_WIN,
         "/usr/bin/clang++": DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_WIN,
-        "/usr/bin/clang-7.0": CLANG_7_0 + CLANG_PLATFORM_X86_64_WIN,
-        "/usr/bin/clang++-7.0": CLANGXX_7_0 + CLANG_PLATFORM_X86_64_WIN,
+        "/usr/bin/clang-8.0": CLANG_8_0 + CLANG_PLATFORM_X86_64_WIN,
+        "/usr/bin/clang++-8.0": CLANGXX_8_0 + CLANG_PLATFORM_X86_64_WIN,
         "/usr/bin/clang-4.0": CLANG_4_0 + CLANG_PLATFORM_X86_64_WIN,
         "/usr/bin/clang++-4.0": CLANGXX_4_0 + CLANG_PLATFORM_X86_64_WIN,
         "/usr/bin/clang-3.3": CLANG_3_3 + CLANG_PLATFORM_X86_64_WIN,
@@ -1561,20 +1561,20 @@ class OSXCrossToolchainTest(BaseToolchainTest):
     PATHS = dict(LinuxToolchainTest.PATHS)
     PATHS.update(
         {
-            "/usr/bin/clang": CLANG_7_0 + CLANG_PLATFORM_X86_64_LINUX,
-            "/usr/bin/clang++": CLANGXX_7_0 + CLANG_PLATFORM_X86_64_LINUX,
+            "/usr/bin/clang": CLANG_8_0 + CLANG_PLATFORM_X86_64_LINUX,
+            "/usr/bin/clang++": CLANGXX_8_0 + CLANG_PLATFORM_X86_64_LINUX,
         }
     )
     DEFAULT_CLANG_RESULT = CompilerResult(
         flags=["-std=gnu99"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
         compiler="/usr/bin/clang",
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
         flags=["-std=gnu++17"],
-        version="7.0.0",
+        version="8.0.0",
         type="clang",
         compiler="/usr/bin/clang++",
         language="C++",

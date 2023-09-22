@@ -1,0 +1,14 @@
+# https://github.com/WebAssembly/wasi-sdk/pull/189
+diff --git a/Makefile b/Makefile
+index bde9936..b1f24fe 100644
+--- a/Makefile
++++ b/Makefile
+@@ -91,7 +91,7 @@ build/wasi-libc.BUILT: build/llvm.BUILT
+ 		SYSROOT=$(BUILD_PREFIX)/share/wasi-sysroot
+ 	touch build/wasi-libc.BUILT
+ 
+-build/compiler-rt.BUILT: build/llvm.BUILT
++build/compiler-rt.BUILT: build/llvm.BUILT build/wasi-libc.BUILT
+ 	# Do the build, and install it.
+ 	mkdir -p build/compiler-rt
+ 	cd build/compiler-rt && cmake -G Ninja \

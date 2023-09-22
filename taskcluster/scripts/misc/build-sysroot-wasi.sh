@@ -7,7 +7,9 @@ sysroot=${artifact%.tar.*}
 # Make the wasi compiler-rt available to clang.
 env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
 
-patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/wasi-sdk.patch
+if [ -n "$1" ]; then
+  patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/$1
+fi
 
 cd $MOZ_FETCHES_DIR/wasi-sdk
 LLVM_PROJ_DIR=$MOZ_FETCHES_DIR/llvm-project
@@ -27,7 +29,7 @@ ln -s llvm-ar build/install/wasi/bin/ar
 do_make() {
   make \
     LLVM_PROJ_DIR=$LLVM_PROJ_DIR \
-    PREFIX=/wasi \
+    PREFIX=$(grep -q BUILD_PREFIX Makefile || echo $PWD/build/install)/wasi \
     -j$(nproc) \
     $1
 }
@@ -41,6 +43,9 @@ do_make build/wasi-libc.BUILT
 touch build/compiler-rt.BUILT
 
 do_make build/libcxx.BUILT
+if grep -q build/libcxxabi.BUILT Makefile; then
+    do_make build/libcxxabi.BUILT
+fi
 
 mv build/install/wasi/share/wasi-sysroot $sysroot
 tar --zstd -cf $artifact $sysroot
