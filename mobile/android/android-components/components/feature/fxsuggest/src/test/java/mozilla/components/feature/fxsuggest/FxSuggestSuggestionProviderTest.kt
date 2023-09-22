@@ -73,6 +73,7 @@ class FxSuggestSuggestionProviderTest {
                 Suggestion.Amp(
                     title = "Lasagna Come Out Tomorrow",
                     url = "https://www.lasagna.restaurant",
+                    rawUrl = "https://www.lasagna.restaurant",
                     icon = listOf(
                         137u, 80u, 78u, 71u, 13u, 10u, 26u, 10u, 0u, 0u, 0u, 13u, 73u, 72u, 68u, 82u,
                         0u, 0u, 0u, 1u, 0u, 0u, 0u, 1u, 1u, 3u, 0u, 0u, 0u, 37u, 219u, 86u, 202u, 0u,
@@ -87,6 +88,7 @@ class FxSuggestSuggestionProviderTest {
                     iabCategory = "8 - Food & Drink",
                     impressionUrl = "https://example.com/impression_url",
                     clickUrl = "https://example.com/click_url",
+                    rawClickUrl = "https://example.com/click_url",
                 ),
                 Suggestion.Wikipedia(
                     title = "Las Vegas",
@@ -184,6 +186,7 @@ class FxSuggestSuggestionProviderTest {
                 Suggestion.Amp(
                     title = "Lasagna Come Out Tomorrow",
                     url = "https://www.lasagna.restaurant",
+                    rawUrl = "https://www.lasagna.restaurant",
                     icon = null,
                     fullKeyword = "lasagna",
                     blockId = 0,
@@ -191,6 +194,7 @@ class FxSuggestSuggestionProviderTest {
                     iabCategory = "8 - Food & Drink",
                     impressionUrl = "https://example.com/impression_url",
                     clickUrl = "https://example.com/click_url",
+                    rawClickUrl = "https://example.com/click_url",
                 ),
             ),
         )
