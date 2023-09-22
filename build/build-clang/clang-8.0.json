@@ -1,0 +1,9 @@
+{
+    "cc": "/usr/bin/gcc",
+    "cxx": "/usr/bin/g++",
+    "as": "/usr/bin/gcc",
+    "targets": "X86;WebAssembly",
+    "patches": [
+        "llvmorg-10-init-136-gb288d90b39f4.patch"
+    ]
+}

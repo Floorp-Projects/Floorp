@@ -60,6 +60,23 @@ sysroot-x86_64-linux-gnu-x11:
         arguments:
             - amd64
 
+sysroot-wasm32-wasi-clang-8.0:
+    description: "Sysroot for wasi"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(sysroot-wasi-8)
+    run:
+        script: build-sysroot-wasi.sh
+        toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
+    fetches:
+        fetch:
+            - clang-8.0
+            - wasi-sdk-11
+        toolchain:
+            - linux64-clang-8.0
+            - wasm32-wasi-compiler-rt-8.0
+
 sysroot-wasm32-wasi-clang-16:
     description: "Sysroot for wasi"
     attributes:
@@ -89,6 +106,10 @@ sysroot-wasm32-wasi-clang-17:
         symbol: TL(sysroot-wasi-17)
     run:
         script: build-sysroot-wasi.sh
+        arguments:
+            - wasi-sdk.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk.patch
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
@@ -106,6 +127,10 @@ sysroot-wasm32-wasi-clang-trunk:
         symbol: TL(sysroot-wasi-trunk)
     run:
         script: build-sysroot-wasi.sh
+        arguments:
+            - wasi-sdk.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk.patch
         toolchain-alias:
             by-project:
                 toolchains: sysroot-wasm32-wasi

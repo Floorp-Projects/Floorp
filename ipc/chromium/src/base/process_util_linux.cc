@@ -27,6 +27,7 @@
 #  include "mozilla/Unused.h"
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/ipc/ProcessUtils.h"
+#  include "mozilla/ipc/SetProcessTitle.h"
 
 using namespace mozilla::ipc;
 #endif
@@ -142,6 +143,7 @@ void AppProcessBuilder::ReplaceArguments(int* argcp, char*** argvp) {
   *p = nullptr;
   *argvp = argv;
   *argcp = argv_.size();
+  mozilla::SetProcessTitle(argv_);
 }
 
 void AppProcessBuilder::InitAppProcess(int* argcp, char*** argvp) {

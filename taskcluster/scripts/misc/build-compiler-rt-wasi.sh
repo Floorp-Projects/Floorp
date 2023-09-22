@@ -4,7 +4,9 @@ set -x -e -v
 artifact=$(basename $TOOLCHAIN_ARTIFACT)
 dir=${artifact%.tar.*}
 
-patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/wasi-sdk.patch
+if [ -n "$1" ]; then
+  patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/$1
+fi
 
 cd $MOZ_FETCHES_DIR/wasi-sdk
 LLVM_PROJ_DIR=$MOZ_FETCHES_DIR/llvm-project
@@ -23,7 +25,7 @@ ln -s llvm-ar build/install/wasi/bin/ar
 # Build compiler-rt
 make \
   LLVM_PROJ_DIR=$LLVM_PROJ_DIR \
-  PREFIX=/wasi \
+  PREFIX=$(grep -q BUILD_PREFIX Makefile || echo $PWD/build/install)/wasi \
   build/compiler-rt.BUILT \
   -j$(nproc)
 

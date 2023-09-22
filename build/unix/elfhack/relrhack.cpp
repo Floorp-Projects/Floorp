@@ -180,6 +180,12 @@ bool RelR<bits>::hack(std::fstream& f) {
     return false;
   }
 
+  // Apply the PT_DYNAMIC tag changes we've recorded.
+  for (const auto& [offset, tag] : relr_tags) {
+    f.seekg(offset, std::ios::beg);
+    f.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+  }
+
   if (verneednum && verneed_off && strsz && strtab_off) {
     // Scan SHT_VERNEED for the GLIBC_ABI_DT_RELR version on the libc
     // library.
@@ -220,10 +226,6 @@ bool RelR<bits>::hack(std::fstream& f) {
           // Don't overwrite vn_aux.
           f.write(reinterpret_cast<char*>(&reuse),
                   sizeof(reuse) - sizeof(Elf_Word));
-          for (const auto& [offset, tag] : relr_tags) {
-            f.seekg(offset, std::ios::beg);
-            f.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-          }
         }
       }
       verneed_off += verneed.vn_next;

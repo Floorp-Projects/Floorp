@@ -1414,9 +1414,9 @@ def compiler(
 
         # If you want to bump the version check here ensure the version
         # is known for Xcode in get_compiler_info.
-        if info.type == "clang" and info.version < "7.0":
+        if info.type == "clang" and info.version < "8.0":
             raise FatalCheckError(
-                "Only clang/llvm 7.0 or newer is supported (found version %s)."
+                "Only clang/llvm 8.0 or newer is supported (found version %s)."
                 % info.version
             )
 
