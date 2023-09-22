@@ -33,6 +33,7 @@ button {
 #label-wrapper {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
   width: 100%;
 }
@@ -45,10 +46,6 @@ button {
   color: var(--in-content-text-color);
   font-size: 1em;
   margin: 0;
-}
-
-slot[name="rating"] {
-  font-size: 12px;
 }
 
 #content {

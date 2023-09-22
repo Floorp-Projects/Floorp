@@ -20,9 +20,10 @@
 :host([type="stale"]) #message-bar-container {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  flex-wrap: wrap;
+  column-gap: 8px;
 
-  > :is(span, button) {
+  > span {
     display: flex;
     flex-direction: column;
     align-self: center;
@@ -53,4 +54,5 @@ message-bar::part(icon) {
 :host([type=stale]) message-bar::part(container) {
   align-items: center;
   background-color: transparent;
+  padding: 0;
 }
