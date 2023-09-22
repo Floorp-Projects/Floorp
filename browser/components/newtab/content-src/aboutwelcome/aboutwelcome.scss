@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @use 'sass:math';
+@import 'chrome://global/skin/design-system/tokens-brand.css';
 @import '../styles/feature-callout';
 @import '../styles/shopping';
 
@@ -234,6 +235,10 @@ html {
 
     &:active {
       color: var(--link-color-active);
+
+      @media (prefers-contrast) {
+        text-decoration: none;
+      }
     }
   }
 
@@ -244,11 +249,6 @@ html {
     height: 100%;
     min-height: 500px;
     overflow: hidden;
-
-    --link-color: var(--in-content-primary-button-background);
-    --link-color-hover: var(--in-content-primary-button-background-hover);
-    --link-color-active: var(--in-content-primary-button-background-active);
-    --link-color-visited: var(--link-color);
 
     &.light-text {
       --in-content-page-color: rgb(251, 251, 254);
