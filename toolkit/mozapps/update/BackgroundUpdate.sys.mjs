@@ -211,10 +211,13 @@ export var BackgroundUpdate = {
       }
 
       if (!serviceRegKeyExists) {
-        // The nimbus experiment allows users with unelevated installations
-        // to update in the background.
-        let allowUnelevated = lazy.NimbusFeatures.backgroundUpdate.getVariable(
-          "allowUpdatesForUnelevatedInstallations"
+        // A Nimbus rollout sets this preference and allows users with
+        // unelevated installations to update in the background. For that to
+        // work we use the setPref function to toggle a preference, because the
+        // value for Nimbus is currently not readable in a backgroundtask. The
+        // preference serves in that case as our communication channel.
+        let allowUnelevated = await Services.prefs.getBoolPref(
+          "app.update.background.allowUpdatesForUnelevatedInstallations"
         );
 
         if (!allowUnelevated) {
