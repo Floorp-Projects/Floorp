@@ -2277,7 +2277,7 @@ const LinkParagraph = props => {
   }, [handleParagraphAction]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: text_content.text
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
     className: text_content.font_styles === "legal" ? "legal-paragraph" : "link-paragraph",
     onClick: handleParagraphAction,
     value: "link_paragraph",
@@ -2285,10 +2285,11 @@ const LinkParagraph = props => {
   }, (_text_content$link_ke = text_content.link_keys) === null || _text_content$link_ke === void 0 ? void 0 : _text_content$link_ke.map(link => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
     key: link,
     value: link,
-    "data-l10n-name": link,
-    role: "button",
-    tabIndex: "0" // must pass in tabIndex when no href is provided
-
+    role: "link",
+    className: "text-link",
+    "data-l10n-name": link // must pass in tabIndex when no href is provided
+    ,
+    tabIndex: "0"
   }, " "))));
 };
 
