@@ -17,7 +17,7 @@ const { PlacesUIUtils } = ChromeUtils.importESModule(
 
 let sandbox;
 
-add_task(function setup() {
+add_setup(function () {
   sandbox = sinon.createSandbox();
 });
 

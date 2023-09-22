@@ -20,7 +20,7 @@ const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
 let engine;
 let port;
 
-add_task(async function setup() {
+add_setup(async function () {
   engine = await addTestSuggestionsEngine();
   port = engine.getSubmission("").uri.port;
 

@@ -20,7 +20,7 @@ async function cleanup() {
   await PlacesUtils.history.clear();
 }
 
-add_task(function setup() {
+add_setup(function () {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
 

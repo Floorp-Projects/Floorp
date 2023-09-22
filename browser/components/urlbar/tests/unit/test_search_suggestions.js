@@ -128,7 +128,7 @@ function setResultGroups(groups) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   sandbox = lazy.sinon.createSandbox();
 
   let engine = await addTestSuggestionsEngine(searchStr => {

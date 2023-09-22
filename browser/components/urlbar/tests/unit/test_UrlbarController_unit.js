@@ -35,7 +35,7 @@ function assertContextMatches(context, expectedValues) {
   }
 }
 
-add_task(function setup() {
+add_setup(function () {
   sandbox = sinon.createSandbox();
 
   fPM = {
