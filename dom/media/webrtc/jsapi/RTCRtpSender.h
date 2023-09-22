@@ -190,7 +190,6 @@ class RTCRtpSender : public nsISupports,
   bool mHaveWarnedBecauseNoGetParameters = false;
   bool mHaveWarnedBecauseEncodingCountChange = false;
   bool mHaveWarnedBecauseNoTransactionId = false;
-  bool mHaveWarnedBecauseStaleTransactionId = false;
   // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
   bool mHaveFailedBecauseNoGetParameters = false;
   bool mHaveFailedBecauseEncodingCountChange = false;
