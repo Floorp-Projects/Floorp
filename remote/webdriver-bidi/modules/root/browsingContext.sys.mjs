@@ -18,6 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
+  NavigationListener:
+    "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
@@ -110,6 +112,7 @@ const WaitCondition = {
 
 class BrowsingContextModule extends Module {
   #contextListener;
+  #navigationListener;
   #promptListener;
   #subscribedEvents;
 
@@ -125,6 +128,17 @@ class BrowsingContextModule extends Module {
     // Create the browsing context listener and listen to "attached" events.
     this.#contextListener = new lazy.BrowsingContextListener();
     this.#contextListener.on("attached", this.#onContextAttached);
+
+    // Create the navigation listener and listen to "navigation-started" and
+    // "location-changed" events.
+    this.#navigationListener = new lazy.NavigationListener(
+      this.messageHandler.navigationManager
+    );
+    this.#navigationListener.on("location-changed", this.#onLocationChanged);
+    this.#navigationListener.on(
+      "navigation-started",
+      this.#onNavigationStarted
+    );
 
     // Create the prompt listener and listen to "closed" and "opened" events.
     this.#promptListener = new lazy.PromptListener();
@@ -1234,7 +1248,7 @@ class BrowsingContextModule extends Module {
     );
   };
 
-  #onLocationChange = async (eventName, data) => {
+  #onLocationChanged = async (eventName, data) => {
     const { navigationId, navigableId, url } = data;
     const context = this.#getBrowsingContext(navigableId);
 
@@ -1335,39 +1349,15 @@ class BrowsingContextModule extends Module {
     }
   };
 
-  #startListeningLocationChanged() {
-    if (!this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
-      this.messageHandler.navigationManager.on(
-        "location-changed",
-        this.#onLocationChange
-      );
-    }
-  }
+  #stopListeningToNavigationEvent(event) {
+    this.#subscribedEvents.delete(event);
 
-  #stopListeningLocationChanged() {
-    if (this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
-      this.messageHandler.navigationManager.off(
-        "location-changed",
-        this.#onLocationChange
-      );
-    }
-  }
+    const hasNavigationEvent =
+      this.#subscribedEvents.has("browsingContext.fragmentNavigated") ||
+      this.#subscribedEvents.has("browsingContext.navigationStarted");
 
-  #startListeningNavigationStarted() {
-    if (!this.#subscribedEvents.has("browsingContext.navigationStarted")) {
-      this.messageHandler.navigationManager.on(
-        "navigation-started",
-        this.#onNavigationStarted
-      );
-    }
-  }
-
-  #stopListeningNavigationStarted() {
-    if (this.#subscribedEvents.has("browsingContext.navigationStarted")) {
-      this.messageHandler.navigationManager.off(
-        "navigation-started",
-        this.#onNavigationStarted
-      );
+    if (!hasNavigationEvent) {
+      this.#navigationListener.stopListening();
     }
   }
 
@@ -1390,13 +1380,9 @@ class BrowsingContextModule extends Module {
         this.#subscribedEvents.add(event);
         break;
       }
-      case "browsingContext.fragmentNavigated": {
-        this.#startListeningLocationChanged();
-        this.#subscribedEvents.add(event);
-        break;
-      }
+      case "browsingContext.fragmentNavigated":
       case "browsingContext.navigationStarted": {
-        this.#startListeningNavigationStarted();
+        this.#navigationListener.startListening();
         this.#subscribedEvents.add(event);
         break;
       }
@@ -1416,13 +1402,9 @@ class BrowsingContextModule extends Module {
         this.#subscribedEvents.delete(event);
         break;
       }
-      case "browsingContext.fragmentNavigated": {
-        this.#stopListeningLocationChanged();
-        this.#subscribedEvents.delete(event);
-        break;
-      }
+      case "browsingContext.fragmentNavigated":
       case "browsingContext.navigationStarted": {
-        this.#stopListeningNavigationStarted();
+        this.#stopListeningToNavigationEvent();
         this.#subscribedEvents.delete(event);
         break;
       }

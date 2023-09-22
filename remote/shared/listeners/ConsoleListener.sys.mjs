@@ -49,7 +49,7 @@ export class ConsoleListener {
   #listening;
 
   /**
-   * Create a new ConsolerListener instance.
+   * Create a new ConsoleListener instance.
    *
    * @param {number} innerWindowId
    *     The inner window id to filter the messages for.
