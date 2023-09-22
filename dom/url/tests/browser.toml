@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = ["empty.html"]
+
+["browser_download_after_revoke.js"]

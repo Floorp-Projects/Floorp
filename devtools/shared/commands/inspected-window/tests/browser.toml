@@ -1,0 +1,12 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+  "!/devtools/client/shared/test/highlighter-test-actor.js",
+  "head.js",
+  "inspectedwindow-reload-target.sjs",
+]
+
+["browser_webextension_inspected_window.js"]

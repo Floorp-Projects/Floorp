@@ -28,9 +28,9 @@ DevToolsModules(
 )
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/_browser_console.ini",
+    "test/browser/_browser_console.toml",
     "test/browser/_jsterm.ini",
-    "test/browser/_webconsole.ini",
+    "test/browser/_webconsole.toml",
     "test/node/fixtures/stubs/stubs.ini",
 ]
 

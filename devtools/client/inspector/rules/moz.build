@@ -17,8 +17,8 @@ DevToolsModules(
 )
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser_part1.ini",
-    "test/browser_part2.ini",
+    "test/browser_part1.toml",
+    "test/browser_part2.toml",
 ]
 
 with Files("**"):

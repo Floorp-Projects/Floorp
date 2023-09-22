@@ -1,0 +1,11 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "command-line.html",
+  "command-line.js",
+]
+
+["browser_command_line_urls.js"]
+
+["browser_shim_disable_devtools.js"]

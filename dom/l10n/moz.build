@@ -29,7 +29,7 @@ FINAL_LIBRARY = "xul"
 
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.toml"]
-BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.toml"]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]

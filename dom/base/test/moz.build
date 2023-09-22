@@ -19,8 +19,8 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "browser.ini",
-    "fmm/browser.ini",
+    "browser.toml",
+    "fmm/browser.toml",
 ]
 
 TEST_DIRS += [

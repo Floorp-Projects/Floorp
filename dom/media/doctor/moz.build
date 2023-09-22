@@ -35,6 +35,6 @@ UNIFIED_SOURCES += [
     "DecoderDoctorLogger.cpp",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 FINAL_LIBRARY = "xul"

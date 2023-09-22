@@ -1,0 +1,215 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+support-files = [
+  "head.js",
+  "animation.html",
+  "animation-data.html",
+  "application-manifest-404-manifest.html",
+  "application-manifest-basic.html",
+  "application-manifest-invalid-json.html",
+  "application-manifest-no-manifest.html",
+  "application-manifest-warnings.html",
+  "doc_accessibility_audit.html",
+  "doc_accessibility_infobar.html",
+  "doc_accessibility_keyboard_audit.html",
+  "doc_accessibility_text_label_audit_frame.html",
+  "doc_accessibility_text_label_audit.html",
+  "doc_accessibility.html",
+  "doc_allocations.html",
+  "doc_compatibility.html",
+  "doc_force_cc.html",
+  "doc_force_gc.html",
+  "doc_innerHTML.html",
+  "doc_iframe.html",
+  "doc_iframe_content.html",
+  "doc_iframe2.html",
+  "error-actor.js",
+  "grid.html",
+  "inspector-isScrollable-data.html",
+  "inspector-search-data.html",
+  "inspector-traversal-data.html",
+  "inspector-shadow.html",
+  "storage-cookies-same-name.html",
+  "storage-dynamic-windows.html",
+  "storage-listings.html",
+  "storage-unsecured-iframe.html",
+  "storage-updates.html",
+  "storage-secured-iframe.html",
+  "test-errors-actor.js",
+  "test-window.xhtml",
+  "inspector-helpers.js",
+  "storage-helpers.js",
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+  "!/devtools/server/tests/chrome/hello-actor.js",
+]
+
+["browser_accessibility_highlighter_infobar.js"]
+
+["browser_accessibility_infobar_audit_keyboard.js"]
+
+["browser_accessibility_infobar_audit_text_label.js"]
+
+["browser_accessibility_infobar_show.js"]
+
+["browser_accessibility_keyboard_audit.js"]
+
+["browser_accessibility_node.js"]
+
+["browser_accessibility_node_audit.js"]
+
+["browser_accessibility_node_events.js"]
+
+["browser_accessibility_node_tabbing_order_highlighter.js"]
+
+["browser_accessibility_simple.js"]
+
+["browser_accessibility_simulator.js"]
+
+["browser_accessibility_tabbing_order_highlighter.js"]
+
+["browser_accessibility_text_label_audit.js"]
+
+["browser_accessibility_text_label_audit_frame.js"]
+
+["browser_accessibility_walker.js"]
+
+["browser_accessibility_walker_audit.js"]
+
+["browser_actor_error.js"]
+
+["browser_animation_actor-lifetime.js"]
+
+["browser_animation_emitMutations.js"]
+
+["browser_animation_getMultipleStates.js"]
+
+["browser_animation_getPlayers.js"]
+
+["browser_animation_getStateAfterFinished.js"]
+
+["browser_animation_getSubTreeAnimations.js"]
+
+["browser_animation_keepFinished.js"]
+
+["browser_animation_playPauseIframe.js"]
+
+["browser_animation_playPauseSeveral.js"]
+
+["browser_animation_playerState.js"]
+
+["browser_animation_reconstructState.js"]
+
+["browser_animation_refreshTransitions.js"]
+
+["browser_animation_setCurrentTime.js"]
+
+["browser_animation_setPlaybackRate.js"]
+
+["browser_animation_simple.js"]
+
+["browser_animation_updatedState.js"]
+
+["browser_application_manifest.js"]
+
+["browser_canvasframe_helper_01.js"]
+skip-if = ["true"] # Bug 1183605
+
+["browser_canvasframe_helper_02.js"]
+skip-if = ["true"] # iframe will not be loaded in xul:window with strict xhtml.
+
+["browser_canvasframe_helper_03.js"]
+skip-if = ["true"] # Bug 1183605
+
+["browser_canvasframe_helper_04.js"]
+skip-if = ["true"] # Bug 1183605
+
+["browser_canvasframe_helper_05.js"]
+skip-if = ["true"] # Bug 1183605
+
+["browser_canvasframe_helper_06.js"]
+skip-if = ["true"] # Bug 1183605
+
+["browser_compatibility_cssIssues.js"]
+
+["browser_connectToFrame.js"]
+
+["browser_debugger_server.js"]
+
+["browser_document_devtools_basics.js"]
+
+["browser_document_rdp_basics.js"]
+
+["browser_getProcess.js"]
+
+["browser_inspector-anonymous.js"]
+
+["browser_inspector-iframe.js"]
+
+["browser_inspector-insert.js"]
+
+["browser_inspector-isScrollable.js"]
+
+["browser_inspector-mutations-childlist.js"]
+skip-if = ["win10_2004 && fission && debug && socketprocess_networking"] # high frequency intermittent
+
+["browser_inspector-release.js"]
+
+["browser_inspector-remove.js"]
+
+["browser_inspector-retain.js"]
+
+["browser_inspector-search.js"]
+
+["browser_inspector-shadow.js"]
+
+["browser_inspector-traversal.js"]
+
+["browser_inspector-utils.js"]
+
+["browser_layout_getGrids.js"]
+
+["browser_layout_simple.js"]
+
+["browser_memory_allocations_01.js"]
+
+["browser_perf-01.js"]
+skip-if = ["tsan"] # bug 1804081, profiler issues in TSAN
+
+["browser_perf-02.js"]
+skip-if = ["tsan"] # bug 1804081, profiler issues in TSAN
+
+["browser_perf-04.js"]
+skip-if = ["tsan"] # bug 1804081, profiler issues in TSAN
+
+["browser_perf-getSupportedFeatures.js"]
+skip-if = ["tsan"] # bug 1804081, profiler issues in TSAN
+
+["browser_storage_cookies-duplicate-names.js"]
+https_first_disabled = true
+
+["browser_storage_dynamic_windows.js"]
+https_first_disabled = true
+skip-if = [
+  "debug", # Bug 1715916 - test is having race conditions on slow hardware
+  "tsan", # high frequency intermittent
+  "win10_2004 && asan && fission", # high frequency intermittent
+  "win11_2009 && asan", # high frequency intermittent
+]
+
+["browser_storage_listings.js"]
+https_first_disabled = true
+
+["browser_storage_updates.js"]
+https_first_disabled = true
+
+["browser_style_utils_getFontPreviewData.js"]
+
+["browser_styles_getRuleText.js"]
+
+["browser_stylesheets_getTextEmpty.js"]

@@ -6,7 +6,7 @@
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser-telemetry-startup.ini",
-    "test/browser.ini",
+    "test/browser.toml",
     "test/metrics/browser_metrics.ini",
     "test/metrics/browser_metrics_debugger.ini",
     "test/metrics/browser_metrics_inspector.ini",

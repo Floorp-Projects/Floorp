@@ -24,6 +24,6 @@ DevToolsModules(
     "utils.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]

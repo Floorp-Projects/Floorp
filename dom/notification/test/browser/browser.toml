@@ -1,0 +1,4 @@
+[DEFAULT]
+
+["browser_permission_dismiss.js"]
+support-files = ["notification.html"]

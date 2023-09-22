@@ -25,7 +25,7 @@ XPIDL_SOURCES += [
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = ["block_all_plugins.html"]
+
+["browser_blockallplugins.js"]

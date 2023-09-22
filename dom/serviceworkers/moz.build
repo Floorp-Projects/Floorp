@@ -122,9 +122,9 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser-dFPI.ini",
-    "test/browser.ini",
-    "test/isolated/multi-e10s-update/browser.ini",
+    "test/browser-dFPI.toml",
+    "test/browser.toml",
+    "test/isolated/multi-e10s-update/browser.toml",
 ]
 
 TEST_DIRS += ["test/gtest"]

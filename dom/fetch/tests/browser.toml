@@ -1,0 +1,34 @@
+[DEFAULT]
+
+["browser_blobFromFile.js"]
+
+["browser_origin_trial_coep_credentialless_cache.js"]
+support-files = [
+  "open_credentialless_document.sjs",
+  "credentialless_resource.sjs",
+]
+
+["browser_origin_trial_coep_credentialless_fetch_1.js"]
+support-files = [
+  "open_credentialless_document.sjs",
+  "store_header.sjs",
+]
+
+["browser_origin_trial_coep_credentialless_fetch_2.js"]
+support-files = [
+  "open_credentialless_document.sjs",
+  "store_header.sjs",
+]
+
+["browser_origin_trial_coep_credentialless_fetch_3.js"]
+support-files = [
+  "open_credentialless_document.sjs",
+  "store_header.sjs",
+]
+
+["browser_origin_trial_coep_credentialless_worker.js"]
+support-files = [
+  "open_credentialless_document.sjs",
+  "store_header.sjs",
+  "credentialless_worker.sjs",
+]

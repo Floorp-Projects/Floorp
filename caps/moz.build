@@ -6,7 +6,7 @@
 
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.toml"]
-BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 # Hack to make this file available as a resource:// URI.

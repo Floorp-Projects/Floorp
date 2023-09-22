@@ -1,0 +1,5 @@
+[DEFAULT]
+skip-if = ["buildapp != 'browser'"]
+support-files = ["page_private_ls.html"]
+
+["browser_private_ls.js"]

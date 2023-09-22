@@ -1,0 +1,22 @@
+[DEFAULT]
+prefs = [
+ "dom.webmidi.enabled=true",
+ "midi.testing=true",
+ "midi.prompt.testing=true",
+ "media.navigator.permission.disabled=true",
+ "dom.sitepermsaddon-provider.enabled=true",
+]
+
+["browser_midi_permission_gated.js"]
+support-files = ["blank.html"]
+
+["browser_refresh_port_list.js"]
+run-if = ["os != 'android'"]
+support-files = ["refresh_port_list.html"]
+
+["browser_stable_midi_port_ids.js"]
+run-if = ["os != 'android'"]
+support-files = [
+  "port_ids_page_1.html",
+  "port_ids_page_2.html",
+]

@@ -29,7 +29,7 @@ DevToolsModules(
     "toolsidebar.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Inspector")

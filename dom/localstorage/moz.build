@@ -9,7 +9,7 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 

@@ -1,0 +1,16 @@
+[DEFAULT]
+support-files = ["head.js"]
+
+["browser_getActor.js"]
+
+["browser_getActor_filter.js"]
+
+["browser_observer_notification.js"]
+
+["browser_registerProcessActor.js"]
+
+["browser_sendAsyncMessage.js"]
+
+["browser_sendQuery.js"]
+
+["browser_uri_combination.js"]
