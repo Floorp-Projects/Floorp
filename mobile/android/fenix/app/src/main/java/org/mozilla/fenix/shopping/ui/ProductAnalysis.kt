@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -95,13 +94,6 @@ fun ProductAnalysis(
                 description = stringResource(id = R.string.review_quality_check_no_reviews_warning_body),
                 type = ReviewQualityCheckInfoType.Info,
                 modifier = Modifier.fillMaxWidth(),
-                icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.mozac_ic_information_fill_24),
-                        contentDescription = null,
-                        tint = FirefoxTheme.colors.iconPrimary,
-                    )
-                },
             )
         }
 
@@ -154,16 +146,10 @@ private fun ReanalyzeCard(
         title = stringResource(R.string.review_quality_check_outdated_analysis_warning_title),
         type = ReviewQualityCheckInfoType.AnalysisUpdate,
         modifier = Modifier.fillMaxWidth(),
-        buttonText = stringResource(R.string.review_quality_check_outdated_analysis_warning_action),
-        onButtonClick = onReanalyzeClick,
-        icon = {
-            Icon(
-                painter = painterResource(id = R.drawable.mozac_ic_information_fill_24),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = FirefoxTheme.colors.iconPrimary,
-            )
-        },
+        buttonText = InfoCardButtonText(
+            text = stringResource(R.string.review_quality_check_outdated_analysis_warning_action),
+            onClick = onReanalyzeClick,
+        ),
     )
 }
 
@@ -171,13 +157,8 @@ private fun ReanalyzeCard(
 private fun ReanalysisInProgressCard() {
     ReviewQualityCheckInfoCard(
         title = stringResource(R.string.review_quality_check_reanalysis_in_progress_warning_title),
-        type = ReviewQualityCheckInfoType.AnalysisUpdate,
+        type = ReviewQualityCheckInfoType.Loading,
         modifier = Modifier.fillMaxWidth(),
-        icon = {
-            IndeterminateProgressIndicator(
-                modifier = Modifier.size(24.dp),
-            )
-        },
     )
 }
 

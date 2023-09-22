@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,7 +54,7 @@ fun ReviewQualityCheckExpandableCard(
 ) {
     ReviewQualityCheckCard(
         modifier = modifier,
-        contentPadding = 0.dp,
+        contentPadding = PaddingValues(0.dp),
     ) {
         var isExpanded by remember { mutableStateOf(false) }
 
@@ -113,7 +114,7 @@ fun ReviewQualityCheckCard(
     modifier: Modifier,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     elevation: Dp = defaultCardElevation,
-    contentPadding: Dp = defaultCardContentPadding,
+    contentPadding: PaddingValues = PaddingValues(defaultCardContentPadding),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(

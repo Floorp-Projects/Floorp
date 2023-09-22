@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -34,22 +33,15 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
-private val cardShape = RoundedCornerShape(8.dp)
-
 /**
- * Review Quality Check info UI.
+ * Review Quality Check Info Card UI.
  *
  * @param title The primary text of the info message.
  * @param type The [ReviewQualityCheckInfoType] of message to display.
  * @param modifier Modifier to be applied to the card.
  * @param description The optional secondary piece of text.
- * @param linkText An optional piece of text with a clickable substring.
- * @param hyperlinkText The text within [linkText] that is clickable.
- * @param linkURL The optional URL to return when the link is clicked.
+ * @param footer An optional piece of text with a clickable link.
  * @param buttonText The text to show in the optional button.
- * @param onLinkClick Invoked when the link is clicked. When not-null, the link will be visible.
- * @param onButtonClick Invoked when the button is clicked. When not-null, the button will be visible.
- * @param icon The UI to display before the text, typically an image or loading spinner.
  */
 @Composable
 fun ReviewQualityCheckInfoCard(
@@ -57,75 +49,102 @@ fun ReviewQualityCheckInfoCard(
     type: ReviewQualityCheckInfoType,
     modifier: Modifier = Modifier,
     description: String? = null,
-    linkText: String = "",
-    hyperlinkText: String = "",
-    linkURL: String = "",
-    buttonText: String = "",
-    onLinkClick: (() -> Unit)? = null,
-    onButtonClick: (() -> Unit)? = null,
-    icon: @Composable () -> Unit,
+    footer: Pair<String, LinkTextState>? = null,
+    buttonText: InfoCardButtonText? = null,
 ) {
-    Card(
+    ReviewQualityCheckCard(
         modifier = modifier,
-        shape = cardShape,
         backgroundColor = type.cardBackgroundColor,
+        contentPadding = PaddingValues(
+            horizontal = 12.dp,
+            vertical = 8.dp,
+        ),
         elevation = 0.dp,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            Row {
-                icon()
+        Row {
+            when (type) {
+                ReviewQualityCheckInfoType.Warning -> {
+                    InfoCardIcon(iconId = R.drawable.mozac_ic_warning_fill_24)
+                }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                ReviewQualityCheckInfoType.Confirmation -> {
+                    InfoCardIcon(iconId = R.drawable.mozac_ic_checkmark_24)
+                }
 
-                Column {
-                    Text(
-                        text = title,
-                        color = FirefoxTheme.colors.textPrimary,
-                        style = FirefoxTheme.typography.headline8,
+                ReviewQualityCheckInfoType.Error,
+                ReviewQualityCheckInfoType.Info,
+                ReviewQualityCheckInfoType.AnalysisUpdate,
+                -> {
+                    InfoCardIcon(
+                        iconId = R.drawable.mozac_ic_information_fill_24,
+                        modifier = Modifier.size(24.dp),
                     )
+                }
 
-                    description?.let {
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = description,
-                            color = FirefoxTheme.colors.textPrimary,
-                            style = FirefoxTheme.typography.body2,
-                        )
-                    }
-
-                    onLinkClick?.let {
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        LinkText(
-                            text = linkText,
-                            linkTextState = LinkTextState(
-                                text = hyperlinkText,
-                                url = linkURL,
-                                onClick = { onLinkClick() },
-                            ),
-                            style = FirefoxTheme.typography.body2.copy(
-                                color = FirefoxTheme.colors.textPrimary,
-                            ),
-                            linkTextColor = FirefoxTheme.colors.textPrimary,
-                            linkTextDecoration = TextDecoration.Underline,
-                        )
-                    }
+                ReviewQualityCheckInfoType.Loading -> {
+                    IndeterminateProgressIndicator(modifier = Modifier.size(24.dp))
                 }
             }
 
-            onButtonClick?.let {
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-                PrimaryButton(
-                    text = buttonText,
-                    textColor = type.buttonTextColor,
-                    backgroundColor = type.buttonBackgroundColor,
-                    onClick = onButtonClick,
+            Column {
+                Text(
+                    text = title,
+                    color = FirefoxTheme.colors.textPrimary,
+                    style = FirefoxTheme.typography.headline8,
                 )
+
+                description?.let {
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = description,
+                        color = FirefoxTheme.colors.textPrimary,
+                        style = FirefoxTheme.typography.body2,
+                    )
+                }
+
+                footer?.let {
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    LinkText(
+                        text = it.first,
+                        linkTextState = it.second,
+                        style = FirefoxTheme.typography.body2.copy(
+                            color = FirefoxTheme.colors.textPrimary,
+                        ),
+                        linkTextColor = FirefoxTheme.colors.textPrimary,
+                        linkTextDecoration = TextDecoration.Underline,
+                    )
+                }
             }
         }
+
+        buttonText?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PrimaryButton(
+                text = it.text,
+                textColor = type.buttonTextColor,
+                backgroundColor = type.buttonBackgroundColor,
+                onClick = it.onClick,
+            )
+        }
     }
+}
+
+@Composable
+private fun InfoCardIcon(
+    iconId: Int,
+    modifier: Modifier = Modifier,
+) {
+    Icon(
+        painter = painterResource(id = iconId),
+        contentDescription = null,
+        tint = FirefoxTheme.colors.iconPrimary,
+        modifier = modifier,
+    )
 }
 
 /**
@@ -138,6 +157,7 @@ enum class ReviewQualityCheckInfoType {
     Error,
     Info,
     AnalysisUpdate,
+    Loading,
     ;
 
     val cardBackgroundColor: Color
@@ -148,6 +168,7 @@ enum class ReviewQualityCheckInfoType {
             Error -> FirefoxTheme.colors.layerError
             Info -> FirefoxTheme.colors.layerInfo
             AnalysisUpdate -> Color.Transparent
+            Loading -> Color.Transparent
         }
 
     val buttonBackgroundColor: Color
@@ -158,37 +179,38 @@ enum class ReviewQualityCheckInfoType {
             Error -> FirefoxTheme.colors.actionError
             Info -> FirefoxTheme.colors.actionInfo
             AnalysisUpdate -> FirefoxTheme.colors.actionSecondary
+            Loading -> FirefoxTheme.colors.actionSecondary
         }
 
     val buttonTextColor: Color
         @Composable
         get() = when {
             this == Info && !isSystemInDarkTheme() -> FirefoxTheme.colors.textOnColorPrimary
-            this == AnalysisUpdate -> FirefoxTheme.colors.textActionSecondary
+            this == AnalysisUpdate || this == Loading -> FirefoxTheme.colors.textActionSecondary
             else -> FirefoxTheme.colors.textPrimary
         }
 }
 
-private class PreviewModel(
-    val messageType: ReviewQualityCheckInfoType,
-    val iconId: Int,
+/**
+ * Model for the optional button in a [ReviewQualityCheckInfoCard].
+ *
+ * @param text The text to show in the button.
+ * @param onClick The callback to invoke when the button is clicked.
+ */
+data class InfoCardButtonText(
+    val text: String,
+    val onClick: () -> Unit,
 )
 
-private class PreviewModelParameterProvider : PreviewParameterProvider<PreviewModel> {
-    override val values: Sequence<PreviewModel>
-        get() = sequenceOf(
-            PreviewModel(ReviewQualityCheckInfoType.Warning, R.drawable.mozac_ic_warning_fill_24),
-            PreviewModel(ReviewQualityCheckInfoType.Confirmation, R.drawable.mozac_ic_checkmark_24),
-            PreviewModel(ReviewQualityCheckInfoType.Error, R.drawable.mozac_ic_information_fill_24),
-            PreviewModel(ReviewQualityCheckInfoType.Info, R.drawable.mozac_ic_information_fill_24),
-            PreviewModel(ReviewQualityCheckInfoType.AnalysisUpdate, R.drawable.mozac_ic_information_fill_24),
-        )
+private class PreviewModelParameterProvider : PreviewParameterProvider<ReviewQualityCheckInfoType> {
+
+    override val values = enumValues<ReviewQualityCheckInfoType>().asSequence()
 }
 
 @LightDarkPreview
 @Composable
 private fun InfoCardPreview(
-    @PreviewParameter(PreviewModelParameterProvider::class) model: PreviewModel,
+    @PreviewParameter(PreviewModelParameterProvider::class) type: ReviewQualityCheckInfoType,
 ) {
     FirefoxTheme {
         Box(
@@ -198,22 +220,18 @@ private fun InfoCardPreview(
         ) {
             ReviewQualityCheckInfoCard(
                 title = "Title text",
-                type = model.messageType,
+                type = type,
                 modifier = Modifier.fillMaxWidth(),
                 description = "Description text",
-                linkText = "Primary link text with an underlined hyperlink.",
-                hyperlinkText = "underlined hyperlink",
-                buttonText = "Button text",
-                onLinkClick = {},
-                onButtonClick = {},
-                icon = {
-                    Icon(
-                        painter = painterResource(id = model.iconId),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = FirefoxTheme.colors.iconPrimary,
-                    )
-                },
+                footer = "Primary link text with an underlined hyperlink." to LinkTextState(
+                    text = "underlined hyperlink",
+                    url = "https://www.mozilla.org",
+                    onClick = {},
+                ),
+                buttonText = InfoCardButtonText(
+                    text = "Button text",
+                    onClick = {},
+                ),
             )
         }
     }

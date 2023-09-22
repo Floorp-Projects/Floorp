@@ -4,16 +4,15 @@
 
 package org.mozilla.fenix.shopping.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -48,52 +47,42 @@ fun ProductAnalysisError(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        when (error) {
-            ProductReviewState.Error.GenericError ->
-                ReviewQualityCheckInfoCard(
-                    title = stringResource(id = R.string.review_quality_check_generic_error_title),
-                    description = stringResource(id = R.string.review_quality_check_generic_error_body),
-                    type = ReviewQualityCheckInfoType.Warning,
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.mozac_ic_warning_fill_24),
-                            contentDescription = null,
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    },
+        val (
+            @StringRes titleResourceId: Int,
+            @StringRes descriptionResourceId: Int,
+            type: ReviewQualityCheckInfoType,
+        ) = when (error) {
+            ProductReviewState.Error.GenericError -> {
+                Triple(
+                    R.string.review_quality_check_generic_error_title,
+                    R.string.review_quality_check_generic_error_body,
+                    ReviewQualityCheckInfoType.Info,
                 )
+            }
 
-            ProductReviewState.Error.NetworkError ->
-                ReviewQualityCheckInfoCard(
-                    title = stringResource(id = R.string.review_quality_check_no_connection_title),
-                    description = stringResource(id = R.string.review_quality_check_no_connection_body),
-                    type = ReviewQualityCheckInfoType.Warning,
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.mozac_ic_warning_fill_24),
-                            contentDescription = null,
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    },
+            ProductReviewState.Error.NetworkError -> {
+                Triple(
+                    R.string.review_quality_check_no_connection_title,
+                    R.string.review_quality_check_no_connection_body,
+                    ReviewQualityCheckInfoType.Warning,
                 )
+            }
 
-            ProductReviewState.Error.UnsupportedProductTypeError ->
-                ReviewQualityCheckInfoCard(
-                    title = stringResource(id = R.string.review_quality_check_not_analyzable_info_title),
-                    description = stringResource(id = R.string.review_quality_check_not_analyzable_info_body),
-                    type = ReviewQualityCheckInfoType.Info,
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.mozac_ic_information_fill_24),
-                            contentDescription = null,
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    },
+            ProductReviewState.Error.UnsupportedProductTypeError -> {
+                Triple(
+                    R.string.review_quality_check_not_analyzable_info_title,
+                    R.string.review_quality_check_not_analyzable_info_body,
+                    ReviewQualityCheckInfoType.Info,
                 )
+            }
         }
+
+        ReviewQualityCheckInfoCard(
+            title = stringResource(id = titleResourceId),
+            description = stringResource(id = descriptionResourceId),
+            type = type,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         ReviewQualityInfoCard(
             onLearnMoreClick = onReviewGradeLearnMoreClick,
