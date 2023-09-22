@@ -440,7 +440,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         _binding = null
     }
 
-    private fun openItem(item: History.Regular) {
+    private fun openItem(item: History.Regular) = runIfFragmentIsAttached {
         GleanHistory.openedItem.record(
             GleanHistory.OpenedItemExtra(
                 isRemote = item.isRemote,
