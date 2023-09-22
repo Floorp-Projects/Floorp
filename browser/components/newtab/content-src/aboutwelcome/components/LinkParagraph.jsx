@@ -28,8 +28,8 @@ export const LinkParagraph = props => {
 
   return (
     <Localized text={text_content.text}>
-      {/* eslint-disable jsx-a11y/no-static-element-interactions */}
-      <span
+      {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */}
+      <p
         className={
           text_content.font_styles === "legal"
             ? "legal-paragraph"
@@ -44,14 +44,16 @@ export const LinkParagraph = props => {
           <a
             key={link}
             value={link}
+            role="link"
+            className="text-link"
             data-l10n-name={link}
-            role="button"
-            tabIndex="0" // must pass in tabIndex when no href is provided
+            // must pass in tabIndex when no href is provided
+            tabIndex="0"
           >
             {" "}
           </a>
         ))}
-      </span>
+      </p>
     </Localized>
   );
 };
