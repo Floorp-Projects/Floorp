@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
 });
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   // Disable tab-to-search onboarding results.

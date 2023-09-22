@@ -19,7 +19,7 @@ const match = new UrlbarResult(
 );
 let controller;
 
-add_task(async function setup() {
+add_setup(async function () {
   controller = UrlbarTestUtils.newMockController();
 });
 

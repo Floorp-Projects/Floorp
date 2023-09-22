@@ -33,7 +33,7 @@ const MAX_RESULTS = 10;
 
 let sandbox;
 
-add_task(async function setup() {
+add_setup(async function () {
   // Set a specific maxRichResults for sanity's sake.
   Services.prefs.setIntPref(MAX_RICH_RESULTS_PREF, MAX_RESULTS);
 
