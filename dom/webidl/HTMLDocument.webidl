@@ -6,9 +6,7 @@
 
 [LegacyOverrideBuiltIns,
  Exposed=Window,
- InstrumentedProps=(adoptedStyleSheets,
-                    caretRangeFromPoint,
-                    clear,
+ InstrumentedProps=(caretRangeFromPoint,
                     exitPictureInPicture,
                     featurePolicy,
                     onbeforecopy,
@@ -19,7 +17,6 @@
                     onmousewheel,
                     onresume,
                     onsearch,
-                    onsecuritypolicyviolation,
                     onwebkitfullscreenchange,
                     onwebkitfullscreenerror,
                     pictureInPictureElement,
