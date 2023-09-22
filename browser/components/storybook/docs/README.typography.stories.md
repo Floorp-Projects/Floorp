@@ -17,6 +17,24 @@ We set `font: message-box` at the root of `common-shared.css` and `global.css` s
     </tr>
   </thead>
   <tbody>
+  <tr>
+    <th>Heading XLarge <i>(used for error pages)</i></th>
+      <td><code>--font-size-xxlarge</code></td>
+      <td>
+        ```html story
+          <h1 class="text-truncated-ellipsis sb-preview-font-size-xxlarge">The quick brown fox jumps over the lazy dog</h1>
+        ```
+      </td>
+      <td>
+        <code>2.2rem</code> (<code>33px</code>)
+      </td>
+      <td>
+        <code>300</code>
+      </td>
+      <td>
+        <code>1.3</code>
+      </td>
+    </tr>
     <tr>
       <th>Heading Large</th>
       <td><code>h1,<br/>.heading-large</code></td>

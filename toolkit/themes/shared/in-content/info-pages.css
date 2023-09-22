@@ -36,7 +36,7 @@ body.wide-container {
   background-size: 1.6em;
   margin-inline-start: -2.3em;
   padding-inline-start: 2.3em;
-  font-size: 2.2em;
+  font-size: var(--font-size-xxlarge);
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -47,7 +47,7 @@ body.wide-container {
 }
 
 .title-text {
-  font-size: inherit;
+  font-size: var(--font-size-xxlarge);
   padding-bottom: 0.4em;
 }
 
