@@ -89,6 +89,10 @@ sysroot-wasm32-wasi-clang-17:
         symbol: TL(sysroot-wasi-17)
     run:
         script: build-sysroot-wasi.sh
+        arguments:
+            - wasi-sdk.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk.patch
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
@@ -106,6 +110,10 @@ sysroot-wasm32-wasi-clang-trunk:
         symbol: TL(sysroot-wasi-trunk)
     run:
         script: build-sysroot-wasi.sh
+        arguments:
+            - wasi-sdk.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk.patch
         toolchain-alias:
             by-project:
                 toolchains: sysroot-wasm32-wasi
