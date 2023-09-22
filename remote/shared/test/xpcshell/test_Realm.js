@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { Realm } = ChromeUtils.importESModule(
+const { Realm, WindowRealm } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/Realm.sys.mjs"
 );
 
@@ -83,4 +83,15 @@ add_task(function test_handleObjectMap() {
     undefined,
     "The first handle returns undefined as well"
   );
+});
+
+add_task(async function test_windowRealm_isSandbox() {
+  const windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
+  const contentWindow = windowlessBrowser.docShell.domWindow;
+
+  const realm1 = new WindowRealm(contentWindow);
+  Assert.equal(realm1.isSandbox, false);
+
+  const realm2 = new WindowRealm(contentWindow, { sandboxName: "test" });
+  Assert.equal(realm2.isSandbox, true);
 });

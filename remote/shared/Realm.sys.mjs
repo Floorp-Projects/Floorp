@@ -148,6 +148,7 @@ export class WindowRealm extends Realm {
   #realmAutomationFeaturesEnabled;
   #globalObject;
   #globalObjectReference;
+  #isSandbox;
   #sandboxName;
   #window;
 
@@ -166,10 +167,10 @@ export class WindowRealm extends Realm {
 
     super();
 
+    this.#isSandbox = sandboxName !== null;
     this.#sandboxName = sandboxName;
     this.#window = window;
-    this.#globalObject =
-      sandboxName === null ? this.#window : this.#createSandbox();
+    this.#globalObject = this.#isSandbox ? this.#createSandbox() : this.#window;
     this.#globalObjectReference = lazy.dbg.makeGlobalObjectReference(
       this.#globalObject
     );
@@ -196,6 +197,10 @@ export class WindowRealm extends Realm {
 
   get globalObjectReference() {
     return this.#globalObjectReference;
+  }
+
+  get isSandbox() {
+    return this.#isSandbox;
   }
 
   get origin() {
@@ -309,17 +314,22 @@ export class WindowRealm extends Realm {
    *     - context {BrowsingContext} The browsing context, associated with the realm.
    *     - id {string} The realm unique identifier.
    *     - origin {string} The serialization of an origin.
-   *     - sandbox {string|null} The name of the sandbox.
+   *     - sandbox {string=} The name of the sandbox.
    *     - type {RealmType.Window} The window realm type.
    */
   getInfo() {
     const baseInfo = super.getInfo();
-    return {
+    const info = {
       ...baseInfo,
       context: this.#window.browsingContext,
-      sandbox: this.#sandboxName,
       type: WindowRealm.type,
     };
+
+    if (this.#isSandbox) {
+      info.sandbox = this.#sandboxName;
+    }
+
+    return info;
   }
 
   /**
