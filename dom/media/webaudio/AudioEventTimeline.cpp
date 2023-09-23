@@ -247,7 +247,7 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
 
   // If this event is a curve event, this returns the end time of the curve.
   // Otherwise, this returns the time of the event.
-  auto EndTimeOf = [](const AudioTimelineEvent* aEvent) -> TimeType {
+  auto EndTimeOf = [](const AudioTimelineEvent* aEvent) -> double {
     MOZ_ASSERT(aEvent->mType != AudioTimelineEvent::SetTarget);
     if (aEvent->mType == AudioTimelineEvent::SetValueCurve) {
       return aEvent->Time<TimeType>() + aEvent->mDuration;
