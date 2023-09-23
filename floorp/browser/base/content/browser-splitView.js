@@ -45,6 +45,10 @@ let gSplitView = {
         .deck-selected[splitview="left"] {
           order: 0 !important;
         }
+        
+        #tabbrowser-tabpanels {
+          display: flex !important;
+        }
         `;
         document.head.appendChild(elem);
       }
