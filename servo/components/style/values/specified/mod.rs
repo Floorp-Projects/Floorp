@@ -966,8 +966,10 @@ impl ToCss for Attr {
         serialize_atom_identifier(&self.attribute, dest)?;
 
         if !self.fallback.is_empty() {
-            dest.write_str(", ")?;
+            // Fallback will always be a string value for now, so always wrap in "..."
+            dest.write_str(", \"")?;
             self.fallback.to_css(dest)?;
+            dest.write_char('"')?;
         }
 
         dest.write_char(')')
