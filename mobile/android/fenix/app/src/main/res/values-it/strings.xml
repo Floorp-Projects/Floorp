@@ -1434,7 +1434,7 @@
     <string name="preference_accessibility_auto_size_summary">La dimensione dei caratteri corrisponderà alle impostazioni di Android. Disattivare per gestire la dimensione dei caratteri separatamente.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">Elimina i dati di navigazione</string>
+    <string name="preferences_delete_browsing_data">Elimina dati di navigazione</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Schede aperte</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -2290,9 +2290,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Controlla adesso</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Non ci sono ancora abbastanza recensioni</string>
+    <string name="review_quality_check_no_reviews_warning_title">Non ci sono ancora abbastanza recensioni</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Non appena questo prodotto avrà più recensioni, saremo in grado di verificarne la qualità.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Non appena questo prodotto avrà più recensioni, saremo in grado di verificarne la qualità.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Il prodotto non è disponibile</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2301,7 +2301,7 @@
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Segnala che questo prodotto è di nuovo disponibile</string>
 
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Verifica qualità recensioni</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Verifica qualità recensioni</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Verifica qualità recensioni</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2311,10 +2311,10 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Dovremmo avere informazioni su questo prodotto entro 24 ore. Ricontrolla più tardi.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Impossibile verificare queste recensioni</string>
+    <string name="review_quality_check_not_analyzable_info_title">Impossibile verificare queste recensioni</string>
 
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Purtroppo non è possibile verificare la qualità delle recensioni per alcuni tipi di prodotto come carte regalo, video in streaming e giochi.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Purtroppo non è possibile verificare la qualità delle recensioni per alcuni tipi di prodotto come carte regalo, video in streaming e giochi.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Informazioni disponibili a breve</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2324,13 +2324,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">OK</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Nessuna informazione disponibile al momento</string>
+    <string name="review_quality_check_generic_error_title">Nessuna informazione disponibile al momento</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Stiamo lavorando per risolvere il problema. Ricontrolla a breve.</string>
+    <string name="review_quality_check_generic_error_body">Stiamo lavorando per risolvere il problema. Ricontrolla a breve.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Nessuna connessione di rete</string>
+    <string name="review_quality_check_no_connection_title">Nessuna connessione di rete</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Controlla la connessione di rete e prova a ricaricare la pagina.</string>
+    <string name="review_quality_check_no_connection_body">Controlla la connessione di rete e prova a ricaricare la pagina.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Non ci sono ancora informazioni su queste recensioni</string>
 

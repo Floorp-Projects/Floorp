@@ -2179,9 +2179,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">ביצוע בדיקה כעת</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">אין מספיק סקירות עדיין</string>
+    <string name="review_quality_check_no_reviews_warning_title">אין מספיק סקירות עדיין</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">כאשר למוצר זה יהיו סקירות נוספות, נוכל לבדוק את האיכות שלהן.</string>
+    <string name="review_quality_check_no_reviews_warning_body">כאשר למוצר זה יהיו סקירות נוספות, נוכל לבדוק את האיכות שלהן.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">המוצר אינו זמין</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2189,7 +2189,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">שליחת דיווח שמוצר זה חזר למלאי</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">בתהליך בדיקת איכות הסקירות</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">בתהליך בדיקת איכות הסקירות</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">בתהליך בדיקת איכות הסקירות</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2200,9 +2200,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">אמור להיות לנו מידע על הסקירות של מוצר זה תוך 24 שעות. נא לבדוק שוב אז.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">אין באפשרותנו לבדוק סקירות אלה</string>
+    <string name="review_quality_check_not_analyzable_info_title">אין באפשרותנו לבדוק סקירות אלה</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">למרבה הצער, איננו יכולים לבדוק את איכות הסקירות עבור סוגים מסויימים של מוצרים. למשל, כרטיסי מתנה והזרמת וידאו, מוזיקה ומשחקים.</string>
+    <string name="review_quality_check_not_analyzable_info_body">למרבה הצער, איננו יכולים לבדוק את איכות הסקירות עבור סוגים מסויימים של מוצרים. למשל, כרטיסי מתנה והזרמת וידאו, מוזיקה ומשחקים.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">מידע יבוא בקרוב</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2212,13 +2212,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">הבנתי</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">אין מידע זמין כרגע</string>
+    <string name="review_quality_check_generic_error_title">אין מידע זמין כרגע</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">אנחנו עובדים על פתרון הבעיה. נא לבדוק שוב בקרוב.</string>
+    <string name="review_quality_check_generic_error_body">אנחנו עובדים על פתרון הבעיה. נא לבדוק שוב בקרוב.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">אין חיבור לרשת</string>
+    <string name="review_quality_check_no_connection_title">אין חיבור לרשת</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">נא לבדוק את החיבור שלך לרשת ולנסות לטעון מחדש את הדף.</string>
+    <string name="review_quality_check_no_connection_body">נא לבדוק את החיבור שלך לרשת ולנסות לטעון מחדש את הדף.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">אין עדיין מידע על סקירות אלה</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
@@ -2228,7 +2228,7 @@
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">נסו את המדריך המהימן שלנו לסקירות מוצרים</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">ניתן לבדוק עד כמה ביקורות מוצר אמינות ב-%1$s לפני הקנייה. בודק הסקירות, תכונה ניסיונית מאת %2$s, מובנה ישירות בדפדפן. הוא עובד גם על %3$s ו־%4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_description">ניתן לבדוק עד כמה ביקורות מוצר אמינות ב־%1$s לפני הקנייה. בודק הסקירות, תכונה ניסיונית מאת %2$s, מובנה ישירות בדפדפן. הוא עובד גם על %3$s ו־%4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">באמצעות הכוח של %1$s מאת Mozilla, אנו עוזרים לך להימנע מסקירות מוטות ולא אותנטיות. מודל הבינה המלאכותית שלנו משתפר תמיד כדי להגן עליך בזמן הקנייה. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->

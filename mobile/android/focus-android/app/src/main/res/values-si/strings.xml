@@ -13,7 +13,7 @@
     <string name="action_save">සුරකින්න</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
-    <string name="urlbar_hint">සොයන්න හෝ ලිපිනය යොදන්න</string>
+    <string name="urlbar_hint">සොයන්න හෝ ලිපිනය ලියන්න</string>
 
     <string name="teaser">ස්වයංක්‍රීය පෞද්. පිරික්සීම.\nපිරික්සන්න. මකන්න. නැවතත්.</string>
 
@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">කෙටිමං වෙතින් ඉවත් කරන්න</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">අළුත් දෑ</string>
     <string name="menu_settings">සැකසුම්</string>
     <string name="menu_about">පිළිබඳව</string>
     <string name="menu_help">උදව්</string>

@@ -2300,35 +2300,35 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">马上了解</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">还没有足够数量的评价</string>
+    <string name="review_quality_check_no_reviews_warning_title">还没有足够数量的评价</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">此商品获得更多评价后，我们就能开始分析其评价的质量。</string>
+    <string name="review_quality_check_no_reviews_warning_body">此商品获得更多评价后，我们就能开始分析其评价的质量。</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">商品无货</string>
 
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
-    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">若您发现此商品已有货，请向我们反馈，以便我们核查评论。</string>
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">若您发现此商品已有货，请向我们反馈，以便我们核查评价。</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">反馈此商品已有货</string>
 
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">正在检查评价质量</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">正在检查评价质量</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">正在检查评价质量</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">正在检查评价质量</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">这可能需要大约 60 秒。</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">这可能需要大约 60 秒。</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">感谢反馈！</string>
 
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">我们会在 24 小时内提供此商品的评价分析信息，请记得回来查看。</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">无法核查这些评价</string>
+    <string name="review_quality_check_not_analyzable_info_title">无法核查这些评价</string>
 
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">很抱歉，我们无法核查某些类型商品的评价质量，例如礼品卡、流媒体视频、音乐、游戏。</string>
+    <string name="review_quality_check_not_analyzable_info_body">很抱歉，我们无法核查某些类型商品的评价质量，例如礼品卡、流媒体视频、音乐、游戏。</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">即将提供信息</string>
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">分析信息即将就绪</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">我们会在 24 小时内提供此商品的评价分析信息，请记得回来查看。</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
@@ -2336,20 +2336,20 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">好的</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">目前没有可提供的信息</string>
+    <string name="review_quality_check_generic_error_title">目前没有可提供的信息</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">我们正努力解决此问题，请稍后再试。</string>
+    <string name="review_quality_check_generic_error_body">我们正努力解决此问题，请稍后再试。</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">无网络连接</string>
+    <string name="review_quality_check_no_connection_title">无网络连接</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">请检查网络连接，然后尝试重新加载此页面。</string>
+    <string name="review_quality_check_no_connection_body">请检查网络连接，然后尝试重新加载此页面。</string>
 
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">还没有关于这些评价的信息</string>
+    <string name="review_quality_check_no_analysis_title">还没有关于这些评价的信息</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">如需了解对此商品的评价是否可信，请检查评价质量。只需约 60 秒即可得出结果。</string>
+    <string name="review_quality_check_no_analysis_body">如需了解对此商品的评价是否可信，请检查评价质量。只需约 60 秒即可得出结果。</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">检查评价质量</string>
+    <string name="review_quality_check_no_analysis_link">检查评价质量</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">试试我们可信赖的商品评价指南</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2380,10 +2380,6 @@
 
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">测试中</string>
-    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">打开检查评价质量</string>
-    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">关闭检查评价质量</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s 颗星（满分 5 星）</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

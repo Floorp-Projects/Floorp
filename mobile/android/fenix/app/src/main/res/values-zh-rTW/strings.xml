@@ -2281,9 +2281,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">立刻檢查</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">還沒有足夠的評論數</string>
+    <string name="review_quality_check_no_reviews_warning_title">還沒有足夠的評論數</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">當此商品有足夠的評論後，即可檢查其評論品質。</string>
+    <string name="review_quality_check_no_reviews_warning_body">當此商品有足夠的評論後，即可檢查其評論品質。</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">商品已下架</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2291,7 +2291,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">回報此商品已重新上架</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">正在檢查評論品質</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">正在檢查評論品質</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">正在檢查評論品質</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2301,9 +2301,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">我們將在 24 小時內提供更新過的評論分析資訊，請稍候再回來。</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">我們無法檢查這些評論</string>
+    <string name="review_quality_check_not_analyzable_info_title">我們無法檢查這些評論</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">很可惜，我們無法確認某些類型產品（例如：儲值卡、影音串流服務、遊戲）的評論品質。</string>
+    <string name="review_quality_check_not_analyzable_info_body">很可惜，我們無法確認某些類型產品（例如：儲值卡、影音串流服務、遊戲）的評論品質。</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">即將提供資訊</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2313,13 +2313,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">知道了！</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">目前沒有可用資訊</string>
+    <string name="review_quality_check_generic_error_title">目前沒有可用資訊</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">我們正在努力解決此問題，請稍後再回來。</string>
+    <string name="review_quality_check_generic_error_body">我們正在努力解決此問題，請稍後再回來。</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">沒有網路連線</string>
+    <string name="review_quality_check_no_connection_title">沒有網路連線</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">請檢查您的網路連線是否正常，然後嘗試重新載入頁面。</string>
+    <string name="review_quality_check_no_connection_body">請檢查您的網路連線是否正常，然後嘗試重新載入頁面。</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">還沒有這些評論的相關資訊</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
@@ -2335,13 +2335,13 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">了解更多</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">選擇「好，使用看看」，代表您同意 %1$s by Mozilla 的 %2$s 與 %3$s 。</string>
+    <string name="review_quality_check_contextual_onboarding_caption">選擇「好，試用看看」，代表您同意 %1$s by Mozilla 的 %2$s 與 %3$s 。</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">隱私權保護政策</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">使用條款</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_primary_button_text">好，使用看看</string>
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">好，試用看看</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">現在不要</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->

@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Rimuovi dalle scorciatoie</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Novità</string>
     <string name="menu_settings">Impostazioni</string>
     <string name="menu_about">Informazioni su</string>
     <string name="menu_help">Aiuto</string>
@@ -493,7 +492,7 @@
 
 
   <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
-    <string name="snackbar_added_to_shortcuts">Aggiunto alle scorciatoie!</string>
+    <string name="snackbar_added_to_shortcuts">Aggiunto alle scorciatoie.</string>
 
     <string name="error_hostLookup_title">Impossibile contattare il server</string>
 

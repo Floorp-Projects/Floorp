@@ -2254,7 +2254,7 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Roipuru tembipurupyahu IA %s Mozilla rupive rohesa’ỹijo hag̃ua iporãpa marandu’i apopyregua. Ñehesa’ỹijo oipytyvõta roha’ã hag̃ua marandu’i porãngue, ndaha’éi apopyre porãngue.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Rome’ẽ marandu’i peteĩteĩva apopyrépe <strong>papapy tai ndive</strong> A guive F peve.]]></string>
+    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Rome’ẽ marandu’i peteĩteĩva apopyrépe <b>papapy tai ndive</b> A guive F peve.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">Hechajey jeroviaha. Roguerovia marandu’i ouha joguaharaitégui ohejáva umi marandu’i oñanduháicha ha ñaña’ỹre.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
@@ -2289,13 +2289,13 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Ehechajey ko’ág̃a</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Noĩri gueteri heta marandu’i</string>
+    <string name="review_quality_check_no_reviews_warning_title">Noĩri gueteri heta marandu’i</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Apopyre ndojeporukuaái</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Emombe’u ko apopyre ojeporukuaajeymaha</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Ehechajey marandu’i porãngue</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Ehechajey marandu’i porãngue</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Ehechajey marandu’i porãngue</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2303,7 +2303,7 @@
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">¡Aguyje emomarandúre!</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Ndorohechajeykuaái ko marandu’i.</string>
+    <string name="review_quality_check_not_analyzable_info_title">Ndorohechajeykuaái ko marandu’i.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Marandu ojeporupotáma</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
@@ -2311,9 +2311,9 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Aikumby</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Ndaipóri marandu ko’ág̃aite</string>
+    <string name="review_quality_check_generic_error_title">Ndaipóri marandu ko’ág̃aite</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Ndaikatúi eike ñandutípe</string>
+    <string name="review_quality_check_no_connection_title">Ndaikatúi eike ñandutípe</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Ndaipóri mba’eve ko’ã marandu’i rehegua</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
