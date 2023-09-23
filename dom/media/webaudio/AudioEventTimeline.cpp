@@ -241,18 +241,23 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
     return mDefaultValue;
   }
 
+  auto TimeOf = [](const AudioTimelineEvent* aEvent) -> TimeType {
+    return aEvent->Time<TimeType>();
+  };
+
   // If this event is a curve event, this returns the end time of the curve.
   // Otherwise, this returns the time of the event.
-  auto TimeOf = [](const AudioTimelineEvent* aEvent) -> TimeType {
+  auto EndTimeOf = [](const AudioTimelineEvent* aEvent) -> TimeType {
+    MOZ_ASSERT(aEvent->mType != AudioTimelineEvent::SetTarget);
     if (aEvent->mType == AudioTimelineEvent::SetValueCurve) {
       return aEvent->Time<TimeType>() + aEvent->mDuration;
     }
     return aEvent->Time<TimeType>();
   };
 
-  // Value for an event. For a ValueCurve event, this is the value of the last
-  // element of the curve.
-  auto ValueOf = [](const AudioTimelineEvent* aEvent) -> float {
+  // Value for an event, or for a ValueCurve event, this is the value of the
+  // last element of the curve.
+  auto EndValueOf = [](const AudioTimelineEvent* aEvent) -> float {
     if (aEvent->mType == AudioTimelineEvent::SetValueCurve) {
       return aEvent->mCurve[aEvent->mCurveLength - 1];
     }
@@ -263,15 +268,15 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
   // they have one)
   if (aPrevious->mType == AudioTimelineEvent::SetTarget) {
     return ExponentialApproach(TimeOf(aPrevious), mSetTargetStartValue,
-                               ValueOf(aPrevious), aPrevious->mTimeConstant,
+                               aPrevious->mValue, aPrevious->mTimeConstant,
                                aTime);
   }
 
   // SetValueCurve events can be handled no matter what their next node is
   // (if they have one), when aTime is in the curve region.
   if (aPrevious->mType == AudioTimelineEvent::SetValueCurve &&
-      aTime <= aPrevious->Time<TimeType>() + aPrevious->mDuration) {
-    return ExtractValueFromCurve(aPrevious->Time<TimeType>(), aPrevious->mCurve,
+      aTime <= TimeOf(aPrevious) + aPrevious->mDuration) {
+    return ExtractValueFromCurve(TimeOf(aPrevious), aPrevious->mCurve,
                                  aPrevious->mCurveLength, aPrevious->mDuration,
                                  aTime);
   }
@@ -280,12 +285,13 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
   if (aNext) {
     switch (aNext->mType) {
       case AudioTimelineEvent::LinearRamp:
-        return LinearInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
-                                 TimeOf(aNext), ValueOf(aNext), aTime);
+        return LinearInterpolate(EndTimeOf(aPrevious), EndValueOf(aPrevious),
+                                 TimeOf(aNext), aNext->mValue, aTime);
 
       case AudioTimelineEvent::ExponentialRamp:
-        return ExponentialInterpolate(TimeOf(aPrevious), ValueOf(aPrevious),
-                                      TimeOf(aNext), ValueOf(aNext), aTime);
+        return ExponentialInterpolate(EndTimeOf(aPrevious),
+                                      EndValueOf(aPrevious), TimeOf(aNext),
+                                      aNext->mValue, aTime);
 
       case AudioTimelineEvent::SetValueAtTime:
       case AudioTimelineEvent::SetTarget:
