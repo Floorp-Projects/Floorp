@@ -7343,18 +7343,17 @@ void Document::AddStyleSheetToStyleSets(StyleSheet& aSheet) {
 
 void Document::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
   mStyleSet->RecordShadowStyleChange(aShadowRoot);
-  ApplicableStylesChanged(/* aKnownInShadowTree= */ true);
+  ApplicableStylesChanged();
 }
 
-void Document::ApplicableStylesChanged(bool aKnownInShadowTree) {
+void Document::ApplicableStylesChanged() {
   // TODO(emilio): if we decide to resolve style in display: none iframes, then
   // we need to always track style changes and remove the mStyleSetFilled.
   if (!mStyleSetFilled) {
     return;
   }
-  if (!aKnownInShadowTree) {
-    MarkUserFontSetDirty();
-  }
+
+  MarkUserFontSetDirty();
   PresShell* ps = GetPresShell();
   if (!ps) {
     return;
@@ -7366,11 +7365,9 @@ void Document::ApplicableStylesChanged(bool aKnownInShadowTree) {
     return;
   }
 
-  if (!aKnownInShadowTree) {
-    pc->MarkCounterStylesDirty();
-    pc->MarkFontFeatureValuesDirty();
-    pc->MarkFontPaletteValuesDirty();
-  }
+  pc->MarkCounterStylesDirty();
+  pc->MarkFontFeatureValuesDirty();
+  pc->MarkFontPaletteValuesDirty();
   pc->RestyleManager()->NextRestyleIsForCSSRuleChanges();
 }
 
