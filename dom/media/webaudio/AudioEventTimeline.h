@@ -110,6 +110,13 @@ struct AudioTimelineEvent final {
   TimeType Time() const {
     return mTime.Get<TimeType>();
   }
+  // If this event is a curve event, this returns the end time of the curve.
+  // Otherwise, this returns the time of the event.
+  template <class TimeType>
+  double EndTime() const;
+  // Value for an event, or for a ValueCurve event, this is the value of the
+  // last element of the curve.
+  float EndValue() const;
 
   void SetTimeInTicks(int64_t aTimeInTicks) { mTime = aTimeInTicks; }
 
