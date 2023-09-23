@@ -24,6 +24,31 @@ let gSplitView = {
         }
       }
 
+      let CSSElem = document.getElementById("splitViewCSS");
+      if (!CSSElem) {
+        let elem = document.createElement("style");
+        elem.setAttribute("id", "splitViewCSS");
+        elem.textContent = `
+        #tabbrowser-tabpanels > * {
+          flex: 0;
+        }
+        
+        .deck-selected {
+          flex: 1 !important;
+          order: 1 !important;
+        }
+        
+        .deck-selected[splitview="right"] {
+          order: 3 !important;
+        }
+        
+        .deck-selected[splitview="left"] {
+          order: 0 !important;
+        }
+        `;
+        document.head.appendChild(elem);
+      }
+
       tab.setAttribute("splitView", true);
       panel.setAttribute("splitview", side);
       panel.setAttribute("splitviewtab", true);
@@ -48,6 +73,10 @@ let gSplitView = {
       let panel = gSplitView.Functions.getlinkedPanel(tab.linkedPanel);
       let browser = tab.linkedBrowser;
       let browserRenderLayers = browser.renderLayers;
+
+      // remove style
+      let CSSElem = document.getElementById("splitViewCSS");
+      CSSElem?.remove();
 
       tab.removeAttribute("splitView");
       panel.removeAttribute("splitview");
