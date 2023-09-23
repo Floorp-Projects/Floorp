@@ -529,7 +529,5 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
   display: none;
 }
 
-#tabbrowser-tabpanels {
-  display: flex !important;
-}
+
 
