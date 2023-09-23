@@ -177,15 +177,18 @@ impl cssparser::ToCss for AtomString {
     where
         W: Write,
     {
+        // Wrap in quotes to form a string literal
+        dest.write_char('"')?;
         #[cfg(feature = "servo")]
         {
-            cssparser::CssStringWriter::new(dest).write_str(self.as_ref())
+            cssparser::CssStringWriter::new(dest).write_str(self.as_ref())?;
         }
         #[cfg(feature = "gecko")]
         {
             self.0
-                .with_str(|s| cssparser::CssStringWriter::new(dest).write_str(s))
+                .with_str(|s| cssparser::CssStringWriter::new(dest).write_str(s))?;
         }
+        dest.write_char('"')
     }
 }
 

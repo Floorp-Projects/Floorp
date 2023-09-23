@@ -2291,9 +2291,7 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                 dest.write_char('[')?;
                 local_name.to_css(dest)?;
                 operator.to_css(dest)?;
-                dest.write_char('"')?;
                 value.to_css(dest)?;
-                dest.write_char('"')?;
                 match case_sensitivity {
                     ParsedCaseSensitivity::CaseSensitive |
                     ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {},
@@ -2397,9 +2395,7 @@ impl<Impl: SelectorImpl> ToCss for AttrSelectorWithOptionalNamespace<Impl> {
                 ref value,
             } => {
                 operator.to_css(dest)?;
-                dest.write_char('"')?;
                 value.to_css(dest)?;
-                dest.write_char('"')?;
                 match case_sensitivity {
                     ParsedCaseSensitivity::CaseSensitive |
                     ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {},
