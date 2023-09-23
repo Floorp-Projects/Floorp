@@ -473,6 +473,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void ProcessTransitions();
 
   bool mInProcessTransitions = false;
+  bool mInLocalRunLoop = false;
 
   // While running an emulated fullscreen transition, we want to suppress
   // sending size mode events due to window resizing. We fix it up at the end
@@ -489,6 +490,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // period, we presume the window is visible, which prevents us from sending
   // unnecessary OcclusionStateChanged events.
   bool mHasStartedNativeFullscreen;
+
+  bool mWaitingOnFinishCurrentTransition = false;
 
   bool mModal;
   bool mFakeModal;
