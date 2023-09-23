@@ -1216,14 +1216,31 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * exists on home screen or if it has been removed completely.
      */
     fun setSearchWidgetInstalled(installed: Boolean) {
-        val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed)
+        val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed_2)
         preferences.edit()
             .putBoolean(key, installed)
             .apply()
     }
 
+    /**
+     * In Bug 1853113, we changed the type of [searchWidgetInstalled] from int to boolean without
+     * changing the pref key, now we have to migrate users that were using the previous type int
+     * to the new one boolean. The migration will only happens if pref_key_search_widget_installed
+     * is detected.
+     */
+    fun migrateSearchWidgetInstalledPrefIfNeeded() {
+        val oldKey = "pref_key_search_widget_installed"
+        val installedCount = preferences.getInt(oldKey, 0)
+
+        if (installedCount > 0) {
+            setSearchWidgetInstalled(true)
+            preferences.edit()
+                .remove(oldKey).apply()
+        }
+    }
+
     val searchWidgetInstalled by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_search_widget_installed),
+        appContext.getPreferenceKey(R.string.pref_key_search_widget_installed_2),
         default = false,
     )
 

@@ -746,6 +746,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             adjustCreative.set(settings.adjustCreative)
             adjustNetwork.set(settings.adjustNetwork)
 
+            settings.migrateSearchWidgetInstalledPrefIfNeeded()
             searchWidgetInstalled.set(settings.searchWidgetInstalled)
 
             val openTabsCount = settings.openTabsCount

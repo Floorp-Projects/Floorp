@@ -105,7 +105,8 @@ class FenixApplicationTest {
         every { settings.adjustAdGroup } returns "group"
         every { settings.adjustCreative } returns "creative"
         every { settings.adjustNetwork } returns "network"
-        every { settings.searchWidgetInstalled } returns true
+        // Testing [settings.migrateSearchWidgetInstalledPrefIfNeeded]
+        settings.preferences.edit().putInt("pref_key_search_widget_installed", 5).apply()
         every { settings.openTabsCount } returns 1
         every { settings.topSitesSize } returns 2
         every { settings.installedAddonsCount } returns 3
