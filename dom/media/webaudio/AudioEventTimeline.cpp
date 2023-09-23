@@ -128,6 +128,10 @@ void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
     return aEvent->Time<TimeType>();
   };
 
+  if (mSimpleValue.isSome()) {
+    return;  // already only a single event
+  }
+
   // Find first event to keep.  Keep one event prior to aTime.
   auto begin = mEvents.cbegin();
   auto end = mEvents.cend();
@@ -138,25 +142,33 @@ void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
                "thread.");
   }
   auto firstToKeep = event - 1;
+
+  if (firstToKeep->mType != AudioTimelineEvent::SetTarget) {
+    // The value is constant if there is a single remaining non-SetTarget event
+    // that has already passed.
+    if (end - firstToKeep == 1 && aTime >= firstToKeep->EndTime<TimeType>()) {
+      mSimpleValue.emplace(firstToKeep->EndValue());
+    }
+  } else {
+    // The firstToKeep event is a SetTarget.  Set its initial value if
+    // not already set.  First find the most recent event where the value at
+    // the end time of the event is known, either from the event or for
+    // SetTarget events because it has already been calculated.  This may not
+    // have been calculated if GetValuesAtTime() was not called for the start
+    // time of the SetTarget event.
+    for (event = firstToKeep;
+         event > begin && event->mType == AudioTimelineEvent::SetTarget &&
+         TimeOf(event) > mSetTargetStartTime.Get<TimeType>();
+         --event) {
+    }
+    // Compute SetTarget start times.
+    for (; event < firstToKeep; ++event) {
+      MOZ_ASSERT((event + 1)->mType == AudioTimelineEvent::SetTarget);
+      ComputeSetTargetStartValue(&*event, TimeOf(event + 1));
+    }
+  }
   if (firstToKeep == begin) {
     return;
-  }
-
-  // If the firstToKeep event is a SetTarget, then set its initial value if
-  // not already set.  First find the most recent event where the value at the
-  // end time of the event is known, either from the event or for SetTarget
-  // events because it has already been calculated.  This may not have been
-  // calculated if GetValuesAtTime() was not called for the start time of the
-  // SetTarget event.
-  for (event = firstToKeep;
-       event > begin && event->mType == AudioTimelineEvent::SetTarget &&
-       TimeOf(event) > mSetTargetStartTime.Get<TimeType>();
-       --event) {
-  }
-  // Compute SetTarget start times.
-  for (; event < firstToKeep; ++event) {
-    MOZ_ASSERT((event + 1)->mType == AudioTimelineEvent::SetTarget);
-    ComputeSetTargetStartValue(&*event, TimeOf(event + 1));
   }
 
   JS::AutoSuppressGCAnalysis suppress;  // for null mTrack

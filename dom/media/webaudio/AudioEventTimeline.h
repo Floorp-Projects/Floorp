@@ -170,7 +170,9 @@ inline int64_t AudioTimelineEvent::TimeUnion::Get<int64_t>() const {
 class AudioEventTimeline {
  public:
   explicit AudioEventTimeline(float aDefaultValue)
-      : mDefaultValue(aDefaultValue), mSetTargetStartValue(aDefaultValue) {}
+      : mDefaultValue(aDefaultValue),
+        mSetTargetStartValue(aDefaultValue),
+        mSimpleValue(Some(aDefaultValue)) {}
 
   bool ValidateEvent(const AudioTimelineEvent& aEvent, ErrorResult& aRv) const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -259,6 +261,7 @@ class AudioEventTimeline {
 
   template <typename TimeType>
   void InsertEvent(const AudioTimelineEvent& aEvent) {
+    mSimpleValue.reset();
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
       if (aEvent.Time<TimeType>() == mEvents[i].Time<TimeType>()) {
         // If two events happen at the same time, have them in chronological
@@ -281,12 +284,12 @@ class AudioEventTimeline {
     mEvents.AppendElement(aEvent);
   }
 
-  bool HasSimpleValue() const { return mEvents.IsEmpty(); }
+  bool HasSimpleValue() const { return mSimpleValue.isSome(); }
 
   float GetValue() const {
     // This method should only be called if HasSimpleValue() returns true
     MOZ_ASSERT(HasSimpleValue());
-    return mDefaultValue;
+    return mSimpleValue.value();
   }
 
   void SetValue(float aValue) {
@@ -296,6 +299,7 @@ class AudioEventTimeline {
     // Silently don't change anything if there are any events
     if (mEvents.IsEmpty()) {
       mSetTargetStartValue = mDefaultValue = aValue;
+      mSimpleValue = Some(aValue);
     }
   }
 
@@ -361,6 +365,9 @@ class AudioEventTimeline {
         mEvents.TruncateLength(i);
         break;
       }
+    }
+    if (mEvents.IsEmpty()) {
+      mSimpleValue = Some(mDefaultValue);
     }
   }
 
@@ -428,6 +435,7 @@ class AudioEventTimeline {
   // event for SetTarget curves.
   float mSetTargetStartValue;
   AudioTimelineEvent::TimeUnion mSetTargetStartTime;
+  Maybe<float> mSimpleValue;
 };
 
 }  // namespace dom
