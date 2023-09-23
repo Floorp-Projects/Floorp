@@ -1646,11 +1646,7 @@ class Document : public nsINode,
 
   // Needs to be called any time the applicable style can has changed, in order
   // to schedule a style flush and setup all the relevant state.
-  //
-  // If we know the stylesheet change applies only to a shadow tree we can avoid
-  // some work (like updating the font-face-set / counter-styles / etc, as those
-  // are global).
-  void ApplicableStylesChanged(bool aKnownInShadowTree = false);
+  void ApplicableStylesChanged();
 
   // Whether we filled the style set with any style sheet. Only meant to be used
   // from DocumentOrShadowRoot::Traverse.
