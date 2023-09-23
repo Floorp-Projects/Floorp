@@ -143,19 +143,19 @@
   add_task(async function styling_for_multiple_windows() {
     await openTabs.getUpdateComplete();
     ok(
-      openTabs.shadowRoot.querySelector(".one-column"),
+      openTabs.shadowRoot.querySelector("[card-count=one]"),
       "The container shows one column when one window is open."
     );
     const win = await BrowserTestUtils.openNewBrowserWindow();
     await openTabs.getUpdateComplete();
     ok(
-      openTabs.shadowRoot.querySelector(".two-columns"),
+      openTabs.shadowRoot.querySelector("[card-count=two]"),
       "The container shows two columns when two windows are open."
     );
     const otherWin = await BrowserTestUtils.openNewBrowserWindow();
     await openTabs.getUpdateComplete();
     ok(
-      openTabs.shadowRoot.querySelector(".three-columns"),
+      openTabs.shadowRoot.querySelector("[card-count=three-or-more]"),
       "The container shows three columns when three windows are open."
     );
     await BrowserTestUtils.closeWindow(win);
