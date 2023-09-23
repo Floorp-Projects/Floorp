@@ -149,14 +149,6 @@ class OpenTabsInView extends ViewPage {
       "height-limited": this.windows.size > 3,
       "width-limited": this.windows.size > 1,
     });
-    let cardCount;
-    if (this.windows.size <= 1) {
-      cardCount = "one";
-    } else if (this.windows.size === 2) {
-      cardCount = "two";
-    } else {
-      cardCount = "three-or-more";
-    }
     return html`
       <link
         rel="stylesheet"
@@ -170,8 +162,12 @@ class OpenTabsInView extends ViewPage {
         <h2 class="page-header" data-l10n-id="firefoxview-opentabs-header"></h2>
       </div>
       <div
-        card-count=${cardCount}
-        class="view-opentabs-card-container cards-container"
+        class="${classMap({
+          "view-opentabs-card-container": true,
+          "one-column": this.windows.size <= 1,
+          "two-columns": this.windows.size === 2,
+          "three-columns": this.windows.size >= 3,
+        })} cards-container"
       >
         ${when(
           currentWindowIndex && currentWindowTabs,
