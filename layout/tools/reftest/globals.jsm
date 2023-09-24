@@ -17,16 +17,16 @@ for (let [key, val] of Object.entries({
   NS_DIRECTORY_SERVICE_CONTRACTID: "@mozilla.org/file/directory_service;1",
   NS_OBSERVER_SERVICE_CONTRACTID: "@mozilla.org/observer-service;1",
 
-  TYPE_REFTEST_EQUAL: '==',
-  TYPE_REFTEST_NOTEQUAL: '!=',
-  TYPE_LOAD: 'load',     // test without a reference (just test that it does
-                         // not assert, crash, hang, or leak)
-  TYPE_SCRIPT: 'script', // test contains individual test results
-  TYPE_PRINT: 'print',   // test and reference will be printed to PDF's and
-                         // compared structurally
+  TYPE_REFTEST_EQUAL: "==",
+  TYPE_REFTEST_NOTEQUAL: "!=",
+  TYPE_LOAD: "load", // test without a reference (just test that it does
+  // not assert, crash, hang, or leak)
+  TYPE_SCRIPT: "script", // test contains individual test results
+  TYPE_PRINT: "print", // test and reference will be printed to PDF's and
+  // compared structurally
 
   // keep this in sync with reftest-content.js
-  URL_TARGET_TYPE_TEST: 0,      // first url
+  URL_TARGET_TYPE_TEST: 0, // first url
   URL_TARGET_TYPE_REFERENCE: 1, // second url, if any
 
   // The order of these constants matters, since when we have a status
@@ -50,7 +50,8 @@ for (let [key, val] of Object.entries({
   FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS: "non-needs-focus",
 
   // "<!--CLEAR-->"
-  BLANK_URL_FOR_CLEARING: "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E",
+  BLANK_URL_FOR_CLEARING:
+    "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E",
 
   /* Globals */
   g: {
@@ -73,11 +74,11 @@ for (let [key, val] of Object.entries({
 
     browser: undefined,
     // Are we testing web content loaded in a separate process?
-    browserIsRemote: undefined,        // bool
+    browserIsRemote: undefined, // bool
     // Are we using <iframe mozbrowser>?
-    browserIsIframe: undefined,        // bool
-    browserMessageManager: undefined,  // bool
-    useDrawSnapshot: undefined,        // bool
+    browserIsIframe: undefined, // bool
+    browserMessageManager: undefined, // bool
+    useDrawSnapshot: undefined, // bool
     canvas1: undefined,
     canvas2: undefined,
     // gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next
@@ -100,9 +101,9 @@ for (let [key, val] of Object.entries({
       AssertionUnexpected: 0,
       AssertionUnexpectedFixed: 0,
       // Known problems...
-      KnownFail : 0,
+      KnownFail: 0,
       AssertionKnown: 0,
-      Random : 0,
+      Random: 0,
       Skip: 0,
       Slow: 0,
     },
@@ -159,7 +160,7 @@ for (let [key, val] of Object.entries({
     // Only dump the sandbox once, because it doesn't depend on the
     // manifest URL (yet!).
     dumpedConditionSandbox: false,
-  }
+  },
 })) {
   this[key] = val;
   EXPORTED_SYMBOLS.push(key);
