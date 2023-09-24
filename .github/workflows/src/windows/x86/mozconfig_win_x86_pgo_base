@@ -1,0 +1,39 @@
+####### Use for Windows 32-bit builds #######
+
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --disable-crashreporter
+ac_add_options --disable-maintenance-service
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --enable-unverified-updates
+ac_add_options --enable-update-channel=release
+ac_add_options --enable-optimize="-O2 -Qvec -w -clang:-ftree-vectorize -clang:-msse3 -clang:-mssse3 -clang:-msse4.1 -clang:-mtune=haswell"
+ac_add_options --disable-tests
+ac_add_options --enable-rust-simd
+ac_add_options --enable-release
+ac_add_options RUSTC_OPT_LEVEL=3
+MOZ_REQUIRE_SIGNING=
+MOZ_DATA_REPORTING=
+MOZ_TELEMETRY_REPORTING=
+
+ac_add_options --enable-bootstrap
+
+ac_add_options --without-wasm-sandboxed-libraries
+
+ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
+ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
+ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
+
+export WINSYSROOT="$(echo ~)/win-cross/vs2019"
+
+export MIDL="$(echo ~)/win-cross/wine/bin/widl"
+export WINE="$(echo ~)/win-cross/wine/bin/wine64"
+export WINEDEBUG=-all
+
+#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793
+#? https://phabricator.services.mozilla.com/D170170
+ac_add_options --target=i686-pc-windows-msvc
+
+export MOZ_STUB_INSTALLER=1
+
+export MOZ_LTO=cross

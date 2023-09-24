@@ -20,8 +20,8 @@ on:
         description: generate profile for PGO.
         type: boolean
         default: false
-      fast_build:
-        description: Not optimize build. (faster build)
+      build32bit:
+        description: enable 32bit build
         type: boolean
         default: false
       aarch64:
@@ -95,9 +95,16 @@ jobs:
             || process.env.GHA_profdata_jarlog_artifact_name != ""
           )
         ) {process.exit(-1);}
+
+        // aarch64 & 32bit build is not compatible
+        if (
+          process.env.GHA_aarch64 == "true"
+          && process.env.GHA_32bit == "true"
+        ) {process.exit(-1);}
       env:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_32bit: ${{inputs.build32bit}}
         GHA_zstd: ${{inputs.zstd}}
         GHA_beta: ${{inputs.beta}}
         GHA_mar: ${{inputs.mar}}
@@ -147,10 +154,12 @@ jobs:
       run: |
         mkdir -p ~/win-cross
 
-        if [[ $GHA_aarch64 != 'true' ]];then
-          cp ./.github/workflows/src/windows/x86_64/mozconfig_win_x86_64_pgo_base mozconfig
-        else
+        if [[ $GHA_aarch64 == 'true' ]];then
           cp ./.github/workflows/src/windows/aarch64/mozconfig_win_aarch64_pgo_base mozconfig
+        elseif [[ $GHA_32bit == 'true' ]];then
+          cp ./.github/workflows/src/windows/x86/mozconfig_win_x86_pgo_base mozconfig
+        else
+          cp ./.github/workflows/src/windows/x86_64/mozconfig_win_x86_64_pgo_base mozconfig
         fi
 
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
@@ -203,6 +212,7 @@ jobs:
       env:
         GHA_profgen: ${{inputs.profgen}}
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_32bit: ${{inputs.build32bit}}
         GHA_beta: ${{inputs.beta}}
         GHA_profdata_jarlog_artifact_name : ${{inputs.profdata_jarlog_artifact_name}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
@@ -285,9 +295,9 @@ jobs:
         if [[ $GHA_aarch64 == 'true' ]];then
           arch="aarch64"
           arch_inst="win64-aarch64"
-        else
-          arch="x86_64"
-          arch_inst="win64"
+        elseif [[ $GHA_32bit == 'true' ]];then
+          arch="i686"
+          arch_inst="win32"
         fi
 
         if [[ $GHA_zstd != 'true' ]];then
@@ -304,6 +314,7 @@ jobs:
         # cp -r obj-x86_64-pc-mingw32/dist/floorp ~/output/
       env:
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_32bit: ${{inputs.build32bit}}
         GHA_zstd: ${{inputs.zstd}}
         GHA_beta: ${{inputs.beta}}
 
