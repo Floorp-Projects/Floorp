@@ -219,16 +219,19 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
-        if [[ $GHA_aarch64 != 'true' ]];then
-          rustup target add x86_64-pc-windows-msvc
-        else
+        if [[ $GHA_aarch64 == 'true' ]];then
           rustup target add aarch64-pc-windows-msvc
+        elif [[ $GHA_32bit == 'true' ]];then
+          rustup target add i686-pc-windows-msvc
+        else
+          rustup target add x86_64-pc-windows-msvc
         fi
 
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0
       env:
         GHA_aarch64: ${{inputs.aarch64}}
+        GHA_32bit: ${{inputs.build32bit}}
 
     - name: Change update url if beta
       if: inputs.beta
