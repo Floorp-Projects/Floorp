@@ -319,8 +319,9 @@ function InitAndStartRefTests() {
   }
 
   g.windowUtils = g.containingWindow.windowUtils;
-  if (!g.windowUtils || !g.windowUtils.compareCanvases)
+  if (!g.windowUtils || !g.windowUtils.compareCanvases) {
     throw "nsIDOMWindowUtils inteface missing";
+  }
 
   g.ioService = Cc[IO_SERVICE_CONTRACTID].getService(Ci.nsIIOService);
   g.debug = Cc[DEBUG_CONTRACTID].getService(Ci.nsIDebug2);
@@ -333,7 +334,9 @@ function InitAndStartRefTests() {
     g.server = new HttpServer();
   }
   try {
-    if (g.server) StartHTTPServer();
+    if (g.server) {
+      StartHTTPServer();
+    }
   } catch (ex) {
     //g.browser.loadURI('data:text/plain,' + ex);
     ++g.testResults.Exception;
@@ -449,7 +452,7 @@ function ReadTests() {
       // Parse reftest manifests
       logger.debug("Reading " + manifests.length + " manifests");
       manifests = JSON.parse(manifests);
-      g.urlsFilterRegex = manifests[null];
+      g.urlsFilterRegex = manifests.null;
 
       var globalFilter = null;
       if (manifests.hasOwnProperty("")) {
@@ -560,11 +563,17 @@ function StartTests() {
     // tURLs is a temporary array containing all active tests
     var tURLs = new Array();
     for (var i = 0; i < g.urls.length; ++i) {
-      if (g.urls[i].skip) continue;
+      if (g.urls[i].skip) {
+        continue;
+      }
 
-      if (g.urls[i].needsFocus && !Focus()) continue;
+      if (g.urls[i].needsFocus && !Focus()) {
+        continue;
+      }
 
-      if (g.urls[i].slow && !g.runSlowTests) continue;
+      if (g.urls[i].slow && !g.runSlowTests) {
+        continue;
+      }
 
       tURLs.push(g.urls[i]);
     }
@@ -624,7 +633,9 @@ function StartTests() {
     }
 
     g.totalTests = g.urls.length;
-    if (!g.totalTests && !g.verify && !g.repeat) throw "No tests to run";
+    if (!g.totalTests && !g.verify && !g.repeat) {
+      throw "No tests to run";
+    }
 
     g.uriCanvases = {};
 
@@ -645,7 +656,9 @@ function StartTests() {
 function OnRefTestUnload() {}
 
 function AddURIUseCount(uri) {
-  if (uri == null) return;
+  if (uri == null) {
+    return;
+  }
 
   var spec = uri.spec;
   if (spec in g.uriUseCounts) {
@@ -907,9 +920,8 @@ async function StartCurrentURI(aURLTargetType) {
         g.urls.shift();
         await StartCurrentTest();
         return;
-      } else {
-        throw e;
       }
+      throw e;
     }
   }
 
@@ -1211,7 +1223,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
           // (If it's empty, we'll spuriously succeed, regardless of
           // our expectations)
           if (error) {
-            output = outputs[expected][false];
+            output = outputs[expected].false;
             extra = { status_msg: output.n };
             ++g.testResults[output.n];
             logger.testEnd(
@@ -1269,13 +1281,15 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       // This failure may be due to a JavaScript Engine bug causing
       // early termination of the test. If we do not allow silent
       // failure, report an error.
-      if (!g.urls[0].allowSilentFail)
+      if (!g.urls[0].allowSilentFail) {
         errorMsg = "No test results reported. (SCRIPT)\n";
-      else logger.info("An expected silent failure occurred");
+      } else {
+        logger.info("An expected silent failure occurred");
+      }
     }
 
     if (errorMsg) {
-      output = outputs[expected][false];
+      output = outputs[expected].false;
       extra = { status_msg: output.n };
       ++g.testResults[output.n];
       logger.testStatus(
@@ -1301,8 +1315,8 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       // (since we can't tell whether they were really intended to be
       // marked failing or not).
       outputPair = {
-        true: outputs[EXPECTED_RANDOM][true],
-        false: outputs[expected][false],
+        true: outputs[EXPECTED_RANDOM].true,
+        false: outputs[expected].false,
       };
     } else {
       outputPair = outputs[expected];
