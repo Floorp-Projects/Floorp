@@ -308,11 +308,11 @@ jobs:
         if [[ $GHA_zstd != 'true' ]];then
           cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe ~/output/floorp-stub.installer.exe
           cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
-          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe ~/output/floorp-win64.installer.exe
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe ~/output/floorp-${arch_inst}.installer.exe
         else
           cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
           7z x ~/output/floorp-*.en-US.${arch_inst}.zip
-          tar -I "zstd -T4 -10" --remove-files -cvf ~/output/floorp-$(cat browser/config/version.txt).en-us.win64.tar.zst floorp
+          tar -I "zstd -T4 -10" --remove-files -cvf ~/output/floorp-$(cat browser/config/version.txt).en-us.${arch_inst}.tar.zst floorp
           rm ~/output/floorp-*.en-US.${arch_inst}.zip
         fi
         #? Original code used in daily b with update
