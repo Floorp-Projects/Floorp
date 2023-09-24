@@ -53,10 +53,6 @@ ja sa võid hiljem uuesti proovida.</li>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Edasijõudnuile…</string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
-        <label>Sait <b>%1$s</b> kasutab HTTP Strict Transport Security (HSTS) turvaprotokolli, mis tähendab, et <b>%2$s</b> saab sellega ühenduda ainult turvaliselt. Selle saidi külastamiseks pole võimalik erandit lisada.
-    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Mine tagasi</string>
 

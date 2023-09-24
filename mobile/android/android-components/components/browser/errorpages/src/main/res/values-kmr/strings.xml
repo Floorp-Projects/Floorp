@@ -61,11 +61,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Pêşketî…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> polîtîkayeke ewlekariyê heye ku navê wê HTTP Strict Transport Security (HSTS) ango Ewlekariya Transporta Guvaştî ye, loma <b>%2$s</b> dikare tenê gava ewle be peywendiyê çêke. Tu nikarî ji bo vekirina vê malperê îstisnayan lê zêde bikî.
-    ]]></string>
-
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> rêgezeke ewlekariyê ya bi navê Ewlekariya Jidandî ya Guheztinê ya HTTPê (HSTS) heye û loma <b>%2$s</b> dikare tenê di rewşeke ewle de bi malperê re têkiliyê dayne. Tu nikarî zêdekariyan bidiyê û têkeviyê.</label>
      ]]></string>

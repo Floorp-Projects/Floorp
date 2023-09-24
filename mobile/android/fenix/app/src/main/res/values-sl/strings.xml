@@ -67,6 +67,11 @@
        Pogoste zmote o zasebnem brskanju
     </string>
 
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Kdo bi lahko videl mojo dejavnost?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Odprite svoj naslednji zaseben zavihek z enim dotikom.</string>

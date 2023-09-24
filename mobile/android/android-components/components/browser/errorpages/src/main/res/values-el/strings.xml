@@ -58,10 +58,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Σύνθετα…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> Το <b>%1$s</b> διαθέτει μια πολιτική ασφαλείας, η οποία ονομάζεται «HTTP Strict Transport Security» (HSTS), που σημαίνει ότι το <b>%2$s</b> μπορεί να συνδεθεί μόνο με ασφάλεια σε αυτό. Δεν μπορείτε να προσθέσετε εξαίρεση για να επισκεφθείτε τον ιστότοπο αυτό.
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> Το <b>%1$s</b> διαθέτει μια πολιτική ασφαλείας, η οποία ονομάζεται «HTTP Strict Transport Security (HSTS)», που σημαίνει ότι το <b>%2$s</b> μπορεί να συνδεθεί μόνο με ασφάλεια σε αυτό. Δεν μπορείτε να προσθέσετε εξαίρεση για να επισκεφθείτε τον ιστότοπο αυτό. </label>
     ]]></string>

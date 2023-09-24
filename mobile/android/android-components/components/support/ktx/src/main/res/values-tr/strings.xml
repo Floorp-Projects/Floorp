@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Bununla e-posta…</string>
     <string name="mozac_support_ktx_menu_share_with">Paylaş…</string>
     <string name="mozac_support_ktx_share_dialog_title">Paylaş</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Resim panoya kopyalandı</string>
 </resources>

@@ -55,10 +55,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Напредно…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> проводи сигурносну политику под називом HTTP Strict Transport Security (HSTS), што значи да <b>%2$s</b> може на исту повезати само сигурно. Не можете да додате изузетак за посете овој страници.
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> проводи сигурносну политику под називом HTTP Strict Transport Security (HSTS), што значи да <b>%2$s</b> може на исту повезати само сигурно. Не можете да додате изузетак за посете овој страници. </label>
     ]]></string>

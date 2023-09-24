@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Ирсоли паёми эл. тавассути…</string>
     <string name="mozac_support_ktx_menu_share_with">Мубодила кардан тавассути…</string>
     <string name="mozac_support_ktx_share_dialog_title">Мубодила тавассути</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Тасвир ба ҳофизаи муваққатӣ нусха бардошта шуд</string>
 </resources>

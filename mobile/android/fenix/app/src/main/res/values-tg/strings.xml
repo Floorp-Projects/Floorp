@@ -2257,9 +2257,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Ҳозир тафтиш карда шавад</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Ҳоло шумораи тақризҳо кофӣ намебошад</string>
+    <string name="review_quality_check_no_reviews_warning_title">Ҳоло шумораи тақризҳо кофӣ намебошад</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Вақте ки ин маҳсул дорои тақризҳои сершумор мебошад, мо метавонем сифати он тақризҳоро тафтиш намоем.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Вақте ки ин маҳсул дорои тақризҳои сершумор мебошад, мо метавонем сифати он тақризҳоро тафтиш намоем.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Маҳсул дастнорас аст</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2267,19 +2267,19 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Гузориш диҳед, ки ин маҳсул аз нав дастрас аст</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Дар ҳоли санҷиши сифати тақризҳо</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Дар ҳоли санҷиши сифати тақризҳо</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Дар ҳоли санҷиши сифати тақризҳо</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Дар ҳоли санҷиши сифати тақризҳо</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Ин метавонад тахминан то 60 сония вақт гирад.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Ин метавонад тахминан то 60 сония вақт гирад.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Ташаккур барои гузориш!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Мо бояд дар муддати 24 соат дар бораи тақризҳои ин маҳсул маълумот гирем. Лутфан, аз нав дертар тафтиш кунед.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Мо ин тақризҳоро тафтиш карда наметавонем</string>
+    <string name="review_quality_check_not_analyzable_info_title">Мо ин тақризҳоро тафтиш карда наметавонем</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Мутаассифона, мо наметавонем сифати тақризҳоро барои баъзе намудҳои маҳсулот тафтиш кунем. Масалан, барои кортҳои ёдгорӣ, видеоҳои пахши мустақим, мусиқӣ ва бозиҳо.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Мутаассифона, мо наметавонем сифати тақризҳоро барои баъзе намудҳои маҳсулот тафтиш кунем. Масалан, барои кортҳои ёдгорӣ, видеоҳои пахши мустақим, мусиқӣ ва бозиҳо.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Маълумот ба наздикӣ дастрас мешавад</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2289,19 +2289,19 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Фаҳмидам</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Ҳоло ягон маълумот дастрас нест</string>
+    <string name="review_quality_check_generic_error_title">Ҳоло ягон маълумот дастрас нест</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Мо барои ҳал кардани ин масъала кор карда истодаем. Лутфан, дертар аз нав тафтиш кунед.</string>
+    <string name="review_quality_check_generic_error_body">Мо барои ҳал кардани ин масъала кор карда истодаем. Лутфан, дертар аз нав тафтиш кунед.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Пайвастшавӣ ба шабака нест</string>
+    <string name="review_quality_check_no_connection_title">Пайвастшавӣ ба шабака нест</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Пайвасти Интернетро санҷед ва пас аз чанд лаҳза саҳифаро аз нав бор кунед.</string>
+    <string name="review_quality_check_no_connection_body">Пайвасти Интернетро санҷед ва пас аз чанд лаҳза саҳифаро аз нав бор кунед.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">То ҳол дар бораи ин тақризҳо ягон маълумот нест</string>
+    <string name="review_quality_check_no_analysis_title">То ҳол дар бораи ин тақризҳо ягон маълумот нест</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Барои гирифтани маълумот дар бораи эътимоднокӣ нисбат ба тақризҳои ин маҳсул, сифати тақризҳоро аз назар гузаронед. Ин танҳо тахминан 60 сония вақти шуморо мегирад.</string>
+    <string name="review_quality_check_no_analysis_body">Барои гирифтани маълумот дар бораи эътимоднокӣ нисбат ба тақризҳои ин маҳсул, сифати тақризҳоро аз назар гузаронед. Ин танҳо тахминан 60 сония вақти шуморо мегирад.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Ҷанҷиши сифати тақризҳо</string>
+    <string name="review_quality_check_no_analysis_link">Ҷанҷиши сифати тақризҳо</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Дастури моро дар бораи эътимоднокӣ нисбат ба тақризҳои маҳсулот озмоед</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2331,9 +2331,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Бета</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Кушодани тафтиши сифати тақризҳо</string>
+    <string name="review_quality_check_open_handle_content_description">Кушодани абзори тафтиши тақризҳо</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Пӯшидани тафтиши сифати тақризҳо</string>
+    <string name="review_quality_check_close_handle_content_description">Пӯшидани абзори тафтиши тақризҳо</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s аз 5 ситора</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

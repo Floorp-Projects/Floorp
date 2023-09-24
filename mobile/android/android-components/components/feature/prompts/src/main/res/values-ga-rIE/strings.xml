@@ -26,8 +26,6 @@
     <string name="mozac_feature_prompt_error_empty_password">Ní cheadaítear focal faire folamh</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Níorbh fhéidir an focal faire a shábháil</string>
-    <!-- Prompt message displayed when app detects a user has entered a password and user decides if app should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="mozac_feature_prompt_logins_save_message">An bhfuil tú ag iarraidh go sábhálfadh %s an focal faire seo?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">Lipéad do réimse ionchurtha téacs</string>

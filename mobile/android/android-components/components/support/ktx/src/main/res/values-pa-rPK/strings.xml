@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">کیہتھوں ای‌میل بھیجو…</string>
     <string name="mozac_support_ktx_menu_share_with">کیہنوں سانجھا کرو…</string>
     <string name="mozac_support_ktx_share_dialog_title">کیہتھوں سانجھا کرو</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied" moz:removedIn="114" tools:ignore="UnusedResources">کاپی کیتی گئی</string>
 </resources>

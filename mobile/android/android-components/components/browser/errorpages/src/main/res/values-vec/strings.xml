@@ -56,10 +56,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Vansà…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-   <label> <b>%1$s</b> el gà na połìtega de seguresa ciamà HTTP Strict Transport Security (HSTS), che vołe dire che <b>%2$s</b> el połe conétarse soło in magnera segura. No se połe zontare na ecesion par vardare ’sto sito.
-]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> el gà na połìtega de seguresa ciamada HTTP Strict Transport Security (HSTS), che vołe dir che <b>%2$s</b> el połe conétarse soło en magnera segura. No te połi zontar nissuna ecesion par vardar ’sto sito. </label>
     ]]></string>

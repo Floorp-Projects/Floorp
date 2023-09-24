@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">i-Email kasama…</string>
     <string name="mozac_support_ktx_menu_share_with">Ibahagi sa…</string>
     <string name="mozac_support_ktx_share_dialog_title">Ibahagi sa pamamagitan ng</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied" moz:removedIn="114" tools:ignore="UnusedResources">Kinopya sa clipboard</string>
 </resources>

@@ -56,10 +56,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">詳細情報...</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-  <label> <b>%1$s</b> には HTTP Strict Transport Security (HSTS) と呼ばれるセキュリティポリシーが設定されており、<b>%2$s</b> は安全な接続でしか通信できません。そのため、このサイトを例外に追加することはできません。
-]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
   <label> <b>%1$s</b> には HTTP Strict Transport Security (HSTS) と呼ばれるセキュリティポリシーが設定されており、<b>%2$s</b> は安全な接続でしか通信できません。そのため、このサイトを例外に追加することはできません。</label>
 ]]></string>

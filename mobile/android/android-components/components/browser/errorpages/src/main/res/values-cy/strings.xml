@@ -59,10 +59,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Uwch…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        Mae gan <label> <b>%1$s</b> bolisi diogelwch o’r enw HTTP Strict Transport Security (HSTS), sy’n golygu mai dim ond yn ddiogel y gall <b>%2$s</b> gysylltu ag ef. Ni allwch ychwanegu eithriad i ymweld â’r wefan hon.
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
  Mae gan <label> <b>%1$s</b> bolisi diogelwch o’r enw HTTP Strict Transport Security (HSTS), sy’n golygu mai dim ond yn ddiogel y gall <b>%2$s</b> gysylltu ag ef. Ni allwch ychwanegu eithriad i ymweld â’r wefan hon. </label>
 ]]></string>

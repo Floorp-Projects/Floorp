@@ -54,11 +54,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Q\'axinäq…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
- <label> <b>%1$s</b>k\'o jun runa\'ojil jikomal b\'ina\'am HTTP Jikïl Ruk\'waxik Jikomal (HSTS), ri nuq\'ajuj chi ri <b>%2$s</b> xa xe nitikïr nok pa ütz jikomal. Man yatikïr ta natz\'aqatisaj jun man relik ta richin natz\'ët re ruxaq re\'.
-
-]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
  <label> <b>%1$s</b>k\'o jun runa\'ojil jikomal b\'ina\'am HTTP Jikïl Ruk\'waxik Jikomal (HSTS), ri nuq\'ajuj chi ri <b>%2$s</b> xa xe nitikïr nok pa ütz jikomal. Man yatikïr ta natz\'aqatisaj jun man relik ta richin natz\'ët re ruxaq re\'. </label>
 

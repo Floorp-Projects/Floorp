@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">メール送信…</string>
     <string name="mozac_support_ktx_menu_share_with">共有先…</string>
     <string name="mozac_support_ktx_share_dialog_title">共有方法</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied" moz:removedIn="114" tools:ignore="UnusedResources">画像をクリップボードにコピーしました</string>
 </resources>

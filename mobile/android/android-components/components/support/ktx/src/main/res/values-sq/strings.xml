@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Dërgoni Email me…</string>
     <string name="mozac_support_ktx_menu_share_with">Ndajeni me të tjerët përmes…</string>
     <string name="mozac_support_ktx_share_dialog_title">Ndajeni përmes</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Figura u kopjua në të papastër</string>
 </resources>

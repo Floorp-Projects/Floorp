@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Email με…</string>
     <string name="mozac_support_ktx_menu_share_with">Κοινή χρήση με…</string>
     <string name="mozac_support_ktx_share_dialog_title">Κοινή χρήση μέσω</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Η εικόνα αντιγράφτηκε στο πρόχειρο</string>
 </resources>

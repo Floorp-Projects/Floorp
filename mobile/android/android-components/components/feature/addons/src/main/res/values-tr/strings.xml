@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Gizlilik ayarlarını okuma ve değiştirme</string>
     <!-- Description for all_urls add-on permission. -->
@@ -132,6 +132,8 @@
     <string name="mozac_feature_addons_addons">Eklentiler</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Eklenti yöneticisi</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">Daha fazla eklenti bul</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">İzin ver</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -175,7 +177,7 @@
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error">Bağlantı hatası nedeniyle bu eklenti indirilemedi.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">%1$s yüklenemedi çünkü kararsızlık veya güvenlik sorunlarına yol açma riski yüksek</string>
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s yüklenemedi çünkü kararsızlık veya güvenlik sorunlarına yol açma riski yüksek</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s başarıyla etkinleştirildi</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

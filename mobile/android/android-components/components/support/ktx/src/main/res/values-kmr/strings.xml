@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Emaîl bi…</string>
     <string name="mozac_support_ktx_menu_share_with">Parve bike bi…</string>
     <string name="mozac_support_ktx_share_dialog_title">Parve bike bi rêya</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Wêne li panoyê hate kopîkirin</string>
 </resources>

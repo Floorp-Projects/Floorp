@@ -56,10 +56,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Nâng cao…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> có một chính sách bảo mật được gọi là Bảo mật truyền tải nghiêm ngặt HTTP (HSTS), có nghĩa là <b>%2$s</b> chỉ có thể kết nối với nó một cách an toàn. Bạn không thể thêm một ngoại lệ để truy cập trang web này.
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> có chính sách bảo mật được gọi là Bảo mật truyền tải nghiêm ngặt HTTP (HSTS), có nghĩa là <b>%2$s</b> chỉ có thể kết nối với nó một cách an toàn. Bạn không thể thêm ngoại lệ để truy cập trang web này. </label>
     ]]></string>

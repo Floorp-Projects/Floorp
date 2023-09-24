@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">Send e-post med…</string>
     <string name="mozac_support_ktx_menu_share_with">Del med…</string>
     <string name="mozac_support_ktx_share_dialog_title">Del via</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Bilde kopiert til utklippstavla</string>
 </resources>

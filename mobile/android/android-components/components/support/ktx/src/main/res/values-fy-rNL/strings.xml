@@ -6,6 +6,4 @@
     <string name="mozac_support_ktx_menu_email_with">E-maile mei…</string>
     <string name="mozac_support_ktx_menu_share_with">Diele mei…</string>
     <string name="mozac_support_ktx_share_dialog_title">Diele fia</string>
-    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
-    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Ofbylding nei klamboerd kopiearre</string>
 </resources>

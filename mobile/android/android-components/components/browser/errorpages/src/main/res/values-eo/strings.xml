@@ -55,10 +55,6 @@ la eraro povas esti tempa kaj vi povos klopodi denove poste.</li>
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Spertula…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> havas sekurecan politikon, kiun oni nomas HTTP Strict Transport Security (HSTS), kiu signifas ke <b>%2$s</b> nur povas konektiĝi per sekura konekto. Vi ne povas aldoni escepton por viziti la retejon.
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> havas sekurecan politikon, kiun oni nomas HTTP Strict Transport Security (HSTS), kiu signifas ke <b>%2$s</b> nur povas konektiĝi per sekura konekto. Vi ne povas aldoni escepton por viziti la retejon.</label>
     ]]></string>

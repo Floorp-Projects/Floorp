@@ -54,10 +54,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ขั้นสูง…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้ </label>
     ]]></string>
