@@ -1230,7 +1230,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun migrateSearchWidgetInstalledPrefIfNeeded() {
         val oldKey = "pref_key_search_widget_installed"
-        val installedCount = preferences.getInt(oldKey, 0)
+        val installedCount = try {
+            preferences.getInt(oldKey, 0)
+        } catch (e: ClassCastException) {
+            0
+        }
 
         if (installedCount > 0) {
             setSearchWidgetInstalled(true)

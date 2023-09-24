@@ -995,4 +995,13 @@ class SettingsTest {
         assertEquals(expectedDefaultValue, settings.preferences.getInt(oldPrefKey, expectedDefaultValue))
         assertFalse(settings.searchWidgetInstalled)
     }
+
+    @Test
+    fun `GIVEN previously stored pref_key_search_widget_installed value is Boolean WHEN calling migrateSearchWidgetInstalledIfNeeded THEN crash should not happen`() {
+        val oldPrefKey = "pref_key_search_widget_installed"
+        settings.preferences.edit().putBoolean(oldPrefKey, false).apply()
+
+        settings.migrateSearchWidgetInstalledPrefIfNeeded()
+        assertFalse(settings.searchWidgetInstalled)
+    }
 }
