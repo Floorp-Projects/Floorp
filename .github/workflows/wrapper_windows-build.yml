@@ -20,13 +20,13 @@ on:
         required: true
       bit-32:
         type: boolean
-        description: Build 32bit; does NOT comportable with pgo
+        description: Build 32bit; does NOT comportable with aarch64
         required: true
 
 run-name: ${{fromJSON('["[normal]","[profgen]"]')[inputs.profgen]}} Windows ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}} build
 jobs:
   windows-build:
-    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-x86_64
+    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}-${{fromJson('["32bit","64bit"]')[inputs.bit-32]}}
     uses: ./.github/workflows/windows-build.yml
     with:
       profgen: ${{inputs.profgen}}
