@@ -23,10 +23,10 @@ on:
         description: Build 32bit; does NOT comportable with aarch64
         required: true
 
-run-name: ${{fromJSON('["[NO PGO]","[PGO]"]')[inputs.profgen]}} Windows ${{fromJson('["AMD","AARCH"]')[inputs.aarch64]}} ${{fromJson('["32bit","64bit"]')[inputs.bit-32]}} build
+run-name: ${{fromJSON('["[NO PGO]","[PGO]"]')[inputs.profgen]}} Windows ${{fromJson('["AMD","AARCH"]')[inputs.aarch64]}} ${{fromJson('["64bit","32bit"]')[inputs.bit-32]}} build
 jobs:
   windows-build:
-    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-${{fromJson('["AMD","AARCH"]')[inputs.aarch64]}}-${{fromJson('["32bit","64bit"]')[inputs.bit-32]}}
+    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-${{fromJson('["AMD","AARCH"]')[inputs.aarch64]}}-${{fromJson('["64bit","32bit"]')[inputs.bit-32]}}
     uses: ./.github/workflows/windows-build.yml
     with:
       profgen: ${{inputs.profgen}}
