@@ -32,7 +32,7 @@ on:
           type: string
 jobs:
    Generate-Profile-data-and-jarlog:
-    runs-on: Generate-Profile-data-and-jarlog
+    runs-on: windows-latest
     steps:
         - uses: actions/download-artifact@v3
           name: Download artifact 📥
