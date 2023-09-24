@@ -21,6 +21,8 @@ on:
 #----------------------------------------- JOBS -----------------------------------------#
 jobs:
   get-display-version:
+    ## only run this job if the repository owner is Floorp-Projects. This is to prevent forks from running this job.
+    if: github.repository_owner == 'Floorp-Projects'
     runs-on: ubuntu-latest
     outputs:
       display-version: ${{ steps.get.outputs.display-version }}
