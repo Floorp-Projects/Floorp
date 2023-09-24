@@ -82,46 +82,10 @@ jobs:
 
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
-    runs-on: windows-2022
-
-    steps:
-    - uses: actions/download-artifact@v3
-      name: Download artifact 📥
-      with:
-        name: floorp-windows-x86_64-build-with-profgen-zstd
-        path: C:\artifact
-
-    - name:  Unpack artifact
-      run: |
-        cd C:\artifact
-        zstd -d floorp-*.tar.zst
-        7z x floorp-*.tar
-
-    - uses: actions/checkout@v3
-      name: Clone 🧬
-
-    - name: Setup 🪛
-      run: |
-        (New-Object System.Net.WebClient).DownloadFile("https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe","C:\MozillaBuildSetup-Latest.exe")
-        C:\MozillaBuildSetup-Latest.exe /S | out-null
-
-    - name: Generate 🔄
-      run: |
-        $workspace_dir = [regex]::replace($env:GITHUB_WORKSPACE, "^([A-Z]):", { "/" + $args.value.Substring(0, 1).toLower() }) -replace "\\","/"
-
-        echo "cd $workspace_dir" '' >> mozilla-build-run.sh
-        echo 'export PATH=/c/mozilla-build/msys2/usr/bin:$PATH' '' >> mozilla-build-run.sh
-        echo './mach --no-interactive bootstrap --application-choice browser' '' >> mozilla-build-run.sh
-        echo 'LLVM_PROFDATA=/c/Users/runneradmin/.mozbuild/clang/bin/llvm-profdata.exe JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary /c/artifact/floorp/floorp.exe' '' >> mozilla-build-run.sh
-        C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
-
-    - name: Publish 🎁
-      uses: actions/upload-artifact@v3
-      with:
-        name: floorp-windows-x86_64-profdata-and-jarlog
-        path: |
-          merged.profdata
-          en-US.log
+    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
+    with:
+      browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
+      arch: x86_64
 
   Part3-win-x86_64-build-with-profdata-and-jarlog:
     needs: [Part2-win-x86_64-gen-profdata-and-jarlog, get-buildid]
@@ -136,7 +100,39 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
 
-################################################################ ↑ Windows x86_64 Build ####################################################################################
+################################################################ ↑ Windows x86_64 Build ###################################################################################
+
+  Part1-win-x86-build-with-profgen-zstd:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      build32bit: true
+      zstd: true
+      buildjet: ${{ inputs.buildjet }}
+
+  Part2-win-x86-gen-profdata-and-jarlog:
+    needs: Part1-win-x86-build-with-profgen-zstd
+    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
+    with:
+      browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
+      arch: x86
+
+  Part3-win-x86-build-with-profdata-and-jarlog:
+    needs: [Part2-win-x86-gen-profdata-and-jarlog, get-buildid]
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      aarch64: false
+      mar: true
+      build32bit: true
+      beta: false
+      buildjet: ${{ inputs.buildjet }}
+      profdata_jarlog_artifact_name: "floorp-windows-x86-profdata-and-jarlog"
+      out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+
+################################################################ ↑ Windows x86 Build ####################################################################################
 
   Part1-linux-x86_64-build-with-PGO:
     uses: ./.github/workflows/linux-build.yml
@@ -284,7 +280,7 @@ jobs:
 ####################################################################### macOS Universal #######################################################################
 
   Deploy-to-installer:
-    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, get-display-version]
+    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, Part3-win-x86-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
     environment: 
       name: Deploy-to-installer-release
@@ -302,6 +298,7 @@ jobs:
         mkdir -p ~/downloads/artifacts/linux-x64
         mkdir -p ~/downloads/artifacts/linux-aarch64
         mkdir -p ~/downloads/artifacts/windows-x64
+        mkdir -p ~/downloads/artifacts/windows-x86
         mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
@@ -321,6 +318,12 @@ jobs:
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
+
+    - name: download Windows x86 build artifact📥
+      uses: actions/download-artifact@v3
+      with:
+        name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
+        path: ~/downloads/artifacts/windows-x86
 
     - name: download macOS Universal build artifact📥
       uses: actions/download-artifact@v3

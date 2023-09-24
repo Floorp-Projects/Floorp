@@ -349,7 +349,7 @@ jobs:
         fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
       env:
         GHA_out_artifact_name : ${{inputs.out_artifact_name}}
-        GHA_default_name: floorp-windows-${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
+        GHA_default_name: floorp-windows-${{fromJson('["x86","aarch"]')[inputs.aarch64]}}-${{fromJson('["_64",""]')[inputs.build32bit]}}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}${{fromJson('["","-zstd"]')[inputs.zstd]}}
 
     - name: Publish Package🎁
       uses: actions/upload-artifact@v3
