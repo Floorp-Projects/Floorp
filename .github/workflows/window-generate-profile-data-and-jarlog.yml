@@ -31,7 +31,7 @@ on:
           default: 'x86_64'
           type: string
 jobs:
-   Integration:
+   Generate-Profile-data-and-jarlog:
     runs-on: Generate-Profile-data-and-jarlog
     steps:
         - uses: actions/download-artifact@v3
