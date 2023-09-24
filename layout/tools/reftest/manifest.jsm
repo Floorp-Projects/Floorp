@@ -46,7 +46,9 @@ const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 
 function ReadTopManifest(aFileURL, aFilter, aManifestID) {
   var url = g.ioService.newURI(aFileURL);
-  if (!url) throw "Expected a file or http URL for the manifest.";
+  if (!url) {
+    throw "Expected a file or http URL for the manifest.";
+  }
 
   g.manifestsLoaded = {};
   ReadManifest(url, aFilter, aManifestID);
@@ -59,8 +61,10 @@ function ReadManifest(aURL, aFilter, aManifestID) {
   // are included with filters will be read via their include before they are
   // read directly in the case of a duplicate
   if (g.manifestsLoaded.hasOwnProperty(aURL.spec)) {
-    if (g.manifestsLoaded[aURL.spec] === null) return;
-    else aFilter = [aFilter[0], aFilter[1], true];
+    if (g.manifestsLoaded[aURL.spec] === null) {
+      return;
+    }
+    aFilter = [aFilter[0], aFilter[1], true];
   }
   g.manifestsLoaded[aURL.spec] = aFilter[1];
 
@@ -110,22 +114,29 @@ function ReadManifest(aURL, aFilter, aManifestID) {
   }
   for (var str of lines) {
     ++lineNo;
-    if (str.charAt(0) == "#") continue; // entire line was a comment
+    if (str.charAt(0) == "#") {
+      continue;
+    } // entire line was a comment
     var i = str.search(/\s+#/);
-    if (i >= 0) str = str.substring(0, i);
+    if (i >= 0) {
+      str = str.substring(0, i);
+    }
     // strip leading and trailing whitespace
     str = str.replace(/^\s*/, "").replace(/\s*$/, "");
-    if (!str || str == "") continue;
+    if (!str || str == "") {
+      continue;
+    }
     var items = str.split(/\s+/); // split on whitespace
 
     if (items[0] == "url-prefix") {
-      if (items.length != 2)
+      if (items.length != 2) {
         throw (
           "url-prefix requires one url in manifest file " +
           aURL.spec +
           " line " +
           lineNo
         );
+      }
       urlprefix = items[1];
       continue;
     }
@@ -219,8 +230,9 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         }
       } else if ((m = item.match(/^slow-if\((.*?)\)$/))) {
         cond = false;
-        if (Cu.evalInSandbox("(" + m[1] + ")", GetOrCreateSandbox()))
+        if (Cu.evalInSandbox("(" + m[1] + ")", GetOrCreateSandbox())) {
           slow = true;
+        }
       } else if (item == "silentfail") {
         cond = false;
         allow_silent_fail = true;
@@ -344,7 +356,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     var principal = secMan.createContentPrincipal(aURL, {});
 
     if (items[0] == "include") {
-      if (items.length != 2)
+      if (items.length != 2) {
         throw (
           "Error in manifest file " +
           aURL.spec +
@@ -352,7 +364,8 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           lineNo +
           ": incorrect number of arguments to include"
         );
-      if (runHttp)
+      }
+      if (runHttp) {
         throw (
           "Error in manifest file " +
           aURL.spec +
@@ -360,6 +373,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           lineNo +
           ": use of include with http"
         );
+      }
 
       // If the expected_status is EXPECTED_PASS (the default) then allow
       // the include. If 'skip' is true, that means there was a skip
@@ -439,7 +453,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       }
     } else if (items[0] == TYPE_LOAD || items[0] == TYPE_SCRIPT) {
       var type = items[0];
-      if (items.length != 2)
+      if (items.length != 2) {
         throw (
           "Error in manifest file " +
           aURL.spec +
@@ -448,7 +462,8 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           ": incorrect number of arguments to " +
           type
         );
-      if (type == TYPE_LOAD && expected_status != EXPECTED_PASS)
+      }
+      if (type == TYPE_LOAD && expected_status != EXPECTED_PASS) {
         throw (
           "Error in manifest file " +
           aURL.spec +
@@ -456,6 +471,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           lineNo +
           ": incorrect known failure type for load test"
         );
+      }
       AddTestItem(
         {
           type: type,
@@ -490,7 +506,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       items[0] == TYPE_REFTEST_NOTEQUAL ||
       items[0] == TYPE_PRINT
     ) {
-      if (items.length != 3)
+      if (items.length != 3) {
         throw (
           "Error in manifest file " +
           aURL.spec +
@@ -499,6 +515,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           ": incorrect number of arguments to " +
           items[0]
         );
+      }
 
       if (
         items[0] == TYPE_REFTEST_NOTEQUAL &&
@@ -742,8 +759,7 @@ function BuildConditionSandbox(aURL) {
   httpProps.forEach(x => (sandbox.http[x] = hh[x]));
 
   // set to specific Android13 version (Pixel 5 in CI)
-  sandbox.Android13 =
-    sandbox.Android && sandbox.http["platform"] == "Android 13";
+  sandbox.Android13 = sandbox.Android && sandbox.http.platform == "Android 13";
 
   // Set OSX to be the Mac OS X version, as an integer, or undefined
   // for other platforms.  The integer is formed by 100 times the
@@ -931,7 +947,9 @@ function CreateUrls(test) {
   );
 
   function FileToURI(file) {
-    if (file === null) return file;
+    if (file === null) {
+      return file;
+    }
 
     var testURI = g.ioService.newURI(file, null, testbase);
     let isChromeOrViewSource =
@@ -967,7 +985,9 @@ function TestIdentifier(aUrl, aManifestID) {
 }
 
 function AddTestItem(aTest, aFilter, aManifestID) {
-  if (!aFilter) aFilter = [null, [], false];
+  if (!aFilter) {
+    aFilter = [null, [], false];
+  }
 
   var identifier = TestIdentifier(aTest.url1, aManifestID);
   if (aTest.url2 !== null) {
@@ -984,21 +1004,33 @@ function AddTestItem(aTest, aFilter, aManifestID) {
   var manifestFilter = aFilter[1];
   var invertManifest = aFilter[2];
   if (globalFilter && !globalFilter.test(url1.spec)) {
-    if (url2 === null) return;
-    if (globalFilter && !globalFilter.test(url2.spec)) return;
+    if (url2 === null) {
+      return;
+    }
+    if (globalFilter && !globalFilter.test(url2.spec)) {
+      return;
+    }
   }
   if (manifestFilter && !(invertManifest ^ manifestFilter.test(url1.spec))) {
-    if (url2 === null) return;
-    if (manifestFilter && !(invertManifest ^ manifestFilter.test(url2.spec)))
+    if (url2 === null) {
       return;
+    }
+    if (manifestFilter && !(invertManifest ^ manifestFilter.test(url2.spec))) {
+      return;
+    }
   }
-  if (g.focusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS && !aTest.needsFocus)
+  if (
+    g.focusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
+    !aTest.needsFocus
+  ) {
     return;
+  }
   if (
     g.focusFilterMode == FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS &&
     aTest.needsFocus
-  )
+  ) {
     return;
+  }
 
   aTest.identifier = identifier;
   g.urls.push(aTest);
@@ -1006,6 +1038,7 @@ function AddTestItem(aTest, aFilter, aManifestID) {
   // No-output timeouts during manifest parsing have been a problem for
   // jsreftests on Android/debug. Any logging resets the no-output timer,
   // even debug logging which is normally not displayed.
-  if (g.urls.length % 5000 == 0)
+  if (g.urls.length % 5000 == 0) {
     g.logger.debug(g.urls.length + " tests found...");
+  }
 }

@@ -170,15 +170,17 @@ function setupTextZoom(contentRootElement) {
   if (
     !contentRootElement ||
     !contentRootElement.hasAttribute("reftest-text-zoom")
-  )
+  ) {
     return;
+  }
   docShell.browsingContext.textZoom =
     contentRootElement.getAttribute("reftest-text-zoom");
 }
 
 function setupFullZoom(contentRootElement) {
-  if (!contentRootElement || !contentRootElement.hasAttribute("reftest-zoom"))
+  if (!contentRootElement || !contentRootElement.hasAttribute("reftest-zoom")) {
     return;
+  }
   docShell.browsingContext.fullZoom =
     contentRootElement.getAttribute("reftest-zoom");
 }
@@ -343,8 +345,9 @@ function setupAsyncZoom(options) {
   if (
     !contentRootElement ||
     !contentRootElement.hasAttribute("reftest-async-zoom")
-  )
+  ) {
     return false;
+  }
 
   var zoom = attrOrDefault(contentRootElement, "reftest-async-zoom", 1);
   if (zoom != 1) {
@@ -888,7 +891,9 @@ function WaitForTestEnd(
           Ci.nsIObserverService
         );
         var flushWaiter = function (aSubject, aTopic, aData) {
-          if (aTopic) LogInfo("MakeProgress: apz-repaints-flushed fired");
+          if (aTopic) {
+            LogInfo("MakeProgress: apz-repaints-flushed fired");
+          }
           os.removeObserver(flushWaiter, "apz-repaints-flushed");
           state = STATE_WAITING_TO_FINISH;
           if (operationInProgress) {
@@ -1189,7 +1194,9 @@ async function RecordResult(forURL) {
     var error = "";
     var testwindow = content;
 
-    if (testwindow.wrappedJSObject) testwindow = testwindow.wrappedJSObject;
+    if (testwindow.wrappedJSObject) {
+      testwindow = testwindow.wrappedJSObject;
+    }
 
     var testcases;
     if (

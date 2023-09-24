@@ -27,7 +27,7 @@ class ReftestFissionChild extends JSWindowActorChild {
         // |this| can be destroyed here and unable to send messages, which is
         // not a problem, the reftest harness probably torn down the page and
         // moved on to the next test.
-        Cu.reportError(e);
+        console.error(e);
       }
     }
   }
@@ -334,7 +334,7 @@ class ReftestFissionChild extends JSWindowActorChild {
                     flushWindow(win.frames[i]);
                   }
                 } catch (e) {
-                  Cu.reportError(e);
+                  console.error(e);
                 }
               }
             }
