@@ -152,11 +152,11 @@ jobs:
 
     - name: Setup 🪛
       run: |
-        mkdir -p ~/win-cross
-
-        if [[ $GHA_aarch64 == 'true' ]];then
+        mkdir -p ~/win-crossif
+        
+        if[[ $GHA_aarch64 == 'true' ]]; then
           cp ./.github/workflows/src/windows/aarch64/mozconfig_win_aarch64_pgo_base mozconfig
-        elseif [[ $GHA_32bit == 'true' ]];then
+        elif [[ $GHA_32bit == 'true' ]]; then
           cp ./.github/workflows/src/windows/x86/mozconfig_win_x86_pgo_base mozconfig
         else
           cp ./.github/workflows/src/windows/x86_64/mozconfig_win_x86_64_pgo_base mozconfig
@@ -295,9 +295,12 @@ jobs:
         if [[ $GHA_aarch64 == 'true' ]];then
           arch="aarch64"
           arch_inst="win64-aarch64"
-        elseif [[ $GHA_32bit == 'true' ]];then
+        elif [[ $GHA_32bit == 'true' ]];then
           arch="i686"
           arch_inst="win32"
+        else
+          arch="x86_64"
+          arch_inst="win64"
         fi
 
         if [[ $GHA_zstd != 'true' ]];then
