@@ -92,7 +92,6 @@ jobs:
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
-      mar: true
       beta: false
       buildjet: ${{ inputs.buildjet }}
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
@@ -123,7 +122,6 @@ jobs:
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
-      mar: true
       build32bit: true
       beta: false
       buildjet: ${{ inputs.buildjet }}
@@ -346,11 +344,11 @@ jobs:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
           /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64.mar
-          /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
           /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
           /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
+          /home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
         name: "v${{ needs.get-display-version.outputs.display-version }}"
