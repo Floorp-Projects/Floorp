@@ -152,9 +152,9 @@ jobs:
 
     - name: Setup 🪛
       run: |
-        mkdir -p ~/win-crossif
+        mkdir -p ~/win-cross
         
-        if[[ $GHA_aarch64 == 'true' ]]; then
+        if [[ $GHA_aarch64 == 'true' ]]; then
           cp ./.github/workflows/src/windows/aarch64/mozconfig_win_aarch64_pgo_base mozconfig
         elif [[ $GHA_32bit == 'true' ]]; then
           cp ./.github/workflows/src/windows/x86/mozconfig_win_x86_pgo_base mozconfig
