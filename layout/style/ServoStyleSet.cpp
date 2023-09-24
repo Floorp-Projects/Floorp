@@ -328,11 +328,12 @@ void ServoStyleSet::PreTraverseSync() {
   // is necessary to avoid a data race when updating the cache.
   Unused << mDocument->GetRootElement();
 
-  // FIXME(emilio): This shouldn't be needed in theory, the call to the same
-  // function in PresShell should do the work, but as it turns out we
+  // FIXME(emilio): These two shouldn't be needed in theory, the call to the
+  // same function in PresShell should do the work, but as it turns out we
   // ProcessPendingRestyles() twice, and runnables from frames just constructed
   // can end up doing editing stuff, which adds stylesheets etc...
   mDocument->FlushUserFontSet();
+  UpdateStylistIfNeeded();
 
   mDocument->ResolveScheduledPresAttrs();
 
