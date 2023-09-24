@@ -1,25 +1,46 @@
 var EXPORTED_SYMBOLS = ["ReftestFissionParent"];
 
 class ReftestFissionParent extends JSWindowActorParent {
-
-  tellChildrenToFlushRendering(browsingContext, ignoreThrottledAnimations, needsAnimationFrame) {
+  tellChildrenToFlushRendering(
+    browsingContext,
+    ignoreThrottledAnimations,
+    needsAnimationFrame
+  ) {
     let promises = [];
-    this.tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, needsAnimationFrame, promises);
+    this.tellChildrenToFlushRenderingRecursive(
+      browsingContext,
+      ignoreThrottledAnimations,
+      needsAnimationFrame,
+      promises
+    );
     return Promise.allSettled(promises);
   }
 
-  tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, needsAnimationFrame, promises) {
+  tellChildrenToFlushRenderingRecursive(
+    browsingContext,
+    ignoreThrottledAnimations,
+    needsAnimationFrame,
+    promises
+  ) {
     let cwg = browsingContext.currentWindowGlobal;
     if (cwg && cwg.isProcessRoot) {
       let a = cwg.getActor("ReftestFission");
       if (a) {
-        let responsePromise = a.sendQuery("FlushRendering", {ignoreThrottledAnimations, needsAnimationFrame});
+        let responsePromise = a.sendQuery("FlushRendering", {
+          ignoreThrottledAnimations,
+          needsAnimationFrame,
+        });
         promises.push(responsePromise);
       }
     }
 
     for (let context of browsingContext.children) {
-      this.tellChildrenToFlushRenderingRecursive(context, ignoreThrottledAnimations, needsAnimationFrame, promises);
+      this.tellChildrenToFlushRenderingRecursive(
+        context,
+        ignoreThrottledAnimations,
+        needsAnimationFrame,
+        promises
+      );
     }
   }
 
@@ -51,14 +72,16 @@ class ReftestFissionParent extends JSWindowActorParent {
     let cwg = browsingContext.currentWindowGlobal;
     if (!cwg || !cwg.isProcessRoot) {
       if (cwg) {
-        errorStrings.push("tellChildrenToUpdateLayerTree called on a non process root?");
+        errorStrings.push(
+          "tellChildrenToUpdateLayerTree called on a non process root?"
+        );
       }
-      return {errorStrings, infoStrings};
+      return { errorStrings, infoStrings };
     }
 
     let actor = cwg.getActor("ReftestFission");
     if (!actor) {
-      return {errorStrings, infoStrings};
+      return { errorStrings, infoStrings };
     }
 
     // When we paint a document we also update the EffectsInfo visible rect in
@@ -77,22 +100,31 @@ class ReftestFissionParent extends JSWindowActorParent {
       let result = await actor.sendQuery("UpdateLayerTree");
       errorStrings.push(...result.errorStrings);
     } catch (e) {
-      infoStrings.push("tellChildrenToUpdateLayerTree UpdateLayerTree msg to child rejected: " + e);
+      infoStrings.push(
+        "tellChildrenToUpdateLayerTree UpdateLayerTree msg to child rejected: " +
+          e
+      );
     }
 
-    let descendants = actor.getNearestProcessRootProperDescendants(browsingContext);
+    let descendants =
+      actor.getNearestProcessRootProperDescendants(browsingContext);
     for (let context of descendants) {
       let cwg2 = context.currentWindowGlobal;
       if (cwg2) {
         if (!cwg2.isProcessRoot) {
-          errorStrings.push("getNearestProcessRootProperDescendants returned a non process root?");
+          errorStrings.push(
+            "getNearestProcessRootProperDescendants returned a non process root?"
+          );
         }
         let actor2 = cwg2.getActor("ReftestFission");
         if (actor2) {
           try {
             await actor2.sendQuery("EmptyMessage");
-          } catch(e) {
-            infoStrings.push("tellChildrenToUpdateLayerTree EmptyMessage msg to child rejected: " + e);
+          } catch (e) {
+            infoStrings.push(
+              "tellChildrenToUpdateLayerTree EmptyMessage msg to child rejected: " +
+                e
+            );
           }
 
           try {
@@ -100,14 +132,16 @@ class ReftestFissionParent extends JSWindowActorParent {
             errorStrings.push(...result2.errorStrings);
             infoStrings.push(...result2.infoStrings);
           } catch (e) {
-            errorStrings.push("tellChildrenToUpdateLayerTree recursive tellChildrenToUpdateLayerTree call rejected: " + e);
+            errorStrings.push(
+              "tellChildrenToUpdateLayerTree recursive tellChildrenToUpdateLayerTree call rejected: " +
+                e
+            );
           }
-
         }
       }
     }
 
-    return {errorStrings, infoStrings};
+    return { errorStrings, infoStrings };
   }
 
   tellChildrenToSetupDisplayport(browsingContext, promises) {
@@ -125,38 +159,52 @@ class ReftestFissionParent extends JSWindowActorParent {
     }
   }
 
-  tellChildrenToSetupAsyncScrollOffsets(browsingContext, allowFailure, promises) {
+  tellChildrenToSetupAsyncScrollOffsets(
+    browsingContext,
+    allowFailure,
+    promises
+  ) {
     let cwg = browsingContext.currentWindowGlobal;
     if (cwg && cwg.isProcessRoot) {
       let a = cwg.getActor("ReftestFission");
       if (a) {
-        let responsePromise = a.sendQuery("SetupAsyncScrollOffsets", {allowFailure});
+        let responsePromise = a.sendQuery("SetupAsyncScrollOffsets", {
+          allowFailure,
+        });
         promises.push(responsePromise);
       }
     }
 
     for (let context of browsingContext.children) {
-      this.tellChildrenToSetupAsyncScrollOffsets(context, allowFailure, promises);
+      this.tellChildrenToSetupAsyncScrollOffsets(
+        context,
+        allowFailure,
+        promises
+      );
     }
   }
 
-
   receiveMessage(msg) {
     switch (msg.name) {
-      case "ForwardAfterPaintEvent":
-      {
+      case "ForwardAfterPaintEvent": {
         let cwg = msg.data.toBrowsingContext.currentWindowGlobal;
         if (cwg) {
           let a = cwg.getActor("ReftestFission");
           if (a) {
-            a.sendAsyncMessage("ForwardAfterPaintEventToSelfAndParent", msg.data);
+            a.sendAsyncMessage(
+              "ForwardAfterPaintEventToSelfAndParent",
+              msg.data
+            );
           }
         }
         break;
       }
-      case "FlushRendering":
-      {
-        let promise = this.tellChildrenToFlushRendering(msg.data.browsingContext, msg.data.ignoreThrottledAnimations, msg.data.needsAnimationFrame);
+      case "FlushRendering": {
+        let promise = this.tellChildrenToFlushRendering(
+          msg.data.browsingContext,
+          msg.data.ignoreThrottledAnimations,
+          msg.data.needsAnimationFrame
+        );
         return promise.then(function (results) {
           let errorStrings = [];
           let warningStrings = [];
@@ -164,11 +212,16 @@ class ReftestFissionParent extends JSWindowActorParent {
           for (let r of results) {
             if (r.status != "fulfilled") {
               if (r.status == "pending") {
-                errorStrings.push("FlushRendering sendQuery to child promise still pending?");
+                errorStrings.push(
+                  "FlushRendering sendQuery to child promise still pending?"
+                );
               } else {
                 // We expect actors to go away causing sendQuery's to fail, so
                 // just note it.
-                infoStrings.push("FlushRendering sendQuery to child promise rejected: " + r.reason);
+                infoStrings.push(
+                  "FlushRendering sendQuery to child promise rejected: " +
+                    r.reason
+                );
               }
               continue;
             }
@@ -177,15 +230,13 @@ class ReftestFissionParent extends JSWindowActorParent {
             warningStrings.push(...r.value.warningStrings);
             infoStrings.push(...r.value.infoStrings);
           }
-          return {errorStrings, warningStrings, infoStrings};
+          return { errorStrings, warningStrings, infoStrings };
         });
       }
-      case "UpdateLayerTree":
-      {
+      case "UpdateLayerTree": {
         return this.tellChildrenToUpdateLayerTree(msg.data.browsingContext);
       }
-      case "TellChildrenToSetupDisplayport":
-      {
+      case "TellChildrenToSetupDisplayport": {
         let promises = [];
         this.tellChildrenToSetupDisplayport(msg.data.browsingContext, promises);
         return Promise.allSettled(promises).then(function (results) {
@@ -195,21 +246,27 @@ class ReftestFissionParent extends JSWindowActorParent {
             if (r.status != "fulfilled") {
               // We expect actors to go away causing sendQuery's to fail, so
               // just note it.
-              infoStrings.push("SetupDisplayport sendQuery to child promise rejected: " + r.reason);
+              infoStrings.push(
+                "SetupDisplayport sendQuery to child promise rejected: " +
+                  r.reason
+              );
               continue;
             }
 
             errorStrings.push(...r.value.errorStrings);
             infoStrings.push(...r.value.infoStrings);
           }
-          return {errorStrings, infoStrings}
+          return { errorStrings, infoStrings };
         });
       }
 
-      case "SetupAsyncScrollOffsets":
-      {
+      case "SetupAsyncScrollOffsets": {
         let promises = [];
-        this.tellChildrenToSetupAsyncScrollOffsets(this.manager.browsingContext, msg.data.allowFailure, promises);
+        this.tellChildrenToSetupAsyncScrollOffsets(
+          this.manager.browsingContext,
+          msg.data.allowFailure,
+          promises
+        );
         return Promise.allSettled(promises).then(function (results) {
           let errorStrings = [];
           let infoStrings = [];
@@ -218,7 +275,10 @@ class ReftestFissionParent extends JSWindowActorParent {
             if (r.status != "fulfilled") {
               // We expect actors to go away causing sendQuery's to fail, so
               // just note it.
-              infoStrings.push("SetupAsyncScrollOffsets sendQuery to child promise rejected: " + r.reason);
+              infoStrings.push(
+                "SetupAsyncScrollOffsets sendQuery to child promise rejected: " +
+                  r.reason
+              );
               continue;
             }
 
@@ -228,11 +288,9 @@ class ReftestFissionParent extends JSWindowActorParent {
               updatedAny = true;
             }
           }
-          return {errorStrings, infoStrings, updatedAny};
+          return { errorStrings, infoStrings, updatedAny };
         });
       }
-
     }
   }
-
 }

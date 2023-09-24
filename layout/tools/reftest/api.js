@@ -33,7 +33,7 @@ function processTerminated() {
 
 function startAndroid(win) {
   // Add setTimeout here because windows.innerWidth/Height are not set yet.
-  win.setTimeout(function() {
+  win.setTimeout(function () {
     OnRefTestLoad(win);
   }, 0);
 }
@@ -125,7 +125,7 @@ this.reftest = class extends ExtensionAPI {
       "chrome,dialog=no,left=800,height=200,width=200,all",
       null
     );
-    dummy.onload = async function() {
+    dummy.onload = async function () {
       // Close pre-existing window
       win.close();
 

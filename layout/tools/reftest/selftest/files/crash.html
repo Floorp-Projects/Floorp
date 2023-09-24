@@ -1,7 +1,7 @@
 <script>
-const Cc = SpecialPowers.Cc;
-const Ci = SpecialPowers.Ci;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
 
-let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
-debug.abort('crash.html', 6);
+  let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+  debug.abort("crash.html", 6);
 </script>
