@@ -292,7 +292,6 @@ jobs:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Copy 📂
-
       run: |
         mkdir ~/output
         if [[ $GHA_aarch64 == 'true' ]];then
@@ -328,17 +327,26 @@ jobs:
       id: gen-mar
       if : inputs.mar
       run: |
-        # mkdir -p output
-        touch "obj-x86_64-pc-windows-msvc/dist/floorp/precomplete"
-        MAR="obj-x86_64-pc-windows-msvc/dist/host/bin/mar" \
+        if [[ $GHA_aarch64 == 'true' ]];then
+          arch="aarch64"
+        elif [[ $GHA_32bit == 'true' ]];then
+          arch="i686"
+        else
+          arch="x86_64"
+        fi
+
+        touch "obj-${arch}-pc-windows-msvc/dist/floorp/precomplete"
+        MAR="obj-${arch}-pc-windows-msvc/dist/host/bin/mar" \
         MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
         MAR_CHANNEL_ID=release \
-        ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-windows-msvc/dist/floorp"
+        ./tools/update-packaging/make_full_update.sh ~/output "obj-${arch}-pc-windows-msvc/dist/floorp"
 
-        mv ~/output/*.mar ~/output/WINNT-x86_64.mar
+        mv ~/output/*.mar ~/output/WINNT-${arch}.mar
 
-        echo "MAR_NAME=WINNT-x86_64.mar" >> $GITHUB_OUTPUT
-        echo "MAR_SIZE=$(stat -c "%s" ~/output/WINNT-x86_64.mar)" >> $GITHUB_OUTPUT
+        echo "MAR_NAME=WINNT-${arch}.mar" >> $GITHUB_OUTPUT
+        echo "MAR_SIZE=$(stat -c "%s" ~/output/WINNT-${arch}.mar)" >> $GITHUB_OUTPUT
+      env:
+        GHA_32bit: ${{inputs.build32bit}}
 
     # Publish START
     - name: make name of publish archive
