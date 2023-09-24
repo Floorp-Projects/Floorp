@@ -162,6 +162,7 @@ for (let [key, val] of Object.entries({
     dumpedConditionSandbox: false,
   },
 })) {
+  // eslint-disable-next-line mozilla/reject-global-this
   this[key] = val;
   EXPORTED_SYMBOLS.push(key);
 }

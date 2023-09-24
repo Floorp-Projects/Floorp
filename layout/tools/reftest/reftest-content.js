@@ -535,13 +535,13 @@ function WaitForTestEnd(
 
   var operationInProgress = false;
   function OperationInProgress() {
-    if (operationInProgress != false) {
+    if (operationInProgress) {
       LogWarning("Nesting atomic operations?");
     }
     operationInProgress = true;
   }
   function OperationCompleted() {
-    if (operationInProgress != true) {
+    if (!operationInProgress) {
       LogWarning("Mismatched OperationInProgress/OperationCompleted calls?");
     }
     operationInProgress = false;

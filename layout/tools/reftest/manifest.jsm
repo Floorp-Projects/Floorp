@@ -682,7 +682,7 @@ function BuildConditionSandbox(aURL) {
   sandbox.swgl = g.windowUtils.layerManagerType.startsWith(
     "WebRender (Software"
   );
-  sandbox.layersOMTC = g.windowUtils.layerManagerRemote == true;
+  sandbox.layersOMTC = !!g.windowUtils.layerManagerRemote;
 
   // Shortcuts for widget toolkits.
   sandbox.Android = xr.OS == "Android";

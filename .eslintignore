@@ -24,6 +24,8 @@
 # Also ignore reftest - specially crafted to produce expected output.
 **/reftest/
 **/reftests/
+# Don't ignore the reftest harness files.
+!/layout/tools/reftest/
 
 # Exclude expected objdirs.
 obj*/
