@@ -157,18 +157,7 @@ ol {
   fill-opacity: 0.8;
 }
 
-.alert-icon {
-  min-width: 16px;
-  width: 16px;
-  margin-inline-start: 12px;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.75;
-}
-
-@media not (prefers-contrast) {
-  .breached > .alert-icon {
-    fill: var(--red-60);
-    fill-opacity: 1;
-  }
+.username {
+  font-size: 0.85em;
+  color: var(--text-color-deemphasized);
 }
