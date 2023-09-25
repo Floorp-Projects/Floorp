@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Example for aiohttp.web class based views
-"""
+"""Example for aiohttp.web class based views."""
 
 
 import functools
@@ -14,7 +13,7 @@ class MyView(web.View):
         return web.json_response(
             {
                 "method": "get",
-                "args": dict(self.request.GET),
+                "args": dict(self.request.query),
                 "headers": dict(self.request.headers),
             },
             dumps=functools.partial(json.dumps, indent=4),
@@ -25,7 +24,7 @@ class MyView(web.View):
         return web.json_response(
             {
                 "method": "post",
-                "args": dict(self.request.GET),
+                "args": dict(self.request.query),
                 "data": dict(data),
                 "headers": dict(self.request.headers),
             },

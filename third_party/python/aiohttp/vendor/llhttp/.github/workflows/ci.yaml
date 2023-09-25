@@ -1,0 +1,117 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  CI: true
+
+jobs:
+  build:
+    name: Build libllhttp.a
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Install clang for Windows
+        if: runner.os == 'Windows'
+        run: |
+          iwr -useb get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
+          scoop install llvm --global
+
+          # Scoop modifies the PATH so we make the modified PATH global.
+          echo $env:PATH >> $env:GITHUB_PATH
+
+      - name: Fetch code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      # Skip macOS & Windows, cache there is slower
+      - name: Restore node_modules cache for Linux
+        uses: actions/cache@v3
+        if: runner.os == 'Linux'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build libllhttp.a
+        shell: bash
+        run: |
+          make build/libllhttp.a
+
+  test:
+    name: Run tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Install clang for Windows
+        if: runner.os == 'Windows'
+        run: |
+          iwr -useb get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
+          scoop install llvm --global
+
+          # Scoop modifies the PATH so we make the modified PATH global.
+          echo $env:PATH >> $env:GITHUB_PATH
+
+      - name: Fetch code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      # Skip macOS & Windows, cache there is slower
+      - name: Restore node_modules cache for Linux
+        uses: actions/cache@v3
+        if: runner.os == 'Linux'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      # Custom script, because progress looks not good in CI
+      - name: Run tests
+        env:
+          CFLAGS: -O0
+        run: npx mocha --timeout 30000 -r ts-node/register/type-check test/*-test.ts
+
+  lint:
+    name: Run TSLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Run lint command
+        run: npm run lint

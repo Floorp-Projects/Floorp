@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import datetime
 import os  # noqa
 import pathlib
@@ -11,6 +12,7 @@ from typing import (  # noqa
     Dict,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Set,
@@ -21,9 +23,9 @@ from typing import (  # noqa
 
 from yarl import URL
 
-from .abc import AbstractCookieJar
+from .abc import AbstractCookieJar, ClearCookiePredicate
 from .helpers import is_ip_address, next_whole_second
-from .typedefs import LooseCookies, PathLike
+from .typedefs import LooseCookies, PathLike, StrOrURL
 
 __all__ = ("CookieJar", "DummyCookieJar")
 
@@ -52,24 +54,37 @@ class CookieJar(AbstractCookieJar):
 
     MAX_TIME = datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
 
-    MAX_32BIT_TIME = datetime.datetime.utcfromtimestamp(2 ** 31 - 1)
+    MAX_32BIT_TIME = datetime.datetime.utcfromtimestamp(2**31 - 1)
 
     def __init__(
         self,
         *,
         unsafe: bool = False,
         quote_cookie: bool = True,
-        loop: Optional[asyncio.AbstractEventLoop] = None
+        treat_as_secure_origin: Union[StrOrURL, List[StrOrURL], None] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ) -> None:
         super().__init__(loop=loop)
-        self._cookies = defaultdict(
+        self._cookies: DefaultDict[Tuple[str, str], SimpleCookie[str]] = defaultdict(
             SimpleCookie
-        )  # type: DefaultDict[str, SimpleCookie[str]]
-        self._host_only_cookies = set()  # type: Set[Tuple[str, str]]
+        )
+        self._host_only_cookies: Set[Tuple[str, str]] = set()
         self._unsafe = unsafe
         self._quote_cookie = quote_cookie
+        if treat_as_secure_origin is None:
+            treat_as_secure_origin = []
+        elif isinstance(treat_as_secure_origin, URL):
+            treat_as_secure_origin = [treat_as_secure_origin.origin()]
+        elif isinstance(treat_as_secure_origin, str):
+            treat_as_secure_origin = [URL(treat_as_secure_origin).origin()]
+        else:
+            treat_as_secure_origin = [
+                URL(url).origin() if isinstance(url, str) else url.origin()
+                for url in treat_as_secure_origin
+            ]
+        self._treat_as_secure_origin = treat_as_secure_origin
         self._next_expiration = next_whole_second()
-        self._expirations = {}  # type: Dict[Tuple[str, str], datetime.datetime]
+        self._expirations: Dict[Tuple[str, str, str], datetime.datetime] = {}
         # #4515: datetime.max may not be representable on 32-bit platforms
         self._max_time = self.MAX_TIME
         try:
@@ -87,11 +102,41 @@ class CookieJar(AbstractCookieJar):
         with file_path.open(mode="rb") as f:
             self._cookies = pickle.load(f)
 
-    def clear(self) -> None:
-        self._cookies.clear()
-        self._host_only_cookies.clear()
-        self._next_expiration = next_whole_second()
-        self._expirations.clear()
+    def clear(self, predicate: Optional[ClearCookiePredicate] = None) -> None:
+        if predicate is None:
+            self._next_expiration = next_whole_second()
+            self._cookies.clear()
+            self._host_only_cookies.clear()
+            self._expirations.clear()
+            return
+
+        to_del = []
+        now = datetime.datetime.now(datetime.timezone.utc)
+        for (domain, path), cookie in self._cookies.items():
+            for name, morsel in cookie.items():
+                key = (domain, path, name)
+                if (
+                    key in self._expirations and self._expirations[key] <= now
+                ) or predicate(morsel):
+                    to_del.append(key)
+
+        for domain, path, name in to_del:
+            self._host_only_cookies.discard((domain, name))
+            key = (domain, path, name)
+            if key in self._expirations:
+                del self._expirations[(domain, path, name)]
+            self._cookies[(domain, path)].pop(name, None)
+
+        next_expiration = min(self._expirations.values(), default=self._max_time)
+        try:
+            self._next_expiration = next_expiration.replace(
+                microsecond=0
+            ) + datetime.timedelta(seconds=1)
+        except OverflowError:
+            self._next_expiration = self._max_time
+
+    def clear_domain(self, domain: str) -> None:
+        self.clear(lambda x: self._is_domain_match(domain, x["domain"]))
 
     def __iter__(self) -> "Iterator[Morsel[str]]":
         self._do_expiration()
@@ -102,35 +147,13 @@ class CookieJar(AbstractCookieJar):
         return sum(1 for i in self)
 
     def _do_expiration(self) -> None:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        if self._next_expiration > now:
-            return
-        if not self._expirations:
-            return
-        next_expiration = self._max_time
-        to_del = []
-        cookies = self._cookies
-        expirations = self._expirations
-        for (domain, name), when in expirations.items():
-            if when <= now:
-                cookies[domain].pop(name, None)
-                to_del.append((domain, name))
-                self._host_only_cookies.discard((domain, name))
-            else:
-                next_expiration = min(next_expiration, when)
-        for key in to_del:
-            del expirations[key]
+        self.clear(lambda x: False)
 
-        try:
-            self._next_expiration = next_expiration.replace(
-                microsecond=0
-            ) + datetime.timedelta(seconds=1)
-        except OverflowError:
-            self._next_expiration = self._max_time
-
-    def _expire_cookie(self, when: datetime.datetime, domain: str, name: str) -> None:
+    def _expire_cookie(
+        self, when: datetime.datetime, domain: str, path: str, name: str
+    ) -> None:
         self._next_expiration = min(self._next_expiration, when)
-        self._expirations[(domain, name)] = when
+        self._expirations[(domain, path, name)] = when
 
     def update_cookies(self, cookies: LooseCookies, response_url: URL = URL()) -> None:
         """Update cookies."""
@@ -145,8 +168,8 @@ class CookieJar(AbstractCookieJar):
 
         for name, cookie in cookies:
             if not isinstance(cookie, Morsel):
-                tmp = SimpleCookie()  # type: SimpleCookie[str]
-                tmp[name] = cookie  # type: ignore
+                tmp: SimpleCookie[str] = SimpleCookie()
+                tmp[name] = cookie  # type: ignore[assignment]
                 cookie = tmp[name]
 
             domain = cookie["domain"]
@@ -192,7 +215,7 @@ class CookieJar(AbstractCookieJar):
                         ) + datetime.timedelta(seconds=delta_seconds)
                     except OverflowError:
                         max_age_expiration = self._max_time
-                    self._expire_cookie(max_age_expiration, domain, name)
+                    self._expire_cookie(max_age_expiration, domain, path, name)
                 except ValueError:
                     cookie["max-age"] = ""
 
@@ -201,11 +224,11 @@ class CookieJar(AbstractCookieJar):
                 if expires:
                     expire_time = self._parse_date(expires)
                     if expire_time:
-                        self._expire_cookie(expire_time, domain, name)
+                        self._expire_cookie(expire_time, domain, path, name)
                     else:
                         cookie["expires"] = ""
 
-            self._cookies[domain][name] = cookie
+            self._cookies[(domain, path)][name] = cookie
 
         self._do_expiration()
 
@@ -219,7 +242,14 @@ class CookieJar(AbstractCookieJar):
             SimpleCookie() if self._quote_cookie else BaseCookie()
         )
         hostname = request_url.raw_host or ""
-        is_not_secure = request_url.scheme not in ("https", "wss")
+        request_origin = URL()
+        with contextlib.suppress(ValueError):
+            request_origin = request_url.origin()
+
+        is_not_secure = (
+            request_url.scheme not in ("https", "wss")
+            and request_origin not in self._treat_as_secure_origin
+        )
 
         for cookie in self:
             name = cookie.key
@@ -312,7 +342,7 @@ class CookieJar(AbstractCookieJar):
                 time_match = cls.DATE_HMS_TIME_RE.match(token)
                 if time_match:
                     found_time = True
-                    hour, minute, second = [int(s) for s in time_match.groups()]
+                    hour, minute, second = (int(s) for s in time_match.groups())
                     continue
 
             if not found_day:
@@ -372,7 +402,10 @@ class DummyCookieJar(AbstractCookieJar):
     def __len__(self) -> int:
         return 0
 
-    def clear(self) -> None:
+    def clear(self, predicate: Optional[ClearCookiePredicate] = None) -> None:
+        pass
+
+    def clear_domain(self, domain: str) -> None:
         pass
 
     def update_cookies(self, cookies: LooseCookies, response_url: URL = URL()) -> None:

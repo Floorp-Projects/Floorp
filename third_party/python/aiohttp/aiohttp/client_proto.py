@@ -23,7 +23,7 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
 
         self._should_close = False
 
-        self._payload = None
+        self._payload: Optional[StreamReader] = None
         self._skip_payload = False
         self._payload_parser = None
 
@@ -31,10 +31,10 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
 
         self._tail = b""
         self._upgraded = False
-        self._parser = None  # type: Optional[HttpResponseParser]
+        self._parser: Optional[HttpResponseParser] = None
 
-        self._read_timeout = None  # type: Optional[float]
-        self._read_timeout_handle = None  # type: Optional[asyncio.TimerHandle]
+        self._read_timeout: Optional[float] = None
+        self._read_timeout_handle: Optional[asyncio.TimerHandle] = None
 
     @property
     def upgraded(self) -> bool:
@@ -142,7 +142,7 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
         read_until_eof: bool = False,
         auto_decompress: bool = True,
         read_timeout: Optional[float] = None,
-        read_bufsize: int = 2 ** 16
+        read_bufsize: int = 2**16,
     ) -> None:
         self._skip_payload = skip_payload
 
@@ -223,7 +223,7 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
 
                 self._upgraded = upgraded
 
-                payload = None
+                payload: Optional[StreamReader] = None
                 for message, payload in messages:
                     if message.should_close:
                         self._should_close = True
@@ -231,7 +231,7 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
                     self._payload = payload
 
                     if self._skip_payload or message.code in (204, 304):
-                        self.feed_data((message, EMPTY_PAYLOAD), 0)  # type: ignore
+                        self.feed_data((message, EMPTY_PAYLOAD), 0)
                     else:
                         self.feed_data((message, payload), 0)
                 if payload is not None:

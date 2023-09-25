@@ -3,7 +3,6 @@ import os  # noqa
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
     Callable,
     Dict,
     Iterator,
@@ -19,7 +18,7 @@ import attr
 
 from . import hdrs
 from .abc import AbstractView
-from .typedefs import PathLike
+from .typedefs import Handler, PathLike
 
 if TYPE_CHECKING:  # pragma: no cover
     from .web_request import Request
@@ -53,8 +52,7 @@ class AbstractRouteDef(abc.ABC):
         pass  # pragma: no cover
 
 
-_SimpleHandler = Callable[[Request], Awaitable[StreamResponse]]
-_HandlerType = Union[Type[AbstractView], _SimpleHandler]
+_HandlerType = Union[Type[AbstractView], Handler]
 
 
 @attr.s(auto_attribs=True, frozen=True, repr=False, slots=True)
@@ -158,10 +156,10 @@ class RouteTableDef(Sequence[AbstractRouteDef]):
     """Route definition table"""
 
     def __init__(self) -> None:
-        self._items = []  # type: List[AbstractRouteDef]
+        self._items: List[AbstractRouteDef] = []
 
     def __repr__(self) -> str:
-        return "<RouteTableDef count={}>".format(len(self._items))
+        return f"<RouteTableDef count={len(self._items)}>"
 
     @overload
     def __getitem__(self, index: int) -> AbstractRouteDef:
@@ -171,7 +169,7 @@ class RouteTableDef(Sequence[AbstractRouteDef]):
     def __getitem__(self, index: slice) -> List[AbstractRouteDef]:
         ...
 
-    def __getitem__(self, index):  # type: ignore
+    def __getitem__(self, index):  # type: ignore[no-untyped-def]
         return self._items[index]
 
     def __iter__(self) -> Iterator[AbstractRouteDef]:
@@ -207,6 +205,9 @@ class RouteTableDef(Sequence[AbstractRouteDef]):
 
     def delete(self, path: str, **kwargs: Any) -> _Deco:
         return self.route(hdrs.METH_DELETE, path, **kwargs)
+
+    def options(self, path: str, **kwargs: Any) -> _Deco:
+        return self.route(hdrs.METH_OPTIONS, path, **kwargs)
 
     def view(self, path: str, **kwargs: Any) -> _Deco:
         return self.route(hdrs.METH_ANY, path, **kwargs)

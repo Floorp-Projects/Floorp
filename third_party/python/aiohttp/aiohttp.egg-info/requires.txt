@@ -1,14 +1,21 @@
 attrs>=17.3.0
-chardet<5.0,>=2.0
+charset-normalizer<4.0,>=2.0
 multidict<7.0,>=4.5
-async_timeout<4.0,>=3.0
+async_timeout<5.0,>=4.0.0a3
 yarl<2.0,>=1.0
-typing_extensions>=3.6.5
+frozenlist>=1.1.1
+aiosignal>=1.1.2
 
 [:python_version < "3.7"]
 idna-ssl>=1.0
 
+[:python_version < "3.8"]
+asynctest==0.13.0
+typing_extensions>=3.7.4
+
 [speedups]
 aiodns
-brotlipy
+Brotli
+
+[speedups:python_version < "3.10"]
 cchardet
