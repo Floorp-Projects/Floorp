@@ -309,3 +309,9 @@ skip == dynamic--inline-resize-window-height.xhtml  pass.svg # XXX breaks the re
 skip == dynamic--inline-resize-window-width.xhtml    pass.svg # Fails way too much
 random-if(Android) == dynamic--object-svg-unloaded.xhtml     pass.svg
 # == dynamic--object--auto-auto--pct-px.html 
+
+# FIXME(bug 700533): CanvasRenderingContext2D.drawImage() fails silently when drawing an SVG image
+# without a width or height attribute.
+!= canvas-drawImage-no-width-or-height.html canvas-drawImage-no-width-or-height-ref.html
+!= canvas-drawImage-width-with-no-height.html canvas-drawImage-width-with-no-height-ref.html
+!= canvas-drawImage-height-with-no-width.html canvas-drawImage-height-with-no-width-ref.html

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script src="svg-image-util.js"></script>
+<style>
+  canvas {
+    background: blue;
+  }
+</style>
+<body>
+  <script>
+    let viewBoxes = [null, "0 0 50 50", "0 0 50 20"];
+    let promises = [];
+    for (viewBox of viewBoxes) {
+      promises.push(generateCanvasDrawImageSVG("350", "200", "300px", "150px", viewBox));
+    }
+    Promise.all(promises).then(() => { document.documentElement.className = "" });
+  </script>
+  <!-- Body gets populated by script -->
+</body>
+</html>
