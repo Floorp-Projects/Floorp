@@ -9,7 +9,7 @@ fn not_supported<T>() -> io::Result<T> {
     ))
 }
 
-pub fn create_named(_path: &Path, open_options: &mut OpenOptions) -> io::Result<File> {
+pub fn create_named(_path: &Path, _open_options: &mut OpenOptions) -> io::Result<File> {
     not_supported()
 }
 
@@ -25,6 +25,6 @@ pub fn persist(_old_path: &Path, _new_path: &Path, _overwrite: bool) -> io::Resu
     not_supported()
 }
 
-pub fn keep(path: &Path) -> io::Result<()> {
+pub fn keep(_path: &Path) -> io::Result<()> {
     not_supported()
 }

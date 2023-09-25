@@ -29,6 +29,14 @@
 //! let elem = v[i];
 //! ```
 //!
+//! Sample values from an array with `O(n)` complexity (`n` is the length of array):
+//!
+//! ```
+//! fastrand::choose_multiple(vec![1, 4, 5].iter(), 2);
+//! fastrand::choose_multiple(0..20, 12);
+//! ```
+//!
+//!
 //! Shuffle an array:
 //!
 //! ```
@@ -61,87 +69,88 @@
 //! ```
 //! use std::iter::repeat_with;
 //!
-//! let rng = fastrand::Rng::new();
+//! let mut rng = fastrand::Rng::new();
 //! let mut bytes: Vec<u8> = repeat_with(|| rng.u8(..)).take(10_000).collect();
 //! ```
+//!
+//! # Features
+//!
+//! - `std` (enabled by default): Enables the `std` library. This is required for the global
+//!   generator and global entropy. Without this feature, [`Rng`] can only be instantiated using
+//!   the [`with_seed`](Rng::with_seed) method.
+//! - `js`: Assumes that WebAssembly targets are being run in a JavaScript environment. See the
+//!   [WebAssembly Notes](#webassembly-notes) section for more information.
+//!
+//! # WebAssembly Notes
+//!
+//! For non-WASI WASM targets, there is additional sublety to consider when utilizing the global RNG.
+//! By default, `std` targets will use entropy sources in the standard library to seed the global RNG.
+//! However, these sources are not available by default on WASM targets outside of WASI.
+//!
+//! If the `js` feature is enabled, this crate will assume that it is running in a JavaScript
+//! environment. At this point, the [`getrandom`] crate will be used in order to access the available
+//! entropy sources and seed the global RNG. If the `js` feature is not enabled, the global RNG will
+//! use a predefined seed.
+//!
+//! [`getrandom`]: https://crates.io/crates/getrandom
 
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
-use std::cell::Cell;
-use std::collections::hash_map::DefaultHasher;
-use std::convert::TryInto;
-use std::hash::{Hash, Hasher};
-use std::ops::{Bound, RangeBounds};
-use std::thread;
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
-#[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
-use instant::Instant;
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "wasi"))))]
-use std::time::Instant;
+use core::convert::{TryFrom, TryInto};
+use core::ops::{Bound, RangeBounds};
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+mod global_rng;
+
+#[cfg(feature = "std")]
+pub use global_rng::*;
 
 /// A random number generator.
 #[derive(Debug, PartialEq, Eq)]
-pub struct Rng(Cell<u64>);
-
-impl Default for Rng {
-    #[inline]
-    fn default() -> Rng {
-        Rng::new()
-    }
-}
+pub struct Rng(u64);
 
 impl Clone for Rng {
-    /// Clones the generator by deterministically deriving a new generator based on the initial
-    /// seed.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// // Seed two generators equally, and clone both of them.
-    /// let base1 = fastrand::Rng::new();
-    /// base1.seed(0x4d595df4d0f33173);
-    /// base1.bool(); // Use the generator once.
-    ///
-    /// let base2 = fastrand::Rng::new();
-    /// base2.seed(0x4d595df4d0f33173);
-    /// base2.bool(); // Use the generator once.
-    ///
-    /// let rng1 = base1.clone();
-    /// let rng2 = base2.clone();
-    ///
-    /// assert_eq!(rng1.u64(..), rng2.u64(..), "the cloned generators are identical");
-    /// ```
+    /// Clones the generator by creating a new generator with the same seed.
     fn clone(&self) -> Rng {
-        Rng::with_seed(self.gen_u64())
+        Rng::with_seed(self.0)
     }
 }
 
 impl Rng {
     /// Generates a random `u32`.
     #[inline]
-    fn gen_u32(&self) -> u32 {
+    fn gen_u32(&mut self) -> u32 {
         self.gen_u64() as u32
     }
 
     /// Generates a random `u64`.
     #[inline]
-    fn gen_u64(&self) -> u64 {
-        let s = self.0.get().wrapping_add(0xA0761D6478BD642F);
-        self.0.set(s);
+    fn gen_u64(&mut self) -> u64 {
+        let s = self.0.wrapping_add(0xA0761D6478BD642F);
+        self.0 = s;
         let t = u128::from(s) * u128::from(s ^ 0xE7037ED1A0B428DB);
         (t as u64) ^ (t >> 64) as u64
     }
 
     /// Generates a random `u128`.
     #[inline]
-    fn gen_u128(&self) -> u128 {
+    fn gen_u128(&mut self) -> u128 {
         (u128::from(self.gen_u64()) << 64) | u128::from(self.gen_u64())
     }
 
     /// Generates a random `u32` in `0..n`.
     #[inline]
-    fn gen_mod_u32(&self, n: u32) -> u32 {
+    fn gen_mod_u32(&mut self, n: u32) -> u32 {
         // Adapted from: https://lemire.me/blog/2016/06/30/fast-random-shuffling/
         let mut r = self.gen_u32();
         let mut hi = mul_high_u32(r, n);
@@ -159,7 +168,7 @@ impl Rng {
 
     /// Generates a random `u64` in `0..n`.
     #[inline]
-    fn gen_mod_u64(&self, n: u64) -> u64 {
+    fn gen_mod_u64(&mut self, n: u64) -> u64 {
         // Adapted from: https://lemire.me/blog/2016/06/30/fast-random-shuffling/
         let mut r = self.gen_u64();
         let mut hi = mul_high_u64(r, n);
@@ -177,7 +186,7 @@ impl Rng {
 
     /// Generates a random `u128` in `0..n`.
     #[inline]
-    fn gen_mod_u128(&self, n: u128) -> u128 {
+    fn gen_mod_u128(&mut self, n: u128) -> u128 {
         // Adapted from: https://lemire.me/blog/2016/06/30/fast-random-shuffling/
         let mut r = self.gen_u128();
         let mut hi = mul_high_u128(r, n);
@@ -192,16 +201,6 @@ impl Rng {
         }
         hi
     }
-}
-
-thread_local! {
-    static RNG: Rng = Rng(Cell::new({
-        let mut hasher = DefaultHasher::new();
-        Instant::now().hash(&mut hasher);
-        thread::current().id().hash(&mut hasher);
-        let hash = hasher.finish();
-        (hash << 1) | 1
-    }));
 }
 
 /// Computes `(a * b) >> 32`.
@@ -235,7 +234,7 @@ macro_rules! rng_integer {
         ///
         /// Panics if the range is empty.
         #[inline]
-        pub fn $t(&self, range: impl RangeBounds<$t>) -> $t {
+        pub fn $t(&mut self, range: impl RangeBounds<$t>) -> $t {
             let panic_empty_range = || {
                 panic!(
                     "empty range: {:?}..{:?}",
@@ -245,13 +244,13 @@ macro_rules! rng_integer {
             };
 
             let low = match range.start_bound() {
-                Bound::Unbounded => std::$t::MIN,
+                Bound::Unbounded => core::$t::MIN,
                 Bound::Included(&x) => x,
                 Bound::Excluded(&x) => x.checked_add(1).unwrap_or_else(panic_empty_range),
             };
 
             let high = match range.end_bound() {
-                Bound::Unbounded => std::$t::MAX,
+                Bound::Unbounded => core::$t::MAX,
                 Bound::Included(&x) => x,
                 Bound::Excluded(&x) => x.checked_sub(1).unwrap_or_else(panic_empty_range),
             };
@@ -260,7 +259,7 @@ macro_rules! rng_integer {
                 panic_empty_range();
             }
 
-            if low == std::$t::MIN && high == std::$t::MAX {
+            if low == core::$t::MIN && high == core::$t::MAX {
                 self.$gen() as $t
             } else {
                 let len = high.wrapping_sub(low).wrapping_add(1);
@@ -271,46 +270,59 @@ macro_rules! rng_integer {
 }
 
 impl Rng {
-    /// Creates a new random number generator.
-    #[inline]
-    pub fn new() -> Rng {
-        Rng::with_seed(
-            RNG.try_with(|rng| rng.u64(..))
-                .unwrap_or(0x4d595df4d0f33173),
-        )
-    }
-
     /// Creates a new random number generator with the initial seed.
     #[inline]
     #[must_use = "this creates a new instance of `Rng`; if you want to initialize the thread-local generator, use `fastrand::seed()` instead"]
     pub fn with_seed(seed: u64) -> Self {
-        let rng = Rng(Cell::new(0));
+        let mut rng = Rng(0);
 
         rng.seed(seed);
         rng
     }
 
+    /// Clones the generator by deterministically deriving a new generator based on the initial
+    /// seed.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// // Seed two generators equally, and clone both of them.
+    /// let mut base1 = fastrand::Rng::new();
+    /// base1.seed(0x4d595df4d0f33173);
+    /// base1.bool(); // Use the generator once.
+    ///
+    /// let mut base2 = fastrand::Rng::new();
+    /// base2.seed(0x4d595df4d0f33173);
+    /// base2.bool(); // Use the generator once.
+    ///
+    /// let mut rng1 = base1.clone();
+    /// let mut rng2 = base2.clone();
+    ///
+    /// assert_eq!(rng1.u64(..), rng2.u64(..), "the cloned generators are identical");
+    /// ```
+    #[inline]
+    #[must_use = "this creates a new instance of `Rng`"]
+    pub fn fork(&mut self) -> Self {
+        Rng::with_seed(self.gen_u64())
+    }
+
     /// Generates a random `char` in ranges a-z and A-Z.
     #[inline]
-    pub fn alphabetic(&self) -> char {
+    pub fn alphabetic(&mut self) -> char {
         const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        let len = CHARS.len() as u8;
-        let i = self.u8(..len);
-        CHARS[i as usize] as char
+        *self.choice(CHARS).unwrap() as char
     }
 
     /// Generates a random `char` in ranges a-z, A-Z and 0-9.
     #[inline]
-    pub fn alphanumeric(&self) -> char {
+    pub fn alphanumeric(&mut self) -> char {
         const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        let len = CHARS.len() as u8;
-        let i = self.u8(..len);
-        CHARS[i as usize] as char
+        *self.choice(CHARS).unwrap() as char
     }
 
     /// Generates a random `bool`.
     #[inline]
-    pub fn bool(&self) -> bool {
+    pub fn bool(&mut self) -> bool {
         self.u8(..) % 2 == 0
     }
 
@@ -320,7 +332,7 @@ impl Rng {
     ///
     /// Panics if the base is zero or greater than 36.
     #[inline]
-    pub fn digit(&self, base: u32) -> char {
+    pub fn digit(&mut self, base: u32) -> char {
         if base == 0 {
             panic!("base cannot be zero");
         }
@@ -336,17 +348,55 @@ impl Rng {
     }
 
     /// Generates a random `f32` in range `0..1`.
-    pub fn f32(&self) -> f32 {
+    pub fn f32(&mut self) -> f32 {
         let b = 32;
-        let f = std::f32::MANTISSA_DIGITS - 1;
+        let f = core::f32::MANTISSA_DIGITS - 1;
         f32::from_bits((1 << (b - 2)) - (1 << f) + (self.u32(..) >> (b - f))) - 1.0
     }
 
     /// Generates a random `f64` in range `0..1`.
-    pub fn f64(&self) -> f64 {
+    pub fn f64(&mut self) -> f64 {
         let b = 64;
-        let f = std::f64::MANTISSA_DIGITS - 1;
+        let f = core::f64::MANTISSA_DIGITS - 1;
         f64::from_bits((1 << (b - 2)) - (1 << f) + (self.u64(..) >> (b - f))) - 1.0
+    }
+
+    /// Collects `amount` values at random from the iterator into a vector.
+    ///
+    /// The length of the returned vector equals `amount` unless the iterator
+    /// contains insufficient elements, in which case it equals the number of
+    /// elements available.
+    ///
+    /// Complexity is `O(n)` where `n` is the length of the iterator.
+    #[cfg(feature = "alloc")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+    pub fn choose_multiple<T: Iterator>(&mut self, mut source: T, amount: usize) -> Vec<T::Item> {
+        // Adapted from: https://docs.rs/rand/latest/rand/seq/trait.IteratorRandom.html#method.choose_multiple
+        let mut reservoir = Vec::with_capacity(amount);
+
+        reservoir.extend(source.by_ref().take(amount));
+
+        // Continue unless the iterator was exhausted
+        //
+        // note: this prevents iterators that "restart" from causing problems.
+        // If the iterator stops once, then so do we.
+        if reservoir.len() == amount {
+            for (i, elem) in source.enumerate() {
+                let end = i + 1 + amount;
+                let k = self.usize(0..end);
+                if let Some(slot) = reservoir.get_mut(k) {
+                    *slot = elem;
+                }
+            }
+        } else {
+            // If less than one third of the `Vec` was used, reallocate
+            // so that the unused space is not wasted. There is a corner
+            // case where `amount` was much less than `self.len()`.
+            if reservoir.capacity() > 3 * reservoir.len() {
+                reservoir.shrink_to_fit();
+            }
+        }
+        reservoir
     }
 
     rng_integer!(
@@ -416,28 +466,49 @@ impl Rng {
 
     /// Generates a random `char` in range a-z.
     #[inline]
-    pub fn lowercase(&self) -> char {
+    pub fn lowercase(&mut self) -> char {
         const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
-        let len = CHARS.len() as u8;
-        let i = self.u8(..len);
-        CHARS[i as usize] as char
+        *self.choice(CHARS).unwrap() as char
     }
 
     /// Initializes this generator with the given seed.
     #[inline]
-    pub fn seed(&self, seed: u64) {
-        self.0.set(seed);
+    pub fn seed(&mut self, seed: u64) {
+        self.0 = seed;
     }
 
     /// Gives back **current** seed that is being held by this generator.
     #[inline]
     pub fn get_seed(&self) -> u64 {
-        self.0.get()
+        self.0
+    }
+
+    /// Choose an item from an iterator at random.
+    ///
+    /// This function may have an unexpected result if the `len()` property of the
+    /// iterator does not match the actual number of items in the iterator. If
+    /// the iterator is empty, this returns `None`.
+    #[inline]
+    pub fn choice<I>(&mut self, iter: I) -> Option<I::Item>
+    where
+        I: IntoIterator,
+        I::IntoIter: ExactSizeIterator,
+    {
+        let mut iter = iter.into_iter();
+
+        // Get the item at a random index.
+        let len = iter.len();
+        if len == 0 {
+            return None;
+        }
+        let index = self.usize(0..len);
+
+        iter.nth(index)
     }
 
     /// Shuffles a slice randomly.
     #[inline]
-    pub fn shuffle<T>(&self, slice: &mut [T]) {
+    pub fn shuffle<T>(&mut self, slice: &mut [T]) {
         for i in 1..slice.len() {
             slice.swap(i, self.usize(..=i));
         }
@@ -445,7 +516,7 @@ impl Rng {
 
     /// Fill a byte slice with random data.
     #[inline]
-    pub fn fill(&self, slice: &mut [u8]) {
+    pub fn fill(&mut self, slice: &mut [u8]) {
         // We fill the slice by chunks of 8 bytes, or one block of
         // WyRand output per new state.
         let mut chunks = slice.chunks_exact_mut(core::mem::size_of::<u64>());
@@ -542,20 +613,16 @@ impl Rng {
 
     /// Generates a random `char` in range A-Z.
     #[inline]
-    pub fn uppercase(&self) -> char {
+    pub fn uppercase(&mut self) -> char {
         const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        let len = CHARS.len() as u8;
-        let i = self.u8(..len);
-        CHARS[i as usize] as char
+        *self.choice(CHARS).unwrap() as char
     }
 
     /// Generates a random `char` in the given range.
     ///
     /// Panics if the range is empty.
     #[inline]
-    pub fn char(&self, range: impl RangeBounds<char>) -> char {
-        use std::convert::TryFrom;
-
+    pub fn char(&mut self, range: impl RangeBounds<char>) -> char {
         let panic_empty_range = || {
             panic!(
                 "empty range: {:?}..{:?}",
@@ -581,7 +648,7 @@ impl Rng {
         };
 
         let high = match range.end_bound() {
-            Bound::Unbounded => std::char::MAX,
+            Bound::Unbounded => core::char::MAX,
             Bound::Included(&x) => x,
             Bound::Excluded(&x) => {
                 let scalar = if x as u32 == surrogate_start + surrogate_len {
@@ -609,98 +676,4 @@ impl Rng {
         }
         val.try_into().unwrap()
     }
-}
-
-/// Initializes the thread-local generator with the given seed.
-#[inline]
-pub fn seed(seed: u64) {
-    RNG.with(|rng| rng.seed(seed))
-}
-
-/// Gives back **current** seed that is being held by the thread-local generator.
-#[inline]
-pub fn get_seed() -> u64 {
-    RNG.with(|rng| rng.get_seed())
-}
-
-/// Generates a random `bool`.
-#[inline]
-pub fn bool() -> bool {
-    RNG.with(|rng| rng.bool())
-}
-
-/// Generates a random `char` in ranges a-z and A-Z.
-#[inline]
-pub fn alphabetic() -> char {
-    RNG.with(|rng| rng.alphabetic())
-}
-
-/// Generates a random `char` in ranges a-z, A-Z and 0-9.
-#[inline]
-pub fn alphanumeric() -> char {
-    RNG.with(|rng| rng.alphanumeric())
-}
-
-/// Generates a random `char` in range a-z.
-#[inline]
-pub fn lowercase() -> char {
-    RNG.with(|rng| rng.lowercase())
-}
-
-/// Generates a random `char` in range A-Z.
-#[inline]
-pub fn uppercase() -> char {
-    RNG.with(|rng| rng.uppercase())
-}
-
-/// Generates a random digit in the given `base`.
-///
-/// Digits are represented by `char`s in ranges 0-9 and a-z.
-///
-/// Panics if the base is zero or greater than 36.
-#[inline]
-pub fn digit(base: u32) -> char {
-    RNG.with(|rng| rng.digit(base))
-}
-
-/// Shuffles a slice randomly.
-#[inline]
-pub fn shuffle<T>(slice: &mut [T]) {
-    RNG.with(|rng| rng.shuffle(slice))
-}
-
-macro_rules! integer {
-    ($t:tt, $doc:tt) => {
-        #[doc = $doc]
-        ///
-        /// Panics if the range is empty.
-        #[inline]
-        pub fn $t(range: impl RangeBounds<$t>) -> $t {
-            RNG.with(|rng| rng.$t(range))
-        }
-    };
-}
-
-integer!(u8, "Generates a random `u8` in the given range.");
-integer!(i8, "Generates a random `i8` in the given range.");
-integer!(u16, "Generates a random `u16` in the given range.");
-integer!(i16, "Generates a random `i16` in the given range.");
-integer!(u32, "Generates a random `u32` in the given range.");
-integer!(i32, "Generates a random `i32` in the given range.");
-integer!(u64, "Generates a random `u64` in the given range.");
-integer!(i64, "Generates a random `i64` in the given range.");
-integer!(u128, "Generates a random `u128` in the given range.");
-integer!(i128, "Generates a random `i128` in the given range.");
-integer!(usize, "Generates a random `usize` in the given range.");
-integer!(isize, "Generates a random `isize` in the given range.");
-integer!(char, "Generates a random `char` in the given range.");
-
-/// Generates a random `f32` in range `0..1`.
-pub fn f32() -> f32 {
-    RNG.with(|rng| rng.f32())
-}
-
-/// Generates a random `f64` in range `0..1`.
-pub fn f64() -> f64 {
-    RNG.with(|rng| rng.f64())
 }

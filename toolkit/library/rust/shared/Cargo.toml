@@ -104,9 +104,6 @@ url = "=2.1.0"
 # Since we're building with at least rustc 1.63, enable rust 1.57 features (use of try_reserve methods).
 fallible_collections = { version = "0.4", features = ["rust_1_57"] }
 
-# Temporarily add an explicit dependency on rustix to vendor it.
-rustix = "0.38"
-
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
