@@ -14,16 +14,6 @@
   &:-moz-lwtheme {
     --chrome-content-separator-color: rgba(0,0,0,.3);
   }
-
-  &[tabsintitlebar]:not(:-moz-lwtheme) {
-    background-color: ActiveCaption;
-    color: CaptionText;
-
-    &:-moz-window-inactive {
-      background-color: InactiveCaption;
-      color: InactiveCaptionText;
-    }
-  }
 }
 
 #menubar-items {
@@ -89,7 +79,6 @@
   height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
 }
 
-#navigator-toolbox,
 .browser-toolbar {
   appearance: none;
 }
