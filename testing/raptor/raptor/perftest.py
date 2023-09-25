@@ -674,9 +674,7 @@ class PerftestAndroid(Perftest):
                     break
 
             if not browser_version:
-                raise Exception(
-                    "Could not determine version for Google Chrome for Android"
-                )
+                raise Exception("Could not determine version for apk %s" % binary)
 
         if not browser_name:
             LOG.warning("Could not find a browser name")
