@@ -3688,6 +3688,9 @@ class Document : public nsINode,
   bool UserHasInteracted() { return mUserHasInteracted; }
   void ResetUserInteractionTimer();
 
+  // Whether we're cloning the contents of an SVG use element.
+  bool CloningForSVGUse() const { return mCloningForSVGUse; }
+
   // This should be called when this document receives events which are likely
   // to be user interaction with the document, rather than the byproduct of
   // interaction with the browser (i.e. a keypress to scroll the view port,
@@ -4871,6 +4874,9 @@ class Document : public nsINode,
 
   // Whether we should resist fingerprinting.
   bool mShouldResistFingerprinting : 1;
+
+  // Whether we're cloning the contents of an SVG use element.
+  bool mCloningForSVGUse : 1;
 
   uint8_t mXMLDeclarationBits;
 

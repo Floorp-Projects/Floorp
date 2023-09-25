@@ -206,7 +206,8 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
 
   // If our destination is a print document, copy all the relevant length values
   // etc so that they match the state of the original node.
-  if (aDest->OwnerDoc()->IsStaticDocument()) {
+  if (aDest->OwnerDoc()->IsStaticDocument() ||
+      aDest->OwnerDoc()->CloningForSVGUse()) {
     LengthAttributesInfo lengthInfo = GetLengthInfo();
     dest->GetLengthInfo().CopyAllFrom(lengthInfo);
     if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {

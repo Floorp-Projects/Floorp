@@ -94,6 +94,9 @@ namespace SVGT = SVGGeometryProperty::Tags;
 
 void SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID,
                                            nsAtom* aAttribute) {
+  if (OwnerDoc()->CloningForSVGUse()) {
+    return;
+  }
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
       const bool hadValidDimensions = HasValidDimensions();
@@ -407,8 +410,7 @@ void SVGUseElement::UpdateShadowTree() {
   RefPtr<Element> newElement;
 
   auto UpdateShadowTree = mozilla::MakeScopeExit([&]() {
-    nsIContent* firstChild = shadow->GetFirstChild();
-    if (firstChild) {
+    if (nsIContent* firstChild = shadow->GetFirstChild()) {
       MOZ_ASSERT(!firstChild->GetNextSibling());
       shadow->RemoveChildNode(firstChild, /* aNotify = */ true);
     }
