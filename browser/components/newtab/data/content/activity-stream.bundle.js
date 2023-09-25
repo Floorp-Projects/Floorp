@@ -14233,12 +14233,6 @@ class ContentSection extends (external_React_default()).PureComponent {
       if (eventSource) {
         this.inputUserEvent(eventSource, value);
       }
-    } else if (e.target.nodeName === "MOZ-TOGGLE") {
-      value = e.target.pressed;
-
-      if (eventSource) {
-        this.inputUserEvent(eventSource, value);
-      }
     }
 
     this.props.setPref(prefName, value);
@@ -14306,15 +14300,31 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement("div", {
       id: "shortcuts-section",
       className: "section"
-    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+    }, /*#__PURE__*/external_React_default().createElement("label", {
+      className: "switch"
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "shortcuts-toggle",
-      pressed: topSitesEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      checked: topSitesEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
       preference: "feeds.topsites",
-      eventSource: "TOP_SITES",
-      "data-l10n-id": "newtab-custom-shortcuts-toggle",
-      "data-l10n-attrs": "label, description"
-    }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("div", {
+      "aria-labelledby": "custom-shortcuts-title",
+      "aria-describedby": "custom-shortcuts-subtitle",
+      eventSource: "TOP_SITES"
+    }), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "slider",
+      role: "presentation"
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
+      id: "custom-shortcuts-title",
+      className: "title"
+    }, /*#__PURE__*/external_React_default().createElement("label", {
+      htmlFor: "shortcuts-toggle",
+      "data-l10n-id": "newtab-custom-shortcuts-title"
+    })), /*#__PURE__*/external_React_default().createElement("p", {
+      id: "custom-shortcuts-subtitle",
+      className: "subtitle",
+      "data-l10n-id": "newtab-custom-shortcuts-subtitle"
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-top-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-information",
@@ -14365,16 +14375,29 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "section"
     }, /*#__PURE__*/external_React_default().createElement("label", {
       className: "switch"
-    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "pocket-toggle",
-      pressed: pocketEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      checked: pocketEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
       preference: "feeds.section.topstories",
+      "aria-labelledby": "custom-pocket-title",
       "aria-describedby": "custom-pocket-subtitle",
-      eventSource: "TOP_STORIES",
-      "data-l10n-id": "newtab-custom-pocket-toggle",
-      "data-l10n-attrs": "label, description"
-    })), /*#__PURE__*/external_React_default().createElement("div", null, (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
+      eventSource: "TOP_STORIES"
+    }), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "slider",
+      role: "presentation"
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
+      id: "custom-pocket-title",
+      className: "title"
+    }, /*#__PURE__*/external_React_default().createElement("label", {
+      htmlFor: "pocket-toggle",
+      "data-l10n-id": "newtab-custom-pocket-title"
+    })), /*#__PURE__*/external_React_default().createElement("p", {
+      id: "custom-pocket-subtitle",
+      className: "subtitle",
+      "data-l10n-id": "newtab-custom-pocket-subtitle"
+    }), (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-info-pocket-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "more-information",
@@ -14416,14 +14439,28 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "section"
     }, /*#__PURE__*/external_React_default().createElement("label", {
       className: "switch"
-    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+    }, /*#__PURE__*/external_React_default().createElement("input", {
       id: "highlights-toggle",
-      pressed: highlightsEnabled || null,
-      onToggle: this.onPreferenceSelect,
+      checked: highlightsEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
       preference: "feeds.section.highlights",
       eventSource: "HIGHLIGHTS",
-      "data-l10n-id": "newtab-custom-recent-toggle",
-      "data-l10n-attrs": "label, description"
+      "aria-labelledby": "custom-recent-title",
+      "aria-describedby": "custom-recent-subtitle"
+    }), /*#__PURE__*/external_React_default().createElement("span", {
+      className: "slider",
+      role: "presentation"
+    })), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", {
+      id: "custom-recent-title",
+      className: "title"
+    }, /*#__PURE__*/external_React_default().createElement("label", {
+      htmlFor: "highlights-toggle",
+      "data-l10n-id": "newtab-custom-recent-title"
+    })), /*#__PURE__*/external_React_default().createElement("p", {
+      id: "custom-recent-subtitle",
+      className: "subtitle",
+      "data-l10n-id": "newtab-custom-recent-subtitle"
     }))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
