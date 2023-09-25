@@ -54,6 +54,11 @@ class EventTarget : public nsISupports, public nsWrapperCache {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  void SetIsOnMainThread() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mRefCnt.SetIsOnMainThread();
+  }
+
 #ifndef NS_BUILD_REFCNT_LOGGING
   MozExternalRefCountType NonVirtualAddRef();
   MozExternalRefCountType NonVirtualRelease();

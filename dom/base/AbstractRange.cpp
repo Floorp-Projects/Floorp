@@ -136,6 +136,7 @@ AbstractRange::AbstractRange(nsINode* aNode, bool aIsDynamicRange)
       mIsGenerated(false),
       mCalledByJS(false),
       mIsDynamicRange(aIsDynamicRange) {
+  mRefCnt.SetIsOnMainThread();
   Init(aNode);
 }
 
