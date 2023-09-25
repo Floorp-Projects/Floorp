@@ -28,7 +28,9 @@ support-files = [
 skip-if = ["win10_2004 && debug && fission && socketprocess_networking"] # high frequency intermittent
 
 ["browser_target_command_frames_reload_server_side_targets.js"]
-
+skip-if = [
+  "os == 'linux' && !fission" # Bug 1855067
+]
 ["browser_target_command_getAllTargets.js"]
 
 ["browser_target_command_invalid_api_usage.js"]
