@@ -217,7 +217,7 @@ window.optionsManager =
 
         document.body.classList.add("display-" + optionsManager.valueForOption("display"));
     },
-    
+
     updateTiles: function()
     {
         document.body.classList.remove("tiles-big");
@@ -671,7 +671,12 @@ Utilities.extendObject(window.benchmarkController, {
         for (var suite in item['testsResults']) {
             for (var subtest in item['testsResults'][suite.toString()]) {
                 fullNames.push(suite.toString() + "-" + subtest.toString().replace(/ /g, '_'));
-                values.push(item['testsResults'][suite.toString()][subtest.toString()]['frameLength']['average']);
+                if (dashboard.options["controller"] === "fixed") {
+                    values.push(item['testsResults'][suite.toString()][subtest.toString()]['frameLength']['average']);
+                } else if (dashboard.options["controller"] === "ramp") {
+                    values.push(item['testsResults'][suite.toString()][subtest.toString()]['complexity']['bootstrap']['median']);
+                }
+
            }
         }
         if (typeof tpRecordTime !== "undefined") {
