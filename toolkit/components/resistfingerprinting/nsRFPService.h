@@ -282,8 +282,7 @@ class nsRFPService final : public nsIObserver {
   // The method to add random noises to the image data based on the random key
   // of the given cookieJarSettings.
   static nsresult RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
-                                  uint8_t* aData, uint32_t aWidth,
-                                  uint32_t aHeight, uint32_t aSize,
+                                  uint8_t* aData, uint32_t aSize,
                                   mozilla::gfx::SurfaceFormat aSurfaceFormat);
 
   // --------------------------------------------------------------------------
