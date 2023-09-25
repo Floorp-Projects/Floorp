@@ -29,6 +29,8 @@ import {
   canPrettyPrintSource,
   getSourceTextContent,
   tabExists,
+  hasSource,
+  hasSourceActor,
 } from "../../selectors";
 
 // This is only used by jest tests (and within this module)
@@ -213,6 +215,53 @@ export function selectLocation(location, { keepContext = true } = {}) {
  */
 export function selectSpecificLocation(location) {
   return selectLocation(location, { keepContext: false });
+}
+
+/**
+ * Similar to `selectSpecificLocation`, but if the precise Source object
+ * is missing, this will fallback to select any source having the same URL.
+ * In this fallback scenario, sources without a URL will be ignored.
+ *
+ * This is typically used when trying to select a source (e.g. in project search result)
+ * after reload, because the source objects are new on each new page load, but source
+ * with the same URL may still exist.
+ *
+ * @param {Object} location
+ *        The location to select.
+ * @return {function}
+ *        The action will return true if a matching source was found.
+ */
+export function selectSpecificLocationOrSameUrl(location) {
+  return async ({ dispatch, getState }) => {
+    // If this particular source no longer exists, open any matching URL.
+    // This will typically happen on reload.
+    if (!hasSource(getState(), location.source.id)) {
+      // Some sources, like evaled script won't have a URL attribute
+      // and can't be re-selected if we don't find the exact same source object.
+      if (!location.source.url) {
+        return false;
+      }
+      const source = getSourceByURL(getState(), location.source.url);
+      if (!source) {
+        return false;
+      }
+      // Also reset the sourceActor, as it won't match the same source.
+      const sourceActor = getFirstSourceActorForGeneratedSource(
+        getState(),
+        location.source.id
+      );
+      location = createLocation({ ...location, source, sourceActor });
+    } else if (!hasSourceActor(getState(), location.sourceActor.id)) {
+      // If the specific source actor no longer exists, match any still available.
+      const sourceActor = getFirstSourceActorForGeneratedSource(
+        getState(),
+        location.source.id
+      );
+      location = createLocation({ ...location, sourceActor });
+    }
+    await dispatch(selectSpecificLocation(location));
+    return true;
+  };
 }
 
 /**

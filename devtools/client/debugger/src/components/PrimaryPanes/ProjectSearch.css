@@ -50,6 +50,14 @@
   color: var(--theme-text-color-alt);
 }
 
+.unavailable-source {
+  white-space: pre;
+
+  .tooltip-panel {
+    padding: 1em;
+  }
+}
+
 .project-text-search .result .line-value {
   grid-column: 2;
   padding-block: 1px;
