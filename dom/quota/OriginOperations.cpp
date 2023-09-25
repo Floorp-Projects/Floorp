@@ -474,16 +474,15 @@ class ClearRequestBase
 };
 
 class ClearOriginOp final : public ClearRequestBase {
-  OriginScope mOriginScope;
-  Nullable<PersistenceType> mPersistenceType;
-  Nullable<Client::Type> mClientType;
+  const nsCString mOrigin;
+  const Nullable<PersistenceType> mPersistenceType;
+  const Nullable<Client::Type> mClientType;
 
  public:
   ClearOriginOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                 const mozilla::Maybe<PersistenceType>& aPersistenceType,
                 const PrincipalInfo& aPrincipalInfo,
-                const mozilla::Maybe<Client::Type>& aClientType,
-                const bool& aClearAll);
+                const mozilla::Maybe<Client::Type>& aClientType);
 
  private:
   ~ClearOriginOp() = default;
@@ -747,10 +746,10 @@ RefPtr<ResolvableNormalOriginOp<bool>> CreateClearStorageOp(
 RefPtr<ResolvableNormalOriginOp<bool>> CreateClearOriginOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const Maybe<PersistenceType>& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo, const Maybe<Client::Type>& aClientType,
-    const bool& aClearAll) {
+    const PrincipalInfo& aPrincipalInfo,
+    const Maybe<Client::Type>& aClientType) {
   return MakeRefPtr<ClearOriginOp>(std::move(aQuotaManager), aPersistenceType,
-                                   aPrincipalInfo, aClientType, aClearAll);
+                                   aPrincipalInfo, aClientType);
 }
 
 RefPtr<ResolvableNormalOriginOp<bool>> CreateClearStoragesForOriginPrefixOp(
@@ -1933,31 +1932,23 @@ ClearOriginOp::ClearOriginOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const mozilla::Maybe<PersistenceType>& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo,
-    const mozilla::Maybe<Client::Type>& aClientType, const bool& aClearAll)
-    : ClearRequestBase(std::move(aQuotaManager), "dom::quota::ClearOriginOp") {
-  // Figure out which origin we're dealing with.
-  const auto origin =
-      QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo);
-
-  if (aClearAll) {
-    mOriginScope.SetFromPrefix(origin);
-  } else {
-    mOriginScope.SetFromOrigin(origin);
-  }
-
-  if (aPersistenceType) {
-    mPersistenceType.SetValue(*aPersistenceType);
-  }
-
-  if (aClientType) {
-    mClientType.SetValue(*aClientType);
-  }
+    const mozilla::Maybe<Client::Type>& aClientType)
+    : ClearRequestBase(std::move(aQuotaManager), "dom::quota::ClearOriginOp"),
+      mOrigin(
+          QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo)),
+      mPersistenceType(aPersistenceType
+                           ? Nullable<PersistenceType>(*aPersistenceType)
+                           : Nullable<PersistenceType>()),
+      mClientType(aClientType ? Nullable<Client::Type>(*aClientType)
+                              : Nullable<Client::Type>()) {
+  AssertIsOnOwningThread();
 }
 
 RefPtr<BoolPromise> ClearOriginOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  return OpenStorageDirectory(mPersistenceType, mOriginScope, mClientType,
+  return OpenStorageDirectory(mPersistenceType,
+                              OriginScope::FromOrigin(mOrigin), mClientType,
                               /* aExclusive */ true);
 }
 
@@ -1969,11 +1960,12 @@ nsresult ClearOriginOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   if (mPersistenceType.IsNull()) {
     for (const PersistenceType type : kAllPersistenceTypes) {
-      DeleteFiles(aQuotaManager, type, mOriginScope, mClientType);
+      DeleteFiles(aQuotaManager, type, OriginScope::FromOrigin(mOrigin),
+                  mClientType);
     }
   } else {
-    DeleteFiles(aQuotaManager, mPersistenceType.Value(), mOriginScope,
-                mClientType);
+    DeleteFiles(aQuotaManager, mPersistenceType.Value(),
+                OriginScope::FromOrigin(mOrigin), mClientType);
   }
 
   return NS_OK;

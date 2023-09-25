@@ -458,7 +458,7 @@ mozilla::ipc::IPCResult Quota::RecvInitializeStorage(
 mozilla::ipc::IPCResult Quota::RecvClearStoragesForOrigin(
     const Maybe<PersistenceType>& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,
-    const bool& aClearAll, ClearStoragesForOriginResolver&& aResolver) {
+    ClearStoragesForOriginResolver&& aResolver) {
   AssertIsOnBackgroundThread();
 
   QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
@@ -484,8 +484,7 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForOrigin(
                 ResolveBoolResponseAndReturn(aResolver));
 
   quotaManager
-      ->ClearStoragesForOrigin(aPersistenceType, aPrincipalInfo, aClientType,
-                               aClearAll)
+      ->ClearStoragesForOrigin(aPersistenceType, aPrincipalInfo, aClientType)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
 

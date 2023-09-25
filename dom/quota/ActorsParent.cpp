@@ -5298,13 +5298,13 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
 RefPtr<BoolPromise> QuotaManager::ClearStoragesForOrigin(
     const Maybe<PersistenceType>& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo, const Maybe<Client::Type>& aClientType,
-    const bool& aClearAll) {
+    const PrincipalInfo& aPrincipalInfo,
+    const Maybe<Client::Type>& aClientType) {
   AssertIsOnOwningThread();
 
   auto clearOriginOp =
       CreateClearOriginOp(WrapMovingNotNullUnchecked(this), aPersistenceType,
-                          aPrincipalInfo, aClientType, aClearAll);
+                          aPrincipalInfo, aClientType);
 
   RegisterNormalOriginOp(*clearOriginOp);
 
