@@ -572,10 +572,6 @@ impl Global {
                     }
                 }
 
-                if swap_chain_id.is_some() && self_id.backend() != wgt::Backend::Dx12 {
-                    debug_assert!(false, "Unexpected to be called");
-                }
-
                 let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
