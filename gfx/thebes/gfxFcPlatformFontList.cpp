@@ -1764,6 +1764,9 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     aLastFamilyName = canonical;
     aFamilyName = ToCharPtr(canonical);
 
+    const FontVisibility visibility =
+        aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
+
     // Same canonical family name as the last one? Definitely no need to add a
     // new family record.
     auto* faceList =
@@ -1771,9 +1774,6 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
             .LookupOrInsertWith(
                 keyName,
                 [&] {
-                  FontVisibility visibility =
-                      aAppFont ? FontVisibility::Base
-                               : GetVisibilityForFamily(keyName);
                   families.AppendElement(fontlist::Family::InitData(
                       keyName, aFamilyName, fontlist::Family::kNoIndex,
                       visibility,
@@ -1806,6 +1806,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
 
     // Add entries for any other localized family names. (Most fonts only have
     // a single family name, so the first call to GetString will usually fail).
+    // These get the same visibility level as we looked up for the first name.
     FcChar8* otherName;
     int n = (cIndex == 0 ? 1 : 0);
     while (FcPatternGetString(aPattern, FC_FAMILY, n, &otherName) ==
@@ -1818,9 +1819,6 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
           .LookupOrInsertWith(
               keyName,
               [&] {
-                FontVisibility visibility =
-                    aAppFont ? FontVisibility::Base
-                             : GetVisibilityForFamily(keyName);
                 families.AppendElement(fontlist::Family::InitData(
                     keyName, otherFamilyName, fontlist::Family::kNoIndex,
                     visibility,
