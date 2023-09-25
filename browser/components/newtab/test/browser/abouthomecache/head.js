@@ -279,13 +279,11 @@ function assertCacheResultScalar(cacheResultScalar) {
  */
 async function ensureCachedAboutHome(browser) {
   await SpecialPowers.spawn(browser, [], async () => {
-    let syncScripts = Array.from(
-      content.document.querySelectorAll("script:not([type='module'])")
-    );
-    Assert.ok(!!syncScripts.length, "There should be page scripts.");
-    let [lastSyncScript] = syncScripts.reverse();
+    let scripts = Array.from(content.document.querySelectorAll("script"));
+    Assert.ok(!!scripts.length, "There should be page scripts.");
+    let [lastScript] = scripts.reverse();
     Assert.equal(
-      lastSyncScript.src,
+      lastScript.src,
       "about:home?jscache",
       "Found about:home?jscache script tag, indicating the cached doc"
     );
@@ -333,10 +331,8 @@ async function ensureCachedAboutHome(browser) {
  */
 async function ensureDynamicAboutHome(browser, expectedResultScalar) {
   await SpecialPowers.spawn(browser, [], async () => {
-    let syncScripts = Array.from(
-      content.document.querySelectorAll("script:not([type='module'])")
-    );
-    Assert.equal(syncScripts.length, 0, "There should be no page scripts.");
+    let scripts = Array.from(content.document.querySelectorAll("script"));
+    Assert.equal(scripts.length, 0, "There should be no page scripts.");
 
     Assert.equal(
       Cu.waiveXrays(content).__FROM_STARTUP_CACHE__,
