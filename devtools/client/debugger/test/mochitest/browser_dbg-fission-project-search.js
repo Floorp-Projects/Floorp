@@ -21,7 +21,7 @@ add_task(async function () {
   type(dbg, "foo");
   pressKey(dbg, "Enter");
 
-  await waitForState(dbg, state => state.projectTextSearch.status === "DONE");
+  await waitForSearchResults(dbg, 2);
 
   const fileResults = findAllElements(dbg, "projectSearchFileResults");
   const matches = findAllElements(dbg, "projectSearchExpandedResults");

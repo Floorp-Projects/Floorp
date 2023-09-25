@@ -18,7 +18,6 @@ CompiledModules(
     "isSelectedFrameVisible.js",
     "pause.js",
     "pending-breakpoints.js",
-    "project-text-search.js",
     "quick-open.js",
     "source-actors.js",
     "source-blackbox.js",

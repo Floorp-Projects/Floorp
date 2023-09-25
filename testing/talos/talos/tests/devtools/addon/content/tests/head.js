@@ -98,10 +98,7 @@ exports.waitForPendingPaints = waitForPendingPaints;
  * becomes available
  */
 exports.waitForDOMElement = async function (target, selector) {
-  await waitForDOMPredicate(
-    target,
-    () => target.querySelector(selector) !== null
-  );
+  return waitForDOMPredicate(target, () => target.querySelector(selector));
 };
 
 /*

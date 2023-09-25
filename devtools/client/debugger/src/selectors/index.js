@@ -18,7 +18,6 @@ export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
 export * from "./pause";
 export * from "./pending-breakpoints";
-export * from "./project-text-search";
 export * from "./quick-open";
 export * from "./source-actors";
 export * from "./source-blackbox";

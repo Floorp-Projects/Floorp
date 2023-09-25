@@ -17,7 +17,7 @@ add_task(async function testProjectSearchCloseOnNavigation() {
   await selectSource(dbg, "script-switching-01.js");
 
   await openProjectSearch(dbg);
-  await doProjectSearch(dbg, "first");
+  await doProjectSearch(dbg, "first", 1);
 
   is(dbg.selectors.getActiveSearch(), "project");
 
@@ -45,7 +45,7 @@ add_task(async function testSimpleProjectSearch() {
   );
 
   const searchTerm = "first";
-  await doProjectSearch(dbg, searchTerm);
+  await doProjectSearch(dbg, searchTerm, 1);
 
   const queryMatch = findElement(dbg, "fileMatch").querySelector(
     ".query-match"
@@ -104,7 +104,7 @@ add_task(async function testExpandSearchResultsToShowMatches() {
   const dbg = await initDebugger("doc-react.html", "App.js");
 
   await openProjectSearch(dbg);
-  await doProjectSearch(dbg, "we");
+  await doProjectSearch(dbg, "we", 19);
 
   is(getExpandedResultsCount(dbg), 159);
 
@@ -149,9 +149,7 @@ add_task(async function testSearchExcludePatterns() {
 
   info("Search across all files");
   await openProjectSearch(dbg);
-  let fileResults = await doProjectSearch(dbg, "console");
-
-  is(fileResults.length, 5, "5 results were found");
+  let fileResults = await doProjectSearch(dbg, "console", 5);
 
   let resultsFromNodeModules = [...fileResults].filter(result =>
     result.innerText.includes("node_modules")
