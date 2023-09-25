@@ -3427,7 +3427,7 @@ dependencies = [
 [[package]]
 name = "minidump-writer"
 version = "0.8.1"
-source = "git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c#a15bd5cab6a3de251c0c23264be14b977c0af09c"
+source = "git+https://github.com/rust-minidump/minidump-writer.git?rev=491eb330e78e310c32927e5cc3bd2350af1e93f8#491eb330e78e310c32927e5cc3bd2350af1e93f8"
 dependencies = [
  "bitflags 2.999.999",
  "byteorder",

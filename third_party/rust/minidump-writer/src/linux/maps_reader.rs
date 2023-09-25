@@ -70,6 +70,14 @@ impl MappingInfo {
         is_mapping_a_path(self.name.as_deref())
     }
 
+    pub fn is_empty_page(&self) -> bool {
+        (self.offset == 0) && (self.permissions == MMPermissions::PRIVATE) && self.name.is_none()
+    }
+
+    pub fn end_address(&self) -> usize {
+        self.start_address + self.size
+    }
+
     pub fn aggregate(memory_maps: MemoryMaps, linux_gate_loc: AuxvType) -> Result<Vec<Self>> {
         let mut infos = Vec::<Self>::new();
 
@@ -99,31 +107,54 @@ impl MappingInfo {
                 offset = 0;
             }
 
-            // Merge adjacent mappings into one module, assuming they're a single
-            // library mapped by the dynamic linker.
-            if let Some(module) = infos.last_mut() {
-                if pathname.is_some() {
-                    if (start_address == module.start_address + module.size)
-                        && (pathname == module.name)
-                    {
-                        module.system_mapping_info.end_address = end_address;
-                        module.size = end_address - module.start_address;
-                        module.permissions |= mm.perms;
-                        continue;
-                    }
-                } else {
+            if let Some(prev_module) = infos.last_mut() {
+                if (start_address == prev_module.end_address())
+                    && pathname.is_some()
+                    && (pathname == prev_module.name)
+                {
+                    // Merge adjacent mappings into one module, assuming they're a single
+                    // library mapped by the dynamic linker.
+                    prev_module.system_mapping_info.end_address = end_address;
+                    prev_module.size = end_address - prev_module.start_address;
+                    prev_module.permissions |= mm.perms;
+                    continue;
+                } else if (start_address == prev_module.end_address())
+                    && prev_module.is_executable()
+                    && prev_module.name_is_path()
+                    && ((offset == 0) || (offset == prev_module.end_address()))
+                    && (mm.perms == MMPermissions::PRIVATE)
+                {
                     // Also merge mappings that result from address ranges that the
                     // linker reserved but which a loaded library did not use. These
                     // appear as an anonymous private mapping with no access flags set
                     // and which directly follow an executable mapping.
-                    let module_end_address = module.start_address + module.size;
-                    if (start_address == module_end_address)
-                        && module.is_executable()
-                        && is_mapping_a_path(module.name.as_deref())
-                        && (offset == 0 || offset == module_end_address)
-                        && mm.perms == MMPermissions::PRIVATE
-                    {
-                        module.size = end_address - module.start_address;
+                    prev_module.size = end_address - prev_module.start_address;
+                    continue;
+                }
+            }
+
+            // Sometimes the unused ranges reserved but the linker appear within the library.
+            // If we detect an empty page that is adjacent to two mappings of the same library
+            // we fold the three mappings together.
+            if let Some(previous_modules) = infos.rchunks_exact_mut(2).next() {
+                let empty_page = if let Some(prev_module) = previous_modules.last() {
+                    let prev_prev_module = previous_modules.first().unwrap();
+                    prev_prev_module.name_is_path()
+                        && (prev_prev_module.end_address() == prev_module.start_address)
+                        && prev_module.is_empty_page()
+                        && (prev_module.end_address() == start_address)
+                } else {
+                    false
+                };
+
+                if empty_page {
+                    let prev_prev_module = previous_modules.first_mut().unwrap();
+
+                    if pathname == prev_prev_module.name {
+                        prev_prev_module.system_mapping_info.end_address = end_address;
+                        prev_prev_module.size = end_address - prev_prev_module.start_address;
+                        prev_prev_module.permissions |= mm.perms;
+                        infos.pop();
                         continue;
                     }
                 }
@@ -551,6 +582,38 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsysca
         };
 
         assert_eq!(mappings[6], gate_map);
+    }
+
+    #[test]
+    fn test_merged_reserved_mappings_within_module() {
+        let mappings = get_mappings_for(
+            "\
+9b4a0000-9b931000 r--p 00000000 08:12 393449     /data/app/org.mozilla.firefox-1/lib/x86/libxul.so
+9b931000-9bcae000 ---p 00000000 00:00 0 
+9bcae000-a116b000 r-xp 00490000 08:12 393449     /data/app/org.mozilla.firefox-1/lib/x86/libxul.so
+a116b000-a4562000 r--p 0594d000 08:12 393449     /data/app/org.mozilla.firefox-1/lib/x86/libxul.so
+a4562000-a4563000 ---p 00000000 00:00 0 
+a4563000-a4840000 r--p 08d44000 08:12 393449     /data/app/org.mozilla.firefox-1/lib/x86/libxul.so
+a4840000-a4873000 rw-p 09021000 08:12 393449     /data/app/org.mozilla.firefox-1/lib/x86/libxul.so",
+            0xa4876000,
+        );
+
+        let gate_map = MappingInfo {
+            start_address: 0x9b4a0000,
+            size: 155004928, // Merged the anonymous area after in this mapping, so its bigger..
+            system_mapping_info: SystemMappingInfo {
+                start_address: 0x9b4a0000,
+                end_address: 0xa4873000,
+            },
+            offset: 0,
+            permissions: MMPermissions::READ
+                | MMPermissions::WRITE
+                | MMPermissions::EXECUTE
+                | MMPermissions::PRIVATE,
+            name: Some("/data/app/org.mozilla.firefox-1/lib/x86/libxul.so".into()),
+        };
+
+        assert_eq!(mappings[0], gate_map);
     }
 
     #[test]
