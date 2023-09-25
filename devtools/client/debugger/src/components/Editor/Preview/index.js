@@ -69,7 +69,7 @@ class Preview extends PureComponent {
       preview = await getExceptionPreview(target, tokenPos, editor.codeMirror);
     }
 
-    if (this.props.isPaused && !this.state.selecting) {
+    if (!preview && this.props.isPaused && !this.state.selecting) {
       preview = await getPreview(target, tokenPos, editor.codeMirror);
     }
 
