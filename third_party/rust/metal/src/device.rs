@@ -1958,6 +1958,19 @@ impl DeviceRef {
         }
     }
 
+    pub fn new_indirect_command_buffer_with_descriptor(
+        &self,
+        descriptor: &IndirectCommandBufferDescriptorRef,
+        max_command_count: NSUInteger,
+        options: MTLResourceOptions,
+    ) -> IndirectCommandBuffer {
+        unsafe {
+            msg_send![self, newIndirectCommandBufferWithDescriptor:descriptor
+                                                   maxCommandCount:max_command_count
+                                                           options:options]
+        }
+    }
+
     pub fn new_texture(&self, descriptor: &TextureDescriptorRef) -> Texture {
         unsafe { msg_send![self, newTextureWithDescriptor: descriptor] }
     }

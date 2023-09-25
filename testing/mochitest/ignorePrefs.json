@@ -8,6 +8,7 @@
   "app.update.lastUpdateTime.services-settings-poll-changes",
   "app.update.lastUpdateTime.xpi-signature-verification",
   "browser.bookmarks.restore_default_bookmarks",
+  "browser.contentblocking.category",
   "browser.newtabpage.pinned",
   "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.havePinned",
   "browser.pageActions.persistedActions",
