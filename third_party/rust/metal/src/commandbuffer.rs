@@ -109,8 +109,29 @@ impl CommandBufferRef {
         unsafe { msg_send![self, blitCommandEncoder] }
     }
 
+    pub fn blit_command_encoder_with_descriptor(
+        &self,
+        descriptor: &BlitPassDescriptorRef,
+    ) -> &BlitCommandEncoderRef {
+        unsafe { msg_send![self, blitCommandEncoderWithDescriptor: descriptor] }
+    }
+
     pub fn new_compute_command_encoder(&self) -> &ComputeCommandEncoderRef {
         unsafe { msg_send![self, computeCommandEncoder] }
+    }
+
+    pub fn compute_command_encoder_with_dispatch_type(
+        &self,
+        ty: MTLDispatchType,
+    ) -> &ComputeCommandEncoderRef {
+        unsafe { msg_send![self, computeCommandEncoderWithDispatchType: ty] }
+    }
+
+    pub fn compute_command_encoder_with_descriptor(
+        &self,
+        descriptor: &ComputePassDescriptorRef,
+    ) -> &ComputeCommandEncoderRef {
+        unsafe { msg_send![self, computeCommandEncoderWithDescriptor: descriptor] }
     }
 
     pub fn new_render_command_encoder(
@@ -131,20 +152,6 @@ impl CommandBufferRef {
         &self,
     ) -> &AccelerationStructureCommandEncoderRef {
         unsafe { msg_send![self, accelerationStructureCommandEncoder] }
-    }
-
-    pub fn compute_command_encoder_with_dispatch_type(
-        &self,
-        ty: MTLDispatchType,
-    ) -> &ComputeCommandEncoderRef {
-        unsafe { msg_send![self, computeCommandEncoderWithDispatchType: ty] }
-    }
-
-    pub fn compute_command_encoder_with_descriptor(
-        &self,
-        descriptor: &ComputePassDescriptorRef,
-    ) -> &ComputeCommandEncoderRef {
-        unsafe { msg_send![self, computeCommandEncoderWithDescriptor: descriptor] }
     }
 
     pub fn encode_signal_event(&self, event: &EventRef, new_value: u64) {

@@ -3348,8 +3348,7 @@ dependencies = [
 [[package]]
 name = "metal"
 version = "0.26.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "623b5e6cefd76e58f774bd3cc0c6f5c7615c58c03a97815245a25c3c9bdee318"
+source = "git+https://github.com/gfx-rs/metal-rs/?rev=d24f1a4#d24f1a4ae92470bf87a0c65ecfe78c9299835505"
 dependencies = [
  "bitflags 2.999.999",
  "block",
@@ -3725,7 +3724,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.13.0"
-source = "git+https://github.com/gfx-rs/naga?rev=cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c#cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
+source = "git+https://github.com/gfx-rs/naga?rev=df8107b7#df8107b78812cc2b1e3d5de35279cedc1f0da3fb"
 dependencies = [
  "bit-set",
  "bitflags 2.999.999",
@@ -6302,7 +6301,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.17.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e#7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+source = "git+https://github.com/gfx-rs/wgpu?rev=7e0d6c971f900f6a8f01a9de9c41f7894164a82c#7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6325,7 +6324,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.17.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e#7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+source = "git+https://github.com/gfx-rs/wgpu?rev=7e0d6c971f900f6a8f01a9de9c41f7894164a82c#7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6361,7 +6360,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.17.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e#7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+source = "git+https://github.com/gfx-rs/wgpu?rev=7e0d6c971f900f6a8f01a9de9c41f7894164a82c#7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 dependencies = [
  "bitflags 2.999.999",
  "js-sys",

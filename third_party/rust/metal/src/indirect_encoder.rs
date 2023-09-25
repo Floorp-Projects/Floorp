@@ -22,6 +22,13 @@ foreign_obj_type! {
     pub struct IndirectCommandBufferDescriptor;
 }
 
+impl IndirectCommandBufferDescriptor {
+    pub fn new() -> Self {
+        let class = class!(MTLIndirectCommandBufferDescriptor);
+        unsafe { msg_send![class, new] }
+    }
+}
+
 impl IndirectCommandBufferDescriptorRef {
     pub fn command_types(&self) -> MTLIndirectCommandType {
         unsafe { msg_send![self, commandTypes] }

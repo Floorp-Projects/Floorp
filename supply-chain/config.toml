@@ -100,6 +100,10 @@ notes = "This was originally servo code which Bobby Holley put on crates.io some
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
+[policy.metal]
+audit-as-crates-io = true
+notes = "Upstream project which we pin."
+
 [policy.midir]
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
