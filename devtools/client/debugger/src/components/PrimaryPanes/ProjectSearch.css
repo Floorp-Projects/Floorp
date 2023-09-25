@@ -74,6 +74,59 @@
   display: none;
 }
 
+.project-search-results-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  background-color: var(--theme-accordion-header-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 2px 8px;
+  align-items: center;
+  gap: 4px;
+}
+
+
+.project-text-search .refresh-btn {
+  background-color: transparent;
+  padding: 2px;
+  display: grid;
+  --size: 16px;
+  --highlight-size: 5px;
+  --remain-size: calc(var(--size) - var(--highlight-size));
+  width: var(--size);
+  aspect-ratio: 1;
+  box-sizing: content-box;
+  grid-template-rows:  var(--highlight-size) var(--remain-size);
+  grid-template-columns: var(--remain-size) var(--highlight-size);
+
+  &.devtools-button:focus-visible {
+    outline: var(--theme-focus-outline);
+  }
+
+  &.highlight::after {
+    content: "";
+    display: block;
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+    height: 5px;
+    width: 5px;
+    background-color: var(--blue-40);
+    border-radius: 100%;
+    outline: 1px solid 	var(--theme-sidebar-background);
+    z-index: 1;
+  }
+
+  .img {
+    grid-row: 1 / -1;
+    grid-column: 1 / -1;
+    transition: rotate 0.2s;
+    width: 14px; height: 14px;
+
+    .highlight & {
+      rotate: 0.75turn;
+    }
+  }
+}
+
 .project-text-search .no-result-msg {
   color: var(--theme-text-color-inactive);
   font-size: 24px;

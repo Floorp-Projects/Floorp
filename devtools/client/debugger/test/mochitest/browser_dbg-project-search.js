@@ -17,14 +17,48 @@ add_task(async function testProjectSearchCloseOnNavigation() {
   await selectSource(dbg, "script-switching-01.js");
 
   await openProjectSearch(dbg);
-  await doProjectSearch(dbg, "first", 1);
+
+  ok(
+    !findElement(dbg, "projectSearchRefreshButton"),
+    "The refresh button is only visible after having done a search"
+  );
+
+  await doProjectSearch(dbg, "function", 2);
+
+  is(getExpandedResultsCount(dbg), 4);
 
   is(dbg.selectors.getActiveSearch(), "project");
 
+  const refreshButton = findElement(dbg, "projectSearchRefreshButton");
+  ok(
+    refreshButton,
+    "Refresh button is visible right after search is completed"
+  );
+  ok(
+    !refreshButton.classList.contains("highlight"),
+    "Refresh button is *not* highlighted by default"
+  );
+
   await navigate(dbg, "doc-scripts.html");
 
-  // wait for the project search to close
-  await waitForState(dbg, state => !dbg.selectors.getActiveSearch());
+  // Project search is still visible after navigation
+  is(dbg.selectors.getActiveSearch(), "project");
+  // With same search results
+  is(getExpandedResultsCount(dbg), 4);
+
+  ok(
+    refreshButton.classList.contains("highlight"),
+    "Refresh button is highlighted after navigation"
+  );
+
+  refreshButton.click();
+  // Wait for the search to be updated against the new page
+  await waitForSearchResults(dbg, 5);
+  is(getExpandedResultsCount(dbg), 29);
+  ok(
+    !refreshButton.classList.contains("highlight"),
+    "Refresh button is no longer highlighted after refreshing the search"
+  );
 });
 
 add_task(async function testSimpleProjectSearch() {
