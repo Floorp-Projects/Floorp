@@ -142,12 +142,7 @@ add_task(async function test_quota_clearStoragesForPrincipal() {
     httpURI,
     {}
   );
-  let clearRequest = Services.qms.clearStoragesForPrincipal(
-    httpPrincipal,
-    null,
-    null,
-    true
-  );
+  let clearRequest = Services.qms.clearStoragesForOriginPrefix(httpPrincipal);
   await new Promise(resolve => {
     clearRequest.callback = () => {
       resolve();
