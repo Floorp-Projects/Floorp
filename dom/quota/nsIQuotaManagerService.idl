@@ -225,6 +225,31 @@ interface nsIQuotaManagerService : nsISupports
                             [optional] in boolean aClearAll);
 
   /**
+   * Removes all storages stored for the given prefix. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.
+   *
+   * Effectively, this clears all possible OriginAttribute suffixes that
+   * could exist.  So this clears the given origin across all userContextIds,
+   * in private browsing, all third-party partitioned uses of the origin (by
+   * way of partitionKey), etc.
+   *
+   * @param aPrincipal
+   *        A prefix for the origins whose storages are to be cleared.
+   * @param aPersistenceType
+   *        An optional string that tells what persistence type of storages
+   *        will be cleared.  If omitted (or void), all persistence types will
+   *        be cleared for the prefix.  If a single persistence type
+   *        ("persistent", "temporary", or "default") is provided, then only
+   *        that persistence directory will be considered.  Note that
+   *        "persistent" is different than being "persisted" via persist() and
+   *        is only for chrome principals.  See bug 1354500 for more info.
+   *        In general, null is the right thing to pass here.
+   */
+  [must_use] nsIQuotaRequest
+  clearStoragesForOriginPrefix(in nsIPrincipal aPrincipal,
+                            [optional] in ACString aPersistenceType);
+
+  /**
    * Resets quota and storage management. This can be used to force
    * reinitialization of the temp storage, for example when the pref for
    * overriding the temp storage limit has changed.

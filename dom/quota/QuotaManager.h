@@ -361,6 +361,10 @@ class QuotaManager final : public BackgroundThreadObject {
       const PrincipalInfo& aPrincipalInfo,
       const Maybe<Client::Type>& aClientType, const bool& aClearAll);
 
+  RefPtr<BoolPromise> ClearStoragesForOriginPrefix(
+      const Maybe<PersistenceType>& aPersistenceType,
+      const PrincipalInfo& aPrincipalInfo);
+
   RefPtr<BoolPromise> ClearStoragesForOriginAttributesPattern(
       const OriginAttributesPattern& aPattern);
 

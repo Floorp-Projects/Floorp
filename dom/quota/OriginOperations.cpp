@@ -497,6 +497,29 @@ class ClearOriginOp final : public ClearRequestBase {
   void CloseDirectory() override;
 };
 
+class ClearStoragesForOriginPrefixOp final
+    : public OpenStorageDirectoryHelper<ClearRequestBase> {
+  const nsCString mPrefix;
+  const Nullable<PersistenceType> mPersistenceType;
+
+ public:
+  ClearStoragesForOriginPrefixOp(
+      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+      const Maybe<PersistenceType>& aPersistenceType,
+      const PrincipalInfo& aPrincipalInfo);
+
+ private:
+  ~ClearStoragesForOriginPrefixOp() = default;
+
+  RefPtr<BoolPromise> OpenDirectory() override;
+
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  bool GetResolveValue() override;
+
+  void CloseDirectory() override;
+};
+
 class ClearDataOp final : public ClearRequestBase {
   const OriginAttributesPattern mPattern;
 
@@ -728,6 +751,14 @@ RefPtr<ResolvableNormalOriginOp<bool>> CreateClearOriginOp(
     const bool& aClearAll) {
   return MakeRefPtr<ClearOriginOp>(std::move(aQuotaManager), aPersistenceType,
                                    aPrincipalInfo, aClientType, aClearAll);
+}
+
+RefPtr<ResolvableNormalOriginOp<bool>> CreateClearStoragesForOriginPrefixOp(
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    const Maybe<PersistenceType>& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo) {
+  return MakeRefPtr<ClearStoragesForOriginPrefixOp>(
+      std::move(aQuotaManager), aPersistenceType, aPrincipalInfo);
 }
 
 RefPtr<ResolvableNormalOriginOp<bool>> CreateClearDataOp(
@@ -1955,6 +1986,60 @@ bool ClearOriginOp::GetResolveValue() {
 }
 
 void ClearOriginOp::CloseDirectory() {
+  AssertIsOnOwningThread();
+
+  mDirectoryLock = nullptr;
+}
+
+ClearStoragesForOriginPrefixOp::ClearStoragesForOriginPrefixOp(
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    const Maybe<PersistenceType>& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo)
+    : OpenStorageDirectoryHelper(std::move(aQuotaManager),
+                                 "dom::quota::ClearStoragesForOriginPrefixOp"),
+      mPrefix(
+          QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo)),
+      mPersistenceType(aPersistenceType
+                           ? Nullable<PersistenceType>(*aPersistenceType)
+                           : Nullable<PersistenceType>()) {
+  AssertIsOnOwningThread();
+}
+
+RefPtr<BoolPromise> ClearStoragesForOriginPrefixOp::OpenDirectory() {
+  AssertIsOnOwningThread();
+
+  return OpenStorageDirectory(mPersistenceType,
+                              OriginScope::FromPrefix(mPrefix),
+                              Nullable<Client::Type>(),
+                              /* aExclusive */ true);
+}
+
+nsresult ClearStoragesForOriginPrefixOp::DoDirectoryWork(
+    QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("ClearStoragesForOriginPrefixOp::DoDirectoryWork", OTHER);
+
+  if (mPersistenceType.IsNull()) {
+    for (const PersistenceType type : kAllPersistenceTypes) {
+      DeleteFiles(aQuotaManager, type, OriginScope::FromPrefix(mPrefix),
+                  Nullable<Client::Type>());
+    }
+  } else {
+    DeleteFiles(aQuotaManager, mPersistenceType.Value(),
+                OriginScope::FromPrefix(mPrefix), Nullable<Client::Type>());
+  }
+
+  return NS_OK;
+}
+
+bool ClearStoragesForOriginPrefixOp::GetResolveValue() {
+  AssertIsOnOwningThread();
+
+  return true;
+}
+
+void ClearStoragesForOriginPrefixOp::CloseDirectory() {
   AssertIsOnOwningThread();
 
   mDirectoryLock = nullptr;

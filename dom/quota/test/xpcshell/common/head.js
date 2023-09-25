@@ -203,6 +203,16 @@ function clearOrigin(principal, persistence, callback) {
   return request;
 }
 
+function clearOriginsByPrefix(principal, persistence, callback) {
+  let request = SpecialPowers._getQuotaManager().clearStoragesForOriginPrefix(
+    principal,
+    persistence
+  );
+  request.callback = callback;
+
+  return request;
+}
+
 function clearPrivateBrowsing(callback) {
   let request =
     SpecialPowers._getQuotaManager().clearStoragesForPrivateBrowsing();
@@ -349,7 +359,7 @@ function installPackages(packageRelativePaths) {
 // test package definition and a shared package definition. The shared package
 // definition should contain unknown stuff which needs to be properly handled
 // in all situations.
-function verifyStorage(packageDefinitionRelativePaths, key) {
+function verifyStorage(packageDefinitionRelativePaths, key, sharedKey) {
   if (packageDefinitionRelativePaths.length != 2) {
     throw new Error("Unsupported number of package definition relative paths");
   }
@@ -589,7 +599,7 @@ function verifyStorage(packageDefinitionRelativePaths, key) {
   );
   const sharedEntries = getEntriesFromPackageDefinition(
     packageDefinitionRelativePaths[1],
-    key
+    sharedKey ? sharedKey : key
   );
 
   addSharedEntries(expectedEntries, sharedEntries, key);
