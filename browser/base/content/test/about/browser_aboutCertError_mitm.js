@@ -18,6 +18,7 @@ add_task(async function checkMitmPriming() {
     set: [
       [PREF_MITM_PRIMING, true],
       [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
+      [PREF_ENTERPRISE_ROOTS, false],
     ],
   });
 

@@ -69,6 +69,7 @@ add_task(async function run_test() {
     Ci.nsIX509CertDB
   );
   nssComponent.getEnterpriseRoots(); // blocks until roots are loaded
+  await check_some_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
   await check_no_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);

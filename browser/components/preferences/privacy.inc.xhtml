@@ -1193,6 +1193,18 @@
               "/>
     </vbox>
   </hbox>
+
+  <hbox id="certEnableThirdPartyToggleBox" align="center">
+    <checkbox id="certEnableThirdPartyToggle"
+              data-l10n-id="certs-thirdparty-toggle"
+              preference="security.enterprise_roots.enabled"
+              class="tail-with-learn-more"
+    />
+    <html:a is="moz-support-link"
+            class="learnMore"
+            support-page="automatically-trust-third-party-certificates"
+    />
+  </hbox>
 </groupbox>
 
 <!-- HTTPS-ONLY Mode -->

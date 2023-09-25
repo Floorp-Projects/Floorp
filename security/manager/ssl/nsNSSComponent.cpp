@@ -1156,8 +1156,7 @@ void nsNSSComponent::setValidationOptions(
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mDefaultCertVerifier);
-  if (NS_WARN_IF(!mDefaultCertVerifier)) {
+  if (!mDefaultCertVerifier) {
     return;
   }
 
