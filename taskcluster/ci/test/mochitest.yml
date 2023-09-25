@@ -623,6 +623,7 @@ mochitest-media:
             linux.*64-tsan-qr/opt: 7200
             default: 5400
     variants:
+        - media-gpu
         - no-fission
         - socketprocess+no-fission
         - socketprocess
@@ -689,6 +690,12 @@ mochitest-media:
                     windows11-64-2009-qr/opt: ['autoland']
                     windows11-64-2009-qr/debug: ['autoland']
                     default: []
+            media-gpu:
+                by-test-platform:
+                    (macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central', 'mozilla-beta']
+                    default: []
+                    # TODO : add Android, it hasn't supported 'tags'
+                    # TODO : add Linux, it would crash on gfxFeature.cpp:180
             default:
                 by-test-platform:
                     android-hw.*/opt: []
@@ -702,6 +709,7 @@ mochitest-media:
     chunks:
         by-variant:
             wmf-media-engine: 1
+            media-gpu: 1
             default:
                 by-test-platform:
                     (android|macos).*/opt: 1
