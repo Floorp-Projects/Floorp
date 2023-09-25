@@ -135,7 +135,7 @@ elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
         "ProcessUtils_bsd.cpp",
         "SetProcessTitle.cpp",
     ]
-    EXPORTS.ipc += [
+    EXPORTS.mozilla.ipc += [
         "SetProcessTitle.h",
     ]
 elif CONFIG["OS_ARCH"] == "Darwin":
