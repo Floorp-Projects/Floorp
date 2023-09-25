@@ -602,6 +602,15 @@ fn create_tile_cache(
 
     let slice_id = SliceId::new(slice);
 
+    // If we found an opaque compositor surface, use underlays. This implies
+    // we disable overlays for any transparent compositor surfaces and composite
+    // them in to regular picture cache tiles.
+    let overlay_surface_count = if prim_list.has_opaque_compositor_surface {
+        0
+    } else {
+        prim_list.overlay_surface_count
+    };
+
     // Store some information about the picture cache slice. This is used when we swap the
     // new scene into the frame builder to either reuse existing slices, or create new ones.
     tile_caches.insert(slice_id, TileCacheParams {
@@ -612,7 +621,7 @@ fn create_tile_cache(
         shared_clip_node_id,
         shared_clip_leaf_id,
         virtual_surface_size: frame_builder_config.compositor_kind.get_virtual_surface_size(),
-        compositor_surface_count: prim_list.compositor_surface_count,
+        overlay_surface_count,
     });
 
     let pic_index = prim_store.pictures.alloc().init(PicturePrimitive::new_image(
