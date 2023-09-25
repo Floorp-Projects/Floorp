@@ -36,13 +36,6 @@ ruleTester.run("valid-lazy", rule, {
     `,
     `
       const lazy = {};
-      XPCOMUtils.defineLazyModuleGetters(lazy, {
-        foo: "foo.jsm",
-      });
-      if (x) { lazy.foo.bar(); }
-    `,
-    `
-      const lazy = {};
       ChromeUtils.defineESModuleGetters(lazy, {
         foo: "foo.mjs",
       });

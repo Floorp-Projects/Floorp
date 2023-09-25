@@ -15,11 +15,6 @@ Examples of incorrect code for this rule:
     XPCOMUtils.defineLazyModuleGetters(lazy, {
       XPCOMUtils: "resource://gre/modules/XPCOMUtils.jsm",
     });
-    XPCOMUtils.defineLazyModuleGetter(
-      lazy,
-      "AppConstants",
-      "resource://gre/modules/AppConstants.jsm",
-    });
 
 Examples of correct code for this rule:
 ---------------------------------------

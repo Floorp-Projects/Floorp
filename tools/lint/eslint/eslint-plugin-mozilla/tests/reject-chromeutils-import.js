@@ -37,19 +37,7 @@ ruleTester.run("reject-chromeutils-import", rule, {
   ],
   invalid: [
     {
-      code: 'Components.utils.import("resource://some/path/to/My.jsm")',
-      errors: invalidError,
-    },
-    {
-      code: 'Cu.import("resource://some/path/to/My.jsm")',
-      errors: invalidError,
-    },
-    {
       code: 'ChromeUtils.import("resource://some/path/to/My.jsm")',
-      errors: invalidError,
-    },
-    {
-      code: 'SpecialPowers.Cu.import("resource://some/path/to/My.jsm")',
       errors: invalidError,
     },
     {
@@ -62,10 +50,6 @@ ruleTester.run("reject-chromeutils-import", rule, {
     },
     {
       code: 'SpecialPowers.ChromeUtils.defineModuleGetter(obj, "My", "resource://some/path/to/My.jsm")',
-      errors: invalidErrorLazy,
-    },
-    {
-      code: 'XPCOMUtils.defineLazyModuleGetter(obj, "My", "resource://some/path/to/My.jsm")',
       errors: invalidErrorLazy,
     },
     {

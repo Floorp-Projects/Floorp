@@ -34,11 +34,6 @@ ruleTester.run("reject-mixing-eager-and-lazy", rule, {
     import{ AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 `,
     `
-    XPCOMUtils.defineLazyModuleGetter(
-      lazy, "AppConstants", "resource://gre/modules/AppConstants.jsm"
-    );
-`,
-    `
     ChromeUtils.defineModuleGetter(
       lazy, "AppConstants", "resource://gre/modules/AppConstants.jsm"
     );
@@ -57,15 +52,9 @@ ruleTester.run("reject-mixing-eager-and-lazy", rule, {
     if (some_condition) {
       ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     }
-    XPCOMUtils.defineLazyModuleGetter(
-      lazy, "AppConstants", "resource://gre/modules/AppConstants.jsm"
-    );
-`,
-    `
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-    XPCOMUtils.defineLazyModuleGetter(
-      sandbox, "AppConstants", "resource://gre/modules/AppConstants.jsm"
-    );
+    XPCOMUtils.defineLazyModuleGetters(lazy, {
+      AppConstants: "resource://gre/modules/AppConstants.jsm"
+    });
 `,
     `
     ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
@@ -75,15 +64,6 @@ ruleTester.run("reject-mixing-eager-and-lazy", rule, {
 `,
   ],
   invalid: [
-    invalidCode(
-      `
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-    XPCOMUtils.defineLazyModuleGetter(
-      lazy, "AppConstants", "resource://gre/modules/AppConstants.jsm"
-    );
-`,
-      "resource://gre/modules/AppConstants.jsm"
-    ),
     invalidCode(
       `
     ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
