@@ -2383,6 +2383,8 @@ class nsINode : public mozilla::dom::EventTarget {
   nsSlots* mSlots;
 };
 
+NON_VIRTUAL_ADDREF_RELEASE(nsINode)
+
 inline nsINode* mozilla::dom::EventTarget::GetAsNode() {
   return IsNode() ? AsNode() : nullptr;
 }
