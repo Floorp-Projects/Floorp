@@ -777,6 +777,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
     mSwapChainInfo = mozilla::Some(aInfo);
   }
 
+  static void DisableRemoteCanvas();
+
   static bool HasVariationFontSupport();
 
   // you probably want to use gfxVars::UseWebRender() instead of this

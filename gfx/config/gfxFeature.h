@@ -52,6 +52,7 @@ namespace gfx {
   _(ACCELERATED_CANVAS2D, Feature, "Accelerated Canvas2D")                   \
   _(H264_HW_DECODE, Feature, "H.264 hardware decoding")                      \
   _(AV1_HW_DECODE, Feature, "AV1 hardware decoding")                         \
+  _(REMOTE_CANVAS, Feature, "Remote canvas")                                 \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

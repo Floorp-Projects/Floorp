@@ -20,6 +20,8 @@
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+class TaskQueue;
+
 namespace layers {
 
 class TextureData;
@@ -261,6 +263,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void StartTranslation();
 
   void FinishShutdown();
+
+  bool CheckDeactivated();
 
   void Deactivate();
 
