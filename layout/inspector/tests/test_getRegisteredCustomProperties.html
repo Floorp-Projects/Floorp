@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test InspectorUtils.getCSSRegisteredProperties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @property --color-1 {
+      syntax: "<color>";
+      inherits: true;
+      initial-value: blue;
+    }
+    @property --color-2 {
+      syntax: "*";
+      inherits: false;
+    }
+  </style>
+</head>
+<body>
+<code>InspectorUtils.getCSSRegisteredProperties</code>
+
+<script>
+"use strict";
+
+/** Test for InspectorUtils.getCSSRegisteredProperties **/
+
+const { Assert } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+CSS.registerProperty({
+  name: "--length-1",
+  syntax: "<length>",
+  initialValue: "10px",
+  inherits: true,
+});
+CSS.registerProperty({
+  name: "--length-2",
+  syntax: "foo | <integer>+ | <percentage> | <length># | auto",
+  initialValue: "100vw",
+  inherits: true
+});
+CSS.registerProperty({
+  name: "--length-3",
+  syntax: "*",
+  inherits: false
+});
+CSS.registerProperty({
+  name: "--length-4",
+  syntax: "*",
+  initialValue: "",
+  inherits: false
+});
+
+// The order isn't guaranteed, so sort variable by their name.
+// We get a Proxy, so build another array to properly sort it.
+const results = Array.from(InspectorUtils.getCSSRegisteredProperties(document));
+results.sort((a,b) => a.name < b.name ? -1 : 1)
+
+Assert.deepEqual(
+  results,
+  [{
+    name: "color-1",
+    syntax: "<color>",
+    inherits: true,
+    initialValue: "blue",
+    fromJS: false,
+  },{
+    name: "color-2",
+    syntax: "*",
+    inherits: false,
+    initialValue: null,
+    fromJS: false,
+  },{
+    name: "length-1",
+    syntax: "<length>",
+    inherits: true,
+    initialValue: "10px",
+    fromJS: true,
+  }, {
+    name: "length-2",
+    syntax: "foo | <integer>+ | <percentage> | <length># | auto",
+    inherits: true,
+    initialValue: "100vw",
+    fromJS: true,
+  }, {
+    name: "length-3",
+    syntax: "*",
+    inherits: false,
+    initialValue: null,
+    fromJS: true,
+  }, {
+    name: "length-4",
+    syntax: "*",
+    inherits: false,
+    initialValue: "",
+    fromJS: true,
+  }],
+  `Got registered CSS properties`
+);
+
+// Test needs at least one `ok/is` call
+ok(true, "Success!")
+
+</script>
+</pre>
+</body>
+</html>
