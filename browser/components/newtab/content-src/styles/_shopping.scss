@@ -32,6 +32,8 @@
 
     .main-content {
       border-radius: 4px;
+      color: inherit;
+      font: menu;
 
       @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
         background-color: #52525E;
@@ -46,14 +48,15 @@
         margin-block: 10px 20px;
 
         h1 {
-          font-size: 1.37em;
           width: auto;
           font-weight: 400;
           line-height: 1.5;
+          font-size: 1.7em;
         }
 
         h2 {
-          font-size: 0.8em;
+          color: inherit;
+          font-size: 1em;
         }
       }
 
@@ -65,7 +68,6 @@
 
         .primary {
           font-weight: 400;
-          font-size: 0.8em;
           padding: 4px 16px;
         }
 
@@ -75,7 +77,7 @@
       }
 
       .legal-paragraph {
-        font-size: 0.6875em;
+        font-size: 0.85em;
         line-height: 1.5;
         margin-block: 0 20px;
         padding-inline: 30px;
@@ -98,18 +100,12 @@
   }
 
   .info-text, .link-paragraph {
-    color: #5B5B66;
-    font-size: 0.69em;
+    font-size: 1em;
     margin: 10px auto;
     line-height: 1.5;
-
-    @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
-      color: #CFCFD8;
-    }
   }
 
   .link-paragraph {
-    font-size: 0.8em;
     margin-block: 0 10px;
     padding-inline: 30px;
     text-align: start;
@@ -133,25 +129,25 @@
         margin-top: 12px;
 
         h1 {
-          font-size: 0.8em;
+          font-size: 1em;
           font-weight: 590;
           margin: 0;
         }
 
         h2 {
+          color: inherit;
           margin-block: 12px 0;
         }
       }
 
       .multi-select-container {
+        color: inherit;
         padding: 0;
         margin-block: 12px;
         align-items: center;
         overflow: visible;
-
-        label {
-          font-size: 0.9em;
-        }
+        font-size: 1em;
+        gap: 8px;
       }
 
       .steps {
