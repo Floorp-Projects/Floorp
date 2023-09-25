@@ -35,11 +35,8 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
-  "@mozilla.org/scriptsecuritymanager;1";
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
   "@mozilla.org/network/protocol;1?name=";
-const NS_XREAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 
 const RE_PROTOCOL = /^\w+:/;
 const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
@@ -56,6 +53,7 @@ function ReadTopManifest(aFileURL, aFilter, aManifestID) {
 
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in layout/tools/reftest/__init__.py in sync.
+// eslint-disable-next-line complexity
 function ReadManifest(aURL, aFilter, aManifestID) {
   // Ensure each manifest is only read once. This assumes that manifests that
   // are included with filters will be read via their include before they are
@@ -67,10 +65,6 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     aFilter = [aFilter[0], aFilter[1], true];
   }
   g.manifestsLoaded[aURL.spec] = aFilter[1];
-
-  var secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID].getService(
-    Ci.nsIScriptSecurityManager
-  );
 
   var listURL = aURL;
   var channel = NetUtil.newChannel({
@@ -353,7 +347,10 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       }
     }
 
-    var principal = secMan.createContentPrincipal(aURL, {});
+    var principal = Services.scriptSecurityManager.createContentPrincipal(
+      aURL,
+      {}
+    );
 
     if (items[0] == "include") {
       if (items.length != 2) {
@@ -412,7 +409,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         }
 
         var incURI = g.ioService.newURI(items[1], null, listURL);
-        secMan.checkLoadURIWithPrincipal(
+        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
           principal,
           incURI,
           Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT
@@ -452,7 +449,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         ReadManifest(incURI, aFilter, newManifestID);
       }
     } else if (items[0] == TYPE_LOAD || items[0] == TYPE_SCRIPT) {
-      var type = items[0];
+      let type = items[0];
       if (items.length != 2) {
         throw (
           "Error in manifest file " +
@@ -532,7 +529,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         );
       }
 
-      var type = items[0];
+      let type = items[0];
       if (g.compareRetainedDisplayLists) {
         type = TYPE_REFTEST_EQUAL;
 
@@ -614,20 +611,18 @@ function getStreamContent(inputStream) {
 // Build the sandbox for fails-if(), etc., condition evaluation.
 function BuildConditionSandbox(aURL) {
   var sandbox = new Cu.Sandbox(aURL.spec);
-  var xr = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULRuntime);
-  var appInfo = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULAppInfo);
   sandbox.isDebugBuild = g.debug.isDebugBuild;
   sandbox.isCoverageBuild = g.isCoverageBuild;
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
 
   sandbox.xulRuntime = Cu.cloneInto(
-    { widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: xr.XPCOMABI },
+    {
+      widgetToolkit: Services.appinfo.widgetToolkit,
+      OS: Services.appinfo.OS,
+      XPCOMABI: Services.appinfo.XPCOMABI,
+    },
     sandbox
   );
 
-  var testRect = g.browser.getBoundingClientRect();
   sandbox.smallScreen = false;
   if (
     g.containingWindow.innerWidth < 800 ||
@@ -673,7 +668,9 @@ function BuildConditionSandbox(aURL) {
     (contentBackend == "none" && canvasBackend == "cairo");
 
   sandbox.remoteCanvas =
-    prefs.getBoolPref("gfx.canvas.remote") && sandbox.d2d && sandbox.gpuProcess;
+    Services.prefs.getBoolPref("gfx.canvas.remote") &&
+    sandbox.d2d &&
+    sandbox.gpuProcess;
 
   sandbox.layersGPUAccelerated = g.windowUtils.layerManagerType != "Basic";
   sandbox.d3d11 = g.windowUtils.layerManagerType == "Direct3D 11";
@@ -685,13 +682,13 @@ function BuildConditionSandbox(aURL) {
   sandbox.layersOMTC = !!g.windowUtils.layerManagerRemote;
 
   // Shortcuts for widget toolkits.
-  sandbox.Android = xr.OS == "Android";
-  sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
-  sandbox.gtkWidget = xr.widgetToolkit == "gtk";
-  sandbox.qtWidget = xr.widgetToolkit == "qt";
-  sandbox.winWidget = xr.widgetToolkit == "windows";
+  sandbox.Android = Services.appinfo.OS == "Android";
+  sandbox.cocoaWidget = Services.appinfo.widgetToolkit == "cocoa";
+  sandbox.gtkWidget = Services.appinfo.widgetToolkit == "gtk";
+  sandbox.qtWidget = Services.appinfo.widgetToolkit == "qt";
+  sandbox.winWidget = Services.appinfo.widgetToolkit == "windows";
 
-  sandbox.is64Bit = xr.is64Bit;
+  sandbox.is64Bit = Services.appinfo.is64Bit;
 
   // Use this to annotate reftests that fail in drawSnapshot, but
   // the reason hasn't been investigated (or fixed) yet.
@@ -702,25 +699,25 @@ function BuildConditionSandbox(aURL) {
   sandbox.unsupportedWithDrawSnapshot = g.useDrawSnapshot;
 
   sandbox.retainedDisplayList =
-    prefs.getBoolPref("layout.display-list.retain") && !sandbox.useDrawSnapshot;
+    Services.prefs.getBoolPref("layout.display-list.retain") &&
+    !sandbox.useDrawSnapshot;
 
   // Needed to specifically test the new and old behavior. This will eventually be removed.
   sandbox.retainedDisplayListNew =
     sandbox.retainedDisplayList &&
-    prefs.getBoolPref("layout.display-list.retain.sc");
+    Services.prefs.getBoolPref("layout.display-list.retain.sc");
 
   // GeckoView is currently uniquely identified by "android + e10s" but
   // we might want to make this condition more precise in the future.
   sandbox.geckoview = sandbox.Android && g.browserIsRemote;
 
   // Scrollbars that are semi-transparent. See bug 1169666.
-  sandbox.transparentScrollbars = xr.widgetToolkit == "gtk";
+  sandbox.transparentScrollbars = Services.appinfo.widgetToolkit == "gtk";
 
-  var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
   if (sandbox.Android) {
     // This is currently used to distinguish Android 4.0.3 (SDK version 15)
     // and later from Android 2.x
-    sandbox.AndroidVersion = sysInfo.getPropertyAsInt32("version");
+    sandbox.AndroidVersion = Services.sysinfo.getPropertyAsInt32("version");
 
     sandbox.emulator = readGfxInfo(gfxInfo, "adapterDeviceID").includes(
       "Android Emulator"
@@ -728,7 +725,8 @@ function BuildConditionSandbox(aURL) {
     sandbox.device = !sandbox.emulator;
   }
 
-  sandbox.MinGW = sandbox.winWidget && sysInfo.getPropertyAsBool("isMinGW");
+  sandbox.MinGW =
+    sandbox.winWidget && Services.sysinfo.getPropertyAsBool("isMinGW");
 
   sandbox.AddressSanitizer = AppConstants.ASAN;
   sandbox.ThreadSanitizer = AppConstants.TSAN;
@@ -771,9 +769,12 @@ function BuildConditionSandbox(aURL) {
     : undefined;
 
   // config specific prefs
-  sandbox.appleSilicon = prefs.getBoolPref("sandbox.apple_silicon", false);
+  sandbox.appleSilicon = Services.prefs.getBoolPref(
+    "sandbox.apple_silicon",
+    false
+  );
 
-  sandbox.gpuProcessForceEnabled = prefs.getBoolPref(
+  sandbox.gpuProcessForceEnabled = Services.prefs.getBoolPref(
     "layers.gpu-process.force-enabled",
     false
   );
@@ -781,10 +782,10 @@ function BuildConditionSandbox(aURL) {
   sandbox.prefs = Cu.cloneInto(
     {
       getBoolPref(p) {
-        return prefs.getBoolPref(p);
+        return Services.prefs.getBoolPref(p);
       },
       getIntPref(p) {
-        return prefs.getIntPref(p);
+        return Services.prefs.getIntPref(p);
       },
     },
     sandbox,
@@ -808,7 +809,7 @@ function BuildConditionSandbox(aURL) {
   sandbox.usesRepeatResampling = sandbox.d2d;
 
   // Running in a test-verify session?
-  sandbox.verify = prefs.getBoolPref("reftest.verify", false);
+  sandbox.verify = Services.prefs.getBoolPref("reftest.verify", false);
 
   // Running with a variant enabled?
   sandbox.fission = Services.appinfo.fissionAutostart;
@@ -928,10 +929,6 @@ function ServeTestBase(aURL, depth) {
 }
 
 function CreateUrls(test) {
-  let secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID].getService(
-    Ci.nsIScriptSecurityManager
-  );
-
   let manifestURL = g.ioService.newURI(test.manifest);
 
   let testbase = manifestURL;
@@ -939,7 +936,10 @@ function CreateUrls(test) {
     testbase = ServeTestBase(manifestURL, test.httpDepth);
   }
 
-  let testbasePrincipal = secMan.createContentPrincipal(testbase, {});
+  let testbasePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+    testbase,
+    {}
+  );
   Services.perms.addFromPrincipal(
     testbasePrincipal,
     "allowXULXBL",
@@ -955,9 +955,9 @@ function CreateUrls(test) {
     let isChromeOrViewSource =
       testURI.scheme == "chrome" || testURI.scheme == "view-source";
     let principal = isChromeOrViewSource
-      ? secMan.getSystemPrincipal()
-      : secMan.createContentPrincipal(manifestURL, {});
-    secMan.checkLoadURIWithPrincipal(
+      ? Services.scriptSecurityManager.getSystemPrincipal()
+      : Services.scriptSecurityManager.createContentPrincipal(manifestURL, {});
+    Services.scriptSecurityManager.checkLoadURIWithPrincipal(
       principal,
       testURI,
       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT

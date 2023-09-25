@@ -10,12 +10,8 @@ for (let [key, val] of Object.entries({
   XHTML_NS: "http://www.w3.org/1999/xhtml",
   XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
 
-  NS_LOCAL_FILE_CONTRACTID: "@mozilla.org/file/local;1",
   NS_GFXINFO_CONTRACTID: "@mozilla.org/gfx/info;1",
-  IO_SERVICE_CONTRACTID: "@mozilla.org/network/io-service;1",
   DEBUG_CONTRACTID: "@mozilla.org/xpcom/debug;1",
-  NS_DIRECTORY_SERVICE_CONTRACTID: "@mozilla.org/file/directory_service;1",
-  NS_OBSERVER_SERVICE_CONTRACTID: "@mozilla.org/observer-service;1",
 
   TYPE_REFTEST_EQUAL: "==",
   TYPE_REFTEST_NOTEQUAL: "!=",
@@ -153,7 +149,7 @@ for (let [key, val] of Object.entries({
 
     // whether we should skip caching canvases
     noCanvasCache: false,
-    recycledCanvases: new Array(),
+    recycledCanvases: [],
     testPrintOutput: null,
 
     manifestsLoaded: {},

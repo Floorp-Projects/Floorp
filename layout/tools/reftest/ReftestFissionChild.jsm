@@ -244,7 +244,7 @@ class ReftestFissionChild extends JSWindowActorChild {
             msg.data.originalTargetUri,
             /* dispatchToSelfAsWell */ true
           );
-          return;
+          return undefined;
         }
 
         // Transform the rects from fromBrowsingContext to us.
@@ -393,5 +393,6 @@ class ReftestFissionChild extends JSWindowActorChild {
         return returns;
       }
     }
+    return undefined;
   }
 }
