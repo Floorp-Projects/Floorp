@@ -276,7 +276,7 @@ class RecentlyClosedTabsInView extends ViewPage {
       />
       <div class="sticky-container bottom-fade" ?hidden=${!this.selectedTab}>
         <h2
-          class="page-header"
+          class="page-header heading-large"
           data-l10n-id="firefoxview-recently-closed-header"
         ></h2>
       </div>
