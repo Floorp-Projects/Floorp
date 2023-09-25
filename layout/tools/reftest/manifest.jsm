@@ -44,7 +44,7 @@ const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 function ReadTopManifest(aFileURL, aFilter, aManifestID) {
   var url = g.ioService.newURI(aFileURL);
   if (!url) {
-    throw "Expected a file or http URL for the manifest.";
+    throw new Error("Expected a file or http URL for the manifest.");
   }
 
   g.manifestsLoaded = {};
@@ -75,7 +75,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     var inputStream = channel.open();
   } catch (e) {
     g.logger.error("failed to open manifest at : " + aURL.spec);
-    throw e;
+    throw new Error(e);
   }
   if (channel instanceof Ci.nsIHttpChannel && channel.responseStatus != 200) {
     g.logger.error("HTTP ERROR : " + channel.responseStatus);
@@ -124,11 +124,11 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
     if (items[0] == "url-prefix") {
       if (items.length != 2) {
-        throw (
+        throw new Error(
           "url-prefix requires one url in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo
+            aURL.spec +
+            " line " +
+            lineNo
         );
       }
       urlprefix = items[1];
@@ -195,12 +195,12 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       } else if ((m = item.match(/^require-or\((.*?)\)$/))) {
         var args = m[1].split(/,/);
         if (args.length != 2) {
-          throw (
+          throw new Error(
             "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": wrong number of args to require-or"
+              aURL.spec +
+              " line " +
+              lineNo +
+              ": wrong number of args to require-or"
           );
         }
         var [precondition_str, fallback_action] = args;
@@ -242,11 +242,11 @@ function ReadManifest(aURL, aFilter, aManifestID) {
             refPrefSettings
           )
         ) {
-          throw (
+          throw new Error(
             "Error in pref value in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo
+              aURL.spec +
+              " line " +
+              lineNo
           );
         }
       } else if ((m = item.match(/^fuzzy\((\d+)-(\d+),(\d+)-(\d+)\)$/))) {
@@ -276,13 +276,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         cond = false;
         noAutoFuzz = true;
       } else {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": unexpected item " +
-          item
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": unexpected item " +
+            item
         );
       }
 
@@ -306,19 +306,21 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     if (items.length > origLength) {
       // Implies we broke out of the loop before we finished processing
       // defaults. This means defaults contained an invalid token.
-      throw (
+      throw new Error(
         "Error in manifest file " +
-        aURL.spec +
-        " line " +
-        lineNo +
-        ": invalid defaults token '" +
-        items[0] +
-        "'"
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": invalid defaults token '" +
+          items[0] +
+          "'"
       );
     }
 
     if (minAsserts > maxAsserts) {
-      throw "Bad range in manifest file " + aURL.spec + " line " + lineNo;
+      throw new Error(
+        "Bad range in manifest file " + aURL.spec + " line " + lineNo
+      );
     }
 
     var runHttp = false;
@@ -354,21 +356,21 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
     if (items[0] == "include") {
       if (items.length != 2) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": incorrect number of arguments to include"
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": incorrect number of arguments to include"
         );
       }
       if (runHttp) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": use of include with http"
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": use of include with http"
         );
       }
 
@@ -379,12 +381,12 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       // is disallowed since it's nonintuitive as to what the intended
       // effect is.
       if (nonSkipUsed) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": include statement with annotation other than 'skip' or 'skip-if'"
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": include statement with annotation other than 'skip' or 'skip-if'"
         );
       } else if (skip) {
         g.logger.info(
@@ -397,14 +399,14 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       } else {
         // poor man's assertion
         if (expected_status != EXPECTED_PASS) {
-          throw (
+          throw new Error(
             "Error in manifest file parsing code: we should never get expected_status=" +
-            expected_status +
-            " when nonSkipUsed=false (from " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ")"
+              expected_status +
+              " when nonSkipUsed=false (from " +
+              aURL.spec +
+              " line " +
+              lineNo +
+              ")"
           );
         }
 
@@ -451,22 +453,22 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     } else if (items[0] == TYPE_LOAD || items[0] == TYPE_SCRIPT) {
       let type = items[0];
       if (items.length != 2) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": incorrect number of arguments to " +
-          type
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": incorrect number of arguments to " +
+            type
         );
       }
       if (type == TYPE_LOAD && expected_status != EXPECTED_PASS) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": incorrect known failure type for load test"
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": incorrect known failure type for load test"
         );
       }
       AddTestItem(
@@ -504,13 +506,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       items[0] == TYPE_PRINT
     ) {
       if (items.length != 3) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": incorrect number of arguments to " +
-          items[0]
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": incorrect number of arguments to " +
+            items[0]
         );
       }
 
@@ -519,13 +521,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         expected_status == EXPECTED_FUZZY &&
         (fuzzy_delta.min > 0 || fuzzy_pixels.min > 0)
       ) {
-        throw (
+        throw new Error(
           "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": minimum fuzz must be zero for tests of type " +
-          items[0]
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": minimum fuzz must be zero for tests of type " +
+            items[0]
         );
       }
 
@@ -579,13 +581,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         aManifestID
       );
     } else {
-      throw (
+      throw new Error(
         "Error in manifest file " +
-        aURL.spec +
-        " line " +
-        lineNo +
-        ": unknown test type " +
-        items[0]
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": unknown test type " +
+          items[0]
       );
     }
   }
