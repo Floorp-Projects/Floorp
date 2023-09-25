@@ -3,6 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * Localization object holding the fluent definitions of permission descriptions
+ * of WebExtension APIs defined in toolkit.
+ *
+ * This is exported to allow builds (e.g. Thunderbird) to extend or modify the
+ * object via its addResourceIds() method.
+ */
+export const PERMISSION_L10N = new Localization(
+  [
+    "toolkit/global/extensions.ftl",
+    "toolkit/global/extensionPermissions.ftl",
+    "branding/brand.ftl",
+  ],
+  true
+);
+
+/**
  * List of permissions that are associated with a permission message.
  *
  * Keep this list in sync with:

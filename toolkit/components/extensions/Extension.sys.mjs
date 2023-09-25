@@ -60,6 +60,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
+  PERMISSION_L10N: "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
   permissionToL10nId:
     "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
 });
@@ -72,20 +73,6 @@ XPCOMUtils.defineLazyGetter(lazy, "resourceProtocol", () =>
   Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler)
-);
-
-XPCOMUtils.defineLazyGetter(
-  lazy,
-  "l10n",
-  () =>
-    new Localization(
-      [
-        "toolkit/global/extensions.ftl",
-        "toolkit/global/extensionPermissions.ftl",
-        "branding/brand.ftl",
-      ],
-      true
-    )
 );
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -2231,7 +2218,7 @@ export class ExtensionData {
     },
     { collapseOrigins = false, buildOptionalOrigins = false, localization } = {}
   ) {
-    const l10n = localization ?? lazy.l10n;
+    const l10n = localization ?? lazy.PERMISSION_L10N;
 
     const msgIds = [];
     const headerArgs = { extension: "<>" };
