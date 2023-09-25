@@ -79,21 +79,22 @@ BEGIN_TEST(testGCStoreBufferRemoval) {
   // Test removal of store buffer entries added by Heap<T>.
   {
     JSObject* punnedPtr = nullptr;
-    Heap<JSObject*>* heapPtr = reinterpret_cast<Heap<JSObject*>*>(&punnedPtr);
-    new (heapPtr) Heap<JSObject*>;
+    JS::Heap<JSObject*>* heapPtr =
+        reinterpret_cast<JS::Heap<JSObject*>*>(&punnedPtr);
+    new (heapPtr) JS::Heap<JSObject*>;
     *heapPtr = NurseryObject();
     heapPtr->~Heap<JSObject*>();
     punnedPtr = BAD_OBJECT_PTR;
     JS_GC(cx);
 
-    new (heapPtr) Heap<JSObject*>;
+    new (heapPtr) JS::Heap<JSObject*>;
     *heapPtr = NurseryObject();
     *heapPtr = tenuredObject;
     heapPtr->~Heap<JSObject*>();
     punnedPtr = BAD_OBJECT_PTR;
     JS_GC(cx);
 
-    new (heapPtr) Heap<JSObject*>;
+    new (heapPtr) JS::Heap<JSObject*>;
     *heapPtr = NurseryObject();
     *heapPtr = nullptr;
     heapPtr->~Heap<JSObject*>();
