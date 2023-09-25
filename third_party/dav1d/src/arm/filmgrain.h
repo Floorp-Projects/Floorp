@@ -91,8 +91,8 @@ static void fgy_32x32xn_neon(pixel *const dst_row, const pixel *const src_row,
 
     int offsets[2 /* col offset */][2 /* row offset */];
 
-    // process this row in BLOCK_SIZE^2 blocks
-    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE) {
+    // process this row in FG_BLOCK_SIZE^2 blocks
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE) {
 
         if (data->overlap_flag && bx) {
             // shift previous offsets left
@@ -155,8 +155,8 @@ fguv_32x32xn_##nm##_neon(pixel *const dst_row, const pixel *const src_row, \
  \
     int offsets[2 /* col offset */][2 /* row offset */]; \
  \
-    /* process this row in BLOCK_SIZE^2 blocks (subsampled) */ \
-    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE >> sx) { \
+    /* process this row in FG_BLOCK_SIZE^2 blocks (subsampled) */ \
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE >> sx) { \
         if (data->overlap_flag && bx) { \
             /* shift previous offsets left */ \
             for (int i = 0; i < rows; i++) \

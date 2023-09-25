@@ -172,14 +172,14 @@ void bitfn(dav1d_apply_grain_row)(const Dav1dFilmGrainDSPContext *const dsp,
     const int cpw = (out->p.w + ss_x) >> ss_x;
     const int is_id = out->seq_hdr->mtrx == DAV1D_MC_IDENTITY;
     pixel *const luma_src =
-        ((pixel *) in->data[0]) + row * BLOCK_SIZE * PXSTRIDE(in->stride[0]);
+        ((pixel *) in->data[0]) + row * FG_BLOCK_SIZE * PXSTRIDE(in->stride[0]);
 #if BITDEPTH != 8
     const int bitdepth_max = (1 << out->p.bpc) - 1;
 #endif
 
     if (data->num_y_points) {
-        const int bh = imin(out->p.h - row * BLOCK_SIZE, BLOCK_SIZE);
-        dsp->fgy_32x32xn(((pixel *) out->data[0]) + row * BLOCK_SIZE * PXSTRIDE(out->stride[0]),
+        const int bh = imin(out->p.h - row * FG_BLOCK_SIZE, FG_BLOCK_SIZE);
+        dsp->fgy_32x32xn(((pixel *) out->data[0]) + row * FG_BLOCK_SIZE * PXSTRIDE(out->stride[0]),
                          luma_src, out->stride[0], data,
                          out->p.w, scaling[0], grain_lut[0], bh, row HIGHBD_TAIL_SUFFIX);
     }
@@ -190,7 +190,7 @@ void bitfn(dav1d_apply_grain_row)(const Dav1dFilmGrainDSPContext *const dsp,
         return;
     }
 
-    const int bh = (imin(out->p.h - row * BLOCK_SIZE, BLOCK_SIZE) + ss_y) >> ss_y;
+    const int bh = (imin(out->p.h - row * FG_BLOCK_SIZE, FG_BLOCK_SIZE) + ss_y) >> ss_y;
 
     // extend padding pixels
     if (out->p.w & ss_x) {
@@ -201,7 +201,7 @@ void bitfn(dav1d_apply_grain_row)(const Dav1dFilmGrainDSPContext *const dsp,
         }
     }
 
-    const ptrdiff_t uv_off = row * BLOCK_SIZE * PXSTRIDE(out->stride[1]) >> ss_y;
+    const ptrdiff_t uv_off = row * FG_BLOCK_SIZE * PXSTRIDE(out->stride[1]) >> ss_y;
     if (data->chroma_scaling_from_luma) {
         for (int pl = 0; pl < 2; pl++)
             dsp->fguv_32x32xn[in->p.layout - 1](((pixel *) out->data[1 + pl]) + uv_off,
@@ -232,7 +232,7 @@ void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
 #else
     uint8_t scaling[3][SCALING_SIZE];
 #endif
-    const int rows = (out->p.h + 31) >> 5;
+    const int rows = (out->p.h + FG_BLOCK_SIZE - 1) / FG_BLOCK_SIZE;
 
     bitfn(dav1d_prep_grain)(dsp, out, in, scaling, grain_lut);
     for (int row = 0; row < rows; row++)

@@ -370,142 +370,6 @@ static inline int findoddzero(const uint8_t *buf, int len) {
     return 0;
 }
 
-static void read_pal_plane(Dav1dTaskContext *const t, Av1Block *const b,
-                           const int pl, const int sz_ctx,
-                           const int bx4, const int by4)
-{
-    Dav1dTileState *const ts = t->ts;
-    const Dav1dFrameContext *const f = t->f;
-    const int pal_sz = b->pal_sz[pl] = dav1d_msac_decode_symbol_adapt8(&ts->msac,
-                                           ts->cdf.m.pal_sz[pl][sz_ctx], 6) + 2;
-    uint16_t cache[16], used_cache[8];
-    int l_cache = pl ? t->pal_sz_uv[1][by4] : t->l.pal_sz[by4];
-    int n_cache = 0;
-    // don't reuse above palette outside SB64 boundaries
-    int a_cache = by4 & 15 ? pl ? t->pal_sz_uv[0][bx4] : t->a->pal_sz[bx4] : 0;
-    const uint16_t *l = t->al_pal[1][by4][pl], *a = t->al_pal[0][bx4][pl];
-
-    // fill/sort cache
-    while (l_cache && a_cache) {
-        if (*l < *a) {
-            if (!n_cache || cache[n_cache - 1] != *l)
-                cache[n_cache++] = *l;
-            l++;
-            l_cache--;
-        } else {
-            if (*a == *l) {
-                l++;
-                l_cache--;
-            }
-            if (!n_cache || cache[n_cache - 1] != *a)
-                cache[n_cache++] = *a;
-            a++;
-            a_cache--;
-        }
-    }
-    if (l_cache) {
-        do {
-            if (!n_cache || cache[n_cache - 1] != *l)
-                cache[n_cache++] = *l;
-            l++;
-        } while (--l_cache > 0);
-    } else if (a_cache) {
-        do {
-            if (!n_cache || cache[n_cache - 1] != *a)
-                cache[n_cache++] = *a;
-            a++;
-        } while (--a_cache > 0);
-    }
-
-    // find reused cache entries
-    int i = 0;
-    for (int n = 0; n < n_cache && i < pal_sz; n++)
-        if (dav1d_msac_decode_bool_equi(&ts->msac))
-            used_cache[i++] = cache[n];
-    const int n_used_cache = i;
-
-    // parse new entries
-    uint16_t *const pal = t->frame_thread.pass ?
-        f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                            ((t->bx >> 1) + (t->by & 1))][pl] : t->scratch.pal[pl];
-    if (i < pal_sz) {
-        int prev = pal[i++] = dav1d_msac_decode_bools(&ts->msac, f->cur.p.bpc);
-
-        if (i < pal_sz) {
-            int bits = f->cur.p.bpc - 3 + dav1d_msac_decode_bools(&ts->msac, 2);
-            const int max = (1 << f->cur.p.bpc) - 1;
-
-            do {
-                const int delta = dav1d_msac_decode_bools(&ts->msac, bits);
-                prev = pal[i++] = imin(prev + delta + !pl, max);
-                if (prev + !pl >= max) {
-                    for (; i < pal_sz; i++)
-                        pal[i] = max;
-                    break;
-                }
-                bits = imin(bits, 1 + ulog2(max - prev - !pl));
-            } while (i < pal_sz);
-        }
-
-        // merge cache+new entries
-        int n = 0, m = n_used_cache;
-        for (i = 0; i < pal_sz; i++) {
-            if (n < n_used_cache && (m >= pal_sz || used_cache[n] <= pal[m])) {
-                pal[i] = used_cache[n++];
-            } else {
-                assert(m < pal_sz);
-                pal[i] = pal[m++];
-            }
-        }
-    } else {
-        memcpy(pal, used_cache, n_used_cache * sizeof(*used_cache));
-    }
-
-    if (DEBUG_BLOCK_INFO) {
-        printf("Post-pal[pl=%d,sz=%d,cache_size=%d,used_cache=%d]: r=%d, cache=",
-               pl, pal_sz, n_cache, n_used_cache, ts->msac.rng);
-        for (int n = 0; n < n_cache; n++)
-            printf("%c%02x", n ? ' ' : '[', cache[n]);
-        printf("%s, pal=", n_cache ? "]" : "[]");
-        for (int n = 0; n < pal_sz; n++)
-            printf("%c%02x", n ? ' ' : '[', pal[n]);
-        printf("]\n");
-    }
-}
-
-static void read_pal_uv(Dav1dTaskContext *const t, Av1Block *const b,
-                        const int sz_ctx, const int bx4, const int by4)
-{
-    read_pal_plane(t, b, 1, sz_ctx, bx4, by4);
-
-    // V pal coding
-    Dav1dTileState *const ts = t->ts;
-    const Dav1dFrameContext *const f = t->f;
-    uint16_t *const pal = t->frame_thread.pass ?
-        f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                            ((t->bx >> 1) + (t->by & 1))][2] : t->scratch.pal[2];
-    if (dav1d_msac_decode_bool_equi(&ts->msac)) {
-        const int bits = f->cur.p.bpc - 4 +
-                         dav1d_msac_decode_bools(&ts->msac, 2);
-        int prev = pal[0] = dav1d_msac_decode_bools(&ts->msac, f->cur.p.bpc);
-        const int max = (1 << f->cur.p.bpc) - 1;
-        for (int i = 1; i < b->pal_sz[1]; i++) {
-            int delta = dav1d_msac_decode_bools(&ts->msac, bits);
-            if (delta && dav1d_msac_decode_bool_equi(&ts->msac)) delta = -delta;
-            prev = pal[i] = (prev + delta) & max;
-        }
-    } else {
-        for (int i = 0; i < b->pal_sz[1]; i++)
-            pal[i] = dav1d_msac_decode_bools(&ts->msac, f->cur.p.bpc);
-    }
-    if (DEBUG_BLOCK_INFO) {
-        printf("Post-pal[pl=2]: r=%d ", ts->msac.rng);
-        for (int n = 0; n < b->pal_sz[1]; n++)
-            printf("%c%02x", n ? ' ' : '[', pal[n]);
-        printf("]\n");
-    }
-}
-
 // meant to be SIMD'able, so that theoretical complexity of this function
 // times block size goes from w4*h4 to w4+h4-1
 // a and b are previous two lines containing (a) top/left entries or (b)
@@ -584,7 +448,8 @@ static void read_pal_indices(Dav1dTaskContext *const t,
     Dav1dTileState *const ts = t->ts;
     const ptrdiff_t stride = bw4 * 4;
     assert(pal_idx);
-    pal_idx[0] = dav1d_msac_decode_uniform(&ts->msac, b->pal_sz[pl]);
+    pixel *const pal_tmp = t->scratch.pal_idx_uv;
+    pal_tmp[0] = dav1d_msac_decode_uniform(&ts->msac, b->pal_sz[pl]);
     uint16_t (*const color_map_cdf)[8] =
         ts->cdf.m.color_map[pl][b->pal_sz[pl] - 2];
     uint8_t (*const order)[8] = t->scratch.pal_order;
@@ -593,23 +458,16 @@ static void read_pal_indices(Dav1dTaskContext *const t,
         // top/left-to-bottom/right diagonals ("wave-front")
         const int first = imin(i, w4 * 4 - 1);
         const int last = imax(0, i - h4 * 4 + 1);
-        order_palette(pal_idx, stride, i, first, last, order, ctx);
+        order_palette(pal_tmp, stride, i, first, last, order, ctx);
         for (int j = first, m = 0; j >= last; j--, m++) {
             const int color_idx = dav1d_msac_decode_symbol_adapt8(&ts->msac,
                                       color_map_cdf[ctx[m]], b->pal_sz[pl] - 1);
-            pal_idx[(i - j) * stride + j] = order[m][color_idx];
+            pal_tmp[(i - j) * stride + j] = order[m][color_idx];
         }
     }
-    // fill invisible edges
-    if (bw4 > w4)
-        for (int y = 0; y < 4 * h4; y++)
-            memset(&pal_idx[y * stride + 4 * w4],
-                   pal_idx[y * stride + 4 * w4 - 1], 4 * (bw4 - w4));
-    if (h4 < bh4) {
-        const uint8_t *const src = &pal_idx[stride * (4 * h4 - 1)];
-        for (int y = h4 * 4; y < bh4 * 4; y++)
-            memcpy(&pal_idx[y * stride], src, bw4 * 4);
-    }
+
+    t->c->pal_dsp.pal_idx_finish(pal_idx, pal_tmp, bw4 * 4, bh4 * 4,
+                                 w4 * 4, h4 * 4);
 }
 
 static void read_vartx_tree(Dav1dTaskContext *const t,
@@ -1306,7 +1164,7 @@ static int decode_b(Dav1dTaskContext *const t,
                 if (DEBUG_BLOCK_INFO)
                     printf("Post-y_pal[%d]: r=%d\n", use_y_pal, ts->msac.rng);
                 if (use_y_pal)
-                    read_pal_plane(t, b, 0, sz_ctx, bx4, by4);
+                    f->bd_fn.read_pal_plane(t, b, 0, sz_ctx, bx4, by4);
             }
 
             if (has_chroma && b->uv_mode == DC_PRED) {
@@ -1316,7 +1174,7 @@ static int decode_b(Dav1dTaskContext *const t,
                 if (DEBUG_BLOCK_INFO)
                     printf("Post-uv_pal[%d]: r=%d\n", use_uv_pal, ts->msac.rng);
                 if (use_uv_pal) // see aomedia bug 2183 for why we use luma coordinates
-                    read_pal_uv(t, b, sz_ctx, bx4, by4);
+                    f->bd_fn.read_pal_uv(t, b, sz_ctx, bx4, by4);
             }
         }
 
@@ -1341,9 +1199,9 @@ static int decode_b(Dav1dTaskContext *const t,
                 const int p = t->frame_thread.pass & 1;
                 assert(ts->frame_thread[p].pal_idx);
                 pal_idx = ts->frame_thread[p].pal_idx;
-                ts->frame_thread[p].pal_idx += bw4 * bh4 * 16;
+                ts->frame_thread[p].pal_idx += bw4 * bh4 * 8;
             } else
-                pal_idx = t->scratch.pal_idx;
+                pal_idx = t->scratch.pal_idx_y;
             read_pal_indices(t, pal_idx, b, 0, w4, h4, bw4, bh4);
             if (DEBUG_BLOCK_INFO)
                 printf("Post-y-pal-indices: r=%d\n", ts->msac.rng);
@@ -1355,9 +1213,9 @@ static int decode_b(Dav1dTaskContext *const t,
                 const int p = t->frame_thread.pass & 1;
                 assert(ts->frame_thread[p].pal_idx);
                 pal_idx = ts->frame_thread[p].pal_idx;
-                ts->frame_thread[p].pal_idx += cbw4 * cbh4 * 16;
+                ts->frame_thread[p].pal_idx += cbw4 * cbh4 * 8;
             } else
-                pal_idx = &t->scratch.pal_idx[bw4 * bh4 * 16];
+                pal_idx = t->scratch.pal_idx_uv;
             read_pal_indices(t, pal_idx, b, 1, cw4, ch4, cbw4, cbh4);
             if (DEBUG_BLOCK_INFO)
                 printf("Post-uv-pal-indices: r=%d\n", ts->msac.rng);
@@ -1430,34 +1288,16 @@ static int decode_b(Dav1dTaskContext *const t,
         case_set(bh4, l., 1, by4);
         case_set(bw4, a->, 0, bx4);
 #undef set_ctx
-        if (b->pal_sz[0]) {
-            uint16_t *const pal = t->frame_thread.pass ?
-                f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                                    ((t->bx >> 1) + (t->by & 1))][0] : t->scratch.pal[0];
-            for (int x = 0; x < bw4; x++)
-                memcpy(t->al_pal[0][bx4 + x][0], pal, 16);
-            for (int y = 0; y < bh4; y++)
-                memcpy(t->al_pal[1][by4 + y][0], pal, 16);
-        }
+        if (b->pal_sz[0])
+            f->bd_fn.copy_pal_block_y(t, bx4, by4, bw4, bh4);
         if (has_chroma) {
 #define set_ctx(type, dir, diridx, off, mul, rep_macro) \
                 rep_macro(type, t->dir uvmode, off, mul * b->uv_mode)
                 case_set(cbh4, l., 1, cby4);
                 case_set(cbw4, a->, 0, cbx4);
 #undef set_ctx
-            if (b->pal_sz[1]) {
-                const uint16_t (*const pal)[8] = t->frame_thread.pass ?
-                    f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) *
-                    (f->b4_stride >> 1) + ((t->bx >> 1) + (t->by & 1))] :
-                    t->scratch.pal;
-                // see aomedia bug 2183 for why we use luma coordinates here
-                for (int pl = 1; pl <= 2; pl++) {
-                    for (int x = 0; x < bw4; x++)
-                        memcpy(t->al_pal[0][bx4 + x][pl], pal[pl], 16);
-                    for (int y = 0; y < bh4; y++)
-                        memcpy(t->al_pal[1][by4 + y][pl], pal[pl], 16);
-                }
-            }
+            if (b->pal_sz[1])
+                f->bd_fn.copy_pal_block_uv(t, bx4, by4, bw4, bh4);
         }
         if (IS_INTER_OR_SWITCH(f->frame_hdr) || f->frame_hdr->allow_intrabc)
             splat_intraref(f->c, t, bs, bw4, bh4);
@@ -2642,7 +2482,10 @@ static void setup_tile(Dav1dTileState *const ts,
     const uint8_t *const size_mul = ss_size_mul[f->cur.p.layout];
     for (int p = 0; p < 2; p++) {
         ts->frame_thread[p].pal_idx = f->frame_thread.pal_idx ?
-            &f->frame_thread.pal_idx[(size_t)tile_start_off * size_mul[1] / 4] :
+            &f->frame_thread.pal_idx[(size_t)tile_start_off * size_mul[1] / 8] :
+            NULL;
+        ts->frame_thread[p].cbi = f->frame_thread.cbi ?
+            &f->frame_thread.cbi[(size_t)tile_start_off * size_mul[0] / 64] :
             NULL;
         ts->frame_thread[p].cf = f->frame_thread.cf ?
             (uint8_t*)f->frame_thread.cf +
@@ -3015,6 +2858,19 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
             }
         }
 
+        const int cbi_sz = num_sb128 * size_mul[0];
+        if (cbi_sz != f->frame_thread.cbi_sz) {
+            dav1d_free_aligned(f->frame_thread.cbi);
+            f->frame_thread.cbi =
+                dav1d_alloc_aligned(ALLOC_BLOCK, sizeof(*f->frame_thread.cbi) *
+                                    cbi_sz * 32 * 32 / 4, 64);
+            if (!f->frame_thread.cbi) {
+                f->frame_thread.cbi_sz = 0;
+                goto error;
+            }
+            f->frame_thread.cbi_sz = cbi_sz;
+        }
+
         const int cf_sz = (num_sb128 * size_mul[0]) << hbd;
         if (cf_sz != f->frame_thread.cf_sz) {
             dav1d_free_aligned(f->frame_thread.cf);
@@ -3029,16 +2885,17 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
         }
 
         if (f->frame_hdr->allow_screen_content_tools) {
-            if (num_sb128 != f->frame_thread.pal_sz) {
+            const int pal_sz = num_sb128 << hbd;
+            if (pal_sz != f->frame_thread.pal_sz) {
                 dav1d_free_aligned(f->frame_thread.pal);
                 f->frame_thread.pal =
                     dav1d_alloc_aligned(ALLOC_PAL, sizeof(*f->frame_thread.pal) *
-                                        num_sb128 * 16 * 16, 64);
+                                        pal_sz * 16 * 16, 64);
                 if (!f->frame_thread.pal) {
                     f->frame_thread.pal_sz = 0;
                     goto error;
                 }
-                f->frame_thread.pal_sz = num_sb128;
+                f->frame_thread.pal_sz = pal_sz;
             }
 
             const int pal_idx_sz = num_sb128 * size_mul[1];
@@ -3046,7 +2903,7 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
                 dav1d_free_aligned(f->frame_thread.pal_idx);
                 f->frame_thread.pal_idx =
                     dav1d_alloc_aligned(ALLOC_PAL, sizeof(*f->frame_thread.pal_idx) *
-                                        pal_idx_sz * 128 * 128 / 4, 64);
+                                        pal_idx_sz * 128 * 128 / 8, 64);
                 if (!f->frame_thread.pal_idx) {
                     f->frame_thread.pal_idx_sz = 0;
                     goto error;
@@ -3171,12 +3028,9 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
         }
         if (c->n_fc > 1) {
             dav1d_free(f->frame_thread.b);
-            dav1d_free(f->frame_thread.cbi);
             f->frame_thread.b = dav1d_malloc(ALLOC_BLOCK, sizeof(*f->frame_thread.b) *
                                              num_sb128 * 32 * 32);
-            f->frame_thread.cbi = dav1d_malloc(ALLOC_BLOCK, sizeof(*f->frame_thread.cbi) *
-                                               num_sb128 * 32 * 32);
-            if (!f->frame_thread.b || !f->frame_thread.cbi) {
+            if (!f->frame_thread.b) {
                 f->lf.mask_sz = 0;
                 goto error;
             }
@@ -3584,7 +3438,11 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         f->bd_fn.filter_sbrow_resize = dav1d_filter_sbrow_resize_##bd##bpc; \
         f->bd_fn.filter_sbrow_lr = dav1d_filter_sbrow_lr_##bd##bpc; \
         f->bd_fn.backup_ipred_edge = dav1d_backup_ipred_edge_##bd##bpc; \
-        f->bd_fn.read_coef_blocks = dav1d_read_coef_blocks_##bd##bpc
+        f->bd_fn.read_coef_blocks = dav1d_read_coef_blocks_##bd##bpc; \
+        f->bd_fn.copy_pal_block_y = dav1d_copy_pal_block_y_##bd##bpc; \
+        f->bd_fn.copy_pal_block_uv = dav1d_copy_pal_block_uv_##bd##bpc; \
+        f->bd_fn.read_pal_plane = dav1d_read_pal_plane_##bd##bpc; \
+        f->bd_fn.read_pal_uv = dav1d_read_pal_uv_##bd##bpc
     if (!f->seq_hdr->hbd) {
 #if CONFIG_8BPC
         assign_bitdepth_case(8);

@@ -85,6 +85,7 @@ SOURCES += [
     '../../third_party/dav1d/src/mem.c',
     '../../third_party/dav1d/src/msac.c',
     '../../third_party/dav1d/src/obu.c',
+    '../../third_party/dav1d/src/pal.c',
     '../../third_party/dav1d/src/picture.c',
     '../../third_party/dav1d/src/qm.c',
     '../../third_party/dav1d/src/ref.c',

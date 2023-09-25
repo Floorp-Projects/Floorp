@@ -74,7 +74,7 @@ typedef decl_cfl_pred_fn(*cfl_pred_fn);
  * - only 16-byte alignment is guaranteed for idx.
  */
 #define decl_pal_pred_fn(name) \
-void (name)(pixel *dst, ptrdiff_t stride, const uint16_t *pal, \
+void (name)(pixel *dst, ptrdiff_t stride, const pixel *pal, \
             const uint8_t *idx, int w, int h)
 typedef decl_pal_pred_fn(*pal_pred_fn);
 

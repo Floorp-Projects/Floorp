@@ -4885,24 +4885,26 @@ cglobal ipred_cfl_ac_444_16bpc, 4, 7, 6, ac, ypx, stride, wpad, hpad, w, h
     jg .w32_wpad
     jmp .w32_hpad
 
-cglobal pal_pred_16bpc, 4, 6, 5, dst, stride, pal, idx, w, h
-    vbroadcasti128       m3, [palq]
+cglobal pal_pred_16bpc, 4, 6, 6, dst, stride, pal, idx, w, h
+    vbroadcasti128       m4, [palq]
     lea                  r2, [pal_pred_16bpc_avx2_table]
     tzcnt                wd, wm
-    vbroadcasti128       m4, [pal_pred_shuf]
+    vbroadcasti128       m5, [pal_pred_shuf]
     movifnidn            hd, hm
     movsxd               wq, [r2+wq*4]
-    pshufb               m3, m4
-    punpckhqdq           m4, m3, m3
+    pshufb               m4, m5
+    punpckhqdq           m5, m4, m4
     add                  wq, r2
 DEFINE_ARGS dst, stride, stride3, idx, w, h
     lea            stride3q, [strideq*3]
     jmp                  wq
 .w4:
-    mova                xm2, [idxq]
-    add                idxq, 16
-    pshufb              xm1, xm3, xm2
-    pshufb              xm2, xm4, xm2
+    movq                xm0, [idxq]
+    add                idxq, 8
+    psrlw               xm1, xm0, 4
+    punpcklbw           xm0, xm1
+    pshufb              xm1, xm4, xm0
+    pshufb              xm2, xm5, xm0
     punpcklbw           xm0, xm1, xm2
     punpckhbw           xm1, xm2
     movq   [dstq+strideq*0], xm0
@@ -4914,10 +4916,12 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w4
     RET
 .w8:
-    movu                 m2, [idxq] ; only 16-byte alignment
-    add                idxq, 32
-    pshufb               m1, m3, m2
-    pshufb               m2, m4, m2
+    pmovzxbw             m2, [idxq]
+    add                idxq, 16
+    psllw                m1, m2, 4
+    por                  m2, m1
+    pshufb               m1, m4, m2
+    pshufb               m2, m5, m2
     punpcklbw            m0, m1, m2
     punpckhbw            m1, m2
     mova         [dstq+strideq*0], xm0
@@ -4929,19 +4933,22 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w8
     RET
 .w16:
-    vpermq               m2, [idxq+ 0], q3120
-    vpermq               m5, [idxq+32], q3120
-    add                idxq, 64
-    pshufb               m1, m3, m2
-    pshufb               m2, m4, m2
+    pshufd               m3, [idxq], q3120
+    add                idxq, 32
+    vpermq               m3, m3, q3120
+    psrlw                m1, m3, 4
+    punpcklbw            m2, m3, m1
+    punpckhbw            m3, m1
+    pshufb               m1, m4, m2
+    pshufb               m2, m5, m2
     punpcklbw            m0, m1, m2
     punpckhbw            m1, m2
     mova   [dstq+strideq*0], m0
     mova   [dstq+strideq*1], m1
-    pshufb               m1, m3, m5
-    pshufb               m2, m4, m5
-    punpcklbw            m0, m1, m2
-    punpckhbw            m1, m2
+    pshufb               m1, m4, m3
+    pshufb               m3, m5, m3
+    punpcklbw            m0, m1, m3
+    punpckhbw            m1, m3
     mova   [dstq+strideq*2], m0
     mova   [dstq+stride3q ], m1
     lea                dstq, [dstq+strideq*4]
@@ -4949,41 +4956,47 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w16
     RET
 .w32:
-    vpermq               m2, [idxq+ 0], q3120
-    vpermq               m5, [idxq+32], q3120
-    add                idxq, 64
-    pshufb               m1, m3, m2
-    pshufb               m2, m4, m2
+    pshufd               m3, [idxq], q3120
+    add                idxq, 32
+    vpermq               m3, m3, q3120
+    psrlw                m1, m3, 4
+    punpcklbw            m2, m3, m1
+    punpckhbw            m3, m1
+    pshufb               m1, m4, m2
+    pshufb               m2, m5, m2
     punpcklbw            m0, m1, m2
     punpckhbw            m1, m2
-    mova [dstq+strideq*0+ 0], m0
-    mova [dstq+strideq*0+32], m1
-    pshufb               m1, m3, m5
-    pshufb               m2, m4, m5
-    punpcklbw            m0, m1, m2
-    punpckhbw            m1, m2
-    mova [dstq+strideq*1+ 0], m0
-    mova [dstq+strideq*1+32], m1
+    mova          [dstq+ 0], m0
+    mova          [dstq+32], m1
+    pshufb               m1, m4, m3
+    pshufb               m3, m5, m3
+    punpcklbw            m0, m1, m3
+    punpckhbw            m1, m3
+    mova  [dstq+strideq+ 0], m0
+    mova  [dstq+strideq+32], m1
     lea                dstq, [dstq+strideq*2]
     sub                  hd, 2
     jg .w32
     RET
 .w64:
-    vpermq               m2, [idxq+ 0], q3120
-    vpermq               m5, [idxq+32], q3120
-    add                idxq, 64
-    pshufb               m1, m3, m2
-    pshufb               m2, m4, m2
+    pshufd               m3, [idxq], q3120
+    add                idxq, 32
+    vpermq               m3, m3, q3120
+    psrlw                m1, m3, 4
+    punpcklbw            m2, m3, m1
+    punpckhbw            m3, m1
+    pshufb               m1, m4, m2
+    pshufb               m2, m5, m2
     punpcklbw            m0, m1, m2
     punpckhbw            m1, m2
-    mova          [dstq+ 0], m0
-    mova          [dstq+32], m1
-    pshufb               m1, m3, m5
-    pshufb               m2, m4, m5
-    punpcklbw            m0, m1, m2
-    punpckhbw            m1, m2
-    mova          [dstq+64], m0
-    mova          [dstq+96], m1
+    mova        [dstq+32*0], m0
+    mova        [dstq+32*1], m1
+    pshufb               m1, m4, m3
+    pshufb               m3, m5, m3
+    punpcklbw            m0, m1, m3
+    punpckhbw            m1, m3
+    mova        [dstq+32*2], m0
+    mova        [dstq+32*3], m1
     add                 dstq, strideq
     dec                   hd
     jg .w64

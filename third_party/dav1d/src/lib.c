@@ -52,11 +52,10 @@
 
 static COLD void init_internal(void) {
     dav1d_init_cpu();
-    dav1d_init_interintra_masks();
+    dav1d_init_ii_wedge_masks();
     dav1d_init_intra_edge_tree();
     dav1d_init_qm_tables();
     dav1d_init_thread();
-    dav1d_init_wedge_masks();
 }
 
 COLD const char *dav1d_version(void) {
@@ -287,6 +286,7 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
             t->task_thread.td.inited = 1;
         }
     }
+    dav1d_pal_dsp_init(&c->pal_dsp);
     dav1d_refmvs_dsp_init(&c->refmvs_dsp);
 
     pthread_attr_destroy(&thread_attr);
@@ -641,11 +641,11 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
         if (c->n_fc > 1) {
             dav1d_free(f->tile_thread.lowest_pixel_mem);
             dav1d_free(f->frame_thread.b);
+            dav1d_free_aligned(f->frame_thread.cbi);
             dav1d_free_aligned(f->frame_thread.pal_idx);
             dav1d_free_aligned(f->frame_thread.cf);
             dav1d_free(f->frame_thread.tile_start_off);
             dav1d_free_aligned(f->frame_thread.pal);
-            dav1d_free(f->frame_thread.cbi);
         }
         if (c->n_tc > 1) {
             pthread_mutex_destroy(&f->task_thread.pending_tasks.lock);

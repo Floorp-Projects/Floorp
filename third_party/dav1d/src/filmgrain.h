@@ -34,7 +34,7 @@
 
 #define GRAIN_WIDTH 82
 #define GRAIN_HEIGHT 73
-#define BLOCK_SIZE 32
+#define FG_BLOCK_SIZE 32
 #if !defined(BITDEPTH) || BITDEPTH == 8
 #define SCALING_SIZE 256
 typedef int8_t entry;

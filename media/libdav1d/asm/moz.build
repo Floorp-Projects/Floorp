@@ -133,6 +133,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/mc16_sse.asm',
         '../../../third_party/dav1d/src/x86/mc_sse.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
+        '../../../third_party/dav1d/src/x86/pal.asm',
         '../../../third_party/dav1d/src/x86/refmvs.asm',
     ]
 
