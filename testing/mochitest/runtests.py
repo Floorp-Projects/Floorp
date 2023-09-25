@@ -3371,6 +3371,9 @@ toolbar#nav-bar {
                         "media.wmf.media-engine.channel-decoder.enabled", False
                     )
                 ),
+                "mda_gpu": self.extraPrefs.get(
+                    "media.hardware-video-decoding.force-enabled", False
+                ),
                 "xorigin": options.xOriginTests,
                 "condprof": options.conditionedProfile,
                 "msix": "WindowsApps" in options.app,
