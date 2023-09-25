@@ -441,8 +441,8 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           included = included.substring(3);
         }
         // Use a new manifest ID if the included manifest is in a different directory.
-        if (included.length > 0) {
-          if (newManifestID.length > 0) {
+        if (included.length) {
+          if (newManifestID.length) {
             newManifestID = newManifestID + "/" + included;
           } else {
             // parent directory includes may refer to the topsrcdir
@@ -474,29 +474,29 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       }
       AddTestItem(
         {
-          type: type,
+          type,
           expected: expected_status,
           manifest: aURL.spec,
           manifestID: TestIdentifier(aURL.spec, aManifestID),
           allowSilentFail: allow_silent_fail,
-          minAsserts: minAsserts,
-          maxAsserts: maxAsserts,
+          minAsserts,
+          maxAsserts,
           needsFocus: needs_focus,
-          slow: slow,
-          skip: skip,
+          slow,
+          skip,
           prefSettings1: testPrefSettings,
           prefSettings2: refPrefSettings,
           fuzzyMinDelta: fuzzy_delta.min,
           fuzzyMaxDelta: fuzzy_delta.max,
           fuzzyMinPixels: fuzzy_pixels.min,
           fuzzyMaxPixels: fuzzy_pixels.max,
-          runHttp: runHttp,
-          httpDepth: httpDepth,
+          runHttp,
+          httpDepth,
           url1: items[1],
           url2: null,
-          chaosMode: chaosMode,
-          wrCapture: wrCapture,
-          noAutoFuzz: noAutoFuzz,
+          chaosMode,
+          wrCapture,
+          noAutoFuzz,
         },
         aFilter,
         aManifestID
@@ -554,29 +554,29 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
       AddTestItem(
         {
-          type: type,
+          type,
           expected: expected_status,
           manifest: aURL.spec,
           manifestID: TestIdentifier(aURL.spec, aManifestID),
           allowSilentFail: allow_silent_fail,
-          minAsserts: minAsserts,
-          maxAsserts: maxAsserts,
+          minAsserts,
+          maxAsserts,
           needsFocus: needs_focus,
-          slow: slow,
-          skip: skip,
+          slow,
+          skip,
           prefSettings1: testPrefSettings,
           prefSettings2: refPrefSettings,
           fuzzyMinDelta: fuzzy_delta.min,
           fuzzyMaxDelta: fuzzy_delta.max,
           fuzzyMinPixels: fuzzy_pixels.min,
           fuzzyMaxPixels: fuzzy_pixels.max,
-          runHttp: runHttp,
-          httpDepth: httpDepth,
+          runHttp,
+          httpDepth,
           url1: items[1],
           url2: items[2],
-          chaosMode: chaosMode,
-          wrCapture: wrCapture,
-          noAutoFuzz: noAutoFuzz,
+          chaosMode,
+          wrCapture,
+          noAutoFuzz,
         },
         aFilter,
         aManifestID
@@ -780,10 +780,10 @@ function BuildConditionSandbox(aURL) {
 
   sandbox.prefs = Cu.cloneInto(
     {
-      getBoolPref: function (p) {
+      getBoolPref(p) {
         return prefs.getBoolPref(p);
       },
-      getIntPref: function (p) {
+      getIntPref(p) {
         return prefs.getIntPref(p);
       },
     },
