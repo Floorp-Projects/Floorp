@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Mixed Content Navigation with window.open</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let testsCompleted = 0;
+const numberOfTestCases = 2;
+
+function markTestCaseComplete() {
+  testsCompleted++;
+
+  if (testsCompleted == numberOfTestCases) {
+    SimpleTest.finish();
+  }
+}
+
+window.onmessage = function(event) {
+  if (event.data.src.includes("test1")) {
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    is(event.data.errorTarget, "http://test1.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html", "error thrown for failed iframe load should be from test1's iframe.");
+    is(event.data.outcome, "blocked", "http iframe should be blocked from loading in child https window.");
+    is(event.data.method, "http", "messages from test1 iframe should be http.");
+    markTestCaseComplete();
+  }
+  else if (event.data.src.includes("test2")) {
+    is(event.data.triggeringPrincipal, "https://example.com/tests/dom/security/test/mixedcontentblocker/test_windowOpen.html", "triggeringPrincipal for successfully loaded https iframe should be the original test file.");
+    is(event.data.outcome, "loaded", "https iframe should be allowed to load in child https window.");
+    is(event.data.method, "https", "messages from test2 iframe should be https");
+    markTestCaseComplete();
+  }
+};
+
+function testURLInOpenedWindow(testURL) {
+  let openedWindow = window.open("javascript:''","_blank");
+  openedWindow.onload = function() {
+    openedWindow.document.body.innerHTML = `<iframe id="testframe" src=\"${testURL}\">`
+
+    let testframe = openedWindow.document.getElementById("testframe");
+
+    testframe.onload = function() {
+      let triggeringPrincipal = SpecialPowers.wrap(testframe.contentWindow).docShell.currentDocumentChannel.loadInfo.triggeringPrincipal.asciiSpec;
+      openedWindow.opener.postMessage({outcome: 'loaded', method: testframe.src.split(":")[0], src: testframe.src, triggeringPrincipal}, 'https://example.com');
+      openedWindow.close();
+    }
+    testframe.onerror = function(error) {
+      let errorTarget = error.target.src;
+      openedWindow.opener.postMessage({outcome: 'blocked', method: testframe.src.split(":")[0], src: testframe.src, errorTarget}, 'https://example.com');
+      openedWindow.close();
+    }
+  };
+};
+
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
+testURLInOpenedWindow("http://test1.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html");
+testURLInOpenedWindow("https://test2.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html");
+
+</script>
+</body>
+</html>
