@@ -44,9 +44,13 @@ test_newtab({
       "Customize Menu should be visible on screen"
     );
 
-    // Test that clicking the shortcuts toggle will make the section appear on the newtab page.
-    let shortcutsSwitch = content.document.querySelector(
-      "#shortcuts-section .switch"
+    // Test that clicking the shortcuts toggle will make the section
+    // appear on the newtab page.
+    //
+    // We waive XRay wrappers because we want to call the click()
+    // method defined on the toggle from this context.
+    let shortcutsSwitch = Cu.waiveXrays(
+      content.document.querySelector("#shortcuts-section moz-toggle")
     );
     Assert.ok(
       !Services.prefs.getBoolPref(TOPSITES_PREF),
@@ -60,9 +64,13 @@ test_newtab({
 
     Assert.ok(getSection("topsites"), "Shortcuts section is rendered");
 
-    // Test that clicking the pocket toggle will make the pocket section appear on the newtab page
-    let pocketSwitch = content.document.querySelector(
-      "#pocket-section .switch"
+    // Test that clicking the pocket toggle will make the pocket section
+    // appear on the newtab page
+    //
+    // We waive XRay wrappers because we want to call the click()
+    // method defined on the toggle from this context.
+    let pocketSwitch = Cu.waiveXrays(
+      content.document.querySelector("#pocket-section moz-toggle")
     );
     Assert.ok(
       !Services.prefs.getBoolPref(TOPSTORIES_PREF),
@@ -76,9 +84,13 @@ test_newtab({
 
     Assert.ok(getSection("topstories"), "Pocket section is rendered");
 
-    // Test that clicking the recent activity toggle will make the recent activity section appear on the newtab page
-    let highlightsSwitch = content.document.querySelector(
-      "#recent-section .switch"
+    // Test that clicking the recent activity toggle will make the
+    // recent activity section appear on the newtab page.
+    //
+    // We waive XRay wrappers because we want to call the click()
+    // method defined on the toggle from this context.
+    let highlightsSwitch = Cu.waiveXrays(
+      content.document.querySelector("#recent-section moz-toggle")
     );
     Assert.ok(
       !Services.prefs.getBoolPref(HIGHLIGHTS_PREF),
