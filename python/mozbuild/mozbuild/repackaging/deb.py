@@ -74,12 +74,14 @@ def repackage_deb(
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
-        application_ini_data = _extract_application_ini_data(infile)
+        application_ini_data = _parse_application_ini_data(
+            _extract_application_ini_data(infile, version, build_number),
+            version,
+            build_number,
+        )
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
-            version,
-            build_number,
             depends="${shlibs:Depends},",
         )
 
@@ -130,14 +132,16 @@ def repackage_deb_l10n(
     try:
         langpack_metadata = _extract_langpack_metadata(input_xpi_file)
         langpack_dir = mozpath.join(source_dir, "firefox", "distribution", "extensions")
-        application_ini_data = _extract_application_ini_data(input_tar_file)
+        application_ini_data = _parse_application_ini_data(
+            _extract_application_ini_data(input_tar_file, version, build_number),
+            version,
+            build_number,
+        )
         langpack_id = langpack_metadata["langpack_id"]
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
-            version,
-            build_number,
-            depends=application_ini_data["remoting_name"],
+            depends=f"{application_ini_data['remoting_name']} (= {application_ini_data['deb_pkg_version']})",
             # Debian package names are only lowercase
             package_name_suffix=f"-l10n-{langpack_id.lower()}",
             description_suffix=f" - {langpack_metadata['description']}",
@@ -184,7 +188,35 @@ def _extract_application_ini_data(input_tar_file):
 
             tar.extract(application_ini_files[0], path=d)
 
-        return _extract_application_ini_data_from_directory(d)
+        application_ini_data = _extract_application_ini_data_from_directory(d)
+
+        return application_ini_data
+
+
+def _parse_application_ini_data(application_ini_data, version, build_number):
+    application_ini_data["timestamp"] = datetime.datetime.strptime(
+        application_ini_data["build_id"], "%Y%m%d%H%M%S"
+    )
+
+    application_ini_data["remoting_name"] = application_ini_data[
+        "remoting_name"
+    ].lower()
+
+    application_ini_data["deb_pkg_version"] = _get_deb_pkg_version(
+        version, application_ini_data["build_id"], build_number
+    )
+
+    return application_ini_data
+
+
+def _get_deb_pkg_version(version, build_id, build_number):
+    gecko_version = GeckoVersion.parse(version)
+    deb_pkg_version = (
+        f"{gecko_version}~{build_id}"
+        if gecko_version.is_nightly
+        else f"{gecko_version}~build{build_number}"
+    )
+    return deb_pkg_version
 
 
 def _extract_application_ini_data_from_directory(application_directory):
@@ -204,7 +236,6 @@ def _extract_application_ini_data_from_directory(application_directory):
         "remoting_name": next(values),
         "build_id": next(values),
     }
-    data["timestamp"] = datetime.datetime.strptime(data["build_id"], "%Y%m%d%H%M%S")
 
     return data
 
@@ -212,27 +243,16 @@ def _extract_application_ini_data_from_directory(application_directory):
 def _get_build_variables(
     application_ini_data,
     arch,
-    version_string,
-    build_number,
     depends,
     package_name_suffix="",
     description_suffix="",
 ):
-    version = GeckoVersion.parse(version_string)
-    # Nightlies don't have build numbers
-    deb_pkg_version = (
-        f"{version}~{application_ini_data['build_id']}"
-        if version.is_nightly
-        else f"{version}~build{build_number}"
-    )
-    remoting_name = application_ini_data["remoting_name"].lower()
-
     return {
         "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}"
         f"{description_suffix}",
-        "DEB_PKG_INSTALL_PATH": f"usr/lib/{remoting_name}",
-        "DEB_PKG_NAME": f"{remoting_name}{package_name_suffix}",
-        "DEB_PKG_VERSION": deb_pkg_version,
+        "DEB_PKG_INSTALL_PATH": f"usr/lib/{application_ini_data['remoting_name']}",
+        "DEB_PKG_NAME": f"{application_ini_data['remoting_name']}{package_name_suffix}",
+        "DEB_PKG_VERSION": application_ini_data["deb_pkg_version"],
         "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "DEB_ARCH_NAME": _DEB_ARCH[arch],
         "DEB_DEPENDS": depends,
