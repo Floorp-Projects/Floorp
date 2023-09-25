@@ -1,0 +1,20 @@
+# Test that basic functionality of opaque compositor surfaces with
+# clip mask is blending correctly.
+---
+root:
+  items:
+    - type: rect
+      bounds: [50, 50, 462, 462]
+      color: green
+    - type: clip
+      id: 3
+      complex:
+        - rect: [150, 150, 262, 262]
+          radius: 32
+    - image: checkerboard(2,16,16)
+      bounds: [150, 150, 262, 262]
+      prefer-compositor-surface: true
+      clip-chain: [3]
+    - type: rect
+      bounds: [200, 200, 162, 162]
+      color: [0, 0, 255, 0.5]
