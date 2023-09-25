@@ -2585,7 +2585,7 @@ def wasm_sandboxing_libraries():
 @depends(dependable(wasm_sandboxing_libraries), build_project)
 def default_wasm_sandboxing_libraries(libraries, build_project):
     if build_project != "tools/rusttests":
-        non_default_libs = {"soundtouch"}
+        non_default_libs = {}
 
         return tuple(l for l in libraries if l not in non_default_libs)
 

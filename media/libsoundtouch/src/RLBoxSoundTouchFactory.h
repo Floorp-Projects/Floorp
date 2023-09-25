@@ -10,31 +10,19 @@
 
 extern "C" {
 
-SOUNDTOUCH_API
 void SetSampleRate(soundtouch::SoundTouch* mTimeStretcher, uint srate);
-SOUNDTOUCH_API
 void SetChannels(soundtouch::SoundTouch* mTimeStretcher, uint numChannels);
-SOUNDTOUCH_API
 void SetPitch(soundtouch::SoundTouch* mTimeStretcher, double newPitch);
-SOUNDTOUCH_API
 void SetSetting(soundtouch::SoundTouch* mTimeStretcher, int settingId,
                 int value);
-SOUNDTOUCH_API
 void SetTempo(soundtouch::SoundTouch* mTimeStretcher, double newTempo);
-SOUNDTOUCH_API
 void SetRate(soundtouch::SoundTouch* mTimeStretcher, double newRate);
-SOUNDTOUCH_API
 uint NumChannels(soundtouch::SoundTouch* mTimeStretcher);
-SOUNDTOUCH_API
 uint NumSamples(soundtouch::SoundTouch* mTimeStretcher);
-SOUNDTOUCH_API
 uint NumUnprocessedSamples(soundtouch::SoundTouch* mTimeStretcher);
-SOUNDTOUCH_API
 void PutSamples(soundtouch::SoundTouch* mTimeStretcher,
                 const soundtouch::SAMPLETYPE* samples, uint numSamples);
-SOUNDTOUCH_API
 uint ReceiveSamples(soundtouch::SoundTouch* mTimeStretcher,
                     soundtouch::SAMPLETYPE* output, uint maxSamples);
-SOUNDTOUCH_API
 void Flush(soundtouch::SoundTouch* mTimeStretcher);
 }
