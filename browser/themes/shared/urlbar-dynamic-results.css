@@ -207,7 +207,7 @@
 }
 
 .urlbarView-dynamic-weather-currently {
-  font-size: 0.85em;
+  font-size: var(--urlbarView-small-font-size);
   margin-bottom: 0.53em;
 }
 
@@ -368,7 +368,7 @@
 }
 
 .urlbarView-dynamic-weather-middle {
-  font-size: 0.85em;
+  font-size: var(--urlbarView-small-font-size);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -403,7 +403,7 @@
 }
 
 .urlbarView-dynamic-weather-bottom {
-  font-size: 0.85em;
+  font-size: var(--urlbarView-small-font-size);
   margin-top: 0.40em;
   opacity: 0.6;
 }
@@ -447,7 +447,7 @@
 
 .urlbarView-dynamic-addons-description {
   grid-area: description;
-  font-size: 0.85em;
+  font-size: var(--urlbarView-small-font-size);
   color: var(--text-color-deemphasized);
   margin-block: 2px 9px;
   max-width: 80ch;
@@ -499,6 +499,6 @@
 }
 
 .urlbarView-dynamic-addons-reviews {
-  font-size: 0.85em;
+  font-size: var(--urlbarView-small-font-size);
   color: var(--text-color-deemphasized);
 }
