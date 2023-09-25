@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1695307683026,
+      "derHash": "tyRQq/UEeor2PsnYfjMUhIULGEmiVQqCqG22tB7Th2A=",
+      "subject": "CN=Certum EC-384 CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MHQxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEZMBcGA1UEAxMQQ2VydHVtIEVDLTM4NCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9f6d0c980c92ac6a3e9e0a1e42717fa38645b16394d41c870163e37ad342f093",
+        "size": 1467,
+        "filename": "3ntpMunERYLODeB6vat-6pDHXW0qBzMd9XvVy4hVPRM=.pem",
+        "location": "security-state-staging/intermediates/f5b8aee1-184d-4879-a293-83a907ed9bb4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "3ntpMunERYLODeB6vat+6pDHXW0qBzMd9XvVy4hVPRM=",
+      "crlite_enrolled": false,
+      "id": "5c606c94-7cdb-4580-a055-0f6251dbdadf",
+      "last_modified": 1695308223101
+    },
+    {
+      "schema": 1695307682604,
+      "derHash": "+xOJDHqxT/e5SycUUD4xEjv900D8TZeXQxZuBGm0eog=",
+      "subject": "CN=Certum Trusted Root CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MHoxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEfMB0GA1UEAxMWQ2VydHVtIFRydXN0ZWQgUm9vdCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a586257fe96fc4e4a0d2e95d3c14a7d15541cc2858fa8f573dcac84fe1040205",
+        "size": 2060,
+        "filename": "aB3EgsKWyEAsbrsg5oMJo7yEZSOuNLmEqE7ml6MxLbc=.pem",
+        "location": "security-state-staging/intermediates/7a2c407a-2716-4f14-978e-9a399d955741.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aB3EgsKWyEAsbrsg5oMJo7yEZSOuNLmEqE7ml6MxLbc=",
+      "crlite_enrolled": false,
+      "id": "f655736e-e759-4498-8498-648772d8f63d",
+      "last_modified": 1695308223097
+    },
+    {
       "schema": 1695221287209,
       "derHash": "v7CIKOtpuZ7nzr3Wh8jog6H+B9P5mDR/ku6TVkFK0AI=",
       "subject": "CN=GlobalSign Atlas R1 EV TLS CA 2023,O=GlobalSign nv-sa,C=BE",
@@ -28945,5 +28981,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1695221823081
+  "timestamp": 1695308223101
 }
