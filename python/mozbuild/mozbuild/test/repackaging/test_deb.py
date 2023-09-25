@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
 import json
 import logging
 import os
@@ -33,7 +32,6 @@ _APPLICATION_INI_CONTENT_DATA = {
     "vendor": "Mozilla",
     "remoting_name": "firefox-nightly-try",
     "build_id": "20230222000000",
-    "timestamp": datetime.datetime(2023, 2, 22),
 }
 
 
@@ -129,19 +127,21 @@ def test_extract_application_ini_data_from_directory():
 def test_get_build_variables(
     version, build_number, package_name_suffix, description_suffix, expected
 ):
-    application_ini_data = {
-        "name": "Firefox",
-        "display_name": "Firefox",
-        "vendor": "Mozilla",
-        "remoting_name": "firefox-nightly-try",
-        "build_id": "20230222000000",
-        "timestamp": datetime.datetime(2023, 2, 22),
-    }
+    application_ini_data = deb._parse_application_ini_data(
+        {
+            "name": "Firefox",
+            "display_name": "Firefox",
+            "vendor": "Mozilla",
+            "remoting_name": "firefox-nightly-try",
+            "build_id": "20230222000000",
+        },
+        version,
+        build_number,
+    )
+
     assert deb._get_build_variables(
         application_ini_data,
         "x86",
-        version,
-        build_number,
         depends="${shlibs:Depends},",
         package_name_suffix=package_name_suffix,
         description_suffix=description_suffix,
