@@ -166,9 +166,17 @@ Each metric type has six pieces you'll need to cover:
     - The naming style for methods here is `lowerCamelCase`.
     - If the metric method is a reserved word, prepend it with a `_`.
     - Web IDL bindings use
-      [their own mapping for types](/dom/webIdlBindings/index.html)
+      [their own mapping for types](/dom/webIdlBindings/index.md).
       If you choose ones that most closely resemble the C++ types,
       you'll make your life easier.
+- Add a new mapping in `dom/bindings/Bindings.conf`:
+  ```idl
+  'GleanX': {
+      'nativeType': 'mozilla::glean::GleanX',
+      'headerFile': 'mozilla/glean/bindings/X.h',
+  },
+  ```
+    - If you don't, you will get a build error complaining `fatal error: 'mozilla/dom/GleanX.h' file not found`.
 
 ### 4. JS Impl
 
