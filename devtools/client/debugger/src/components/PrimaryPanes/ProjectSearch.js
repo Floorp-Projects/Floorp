@@ -24,6 +24,10 @@ const Tree = require("devtools/client/shared/components/Tree");
 const { debounce } = require("devtools/shared/debounce");
 const { throttle } = require("devtools/shared/throttle");
 
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+
 import "./ProjectSearch.css";
 
 export const statusType = {
@@ -71,7 +75,7 @@ export class ProjectSearch extends Component {
       query: PropTypes.string.isRequired,
       results: PropTypes.array.isRequired,
       searchSources: PropTypes.func.isRequired,
-      selectSpecificLocation: PropTypes.func.isRequired,
+      selectSpecificLocationOrSameUrl: PropTypes.func.isRequired,
       status: PropTypes.oneOf([
         "INITIAL",
         "FETCHING",
@@ -82,16 +86,6 @@ export class ProjectSearch extends Component {
       modifiers: PropTypes.object,
       toggleProjectSearchModifier: PropTypes.func,
     };
-  }
-
-  componentDidMount() {
-    const { shortcuts } = this.context;
-    shortcuts.on("Enter", this.onEnterPress);
-  }
-
-  componentWillUnmount() {
-    const { shortcuts } = this.context;
-    shortcuts.off("Enter", this.onEnterPress);
   }
 
   async doSearch() {
@@ -136,8 +130,33 @@ export class ProjectSearch extends Component {
     });
   }
 
-  selectMatchItem = matchItem => {
-    this.props.selectSpecificLocation(matchItem.location);
+  selectMatchItem = async matchItem => {
+    const foundMatchingSource =
+      await this.props.selectSpecificLocationOrSameUrl(matchItem.location);
+    // When we reload, or if the source's target has been destroyed,
+    // we may no longer have the source available in the reducer.
+    // In such case `selectSpecificLocationOrSameUrl` will return false.
+    if (!foundMatchingSource) {
+      // When going over results via the key arrows and Enter, we may display many tooltips at once.
+      if (this.tooltip) {
+        this.tooltip.hide();
+      }
+      // Go down to line-number otherwise HTMLTooltip's call to getBoundingClientRect would return (0, 0) position for the tooltip
+      const element = document.querySelector(
+        ".project-text-search .tree-node.focused .result .line-number"
+      );
+      const tooltip = new HTMLTooltip(element.ownerDocument, {
+        className: "unavailable-source",
+        type: "arrow",
+      });
+      tooltip.panel.textContent = L10N.getStr(
+        "projectTextSearch.sourceNoLongerAvailable"
+      );
+      tooltip.setContentSize({ height: "auto" });
+      tooltip.show(element);
+      this.tooltip = tooltip;
+      return;
+    }
     this.props.doSearchForHighlight(
       this.state.query,
       getEditor(),
@@ -196,13 +215,10 @@ export class ProjectSearch extends Component {
     this.doSearch();
   };
 
-  onEnterPress = () => {
-    // This is to select a match from the search result.
-    if (!this.state.focusedItem || this.state.inputFocused) {
-      return;
-    }
-    if (this.state.focusedItem.type === "MATCH") {
-      this.selectMatchItem(this.state.focusedItem);
+  // This can be called by Tree when manually selecting node via arrow keys and Enter.
+  onActivate = item => {
+    if (item && item.type === "MATCH") {
+      this.selectMatchItem(item);
     }
   };
 
@@ -261,7 +277,7 @@ export class ProjectSearch extends Component {
         className: classnames("result", {
           focused,
         }),
-        onClick: () => setTimeout(() => this.selectMatchItem(match), 50),
+        onClick: () => this.selectMatchItem(match),
       },
       span(
         {
@@ -338,6 +354,7 @@ export class ProjectSearch extends Component {
         renderItem: this.renderItem,
         focused: this.state.focusedItem,
         onFocus: this.onFocus,
+        onActivate: this.onActivate,
         isExpanded: item => {
           return this.state.expanded.has(item);
         },
@@ -454,6 +471,6 @@ const mapStateToProps = state => ({
 
 export default connect(mapStateToProps, {
   searchSources: actions.searchSources,
-  selectSpecificLocation: actions.selectSpecificLocation,
+  selectSpecificLocationOrSameUrl: actions.selectSpecificLocationOrSameUrl,
   doSearchForHighlight: actions.doSearchForHighlight,
 })(ProjectSearch);
