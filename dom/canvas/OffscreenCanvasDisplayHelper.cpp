@@ -496,7 +496,8 @@ UniquePtr<uint8_t[]> OffscreenCanvasDisplayHelper::GetImageBuffer(
 
   if (resistFingerprinting) {
     nsRFPService::RandomizePixels(
-        cookieJarSettings, imageBuffer.get(),
+        cookieJarSettings, imageBuffer.get(), dataSurface->GetSize().width,
+        dataSurface->GetSize().height,
         dataSurface->GetSize().width * dataSurface->GetSize().height * 4,
         gfx::SurfaceFormat::A8R8G8B8_UINT32);
   }
