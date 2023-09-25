@@ -18,7 +18,7 @@ add_task(async function testSearchDynamicScripts() {
   await waitForPaused(dbg);
 
   await openProjectSearch(dbg);
-  const fileResults = await doProjectSearch(dbg, "foo");
+  const fileResults = await doProjectSearch(dbg, "foo", 1);
   ok(
     /source\d+/g.test(fileResults[0].innerText),
     "The search result was found in the eval script."
@@ -34,7 +34,7 @@ add_task(async function testIgnoreMinifiedSourceForPrettySource() {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
 
   await openProjectSearch(dbg);
-  let fileResults = await doProjectSearch(dbg, "stuff");
+  let fileResults = await doProjectSearch(dbg, "stuff", 1);
 
   is(fileResults.length, 1, "Only the result was found");
   ok(
@@ -48,7 +48,7 @@ add_task(async function testIgnoreMinifiedSourceForPrettySource() {
   info("Pretty print the source");
   await prettyPrint(dbg);
 
-  fileResults = await doProjectSearch(dbg, "stuff");
+  fileResults = await doProjectSearch(dbg, "stuff", 2);
 
   is(
     fileResults.length,
@@ -72,7 +72,7 @@ add_task(async function testFilesPrioritization() {
   const dbg = await initDebugger("doc-react.html", "App.js");
 
   await openProjectSearch(dbg);
-  const fileResults = await doProjectSearch(dbg, "componentDidMount");
+  const fileResults = await doProjectSearch(dbg, "componentDidMount", 3);
 
   is(getExpandedResultsCount(dbg), 13);
 
@@ -108,7 +108,7 @@ add_task(async function testBlackBoxedSources() {
   await toggleBlackbox(dbg);
 
   await openProjectSearch(dbg);
-  let fileResults = await doProjectSearch(dbg, "stuff");
+  let fileResults = await doProjectSearch(dbg, "stuff", 0);
 
   is(fileResults.length, 0, "No results were found as pretty.js is blackboxed");
 
@@ -116,7 +116,7 @@ add_task(async function testBlackBoxedSources() {
   await toggleBlackbox(dbg);
 
   await openProjectSearch(dbg);
-  fileResults = await doProjectSearch(dbg, "stuff");
+  fileResults = await doProjectSearch(dbg, "stuff", 1);
 
   is(
     fileResults.length,
