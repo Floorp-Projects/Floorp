@@ -194,7 +194,9 @@ fi
 HANDLE_NOOP_COMMIT=""
 
 # save the current patch stack in case we need to reconstitute it later
+echo_log "Save patch-stack"
 ./mach python $SCRIPT_DIR/save_patch_stack.py \
+    --skip-startup-sanity \
     --repo-path $MOZ_LIBWEBRTC_SRC \
     --branch $MOZ_LIBWEBRTC_BRANCH \
     --patch-path "third_party/libwebrtc/moz-patch-stack" \
