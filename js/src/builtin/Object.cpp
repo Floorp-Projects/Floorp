@@ -958,9 +958,10 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
       if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
         return false;
       }
-      for (size_t i = props.length(); i > 0; i--) {
-        size_t slot = props[i - 1].slot();
-        toPlain->initSlot(slot, fromPlain->getSlot(slot));
+      MOZ_ASSERT(fromPlain->slotSpan() == newSpan);
+      MOZ_ASSERT(toPlain->slotSpan() == newSpan);
+      for (size_t i = 0; i < newSpan; i++) {
+        toPlain->initSlot(i, fromPlain->getSlot(i));
       }
       return true;
     }
