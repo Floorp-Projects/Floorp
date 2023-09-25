@@ -77,10 +77,6 @@ function templateHTML(options) {
     <link rel="localization" href="browser/newtab/newtab.ftl" />
     <link
       rel="stylesheet"
-      href="chrome://global/skin/design-tokens-brand.css"
-    />
-    <link
-      rel="stylesheet"
       href="chrome://browser/content/contentSearchUI.css"
     />
     <link
@@ -93,10 +89,6 @@ function templateHTML(options) {
     <div id="footer-asrouter-container" role="presentation"></div>${
       options.noscripts ? "" : scriptRender
     }
-    <script
-      type="module"
-      src="chrome://global/content/elements/moz-toggle.mjs"
-    ></script>
   </body>
 </html>
 `.trimLeft();
