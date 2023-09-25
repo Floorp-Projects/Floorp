@@ -165,7 +165,6 @@ class HeaderChanger {
 
   applyChanges(headers, opts = {}) {
     if (!this.validateHeaders(headers)) {
-      /* globals uneval */
       Cu.reportError(`Invalid header array: ${uneval(headers)}`);
       return;
     }

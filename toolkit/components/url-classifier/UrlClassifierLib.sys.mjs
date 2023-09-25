@@ -198,7 +198,6 @@ RequestBackoff.prototype.isErrorStatus = function (status) {
 // since both listmanager and hashcompleter would use it.
 // Note that |maxRequests| and |requestPeriod| is still configurable
 // to throttle pending requests.
-/* exported RequestBackoffV4 */
 function RequestBackoffV4(maxRequests, requestPeriod, provider = null) {
   let rand = Math.random();
   let retryInterval = Math.floor(15 * 60 * 1000 * (rand + 1)); // 15 ~ 30 min.

@@ -127,9 +127,6 @@ const LOW_PRIORITY_TIMEOUT_MS = 250;
 const MESSAGE_MESSAGES = "MessageChannel:Messages";
 const MESSAGE_RESPONSE = "MessageChannel:Response";
 
-// ESLint can't tell that these are referenced, so tell it that they're
-// exported to make it happy.
-/* exported _deferredResult, _makeDeferred */
 var _deferredResult;
 var _makeDeferred = (resolve, reject) => {
   // We use arrow functions here and refer to the outer variables via
