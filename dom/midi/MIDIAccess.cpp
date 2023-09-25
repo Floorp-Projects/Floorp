@@ -216,6 +216,8 @@ void MIDIAccess::Notify(const MIDIPortList& aEvent) {
     MaybeCreateMIDIPort(port, rv);
     if (rv.Failed()) {
       if (!mAccessPromise) {
+        // We can't reject the promise so let's suppress the error instead
+        rv.SuppressException();
         return;
       }
       mAccessPromise->MaybeReject(std::move(rv));
