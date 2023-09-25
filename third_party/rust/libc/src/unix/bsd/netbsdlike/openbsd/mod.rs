@@ -7,7 +7,6 @@ pub type sigset_t = ::c_uint;
 pub type blksize_t = i32;
 pub type fsblkcnt_t = u64;
 pub type fsfilcnt_t = u64;
-pub type idtype_t = ::c_uint;
 pub type pthread_attr_t = *mut ::c_void;
 pub type pthread_mutex_t = *mut ::c_void;
 pub type pthread_mutexattr_t = *mut ::c_void;
@@ -110,7 +109,7 @@ s! {
     pub struct mfs_args {
         pub fspec: *mut ::c_char,
         pub export_info: export_args,
-        // https://github.com/openbsd/src/blob/HEAD/sys/sys/types.h#L134
+        // https://github.com/openbsd/src/blob/master/sys/sys/types.h#L134
         pub base: *mut ::c_char,
         pub size: ::c_ulong,
     }
@@ -190,7 +189,7 @@ s! {
         pub cr_uid: ::uid_t,
         pub cr_gid: ::gid_t,
         pub cr_ngroups: ::c_short,
-        //https://github.com/openbsd/src/blob/HEAD/sys/sys/syslimits.h#L44
+        //https://github.com/openbsd/src/blob/master/sys/sys/syslimits.h#L44
         pub cr_groups: [::gid_t; 16],
     }
 
@@ -499,7 +498,6 @@ s! {
         pub p_tid: i32,
         pub p_rtableid: u32,
         pub p_pledge: u64,
-        pub p_name: [::c_char; KI_MAXCOMLEN as usize],
     }
 
     pub struct kinfo_vmentry {
@@ -999,8 +997,6 @@ pub const SO_NETPROC: ::c_int = 0x1020;
 pub const SO_RTABLE: ::c_int = 0x1021;
 pub const SO_PEERCRED: ::c_int = 0x1022;
 pub const SO_SPLICE: ::c_int = 0x1023;
-pub const SO_DOMAIN: ::c_int = 0x1024;
-pub const SO_PROTOCOL: ::c_int = 0x1025;
 
 // sys/netinet/in.h
 // Protocols (RFC 1700)
@@ -1074,8 +1070,6 @@ pub const IP_RECVIF: ::c_int = 30;
 // sys/netinet/in.h
 pub const TCP_MD5SIG: ::c_int = 0x04;
 pub const TCP_NOPUSH: ::c_int = 0x10;
-
-pub const MSG_WAITFORONE: ::c_int = 0x1000;
 
 pub const AF_ECMA: ::c_int = 8;
 pub const AF_ROUTE: ::c_int = 17;
@@ -1284,15 +1278,13 @@ pub const PTHREAD_MUTEX_NORMAL: ::c_int = 3;
 pub const PTHREAD_MUTEX_STRICT_NP: ::c_int = 4;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_STRICT_NP;
 
-pub const EVFILT_READ: i16 = -1;
-pub const EVFILT_WRITE: i16 = -2;
 pub const EVFILT_AIO: i16 = -3;
-pub const EVFILT_VNODE: i16 = -4;
 pub const EVFILT_PROC: i16 = -5;
+pub const EVFILT_READ: i16 = -1;
 pub const EVFILT_SIGNAL: i16 = -6;
 pub const EVFILT_TIMER: i16 = -7;
-pub const EVFILT_DEVICE: i16 = -8;
-pub const EVFILT_EXCEPT: i16 = -9;
+pub const EVFILT_VNODE: i16 = -4;
+pub const EVFILT_WRITE: i16 = -2;
 
 pub const EV_ADD: u16 = 0x1;
 pub const EV_DELETE: u16 = 0x2;
@@ -1311,7 +1303,6 @@ pub const EV_SYSFLAGS: u16 = 0xf800;
 
 pub const NOTE_LOWAT: u32 = 0x00000001;
 pub const NOTE_EOF: u32 = 0x00000002;
-pub const NOTE_OOB: u32 = 0x00000004;
 pub const NOTE_DELETE: u32 = 0x00000001;
 pub const NOTE_WRITE: u32 = 0x00000002;
 pub const NOTE_EXTEND: u32 = 0x00000004;
@@ -1328,7 +1319,6 @@ pub const NOTE_PCTRLMASK: u32 = 0xf0000000;
 pub const NOTE_TRACK: u32 = 0x00000001;
 pub const NOTE_TRACKERR: u32 = 0x00000002;
 pub const NOTE_CHILD: u32 = 0x00000004;
-pub const NOTE_CHANGE: u32 = 0x00000001;
 
 pub const TMP_MAX: ::c_uint = 0x7fffffff;
 
@@ -1517,7 +1507,7 @@ pub const OLCUC: ::tcflag_t = 0x20;
 pub const ONOCR: ::tcflag_t = 0x40;
 pub const ONLRET: ::tcflag_t = 0x80;
 
-//https://github.com/openbsd/src/blob/HEAD/sys/sys/mount.h
+//https://github.com/openbsd/src/blob/master/sys/sys/mount.h
 pub const ISOFSMNT_NORRIP: ::c_int = 0x1; // disable Rock Ridge Ext
 pub const ISOFSMNT_GENS: ::c_int = 0x2; // enable generation numbers
 pub const ISOFSMNT_EXTATT: ::c_int = 0x4; // enable extended attr
@@ -1581,7 +1571,7 @@ pub const TMPFS_ARGS_VERSION: ::c_int = 1;
 pub const MAP_STACK: ::c_int = 0x4000;
 pub const MAP_CONCEAL: ::c_int = 0x8000;
 
-// https://github.com/openbsd/src/blob/HEAD/sys/net/if.h#L187
+// https://github.com/openbsd/src/blob/master/sys/net/if.h#L187
 pub const IFF_UP: ::c_int = 0x1; // interface is up
 pub const IFF_BROADCAST: ::c_int = 0x2; // broadcast address valid
 pub const IFF_DEBUG: ::c_int = 0x4; // turn on debugging
@@ -1620,15 +1610,7 @@ pub const BIOCSDLT: ::c_ulong = 0x8004427a;
 
 pub const PTRACE_FORK: ::c_int = 0x0002;
 
-pub const WCONTINUED: ::c_int = 0x08;
-pub const WEXITED: ::c_int = 0x04;
-pub const WSTOPPED: ::c_int = 0x02; // same as WUNTRACED
-pub const WNOWAIT: ::c_int = 0x10;
-pub const WTRAPPED: ::c_int = 0x20;
-
-pub const P_ALL: ::idtype_t = 0;
-pub const P_PGID: ::idtype_t = 1;
-pub const P_PID: ::idtype_t = 2;
+pub const WCONTINUED: ::c_int = 8;
 
 // search.h
 pub const FIND: ::ACTION = 0;
@@ -1677,12 +1659,6 @@ pub const MNT_WAIT: ::c_int = 1;
 pub const MNT_NOWAIT: ::c_int = 2;
 pub const MNT_LAZY: ::c_int = 3;
 
-// sys/_time.h
-pub const CLOCK_PROCESS_CPUTIME_ID: ::clockid_t = 2;
-pub const CLOCK_THREAD_CPUTIME_ID: ::clockid_t = 4;
-pub const CLOCK_UPTIME: ::clockid_t = 5;
-pub const CLOCK_BOOTTIME: ::clockid_t = 6;
-
 pub const LC_COLLATE_MASK: ::c_int = 1 << ::LC_COLLATE;
 pub const LC_CTYPE_MASK: ::c_int = 1 << ::LC_CTYPE;
 pub const LC_MONETARY_MASK: ::c_int = 1 << ::LC_MONETARY;
@@ -1707,7 +1683,7 @@ f! {
             .offset(_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
     }
 
-    pub {const} fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
         _ALIGN(::mem::size_of::<::cmsghdr>()) as ::c_uint + length
     }
 
@@ -1732,19 +1708,6 @@ f! {
     pub {const} fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
         (_ALIGN(::mem::size_of::<::cmsghdr>()) + _ALIGN(length as usize))
             as ::c_uint
-    }
-
-    pub fn major(dev: ::dev_t) -> ::c_uint{
-        ((dev as ::c_uint) >> 8) & 0xff
-    }
-
-    pub fn minor(dev: ::dev_t) -> ::c_uint {
-        let dev = dev as ::c_uint;
-        let mut res = 0;
-        res |= (dev) & 0xff;
-        res |= ((dev) & 0xffff0000) >> 8;
-
-        res
     }
 }
 
@@ -1859,6 +1822,7 @@ extern "C" {
         newp: *mut ::c_void,
         newlen: ::size_t,
     ) -> ::c_int;
+    pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
     pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
     pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
     pub fn ptrace(request: ::c_int, pid: ::pid_t, addr: caddr_t, data: ::c_int) -> ::c_int;
@@ -1924,8 +1888,6 @@ extern "C" {
         timeout: *const ::timespec,
         uaddr2: *mut u32,
     ) -> ::c_int;
-
-    pub fn mimmutable(addr: *mut ::c_void, len: ::size_t) -> ::c_int;
 }
 
 #[link(name = "execinfo")]

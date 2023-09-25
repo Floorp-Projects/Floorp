@@ -1359,11 +1359,6 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.9.3 -> 0.10.0"
 
-[[audits.errno]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.3.1 -> 0.3.3"
-
 [[audits.extend]]
 who = "Ben Dean-Kawamura <bdk@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1395,11 +1390,6 @@ delta = "1.7.0 -> 1.8.0"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.8.0 -> 1.9.0"
-
-[[audits.fastrand]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "1.9.0 -> 2.0.0"
 
 [[audits.filetime_win]]
 who = "Nick Alexander <nalexander@mozilla.com>"
@@ -2018,11 +2008,6 @@ delta = "0.2.132 -> 0.2.138"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.138 -> 0.2.139"
-
-[[audits.libc]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.2.147 -> 0.2.148"
 
 [[audits.libloading]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -3276,11 +3261,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.12.6 -> 0.13.0"
 
-[[audits.tempfile]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "3.6.0 -> 3.8.0"
-
 [[audits.termcolor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -4502,12 +4482,6 @@ user-id = 2915 # Amanieu d'Antras (Amanieu)
 start = "2021-01-27"
 end = "2024-05-05"
 
-[[trusted.linux-raw-sys]]
-criteria = "safe-to-deploy"
-user-id = 6825 # Dan Gohman (sunfishcode)
-start = "2021-06-12"
-end = "2024-09-08"
-
 [[trusted.lock_api]]
 criteria = "safe-to-deploy"
 user-id = 2915 # Amanieu d'Antras (Amanieu)
@@ -4591,12 +4565,6 @@ criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-03-30"
 end = "2024-05-03"
-
-[[trusted.rustix]]
-criteria = "safe-to-deploy"
-user-id = 6825 # Dan Gohman (sunfishcode)
-start = "2021-10-29"
-end = "2024-09-08"
 
 [[trusted.ryu]]
 criteria = "safe-to-deploy"

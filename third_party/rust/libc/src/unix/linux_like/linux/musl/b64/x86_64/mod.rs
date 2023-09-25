@@ -682,9 +682,6 @@ pub const O_RSYNC: ::c_int = 1052672;
 pub const O_DSYNC: ::c_int = 4096;
 pub const O_ASYNC: ::c_int = 0x2000;
 
-pub const PTRACE_SYSEMU: ::c_int = 31;
-pub const PTRACE_SYSEMU_SINGLESTEP: ::c_int = 32;
-
 pub const SIGSTKSZ: ::size_t = 8192;
 pub const MINSIGSTKSZ: ::size_t = 2048;
 

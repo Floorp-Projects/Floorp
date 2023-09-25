@@ -191,27 +191,6 @@ s! {
         pub arm_cpsr: ::c_ulong,
         pub fault_address: ::c_ulong,
     }
-
-    pub struct user_regs {
-        pub arm_r0: ::c_ulong,
-        pub arm_r1: ::c_ulong,
-        pub arm_r2: ::c_ulong,
-        pub arm_r3: ::c_ulong,
-        pub arm_r4: ::c_ulong,
-        pub arm_r5: ::c_ulong,
-        pub arm_r6: ::c_ulong,
-        pub arm_r7: ::c_ulong,
-        pub arm_r8: ::c_ulong,
-        pub arm_r9: ::c_ulong,
-        pub arm_r10: ::c_ulong,
-        pub arm_fp: ::c_ulong,
-        pub arm_ip: ::c_ulong,
-        pub arm_sp: ::c_ulong,
-        pub arm_lr: ::c_ulong,
-        pub arm_pc: ::c_ulong,
-        pub arm_cpsr: ::c_ulong,
-        pub arm_orig_r0: ::c_ulong,
-    }
 }
 
 pub const VEOF: usize = 4;
@@ -837,7 +816,6 @@ pub const SYS_pkey_alloc: ::c_long = 395;
 pub const SYS_pkey_free: ::c_long = 396;
 pub const SYS_statx: ::c_long = 397;
 pub const SYS_rseq: ::c_long = 398;
-pub const SYS_kexec_file_load: ::c_long = 401;
 pub const SYS_pidfd_send_signal: ::c_long = 424;
 pub const SYS_io_uring_setup: ::c_long = 425;
 pub const SYS_io_uring_enter: ::c_long = 426;

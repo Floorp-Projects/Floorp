@@ -288,20 +288,6 @@ user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
-[[publisher.libc]]
-version = "0.2.146"
-when = "2023-06-06"
-user-id = 2915
-user-login = "Amanieu"
-user-name = "Amanieu d'Antras"
-
-[[publisher.linux-raw-sys]]
-version = "0.4.7"
-when = "2023-09-10"
-user-id = 6825
-user-login = "sunfishcode"
-user-name = "Dan Gohman"
-
 [[publisher.lock_api]]
 version = "0.4.9"
 when = "2022-09-20"
@@ -419,13 +405,6 @@ when = "2023-04-05"
 user-id = 57462
 user-login = "mozkeeler"
 user-name = "Dana Keeler"
-
-[[publisher.rustix]]
-version = "0.38.13"
-when = "2023-09-10"
-user-id = 6825
-user-login = "sunfishcode"
-user-name = "Dan Gohman"
 
 [[publisher.ryu]]
 version = "1.0.12"
@@ -875,24 +854,6 @@ who = "Benjamin Bouvier <public@benj.me>"
 criteria = "safe-to-deploy"
 version = "0.1.3"
 
-[[audits.bytecode-alliance.audits.errno]]
-who = "Dan Gohman <dev@sunfishcode.online>"
-criteria = "safe-to-deploy"
-version = "0.3.0"
-notes = "This crate uses libc and windows-sys APIs to get and set the raw OS error value."
-
-[[audits.bytecode-alliance.audits.errno]]
-who = "Dan Gohman <dev@sunfishcode.online>"
-criteria = "safe-to-deploy"
-delta = "0.3.0 -> 0.3.1"
-notes = "Just a dependency version bump and a bug fix for redox"
-
-[[audits.bytecode-alliance.audits.errno-dragonfly]]
-who = "Jamey Sharp <jsharp@fastly.com>"
-criteria = "safe-to-deploy"
-version = "0.1.2"
-notes = "This should be portable to any POSIX system and seems like it should be part of the libc crate, but at any rate it's safe as is."
-
 [[audits.bytecode-alliance.audits.foreign-types]]
 who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
@@ -971,12 +932,6 @@ criteria = "safe-to-deploy"
 version = "0.2.5"
 notes = "I am the author of this crate."
 
-[[audits.bytecode-alliance.audits.libc]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-delta = "0.2.146 -> 0.2.147"
-notes = "Only new type definitions and updating others for some platforms, no major changes"
-
 [[audits.bytecode-alliance.audits.memoffset]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -1033,17 +988,6 @@ who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
 version = "0.4.6"
 notes = "provides a datastructure implemented using std's Vec. all uses of unsafe are just delegating to the underlying unsafe Vec methods."
-
-[[audits.bytecode-alliance.audits.tempfile]]
-who = "Pat Hickey <phickey@fastly.com>"
-criteria = "safe-to-deploy"
-delta = "3.3.0 -> 3.5.0"
-
-[[audits.bytecode-alliance.audits.tempfile]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-delta = "3.5.0 -> 3.6.0"
-notes = "Dependency updates and new optimized trait implementations, but otherwise everything looks normal."
 
 [[audits.bytecode-alliance.audits.unicase]]
 who = "Alex Crichton <alex@alexcrichton.com>"
