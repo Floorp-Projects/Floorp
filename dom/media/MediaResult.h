@@ -67,7 +67,7 @@ class MediaResult {
   nsresult mCode;
   nsCString mMessage;
   // It's used when the error is NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR.
-  CDMProxy* mCDMProxy;
+  CDMProxy* mCDMProxy = nullptr;
 };
 
 #ifdef _MSC_VER
