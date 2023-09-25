@@ -115,7 +115,7 @@ object GeckoProvider {
             .debugLogging(Config.channel.isDebug || context.components.settings.enableGeckoLogs)
             .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
             .extensionsProcessEnabled(FxNimbus.features.extensionsProcess.value().enabled)
-            .extensionsWebAPIEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
+            .extensionsWebAPIEnabled(true)
             .build()
     }
 }
