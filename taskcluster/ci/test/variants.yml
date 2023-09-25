@@ -268,6 +268,19 @@ wmf-media-engine:
                 - "--setpref=media.wmf.media-engine.enabled=1"
                 - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"
 
+media-gpu:
+    description: "{description} for running media tests on the GPU worker"
+    component: "Core::Audio/Video: Playback"
+    expiration: "2024-04-21"
+    suffix: "mda-gpu"
+    mozinfo: "mda_gpu"
+    merge:
+        virtualization: virtual-with-gpu
+        mozharness:
+            extra-options:
+                - "--tag=media-gpu"
+                - "--setpref=media.hardware-video-decoding.force-enabled=true"
+
 msix:
     description: "{description} from msix packages"
     component: "Firefox:Installer"

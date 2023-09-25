@@ -80,6 +80,7 @@ treeherder:
         'M-swr-1proc': 'Mochitests with software webrender enabled without e10s'
         'M-swr-nofis': 'Mochitests with software webrender without fission enabled'
         'M-wmfme': 'Mochitests with Windows Media Foundation media engine enabled'
+        'M-mda-gpu': 'Mochitests Media on GPU worker'
         'M-f': 'Mochitest failures'
         'M-dt-no-eft-nofis': 'DevTools Mochitests with EFT without fission enabled'
         'M-msix': 'Mochitests from MSIX builds'
