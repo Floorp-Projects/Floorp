@@ -386,4 +386,20 @@ class AddonTest {
         assertEquals("some description", addon.translatableDescription[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableSummary[Addon.DEFAULT_LOCALE])
     }
+
+    @Test
+    fun `isDisabledAsBlocklisted - true if installed state disabled status equals to BLOCKLISTED and otherwise false`() {
+        val addon = Addon(id = "id")
+        val blockListedAddon = addon.copy(
+            installedState = Addon.InstalledState(
+                id = "id",
+                version = "1.0",
+                optionsPageUrl = "",
+                disabledReason = Addon.DisabledReason.BLOCKLISTED,
+            ),
+        )
+
+        assertFalse(addon.isDisabledAsBlocklisted())
+        assertTrue(blockListedAddon.isDisabledAsBlocklisted())
+    }
 }

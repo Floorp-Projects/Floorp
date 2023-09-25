@@ -99,6 +99,7 @@ data class Addon(
      * defaults to false.
      * @property supported Indicates if this [Addon] is supported by the browser or not, defaults
      * to true.
+     * @property disabledReason Indicates why the [Addon] was disabled.
      * @property optionsPageUrl the URL of the page displaying the
      * options page (options_ui in the extension's manifest).
      * @property allowedInPrivateBrowsing true if this addon should be allowed to run in private
@@ -115,10 +116,31 @@ data class Addon(
         val openOptionsPageInTab: Boolean = false,
         val enabled: Boolean = false,
         val supported: Boolean = true,
-        val disabledAsUnsupported: Boolean = false,
+        val disabledReason: DisabledReason? = null,
         val allowedInPrivateBrowsing: Boolean = false,
         val icon: Bitmap? = null,
     ) : Parcelable
+
+    /**
+     * Enum containing all reasons why an [Addon] was disabled.
+     */
+    enum class DisabledReason {
+
+        /**
+         * The [Addon] was disabled because it is unsupported.
+         */
+        UNSUPPORTED,
+
+        /**
+         * The [Addon] was disabled because is it is blocklisted.
+         */
+        BLOCKLISTED,
+
+        /**
+         * The [Addon] was disabled by the user.
+         */
+        USER_REQUESTED,
+    }
 
     /**
      * Returns a list of localized Strings per each item on the [permissions] list.
@@ -149,7 +171,13 @@ data class Addon(
      * addon can be disabled as unsupported and later become supported, so
      * both [isSupported] and [isDisabledAsUnsupported] can be true.
      */
-    fun isDisabledAsUnsupported() = installedState?.disabledAsUnsupported == true
+    fun isDisabledAsUnsupported() = installedState?.disabledReason == DisabledReason.UNSUPPORTED
+
+    /**
+     * Returns whether or not this [Addon] is currently disabled because it is part of
+     * the blocklist. This is based on the installed extension state in the engine.
+     */
+    fun isDisabledAsBlocklisted() = installedState?.disabledReason == DisabledReason.BLOCKLISTED
 
     /**
      * Returns whether or not this [Addon] is allowed in private browsing mode.

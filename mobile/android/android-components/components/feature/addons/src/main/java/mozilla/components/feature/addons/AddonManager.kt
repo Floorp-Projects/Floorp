@@ -14,9 +14,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
+import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
+import mozilla.components.concept.engine.webextension.isBlockListed
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
@@ -372,6 +374,18 @@ fun WebExtension.toInstalledState() =
         optionsPageUrl = getMetadata()?.optionsPageUrl,
         openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
         enabled = isEnabled(),
-        disabledAsUnsupported = isUnsupported(),
+        disabledReason = getDisabledReason(),
         allowedInPrivateBrowsing = isAllowedInPrivateBrowsing(),
     )
+
+internal fun WebExtension.getDisabledReason(): Addon.DisabledReason? {
+    return if (isUnsupported()) {
+        Addon.DisabledReason.UNSUPPORTED
+    } else if (isBlockListed()) {
+        Addon.DisabledReason.BLOCKLISTED
+    } else if (getMetadata()?.disabledFlags?.contains(DisabledFlags.USER) == true) {
+        Addon.DisabledReason.USER_REQUESTED
+    } else {
+        null
+    }
+}

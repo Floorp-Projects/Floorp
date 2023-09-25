@@ -118,11 +118,24 @@ class InstalledAddonDetailsFragment : Fragment() {
         bindRemoveButton()
     }
 
+    @VisibleForTesting
+    internal fun provideEnableSwitch() = binding.enableSwitch
+
+    @VisibleForTesting
+    internal fun providePrivateBrowsingSwitch() = binding.allowInPrivateBrowsingSwitch
+
+    @VisibleForTesting
     @SuppressWarnings("LongMethod")
-    private fun bindEnableSwitch() {
-        val switch = binding.enableSwitch
-        val privateBrowsingSwitch = binding.allowInPrivateBrowsingSwitch
+    internal fun bindEnableSwitch() {
+        val switch = provideEnableSwitch()
+        val privateBrowsingSwitch = providePrivateBrowsingSwitch()
         switch.setState(addon.isEnabled())
+        // When the ad-on is blocklisted, we do not want to enable the toggle switch
+        // because users shouldn't be able to re-enable a blocklisted add-on.
+        if (addon.isDisabledAsBlocklisted()) {
+            switch.isEnabled = false
+            return
+        }
         switch.setOnCheckedChangeListener { v, isChecked ->
             val addonManager = v.context.components.addonManager
             switch.isClickable = false

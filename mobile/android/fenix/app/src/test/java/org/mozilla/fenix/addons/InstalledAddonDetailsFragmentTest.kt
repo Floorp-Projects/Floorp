@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.addons
 
+import com.google.android.material.switchmaterial.SwitchMaterial
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -61,5 +62,39 @@ class InstalledAddonDetailsFragmentTest {
 
         verify { addonManager.enableAddon(addon, EnableSource.APP_SUPPORT, any(), any()) }
         verify { addonManager.enableAddon(capturedAddon.captured, EnableSource.USER, any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN blocklisted addon WHEN biding the enable switch THEN disable the switch`() {
+        val addon = mockk<Addon>()
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
+
+        every { fragment.provideEnableSwitch() } returns enableSwitch
+        every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
+        every { addon.isEnabled() } returns true
+        every { addon.isDisabledAsBlocklisted() } returns true
+        every { fragment.addon } returns addon
+
+        fragment.bindEnableSwitch()
+
+        verify { enableSwitch.isEnabled = false }
+    }
+
+    @Test
+    fun `GIVEN enabled addon WHEN biding the enable switch THEN do not disable the switch`() {
+        val addon = mockk<Addon>()
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
+
+        every { fragment.provideEnableSwitch() } returns enableSwitch
+        every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
+        every { addon.isDisabledAsBlocklisted() } returns false
+        every { addon.isEnabled() } returns true
+        every { fragment.addon } returns addon
+
+        fragment.bindEnableSwitch()
+
+        verify(exactly = 0) { enableSwitch.isEnabled = false }
     }
 }

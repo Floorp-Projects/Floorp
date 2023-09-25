@@ -74,8 +74,10 @@ class WebExtensionTest {
 
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.BLOCKLIST))
         assertFalse(extension.isUnsupported())
+        assertTrue(extension.isBlockListed())
 
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
         assertTrue(extension.isUnsupported())
+        assertFalse(extension.isBlockListed())
     }
 }

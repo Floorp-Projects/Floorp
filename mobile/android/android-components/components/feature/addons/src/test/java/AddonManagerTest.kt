@@ -19,6 +19,9 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
+import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.APP_SUPPORT
+import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.BLOCKLIST
+import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.USER
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -819,5 +822,28 @@ class AddonManagerTest {
         assertNotNull(throwable!!)
         assertEquals("test", throwable!!.localizedMessage)
         assertTrue(manager.pendingAddonActions.isEmpty())
+    }
+
+    @Test
+    fun `getDisabledReason cases`() {
+        val extension: WebExtension = mock()
+        val metadata: Metadata = mock()
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(BLOCKLIST))
+        whenever(extension.getMetadata()).thenReturn(metadata)
+
+        assertEquals(Addon.DisabledReason.BLOCKLISTED, extension.getDisabledReason())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(APP_SUPPORT))
+
+        assertEquals(Addon.DisabledReason.UNSUPPORTED, extension.getDisabledReason())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(USER))
+
+        assertEquals(Addon.DisabledReason.USER_REQUESTED, extension.getDisabledReason())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(0))
+
+        assertNull(extension.getDisabledReason())
     }
 }

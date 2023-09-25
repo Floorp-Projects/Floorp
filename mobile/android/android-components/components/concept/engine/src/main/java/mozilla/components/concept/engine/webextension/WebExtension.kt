@@ -475,6 +475,14 @@ fun WebExtension.isUnsupported(): Boolean {
 }
 
 /**
+ * Returns whether or not the extension is disabled because it has been blocklisted.
+ */
+fun WebExtension.isBlockListed(): Boolean {
+    val flags = getMetadata()?.disabledFlags
+    return flags?.contains(DisabledFlags.BLOCKLIST) == true
+}
+
+/**
  * An unexpected event that occurs when trying to perform an action on the extension like
  * (but not exclusively) installing/uninstalling, removing or updating.
  */
