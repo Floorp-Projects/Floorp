@@ -773,6 +773,11 @@ void BrowserChild::DestroyWindow() {
     }
     mLayersId = layers::LayersId{0};
   }
+
+  if (mAPZEventState) {
+    mAPZEventState->Destroy();
+    mAPZEventState = nullptr;
+  }
 }
 
 void BrowserChild::ActorDestroy(ActorDestroyReason why) {
@@ -1320,10 +1325,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
   // event loop, which may release this, so we hold a strong reference here.
   RefPtr<BrowserChild> kungFuDeathGrip(this);
   RefPtr<PresShell> presShell = GetTopLevelPresShell();
-  if (!presShell) {
-    return IPC_OK();
-  }
-  if (!presShell->GetPresContext()) {
+  if (!presShell || !presShell->GetPresContext() || !mAPZEventState) {
     return IPC_OK();
   }
   CSSToLayoutDeviceScale scale(
@@ -1384,7 +1386,10 @@ void BrowserChild::NotifyAPZStateChange(
     const ViewID& aViewId,
     const layers::GeckoContentController::APZStateChange& aChange,
     const int& aArg, Maybe<uint64_t> aInputBlockId) {
-  mAPZEventState->ProcessAPZStateChange(aViewId, aChange, aArg, aInputBlockId);
+  if (mAPZEventState) {
+    mAPZEventState->ProcessAPZStateChange(aViewId, aChange, aArg,
+                                          aInputBlockId);
+  }
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
   if (aChange ==
@@ -1656,7 +1661,7 @@ void BrowserChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
 
   DispatchWidgetEventViaAPZ(localEvent);
 
-  if (aInputBlockId && localEvent.mFlags.mHandledByAPZ) {
+  if (aInputBlockId && localEvent.mFlags.mHandledByAPZ && mAPZEventState) {
     mAPZEventState->ProcessMouseEvent(localEvent, aInputBlockId);
   }
 
@@ -1730,7 +1735,7 @@ void BrowserChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
     SendRespondStartSwipeEvent(aInputBlockId, localEvent.TriggersSwipe());
   }
 
-  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
+  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ && mAPZEventState) {
     mAPZEventState->ProcessWheelEvent(localEvent, aInputBlockId);
   }
 }
@@ -1830,9 +1835,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
     return IPC_OK();
   }
 
-  mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId,
-                                    aApzResponse, status,
-                                    std::move(allowedTouchBehaviors));
+  if (mAPZEventState) {
+    mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId,
+                                      aApzResponse, status,
+                                      std::move(allowedTouchBehaviors));
+  }
   return IPC_OK();
 }
 

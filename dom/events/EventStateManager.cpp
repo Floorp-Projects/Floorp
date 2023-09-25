@@ -3642,8 +3642,13 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // we should never be capturing when the mouse button is up
       PresShell::ReleaseCapturingContent();
 
-      ClearGlobalActiveContent(this);
       WidgetMouseEvent* mouseUpEvent = aEvent->AsMouseEvent();
+      // If the mouseup event is a synthesized mouse event due to a touch, do
+      // not clear the activation state. Element activation is handled by APZ.
+      if (!mouseUpEvent || mouseUpEvent->mInputSource !=
+                               dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+        ClearGlobalActiveContent(this);
+      }
       if (mouseUpEvent && EventCausesClickEvents(*mouseUpEvent)) {
         // Make sure to dispatch the click even if there is no frame for
         // the current target element. This is required for Web compatibility.
