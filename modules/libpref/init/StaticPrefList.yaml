@@ -5666,6 +5666,19 @@
   value: false
   mirror: once
 
+# How many worker threads spawned for remote canvas
+#  -1 - Calculate based on processor cores
+#   0 - No worker threads spawned, will do work on CanvasRenderThread
+#  >0 - Create worker thread pool with given size
+- name: gfx.canvas.remote.worker-threads
+  type: int32_t
+#if defined(XP_WIN)
+  value: -1
+#else
+  value: 0
+#endif
+  mirror: once
+
 - name: gfx.canvas.willreadfrequently.enabled
   type: bool
 #if defined(XP_WIN)
