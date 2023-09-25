@@ -1,0 +1,10 @@
+[build-system]
+requires= ['setuptools', 'wheel', 'Cython']
+
+[tool.towncrier]
+package = "frozenlist"
+filename = "CHANGES.rst"
+directory = "CHANGES/"
+title_format = "{version} ({project_date})"
+template = "CHANGES/.TEMPLATE.rst"
+issue_format = "`#{issue} <https://github.com/aio-libs/frozenlist/issues/{issue}>`_"

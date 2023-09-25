@@ -6,16 +6,16 @@ from argparse import ArgumentParser
 from collections.abc import Iterable
 from importlib import import_module
 from typing import (
-    Any as Any,
-    Awaitable as Awaitable,
-    Callable as Callable,
+    Any,
+    Awaitable,
+    Callable,
     Iterable as TypingIterable,
-    List as List,
-    Optional as Optional,
-    Set as Set,
-    Type as Type,
-    Union as Union,
-    cast as cast,
+    List,
+    Optional,
+    Set,
+    Type,
+    Union,
+    cast,
 )
 
 from .abc import AbstractAccessLogger
@@ -136,6 +136,7 @@ from .web_urldispatcher import (
     AbstractRoute as AbstractRoute,
     DynamicResource as DynamicResource,
     PlainResource as PlainResource,
+    PrefixedSubAppResource as PrefixedSubAppResource,
     Resource as Resource,
     ResourceRoute as ResourceRoute,
     StaticResource as StaticResource,
@@ -261,6 +262,7 @@ __all__ = (
     "AbstractRoute",
     "DynamicResource",
     "PlainResource",
+    "PrefixedSubAppResource",
     "Resource",
     "ResourceRoute",
     "StaticResource",
@@ -279,7 +281,7 @@ __all__ = (
 try:
     from ssl import SSLContext
 except ImportError:  # pragma: no cover
-    SSLContext = Any  # type: ignore
+    SSLContext = Any  # type: ignore[misc,assignment]
 
 HostSequence = TypingIterable[str]
 
@@ -290,8 +292,9 @@ async def _run_app(
     host: Optional[Union[str, HostSequence]] = None,
     port: Optional[int] = None,
     path: Optional[str] = None,
-    sock: Optional[socket.socket] = None,
+    sock: Optional[Union[socket.socket, TypingIterable[socket.socket]]] = None,
     shutdown_timeout: float = 60.0,
+    keepalive_timeout: float = 75.0,
     ssl_context: Optional[SSLContext] = None,
     print: Callable[..., None] = print,
     backlog: int = 128,
@@ -304,7 +307,7 @@ async def _run_app(
 ) -> None:
     # A internal functio to actually do all dirty job for application running
     if asyncio.iscoroutine(app):
-        app = await app  # type: ignore
+        app = await app  # type: ignore[misc]
 
     app = cast(Application, app)
 
@@ -314,11 +317,12 @@ async def _run_app(
         access_log_class=access_log_class,
         access_log_format=access_log_format,
         access_log=access_log,
+        keepalive_timeout=keepalive_timeout,
     )
 
     await runner.setup()
 
-    sites = []  # type: List[BaseSite]
+    sites: List[BaseSite] = []
 
     try:
         if host is not None:
@@ -440,9 +444,7 @@ def _cancel_tasks(
     for task in to_cancel:
         task.cancel()
 
-    loop.run_until_complete(
-        asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
-    )
+    loop.run_until_complete(asyncio.gather(*to_cancel, return_exceptions=True))
 
     for task in to_cancel:
         if task.cancelled():
@@ -463,8 +465,9 @@ def run_app(
     host: Optional[Union[str, HostSequence]] = None,
     port: Optional[int] = None,
     path: Optional[str] = None,
-    sock: Optional[socket.socket] = None,
+    sock: Optional[Union[socket.socket, TypingIterable[socket.socket]]] = None,
     shutdown_timeout: float = 60.0,
+    keepalive_timeout: float = 75.0,
     ssl_context: Optional[SSLContext] = None,
     print: Callable[..., None] = print,
     backlog: int = 128,
@@ -474,9 +477,11 @@ def run_app(
     handle_signals: bool = True,
     reuse_address: Optional[bool] = None,
     reuse_port: Optional[bool] = None,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> None:
     """Run an app locally"""
-    loop = asyncio.get_event_loop()
+    if loop is None:
+        loop = asyncio.new_event_loop()
 
     # Configure if and only if in debugging mode and using the default logger
     if loop.get_debug() and access_log and access_log.name == "aiohttp.access":
@@ -485,34 +490,36 @@ def run_app(
         if not access_log.hasHandlers():
             access_log.addHandler(logging.StreamHandler())
 
-    try:
-        main_task = loop.create_task(
-            _run_app(
-                app,
-                host=host,
-                port=port,
-                path=path,
-                sock=sock,
-                shutdown_timeout=shutdown_timeout,
-                ssl_context=ssl_context,
-                print=print,
-                backlog=backlog,
-                access_log_class=access_log_class,
-                access_log_format=access_log_format,
-                access_log=access_log,
-                handle_signals=handle_signals,
-                reuse_address=reuse_address,
-                reuse_port=reuse_port,
-            )
+    main_task = loop.create_task(
+        _run_app(
+            app,
+            host=host,
+            port=port,
+            path=path,
+            sock=sock,
+            shutdown_timeout=shutdown_timeout,
+            keepalive_timeout=keepalive_timeout,
+            ssl_context=ssl_context,
+            print=print,
+            backlog=backlog,
+            access_log_class=access_log_class,
+            access_log_format=access_log_format,
+            access_log=access_log,
+            handle_signals=handle_signals,
+            reuse_address=reuse_address,
+            reuse_port=reuse_port,
         )
+    )
+
+    try:
+        asyncio.set_event_loop(loop)
         loop.run_until_complete(main_task)
     except (GracefulExit, KeyboardInterrupt):  # pragma: no cover
         pass
     finally:
         _cancel_tasks({main_task}, loop)
         _cancel_tasks(all_tasks(loop), loop)
-        if sys.version_info >= (3, 6):  # don't use PY_36 to pass mypy
-            loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
 
 

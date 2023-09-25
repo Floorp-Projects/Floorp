@@ -22,6 +22,9 @@ from typing import (
     cast,
 )
 
+from aiosignal import Signal
+from frozenlist import FrozenList
+
 from . import hdrs
 from .abc import (
     AbstractAccessLogger,
@@ -29,11 +32,9 @@ from .abc import (
     AbstractRouter,
     AbstractStreamWriter,
 )
-from .frozenlist import FrozenList
 from .helpers import DEBUG
 from .http_parser import RawRequestMessage
 from .log import web_logger
-from .signals import Signal
 from .streams import StreamReader
 from .web_log import AccessLogger
 from .web_middlewares import _fix_request_current_app
@@ -56,12 +57,13 @@ __all__ = ("Application", "CleanupError")
 
 
 if TYPE_CHECKING:  # pragma: no cover
+    from .typedefs import Handler
+
     _AppSignal = Signal[Callable[["Application"], Awaitable[None]]]
     _RespPrepareSignal = Signal[Callable[[Request, StreamResponse], Awaitable[None]]]
-    _Handler = Callable[[Request], Awaitable[StreamResponse]]
     _Middleware = Union[
-        Callable[[Request, _Handler], Awaitable[StreamResponse]],
-        Callable[["Application", _Handler], Awaitable[_Handler]],  # old-style
+        Callable[[Request, Handler], Awaitable[StreamResponse]],
+        Callable[["Application", Handler], Awaitable[Handler]],  # old-style
     ]
     _Middlewares = FrozenList[_Middleware]
     _MiddlewaresHandlers = Optional[Sequence[Tuple[_Middleware, bool]]]
@@ -70,7 +72,6 @@ else:
     # No type checker mode, skip types
     _AppSignal = Signal
     _RespPrepareSignal = Signal
-    _Handler = Callable
     _Middleware = Callable
     _Middlewares = FrozenList
     _MiddlewaresHandlers = Optional[Sequence]
@@ -108,7 +109,7 @@ class Application(MutableMapping[str, Any]):
         router: Optional[UrlDispatcher] = None,
         middlewares: Iterable[_Middleware] = (),
         handler_args: Optional[Mapping[str, Any]] = None,
-        client_max_size: int = 1024 ** 2,
+        client_max_size: int = 1024**2,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         debug: Any = ...,  # mypy doesn't support ellipsis
     ) -> None:
@@ -130,27 +131,27 @@ class Application(MutableMapping[str, Any]):
                 "debug argument is deprecated", DeprecationWarning, stacklevel=2
             )
         self._debug = debug
-        self._router = router  # type: UrlDispatcher
+        self._router: UrlDispatcher = router
         self._loop = loop
         self._handler_args = handler_args
         self.logger = logger
 
-        self._middlewares = FrozenList(middlewares)  # type: _Middlewares
+        self._middlewares: _Middlewares = FrozenList(middlewares)
 
         # initialized on freezing
-        self._middlewares_handlers = None  # type: _MiddlewaresHandlers
+        self._middlewares_handlers: _MiddlewaresHandlers = None
         # initialized on freezing
-        self._run_middlewares = None  # type: Optional[bool]
+        self._run_middlewares: Optional[bool] = None
 
-        self._state = {}  # type: Dict[str, Any]
+        self._state: Dict[str, Any] = {}
         self._frozen = False
         self._pre_frozen = False
-        self._subapps = []  # type: _Subapps
+        self._subapps: _Subapps = []
 
-        self._on_response_prepare = Signal(self)  # type: _RespPrepareSignal
-        self._on_startup = Signal(self)  # type: _AppSignal
-        self._on_shutdown = Signal(self)  # type: _AppSignal
-        self._on_cleanup = Signal(self)  # type: _AppSignal
+        self._on_response_prepare: _RespPrepareSignal = Signal(self)
+        self._on_startup: _AppSignal = Signal(self)
+        self._on_shutdown: _AppSignal = Signal(self)
+        self._on_cleanup: _AppSignal = Signal(self)
         self._cleanup_ctx = CleanupContext()
         self._on_startup.append(self._cleanup_ctx._on_startup)
         self._on_cleanup.append(self._cleanup_ctx._on_cleanup)
@@ -278,7 +279,7 @@ class Application(MutableMapping[str, Any]):
     @property
     def debug(self) -> bool:
         warnings.warn("debug property is deprecated", DeprecationWarning, stacklevel=2)
-        return self._debug
+        return self._debug  # type: ignore[no-any-return]
 
     def _reg_subapp_signals(self, subapp: "Application") -> None:
         def reg_handler(signame: str) -> None:
@@ -323,7 +324,7 @@ class Application(MutableMapping[str, Any]):
         if not isinstance(domain, str):
             raise TypeError("Domain must be str")
         elif "*" in domain:
-            rule = MaskDomain(domain)  # type: Domain
+            rule: Domain = MaskDomain(domain)
         else:
             rule = Domain(domain)
         factory = partial(MatchedSubAppResource, rule, subapp)
@@ -384,7 +385,7 @@ class Application(MutableMapping[str, Any]):
                 kwargs[k] = v
 
         return Server(
-            self._handle,  # type: ignore
+            self._handle,  # type: ignore[arg-type]
             request_factory=self._make_request,
             loop=self._loop,
             **kwargs,
@@ -427,7 +428,11 @@ class Application(MutableMapping[str, Any]):
 
         Should be called after shutdown()
         """
-        await self.on_cleanup.send(self)
+        if self.on_cleanup.frozen:
+            await self.on_cleanup.send(self)
+        else:
+            # If an exception occurs in startup, ensure cleanup contexts are completed.
+            await self._cleanup_ctx._on_cleanup(self)
 
     def _make_request(
         self,
@@ -477,7 +482,7 @@ class Application(MutableMapping[str, Any]):
         match_info.freeze()
 
         resp = None
-        request._match_info = match_info  # type: ignore
+        request._match_info = match_info
         expect = request.headers.get(hdrs.EXPECT)
         if expect:
             resp = await match_info.expect_handler(request)
@@ -488,13 +493,13 @@ class Application(MutableMapping[str, Any]):
 
             if self._run_middlewares:
                 for app in match_info.apps[::-1]:
-                    for m, new_style in app._middlewares_handlers:  # type: ignore
+                    for m, new_style in app._middlewares_handlers:  # type: ignore[union-attr] # noqa
                         if new_style:
                             handler = update_wrapper(
                                 partial(m, handler=handler), handler
                             )
                         else:
-                            handler = await m(app, handler)  # type: ignore
+                            handler = await m(app, handler)  # type: ignore[arg-type]
 
             resp = await handler(request)
 
@@ -505,7 +510,7 @@ class Application(MutableMapping[str, Any]):
         return self
 
     def __repr__(self) -> str:
-        return "<Application 0x{:x}>".format(id(self))
+        return f"<Application 0x{id(self):x}>"
 
     def __bool__(self) -> bool:
         return True
@@ -514,7 +519,7 @@ class Application(MutableMapping[str, Any]):
 class CleanupError(RuntimeError):
     @property
     def exceptions(self) -> List[BaseException]:
-        return self.args[1]
+        return cast(List[BaseException], self.args[1])
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -526,7 +531,7 @@ else:
 class CleanupContext(_CleanupContextBase):
     def __init__(self) -> None:
         super().__init__()
-        self._exits = []  # type: List[AsyncIterator[None]]
+        self._exits: List[AsyncIterator[None]] = []
 
     async def _on_startup(self, app: Application) -> None:
         for cb in self:

@@ -57,7 +57,7 @@ class AccessLogger(AbstractAccessLogger):
     LOG_FORMAT = '%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i"'
     FORMAT_RE = re.compile(r"%(\{([A-Za-z0-9\-_]+)\}([ioe])|[atPrsbOD]|Tf?)")
     CLEANUP_RE = re.compile(r"(%[^s])")
-    _FORMAT_CACHE = {}  # type: Dict[str, Tuple[str, List[KeyMethod]]]
+    _FORMAT_CACHE: Dict[str, Tuple[str, List[KeyMethod]]] = {}
 
     def __init__(self, logger: logging.Logger, log_format: str = LOG_FORMAT) -> None:
         """Initialise the logger.
@@ -198,10 +198,10 @@ class AccessLogger(AbstractAccessLogger):
                 if key.__class__ is str:
                     extra[key] = value
                 else:
-                    k1, k2 = key  # type: ignore
-                    dct = extra.get(k1, {})  # type: ignore
-                    dct[k2] = value  # type: ignore
-                    extra[k1] = dct  # type: ignore
+                    k1, k2 = key  # type: ignore[misc]
+                    dct = extra.get(k1, {})  # type: ignore[var-annotated,has-type]
+                    dct[k2] = value  # type: ignore[index,has-type]
+                    extra[k1] = dct  # type: ignore[has-type,assignment]
 
             self.logger.info(self._log_format % tuple(values), extra=extra)
         except Exception:

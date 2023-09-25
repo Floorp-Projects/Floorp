@@ -1,0 +1,17 @@
+include LICENSE.txt
+include CHANGES.rst
+include README.rst
+include CONTRIBUTORS.txt
+graft frozenlist
+graft docs
+graft tests
+include frozenlist/*.c
+global-exclude *.pyc
+global-exclude *.pyd
+global-exclude *.so
+global-exclude *.lib
+global-exclude *.dll
+global-exclude *.a
+global-exclude *.obj
+exclude frozenlist/*.html
+prune docs/_build

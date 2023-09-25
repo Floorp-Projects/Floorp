@@ -9,12 +9,15 @@ vendored:testing/web-platform/tests/tools/wptserve
 vendored:third_party/python/MarkupSafe/src
 vendored:third_party/python/PyYAML/lib/
 vendored:third_party/python/aiohttp
+vendored:third_party/python/aiosignal
 vendored:third_party/python/appdirs
 vendored:third_party/python/arrow
 vendored:third_party/python/async_timeout
+vendored:third_party/python/asynctest
 vendored:third_party/python/binaryornot
 vendored:third_party/python/cbor2
 vendored:third_party/python/chardet
+vendored:third_party/python/charset_normalizer
 vendored:third_party/python/compare_locales
 vendored:third_party/python/cookiecutter
 vendored:third_party/python/cookies
@@ -25,6 +28,7 @@ vendored:third_party/python/ecdsa
 vendored:third_party/python/esprima
 vendored:third_party/python/fluent.migrate
 vendored:third_party/python/fluent.syntax
+vendored:third_party/python/frozenlist
 vendored:third_party/python/giturlparse
 vendored:third_party/python/glean_parser
 vendored:third_party/python/gyp/pylib

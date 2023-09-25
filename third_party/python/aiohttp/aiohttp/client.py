@@ -8,6 +8,7 @@ import os
 import sys
 import traceback
 import warnings
+from contextlib import suppress
 from types import SimpleNamespace, TracebackType
 from typing import (
     Any,
@@ -74,10 +75,10 @@ from .helpers import (
     DEBUG,
     PY_36,
     BasicAuth,
-    CeilTimeout,
     TimeoutHandle,
+    ceil_timeout,
+    get_env_proxy_for_url,
     get_running_loop,
-    proxies_from_env,
     sentinel,
     strip_auth_from_url,
 )
@@ -85,7 +86,7 @@ from .http import WS_KEY, HttpVersion, WebSocketReader, WebSocketWriter
 from .http_websocket import WSHandshakeError, WSMessage, ws_ext_gen, ws_ext_parse
 from .streams import FlowControlDataQueue
 from .tracing import Trace, TraceConfig
-from .typedefs import JSONEncoder, LooseCookies, LooseHeaders, StrOrURL
+from .typedefs import Final, JSONEncoder, LooseCookies, LooseHeaders, StrOrURL
 
 __all__ = (
     # client_exceptions
@@ -130,7 +131,7 @@ __all__ = (
 try:
     from ssl import SSLContext
 except ImportError:  # pragma: no cover
-    SSLContext = object  # type: ignore
+    SSLContext = object  # type: ignore[misc,assignment]
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
@@ -155,7 +156,7 @@ class ClientTimeout:
 
 
 # 5 Minute default read timeout
-DEFAULT_TIMEOUT = ClientTimeout(total=5 * 60)
+DEFAULT_TIMEOUT: Final[ClientTimeout] = ClientTimeout(total=5 * 60)
 
 _RetType = TypeVar("_RetType")
 
@@ -165,6 +166,7 @@ class ClientSession:
 
     ATTRS = frozenset(
         [
+            "_base_url",
             "_source_traceback",
             "_connector",
             "requote_redirect_url",
@@ -189,10 +191,12 @@ class ClientSession:
         ]
     )
 
-    _source_traceback = None
+    _source_traceback = None  # type: Optional[traceback.StackSummary]
+    _connector = None  # type: Optional[BaseConnector]
 
     def __init__(
         self,
+        base_url: Optional[StrOrURL] = None,
         *,
         connector: Optional[BaseConnector] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
@@ -215,14 +219,21 @@ class ClientSession:
         trust_env: bool = False,
         requote_redirect_url: bool = True,
         trace_configs: Optional[List[TraceConfig]] = None,
-        read_bufsize: int = 2 ** 16,
+        read_bufsize: int = 2**16,
     ) -> None:
-
         if loop is None:
             if connector is not None:
                 loop = connector._loop
 
         loop = get_running_loop(loop)
+
+        if base_url is None or isinstance(base_url, URL):
+            self._base_url: Optional[URL] = base_url
+        else:
+            self._base_url = URL(base_url)
+            assert (
+                self._base_url.origin() == self._base_url
+            ), "Only absolute URLs without path part are supported"
 
         if connector is None:
             connector = TCPConnector(loop=loop)
@@ -242,7 +253,7 @@ class ClientSession:
         if cookies is not None:
             self._cookie_jar.update_cookies(cookies)
 
-        self._connector = connector  # type: Optional[BaseConnector]
+        self._connector = connector
         self._connector_owner = connector_owner
         self._default_auth = auth
         self._version = version
@@ -264,7 +275,7 @@ class ClientSession:
                     stacklevel=2,
                 )
         else:
-            self._timeout = timeout  # type: ignore
+            self._timeout = timeout  # type: ignore[assignment]
             if read_timeout is not sentinel:
                 raise ValueError(
                     "read_timeout and timeout parameters "
@@ -285,12 +296,12 @@ class ClientSession:
 
         # Convert to list of tuples
         if headers:
-            real_headers = CIMultiDict(headers)  # type: CIMultiDict[str]
+            real_headers: CIMultiDict[str] = CIMultiDict(headers)
         else:
             real_headers = CIMultiDict()
-        self._default_headers = real_headers  # type: CIMultiDict[str]
+        self._default_headers: CIMultiDict[str] = real_headers
         if skip_auto_headers is not None:
-            self._skip_auto_headers = frozenset([istr(i) for i in skip_auto_headers])
+            self._skip_auto_headers = frozenset(istr(i) for i in skip_auto_headers)
         else:
             self._skip_auto_headers = frozenset()
 
@@ -341,6 +352,14 @@ class ClientSession:
     ) -> "_RequestContextManager":
         """Perform HTTP request."""
         return _RequestContextManager(self._request(method, url, **kwargs))
+
+    def _build_url(self, str_or_url: StrOrURL) -> URL:
+        url = URL(str_or_url)
+        if self._base_url is None:
+            return url
+        else:
+            assert not url.is_absolute() and url.path.startswith("/")
+            return self._base_url.join(url)
 
     async def _request(
         self,
@@ -401,7 +420,7 @@ class ClientSession:
         proxy_headers = self._prepare_headers(proxy_headers)
 
         try:
-            url = URL(str_or_url)
+            url = self._build_url(str_or_url)
         except ValueError as e:
             raise InvalidURL(str_or_url) from e
 
@@ -417,10 +436,10 @@ class ClientSession:
                 raise InvalidURL(proxy) from e
 
         if timeout is sentinel:
-            real_timeout = self._timeout  # type: ClientTimeout
+            real_timeout: ClientTimeout = self._timeout
         else:
             if not isinstance(timeout, ClientTimeout):
-                real_timeout = ClientTimeout(total=timeout)  # type: ignore
+                real_timeout = ClientTimeout(total=timeout)  # type: ignore[arg-type]
             else:
                 real_timeout = timeout
         # timeout is cumulative for all request operations
@@ -441,7 +460,7 @@ class ClientSession:
         ]
 
         for trace in traces:
-            await trace.send_request_start(method, url, headers)
+            await trace.send_request_start(method, url.update_query(params), headers)
 
         timer = tm.timer()
         try:
@@ -483,11 +502,8 @@ class ClientSession:
                     if proxy is not None:
                         proxy = URL(proxy)
                     elif self._trust_env:
-                        for scheme, proxy_info in proxies_from_env().items():
-                            if scheme == url.scheme:
-                                proxy = proxy_info.proxy
-                                proxy_auth = proxy_info.proxy_auth
-                                break
+                        with suppress(LookupError):
+                            proxy, proxy_auth = get_env_proxy_for_url(url)
 
                     req = self._request_class(
                         method,
@@ -515,7 +531,7 @@ class ClientSession:
 
                     # connection timeout
                     try:
-                        with CeilTimeout(real_timeout.connect, loop=self._loop):
+                        async with ceil_timeout(real_timeout.connect):
                             assert self._connector is not None
                             conn = await self._connector.connect(
                                 req, traces=traces, timeout=real_timeout
@@ -551,6 +567,8 @@ class ClientSession:
                     except ClientError:
                         raise
                     except OSError as exc:
+                        if exc.errno is None and isinstance(exc, asyncio.TimeoutError):
+                            raise
                         raise ClientOSError(*exc.args) from exc
 
                     self._cookie_jar.update_cookies(resp.cookies, resp.url)
@@ -560,7 +578,7 @@ class ClientSession:
 
                         for trace in traces:
                             await trace.send_request_redirect(
-                                method, url, headers, resp
+                                method, url.update_query(params), headers, resp
                             )
 
                         redirects += 1
@@ -634,7 +652,9 @@ class ClientSession:
             resp._history = tuple(history)
 
             for trace in traces:
-                await trace.send_request_end(method, url, headers, resp)
+                await trace.send_request_end(
+                    method, url.update_query(params), headers, resp
+                )
             return resp
 
         except BaseException as e:
@@ -645,7 +665,9 @@ class ClientSession:
                 handle = None
 
             for trace in traces:
-                await trace.send_request_exception(method, url, headers, e)
+                await trace.send_request_exception(
+                    method, url.update_query(params), headers, e
+                )
             raise
 
     def ws_connect(
@@ -661,6 +683,7 @@ class ClientSession:
         heartbeat: Optional[float] = None,
         auth: Optional[BasicAuth] = None,
         origin: Optional[str] = None,
+        params: Optional[Mapping[str, str]] = None,
         headers: Optional[LooseHeaders] = None,
         proxy: Optional[StrOrURL] = None,
         proxy_auth: Optional[BasicAuth] = None,
@@ -685,6 +708,7 @@ class ClientSession:
                 heartbeat=heartbeat,
                 auth=auth,
                 origin=origin,
+                params=params,
                 headers=headers,
                 proxy=proxy,
                 proxy_auth=proxy_auth,
@@ -711,6 +735,7 @@ class ClientSession:
         heartbeat: Optional[float] = None,
         auth: Optional[BasicAuth] = None,
         origin: Optional[str] = None,
+        params: Optional[Mapping[str, str]] = None,
         headers: Optional[LooseHeaders] = None,
         proxy: Optional[StrOrURL] = None,
         proxy_auth: Optional[BasicAuth] = None,
@@ -724,7 +749,7 @@ class ClientSession:
     ) -> ClientWebSocketResponse:
 
         if headers is None:
-            real_headers = CIMultiDict()  # type: CIMultiDict[str]
+            real_headers: CIMultiDict[str] = CIMultiDict()
         else:
             real_headers = CIMultiDict(headers)
 
@@ -754,6 +779,7 @@ class ClientSession:
         resp = await self.request(
             method,
             url,
+            params=params,
             headers=real_headers,
             read_until_eof=False,
             auth=auth,
@@ -842,9 +868,9 @@ class ClientSession:
             assert conn_proto is not None
             transport = conn.transport
             assert transport is not None
-            reader = FlowControlDataQueue(
-                conn_proto, 2 ** 16, loop=self._loop
-            )  # type: FlowControlDataQueue[WSMessage]
+            reader: FlowControlDataQueue[WSMessage] = FlowControlDataQueue(
+                conn_proto, 2**16, loop=self._loop
+            )
             conn_proto.set_parser(WebSocketReader(reader, max_msg_size), reader)
             writer = WebSocketWriter(
                 conn_proto,
@@ -879,7 +905,7 @@ class ClientSession:
         if headers:
             if not isinstance(headers, (MultiDictProxy, MultiDict)):
                 headers = CIMultiDict(headers)
-            added_names = set()  # type: Set[str]
+            added_names: Set[str] = set()
             for key, value in headers.items():
                 if key in added_names:
                     result.add(key, value)
@@ -1001,7 +1027,7 @@ class ClientSession:
         return self._loop
 
     @property
-    def timeout(self) -> Union[object, ClientTimeout]:
+    def timeout(self) -> ClientTimeout:
         """Timeout for the session."""
         return self._timeout
 
@@ -1034,23 +1060,21 @@ class ClientSession:
     def raise_for_status(
         self,
     ) -> Union[bool, Callable[[ClientResponse], Awaitable[None]]]:
-        """
-        Should `ClientResponse.raise_for_status()`
-        be called for each response
-        """
+        """Should `ClientResponse.raise_for_status()` be called for each response."""
         return self._raise_for_status
 
     @property
     def auto_decompress(self) -> bool:
-        """Should the body response be automatically decompressed"""
+        """Should the body response be automatically decompressed."""
         return self._auto_decompress
 
     @property
     def trust_env(self) -> bool:
         """
-        Should get proxies information
-        from HTTP_PROXY / HTTPS_PROXY environment variables
-        or ~/.netrc file if present
+        Should proxies information from environment or netrc be trusted.
+
+        Information is from HTTP_PROXY / HTTPS_PROXY environment variables
+        or ~/.netrc file if present.
         """
         return self._trust_env
 
@@ -1100,7 +1124,7 @@ class _BaseRequestContextManager(Coroutine[Any, Any, _RetType], Generic[_RetType
     def send(self, arg: None) -> "asyncio.Future[Any]":
         return self._coro.send(arg)
 
-    def throw(self, arg: BaseException) -> None:  # type: ignore
+    def throw(self, arg: BaseException) -> None:  # type: ignore[arg-type,override]
         self._coro.throw(arg)
 
     def close(self) -> None:
@@ -1119,6 +1143,8 @@ class _BaseRequestContextManager(Coroutine[Any, Any, _RetType], Generic[_RetType
 
 
 class _RequestContextManager(_BaseRequestContextManager[ClientResponse]):
+    __slots__ = ()
+
     async def __aexit__(
         self,
         exc_type: Optional[Type[BaseException]],
@@ -1134,6 +1160,8 @@ class _RequestContextManager(_BaseRequestContextManager[ClientResponse]):
 
 
 class _WSRequestContextManager(_BaseRequestContextManager[ClientWebSocketResponse]):
+    __slots__ = ()
+
     async def __aexit__(
         self,
         exc_type: Optional[Type[BaseException]],
@@ -1153,7 +1181,7 @@ class _SessionRequestContextManager:
         session: ClientSession,
     ) -> None:
         self._coro = coro
-        self._resp = None  # type: Optional[ClientResponse]
+        self._resp: Optional[ClientResponse] = None
         self._session = session
 
     async def __aenter__(self) -> ClientResponse:
@@ -1202,7 +1230,9 @@ def request(
     read_bufsize: Optional[int] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> _SessionRequestContextManager:
-    """Constructs and sends a request. Returns response object.
+    """Constructs and sends a request.
+
+    Returns response object.
     method - HTTP method
     url - request url
     params - (optional) Dictionary or bytes to be sent in the query
