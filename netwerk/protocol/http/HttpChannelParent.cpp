@@ -983,14 +983,21 @@ HttpChannelParent::ContinueVerification(
 
   // Otherwise, wait for the background channel.
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
-  WaitForBgParent(mChannel->ChannelId())
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [callback]() { callback->ReadyToVerify(NS_OK); },
-          [callback](const nsresult& aResult) {
-            NS_ERROR("failed to establish the background channel");
-            callback->ReadyToVerify(aResult);
-          });
+  if (mChannel) {
+    WaitForBgParent(mChannel->ChannelId())
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [callback]() { callback->ReadyToVerify(NS_OK); },
+            [callback](const nsresult& aResult) {
+              NS_ERROR("failed to establish the background channel");
+              callback->ReadyToVerify(aResult);
+            });
+  } else {
+    // mChannel can be null for several reasons (AsyncOpenFailed, etc)
+    NS_ERROR("No channel for ContinueVerification");
+    GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+        __func__, [callback] { callback->ReadyToVerify(NS_ERROR_FAILURE); }));
+  }
   return NS_OK;
 }
 
