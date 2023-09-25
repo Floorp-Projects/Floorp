@@ -56,8 +56,8 @@ https_first_disabled = true
 ["browser_dynamical_window_rounding.js"]
 https_first_disabled = true
 skip-if = [
-  "(os == 'mac')", #Bug 1570812
-  "os == 'linux' && bits == 64 && !debug", # Bug 1570812
+  "os == 'mac'", # Bug 1570812
+  "os == 'linux'", # Bug 1570812, Bug 1775698
 ]
 
 ["browser_hwconcurrency_etp_iframes.js"]
