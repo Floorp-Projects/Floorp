@@ -94,6 +94,7 @@ def run(
         "browser/config/version.txt": "{}\n".format(app_version),
         "browser/config/version_display.txt": "{}\n".format(version),
         "config/milestone.txt": "{}\n".format(app_version),
+        "mobile/android/version.txt": "{}\n".format(version),
     }
     with open("browser/config/version.txt") as f:
         current_version = FirefoxVersion.parse(f.read())
