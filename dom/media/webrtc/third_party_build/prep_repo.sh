@@ -17,18 +17,6 @@ echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 echo "MOZ_LIBWEBRTC_BRANCH: $MOZ_LIBWEBRTC_BRANCH"
 echo "MOZ_FASTFORWARD_BUG: $MOZ_FASTFORWARD_BUG"
 
-echo "MOZ_PRIOR_FASTFORWARD_BUG: $MOZ_PRIOR_FASTFORWARD_BUG"
-LAST_LIBWEBRTC_UPDATE_COMMIT=`hg log --template "{node|short} {desc}\n" \
-    | grep "$MOZ_PRIOR_FASTFORWARD_BUG" | head -1`
-echo "LAST_LIBWEBRTC_UPDATE_COMMIT: $LAST_LIBWEBRTC_UPDATE_COMMIT"
-
-LAST_LIBWEBRTC_UPDATE_COMMIT_SHA=`echo $LAST_LIBWEBRTC_UPDATE_COMMIT \
-    | awk '{ print $1; }'`
-echo "LAST_LIBWEBRTC_UPDATE_COMMIT_SHA: $LAST_LIBWEBRTC_UPDATE_COMMIT_SHA"
-
-COMMIT_AFTER_LIBWEBRTC_UPDATE=`hg id -r $LAST_LIBWEBRTC_UPDATE_COMMIT_SHA~-1`
-echo "COMMIT_AFTER_LIBWEBRTC_UPDATE: $COMMIT_AFTER_LIBWEBRTC_UPDATE"
-
 # After this point:
 # * eE: All commands should succeed.
 # * u: All variables should be defined before use.
@@ -108,24 +96,4 @@ if [ "x$NO_OP_FILE_COUNT" != "x0" ]; then
      $STATE_DIR
 fi
 
-ERROR_HELP=$"
-***
-Changes made in third_party/libwebrtc since the last libwebrtc update
-landed in mozilla-central have been detected.  To remedy this situation,
-the new changes must be reflected in the moz-libwebrtc git repo's
-patch-stack.  The previous libwebrtc update was in Bug ($MOZ_PRIOR_FASTFORWARD_BUG).
-The last commit of the previous update is:
-$LAST_LIBWEBRTC_UPDATE_COMMIT
-The next commit in mozilla-central is:
-$COMMIT_AFTER_LIBWEBRTC_UPDATE
-
-The commands you want will look something like:
-  ./mach python $SCRIPT_DIR/extract-for-git.py $COMMIT_AFTER_LIBWEBRTC_UPDATE::elm
-  mv mailbox.patch $MOZ_LIBWEBRTC_SRC
-  (cd $MOZ_LIBWEBRTC_SRC && \\
-   git am mailbox.patch)
-
-After running the commands above, you should run this command:
-  bash $SCRIPT_DIR/verify_vendoring.sh
-"
-bash $SCRIPT_DIR/verify_vendoring.sh &> $LOG_DIR/log-verify.txt || echo "$ERROR_HELP"
+bash $SCRIPT_DIR/verify_vendoring.sh || exit 1
