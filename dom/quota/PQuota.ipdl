@@ -156,8 +156,7 @@ parent:
 
   async ClearStoragesForOrigin(PersistenceType? persistenceType,
                                PrincipalInfo principalInfo,
-                               Type? clientType,
-                               bool clearAll)
+                               Type? clientType)
       returns(BoolResponse response);
 
   async ClearStoragesForOriginPrefix(PersistenceType? persistenceType,

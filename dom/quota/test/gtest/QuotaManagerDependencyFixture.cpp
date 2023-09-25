@@ -203,7 +203,6 @@ void QuotaManagerDependencyFixture::ClearStoragesForOrigin(
 
   nsCOMPtr<nsIQuotaRequest> request;
   rv = qms->ClearStoragesForPrincipal(principal, VoidCString(), VoidString(),
-                                      /* aClearAll */ false,
                                       getter_AddRefs(request));
   ASSERT_NS_SUCCEEDED(rv);
 

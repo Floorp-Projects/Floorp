@@ -789,7 +789,7 @@ QuotaManagerService::ClearStoragesForOriginAttributesPattern(
 NS_IMETHODIMP
 QuotaManagerService::ClearStoragesForPrincipal(
     nsIPrincipal* aPrincipal, const nsACString& aPersistenceType,
-    const nsAString& aClientType, bool aClearAll, nsIQuotaRequest** _retval) {
+    const nsAString& aClientType, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
@@ -812,14 +812,7 @@ QuotaManagerService::ClearStoragesForPrincipal(
 
   QM_TRY_INSPECT(
       const auto& principalInfo,
-      ([&aPrincipal, &aClearAll]() -> Result<PrincipalInfo, nsresult> {
-        if (aClearAll) {
-          nsCString suffix;
-          aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
-
-          QM_TRY(MOZ_TO_RESULT(suffix.IsEmpty()), Err(NS_ERROR_INVALID_ARG));
-        }
-
+      ([&aPrincipal]() -> Result<PrincipalInfo, nsresult> {
         PrincipalInfo principalInfo;
         QM_TRY(MOZ_TO_RESULT(
             PrincipalToPrincipalInfo(aPrincipal, &principalInfo)));
@@ -847,8 +840,7 @@ QuotaManagerService::ClearStoragesForPrincipal(
   RefPtr<Request> request = new Request();
 
   mBackgroundActor
-      ->SendClearStoragesForOrigin(persistenceType, principalInfo, clientType,
-                                   aClearAll)
+      ->SendClearStoragesForOrigin(persistenceType, principalInfo, clientType)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              BoolResponsePromiseResolveOrRejectCallback(request));
 
