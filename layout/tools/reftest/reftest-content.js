@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
@@ -196,10 +198,11 @@ function doPrintMode(contentRootElement) {
     var classList = contentRootElement.getAttribute("class").split(/\s+/);
     if (classList.includes("reftest-print")) {
       SendException("reftest-print is obsolete, use reftest-paged instead");
-      return;
+      return false;
     }
     return classList.includes("reftest-paged");
   }
+  return false;
 }
 
 function setupPrintMode(contentRootElement) {
@@ -559,7 +562,6 @@ function WaitForTestEnd(
   var updateCanvasPending = false;
   var updateCanvasRects = [];
 
-  var stopAfterPaintReceived = false;
   var currentDoc = content.document;
   var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
 
@@ -765,7 +767,7 @@ function WaitForTestEnd(
       // MozReftestInvalidate won't be sent until we finish waiting for all
       // MozAfterPaint events, we should avoid flushing throttled animations
       // here or else we'll never leave this state.
-      flushMode =
+      let flushMode =
         state === STATE_WAITING_TO_FIRE_INVALIDATE_EVENT
           ? FlushMode.IGNORE_THROTTLED_ANIMATIONS
           : FlushMode.ALL;
@@ -782,6 +784,7 @@ function WaitForTestEnd(
     });
   }
 
+  // eslint-disable-next-line complexity
   function MakeProgress2() {
     switch (state) {
       case STATE_WAITING_TO_FIRE_INVALIDATE_EVENT: {
@@ -807,16 +810,16 @@ function WaitForTestEnd(
         // Notify the test document that now is a good time to test some invalidation
         LogInfo("MakeProgress: dispatching MozReftestInvalidate");
         if (contentRootElement) {
-          var elements = getNoPaintElements(contentRootElement);
-          for (var i = 0; i < elements.length; ++i) {
+          let elements = getNoPaintElements(contentRootElement);
+          for (let i = 0; i < elements.length; ++i) {
             windowUtils().checkAndClearPaintedState(elements[i]);
           }
           elements = getNoDisplayListElements(contentRootElement);
-          for (var i = 0; i < elements.length; ++i) {
+          for (let i = 0; i < elements.length; ++i) {
             windowUtils().checkAndClearDisplayListState(elements[i]);
           }
           elements = getDisplayListElements(contentRootElement);
-          for (var i = 0; i < elements.length; ++i) {
+          for (let i = 0; i < elements.length; ++i) {
             windowUtils().checkAndClearDisplayListState(elements[i]);
           }
           var notification = content.document.createEvent("Events");
@@ -887,14 +890,11 @@ function WaitForTestEnd(
         LogInfo("MakeProgress: STATE_WAITING_FOR_APZ_FLUSH");
         gFailureReason = "timed out waiting for APZ flush to complete";
 
-        var os = Cc[NS_OBSERVER_SERVICE_CONTRACTID].getService(
-          Ci.nsIObserverService
-        );
         var flushWaiter = function (aSubject, aTopic, aData) {
           if (aTopic) {
             LogInfo("MakeProgress: apz-repaints-flushed fired");
           }
-          os.removeObserver(flushWaiter, "apz-repaints-flushed");
+          Services.obs.removeObserver(flushWaiter, "apz-repaints-flushed");
           state = STATE_WAITING_TO_FINISH;
           if (operationInProgress) {
             CallSetTimeoutMakeProgress();
@@ -902,7 +902,7 @@ function WaitForTestEnd(
             MakeProgress();
           }
         };
-        os.addObserver(flushWaiter, "apz-repaints-flushed");
+        Services.obs.addObserver(flushWaiter, "apz-repaints-flushed");
 
         var willSnapshot = IsSnapshottableTestType();
         CheckForLivenessOfContentRootElement();
@@ -939,8 +939,8 @@ function WaitForTestEnd(
         }
         CheckForLivenessOfContentRootElement();
         if (contentRootElement) {
-          var elements = getNoPaintElements(contentRootElement);
-          for (var i = 0; i < elements.length; ++i) {
+          let elements = getNoPaintElements(contentRootElement);
+          for (let i = 0; i < elements.length; ++i) {
             if (windowUtils().checkAndClearPaintedState(elements[i])) {
               SendFailedNoPaint();
             }
@@ -950,13 +950,13 @@ function WaitForTestEnd(
           // we don't have e10s.
           if (gBrowserIsRemote) {
             elements = getNoDisplayListElements(contentRootElement);
-            for (var i = 0; i < elements.length; ++i) {
+            for (let i = 0; i < elements.length; ++i) {
               if (windowUtils().checkAndClearDisplayListState(elements[i])) {
                 SendFailedNoDisplayList();
               }
             }
             elements = getDisplayListElements(contentRootElement);
-            for (var i = 0; i < elements.length; ++i) {
+            for (let i = 0; i < elements.length; ++i) {
               if (!windowUtils().checkAndClearDisplayListState(elements[i])) {
                 SendFailedDisplayList();
               }
@@ -996,10 +996,9 @@ function WaitForTestEnd(
   // always return false so we don't need a listener anyway
   CheckForLivenessOfContentRootElement();
   if (contentRootElement?.hasAttribute("class")) {
-    attrModifiedObserver =
-      new contentRootElement.ownerDocument.defaultView.MutationObserver(
-        AttrModifiedListener
-      );
+    attrModifiedObserver = new contentRootElement.ownerGlobal.MutationObserver(
+      AttrModifiedListener
+    );
     attrModifiedObserver.observe(contentRootElement, { attributes: true });
   }
   gTimeoutHook = RemoveListeners;
@@ -1576,7 +1575,6 @@ async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement) {
     return;
   }
 
-  var win = content;
   var scale = docShell.browsingContext.fullZoom;
 
   var rects = [];

@@ -292,5 +292,6 @@ class ReftestFissionParent extends JSWindowActorParent {
         });
       }
     }
+    return undefined;
   }
 }

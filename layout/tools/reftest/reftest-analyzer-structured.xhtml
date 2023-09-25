@@ -286,15 +286,14 @@ Features to add:
             continue;
 
           var tr = document.createElement("tr");
-          var rowclass = item.pass ? "pass" : "fail";
           var td;
           var text;
 
           td = document.createElement("td");
           text = "";
-          if (item.unexpected) { text += "!"; rowclass += " unexpected"; }
-          if (item.random) { text += "R"; rowclass += " random"; }
-          if (item.skip) { text += "S"; rowclass += " skip"; }
+          if (item.unexpected) { text += "!"; }
+          if (item.random) { text += "R"; }
+          if (item.skip) { text += "S"; }
           td.appendChild(document.createTextNode(text));
           tr.appendChild(td);
 
@@ -514,7 +513,6 @@ Features to add:
       }
 
       function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
-        var pixelinfo = ID("pixelinfo");
         ID("coords").textContent = [x, y];
         ID("pix1hex").textContent = pix1hex;
         ID("pix1rgb").textContent = pix1rgb;
