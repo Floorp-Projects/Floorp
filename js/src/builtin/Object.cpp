@@ -928,22 +928,42 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   bool toWasEmpty = toPlain->empty();
 
   // If the |to| object has no properties and the |from| object only has plain
-  // enumerable/writable/configurable data properties, try to use its shape.
-  if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
-      toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
-    MOZ_ASSERT(!Watchtower::watchesPropertyAdd(toPlain),
-               "watched objects require Watchtower calls");
-    SharedShape* newShape = fromPlain->sharedShape();
-    uint32_t oldSpan = 0;
-    uint32_t newSpan = props.length();
-    if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
-      return false;
+  // enumerable/writable/configurable data properties, try to use its shape or
+  // property map.
+  if (toWasEmpty && !hasPropsWithNonDefaultAttrs) {
+    CanReuseShape canReuse =
+        toPlain->canReuseShapeForNewProperties(fromPlain->shape());
+    if (canReuse != CanReuseShape::NoReuse) {
+      SharedShape* newShape;
+      if (canReuse == CanReuseShape::CanReuseShape) {
+        newShape = fromPlain->sharedShape();
+      } else {
+        // Get a shape with fromPlain's PropMap and ObjectFlags (because we need
+        // the HasEnumerable flag checked in canReuseShapeForNewProperties) and
+        // the other fields (BaseShape, numFixedSlots) unchanged.
+        MOZ_ASSERT(canReuse == CanReuseShape::CanReusePropMap);
+        ObjectFlags objectFlags = fromPlain->sharedShape()->objectFlags();
+        Rooted<SharedPropMap*> map(cx, fromPlain->sharedShape()->propMap());
+        uint32_t mapLength = fromPlain->sharedShape()->propMapLength();
+        BaseShape* base = toPlain->sharedShape()->base();
+        uint32_t nfixed = toPlain->sharedShape()->numFixedSlots();
+        newShape = SharedShape::getPropMapShape(cx, base, nfixed, map,
+                                                mapLength, objectFlags);
+        if (!newShape) {
+          return false;
+        }
+      }
+      uint32_t oldSpan = 0;
+      uint32_t newSpan = props.length();
+      if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
+        return false;
+      }
+      for (size_t i = props.length(); i > 0; i--) {
+        size_t slot = props[i - 1].slot();
+        toPlain->initSlot(slot, fromPlain->getSlot(slot));
+      }
+      return true;
     }
-    for (size_t i = props.length(); i > 0; i--) {
-      size_t slot = props[i - 1].slot();
-      toPlain->initSlot(slot, fromPlain->getSlot(slot));
-    }
-    return true;
   }
 
   RootedValue propValue(cx);
