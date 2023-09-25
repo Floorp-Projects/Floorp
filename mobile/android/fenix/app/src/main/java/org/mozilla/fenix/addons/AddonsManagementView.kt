@@ -7,7 +7,6 @@ package org.mozilla.fenix.addons
 import androidx.navigation.NavController
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.navigateSafe
 
@@ -36,9 +35,7 @@ class AddonsManagementView(
         showNotYetSupportedAddonFragment(unsupportedAddons)
     }
 
-    override fun shouldShowFindMoreAddonsButton(): Boolean {
-        return !Config.channel.isRelease
-    }
+    override fun shouldShowFindMoreAddonsButton(): Boolean = true
 
     override fun onFindMoreAddonsButtonClicked() {
         onMoreAddonsButtonClicked()
