@@ -145,7 +145,7 @@ function update(state = initialUIState(), action) {
     }
 
     case "NAVIGATE": {
-      return { ...state, activeSearch: null, highlightedLineRange: null };
+      return { ...state, highlightedLineRange: null };
     }
 
     case "REMOVE_THREAD": {

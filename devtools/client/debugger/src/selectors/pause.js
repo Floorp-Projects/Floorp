@@ -49,6 +49,10 @@ export function getThreadContext(state) {
   return state.pause.threadcx;
 }
 
+export function getNavigateCounter(state) {
+  return state.pause.threadcx.navigateCounter;
+}
+
 export function getPauseReason(state, thread) {
   return getThreadPauseState(state.pause, thread).why;
 }
