@@ -42,11 +42,18 @@
     ok(pts.includes("120"), "VP8 is supported");
     ok(pts.includes("121"), "VP9 is supported");
     if (pts.length > 2) {
-      is(pts.length, 4, "Expected VP8, VP9 and two variants of H264");
+      is(pts.length, 6, "Expected VP8, VP9, two variants of H264, ULPFEC, and RED");
       ok(pts.includes("97"), "H264 with no packetization-mode is supported");
       ok(pts.includes("126"), "H264 with packetization-mode=1 is supported");
+      ok(pts.includes("122"), "RED is supported");
+      ok(pts.includes("123"), "ULPFEC is supported");
     }
     for (const pt of pts) {
+      if (pt == "122" || pt == "123") {
+        // ULPFEC and RED are meant to work combined with other codecs.
+        // Forcing sdp with only one of them is not supported and will result in failures.
+        continue;
+      }
       await testScreenshare(pt);
     }
   });
