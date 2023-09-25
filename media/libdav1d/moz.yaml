@@ -53,6 +53,7 @@ vendoring:
     - doc
     - examples
     - package
+    - tests/checkasm
     - tools
 
   generated:
