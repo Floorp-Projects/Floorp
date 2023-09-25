@@ -20,6 +20,7 @@ extern crate lazy_static;
 extern crate malloc_size_of;
 #[macro_use]
 extern crate malloc_size_of_derive;
+extern crate nsstring;
 extern crate selectors;
 #[macro_use]
 extern crate serde;

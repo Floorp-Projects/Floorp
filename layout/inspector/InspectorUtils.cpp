@@ -27,6 +27,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
+#include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/Highlight.h"
@@ -815,6 +816,29 @@ void InspectorUtils::GetRegisteredCssHighlights(GlobalObject& aGlobalObject,
     if (!aActiveOnly || highlight->Size() > 0) {
       aResult.AppendElement(highlightName->GetUTF16String());
     }
+  }
+}
+
+/* static */
+void InspectorUtils::GetCSSRegisteredProperties(
+    GlobalObject& aGlobalObject, Document& aDocument,
+    nsTArray<InspectorCSSPropertyDefinition>& aResult) {
+  nsTArray<StylePropDef> result;
+  Servo_GetRegisteredCustomProperties(
+      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawData(),
+      &result);
+  for (const auto& propDef : result) {
+    InspectorCSSPropertyDefinition& property = *aResult.AppendElement();
+
+    propDef.name.AsAtom()->ToUTF8String(property.mName);
+    property.mSyntax.Append(propDef.syntax);
+    property.mInherits = propDef.inherits;
+    if (propDef.has_initial_value) {
+      property.mInitialValue.Append(propDef.initial_value);
+    } else {
+      property.mInitialValue.SetIsVoid(true);
+    }
+    property.mFromJS = propDef.from_js;
   }
 }
 

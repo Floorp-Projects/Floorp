@@ -47,4 +47,10 @@ impl ScriptRegistry {
         let old = self.properties.insert(name, registration);
         debug_assert!(old.is_none(), "Already registered? Should be an error");
     }
+
+    /// Returns the properties hashmap.
+    #[inline]
+    pub fn get_all(&self) -> &PrecomputedHashMap<Atom, PropertyRegistration> {
+        &self.properties
+    }
 }

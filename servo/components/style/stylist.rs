@@ -3237,6 +3237,11 @@ impl CascadeData {
         true
     }
 
+    /// Returns the custom properties map.
+    pub fn custom_property_registrations(&self) -> &LayerOrderedMap<PropertyRegistration> {
+        &self.custom_property_registrations
+    }
+
     /// Clears the cascade data, but not the invalidation data.
     fn clear_cascade_data(&mut self) {
         self.normal_rules.clear();

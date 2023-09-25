@@ -5,6 +5,9 @@
 //! Used for parsing and serializing component names from the syntax string.
 
 use super::{Component, ComponentName, Multiplier};
+use std::fmt::{self, Debug};
+use std::{fmt::Write};
+use style_traits::{CssWriter, ToCss};
 
 /// <https://drafts.css-houdini.org/css-properties-values-api-1/#supported-names>
 #[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq)]
@@ -79,5 +82,34 @@ impl DataType {
             b"string" => DataType::String,
             _ => return None,
         })
+    }
+}
+
+impl ToCss for DataType {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        dest.write_char('<')?;
+        dest.write_str(
+            match *self {
+                DataType::Length => "length",
+                DataType::Number => "number",
+                DataType::Percentage => "percentage",
+                DataType::LengthPercentage => "length-percentage",
+                DataType::Color => "color",
+                DataType::Image => "image",
+                DataType::Url => "url",
+                DataType::Integer => "integer",
+                DataType::Angle => "angle",
+                DataType::Time => "time",
+                DataType::Resolution => "resolution",
+                DataType::TransformFunction => "transform-function",
+                DataType::CustomIdent => "custom-ident",
+                DataType::TransformList => "transform-list",
+                DataType::String => "string",
+            }
+        )?;
+        dest.write_char('>')
     }
 }

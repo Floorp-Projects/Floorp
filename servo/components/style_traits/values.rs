@@ -7,6 +7,7 @@
 use app_units::Au;
 use cssparser::ToCss as CssparserToCss;
 use cssparser::{serialize_string, ParseError, Parser, Token, UnicodeRange};
+use nsstring::nsCString;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 
@@ -88,6 +89,16 @@ pub trait ToCss {
     #[inline]
     fn to_css_string(&self) -> String {
         let mut s = String::new();
+        self.to_css(&mut CssWriter::new(&mut s)).unwrap();
+        s
+    }
+
+    /// Serialize `self` in CSS syntax and return a nsCString.
+    ///
+    /// (This is a convenience wrapper for `to_css` and probably should not be overridden.)
+    #[inline]
+    fn to_css_nscstring(&self) -> nsCString {
+        let mut s = nsCString::new();
         self.to_css(&mut CssWriter::new(&mut s)).unwrap();
         s
     }

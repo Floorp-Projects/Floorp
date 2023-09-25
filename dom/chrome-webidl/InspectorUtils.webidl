@@ -80,6 +80,7 @@ namespace InspectorUtils {
 
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
   sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
+  sequence<InspectorCSSPropertyDefinition> getCSSRegisteredProperties(Document document);
 };
 
 dictionary SupportsOptions {
@@ -142,6 +143,14 @@ dictionary InspectorFontFeature {
   required DOMString tag;
   required DOMString script;
   required DOMString languageSystem;
+};
+
+dictionary InspectorCSSPropertyDefinition {
+  required UTF8String name;
+  required UTF8String syntax;
+  required boolean inherits;
+  required UTF8String? initialValue;
+  required boolean fromJS;
 };
 
 [Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",
