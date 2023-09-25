@@ -811,7 +811,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
                                    nsEventStatus* aEventStatus,
                                    EventDispatchingCallback* aCallback,
                                    nsTArray<EventTarget*>* aTargets) {
-  AUTO_PROFILER_LABEL("EventDispatcher::Dispatch", OTHER);
+  AUTO_PROFILER_LABEL_HOT("EventDispatcher::Dispatch", OTHER);
 
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
