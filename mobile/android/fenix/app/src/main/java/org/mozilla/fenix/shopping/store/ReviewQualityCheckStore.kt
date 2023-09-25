@@ -51,12 +51,12 @@ private fun mapStateForUpdateAction(
                     )
                 }
             } else {
-                ReviewQualityCheckState.NotOptedIn
+                ReviewQualityCheckState.NotOptedIn()
             }
         }
 
         ReviewQualityCheckAction.OptOut -> {
-            ReviewQualityCheckState.NotOptedIn
+            ReviewQualityCheckState.NotOptedIn()
         }
 
         ReviewQualityCheckAction.ToggleProductRecommendation -> {

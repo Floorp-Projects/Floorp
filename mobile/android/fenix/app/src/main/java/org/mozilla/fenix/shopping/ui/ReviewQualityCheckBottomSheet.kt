@@ -25,6 +25,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
  * @param onRequestDismiss Invoked when a user action requests dismissal of the bottom sheet.
  * @param modifier The modifier to be applied to the Composable.
  */
+@Suppress("LongMethod")
 @Composable
 fun ReviewQualityCheckBottomSheet(
     store: ReviewQualityCheckStore,
@@ -42,8 +43,30 @@ fun ReviewQualityCheckBottomSheet(
         when (val state = reviewQualityCheckState) {
             is ReviewQualityCheckState.NotOptedIn -> {
                 ReviewQualityCheckContextualOnboarding(
+                    retailers = state.retailers,
                     onPrimaryButtonClick = {
                         store.dispatch(ReviewQualityCheckAction.OptIn)
+                    },
+                    onLearnMoreClick = { url ->
+                        store.dispatch(
+                            ReviewQualityCheckAction.OpenLink(
+                                ReviewQualityCheckState.LinkType.ExternalLink(url),
+                            ),
+                        )
+                    },
+                    onPrivacyPolicyClick = { url ->
+                        store.dispatch(
+                            ReviewQualityCheckAction.OpenLink(
+                                ReviewQualityCheckState.LinkType.ExternalLink(url),
+                            ),
+                        )
+                    },
+                    onTermsOfUseClick = { url ->
+                        store.dispatch(
+                            ReviewQualityCheckAction.OpenLink(
+                                ReviewQualityCheckState.LinkType.ExternalLink(url),
+                            ),
+                        )
                     },
                     onSecondaryButtonClick = onRequestDismiss,
                 )

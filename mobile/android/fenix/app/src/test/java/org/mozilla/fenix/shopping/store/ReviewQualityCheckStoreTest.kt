@@ -45,7 +45,7 @@ class ReviewQualityCheckStoreTest {
             dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
 
-            val expected = ReviewQualityCheckState.NotOptedIn
+            val expected = ReviewQualityCheckState.NotOptedIn()
             assertEquals(expected, tested.state)
         }
 
@@ -90,7 +90,7 @@ class ReviewQualityCheckStoreTest {
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            val expected = ReviewQualityCheckState.NotOptedIn
+            val expected = ReviewQualityCheckState.NotOptedIn()
             assertEquals(expected, tested.state)
         }
 

@@ -110,7 +110,7 @@ fun ReviewQualityCheckInfoCard(
 
                     LinkText(
                         text = it.first,
-                        linkTextState = listOf(it.second),
+                        linkTextStates = listOf(it.second),
                         style = FirefoxTheme.typography.body2.copy(
                             color = FirefoxTheme.colors.textPrimary,
                         ),
