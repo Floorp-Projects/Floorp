@@ -49,10 +49,6 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
   bool mPolling MOZ_GUARDED_BY(mMutex);
   bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
 
-  // We might tell polling to start/stop from our polling thread
-  // or from the main thread during ::Observe().
-  Mutex mMutex;
-
   // Polling interval to check for low memory. In high memory scenarios,
   // default to 5000 ms between each check.
   static const uint32_t kHighMemoryPollingIntervalMS = 5000;
@@ -67,9 +63,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 static const char* kMeminfoPath = "/proc/meminfo";
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
-    : mPolling(false),
-      mUnderMemoryPressure(false),
-      mMutex("Memory Poller mutex") {}
+    : mPolling(false), mUnderMemoryPressure(false) {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
   nsresult rv = nsAvailableMemoryWatcherBase::Init();
@@ -207,6 +201,8 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
   // We handle low memory offthread, but we want to unload
   // tabs only from the main thread, so we will dispatch this
   // back to the main thread.
+  // Since we are doing this async, we don't need to unlock the mutex first;
+  // the AutoLock will unlock the mutex when we finish the dispatch.
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "nsAvailableMemoryWatcher::OnLowMemory",
       [self = RefPtr{this}]() { self->mTabUnloader->UnloadTabAsync(); }));
@@ -229,7 +225,7 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
     return;
   }
   if (mUnderMemoryPressure) {
-    RecordTelemetryEventOnHighMemory();
+    RecordTelemetryEventOnHighMemory(lock);
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
     mUnderMemoryPressure = false;
     UpdateCrashAnnotation(lock);
