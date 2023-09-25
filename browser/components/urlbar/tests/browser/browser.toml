@@ -422,7 +422,11 @@ https_first_disabled = true
 
 ["browser_searchMode_sessionStore.js"]
 https_first_disabled = true
-skip-if = ["os == 'mac' && debug && verify"] # bug 1671045
+skip-if = [
+  "os == 'mac' && debug", # Bug 1671045, Bug 1849098
+  "os == 'linux' && (debug || tsan || asan)", # Bug 1849098
+  "os == 'win' && debug", # Bug 1849098
+]
 
 ["browser_searchMode_setURI.js"]
 https_first_disabled = true
