@@ -104,6 +104,7 @@ class RecordingDevicesMiddleware(
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(recordingState.iconResource)
             .setContentTitle(context.getString(recordingState.titleResource))
+            .setContentText(context.getString(recordingState.textResource))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setContentIntent(pendingIntent)
@@ -127,6 +128,7 @@ class RecordingDevicesMiddleware(
 internal sealed class RecordingState {
     abstract val iconResource: Int
     abstract val titleResource: Int
+    abstract val textResource: Int
 
     val isRecording
         get() = this !is None
@@ -134,16 +136,19 @@ internal sealed class RecordingState {
     object CameraAndMicrophone : RecordingState() {
         override val iconResource = iconsR.drawable.mozac_ic_camera_24
         override val titleResource = R.string.mozac_feature_media_sharing_camera_and_microphone
+        override val textResource = R.string.mozac_feature_media_sharing_camera_and_microphone_text
     }
 
     object Camera : RecordingState() {
         override val iconResource = iconsR.drawable.mozac_ic_camera_24
         override val titleResource = R.string.mozac_feature_media_sharing_camera
+        override val textResource = R.string.mozac_feature_media_sharing_camera_text
     }
 
     object Microphone : RecordingState() {
         override val iconResource = iconsR.drawable.mozac_ic_microphone_24
         override val titleResource = R.string.mozac_feature_media_sharing_microphone
+        override val textResource = R.string.mozac_feature_media_sharing_microphone_text
     }
 
     object None : RecordingState() {
@@ -151,6 +156,8 @@ internal sealed class RecordingState {
             get() = throw UnsupportedOperationException()
 
         override val titleResource: Int
+            get() = throw UnsupportedOperationException()
+        override val textResource: Int
             get() = throw UnsupportedOperationException()
     }
 }
