@@ -2416,8 +2416,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
     wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder, LayoutDeviceRect& aImageRect) {
   const bool paintOnContentSide = aItem->MustPaintOnContentSide();
-  bool useBlobImage =
-      StaticPrefs::gfx_webrender_blob_images() && !paintOnContentSide;
+  bool useBlobImage = !paintOnContentSide;
   Maybe<gfx::DeviceColor> highlight = Nothing();
   if (StaticPrefs::gfx_webrender_debug_highlight_painted_layers()) {
     highlight = Some(useBlobImage ? gfx::DeviceColor(1.0, 0.0, 0.0, 0.5)

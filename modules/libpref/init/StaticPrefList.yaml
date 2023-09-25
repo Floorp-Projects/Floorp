@@ -6269,11 +6269,6 @@
   mirror: once
 #endif
 
-- name: gfx.webrender.blob-images
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: gfx.webrender.svg-images
   type: RelaxedAtomicBool
   value: true

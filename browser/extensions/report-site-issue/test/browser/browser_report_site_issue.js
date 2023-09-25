@@ -200,10 +200,6 @@ add_task(async function test_opened_page() {
         typeof details["gfx.webrender.all"] == "boolean",
         "Details has gfx.webrender.all."
       );
-      ok(
-        typeof details["gfx.webrender.blob-images"] == "boolean",
-        "Details has gfx.webrender.blob-images."
-      );
 
       is(
         preview.innerText,
