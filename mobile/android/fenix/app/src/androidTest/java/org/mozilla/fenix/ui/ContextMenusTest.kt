@@ -232,7 +232,7 @@ class ContextMenusTest {
         }
 
         downloadRobot {
-            verifyDownloadNotificationPopup()
+            verifyDownloadCompleteNotificationPopup()
         }.clickOpen("image/jpeg") {} // verify open intent is matched with associated data type
         downloadRobot {
             verifyPhotosAppOpens()

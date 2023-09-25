@@ -199,7 +199,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }.clickDownloadLink("smallZip.zip") {
             verifyDownloadPrompt("smallZip.zip")
         }.clickDownload {
-            verifyDownloadNotificationPopup()
+            verifyDownloadCompleteNotificationPopup()
         }.closeCompletedDownloadPrompt {
         }.goToHomescreen {
         }.openThreeDotMenu {

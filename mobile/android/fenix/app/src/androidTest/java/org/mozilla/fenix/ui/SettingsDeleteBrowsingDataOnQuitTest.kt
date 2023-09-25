@@ -196,7 +196,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }.clickDownloadLink("smallZip.zip") {
             verifyDownloadPrompt("smallZip.zip")
         }.clickDownload {
-            verifyDownloadNotificationPopup()
+            verifyDownloadCompleteNotificationPopup()
         }.closeCompletedDownloadPrompt {
         }.goToHomescreen {
         }.openThreeDotMenu {

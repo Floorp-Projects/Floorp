@@ -187,9 +187,11 @@ object TestHelper {
         val storageVolume: StorageVolume = storageVolumes[0]
         val file = File(storageVolume.directory!!.path + "/Download/" + fileName)
         try {
-            file.delete()
-            Log.d("TestLog", "File delete try 1")
-            assertFalse("The file was not deleted", file.exists())
+            if (file.exists()) {
+                file.delete()
+                Log.d("TestLog", "File delete try 1")
+                assertFalse("The file was not deleted", file.exists())
+            }
         } catch (e: AssertionError) {
             file.delete()
             Log.d("TestLog", "File delete retried")

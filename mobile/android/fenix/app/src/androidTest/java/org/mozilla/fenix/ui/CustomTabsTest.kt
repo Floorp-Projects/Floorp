@@ -206,7 +206,7 @@ class CustomTabsTest {
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
-            verifyDownloadNotificationPopup()
+            verifyDownloadCompleteNotificationPopup()
         }
         mDevice.openNotification()
         notificationShade {

@@ -41,18 +41,20 @@ class DownloadFileTypesTest(fileName: String) {
             "videoSample.webm",
             "CSVfile.csv",
             "XMLfile.xml",
+            "tAJwqaWjJsXS8AhzSninBMCfIZbHBGgcc001lx5DIdDwIcfEgQ6vE5Gb5VgAled17DFZ2A7ZDOHA0NpQPHXXFt.svg",
         )
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251028&group_by=cases:section_id&group_id=31659&group_order=asc
     @SmokeTest
     @Test
-    fun downloadMultipleFileTypesTest() {
+    fun allFilesAppearInDownloadsMenuTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
-            verifyDownloadNotificationPopup()
+            verifyDownloadCompleteNotificationPopup()
         }.closeCompletedDownloadPrompt {
         }.openThreeDotMenu {
         }.openDownloadsManager {

@@ -29,6 +29,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
@@ -48,7 +49,58 @@ class DownloadRobot {
 
     fun verifyDownloadPrompt(fileName: String) = assertDownloadPrompt(fileName)
 
-    fun verifyDownloadNotificationPopup() = assertDownloadNotificationPopup()
+    fun verifyDownloadCompleteNotificationPopup() {
+        assertTrue(
+            "Download notification Open button not found",
+            mDevice.findObject(UiSelector().text("Open"))
+                .waitForExists(waitingTime),
+        )
+        assertTrue(
+            "Download completed notification text doesn't match",
+            mDevice.findObject(UiSelector().textContains("Download completed"))
+                .waitForExists(waitingTime),
+        )
+        assertTrue(
+            "Downloaded file name not visible",
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/download_dialog_filename"))
+                .waitForExists(waitingTime),
+        )
+    }
+
+    fun verifyDownloadFailedPrompt(fileName: String) {
+        assertTrue(
+            itemWithResId("$packageName:id/download_dialog_icon")
+                .waitForExists(waitingTime),
+        )
+        assertTrue(
+            "Download dialog title not displayed",
+            itemWithResIdAndText(
+                "$packageName:id/download_dialog_title",
+                "Download failed",
+            ).waitForExists(waitingTime),
+        )
+        assertTrue(
+            "Download file name not displayed",
+            itemWithResIdContainingText(
+                "$packageName:id/download_dialog_filename",
+                fileName,
+            ).waitForExists(waitingTime),
+        )
+        assertTrue(
+            "Try again button not displayed",
+            itemWithResIdAndText(
+                "$packageName:id/download_dialog_action_button",
+                "Try Again",
+            ).waitForExists(waitingTime),
+        )
+    }
+
+    fun clickTryAgainButton() {
+        itemWithResIdAndText(
+            "$packageName:id/download_dialog_action_button",
+            "Try Again",
+        ).click()
+    }
 
     fun verifyPhotosAppOpens() = assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
 
@@ -121,13 +173,6 @@ class DownloadRobot {
 
         fun closeCompletedDownloadPrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             closeCompletedDownloadButton().click()
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
-        fun closePrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            closePromptButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -214,24 +259,6 @@ private fun assertDownloadPrompt(fileName: String) {
             }
         }
     }
-}
-
-private fun assertDownloadNotificationPopup() {
-    assertTrue(
-        "Download notification Open button not found",
-        mDevice.findObject(UiSelector().text("Open"))
-            .waitForExists(waitingTime),
-    )
-    assertTrue(
-        "Download completed notification text doesn't match",
-        mDevice.findObject(UiSelector().textContains("Download completed"))
-            .waitForExists(waitingTime),
-    )
-    assertTrue(
-        "Downloaded file name not visible",
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/download_dialog_filename"))
-            .waitForExists(waitingTime),
-    )
 }
 
 private fun closeCompletedDownloadButton() =

@@ -165,6 +165,11 @@ class NotificationRobot {
         }
     }
 
+    fun clickNotification(notificationMessage: String) {
+        mDevice.findObject(UiSelector().text(notificationMessage)).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().text(notificationMessage)).click()
+    }
+
     class Transition {
 
         fun clickClosePrivateTabsNotification(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
