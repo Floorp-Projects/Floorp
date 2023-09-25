@@ -310,8 +310,8 @@ skip == dynamic--inline-resize-window-width.xhtml    pass.svg # Fails way too mu
 random-if(Android) == dynamic--object-svg-unloaded.xhtml     pass.svg
 # == dynamic--object--auto-auto--pct-px.html 
 
-# FIXME(bug 700533): CanvasRenderingContext2D.drawImage() fails silently when drawing an SVG image
-# without a width or height attribute.
-!= canvas-drawImage-no-width-or-height.html canvas-drawImage-no-width-or-height-ref.html
-!= canvas-drawImage-width-with-no-height.html canvas-drawImage-width-with-no-height-ref.html
-!= canvas-drawImage-height-with-no-width.html canvas-drawImage-height-with-no-width-ref.html
+# FIXME(dlrobertson): Blink and WebKit do no not pass the following tests due
+# due to a difference in surface size calculation.
+== canvas-drawImage-no-width-or-height.html canvas-drawImage-no-width-or-height-ref.html
+== canvas-drawImage-width-with-no-height.html canvas-drawImage-width-with-no-height-ref.html
+== canvas-drawImage-height-with-no-width.html canvas-drawImage-height-with-no-width-ref.html
