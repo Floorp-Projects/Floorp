@@ -211,8 +211,6 @@ void nsCocoaWindow::DestroyNativeWindow() {
       // native fullscreen transition.
       if (!haveRequestedFullscreenExit && inNativeFullscreen() &&
           CanStartNativeTransition()) {
-        NSLog(@"BJW nsCocoaWindow::DestroyNativeWindow: one-time request to "
-              @"request fullscreen exit.\n");
         [mWindow toggleFullScreen:nil];
         haveRequestedFullscreenExit = true;
       }
@@ -2037,7 +2035,6 @@ void nsCocoaWindow::ProcessTransitions() {
 }
 
 void nsCocoaWindow::FinishCurrentTransition() {
-  NSLog(@"BJW nsCocoaWindow::FinishCurrentTransition.\n");
   mWaitingOnFinishCurrentTransition = false;
   mTransitionCurrent.reset();
   mIsTransitionCurrentAdded = false;
@@ -2061,7 +2058,6 @@ void nsCocoaWindow::FinishCurrentTransitionIfMatching(
     // transitions. To accomplish this, we dispatch our cleanup to happen on the
     // next event loop. Doing this will ensure that any async native transition
     // methods we call (like toggleFullScreen) will succeed.
-    NSLog(@"BJW nsCocoaWindow::FinishCurrentTransitionIfMatching.\n");
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(
             NewRunnableMethod("FinishCurrentTransition", this,
                               &nsCocoaWindow::FinishCurrentTransition)))) {
