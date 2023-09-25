@@ -3039,8 +3039,10 @@ void nsHTMLScrollFrame::ScrollToImpl(
     // may simplify this a bit and should be fine from the APZ side.
     if (mApzSmoothScrollDestination && aOrigin != ScrollOrigin::Clamp) {
       if (aOrigin == ScrollOrigin::Relative) {
-        AppendScrollUpdate(
-            ScrollPositionUpdate::NewRelativeScroll(mApzScrollPos, pt));
+        AppendScrollUpdate(ScrollPositionUpdate::NewRelativeScroll(
+            // Clamp |mApzScrollPos| here. See the comment for this clamping
+            // reason below NewRelativeScroll call.
+            GetLayoutScrollRange().ClampPoint(mApzScrollPos), pt));
         mApzScrollPos = pt;
       } else if (aOrigin != ScrollOrigin::Apz) {
         ScrollOrigin origin =
@@ -3127,8 +3129,12 @@ void nsHTMLScrollFrame::ScrollToImpl(
   if (aOrigin == ScrollOrigin::Relative) {
     MOZ_ASSERT(!isScrollOriginDowngrade);
     MOZ_ASSERT(mLastScrollOrigin == ScrollOrigin::Relative);
-    AppendScrollUpdate(
-        ScrollPositionUpdate::NewRelativeScroll(mApzScrollPos, pt));
+    AppendScrollUpdate(ScrollPositionUpdate::NewRelativeScroll(
+        // It's possible that |mApzScrollPos| is no longer within the scroll
+        // range, we need to clamp it to the current scroll range, otherwise
+        // calculating a relative scroll distance from the outside point will
+        // result a point far from the desired point.
+        GetLayoutScrollRange().ClampPoint(mApzScrollPos), pt));
     mApzScrollPos = pt;
   } else if (aOrigin != ScrollOrigin::Apz) {
     AppendScrollUpdate(ScrollPositionUpdate::NewScroll(mLastScrollOrigin, pt));
