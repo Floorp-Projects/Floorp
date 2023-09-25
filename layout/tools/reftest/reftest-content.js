@@ -981,7 +981,6 @@ function WaitForTestEnd(
         CheckForLivenessOfContentRootElement();
         CheckForProcessCrashExpectation(contentRootElement);
         setTimeout(RecordResult, 0, forURL);
-        return;
     }
   }
 
@@ -1209,7 +1208,7 @@ async function RecordResult(forURL) {
       // Force an unexpected failure to alert the test author to fix the test.
       error =
         "test's getTestCases() must return an Array-like Object. (SCRIPT)\n";
-    } else if (testcases.length == 0) {
+    } else if (!testcases.length) {
       // This failure may be due to a JavaScript Engine bug causing
       // early termination of the test. If we do not allow silent
       // failure, the driver will report an error.
@@ -1456,11 +1455,11 @@ function SendContentReady() {
 }
 
 function SendException(what) {
-  sendAsyncMessage("reftest:Exception", { what: what });
+  sendAsyncMessage("reftest:Exception", { what });
 }
 
 function SendFailedLoad(why) {
-  sendAsyncMessage("reftest:FailedLoad", { why: why });
+  sendAsyncMessage("reftest:FailedLoad", { why });
 }
 
 function SendFailedNoPaint() {
@@ -1476,11 +1475,11 @@ function SendFailedDisplayList() {
 }
 
 function SendFailedOpaqueLayer(why) {
-  sendAsyncMessage("reftest:FailedOpaqueLayer", { why: why });
+  sendAsyncMessage("reftest:FailedOpaqueLayer", { why });
 }
 
 function SendFailedAssignedLayer(why) {
-  sendAsyncMessage("reftest:FailedAssignedLayer", { why: why });
+  sendAsyncMessage("reftest:FailedAssignedLayer", { why });
 }
 
 // Returns a promise that resolves to a bool that indicates if a snapshot was taken.
@@ -1527,9 +1526,9 @@ async function SendInitCanvasWithSnapshot(forURL) {
 
 function SendScriptResults(runtimeMs, error, results) {
   sendAsyncMessage("reftest:ScriptResults", {
-    runtimeMs: runtimeMs,
-    error: error,
-    results: results,
+    runtimeMs,
+    error,
+    results,
   });
 }
 
@@ -1539,9 +1538,9 @@ function SendStartPrint(isPrintSelection, printRange) {
 
 function SendPrintResult(runtimeMs, status, fileName) {
   sendAsyncMessage("reftest:PrintResult", {
-    runtimeMs: runtimeMs,
-    status: status,
-    fileName: fileName,
+    runtimeMs,
+    status,
+    fileName,
   });
 }
 
@@ -1550,7 +1549,7 @@ function SendExpectProcessCrash(runtimeMs) {
 }
 
 function SendTestDone(runtimeMs) {
-  sendAsyncMessage("reftest:TestDone", { runtimeMs: runtimeMs });
+  sendAsyncMessage("reftest:TestDone", { runtimeMs });
 }
 
 function roundTo(x, fraction) {
@@ -1618,7 +1617,7 @@ async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement) {
       var bottom = Math.ceil(roundTo(r.bottom * scale, 0.001));
       LogInfo("Rect: " + left + " " + top + " " + right + " " + bottom);
 
-      rects.push({ left: left, top: top, right: right, bottom: bottom });
+      rects.push({ left, top, right, bottom });
     }
 
     message = "reftest:UpdateCanvasForInvalidation";
@@ -1627,13 +1626,13 @@ async function SendUpdateCanvasForEvent(forURL, rectList, contentRootElement) {
   // See comments in SendInitCanvasWithSnapshot() re: the split
   // logic here.
   if (!gBrowserIsRemote) {
-    sendSyncMessage(message, { rects: rects });
+    sendSyncMessage(message, { rects });
   } else {
     await SynchronizeForSnapshot(SYNC_ALLOW_DISABLE);
     let promise = new Promise(resolve => {
       gUpdateCanvasPromiseResolver = resolve;
     });
-    sendAsyncMessage(message, { rects: rects });
+    sendAsyncMessage(message, { rects });
     await promise;
   }
 }

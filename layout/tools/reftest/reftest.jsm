@@ -139,7 +139,7 @@ function LogWidgetLayersFailure() {
 }
 
 function AllocateCanvas() {
-  if (g.recycledCanvases.length > 0) {
+  if (g.recycledCanvases.length) {
     return g.recycledCanvases.shift();
   }
 
@@ -680,10 +680,10 @@ function BuildUseCounts() {
       !url.skip &&
       (url.type == TYPE_REFTEST_EQUAL || url.type == TYPE_REFTEST_NOTEQUAL)
     ) {
-      if (url.prefSettings1.length == 0) {
+      if (!url.prefSettings1.length) {
         AddURIUseCount(g.urls[i].url1);
       }
-      if (url.prefSettings2.length == 0) {
+      if (!url.prefSettings2.length) {
         AddURIUseCount(g.urls[i].url2);
       }
     }
@@ -717,7 +717,7 @@ async function StartCurrentTest() {
   g.testLog = [];
 
   // make sure we don't run tests that are expected to kill the browser
-  while (g.urls.length > 0) {
+  while (g.urls.length) {
     var test = g.urls[0];
     logger.testStart(test.identifier);
     if (test.skip) {
@@ -740,12 +740,12 @@ async function StartCurrentTest() {
   }
 
   if (
-    (g.urls.length == 0 && g.repeat == 0) ||
+    (!g.urls.length && g.repeat == 0) ||
     (g.runUntilFailure && HasUnexpectedResult())
   ) {
     await RestoreChangedPreferences();
     DoneTests();
-  } else if (g.urls.length == 0 && g.repeat > 0) {
+  } else if (!g.urls.length && g.repeat > 0) {
     // Repeat
     g.repeat--;
     ReadTests();
@@ -833,7 +833,7 @@ async function StartCurrentURI(aURLTargetType) {
 
   var prefsRequireRefresh = false;
 
-  if (prefSettings.length > 0) {
+  if (prefSettings.length) {
     var badPref = undefined;
     try {
       prefSettings.forEach(function (ps) {
@@ -926,7 +926,7 @@ async function StartCurrentURI(aURLTargetType) {
   }
 
   if (
-    prefSettings.length == 0 &&
+    !prefSettings.length &&
     g.uriCanvases[g.currentURL] &&
     (g.urls[0].type == TYPE_REFTEST_EQUAL ||
       g.urls[0].type == TYPE_REFTEST_NOTEQUAL) &&
@@ -1240,7 +1240,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
               let failureResults = results.filter(function (result) {
                 return !result.passed;
               });
-              if (failureResults.length > 0) {
+              if (failureResults.length) {
                 // We got an expected failure. Let's get rid of the
                 // passes from the results so we don't trigger
                 // TEST_UNEXPECTED_PASS logging for those.
@@ -1277,7 +1277,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
     if (errorMsg) {
       // Force an unexpected failure to alert the test author to fix the test.
       expected = EXPECTED_PASS;
-    } else if (typeSpecificResults.length == 0) {
+    } else if (!typeSpecificResults.length) {
       // This failure may be due to a JavaScript Engine bug causing
       // early termination of the test. If we do not allow silent
       // failure, report an error.
@@ -1350,7 +1350,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
   const prefSettings =
     g.urls[0][isRecordingRef ? "prefSettings2" : "prefSettings1"];
 
-  if (prefSettings.length == 0 && g.uriCanvases[g.currentURL]) {
+  if (!prefSettings.length && g.uriCanvases[g.currentURL]) {
     g.currentCanvas = g.uriCanvases[g.currentURL];
   }
   if (g.currentCanvas == null) {
@@ -1565,10 +1565,10 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
           ReleaseCanvas(g.canvas1);
           ReleaseCanvas(g.canvas2);
         } else {
-          if (g.urls[0].prefSettings1.length == 0) {
+          if (!g.urls[0].prefSettings1.length) {
             UpdateCanvasCache(g.urls[0].url1, g.canvas1);
           }
-          if (g.urls[0].prefSettings2.length == 0) {
+          if (!g.urls[0].prefSettings2.length) {
             UpdateCanvasCache(g.urls[0].url2, g.canvas2);
           }
         }
@@ -2079,7 +2079,7 @@ function OnProcessCrashed(subject, topic, data) {
     g.expectedCrashDumpFiles.push(id + ".extra");
   }
 
-  if (additionalDumps && additionalDumps.length != 0) {
+  if (additionalDumps && additionalDumps.length) {
     for (const name of additionalDumps.split(",")) {
       g.expectedCrashDumpFiles.push(id + "-" + name + ".dmp");
     }
@@ -2101,24 +2101,24 @@ function SendClear() {
 
 function SendLoadScriptTest(uri, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadScriptTest", {
-    uri: uri,
-    timeout: timeout,
+    uri,
+    timeout,
   });
 }
 
 function SendLoadPrintTest(uri, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadPrintTest", {
-    uri: uri,
-    timeout: timeout,
+    uri,
+    timeout,
   });
 }
 
 function SendLoadTest(type, uri, uriTargetType, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadTest", {
-    type: type,
-    uri: uri,
-    uriTargetType: uriTargetType,
-    timeout: timeout,
+    type,
+    uri,
+    uriTargetType,
+    timeout,
   });
 }
 
@@ -2164,7 +2164,7 @@ function readPdf(path, callback) {
         "resource://pdf.js/build/pdf.worker.js";
       pdfjsLib
         .getDocument({
-          data: data,
+          data,
         })
         .promise.then(
           function (pdf) {
@@ -2174,7 +2174,6 @@ function readPdf(path, callback) {
             callback(new Error(`Couldn't parse ${path}, exception: ${e}`));
           }
         );
-      return;
     },
     function (e) {
       callback(new Error(`Couldn't read PDF ${path}, exception: ${e}`));
@@ -2270,8 +2269,8 @@ function comparePdfs(pathToTestPdf, pathToRefPdf, callback) {
                       }
                     }
                     resolve({
-                      passed: passed,
-                      description: description,
+                      passed,
+                      description,
                     });
                   },
                   reject);

@@ -182,7 +182,7 @@ Features to add:
         show_phase("loading");
         var input = ID("fileentry");
         var files = input.files;
-        if (files.length > 0) {
+        if (files.length) {
           // Only handle the first file; don't handle multiple selection.
           // The parts of the log we care about are ASCII-only.  Since we
           // can ignore lines we don't care about, best to read in as
@@ -244,7 +244,7 @@ Features to add:
               unexpected: data.hasOwnProperty("expected"),
               random: false,
               skip: data.status == "SKIP",
-              url: url,
+              url,
               images: [],
               imageLabels: []
             });
@@ -261,13 +261,13 @@ Features to add:
       }
 
       function build_viewer() {
-        if (gTestItems.length == 0) {
+        if (!gTestItems.length) {
           show_phase("entry");
           return;
         }
 
         var cell = ID("itemlist");
-        while (cell.childNodes.length > 0)
+        while (cell.childNodes.length)
           cell.removeChild(cell.childNodes[cell.childNodes.length - 1]);
 
         var table = document.createElement("table");
@@ -304,7 +304,7 @@ Features to add:
           // Only display part of URL after "/mozilla/".
           var match = item.url.match(/\/mozilla\/(.*)/);
           text = document.createTextNode(match ? match[1] : item.url);
-          if (item.images.length > 0) {
+          if (item.images.length) {
             var a = document.createElement("a");
             a.href = "javascript:show_images(" + i + ")";
             a.appendChild(text);
