@@ -340,8 +340,6 @@ class nsDisplayButtonBorder final : public nsPaintedDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayButtonBorder)
 
-  virtual bool MustPaintOnContentSide() const override { return true; }
-
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*>* aOutFrames) override {
