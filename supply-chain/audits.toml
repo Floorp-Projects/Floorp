@@ -1396,6 +1396,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.8.0 -> 1.9.0"
 
+[[audits.fastrand]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.9.0 -> 2.0.0"
+
 [[audits.filetime_win]]
 who = "Nick Alexander <nalexander@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -3270,6 +3275,11 @@ harmless. It will be removed in the next version.
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.12.6 -> 0.13.0"
+
+[[audits.tempfile]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "3.6.0 -> 3.8.0"
 
 [[audits.termcolor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -1,3 +1,12 @@
+# Version 2.0.0
+
+- **Breaking:** Remove interior mutability from `Rng`. (#47)
+- Add a `fork()` method. (#49)
+- Add a `no_std` mode. (#50)
+- Add an iterator selection function. (#51)
+- Add a `choose_multiple()` function for sampling several elements from an iterator. (#55)
+- Use the `getrandom` crate for seeding on WebAssembly targets if the `js` feature is enabled. (#60)
+
 # Version 1.9.0
 
 - Add `Rng::fill()` (#35, #43)

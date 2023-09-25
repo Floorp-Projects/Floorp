@@ -121,7 +121,6 @@ serde_with = { path = "build/rust/serde_with" }
 redox_users = { path = "build/rust/redox_users" }
 
 # Patch redox_syscall to an empty crate
-redox_syscall_0_2 = { package = "redox_syscall", path = "build/rust/redox_syscall_0_2" }
 redox_syscall = { path = "build/rust/redox_syscall" }
 
 # Override tinyvec with smallvec

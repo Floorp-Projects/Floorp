@@ -18,7 +18,7 @@ fn shuffle_wyhash(b: &mut Bencher) {
 
 #[bench]
 fn shuffle_fastrand(b: &mut Bencher) {
-    let rng = fastrand::Rng::new();
+    let mut rng = fastrand::Rng::new();
     let mut x = (0..100).collect::<Vec<usize>>();
     b.iter(|| {
         rng.shuffle(&mut x);
@@ -40,7 +40,7 @@ fn u8_wyhash(b: &mut Bencher) {
 
 #[bench]
 fn u8_fastrand(b: &mut Bencher) {
-    let rng = fastrand::Rng::new();
+    let mut rng = fastrand::Rng::new();
     b.iter(|| {
         let mut sum = 0u8;
         for _ in 0..10_000 {
@@ -64,7 +64,7 @@ fn u32_wyhash(b: &mut Bencher) {
 
 #[bench]
 fn u32_fastrand(b: &mut Bencher) {
-    let rng = fastrand::Rng::new();
+    let mut rng = fastrand::Rng::new();
     b.iter(|| {
         let mut sum = 0u32;
         for _ in 0..10_000 {
@@ -76,7 +76,7 @@ fn u32_fastrand(b: &mut Bencher) {
 
 #[bench]
 fn fill(b: &mut Bencher) {
-    let rng = fastrand::Rng::new();
+    let mut rng = fastrand::Rng::new();
     b.iter(|| {
         // Pick a size that isn't divisble by 8.
         let mut bytes = [0u8; 367];
@@ -87,7 +87,7 @@ fn fill(b: &mut Bencher) {
 
 #[bench]
 fn fill_naive(b: &mut Bencher) {
-    let rng = fastrand::Rng::new();
+    let mut rng = fastrand::Rng::new();
     b.iter(|| {
         let mut bytes = [0u8; 367];
         for item in &mut bytes {
