@@ -11,6 +11,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "nsIThread.h"
@@ -19,6 +20,11 @@
 namespace mozilla::gfx {
 
 CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
+
+StaticMonitor CanvasManagerParent::sReplayTexturesMonitor;
+nsTArray<CanvasManagerParent::ReplayTexture>
+    CanvasManagerParent::sReplayTextures;
+bool CanvasManagerParent::sReplayTexturesEnabled(true);
 
 /* static */ void CanvasManagerParent::Init(
     Endpoint<PCanvasManagerParent>&& aEndpoint) {
@@ -59,6 +65,10 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
   for (auto const& actor : actors) {
     actor->Close();
   }
+
+  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+  sReplayTextures.Clear();
+  lock.NotifyAll();
 }
 
 /* static */ void CanvasManagerParent::DisableRemoteCanvas() {
@@ -70,6 +80,127 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
           gfxPlatform::DisableRemoteCanvas();
         }
       }));
+
+  if (CanvasRenderThread::IsInCanvasRenderThread()) {
+    DisableRemoteCanvasInternal();
+    return;
+  }
+
+  CanvasRenderThread::Dispatch(NS_NewRunnableFunction(
+      "CanvasManagerParent::DisableRemoteCanvas",
+      [] { CanvasManagerParent::DisableRemoteCanvasInternal(); }));
+}
+
+/* static */ void CanvasManagerParent::DisableRemoteCanvasInternal() {
+  MOZ_ASSERT(CanvasRenderThread::IsInCanvasRenderThread());
+
+  AutoTArray<RefPtr<layers::CanvasTranslator>, 16> actors;
+  for (const auto& manager : sManagers) {
+    for (const auto& canvas : manager->ManagedPCanvasParent()) {
+      actors.AppendElement(static_cast<layers::CanvasTranslator*>(canvas));
+    }
+  }
+
+  {
+    StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+    sReplayTexturesEnabled = false;
+    sReplayTextures.Clear();
+  }
+
+  for (const auto& actor : actors) {
+    Unused << NS_WARN_IF(!actor->SendDeactivate());
+  }
+
+  {
+    StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+    lock.NotifyAll();
+  }
+}
+
+/* static */ void CanvasManagerParent::AddReplayTexture(
+    layers::CanvasTranslator* aOwner, int64_t aTextureId,
+    layers::TextureData* aTextureData) {
+  auto desc = MakeUnique<layers::SurfaceDescriptor>();
+  if (!aTextureData->Serialize(*desc)) {
+    MOZ_CRASH("Failed to serialize");
+  }
+
+  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+  sReplayTextures.AppendElement(
+      ReplayTexture{aOwner, aTextureId, std::move(desc)});
+  lock.NotifyAll();
+}
+
+/* static */ void CanvasManagerParent::RemoveReplayTexture(
+    layers::CanvasTranslator* aOwner, int64_t aTextureId) {
+  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+
+  auto i = sReplayTextures.Length();
+  while (i > 0) {
+    --i;
+    const auto& texture = sReplayTextures[i];
+    if (texture.mOwner == aOwner && texture.mId == aTextureId) {
+      sReplayTextures.RemoveElementAt(i);
+      break;
+    }
+  }
+}
+
+/* static */ void CanvasManagerParent::RemoveReplayTextures(
+    layers::CanvasTranslator* aOwner) {
+  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+
+  auto i = sReplayTextures.Length();
+  while (i > 0) {
+    --i;
+    const auto& texture = sReplayTextures[i];
+    if (texture.mOwner == aOwner) {
+      sReplayTextures.RemoveElementAt(i);
+    }
+  }
+}
+
+/* static */ UniquePtr<layers::SurfaceDescriptor>
+CanvasManagerParent::TakeReplayTexture(base::ProcessId aOtherPid,
+                                       int64_t aTextureId) {
+  // While in theory this could be relatively expensive, the array is most
+  // likely very small as the textures are removed during each composite.
+  auto i = sReplayTextures.Length();
+  while (i > 0) {
+    --i;
+    const auto& texture = sReplayTextures[i];
+    if (texture.mOwner->OtherPid() == aOtherPid && texture.mId == aTextureId) {
+      UniquePtr<layers::SurfaceDescriptor> desc =
+          std::move(sReplayTextures[i].mDesc);
+      sReplayTextures.RemoveElementAt(i);
+      return desc;
+    }
+  }
+  return nullptr;
+}
+
+/* static */ UniquePtr<layers::SurfaceDescriptor>
+CanvasManagerParent::WaitForReplayTexture(base::ProcessId aOtherPid,
+                                          int64_t aTextureId) {
+  StaticMonitorAutoLock lock(sReplayTexturesMonitor);
+
+  UniquePtr<layers::SurfaceDescriptor> desc;
+  while (!(desc = TakeReplayTexture(aOtherPid, aTextureId))) {
+    if (NS_WARN_IF(!sReplayTexturesEnabled)) {
+      return nullptr;
+    }
+
+    TimeDuration timeout = TimeDuration::FromMilliseconds(
+        StaticPrefs::gfx_canvas_remote_texture_timeout_ms());
+    CVStatus status = lock.Wait(timeout);
+    if (status == CVStatus::Timeout) {
+      // If something has gone wrong and the texture has already been destroyed,
+      // it will have cleaned up its descriptor.
+      return nullptr;
+    }
+  }
+
+  return desc;
 }
 
 CanvasManagerParent::CanvasManagerParent() = default;
@@ -111,6 +242,11 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(
   }
   mId = aId;
   return IPC_OK();
+}
+
+already_AddRefed<layers::PCanvasParent>
+CanvasManagerParent::AllocPCanvasParent() {
+  return MakeAndAddRef<layers::CanvasTranslator>();
 }
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(

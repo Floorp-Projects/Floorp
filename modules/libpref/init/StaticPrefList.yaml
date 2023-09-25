@@ -5666,6 +5666,12 @@
   value: false
   mirror: once
 
+# How long to wait in milliseconds for a texture to be resolved
+- name: gfx.canvas.remote.texture-timeout-ms
+  type: RelaxedAtomicUint32
+  value: 10000
+  mirror: always
+
 # How many worker threads spawned for remote canvas
 #  -1 - Calculate based on processor cores
 #   0 - No worker threads spawned, will do work on CanvasRenderThread

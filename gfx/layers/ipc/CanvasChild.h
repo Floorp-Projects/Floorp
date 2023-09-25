@@ -28,7 +28,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
  public:
   NS_INLINE_DECL_REFCOUNTING(CanvasChild)
 
-  explicit CanvasChild(Endpoint<PCanvasChild>&& aEndpoint);
+  CanvasChild();
 
   /**
    * @returns true if remote canvas has been deactivated due to failure.

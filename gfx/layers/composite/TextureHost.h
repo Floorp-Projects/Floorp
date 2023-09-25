@@ -417,7 +417,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   static already_AddRefed<TextureHost> Create(
       const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
-      ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
+      HostIPCAllocator* aDeallocator, LayersBackend aBackend,
       TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId);
 
   /**

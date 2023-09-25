@@ -17,6 +17,10 @@ class IPCWorkerRef;
 class WorkerPrivate;
 }  // namespace dom
 
+namespace layers {
+class CanvasChild;
+}  // namespace layers
+
 namespace webgpu {
 class WebGPUChild;
 }  // namespace webgpu
@@ -41,6 +45,12 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   static bool CreateParent(
       mozilla::ipc::Endpoint<PCanvasManagerParent>&& aEndpoint);
 
+  bool IsCanvasActive() { return mActive; }
+  void EndCanvasTransaction();
+  void DeactivateCanvas();
+
+  RefPtr<layers::CanvasChild> GetCanvasChild();
+
   RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
 
  private:
@@ -48,8 +58,10 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   void Destroy();
 
   RefPtr<mozilla::dom::IPCWorkerRef> mWorkerRef;
+  RefPtr<layers::CanvasChild> mCanvasChild;
   RefPtr<webgpu::WebGPUChild> mWebGPUChild;
   const uint32_t mId;
+  bool mActive = true;
 
   static MOZ_THREAD_LOCAL(CanvasManagerChild*) sLocalManager;
   static Atomic<uint32_t> sNextId;
