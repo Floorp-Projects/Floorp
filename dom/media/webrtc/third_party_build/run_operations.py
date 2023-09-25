@@ -68,7 +68,8 @@ def run_shell(cmd, capture_output=True):
             "Hit return code {} running '{}'. Aborting.".format(res.returncode, cmd),
             file=sys.stderr,
         )
-        print(res.stderr)
+        if capture_output:
+            print(res.stderr)
         sys.exit(1)
     output_lines = []
     if capture_output:
