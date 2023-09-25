@@ -295,6 +295,13 @@ user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
+[[publisher.linux-raw-sys]]
+version = "0.4.7"
+when = "2023-09-10"
+user-id = 6825
+user-login = "sunfishcode"
+user-name = "Dan Gohman"
+
 [[publisher.lock_api]]
 version = "0.4.9"
 when = "2022-09-20"
@@ -412,6 +419,13 @@ when = "2023-04-05"
 user-id = 57462
 user-login = "mozkeeler"
 user-name = "Dana Keeler"
+
+[[publisher.rustix]]
+version = "0.38.13"
+when = "2023-09-10"
+user-id = 6825
+user-login = "sunfishcode"
+user-name = "Dan Gohman"
 
 [[publisher.ryu]]
 version = "1.0.12"
@@ -860,6 +874,24 @@ various other minor portability fixes such as MIRI support.
 who = "Benjamin Bouvier <public@benj.me>"
 criteria = "safe-to-deploy"
 version = "0.1.3"
+
+[[audits.bytecode-alliance.audits.errno]]
+who = "Dan Gohman <dev@sunfishcode.online>"
+criteria = "safe-to-deploy"
+version = "0.3.0"
+notes = "This crate uses libc and windows-sys APIs to get and set the raw OS error value."
+
+[[audits.bytecode-alliance.audits.errno]]
+who = "Dan Gohman <dev@sunfishcode.online>"
+criteria = "safe-to-deploy"
+delta = "0.3.0 -> 0.3.1"
+notes = "Just a dependency version bump and a bug fix for redox"
+
+[[audits.bytecode-alliance.audits.errno-dragonfly]]
+who = "Jamey Sharp <jsharp@fastly.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "This should be portable to any POSIX system and seems like it should be part of the libc crate, but at any rate it's safe as is."
 
 [[audits.bytecode-alliance.audits.foreign-types]]
 who = "Pat Hickey <phickey@fastly.com>"
