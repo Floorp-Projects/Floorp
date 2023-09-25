@@ -179,7 +179,6 @@ function failedAuth(metadata, response) {
     case 2:
       // Proxy - Expecting a type 3 Authenticate message from the client
       // Respond with a 407 to indicate invalid credentials
-      //
       authorization = metadata.getHeader("Proxy-Authorization");
       authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 3 message");
