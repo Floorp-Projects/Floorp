@@ -154,7 +154,12 @@ class Browsertime(Perftest):
                     "windows": str(
                         pathlib.Path("{}chromedriver-win32", "chromedriver.exe")
                     ),
-                    "mac": str(pathlib.Path("{}chromedriver-mac-x64", "chromedriver")),
+                    "mac-x86_64": str(
+                        pathlib.Path("{}chromedriver-mac-x64", "chromedriver")
+                    ),
+                    "mac-arm": str(
+                        pathlib.Path("{}chromedriver-mac-arm64", "chromedriver")
+                    ),
                     "default": str(
                         pathlib.Path("{}chromedriver-linux64", "chromedriver")
                     ),
@@ -164,7 +169,10 @@ class Browsertime(Perftest):
                     if "mac" in self.config["platform"]:
                         self.browsertime_chromedriver = (
                             self.browsertime_chromedriver.replace(
-                                "{}chromedriver", cd_extracted_names_115["mac"]
+                                "{}chromedriver",
+                                cd_extracted_names_115[
+                                    f"mac-{self.config['processor']}"
+                                ],
                             )
                         )
                     elif "win" in self.config["platform"]:
