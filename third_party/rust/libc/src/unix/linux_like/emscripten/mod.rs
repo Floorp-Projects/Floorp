@@ -260,16 +260,13 @@ s! {
     }
     pub struct stat {
         pub st_dev: ::dev_t,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_dev_padding: ::c_int,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_ino_truncated: ::c_long,
         pub st_mode: ::mode_t,
         pub st_nlink: ::nlink_t,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
         pub st_rdev: ::dev_t,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_rdev_padding: ::c_int,
         pub st_size: ::off_t,
         pub st_blksize: ::blksize_t,
@@ -285,16 +282,13 @@ s! {
 
     pub struct stat64 {
         pub st_dev: ::dev_t,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_dev_padding: ::c_int,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_ino_truncated: ::c_long,
         pub st_mode: ::mode_t,
         pub st_nlink: ::nlink_t,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
         pub st_rdev: ::dev_t,
-        #[cfg(not(emscripten_new_stat_abi))]
         __st_rdev_padding: ::c_int,
         pub st_size: ::off_t,
         pub st_blksize: ::blksize_t,
@@ -1125,7 +1119,6 @@ pub const PR_SET_MM_MAP: ::c_int = 14;
 pub const PR_SET_MM_MAP_SIZE: ::c_int = 15;
 
 pub const PR_SET_PTRACER: ::c_int = 0x59616d61;
-pub const PR_SET_PTRACER_ANY: ::c_ulong = 0xffffffffffffffff;
 
 pub const PR_SET_CHILD_SUBREAPER: ::c_int = 36;
 pub const PR_GET_CHILD_SUBREAPER: ::c_int = 37;
@@ -1731,7 +1724,7 @@ f! {
     pub fn major(dev: ::dev_t) -> ::c_uint {
         // see
         // https://github.com/emscripten-core/emscripten/blob/
-        // main/system/lib/libc/musl/include/sys/sysmacros.h
+        // master/system/include/libc/sys/sysmacros.h
         let mut major = 0;
         major |= (dev & 0x00000fff) >> 8;
         major |= (dev & 0xfffff000) >> 31 >> 1;
@@ -1741,7 +1734,7 @@ f! {
     pub fn minor(dev: ::dev_t) -> ::c_uint {
         // see
         // https://github.com/emscripten-core/emscripten/blob/
-        // main/system/lib/libc/musl/include/sys/sysmacros.h
+        // master/system/include/libc/sys/sysmacros.h
         let mut minor = 0;
         minor |= (dev & 0x000000ff) >> 0;
         minor |= (dev & 0xffffff00) >> 12;
@@ -1821,6 +1814,7 @@ extern "C" {
     ) -> ::c_int;
     pub fn getloadavg(loadavg: *mut ::c_double, nelem: ::c_int) -> ::c_int;
 
+    // Not available now on Android
     pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char, mode: ::mode_t) -> ::c_int;
     pub fn if_nameindex() -> *mut if_nameindex;
     pub fn if_freenameindex(ptr: *mut if_nameindex);
@@ -1888,8 +1882,6 @@ extern "C" {
         f: extern "C" fn(*mut ::c_void) -> *mut ::c_void,
         value: *mut ::c_void,
     ) -> ::c_int;
-
-    pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
 }
 
 cfg_if! {

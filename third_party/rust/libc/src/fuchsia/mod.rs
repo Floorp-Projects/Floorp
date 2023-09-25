@@ -2602,7 +2602,6 @@ pub const PR_SET_MM_MAP: ::c_int = 14;
 pub const PR_SET_MM_MAP_SIZE: ::c_int = 15;
 
 pub const PR_SET_PTRACER: ::c_int = 0x59616d61;
-pub const PR_SET_PTRACER_ANY: ::c_ulong = 0xffffffffffffffff;
 
 pub const PR_SET_CHILD_SUBREAPER: ::c_int = 36;
 pub const PR_GET_CHILD_SUBREAPER: ::c_int = 37;
@@ -3271,7 +3270,7 @@ f! {
             as ::c_uint
     }
 
-    pub {const} fn CMSG_LEN(len: ::c_uint) -> ::c_uint {
+    pub fn CMSG_LEN(len: ::c_uint) -> ::c_uint {
         (CMSG_ALIGN(::mem::size_of::<cmsghdr>()) + len as ::size_t) as ::c_uint
     }
 }
@@ -4260,9 +4259,6 @@ cfg_if! {
     } else if #[cfg(any(target_arch = "x86_64"))] {
         mod x86_64;
         pub use self::x86_64::*;
-    } else if #[cfg(any(target_arch = "riscv64"))] {
-        mod riscv64;
-        pub use self::riscv64::*;
     } else {
         // Unknown target_arch
     }

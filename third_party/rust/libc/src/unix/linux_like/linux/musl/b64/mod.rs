@@ -132,7 +132,6 @@ s! {
 
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
-pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 32;
 
 pub const SOCK_NONBLOCK: ::c_int = 2048;
 

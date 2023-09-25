@@ -64,16 +64,14 @@ pub fn spooled_tempfile(max_size: usize) -> SpooledTempFile {
 }
 
 impl SpooledTempFile {
-    #[must_use]
     pub fn new(max_size: usize) -> SpooledTempFile {
         SpooledTempFile {
-            max_size,
+            max_size: max_size,
             inner: SpooledData::InMemory(Cursor::new(Vec::new())),
         }
     }
 
     /// Returns true if the file has been rolled over to disk.
-    #[must_use]
     pub fn is_rolled(&self) -> bool {
         match self.inner {
             SpooledData::InMemory(_) => false,
@@ -86,7 +84,7 @@ impl SpooledTempFile {
     pub fn roll(&mut self) -> io::Result<()> {
         if !self.is_rolled() {
             let mut file = tempfile()?;
-            if let SpooledData::InMemory(cursor) = &mut self.inner {
+            if let SpooledData::InMemory(ref mut cursor) = self.inner {
                 file.write_all(cursor.get_ref())?;
                 file.seek(SeekFrom::Start(cursor.position()))?;
             }
@@ -99,17 +97,16 @@ impl SpooledTempFile {
         if size as usize > self.max_size {
             self.roll()?; // does nothing if already rolled over
         }
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => {
+        match self.inner {
+            SpooledData::InMemory(ref mut cursor) => {
                 cursor.get_mut().resize(size as usize, 0);
                 Ok(())
             }
-            SpooledData::OnDisk(file) => file.set_len(size),
+            SpooledData::OnDisk(ref mut file) => file.set_len(size),
         }
     }
 
     /// Consumes and returns the inner `SpooledData` type.
-    #[must_use]
     pub fn into_inner(self) -> SpooledData {
         self.inner
     }
@@ -117,37 +114,9 @@ impl SpooledTempFile {
 
 impl Read for SpooledTempFile {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.read(buf),
-            SpooledData::OnDisk(file) => file.read(buf),
-        }
-    }
-
-    fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.read_vectored(bufs),
-            SpooledData::OnDisk(file) => file.read_vectored(bufs),
-        }
-    }
-
-    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.read_to_end(buf),
-            SpooledData::OnDisk(file) => file.read_to_end(buf),
-        }
-    }
-
-    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.read_to_string(buf),
-            SpooledData::OnDisk(file) => file.read_to_string(buf),
-        }
-    }
-
-    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.read_exact(buf),
-            SpooledData::OnDisk(file) => file.read_exact(buf),
+        match self.inner {
+            SpooledData::InMemory(ref mut cursor) => cursor.read(buf),
+            SpooledData::OnDisk(ref mut file) => file.read(buf),
         }
     }
 }
@@ -155,49 +124,35 @@ impl Read for SpooledTempFile {
 impl Write for SpooledTempFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         // roll over to file if necessary
-        if matches! {
-            &self.inner, SpooledData::InMemory(cursor)
-            if cursor.position() as usize + buf.len() > self.max_size
-        } {
+        let mut rolling = false;
+        if let SpooledData::InMemory(ref mut cursor) = self.inner {
+            rolling = cursor.position() as usize + buf.len() > self.max_size;
+        }
+        if rolling {
             self.roll()?;
         }
 
         // write the bytes
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.write(buf),
-            SpooledData::OnDisk(file) => file.write(buf),
-        }
-    }
-
-    fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
-        if matches! {
-            &self.inner, SpooledData::InMemory(cursor)
-            // Borrowed from the rust standard library.
-            if cursor.position() as usize + bufs.iter()
-                .fold(0usize, |a, b| a.saturating_add(b.len())) > self.max_size
-        } {
-            self.roll()?;
-        }
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.write_vectored(bufs),
-            SpooledData::OnDisk(file) => file.write_vectored(bufs),
+        match self.inner {
+            SpooledData::InMemory(ref mut cursor) => cursor.write(buf),
+            SpooledData::OnDisk(ref mut file) => file.write(buf),
         }
     }
 
     #[inline]
     fn flush(&mut self) -> io::Result<()> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.flush(),
-            SpooledData::OnDisk(file) => file.flush(),
+        match self.inner {
+            SpooledData::InMemory(ref mut cursor) => cursor.flush(),
+            SpooledData::OnDisk(ref mut file) => file.flush(),
         }
     }
 }
 
 impl Seek for SpooledTempFile {
     fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
-        match &mut self.inner {
-            SpooledData::InMemory(cursor) => cursor.seek(pos),
-            SpooledData::OnDisk(file) => file.seek(pos),
+        match self.inner {
+            SpooledData::InMemory(ref mut cursor) => cursor.seek(pos),
+            SpooledData::OnDisk(ref mut file) => file.seek(pos),
         }
     }
 }

@@ -9,7 +9,6 @@ path = "lib.rs"
 
 [features]
 serde = []
-std = []
 
 [dependencies.bitflags]
 version = "1.0"

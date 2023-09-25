@@ -108,13 +108,13 @@ s! {
 
     pub struct sched_param {
         pub sched_priority: ::c_int,
-        #[cfg(any(target_env = "musl", target_os = "emscripten", target_env = "ohos"))]
+        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
         pub sched_ss_low_priority: ::c_int,
-        #[cfg(any(target_env = "musl", target_os = "emscripten", target_env = "ohos"))]
+        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
         pub sched_ss_repl_period: ::timespec,
-        #[cfg(any(target_env = "musl", target_os = "emscripten", target_env = "ohos"))]
+        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
         pub sched_ss_init_budget: ::timespec,
-        #[cfg(any(target_env = "musl", target_os = "emscripten", target_env = "ohos"))]
+        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
         pub sched_ss_max_repl: ::c_int,
     }
 
@@ -557,29 +557,7 @@ pub const XATTR_CREATE: ::c_int = 0x1;
 pub const XATTR_REPLACE: ::c_int = 0x2;
 
 cfg_if! {
-    if #[cfg(target_os = "android")] {
-        pub const RLIM64_INFINITY: ::c_ulonglong = !0;
-    } else {
-        pub const RLIM64_INFINITY: ::rlim64_t = !0;
-    }
-}
-
-cfg_if! {
-    if #[cfg(target_env = "ohos")] {
-        pub const LC_CTYPE: ::c_int = 0;
-        pub const LC_NUMERIC: ::c_int = 1;
-        pub const LC_TIME: ::c_int = 2;
-        pub const LC_COLLATE: ::c_int = 3;
-        pub const LC_MONETARY: ::c_int = 4;
-        pub const LC_MESSAGES: ::c_int = 5;
-        pub const LC_PAPER: ::c_int = 6;
-        pub const LC_NAME: ::c_int = 7;
-        pub const LC_ADDRESS: ::c_int = 8;
-        pub const LC_TELEPHONE: ::c_int = 9;
-        pub const LC_MEASUREMENT: ::c_int = 10;
-        pub const LC_IDENTIFICATION: ::c_int = 11;
-        pub const LC_ALL: ::c_int = 12;
-    } else if #[cfg(not(target_env = "uclibc"))] {
+    if #[cfg(not(target_env = "uclibc"))] {
         pub const LC_CTYPE: ::c_int = 0;
         pub const LC_NUMERIC: ::c_int = 1;
         pub const LC_TIME: ::c_int = 2;
@@ -662,18 +640,7 @@ pub const MADV_HUGEPAGE: ::c_int = 14;
 pub const MADV_NOHUGEPAGE: ::c_int = 15;
 pub const MADV_DONTDUMP: ::c_int = 16;
 pub const MADV_DODUMP: ::c_int = 17;
-pub const MADV_WIPEONFORK: ::c_int = 18;
-pub const MADV_KEEPONFORK: ::c_int = 19;
-pub const MADV_COLD: ::c_int = 20;
-pub const MADV_PAGEOUT: ::c_int = 21;
 pub const MADV_HWPOISON: ::c_int = 100;
-cfg_if! {
-    if #[cfg(not(target_os = "emscripten"))] {
-        pub const MADV_POPULATE_READ: ::c_int = 22;
-        pub const MADV_POPULATE_WRITE: ::c_int = 23;
-        pub const MADV_DONTNEED_LOCKED: ::c_int = 24;
-    }
-}
 
 pub const IFF_UP: ::c_int = 0x1;
 pub const IFF_BROADCAST: ::c_int = 0x2;
@@ -916,10 +883,6 @@ pub const IPPROTO_UDPLITE: ::c_int = 136;
 pub const IPPROTO_RAW: ::c_int = 255;
 pub const IPPROTO_BEETPH: ::c_int = 94;
 pub const IPPROTO_MPLS: ::c_int = 137;
-/// Multipath TCP
-pub const IPPROTO_MPTCP: ::c_int = 262;
-/// Ethernet-within-IPv6 encapsulation.
-pub const IPPROTO_ETHERNET: ::c_int = 143;
 
 pub const MCAST_EXCLUDE: ::c_int = 0;
 pub const MCAST_INCLUDE: ::c_int = 1;
@@ -1010,11 +973,7 @@ pub const TCP_QUICKACK: ::c_int = 12;
 pub const TCP_CONGESTION: ::c_int = 13;
 pub const TCP_MD5SIG: ::c_int = 14;
 cfg_if! {
-    if #[cfg(all(target_os = "linux", any(
-            target_env = "gnu",
-            target_env = "musl",
-            target_env = "ohos"
-        )))] {
+    if #[cfg(all(target_os = "linux", any(target_env = "gnu", target_env = "musl")))] {
         // WARN: deprecated
         pub const TCP_COOKIE_TRANSACTIONS: ::c_int = 15;
     }
@@ -1047,7 +1006,6 @@ cfg_if! {
         pub const TCP_CM_INQ: ::c_int = TCP_INQ;
         // NOTE: Some CI images doesn't have this option yet.
         // pub const TCP_TX_DELAY: ::c_int = 37;
-        pub const TCP_MD5SIG_MAXKEYLEN: usize = 80;
     }
 }
 
@@ -1243,7 +1201,6 @@ pub const AT_REMOVEDIR: ::c_int = 0x200;
 pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
 pub const AT_NO_AUTOMOUNT: ::c_int = 0x800;
 pub const AT_EMPTY_PATH: ::c_int = 0x1000;
-pub const AT_RECURSIVE: ::c_int = 0x8000;
 
 pub const LOG_CRON: ::c_int = 9 << 3;
 pub const LOG_AUTHPRIV: ::c_int = 10 << 3;
@@ -1559,7 +1516,7 @@ f! {
             as ::c_uint
     }
 
-    pub {const} fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
         CMSG_ALIGN(::mem::size_of::<cmsghdr>()) as ::c_uint + length
     }
 
@@ -1696,9 +1653,20 @@ extern "C" {
     pub fn setgroups(ngroups: ::size_t, ptr: *const ::gid_t) -> ::c_int;
     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
     pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
+    pub fn statfs64(path: *const ::c_char, buf: *mut statfs64) -> ::c_int;
     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
+    pub fn fstatfs64(fd: ::c_int, buf: *mut statfs64) -> ::c_int;
+    pub fn statvfs64(path: *const ::c_char, buf: *mut statvfs64) -> ::c_int;
+    pub fn fstatvfs64(fd: ::c_int, buf: *mut statvfs64) -> ::c_int;
     pub fn memrchr(cx: *const ::c_void, c: ::c_int, n: ::size_t) -> *mut ::c_void;
+
     pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advise: ::c_int) -> ::c_int;
+    pub fn posix_fadvise64(
+        fd: ::c_int,
+        offset: ::off64_t,
+        len: ::off64_t,
+        advise: ::c_int,
+    ) -> ::c_int;
     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
     pub fn utimensat(
         dirfd: ::c_int,
@@ -1710,6 +1678,43 @@ extern "C" {
     pub fn freelocale(loc: ::locale_t);
     pub fn newlocale(mask: ::c_int, locale: *const ::c_char, base: ::locale_t) -> ::locale_t;
     pub fn uselocale(loc: ::locale_t) -> ::locale_t;
+    pub fn creat64(path: *const c_char, mode: mode_t) -> ::c_int;
+    pub fn fstat64(fildes: ::c_int, buf: *mut stat64) -> ::c_int;
+    pub fn fstatat64(
+        dirfd: ::c_int,
+        pathname: *const c_char,
+        buf: *mut stat64,
+        flags: ::c_int,
+    ) -> ::c_int;
+    pub fn ftruncate64(fd: ::c_int, length: off64_t) -> ::c_int;
+    pub fn lseek64(fd: ::c_int, offset: off64_t, whence: ::c_int) -> off64_t;
+    pub fn lstat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
+    pub fn mmap64(
+        addr: *mut ::c_void,
+        len: ::size_t,
+        prot: ::c_int,
+        flags: ::c_int,
+        fd: ::c_int,
+        offset: off64_t,
+    ) -> *mut ::c_void;
+    pub fn open64(path: *const c_char, oflag: ::c_int, ...) -> ::c_int;
+    pub fn openat64(fd: ::c_int, path: *const c_char, oflag: ::c_int, ...) -> ::c_int;
+    pub fn pread64(fd: ::c_int, buf: *mut ::c_void, count: ::size_t, offset: off64_t) -> ::ssize_t;
+    pub fn pwrite64(
+        fd: ::c_int,
+        buf: *const ::c_void,
+        count: ::size_t,
+        offset: off64_t,
+    ) -> ::ssize_t;
+    pub fn readdir64(dirp: *mut ::DIR) -> *mut ::dirent64;
+    pub fn readdir64_r(
+        dirp: *mut ::DIR,
+        entry: *mut ::dirent64,
+        result: *mut *mut ::dirent64,
+    ) -> ::c_int;
+    pub fn stat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
+    pub fn truncate64(path: *const c_char, length: off64_t) -> ::c_int;
+
     pub fn mknodat(
         dirfd: ::c_int,
         pathname: *const ::c_char,
@@ -1777,74 +1782,10 @@ extern "C" {
     pub fn sendmsg(fd: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
     pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
     pub fn uname(buf: *mut ::utsname) -> ::c_int;
-
-    pub fn strchrnul(s: *const ::c_char, c: ::c_int) -> *mut ::c_char;
-}
-
-// LFS64 extensions
-//
-// * musl has 64-bit versions only so aliases the LFS64 symbols to the standard ones
-// * ulibc doesn't have preadv64/pwritev64
-cfg_if! {
-    if #[cfg(not(target_env = "musl"))] {
-        extern "C" {
-            pub fn fstatfs64(fd: ::c_int, buf: *mut statfs64) -> ::c_int;
-            pub fn statvfs64(path: *const ::c_char, buf: *mut statvfs64) -> ::c_int;
-            pub fn fstatvfs64(fd: ::c_int, buf: *mut statvfs64) -> ::c_int;
-            pub fn statfs64(path: *const ::c_char, buf: *mut statfs64) -> ::c_int;
-            pub fn creat64(path: *const c_char, mode: mode_t) -> ::c_int;
-            pub fn fstat64(fildes: ::c_int, buf: *mut stat64) -> ::c_int;
-            pub fn fstatat64(
-                dirfd: ::c_int,
-                pathname: *const c_char,
-                buf: *mut stat64,
-                flags: ::c_int,
-            ) -> ::c_int;
-            pub fn ftruncate64(fd: ::c_int, length: off64_t) -> ::c_int;
-            pub fn lseek64(fd: ::c_int, offset: off64_t, whence: ::c_int) -> off64_t;
-            pub fn lstat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
-            pub fn mmap64(
-                addr: *mut ::c_void,
-                len: ::size_t,
-                prot: ::c_int,
-                flags: ::c_int,
-                fd: ::c_int,
-                offset: off64_t,
-            ) -> *mut ::c_void;
-            pub fn open64(path: *const c_char, oflag: ::c_int, ...) -> ::c_int;
-            pub fn openat64(fd: ::c_int, path: *const c_char, oflag: ::c_int, ...) -> ::c_int;
-            pub fn posix_fadvise64(
-                fd: ::c_int,
-                offset: ::off64_t,
-                len: ::off64_t,
-                advise: ::c_int,
-            ) -> ::c_int;
-            pub fn pread64(
-                fd: ::c_int,
-                buf: *mut ::c_void,
-                count: ::size_t,
-                offset: off64_t
-            ) -> ::ssize_t;
-            pub fn pwrite64(
-                fd: ::c_int,
-                buf: *const ::c_void,
-                count: ::size_t,
-                offset: off64_t,
-            ) -> ::ssize_t;
-            pub fn readdir64(dirp: *mut ::DIR) -> *mut ::dirent64;
-            pub fn readdir64_r(
-                dirp: *mut ::DIR,
-                entry: *mut ::dirent64,
-                result: *mut *mut ::dirent64,
-            ) -> ::c_int;
-            pub fn stat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
-            pub fn truncate64(path: *const c_char, length: off64_t) -> ::c_int;
-        }
-    }
 }
 
 cfg_if! {
-    if #[cfg(not(any(target_env = "uclibc", target_env = "musl")))] {
+    if #[cfg(not(target_env = "uclibc"))] {
         extern "C" {
             pub fn preadv64(
                 fd: ::c_int,
@@ -1858,13 +1799,6 @@ cfg_if! {
                 iovcnt: ::c_int,
                 offset: ::off64_t,
             ) -> ::ssize_t;
-        }
-    }
-}
-
-cfg_if! {
-    if #[cfg(not(target_env = "uclibc"))] {
-        extern "C" {
             // uclibc has separate non-const version of this function
             pub fn forkpty(
                 amaster: *mut ::c_int,

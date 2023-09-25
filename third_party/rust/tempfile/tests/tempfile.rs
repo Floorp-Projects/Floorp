@@ -2,11 +2,8 @@
 
 use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
-#[cfg(target_os = "linux")]
-use std::{
-    sync::mpsc::{sync_channel, TryRecvError},
-    thread,
-};
+use std::sync::mpsc::{sync_channel, TryRecvError};
+use std::thread;
 
 #[test]
 fn test_basic() {

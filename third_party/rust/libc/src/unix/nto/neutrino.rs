@@ -1,16 +1,6 @@
 pub type nto_job_t = ::sync_t;
 
 s! {
-    pub struct syspage_entry_info {
-        pub entry_off: u16,
-        pub entry_size: u16,
-    }
-    pub struct syspage_array_info {
-        entry_off: u16,
-        entry_size: u16,
-        element_size: u16,
-    }
-
     pub struct intrspin {
         pub value: ::c_uint, // volatile
     }
@@ -212,6 +202,16 @@ s! {
 }
 
 s_no_extra_traits! {
+    pub struct syspage_entry_info {
+        pub entry_off: u16,
+        pub entry_size: u16,
+    }
+
+    pub struct syspage_array_info {
+        entry_off: u16,
+        entry_size: u16,
+        element_size: u16,
+    }
 
     #[repr(align(8))]
     pub struct syspage_entry {
