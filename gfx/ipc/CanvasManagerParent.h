@@ -19,6 +19,8 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   static void Shutdown();
 
+  static void DisableRemoteCanvas();
+
   CanvasManagerParent();
 
   void Bind(Endpoint<PCanvasManagerParent>&& aEndpoint);

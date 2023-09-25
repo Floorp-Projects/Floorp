@@ -5653,13 +5653,18 @@
   mirror: always
 
 - name: gfx.canvas.remote
-  type: RelaxedAtomicBool
+  type: bool
 #if defined(XP_WIN)
   value: true
 #else
   value: false
 #endif
-  mirror: always
+  mirror: once
+
+- name: gfx.canvas.remote.allow-in-parent
+  type: bool
+  value: false
+  mirror: once
 
 - name: gfx.canvas.willreadfrequently.enabled
   type: bool

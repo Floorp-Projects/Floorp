@@ -45,6 +45,7 @@ class GPUParent final : public PGPUParent {
   void NotifyDeviceReset();
   void NotifyOverlayInfo(layers::OverlayInfo aInfo);
   void NotifySwapChainInfo(layers::SwapChainInfo aInfo);
+  void NotifyDisableRemoteCanvas();
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,

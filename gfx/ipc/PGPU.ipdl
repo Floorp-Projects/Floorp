@@ -162,6 +162,7 @@ child:
   async NotifyDeviceReset(GPUDeviceData status);
   async NotifyOverlayInfo(OverlayInfo info);
   async NotifySwapChainInfo(SwapChainInfo info);
+  async NotifyDisableRemoteCanvas();
   async FlushMemory(nsString reason);
 
   async AddMemoryReport(MemoryReport aReport);

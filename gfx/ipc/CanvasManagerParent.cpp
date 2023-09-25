@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CanvasManagerParent.h"
+#include "gfxPlatform.h"
 #include "mozilla/dom/WebGLParent.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webgpu/WebGPUParent.h"
@@ -78,6 +80,17 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
   for (auto const& actor : actors) {
     actor->Close();
   }
+}
+
+/* static */ void CanvasManagerParent::DisableRemoteCanvas() {
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("CanvasManagerParent::DisableRemoteCanvas", [] {
+        if (XRE_IsGPUProcess()) {
+          GPUParent::GetSingleton()->NotifyDisableRemoteCanvas();
+        } else {
+          gfxPlatform::DisableRemoteCanvas();
+        }
+      }));
 }
 
 CanvasManagerParent::CanvasManagerParent() = default;

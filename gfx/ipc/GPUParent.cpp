@@ -252,6 +252,17 @@ void GPUParent::NotifySwapChainInfo(layers::SwapChainInfo aInfo) {
   Unused << SendNotifySwapChainInfo(aInfo);
 }
 
+void GPUParent::NotifyDisableRemoteCanvas() {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "gfx::GPUParent::NotifyDisableRemoteCanvas", []() -> void {
+          GPUParent::GetSingleton()->NotifyDisableRemoteCanvas();
+        }));
+    return;
+  }
+  Unused << SendNotifyDisableRemoteCanvas();
+}
+
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
