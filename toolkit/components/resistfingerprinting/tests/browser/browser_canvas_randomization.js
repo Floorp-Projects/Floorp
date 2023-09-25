@@ -17,54 +17,7 @@ const emptyPage =
 
 var TEST_CASES = [
   {
-    name: "CanvasRenderingContext2D.getImageData() but constant color",
-    shouldBeRandomized: false,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
-
-        const context = canvas.getContext("2d");
-
-        // Draw a red rectangle
-        context.fillStyle = "red";
-        context.fillRect(0, 0, 100, 100);
-
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
-
-        const imageData = context.getImageData(0, 0, 100, 100);
-
-        // Access the data again.
-        const imageDataSecond = context.getImageData(0, 0, 100, 100);
-
-        return [imageData.data, imageDataSecond.data];
-      });
-    },
-    isDataRandomized(data1, data2, isCompareOriginal) {
-      let diffCnt = compareUint8Arrays(data1, data2);
-      info(`There are ${diffCnt} bits are different.`);
-
-      // The Canvas randomization adds at most 512 bits noise to the image data.
-      // We compare the image data arrays to see if they are different and the
-      // difference is within the range.
-
-      // If we are compare two randomized arrays, the difference can be doubled.
-      let expected = isCompareOriginal
-        ? NUM_RANDOMIZED_CANVAS_BITS
-        : NUM_RANDOMIZED_CANVAS_BITS * 2;
-
-      // The number of difference bits should never bigger than the expected
-      // number. It could be zero if the randomization is disabled.
-      ok(diffCnt <= expected, "The number of noise bits is expected.");
-
-      return diffCnt <= expected && diffCnt > 0;
-    },
-  },
-  {
     name: "CanvasRenderingContext2D.getImageData().",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], _ => {
         const canvas = content.document.createElement("canvas");
@@ -76,8 +29,6 @@ var TEST_CASES = [
         // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 100, 100);
 
         // Add the canvas element to the document
         content.document.body.appendChild(canvas);
@@ -112,7 +63,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a 2d context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], _ => {
         const canvas = content.document.createElement("canvas");
@@ -121,11 +71,9 @@ var TEST_CASES = [
 
         const context = canvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         // Add the canvas element to the document
         content.document.body.appendChild(canvas);
@@ -144,7 +92,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a webgl context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], _ => {
         const canvas = content.document.createElement("canvas");
@@ -180,7 +127,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a bitmaprenderer context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         const canvas = content.document.createElement("canvas");
@@ -189,11 +135,9 @@ var TEST_CASES = [
 
         const context = canvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         // Add the canvas element to the document
         content.document.body.appendChild(canvas);
@@ -221,7 +165,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toBlob() with a 2d context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         const canvas = content.document.createElement("canvas");
@@ -230,11 +173,9 @@ var TEST_CASES = [
 
         const context = canvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         // Add the canvas element to the document
         content.document.body.appendChild(canvas);
@@ -269,7 +210,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toBlob() with a webgl context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         const canvas = content.document.createElement("canvas");
@@ -315,7 +255,6 @@ var TEST_CASES = [
   },
   {
     name: "HTMLCanvasElement.toBlob() with a bitmaprenderer context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         const canvas = content.document.createElement("canvas");
@@ -324,11 +263,9 @@ var TEST_CASES = [
 
         const context = canvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         // Add the canvas element to the document
         content.document.body.appendChild(canvas);
@@ -372,18 +309,15 @@ var TEST_CASES = [
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a 2d context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         let offscreenCanvas = new content.OffscreenCanvas(100, 100);
 
         const context = offscreenCanvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         let blob = await offscreenCanvas.convertToBlob();
 
@@ -415,22 +349,21 @@ var TEST_CASES = [
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a webgl context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         let offscreenCanvas = new content.OffscreenCanvas(100, 100);
 
         const context = offscreenCanvas.getContext("webgl");
 
-        // Draw rectangles
+        // Draw a blue rectangle
         context.enable(context.SCISSOR_TEST);
-        context.scissor(0, 15, 15, 15);
+        context.scissor(0, 150, 150, 150);
         context.clearColor(1, 0, 0, 1);
         context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(15, 15, 30, 15);
+        context.scissor(150, 150, 300, 150);
         context.clearColor(0, 1, 0, 1);
         context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(0, 0, 15, 15);
+        context.scissor(0, 0, 150, 150);
         context.clearColor(0, 0, 1, 1);
         context.clear(context.COLOR_BUFFER_BIT);
 
@@ -464,18 +397,15 @@ var TEST_CASES = [
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a bitmaprenderer context",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         let offscreenCanvas = new content.OffscreenCanvas(100, 100);
 
         const context = offscreenCanvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         const bitmapCanvas = new content.OffscreenCanvas(100, 100);
 
@@ -513,18 +443,15 @@ var TEST_CASES = [
   },
   {
     name: "CanvasRenderingContext2D.getImageData() with a offscreen canvas",
-    shouldBeRandomized: true,
     extractCanvasData(browser) {
       return SpecialPowers.spawn(browser, [], async _ => {
         let offscreenCanvas = new content.OffscreenCanvas(100, 100);
 
         const context = offscreenCanvas.getContext("2d");
 
-        // Draw a red and blue rectangle
+        // Draw a red rectangle
         context.fillStyle = "red";
         context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "blue";
-        context.fillRect(20, 20, 80, 80);
 
         const imageData = context.getImageData(0, 0, 100, 100);
 
@@ -590,74 +517,52 @@ async function runTest(enabled) {
     let data = await test.extractCanvasData(tab.linkedBrowser);
     let result = test.isDataRandomized(data[0], test.originalData);
 
-    if (test.shouldBeRandomized) {
-      is(
-        result,
-        enabled,
-        `The image data is ${enabled ? "randomized" : "the same"} for ${
-          test.name
-        }.`
-      );
-    } else {
-      is(
-        result,
-        false,
-        `The image data for ${test.name} should never be randomized.`
-      );
-    }
+    is(
+      result,
+      enabled,
+      `The image data is ${enabled ? "randomized" : "the same"}.`
+    );
 
     ok(
       !test.isDataRandomized(data[0], data[1]),
-      `The data of first and second access should be the same for ${test.name}.`
+      "The data of first and second access should be the same."
     );
 
     let privateData = await test.extractCanvasData(privateTab.linkedBrowser);
 
     // Check if we add noise to canvas data in private windows.
     result = test.isDataRandomized(privateData[0], test.originalData, true);
-    if (test.shouldBeRandomized) {
-      is(
-        result,
-        enabled,
-        `The private image data is ${enabled ? "randomized" : "the same"} for ${
-          test.name
-        }.`
-      );
-    } else {
-      is(
-        result,
-        false,
-        `The image data for ${test.name} should never be randomized.`
-      );
-    }
+    is(
+      result,
+      enabled,
+      `The private image data is ${enabled ? "randomized" : "the same"}.`
+    );
 
     ok(
       !test.isDataRandomized(privateData[0], privateData[1]),
       "The data of first and second access should be the same for private windows."
     );
 
-    if (test.shouldBeRandomized) {
-      // Make sure the noises are different between normal window and private
-      // windows.
-      result = test.isDataRandomized(privateData[0], data[0]);
-      is(
-        result,
-        enabled,
-        `The image data between the normal window and the private window are ${
-          enabled ? "different" : "the same"
-        } for ${test.name}.`
+    // Make sure the noises are different between normal window and private
+    // windows.
+    result = test.isDataRandomized(privateData[0], data[0]);
+    is(
+      result,
+      enabled,
+      `The image data between the normal window and the private window are ${
+        enabled ? "different" : "the same"
+      }.`
+    );
+
+    // Verify the telemetry is recorded if canvas randomization is enabled.
+    if (enabled) {
+      await Services.fog.testFlushAllChildren();
+
+      ok(
+        Glean.fingerprintingProtection.canvasNoiseCalculateTime.testGetValue()
+          .sum > 0,
+        "The telemetry of canvas randomization is recorded."
       );
-
-      // Verify the telemetry is recorded if canvas randomization is enabled.
-      if (enabled) {
-        await Services.fog.testFlushAllChildren();
-
-        ok(
-          Glean.fingerprintingProtection.canvasNoiseCalculateTime.testGetValue()
-            .sum > 0,
-          "The telemetry of canvas randomization is recorded."
-        );
-      }
     }
   }
 
