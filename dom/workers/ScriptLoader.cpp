@@ -396,14 +396,15 @@ nsresult GetModuleSecFlags(bool aIsTopLevel, nsIPrincipal* principal,
   // Step 9. If destination is "worker", "sharedworker", or "serviceworker",
   //         and the top-level module fetch flag is set, then set request's
   //         mode to "same-origin".
-  secFlags = aIsTopLevel
-                 ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
-                 : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
 
   // Step 8. Let request be a new request whose [...] mode is "cors" [...]
+  secFlags = aIsTopLevel ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+                         : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+
   // This implements the same Cookie settings as  nsContentSecurityManager's
   // ComputeSecurityFlags. The main difference is the line above, Step 9,
   // setting to same origin.
+
   if (aCredentials == RequestCredentials::Include) {
     secFlags |= nsILoadInfo::nsILoadInfo::SEC_COOKIES_INCLUDE;
   } else if (aCredentials == RequestCredentials::Same_origin) {
