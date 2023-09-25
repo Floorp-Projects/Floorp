@@ -301,7 +301,7 @@ function InitAndStartRefTests() {
 
   g.windowUtils = g.containingWindow.windowUtils;
   if (!g.windowUtils || !g.windowUtils.compareCanvases) {
-    throw "nsIDOMWindowUtils inteface missing";
+    throw new Error("nsIDOMWindowUtils inteface missing");
   }
 
   g.ioService = Services.io;
@@ -608,7 +608,7 @@ function StartTests() {
 
     g.totalTests = g.urls.length;
     if (!g.totalTests && !g.verify && !g.repeat) {
-      throw "No tests to run";
+      throw new Error("No tests to run");
     }
 
     g.uriCanvases = {};
@@ -823,14 +823,14 @@ async function StartCurrentURI(aURLTargetType) {
               oldVal = Services.prefs.getBoolPref(ps.name);
             } catch (e) {
               badPref = "boolean preference '" + ps.name + "'";
-              throw "bad pref";
+              throw new Error("bad pref");
             }
           } else if (ps.type == PREF_STRING) {
             try {
               oldVal = Services.prefs.getStringPref(ps.name);
             } catch (e) {
               badPref = "string preference '" + ps.name + "'";
-              throw "bad pref";
+              throw new Error("bad pref");
             }
           } else if (ps.type == PREF_INTEGER) {
             // eslint-disable-next-line mozilla/use-default-preference-values
@@ -838,10 +838,10 @@ async function StartCurrentURI(aURLTargetType) {
               oldVal = Services.prefs.getIntPref(ps.name);
             } catch (e) {
               badPref = "integer preference '" + ps.name + "'";
-              throw "bad pref";
+              throw new Error("bad pref");
             }
           } else {
-            throw "internal error - unknown preference type";
+            throw new Error("internal error - unknown preference type");
           }
         }
         if (!prefExists || oldVal != ps.value) {
@@ -867,7 +867,7 @@ async function StartCurrentURI(aURLTargetType) {
         }
       });
     } catch (e) {
-      if (e == "bad pref") {
+      if (e.message == "bad pref") {
         var test = g.urls[0];
         if (test.expected == EXPECTED_FAIL) {
           logger.testEnd(
@@ -989,7 +989,7 @@ function UpdateCanvasCache(url, canvas) {
   } else if (g.uriUseCounts[spec] > 0) {
     g.uriCanvases[spec] = canvas;
   } else {
-    throw "Use counts were computed incorrectly";
+    throw new Error("Use counts were computed incorrectly");
   }
 }
 
@@ -1236,7 +1236,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
         });
         break;
       default:
-        throw "Unexpected state.";
+        throw new Error("Unexpected state.");
     }
     return;
   }
@@ -1387,7 +1387,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       equal = differences == 0;
 
       if (maxDifference.value > 0 && equal) {
-        throw "Inconsistent result from compareCanvases.";
+        throw new Error("Inconsistent result from compareCanvases.");
       }
 
       if (expected == EXPECTED_FUZZY) {
@@ -1433,7 +1433,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
         // branch, 'equal' must be false so let's assert that to guard
         // against logic errors.
         if (equal) {
-          throw "Logic error in reftest.jsm fuzzy test handling!";
+          throw new Error("Logic error in reftest.jsm fuzzy test handling!");
         }
         output = { s: ["PASS", "FAIL"], n: "UnexpectedPass" };
       } else {
@@ -1554,7 +1554,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       FinishTestItem();
       break;
     default:
-      throw "Unexpected state.";
+      throw new Error("Unexpected state.");
   }
 }
 
