@@ -112,14 +112,16 @@ function waitForDOMPredicate(
   predicate,
   options = { attributes: true, childList: true, subtree: true }
 ) {
+  let rv = predicate();
+  if (rv) {
+    return Promise.resolve(rv);
+  }
   return new Promise(resolve => {
     const observer = new target.ownerGlobal.MutationObserver(mutations => {
-      for (const mutation of mutations) {
-        if (predicate(mutation.target)) {
-          resolve();
-          observer.disconnect();
-          break;
-        }
+      rv = predicate();
+      if (rv) {
+        resolve(rv);
+        observer.disconnect();
       }
     });
 

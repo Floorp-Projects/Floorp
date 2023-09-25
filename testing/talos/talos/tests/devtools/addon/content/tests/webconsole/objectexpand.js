@@ -118,7 +118,7 @@ async function logAndWaitForExpandedObjectDirMessage(
     // If this is the case, we wait for the properties to be fetched and displayed.
     await waitForDOMPredicate(
       tree,
-      target => target.childElementCount === expectedTreeItemCount,
+      () => tree.childElementCount === expectedTreeItemCount,
       { childList: true }
     );
   }
