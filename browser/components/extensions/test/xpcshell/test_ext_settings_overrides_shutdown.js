@@ -46,7 +46,7 @@ add_task(async function shutdown_during_search_provider_startup() {
   });
 
   let initialized = false;
-  ExtensionParent.apiManager.global.searchInitialized.then(() => {
+  Services.search.promiseInitialized.then(() => {
     initialized = true;
   });
 
