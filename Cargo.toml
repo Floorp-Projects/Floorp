@@ -187,8 +187,8 @@ firefox-on-glean = { path = "toolkit/components/glean/api" }
 icu_testdata = { path = "intl/icu_testdata" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3391db08f9ae6400bc023e18" }
-# Avoid the dependency on chrono
-minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c" }
+# Avoid the dependency on chrono and include Android support
+minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "491eb330e78e310c32927e5cc3bd2350af1e93f8" }
 # Bump some dependencies
 minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev = "6ae42a7f992e8a88ebee661bc77bcedb95cd671f" }
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
