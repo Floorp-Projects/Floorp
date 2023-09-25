@@ -2545,6 +2545,52 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `WHEN session reanalyzeProduct is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mUrl = "https://m.example.com"
+        val geckoResult = GeckoResult<String?>()
+        geckoResult.complete("COMPLETED")
+        whenever(geckoSession.requestCreateAnalysis(mUrl))
+            .thenReturn(geckoResult)
+
+        engineSession.reanalyzeProduct(
+            mUrl,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session requestAnalysisStatus is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mUrl = "https://m.example.com"
+        val geckoResult = GeckoResult<String?>()
+        geckoResult.complete("COMPLETED")
+        whenever(geckoSession.requestAnalysisCreationStatus(mUrl))
+            .thenReturn(geckoResult)
+
+        engineSession.requestAnalysisStatus(
+            mUrl,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
     fun containsFormData() {
         val engineSession = GeckoEngineSession(runtime = mock(), geckoSessionProvider = geckoSessionProvider)
         var formData = false
