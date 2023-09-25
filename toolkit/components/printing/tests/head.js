@@ -105,23 +105,6 @@ class PrintHelper {
     );
   }
 
-  // This is used only for the old print preview. For tests
-  // involving the newer UI, use waitForPreview instead.
-  static waitForOldPrintPreview(expectedBrowser) {
-    const { PrintingParent } = ChromeUtils.importESModule(
-      "resource://gre/actors/PrintingParent.sys.mjs"
-    );
-
-    return new Promise(resolve => {
-      PrintingParent.setTestListener(browser => {
-        if (browser == expectedBrowser) {
-          PrintingParent.setTestListener(null);
-          resolve();
-        }
-      });
-    });
-  }
-
   constructor(sourceBrowser) {
     this.sourceBrowser = sourceBrowser;
   }
