@@ -15,11 +15,13 @@
 #include "nsContentListDeclarations.h"
 #include "nsTArray.h"
 #include "nsTHashSet.h"
+#include "RadioGroupManager.h"
 
 class nsContentList;
 class nsCycleCollectionTraversalCallback;
 class nsINode;
 class nsINodeList;
+class nsIRadioVisitor;
 class nsWindowSizes;
 
 namespace mozilla {
@@ -46,7 +48,7 @@ class Sequence;
  * TODO(emilio, bug 1418159): In the future this should hold most of the
  * relevant style state, this should allow us to fix bug 548397.
  */
-class DocumentOrShadowRoot {
+class DocumentOrShadowRoot : public RadioGroupManager {
   enum class Kind {
     Document,
     ShadowRoot,
