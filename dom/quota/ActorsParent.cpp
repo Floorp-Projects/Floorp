@@ -5296,6 +5296,37 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
       "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns, innerFunc);
 }
 
+RefPtr<BoolPromise> QuotaManager::ClearStoragesForOrigin(
+    const Maybe<PersistenceType>& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo, const Maybe<Client::Type>& aClientType,
+    const bool& aClearAll) {
+  AssertIsOnOwningThread();
+
+  auto clearOriginOp =
+      CreateClearOriginOp(WrapMovingNotNullUnchecked(this), aPersistenceType,
+                          aPrincipalInfo, aClientType, aClearAll);
+
+  RegisterNormalOriginOp(*clearOriginOp);
+
+  clearOriginOp->RunImmediately();
+
+  return clearOriginOp->OnResults();
+}
+
+RefPtr<BoolPromise> QuotaManager::ClearStoragesForOriginAttributesPattern(
+    const OriginAttributesPattern& aPattern) {
+  AssertIsOnOwningThread();
+
+  auto clearDataOp =
+      CreateClearDataOp(WrapMovingNotNullUnchecked(this), aPattern);
+
+  RegisterNormalOriginOp(*clearDataOp);
+
+  clearDataOp->RunImmediately();
+
+  return clearDataOp->OnResults();
+}
+
 RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
   AssertIsOnOwningThread();
 

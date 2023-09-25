@@ -25,6 +25,8 @@ class Quota final : public PQuotaParent {
  private:
   ~Quota();
 
+  bool TrustParams() const;
+
   bool VerifyRequestParams(const UsageRequestParams& aParams) const;
 
   bool VerifyRequestParams(const RequestParams& aParams) const;
@@ -52,6 +54,16 @@ class Quota final : public PQuotaParent {
 
   virtual mozilla::ipc::IPCResult RecvInitializeStorage(
       InitializeStorageResolver&& aResolver) override;
+
+  virtual mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
+      const Maybe<PersistenceType>& aPersistenceType,
+      const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,
+      const bool& aClearAll,
+      ClearStoragesForOriginResolver&& aResolve) override;
+
+  virtual mozilla::ipc::IPCResult RecvClearStoragesForOriginAttributesPattern(
+      const OriginAttributesPattern& aPattern,
+      ClearStoragesForOriginAttributesPatternResolver&& aResolver) override;
 
   virtual mozilla::ipc::IPCResult RecvClearStoragesForPrivateBrowsing(
       ClearStoragesForPrivateBrowsingResolver&& aResolver) override;
