@@ -8,6 +8,10 @@
 
 menupopup,
 panel {
+  /* We can always render in the preferred color scheme (unless otherwise
+   * overridden). */
+  color-scheme: light dark;
+
   min-width: 1px;
   --panel-background: Menu;
   --panel-color: MenuText;
