@@ -161,6 +161,9 @@ android {
         resources {
             pickFirsts += ['META-INF/atomicfu.kotlin_module', 'META-INF/proguard/coroutines.pro']
         }
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
 
 
