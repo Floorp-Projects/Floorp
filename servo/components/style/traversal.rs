@@ -405,6 +405,7 @@ pub fn recalc_style_at<E, D, F>(
     context.thread_local.statistics.elements_traversed += 1;
     debug_assert!(
         flags.intersects(TraversalFlags::AnimationOnly) ||
+            is_initial_style ||
             !element.has_snapshot() ||
             element.handled_snapshot(),
         "Should've handled snapshots here already"
