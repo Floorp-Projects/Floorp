@@ -2426,19 +2426,14 @@ WebRenderCommandBuilder::GenerateFallbackData(
   RefPtr<WebRenderFallbackData> fallbackData =
       CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
-  bool snap;
-  nsRect itemBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
-
   // Blob images will only draw the visible area of the blob so we don't need to
   // clip them here and can just rely on the webrender clipping.
   // TODO We also don't clip native themed widget to avoid over-invalidation
   // during scrolling. It would be better to support a sort of streaming/tiling
   // scheme for large ones but the hope is that we should not have large native
   // themed items.
-  nsRect paintBounds = (useBlobImage || paintOnContentSide)
-                           ? itemBounds
-                           : aItem->GetClippedBounds(aDisplayListBuilder);
-
+  bool snap;
+  nsRect paintBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
   nsRect buildingRect = aItem->GetBuildingRect();
 
   const int32_t appUnitsPerDevPixel =
@@ -2531,7 +2526,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
       aItem->GetType() != DisplayItemType::TYPE_SVG_WRAPPER && differentScale) {
     nsRect invalid;
     if (!aItem->IsInvalid(invalid)) {
-      nsPoint shift = itemBounds.TopLeft() - geometry->mBounds.TopLeft();
+      nsPoint shift = paintBounds.TopLeft() - geometry->mBounds.TopLeft();
       geometry->MoveBy(shift);
 
       nsRegion invalidRegion;
