@@ -4,10 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    "RLBoxSoundTouch.h",
-    "RLBoxSoundTouchTypes.h",
-]
+include("sources.mozbuild")
 
 EXPORTS.soundtouch += [
     'FIFOSamplePipe.h',
@@ -18,89 +15,28 @@ EXPORTS.soundtouch += [
     'STTypes.h',
 ]
 
+UNIFIED_SOURCES += soundtouch_sources
+
 LOCAL_INCLUDES += ["!/security/rlbox"]
 
-LOCAL_INCLUDES += [
-    "/third_party/simde/",
-    "/third_party/wasm2c/wasm2c/",
-]
-
-SOURCES += ["RLBoxSoundTouch.cpp"]
-# Some xpcom things are #included indirectly (but not actually used), and
-# it's simpler to set MOZILLA_INTERNAL_API to make it compile than to
-# disentangle the whole thing.
-SOURCES["RLBoxSoundTouch.cpp"].flags += ["-DMOZILLA_INTERNAL_API"]
-
-if CONFIG["MOZ_WASM_SANDBOXING_SOUNDTOUCH"]:
-    include("/security/rlbox/rlbox.mozbuild")
-
-    RLBoxLibrary("soundtouch")
-
-    DEFINES["WASM_RT_GROW_FAILED_CRASH"] = True
-
-    SOURCES += [
-        "/config/external/rlbox_wasm2c_sandbox/rlbox_wasm2c_thread_locals.cpp",
-        "/third_party/rlbox_wasm2c_sandbox/src/wasm2c_rt_mem.c",
-        "/third_party/rlbox_wasm2c_sandbox/src/wasm2c_rt_minwasi.c",
-    ]
-    if CONFIG['OS_ARCH'] != 'WINNT':
-        OS_LIBS += ["m"]
-
-    if CONFIG["MOZ_SAMPLE_TYPE_FLOAT32"]:
-        WASM_DEFINES["MOZ_SAMPLE_TYPE_FLOAT32"] = 1
-
-        WASM_SOURCES += ['sse_optimized.cpp']
-
-        WASM_DEFINES["SOUNDTOUCH_ALLOW_SSE"] = 1
-        WASM_DEFINES["SOUNDTOUCH_WASM_SIMD"] = 1
-        WASM_DEFINES["SIMDE_ENABLE_NATIVE_ALIASES"] = 1
-
-    soundtouch_sources = WASM_SOURCES
-    soundtouch_defines = WASM_DEFINES
-
-else:
-    SOURCES += ["/config/external/rlbox/rlbox_thread_locals.cpp"]
-    if CONFIG['INTEL_ARCHITECTURE']:
-        if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
-            SOURCES += ['sse_optimized.cpp']
-            SOURCES['sse_optimized.cpp'].flags += CONFIG['SSE2_FLAGS']
-        else:
-            SOURCES += ['mmx_optimized.cpp']
-            SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
-
-    if CONFIG['OS_ARCH'] != 'WINNT':
-        # GCC/Clang require permissions to be explicitly set for the soundtouch
-        # header.
-        CXXFLAGS += ['-include', SRCDIR + '/soundtouch_perms.h']
+if CONFIG['INTEL_ARCHITECTURE']:
+    if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+        SOURCES += ['sse_optimized.cpp']
+        SOURCES['sse_optimized.cpp'].flags += CONFIG['SSE2_FLAGS']
     else:
-        # Windows need alloca renamed to _alloca
-        DEFINES['alloca'] = '_alloca'
+        SOURCES += ['mmx_optimized.cpp']
+        SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
 
-    soundtouch_sources = UNIFIED_SOURCES
-    soundtouch_defines = DEFINES
+if CONFIG['OS_ARCH'] != 'WINNT':
+    # GCC/Clang require permissions to be explicitly set for the soundtouch
+    # header.
+    CXXFLAGS += ['-include', SRCDIR + '/soundtouch_perms.h']
+else:
+    # Windows need alloca renamed to _alloca
+    DEFINES['alloca'] = '_alloca'
 
-soundtouch_sources += [
-    'AAFilter.cpp',
-    'cpu_detect_x86.cpp',
-    'FIFOSampleBuffer.cpp',
-    'FIRFilter.cpp',
-    'InterpolateCubic.cpp',
-    'InterpolateLinear.cpp',
-    'InterpolateShannon.cpp',
-    'RateTransposer.cpp',
-    'RLBoxSoundTouchFactory.cpp',
-    'SoundTouch.cpp',
-    'SoundTouchFactory.cpp',
-    'TDStretch.cpp',
-]
-
-for k, v in (
-    ('BUILDING_SOUNDTOUCH', 1),
-    # Use abort() instead of exception in SoundTouch.
-    ('ST_NO_EXCEPTION_HANDLING', 1)
-):
-    soundtouch_defines[k] = v
-
+for k, v in soundtouch_defines:
+    DEFINES[k] = v
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

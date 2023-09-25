@@ -69,7 +69,7 @@ vendoring:
   keep:
     - AUTHORS
     - clear-lf.sh
-    - src/RLBoxSoundTouch*
+    - src/RLBoxSoundTouchFactory.*
     - src/SoundTouchFactory.*
     - src/soundtouch_config.h
     - src/soundtouch_perms.h
