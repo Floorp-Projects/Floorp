@@ -308,6 +308,8 @@ skip-if = ["verify"]
 
 ["browser_dbg-pause-on-next.js"]
 
+["browser_dbg-pause-on-unload.js"]
+
 ["browser_dbg-pause-points.js"]
 
 ["browser_dbg-pause-ux.js"]
