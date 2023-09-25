@@ -836,7 +836,7 @@ const PDFViewerApplication = {
       background: _app_options.AppOptions.get("pageColorsBackground"),
       foreground: _app_options.AppOptions.get("pageColorsForeground")
     } : null;
-    const altTextManager = appConfig.altTextDialog ? new _webAlt_text_manager.AltTextManager(appConfig.altTextDialog, this.overlayManager, eventBus) : null;
+    const altTextManager = appConfig.altTextDialog ? new _webAlt_text_manager.AltTextManager(appConfig.altTextDialog, container, this.overlayManager, eventBus) : null;
     const pdfViewer = new _pdf_viewer.PDFViewer({
       container,
       viewer,
@@ -2239,7 +2239,7 @@ function webViewerWheel(evt) {
   const isPinchToZoom = evt.ctrlKey && !PDFViewerApplication._isCtrlKeyDown && deltaMode === WheelEvent.DOM_DELTA_PIXEL && evt.deltaX === 0 && (Math.abs(scaleFactor - 1) < 0.05 || isBuiltInMac) && evt.deltaZ === 0;
   if (isPinchToZoom || evt.ctrlKey && supportedMouseWheelZoomModifierKeys.ctrlKey || evt.metaKey && supportedMouseWheelZoomModifierKeys.metaKey) {
     evt.preventDefault();
-    if (zoomDisabledTimeout || document.visibilityState === "hidden") {
+    if (zoomDisabledTimeout || document.visibilityState === "hidden" || PDFViewerApplication.overlayManager.active) {
       return;
     }
     const previousScale = pdfViewer.currentScale;
@@ -2283,7 +2283,7 @@ function webViewerTouchStart(evt) {
     return;
   }
   evt.preventDefault();
-  if (evt.touches.length !== 2) {
+  if (evt.touches.length !== 2 || PDFViewerApplication.overlayManager.active) {
     PDFViewerApplication._touchInfo = null;
     return;
   }
@@ -6107,7 +6107,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.11.131';
+    const viewerVersion = '3.11.153';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9747,8 +9747,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.11.131';
-const pdfjsBuild = 'a7894a4d7';
+const pdfjsVersion = '3.11.153';
+const pdfjsBuild = '85568bd6c';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
