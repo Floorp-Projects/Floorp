@@ -282,6 +282,16 @@ interface nsISearchService : nsISupports
   Promise init();
 
   /**
+   * A promise that is resolved when initialization has finished, but does not
+   * trigger initialization to begin.
+   *
+   * @returns {Promise}
+   *   Resolved when initalization has successfully finished, and rejected if it
+   *   has failed.
+   */
+  readonly attribute Promise promiseInitialized;
+
+  /**
    * Determine whether initialization has been completed.
    *
    * Clients of the service can use this attribute to quickly determine whether

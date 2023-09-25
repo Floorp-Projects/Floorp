@@ -28,6 +28,12 @@ const SETTINGS_FILENAME = "search.json.mozlz4";
 export class SearchSettings {
   constructor(searchService) {
     this.#searchService = searchService;
+
+    // Once the search service has initialized, schedule a write to ensure
+    // that any settings that may have changed or need updating are handled.
+    searchService.promiseInitialized.then(() => {
+      this._delayedWrite();
+    });
   }
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
@@ -496,7 +502,6 @@ export class SearchSettings {
         break;
       case lazy.SearchUtils.TOPIC_SEARCH_SERVICE:
         switch (verb) {
-          case "init-complete":
           case "engines-reloaded":
             this._delayedWrite();
             break;
