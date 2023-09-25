@@ -32,13 +32,13 @@ class ExtensionProcessTest {
     }
 
     @Test
-    fun test_extension_process_can_be_controlled_by_nimbus() {
+    fun test_extension_process_can_be_enabled_by_nimbus() {
         val hardcodedNimbus = HardcodedNimbusFeatures(
             context,
             "extensions-process" to JSONObject(
                 """
                   {
-                    "enabled":true
+                    "enabled": true
                   }
                 """.trimIndent(),
             ),
@@ -53,7 +53,20 @@ class ExtensionProcessTest {
     }
 
     @Test
-    fun test_extension_process_must_be_disabled_by_default() {
+    fun test_extension_process_can_be_disabled_by_nimbus() {
+        val hardcodedNimbus = HardcodedNimbusFeatures(
+            context,
+            "extensions-process" to JSONObject(
+                """
+                  {
+                    "enabled": false
+                  }
+                """.trimIndent(),
+            ),
+        )
+
+        hardcodedNimbus.connectWith(FxNimbus)
+
         val runtime = GeckoProvider.createRuntimeSettings(context, policy)
 
         assertFalse(FxNimbus.features.extensionsProcess.value().enabled)

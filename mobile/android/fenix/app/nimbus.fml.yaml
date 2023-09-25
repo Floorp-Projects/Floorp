@@ -277,6 +277,12 @@ features:
         description: If true, the extensions process is enabled.
         type: Boolean
         default: false
+    defaults:
+      - channels:
+          - developer
+          - nightly
+        value:
+          enabled: true
 
   growth-data:
     description: A feature measuring campaign growth data
@@ -444,7 +450,7 @@ types:
       variants:
         feature-ui:
           description: An integer either 0 or 1 indicating if the UI for cookie banner handling should be visible,
-            0 to hide the UI and 1 to show the UI. The actual UI is composed by cookie banner section 
+            0 to hide the UI and 1 to show the UI. The actual UI is composed by cookie banner section
             in the settings page, the toolbar section and the re-engagement dialog.
         feature-setting-value:
           description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
