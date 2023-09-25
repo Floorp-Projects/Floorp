@@ -4179,13 +4179,14 @@ function ipred_filter_16bpc_neon, export=1
 endfunc
 
 // void pal_pred_16bpc_neon(pixel *dst, const ptrdiff_t stride,
-//                          const uint16_t *const pal, const uint8_t *idx,
+//                          const pixel *const pal, const uint8_t *idx,
 //                          const int w, const int h);
 function pal_pred_16bpc_neon, export=1
         ld1             {v30.8h}, [x2]
         clz             w9,  w4
         adr             x6,  L(pal_pred_tbl)
         sub             w9,  w9,  #25
+        movi            v29.16b, #7
         ldrh            w9,  [x6, w9, uxtw #1]
         movi            v31.8h,  #1, lsl #8
         sub             x6,  x6,  w9, uxtw
@@ -4195,8 +4196,11 @@ function pal_pred_16bpc_neon, export=1
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 4:
-        ld1             {v1.16b}, [x3], #16
+        ld1             {v1.8b}, [x3], #8
         subs            w5,  w5,  #4
+        ushr            v3.8b,   v1.8b,   #4
+        and             v2.8b,   v1.8b,   v29.8b
+        zip1            v1.16b,  v2.16b,  v3.16b
         // Restructure v1 from a, b, c, ... into 2*a, 2*a+1, 2*b, 2*b+1, 2*c, 2*c+1, ...
         add             v1.16b,  v1.16b,  v1.16b
         zip1            v0.16b,  v1.16b,  v1.16b
@@ -4216,8 +4220,12 @@ function pal_pred_16bpc_neon, export=1
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 8:
-        ld1             {v2.16b, v3.16b}, [x3], #32
+        ld1             {v2.16b}, [x3], #16
         subs            w5,  w5,  #4
+        ushr            v4.16b,  v2.16b,  #4
+        and             v3.16b,  v2.16b,  v29.16b
+        zip1            v2.16b,  v3.16b,  v4.16b
+        zip2            v3.16b,  v3.16b,  v4.16b
         add             v2.16b,  v2.16b,  v2.16b
         add             v3.16b,  v3.16b,  v3.16b
         zip1            v0.16b,  v2.16b,  v2.16b
@@ -4243,8 +4251,16 @@ function pal_pred_16bpc_neon, export=1
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 16:
-        ld1             {v4.16b, v5.16b, v6.16b, v7.16b}, [x3], #64
+        ld1             {v4.16b, v5.16b}, [x3], #32
         subs            w5,  w5,  #4
+        ushr            v7.16b,  v4.16b,  #4
+        and             v6.16b,  v4.16b,  v29.16b
+        ushr            v3.16b,  v5.16b,  #4
+        and             v2.16b,  v5.16b,  v29.16b
+        zip1            v4.16b,  v6.16b,  v7.16b
+        zip2            v5.16b,  v6.16b,  v7.16b
+        zip1            v6.16b,  v2.16b,  v3.16b
+        zip2            v7.16b,  v2.16b,  v3.16b
         add             v4.16b,  v4.16b,  v4.16b
         add             v5.16b,  v5.16b,  v5.16b
         add             v6.16b,  v6.16b,  v6.16b
@@ -4284,8 +4300,16 @@ function pal_pred_16bpc_neon, export=1
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 32:
-        ld1             {v4.16b, v5.16b, v6.16b, v7.16b}, [x3], #64
+        ld1             {v4.16b, v5.16b}, [x3], #32
         subs            w5,  w5,  #2
+        ushr            v7.16b,  v4.16b,  #4
+        and             v6.16b,  v4.16b,  v29.16b
+        ushr            v3.16b,  v5.16b,  #4
+        and             v2.16b,  v5.16b,  v29.16b
+        zip1            v4.16b,  v6.16b,  v7.16b
+        zip2            v5.16b,  v6.16b,  v7.16b
+        zip1            v6.16b,  v2.16b,  v3.16b
+        zip2            v7.16b,  v2.16b,  v3.16b
         add             v4.16b,  v4.16b,  v4.16b
         add             v5.16b,  v5.16b,  v5.16b
         add             v6.16b,  v6.16b,  v6.16b
@@ -4322,8 +4346,16 @@ function pal_pred_16bpc_neon, export=1
         AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  #64
 64:
-        ld1             {v4.16b, v5.16b, v6.16b, v7.16b}, [x3], #64
+        ld1             {v4.16b, v5.16b}, [x3], #32
         subs            w5,  w5,  #1
+        ushr            v7.16b,  v4.16b,  #4
+        and             v6.16b,  v4.16b,  v29.16b
+        ushr            v3.16b,  v5.16b,  #4
+        and             v2.16b,  v5.16b,  v29.16b
+        zip1            v4.16b,  v6.16b,  v7.16b
+        zip2            v5.16b,  v6.16b,  v7.16b
+        zip1            v6.16b,  v2.16b,  v3.16b
+        zip2            v7.16b,  v2.16b,  v3.16b
         add             v4.16b,  v4.16b,  v4.16b
         add             v5.16b,  v5.16b,  v5.16b
         add             v6.16b,  v6.16b,  v6.16b

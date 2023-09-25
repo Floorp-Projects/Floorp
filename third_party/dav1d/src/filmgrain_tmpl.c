@@ -162,8 +162,8 @@ static inline entry sample_lut(const entry grain_lut[][GRAIN_WIDTH],
     const int randval = offsets[bx][by];
     const int offx = 3 + (2 >> subx) * (3 + (randval >> 4));
     const int offy = 3 + (2 >> suby) * (3 + (randval & 0xF));
-    return grain_lut[offy + y + (BLOCK_SIZE >> suby) * by]
-                    [offx + x + (BLOCK_SIZE >> subx) * bx];
+    return grain_lut[offy + y + (FG_BLOCK_SIZE >> suby) * by]
+                    [offx + x + (FG_BLOCK_SIZE >> subx) * bx];
 }
 
 static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
@@ -195,13 +195,13 @@ static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         seed[i] ^= (((row_num - i) * 173 + 105) & 0xFF);
     }
 
-    assert(stride % (BLOCK_SIZE * sizeof(pixel)) == 0);
+    assert(stride % (FG_BLOCK_SIZE * sizeof(pixel)) == 0);
 
     int offsets[2 /* col offset */][2 /* row offset */];
 
-    // process this row in BLOCK_SIZE^2 blocks
-    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE) {
-        const int bw = imin(BLOCK_SIZE, (int) pw - bx);
+    // process this row in FG_BLOCK_SIZE^2 blocks
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE) {
+        const int bw = imin(FG_BLOCK_SIZE, (int) pw - bx);
 
         if (data->overlap_flag && bx) {
             // shift previous offsets left
@@ -306,13 +306,13 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         seed[i] ^= (((row_num - i) * 173 + 105) & 0xFF);
     }
 
-    assert(stride % (BLOCK_SIZE * sizeof(pixel)) == 0);
+    assert(stride % (FG_BLOCK_SIZE * sizeof(pixel)) == 0);
 
     int offsets[2 /* col offset */][2 /* row offset */];
 
-    // process this row in BLOCK_SIZE^2 blocks (subsampled)
-    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE >> sx) {
-        const int bw = imin(BLOCK_SIZE >> sx, (int)(pw - bx));
+    // process this row in FG_BLOCK_SIZE^2 blocks (subsampled)
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE >> sx) {
+        const int bw = imin(FG_BLOCK_SIZE >> sx, (int)(pw - bx));
         if (data->overlap_flag && bx) {
             // shift previous offsets left
             for (int i = 0; i < rows; i++)

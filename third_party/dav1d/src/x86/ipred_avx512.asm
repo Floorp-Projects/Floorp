@@ -95,6 +95,8 @@ smooth_endB:  db  1,  3,  5,  7,  9, 11, 13, 15, 65, 67, 69, 71, 73, 75, 77, 79
               db 49, 51, 53, 55, 57, 59, 61, 63,113,115,117,119,121,123,125,127
 ipred_h_shuf: db  7,  7,  7,  7,  6,  6,  6,  6,  5,  5,  5,  5,  4,  4,  4,  4
               db  3,  3,  3,  3,  2,  2,  2,  2,  1,  1,  1,  1,  0,  0,  0,  0
+pal_unpack:   db  0,  4,  8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60
+pal_perm:     db  0,  8,  1,  9,  2, 10,  3, 11,  4, 12,  5, 13,  6, 14,  7, 15
 
 pb_127_m127:  times 2 db 127, -127
 pb_128:       times 4 db 128
@@ -126,7 +128,6 @@ JMP_TABLE ipred_smooth_h_8bpc,   avx512icl, w4, w8, w16, w32, w64
 JMP_TABLE ipred_dc_8bpc,         avx512icl, h4, h8, h16, h32, h64, w4, w8, w16, w32, w64, \
                                        s4-10*4, s8-10*4, s16-10*4, s32-10*4, s64-10*4
 JMP_TABLE ipred_dc_left_8bpc,    avx512icl, h4, h8, h16, h32, h64
-JMP_TABLE pal_pred_8bpc,         avx512icl, w4, w8, w16, w32, w64
 
 SECTION .text
 
@@ -1111,19 +1112,20 @@ cglobal ipred_smooth_8bpc, 4, 7, 16, dst, stride, tl, w, h, v_weights, stride3
     jg .w64_loop
     RET
 
-cglobal pal_pred_8bpc, 4, 7, 5, dst, stride, pal, idx, w, h, stride3
-    lea                  r6, [pal_pred_8bpc_avx512icl_table]
-    tzcnt                wd, wm
-    vbroadcasti32x4      m4, [palq]
+cglobal pal_pred_8bpc, 4, 7, 6, dst, stride, pal, idx, w, h, stride3
+    movifnidn            wd, wm
     movifnidn            hd, hm
-    movsxd               wq, [r6+wq*4]
-    packuswb             m4, m4
-    add                  wq, r6
     lea            stride3q, [strideq*3]
-    jmp                  wq
+    cmp                  wd, 8
+    jg .w32
+    movq               xmm3, [palq]
+    je .w8
 .w4:
-    pshufb             xmm0, xm4, [idxq]
-    add                idxq, 16
+    movq               xmm0, [idxq]
+    add                idxq, 8
+    psrlw              xmm1, xmm0, 4
+    punpcklbw          xmm0, xmm1
+    pshufb             xmm0, xmm3, xmm0
     movd   [dstq+strideq*0], xmm0
     pextrd [dstq+strideq*1], xmm0, 1
     pextrd [dstq+strideq*2], xmm0, 2
@@ -1133,9 +1135,13 @@ cglobal pal_pred_8bpc, 4, 7, 5, dst, stride, pal, idx, w, h, stride3
     jg .w4
     RET
 .w8:
-    pshufb             xmm0, xm4, [idxq+16*0]
-    pshufb             xmm1, xm4, [idxq+16*1]
-    add                idxq, 16*2
+    movu               xmm2, [idxq]
+    add                idxq, 16
+    pshufb             xmm1, xmm3, xmm2
+    psrlw              xmm2, 4
+    pshufb             xmm2, xmm3, xmm2
+    punpcklbw          xmm0, xmm1, xmm2
+    punpckhbw          xmm1, xmm2
     movq   [dstq+strideq*0], xmm0
     movhps [dstq+strideq*1], xmm0
     movq   [dstq+strideq*2], xmm1
@@ -1145,8 +1151,10 @@ cglobal pal_pred_8bpc, 4, 7, 5, dst, stride, pal, idx, w, h, stride3
     jg .w8
     RET
 .w16:
-    pshufb               m0, m4, [idxq]
-    add                idxq, 64
+    pmovzxdq             m0, [idxq]
+    add                idxq, 32
+    vpmultishiftqb       m0, m3, m0
+    pshufb               m0, m5, m0
     mova          [dstq+strideq*0], xm0
     vextracti32x4 [dstq+strideq*1], ym0, 1
     vextracti32x4 [dstq+strideq*2], m0, 2
@@ -1156,29 +1164,39 @@ cglobal pal_pred_8bpc, 4, 7, 5, dst, stride, pal, idx, w, h, stride3
     jg .w16
     RET
 .w32:
-    pshufb               m0, m4, [idxq+64*0]
-    pshufb               m1, m4, [idxq+64*1]
-    add                idxq, 64*2
+    vpbroadcastq         m3, [pal_unpack+0]
+    vpbroadcastq         m5, [palq]
+    cmp                  wd, 32
+    jl .w16
+    pmovzxbd             m2, [pal_perm]
+    vpbroadcastq         m4, [pal_unpack+8]
+    jg .w64
+.w32_loop:
+    vpermd               m1, m2, [idxq]
+    add                idxq, 64
+    vpmultishiftqb       m0, m3, m1
+    vpmultishiftqb       m1, m4, m1
+    pshufb               m0, m5, m0
+    pshufb               m1, m5, m1
     mova          [dstq+strideq*0], ym0
     vextracti32x8 [dstq+strideq*1], m0, 1
     mova          [dstq+strideq*2], ym1
     vextracti32x8 [dstq+stride3q ], m1, 1
     lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
-    jg .w32
+    jg .w32_loop
     RET
 .w64:
-    pshufb               m0, m4, [idxq+64*0]
-    pshufb               m1, m4, [idxq+64*1]
-    pshufb               m2, m4, [idxq+64*2]
-    pshufb               m3, m4, [idxq+64*3]
-    add                idxq, 64*4
+    vpermd               m1, m2, [idxq]
+    add                idxq, 64
+    vpmultishiftqb       m0, m3, m1
+    vpmultishiftqb       m1, m4, m1
+    pshufb               m0, m5, m0
+    pshufb               m1, m5, m1
     mova   [dstq+strideq*0], m0
     mova   [dstq+strideq*1], m1
-    mova   [dstq+strideq*2], m2
-    mova   [dstq+stride3q ], m3
-    lea                dstq, [dstq+strideq*4]
-    sub                  hd, 4
+    lea                dstq, [dstq+strideq*2]
+    sub                  hd, 2
     jg .w64
     RET
 

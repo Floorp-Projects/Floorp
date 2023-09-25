@@ -1308,14 +1308,14 @@ function fgy_32x32_16bpc_neon, export=1
         ldr             w11, [sp, #88]         // type
         adr             x13, L(fgy_loop_tbl)
 
-        add             x4,  x12, #32*2        // grain_lut += BLOCK_SIZE * bx
-        add             x6,  x14, x9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
+        add             x4,  x12, #32*2        // grain_lut += FG_BLOCK_SIZE * bx
+        add             x6,  x14, x9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
 
         tst             w11, #1
         ldrh            w11, [x13, w11, uxtw #1]
 
-        add             x8,  x16, x9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x8,  x8,  #32*2        // grain_lut += BLOCK_SIZE * bx
+        add             x8,  x16, x9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x8,  x8,  #32*2        // grain_lut += FG_BLOCK_SIZE * bx
 
         sub             x11, x13, w11, uxtw
 
@@ -1581,10 +1581,10 @@ function fguv_32x32_\layout\()_16bpc_neon, export=1
         add_offset      x17, w16, x17, x5,  x10
         add_offset      x5,  w8,  x11, x5,  x10
 
-        add             x4,  x13, #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
-        add             x8,  x15, x10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x11, x17, x10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x11, x11, #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
+        add             x4,  x13, #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
+        add             x8,  x15, x10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x11, x17, x10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x11, x11, #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
 
         ldr             w13, [sp, #112]        // type
 

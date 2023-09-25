@@ -38,10 +38,10 @@ smooth_perm:   db  1,  2,  5,  6,  9, 10, 13, 14, 17, 18, 21, 22, 25, 26, 29, 30
                db 33, 34, 37, 38, 41, 42, 45, 46, 49, 50, 53, 54, 57, 58, 61, 62
                db 65, 66, 69, 70, 73, 74, 77, 78, 81, 82, 85, 86, 89, 90, 93, 94
                db 97, 98,101,102,105,106,109,110,113,114,117,118,121,122,125,126
-pal_pred_perm: db  0, 32,  1, 33,  2, 34,  3, 35,  4, 36,  5, 37,  6, 38,  7, 39
-               db  8, 40,  9, 41, 10, 42, 11, 43, 12, 44, 13, 45, 14, 46, 15, 47
-               db 16, 48, 17, 49, 18, 50, 19, 51, 20, 52, 21, 53, 22, 54, 23, 55
-               db 24, 56, 25, 57, 26, 58, 27, 59, 28, 60, 29, 61, 30, 62, 31, 63
+pal_pred_perm: db  0, 16, 32, 48,  1, 17, 33, 49,  2, 18, 34, 50,  3, 19, 35, 51
+               db  4, 20, 36, 52,  5, 21, 37, 53,  6, 22, 38, 54,  7, 23, 39, 55
+               db  8, 24, 40, 56,  9, 25, 41, 57, 10, 26, 42, 58, 11, 27, 43, 59
+               db 12, 28, 44, 60, 13, 29, 45, 61, 14, 30, 46, 62, 15, 31, 47, 63
 filter_permA:  times 4 db  6,  7,  8,  9, 14, 15,  4,  5
                times 4 db 10, 11, 12, 13,  2,  3, -1, -1
 filter_permB:  times 4 db 22, 23, 24, 25, 30, 31,  6,  7
@@ -57,6 +57,8 @@ filter_shift:  times 2 dw  6
                        dd  0
                times 2 dw  4
                        dd  9
+pal_unpack:            db  0,  8,  4, 12, 32, 40, 36, 44
+                       db 16, 24, 20, 28, 48, 56, 52, 60
 
 %macro JMP_TABLE 3-*
     %xdefine %1_%2_table (%%table - 2*4)
@@ -610,20 +612,23 @@ cglobal ipred_smooth_16bpc, 3, 7, 16, dst, stride, tl, w, h, v_weights, stride3
     jg .w64_loop
     RET
 
-cglobal pal_pred_16bpc, 4, 7, 4, dst, stride, pal, idx, w, h, stride3
+cglobal pal_pred_16bpc, 4, 7, 7, dst, stride, pal, idx, w, h, stride3
     lea                  r6, [pal_pred_16bpc_avx512icl_table]
     tzcnt                wd, wm
-    mova                 m2, [pal_pred_perm]
-    movsxd               wq, [r6+wq*4]
-    mova                xm3, [palq]
+    mova                 m3, [pal_pred_perm]
     movifnidn            hd, hm
+    movsxd               wq, [r6+wq*4]
+    vpbroadcastq         m4, [pal_unpack+0]
+    vpbroadcastq         m5, [pal_unpack+8]
     add                  wq, r6
+    vbroadcasti32x4      m6, [palq]
     lea            stride3q, [strideq*3]
     jmp                  wq
 .w4:
-    pmovzxbw            ym0, [idxq]
-    add                idxq, 16
-    vpermw              ym0, ym0, ym3
+    pmovzxbd            ym0, [idxq]
+    add                idxq, 8
+    vpmultishiftqb      ym0, ym4, ym0
+    vpermw              ym0, ym0, ym6
     vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
@@ -634,9 +639,10 @@ cglobal pal_pred_16bpc, 4, 7, 4, dst, stride, pal, idx, w, h, stride3
     jg .w4
     RET
 .w8:
-    pmovzxbw             m0, [idxq]
-    add                idxq, 32
-    vpermw               m0, m0, m3
+    pmovzxbd             m0, [idxq]
+    add                idxq, 16
+    vpmultishiftqb       m0, m4, m0
+    vpermw               m0, m0, m6
     mova          [dstq+strideq*0], xm0
     vextracti32x4 [dstq+strideq*1], ym0, 1
     vextracti32x4 [dstq+strideq*2], m0, 2
@@ -646,11 +652,13 @@ cglobal pal_pred_16bpc, 4, 7, 4, dst, stride, pal, idx, w, h, stride3
     jg .w8
     RET
 .w16:
-    vpermb               m1, m2, [idxq]
-    add                idxq, 64
-    vpermw               m0, m1, m3
+    movu                ym1, [idxq]
+    add                idxq, 32
+    vpermb               m1, m3, m1
+    vpmultishiftqb       m1, m4, m1
+    vpermw               m0, m1, m6
     psrlw                m1, 8
-    vpermw               m1, m1, m3
+    vpermw               m1, m1, m6
     mova          [dstq+strideq*0], ym0
     vextracti32x8 [dstq+strideq*1], m0, 1
     mova          [dstq+strideq*2], ym1
@@ -660,27 +668,41 @@ cglobal pal_pred_16bpc, 4, 7, 4, dst, stride, pal, idx, w, h, stride3
     jg .w16
     RET
 .w32:
-    vpermb               m1, m2, [idxq]
+    vpermb               m2, m3, [idxq]
     add                idxq, 64
-    vpermw               m0, m1, m3
+    vpmultishiftqb       m1, m4, m2
+    vpmultishiftqb       m2, m5, m2
+    vpermw               m0, m1, m6
     psrlw                m1, 8
-    vpermw               m1, m1, m3
+    vpermw               m1, m1, m6
     mova   [dstq+strideq*0], m0
     mova   [dstq+strideq*1], m1
-    lea                dstq, [dstq+strideq*2]
-    sub                  hd, 2
+    vpermw               m0, m2, m6
+    psrlw                m2, 8
+    vpermw               m1, m2, m6
+    mova   [dstq+strideq*2], m0
+    mova   [dstq+stride3q ], m1
+    lea                dstq, [dstq+strideq*4]
+    sub                  hd, 4
     jg .w32
     RET
 .w64:
-    vpermb               m1, m2, [idxq]
+    vpermb               m2, m3, [idxq]
     add                idxq, 64
-    vpermw               m0, m1, m3
+    vpmultishiftqb       m1, m4, m2
+    vpmultishiftqb       m2, m5, m2
+    vpermw               m0, m1, m6
     psrlw                m1, 8
-    vpermw               m1, m1, m3
-    mova        [dstq+64*0], m0
-    mova        [dstq+64*1], m1
-    add                dstq, strideq
-    dec                  hd
+    vpermw               m1, m1, m6
+    mova          [dstq+ 0], m0
+    mova          [dstq+64], m1
+    vpermw               m0, m2, m6
+    psrlw                m2, 8
+    vpermw               m1, m2, m6
+    mova  [dstq+strideq+ 0], m0
+    mova  [dstq+strideq+64], m1
+    lea                dstq, [dstq+strideq*2]
+    sub                  hd, 2
     jg .w64
     RET
 
