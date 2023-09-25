@@ -7,7 +7,6 @@
 #ifndef mozilla_layers_ContentCompositorBridgeParent_h
 #define mozilla_layers_ContentCompositorBridgeParent_h
 
-#include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/UniquePtr.h"
@@ -128,11 +127,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   bool DeallocPTextureParent(PTextureParent* actor) override;
 
-  mozilla::ipc::IPCResult RecvInitPCanvasParent(
-      Endpoint<PCanvasParent>&& aEndpoint) final;
-
-  mozilla::ipc::IPCResult RecvReleasePCanvasParent() final;
-
   bool IsSameProcess() const override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(
@@ -162,9 +156,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   bool IsRemote() const override { return true; }
 
-  UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
-      const int64_t aTextureId) final;
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~ContentCompositorBridgeParent();
@@ -177,8 +168,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   RefPtr<ContentCompositorBridgeParent> mSelfRef;
 
   bool mDestroyCalled;
-
-  RefPtr<CanvasTranslator> mCanvasTranslator;
 };
 
 }  // namespace mozilla::layers

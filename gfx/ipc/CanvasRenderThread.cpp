@@ -12,11 +12,16 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsThread.h"
 #include "prsystem.h"
 #include "transport/runnable_utils.h"
+
+bool NS_IsInCanvasThreadOrWorker() {
+  return mozilla::gfx::CanvasRenderThread::IsInCanvasRenderOrWorkerThread();
+}
 
 namespace mozilla::gfx {
 

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PCanvasManager;
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/CanvasTranslator.h";
 
@@ -17,8 +18,10 @@ namespace layers {
 /**
  * PCanvas is the IPDL for recorded Canvas drawing.
  */
-[NeedsOtherPid, ParentImpl="CanvasTranslator"]
+[ParentImpl="CanvasTranslator"]
 async protocol PCanvas {
+  manager PCanvasManager;
+
 parent:
   /**
    * Initialize a CanvasTranslator for a particular TextureType, which
@@ -28,7 +31,8 @@ parent:
    */
   async InitTranslator(TextureType aTextureType, Handle aReadHandle,
                        CrossProcessSemaphoreHandle aReaderSem,
-                       CrossProcessSemaphoreHandle aWriterSem);
+                       CrossProcessSemaphoreHandle aWriterSem,
+                       bool aUseIPDLThread);
 
   /**
    * Send a new buffer to resume translation after it's been stopped by writer.
@@ -41,7 +45,9 @@ parent:
    */
   async ResumeTranslation();
 
-  child:
+  async __delete__();
+
+child:
   /**
    * Notify that the canvas device used by the translator has changed.
    */

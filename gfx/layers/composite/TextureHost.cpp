@@ -8,6 +8,7 @@
 
 #include "CompositableHost.h"  // for CompositableHost
 #include "mozilla/gfx/2D.h"    // for DataSourceSurface, Factory
+#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Shmem.h"  // for Shmem
 #include "mozilla/layers/AsyncImagePipelineManager.h"
@@ -184,8 +185,8 @@ already_AddRefed<TextureHost> CreateDummyBufferTextureHost(
 
 already_AddRefed<TextureHost> TextureHost::Create(
     const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
-    ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
-    TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId) {
+    HostIPCAllocator* aDeallocator, LayersBackend aBackend, TextureFlags aFlags,
+    wr::MaybeExternalImageId& aExternalImageId) {
   RefPtr<TextureHost> result;
 
   switch (aDesc.type()) {
@@ -222,12 +223,17 @@ already_AddRefed<TextureHost> TextureHost::Create(
     case SurfaceDescriptor::TSurfaceDescriptorRecorded: {
       const SurfaceDescriptorRecorded& desc =
           aDesc.get_SurfaceDescriptorRecorded();
-      CompositorBridgeParentBase* actor =
-          aDeallocator ? aDeallocator->AsCompositorBridgeParentBase() : nullptr;
+      if (NS_WARN_IF(!aDeallocator)) {
+        gfxCriticalNote
+            << "Missing allocator to get descriptor for recorded texture.";
+        // Create a dummy to prevent any crashes due to missing IPDL actors.
+        result = CreateDummyBufferTextureHost(aBackend, aFlags);
+        break;
+      }
+
       UniquePtr<SurfaceDescriptor> realDesc =
-          actor
-              ? actor->LookupSurfaceDescriptorForClientTexture(desc.textureId())
-              : nullptr;
+          gfx::CanvasManagerParent::WaitForReplayTexture(
+              aDeallocator->GetChildProcessId(), desc.textureId());
       if (!realDesc) {
         gfxCriticalNote << "Failed to get descriptor for recorded texture.";
         // Create a dummy to prevent any crashes due to missing IPDL actors.
