@@ -77,6 +77,16 @@ mac64-chromedriver-115:
         sha256: 53bf8a624543197b94bc1fd9d13aae334bcb0638c7f3bb3bf17604f8cf6281b0
         size: 9401104
 
+mac-arm-chromedriver-115:
+    description: "Mac64 arm chromedriver v115"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_mac_arm_115.tar.zst
+        add-prefix: "115"
+        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/115.0.5790.98/mac-arm64/chromedriver-mac-arm64.zip
+        sha256: 4d6cc6e0ab50589705d45787a9a7b16e9f0cb0fc2d4b143fa4d64a10f8d791ce
+        size: 8386835
+
 win32-chromedriver-116:
     description: "Win32 chromedriver v116"
     fetch:
