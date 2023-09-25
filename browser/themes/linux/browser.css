@@ -15,6 +15,11 @@
  */
 
 :root {
+  --toolbox-non-lwt-bgcolor: -moz-headerbar;
+  --toolbox-non-lwt-textcolor:-moz-headerbartext;
+  --toolbox-non-lwt-bgcolor-inactive: -moz-headerbarinactive;
+  --toolbox-non-lwt-textcolor-inactive: -moz-headerbarinactivetext;
+
   --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
 
@@ -30,22 +35,6 @@
   justify-content: normal; /* align the menubar to the top also in customize mode */
 }
 
-#navigator-toolbox {
-  appearance: none;
-  background-color: transparent;
-  border-top: none;
-
-  &:not(:-moz-lwtheme) {
-    background-color: -moz-headerbar;
-    color: -moz-headerbartext;
-
-    &:-moz-window-inactive {
-      background-color: -moz-headerbarinactive;
-      color: -moz-headerbarinactivetext;
-    }
-  }
-}
-
 /**
  * Titlebar drawing:
  *
@@ -57,16 +46,6 @@
  */
 :root[tabsintitlebar] {
   background-color: transparent;
-
-  #navigator-toolbox:not(:-moz-lwtheme) {
-    background-color: ActiveCaption;
-    color: CaptionText;
-
-    &:-moz-window-inactive {
-      background-color: InactiveCaption;
-      color: InactiveCaptionText;
-    }
-  }
 
   /* When temporarily showing the menu bar, make it at least as tall as the tab
    * bar such that the window controls don't appear to move up. */
