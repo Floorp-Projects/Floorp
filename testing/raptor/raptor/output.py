@@ -729,7 +729,15 @@ class PerftestOutput(object):
                 try:
                     # pylint: disable=W1633
                     replicate = round(
-                        float(page_cycle_results[suite][sub]["frameLength"]["average"]),
+                        float(
+                            page_cycle_results[suite][sub]["complexity"]["bootstrap"][
+                                "median"
+                            ]
+                            if "ramp" in test["name"]
+                            else page_cycle_results[suite][sub]["frameLength"][
+                                "average"
+                            ]
+                        ),
                         3,
                     )
                 except TypeError as e:
