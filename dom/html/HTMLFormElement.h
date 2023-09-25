@@ -13,10 +13,11 @@
 #include "mozilla/dom/AnchorAreaFormRelValues.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PopupBlocker.h"
-#include "mozilla/dom/RadioGroupContainer.h"
+#include "mozilla/dom/RadioGroupManager.h"
 #include "nsCOMPtr.h"
 #include "nsIFormControl.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIRadioGroupContainer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 #include "nsInterfaceHashtable.h"
@@ -38,7 +39,9 @@ class HTMLImageElement;
 class FormData;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
-                              public AnchorAreaFormRelValues {
+                              public nsIRadioGroupContainer,
+                              public AnchorAreaFormRelValues,
+                              RadioGroupManager {
   friend class HTMLFormControlsCollection;
 
  public:
@@ -57,6 +60,25 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool IsDefaultSubmitElement(nsGenericHTMLFormElement* aElement) const {
     return aElement == mDefaultSubmitElement;
   }
+
+  // nsIRadioGroupContainer
+  void SetCurrentRadioButton(const nsAString& aName,
+                             HTMLInputElement* aRadio) override;
+  HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) override;
+  NS_IMETHOD GetNextRadioButton(const nsAString& aName, const bool aPrevious,
+                                HTMLInputElement* aFocusedRadio,
+                                HTMLInputElement** aRadioOut) override;
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) override;
+  void AddToRadioGroup(const nsAString& aName,
+                       HTMLInputElement* aRadio) override;
+  void RemoveFromRadioGroup(const nsAString& aName,
+                            HTMLInputElement* aRadio) override;
+  uint32_t GetRequiredRadioCount(const nsAString& aName) const override;
+  void RadioRequiredWillChange(const nsAString& aName,
+                               bool aRequiredAdded) override;
+  bool GetValueMissingState(const nsAString& aName) const override;
+  void SetValueMissingState(const nsAString& aName, bool aValue) override;
 
   // EventTarget
   void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
