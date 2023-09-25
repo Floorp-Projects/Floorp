@@ -1750,10 +1750,6 @@ HttpChannelParent::GetRemoteType(nsACString& aRemoteType) {
   return NS_OK;
 }
 
-bool HttpChannelParent::IsRedirectDueToAuthRetry(uint32_t redirectFlags) {
-  return (redirectFlags & nsIChannelEventSink::REDIRECT_AUTH_RETRY);
-}
-
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIParentRedirectingChannel
 //-----------------------------------------------------------------------------
@@ -1782,30 +1778,24 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
     return NS_BINDING_ABORTED;
   }
 
-  // If this is an internal redirect for service worker interception or
-  // internal redirect due to auth retries, then hide it from the child
-  // process.  The original e10s interception code was not designed with this
-  // in mind and its not necessary to replace the HttpChannelChild/Parent
-  // objects in this case.
+  // If this is an internal redirect for service worker interception, then
+  // hide it from the child process.  The original e10s interception code
+  // was not designed with this in mind and its not necessary to replace
+  // the HttpChannelChild/Parent objects in this case.
   if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
     nsCOMPtr<nsIInterceptedChannel> oldIntercepted =
         do_QueryInterface(static_cast<nsIChannel*>(mChannel.get()));
     nsCOMPtr<nsIInterceptedChannel> newIntercepted =
         do_QueryInterface(newChannel);
 
-    // 1. We only want to hide the special internal redirects from
-    // nsHttpChannel to InterceptedHttpChannel.
-    // 2. We want to allow through internal redirects
+    // We only want to hide the special internal redirect from nsHttpChannel
+    // to InterceptedHttpChannel.  We want to allow through internal redirects
     // initiated from the InterceptedHttpChannel even if they are to another
     // InterceptedHttpChannel, except the interception reset, since
     // corresponding HttpChannelChild/Parent objects can be reused for reset
     // case.
-    // 3. If this is an internal redirect due to auth retry then we will
-    // hide it from the child process
-
     if ((!oldIntercepted && newIntercepted) ||
-        (oldIntercepted && !newIntercepted && oldIntercepted->IsReset()) ||
-        (IsRedirectDueToAuthRetry(redirectFlags))) {
+        (oldIntercepted && !newIntercepted && oldIntercepted->IsReset())) {
       // We need to move across the reserved and initial client information
       // to the new channel.  Normally this would be handled by the child
       // ClientChannelHelper, but that is not notified of this redirect since
