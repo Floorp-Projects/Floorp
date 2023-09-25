@@ -7,6 +7,10 @@
 #include "CanvasRenderThread.h"
 
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/gfx/CanvasManagerParent.h"
+#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "transport/runnable_utils.h"
 
 namespace mozilla::gfx {
@@ -17,13 +21,11 @@ static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 static bool sCanvasRenderThreadEverStarted = false;
 #endif
 
-CanvasRenderThread::CanvasRenderThread(RefPtr<nsIThread> aThread)
-    : mThread(std::move(aThread)) {}
+CanvasRenderThread::CanvasRenderThread(nsCOMPtr<nsIThread>&& aThread,
+                                       bool aCreatedThread)
+    : mThread(std::move(aThread)), mCreatedThread(aCreatedThread) {}
 
-CanvasRenderThread::~CanvasRenderThread() {}
-
-// static
-CanvasRenderThread* CanvasRenderThread::Get() { return sCanvasRenderThread; }
+CanvasRenderThread::~CanvasRenderThread() = default;
 
 // static
 void CanvasRenderThread::Start() {
@@ -36,6 +38,21 @@ void CanvasRenderThread::Start() {
   MOZ_ASSERT(!sCanvasRenderThreadEverStarted);
   sCanvasRenderThreadEverStarted = true;
 #endif
+
+  nsCOMPtr<nsIThread> thread;
+  if (!gfxVars::SupportsThreadsafeGL()) {
+    thread = wr::RenderThread::GetRenderThread();
+    MOZ_ASSERT(thread);
+  } else if (!gfxVars::UseCanvasRenderThread()) {
+    thread = layers::CompositorThread();
+    MOZ_ASSERT(thread);
+  }
+
+  if (thread) {
+    sCanvasRenderThread =
+        new CanvasRenderThread(std::move(thread), /* aCreatedThread */ false);
+    return;
+  }
 
   // This is 4M, which is higher than the default 256K.
   // Increased with bug 1753349 to accommodate the `chromium/5359` branch of
@@ -51,7 +68,6 @@ void CanvasRenderThread::Start() {
   const uint32_t stackSize =
       nsIThreadManager::DEFAULT_STACK_SIZE ? 4096 << 10 : 0;
 
-  RefPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread(
       "CanvasRenderer", getter_AddRefs(thread),
       NS_NewRunnableFunction(
@@ -75,26 +91,41 @@ void CanvasRenderThread::Start() {
           }),
       {.stackSize = stackSize});
 
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  sCanvasRenderThread = new CanvasRenderThread(thread);
+  sCanvasRenderThread =
+      new CanvasRenderThread(std::move(thread), /* aCreatedThread */ true);
 }
 
 // static
-void CanvasRenderThread::ShutDown() {
+void CanvasRenderThread::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sCanvasRenderThread);
+
+  // It is possible we never initialized this thread in the parent process,
+  // because we used the GPU process instead.
+  if (!sCanvasRenderThread) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    return;
+  }
+
+  CanvasManagerParent::Shutdown();
 
   // Null out sCanvasRenderThread before we enter synchronous Shutdown,
   // from here on we are to be considered shut down for our consumers.
-  nsCOMPtr<nsIThread> oldThread = sCanvasRenderThread->GetCanvasRenderThread();
+  nsCOMPtr<nsIThread> oldThread;
+  if (sCanvasRenderThread->mCreatedThread) {
+    oldThread = sCanvasRenderThread->GetCanvasRenderThread();
+    MOZ_ASSERT(oldThread);
+  }
   sCanvasRenderThread = nullptr;
 
-  // We do a synchronous shutdown here while spinning the MT event loop.
-  MOZ_ASSERT(oldThread);
-  oldThread->Shutdown();
+  // We do a synchronous shutdown here while spinning the MT event loop, but
+  // only if we created a dedicated CanvasRender thread.
+  if (oldThread) {
+    oldThread->Shutdown();
+  }
 }
 
 // static

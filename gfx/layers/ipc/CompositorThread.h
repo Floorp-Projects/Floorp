@@ -13,7 +13,6 @@ namespace mozilla::baseprofiler {
 class BaseProfilerThreadId;
 }
 using ProfilerThreadId = mozilla::baseprofiler::BaseProfilerThreadId;
-class nsISerialEventTarget;
 class nsIThread;
 
 namespace mozilla {
@@ -26,9 +25,7 @@ class CompositorThreadHolder final {
  public:
   CompositorThreadHolder();
 
-  nsISerialEventTarget* GetCompositorThread() const {
-    return mCompositorThread;
-  }
+  nsIThread* GetCompositorThread() const { return mCompositorThread; }
 
   static CompositorThreadHolder* GetSingleton();
 
@@ -61,7 +58,7 @@ class CompositorThreadHolder final {
   friend class CompositorBridgeParent;
 };
 
-nsISerialEventTarget* CompositorThread();
+nsIThread* CompositorThread();
 
 }  // namespace layers
 }  // namespace mozilla
