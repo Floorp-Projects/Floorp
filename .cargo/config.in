@@ -25,14 +25,19 @@ git = "https://github.com/franziskuskiefer/cose-rust"
 rev = "43c22248d136c8b38fe42ea709d08da6355cf04b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/naga?rev=cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"]
-git = "https://github.com/gfx-rs/naga"
-rev = "cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
+[source."git+https://github.com/gfx-rs/metal-rs/?rev=d24f1a4"]
+git = "https://github.com/gfx-rs/metal-rs/"
+rev = "d24f1a4"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"]
+[source."git+https://github.com/gfx-rs/naga?rev=df8107b7"]
+git = "https://github.com/gfx-rs/naga"
+rev = "df8107b7"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/gfx-rs/wgpu?rev=7e0d6c971f900f6a8f01a9de9c41f7894164a82c"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e"
+rev = "7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/prost?rev=95964e9d33df3c2a9c3f14285e262867cab6f96b"]
