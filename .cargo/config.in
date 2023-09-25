@@ -115,9 +115,9 @@ git = "https://github.com/rust-diplomat/diplomat"
 rev = "8d125999893fedfdf30595e97334c21ec4b18da9"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/rust-minidump/minidump-writer.git?rev=a15bd5cab6a3de251c0c23264be14b977c0af09c"]
+[source."git+https://github.com/rust-minidump/minidump-writer.git?rev=491eb330e78e310c32927e5cc3bd2350af1e93f8"]
 git = "https://github.com/rust-minidump/minidump-writer.git"
-rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c"
+rev = "491eb330e78e310c32927e5cc3bd2350af1e93f8"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/rust-minidump/rust-minidump?rev=6ae42a7f992e8a88ebee661bc77bcedb95cd671f"]
