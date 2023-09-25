@@ -15,21 +15,81 @@ import org.mozilla.fenix.settings.SupportUtils
 internal fun Collection<OnboardingCardData>.toPageUiData(
     showNotificationPage: Boolean,
     showAddWidgetPage: Boolean,
-): List<OnboardingPageUiData> =
-    filter {
-        when (it.cardType) {
-            OnboardingCardType.NOTIFICATION_PERMISSION -> {
-                it.enabled && showNotificationPage
-            }
-            OnboardingCardType.ADD_SEARCH_WIDGET -> {
-                it.enabled && showAddWidgetPage
-            }
-            else -> {
-                it.enabled
+    jexlConditions: Map<String, String>,
+    func: (String) -> Boolean,
+): List<OnboardingPageUiData> {
+    // we are first filtering the cards based on Nimbus configuration
+    return filter { it.shouldDisplayCard(func, jexlConditions) }
+        // we are then filtering again based on device capabilities
+        .filter { it.isCardEnabled(showNotificationPage, showAddWidgetPage) }
+        .sortedBy { it.ordering }
+        .map { it.toPageUiData() }
+}
+
+private fun OnboardingCardData.isCardEnabled(
+    showNotificationPage: Boolean,
+    showAddWidgetPage: Boolean,
+): Boolean =
+    when (cardType) {
+        OnboardingCardType.NOTIFICATION_PERMISSION -> {
+            enabled && showNotificationPage
+        }
+
+        OnboardingCardType.ADD_SEARCH_WIDGET -> {
+            enabled && showAddWidgetPage
+        }
+
+        else -> {
+            enabled
+        }
+    }
+
+/**
+ *  Determines whether the given [OnboardingCardData] should be displayed.
+ *
+ *  @param func Function that receives a condition as a [String] and returns its JEXL evaluation as a [Boolean].
+ *  @param jexlConditions A <String, String> map containing the Nimbus conditions.
+ *
+ *  @return True if the card should be displayed, otherwise false.
+ */
+private fun OnboardingCardData.shouldDisplayCard(
+    func: (String) -> Boolean,
+    jexlConditions: Map<String, String>,
+): Boolean {
+    val jexlCache: MutableMap<String, Boolean> = mutableMapOf()
+
+    // Make sure the conditions exist and have a value, and that the number
+    // of valid conditions matches the number of conditions on the card's
+    // respective prerequisite or disqualifier table. If these mismatch,
+    // that means a card contains a condition that's not in the feature
+    // conditions lookup table. JEXLs can only be evaluated on
+    // supported conditions. Otherwise, consider the card invalid.
+    val allPrerequisites = prerequisites.mapNotNull { jexlConditions[it] }
+    val allDisqualifiers = disqualifiers.mapNotNull { jexlConditions[it] }
+
+    val validPrerequisites = if (allPrerequisites.size == prerequisites.size) {
+        allPrerequisites.all { condition ->
+            jexlCache.getOrPut(condition) {
+                func(condition)
             }
         }
-    }.sortedBy { it.ordering }
-        .map { it.toPageUiData() }
+    } else {
+        false
+    }
+
+    val hasDisqualifiers =
+        if (allDisqualifiers.isNotEmpty() && allDisqualifiers.size == disqualifiers.size) {
+            allDisqualifiers.all { condition ->
+                jexlCache.getOrPut(condition) {
+                    func(condition)
+                }
+            }
+        } else {
+            false
+        }
+
+    return validPrerequisites && !hasDisqualifiers
+}
 
 private fun OnboardingCardData.toPageUiData() = OnboardingPageUiData(
     type = cardType.toPageUiDataType(),

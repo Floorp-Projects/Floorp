@@ -53,6 +53,9 @@ class NimbusMessagingStorage(
     private val customAttributes: JSONObject
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
+    val helper: GleanPlumbMessageHelper
+        get() = gleanPlumb.createMessageHelper(customAttributes)
+
     /**
      * Returns the [Message] for the given [key] or returns null if none found.
      */
@@ -115,7 +118,7 @@ class NimbusMessagingStorage(
             surface,
             availableMessages,
             setOf(),
-            gleanPlumb.createMessageHelper(customAttributes),
+            helper,
             mutableMapOf(),
         )
 

@@ -58,6 +58,9 @@ juno-onboarding:
     cards:
       type: json
       description: Collection of user facing onboarding cards.
+    conditions:
+      type: json
+      description: "A collection of out the box conditional expressions to be used in determining whether a card should show or not. Each entry maps to a valid JEXL expression.\n"
 messaging:
   description: "The in-app messaging system.\n"
   hasExposure: true

@@ -5,6 +5,16 @@ features:
     description: A feature that shows juno onboarding flow.
 
     variables:
+      conditions:
+        description: >
+          A collection of out the box conditional expressions to be
+          used in determining whether a card should show or not.
+          Each entry maps to a valid JEXL expression.
+        type: Map<String, String>
+        default: {
+          ALWAYS: "true",
+          NEVER: "false"
+        }
       cards:
         description: Collection of user facing onboarding cards.
         type: Map<String, OnboardingCardData>
@@ -98,6 +108,20 @@ objects:
         description: The text to display on the secondary button.
         # This should never be defaulted.
         default: ""
+      prerequisites:
+        type: List<String>
+        description: >
+          A list of strings corresponding to targeting expressions.
+          The card will be shown if all expressions are `true` and if
+          no expressions in the `disqualifiers` table are true, or
+          if the `disqualifiers` table is empty.
+        default: [ ALWAYS ]
+      disqualifiers:
+        type: List<String>
+        description: >
+          A list of strings corresponding to targeting expressions.
+          The card will not be shown if any expression is `true`.
+        default: [ NEVER ]
 
 enums:
 
