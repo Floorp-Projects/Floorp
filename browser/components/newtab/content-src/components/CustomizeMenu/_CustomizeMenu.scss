@@ -111,25 +111,8 @@
   padding: 0 16px;
 
   .section {
-    display: grid;
-    grid-template-rows: auto;
-    grid-template-columns: auto 26px;
-
-    & > div {
-      grid-area: 1;
-    }
-
-    .title {
-      grid-column: 1 / -1;
-      margin: 0;
-      font-weight: 600;
-      font-size: 16px;
+    moz-toggle {
       margin-bottom: 10px;
-    }
-
-    .subtitle {
-      margin: 0;
-      font-size: 14px;
     }
 
     .sponsored {
@@ -189,64 +172,6 @@
       &:dir(rtl) {
         background-position-x: left;
       }
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 26px;
-      height: 16px;
-      grid-column: 2;
-      margin-top: 2px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      transition: transform 250ms;
-      border-radius: 13px;
-      border: $customize-menu-border-tint;
-      background-color: var(--newtab-element-secondary-color);
-
-      &::before {
-        position: absolute;
-        content: '';
-        height: 8px;
-        width: 8px;
-        inset-inline-start: 3px;
-        bottom: 3px;
-        background-color: var(--newtab-primary-element-text-color);
-        transition: transform 250ms;
-        border-radius: 50%;
-        outline: $customize-menu-border-tint;
-      }
-    }
-
-    .switch input:focus-visible + .slider {
-      outline: 0;
-      box-shadow: $shadow-focus;
-    }
-
-    .switch input:not(:checked):focus-visible + .slider {
-      border: 1px solid var(--newtab-primary-action-background);
-    }
-
-    input:checked + .slider {
-      background-color: var(--newtab-primary-action-background);
-    }
-
-    input:checked + .slider::before {
-      transform: translateX(10px);
-    }
-
-    input:checked + .slider:dir(rtl)::before {
-      transform: translateX(-10px);
     }
 
     .more-info-top-wrapper,
