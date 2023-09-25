@@ -857,6 +857,61 @@ QuotaManagerService::ClearStoragesForPrincipal(
 }
 
 NS_IMETHODIMP
+QuotaManagerService::ClearStoragesForOriginPrefix(
+    nsIPrincipal* aPrincipal, const nsACString& aPersistenceType,
+    nsIQuotaRequest** _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()));
+
+  QM_TRY_INSPECT(
+      const auto& persistenceType,
+      ([&aPersistenceType]() -> Result<Maybe<PersistenceType>, nsresult> {
+        if (aPersistenceType.IsVoid()) {
+          return Maybe<PersistenceType>();
+        }
+
+        const auto persistenceType =
+            PersistenceTypeFromString(aPersistenceType, fallible);
+        QM_TRY(MOZ_TO_RESULT(persistenceType.isSome()),
+               Err(NS_ERROR_INVALID_ARG));
+
+        return persistenceType;
+      }()));
+
+  QM_TRY_INSPECT(
+      const auto& principalInfo,
+      ([&aPrincipal]() -> Result<PrincipalInfo, nsresult> {
+        PrincipalInfo principalInfo;
+        QM_TRY(MOZ_TO_RESULT(
+            PrincipalToPrincipalInfo(aPrincipal, &principalInfo)));
+
+        QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(principalInfo)),
+               Err(NS_ERROR_INVALID_ARG));
+
+        if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+          nsCString suffix;
+          principalInfo.get_ContentPrincipalInfo().attrs().CreateSuffix(suffix);
+
+          QM_TRY(MOZ_TO_RESULT(suffix.IsEmpty()), Err(NS_ERROR_INVALID_ARG));
+        }
+
+        return principalInfo;
+      }()));
+
+  RefPtr<Request> request = new Request();
+
+  mBackgroundActor
+      ->SendClearStoragesForOriginPrefix(persistenceType, principalInfo)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             BoolResponsePromiseResolveOrRejectCallback(request));
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::Reset(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 

@@ -100,6 +100,11 @@ RefPtr<ResolvableNormalOriginOp<bool>> CreateClearOriginOp(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const Maybe<Client::Type>& aClientType, const bool& aClearAll);
 
+RefPtr<ResolvableNormalOriginOp<bool>> CreateClearStoragesForOriginPrefixOp(
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    const Maybe<PersistenceType>& aPersistenceType,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
 RefPtr<ResolvableNormalOriginOp<bool>> CreateClearDataOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const OriginAttributesPattern& aPattern);

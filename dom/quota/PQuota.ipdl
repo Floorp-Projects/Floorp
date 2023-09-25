@@ -160,6 +160,10 @@ parent:
                                bool clearAll)
       returns(BoolResponse response);
 
+  async ClearStoragesForOriginPrefix(PersistenceType? persistenceType,
+                                     PrincipalInfo principalInfo)
+      returns(BoolResponse response);
+
   // This can only be called from some other thread in the parent process!
   async ClearStoragesForOriginAttributesPattern(OriginAttributesPattern pattern)
       returns(BoolResponse response);

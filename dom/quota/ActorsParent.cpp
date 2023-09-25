@@ -5313,6 +5313,21 @@ RefPtr<BoolPromise> QuotaManager::ClearStoragesForOrigin(
   return clearOriginOp->OnResults();
 }
 
+RefPtr<BoolPromise> QuotaManager::ClearStoragesForOriginPrefix(
+    const Maybe<PersistenceType>& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo) {
+  AssertIsOnOwningThread();
+
+  auto clearStoragesForOriginPrefixOp = CreateClearStoragesForOriginPrefixOp(
+      WrapMovingNotNullUnchecked(this), aPersistenceType, aPrincipalInfo);
+
+  RegisterNormalOriginOp(*clearStoragesForOriginPrefixOp);
+
+  clearStoragesForOriginPrefixOp->RunImmediately();
+
+  return clearStoragesForOriginPrefixOp->OnResults();
+}
+
 RefPtr<BoolPromise> QuotaManager::ClearStoragesForOriginAttributesPattern(
     const OriginAttributesPattern& aPattern) {
   AssertIsOnOwningThread();

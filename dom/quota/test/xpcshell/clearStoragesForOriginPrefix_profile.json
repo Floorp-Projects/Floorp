@@ -1,0 +1,729 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterClearByOriginPrefix",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterClearByOriginPrefix_persistent",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterClearByOriginPrefix_default",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterClearByOriginPrefix_temporary",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++www.mozilla.org",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++www.mozilla.org^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              },
+              {
+                "name": "http+++example.com^userContextId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "idb", "dir": true },
+                  { "name": "cache", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false },
+                  { "name": "ls", "dir": true },
+                  { "name": "fs", "dir": true }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]
