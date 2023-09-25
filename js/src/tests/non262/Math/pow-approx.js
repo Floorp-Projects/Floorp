@@ -336,7 +336,7 @@ testCases.push(
 );
 
 // std::pow is less precise on Windows.
-const maxError = getBuildConfiguration().windows ? 3 : 1;
+const maxError = getBuildConfiguration("windows") ? 3 : 1;
 
 // Ensure the error is less-or-equal to |maxError| ULP when compared to fdlibm.
 for (let [x, y] of testCases) {

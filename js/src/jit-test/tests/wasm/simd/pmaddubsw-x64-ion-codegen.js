@@ -5,7 +5,7 @@
 // Bug 1762413 adds specialization for emscripten's pattern to directly
 // emit PMADDUBSW machine code.
 
-const isX64 = getBuildConfiguration().x64 && !getBuildConfiguration().simulator;
+const isX64 = getBuildConfiguration("x64") && !getBuildConfiguration("simulator");
 
 // Simple test.
 const simple = wasmTextToBinary(`(module 

@@ -63,7 +63,7 @@ test();
 
 // Test if the test is still useful, or if all results match without
 // fingerprinting resistance as well.
-if (!getBuildConfiguration()["android"] &&
+if (!getBuildConfiguration("android") &&
     Math.cos(1e130          ) == -0.767224894221913 &&
     Math.cos(1e272          ) == -0.7415825695514536 &&
     Math.cos(1e284          ) ==  0.7086865671674247 &&

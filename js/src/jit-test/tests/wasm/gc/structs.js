@@ -3,8 +3,6 @@
 // This tests a bunch of wasm struct stuff, but not i8 or i16 fields.
 // See structs2.js for i8/i16 field tests.
 
-var conf = getBuildConfiguration();
-
 var bin = wasmTextToBinary(
     `(module
       (func $x1 (import "m" "x1") (type $f1))
@@ -235,7 +233,11 @@ var stress = wasmTextToBinary(
          (br $loop)))
        (local.get $list)))`);
 var stressIns = new WebAssembly.Instance(new WebAssembly.Module(stress)).exports;
-var stressLevel = conf.x64 && !conf.tsan && !conf.asan && !conf.valgrind ? 100000 : 1000;
+var stressLevel =
+    getBuildConfiguration("x64") && !getBuildConfiguration("tsan") &&
+            !getBuildConfiguration("asan") && !getBuildConfiguration("valgrind")
+        ? 100000
+        : 1000;
 var the_list = stressIns.iota1(stressLevel);
 for (let i=1; i <= stressLevel; i++) {
     assertEq(wasmGcReadField(the_list, 0), i);

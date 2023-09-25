@@ -1,4 +1,4 @@
-// |jit-test| --fuzzing-safe; --ion-offthread-compile=off; --ion-warmup-threshold=10; skip-if: (getBuildConfiguration()['android'] && getBuildConfiguration()['debug'] && getBuildConfiguration()['arm64'])
+// |jit-test| --fuzzing-safe; --ion-offthread-compile=off; --ion-warmup-threshold=10; skip-if: (getBuildConfiguration("android") && getBuildConfiguration("debug") && getBuildConfiguration("arm64"))
 
 // Test that Nursery::disable() waits for poisoning to finish before
 // discarding and re-poisoning its chunks.

@@ -37,7 +37,7 @@ for (let [write_scope, read_scope] of [['SameProcess', 'DifferentProcessForIndex
 }
 
 // Extra data. This is not checked in #define FUZZING builds.
-const fuzzing = getBuildConfiguration()['fuzzing-defined'];
+const fuzzing = getBuildConfiguration("fuzzing-defined");
 const shouldThrow = fuzzing === false;
 
 var clone = serialize({foo: 7}, undefined, {scope: 'DifferentProcess'});
@@ -91,7 +91,7 @@ function testInnerExtraData() {
     exc = e;
   }
 
-  const fuzzing = getBuildConfiguration()['fuzzing-defined'];
+  const fuzzing = getBuildConfiguration("fuzzing-defined");
   const shouldThrow = fuzzing === false;
 
   if (shouldThrow) {

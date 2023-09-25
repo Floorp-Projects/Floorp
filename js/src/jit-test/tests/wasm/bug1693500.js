@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode() != "ion" || (!getBuildConfiguration().x86 && !getBuildConfiguration().x64) || getBuildConfiguration().simulator
+// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode() != "ion" || (!getBuildConfiguration("x86") && !getBuildConfiguration("x64")) || getBuildConfiguration("simulator")
 
 const avx = isAvxPresent();
 for (let [n1, n2, numInstr] of [
@@ -59,7 +59,7 @@ for (let [n1, n2, numInstr] of [
         assertEq(ins.exports.run(), 1);
     }
 
-    if (hasDisassembler() && getBuildConfiguration().x64) {
+    if (hasDisassembler() && getBuildConfiguration("x64")) {
         const dis = wasmDis(ins.exports.t, {asString: true,});
         const lines = getFuncBody(dis).trim().split('\n');
         assertEq(lines.length, numInstr);

@@ -35,7 +35,7 @@ excluded_tests = [
 name = "spec"
 url = "https://github.com/WebAssembly/spec"
 excluded_tests = []
-directive = "; test-also=--no-avx; skip-variant-if: --no-avx, !getBuildConfiguration().x86 && !getBuildConfiguration().x64 || getBuildConfiguration().simulator"
+directive = "; test-also=--no-avx; skip-variant-if: --no-avx, !getBuildConfiguration('x86') && !getBuildConfiguration('x64') || getBuildConfiguration('simulator')"
 
 [[repos]]
 name = "threads"

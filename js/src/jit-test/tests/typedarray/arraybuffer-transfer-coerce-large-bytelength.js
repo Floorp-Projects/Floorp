@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; --enable-arraybuffer-transfer; skip-if: (!ArrayBuffer.prototype.transfer || getBuildConfiguration().tsan)
+// |jit-test| allow-oom; --enable-arraybuffer-transfer; skip-if: (!ArrayBuffer.prototype.transfer || getBuildConfiguration("tsan"))
 
 let buffer = new ArrayBuffer(0);
 

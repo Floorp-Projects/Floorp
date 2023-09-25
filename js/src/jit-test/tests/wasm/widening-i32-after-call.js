@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !hasDisassembler() || !(wasmCompileMode() == "baseline" || wasmCompileMode() == "ion") || !(getBuildConfiguration().x64 && !getBuildConfiguration()["arm64-simulator"] && !getBuildConfiguration()["mips64-simulator"])
+// |jit-test| skip-if: !hasDisassembler() || !(wasmCompileMode() == "baseline" || wasmCompileMode() == "ion") || !(getBuildConfiguration("x64") && !getBuildConfiguration("arm64-simulator") && !getBuildConfiguration("mips64-simulator"))
 
 // We widen i32 results after calls on 64-bit platforms for two reasons:
 //

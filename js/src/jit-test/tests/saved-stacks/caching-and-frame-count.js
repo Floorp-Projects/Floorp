@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()['wasi']
+// |jit-test| skip-if: getBuildConfiguration("wasi")
 //
 // Test that the SavedFrame caching doesn't mess up counts. Specifically, that
 // if we capture only the first n frames of a stack, we don't cache that stack

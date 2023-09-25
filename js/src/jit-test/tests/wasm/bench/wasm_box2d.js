@@ -1,11 +1,9 @@
-const build = getBuildConfiguration();
-const isSimulator = build['arm-simulator'] ||
-                    build['arm64-simulator'] ||
-                    build['mips32-simulator'] ||
-                    build['mips64-simulator'];
+const isSimulator = [
+  "arm-simulator", "arm64-simulator", "mips32-simulator", "mips64-simulator"
+].some(config => getBuildConfiguration(config));
 
 // This test often times out on debug simulators due to the extreme slowdown.
-if (build['debug'] && isSimulator)
+if (getBuildConfiguration("debug") && isSimulator)
   quit();
 
 // All the glue code is wrapped in a function so it can be executed uncached and
@@ -1598,7 +1596,7 @@ STATIC_BASE = 1024;
 
 STATICTOP = STATIC_BASE + 11904;
   /* global initializers */  __ATINIT__.push();
-  
+
 
 memoryInitializer = Module["wasmJSMethod"].indexOf("asmjs") >= 0 || Module["wasmJSMethod"].indexOf("interpret-asm2wasm") >= 0 ? "wasm_box2d.js.mem" : null;
 
@@ -1657,8 +1655,8 @@ function copyTempDouble(ptr) {
       throw 'Assertion failed: ' + Pointer_stringify(condition) + ', at: ' + [filename ? Pointer_stringify(filename) : 'unknown filename', line, func ? Pointer_stringify(func) : 'unknown function'] + ' at ' + stackTrace();
     }
 
-  
-  
+
+
   var Browser={mainLoop:{scheduler:null,method:"",currentlyRunningMainloop:0,func:null,arg:0,timingMode:0,timingValue:0,currentFrameNumber:0,queue:[],pause:function () {
           Browser.mainLoop.scheduler = null;
           Browser.mainLoop.currentlyRunningMainloop++; // Incrementing this signals the previous main loop that it's now become old, and it must return.
@@ -1707,10 +1705,10 @@ function copyTempDouble(ptr) {
           if (Module['postMainLoop']) Module['postMainLoop']();
         }},isFullscreen:false,pointerLock:false,moduleContextCreatedCallbacks:[],workers:[],init:function () {
         if (!Module["preloadPlugins"]) Module["preloadPlugins"] = []; // needs to exist even in workers
-  
+
         if (Browser.initted) return;
         Browser.initted = true;
-  
+
         try {
           new Blob();
           Browser.hasBlobConstructor = true;
@@ -1724,7 +1722,7 @@ function copyTempDouble(ptr) {
           console.log("warning: Browser does not support creating object URLs. Built-in browser image decoding will not be available.");
           Module.noImageDecoding = true;
         }
-  
+
         // Support for plugins that can process preloaded files. You can add more of these to
         // your app by creating and appending to Module.preloadPlugins.
         //
@@ -1732,7 +1730,7 @@ function copyTempDouble(ptr) {
         // it is given the file's raw data. When it is done, it calls a callback with the file's
         // (possibly modified) data. For example, a plugin might decompress a file, or it
         // might create some side data structure for use later (like an Image element, etc.).
-  
+
         var imagePlugin = {};
         imagePlugin['canHandle'] = function imagePlugin_canHandle(name) {
           return !Module.noImageDecoding && /\.(jpg|jpeg|png|bmp)$/i.test(name);
@@ -1775,7 +1773,7 @@ function copyTempDouble(ptr) {
           img.src = url;
         };
         Module['preloadPlugins'].push(imagePlugin);
-  
+
         var audioPlugin = {};
         audioPlugin['canHandle'] = function audioPlugin_canHandle(name) {
           return !Module.noAudioDecoding && name.substr(-4) in { '.ogg': 1, '.wav': 1, '.mp3': 1 };
@@ -1843,9 +1841,9 @@ function copyTempDouble(ptr) {
           }
         };
         Module['preloadPlugins'].push(audioPlugin);
-  
+
         // Canvas event setup
-  
+
         function pointerLockChange() {
           Browser.pointerLock = document['pointerLockElement'] === Module['canvas'] ||
                                 document['mozPointerLockElement'] === Module['canvas'] ||
@@ -1856,7 +1854,7 @@ function copyTempDouble(ptr) {
         if (canvas) {
           // forced aspect ratio can be enabled by defining 'forcedAspectRatio' on Module
           // Module['forcedAspectRatio'] = 4 / 3;
-          
+
           canvas.requestPointerLock = canvas['requestPointerLock'] ||
                                       canvas['mozRequestPointerLock'] ||
                                       canvas['webkitRequestPointerLock'] ||
@@ -1868,12 +1866,12 @@ function copyTempDouble(ptr) {
                                    document['msExitPointerLock'] ||
                                    function(){}; // no-op if function does not exist
           canvas.exitPointerLock = canvas.exitPointerLock.bind(document);
-  
+
           document.addEventListener('pointerlockchange', pointerLockChange, false);
           document.addEventListener('mozpointerlockchange', pointerLockChange, false);
           document.addEventListener('webkitpointerlockchange', pointerLockChange, false);
           document.addEventListener('mspointerlockchange', pointerLockChange, false);
-  
+
           if (Module['elementPointerLock']) {
             canvas.addEventListener("click", function(ev) {
               if (!Browser.pointerLock && Module['canvas'].requestPointerLock) {
@@ -1885,7 +1883,7 @@ function copyTempDouble(ptr) {
         }
       },createContext:function (canvas, useWebGL, setInModule, webGLContextAttributes) {
         if (useWebGL && Module.ctx && canvas == Module.canvas) return Module.ctx; // no need to recreate GL context if it's already been created for this canvas.
-  
+
         var ctx;
         var contextHandle;
         if (useWebGL) {
@@ -1894,13 +1892,13 @@ function copyTempDouble(ptr) {
             antialias: false,
             alpha: false
           };
-  
+
           if (webGLContextAttributes) {
             for (var attribute in webGLContextAttributes) {
               contextAttributes[attribute] = webGLContextAttributes[attribute];
             }
           }
-  
+
           contextHandle = GL.createContext(canvas, contextAttributes);
           if (contextHandle) {
             ctx = GL.getContext(contextHandle).GLctx;
@@ -1908,12 +1906,12 @@ function copyTempDouble(ptr) {
         } else {
           ctx = canvas.getContext('2d');
         }
-  
+
         if (!ctx) return null;
-  
+
         if (setInModule) {
           if (!useWebGL) assert(typeof GLctx === 'undefined', 'cannot set in module if GLctx is used, but we are a non-GL context that would replace it');
-  
+
           Module.ctx = ctx;
           if (useWebGL) GL.makeContextCurrent(contextHandle);
           Module.useWebGL = useWebGL;
@@ -1928,7 +1926,7 @@ function copyTempDouble(ptr) {
         if (typeof Browser.lockPointer === 'undefined') Browser.lockPointer = true;
         if (typeof Browser.resizeCanvas === 'undefined') Browser.resizeCanvas = false;
         if (typeof Browser.vrDevice === 'undefined') Browser.vrDevice = null;
-  
+
         var canvas = Module['canvas'];
         function fullscreenChange() {
           Browser.isFullscreen = false;
@@ -1947,18 +1945,18 @@ function copyTempDouble(ptr) {
             Browser.isFullscreen = true;
             if (Browser.resizeCanvas) Browser.setFullscreenCanvasSize();
           } else {
-            
+
             // remove the full screen specific parent of the canvas again to restore the HTML structure from before going full screen
             canvasContainer.parentNode.insertBefore(canvas, canvasContainer);
             canvasContainer.parentNode.removeChild(canvasContainer);
-            
+
             if (Browser.resizeCanvas) Browser.setWindowedCanvasSize();
           }
           if (Module['onFullScreen']) Module['onFullScreen'](Browser.isFullscreen);
           if (Module['onFullscreen']) Module['onFullscreen'](Browser.isFullscreen);
           Browser.updateCanvasDimensions(canvas);
         }
-  
+
         if (!Browser.fullscreenHandlersInstalled) {
           Browser.fullscreenHandlersInstalled = true;
           document.addEventListener('fullscreenchange', fullscreenChange, false);
@@ -1966,19 +1964,19 @@ function copyTempDouble(ptr) {
           document.addEventListener('webkitfullscreenchange', fullscreenChange, false);
           document.addEventListener('MSFullscreenChange', fullscreenChange, false);
         }
-  
+
         // create a new parent to ensure the canvas has no siblings. this allows browsers to optimize full screen performance when its parent is the full screen root
         var canvasContainer = document.createElement("div");
         canvas.parentNode.insertBefore(canvasContainer, canvas);
         canvasContainer.appendChild(canvas);
-  
+
         // use parent of canvas as full screen root to allow aspect ratio correction (Firefox stretches the root to screen size)
         canvasContainer.requestFullscreen = canvasContainer['requestFullscreen'] ||
                                             canvasContainer['mozRequestFullScreen'] ||
                                             canvasContainer['msRequestFullscreen'] ||
                                            (canvasContainer['webkitRequestFullscreen'] ? function() { canvasContainer['webkitRequestFullscreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null) ||
                                            (canvasContainer['webkitRequestFullScreen'] ? function() { canvasContainer['webkitRequestFullScreen'](Element['ALLOW_KEYBOARD_INPUT']) } : null);
-  
+
         if (vrDevice) {
           canvasContainer.requestFullscreen({ vrDisplay: vrDevice });
         } else {
@@ -2087,13 +2085,13 @@ function copyTempDouble(ptr) {
       },getMouseWheelDelta:function (event) {
         var delta = 0;
         switch (event.type) {
-          case 'DOMMouseScroll': 
+          case 'DOMMouseScroll':
             delta = event.detail;
             break;
-          case 'mousewheel': 
+          case 'mousewheel':
             delta = event.wheelDelta;
             break;
-          case 'wheel': 
+          case 'wheel':
             delta = event['deltaY'];
             break;
           default:
@@ -2112,7 +2110,7 @@ function copyTempDouble(ptr) {
             Browser.mouseMovementX = Browser.getMovementX(event);
             Browser.mouseMovementY = Browser.getMovementY(event);
           }
-          
+
           // check if SDL is available
           if (typeof SDL != "undefined") {
           	Browser.mouseX = SDL.mouseX + Browser.mouseMovementX;
@@ -2122,34 +2120,34 @@ function copyTempDouble(ptr) {
           	// FIXME: ideally this should be clamped against the canvas size and zero
           	Browser.mouseX += Browser.mouseMovementX;
           	Browser.mouseY += Browser.mouseMovementY;
-          }        
+          }
         } else {
           // Otherwise, calculate the movement based on the changes
           // in the coordinates.
           var rect = Module["canvas"].getBoundingClientRect();
           var cw = Module["canvas"].width;
           var ch = Module["canvas"].height;
-  
+
           // Neither .scrollX or .pageXOffset are defined in a spec, but
           // we prefer .scrollX because it is currently in a spec draft.
           // (see: http://www.w3.org/TR/2013/WD-cssom-view-20131217/)
           var scrollX = ((typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset);
           var scrollY = ((typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset);
-  
+
           if (event.type === 'touchstart' || event.type === 'touchend' || event.type === 'touchmove') {
             var touch = event.touch;
             if (touch === undefined) {
               return; // the "touch" property is only defined in SDL
-  
+
             }
             var adjustedX = touch.pageX - (scrollX + rect.left);
             var adjustedY = touch.pageY - (scrollY + rect.top);
-  
+
             adjustedX = adjustedX * (cw / rect.width);
             adjustedY = adjustedY * (ch / rect.height);
-  
+
             var coords = { x: adjustedX, y: adjustedY };
-            
+
             if (event.type === 'touchstart') {
               Browser.lastTouches[touch.identifier] = coords;
               Browser.touches[touch.identifier] = coords;
@@ -2158,19 +2156,19 @@ function copyTempDouble(ptr) {
               if (!last) last = coords;
               Browser.lastTouches[touch.identifier] = last;
               Browser.touches[touch.identifier] = coords;
-            } 
+            }
             return;
           }
-  
+
           var x = event.pageX - (scrollX + rect.left);
           var y = event.pageY - (scrollY + rect.top);
-  
+
           // the canvas might be CSS-scaled compared to its backbuffer;
           // SDL-using content will want mouse coordinates in terms
           // of backbuffer units.
           x = x * (cw / rect.width);
           y = y * (ch / rect.height);
-  
+
           Browser.mouseMovementX = x - Browser.mouseX;
           Browser.mouseMovementY = y - Browser.mouseY;
           Browser.mouseX = x;
@@ -2200,7 +2198,7 @@ function copyTempDouble(ptr) {
         Browser.updateCanvasDimensions(canvas, width, height);
         if (!noUpdates) Browser.updateResizeListeners();
       },windowedWidth:0,windowedHeight:0,setFullscreenCanvasSize:function () {
-        // check if SDL is available   
+        // check if SDL is available
         if (typeof SDL != "undefined") {
         	var flags = HEAPU32[((SDL.screen+Runtime.QUANTUM_SIZE*0)>>2)];
         	flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
@@ -2208,7 +2206,7 @@ function copyTempDouble(ptr) {
         }
         Browser.updateResizeListeners();
       },setWindowedCanvasSize:function () {
-        // check if SDL is available       
+        // check if SDL is available
         if (typeof SDL != "undefined") {
         	var flags = HEAPU32[((SDL.screen+Runtime.QUANTUM_SIZE*0)>>2)];
         	flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
@@ -2266,11 +2264,11 @@ function copyTempDouble(ptr) {
       }};function _emscripten_set_main_loop_timing(mode, value) {
       Browser.mainLoop.timingMode = mode;
       Browser.mainLoop.timingValue = value;
-  
+
       if (!Browser.mainLoop.func) {
         return 1; // Return non-zero on failure, can't set timing mode when there is no main loop.
       }
-  
+
       if (mode == 0 /*EM_TIMING_SETTIMEOUT*/) {
         Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setTimeout() {
           var timeUntilNextTick = Math.max(0, Browser.mainLoop.tickStartTime + value - _emscripten_get_now())|0;
@@ -2305,15 +2303,15 @@ function copyTempDouble(ptr) {
       }
       return 0;
     }
-  
+
   function _emscripten_get_now() { abort() }function _emscripten_set_main_loop(func, fps, simulateInfiniteLoop, arg, noSetTiming) {
       Module['noExitRuntime'] = true;
-  
+
       assert(!Browser.mainLoop.func, 'emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.');
-  
+
       Browser.mainLoop.func = func;
       Browser.mainLoop.arg = arg;
-  
+
       var browserIterationFunc;
       if (typeof arg !== 'undefined') {
         browserIterationFunc = function() {
@@ -2324,9 +2322,9 @@ function copyTempDouble(ptr) {
           Module['dynCall_v'](func);
         };
       }
-  
+
       var thisMainLoopId = Browser.mainLoop.currentlyRunningMainloop;
-  
+
       Browser.mainLoop.runner = function Browser_mainLoop_runner() {
         if (ABORT) return;
         if (Browser.mainLoop.queue.length > 0) {
@@ -2346,17 +2344,17 @@ function copyTempDouble(ptr) {
           }
           console.log('main loop blocker "' + blocker.name + '" took ' + (Date.now() - start) + ' ms'); //, left: ' + Browser.mainLoop.remainingBlockers);
           Browser.mainLoop.updateStatus();
-          
+
           // catches pause/resume main loop from blocker execution
           if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) return;
-          
+
           setTimeout(Browser.mainLoop.runner, 0);
           return;
         }
-  
+
         // catch pauses from non-main loop sources
         if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) return;
-  
+
         // Implement very basic swap interval control
         Browser.mainLoop.currentFrameNumber = Browser.mainLoop.currentFrameNumber + 1 | 0;
         if (Browser.mainLoop.timingMode == 1/*EM_TIMING_RAF*/ && Browser.mainLoop.timingValue > 1 && Browser.mainLoop.currentFrameNumber % Browser.mainLoop.timingValue != 0) {
@@ -2366,44 +2364,44 @@ function copyTempDouble(ptr) {
         } else if (Browser.mainLoop.timingMode == 0/*EM_TIMING_SETTIMEOUT*/) {
           Browser.mainLoop.tickStartTime = _emscripten_get_now();
         }
-  
+
         // Signal GL rendering layer that processing of a new frame is about to start. This helps it optimize
         // VBO double-buffering and reduce GPU stalls.
-  
-  
+
+
         if (Browser.mainLoop.method === 'timeout' && Module.ctx) {
           Module.printErr('Looks like you are rendering without using requestAnimationFrame for the main loop. You should use 0 for the frame rate in emscripten_set_main_loop in order to use requestAnimationFrame, as that can greatly improve your frame rates!');
           Browser.mainLoop.method = ''; // just warn once per call to set main loop
         }
-  
+
         Browser.mainLoop.runIter(browserIterationFunc);
-  
-  
+
+
         // catch pauses from the main loop itself
         if (thisMainLoopId < Browser.mainLoop.currentlyRunningMainloop) return;
-  
+
         // Queue new audio data. This is important to be right after the main loop invocation, so that we will immediately be able
         // to queue the newest produced audio samples.
         // TODO: Consider adding pre- and post- rAF callbacks so that GL.newRenderingFrameStarted() and SDL.audio.queueNewAudioData()
         //       do not need to be hardcoded into this function, but can be more generic.
         if (typeof SDL === 'object' && SDL.audio && SDL.audio.queueNewAudioData) SDL.audio.queueNewAudioData();
-  
+
         Browser.mainLoop.scheduler();
       }
-  
+
       if (!noSetTiming) {
         if (fps && fps > 0) _emscripten_set_main_loop_timing(0/*EM_TIMING_SETTIMEOUT*/, 1000.0 / fps);
         else _emscripten_set_main_loop_timing(1/*EM_TIMING_RAF*/, 1); // Do rAF by rendering each frame (no decimating)
-  
+
         Browser.mainLoop.scheduler();
       }
-  
+
       if (simulateInfiniteLoop) {
         throw 'SimulateInfiniteLoop';
       }
     }
 
-   
+
   Module["_memset"] = _memset;
 
   function _pthread_cleanup_push(routine, arg) {
@@ -2421,11 +2419,11 @@ function copyTempDouble(ptr) {
       Module['abort']();
     }
 
-  
+
   function __ZSt18uncaught_exceptionv() { // std::uncaught_exception()
       return !!__ZSt18uncaught_exceptionv.uncaught_exception;
     }
-  
+
   var EXCEPTIONS={last:0,caught:[],infos:{},deAdjust:function (adjusted) {
         if (!adjusted || EXCEPTIONS.infos[adjusted]) return adjusted;
         for (var ptr in EXCEPTIONS.infos) {
@@ -2481,7 +2479,7 @@ function copyTempDouble(ptr) {
 
   function ___unlock() {}
 
-  
+
   var SYSCALLS={varargs:0,get:function (varargs) {
         SYSCALLS.varargs += 4;
         var ret = HEAP32[(((SYSCALLS.varargs)-(4))>>2)];
@@ -2508,16 +2506,16 @@ function copyTempDouble(ptr) {
   }
   }
 
-  
+
   var PTHREAD_SPECIFIC={};function _pthread_getspecific(key) {
       return PTHREAD_SPECIFIC[key] || 0;
     }
 
-  
+
   function ___setErrNo(value) {
       if (Module['___errno_location']) HEAP32[((Module['___errno_location']())>>2)]=value;
       return value;
-    } 
+    }
   Module["_sbrk"] = _sbrk;
 
   function _clock() {
@@ -2525,9 +2523,9 @@ function copyTempDouble(ptr) {
       return ((Date.now() - _clock.start) * (1000000 / 1000))|0;
     }
 
-  
+
   var PTHREAD_SPECIFIC_NEXT_KEY=1;
-  
+
   var ERRNO_CODES={EPERM:1,ENOENT:2,ESRCH:3,EINTR:4,EIO:5,ENXIO:6,E2BIG:7,ENOEXEC:8,EBADF:9,ECHILD:10,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EACCES:13,EFAULT:14,ENOTBLK:15,EBUSY:16,EEXIST:17,EXDEV:18,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,ENFILE:23,EMFILE:24,ENOTTY:25,ETXTBSY:26,EFBIG:27,ENOSPC:28,ESPIPE:29,EROFS:30,EMLINK:31,EPIPE:32,EDOM:33,ERANGE:34,ENOMSG:42,EIDRM:43,ECHRNG:44,EL2NSYNC:45,EL3HLT:46,EL3RST:47,ELNRNG:48,EUNATCH:49,ENOCSI:50,EL2HLT:51,EDEADLK:35,ENOLCK:37,EBADE:52,EBADR:53,EXFULL:54,ENOANO:55,EBADRQC:56,EBADSLT:57,EDEADLOCK:35,EBFONT:59,ENOSTR:60,ENODATA:61,ETIME:62,ENOSR:63,ENONET:64,ENOPKG:65,EREMOTE:66,ENOLINK:67,EADV:68,ESRMNT:69,ECOMM:70,EPROTO:71,EMULTIHOP:72,EDOTDOT:73,EBADMSG:74,ENOTUNIQ:76,EBADFD:77,EREMCHG:78,ELIBACC:79,ELIBBAD:80,ELIBSCN:81,ELIBMAX:82,ELIBEXEC:83,ENOSYS:38,ENOTEMPTY:39,ENAMETOOLONG:36,ELOOP:40,EOPNOTSUPP:95,EPFNOSUPPORT:96,ECONNRESET:104,ENOBUFS:105,EAFNOSUPPORT:97,EPROTOTYPE:91,ENOTSOCK:88,ENOPROTOOPT:92,ESHUTDOWN:108,ECONNREFUSED:111,EADDRINUSE:98,ECONNABORTED:103,ENETUNREACH:101,ENETDOWN:100,ETIMEDOUT:110,EHOSTDOWN:112,EHOSTUNREACH:113,EINPROGRESS:115,EALREADY:114,EDESTADDRREQ:89,EMSGSIZE:90,EPROTONOSUPPORT:93,ESOCKTNOSUPPORT:94,EADDRNOTAVAIL:99,ENETRESET:102,EISCONN:106,ENOTCONN:107,ETOOMANYREFS:109,EUSERS:87,EDQUOT:122,ESTALE:116,ENOTSUP:95,ENOMEDIUM:123,EILSEQ:84,EOVERFLOW:75,ECANCELED:125,ENOTRECOVERABLE:131,EOWNERDEAD:130,ESTRPIPE:86};function _pthread_key_create(key, destructor) {
       if (key == 0) {
         return ERRNO_CODES.EINVAL;
@@ -2539,8 +2537,8 @@ function copyTempDouble(ptr) {
       return 0;
     }
 
-  
-  
+
+
   function ___resumeException(ptr) {
       if (!EXCEPTIONS.last) { EXCEPTIONS.last = ptr; }
       throw ptr + " - Exception catching is disabled, this exception cannot be caught. Compile with -s DISABLE_EXCEPTION_CATCHING=0 or DISABLE_EXCEPTION_CATCHING=2 to catch.";
@@ -2557,7 +2555,7 @@ function copyTempDouble(ptr) {
         return ((Runtime.setTempRet0(0),thrown)|0);
       }
       var typeArray = Array.prototype.slice.call(arguments);
-  
+
       var pointer = Module['___cxa_is_pointer_type'](throwntype);
       // can_catch receives a **, add indirection
       if (!___cxa_find_matching_catch.buffer) ___cxa_find_matching_catch.buffer = _malloc(4);
@@ -2582,11 +2580,11 @@ function copyTempDouble(ptr) {
     }function ___gxx_personality_v0() {
     }
 
-  
+
   function _emscripten_memcpy_big(dest, src, num) {
       HEAPU8.set(HEAPU8.subarray(src, src+num), dest);
       return dest;
-    } 
+    }
   Module["_memcpy"] = _memcpy;
 
   function ___syscall140(which, varargs) {SYSCALLS.varargs = varargs;
@@ -2613,7 +2611,7 @@ function copyTempDouble(ptr) {
       return 0;
     }
 
-   
+
   Module["_pthread_self"] = _pthread_self;
 
   function _emscripten_cancel_main_loop() {

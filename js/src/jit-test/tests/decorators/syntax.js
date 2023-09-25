@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration()['decorators']
+// |jit-test| skip-if: !getBuildConfiguration("decorators")
 
 load(libdir + "asserts.js");
 

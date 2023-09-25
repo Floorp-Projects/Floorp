@@ -1,4 +1,4 @@
-// |jit-test| crash; skip-if: getBuildConfiguration()['tsan'] || getBuildConfiguration()['wasi']; --ion-warmup-threshold=50
+// |jit-test| crash; skip-if: getBuildConfiguration("tsan") || getBuildConfiguration("wasi"); --ion-warmup-threshold=50
 setJitCompilerOption("offthread-compilation.enable", 0);
 
 var opts = getJitCompilerOptions();

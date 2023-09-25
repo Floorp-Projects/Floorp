@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()['osx'] && getBuildConfiguration()['arm64']
+// |jit-test| skip-if: getBuildConfiguration("osx") && getBuildConfiguration("arm64")
 load(libdir + "asserts.js");
 function main() {
   class Base {}

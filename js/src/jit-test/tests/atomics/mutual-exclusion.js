@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0 || getBuildConfiguration()["arm64-simulator"] === true
+// |jit-test| skip-if: helperThreadCount() === 0 || getBuildConfiguration("arm64-simulator") === true
 
 // Let a few threads hammer on memory with atomics to provoke errors
 // in exclusion work.  This test is not 100% fail-safe: the test may
