@@ -74,7 +74,7 @@ jobs:
         cd DEBIAN
         chmod +x postinst postrm preinst prerm
         cd ../usr/lib/floorp
-        chmod +x floorp floorp-bin floorp.sh lib*.so plugin-container gmp-clearkey/0.1/libclearkey.so
+        chmod +x floorp floorp-bin glxtest vaapitest floorp.sh lib*.so plugin-container gmp-clearkey/0.1/libclearkey.so
         sudo chown -R root:root $DEBWORK
         cd $WORKDIR
         sudo dpkg-deb -b $DEBWORK
