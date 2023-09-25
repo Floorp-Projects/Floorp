@@ -4299,7 +4299,7 @@ class nsDisplayThemedBackground : public nsPaintedDisplayItem {
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  bool MustPaintOnContentSide() const override { return true; }
+  bool MustPaintOnContentSide() const override { return XRE_IsParentProcess(); }
 
   /**
    * GetBounds() returns the background painting area.
@@ -4642,7 +4642,7 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
   bool MustPaintOnContentSide() const override {
     MOZ_ASSERT(IsThemedOutline(),
                "The only fallback path we have is for themed outlines");
-    return true;
+    return XRE_IsParentProcess();
   }
 
   bool CreateWebRenderCommands(
