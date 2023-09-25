@@ -24,6 +24,9 @@ const NodeStatus = {
   // This node is ready to translate as is.
   READY_TO_TRANSLATE: NodeFilter.FILTER_ACCEPT,
 
+  // This node is a shadow host and needs to be subdivided further.
+  SHADOW_HOST: NodeFilter.FILTER_ACCEPT,
+
   // This node contains too many block elements and needs to be subdivided further.
   SUBDIVIDE_FURTHER: NodeFilter.FILTER_SKIP,
 
@@ -317,6 +320,32 @@ export class TranslationsDocument {
   }
 
   /**
+   * Add qualified nodes to queueNodeForTranslation by recursively walk
+   * through the DOM tree of node, including elements in Shadow DOM.
+   *
+   * @param {Element} [node]
+   */
+  processSubdivide(node) {
+    const nodeIterator = node.ownerDocument.createTreeWalker(
+      node,
+      NodeFilter.SHOW_ELEMENT,
+      this.determineTranslationStatusForUnprocessedNodes
+    );
+
+    // This iterator will contain each node that has been subdivided enough to
+    // be translated.
+    let currentNode;
+    while ((currentNode = nodeIterator.nextNode())) {
+      const shadowRoot = currentNode.openOrClosedShadowRoot;
+      if (shadowRoot) {
+        this.processSubdivide(shadowRoot);
+      } else {
+        this.queueNodeForTranslation(currentNode);
+      }
+    }
+  }
+
+  /**
    * Start walking down through a node's subtree and decide which nodes to queue for
    * translation. This first node could be the root nodes of the DOM, such as the
    * document body, or the title element, or it could be a mutation target.
@@ -356,20 +385,7 @@ export class TranslationsDocument {
         // This node may be translatable, but it needs to be subdivided into smaller
         // pieces. Create a TreeWalker to walk the subtree, and find the subtrees/nodes
         // that contain enough inline elements to send to be translated.
-        {
-          const nodeIterator = node.ownerDocument.createTreeWalker(
-            node,
-            NodeFilter.SHOW_ELEMENT,
-            this.determineTranslationStatusForUnprocessedNodes
-          );
-
-          // This iterator will contain each node that has been subdivided enough to
-          // be translated.
-          let currentNode;
-          while ((currentNode = nodeIterator.nextNode())) {
-            this.queueNodeForTranslation(currentNode);
-          }
-        }
+        this.processSubdivide(node);
         break;
     }
 
@@ -461,6 +477,10 @@ export class TranslationsDocument {
    *   These values also work as a `NodeFilter` value.
    */
   determineTranslationStatus(node) {
+    if (node.openOrClosedShadowRoot) {
+      return NodeStatus.SHADOW_HOST;
+    }
+
     if (isNodeQueued(node, this.#queuedNodes)) {
       // This node or its parent was already queued, reject it.
       return NodeStatus.NOT_TRANSLATABLE;
@@ -474,7 +494,9 @@ export class TranslationsDocument {
     if (node.textContent.trim().length === 0) {
       // Do not use subtrees that are empty of text. This textContent call is fairly
       // expensive.
-      return NodeStatus.NOT_TRANSLATABLE;
+      return !node.hasChildNodes()
+        ? NodeStatus.NOT_TRANSLATABLE
+        : NodeStatus.SUBDIVIDE_FURTHER;
     }
 
     if (nodeNeedsSubdividing(node)) {
