@@ -20,6 +20,13 @@
 #include "QuotaRequestBase.h"
 #include "QuotaUsageRequestBase.h"
 
+// CUF == CRASH_UNLESS_FUZZING
+#define QM_CUF_AND_IPC_FAIL(actor)                           \
+  [&_actor = *actor](const auto& aFunc, const auto& aExpr) { \
+    MOZ_CRASH_UNLESS_FUZZING();                              \
+    return QM_IPC_FAIL(&_actor)(aFunc, aExpr);               \
+  }
+
 namespace mozilla::dom::quota {
 
 using namespace mozilla::ipc;
@@ -98,6 +105,17 @@ Quota::Quota()
 }
 
 Quota::~Quota() { MOZ_ASSERT(mActorDestroyed); }
+
+bool Quota::TrustParams() const {
+#ifdef DEBUG
+  // Never trust parameters in DEBUG builds!
+  bool trustParams = false;
+#else
+  bool trustParams = !BackgroundParent::IsOtherProcessActor(Manager());
+#endif
+
+  return trustParams;
+}
 
 bool Quota::VerifyRequestParams(const UsageRequestParams& aParams) const {
   AssertIsOnBackgroundThread();
@@ -185,33 +203,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
-    case RequestParams::TClearOriginParams: {
-      const ClearResetOriginParams& params =
-          aParams.get_ClearOriginParams().commonParams();
-
-      if (NS_WARN_IF(
-              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
-        return false;
-      }
-
-      if (params.persistenceTypeIsExplicit()) {
-        if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
-          return false;
-        }
-      }
-
-      if (params.clientTypeIsExplicit()) {
-        if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
-          return false;
-        }
-      }
-
-      break;
-    }
-
     case RequestParams::TResetOriginParams: {
       const ClearResetOriginParams& params =
           aParams.get_ResetOriginParams().commonParams();
@@ -234,15 +225,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
           MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
-      }
-
-      break;
-    }
-
-    case RequestParams::TClearDataParams: {
-      if (BackgroundParent::IsOtherProcessActor(Manager())) {
-        MOZ_CRASH_UNLESS_FUZZING();
-        return false;
       }
 
       break;
@@ -311,14 +293,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
     return nullptr;
   }
 
-#ifdef DEBUG
-  // Always verify parameters in DEBUG builds!
-  bool trustParams = false;
-#else
-  bool trustParams = !BackgroundParent::IsOtherProcessActor(Manager());
-#endif
-
-  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+  if (!TrustParams() && NS_WARN_IF(!VerifyRequestParams(aParams))) {
     MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
@@ -379,14 +354,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
     return nullptr;
   }
 
-#ifdef DEBUG
-  // Always verify parameters in DEBUG builds!
-  bool trustParams = false;
-#else
-  bool trustParams = !BackgroundParent::IsOtherProcessActor(Manager());
-#endif
-
-  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+  if (!TrustParams() && NS_WARN_IF(!VerifyRequestParams(aParams))) {
     MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
@@ -418,14 +386,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
         return CreateGetFullOriginMetadataOp(
             quotaManager, aParams.get_GetFullOriginMetadataParams());
 
-      case RequestParams::TClearOriginParams:
-        return CreateClearOriginOp(quotaManager, aParams);
-
       case RequestParams::TResetOriginParams:
         return CreateResetOriginOp(quotaManager, aParams);
-
-      case RequestParams::TClearDataParams:
-        return CreateClearDataOp(quotaManager, aParams);
 
       case RequestParams::TPersistedParams:
         return CreatePersistedOp(quotaManager, aParams);
@@ -493,6 +455,67 @@ mozilla::ipc::IPCResult Quota::RecvInitializeStorage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult Quota::RecvClearStoragesForOrigin(
+    const Maybe<PersistenceType>& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,
+    const bool& aClearAll, ClearStoragesForOriginResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolver));
+
+  if (!TrustParams()) {
+    if (aPersistenceType) {
+      QM_TRY(MOZ_TO_RESULT(IsValidPersistenceType(*aPersistenceType)),
+             QM_CUF_AND_IPC_FAIL(this));
+    }
+
+    QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(aPrincipalInfo)),
+           QM_CUF_AND_IPC_FAIL(this));
+
+    if (aClientType) {
+      QM_TRY(MOZ_TO_RESULT(Client::IsValidType(*aClientType)),
+             QM_CUF_AND_IPC_FAIL(this));
+    }
+  }
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
+
+  quotaManager
+      ->ClearStoragesForOrigin(aPersistenceType, aPrincipalInfo, aClientType,
+                               aClearAll)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvClearStoragesForOriginAttributesPattern(
+    const OriginAttributesPattern& aPattern,
+    ClearStoragesForOriginAttributesPatternResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolver));
+
+  if (!TrustParams()) {
+    QM_TRY(MOZ_TO_RESULT(!BackgroundParent::IsOtherProcessActor(Manager())),
+           QM_CUF_AND_IPC_FAIL(this));
+  }
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
+
+  quotaManager->ClearStoragesForOriginAttributesPattern(aPattern)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
     ClearStoragesForPrivateBrowsingResolver&& aResolver) {
   AssertIsOnBackgroundThread();
@@ -500,9 +523,9 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
   QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
          ResolveBoolResponseAndReturn(aResolver));
 
-  if (BackgroundParent::IsOtherProcessActor(Manager())) {
-    MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL(this, "Wrong actor");
+  if (!TrustParams()) {
+    QM_TRY(MOZ_TO_RESULT(!BackgroundParent::IsOtherProcessActor(Manager())),
+           QM_CUF_AND_IPC_FAIL(this));
   }
 
   QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,

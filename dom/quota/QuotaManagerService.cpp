@@ -771,21 +771,16 @@ QuotaManagerService::ClearStoragesForOriginAttributesPattern(
     const nsAString& aPattern, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()));
+
   OriginAttributesPattern pattern;
   MOZ_ALWAYS_TRUE(pattern.Init(aPattern));
 
   RefPtr<Request> request = new Request();
 
-  ClearDataParams params;
-
-  params.pattern() = pattern;
-
-  RequestInfo info(request, params);
-
-  nsresult rv = InitiateRequest(info);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mBackgroundActor->SendClearStoragesForOriginAttributesPattern(pattern)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolResponsePromiseResolveOrRejectCallback(request));
 
   request.forget(_retval);
   return NS_OK;
@@ -798,35 +793,64 @@ QuotaManagerService::ClearStoragesForPrincipal(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
-  nsCString suffix;
-  aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()));
 
-  if (NS_WARN_IF(aClearAll && !suffix.IsEmpty())) {
-    // The originAttributes should be default originAttributes when the
-    // aClearAll flag is set.
-    return NS_ERROR_INVALID_ARG;
-  }
+  QM_TRY_INSPECT(
+      const auto& persistenceType,
+      ([&aPersistenceType]() -> Result<Maybe<PersistenceType>, nsresult> {
+        if (aPersistenceType.IsVoid()) {
+          return Maybe<PersistenceType>();
+        }
 
-  RefPtr<Request> request = new Request(aPrincipal);
+        const auto persistenceType =
+            PersistenceTypeFromString(aPersistenceType, fallible);
+        QM_TRY(MOZ_TO_RESULT(persistenceType.isSome()),
+               Err(NS_ERROR_INVALID_ARG));
 
-  ClearResetOriginParams commonParams;
+        return persistenceType;
+      }()));
 
-  nsresult rv = GetClearResetOriginParams(aPrincipal, aPersistenceType,
-                                          aClientType, commonParams);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_INSPECT(
+      const auto& principalInfo,
+      ([&aPrincipal, &aClearAll]() -> Result<PrincipalInfo, nsresult> {
+        if (aClearAll) {
+          nsCString suffix;
+          aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
 
-  ClearOriginParams params;
-  params.commonParams() = std::move(commonParams);
-  params.matchAll() = aClearAll;
+          QM_TRY(MOZ_TO_RESULT(suffix.IsEmpty()), Err(NS_ERROR_INVALID_ARG));
+        }
 
-  RequestInfo info(request, params);
+        PrincipalInfo principalInfo;
+        QM_TRY(MOZ_TO_RESULT(
+            PrincipalToPrincipalInfo(aPrincipal, &principalInfo)));
 
-  rv = InitiateRequest(info);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(principalInfo)),
+               Err(NS_ERROR_INVALID_ARG));
+
+        return principalInfo;
+      }()));
+
+  QM_TRY_INSPECT(const auto& clientType,
+                 ([&aClientType]() -> Result<Maybe<Client::Type>, nsresult> {
+                   if (aClientType.IsVoid()) {
+                     return Maybe<Client::Type>();
+                   }
+
+                   Client::Type clientType;
+                   QM_TRY(MOZ_TO_RESULT(Client::TypeFromText(
+                              aClientType, clientType, fallible)),
+                          Err(NS_ERROR_INVALID_ARG));
+
+                   return Some(clientType);
+                 }()));
+
+  RefPtr<Request> request = new Request();
+
+  mBackgroundActor
+      ->SendClearStoragesForOrigin(persistenceType, principalInfo, clientType,
+                                   aClearAll)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             BoolResponsePromiseResolveOrRejectCallback(request));
 
   request.forget(_retval);
   return NS_OK;

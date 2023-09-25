@@ -362,9 +362,7 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       break;
 
     case RequestResponse::TInitTemporaryStorageResponse:
-    case RequestResponse::TClearOriginResponse:
     case RequestResponse::TResetOriginResponse:
-    case RequestResponse::TClearDataResponse:
     case RequestResponse::TPersistResponse:
       HandleResponse();
       break;

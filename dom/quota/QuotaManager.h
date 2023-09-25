@@ -52,6 +52,7 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 
 class OriginAttributes;
+class OriginAttributesPattern;
 
 namespace ipc {
 
@@ -354,6 +355,14 @@ class QuotaManager final : public BackgroundThreadObject {
                                      const OriginMetadata& aOriginMetadata);
 
   nsresult EnsureTemporaryStorageIsInitialized();
+
+  RefPtr<BoolPromise> ClearStoragesForOrigin(
+      const Maybe<PersistenceType>& aPersistenceType,
+      const PrincipalInfo& aPrincipalInfo,
+      const Maybe<Client::Type>& aClientType, const bool& aClearAll);
+
+  RefPtr<BoolPromise> ClearStoragesForOriginAttributesPattern(
+      const OriginAttributesPattern& aPattern);
 
   RefPtr<BoolPromise> ClearPrivateRepository();
 
