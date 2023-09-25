@@ -2,15 +2,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import argparse
+import atexit
 import os
 import re
 import shutil
+import sys
 
 from run_operations import run_git, run_hg, run_shell
 
 # This script saves the mozilla patch stack and no-op commit tracking
 # files.  This makes our fast-forward process much more resilient by
 # saving the intermediate state after each upstream commit is processed.
+
+error_help = None
+script_name = os.path.basename(__file__)
+
+
+@atexit.register
+def early_exit_handler():
+    print("*** ERROR *** {} did not complete successfully".format(script_name))
+    if error_help is not None:
+        print(error_help)
 
 
 def save_patch_stack(
@@ -95,6 +107,7 @@ def save_patch_stack(
 
 if __name__ == "__main__":
     default_patch_dir = "third_party/libwebrtc/moz-patch-stack"
+    default_script_dir = "dom/media/webrtc/third_party_build"
     default_state_dir = ".moz-fast-forward"
 
     parser = argparse.ArgumentParser(
@@ -126,11 +139,44 @@ if __name__ == "__main__":
         help="target branch head for fast-forward, should match MOZ_TARGET_UPSTREAM_BRANCH_HEAD in config_env",
     )
     parser.add_argument(
+        "--script-path",
+        default=default_script_dir,
+        help="path to script directory (defaults to {})".format(default_script_dir),
+    )
+    parser.add_argument(
         "--separate-commit-bug-number",
         type=int,
         help="integer Bugzilla number (example: 1800920), if provided will write patch stack as separate commit",
     )
+    parser.add_argument(
+        "--skip-startup-sanity",
+        action="store_true",
+        default=False,
+        help="skip checking for clean repo and doing the initial verify vendoring",
+    )
     args = parser.parse_args()
+
+    if not args.skip_startup_sanity:
+        # make sure the mercurial repo is clean before beginning
+        error_help = (
+            "There are modified or untracked files in the mercurial repo.\n"
+            "Please start with a clean repo before running {}"
+        ).format(script_name)
+        stdout_lines = run_hg("hg status")
+        if len(stdout_lines) != 0:
+            sys.exit(1)
+
+        # make sure the github repo exists
+        error_help = (
+            "No moz-libwebrtc github repo found at {}\n"
+            "Please run restore_patch_stack.py before running {}"
+        ).format(args.repo_path, script_name)
+        if not os.path.exists(args.repo_path):
+            sys.exit(1)
+        error_help = None
+
+        print("Verifying vendoring before saving patch-stack...")
+        run_shell("bash {}/verify_vendoring.sh".format(args.script_path), False)
 
     save_patch_stack(
         args.repo_path,
@@ -140,3 +186,7 @@ if __name__ == "__main__":
         args.target_branch_head,
         args.separate_commit_bug_number,
     )
+
+    # unregister the exit handler so the normal exit doesn't falsely
+    # report as an error.
+    atexit.unregister(early_exit_handler)
