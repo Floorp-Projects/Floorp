@@ -188,8 +188,17 @@ static bool EnvVarAsInt(const char* name, int* valueOut) {
 
 static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
   RootedObject info(cx, JS_NewPlainObject(cx));
   if (!info) {
+    return false;
+  }
+  if (args.length() > 1) {
+    ReportUsageErrorASCII(cx, callee, "Must have zero or one arguments");
+    return false;
+  }
+  if (args.length() == 1 && !args[0].isString()) {
+    ReportUsageErrorASCII(cx, callee, "Argument must be a string");
     return false;
   }
 
@@ -215,14 +224,43 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 #endif
 
+  if (args.length() == 1) {
+    RootedString str(cx, ToString(cx, args[0]));
+    if (!str) {
+      return false;
+    }
+    RootedId id(cx);
+    if (!JS_StringToId(cx, str, &id)) {
+      return false;
+    }
+
+    bool hasProperty;
+    if (JS_HasPropertyById(cx, info, id, &hasProperty) && hasProperty) {
+      // Returning a true/false from GetProperty
+      return GetProperty(cx, info, info, id, args.rval());
+    }
+
+    ReportUsageErrorASCII(cx, callee, "Invalid option name");
+    return false;
+  }
+
   args.rval().setObject(*info);
   return true;
 }
 
 static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
   RootedObject info(cx, JS_NewPlainObject(cx));
   if (!info) {
+    return false;
+  }
+  if (args.length() > 1) {
+    ReportUsageErrorASCII(cx, callee, "Must have zero or one arguments");
+    return false;
+  }
+  if (args.length() == 1 && !args[0].isString()) {
+    ReportUsageErrorASCII(cx, callee, "Argument must be a string");
     return false;
   }
 
@@ -577,6 +615,26 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   value = BooleanValue(false);
 #endif
   if (!JS_SetProperty(cx, info, "fuzzing-defined", value)) {
+    return false;
+  }
+
+  if (args.length() == 1) {
+    RootedString str(cx, ToString(cx, args[0]));
+    if (!str) {
+      return false;
+    }
+    RootedId id(cx);
+    if (!JS_StringToId(cx, str, &id)) {
+      return false;
+    }
+
+    bool hasProperty;
+    if (JS_HasPropertyById(cx, info, id, &hasProperty) && hasProperty) {
+      // Returning a true/false from GetProperty
+      return GetProperty(cx, info, info, id, args.rval());
+    }
+
+    ReportUsageErrorASCII(cx, callee, "Invalid option name");
     return false;
   }
 
@@ -8771,15 +8829,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Perform a GC and allow relazification of functions. Accepts the same\n"
 "  arguments as gc()."),
 
-    JS_FN_HELP("getBuildConfiguration", GetBuildConfiguration, 0, 0,
-"getBuildConfiguration()",
-"  Return an object describing some of the configuration options SpiderMonkey\n"
-"  was built with."),
+    JS_FN_HELP("getBuildConfiguration", GetBuildConfiguration, 1, 0,
+"getBuildConfiguration([option])",
+"  Query the options SpiderMonkey was built with, or return an object\n"
+"  with the options if no argument is given."),
 
-    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 0, 0,
-"getRealmConfiguration()",
-"  Return an object describing some of the runtime options SpiderMonkey\n"
-"  is running with."),
+    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 1, 0,
+"getRealmConfiguration([option])",
+"  Query the runtime options SpiderMonkey is running with, or return an\n."
+"  object with the options if no argument is given."),
 
     JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
 "isLcovEnabled()",

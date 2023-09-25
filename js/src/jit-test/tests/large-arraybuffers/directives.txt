@@ -1,1 +1,1 @@
-|jit-test| allow-oom; skip-if: (!largeArrayBufferSupported() || getBuildConfiguration().tsan)
+|jit-test| allow-oom; skip-if: (!largeArrayBufferSupported() || getBuildConfiguration("tsan"))

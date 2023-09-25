@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !getBuildConfiguration()['moz-memory']
+// |jit-test| skip-if: !getBuildConfiguration("moz-memory")
 // Run this test only if we're using jemalloc. Other malloc implementations
 // exhibit surprising behaviors. For example, 32-bit Fedora builds have
 // non-deterministic allocation sizes.
@@ -11,9 +11,7 @@
 // something SpiderMonkey hackers really want to know; they're supposed to be
 // stable.
 
-const config = getBuildConfiguration();
-
-const pointerByteSize = config["pointer-byte-size"];
+const pointerByteSize = getBuildConfiguration("pointer-byte-size");
 assertEq(pointerByteSize === 4 || pointerByteSize === 8, true);
 
 const m32 = pointerByteSize === 4;

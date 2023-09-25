@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()['wasi']
+// |jit-test| skip-if: getBuildConfiguration("wasi")
 
 function f(stdlib, foreign, buffer) {
     "use asm";

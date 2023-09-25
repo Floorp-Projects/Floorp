@@ -1,6 +1,6 @@
 load(libdir + "syntax.js");
 
-if (!getBuildConfiguration()['decorators']) {
+if (!getBuildConfiguration("decorators")) {
   function check_syntax_error_at(e, code, name) {
     assertEq(e instanceof SyntaxError, true, name + ": " + code);
     assertEq(e.message, "illegal character U+0040", name + ": " + code);

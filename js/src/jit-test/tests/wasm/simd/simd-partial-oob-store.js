@@ -6,9 +6,10 @@
 // Bug 1666747 - partially OOB stores are not handled correctly on ARM and ARM64.
 // The simulators don't implement the correct semantics anyhow, so when the bug
 // is fixed in the code generator they must remain excluded here.
-var conf = getBuildConfiguration();
-if (conf.arm64 || conf["arm64-simulator"] || conf.arm || conf["arm-simulator"])
-    quit(0);
+if (getBuildConfiguration("arm64") || getBuildConfiguration("arm64-simulator") ||
+    getBuildConfiguration("arm") || getBuildConfiguration("arm-simulator")) {
+      quit(0);
+}
 
 function get(arr, loc, len) {
     let res = [];

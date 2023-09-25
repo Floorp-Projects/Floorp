@@ -6,7 +6,7 @@ if (!wasmDebuggingEnabled())
     throw "TestComplete";
 
 // Single-step profiling currently only works in the ARM simulator
-if (!getBuildConfiguration()["arm-simulator"])
+if (!getBuildConfiguration("arm-simulator"))
     throw "TestComplete";
 
 enableGeckoProfiling();

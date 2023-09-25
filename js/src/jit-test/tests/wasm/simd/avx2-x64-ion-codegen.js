@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator || !isAvxPresent(); include:codegen-x64-test.js
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration("x64") || getBuildConfiguration("simulator") || !isAvxPresent(); include:codegen-x64-test.js
 
 // Test that there are no extraneous moves for various SIMD conversion
 // operations. See README-codegen.md for general information about this type of
@@ -218,8 +218,8 @@ codegenTestX64_adhoc(`(module
      (func (export "f") (param v128 v128 i64) (result v128)
           (i64x2.replace_lane 1 (local.get 1) (local.get 2))))`, 'f', `
 c4 .. f1 22 .. 01         vpinsrq \\$0x01, ${GPR_I64}, %xmm1, %xmm0`);
-     
-                             
+
+
 if (isAvxPresent(2)) {
      codegenTestX64_T_v128_avxhack(
           [['i32', 'i8x16.splat', `
@@ -281,7 +281,7 @@ c5 fa 70 c0 b1            vpshufhw \\$0xB1, %xmm0, %xmm0`],
      // Interleave quadwords
      ['i8x16.shuffle 24 25 26 27 28 29 30 31 8 9 10 11 12 13 14 15',
       'c5 e9 6d c1               vpunpckhqdq %xmm1, %xmm2, %xmm0'],
-     
+
      // Rotate right
     ['i8x16.shuffle 13 14 15 0 1 2 3 4 5 6 7 8 9 10 11 12',
      `c4 e3 71 0f c1 0d         vpalignr \\$0x0D, %xmm1, %xmm1, %xmm0`],
@@ -351,7 +351,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
        `c5 f1 63 05 ${RIPRADDR}  vpacksswbx ${RIPR}, %xmm1, %xmm0`],
       ['i8x16.narrow_i16x8_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 67 05 ${RIPRADDR}  vpackuswbx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['i16x8.add', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
        `c5 f1 fd 05 ${RIPRADDR}  vpaddwx ${RIPR}, %xmm1, %xmm0`],
       ['i16x8.sub', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
@@ -390,7 +390,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
        `c5 f1 6b 05 ${RIPRADDR}  vpackssdwx ${RIPR}, %xmm1, %xmm0`],
       ['i16x8.narrow_i32x4_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
        `c4 e2 71 2b 05 ${RIPRADDR} vpackusdwx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['i32x4.add', '(v128.const i32x4 1 2 1 2)',
        `c5 f1 fe 05 ${RIPRADDR}  vpadddx ${RIPR}, %xmm1, %xmm0`],
       ['i32x4.sub', '(v128.const i32x4 1 2 1 2)',
@@ -419,19 +419,19 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
  66 41 0f ef c7            pxor %xmm15, %xmm0`],
       ['i32x4.dot_i16x8_s', '(v128.const i32x4 1 2 1 2)',
        `c5 f1 f5 05 ${RIPRADDR}  vpmaddwdx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['i64x2.add', '(v128.const i64x2 1 2)',
        `c5 f1 d4 05 ${RIPRADDR}  vpaddqx ${RIPR}, %xmm1, %xmm0`],
       ['i64x2.sub', '(v128.const i64x2 1 2)',
        `c5 f1 fb 05 ${RIPRADDR}  vpsubqx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['v128.and', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 db 05 ${RIPRADDR}  vpandx ${RIPR}, %xmm1, %xmm0`],
       ['v128.or', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 eb 05 ${RIPRADDR}  vporx ${RIPR}, %xmm1, %xmm0`],
       ['v128.xor', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 ef 05 ${RIPRADDR}  vpxorx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['f32x4.add', '(v128.const f32x4 1 2 3 4)',
        `c5 f0 58 05 ${RIPRADDR}      vaddpsx ${RIPR}, %xmm1, %xmm0`],
       ['f32x4.sub', '(v128.const f32x4 1 2 3 4)',
@@ -440,7 +440,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
        `c5 f0 59 05 ${RIPRADDR}      vmulpsx ${RIPR}, %xmm1, %xmm0`],
       ['f32x4.div', '(v128.const f32x4 1 2 3 4)',
        `c5 f0 5e 05 ${RIPRADDR}      vdivpsx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['f64x2.add', '(v128.const f64x2 1 2)',
        `c5 f1 58 05 ${RIPRADDR}      vaddpdx ${RIPR}, %xmm1, %xmm0`],
       ['f64x2.sub', '(v128.const f64x2 1 2)',
@@ -467,7 +467,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
        `c5 f1 c2 05 ${RIPRADDR} 01  vcmppdx \\$0x01, ${RIPR}, %xmm1, %xmm0`],
       ['f64x2.le', '(v128.const f64x2 1 2)',
        `c5 f1 c2 05 ${RIPRADDR} 02  vcmppdx \\$0x02, ${RIPR}, %xmm1, %xmm0`]]);
- 
+
  // Commutative operations with constants on the lhs should generate the same
  // code as with the constant on the rhs.
  codegenTestX64_LITERALxv128_v128_avxhack(
@@ -491,7 +491,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
  c5 f1 74 05 ${RIPRADDR}  vpcmpeqbx ${RIPR}, %xmm1, %xmm0
  66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
  66 41 0f ef c7            pxor %xmm15, %xmm0`],
- 
+
       ['i16x8.add', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
        `c5 f1 fd 05 ${RIPRADDR}  vpaddwx ${RIPR}, %xmm1, %xmm0`],
       ['i16x8.mul', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
@@ -514,7 +514,7 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
  c5 f1 75 05 ${RIPRADDR}  vpcmpeqwx ${RIPR}, %xmm1, %xmm0
  66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
  66 41 0f ef c7            pxor %xmm15, %xmm0`],
- 
+
       ['i32x4.add', '(v128.const i32x4 1 2 1 2)',
        `c5 f1 fe 05 ${RIPRADDR}  vpadddx ${RIPR}, %xmm1, %xmm0`],
       ['i32x4.mul', '(v128.const i32x4 1 2 1 2)',
@@ -535,10 +535,10 @@ codegenTestX64_v128xLITERAL_v128_avxhack(
  66 41 0f ef c7            pxor %xmm15, %xmm0`],
       ['i32x4.dot_i16x8_s', '(v128.const i32x4 1 2 1 2)',
        `c5 f1 f5 05 ${RIPRADDR}  vpmaddwdx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['i64x2.add', '(v128.const i64x2 1 2)',
        `c5 f1 d4 05 ${RIPRADDR}  vpaddqx ${RIPR}, %xmm1, %xmm0`],
- 
+
       ['v128.and', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
        `c5 f1 db 05 ${RIPRADDR}  vpandx ${RIPR}, %xmm1, %xmm0`],
       ['v128.or', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
@@ -559,7 +559,7 @@ c5 f1 db 05 ${RIPRADDR}   vpandx ${RIPR}, %xmm1, %xmm0
       ['i16x8.shr_s', '(i32.const 3)',
        'c5 f9 71 e1 03            vpsraw \\$0x03, %xmm1, %xmm0'],
       ['i16x8.shr_u', '(i32.const 2)',
-       'c5 f9 71 d1 02            vpsrlw \\$0x02, %xmm1, %xmm0'], 
+       'c5 f9 71 d1 02            vpsrlw \\$0x02, %xmm1, %xmm0'],
       ['i32x4.shl', '(i32.const 5)',
        'c5 f9 72 f1 05            vpslld \\$0x05, %xmm1, %xmm0'],
       ['i32x4.shr_s', '(i32.const 2)',

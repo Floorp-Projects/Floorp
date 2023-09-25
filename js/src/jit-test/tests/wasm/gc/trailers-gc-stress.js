@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || getBuildConfiguration().simulator
+// |jit-test| skip-if: !wasmGcEnabled() || getBuildConfiguration("simulator")
 
 // This test is intended to test what was committed in
 //

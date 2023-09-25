@@ -1,1 +1,1 @@
-|jit-test| --wasm-moz-intgemm; skip-if: (!getBuildConfiguration().x64 && !getBuildConfiguration().x86 && !getBuildConfiguration().arm64) || getBuildConfiguration().simulator || !wasmMozIntGemmEnabled()
+|jit-test| --wasm-moz-intgemm; skip-if: (!getBuildConfiguration("x64") && !getBuildConfiguration("x86") && !getBuildConfiguration("arm64")) || getBuildConfiguration("simulator") || !wasmMozIntGemmEnabled()

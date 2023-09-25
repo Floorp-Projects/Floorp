@@ -1,4 +1,4 @@
-// |jit-test| skip-if: getBuildConfiguration()['wasi']
+// |jit-test| skip-if: getBuildConfiguration("wasi")
 timeout(5);
 function f0() {
     var v0;

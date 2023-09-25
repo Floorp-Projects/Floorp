@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().arm64; include:codegen-arm64-test.js
+// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration("arm64"); include:codegen-arm64-test.js
 
 // Basic constant folding tests
 

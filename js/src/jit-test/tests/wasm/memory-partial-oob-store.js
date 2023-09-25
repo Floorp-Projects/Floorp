@@ -4,9 +4,11 @@
 // Bug 1666747 - partially OOB unaligned stores are not handled correctly on ARM
 // and ARM64.  The simulators don't implement the correct semantics anyhow, so
 // when the bug is fixed in the code generator they must remain excluded here.
-var conf = getBuildConfiguration();
-var excluded = conf.arm64 || conf["arm64-simulator"] || conf.arm || conf["arm-simulator"];
-var thirtytwobit = conf["pointer-byte-size"] == 4;
+var excluded = getBuildConfiguration("arm64") ||
+               getBuildConfiguration("arm64-simulator") ||
+               getBuildConfiguration("arm") ||
+               getBuildConfiguration("arm-simulator");
+var thirtytwobit = getBuildConfiguration("pointer-byte-size") == 4;
 
 const RuntimeError = WebAssembly.RuntimeError;
 

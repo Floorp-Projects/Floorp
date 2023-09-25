@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; allow-unhandlable-oom; allow-overrecursed; skip-if: getBuildConfiguration()['android']
+// |jit-test| allow-oom; allow-unhandlable-oom; allow-overrecursed; skip-if: getBuildConfiguration("android")
 // Disabled on Android due to harness problems (Bug 1532654)
 
 g = newGlobal({newCompartment: true})

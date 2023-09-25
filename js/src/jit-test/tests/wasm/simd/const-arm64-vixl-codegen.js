@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "baseline" || !getBuildConfiguration().arm64
+// |jit-test| skip-if: !wasmSimdEnabled() || !hasDisassembler() || wasmCompileMode() != "baseline" || !getBuildConfiguration("arm64")
 
 // Test that the vixl logic for v128 constant loads is at least somewhat
 // reasonable.

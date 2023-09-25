@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator; include:codegen-x64-test.js
+// |jit-test| skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration("x64") || getBuildConfiguration("simulator"); include:codegen-x64-test.js
 
 // There may be some redundant moves to set some operations up on x64 (that's
 // bug 1701164) so we avoid those with no_prefix/no_suffix flags when the issue
@@ -249,7 +249,7 @@ function cmpSel32vs64(cmpTy, cmpOp, selTy) {
               )
             )`;
 }
-if (getBuildConfiguration().windows) {
+if (getBuildConfiguration("windows")) {
     for ( [cmpTy, cmpOp, selTy, insn1, insn2, insn3] of
           [ ['i32', 'le_s', 'i32',  '8b c3        mov %ebx, %eax',
                                     '3b ca        cmp %edx, %ecx',
@@ -326,7 +326,7 @@ for ( [pAnyCmp, pAnySel, cmpBytes, cmpArgL, cmovBytes, cmovArgL ] of
     )`,
     'f',
     // On Linux we have an extra move
-    (getBuildConfiguration().windows ? '' : '48 89 ..       mov %r.+, %r.+\n') +
+    (getBuildConfiguration("windows") ? '' : '48 89 ..       mov %r.+, %r.+\n') +
     // 'q*' because the disassembler shows 'q' only for the memory cases
     `48 89 ..       mov %r.+, %r.+
      ${cmpBytes}    cmpq*    ${cmpArgL}, %r.+

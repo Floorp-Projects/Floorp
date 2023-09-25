@@ -1,7 +1,6 @@
-let conf = getBuildConfiguration();
-if (conf.debug &&
-    (conf["arm-simulator"] || conf["arm64-simulator"] ||
-     conf["mips32-simulator"] || conf["mips64-simulator"]))
+if (getBuildConfiguration("debug") &&
+    (getBuildConfiguration("arm-simulator") || getBuildConfiguration("arm64-simulator") ||
+     getBuildConfiguration("mips32-simulator") || getBuildConfiguration("mips64-simulator")))
 {
     // Will timeout, so just quit early.
     quit(0);

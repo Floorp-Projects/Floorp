@@ -1,4 +1,4 @@
-// |jit-test| --wasm-compiler=optimizing; --spectre-mitigations=off; skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x86 || getBuildConfiguration().simulator || getJitCompilerOptions()["ion.check-range-analysis"]; include:codegen-x86-test.js
+// |jit-test| --wasm-compiler=optimizing; --spectre-mitigations=off; skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration("x86") || getBuildConfiguration("simulator") || getJitCompilerOptions()["ion.check-range-analysis"]; include:codegen-x86-test.js
 
 // Spectre mitigation is disabled above to make the generated code simpler to
 // match; ion.check-range-analysis makes a hash of the code and makes testing
