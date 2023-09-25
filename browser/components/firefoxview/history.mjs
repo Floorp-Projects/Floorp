@@ -435,7 +435,10 @@ class HistoryInView extends ViewPage {
       />
       <dialog id="migrationWizardDialog"></dialog>
       <div class="sticky-container bottom-fade">
-        <h2 class="page-header" data-l10n-id="firefoxview-history-header"></h2>
+        <h2
+          class="page-header heading-large"
+          data-l10n-id="firefoxview-history-header"
+        ></h2>
         <div class="history-sort-options">
           <div class="history-sort-option">
             <input
