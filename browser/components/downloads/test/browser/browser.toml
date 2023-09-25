@@ -23,6 +23,7 @@ support-files = [
 ["browser_download_spam_protection.js"]
 skip-if = [
   "os == 'linux' && bits == 64", # bug 1743263 & Bug 1742678
+  "os == 'win'", # Bug 1775779
 ]
 support-files = ["test_spammy_page.html"]
 
