@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 119.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v118..main)
+# 120.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 119.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v118..releases_v119)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v119/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v119/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v119/android-components/.config.yml)
 
 * **feature-tabs**
   * Removed deprecated `TabsUseCases.AddNewPrivateTabUseCase`. [Bug 1853070](https://bugzilla.mozilla.org/show_bug.cgi?id=1853070)
