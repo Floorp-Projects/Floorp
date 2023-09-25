@@ -512,6 +512,8 @@ merge-automation:
                   new-suffix: ''
                 - filename: "browser/config/version_display.txt"
                   new-suffix: 'b1'
+                - filename: "mobile/android/version.txt"
+                  new-suffix: 'b1'
             replacements:
                 - - browser/config/mozconfigs/linux32/l10n-mozconfig
                   - ac_add_options --with-branding=browser/branding/nightly
@@ -553,6 +555,8 @@ merge-automation:
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: ''
+                - filename: "mobile/android/version.txt"
+                  new-suffix: ''
             replacements: []
             merge-old-head: true
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
@@ -581,6 +585,9 @@ merge-automation:
                   version-bump: "major"
                   new-suffix: 'a1'
                 - filename: "browser/config/version_display.txt"
+                  version-bump: "major"
+                  new-suffix: 'a1'
+                - filename: "mobile/android/version.txt"
                   version-bump: "major"
                   new-suffix: 'a1'
             replacements:
