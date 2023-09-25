@@ -6869,7 +6869,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
 
 UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-  AUTO_PROFILER_LABEL("profiler_capture_backtrace", PROFILER);
+  AUTO_PROFILER_LABEL_HOT("profiler_capture_backtrace", PROFILER);
 
   // Quick is-active and feature check before allocating a buffer.
   // If NoMarkerStacks is set, we don't want to capture a backtrace.

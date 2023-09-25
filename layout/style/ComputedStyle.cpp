@@ -94,7 +94,7 @@ static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
 
 nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
                                                 uint32_t* aEqualStructs) const {
-  AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", LAYOUT);
+  AUTO_PROFILER_LABEL_HOT("ComputedStyle::CalcStyleDifference", LAYOUT);
   static_assert(StyleStructConstants::kStyleStructCount <= 32,
                 "aEqualStructs is not big enough");
 
