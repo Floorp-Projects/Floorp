@@ -160,6 +160,14 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
                 backend,
             } = gfx_select!(id => global.adapter_get_info(id)).unwrap();
 
+            if static_prefs::pref!("dom.webgpu.testing.assert-hardware-adapter") {
+                let is_hardware = match device_type {
+                    wgt::DeviceType::IntegratedGpu | wgt::DeviceType::DiscreteGpu => true,
+                    _ => false,
+                };
+                assert!(is_hardware, "Expected a hardware gpu adapter, got {:?}", device_type);
+            }
+
             let info = AdapterInformation {
                 id,
                 limits: restrict_limits(gfx_select!(id => global.adapter_limits(id)).unwrap()),

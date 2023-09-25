@@ -4531,6 +4531,13 @@
   mirror: always
   rust: true
 
+# For testing purposes, crash if we don't get a hardware adapter.
+- name: dom.webgpu.testing.assert-hardware-adapter
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool
