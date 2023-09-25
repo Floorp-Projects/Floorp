@@ -52,6 +52,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/RadioGroupContainer.h"
 #include "mozilla/dom/TreeOrderedArray.h"
 #include "mozilla/dom/ViewportMetaData.h"
 #include "mozilla/glean/GleanMetrics.h"
@@ -79,7 +80,6 @@
 #include "nsIParser.h"
 #include "nsIPrincipal.h"
 #include "nsIProgressEventSink.h"
-#include "nsIRadioGroupContainer.h"
 #include "nsIReferrerInfo.h"
 #include "nsIRequestObserver.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -532,7 +532,6 @@ enum class SheetPreloadStatus : uint8_t {
 class Document : public nsINode,
                  public DocumentOrShadowRoot,
                  public nsSupportsWeakReference,
-                 public nsIRadioGroupContainer,
                  public nsIScriptObjectPrincipal,
                  public DispatcherTrait,
                  public SupportsWeakPtr {
@@ -582,49 +581,6 @@ class Document : public nsINode,
       presShell->func_ params_;                                               \
     }                                                                         \
   } while (0)
-
-  // nsIRadioGroupContainer
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
-                            nsIRadioVisitor* aVisitor) final {
-    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor);
-  }
-
-  void SetCurrentRadioButton(const nsAString& aName,
-                             HTMLInputElement* aRadio) final {
-    DocumentOrShadowRoot::SetCurrentRadioButton(aName, aRadio);
-  }
-
-  HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) final {
-    return DocumentOrShadowRoot::GetCurrentRadioButton(aName);
-  }
-
-  NS_IMETHOD
-  GetNextRadioButton(const nsAString& aName, const bool aPrevious,
-                     HTMLInputElement* aFocusedRadio,
-                     HTMLInputElement** aRadioOut) final {
-    return DocumentOrShadowRoot::GetNextRadioButton(aName, aPrevious,
-                                                    aFocusedRadio, aRadioOut);
-  }
-  void AddToRadioGroup(const nsAString& aName, HTMLInputElement* aRadio) final {
-    DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio, nullptr);
-  }
-  void RemoveFromRadioGroup(const nsAString& aName,
-                            HTMLInputElement* aRadio) final {
-    DocumentOrShadowRoot::RemoveFromRadioGroup(aName, aRadio);
-  }
-  uint32_t GetRequiredRadioCount(const nsAString& aName) const final {
-    return DocumentOrShadowRoot::GetRequiredRadioCount(aName);
-  }
-  void RadioRequiredWillChange(const nsAString& aName,
-                               bool aRequiredAdded) final {
-    DocumentOrShadowRoot::RadioRequiredWillChange(aName, aRequiredAdded);
-  }
-  bool GetValueMissingState(const nsAString& aName) const final {
-    return DocumentOrShadowRoot::GetValueMissingState(aName);
-  }
-  void SetValueMissingState(const nsAString& aName, bool aValue) final {
-    return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
-  }
 
   nsIPrincipal* EffectiveCookiePrincipal() const;
 
@@ -5353,6 +5309,8 @@ class Document : public nsINode,
   // Registry of custom highlight definitions associated with this document.
   RefPtr<class HighlightRegistry> mHighlightRegistry;
 
+  UniquePtr<RadioGroupContainer> mRadioGroupContainer;
+
  public:
   // Needs to be public because the bindings code pokes at it.
   JS::ExpandoAndGeneration mExpandoAndGeneration;
@@ -5368,6 +5326,8 @@ class Document : public nsINode,
   }
 
   void LoadEventFired();
+
+  RadioGroupContainer& OwnedRadioGroupContainer();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)

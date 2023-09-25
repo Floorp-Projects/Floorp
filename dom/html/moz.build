@@ -30,7 +30,6 @@ EXPORTS += [
     "nsIConstraintValidation.h",
     "nsIFormControl.h",
     "nsIHTMLCollection.h",
-    "nsIRadioGroupContainer.h",
     "nsIRadioVisitor.h",
 ]
 
