@@ -10,12 +10,127 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Document.h"
+#include "nsITimer.h"
 
 static mozilla::LazyLogModule sApzAemLog("apz.activeelement");
 #define AEM_LOG(...) MOZ_LOG(sApzAemLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 namespace layers {
+
+class DelayedClearElementActivation final : public nsITimerCallback,
+                                            public nsINamed {
+ private:
+  explicit DelayedClearElementActivation(nsCOMPtr<dom::Element>& aTarget,
+                                         const nsCOMPtr<nsITimer>& aTimer)
+      : mTarget(aTarget)
+        // Hold the reference count until we are called back.
+        ,
+        mTimer(aTimer),
+        mProcessedSingleTap(false) {}
+
+ public:
+  NS_DECL_ISUPPORTS
+
+  static RefPtr<DelayedClearElementActivation> Create(
+      nsCOMPtr<dom::Element>& aTarget);
+
+  NS_IMETHOD Notify(nsITimer*) override;
+
+  NS_IMETHOD GetName(nsACString& aName) override;
+
+  void MarkSingleTapProcessed();
+
+  bool ProcessedSingleTap() const { return mProcessedSingleTap; }
+
+  void StartTimer();
+
+  /**
+   * Clear the Event State Manager's global active content.
+   */
+  void ClearGlobalActiveContent();
+
+  void ClearTimer() {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+  }
+
+ private:
+  ~DelayedClearElementActivation() = default;
+
+  nsCOMPtr<dom::Element> mTarget;
+  nsCOMPtr<nsITimer> mTimer;
+  bool mProcessedSingleTap;
+};
+
+static nsPresContext* GetPresContextFor(nsIContent* aContent) {
+  if (!aContent) {
+    return nullptr;
+  }
+  PresShell* presShell = aContent->OwnerDoc()->GetPresShell();
+  if (!presShell) {
+    return nullptr;
+  }
+  return presShell->GetPresContext();
+}
+
+RefPtr<DelayedClearElementActivation> DelayedClearElementActivation::Create(
+    nsCOMPtr<dom::Element>& aTarget) {
+  nsCOMPtr<nsITimer> timer = NS_NewTimer();
+  if (!timer) {
+    return nullptr;
+  }
+  RefPtr<DelayedClearElementActivation> event =
+      new DelayedClearElementActivation(aTarget, timer);
+  return event;
+}
+
+NS_IMETHODIMP DelayedClearElementActivation::Notify(nsITimer*) {
+  AEM_LOG("DelayedClearElementActivation notification ready=%d",
+          mProcessedSingleTap);
+  // If the single tap has been processed and the timer has expired,
+  // clear the active element state.
+  if (mProcessedSingleTap) {
+    AEM_LOG("DelayedClearElementActivation clearing active content\n");
+    ClearGlobalActiveContent();
+  }
+  mTimer = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DelayedClearElementActivation::GetName(nsACString& aName) {
+  aName.AssignLiteral("DelayedClearElementActivation");
+  return NS_OK;
+}
+
+void DelayedClearElementActivation::StartTimer() {
+  MOZ_ASSERT(mTimer);
+  nsresult rv = mTimer->InitWithCallback(
+      this, StaticPrefs::ui_touch_activation_duration_ms(),
+      nsITimer::TYPE_ONE_SHOT);
+  if (NS_FAILED(rv)) {
+    ClearTimer();
+  }
+}
+
+void DelayedClearElementActivation::MarkSingleTapProcessed() {
+  mProcessedSingleTap = true;
+  if (!mTimer) {
+    AEM_LOG("Clear activation immediate!");
+    ClearGlobalActiveContent();
+  }
+}
+
+void DelayedClearElementActivation::ClearGlobalActiveContent() {
+  if (nsPresContext* pc = GetPresContextFor(mTarget)) {
+    EventStateManager::ClearGlobalActiveContent(pc->EventStateManager());
+  }
+  mTarget = nullptr;
+}
+
+NS_IMPL_ISUPPORTS(DelayedClearElementActivation, nsITimerCallback, nsINamed)
 
 ActiveElementManager::ActiveElementManager()
     : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {}
@@ -61,10 +176,22 @@ void ActiveElementManager::TriggerElementActivation() {
     return;
   }
 
+  RefPtr<DelayedClearElementActivation> delayedEvent =
+      DelayedClearElementActivation::Create(mTarget);
+  if (mDelayedClearElementActivation) {
+    mDelayedClearElementActivation->ClearTimer();
+    mDelayedClearElementActivation->ClearGlobalActiveContent();
+  }
+  mDelayedClearElementActivation = delayedEvent;
+
   // If the touch cannot be a pan, make mTarget :active right away.
   // Otherwise, wait a bit to see if the user will pan or not.
   if (!mCanBePan) {
     SetActive(mTarget);
+
+    if (mDelayedClearElementActivation) {
+      mDelayedClearElementActivation->StartTimer();
+    }
   } else {
     CancelTask();  // this is only needed because of bug 1169802. Fixing that
                    // bug properly should make this unnecessary.
@@ -116,15 +243,30 @@ void ActiveElementManager::HandleTouchEnd() {
   mCanBePanSet = false;
 }
 
-static nsPresContext* GetPresContextFor(nsIContent* aContent) {
-  if (!aContent) {
-    return nullptr;
+void ActiveElementManager::ProcessSingleTap() {
+  if (!mDelayedClearElementActivation) {
+    return;
   }
-  PresShell* presShell = aContent->OwnerDoc()->GetPresShell();
-  if (!presShell) {
-    return nullptr;
+
+  mDelayedClearElementActivation->MarkSingleTapProcessed();
+
+  if (mCanBePan) {
+    // In the case that we have not started the delayed reset of the element
+    // activation state, start the timer now.
+    mDelayedClearElementActivation->StartTimer();
   }
-  return presShell->GetPresContext();
+
+  // We don't need to keep a reference to the element activation
+  // clearing, because the event and its timer keep each other alive
+  // until the timer expires
+  mDelayedClearElementActivation = nullptr;
+}
+
+void ActiveElementManager::Destroy() {
+  if (mDelayedClearElementActivation) {
+    mDelayedClearElementActivation->ClearTimer();
+    mDelayedClearElementActivation = nullptr;
+  }
 }
 
 void ActiveElementManager::SetActive(dom::Element* aTarget) {

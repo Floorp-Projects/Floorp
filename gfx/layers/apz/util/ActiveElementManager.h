@@ -21,6 +21,8 @@ class EventTarget;
 
 namespace layers {
 
+class DelayedClearElementActivation;
+
 /**
  * Manages setting and clearing the ':active' CSS pseudostate in the presence
  * of touch input.
@@ -61,6 +63,14 @@ class ActiveElementManager final {
    * delayed until after touch listeners have responded to the APZ.
    */
   void HandleTouchEnd();
+  /**
+   * Possibly clear active element sate in response to a single tap.
+   */
+  void ProcessSingleTap();
+  /**
+   * Cleanup on window destroy.
+   */
+  void Destroy();
 
  private:
   /**
@@ -81,6 +91,10 @@ class ActiveElementManager final {
    * A task for calling SetActive() after a timeout.
    */
   RefPtr<CancelableRunnable> mSetActiveTask;
+
+  // Store the pending single tap event element activation clearing
+  // task.
+  RefPtr<DelayedClearElementActivation> mDelayedClearElementActivation;
 
   // Helpers
   void TriggerElementActivation();
