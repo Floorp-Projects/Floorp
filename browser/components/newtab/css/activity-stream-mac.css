@@ -1704,24 +1704,8 @@ main.has-snippet {
   grid-row-gap: 32px;
   padding: 0 16px;
 }
-.home-section .section {
-  display: grid;
-  grid-template-rows: auto;
-  grid-template-columns: auto 26px;
-}
-.home-section .section > div {
-  grid-area: 1;
-}
-.home-section .section .title {
-  grid-column: 1/-1;
-  margin: 0;
-  font-weight: 600;
-  font-size: 16px;
+.home-section .section moz-toggle {
   margin-bottom: 10px;
-}
-.home-section .section .subtitle {
-  margin: 0;
-  font-size: 14px;
 }
 .home-section .section .sponsored {
   font-size: 14px;
@@ -1775,55 +1759,6 @@ main.has-snippet {
 }
 .home-section .section .selector:dir(rtl) {
   background-position-x: left;
-}
-.home-section .section .switch {
-  position: relative;
-  display: inline-block;
-  width: 26px;
-  height: 16px;
-  grid-column: 2;
-  margin-top: 2px;
-}
-.home-section .section .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.home-section .section .slider {
-  position: absolute;
-  inset: 0;
-  transition: transform 250ms;
-  border-radius: 13px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  background-color: var(--newtab-element-secondary-color);
-}
-.home-section .section .slider::before {
-  position: absolute;
-  content: "";
-  height: 8px;
-  width: 8px;
-  inset-inline-start: 3px;
-  bottom: 3px;
-  background-color: var(--newtab-primary-element-text-color);
-  transition: transform 250ms;
-  border-radius: 50%;
-  outline: 1px solid rgba(0, 0, 0, 0.15);
-}
-.home-section .section .switch input:focus-visible + .slider {
-  outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
-}
-.home-section .section .switch input:not(:checked):focus-visible + .slider {
-  border: 1px solid var(--newtab-primary-action-background);
-}
-.home-section .section input:checked + .slider {
-  background-color: var(--newtab-primary-action-background);
-}
-.home-section .section input:checked + .slider::before {
-  transform: translateX(10px);
-}
-.home-section .section input:checked + .slider:dir(rtl)::before {
-  transform: translateX(-10px);
 }
 .home-section .section .more-info-top-wrapper,
 .home-section .section .more-info-pocket-wrapper {

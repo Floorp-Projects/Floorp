@@ -29,6 +29,7 @@
     <link rel="localization" href="branding/brand.ftl" />
     <link rel="localization" href="toolkit/branding/brandings.ftl" />
     <link rel="localization" href="browser/newtab/newtab.ftl" />
+    <link rel="stylesheet" href="chrome://global/skin/design-system/tokens-brand.css">
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
     <link rel="stylesheet" href="chrome://activity-stream/content/css/activity-stream.css" />
   </head>
@@ -40,5 +41,6 @@
     </div>
     <div id="footer-asrouter-container" role="presentation"></div>
     <script src="about:home?jscache"></script>
+    <script type="module" src="chrome://global/content/elements/moz-toggle.mjs"></script>
   </body>
 </html>

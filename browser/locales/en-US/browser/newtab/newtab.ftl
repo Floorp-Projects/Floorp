@@ -253,8 +253,10 @@ newtab-error-fallback-refresh-link = Refresh page to try again.
 
 ## Customization Menu
 
-newtab-custom-shortcuts-title = Shortcuts
-newtab-custom-shortcuts-subtitle = Sites you save or visit
+newtab-custom-shortcuts-toggle =
+  .label = Shortcuts
+  .description = Sites you save or visit
+
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -263,11 +265,13 @@ newtab-custom-row-selector =
            *[other] { $num } rows
         }
 newtab-custom-sponsored-sites = Sponsored shortcuts
-newtab-custom-pocket-title = Recommended by { -pocket-brand-name }
-newtab-custom-pocket-subtitle = Exceptional content curated by { -pocket-brand-name }, part of the { -brand-product-name } family
+newtab-custom-pocket-toggle =
+  .label = Recommended by { -pocket-brand-name }
+  .description = Exceptional content curated by { -pocket-brand-name }, part of the { -brand-product-name } family
 newtab-custom-pocket-sponsored = Sponsored stories
 newtab-custom-pocket-show-recent-saves = Show recent saves
-newtab-custom-recent-title = Recent activity
-newtab-custom-recent-subtitle = A selection of recent sites and content
+newtab-custom-recent-toggle =
+  .label = Recent activity
+  .description = A selection of recent sites and content
 newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
