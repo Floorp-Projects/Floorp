@@ -38,6 +38,7 @@ s! {
 
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 20;
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86"))] {

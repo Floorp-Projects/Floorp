@@ -246,12 +246,15 @@ pub const S_IFREG: mode_t = 32768;
 pub const S_IFLNK: mode_t = 40960;
 pub const S_IFSOCK: mode_t = 49152;
 pub const S_IFMT: mode_t = 57344;
+pub const S_IRWXO: mode_t = 0x7;
 pub const S_IXOTH: mode_t = 0x1;
 pub const S_IWOTH: mode_t = 0x2;
 pub const S_IROTH: mode_t = 0x4;
+pub const S_IRWXG: mode_t = 0x38;
 pub const S_IXGRP: mode_t = 0x8;
 pub const S_IWGRP: mode_t = 0x10;
 pub const S_IRGRP: mode_t = 0x20;
+pub const S_IRWXU: mode_t = 0x1c0;
 pub const S_IXUSR: mode_t = 0x40;
 pub const S_IWUSR: mode_t = 0x80;
 pub const S_IRUSR: mode_t = 0x100;
@@ -822,4 +825,6 @@ extern "C" {
     pub fn arc4random() -> u32;
     pub fn arc4random_buf(a: *mut c_void, b: size_t);
     pub fn arc4random_uniform(a: u32) -> u32;
+
+    pub fn __errno_location() -> *mut ::c_int;
 }

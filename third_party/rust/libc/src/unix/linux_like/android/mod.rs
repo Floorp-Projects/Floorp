@@ -350,6 +350,11 @@ s! {
         pub args: [::__u64; 6],
     }
 
+    pub struct seccomp_metadata {
+        pub filter_off: ::__u64,
+        pub flags: ::__u64,
+    }
+
     pub struct ptrace_peeksiginfo_args {
         pub off: ::__u64,
         pub flags: ::__u32,
@@ -1441,12 +1446,26 @@ pub const SO_PEERSEC: ::c_int = 31;
 pub const SO_SNDBUFFORCE: ::c_int = 32;
 pub const SO_RCVBUFFORCE: ::c_int = 33;
 pub const SO_PASSSEC: ::c_int = 34;
+pub const SO_TIMESTAMPNS: ::c_int = 35;
+// pub const SO_TIMESTAMPNS_OLD: ::c_int = 35;
 pub const SO_MARK: ::c_int = 36;
+pub const SO_TIMESTAMPING: ::c_int = 37;
+// pub const SO_TIMESTAMPING_OLD: ::c_int = 37;
 pub const SO_PROTOCOL: ::c_int = 38;
 pub const SO_DOMAIN: ::c_int = 39;
 pub const SO_RXQ_OVFL: ::c_int = 40;
 pub const SO_PEEK_OFF: ::c_int = 42;
 pub const SO_BUSY_POLL: ::c_int = 46;
+pub const SCM_TIMESTAMPING_OPT_STATS: ::c_int = 54;
+pub const SCM_TIMESTAMPING_PKTINFO: ::c_int = 58;
+pub const SO_TIMESTAMP_NEW: ::c_int = 63;
+pub const SO_TIMESTAMPNS_NEW: ::c_int = 64;
+pub const SO_TIMESTAMPING_NEW: ::c_int = 65;
+
+// Defined in unix/linux_like/mod.rs
+// pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
+pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
+pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
 
 pub const IPTOS_ECN_NOTECT: u8 = 0x00;
 
@@ -1508,6 +1527,7 @@ pub const PTRACE_GETSIGINFO: ::c_int = 0x4202;
 pub const PTRACE_SETSIGINFO: ::c_int = 0x4203;
 pub const PTRACE_GETREGSET: ::c_int = 0x4204;
 pub const PTRACE_SETREGSET: ::c_int = 0x4205;
+pub const PTRACE_SECCOMP_GET_METADATA: ::c_int = 0x420d;
 
 pub const PTRACE_EVENT_STOP: ::c_int = 128;
 
@@ -1579,6 +1599,23 @@ pub const FIONREAD: ::c_int = 0x541B;
 pub const TIOCCONS: ::c_int = 0x541D;
 pub const TIOCSBRK: ::c_int = 0x5427;
 pub const TIOCCBRK: ::c_int = 0x5428;
+cfg_if! {
+    if #[cfg(any(target_arch = "x86",
+                 target_arch = "x86_64",
+                 target_arch = "arm",
+                 target_arch = "aarch64",
+                 target_arch = "riscv64",
+                 target_arch = "s390x"))] {
+        pub const FICLONE: ::c_int = 0x40049409;
+        pub const FICLONERANGE: ::c_int = 0x4020940D;
+    } else if #[cfg(any(target_arch = "mips",
+                        target_arch = "mips64",
+                        target_arch = "powerpc",
+                        target_arch = "powerpc64"))] {
+        pub const FICLONE: ::c_int = 0x80049409;
+        pub const FICLONERANGE: ::c_int = 0x8020940D;
+    }
+}
 
 pub const ST_RDONLY: ::c_ulong = 1;
 pub const ST_NOSUID: ::c_ulong = 2;
@@ -1605,6 +1642,14 @@ pub const AI_V4MAPPED_CFG: ::c_int = 0x00000200;
 pub const AI_ADDRCONFIG: ::c_int = 0x00000400;
 pub const AI_V4MAPPED: ::c_int = 0x00000800;
 pub const AI_DEFAULT: ::c_int = AI_V4MAPPED_CFG | AI_ADDRCONFIG;
+
+// linux/kexec.h
+pub const KEXEC_ON_CRASH: ::c_int = 0x00000001;
+pub const KEXEC_PRESERVE_CONTEXT: ::c_int = 0x00000002;
+pub const KEXEC_ARCH_MASK: ::c_int = 0xffff0000;
+pub const KEXEC_FILE_UNLOAD: ::c_int = 0x00000001;
+pub const KEXEC_FILE_ON_CRASH: ::c_int = 0x00000002;
+pub const KEXEC_FILE_NO_INITRAMFS: ::c_int = 0x00000004;
 
 pub const LINUX_REBOOT_MAGIC1: ::c_int = 0xfee1dead;
 pub const LINUX_REBOOT_MAGIC2: ::c_int = 672274793;
@@ -1792,6 +1837,7 @@ pub const NLM_F_MULTI: ::c_int = 2;
 pub const NLM_F_ACK: ::c_int = 4;
 pub const NLM_F_ECHO: ::c_int = 8;
 pub const NLM_F_DUMP_INTR: ::c_int = 16;
+pub const NLM_F_DUMP_FILTERED: ::c_int = 32;
 
 pub const NLM_F_ROOT: ::c_int = 0x100;
 pub const NLM_F_MATCH: ::c_int = 0x200;
@@ -2121,6 +2167,10 @@ pub const PT_HIOS: u32 = 0x6fffffff;
 pub const PT_LOPROC: u32 = 0x70000000;
 pub const PT_HIPROC: u32 = 0x7fffffff;
 
+// uapi/linux/mount.h
+pub const OPEN_TREE_CLONE: ::c_uint = 0x01;
+pub const OPEN_TREE_CLOEXEC: ::c_uint = O_CLOEXEC as ::c_uint;
+
 // linux/netfilter.h
 pub const NF_DROP: ::c_int = 0;
 pub const NF_ACCEPT: ::c_int = 1;
@@ -2437,8 +2487,7 @@ pub const IFF_PERSIST: ::c_int = 0x0800;
 pub const IFF_NOFILTER: ::c_int = 0x1000;
 
 // start android/platform/bionic/libc/kernel/uapi/linux/if_ether.h
-// from https://android.googlesource.com/
-// platform/bionic/+/master/libc/kernel/uapi/linux/if_ether.h
+// from https://android.googlesource.com/platform/bionic/+/HEAD/libc/kernel/uapi/linux/if_ether.h
 pub const ETH_ALEN: ::c_int = 6;
 pub const ETH_HLEN: ::c_int = 14;
 pub const ETH_ZLEN: ::c_int = 60;
@@ -2538,6 +2587,88 @@ pub const ETH_P_XDSA: ::c_int = 0x00F8;
 /* see rust-lang/libc#924 pub const ETH_P_MAP: ::c_int = 0x00F9;*/
 // end android/platform/bionic/libc/kernel/uapi/linux/if_ether.h
 
+// start android/platform/bionic/libc/kernel/uapi/linux/neighbour.h
+pub const NDA_UNSPEC: ::c_ushort = 0;
+pub const NDA_DST: ::c_ushort = 1;
+pub const NDA_LLADDR: ::c_ushort = 2;
+pub const NDA_CACHEINFO: ::c_ushort = 3;
+pub const NDA_PROBES: ::c_ushort = 4;
+pub const NDA_VLAN: ::c_ushort = 5;
+pub const NDA_PORT: ::c_ushort = 6;
+pub const NDA_VNI: ::c_ushort = 7;
+pub const NDA_IFINDEX: ::c_ushort = 8;
+pub const NDA_MASTER: ::c_ushort = 9;
+pub const NDA_LINK_NETNSID: ::c_ushort = 10;
+pub const NDA_SRC_VNI: ::c_ushort = 11;
+pub const NDA_PROTOCOL: ::c_ushort = 12;
+pub const NDA_NH_ID: ::c_ushort = 13;
+pub const NDA_FDB_EXT_ATTRS: ::c_ushort = 14;
+pub const NDA_FLAGS_EXT: ::c_ushort = 15;
+pub const NDA_NDM_STATE_MASK: ::c_ushort = 16;
+pub const NDA_NDM_FLAGS_MASK: ::c_ushort = 17;
+
+pub const NTF_USE: u8 = 0x01;
+pub const NTF_SELF: u8 = 0x02;
+pub const NTF_MASTER: u8 = 0x04;
+pub const NTF_PROXY: u8 = 0x08;
+pub const NTF_EXT_LEARNED: u8 = 0x10;
+pub const NTF_OFFLOADED: u8 = 0x20;
+pub const NTF_STICKY: u8 = 0x40;
+pub const NTF_ROUTER: u8 = 0x80;
+
+pub const NTF_EXT_MANAGED: u8 = 0x01;
+pub const NTF_EXT_LOCKED: u8 = 0x02;
+
+pub const NUD_NONE: u16 = 0x00;
+pub const NUD_INCOMPLETE: u16 = 0x01;
+pub const NUD_REACHABLE: u16 = 0x02;
+pub const NUD_STALE: u16 = 0x04;
+pub const NUD_DELAY: u16 = 0x08;
+pub const NUD_PROBE: u16 = 0x10;
+pub const NUD_FAILED: u16 = 0x20;
+pub const NUD_NOARP: u16 = 0x40;
+pub const NUD_PERMANENT: u16 = 0x80;
+
+pub const NDTPA_UNSPEC: ::c_ushort = 0;
+pub const NDTPA_IFINDEX: ::c_ushort = 1;
+pub const NDTPA_REFCNT: ::c_ushort = 2;
+pub const NDTPA_REACHABLE_TIME: ::c_ushort = 3;
+pub const NDTPA_BASE_REACHABLE_TIME: ::c_ushort = 4;
+pub const NDTPA_RETRANS_TIME: ::c_ushort = 5;
+pub const NDTPA_GC_STALETIME: ::c_ushort = 6;
+pub const NDTPA_DELAY_PROBE_TIME: ::c_ushort = 7;
+pub const NDTPA_QUEUE_LEN: ::c_ushort = 8;
+pub const NDTPA_APP_PROBES: ::c_ushort = 9;
+pub const NDTPA_UCAST_PROBES: ::c_ushort = 10;
+pub const NDTPA_MCAST_PROBES: ::c_ushort = 11;
+pub const NDTPA_ANYCAST_DELAY: ::c_ushort = 12;
+pub const NDTPA_PROXY_DELAY: ::c_ushort = 13;
+pub const NDTPA_PROXY_QLEN: ::c_ushort = 14;
+pub const NDTPA_LOCKTIME: ::c_ushort = 15;
+pub const NDTPA_QUEUE_LENBYTES: ::c_ushort = 16;
+pub const NDTPA_MCAST_REPROBES: ::c_ushort = 17;
+pub const NDTPA_PAD: ::c_ushort = 18;
+pub const NDTPA_INTERVAL_PROBE_TIME_MS: ::c_ushort = 19;
+
+pub const NDTA_UNSPEC: ::c_ushort = 0;
+pub const NDTA_NAME: ::c_ushort = 1;
+pub const NDTA_THRESH1: ::c_ushort = 2;
+pub const NDTA_THRESH2: ::c_ushort = 3;
+pub const NDTA_THRESH3: ::c_ushort = 4;
+pub const NDTA_CONFIG: ::c_ushort = 5;
+pub const NDTA_PARMS: ::c_ushort = 6;
+pub const NDTA_STATS: ::c_ushort = 7;
+pub const NDTA_GC_INTERVAL: ::c_ushort = 8;
+pub const NDTA_PAD: ::c_ushort = 9;
+
+pub const FDB_NOTIFY_BIT: u16 = 0x01;
+pub const FDB_NOTIFY_INACTIVE_BIT: u16 = 0x02;
+
+pub const NFEA_UNSPEC: ::c_ushort = 0;
+pub const NFEA_ACTIVITY_NOTIFY: ::c_ushort = 1;
+pub const NFEA_DONT_REFRESH: ::c_ushort = 2;
+// end android/platform/bionic/libc/kernel/uapi/linux/neighbour.h
+
 pub const SIOCADDRT: ::c_ulong = 0x0000890B;
 pub const SIOCDELRT: ::c_ulong = 0x0000890C;
 pub const SIOCGIFNAME: ::c_ulong = 0x00008910;
@@ -2579,6 +2710,23 @@ pub const SIOCSIFMAP: ::c_ulong = 0x00008971;
 // linux/module.h
 pub const MODULE_INIT_IGNORE_MODVERSIONS: ::c_uint = 0x0001;
 pub const MODULE_INIT_IGNORE_VERMAGIC: ::c_uint = 0x0002;
+
+// linux/net_tstamp.h
+pub const SOF_TIMESTAMPING_TX_HARDWARE: ::c_uint = 1 << 0;
+pub const SOF_TIMESTAMPING_TX_SOFTWARE: ::c_uint = 1 << 1;
+pub const SOF_TIMESTAMPING_RX_HARDWARE: ::c_uint = 1 << 2;
+pub const SOF_TIMESTAMPING_RX_SOFTWARE: ::c_uint = 1 << 3;
+pub const SOF_TIMESTAMPING_SOFTWARE: ::c_uint = 1 << 4;
+pub const SOF_TIMESTAMPING_SYS_HARDWARE: ::c_uint = 1 << 5;
+pub const SOF_TIMESTAMPING_RAW_HARDWARE: ::c_uint = 1 << 6;
+pub const SOF_TIMESTAMPING_OPT_ID: ::c_uint = 1 << 7;
+pub const SOF_TIMESTAMPING_TX_SCHED: ::c_uint = 1 << 8;
+pub const SOF_TIMESTAMPING_TX_ACK: ::c_uint = 1 << 9;
+pub const SOF_TIMESTAMPING_OPT_CMSG: ::c_uint = 1 << 10;
+pub const SOF_TIMESTAMPING_OPT_TSONLY: ::c_uint = 1 << 11;
+pub const SOF_TIMESTAMPING_OPT_STATS: ::c_uint = 1 << 12;
+pub const SOF_TIMESTAMPING_OPT_PKTINFO: ::c_uint = 1 << 13;
+pub const SOF_TIMESTAMPING_OPT_TX_SWHW: ::c_uint = 1 << 14;
 
 #[deprecated(
     since = "0.2.55",
@@ -2728,6 +2876,18 @@ pub const SCHED_RESET_ON_FORK: ::c_int = 0x40000000;
 
 pub const CLONE_PIDFD: ::c_int = 0x1000;
 
+// linux/membarrier.h
+pub const MEMBARRIER_CMD_QUERY: ::c_int = 0;
+pub const MEMBARRIER_CMD_GLOBAL: ::c_int = 1 << 0;
+pub const MEMBARRIER_CMD_GLOBAL_EXPEDITED: ::c_int = 1 << 1;
+pub const MEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED: ::c_int = 1 << 2;
+pub const MEMBARRIER_CMD_PRIVATE_EXPEDITED: ::c_int = 1 << 3;
+pub const MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED: ::c_int = 1 << 4;
+pub const MEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE: ::c_int = 1 << 5;
+pub const MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE: ::c_int = 1 << 6;
+pub const MEMBARRIER_CMD_PRIVATE_EXPEDITED_RSEQ: ::c_int = 1 << 7;
+pub const MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_RSEQ: ::c_int = 1 << 8;
+
 // linux/mempolicy.h
 pub const MPOL_DEFAULT: ::c_int = 0;
 pub const MPOL_PREFERRED: ::c_int = 1;
@@ -2846,6 +3006,19 @@ pub const IFLA_CARRIER_DOWN_COUNT: ::c_ushort = 48;
 pub const IFLA_NEW_IFINDEX: ::c_ushort = 49;
 pub const IFLA_MIN_MTU: ::c_ushort = 50;
 pub const IFLA_MAX_MTU: ::c_ushort = 51;
+pub const IFLA_PROP_LIST: ::c_ushort = 52;
+pub const IFLA_ALT_IFNAME: ::c_ushort = 53;
+pub const IFLA_PERM_ADDRESS: ::c_ushort = 54;
+pub const IFLA_PROTO_DOWN_REASON: ::c_ushort = 55;
+pub const IFLA_PARENT_DEV_NAME: ::c_ushort = 56;
+pub const IFLA_PARENT_DEV_BUS_NAME: ::c_ushort = 57;
+pub const IFLA_GRO_MAX_SIZE: ::c_ushort = 58;
+pub const IFLA_TSO_MAX_SIZE: ::c_ushort = 59;
+pub const IFLA_TSO_MAX_SEGS: ::c_ushort = 60;
+pub const IFLA_ALLMULTI: ::c_ushort = 61;
+pub const IFLA_DEVLINK_PORT: ::c_ushort = 62;
+pub const IFLA_GSO_IPV4_MAX_SIZE: ::c_ushort = 63;
+pub const IFLA_GRO_IPV4_MAX_SIZE: ::c_ushort = 64;
 
 pub const IFLA_INFO_UNSPEC: ::c_ushort = 0;
 pub const IFLA_INFO_KIND: ::c_ushort = 1;
@@ -3343,7 +3516,13 @@ extern "C" {
     pub fn sendfile(
         out_fd: ::c_int,
         in_fd: ::c_int,
-        offset: *mut off_t,
+        offset: *mut ::off_t,
+        count: ::size_t,
+    ) -> ::ssize_t;
+    pub fn sendfile64(
+        out_fd: ::c_int,
+        in_fd: ::c_int,
+        offset: *mut ::off64_t,
         count: ::size_t,
     ) -> ::ssize_t;
     pub fn setfsgid(gid: ::gid_t) -> ::c_int;
@@ -3463,7 +3642,9 @@ extern "C" {
 
     pub fn gettid() -> ::pid_t;
 
+    /// Only available in API Version 28+
     pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+    pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
 
     pub fn pthread_setname_np(thread: ::pthread_t, name: *const ::c_char) -> ::c_int;
 
@@ -3506,6 +3687,16 @@ extern "C" {
         longopts: *const option,
         longindex: *mut ::c_int,
     ) -> ::c_int;
+
+    pub fn sync();
+    pub fn syncfs(fd: ::c_int) -> ::c_int;
+
+    pub fn memmem(
+        haystack: *const ::c_void,
+        haystacklen: ::size_t,
+        needle: *const ::c_void,
+        needlelen: ::size_t,
+    ) -> *mut ::c_void;
 }
 
 cfg_if! {

@@ -201,6 +201,7 @@ pub const RTLD_GLOBAL: ::c_int = 0x100;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
 pub const VEOF: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 32;
 
 pub const O_APPEND: ::c_int = 1024;
 pub const O_CREAT: ::c_int = 64;
@@ -402,6 +403,7 @@ pub const EFD_CLOEXEC: ::c_int = 0x80000;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 
 align_const! {
     #[cfg(target_endian = "little")]

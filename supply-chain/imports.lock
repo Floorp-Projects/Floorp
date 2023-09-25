@@ -288,6 +288,13 @@ user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
+[[publisher.libc]]
+version = "0.2.146"
+when = "2023-06-06"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.lock_api]]
 version = "0.4.9"
 when = "2022-09-20"
@@ -931,6 +938,12 @@ who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.2.5"
 notes = "I am the author of this crate."
+
+[[audits.bytecode-alliance.audits.libc]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.146 -> 0.2.147"
+notes = "Only new type definitions and updating others for some platforms, no major changes"
 
 [[audits.bytecode-alliance.audits.memoffset]]
 who = "Alex Crichton <alex@alexcrichton.com>"
