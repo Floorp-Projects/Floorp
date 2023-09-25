@@ -22,7 +22,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
-#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
@@ -1309,14 +1308,15 @@ void gfxPlatform::InitLayersIPC() {
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       RemoteTextureMap::Init();
-      if (gfxVars::UseCanvasRenderThread()) {
-        gfx::CanvasRenderThread::Start();
-      }
       wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
       image::ImageMemoryReporter::InitForWebRender();
     }
 
     layers::CompositorThreadHolder::Start();
+
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      gfx::CanvasRenderThread::Start();
+    }
   }
 }
 
@@ -1343,8 +1343,10 @@ void gfxPlatform::ShutdownLayersIPC() {
     gfx::CanvasManagerChild::Shutdown();
     layers::CompositorManagerChild::Shutdown();
     layers::ImageBridgeChild::ShutDown();
-    // This could be running on either the Compositor or the Renderer thread.
-    gfx::CanvasManagerParent::Shutdown();
+    // This could be running on either the Compositor thread, the Renderer
+    // thread, or the dedicated CanvasRender thread, so we need to shutdown
+    // before the former two.
+    gfx::CanvasRenderThread::Shutdown();
     // This has to happen after shutting down the child protocols.
     layers::CompositorThreadHolder::Shutdown();
     RemoteTextureMap::Shutdown();
@@ -1362,9 +1364,6 @@ void gfxPlatform::ShutdownLayersIPC() {
           WebRenderBlobTileSizePrefChangeCallback,
           nsDependentCString(
               StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
-    }
-    if (gfx::CanvasRenderThread::Get()) {
-      gfx::CanvasRenderThread::ShutDown();
     }
 #if defined(XP_WIN)
     widget::WinWindowOcclusionTracker::ShutDown();
@@ -3851,12 +3850,10 @@ void gfxPlatform::DisableGPUProcess() {
   }
 
   RemoteTextureMap::Init();
-  if (gfxVars::UseCanvasRenderThread()) {
-    gfx::CanvasRenderThread::Start();
-  }
   // We need to initialize the parent process to prepare for WebRender if we
   // did not end up disabling it, despite losing the GPU process.
   wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
+  gfx::CanvasRenderThread::Start();
   image::ImageMemoryReporter::InitForWebRender();
 }
 

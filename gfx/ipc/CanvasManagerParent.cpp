@@ -13,7 +13,6 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webgpu/WebGPUParent.h"
-#include "mozilla/webrender/RenderThread.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
@@ -27,41 +26,21 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
 
   auto manager = MakeRefPtr<CanvasManagerParent>();
 
-  if (!gfxVars::SupportsThreadsafeGL()) {
-    nsCOMPtr<nsIThread> owningThread;
-    owningThread = wr::RenderThread::GetRenderThread();
-    MOZ_ASSERT(owningThread);
+  nsCOMPtr<nsIThread> owningThread =
+      gfx::CanvasRenderThread::GetCanvasRenderThread();
+  MOZ_ASSERT(owningThread);
 
-    owningThread->Dispatch(NewRunnableMethod<Endpoint<PCanvasManagerParent>&&>(
-        "CanvasManagerParent::Bind", manager, &CanvasManagerParent::Bind,
-        std::move(aEndpoint)));
-  } else if (gfxVars::UseCanvasRenderThread()) {
-    nsCOMPtr<nsIThread> owningThread;
-    owningThread = gfx::CanvasRenderThread::GetCanvasRenderThread();
-    MOZ_ASSERT(owningThread);
-
-    owningThread->Dispatch(NewRunnableMethod<Endpoint<PCanvasManagerParent>&&>(
-        "CanvasManagerParent::Bind", manager, &CanvasManagerParent::Bind,
-        std::move(aEndpoint)));
-  } else {
-    manager->Bind(std::move(aEndpoint));
-  }
+  owningThread->Dispatch(NewRunnableMethod<Endpoint<PCanvasManagerParent>&&>(
+      "CanvasManagerParent::Bind", manager, &CanvasManagerParent::Bind,
+      std::move(aEndpoint)));
 }
 
 /* static */ void CanvasManagerParent::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsISerialEventTarget> owningThread;
-  if (!gfxVars::SupportsThreadsafeGL()) {
-    owningThread = wr::RenderThread::GetRenderThread();
-  } else if (gfxVars::UseCanvasRenderThread()) {
-    owningThread = gfx::CanvasRenderThread::GetCanvasRenderThread();
-  } else {
-    owningThread = layers::CompositorThread();
-  }
-  if (!owningThread) {
-    return;
-  }
+  nsCOMPtr<nsIThread> owningThread =
+      gfx::CanvasRenderThread::GetCanvasRenderThread();
+  MOZ_ASSERT(owningThread);
 
   NS_DispatchAndSpinEventLoopUntilComplete(
       "CanvasManagerParent::Shutdown"_ns, owningThread,

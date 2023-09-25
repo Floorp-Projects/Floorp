@@ -13,22 +13,28 @@
 #include "nsISupportsImpl.h"
 #include "nsThread.h"
 
+class nsIRunnable;
+
 namespace mozilla::gfx {
 
+/**
+ * This class represents the virtual thread for canvas rendering. Depending on
+ * platform requirements and user configuration, canvas rendering may happen on
+ * the Compositor thread, Render thread or the CanvasRender thread.
+ */
 class CanvasRenderThread final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
       CanvasRenderThread)
 
  public:
-  /// Can be called from any thread, may return nullptr late in shutdown.
-  static CanvasRenderThread* Get();
-
   /// Can only be called from the main thread, expected to be called at most
-  /// once during a process' lifetime.
+  /// once during a process' lifetime. Must be called after the Compositor and
+  /// Render threads are initialized.
   static void Start();
 
-  /// Can only be called from the main thread.
-  static void ShutDown();
+  /// Can only be called from the main thread. Must be called before the
+  /// Compositor and Render threads are shutdown.
+  static void Shutdown();
 
   /// Can be called from any thread.
   static bool IsInCanvasRenderThread();
@@ -37,12 +43,16 @@ class CanvasRenderThread final {
   static already_AddRefed<nsIThread> GetCanvasRenderThread();
 
  private:
-  explicit CanvasRenderThread(RefPtr<nsIThread> aThread);
+  CanvasRenderThread(nsCOMPtr<nsIThread>&& aThread, bool aCreatedThread);
   ~CanvasRenderThread();
 
   void PostRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
-  RefPtr<nsIThread> const mThread;
+  nsCOMPtr<nsIThread> const mThread;
+
+  // True if mThread points to CanvasRender thread, false if mThread points to
+  // Compositor/Render thread.
+  bool mCreatedThread;
 };
 
 }  // namespace mozilla::gfx

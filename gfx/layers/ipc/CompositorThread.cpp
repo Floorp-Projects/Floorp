@@ -28,7 +28,7 @@ static Atomic<bool> sFinishedCompositorShutDown(false);
 static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 static ProfilerThreadId sProfilerThreadId;
 
-nsISerialEventTarget* CompositorThread() {
+nsIThread* CompositorThread() {
   return sCompositorThreadHolder
              ? sCompositorThreadHolder->GetCompositorThread()
              : nullptr;
