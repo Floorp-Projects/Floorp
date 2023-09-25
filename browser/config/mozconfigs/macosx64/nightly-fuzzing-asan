@@ -2,9 +2,6 @@
 
 ac_add_options --enable-fuzzing
 
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld
-
 # Piggybacking UBSan for now since only a small subset of checks are enabled.
 # A new build can be created when appropriate.
 ac_add_options --enable-undefined-sanitizer
