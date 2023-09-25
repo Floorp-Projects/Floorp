@@ -6,6 +6,10 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
+const { PERMISSION_L10N, PERMISSION_L10N_ID_OVERRIDES } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
+  );
 
 AddonTestUtils.initMochitest(this);
 
@@ -727,4 +731,96 @@ add_task(async function test_OneOfMany_AllSites_toggle() {
   await closeView(view);
   await extension.unload();
   /* eslint-enable @microsoft/sdl/no-insecure-url */
+});
+
+add_task(async function testOverrideLocalization() {
+  // Mock a fluent file.
+  const l10nReg = L10nRegistry.getInstance();
+  const source = L10nFileSource.createMock(
+    "mock",
+    "app",
+    ["en-US"],
+    "/localization/",
+    [
+      {
+        path: "/localization/mock.ftl",
+        source: `
+webext-perms-description-test-tabs = Custom description for the tabs permission
+`,
+      },
+    ]
+  );
+  l10nReg.registerSources([source]);
+
+  // Add the mocked fluent file to PERMISSION_L10N and override the tabs
+  // permission to use the alternative string. In a real world use-case, this
+  // would be used to add non-toolkit fluent files with permission strings of
+  // APIs which are defined outside of toolkit.
+  PERMISSION_L10N.addResourceIds(["mock.ftl"]);
+  PERMISSION_L10N_ID_OVERRIDES.set(
+    "tabs",
+    "webext-perms-description-test-tabs"
+  );
+
+  let mockCleanup = () => {
+    // Make sure cleanup is executed only once.
+    mockCleanup = () => {};
+
+    // Remove the non-toolkit permission string.
+    PERMISSION_L10N.removeResourceIds(["mock.ftl"]);
+    PERMISSION_L10N_ID_OVERRIDES.delete("tabs");
+    l10nReg.removeSources(["mock"]);
+  };
+  registerCleanupFunction(mockCleanup);
+
+  // Load an example add-on which uses the tabs permission.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 2,
+      name: "Simple test add-on",
+      browser_specific_settings: { gecko: { id: "testAddon@mochi.test" } },
+      permissions: ["tabs"],
+    },
+    background,
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+  let addonId = extension.id;
+
+  let win = await loadInitialView("extension");
+
+  // Open the card and navigate to its permission list.
+  let card = getAddonCard(win, addonId);
+  let permsSection = card.querySelector("addon-permissions-list");
+  if (!permsSection) {
+    ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+    let loaded = waitForViewLoad(win);
+    card.querySelector('[action="expand"]').click();
+    await loaded;
+  }
+
+  card = getAddonCard(win, addonId);
+  let { deck, tabGroup } = card.details;
+
+  let permsBtn = tabGroup.querySelector('[name="permissions"]');
+  let permsShown = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  permsBtn.click();
+  await permsShown;
+  let permissionList = card.querySelector("addon-permissions-list");
+  let permissionEntries = Array.from(permissionList.querySelectorAll("li"));
+  Assert.equal(
+    permissionEntries.length,
+    1,
+    "Should find a single permission entry"
+  );
+  Assert.equal(
+    permissionEntries[0].textContent,
+    "Custom description for the tabs permission",
+    "Should find the non-default permission description"
+  );
+
+  await closeView(win);
+  await extension.unload();
+
+  mockCleanup();
 });
