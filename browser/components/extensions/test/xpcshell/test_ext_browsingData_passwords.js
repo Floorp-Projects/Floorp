@@ -14,7 +14,7 @@ async function checkLoginExists(origin, shouldExist) {
   equal(
     logins.length,
     shouldExist ? 1 : 0,
-    `Login was ${shouldExist ? "" : "not "} found.`
+    `Login for origin ${origin} should ${shouldExist ? "" : "not"} be found.`
   );
 }
 
@@ -31,7 +31,9 @@ async function addLogin(host, timestamp) {
 }
 
 async function setupPasswords() {
-  Services.logins.removeAllUserFacingLogins();
+  // Remove all logins if any (included FxAccounts one in case one got captured in
+  // a conditioned profile, see Bug 1853617).
+  Services.logins.removeAllLogins();
   await addLogin(FXA_HOST, REFERENCE_DATE);
   await addLogin(NEW_HOST, REFERENCE_DATE);
   await addLogin(OLD_HOST, REFERENCE_DATE - 10000);
