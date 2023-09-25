@@ -80,27 +80,6 @@ add_task(async function testProviderSteering() {
   gDNSOverride.setCnameOverride(TEST_DOMAIN, provider.canonicalName);
   await testNetChangeResult(provider.uri, "enable_doh", provider.id);
 
-  // Set enterprise roots enabled and ensure provider steering is disabled.
-  Preferences.set("security.enterprise_roots.enabled", true);
-  await testNetChangeResult(AUTO_TRR_URI, "disable_doh");
-  checkScalars(
-    [
-      [
-        "networking.doh_heuristics_result",
-        { value: Heuristics.Telemetry.modifiedRoots },
-      ],
-      [
-        "networking.doh_heuristic_ever_tripped",
-        { value: true, key: "modifiedRoots" },
-      ],
-      // All of the other heuristics must be false.
-    ].concat(falseExpectations(["modifiedRoots"]))
-  );
-  Preferences.reset("security.enterprise_roots.enabled");
-
-  // Check that provider steering is enabled again after we reset above.
-  await testNetChangeResult(provider.uri, "enable_doh", provider.id);
-
   // Trigger safesearch heuristics and ensure provider steering is disabled.
   let googleDomain = "google.com.";
   let googleIP = "1.1.1.1";
@@ -117,12 +96,8 @@ add_task(async function testProviderSteering() {
         { value: Heuristics.Telemetry.google },
       ],
       ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
-      [
-        "networking.doh_heuristic_ever_tripped",
-        { value: true, key: "modifiedRoots" },
-      ],
       // All of the other heuristics must be false.
-    ].concat(falseExpectations(["modifiedRoots", "google"]))
+    ].concat(falseExpectations(["google"]))
   );
 
   // Check that provider steering is enabled again after we reset above.
@@ -139,11 +114,7 @@ add_task(async function testProviderSteering() {
         { value: Heuristics.Telemetry.pass },
       ],
       ["networking.doh_heuristic_ever_tripped", { value: true, key: "google" }],
-      [
-        "networking.doh_heuristic_ever_tripped",
-        { value: true, key: "modifiedRoots" },
-      ],
       // All of the other heuristics must be false.
-    ].concat(falseExpectations(["modifiedRoots", "google"]))
+    ].concat(falseExpectations(["google"]))
   );
 });

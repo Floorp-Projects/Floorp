@@ -13812,7 +13812,7 @@
 # Whether or not to import and trust third party root certificates from the OS.
 - name: security.enterprise_roots.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: security.intermediate_preloading_healer.enabled
