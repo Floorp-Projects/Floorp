@@ -456,6 +456,9 @@ pub const FLUSHO: ::tcflag_t = 0x00001000;
 pub const POLLWRNORM: ::c_short = 0x100;
 pub const POLLWRBAND: ::c_short = 0x200;
 
+pub const PTRACE_SYSEMU: ::c_int = 31;
+pub const PTRACE_SYSEMU_SINGLESTEP: ::c_int = 32;
+
 // Syscall table
 pub const SYS_restart_syscall: ::c_long = 0;
 pub const SYS_exit: ::c_long = 1;

@@ -5,6 +5,7 @@ macro_rules! expand_align {
                            target_arch = "x86_64",
                            target_arch = "powerpc64",
                            target_arch = "mips64",
+                           target_arch = "mips64r6",
                            target_arch = "s390x",
                            target_arch = "sparc64",
                            target_arch = "aarch64",
@@ -16,6 +17,7 @@ macro_rules! expand_align {
                                target_arch = "x86_64",
                                target_arch = "powerpc64",
                                target_arch = "mips64",
+                               target_arch = "mips64r6",
                                target_arch = "s390x",
                                target_arch = "sparc64",
                                target_arch = "aarch64",
@@ -28,9 +30,10 @@ macro_rules! expand_align {
                 size: [u8; ::__SIZEOF_PTHREAD_MUTEXATTR_T],
             }
 
-            #[cfg_attr(any(target_env = "musl", target_pointer_width = "32"),
+            #[cfg_attr(any(target_env = "musl", target_env = "ohos", target_pointer_width = "32"),
                        repr(align(4)))]
             #[cfg_attr(all(not(target_env = "musl"),
+                           not(target_env = "ohos"),
                            target_pointer_width = "64"),
                        repr(align(8)))]
             pub struct pthread_rwlockattr_t {
@@ -42,6 +45,12 @@ macro_rules! expand_align {
             pub struct pthread_condattr_t {
                 #[doc(hidden)]
                 size: [u8; ::__SIZEOF_PTHREAD_CONDATTR_T],
+            }
+
+            #[repr(align(4))]
+            pub struct pthread_barrierattr_t {
+                #[doc(hidden)]
+                size: [u8; ::__SIZEOF_PTHREAD_BARRIERATTR_T],
             }
 
             #[repr(align(8))]
@@ -57,16 +66,16 @@ macro_rules! expand_align {
         }
 
         s_no_extra_traits! {
-            #[cfg_attr(all(target_env = "musl",
+            #[cfg_attr(all(any(target_env = "musl", target_env = "ohos"),
                            target_pointer_width = "32"),
                        repr(align(4)))]
-            #[cfg_attr(all(target_env = "musl",
+            #[cfg_attr(all(any(target_env = "musl", target_env = "ohos"),
                            target_pointer_width = "64"),
                        repr(align(8)))]
-            #[cfg_attr(all(not(target_env = "musl"),
+            #[cfg_attr(all(not(any(target_env = "musl", target_env = "ohos")),
                            target_arch = "x86"),
                        repr(align(4)))]
-            #[cfg_attr(all(not(target_env = "musl"),
+            #[cfg_attr(all(not(any(target_env = "musl", target_env = "ohos")),
                            not(target_arch = "x86")),
                        repr(align(8)))]
             pub struct pthread_cond_t {
@@ -76,9 +85,11 @@ macro_rules! expand_align {
 
             #[cfg_attr(all(target_pointer_width = "32",
                            any(target_arch = "mips",
+                               target_arch = "mips32r6",
                                target_arch = "arm",
                                target_arch = "hexagon",
                                target_arch = "m68k",
+                               target_arch = "csky",
                                target_arch = "powerpc",
                                target_arch = "sparc",
                                target_arch = "x86_64",
@@ -86,9 +97,11 @@ macro_rules! expand_align {
                        repr(align(4)))]
             #[cfg_attr(any(target_pointer_width = "64",
                            not(any(target_arch = "mips",
+                                   target_arch = "mips32r6",
                                    target_arch = "arm",
                                    target_arch = "hexagon",
                                    target_arch = "m68k",
+                                   target_arch = "csky",
                                    target_arch = "powerpc",
                                    target_arch = "sparc",
                                    target_arch = "x86_64",
@@ -101,9 +114,11 @@ macro_rules! expand_align {
 
             #[cfg_attr(all(target_pointer_width = "32",
                            any(target_arch = "mips",
+                               target_arch = "mips32r6",
                                target_arch = "arm",
                                target_arch = "hexagon",
                                target_arch = "m68k",
+                               target_arch = "csky",
                                target_arch = "powerpc",
                                target_arch = "sparc",
                                target_arch = "x86_64",
@@ -111,6 +126,7 @@ macro_rules! expand_align {
                        repr(align(4)))]
             #[cfg_attr(any(target_pointer_width = "64",
                            not(any(target_arch = "mips",
+                                   target_arch = "mips32r6",
                                    target_arch = "arm",
                                    target_arch = "hexagon",
                                    target_arch = "m68k",
@@ -121,6 +137,34 @@ macro_rules! expand_align {
                        repr(align(8)))]
             pub struct pthread_rwlock_t {
                 size: [u8; ::__SIZEOF_PTHREAD_RWLOCK_T],
+            }
+
+            #[cfg_attr(all(target_pointer_width = "32",
+                           any(target_arch = "mips",
+                               target_arch = "mips32r6",
+                               target_arch = "arm",
+                               target_arch = "hexagon",
+                               target_arch = "m68k",
+                               target_arch = "csky",
+                               target_arch = "powerpc",
+                               target_arch = "sparc",
+                               target_arch = "x86_64",
+                               target_arch = "x86")),
+                       repr(align(4)))]
+            #[cfg_attr(any(target_pointer_width = "64",
+                           not(any(target_arch = "mips",
+                                   target_arch = "mips32r6",
+                                   target_arch = "arm",
+                                   target_arch = "hexagon",
+                                   target_arch = "m68k",
+                                   target_arch = "csky",
+                                   target_arch = "powerpc",
+                                   target_arch = "sparc",
+                                   target_arch = "x86_64",
+                                   target_arch = "x86"))),
+                       repr(align(8)))]
+            pub struct pthread_barrier_t {
+                size: [u8; ::__SIZEOF_PTHREAD_BARRIER_T],
             }
 
             // linux/can.h
@@ -144,6 +188,17 @@ macro_rules! expand_align {
                 __res0: u8,
                 __res1: u8,
                 pub data: [u8; CANFD_MAX_DLEN],
+            }
+
+            #[repr(align(8))]
+            #[allow(missing_debug_implementations)]
+            pub struct canxl_frame {
+                pub prio: canid_t,
+                pub flags: u8,
+                pub sdt: u8,
+                pub len: u16,
+                pub af: u32,
+                pub data: [u8; CANXL_MAX_DLEN],
             }
         }
     };

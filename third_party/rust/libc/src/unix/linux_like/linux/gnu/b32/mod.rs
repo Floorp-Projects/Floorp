@@ -43,34 +43,34 @@ cfg_if! {
 
 s! {
     pub struct stat {
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         pub st_dev: ::dev_t,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         pub st_dev: ::c_ulong,
 
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         __pad1: ::c_short,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         st_pad1: [::c_long; 3],
         pub st_ino: ::ino_t,
         pub st_mode: ::mode_t,
         pub st_nlink: ::nlink_t,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         pub st_rdev: ::dev_t,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         pub st_rdev: ::c_ulong,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         __pad2: ::c_short,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         st_pad2: [::c_long; 2],
         pub st_size: ::off_t,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         st_pad3: ::c_long,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         pub st_blksize: ::blksize_t,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         pub st_blocks: ::blkcnt_t,
         pub st_atime: ::time_t,
         pub st_atime_nsec: ::c_long,
@@ -78,15 +78,15 @@ s! {
         pub st_mtime_nsec: ::c_long,
         pub st_ctime: ::time_t,
         pub st_ctime_nsec: ::c_long,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         __unused4: ::c_long,
-        #[cfg(not(target_arch = "mips"))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6")))]
         __unused5: ::c_long,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         pub st_blksize: ::blksize_t,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         pub st_blocks: ::blkcnt_t,
-        #[cfg(target_arch = "mips")]
+        #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
         st_pad5: [::c_long; 14],
     }
 
@@ -140,12 +140,12 @@ s! {
         #[cfg(target_arch = "powerpc")]
         __reserved: ::__syscall_ulong_t,
         pub sem_otime: ::time_t,
-        #[cfg(not(any(target_arch = "mips", target_arch = "powerpc")))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6", target_arch = "powerpc")))]
         __reserved: ::__syscall_ulong_t,
         #[cfg(target_arch = "powerpc")]
         __reserved2: ::__syscall_ulong_t,
         pub sem_ctime: ::time_t,
-        #[cfg(not(any(target_arch = "mips", target_arch = "powerpc")))]
+        #[cfg(not(any(target_arch = "mips", target_arch = "mips32r6", target_arch = "powerpc")))]
         __reserved2: ::__syscall_ulong_t,
         pub sem_nsems: ::__syscall_ulong_t,
         __glibc_reserved3: ::__syscall_ulong_t,
@@ -163,8 +163,10 @@ pub const F_OFD_SETLKW: ::c_int = 38;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 20;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 
 cfg_if! {
     if #[cfg(target_arch = "sparc")] {
@@ -335,7 +337,7 @@ cfg_if! {
     } else if #[cfg(target_arch = "arm")] {
         mod arm;
         pub use self::arm::*;
-    } else if #[cfg(target_arch = "mips")] {
+    } else if #[cfg(any(target_arch = "mips", target_arch = "mips32r6"))] {
         mod mips;
         pub use self::mips::*;
     } else if #[cfg(target_arch = "m68k")] {
@@ -350,6 +352,9 @@ cfg_if! {
     } else if #[cfg(target_arch = "riscv32")] {
         mod riscv32;
         pub use self::riscv32::*;
+    } else if #[cfg(target_arch = "csky")] {
+        mod csky;
+        pub use self::csky::*;
     } else {
         // Unknown target_arch
     }

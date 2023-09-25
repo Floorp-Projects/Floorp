@@ -709,6 +709,49 @@ s! {
         #[cfg(libc_union)]
         pub ifc_ifcu: __c_anonymous_ifc_ifcu,
     }
+
+    pub struct tcp_info {
+        pub tcpi_state: u8,
+        pub __tcpi_ca_state: u8,
+        pub __tcpi_retransmits: u8,
+        pub __tcpi_probes: u8,
+        pub __tcpi_backoff: u8,
+        pub tcpi_options: u8,
+        pub tcp_snd_wscale: u8,
+        pub tcp_rcv_wscale: u8,
+        pub tcpi_rto: u32,
+        pub __tcpi_ato: u32,
+        pub tcpi_snd_mss: u32,
+        pub tcpi_rcv_mss: u32,
+        pub __tcpi_unacked: u32,
+        pub __tcpi_sacked: u32,
+        pub __tcpi_lost: u32,
+        pub __tcpi_retrans: u32,
+        pub __tcpi_fackets: u32,
+        pub __tcpi_last_data_sent: u32,
+        pub __tcpi_last_ack_sent: u32,
+        pub tcpi_last_data_recv: u32,
+        pub __tcpi_last_ack_recv: u32,
+        pub __tcpi_pmtu: u32,
+        pub __tcpi_rcv_ssthresh: u32,
+        pub tcpi_rtt: u32,
+        pub tcpi_rttvar: u32,
+        pub tcpi_snd_ssthresh: u32,
+        pub tcpi_snd_cwnd: u32,
+        pub __tcpi_advmss: u32,
+        pub __tcpi_reordering: u32,
+        pub __tcpi_rcv_rtt: u32,
+        pub tcpi_rcv_space: u32,
+        pub tcpi_snd_wnd: u32,
+        pub tcpi_snd_bwnd: u32,
+        pub tcpi_snd_nxt: u32,
+        pub tcpi_rcv_nxt: u32,
+        pub tcpi_toe_tid: u32,
+        pub tcpi_snd_rexmitpack: u32,
+        pub tcpi_rcv_ooopack: u32,
+        pub tcpi_snd_zerowin: u32,
+        pub __tcpi_pad: [u32; 26],
+    }
 }
 
 s_no_extra_traits! {
@@ -1398,7 +1441,7 @@ pub const MS_SYNC: ::c_int = 0x4;
 pub const MS_INVALIDATE: ::c_int = 0x2;
 
 // Here because they are not present on OpenBSD
-// (https://github.com/openbsd/src/blob/master/sys/sys/resource.h)
+// (https://github.com/openbsd/src/blob/HEAD/sys/sys/resource.h)
 pub const RLIMIT_SBSIZE: ::c_int = 9;
 pub const RLIMIT_AS: ::c_int = 10;
 pub const RLIMIT_NTHR: ::c_int = 11;
@@ -1421,7 +1464,15 @@ pub const ENOATTR: ::c_int = 93;
 pub const EMULTIHOP: ::c_int = 94;
 pub const ENOLINK: ::c_int = 95;
 pub const EPROTO: ::c_int = 96;
-pub const ELAST: ::c_int = 96;
+pub const EOWNERDEAD: ::c_int = 97;
+pub const ENOTRECOVERABLE: ::c_int = 98;
+#[deprecated(
+    since = "0.2.143",
+    note = "This value will always match the highest defined error number \
+            and thus is not stable. \
+            See #3040 for more info."
+)]
+pub const ELAST: ::c_int = 98;
 
 pub const F_DUPFD_CLOEXEC: ::c_int = 12;
 pub const F_CLOSEM: ::c_int = 10;
@@ -1926,6 +1977,9 @@ pub const EVFILT_SIGNAL: u32 = 5;
 pub const EVFILT_TIMER: u32 = 6;
 pub const EVFILT_VNODE: u32 = 3;
 pub const EVFILT_WRITE: u32 = 1;
+pub const EVFILT_FS: u32 = 7;
+pub const EVFILT_USER: u32 = 8;
+pub const EVFILT_EMPTY: u32 = 9;
 
 pub const EV_ADD: u32 = 0x1;
 pub const EV_DELETE: u32 = 0x2;
@@ -1940,6 +1994,13 @@ pub const EV_ERROR: u32 = 0x4000;
 pub const EV_EOF: u32 = 0x8000;
 pub const EV_SYSFLAGS: u32 = 0xf000;
 
+pub const NOTE_TRIGGER: u32 = 0x01000000;
+pub const NOTE_FFNOP: u32 = 0x00000000;
+pub const NOTE_FFAND: u32 = 0x40000000;
+pub const NOTE_FFOR: u32 = 0x80000000;
+pub const NOTE_FFCOPY: u32 = 0xc0000000;
+pub const NOTE_FFCTRLMASK: u32 = 0xc0000000;
+pub const NOTE_FFLAGSMASK: u32 = 0x00ffffff;
 pub const NOTE_LOWAT: u32 = 0x00000001;
 pub const NOTE_DELETE: u32 = 0x00000001;
 pub const NOTE_WRITE: u32 = 0x00000002;
@@ -1956,6 +2017,11 @@ pub const NOTE_PCTRLMASK: u32 = 0xf0000000;
 pub const NOTE_TRACK: u32 = 0x00000001;
 pub const NOTE_TRACKERR: u32 = 0x00000002;
 pub const NOTE_CHILD: u32 = 0x00000004;
+pub const NOTE_MSECONDS: u32 = 0x00000000;
+pub const NOTE_SECONDS: u32 = 0x00000001;
+pub const NOTE_USECONDS: u32 = 0x00000002;
+pub const NOTE_NSECONDS: u32 = 0x00000003;
+pub const NOTE_ABSTIME: u32 = 0x000000010;
 
 pub const TMP_MAX: ::c_uint = 308915776;
 
@@ -2162,6 +2228,11 @@ pub const WCONTINUED: ::c_int = 0x00000010;
 pub const WEXITED: ::c_int = 0x000000020;
 pub const WNOWAIT: ::c_int = 0x00010000;
 
+pub const WALTSIG: ::c_int = 0x00000004;
+pub const WALLSIG: ::c_int = 0x00000008;
+pub const WTRAPPED: ::c_int = 0x00000040;
+pub const WNOZOMBIE: ::c_int = 0x00020000;
+
 pub const P_ALL: idtype_t = 0;
 pub const P_PID: idtype_t = 1;
 pub const P_PGID: idtype_t = 4;
@@ -2321,6 +2392,24 @@ pub const XATTR_REPLACE: ::c_int = 0x02;
 // sys/extattr.h
 pub const EXTATTR_NAMESPACE_EMPTY: ::c_int = 0;
 
+// For getrandom()
+pub const GRND_NONBLOCK: ::c_uint = 0x1;
+pub const GRND_RANDOM: ::c_uint = 0x2;
+pub const GRND_INSECURE: ::c_uint = 0x4;
+
+cfg_if! {
+
+    if #[cfg(libc_const_extern_fn)] {
+        pub const fn MAP_ALIGNED(alignment: ::c_int) -> ::c_int {
+            alignment << MAP_ALIGNMENT_SHIFT
+        }
+    } else {
+        pub fn MAP_ALIGNED(alignment: ::c_int) -> ::c_int {
+            alignment << MAP_ALIGNMENT_SHIFT
+        }
+    }
+}
+
 const_fn! {
     {const} fn _ALIGN(p: usize) -> usize {
         (p + _ALIGNBYTES) & !_ALIGNBYTES
@@ -2333,7 +2422,7 @@ f! {
             .offset(_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
     }
 
-    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+    pub {const} fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
         _ALIGN(::mem::size_of::<::cmsghdr>()) as ::c_uint + length
     }
 
@@ -2383,6 +2472,17 @@ f! {
     pub fn PROT_MPROTECT_EXTRACT(x: ::c_int) -> ::c_int {
         (x >> 3) & 0x7
     }
+
+    pub fn major(dev: ::dev_t) -> ::c_int {
+        (((dev as u32) & 0x000fff00) >>  8) as ::c_int
+    }
+
+    pub fn minor(dev: ::dev_t) -> ::c_int {
+        let mut res = 0;
+        res |= ((dev as u32) & 0xfff00000) >> 12;
+        res |= (dev as u32) & 0x000000ff;
+        res as ::c_int
+    }
 }
 
 safe_f! {
@@ -2424,31 +2524,7 @@ extern "C" {
     ) -> ::c_int;
 
     pub fn reallocarr(ptr: *mut ::c_void, number: ::size_t, size: ::size_t) -> ::c_int;
-}
 
-#[link(name = "rt")]
-extern "C" {
-    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
-    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
-    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
-    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
-    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
-    #[link_name = "__aio_suspend50"]
-    pub fn aio_suspend(
-        aiocb_list: *const *const aiocb,
-        nitems: ::c_int,
-        timeout: *const ::timespec,
-    ) -> ::c_int;
-    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
-    pub fn lio_listio(
-        mode: ::c_int,
-        aiocb_list: *const *mut aiocb,
-        nitems: ::c_int,
-        sevp: *mut sigevent,
-    ) -> ::c_int;
-}
-
-extern "C" {
     pub fn chflags(path: *const ::c_char, flags: ::c_ulong) -> ::c_int;
     pub fn fchflags(fd: ::c_int, flags: ::c_ulong) -> ::c_int;
     pub fn lchflags(path: *const ::c_char, flags: ::c_ulong) -> ::c_int;
@@ -2793,7 +2869,12 @@ extern "C" {
         ts: *const ::timespec,
         sigmask: *const ::sigset_t,
     ) -> ::c_int;
-
+    pub fn ppoll(
+        fds: *mut ::pollfd,
+        nfds: ::nfds_t,
+        ts: *const ::timespec,
+        sigmask: *const ::sigset_t,
+    ) -> ::c_int;
     pub fn posix_spawn(
         pid: *mut ::pid_t,
         path: *const ::c_char,
@@ -2869,6 +2950,29 @@ extern "C" {
         actions: *mut posix_spawn_file_actions_t,
         fd: ::c_int,
         newfd: ::c_int,
+    ) -> ::c_int;
+    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+}
+
+#[link(name = "rt")]
+extern "C" {
+    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
+    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
+    #[link_name = "__aio_suspend50"]
+    pub fn aio_suspend(
+        aiocb_list: *const *const aiocb,
+        nitems: ::c_int,
+        timeout: *const ::timespec,
+    ) -> ::c_int;
+    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn lio_listio(
+        mode: ::c_int,
+        aiocb_list: *const *mut aiocb,
+        nitems: ::c_int,
+        sevp: *mut sigevent,
     ) -> ::c_int;
 }
 
