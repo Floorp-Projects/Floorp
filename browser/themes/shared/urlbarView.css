@@ -155,11 +155,6 @@
   }
 }
 
-.urlbarView-url {
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
    window is also short, because fewer results will be shown. */
 @media screen and (min-height: 600px) {
@@ -565,54 +560,44 @@
   display: none;
 }
 
-/* URLs, action labels, tags */
+/* Action labels */
 
-.urlbarView-tags,
-.urlbarView-url,
-.urlbarView-title:not(:empty) ~ .urlbarView-action {
-  font-size: var(--urlbarView-small-font-size);
-}
+.urlbarView-action {
+  .urlbarView-title:not(:empty) ~ & {
+    color: var(--urlbar-popup-action-color);
+    font-size: var(--urlbarView-small-font-size);
 
-.urlbarView-title:not(:empty) ~ .urlbarView-action {
-  color: var(--urlbar-popup-action-color);
-}
-
-.urlbarView-row[sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-  color: unset;
-  opacity: .6;
-}
-
-.urlbarView-row[sponsored][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* The slide-in effect is delayed ~100ms to reduce motion during result
-     composition. We set opacity: 0 at the 0% keyframe to ensure the text is not
-     seen by the user until after the delay. */
-  @keyframes urlbarView-action-slide-in {
-    0%, 28.6% {
-      translate: var(--urlbarView-action-slide-in-distance);
-      opacity: 0;
-    }
-    100% {
-      translate: 0;
-      opacity: 1;
+    &[slide-in] {
+      @media (prefers-reduced-motion: no-preference) {
+        animation-name: urlbarView-action-slide-in;
+        animation-duration: 350ms;
+        animation-timing-function: var(--animation-easing-function);
+      }
     }
   }
 
-  .urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] {
-    animation-name: urlbarView-action-slide-in;
-    animation-duration: 350ms;
-    animation-timing-function: var(--animation-easing-function);
+  .urlbarView-row[sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    color: unset;
+    opacity: .6;
+  }
+
+  .urlbarView-row[sponsored][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    opacity: 1;
   }
 }
 
-.urlbarView-url {
-  color: var(--link-color);
-  /* Increase line-height to avoid cutting overhanging glyphs due to masking on
-     the element */
-  line-height: 1.4;
+/* The slide-in effect is delayed ~100ms to reduce motion during result
+   composition. We set opacity: 0 at the 0% keyframe to ensure the text is not
+   seen by the user until after the delay. */
+@keyframes urlbarView-action-slide-in {
+  0%, 28.6% {
+    translate: var(--urlbarView-action-slide-in-distance);
+    opacity: 0;
+  }
+  100% {
+    translate: 0;
+    opacity: 1;
+  }
 }
 
 .urlbarView-row:is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
@@ -679,10 +664,23 @@
   }
 }
 
+/* URLs */
+
+.urlbarView-url {
+  flex-grow: 1;
+  flex-shrink: 1;
+  color: var(--link-color);
+  font-size: var(--urlbarView-small-font-size);
+  /* Increase line-height to avoid cutting overhanging glyphs due to masking on
+     the element */
+  line-height: 1.4;
+}
+
 /* Tags */
 
 .urlbarView-tags {
   display: flex;
+  font-size: var(--urlbarView-small-font-size);
   /* Increase line-height to avoid cutting overhanging glyphs due to masking on
      the element */
   line-height: 1.4;

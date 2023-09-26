@@ -64,14 +64,6 @@
   color: inherit;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-dynamic-onboardTabToSearch-text-container > .urlbarView-dynamic-onboardTabToSearch-first-row-container > .urlbarView-action[slide-in] {
-    animation-name: urlbarView-action-slide-in;
-    animation-duration: 350ms;
-    animation-timing-function: var(--animation-easing-function);
-  }
-}
-
 /* Description text. */
 .urlbarView-dynamic-onboardTabToSearch-description {
   margin-block-start: 2px;
