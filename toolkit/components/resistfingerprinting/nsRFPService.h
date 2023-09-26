@@ -7,6 +7,7 @@
 #define __nsRFPService_h__
 
 #include <cstdint>
+#include <tuple>
 #include "ErrorList.h"
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
@@ -14,6 +15,7 @@
 #include "mozilla/TypedEnumBits.h"
 #include "nsHashtablesFwd.h"
 #include "nsICookieJarSettings.h"
+#include "nsIFingerprintingWebCompatService.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
 #include "nsIRFPService.h"
@@ -353,6 +355,8 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   // the parent process.
   Maybe<nsID> mBrowsingSessionKey;
   Maybe<nsID> mPrivateBrowsingSessionKey;
+
+  nsCOMPtr<nsIFingerprintingWebCompatService> mWebCompatService;
 };
 
 }  // namespace mozilla
