@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/Maybe.h"
 #include "nsITelemetry.h"
 
 class TelemetryTestFixture : public ::testing::Test {
@@ -32,7 +33,7 @@ class MOZ_RAII AutoJSContextWithGlobal {
   JSContext* GetJSContext() const;
 
  protected:
-  mozilla::dom::AutoJSAPI mJsAPI;
+  mozilla::Maybe<mozilla::dom::AutoJSAPI> mJsAPI;
   JSContext* mCx;
 };
 
