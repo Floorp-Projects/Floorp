@@ -438,8 +438,9 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
     // src local ==> lookup and load immediately
 
     if (currSrc.mSourceType == gfxFontFaceSrc::eSourceType_Local) {
-      // Don't look up local fonts if the font whitelist is being used.
       gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+      pfl->AddUserFontSet(fontSet);
+      // Don't look up local fonts if the font whitelist is being used.
       gfxFontEntry* fe = nullptr;
       if (!pfl->IsFontFamilyWhitelistActive()) {
         fe = gfxPlatform::GetPlatform()->LookupLocalFont(
@@ -956,18 +957,13 @@ gfxUserFontSet::gfxUserFontSet()
       mDownloadCount(0),
       mDownloadSize(0) {
   IncrementGeneration(true);
-  gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
-  if (fp) {
-    fp->AddUserFontSet(this);
-  }
 }
 
 gfxUserFontSet::~gfxUserFontSet() { Destroy(); }
 
 void gfxUserFontSet::Destroy() {
-  gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
-  if (fp) {
-    fp->RemoveUserFontSet(this);
+  if (auto* pfl = gfxPlatformFontList::PlatformFontList(false)) {
+    pfl->RemoveUserFontSet(this);
   }
 
   mFontFamilies.Clear();
