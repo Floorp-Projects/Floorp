@@ -4,8 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import glob
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from subprocess import PIPE
 
 import mozinfo
@@ -30,6 +32,12 @@ except Exception:
 # On Windows, deal with mozilla-build having forward slashes in $HOME:
 if os.name == "nt" and "/" in DEFAULT_CERT_PATH:
     DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace("/", "\\")
+
+FIREFOX_ANDROID_APPS = [
+    "geckoview",
+    "refbrow",
+    "fenix",
+]
 
 
 class MitmproxyAndroid(Mitmproxy):
@@ -118,8 +126,13 @@ class MitmproxyAndroid(Mitmproxy):
         2. Import the mitmproxy certificate into the database, i.e.:
            `certutil -A -d sql:<path to profile> -n "some nickname" -t TC,, -a -i <path to CA.pem>`
         """
-
-        cert_db_location = "sql:%s/" % self.config["local_profile_dir"]
+        # If the app isn't in FIREFOX_ANDROID_APPS then we have to create the tempdir
+        # because we don't have it available in the local_profile_dir
+        if self.config["app"] in FIREFOX_ANDROID_APPS:
+            tempdir = self.config["local_profile_dir"]
+        else:
+            tempdir = tempfile.mkdtemp()
+        cert_db_location = "sql:%s/" % tempdir
 
         if not self.cert_db_exists(cert_db_location):
             self.create_cert_db(cert_db_location)
@@ -133,6 +146,11 @@ class MitmproxyAndroid(Mitmproxy):
             LOG.error("Aborting: failed to install mitmproxy CA cert into Firefox")
             self.stop_mitmproxy_playback()
             sys.exit()
+        if self.config["app"] not in FIREFOX_ANDROID_APPS:
+            try:
+                shutil.rmtree(tempdir)
+            except Exception:
+                LOG.warning("unable to remove directory: %s" % tempdir)
 
     def import_certificate_in_cert_db(self, cert_db_location, local_cert_path):
         # import mitmproxy cert into the db
