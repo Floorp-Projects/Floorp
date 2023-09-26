@@ -72,13 +72,26 @@ geckoview-no-fission:
                 - "--disable-fission"
 
 geckoview-fission:
-    description: "{description} with fission enabled"
+    description: "{description} with fission enabled and default isolation strategy"
     component: "GeckoView::Sandboxing"
     expiration: "2024-03-01"
     when:
         <<: *gv_e10s_filter
     suffix: "fis"
     mozinfo: "fission"
+
+geckoview-fission-isolate-high-value:
+    description: "{description} with fission enabled and isolation strategy isolateHighValue"
+    component: "GeckoView::Sandboxing"
+    expiration: "2024-03-01"
+    when:
+        <<: *gv_e10s_filter
+    suffix: "fis-hv"
+    mozinfo: "fission-high-value"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.webContentIsolationStrategy=2"
 
 fission:
     description: "{description} with fission enabled"
