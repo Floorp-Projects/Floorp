@@ -351,7 +351,6 @@ module.exports = {
         "mozilla/no-arbitrary-setTimeout": "off",
         "mozilla/no-define-cc-etc": "off",
         "mozilla/prefer-boolean-length-check": "off",
-        "mozilla/use-chromeutils-generateqi": "off",
         "mozilla/use-default-preference-values": "off",
         "mozilla/use-includes-instead-of-indexOf": "off",
         "mozilla/use-services": "off",
@@ -439,7 +438,6 @@ module.exports = {
         "mozilla/no-define-cc-etc": "off",
         "mozilla/reject-importGlobalProperties": "off",
         "mozilla/use-cc-etc": "off",
-        "mozilla/use-chromeutils-generateqi": "off",
         "mozilla/use-includes-instead-of-indexOf": "off",
         "mozilla/use-ownerGlobal": "off",
         "mozilla/use-services": "off",
@@ -580,7 +578,6 @@ module.exports = {
       rules: {
         "mozilla/no-useless-parameters": "off",
         "mozilla/no-useless-removeEventListener": "off",
-        "mozilla/use-chromeutils-generateqi": "off",
         "mozilla/use-services": "off",
         complexity: "off",
         "no-array-constructor": "off",

@@ -23,7 +23,6 @@ var obs = Cc["@mozilla.org/observer-service;1"].getService();
 obs = obs.QueryInterface(Ci.nsIObserverService);
 
 var observer = {
-  /* eslint-disable-next-line mozilla/use-chromeutils-generateqi */
   QueryInterface (aIID) {
     if (aIID.equals(Ci.nsISupports) ||
         aIID.equals(Ci.nsIObserver))

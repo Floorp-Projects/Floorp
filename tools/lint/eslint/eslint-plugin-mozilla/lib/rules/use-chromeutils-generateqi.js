@@ -48,7 +48,7 @@ module.exports = {
     fixable: "code",
     messages: {
       noJSQueryInterface:
-        "Please use ChromeUtils.generateQI rather than" +
+        "Please use ChromeUtils.generateQI rather than " +
         "manually creating JavaScript QueryInterface functions",
       noXpcomUtilsGenerateQI:
         "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI",
