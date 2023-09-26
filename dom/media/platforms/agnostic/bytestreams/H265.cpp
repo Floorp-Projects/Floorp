@@ -55,14 +55,15 @@ mozilla::LazyLogModule gH265("H265");
 
 namespace mozilla {
 
-H265NALU::H265NALU(const uint8_t* aData, uint32_t aSize) : mNALU(aData, aSize) {
+H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
+    : mNALU(aData, aByteSize) {
   // Per 7.3.1 NAL unit syntax
-  BitReader reader(aData, aSize);
+  BitReader reader(aData, aByteSize * 8);
   Unused << reader.ReadBit();  // forbidden_zero_bit
   mNalUnitType = reader.ReadBits(6);
   mNuhLayerId = reader.ReadBits(6);
   mNuhTemporalIdPlus1 = reader.ReadBits(3);
-  LOGV("Created H265NALU, type=%hhu, size=%u", mNalUnitType, aSize);
+  LOGV("Created H265NALU, type=%hhu, size=%u", mNalUnitType, aByteSize);
 }
 
 /* static */ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
@@ -126,14 +127,14 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     LOGV("nalu-type=%u, nalu-num=%u", nalUnitType, numNalus);
     for (uint16_t nIdx = 0; nIdx < numNalus; nIdx++) {
       const uint16_t nalUnitLength = reader.ReadBits(16);
-      uint32_t nalSize = nalUnitLength * 8;
       if (reader.BitsLeft() < nalUnitLength * 8) {
         return mozilla::Err(NS_ERROR_FAILURE);
       }
       const uint8_t* currentPtr =
           aExtraData->Elements() + reader.BitCount() / 8;
-      H265NALU nalu(currentPtr, nalSize);
+      H265NALU nalu(currentPtr, nalUnitLength);
       // ReadBits can only read at most 32 bits at a time.
+      uint32_t nalSize = nalUnitLength * 8;
       while (nalSize > 0) {
         uint32_t readBits = nalSize > 32 ? 32 : nalSize;
         reader.ReadBits(readBits);
