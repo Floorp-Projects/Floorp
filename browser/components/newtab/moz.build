@@ -42,7 +42,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "browser-newtab"
 
 EXTRA_JS_MODULES += [
-    "AboutNewTabService.jsm",
+    "AboutNewTabService.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.actors += [

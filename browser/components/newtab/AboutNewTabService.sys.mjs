@@ -4,13 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "AboutNewTabStubService",
-  "AboutHomeStartupCacheChild",
-];
-
 /**
  * The nsIAboutNewTabService is accessed by the AboutRedirector anytime
  * about:home, about:newtab or about:welcome are requested. The primary
@@ -30,15 +23,9 @@ const EXPORTED_SYMBOLS = [
  * been put into an abstract base class.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -81,7 +68,7 @@ const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
  * See https://firefox-source-docs.mozilla.org/browser/components/newtab/docs/v2-system-addon/about_home_startup_cache.html
  * for further details.
  */
-const AboutHomeStartupCacheChild = {
+export const AboutHomeStartupCacheChild = {
   _initted: false,
   CACHE_REQUEST_MESSAGE: "AboutHomeStartupCache:CacheRequest",
   CACHE_RESPONSE_MESSAGE: "AboutHomeStartupCache:CacheResponse",
@@ -515,7 +502,7 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
  * function does the job of choosing the appropriate implementation of
  * nsIAboutNewTabService for the process type.
  */
-function AboutNewTabStubService() {
+export function AboutNewTabStubService() {
   if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT) {
     return new BaseAboutNewTabService();
   }

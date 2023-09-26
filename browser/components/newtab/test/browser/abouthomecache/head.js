@@ -143,8 +143,8 @@ async function simulateRestart(
 
   info("Waiting for AboutHomeStartupCacheChild to uninit");
   await SpecialPowers.spawn(browser, [], async () => {
-    let { AboutHomeStartupCacheChild } = ChromeUtils.import(
-      "resource:///modules/AboutNewTabService.jsm"
+    let { AboutHomeStartupCacheChild } = ChromeUtils.importESModule(
+      "resource:///modules/AboutNewTabService.sys.mjs"
     );
     AboutHomeStartupCacheChild.uninit();
   });
@@ -165,8 +165,8 @@ async function simulateRestart(
     if (ensureCacheWinsRace) {
       info("Ensuring cache bytes are available");
       await SpecialPowers.spawn(browser, [], async () => {
-        let { AboutHomeStartupCacheChild } = ChromeUtils.import(
-          "resource:///modules/AboutNewTabService.jsm"
+        let { AboutHomeStartupCacheChild } = ChromeUtils.importESModule(
+          "resource:///modules/AboutNewTabService.sys.mjs"
         );
         let pageStream = AboutHomeStartupCacheChild._pageInputStream;
         let scriptStream = AboutHomeStartupCacheChild._scriptInputStream;
