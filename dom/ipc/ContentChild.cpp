@@ -223,6 +223,7 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "APKOpen.h"
+#  include <sched.h>
 #endif
 
 #ifdef XP_WIN
@@ -4712,6 +4713,70 @@ void ContentChild::ConfigureThreadPerformanceHints(
       // supported.
       canUsePerformanceHintSession = mPerformanceHintSession != nullptr;
     }
+
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android if we are unable to use PerformanceHintManager then fall back
+    // to setting the stylo threads' affinities to the performant cores. Android
+    // automatically sets each thread's affinity to all cores when a process is
+    // foregrounded, and to a subset of cores when the process is backgrounded.
+    // We must therefore override this each time the process is foregrounded,
+    // but we don't have to do anything when backgrounded.
+    if (!mPerformanceHintSession) {
+      if (const auto& cpuInfo = hal::GetHeterogeneousCpuInfo()) {
+        // If CPUs are homogeneous there is no point setting affinity.
+        if (cpuInfo->mBigCpus.Count() != cpuInfo->mTotalNumCpus) {
+          BitSet<hal::HeterogeneousCpuInfo::MAX_CPUS> cpus = cpuInfo->mBigCpus;
+          if (cpus.Count() < 2) {
+            // From testing on a variety of devices it appears using only the
+            // big cores gives best performance when there are 2 or more big
+            // cores. If there are fewer than 2 big cores then additionally
+            // using the medium cores performs better.
+            cpus |= cpuInfo->mMediumCpus;
+          }
+
+          static_assert(
+              hal::HeterogeneousCpuInfo::MAX_CPUS <= CPU_SETSIZE,
+              "HeterogeneousCpuInfo::MAX_CPUS is too large for CPU_SETSIZE");
+
+          cpu_set_t cpuset;
+          CPU_ZERO(&cpuset);
+          for (size_t i = 0; i < cpuInfo->mTotalNumCpus; i++) {
+            if (cpus.Test(i)) {
+              CPU_SET(i, &cpuset);
+            }
+          }
+
+          // Only set the affinity for the stylo threads, not the main thread.
+          // Testing showed no difference in performance between the two
+          // options, and as newly spawned threads automatically inherit their
+          // parent's affinity mask there may be unintended consequences to
+          // setting the main thread affinity.
+          nsTArray<PlatformThreadHandle> threads;
+          Servo_ThreadPool_GetThreadHandles(&threads);
+          for (pthread_t thread : threads) {
+            int ret = sched_setaffinity(pthread_gettid_np(thread),
+                                        sizeof(cpu_set_t), &cpuset);
+            // Occasionally sched_setaffinity fails, presumably due to a race
+            // between us receiving the process foreground signal and whatever
+            // is responsible for restricting which processes can use certain
+            // cores. Trying again in a runnable seems to do the trick, but if
+            // that still fails it's not the end of the world.
+            if (ret < 0) {
+              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                  "ContentChild::ConfigureThreadPerformanceHints",
+                  [threads = std::move(threads), cpuset] {
+                    for (pthread_t thread : threads) {
+                      sched_setaffinity(pthread_gettid_np(thread),
+                                        sizeof(cpu_set_t), &cpuset);
+                    }
+                  }));
+              break;
+            }
+          }
+        }
+      }
+    }
+#endif
   } else {
     mPerformanceHintSession = nullptr;
   }
