@@ -16,6 +16,11 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const responsiveModeToggleClass = ".media-responsive-mode-toggle";
 
 add_task(async function () {
+  // ensure that original RDM size is big enough so it doesn't match the
+  // media queries by default.
+  await pushPref("devtools.responsive.viewport.width", 1000);
+  await pushPref("devtools.responsive.viewport.height", 1000);
+
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = ui.editors[1];
@@ -60,10 +65,15 @@ function testNumberOfLinks(editor) {
 
 async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
-  let conditions = sidebar.querySelectorAll(".at-rule-condition");
-
-  const onMediaChange = once(ui, "at-rules-list-changed");
+  const conditions = sidebar.querySelectorAll(".at-rule-condition");
   const onRDMOpened = once(ui, "responsive-mode-opened");
+
+  ok(
+    sidebar
+      .querySelectorAll(".at-rule-condition")
+      [itemIndex].classList.contains("media-condition-unmatched"),
+    `The ${type} condition is not matched when not in responsive mode`
+  );
 
   info("Launching responsive mode");
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
@@ -75,9 +85,6 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
   info("Wait for RDM ui to be fully loaded");
   await waitForRDMLoaded(rdmUI);
 
-  info("Waiting for the @media list to update");
-  await onMediaChange;
-
   // Ensure that the content has reflowed, which will ensure that all the
   // element classes are reported correctly.
   await promiseContentReflow(rdmUI);
@@ -86,11 +93,11 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
     ResponsiveUIManager.isActiveForTab(tab),
     "Responsive mode should be active."
   );
-  conditions = sidebar.querySelectorAll(".at-rule-condition");
-  ok(
-    !conditions[itemIndex].classList.contains("media-condition-unmatched"),
-    "media rule should now be matched after responsive mode is active"
-  );
+  await waitFor(() => {
+    const el = sidebar.querySelectorAll(".at-rule-condition")[itemIndex];
+    return !el.classList.contains("media-condition-unmatched");
+  });
+  ok(true, "media rule should now be matched after responsive mode is active");
 
   const dimension = (await getSizing(rdmUI))[type];
   is(dimension, value, `${type} should be properly set.`);
