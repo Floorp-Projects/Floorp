@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-# This file contains exhaustive information about all the release artifacs that
+# This file contains exhaustive information about all the release artifacts that
 # are needed within a type of release.
 #
 # Structure
@@ -10,7 +10,7 @@
 # `s3_bucket_paths`       -- prefix to be used per product to correctly access our S3 buckets
 # `default_locales`       -- list of locales to be used when composing upstream artifacts or the list of
 #                      destinations. If given an empty locale, it uses these locales instead.
-# `tasktype_map`          -- mapping between task reference and task type, particularly usefule when
+# `tasktype_map`          -- mapping between task reference and task type, particularly useful when
 #                      composing the upstreamArtifacts for scriptworker.
 # `platform_names`        -- various platform mappings used in reckoning artifacts or other paths
 # `default`               -- a default entry, which the mappings extend and override in such a way that
@@ -46,6 +46,7 @@ default_locales:
     - multi
 tasktype_map:
     signing-apk: signing
+    signing-bundle: signing
 platform_names:
     product:
         by-platform:
@@ -54,8 +55,6 @@ platform_names:
             klar.*: klar
 
 default: &default
-    from:
-        - signing-apk
     all_locales: true
     description: "TO_BE_OVERRIDDEN"
     # Hard coded 'multi' locale
@@ -73,21 +72,37 @@ mapping:
         pretty_name: ${product}-${version}.${locale}.android-arm64-v8a.apk
         destinations:
             - ${folder_prefix}${product}-${version}-android-arm64-v8a
+        from:
+            - signing-apk
     target.armeabi-v7a.apk:
         <<: *default
         description: "Android package for armeabi-v7a"
         pretty_name: ${product}-${version}.${locale}.android-armeabi-v7a.apk
         destinations:
             - ${folder_prefix}${product}-${version}-android-armeabi-v7a
+        from:
+            - signing-apk
     target.x86.apk:
         <<: *default
         description: "Android package for x86"
         pretty_name: ${product}-${version}.${locale}.android-x86.apk
         destinations:
             - ${folder_prefix}${product}-${version}-android-x86
+        from:
+            - signing-apk
     target.x86_64.apk:
         <<: *default
         description: "Android package for x86_64"
         pretty_name: ${product}-${version}.${locale}.android-x86_64.apk
         destinations:
             - ${folder_prefix}${product}-${version}-android-x86_64
+        from:
+            - signing-apk
+    target.aab:
+        <<: *default
+        description: "Android app bundle"
+        pretty_name: ${product}-${version}.${locale}.android.aab
+        destinations:
+            - ${folder_prefix}${product}-${version}-android
+        from:
+            - signing-bundle
