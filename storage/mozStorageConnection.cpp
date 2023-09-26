@@ -2561,6 +2561,9 @@ Connection::EnableModule(const nsACString& aModuleName) {
 
 // Implemented in QuotaVFS.cpp
 already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile);
+const char* GetObfuscatingVFSName();
+already_AddRefed<QuotaObject> GetObfuscatedQuotaObjectForFile(
+    sqlite3_file* pFile);
 
 NS_IMETHODIMP
 Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
@@ -2583,7 +2586,29 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
     return convertResultCode(srv);
   }
 
-  RefPtr<QuotaObject> databaseQuotaObject = GetQuotaObjectForFile(file);
+  sqlite3_vfs* vfs;
+  srv =
+      ::sqlite3_file_control(mDBConn, nullptr, SQLITE_FCNTL_VFS_POINTER, &vfs);
+  if (srv != SQLITE_OK) {
+    return convertResultCode(srv);
+  }
+
+  bool obfusactingVFS = false;
+
+  {
+    const nsDependentCString vfsName{vfs->zName};
+
+    if (vfsName == GetObfuscatingVFSName()) {
+      obfusactingVFS = true;
+    } else if (vfsName != GetQuotaVFSName()) {
+      NS_WARNING("Got unexpected vfs");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  RefPtr<QuotaObject> databaseQuotaObject =
+      obfusactingVFS ? GetObfuscatedQuotaObjectForFile(file)
+                     : GetQuotaObjectForFile(file);
   if (NS_WARN_IF(!databaseQuotaObject)) {
     return NS_ERROR_FAILURE;
   }
@@ -2594,7 +2619,9 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
     return convertResultCode(srv);
   }
 
-  RefPtr<QuotaObject> journalQuotaObject = GetQuotaObjectForFile(file);
+  RefPtr<QuotaObject> journalQuotaObject =
+      obfusactingVFS ? GetObfuscatedQuotaObjectForFile(file)
+                     : GetQuotaObjectForFile(file);
   if (NS_WARN_IF(!journalQuotaObject)) {
     return NS_ERROR_FAILURE;
   }

@@ -75,6 +75,7 @@
 #include <stdio.h> /* For debugging only */
 
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
+#include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/ScopeExit.h"
 #include "nsPrintfCString.h"
 
@@ -639,6 +640,13 @@ namespace mozilla {
 namespace storage {
 
 const char* GetObfuscatingVFSName() { return "obfsvfs"; }
+
+already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile);
+
+already_AddRefed<QuotaObject> GetObfuscatedQuotaObjectForFile(
+    sqlite3_file* pFile) {
+  return GetQuotaObjectForFile(ORIGFILE(pFile));
+}
 
 UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
   MOZ_ASSERT(aBaseVFSName);
