@@ -13,6 +13,7 @@
 
 .highlight-icon {
   content: url("chrome://global/skin/icons/defaultFavicon.svg");
+  color: var(--icon-color);
   fill: currentColor;
   -moz-context-properties: fill;
   grid-row-start: 1;
