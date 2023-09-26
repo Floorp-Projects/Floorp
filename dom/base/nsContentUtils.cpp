@@ -825,7 +825,8 @@ nsresult nsContentUtils::Init() {
 
   Element::InitCCCallbacks();
 
-  Unused << nsRFPService::GetOrCreate();
+  RefPtr<nsRFPService> rfpService = nsRFPService::GetOrCreate();
+  MOZ_ASSERT(rfpService);
 
   if (XRE_IsParentProcess()) {
     AsyncPrecreateStringBundles();
