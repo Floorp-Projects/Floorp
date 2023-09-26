@@ -285,6 +285,10 @@ void nsRFPService::StartShutdown() {
     }
   }
 
+  if (mWebCompatService) {
+    mWebCompatService->Shutdown();
+  }
+
   Preferences::UnregisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
                                    this);
 }
@@ -325,6 +329,19 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
             privacy_resistFingerprinting_randomization_daily_reset_private_enabled()) {
       ClearSessionKey(true);
     }
+  }
+
+  if (nsCRT::strcmp(aTopic, "profile-after-change") == 0 &&
+      XRE_IsParentProcess()) {
+    // Get the singleton of the remote override service if we are in the parent
+    // process.
+    nsresult rv;
+    mWebCompatService =
+        do_GetService(NS_FINGERPRINTINGWEBCOMPATSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mWebCompatService->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -1382,5 +1399,11 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   glean::fingerprinting_protection::canvas_noise_calculate_time
       .StopAndAccumulate(std::move(timerId));
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::SetFingerprintingOverrides(
+    const nsTArray<RefPtr<nsIFingerprintingOverride>>& aOverrides) {
   return NS_OK;
 }
