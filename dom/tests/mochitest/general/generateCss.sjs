@@ -25,9 +25,6 @@ let gResponses = {
   L: "@import 'generateCss.sjs?M",
   M: "",
 
-  // 5
-  N: ".c1 { background-image: -moz-image-rect(url('/image/test/mochitest/blue.png'), 0, 0, 200, 200);}",
-
   // 6
   O: ".c2 { background-image: url('/image/test/mochitest/red.png');}",
 

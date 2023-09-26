@@ -3608,7 +3608,6 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
 
   ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
   switch (mImageRenderer.GetType()) {
-    case StyleImage::Tag::Rect:
     case StyleImage::Tag::Url: {
       RefPtr<imgIContainer> img = mImageRenderer.GetImage();
       if (!img || img->GetType() == imgIContainer::TYPE_VECTOR) {

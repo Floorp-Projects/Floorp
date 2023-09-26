@@ -43,7 +43,7 @@ fn gradient_color_interpolation_method_enabled() -> bool {
 /// Specified values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
 pub type Image =
-    generic::Image<Gradient, MozImageRect, SpecifiedImageUrl, Color, Percentage, Resolution>;
+    generic::Image<Gradient, SpecifiedImageUrl, Color, Percentage, Resolution>;
 
 // Images should remain small, see https://github.com/servo/servo/pull/18430
 size_of_test!(Image, 16);
@@ -186,26 +186,6 @@ pub enum LineDirection {
 /// A specified ending shape.
 pub type EndingShape = generic::EndingShape<NonNegativeLength, NonNegativeLengthPercentage>;
 
-/// Specified values for `moz-image-rect`
-/// -moz-image-rect(<uri>, top, right, bottom, left);
-#[cfg(all(feature = "gecko", not(feature = "cbindgen")))]
-pub type MozImageRect = generic::GenericMozImageRect<NumberOrPercentage, SpecifiedImageUrl>;
-
-#[cfg(not(feature = "gecko"))]
-#[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
-/// Empty enum on non-Gecko
-pub enum MozImageRect {}
-
 bitflags! {
     struct ParseImageFlags: u8 {
         const FORBID_NONE = 1 << 0;
@@ -264,8 +244,6 @@ impl Image {
                 #[cfg(feature = "servo-layout-2013")]
                 "paint" => Self::PaintWorklet(PaintWorklet::parse_args(context, input)?),
                 "cross-fade" if cross_fade_enabled() => Self::CrossFade(Box::new(CrossFade::parse_args(context, input, cors_mode, flags)?)),
-                #[cfg(feature = "gecko")]
-                "-moz-image-rect" => Self::Rect(Box::new(MozImageRect::parse_args(context, input, cors_mode)?)),
                 #[cfg(feature = "gecko")]
                 "-moz-element" => Self::Element(Self::parse_element(input)?),
                 _ => return Err(input.new_custom_error(StyleParseErrorKind::UnexpectedFunction(function))),
@@ -1322,34 +1300,6 @@ impl PaintWorklet {
             })
             .unwrap_or_default();
         Ok(Self { name, arguments })
-    }
-}
-
-impl MozImageRect {
-    #[cfg(feature = "gecko")]
-    fn parse_args<'i>(
-        context: &ParserContext,
-        input: &mut Parser<'i, '_>,
-        cors_mode: CorsMode,
-    ) -> Result<Self, ParseError<'i>> {
-        let string = input.expect_url_or_string()?;
-        let url =
-            SpecifiedImageUrl::parse_from_string(string.as_ref().to_owned(), context, cors_mode);
-        input.expect_comma()?;
-        let top = NumberOrPercentage::parse_non_negative(context, input)?;
-        input.expect_comma()?;
-        let right = NumberOrPercentage::parse_non_negative(context, input)?;
-        input.expect_comma()?;
-        let bottom = NumberOrPercentage::parse_non_negative(context, input)?;
-        input.expect_comma()?;
-        let left = NumberOrPercentage::parse_non_negative(context, input)?;
-        Ok(MozImageRect {
-            url,
-            top,
-            right,
-            bottom,
-            left,
-        })
     }
 }
 

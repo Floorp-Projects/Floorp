@@ -240,10 +240,6 @@ var validNonUrlImageValues = [
   // When that happens this should be moved to the `invalid` list.
   "repeating-radial-gradient(circle closest-side at left 0px bottom 7in, hsl(2,2%,5%), rgb(1,6,0))",
 
-  "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 2, 10, 10, 2)",
-  "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10%, 50%, 30%, 0%)",
-  "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10, 50%, 30%, 0)",
-
   "radial-gradient(at calc(25%) top, red, blue)",
   "radial-gradient(at left calc(25%), red, blue)",
   "radial-gradient(at calc(25px) top, red, blue)",
@@ -525,7 +521,7 @@ var invalidNonUrlImageValues = [
   "linear-gradient(30deg red, blue)",
   "linear-gradient(to top left red, blue)",
   "linear-gradient(to right red, blue)",
-  /* Invalid color, calc() or -moz-image-rect() function */
+  /* Invalid color or calc() function */
   "linear-gradient(red, rgb(0, rubbish, 0) 50%, red)",
   "linear-gradient(red, red calc(50% + rubbish), red)",
   "linear-gradient(to top calc(50% + rubbish), red, blue)",
@@ -4079,7 +4075,6 @@ var gCSSProperties = {
       "url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0), url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0)",
       "url(404.png) rgb(255, 0, 0), url(404.png) rgb(255, 0, 0)",
       /* error inside functions */
-      "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), rubbish, 50%, 30%, 0) transparent",
       "-moz-element(#a rubbish) black",
       "content-box text text",
       "padding-box text url(404.png) text",

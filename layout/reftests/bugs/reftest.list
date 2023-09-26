@@ -1398,7 +1398,6 @@ fuzzy(0-5,0-50) == 526463-1.html 526463-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
 == 528038-2.html 528038-2-ref.html
-== 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 fuzzy-if(Android,0-2,0-48) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html

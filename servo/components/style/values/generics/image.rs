@@ -24,7 +24,7 @@ use style_traits::{CssWriter, ToCss};
     Clone, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericImage<G, MozImageRect, ImageUrl, Color, Percentage, Resolution> {
+pub enum GenericImage<G, ImageUrl, Color, Percentage, Resolution> {
     /// `none` variant.
     None,
     /// A `<url()>` image.
@@ -33,10 +33,6 @@ pub enum GenericImage<G, MozImageRect, ImageUrl, Color, Percentage, Resolution> 
     /// A `<gradient>` image.  Gradients are rather large, and not nearly as
     /// common as urls, so we box them here to keep the size of this enum sane.
     Gradient(Box<G>),
-    /// A `-moz-image-rect` image.  Also fairly large and rare.
-    // not cfg’ed out on non-Gecko to avoid `error[E0392]: parameter `MozImageRect` is never used`
-    // Instead we make MozImageRect an empty enum
-    Rect(Box<MozImageRect>),
 
     /// A `-moz-element(# <element-id>)`
     #[cfg(feature = "gecko")]
@@ -392,46 +388,18 @@ impl ToCss for PaintWorklet {
     }
 }
 
-/// Values for `moz-image-rect`.
-///
-/// `-moz-image-rect(<uri>, top, right, bottom, left);`
-#[allow(missing_docs)]
-#[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[css(comma, function = "-moz-image-rect")]
-#[repr(C)]
-pub struct GenericMozImageRect<NumberOrPercentage, MozImageRectUrl> {
-    pub url: MozImageRectUrl,
-    pub top: NumberOrPercentage,
-    pub right: NumberOrPercentage,
-    pub bottom: NumberOrPercentage,
-    pub left: NumberOrPercentage,
-}
-
-pub use self::GenericMozImageRect as MozImageRect;
-
-impl<G, R, U, C, P, Resolution> fmt::Debug for Image<G, R, U, C, P, Resolution>
+impl<G, U, C, P, Resolution> fmt::Debug for Image<G, U, C, P, Resolution>
 where
-    Image<G, R, U, C, P, Resolution>: ToCss,
+    Image<G, U, C, P, Resolution>: ToCss,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_css(&mut CssWriter::new(f))
     }
 }
 
-impl<G, R, U, C, P, Resolution> ToCss for Image<G, R, U, C, P, Resolution>
+impl<G, U, C, P, Resolution> ToCss for Image<G, U, C, P, Resolution>
 where
     G: ToCss,
-    R: ToCss,
     U: ToCss,
     C: ToCss,
     P: ToCss,
@@ -445,7 +413,6 @@ where
             Image::None => dest.write_str("none"),
             Image::Url(ref url) => url.to_css(dest),
             Image::Gradient(ref gradient) => gradient.to_css(dest),
-            Image::Rect(ref rect) => rect.to_css(dest),
             #[cfg(feature = "servo-layout-2013")]
             Image::PaintWorklet(ref paint_worklet) => paint_worklet.to_css(dest),
             #[cfg(feature = "gecko")]

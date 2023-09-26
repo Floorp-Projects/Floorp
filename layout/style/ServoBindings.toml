@@ -540,7 +540,6 @@ cbindgen-types = [
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
     { gecko = "StyleGenericFontFamily", servo = "crate::values::computed::font::GenericFontFamily" },
     { gecko = "StyleGenericPosition", servo = "crate::values::generics::position::GenericPosition" },
-    { gecko = "StyleGenericMozImageRect", servo = "crate::values::generics::image::GenericMozImageRect" },
     { gecko = "StyleGenericCounterPair", servo = "crate::values::generics::counters::GenericCounterPair" },
     { gecko = "StyleGenericShapeRadius", servo = "crate::values::generics::basic_shape::GenericShapeRadius" },
     { gecko = "StyleGenericClipRect", servo = "crate::values::generics::GenericClipRect" },

@@ -72,7 +72,7 @@ function do_test() {
   var expected = [ "auto", "initial", "inherit", "unset", "revert", "revert-layer", ...allColors, "no-repeat", "repeat",
       "repeat-x", "repeat-y", "space", "round", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "text", "contain",
-      "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients, "image-set" ];
+      "cover", "none", "-moz-element", "url", ...allGradients, "image-set" ];
 
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
     expected.push("cross-fade");
@@ -152,7 +152,7 @@ function do_test() {
   var prop = "border-image";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "auto", "inherit", "revert", "revert-layer", "initial", "unset", "repeat", "stretch",
-                   "-moz-element", "-moz-image-rect", "url", ...allGradients,
+                   "-moz-element", "url", ...allGradients,
                    "fill", "none", "round", "space", "image-set" ];
 
   if(SpecialPowers.getBoolPref("layout.css.cross-fade.enabled")) {
@@ -222,7 +222,7 @@ function do_test() {
   var expected = [ "normal", "none", "counter", "counters",
                    "attr", "open-quote", "close-quote", "no-open-quote",
                    "no-close-quote", "inherit", "initial", "unset", "revert",
-                   "revert-layer", "-moz-alt-content", "-moz-label-content", "image-set", "url", "-moz-element", "-moz-image-rect" ]
+                   "revert-layer", "-moz-alt-content", "-moz-label-content", "image-set", "url", "-moz-element" ]
     .concat(allGradients);
   var values = InspectorUtils.getCSSValuesForProperty("content");
   ok(testValues(values, expected), "property content's values");
