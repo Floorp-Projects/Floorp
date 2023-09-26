@@ -31,8 +31,13 @@ class AnnexB {
   };
   // All conversions assume size of NAL length field is 4 bytes.
   // Convert a sample from AVCC format to Annex B.
-  static mozilla::Result<mozilla::Ok, nsresult> ConvertSampleToAnnexB(
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertAVCCSampleToAnnexB(
       mozilla::MediaRawData* aSample, bool aAddSPS = true);
+  // All conversions assume size of NAL length field is 4 bytes.
+  // Convert a sample from HVCC format to Annex B.
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertHVCCSampleToAnnexB(
+      mozilla::MediaRawData* aSample, bool aAddSPS = true);
+
   // Convert a sample from Annex B to AVCC.
   // an AVCC extradata must not be set.
   static bool ConvertSampleToAVCC(
@@ -54,6 +59,8 @@ class AnnexB {
 
   // Returns true if format is AVCC and sample has valid extradata.
   static bool IsAVCC(const mozilla::MediaRawData* aSample);
+  // Returns true if format is HVCC and sample has valid extradata.
+  static bool IsHVCC(const mozilla::MediaRawData* aSample);
   // Returns true if format is AnnexB.
   static bool IsAnnexB(const mozilla::MediaRawData* aSample);
 

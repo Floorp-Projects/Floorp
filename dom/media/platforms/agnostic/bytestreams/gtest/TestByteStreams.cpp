@@ -54,8 +54,89 @@ static already_AddRefed<MediaRawData> GetAvccSample(uint32_t aSampleSize) {
   return rawData.forget();
 }
 
+// Create a HVCC sample, which contain fake data, in given size.
+static already_AddRefed<MediaRawData> GetHVCCSample(uint32_t aSampleSize) {
+  if (aSampleSize < 4) {
+    // Stop tests asking for insane samples.
+    EXPECT_FALSE(true) << "Samples should be requested with sane sizes";
+  }
+  auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+  uint8_t hvccBytesBuffer[] = {
+      1 /* version */,
+      1 /* general_profile_space/general_tier_flag/general_profile_idc */,
+      0x60 /* general_profile_compatibility_flags 1/4 */,
+      0 /* general_profile_compatibility_flags 2/4 */,
+      0 /* general_profile_compatibility_flags 3/4 */,
+      0 /* general_profile_compatibility_flags 4/4 */,
+      0x90 /* general_constraint_indicator_flags 1/6 */,
+      0 /* general_constraint_indicator_flags 2/6 */,
+      0 /* general_constraint_indicator_flags 3/6 */,
+      0 /* general_constraint_indicator_flags 4/6 */,
+      0 /* general_constraint_indicator_flags 5/6 */,
+      0 /* general_constraint_indicator_flags 6/6 */,
+      0x5A /* general_level_idc */,
+      0 /* min_spatial_segmentation_idc 1/2 */,
+      0 /* min_spatial_segmentation_idc 2/2 */,
+      0 /* parallelismType */,
+      1 /* chroma_format_idc */,
+      0 /* bit_depth_luma_minus8 */,
+      0 /* bit_depth_chroma_minus8 */,
+      0 /* avgFrameRate 1/2 */,
+      0 /* avgFrameRate 2/2 */,
+      0x0F /* constantFrameRate/numTemporalLayers/temporalIdNested/lengthSizeMinusOne
+            */
+      ,
+      2 /* numOfArrays */,
+      /* SPS Array */
+      0x21 /* NAL_unit_type (SPS) */,
+      0 /* numNalus 1/2 */,
+      1 /* numNalus 2/2 */,
+
+      /* SPS */
+      0 /* nalUnitLength 1/2 */,
+      8 /* nalUnitLength 2/2 (header + rsbp) */,
+      0x42 /* NALU header 1/2 */,
+      0 /* NALU header 2/2 */,
+      0 /* rbsp 1/6 */,
+      0 /* rbsp 2/6 */,
+      0 /* rbsp 3/6 */,
+      0 /* rbsp 4/6 */,
+      0 /* rbsp 5/6 */,
+      0 /* rbsp 6/6 */,
+
+      /* PPS Array */
+      0x22 /* NAL_unit_type (PPS) */,
+      0 /* numNalus 1/2 */,
+      1 /* numNalus 2/2 */,
+
+      /* PPS */
+      0 /* nalUnitLength 1/2 */,
+      3 /* nalUnitLength 2/2 (header + rsbp) */,
+      0x44 /* NALU header 1/2 */,
+      0 /* NALU header 2/2 */,
+      0 /* rbsp */,
+  };
+  extradata->AppendElements(hvccBytesBuffer, ArrayLength(hvccBytesBuffer));
+
+  // Write the NAL size.
+  nsTArray<uint8_t> sampleData;
+  ByteWriter<BigEndian> writer(sampleData);
+  EXPECT_TRUE(writer.WriteU32(aSampleSize - 4));  // Assume it's a 4 bytes NALU
+
+  // Fill fake empty data
+  for (uint32_t idx = 0; idx < aSampleSize - 4; idx++) {
+    sampleData.AppendElement(0);
+  }
+  RefPtr<MediaRawData> rawData =
+      new MediaRawData{sampleData.Elements(), sampleData.Length()};
+  EXPECT_NE(rawData->Data(), nullptr);
+  EXPECT_EQ(rawData->Size(), aSampleSize);
+  rawData->mExtraData = extradata;
+  return rawData.forget();
+}
+
 // Test that conversion from AVCC to AnnexB works as expected.
-TEST(AnnexB, AnnexBConversion)
+TEST(AnnexB, AVCCToAnnexBConversion)
 {
   RefPtr<MediaRawData> rawData{GetAvccSample(128)};
 
@@ -63,7 +144,7 @@ TEST(AnnexB, AnnexBConversion)
     // Test conversion of data when not adding SPS works as expected.
     RefPtr<MediaRawData> rawDataClone = rawData->Clone();
     Result<Ok, nsresult> result =
-        AnnexB::ConvertSampleToAnnexB(rawDataClone, /* aAddSps */ false);
+        AnnexB::ConvertAVCCSampleToAnnexB(rawDataClone, /* aAddSps */ false);
     EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
     EXPECT_EQ(rawDataClone->Size(), rawData->Size())
         << "AnnexB sample should be the same size as the AVCC sample -- the 4 "
@@ -79,7 +160,7 @@ TEST(AnnexB, AnnexBConversion)
     rawDataClone->mKeyframe =
         false;  // false is the default, but let's be sure.
     Result<Ok, nsresult> result =
-        AnnexB::ConvertSampleToAnnexB(rawDataClone, /* aAddSps */ true);
+        AnnexB::ConvertAVCCSampleToAnnexB(rawDataClone, /* aAddSps */ true);
     EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
     EXPECT_EQ(rawDataClone->Size(), rawData->Size())
         << "AnnexB sample should be the same size as the AVCC sample -- the 4 "
@@ -95,7 +176,7 @@ TEST(AnnexB, AnnexBConversion)
     RefPtr<MediaRawData> rawDataClone = rawData->Clone();
     rawDataClone->mKeyframe = true;
     Result<Ok, nsresult> result =
-        AnnexB::ConvertSampleToAnnexB(rawDataClone, /* aAddSps */ true);
+        AnnexB::ConvertAVCCSampleToAnnexB(rawDataClone, /* aAddSps */ true);
     EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
     EXPECT_GT(rawDataClone->Size(), rawData->Size())
         << "AnnexB sample should be larger than the AVCC sample because we've "
@@ -126,11 +207,95 @@ TEST(AnnexB, AnnexBConversion)
                                                          clearSize);
 
     RefPtr<MediaRawData> rawCryptoDataClone = rawCryptoData->Clone();
-    Result<Ok, nsresult> result =
-        AnnexB::ConvertSampleToAnnexB(rawCryptoDataClone, /* aAddSps */ true);
+    Result<Ok, nsresult> result = AnnexB::ConvertAVCCSampleToAnnexB(
+        rawCryptoDataClone, /* aAddSps */ true);
     EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
     EXPECT_GT(rawCryptoDataClone->Size(), rawCryptoData->Size())
         << "AnnexB sample should be larger than the AVCC sample because we've "
+           "added SPS data";
+    EXPECT_GT(rawCryptoDataClone->mCrypto.mPlainSizes[0],
+              rawCryptoData->mCrypto.mPlainSizes[0])
+        << "Conversion should have increased clear data sizes without overflow";
+    EXPECT_EQ(rawCryptoDataClone->mCrypto.mEncryptedSizes[0],
+              rawCryptoData->mCrypto.mEncryptedSizes[0])
+        << "Conversion should not affect encrypted sizes";
+    EXPECT_TRUE(AnnexB::IsAnnexB(rawCryptoDataClone))
+        << "The sample should be AnnexB following conversion";
+  }
+}
+
+TEST(AnnexB, HVCCToAnnexBConversion)
+{
+  RefPtr<MediaRawData> rawData{GetHVCCSample(128)};
+  {
+    // Test conversion of data when not adding SPS works as expected.
+    RefPtr<MediaRawData> rawDataClone = rawData->Clone();
+    Result<Ok, nsresult> result =
+        AnnexB::ConvertHVCCSampleToAnnexB(rawDataClone, /* aAddSps */ false);
+    EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
+    EXPECT_EQ(rawDataClone->Size(), rawData->Size())
+        << "AnnexB sample should be the same size as the HVCC sample -- the 4 "
+           "byte NAL length data (HVCC) is replaced with 4 bytes of NAL "
+           "separator (AnnexB)";
+    EXPECT_TRUE(AnnexB::IsAnnexB(rawDataClone))
+        << "The sample should be AnnexB following conversion";
+  }
+  {
+    // Test that the SPS data is not added if the frame is not a keyframe.
+    RefPtr<MediaRawData> rawDataClone = rawData->Clone();
+    rawDataClone->mKeyframe =
+        false;  // false is the default, but let's be sure.
+    Result<Ok, nsresult> result =
+        AnnexB::ConvertHVCCSampleToAnnexB(rawDataClone, /* aAddSps */ true);
+    EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
+    EXPECT_EQ(rawDataClone->Size(), rawData->Size())
+        << "AnnexB sample should be the same size as the HVCC sample -- the 4 "
+           "byte NAL length data (HVCC) is replaced with 4 bytes of NAL "
+           "separator (AnnexB) and SPS data is not added as the frame is not a "
+           "keyframe";
+    EXPECT_TRUE(AnnexB::IsAnnexB(rawDataClone))
+        << "The sample should be AnnexB following conversion";
+  }
+  {
+    // Test that the SPS data is added to keyframes.
+    RefPtr<MediaRawData> rawDataClone = rawData->Clone();
+    rawDataClone->mKeyframe = true;
+    Result<Ok, nsresult> result =
+        AnnexB::ConvertHVCCSampleToAnnexB(rawDataClone, /* aAddSps */ true);
+    EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
+    EXPECT_GT(rawDataClone->Size(), rawData->Size())
+        << "AnnexB sample should be larger than the HVCC sample because we've "
+           "added SPS data";
+    EXPECT_TRUE(AnnexB::IsAnnexB(rawDataClone))
+        << "The sample should be AnnexB following conversion";
+    // We could verify the SPS and PPS data we add, but we don't have great
+    // tooling to do so. Consider doing so in future.
+  }
+  {
+    // Test conversion involving subsample encryption doesn't overflow values.
+    const uint32_t sampleSize = UINT16_MAX * 2;
+    RefPtr<MediaRawData> rawCryptoData{GetHVCCSample(sampleSize)};
+    // Need to be a keyframe to test prepending SPS + PPS to sample.
+    rawCryptoData->mKeyframe = true;
+    UniquePtr<MediaRawDataWriter> rawDataWriter = rawCryptoData->CreateWriter();
+
+    rawDataWriter->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
+
+    // We want to check that the clear size doesn't overflow during conversion.
+    // This size originates in a uint16_t, but since it can grow during AnnexB
+    // we cover it here.
+    const uint16_t clearSize = UINT16_MAX - 10;
+    // Set a clear size very close to uint16_t max value.
+    rawDataWriter->mCrypto.mPlainSizes.AppendElement(clearSize);
+    rawDataWriter->mCrypto.mEncryptedSizes.AppendElement(sampleSize -
+                                                         clearSize);
+
+    RefPtr<MediaRawData> rawCryptoDataClone = rawCryptoData->Clone();
+    Result<Ok, nsresult> result = AnnexB::ConvertHVCCSampleToAnnexB(
+        rawCryptoDataClone, /* aAddSps */ true);
+    EXPECT_TRUE(result.isOk()) << "Conversion should succeed";
+    EXPECT_GT(rawCryptoDataClone->Size(), rawCryptoData->Size())
+        << "AnnexB sample should be larger than the HVCC sample because we've "
            "added SPS data";
     EXPECT_GT(rawCryptoDataClone->mCrypto.mPlainSizes[0],
               rawCryptoData->mCrypto.mPlainSizes[0])
