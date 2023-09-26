@@ -14,9 +14,9 @@
 #include "nsCOMPtr.h"
 
 static mozilla::LazyLogModule sWidgetClipboardLog("WidgetClipboard");
-#define CLIPBOARD_LOG(...) \
+#define MOZ_CLIPBOARD_LOG(...) \
   MOZ_LOG(sWidgetClipboardLog, LogLevel::Debug, (__VA_ARGS__))
-#define CLIPBOARD_LOG_ENABLED() \
+#define MOZ_CLIPBOARD_LOG_ENABLED() \
   MOZ_LOG_TEST(sWidgetClipboardLog, LogLevel::Debug)
 
 class nsITransferable;
