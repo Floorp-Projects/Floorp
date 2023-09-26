@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.experimentintegration
 
+import android.content.pm.ActivityInfo
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -26,6 +27,7 @@ class SurveyExperimentIntegrationTest {
         isJumpBackInCFREnabled = false,
         isPWAsPromptEnabled = false,
         isTCPCFREnabled = false,
+        isDeleteSitePermissionsEnabled = true,
     )
 
     @Before
@@ -67,6 +69,15 @@ class SurveyExperimentIntegrationTest {
         }.openSettings {
         }.openExperimentsMenu {
             verifyExperimentExists(experimentName)
+        }
+    }
+
+    @Test
+    fun checkSurveyLandscapeLooksCorrect() {
+        activityTestRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        browserScreen {
+            verifySurveyNoThanksButton()
+            verifySurveyButton()
         }
     }
 }

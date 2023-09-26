@@ -910,7 +910,6 @@ class BrowserRobot {
         button.waitForExists(waitingTime)
         button.click()
     }
-
     fun clickNoThanksSurveyButton() {
         val button = mDevice.findObject(
             UiSelector().text(

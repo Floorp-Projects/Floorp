@@ -160,6 +160,7 @@ def fixture_setup_experiment(experiment_slug, json_data, gradlewbuild_log):
     def _(branch):
         logging.info(f"Testing experiment {experiment_slug}, BRANCH: {branch[0]}")
         command = f"nimbus-cli --app fenix --channel developer enroll {experiment_slug} --branch {branch[0]} --file {json_data} --reset-app"
+        logging.info(f"Running command {command}")
         try:
             out = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
