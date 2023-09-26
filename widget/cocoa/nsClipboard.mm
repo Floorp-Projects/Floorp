@@ -24,7 +24,6 @@
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
 
-using mozilla::LogLevel;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
 
