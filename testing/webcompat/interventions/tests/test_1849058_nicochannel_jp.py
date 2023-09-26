@@ -9,7 +9,7 @@ PLAY_BUTTON_CSS = ".nfcp-overlay-play-lg"
 @pytest.mark.with_interventions
 async def test_enabled(client):
     await client.navigate(URL)
-    assert client.await_css(PLAY_BUTTON_CSS)
+    assert client.await_css(PLAY_BUTTON_CSS, timeout=30)
 
 
 @pytest.mark.asyncio

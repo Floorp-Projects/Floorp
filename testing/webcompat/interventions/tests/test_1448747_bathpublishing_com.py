@@ -7,15 +7,16 @@ SELECT_CSS = "select#productSelect--product-template-option-0"
 
 
 async def is_fastclick_active(client):
-    await client.navigate(URL)
+    async with client.ensure_fastclick_activates():
+        await client.navigate(URL)
 
-    try:
-        client.soft_click(client.await_css(POPUP_CSS, timeout=3))
-        client.await_element_hidden(client.css(POPUP_CSS))
-    except NoSuchElementException:
-        pass
+        try:
+            client.soft_click(client.await_css(POPUP_CSS, timeout=3))
+            client.await_element_hidden(client.css(POPUP_CSS))
+        except NoSuchElementException:
+            pass
 
-    return client.test_for_fastclick(client.await_css(SELECT_CSS))
+        return client.test_for_fastclick(client.await_css(SELECT_CSS))
 
 
 @pytest.mark.only_platforms("android")
