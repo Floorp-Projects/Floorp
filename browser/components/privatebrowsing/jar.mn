@@ -4,6 +4,6 @@
 
 browser.jar:
     content/browser/aboutPrivateBrowsing.css              (content/aboutPrivateBrowsing.css)
-    content/browser/aboutPrivateBrowsing.html            (content/aboutPrivateBrowsing.html)
+    content/browser/aboutPrivateBrowsing.html             (content/aboutPrivateBrowsing.html)
     content/browser/aboutPrivateBrowsing.js               (content/aboutPrivateBrowsing.js)
     content/browser/assets/                               (content/assets/*)
