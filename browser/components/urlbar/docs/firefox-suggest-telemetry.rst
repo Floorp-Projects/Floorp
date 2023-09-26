@@ -1237,6 +1237,16 @@ payload includes the following:
   suggestions provided by Merino.
 :source:
   The source of the suggestion, either "remote-settings" or "merino".
+:suggested_index:
+  A string whose value is an integer. The intended index of the suggestion
+  being interacted with. If ``suggested_index_relative_to_group`` is true, the
+  index is relative to the "Firefox Suggest" group; otherwise the index is
+  relative to the entire list of suggestions. Non-negative values (starting
+  at 0) are relative to the start/top of the group/list; negative values are
+  relative to the end/bottom of the group/list.
+:suggested_index_relative_to_group:
+  Whether ``suggested_index`` is relative to the "Firefox Suggest" group. If
+  false, it is relative to the entire list of suggestions.
 
 Changelog
   Firefox 101.0
@@ -1249,9 +1259,14 @@ Changelog
   Firefox 109.0
     ``source`` is added. [Bug 1800993_]
 
+  Firefox 119.0
+    ``suggested_index`` and ``suggested_index_relative_to_group`` are added.
+    [Bug 1854755_]
+
 .. _1764669: https://bugzilla.mozilla.org/show_bug.cgi?id=1764669
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 .. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
+.. _1854755: https://bugzilla.mozilla.org/show_bug.cgi?id=1854755
 
 Click
 ~~~~~
@@ -1283,6 +1298,16 @@ the following:
   suggestions provided by Merino.
 :source:
   The source of the suggestion, either "remote-settings" or "merino".
+:suggested_index:
+  A string whose value is an integer. The intended index of the suggestion
+  being interacted with. If ``suggested_index_relative_to_group`` is true, the
+  index is relative to the "Firefox Suggest" group; otherwise the index is
+  relative to the entire list of suggestions. Non-negative values (starting
+  at 0) are relative to the start/top of the group/list; negative values are
+  relative to the end/bottom of the group/list.
+:suggested_index_relative_to_group:
+  Whether ``suggested_index`` is relative to the "Firefox Suggest" group. If
+  false, it is relative to the entire list of suggestions.
 
 Changelog
   Firefox 87.0
@@ -1305,12 +1330,17 @@ Changelog
   Firefox 109.0
     ``source`` is added. [Bug 1800993_]
 
+  Firefox 119.0
+    ``suggested_index`` and ``suggested_index_relative_to_group`` are added.
+    [Bug 1854755_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1729576: https://bugzilla.mozilla.org/show_bug.cgi?id=1729576
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 .. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
+.. _1854755: https://bugzilla.mozilla.org/show_bug.cgi?id=1854755
 
 Impression
 ~~~~~~~~~~
@@ -1355,6 +1385,16 @@ The impression ping payload contains the following:
   suggestions provided by Merino.
 :source:
   The source of the suggestion, either "remote-settings" or "merino".
+:suggested_index:
+  A string whose value is an integer. The intended index of the suggestion
+  being interacted with. If ``suggested_index_relative_to_group`` is true, the
+  index is relative to the "Firefox Suggest" group; otherwise the index is
+  relative to the entire list of suggestions. Non-negative values (starting
+  at 0) are relative to the start/top of the group/list; negative values are
+  relative to the end/bottom of the group/list.
+:suggested_index_relative_to_group:
+  Whether ``suggested_index`` is relative to the "Firefox Suggest" group. If
+  false, it is relative to the entire list of suggestions.
 
 Changelog
   Firefox 87.0
@@ -1401,6 +1441,10 @@ Changelog
   Firefox 109.0
     ``source`` is added. [Bug 1800993_]
 
+  Firefox 119.0
+    ``suggested_index`` and ``suggested_index_relative_to_group`` are added.
+    [Bug 1854755_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
@@ -1412,6 +1456,7 @@ Changelog
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
 .. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 .. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
+.. _1854755: https://bugzilla.mozilla.org/show_bug.cgi?id=1854755
 
 Nimbus Exposure Event
 ---------------------
