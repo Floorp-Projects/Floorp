@@ -521,7 +521,17 @@ impl VirtualFidoDevice for TestToken {
         }
 
         // 15. process extensions
-        // (not implemented)
+        let mut extensions = Extension::default();
+        if req.extensions.min_pin_length == Some(true) {
+            // a real authenticator would
+            //  1) return an actual minimum pin length, and
+            //  2) check the RP ID against an allowlist before providing any data
+            extensions.min_pin_length = Some(4);
+        }
+
+        if extensions.has_some() {
+            flags |= AuthenticatorDataFlags::EXTENSION_DATA;
+        }
 
         // 16. Generate a new credential.
         let (private, public) =
@@ -556,7 +566,7 @@ impl VirtualFidoDevice for TestToken {
                 credential_id: id.to_vec(),
                 credential_public_key: public,
             }),
-            extensions: Extension::default(),
+            extensions,
         };
 
         let mut data = auth_data.to_vec();

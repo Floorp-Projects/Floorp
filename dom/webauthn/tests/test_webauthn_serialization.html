@@ -85,7 +85,7 @@
         hints: ["hybrid"],
         attestation: "indirect",
         attestationFormats: ["fido-u2f"],
-        extensions: { appid: "https://www.example.com/appID", hmacCreateSecret: true },
+        extensions: { appid: "https://www.example.com/appID", credProps: true, hmacCreateSecret: true, minPinLength: true },
       };
       let creationOptions = PublicKeyCredential.parseCreationOptionsFromJSON(creationOptionsJSON);
       is(Object.getOwnPropertyNames(creationOptions).length, 9, "creation options should have 9 properties");
@@ -110,7 +110,9 @@
       is(creationOptions.authenticatorSelection.userVerification, "discouraged", "creationOptions.authenticatorSelection.userVerification should be discouraged");
       is(creationOptions.attestation, "indirect", "attestation should be indirect");
       is(creationOptions.extensions.appid, "https://www.example.com/appID", "extensions.appid should be https://www.example.com/appID");
+      is(creationOptions.extensions.credProps, true, "extensions.credProps should be true");
       is(creationOptions.extensions.hmacCreateSecret, true, "extensions.hmacCreateSecret should be true");
+      is(creationOptions.extensions.minPinLength, true, "extensions.minPinLength should be true");
     });
 
     add_task(function test_parseCreationOptionsFromJSON_malformed() {

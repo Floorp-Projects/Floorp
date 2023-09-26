@@ -44,10 +44,15 @@ struct WebAuthnExtensionHmacSecret {
   bool hmacCreateSecret;
 };
 
+struct WebAuthnExtensionMinPinLength {
+  bool minPinLength;
+};
+
 union WebAuthnExtension {
   WebAuthnExtensionAppId;
   WebAuthnExtensionCredProps;
   WebAuthnExtensionHmacSecret;
+  WebAuthnExtensionMinPinLength;
 };
 
 struct WebAuthnExtensionResultAppId {

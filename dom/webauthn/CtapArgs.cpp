@@ -92,13 +92,7 @@ NS_IMETHODIMP
 CtapRegisterArgs::GetCredProps(bool* aCredProps) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
-  *aCredProps = false;
-  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
-    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionCredProps) {
-      *aCredProps = ext.get_WebAuthnExtensionCredProps().credProps();
-      break;
-    }
-  }
+  *aCredProps = mCredProps;
 
   return NS_OK;
 }
@@ -107,15 +101,18 @@ NS_IMETHODIMP
 CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
-  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
-    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
-      *aHmacCreateSecret =
-          ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret();
-      return NS_OK;
-    }
-  }
+  *aHmacCreateSecret = mHmacCreateSecret;
 
-  return NS_ERROR_NOT_AVAILABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CtapRegisterArgs::GetMinPinLength(bool* aMinPinLength) {
+  mozilla::ipc::AssertIsOnBackgroundThread();
+
+  *aMinPinLength = mMinPinLength;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
