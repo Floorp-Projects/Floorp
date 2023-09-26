@@ -6,34 +6,13 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-echo "To complete this script you will need the following tokens from https://mozilla-releng.net/tokens"
-echo " - tooltool.upload.public"
-echo " - tooltool.download.public"
-echo ""
-read -p "Are these tokens visible at the above URL (y/n)?" choice
-case "$choice" in
-  y|Y )
-    echo ""
-    echo "1. Go to https://mozilla-releng.net"
-    echo "2. Log in using your Mozilla LDAP account."
-    echo "3. Click on \"Tokens.\""
-    echo "4. Issue a user token with the permissions tooltool.upload.public and tooltool.download.public."
-    echo ""
-    echo "When you click issue you will be presented with a long string. Paste the string into a temporary file called ~/.tooltool-token."
-    echo ""
-    read -rsp $'Press any key to continue...\n' -n 1
-    ;;
-  n|N )
-    echo ""
-    echo "You will need to contact somebody that has these permissions... people most likely to have these permissions are members of the releng, ateam, a sheriff, mratcliffe, or jryans"
-    exit 1
-    ;;
-  * )
-    echo ""
-  echo "Invalid input."
-  continue
-    ;;
-esac
+if [ -z "$TASKCLUSTER_ACCESS_TOKEN" -o -z "$TASKCLUSTER_CLIENT_ID" -o -z "$TASKCLUSTER_ROOT_URL" ]; then
+  echo "Please ensure you have run the taskcluster shell correctly to set"
+  echo "the TASKCLUSTER_ACCESS_TOKEN, TASKCLUSTER_CLIENT_ID and"
+  echo "TASKCLUSTER_ROOT_URL environment variables."
+  echo "See https://firefox-source-docs.mozilla.org/linters/eslint/enabling-rules.html"
+  exit 1;
+fi
 
 echo ""
 echo "Removing node_modules and package-lock.json..."
@@ -52,7 +31,7 @@ rm -f manifest.tt
 ../../../../python/mozbuild/mozbuild/action/tooltool.py add --visibility public --unpack eslint-plugin-mozilla.tar.gz --url="https://tooltool.mozilla-releng.net/"
 
 echo "Uploading eslint-plugin-mozilla.tar.gz to tooltool..."
-../../../../python/mozbuild/mozbuild/action/tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla" --url="https://tooltool.mozilla-releng.net/"
+../../../../python/mozbuild/mozbuild/action/tooltool.py upload --message "node_modules folder update for tools/lint/eslint/eslint-plugin-mozilla" --url="https://tooltool.mozilla-releng.net/"
 
 echo "Cleaning up..."
 rm eslint-plugin-mozilla.tar.gz
