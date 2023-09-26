@@ -44,17 +44,17 @@ function AddOldMenuSideButtons() {
   CustomizableUI.addWidgetToArea(
     "library-button",
     "nav-bar",
-    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 3
   );
   CustomizableUI.addWidgetToArea(
     "sidebar-button",
     "nav-bar",
-    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 3
   );
   CustomizableUI.addWidgetToArea(
     "unified-extensions-button",
     "nav-bar",
-    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 3
   );
 }
 
