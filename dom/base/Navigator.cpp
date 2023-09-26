@@ -561,17 +561,7 @@ bool Navigator::CookieEnabled() {
   return granted;
 }
 
-bool Navigator::OnLine() {
-  if (mWindow) {
-    // Check if this tab is set to be offline.
-    BrowsingContext* bc = mWindow->GetBrowsingContext();
-    if (bc && bc->Top()->GetForceOffline()) {
-      return false;
-    }
-  }
-  // Return the default browser value
-  return !NS_IsOffline();
-}
+bool Navigator::OnLine() { return !NS_IsOffline(); }
 
 void Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
                            ErrorResult& aRv) const {
