@@ -691,6 +691,7 @@ const AVAILABLE_INJECTIONS = [
         "*://*.discountcoffee.co.uk/*", // 118757
         "*://torguard.net/*", // 120113
         "*://*.arcsivr.com/*", // 120716
+        "*://drafthouse.com/*", // 126385
       ],
       js: [
         {
@@ -1108,6 +1109,34 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1849388-kucharkaprodceru.cz-scroll-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1855014",
+    platform: "android",
+    domain: "eksiseyler.com",
+    bug: "1855014",
+    contentScripts: {
+      matches: ["*://eksiseyler.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1855014-eksiseyler.com.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1855071",
+    platform: "android",
+    domain: "www.meteoam.it",
+    bug: "1855071",
+    contentScripts: {
+      matches: ["*://www.meteoam.it/*"],
+      js: [
+        {
+          file: "injections/js/bug1855071-www.meteoam.it.js",
         },
       ],
     },

@@ -463,13 +463,13 @@ const AVAILABLE_UA_OVERRIDES = [
      * Chrome version segment to the UA makes it work.
      */
     id: "bug1719859",
-    platform: "all",
+    platform: "android",
     domain: "saxoinvestor.fr",
     bug: "1719859",
     config: {
       matches: ["*://*.saxoinvestor.fr/*"],
       uaTransformer: originalUA => {
-        return originalUA + " Chrome/91.0.4472.114";
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -1350,6 +1350,61 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1849029",
     config: {
       matches: ["*://*.publi24.ro/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1850455 - UA override for frontgate.com
+     * Webcompat issue #36277 - https://webcompat.com/issues/36277
+     *
+     * The site is showing a desktop view to Firefox mobile user-agents
+     */
+    id: "bug1850455",
+    platform: "android",
+    domain: "frontgate.com",
+    bug: "1850455",
+    config: {
+      matches: ["*://*.frontgate.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1855088 - UA override for hrmis2.eghrmis.gov.my
+     * Webcompat issue #125039 - https://webcompat.com/issues/125039
+     *
+     * hrmis2.eghrmis.gov.my showing unsupported message for Firefox users
+     * Spoofing as Chrome allows to access the page
+     */
+    id: "bug1855088",
+    platform: "all",
+    domain: "hrmis2.eghrmis.gov.my",
+    bug: "1855088",
+    config: {
+      matches: ["*://hrmis2.eghrmis.gov.my/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1855102 - UA override for my.southerncross.co.nz
+     * Webcompat issue #121877 - https://webcompat.com/issues/121877
+     *
+     * Spoofing as Chrome for Android allows to access the page
+     */
+    id: "bug1855102",
+    platform: "android",
+    domain: "my.southerncross.co.nz",
+    bug: "1855102",
+    config: {
+      matches: ["*://my.southerncross.co.nz/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
