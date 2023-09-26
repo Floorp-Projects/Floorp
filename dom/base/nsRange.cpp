@@ -204,8 +204,8 @@ already_AddRefed<nsRange> nsRange::Create(
  * nsISupports
  ******************************************************/
 
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsRange)
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_INTERRUPTABLE_LAST_RELEASE(
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsRange)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_INTERRUPTABLE_LAST_RELEASE(
     nsRange, DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr),
     MaybeInterruptLastRelease())
 
