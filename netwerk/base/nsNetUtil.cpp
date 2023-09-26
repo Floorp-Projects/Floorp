@@ -1860,9 +1860,6 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   if (scheme.EqualsLiteral("ftp")) {
     return NewStandardURI(aSpec, aCharset, aBaseURI, 21, aURI);
   }
-  if (scheme.EqualsLiteral("ssh")) {
-    return NewStandardURI(aSpec, aCharset, aBaseURI, 22, aURI);
-  }
 
   if (scheme.EqualsLiteral("file")) {
     nsAutoCString buf(aSpec);
@@ -1989,6 +1986,10 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   // manually check agains set of known protocols schemes until more general
   // solution is in place (See Bug 1569733)
   if (!StaticPrefs::network_url_useDefaultURI()) {
+    if (scheme.EqualsLiteral("ssh")) {
+      return NewStandardURI(aSpec, aCharset, aBaseURI, 22, aURI);
+    }
+
     if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat") ||
         scheme.EqualsLiteral("ipfs") || scheme.EqualsLiteral("ipns") ||
         scheme.EqualsLiteral("ssb") || scheme.EqualsLiteral("wtp")) {
