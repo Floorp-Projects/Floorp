@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import socket
@@ -12,6 +13,22 @@ from mozprofile import Preferences, Profile
 from mozrunner import FirefoxRunner
 
 from support.network import get_free_port
+
+
+def get_arg_value(arg_names, args):
+    """Get an argument value from a list of arguments
+
+    This assumes that argparse argument parsing is close enough to the target
+    to be compatible, at least with the set of inputs we have.
+
+    :param arg_names: - List of names for the argument e.g. ["--foo", "-f"]
+    :param args: - List of arguments to parse
+    :returns: - Optional string argument value
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(*arg_names, action="store", dest="value", default=None)
+    parsed, _ = parser.parse_known_args(args)
+    return parsed.value
 
 
 @pytest.fixture(scope="module")
@@ -71,10 +88,14 @@ def browser(full_configuration):
 
 
 @pytest.fixture
-def custom_profile(configuration):
-    # Clone the known profile for automation preferences
+def profile_folder(configuration):
     firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
-    _, profile_folder = firefox_options["args"]
+    return get_arg_value(["--profile"], firefox_options["args"])
+
+
+@pytest.fixture
+def custom_profile(profile_folder):
+    # Clone the known profile for automation preferences
     profile = Profile.clone(profile_folder)
 
     yield profile
@@ -105,9 +126,7 @@ def geckodriver(configuration):
 
 
 @pytest.fixture
-def user_prefs(configuration):
-    firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
-    _, profile_folder = firefox_options["args"]
+def user_prefs(profile_folder):
     user_js = os.path.join(profile_folder, "user.js")
 
     prefs = {}
