@@ -71,11 +71,18 @@ export const ResetPBMPanel = {
 
       // Trigger the restart action.
       await this._restartPBM(triggeringWindow);
+
+      Glean.privateBrowsingResetPbm.resetAction.record({ did_confirm: false });
       return;
     }
 
     // Before the panel is shown, update checkbox state based on pref.
     this._rememberCheck(triggeringWindow).checked = this._shouldConfirmClear;
+
+    Glean.privateBrowsingResetPbm.confirmPanel.record({
+      action: "show",
+      reason: "toolbar-btn",
+    });
   },
 
   /**
@@ -87,6 +94,11 @@ export const ResetPBMPanel = {
       throw new Error("Not initialized.");
     }
     lazy.CustomizableUI.hidePanelForNode(button);
+
+    Glean.privateBrowsingResetPbm.confirmPanel.record({
+      action: "hide",
+      reason: "cancel-btn",
+    });
   },
 
   /**
@@ -112,8 +124,15 @@ export const ResetPBMPanel = {
 
     lazy.CustomizableUI.hidePanelForNode(button);
 
+    Glean.privateBrowsingResetPbm.confirmPanel.record({
+      action: "hide",
+      reason: "confirm-btn",
+    });
+
     // Clear the private browsing session.
     await this._restartPBM(triggeringWindow);
+
+    Glean.privateBrowsingResetPbm.resetAction.record({ did_confirm: true });
   },
 
   /**
