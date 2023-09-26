@@ -12,3 +12,7 @@
 
 GeckoSharedLibrary("lgpllibs", linkage=None)
 SHARED_LIBRARY_NAME = "lgpllibs"
+
+# For some reason, mingw builds export way too many symbols.
+if CONFIG["TARGET_OS"] == "WINNT" and CONFIG["CC_TYPE"] != "clang-cl":
+    SYMBOLS_FILE = "lgpllibs.symbols"

@@ -195,8 +195,6 @@ EXPORTS += [
     "PrincipalHandle.h",
     "QueueObject.h",
     "ReaderProxy.h",
-    "RLBoxSoundTouch.h",
-    "RLBoxSoundTouchTypes.h",
     "SeekJob.h",
     "SeekTarget.h",
     "SelfRef.h",
@@ -310,7 +308,6 @@ UNIFIED_SOURCES += [
     "MemoryBlockCache.cpp",
     "QueueObject.cpp",
     "ReaderProxy.cpp",
-    "RLBoxSoundTouch.cpp",
     "SeekJob.cpp",
     "TimeUnits.cpp",
     "Tracing.cpp",
@@ -358,7 +355,7 @@ EXTRA_JS_MODULES.media += [
 ]
 
 LOCAL_INCLUDES += [
-    "!/security/rlbox",
+    "!/media/libsoundtouch/src",
     "/caps",
     "/docshell/base",
     "/dom/base",
