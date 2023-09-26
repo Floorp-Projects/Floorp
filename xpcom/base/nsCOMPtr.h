@@ -75,11 +75,15 @@
  */
 
 #ifndef NSCAP_ADDREF
-#  define NSCAP_ADDREF(this, ptr) (ptr)->AddRef()
+#  define NSCAP_ADDREF(this, ptr) \
+    mozilla::RefPtrTraits<        \
+        typename std::remove_reference<decltype(*ptr)>::type>::AddRef(ptr)
 #endif
 
 #ifndef NSCAP_RELEASE
-#  define NSCAP_RELEASE(this, ptr) (ptr)->Release()
+#  define NSCAP_RELEASE(this, ptr) \
+    mozilla::RefPtrTraits<         \
+        typename std::remove_reference<decltype(*ptr)>::type>::Release(ptr)
 #endif
 
 // Clients can define |NSCAP_LOG_ASSIGNMENT| to perform logging.
@@ -293,7 +297,7 @@ char TestForIID(...);
 template <class T>
 class MOZ_IS_REFPTR nsCOMPtr final {
  private:
-  void assign_with_AddRef(nsISupports*);
+  void assign_with_AddRef(T*);
   template <typename U>
   void assign_from_qi(const nsQueryInterface<U>, const nsIID&);
   template <typename U>
@@ -557,7 +561,7 @@ class MOZ_IS_REFPTR nsCOMPtr final {
   // Assignment operators
 
   nsCOMPtr<T>& operator=(const nsCOMPtr<T>& aRhs) {
-    assign_with_AddRef(ToSupports(aRhs.mRawPtr));
+    assign_with_AddRef(aRhs.mRawPtr);
     return *this;
   }
 
@@ -565,7 +569,7 @@ class MOZ_IS_REFPTR nsCOMPtr final {
   nsCOMPtr<T>& operator=(const nsCOMPtr<U>& aRhs) {
     // Make sure that U actually inherits from T
     static_assert(std::is_base_of<T, U>::value, "U should be a subclass of T");
-    assign_with_AddRef(ToSupports(static_cast<T*>(aRhs.get())));
+    assign_with_AddRef(aRhs.get());
     return *this;
   }
 
@@ -584,7 +588,7 @@ class MOZ_IS_REFPTR nsCOMPtr final {
   }
 
   nsCOMPtr<T>& operator=(T* aRhs) {
-    assign_with_AddRef(ToSupports(aRhs));
+    assign_with_AddRef(aRhs);
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
   }
@@ -802,11 +806,11 @@ inline void ImplCycleCollectionTraverse(
 }
 
 template <class T>
-void nsCOMPtr<T>::assign_with_AddRef(nsISupports* aRawPtr) {
+void nsCOMPtr<T>::assign_with_AddRef(T* aRawPtr) {
   if (aRawPtr) {
     NSCAP_ADDREF(this, aRawPtr);
   }
-  assign_assuming_AddRef(reinterpret_cast<T*>(aRawPtr));
+  assign_assuming_AddRef(aRawPtr);
 }
 
 template <class T>
