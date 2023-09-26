@@ -627,3 +627,29 @@ async function clickFirefoxViewButton(win) {
     win.browsingContext
   );
 }
+
+/**
+ * Wait for and assert telemetry events.
+ *
+ * @param {Array} Nested array of event details
+ */
+async function telemetryEvent(eventDetails) {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    eventDetails,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
