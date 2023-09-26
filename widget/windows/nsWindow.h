@@ -756,6 +756,7 @@ class nsWindow final : public nsBaseWidget {
   bool mResizable = false;
   bool mForMenupopupFrame = false;
   bool mIsPerformingDwmFlushHack = false;
+  bool mDraggingWindowWithMouse = false;
   DWORD_PTR mOldStyle = 0;
   DWORD_PTR mOldExStyle = 0;
   nsNativeDragTarget* mNativeDragTarget = nullptr;

@@ -5652,6 +5652,20 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         NotifySizeMoveDone();
       }
 
+      // Windows spins a separate hidden event loop when moving a window so we
+      // don't hear mouse events during this time and WM_EXITSIZEMOVE is fired
+      // when the hidden event loop exits. We set mDraggingWindowWithMouse to
+      // true in WM_NCLBUTTONDOWN when we started moving the window with the
+      // mouse so we know that if mDraggingWindowWithMouse is true, we can send
+      // a mouse up event.
+      if (mDraggingWindowWithMouse) {
+        mDraggingWindowWithMouse = false;
+        result = DispatchMouseEvent(
+            eMouseUp, wParam, lParam, false, MouseButton::ePrimary,
+            MOUSE_INPUT_SOURCE(),
+            mPointerEvents.GetCachedPointerInfo(msg, wParam));
+      }
+
       break;
     }
 
@@ -5679,6 +5693,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (ClientMarginHitTestPoint(GET_X_LPARAM(lParam),
                                    GET_Y_LPARAM(lParam)) == HTCAPTION) {
         DispatchCustomEvent(u"draggableregionleftmousedown"_ns);
+        mDraggingWindowWithMouse = true;
       }
 
       if (IsWindowButton(wParam) && mCustomNonClient) {
