@@ -17,7 +17,12 @@
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
   --tab-block-margin: 4px;
+
   --tab-attention-icon-color: AccentColor;
+  &:-moz-lwtheme {
+    --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
+  }
+
   /* --tabpanel-background-color matches $in-content-page-background in newtab
      (browser/components/newtab/content-src/styles/_variables.scss) */
   --tabpanel-background-color: #F9F9FB;
