@@ -151,7 +151,6 @@ function test() {
         "urlbar-container",
         "downloads-button",
         "fxa-toolbar-menu-button",
-        "reset-pbm-toolbar-button",
       ],
       "Nav-bar placements should be correct."
     );
@@ -177,11 +176,7 @@ function test() {
   CustomizableUIInternal._updateForNewVersion();
   Assert.deepEqual(
     getSavedStatePlacements("nav-bar"),
-    oldNavbarPlacements.concat([
-      "downloads-button",
-      "fxa-toolbar-menu-button",
-      "reset-pbm-toolbar-button",
-    ]),
+    oldNavbarPlacements.concat(["downloads-button", "fxa-toolbar-menu-button"]),
     "Downloads button inserted in navbar"
   );
   Assert.deepEqual(
@@ -199,11 +194,7 @@ function test() {
   CustomizableUIInternal._updateForNewVersion();
   Assert.deepEqual(
     getSavedStatePlacements("nav-bar"),
-    oldNavbarPlacements.concat([
-      "downloads-button",
-      "fxa-toolbar-menu-button",
-      "reset-pbm-toolbar-button",
-    ]),
+    oldNavbarPlacements.concat(["downloads-button", "fxa-toolbar-menu-button"]),
     "Downloads button reinserted in navbar"
   );
 
@@ -227,7 +218,6 @@ function test() {
     "downloads-button",
     "other-widget",
     "fxa-toolbar-menu-button",
-    "reset-pbm-toolbar-button",
   ];
   Assert.deepEqual(
     getSavedStatePlacements("nav-bar"),

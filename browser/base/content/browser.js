@@ -63,7 +63,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
-  ResetPBMPanel: "resource:///modules/ResetPBMPanel.sys.mjs",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.sys.mjs",
@@ -9740,7 +9739,6 @@ var ConfirmationHint = {
    *         An object with the following optional properties:
    *         - event (DOM event): The event that triggered the feedback
    *         - descriptionId (string): message ID of the description text
-   *         - position (string): position of the panel relative to the anchor.
    *
    */
   show(anchor, messageId, options = {}) {
@@ -9786,7 +9784,7 @@ var ConfirmationHint = {
     );
 
     this._panel.openPopup(anchor, {
-      position: options.position ?? "bottomcenter topleft",
+      position: "bottomcenter topleft",
       triggerEvent: options.event,
     });
   },
