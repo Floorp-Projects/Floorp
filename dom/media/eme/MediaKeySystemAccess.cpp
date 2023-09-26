@@ -160,11 +160,6 @@ static KeySystemConfig::EMECodecString ToEMEAPICodecString(
   if (IsVP9CodecString(aCodec)) {
     return KeySystemConfig::EME_CODEC_VP9;
   }
-#ifdef MOZ_WMF
-  if (IsH265CodecString(aCodec)) {
-    return KeySystemConfig::EME_CODEC_HEVC;
-  }
-#endif
   return ""_ns;
 }
 
@@ -333,8 +328,7 @@ static CodecType GetCodecType(const KeySystemConfig::EMECodecString& aCodec) {
   }
   if (aCodec.Equals(KeySystemConfig::EME_CODEC_H264) ||
       aCodec.Equals(KeySystemConfig::EME_CODEC_VP8) ||
-      aCodec.Equals(KeySystemConfig::EME_CODEC_VP9) ||
-      aCodec.Equals(KeySystemConfig::EME_CODEC_HEVC)) {
+      aCodec.Equals(KeySystemConfig::EME_CODEC_VP9)) {
     return Video;
   }
   return Invalid;
