@@ -183,7 +183,7 @@ IPDL_SOURCES += [
 
 FINAL_LIBRARY = "xul"
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 MARIONETTE_LAYOUT_MANIFESTS += ["tests/marionette/manifest.ini"]
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]

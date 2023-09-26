@@ -1,0 +1,17 @@
+[DEFAULT]
+
+["browser_bug685470.js"]
+
+["browser_bug703210.js"]
+skip-if = ["true"] # Bugs 1382428, 1567736, 1565339
+
+["browser_bug706743.js"]
+skip-if = ["true"] # Bug 1157576
+
+["browser_bug1163304.js"]
+run-if = [
+    "os == 'linux'",
+    "os == 'win'",
+] # Due to testing menubar behavior with keyboard
+
+["browser_bug1754298.js"]

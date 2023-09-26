@@ -1,0 +1,19 @@
+[DEFAULT]
+support-files = [
+  "bug453896_iframe.html",
+  "media_queries_iframe.html",
+  "mapped.css",
+  "mapped.css^headers^",
+  "mapped2.css",
+  "mapped2.css^headers^",
+  "sourcemap_css.html"
+]
+
+["browser_bug453896.js"]
+
+["browser_sourcemap.js"]
+
+["browser_sourcemap_comment.js"]
+
+["browser_sourceurl_comment.js"]
+

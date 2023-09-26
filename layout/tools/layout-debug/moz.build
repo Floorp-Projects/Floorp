@@ -8,6 +8,6 @@ DIRS += ["src", "ui"]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 FINAL_TARGET_FILES.actors += ["LayoutDebugChild.sys.mjs"]
