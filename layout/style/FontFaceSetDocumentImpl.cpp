@@ -452,7 +452,7 @@ bool FontFaceSetDocumentImpl::UpdateRules(
 
   for (size_t i = 0, i_end = mNonRuleFaces.Length(); i < i_end; ++i) {
     // Do the same for the non rule backed FontFace objects.
-    InsertNonRuleFontFace(mNonRuleFaces[i].mFontFace, modified);
+    InsertNonRuleFontFace(mNonRuleFaces[i].mFontFace);
   }
 
   // Remove any residual families that have no font entries (i.e., they were
