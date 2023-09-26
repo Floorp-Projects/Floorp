@@ -31,20 +31,8 @@ ClipboardSetDataHelper::AsyncSetClipboardData::AsyncSetClipboardData(
 NS_IMETHODIMP
 ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
     nsITransferable* aTransferable, nsIClipboardOwner* aOwner) {
-  MOZ_CLIPBOARD_LOG("AsyncSetClipboardData::SetData (%p): clipboard=%d", this,
-                    mClipboardType);
-
   if (!IsValid()) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (MOZ_CLIPBOARD_LOG_ENABLED()) {
-    nsTArray<nsCString> flavors;
-    if (NS_SUCCEEDED(aTransferable->FlavorsTransferableCanImport(flavors))) {
-      for (const auto& flavor : flavors) {
-        MOZ_CLIPBOARD_LOG("    MIME %s", flavor.get());
-      }
-    }
   }
 
   MOZ_ASSERT(mClipboard);
@@ -127,12 +115,8 @@ ClipboardSetDataHelper::SetData(nsITransferable* aTransferable,
 NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
     int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
-
   *_retval = nullptr;
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                      aWhichClipboard);
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
@@ -175,28 +159,19 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                      aWhichClipboard);
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
     return NS_ERROR_FAILURE;
-  }
-
-  if (MOZ_CLIPBOARD_LOG_ENABLED()) {
-    nsTArray<nsCString> flavors;
-    if (NS_SUCCEEDED(aTransferable->FlavorsTransferableCanImport(flavors))) {
-      for (const auto& flavor : flavors) {
-        MOZ_CLIPBOARD_LOG("    MIME %s", flavor.get());
-      }
-    }
   }
 
   const auto& clipboardCache = mCaches[aWhichClipboard];
   MOZ_ASSERT(clipboardCache);
   if (aTransferable == clipboardCache->GetTransferable() &&
       anOwner == clipboardCache->GetClipboardOwner()) {
-    MOZ_CLIPBOARD_LOG("%s: skipping update.", __FUNCTION__);
+    CLIPBOARD_LOG("%s: skipping update.", __FUNCTION__);
     return NS_OK;
   }
 
@@ -210,15 +185,14 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     mIgnoreEmptyNotification = false;
   }
   if (NS_FAILED(rv)) {
-    MOZ_CLIPBOARD_LOG("%s: setting native clipboard data failed.",
-                      __FUNCTION__);
+    CLIPBOARD_LOG("%s: setting native clipboard data failed.", __FUNCTION__);
     return rv;
   }
 
   auto result = GetNativeClipboardSequenceNumber(aWhichClipboard);
   if (result.isErr()) {
-    MOZ_CLIPBOARD_LOG("%s: getting native clipboard change count failed.",
-                      __FUNCTION__);
+    CLIPBOARD_LOG("%s: getting native clipboard change count failed.",
+                  __FUNCTION__);
     return result.unwrapErr();
   }
 
@@ -231,7 +205,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
  */
 NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
   if (!aTransferable) {
     NS_ASSERTION(false, "clipboard given a null transferable");
@@ -258,8 +232,8 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
         rv = clipboardCache->GetTransferable()->GetTransferData(
             flavor.get(), getter_AddRefs(dataSupports));
         if (NS_SUCCEEDED(rv)) {
-          MOZ_CLIPBOARD_LOG("%s: getting %s from cache.", __FUNCTION__,
-                            flavor.get());
+          CLIPBOARD_LOG("%s: getting %s from cache.", __FUNCTION__,
+                        flavor.get());
           aTransferable->SetTransferData(flavor.get(), dataSupports);
           // maybe try to fill in more types? Is there a point?
           return NS_OK;
@@ -285,11 +259,11 @@ RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                      aWhichClipboard);
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
 
@@ -315,12 +289,11 @@ NS_IMETHODIMP
 nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                         int32_t aWhichClipboard,
                                         bool* aOutResult) {
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
-  if (MOZ_CLIPBOARD_LOG_ENABLED()) {
-    MOZ_CLIPBOARD_LOG("    Asking for content clipboard=%i:\n",
-                      aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  if (CLIPBOARD_LOG_ENABLED()) {
+    CLIPBOARD_LOG("    Asking for content clipboard=%i:\n", aWhichClipboard);
     for (const auto& flavor : aFlavorList) {
-      MOZ_CLIPBOARD_LOG("        MIME %s", flavor.get());
+      CLIPBOARD_LOG("        MIME %s", flavor.get());
     }
   }
 
@@ -336,18 +309,18 @@ nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
           clipboardCache->GetTransferable()->FlavorsTransferableCanImport(
               transferableFlavors);
       if (NS_SUCCEEDED(rv)) {
-        if (MOZ_CLIPBOARD_LOG_ENABLED()) {
-          MOZ_CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n",
-                            transferableFlavors.Length());
+        if (CLIPBOARD_LOG_ENABLED()) {
+          CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n",
+                        transferableFlavors.Length());
           for (const auto& transferableFlavor : transferableFlavors) {
-            MOZ_CLIPBOARD_LOG("        MIME %s", transferableFlavor.get());
+            CLIPBOARD_LOG("        MIME %s", transferableFlavor.get());
           }
         }
 
         for (const auto& transferableFlavor : transferableFlavors) {
           for (const auto& flavor : aFlavorList) {
             if (transferableFlavor.Equals(flavor)) {
-              MOZ_CLIPBOARD_LOG("    has %s", flavor.get());
+              CLIPBOARD_LOG("    has %s", flavor.get());
               *aOutResult = true;
               return NS_OK;
             }
@@ -360,9 +333,8 @@ nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   auto resultOrError =
       HasNativeClipboardDataMatchingFlavors(aFlavorList, aWhichClipboard);
   if (resultOrError.isErr()) {
-    MOZ_CLIPBOARD_LOG(
-        "%s: checking native clipboard data matching flavors falied.",
-        __FUNCTION__);
+    CLIPBOARD_LOG("%s: checking native clipboard data matching flavors falied.",
+                  __FUNCTION__);
     return resultOrError.unwrapErr();
   }
 
