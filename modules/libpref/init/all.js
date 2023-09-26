@@ -853,10 +853,6 @@ pref("privacy.resistFingerprinting.exemptedDomains", "*.example.invalid");
 // or remove features from its effects
 pref("privacy.fingerprintingProtection.overrides", "");
 
-// If privacy.fingerprintingProtection is enabled, this pref can be used to add
-// or remove features on a domain granular level.
-pref("privacy.fingerprintingProtection.granularOverrides", "");
-
 // Fix cookie blocking breakage by providing ephemeral Paritioned LocalStorage
 // for a list of hosts when detected as trackers.
 // (See nsICookieService::BEHAVIOR_REJECT_TRACKER cookie behavior)
@@ -3991,11 +3987,8 @@ pref("extensions.formautofill.supportRTL", false);
 // Controls the log level for CookieBannerListService.jsm.
 pref("cookiebanners.listService.logLevel", "Error");
 
-// Controls the log level for Cookie Banner Auto Clicking.
+// Contorls the log level for Cookie Banner Auto Clicking.
 pref("cookiebanners.bannerClicking.logLevel", "Error");
-
-// Controls the log level for Fingerprinting Remote Overrides.
-pref("privacy.fingerprintingProtection.WebCompatService.logLevel", "Error");
 
 // Array of test rules for cookie banner handling as a JSON string. They will be
 // inserted in addition to regular rules and may override them when setting the
