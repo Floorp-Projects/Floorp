@@ -2112,17 +2112,11 @@ already_AddRefed<nsStringBuffer> nsAttrValue::GetStringBuffer(
 
   RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aValue);
   if (buf && (buf->StorageSize() / sizeof(char16_t) - 1) == len) {
+    // We can only reuse the buffer if it's exactly sized, since we rely on
+    // StorageSize() to get the string length in ToString().
     return buf.forget();
   }
-
-  buf = nsStringBuffer::Alloc((len + 1) * sizeof(char16_t));
-  if (!buf) {
-    return nullptr;
-  }
-  char16_t* data = static_cast<char16_t*>(buf->Data());
-  CopyUnicodeTo(aValue, 0, data, len);
-  data[len] = char16_t(0);
-  return buf.forget();
+  return nsStringBuffer::Create(aValue.Data(), aValue.Length());
 }
 
 size_t nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
