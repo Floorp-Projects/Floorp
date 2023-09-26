@@ -1457,6 +1457,87 @@ template void* Instance::arrayNew<false>(Instance* instance,
                                          uint32_t numElements,
                                          TypeDefInstanceData* typeDefData);
 
+// Copies from a data segment into a wasm GC array. Performs the necessary
+// bounds checks, accounting for the array's element size. If this function
+// returns false, it has already reported a trap error.
+static bool ArrayCopyFromData(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
+                              const TypeDef* typeDef, uint32_t arrayIndex,
+                              const DataSegment* seg, uint32_t segByteOffset,
+                              uint32_t numElements) {
+  // Compute the number of bytes to copy, ensuring it's below 2^32.
+  CheckedUint32 numBytesToCopy =
+      CheckedUint32(numElements) *
+      CheckedUint32(typeDef->arrayType().elementType_.size());
+  if (!numBytesToCopy.isValid()) {
+    // Because the request implies that 2^32 or more bytes are to be copied.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return false;
+  }
+
+  // Range-check the copy.  The obvious thing to do is to compute the offset
+  // of the last byte to copy, but that would cause underflow in the
+  // zero-length-and-zero-offset case.  Instead, compute that value plus one;
+  // in other words the offset of the first byte *not* to copy.
+  CheckedUint32 lastByteOffsetPlus1 =
+      CheckedUint32(segByteOffset) + numBytesToCopy;
+
+  CheckedUint32 numBytesAvailable(seg->bytes.length());
+  if (!lastByteOffsetPlus1.isValid() || !numBytesAvailable.isValid() ||
+      lastByteOffsetPlus1.value() > numBytesAvailable.value()) {
+    // Because the last byte to copy doesn't exist inside `seg->bytes`.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return false;
+  }
+
+  // Range check the destination array.
+  uint64_t dstNumElements = uint64_t(arrayObj->numElements_);
+  if (uint64_t(arrayIndex) + uint64_t(numElements) > dstNumElements) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return false;
+  }
+
+  // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
+  // `size_t` is safe even on a 32-bit target.
+  memcpy(arrayObj->data_, &seg->bytes[segByteOffset],
+         size_t(numBytesToCopy.value()));
+
+  return true;
+}
+
+// Copies from an element segment into a wasm GC array. Performs the necessary
+// bounds checks, accounting for the array's element size. If this function
+// returns false, it has already reported a trap error.
+static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
+                              uint32_t arrayIndex,
+                              const InstanceElemSegment& seg,
+                              uint32_t segOffset, uint32_t numElements) {
+  // Range-check the copy. As in ArrayCopyFromData, compute the index of the
+  // last element to copy, plus one.
+  CheckedUint32 lastIndexPlus1 =
+      CheckedUint32(segOffset) + CheckedUint32(numElements);
+  CheckedUint32 numElemsAvailable(seg.length());
+  if (!lastIndexPlus1.isValid() || !numElemsAvailable.isValid() ||
+      lastIndexPlus1.value() > numElemsAvailable.value()) {
+    // Because the last element to copy doesn't exist inside the segment.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return false;
+  }
+
+  // Range check the destination array.
+  uint64_t dstNumElements = uint64_t(arrayObj->numElements_);
+  if (uint64_t(arrayIndex) + uint64_t(numElements) > dstNumElements) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return false;
+  }
+
+  GCPtr<AnyRef>* dst = reinterpret_cast<GCPtr<AnyRef>*>(arrayObj->data_);
+  for (uint32_t i = 0; i < numElements; i++) {
+    dst[i] = seg[segOffset + i];
+  }
+
+  return true;
+}
+
 // Creates an array (WasmArrayObject) containing `numElements` of type
 // described by `typeDef`.  Initialises it with data copied from the data
 // segment whose index is `segIndex`, starting at byte offset `segByteOffset`
@@ -1502,35 +1583,11 @@ template void* Instance::arrayNew<false>(Instance* instance,
     return arrayObj;
   }
 
-  // Compute the number of bytes to copy, ensuring it's below 2^32.
-  CheckedUint32 numBytesToCopy =
-      CheckedUint32(numElements) *
-      CheckedUint32(typeDef->arrayType().elementType_.size());
-  if (!numBytesToCopy.isValid()) {
-    // Because the request implies that 2^32 or more bytes are to be copied.
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+  if (!ArrayCopyFromData(cx, arrayObj, typeDef, 0, seg, segByteOffset,
+                         numElements)) {
+    // Trap errors will be reported by ArrayCopyFromData.
     return nullptr;
   }
-
-  // Range-check the copy.  The obvious thing to do is to compute the offset
-  // of the last byte to copy, but that would cause underflow in the
-  // zero-length-and-zero-offset case.  Instead, compute that value plus one;
-  // in other words the offset of the first byte *not* to copy.
-  CheckedUint32 lastByteOffsetPlus1 =
-      CheckedUint32(segByteOffset) + numBytesToCopy;
-
-  CheckedUint32 numBytesAvailable(seg->bytes.length());
-  if (!lastByteOffsetPlus1.isValid() || !numBytesAvailable.isValid() ||
-      lastByteOffsetPlus1.value() > numBytesAvailable.value()) {
-    // Because the last byte to copy doesn't exist inside `seg->bytes`.
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
-    return nullptr;
-  }
-
-  // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
-  // `size_t` is safe even on a 32-bit target.
-  memcpy(arrayObj->data_, &seg->bytes[segByteOffset],
-         size_t(numBytesToCopy.value()));
 
   return arrayObj;
 }
@@ -1554,18 +1611,6 @@ template void* Instance::arrayNew<false>(Instance* instance,
                      "ensured by validation");
   const InstanceElemSegment& seg = instance->passiveElemSegments_[segIndex];
 
-  // Range-check the copy. As in ::arrayNewData, compute the index of the
-  // last element to copy, plus one.
-  CheckedUint32 lastIndexPlus1 =
-      CheckedUint32(srcOffset) + CheckedUint32(numElements);
-  CheckedUint32 numElemsAvailable(seg.length());
-  if (!lastIndexPlus1.isValid() || !numElemsAvailable.isValid() ||
-      lastIndexPlus1.value() > numElemsAvailable.value()) {
-    // Because the last element to copy doesn't exist inside the segment.
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
-    return nullptr;
-  }
-
   const TypeDef* typeDef = typeDefData->typeDef;
 
   // Any data coming from an element segment will be an AnyRef. Writes into
@@ -1584,17 +1629,112 @@ template void* Instance::arrayNew<false>(Instance* instance,
   }
   MOZ_RELEASE_ASSERT(arrayObj->is<WasmArrayObject>());
 
-  if (seg.length() == 0) {
-    // A zero-length array was requested and has been created, so we're done.
-    return arrayObj;
-  }
-
-  GCPtr<AnyRef>* dst = reinterpret_cast<GCPtr<AnyRef>*>(arrayObj->data_);
-  for (uint32_t i = 0; i < numElements; i++) {
-    dst[i] = seg[srcOffset + i];
+  if (!ArrayCopyFromElem(cx, arrayObj, 0, seg, srcOffset, numElements)) {
+    // Trap errors will be reported by ArrayCopyFromElems.
+    return nullptr;
   }
 
   return arrayObj;
+}
+
+// Copies a range of the data segment `segIndex` into an array
+// (WasmArrayObject), starting at offset `segByteOffset` in the data segment and
+// index `index` in the array. `numElements` is the length of the copy in array
+// elements, NOT bytes - the number of bytes will be computed based on the type
+// of the array.
+//
+// Traps if accesses are out of bounds for either the data segment or the array,
+// or if the array object is null.
+/* static */ int32_t Instance::arrayInitData(
+    Instance* instance, void* array, uint32_t index, uint32_t segByteOffset,
+    uint32_t numElements, TypeDefInstanceData* typeDefData, uint32_t segIndex) {
+  MOZ_ASSERT(SASigArrayInitData.failureMode == FailureMode::FailOnNegI32);
+  JSContext* cx = instance->cx();
+
+  // Check that the data segment is valid for use.
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
+                     "ensured by validation");
+  const DataSegment* seg = instance->passiveDataSegments_[segIndex];
+
+  // `seg` will be nullptr if the segment has already been 'data.drop'ed
+  // (either implicitly in the case of 'active' segments during instantiation,
+  // or explicitly by the data.drop instruction.)  In that case we can
+  // continue only if there's no need to copy any data out of it.
+  if (!seg && (numElements != 0 || segByteOffset != 0)) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+  // At this point, if `seg` is null then `numElements` and `segByteOffset`
+  // are both zero.
+
+  // Trap if the array is null.
+  if (!array) {
+    ReportTrapError(cx, JSMSG_WASM_DEREF_NULL);
+    return -1;
+  }
+
+  if (!seg) {
+    // A zero-length init was requested, so we're done.
+    return 0;
+  }
+
+  // Get hold of the array.
+  const TypeDef* typeDef = typeDefData->typeDef;
+  Rooted<WasmArrayObject*> arrayObj(cx, static_cast<WasmArrayObject*>(array));
+  MOZ_RELEASE_ASSERT(arrayObj->is<WasmArrayObject>());
+
+  if (!ArrayCopyFromData(cx, arrayObj, typeDef, index, seg, segByteOffset,
+                         numElements)) {
+    // Trap errors will be reported by ArrayCopyFromData.
+    return -1;
+  }
+
+  return 0;
+}
+
+// Copies a range of the element segment `segIndex` into an array
+// (WasmArrayObject), starting at offset `segOffset` in the elem segment and
+// index `index` in the array. `numElements` is the length of the copy.
+//
+// Traps if accesses are out of bounds for either the elem segment or the array,
+// or if the array object is null.
+/* static */ int32_t Instance::arrayInitElem(Instance* instance, void* array,
+                                             uint32_t index, uint32_t segOffset,
+                                             uint32_t numElements,
+                                             TypeDefInstanceData* typeDefData,
+                                             uint32_t segIndex) {
+  MOZ_ASSERT(SASigArrayInitElem.failureMode == FailureMode::FailOnNegI32);
+  JSContext* cx = instance->cx();
+
+  // Check that the element segment is valid for use.
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
+                     "ensured by validation");
+  const InstanceElemSegment& seg = instance->passiveElemSegments_[segIndex];
+
+  // Trap if the array is null.
+  if (!array) {
+    ReportTrapError(cx, JSMSG_WASM_DEREF_NULL);
+    return -1;
+  }
+
+  const TypeDef* typeDef = typeDefData->typeDef;
+
+  // Any data coming from an element segment will be an AnyRef. Writes into
+  // array memory are done with raw pointers, so we must ensure here that the
+  // destination size is correct.
+  MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() ==
+                     sizeof(AnyRef));
+
+  // Get hold of the array.
+  Rooted<WasmArrayObject*> arrayObj(cx, static_cast<WasmArrayObject*>(array));
+  MOZ_RELEASE_ASSERT(arrayObj->is<WasmArrayObject>());
+
+  if (!ArrayCopyFromElem(cx, arrayObj, index, seg, segOffset, numElements)) {
+    // Trap errors will be reported by ArrayCopyFromElems.
+    return -1;
+  }
+
+  return 0;
 }
 
 /* static */ int32_t Instance::arrayCopy(Instance* instance, void* dstArray,
@@ -1791,7 +1931,11 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
       debugFilter_(nullptr),
-      maxInitializedGlobalsIndexPlus1_(0) {}
+      maxInitializedGlobalsIndexPlus1_(0) {
+  for (size_t i = 0; i < N_BASELINE_SCRATCH_WORDS; i++) {
+    baselineScratchWords_[i] = 0;
+  }
+}
 
 Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
                            const SharedCode& code, uint32_t instanceDataLength,

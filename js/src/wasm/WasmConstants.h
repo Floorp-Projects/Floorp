@@ -500,7 +500,10 @@ enum class GcOp {
   ArrayGetU = 0xd,
   ArraySet = 0xe,
   ArrayLen = 0xf,
+  ArrayFill = 0x10,
   ArrayCopy = 0x11,
+  ArrayInitData = 0x12,
+  ArrayInitElem = 0x13,
 
   // Ref operations
   RefTest = 0x14,

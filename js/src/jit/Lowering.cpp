@@ -5559,6 +5559,20 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
   }
 }
 
+void LIRGenerator::visitWasmBoundsCheckRange32(MWasmBoundsCheckRange32* ins) {
+  MDefinition* index = ins->index();
+  MDefinition* length = ins->length();
+  MDefinition* limit = ins->limit();
+
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+  MOZ_ASSERT(length->type() == MIRType::Int32);
+  MOZ_ASSERT(limit->type() == MIRType::Int32);
+
+  add(new (alloc()) LWasmBoundsCheckRange32(
+          useRegister(index), useRegister(length), useRegister(limit), temp()),
+      ins);
+}
+
 void LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins) {
   MDefinition* index = ins->index();
   if (index->type() == MIRType::Int64) {

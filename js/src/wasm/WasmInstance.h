@@ -136,14 +136,17 @@ class alignas(16) Instance {
     return offsetof(Instance, addressOfNeedsIncrementalBarrier_);
   }
 
+  // The number of baseline scratch storage words available.
+  static constexpr size_t N_BASELINE_SCRATCH_WORDS = 4;
+
  private:
   // When compiling with tiering, the jumpTable has one entry for each
   // baseline-compiled function.
   void** jumpTable_;
 
-  // General scratch storage for the baseline compiler, which can't always use
-  // the stack for this.
-  uint32_t baselineScratch_[2];
+  // 4 words of scratch storage for the baseline compiler, which can't always
+  // use the stack for this.
+  uintptr_t baselineScratchWords_[N_BASELINE_SCRATCH_WORDS];
 
   // The class_ of WasmValueBox, this is a per-process value. We could patch
   // this into code, but the only use-sites are register restricted and cannot
@@ -278,11 +281,11 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfJumpTable() {
     return offsetof(Instance, jumpTable_);
   }
-  static constexpr size_t offsetOfBaselineScratch() {
-    return offsetof(Instance, baselineScratch_);
+  static constexpr size_t offsetOfBaselineScratchWords() {
+    return offsetof(Instance, baselineScratchWords_);
   }
-  static constexpr size_t sizeOfBaselineScratch() {
-    return sizeof(baselineScratch_);
+  static constexpr size_t sizeOfBaselineScratchWords() {
+    return sizeof(baselineScratchWords_);
   }
   static constexpr size_t offsetOfJSJitArgsRectifier() {
     return offsetof(Instance, jsJitArgsRectifier_);
@@ -534,9 +537,19 @@ class alignas(16) Instance {
                             uint32_t numElements,
                             TypeDefInstanceData* typeDefData,
                             uint32_t segIndex);
+  static int32_t arrayInitData(Instance* instance, void* array, uint32_t index,
+                               uint32_t segByteOffset, uint32_t numElements,
+                               TypeDefInstanceData* typeDefData,
+                               uint32_t segIndex);
+  static int32_t arrayInitElem(Instance* instance, void* array, uint32_t index,
+                               uint32_t segOffset, uint32_t numElements,
+                               TypeDefInstanceData* typeDefData,
+                               uint32_t segIndex);
   static int32_t arrayCopy(Instance* instance, void* dstArray,
                            uint32_t dstIndex, void* srcArray, uint32_t srcIndex,
                            uint32_t numElements, uint32_t elementSize);
+  static int32_t arrayFill(Instance* instance, void* array, uint32_t index,
+                           uint32_t numElements);
   static int32_t refTest(Instance* instance, void* refPtr,
                          const wasm::TypeDef* typeDef);
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
