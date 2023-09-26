@@ -19,7 +19,6 @@ kind-dependencies:
 
 transforms:
     - gecko_taskgraph.transforms.startup_test:transforms
-    - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -27,7 +26,6 @@ job-defaults:
     name: startup-test
     description: Check whether or not a product crashes on startup
     run-on-projects: ['mozilla-central']
-    run-on-releases: ['nightly', 'beta', 'release-rc']
     worker:
         max-run-time: 3600
     run:
