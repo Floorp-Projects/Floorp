@@ -1,0 +1,216 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-env mozilla/browser-window */
+
+/**
+ * ResetPBMPanel contains the logic for the restart private browsing action.
+ * The feature is exposed via a toolbar button in private browsing windows. It
+ * allows users to restart their private browsing session, clearing all site
+ * data and closing all PBM tabs / windows.
+ * The toolbar button for triggering the panel is only shown in private browsing
+ * windows or if permanent private browsing mode is enabled.
+ */
+
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const ENABLED_PREF = "browser.privatebrowsing.resetPBM.enabled";
+const SHOW_CONFIRM_DIALOG_PREF =
+  "browser.privatebrowsing.resetPBM.showConfirmationDialog";
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
+
+export const ResetPBMPanel = {
+  // Button and view config for CustomizableUI.
+  _widgetConfig: null,
+
+  /**
+   * Initialize the widget code depending on pref state.
+   */
+  init() {
+    // Populate _widgetConfig during init to defer (lazy) CustomizableUI import.
+    this._widgetConfig ??= {
+      id: "reset-pbm-toolbar-button",
+      l10nId: "reset-pbm-toolbar-button",
+      type: "view",
+      viewId: "reset-pbm-panel",
+      defaultArea: lazy.CustomizableUI.AREA_NAVBAR,
+      onViewShowing(aEvent) {
+        ResetPBMPanel.onViewShowing(aEvent);
+      },
+    };
+
+    if (this._enabled) {
+      lazy.CustomizableUI.createWidget(this._widgetConfig);
+    } else {
+      lazy.CustomizableUI.destroyWidget(this._widgetConfig.id);
+    }
+  },
+
+  /**
+   * Called when the reset pbm panelview is showing as the result of clicking
+   * the toolbar button.
+   */
+  async onViewShowing(event) {
+    let triggeringWindow = event.target.ownerGlobal;
+
+    // We may skip the confirmation panel if disabled via pref.
+    if (!this._shouldConfirmClear) {
+      // Prevent the panel from showing up.
+      event.preventDefault();
+
+      // If the action is triggered from the overflow menu make sure that the
+      // panel gets hidden.
+      lazy.CustomizableUI.hidePanelForNode(event.target);
+
+      // Trigger the restart action.
+      await this._restartPBM(triggeringWindow);
+      return;
+    }
+
+    // Before the panel is shown, update checkbox state based on pref.
+    this._rememberCheck(triggeringWindow).checked = this._shouldConfirmClear;
+  },
+
+  /**
+   * Handles the confirmation panel cancel button.
+   * @param {MozButton} button - Cancel button that triggered the action.
+   */
+  onCancel(button) {
+    if (!this._enabled) {
+      throw new Error("Not initialized.");
+    }
+    lazy.CustomizableUI.hidePanelForNode(button);
+  },
+
+  /**
+   * Handles the confirmation panel confirm button which triggers the clear
+   * action.
+   * @param {MozButton} button - Confirm button that triggered the action.
+   */
+  async onConfirm(button) {
+    if (!this._enabled) {
+      throw new Error("Not initialized.");
+    }
+    let triggeringWindow = button.ownerGlobal;
+
+    // Write the checkbox state to pref. Only do this when the user
+    // confirms.
+    // Setting this pref to true means there is no way to see the panel
+    // again other than flipping the pref back via about:config or resetting
+    // the profile. This is by design.
+    Services.prefs.setBoolPref(
+      SHOW_CONFIRM_DIALOG_PREF,
+      this._rememberCheck(triggeringWindow).checked
+    );
+
+    lazy.CustomizableUI.hidePanelForNode(button);
+
+    // Clear the private browsing session.
+    await this._restartPBM(triggeringWindow);
+  },
+
+  /**
+   * Restart the private browsing session. This is achieved by closing all other
+   * PBM windows, closing all tabs in the current window but
+   * about:privatebrowsing and triggering PBM data clearing.
+   *
+   * @param {ChromeWindow} triggeringWindow - The (private browsing) chrome window which
+   * triggered the restart action.
+   */
+  async _restartPBM(triggeringWindow) {
+    if (
+      !triggeringWindow ||
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(triggeringWindow)
+    ) {
+      throw new Error("Invalid triggering window.");
+    }
+
+    // 1. Close all PBM windows but the current one.
+    for (let w of Services.ww.getWindowEnumerator()) {
+      if (
+        w != triggeringWindow &&
+        lazy.PrivateBrowsingUtils.isWindowPrivate(w)
+      ) {
+        // This suppresses confirmation dialogs like the beforeunload
+        // handler and the tab close warning.
+        // Skip over windows that don't have the closeWindow method.
+        w.closeWindow?.(true, null, "restart-pbm");
+      }
+    }
+
+    // 2. For the current PBM window create a new tab which will be used for
+    //    the initial newtab page.
+    let newTab = triggeringWindow.gBrowser.addTab(
+      triggeringWindow.BROWSER_NEW_TAB_URL,
+      {
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
+    if (!newTab) {
+      throw new Error("Could not open new tab.");
+    }
+
+    // 3. Close all other tabs.
+    triggeringWindow.gBrowser.removeAllTabsBut(newTab, {
+      skipPermitUnload: true,
+      animate: false,
+    });
+
+    // 4. Clear private browsing data.
+    //    TODO: this doesn't wait for data to be cleared. This is probably
+    //    fine since PBM data is stored in memory and can be cleared quick
+    //    enough. The mechanism is brittle though, some callers still
+    //    perform clearing async. Bug 1846494 will address this.
+    Services.obs.notifyObservers(null, "last-pb-context-exited");
+
+    // Once clearing is complete show a toast message.
+
+    let toolbarButton = this._toolbarButton(triggeringWindow);
+
+    // Find the anchor used for the confirmation hint panel. If the toolbar
+    // button is in the overflow menu we can't use it as an anchor. Instead we
+    // anchor off the overflow button as indicated by cui-anchorid.
+    let anchor;
+    let anchorID = toolbarButton.getAttribute("cui-anchorid");
+    if (anchorID) {
+      anchor = triggeringWindow.document.getElementById(anchorID);
+    }
+    triggeringWindow.ConfirmationHint.show(
+      anchor ?? toolbarButton,
+      "reset-pbm-panel-complete",
+      { position: "bottomright topright" }
+    );
+  },
+
+  _toolbarButton(win) {
+    return lazy.CustomizableUI.getWidget(this._widgetConfig.id).forWindow(win)
+      .node;
+  },
+
+  _rememberCheck(win) {
+    return win.document.getElementById("reset-pbm-panel-checkbox");
+  },
+};
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ResetPBMPanel,
+  "_enabled",
+  ENABLED_PREF,
+  false,
+  // On pref change update the init state.
+  ResetPBMPanel.init.bind(ResetPBMPanel)
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  ResetPBMPanel,
+  "_shouldConfirmClear",
+  SHOW_CONFIRM_DIALOG_PREF,
+  true
+);

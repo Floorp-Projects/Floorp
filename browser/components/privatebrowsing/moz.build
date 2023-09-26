@@ -10,5 +10,9 @@ BROWSER_CHROME_MANIFESTS += [
 
 JAR_MANIFESTS += ["jar.mn"]
 
+EXTRA_JS_MODULES += [
+    "ResetPBMPanel.sys.mjs",
+]
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Private Browsing")
