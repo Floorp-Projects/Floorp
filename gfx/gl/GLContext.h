@@ -282,6 +282,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   }
 
   bool HasPBOState() const { return (!IsGLES() || Version() >= 300); }
+  bool IsRGBColorRenderable() { return !IsGLES() || Version() >= 300; }
 
   /**
    * If this context is double-buffered, returns TRUE.

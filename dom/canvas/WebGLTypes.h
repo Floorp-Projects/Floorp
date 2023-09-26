@@ -651,6 +651,7 @@ struct Limits final {
 
   // Exts
   bool astcHdr = false;
+  bool rgbColorRenderable = false;
   uint32_t maxColorDrawBuffers = 1;
   uint64_t queryCounterBitsTimeElapsed = 0;
   uint64_t queryCounterBitsTimestamp = 0;
