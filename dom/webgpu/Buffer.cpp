@@ -208,6 +208,11 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
           return;
         }
 
+        // mValid should be true or we should have called unmap while marking
+        // the buffer invalid, causing the promise to be rejected and the branch
+        // above to have early-returned.
+        MOZ_RELEASE_ASSERT(self->mValid);
+
         switch (aResult.type()) {
           case BufferMapResult::TBufferMapSuccess: {
             auto& success = aResult.get_BufferMapSuccess();
