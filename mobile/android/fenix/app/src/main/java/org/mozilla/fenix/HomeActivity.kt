@@ -90,6 +90,7 @@ import org.mozilla.fenix.GleanMetrics.SplashScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
+import org.mozilla.fenix.addons.AddonsManagementFragmentDirections
 import org.mozilla.fenix.addons.ExtensionProcessDisabledController
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -1037,6 +1038,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             customTabSessionId,
         )
         BrowserDirection.FromReviewQualityCheck -> ReviewQualityCheckFragmentDirections.actionGlobalBrowser(
+            customTabSessionId,
+        )
+        BrowserDirection.FromAddonsManagementFragment -> AddonsManagementFragmentDirections.actionGlobalBrowser(
             customTabSessionId,
         )
     }

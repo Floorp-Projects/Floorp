@@ -11,6 +11,16 @@ import mozilla.components.feature.addons.Addon
  */
 interface AddonsManagerAdapterDelegate {
     /**
+     * Defines the different learn more links a user might click.
+     */
+    enum class LearnMoreLinks {
+        /**
+         * The [Addon] is blocklisted and the learn more link should give more information to the user.
+         */
+        BLOCKLISTED_ADDON,
+    }
+
+    /**
      * Handler for when an add-on item is clicked.
      *
      * @param addon The [Addon] that was clicked.
@@ -40,4 +50,9 @@ interface AddonsManagerAdapterDelegate {
      * Handler for when the "find more add-ons" button is clicked.
      */
     fun onFindMoreAddonsButtonClicked() = Unit
+
+    /**
+     * Handler for when a "learn more" link on an add-on item is clicked.
+     */
+    fun onLearnMoreLinkClicked(link: LearnMoreLinks, addon: Addon) = Unit
 }

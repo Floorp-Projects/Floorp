@@ -17,6 +17,7 @@ class AddonsManagementView(
     private val navController: NavController,
     private val onInstallButtonClicked: (Addon) -> Unit,
     private val onMoreAddonsButtonClicked: () -> Unit,
+    private val onLearnMoreClicked: (link: AddonsManagerAdapterDelegate.LearnMoreLinks, addon: Addon) -> Unit,
 ) : AddonsManagerAdapterDelegate {
 
     override fun onAddonItemClicked(addon: Addon) {
@@ -39,6 +40,10 @@ class AddonsManagementView(
 
     override fun onFindMoreAddonsButtonClicked() {
         onMoreAddonsButtonClicked()
+    }
+
+    override fun onLearnMoreLinkClicked(link: AddonsManagerAdapterDelegate.LearnMoreLinks, addon: Addon) {
+        onLearnMoreClicked(link, addon)
     }
 
     private fun showInstalledAddonDetailsFragment(addon: Addon) {

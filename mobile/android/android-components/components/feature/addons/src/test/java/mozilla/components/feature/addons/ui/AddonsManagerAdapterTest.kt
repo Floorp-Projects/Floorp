@@ -9,7 +9,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -33,6 +32,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,6 +51,11 @@ class AddonsManagerAdapterTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val scope = coroutinesTestRule.scope
+
+    @Before
+    fun setUp() {
+        Locale.setDefault(Locale.ENGLISH)
+    }
 
     @Test
     fun `createListWithSections`() {
@@ -187,8 +192,6 @@ class AddonsManagerAdapterTest {
 
     @Test
     fun `bind add-on`() {
-        Locale.setDefault(Locale.ENGLISH)
-        val iconContainer: CardView = mock()
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val ratingAccessibleView: TextView = mock()
@@ -197,6 +200,7 @@ class AddonsManagerAdapterTest {
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val statusBlocklistedView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -207,6 +211,7 @@ class AddonsManagerAdapterTest {
             userCountView = userCountView,
             addButton = addButton,
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
+            statusBlocklistedView = statusBlocklistedView,
         )
         val addon = Addon(
             id = "id",
@@ -225,7 +230,6 @@ class AddonsManagerAdapterTest {
 
         whenever(titleView.context).thenReturn(testContext)
         whenever(summaryView.context).thenReturn(testContext)
-        whenever(iconContainer.context).thenReturn(testContext)
 
         val style = AddonsManagerAdapter.Style(
             sectionsTextColor = android.R.color.black,
@@ -366,12 +370,12 @@ class AddonsManagerAdapterTest {
 
     @Test
     fun `bind add-on with no available translatable name`() {
-        Locale.setDefault(Locale.ENGLISH)
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val statusBlocklistedView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -382,6 +386,7 @@ class AddonsManagerAdapterTest {
             userCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
+            statusBlocklistedView = statusBlocklistedView,
         )
         val addon = Addon(
             id = "id",
@@ -501,7 +506,6 @@ class AddonsManagerAdapterTest {
 
     @Test
     fun bindNotYetSupportedSection() {
-        Locale.setDefault(Locale.ENGLISH)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val titleView: TextView = mock()
         val descriptionView: TextView = mock()
@@ -571,5 +575,100 @@ class AddonsManagerAdapterTest {
         val itemsWithSections = adapter.createListWithSections(emptyList())
         assertFalse(itemsWithSections.isEmpty())
         assertEquals(AddonsManagerAdapter.FooterSection, itemsWithSections.last())
+    }
+
+    @Test
+    fun `bind blocklisted add-on`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusBlocklistedView: View = mock()
+        val messageTextView: TextView = mock()
+        val learnMoreTextView = TextView(testContext)
+        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_learn_more_link)).thenReturn(
+            learnMoreTextView,
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusBlocklistedView = statusBlocklistedView,
+        )
+        val addonName = "some addon name"
+        val addon = makeBlocklistedAddon(addonName)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon)
+
+        verify(statusBlocklistedView).isVisible = true
+        verify(messageTextView).text = "$addonName has been disabled due to security or stability issues."
+
+        // Verify that a click on the "learn more" link actually does something.
+        learnMoreTextView.performClick()
+        verify(addonsManagerAdapterDelegate).onLearnMoreLinkClicked(
+            AddonsManagerAdapterDelegate.LearnMoreLinks.BLOCKLISTED_ADDON,
+            addon,
+        )
+    }
+
+    @Test
+    fun `bind blocklisted add-on without an add-on name`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusBlocklistedView: View = mock()
+        val messageTextView: TextView = mock()
+        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_learn_more_link)).thenReturn(
+            mock(),
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusBlocklistedView = statusBlocklistedView,
+        )
+        val addon = makeBlocklistedAddon()
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon)
+
+        verify(statusBlocklistedView).isVisible = true
+        verify(messageTextView).text = "${addon.id} has been disabled due to security or stability issues."
+    }
+
+    private fun makeBlocklistedAddon(name: String? = null): Addon {
+        val installedState: Addon.InstalledState = mock()
+        whenever(installedState.disabledReason).thenReturn(Addon.DisabledReason.BLOCKLISTED)
+        return Addon(
+            id = "@some-addon-id",
+            translatableName = if (name != null) {
+                mapOf(Addon.DEFAULT_LOCALE to name)
+            } else {
+                emptyMap()
+            },
+            installedState = installedState,
+        )
     }
 }

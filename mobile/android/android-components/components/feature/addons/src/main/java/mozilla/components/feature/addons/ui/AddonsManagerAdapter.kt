@@ -136,6 +136,7 @@ class AddonsManagerAdapter(
         val userCountView = view.findViewById<TextView>(R.id.users_count)
         val addButton = view.findViewById<ImageView>(R.id.add_button)
         val allowedInPrivateBrowsingLabel = view.findViewById<ImageView>(R.id.allowed_in_private_browsing_label)
+        val statusBlocklistedView = view.findViewById<View>(R.id.add_on_status_blocklisted)
         return AddonViewHolder(
             view,
             iconView,
@@ -146,6 +147,7 @@ class AddonsManagerAdapter(
             userCountView,
             addButton,
             allowedInPrivateBrowsingLabel,
+            statusBlocklistedView,
         )
     }
 
@@ -235,12 +237,13 @@ class AddonsManagerAdapter(
             holder.userCountView.text = String.format(userCount, getFormattedAmount(it.reviews))
         }
 
-        holder.titleView.text =
-            if (addon.translatableName.isNotEmpty()) {
-                addon.translateName(context)
-            } else {
-                addon.id
-            }
+        val addonName = if (addon.translatableName.isNotEmpty()) {
+            addon.translateName(context)
+        } else {
+            addon.id
+        }
+
+        holder.titleView.text = addonName
 
         if (addon.translatableSummary.isNotEmpty()) {
             holder.summaryView.text = addon.translateSummary(context)
@@ -261,11 +264,28 @@ class AddonsManagerAdapter(
         }
 
         holder.allowedInPrivateBrowsingLabel.isVisible = addon.isAllowedInPrivateBrowsing()
-        style?.maybeSetPrivateBrowsingLabelDrawale(holder.allowedInPrivateBrowsingLabel)
+        style?.maybeSetPrivateBrowsingLabelDrawable(holder.allowedInPrivateBrowsingLabel)
 
         fetchIcon(addon, holder.iconView)
         style?.maybeSetAddonNameTextColor(holder.titleView)
         style?.maybeSetAddonSummaryTextColor(holder.summaryView)
+
+        if (addon.isDisabledAsBlocklisted()) {
+            holder.statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message).text =
+                context.getString(
+                    R.string.mozac_feature_addons_status_blocklisted,
+                    addonName,
+                )
+            holder.statusBlocklistedView.findViewById<TextView>(
+                R.id.add_on_status_blocklisted_learn_more_link,
+            ).setOnClickListener {
+                addonsManagerDelegate.onLearnMoreLinkClicked(
+                    AddonsManagerAdapterDelegate.LearnMoreLinks.BLOCKLISTED_ADDON,
+                    addon,
+                )
+            }
+            holder.statusBlocklistedView.isVisible = true
+        }
     }
 
     @Suppress("MagicNumber")
@@ -416,7 +436,7 @@ class AddonsManagerAdapter(
             }
         }
 
-        internal fun maybeSetPrivateBrowsingLabelDrawale(imageView: ImageView) {
+        internal fun maybeSetPrivateBrowsingLabelDrawable(imageView: ImageView) {
             addonAllowPrivateBrowsingLabelDrawableRes?.let {
                 imageView.setImageDrawable(ContextCompat.getDrawable(imageView.context, it))
             }

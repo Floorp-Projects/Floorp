@@ -25,6 +25,7 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
+import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
@@ -101,6 +102,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             navController = findNavController(),
             onInstallButtonClicked = ::installAddon,
             onMoreAddonsButtonClicked = ::openAMO,
+            onLearnMoreClicked = ::openLearnMoreLink,
         )
 
         val recyclerView = binding?.addOnsList
@@ -261,10 +263,22 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     }
 
     private fun openAMO() {
+        openLinkInNewTab(AMO_HOMEPAGE_FOR_ANDROID)
+    }
+
+    private fun openLearnMoreLink(link: AddonsManagerAdapterDelegate.LearnMoreLinks, addon: Addon) {
+        val url = when (link) {
+            AddonsManagerAdapterDelegate.LearnMoreLinks.BLOCKLISTED_ADDON ->
+                "${BuildConfig.AMO_BASE_URL}/android/blocked-addon/${addon.id}/"
+        }
+        openLinkInNewTab(url)
+    }
+
+    private fun openLinkInNewTab(url: String) {
         (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = AMO_HOMEPAGE_FOR_ANDROID,
+            searchTermOrURL = url,
             newTab = true,
-            from = BrowserDirection.FromGlobal,
+            from = BrowserDirection.FromAddonsManagementFragment,
         )
     }
 
@@ -274,6 +288,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         // This is locale-less on purpose so that the content negotiation happens on the AMO side because the current
         // user language might not be supported by AMO and/or the language might not be exactly what AMO is expecting
         // (e.g. `en` instead of `en-US`).
-        private const val AMO_HOMEPAGE_FOR_ANDROID = BuildConfig.AMO_BASE_URL + "/android/"
+        private const val AMO_HOMEPAGE_FOR_ANDROID = "${BuildConfig.AMO_BASE_URL}/android/"
     }
 }

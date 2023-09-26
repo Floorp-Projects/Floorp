@@ -107,6 +107,31 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/add_on_status_blocklisted"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                    android:id="@+id/add_on_status_blocklisted_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="@color/photonRed70"
+                    tools:text="@string/mozac_feature_addons_status_blocklisted" />
+
+            <TextView
+                android:id="@+id/add_on_status_blocklisted_learn_more_link"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorLink"
+                android:text="@string/mozac_feature_addons_status_learn_more" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <androidx.appcompat.widget.AppCompatImageView

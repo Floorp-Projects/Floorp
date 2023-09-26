@@ -379,10 +379,10 @@ fun WebExtension.toInstalledState() =
     )
 
 internal fun WebExtension.getDisabledReason(): Addon.DisabledReason? {
-    return if (isUnsupported()) {
-        Addon.DisabledReason.UNSUPPORTED
-    } else if (isBlockListed()) {
+    return if (isBlockListed()) {
         Addon.DisabledReason.BLOCKLISTED
+    } else if (isUnsupported()) {
+        Addon.DisabledReason.UNSUPPORTED
     } else if (getMetadata()?.disabledFlags?.contains(DisabledFlags.USER) == true) {
         Addon.DisabledReason.USER_REQUESTED
     } else {

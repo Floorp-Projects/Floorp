@@ -46,6 +46,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val userCountView: TextView,
         val addButton: ImageView,
         val allowedInPrivateBrowsingLabel: ImageView,
+        val statusBlocklistedView: View,
     ) : CustomViewHolder(view)
 
     /**
