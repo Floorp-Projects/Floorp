@@ -13201,11 +13201,6 @@
   value: false
   mirror: always
 
-- name: privacy.partition.bloburl_per_agent_cluster
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: privacy.partition.bloburl_per_partition_key
   type: bool
   value: true

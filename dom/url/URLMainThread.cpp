@@ -43,8 +43,7 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
 
   nsAutoCString url;
   aRv = BlobURLProtocolHandler::AddDataEntry(
-      aBlob.Impl(), principal, global->GetAgentClusterId(),
-      NS_ConvertUTF16toUTF8(partKey), url);
+      aBlob.Impl(), principal, NS_ConvertUTF16toUTF8(partKey), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -80,8 +79,7 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
 
   nsAutoCString url;
   aRv = BlobURLProtocolHandler::AddDataEntry(
-      &aSource, principal, global->GetAgentClusterId(),
-      NS_ConvertUTF16toUTF8(partKey), url);
+      &aSource, principal, NS_ConvertUTF16toUTF8(partKey), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -119,7 +117,7 @@ void URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
 
   if (BlobURLProtocolHandler::RemoveDataEntry(
           asciiurl, nsContentUtils::ObjectPrincipal(aGlobal.Get()),
-          global->GetAgentClusterId(), NS_ConvertUTF16toUTF8(partKey))) {
+          NS_ConvertUTF16toUTF8(partKey))) {
     global->UnregisterHostObjectURI(asciiurl);
   }
 }
