@@ -10,6 +10,7 @@ use process_reader::ProcessReader;
 
 use mozannotation_client::{Annotation, AnnotationContents, AnnotationMutex};
 use nsstring::nsCString;
+use std::cmp::min;
 use std::iter::FromIterator;
 use std::mem::size_of;
 use std::ptr::null_mut;
@@ -40,8 +41,11 @@ type ProcessHandle = mach2::mach_types::task_t;
 ///
 /// This function will be exposed to C++
 #[no_mangle]
-pub extern "C" fn mozannotation_retrieve(process: usize) -> *mut ThinVec<CAnnotation> {
-    let result = retrieve_annotations(process as _);
+pub extern "C" fn mozannotation_retrieve(
+    process: usize,
+    max_annotations: usize,
+) -> *mut ThinVec<CAnnotation> {
+    let result = retrieve_annotations(process as _, max_annotations);
     match result {
         // Leak the object as it will be owned by the C++ code from now on
         Ok(annotations) => Box::into_raw(annotations) as *mut _,
@@ -64,6 +68,7 @@ pub unsafe extern "C" fn mozannotation_free(ptr: *mut ThinVec<CAnnotation>) {
 
 pub fn retrieve_annotations(
     process: ProcessHandle,
+    max_annotations: usize,
 ) -> Result<Box<ThinVec<CAnnotation>>, RetrievalError> {
     let reader = ProcessReader::new(process)?;
     let address = reader.find_annotations()?;
@@ -77,7 +82,7 @@ pub fn retrieve_annotations(
 
     let vec_pointer = contents.as_ptr();
     let length = contents.len();
-    let mut annotations = ThinVec::<CAnnotation>::with_capacity(length);
+    let mut annotations = ThinVec::<CAnnotation>::with_capacity(min(max_annotations, length));
 
     for i in 0..length {
         let annotation_address = unsafe { vec_pointer.add(i) };
