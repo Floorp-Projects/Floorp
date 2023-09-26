@@ -235,7 +235,7 @@
   id delegate = [window delegate];
   if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) {
     [TopLevelWindowData activateInWindowViews:window];
-  } else if ([window isSheet]) {
+  } else if ([window isSheet] || [NSApp modalWindow]) {
     [TopLevelWindowData activateInWindow:window];
   }
 }
@@ -246,7 +246,7 @@
   id delegate = [window delegate];
   if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) {
     [TopLevelWindowData deactivateInWindowViews:window];
-  } else if ([window isSheet]) {
+  } else if ([window isSheet] || [NSApp modalWindow]) {
     [TopLevelWindowData deactivateInWindow:window];
   }
 }
@@ -258,11 +258,11 @@
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
-  // Don't send events to a top-level window that has a sheet open above it --
-  // as far as Gecko is concerned, it's inactive, and stays so until the sheet
-  // closes.
+  // Don't send events to a top-level window that has a sheet/modal-window open
+  // above it -- as far as Gecko is concerned, it's inactive, and stays so until
+  // the sheet/modal-window closes.
   if (delegate && [delegate isKindOfClass:[WindowDelegate class]] &&
-      ![window attachedSheet])
+      ![window attachedSheet] && ![NSApp modalWindow])
     [TopLevelWindowData activateInWindow:window];
 }
 
@@ -271,7 +271,7 @@
 
   id delegate = [window delegate];
   if (delegate && [delegate isKindOfClass:[WindowDelegate class]] &&
-      ![window attachedSheet])
+      ![window attachedSheet] && ![NSApp modalWindow])
     [TopLevelWindowData deactivateInWindow:window];
 }
 
