@@ -96,8 +96,21 @@ add_task(async function test_more_menus() {
     );
     ok(panelItem, "Close Tab panel item exists");
 
+    await clearAllParentTelemetryEvents();
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        undefined,
+        { menu_action: "close-tab", data_type: "opentabs" },
+      ],
+    ];
+
     // close a tab via the menu
     panelItem.click();
+
+    await telemetryEvent(contextMenuEvent);
 
     let visibleTabs = gBrowser.visibleTabs;
     is(visibleTabs.length, 2, "Expected to now have 2 open tabs");
@@ -140,9 +153,21 @@ add_task(async function test_more_menus() {
     EventUtils.synthesizeKey("KEY_ArrowRight", {});
     await shown;
 
+    await clearAllParentTelemetryEvents();
+    contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        null,
+        { menu_action: "move-tab-end", data_type: "opentabs" },
+      ],
+    ];
+
     // click on the first option, which should be "Move to the end" since
     // this is the first tab
     EventUtils.synthesizeKey("KEY_Enter", {});
+    await telemetryEvent(contextMenuEvent);
 
     visibleTabs = gBrowser.visibleTabs;
     is(
@@ -179,7 +204,20 @@ add_task(async function test_more_menus() {
       "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
     );
     ok(panelItem, "Copy link panel item exists");
+
+    await clearAllParentTelemetryEvents();
+    contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        null,
+        { menu_action: "copy-link", data_type: "opentabs" },
+      ],
+    ];
+
     panelItem.click();
+    await telemetryEvent(contextMenuEvent);
 
     let copiedText = SpecialPowers.getClipboardData(
       "text/plain",
@@ -261,9 +299,22 @@ add_task(async function test_send_device_submenu() {
       )
       .returns(true);
 
+    await clearAllParentTelemetryEvents();
+    let contextMenuEvent = [
+      [
+        "firefoxview_next",
+        "context_menu",
+        "tabs",
+        null,
+        { menu_action: "send-tab-device", data_type: "opentabs" },
+      ],
+    ];
+
     // click on the first device and verify it was "sent"
     EventUtils.synthesizeKey("KEY_Enter", {});
+
     expectation.verify();
+    await telemetryEvent(contextMenuEvent);
 
     sandbox.restore();
     TabsSetupFlowManager.resetInternalState();
