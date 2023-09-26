@@ -254,26 +254,26 @@ struct HVCCConfig final {
   static Result<HVCCConfig, nsresult> Parse(
       const mozilla::MediaByteBuffer* aExtraData);
 
-  uint8_t NALUSize() const { return mLengthSizeMinusOne + 1; }
+  uint8_t NALUSize() const { return lengthSizeMinusOne + 1; }
   bool HasSPS() const;
 
-  uint8_t mConfigurationVersion;
-  uint8_t mGeneralProfileSpace;
-  bool mGeneralTierFlag;
-  uint8_t mGeneralProfileIdc;
-  uint32_t mGeneralProfileCompatibilityFlags;
-  uint64_t mGeneralConstraintIndicatorFlags;
-  uint8_t mGeneralLevelIdc;
-  uint16_t mMinSpatialSegmentationIdc;
-  uint8_t mParallelismType;
-  uint8_t mChromaFormatIdc;
-  uint8_t mBitDepthLumaMinus8;
-  uint8_t mBitDepthChromaMinus8;
-  uint16_t mAvgFrameRate;
-  uint8_t mConstantFrameRate;
-  uint8_t mNumTemporalLayers;
-  bool mTemporalIdNested;
-  uint8_t mLengthSizeMinusOne;
+  uint8_t configurationVersion;
+  uint8_t general_profile_space;
+  bool general_tier_flag;
+  uint8_t general_profile_idc;
+  uint32_t general_profile_compatibility_flags;
+  uint64_t general_constraint_indicator_flags;
+  uint8_t general_level_idc;
+  uint16_t min_spatial_segmentation_idc;
+  uint8_t parallelismType;
+  uint8_t chroma_format_idc;
+  uint8_t bit_depth_luma_minus8;
+  uint8_t bit_depth_chroma_minus8;
+  uint16_t avgFrameRate;
+  uint8_t constantFrameRate;
+  uint8_t numTemporalLayers;
+  bool temporalIdNested;
+  uint8_t lengthSizeMinusOne;
 
   nsTArray<H265NALU> mNALUs;
 
