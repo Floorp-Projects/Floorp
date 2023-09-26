@@ -12,7 +12,11 @@ internal object ShoppingProductStateReducer {
     fun reduce(state: BrowserState, action: ShoppingProductAction): BrowserState = when (action) {
         is ShoppingProductAction.UpdateProductUrlStatusAction ->
             state.updateTabOrCustomTabState(action.tabId) { current ->
-                current.createCopy(isProductUrl = action.isProductUrl)
+                if (current.content.private) {
+                    current
+                } else {
+                    current.createCopy(isProductUrl = action.isProductUrl)
+                }
             }
     }
 }

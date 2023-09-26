@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **browser-state**
+  * `SessionState.isProductUrl` is not affected for private tabs as shopping mode is disabled in private tabs. [Bug 1847063](https://bugzilla.mozilla.org/show_bug.cgi?id=1847063)  
+
 # 119.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v118..releases_v119)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v119/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
@@ -55,8 +58,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v118/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v118/android-components/.config.yml)
 
+* **browser-state**
+  🌟️️ Add `isProductUrl` to `SessionState` instance to indicate whether or not a product page of a given session state is being displayed. See more on [Bug 1842638](https://bugzilla.mozilla.org/show_bug.cgi?id=1842638).
+
 * **concept-engine**
-  * 🌟️️ Add `ProductUrlStatus` to `SessionState` instance to indicate whether or not a product page of a given session state is being displayed. See more on [Bug 1842638](https://bugzilla.mozilla.org/show_bug.cgi?id=1842638).
   * 🌟️️ Add `requestProductAnalysis` API to `EngineSession` to allow request product analysis result from the engine. See more on [Bug 1840692](https://bugzilla.mozilla.org/show_bug.cgi?id=1840692).
   * 🌟️️ Add `requestProductRecommendations` API to `EngineSession` to allow request product recommendations from the engine. See more on [Bug 1840693](https://bugzilla.mozilla.org/show_bug.cgi?id=1840693).
 
