@@ -251,6 +251,15 @@ UniquePtr<hal::PerformanceHintSession> CreatePerformanceHintSession(
     const nsTArray<PlatformThreadHandle>& aThreads,
     mozilla::TimeDuration aTargetWorkDuration);
 
+/**
+ * Returns information categorizing the CPUs on the system by performance class.
+ *
+ * Returns Nothing if we are unable to calculate the required information.
+ *
+ * See the definition of hal::HeterogeneousCpuInfo for more details.
+ */
+const Maybe<hal::HeterogeneousCpuInfo>& GetHeterogeneousCpuInfo();
+
 }  // namespace MOZ_HAL_NAMESPACE
 }  // namespace mozilla
 
