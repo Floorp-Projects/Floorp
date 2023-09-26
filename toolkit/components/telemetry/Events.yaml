@@ -2353,7 +2353,7 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL or WI-FI.
+      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL, WI-FI, or Offline.
       session_id: The toolbox session start time e.g. 13963.
   tool_timer:
     objects: ["animationinspector", "compatibilityview", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]

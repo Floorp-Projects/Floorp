@@ -47,6 +47,8 @@ const SUPPORTED_OPTIONS = {
   restoreFocus: true,
   // Enable service worker testing over HTTP (instead of HTTPS only).
   serviceWorkersTestingEnabled: true,
+  // Set the current tab offline
+  setTabOffline: true,
   // Enable touch events simulation
   touchEventsOverride: true,
   // Use simplified highlighters when prefers-reduced-motion is enabled.
@@ -266,6 +268,9 @@ class TargetConfigurationActor extends Actor {
         case "cacheDisabled":
           this._setCacheDisabled(value);
           break;
+        case "setTabOffline":
+          this._setTabOffline(value);
+          break;
       }
     }
 
@@ -282,6 +287,7 @@ class TargetConfigurationActor extends Actor {
     this._setServiceWorkersTestingEnabled(false);
     this._setPrintSimulationEnabled(false);
     this._setCacheDisabled(false);
+    this._setTabOffline(false);
 
     // Restore the color scheme simulation only if it was explicitly updated
     // by this actor. This will avoid side effects caused when destroying additional
@@ -451,6 +457,15 @@ class TargetConfigurationActor extends Actor {
     if (this._browsingContext.defaultLoadFlags != value) {
       this._browsingContext.defaultLoadFlags = value;
     }
+  }
+
+  /**
+   * Set the browsing context to offline.
+   *
+   * @param {Boolean} offline: Whether the network throttling is set to offline
+   */
+  _setTabOffline(offline) {
+    this._browsingContext.forceOffline = offline;
   }
 
   destroy() {
