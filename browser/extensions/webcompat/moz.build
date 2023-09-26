@@ -111,6 +111,8 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1836157-thai-masszazs-niceScroll-disable.js",
     "injections/js/bug1842437-www.youtube.com-performance-now-precision.js",
     "injections/js/bug1849058-nicochannel.jp-picture-in-picture-shim.js",
+    "injections/js/bug1855014-eksiseyler.com.js",
+    "injections/js/bug1855071-www.meteoam.it.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

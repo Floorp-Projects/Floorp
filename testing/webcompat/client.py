@@ -295,16 +295,26 @@ class Client:
                 """
 
         async def await_css(
-            self, selector, all=False, timeout=10, poll=0.25, is_displayed=False
+            self,
+            selector,
+            all=False,
+            timeout=10,
+            poll=0.25,
+            condition=False,
+            is_displayed=False,
         ):
             all = "All" if all else ""
+            condition = (
+                f"var elem=arguments[0]; if ({condition})" if condition else False
+            )
             return await self.client.session.bidi_session.script.evaluate(
                 expression=self.timed_js(
                     timeout,
                     poll,
                     f"""
                     var ele = document.querySelector{all}('{selector}')";
-                    if (ele && (!"length" in ele || ele.length > 0) {{
+                    if (ele && (!"length" in ele || ele.length > 0)) {{
+                        '{condition}'
                         resolve(ele);
                     }}
                     """,
@@ -599,8 +609,11 @@ class Client:
         def find(self, client, **kwargs):
             return client.find_text(self.selector, **kwargs)
 
-    def await_first_element_of(self, finders, timeout=None, delay=0.25, **kwargs):
+    def await_first_element_of(
+        self, finders, timeout=None, delay=0.25, condition=False, **kwargs
+    ):
         t0 = time.time()
+        condition = f"var elem=arguments[0]; return {condition}" if condition else False
 
         if timeout is None:
             timeout = 10
@@ -612,7 +625,10 @@ class Client:
             for i, finder in enumerate(finders):
                 try:
                     result = finder.find(self, **kwargs)
-                    if result:
+                    if result and (
+                        not condition
+                        or self.session.execute_script(condition, [result])
+                    ):
                         found[i] = result
                         return found
                 except webdriver.error.NoSuchElementException as e:
@@ -690,6 +706,19 @@ class Client:
             "arguments[0].scrollIntoView({block:'center', inline:'center', behavior: 'instant'})",
             element,
         )
+
+    @contextlib.asynccontextmanager
+    async def ensure_fastclick_activates(self):
+        fastclick_preload_script = await self.make_preload_script(
+            """
+                var _ = document.createElement("webcompat_test");
+                _.style = "position:absolute;right:-1px;width:1px;height:1px";
+                document.documentElement.appendChild(_);
+            """,
+            "fastclick_forcer",
+        )
+        yield
+        fastclick_preload_script.stop()
 
     def test_for_fastclick(self, element):
         # FastClick cancels touchend, breaking default actions on Fenix.

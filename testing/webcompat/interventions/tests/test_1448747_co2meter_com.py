@@ -9,7 +9,8 @@ POPUP_CLOSE_CSS = "button.needsclick.klaviyo-close-form"
 
 
 async def is_fastclick_active(client):
-    await client.navigate(URL)
+    async with client.ensure_fastclick_activates():
+        await client.navigate(URL)
 
     client.soft_click(client.await_css(ITEM_CSS))
     client.soft_click(client.await_css(ADD_CSS))
