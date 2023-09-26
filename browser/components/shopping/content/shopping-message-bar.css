@@ -56,3 +56,13 @@ message-bar::part(icon) {
   background-color: transparent;
   padding: 0;
 }
+
+:host([type=thank-you-for-feedback]) message-bar::part(icon) {
+  --message-bar-icon-url: url("chrome://global/skin/icons/check-filled.svg");
+}
+
+:host([type=thank-you-for-feedback]) message-bar::part(container) {
+  text-align: start;
+  align-items: center;
+  gap: 12px;
+}
