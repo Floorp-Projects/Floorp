@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    "listeners/test/browser/browser.ini",
-    "messagehandler/test/browser/broadcast/browser.ini",
-    "messagehandler/test/browser/browser.ini",
-    "messagehandler/test/browser/webdriver/browser.ini",
-    "test/browser/browser.ini",
+    "listeners/test/browser/browser.toml",
+    "messagehandler/test/browser/broadcast/browser.toml",
+    "messagehandler/test/browser/browser.toml",
+    "messagehandler/test/browser/webdriver/browser.toml",
+    "test/browser/browser.toml",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [

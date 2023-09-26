@@ -15,7 +15,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     "test/unit_ipc/xpcshell.ini",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 XPIDL_SOURCES += [
     "nsIPrefBranch.idl",

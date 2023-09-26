@@ -10,7 +10,7 @@ with Files("**"):
 if CONFIG["ENABLE_TESTS"]:
     MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
     MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
-    BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+    BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 
 EXPORTS += [
     "nsIScrollbarMediator.h",

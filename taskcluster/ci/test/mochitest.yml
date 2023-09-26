@@ -263,15 +263,21 @@ mochitest-browser-chrome:
                     default: default
             default: default
     chunks:
-        by-test-platform:
-            linux.*-qr/debug: 16
-            linux.*64-asan-qr/opt: 16
-            linux.*64-tsan-qr/opt: 32
-            macosx.*64/debug: 16
-            windows.*-ccov.*/.*: 14
-            windows.*-asan-qr/opt: 14
-            windows.*32-qr/debug: 12
-            default: 7
+        by-variant:
+            msix:
+                by-test-platform:
+                    .*/debug: 12
+                    default: 7
+            default:
+                by-test-platform:
+                    linux.*-qr/debug: 16
+                    linux.*64-asan-qr/opt: 16
+                    linux.*64-tsan-qr/opt: 32
+                    macosx.*64/debug: 16
+                    windows.*-ccov.*/.*: 14
+                    windows.*-asan-qr/opt: 14
+                    windows.*32-qr/debug: 12
+                    default: 7
     max-run-time:
         by-variant:
             msix: 5400
