@@ -652,9 +652,15 @@ const MESSAGES = () => {
             ],
             content: {
               position: "callout",
-              subtitle: {
+              title_logo: {
+                imageURL:
+                  "chrome://browser/content/shopping/assets/shopping.svg",
+                alignment: "top",
+              },
+              title: {
                 string_id: "shopping-callout-closed-opted-in-subtitle",
-                marginInline: "0 40px",
+                marginInline: "3px 40px",
+                fontWeight: "inherit",
               },
               dismiss_button: {
                 action: { dismiss: true },
@@ -706,8 +712,13 @@ const MESSAGES = () => {
             ],
             content: {
               position: "callout",
+              title_logo: {
+                imageURL:
+                  "chrome://browser/content/shopping/assets/shopping.svg",
+              },
               title: {
                 string_id: "shopping-callout-closed-not-opted-in-title",
+                marginInline: "3px 40px",
               },
               subtitle: {
                 string_id: "shopping-callout-closed-not-opted-in-subtitle",

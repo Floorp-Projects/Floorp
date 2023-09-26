@@ -303,6 +303,7 @@ div#feature-callout.hidden {
   height: 16px;
   width: 16px;
   margin-inline-end: 6px;
+  box-sizing: border-box;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -310,6 +311,21 @@ div#feature-callout.hidden {
   height: 16px;
   width: 16px;
   margin: 0;
+}
+#feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=top], #feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=bottom] {
+  flex-wrap: nowrap;
+}
+#feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=top] .logo-container, #feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=bottom] .logo-container {
+  height: 1.5em;
+  align-items: center;
+  padding-bottom: 0.15em;
+  box-sizing: border-box;
+}
+#feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=top] {
+  align-items: start;
+}
+#feature-callout .screen[pos=callout] .welcome-text .inline-icon-container[alignment=bottom] {
+  align-items: end;
 }
 #feature-callout .screen[pos=callout] .multi-select-container {
   margin-block: 0;
