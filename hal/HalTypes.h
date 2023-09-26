@@ -7,6 +7,7 @@
 #define mozilla_hal_Types_h
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/BitSet.h"
 #include "mozilla/Observer.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -78,6 +79,29 @@ class PerformanceHintSession {
 
   // Reports the session's actual work duration for a cycle.
   virtual void ReportActualWorkDuration(TimeDuration aDuration) = 0;
+};
+
+/**
+ * Categorizes the CPUs on the system in to big, medium, and little classes.
+ *
+ * A set bit in each bitset indicates that the CPU of that index belongs to that
+ * class. If the CPUs are fully homogeneous they are all categorized as big. If
+ * there are only 2 classes, they are categorized as either big or little.
+ * Finally, if there are >= 3 classes, the remainder will be categorized as
+ * medium.
+ *
+ * If there are more than MAX_CPUS present we are unable to represent this
+ * information.
+ */
+struct HeterogeneousCpuInfo {
+  // We use a max of 32 because currently this is only implemented for Android
+  // where we are unlikely to need more CPUs than that, and it simplifies
+  // dealing with cpu_set_t as CPU_SETSIZE is 32 on 32-bit Android.
+  static const size_t MAX_CPUS = 32;
+  size_t mTotalNumCpus;
+  mozilla::BitSet<MAX_CPUS> mLittleCpus;
+  mozilla::BitSet<MAX_CPUS> mMediumCpus;
+  mozilla::BitSet<MAX_CPUS> mBigCpus;
 };
 
 }  // namespace hal
