@@ -2,18 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 const RS_COLLECTION = "quicksuggest";
-
-// Default score for remote settings suggestions.
-const DEFAULT_SUGGESTION_SCORE = 0.2;
 
 // Entries are added to `SuggestionsMap` map in chunks, and each chunk will add
 // at most this many entries.
@@ -28,22 +27,16 @@ const TELEMETRY_LATENCY = "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 const KEYWORD_PREFIXES_TO_TREAT_AS_SINGLE_WORDS = ["how to"];
 
 /**
- * Manages quick suggest remote settings data.
+ * The Suggest JS backend. Not used when the Rust backend is enabled.
  */
-class _QuickSuggestRemoteSettings {
-  /**
-   * @returns {number}
-   *   The default score for remote settings suggestions, a value in the range
-   *   [0, 1]. All suggestions require a score that can be used for comparison,
-   *   so if a remote settings suggestion does not have one, it's assigned this
-   *   value.
-   */
-  get DEFAULT_SUGGESTION_SCORE() {
-    return DEFAULT_SUGGESTION_SCORE;
+export class SuggestBackendJs extends BaseFeature {
+  constructor(...args) {
+    super(...args);
+    this.#emitter = new lazy.EventEmitter();
   }
 
-  constructor() {
-    this.#emitter = new lazy.EventEmitter();
+  get shouldEnable() {
+    return !lazy.UrlbarPrefs.get("quickSuggestRustEnabled");
   }
 
   /**
@@ -102,13 +95,13 @@ class _QuickSuggestRemoteSettings {
     return [...this.#features];
   }
 
-  get logger() {
-    if (!this.#logger) {
-      this.#logger = lazy.UrlbarUtils.getLogger({
-        prefix: "QuickSuggestRemoteSettings",
-      });
+  enable(enabled) {
+    if (!enabled) {
+      this.#enableSettings(false);
+    } else if (this.#features.size) {
+      this.#enableSettings(true);
+      this.#syncAll();
     }
-    return this.#logger;
   }
 
   /**
@@ -121,10 +114,12 @@ class _QuickSuggestRemoteSettings {
   register(feature) {
     this.logger.debug("Registering feature: " + feature.name);
     this.#features.add(feature);
-    if (this.#features.size == 1) {
-      this.#enableSettings(true);
+    if (this.isEnabled) {
+      if (this.#features.size == 1) {
+        this.#enableSettings(true);
+      }
+      this.#syncFeature(feature);
     }
-    this.#syncFeature(feature);
   }
 
   /**
@@ -178,12 +173,15 @@ class _QuickSuggestRemoteSettings {
     let allSuggestions = [];
     for (let [feature, suggestions] of results) {
       for (let suggestion of suggestions) {
-        suggestion.source = "remote-settings";
-        suggestion.provider = feature.name;
-        if (typeof suggestion.score != "number") {
-          suggestion.score = DEFAULT_SUGGESTION_SCORE;
-        }
-        allSuggestions.push(suggestion);
+        // Features typically return suggestion objects straight from their
+        // suggestion maps. We don't want consumers to modify those objects
+        // since they are the source of truth (tests especially tend to do
+        // this), so return copies to consumers.
+        allSuggestions.push({
+          ...suggestion,
+          source: "remote-settings",
+          provider: feature.name,
+        });
       }
     }
 
@@ -277,8 +275,6 @@ class _QuickSuggestRemoteSettings {
   #logger = null;
   #onSettingsSync = null;
 }
-
-export var QuickSuggestRemoteSettings = new _QuickSuggestRemoteSettings();
 
 /**
  * A wrapper around `Map` that handles quick suggest suggestions from remote

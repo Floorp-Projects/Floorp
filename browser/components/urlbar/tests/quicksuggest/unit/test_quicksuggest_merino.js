@@ -13,6 +13,8 @@ const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
 
 const SEARCH_STRING = "frab";
 
+const { DEFAULT_SUGGESTION_SCORE } = UrlbarProviderQuickSuggest;
+
 const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
@@ -123,7 +125,7 @@ add_task(async function init() {
   });
 
   Assert.equal(
-    typeof QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE,
+    typeof DEFAULT_SUGGESTION_SCORE,
     "number",
     "Sanity check: DEFAULT_SUGGESTION_SCORE is defined"
   );
@@ -140,7 +142,7 @@ add_task(async function oneEnabled_merino() {
   // Use a score lower than the remote settings score to make sure the
   // suggestion is included regardless.
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE / 2;
+    DEFAULT_SUGGESTION_SCORE / 2;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -215,7 +217,7 @@ add_task(async function higherScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    2 * QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE;
+    2 * DEFAULT_SUGGESTION_SCORE;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -247,7 +249,7 @@ add_task(async function lowerScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE / 2;
+    DEFAULT_SUGGESTION_SCORE / 2;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -279,7 +281,7 @@ add_task(async function sameScore() {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
   MerinoTestUtils.server.response.body.suggestions[0].score =
-    QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE;
+    DEFAULT_SUGGESTION_SCORE;
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],

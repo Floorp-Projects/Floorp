@@ -23,6 +23,8 @@ const FEATURES = {
   MDNSuggestions: "resource:///modules/urlbar/private/MDNSuggestions.sys.mjs",
   PocketSuggestions:
     "resource:///modules/urlbar/private/PocketSuggestions.sys.mjs",
+  SuggestBackendJs:
+    "resource:///modules/urlbar/private/SuggestBackendJs.sys.mjs",
   Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
 };
 
@@ -94,6 +96,14 @@ class _QuickSuggest {
 
   get ONBOARDING_URI() {
     return ONBOARDING_URI;
+  }
+
+  /**
+   * @returns {SuggestBackendJs}
+   *   The JS backend. Not used when the Rust backend is enabled.
+   */
+  get jsBackend() {
+    return this.#features.SuggestBackendJs;
   }
 
   /**

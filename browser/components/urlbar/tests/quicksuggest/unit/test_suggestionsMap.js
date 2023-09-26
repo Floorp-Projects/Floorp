@@ -8,8 +8,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
-  SuggestionsMap:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
+  SuggestionsMap: "resource:///modules/urlbar/private/SuggestBackendJs.sys.mjs",
 });
 
 // This overrides `SuggestionsMap.chunkSize`. Testing the actual value can make

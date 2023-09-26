@@ -358,6 +358,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether Remote Settings is enabled as a quick suggest source.
   ["quicksuggest.remoteSettings.enabled", true],
 
+  // Whether Firefox Suggest will use the new Rust backend instead of the
+  // original JS backend.
+  ["quicksuggest.rustEnabled", false],
+
   // The Firefox Suggest scenario in which the user is enrolled. This is set
   // when the scenario is updated (see `updateFirefoxSuggestScenario`) and is
   // not a pref the user should set. Once initialized, its value is one of:
