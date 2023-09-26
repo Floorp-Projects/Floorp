@@ -10,12 +10,18 @@
 #include "BufferReader.h"
 #include "ByteWriter.h"
 #include "H264.h"
+#include "H265.h"
 #include "MediaData.h"
+
+mozilla::LazyLogModule gAnnexB("AnnexB");
+
+#define LOGV(msg, ...) MOZ_LOG(gAnnexB, LogLevel::Verbose, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 
 static const uint8_t kAnnexBDelimiter[] = {0, 0, 0, 1};
 
+/* static */
 Result<Ok, nsresult> AnnexB::ConvertSampleToAnnexB(
     mozilla::MediaRawData* aSample, bool aAddSPS) {
   MOZ_ASSERT(aSample);
@@ -62,7 +68,7 @@ Result<Ok, nsresult> AnnexB::ConvertSampleToAnnexB(
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aAddSPS && aSample->mKeyframe) {
     RefPtr<MediaByteBuffer> annexB =
-        ConvertExtraDataToAnnexB(aSample->mExtraData);
+        ConvertAVCCExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
@@ -90,7 +96,7 @@ Result<Ok, nsresult> AnnexB::ConvertSampleToAnnexB(
   return Ok();
 }
 
-already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertExtraDataToAnnexB(
+already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertAVCCExtraDataToAnnexB(
     const mozilla::MediaByteBuffer* aExtraData) {
   // AVCC 6 byte header looks like:
   //     +------+------+------+------+------+------+------+------+
@@ -120,6 +126,23 @@ already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertExtraDataToAnnexB(
     // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
 
+  return annexB.forget();
+}
+
+already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertHVCCExtraDataToAnnexB(
+    const mozilla::MediaByteBuffer* aExtraData) {
+  auto rv = HVCCConfig::Parse(aExtraData);
+  if (rv.isErr()) {
+    return nullptr;
+  }
+  const HVCCConfig hvcc = rv.unwrap();
+  RefPtr<mozilla::MediaByteBuffer> annexB = new mozilla::MediaByteBuffer;
+  for (const auto& nalu : hvcc.mNALUs) {
+    annexB->AppendElements(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
+    annexB->AppendElements(nalu.mNALU.Elements(), nalu.mNALU.Length());
+    LOGV("Insert NALU (type=%hhu, size=%zu) to AnnexB (size=%zu)",
+         nalu.mNalUnitType, nalu.mNALU.Length(), annexB->Length());
+  }
   return annexB.forget();
 }
 
@@ -353,11 +376,20 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
   return true;
 }
 
+/* static */
 Result<mozilla::Ok, nsresult> AnnexB::ConvertAVCCTo4BytesAVCC(
     mozilla::MediaRawData* aSample) {
   auto avcc = AVCCConfig::Parse(aSample);
   MOZ_ASSERT(avcc.isOk());
   return ConvertNALUTo4BytesNALU(aSample, avcc.unwrap().NALUSize());
+}
+
+/* static */
+Result<mozilla::Ok, nsresult> AnnexB::ConvertHVCCTo4BytesHVCC(
+    mozilla::MediaRawData* aSample) {
+  auto hvcc = HVCCConfig::Parse(aSample);
+  MOZ_ASSERT(hvcc.isOk());
+  return ConvertNALUTo4BytesNALU(aSample, hvcc.unwrap().NALUSize());
 }
 
 bool AnnexB::IsAVCC(const mozilla::MediaRawData* aSample) {
@@ -430,5 +462,7 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
   }
   return Ok();
 }
+
+#undef LOGV
 
 }  // namespace mozilla

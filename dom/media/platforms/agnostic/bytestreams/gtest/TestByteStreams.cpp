@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "AnnexB.h"
+#include "BufferReader.h"
 #include "ByteWriter.h"
 #include "H264.h"
 #include "H265.h"
@@ -401,6 +402,89 @@ TEST(H265, HVCCParsingFailure)
     auto avcc = HVCCConfig::Parse(extradata);
     EXPECT_TRUE(avcc.isErr());
   }
+}
+
+TEST(H265, HVCCToAnnexB)
+{
+  auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+  uint8_t hvccBytesBuffer[] = {
+      1 /* version */,
+      1 /* general_profile_space/general_tier_flag/general_profile_idc */,
+      0x60 /* general_profile_compatibility_flags 1/4 */,
+      0 /* general_profile_compatibility_flags 2/4 */,
+      0 /* general_profile_compatibility_flags 3/4 */,
+      0 /* general_profile_compatibility_flags 4/4 */,
+      0x90 /* general_constraint_indicator_flags 1/6 */,
+      0 /* general_constraint_indicator_flags 2/6 */,
+      0 /* general_constraint_indicator_flags 3/6 */,
+      0 /* general_constraint_indicator_flags 4/6 */,
+      0 /* general_constraint_indicator_flags 5/6 */,
+      0 /* general_constraint_indicator_flags 6/6 */,
+      0x5A /* general_level_idc */,
+      0 /* min_spatial_segmentation_idc 1/2 */,
+      0 /* min_spatial_segmentation_idc 2/2 */,
+      0 /* parallelismType */,
+      1 /* chroma_format_idc */,
+      0 /* bit_depth_luma_minus8 */,
+      0 /* bit_depth_chroma_minus8 */,
+      0 /* avgFrameRate 1/2 */,
+      0 /* avgFrameRate 2/2 */,
+      0x0F /* constantFrameRate/numTemporalLayers/temporalIdNested/lengthSizeMinusOne
+            */
+      ,
+      2 /* numOfArrays */,
+      /* SPS Array */
+      0x21 /* NAL_unit_type (SPS) */,
+      0 /* numNalus 1/2 */,
+      1 /* numNalus 2/2 */,
+
+      /* SPS */
+      0 /* nalUnitLength 1/2 */,
+      3 /* nalUnitLength 2/2 (header + rsbp) */,
+      0x42 /* NALU header 1/2 */,
+      0 /* NALU header 2/2 */,
+      0 /* rbsp */,
+
+      /* PPS Array */
+      0x22 /* NAL_unit_type (PPS) */,
+      0 /* numNalus 1/2 */,
+      1 /* numNalus 2/2 */,
+
+      /* PPS */
+      0 /* nalUnitLength 1/2 */,
+      3 /* nalUnitLength 2/2 (header + rsbp) */,
+      0x44 /* NALU header 1/2 */,
+      0 /* NALU header 2/2 */,
+      0 /* rbsp */,
+  };
+  extradata->AppendElements(hvccBytesBuffer, ArrayLength(hvccBytesBuffer));
+
+  // We convert hvcc extra-data to annexb format, then parse each nalu to see if
+  // they are still correct or not.
+  const size_t naluBytesSize = 3;  // NAL size is 3, see nalUnitLength above
+  const size_t delimiterBytesSize = 4;  // 0x00000001
+  const size_t naluPlusDelimiterBytesSize = naluBytesSize + delimiterBytesSize;
+  RefPtr<mozilla::MediaByteBuffer> annexBExtraData =
+      AnnexB::ConvertHVCCExtraDataToAnnexB(extradata);
+  // 2 NALU, sps and pps
+  EXPECT_EQ(annexBExtraData->Length(), naluPlusDelimiterBytesSize * 2);
+
+  H265NALU sps(
+      static_cast<uint8_t*>(annexBExtraData->Elements() + delimiterBytesSize),
+      naluBytesSize);
+  EXPECT_EQ(sps.mNalUnitType, H265NALU::NAL_TYPES::SPS_NUT);
+  EXPECT_EQ(sps.mNuhLayerId, 0);
+  EXPECT_EQ(sps.mNuhTemporalIdPlus1, 0);
+  EXPECT_EQ(sps.IsSPS(), true);
+
+  H265NALU pps(
+      static_cast<uint8_t*>(annexBExtraData->Elements() +
+                            naluPlusDelimiterBytesSize + delimiterBytesSize),
+      naluBytesSize);
+  EXPECT_EQ(pps.mNalUnitType, H265NALU::NAL_TYPES::PPS_NUT);
+  EXPECT_EQ(pps.mNuhLayerId, 0);
+  EXPECT_EQ(pps.mNuhTemporalIdPlus1, 0);
+  EXPECT_EQ(pps.IsSPS(), false);
 }
 
 }  // namespace mozilla
