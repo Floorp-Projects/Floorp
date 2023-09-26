@@ -43,6 +43,28 @@ body {
   min-height: 0;
 }
 
+/* These live here because image loads don't go through otherwise,
+ * see bug 1855151 */
+#navigator-toolbox:-moz-lwtheme {
+  background-image: var(--lwt-additional-images);
+  background-repeat: var(--lwt-background-tiling);
+  background-position: var(--lwt-background-alignment);
+  background-color: var(--lwt-accent-color);
+  color: inherit;
+
+  &:-moz-window-inactive {
+    background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+  }
+
+  /* When a theme defines both theme_frame and additional_backgrounds, show
+     the latter atop the former. */
+  :root[lwtheme-image] & {
+    background-image: var(--lwt-header-image), var(--lwt-additional-images);
+    background-repeat: no-repeat, var(--lwt-background-tiling);
+    background-position: right top, var(--lwt-background-alignment);
+  }
+}
+
 /* We set large flex on both containers to allow the devtools toolbox to
  * set a flex value itself. We don't want the toolbox to actually take up free
  * space, but we do want it to collapse when the window shrinks, and with
