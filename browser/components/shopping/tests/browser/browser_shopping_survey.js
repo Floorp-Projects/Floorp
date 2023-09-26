@@ -249,3 +249,89 @@ add_task(async function test_24_hr_since_optin_rule() {
   );
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_confirmation_screen() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.optedIn", 1],
+      ["browser.shopping.experience2023.survey.enabled", true],
+      ["browser.shopping.experience2023.survey.hasSeen", false],
+      ["browser.shopping.experience2023.survey.pdpVisits", 5],
+      ["browser.shopping.experience2023.survey.optedInTime", time25HrsAgo],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          async function clickVisibleElement(selector) {
+            await ContentTaskUtils.waitForCondition(
+              () => content.document.querySelector(selector),
+              `waiting for selector ${selector}`,
+              200, // interval
+              100 // maxTries
+            );
+            content.document.querySelector(selector).click();
+          }
+
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+          // Manually send data update event, as it isn't set due to the lack of mock APIs.
+          // TODO: Support for the mocks will be added in Bug 1853474.
+          let mockObj = {
+            data: mockData,
+            productUrl: "https://example.com/product/1234",
+          };
+          let evt = new content.CustomEvent("Update", {
+            bubbles: true,
+            detail: Cu.cloneInto(mockObj, content),
+          });
+          content.document.dispatchEvent(evt);
+
+          await shoppingContainer.updateComplete;
+
+          let surveyScreen1 = await ContentTaskUtils.waitForCondition(
+            () =>
+              content.document.querySelector(
+                "shopping-container .screen.SHOPPING_MICROSURVEY_SCREEN_1"
+              ),
+            "survey-screen"
+          );
+
+          ok(surveyScreen1, "Survey screen 1 is rendered");
+          clickVisibleElement("#radio-1");
+          clickVisibleElement("button.primary");
+
+          let surveyScreen2 = await ContentTaskUtils.waitForCondition(
+            () =>
+              content.document.querySelector(
+                "shopping-container .screen.SHOPPING_MICROSURVEY_SCREEN_2"
+              ),
+            "survey-screen"
+          );
+          ok(surveyScreen2, "Survey screen 2 is rendered");
+          clickVisibleElement("#radio-1");
+          clickVisibleElement("button.primary");
+
+          let confirmationScreen = await ContentTaskUtils.waitForCondition(
+            () => content.document.querySelector("shopping-message-bar"),
+            "survey-screen"
+          );
+
+          ok(confirmationScreen, "Survey confirmation screen is rendered");
+        }
+      );
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});

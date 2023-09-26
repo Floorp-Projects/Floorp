@@ -821,6 +821,10 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   height: 24px;
 }
 
+.onboardingContainer.shopping shopping-message-bar {
+  font: menu;
+}
+
 html {
   height: 100%;
 }

@@ -24,6 +24,7 @@ export default {
           "analysis-in-progress",
           "reanalysis-in-progress",
           "page-not-supported",
+          "thank-you-for-feedback",
         ],
       },
     },
@@ -51,6 +52,7 @@ shopping-message-bar-analysis-in-progress-title2 = Checking review quality
 shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
 shopping-message-bar-page-not-supported-title = We can't check these reviews
 shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
+shopping-survey-thanks-message = Thanks for your feedback!
     `,
   },
 };
