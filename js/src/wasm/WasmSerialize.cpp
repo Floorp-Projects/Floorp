@@ -1026,7 +1026,7 @@ template <CoderMode mode>
 CoderResult CodeMetadataTier(Coder<mode>& coder,
                              CoderArg<mode, wasm::MetadataTier> item,
                              const uint8_t* codeStart) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::MetadataTier, 856);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::MetadataTier, 896);
   MOZ_TRY(Magic(coder, Marker::MetadataTier));
   MOZ_TRY(CodePodVector(coder, &item->funcToCodeRange));
   MOZ_TRY(CodePodVector(coder, &item->codeRanges));

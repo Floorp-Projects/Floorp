@@ -373,6 +373,7 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          codeRanges.sizeOfExcludingThis(mallocSizeOf) +
          callSites.sizeOfExcludingThis(mallocSizeOf) +
          tryNotes.sizeOfExcludingThis(mallocSizeOf) +
+         codeRangeUnwindInfos.sizeOfExcludingThis(mallocSizeOf) +
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
          stackMaps.sizeOfExcludingThis(mallocSizeOf) +
          funcImports.sizeOfExcludingThis(mallocSizeOf) +
@@ -534,6 +535,7 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
   MOZ_ASSERT(masm.tryNotes().empty());
+  MOZ_ASSERT(masm.codeRangeUnwindInfos().empty());
 
   if (masm.oom()) {
     return false;
@@ -1081,6 +1083,39 @@ bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
   }
 
   return false;
+}
+
+struct UnwindInfoPCOffset {
+  const CodeRangeUnwindInfoVector& info;
+  explicit UnwindInfoPCOffset(const CodeRangeUnwindInfoVector& info)
+      : info(info) {}
+  uint32_t operator[](size_t index) const { return info[index].offset(); }
+};
+
+const CodeRangeUnwindInfo* Code::lookupUnwindInfo(void* pc) const {
+  for (Tier t : tiers()) {
+    uint32_t target = ((uint8_t*)pc) - segment(t).base();
+    const CodeRangeUnwindInfoVector& unwindInfoArray =
+        metadata(t).codeRangeUnwindInfos;
+    size_t match;
+    const CodeRangeUnwindInfo* info = nullptr;
+    if (BinarySearch(UnwindInfoPCOffset(unwindInfoArray), 0,
+                     unwindInfoArray.length(), target, &match)) {
+      info = &unwindInfoArray[match];
+    } else {
+      // Exact match is not found, using insertion point to get the previous
+      // info entry; skip if info is outside of codeRangeUnwindInfos.
+      if (match == 0) continue;
+      if (match == unwindInfoArray.length()) {
+        MOZ_ASSERT(unwindInfoArray[unwindInfoArray.length() - 1].unwindHow() ==
+                   CodeRangeUnwindInfo::Normal);
+        continue;
+      }
+      info = &unwindInfoArray[match - 1];
+    }
+    return info->unwindHow() == CodeRangeUnwindInfo::Normal ? nullptr : info;
+  }
+  return nullptr;
 }
 
 // When enabled, generate profiling labels for every name in funcNames_ that is

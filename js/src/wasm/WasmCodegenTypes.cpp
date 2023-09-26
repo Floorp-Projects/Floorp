@@ -102,6 +102,7 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
+  u.func.hasUnwindInfo_ = false;
   MOZ_ASSERT(isEntry());
   MOZ_ASSERT(begin_ <= end_);
 }
@@ -131,10 +132,11 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets offsets)
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
+  u.func.hasUnwindInfo_ = false;
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
-                     FuncOffsets offsets)
+                     FuncOffsets offsets, bool hasUnwindInfo)
     : begin_(offsets.begin),
       ret_(offsets.ret),
       end_(offsets.end),
@@ -147,6 +149,7 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
   u.func.lineOrBytecode_ = funcLineOrBytecode;
   u.func.beginToUncheckedCallEntry_ = offsets.uncheckedCallEntry - begin_;
   u.func.beginToTierEntry_ = offsets.tierEntry - begin_;
+  u.func.hasUnwindInfo_ = hasUnwindInfo;
 }
 
 const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,

@@ -272,6 +272,7 @@ class CodeRange {
           uint32_t lineOrBytecode_;
           uint16_t beginToUncheckedCallEntry_;
           uint16_t beginToTierEntry_;
+          bool hasUnwindInfo_;
         } func;
       };
     };
@@ -282,7 +283,8 @@ class CodeRange {
   WASM_CHECK_CACHEABLE_POD(begin_, ret_, end_, u.funcIndex_,
                            u.func.lineOrBytecode_,
                            u.func.beginToUncheckedCallEntry_,
-                           u.func.beginToTierEntry_, u.trap_, kind_);
+                           u.func.beginToTierEntry_, u.func.hasUnwindInfo_,
+                           u.trap_, kind_);
 
  public:
   CodeRange() = default;
@@ -290,7 +292,8 @@ class CodeRange {
   CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets);
   CodeRange(Kind kind, CallableOffsets offsets);
   CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets);
-  CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
+  CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets,
+            bool hasUnwindInfo);
 
   void offsetBy(uint32_t offset) {
     begin_ += offset;
@@ -375,6 +378,10 @@ class CodeRange {
   uint32_t funcLineOrBytecode() const {
     MOZ_ASSERT(isFunction());
     return u.func.lineOrBytecode_;
+  }
+  bool funcHasUnwindInfo() const {
+    MOZ_ASSERT(isFunction());
+    return u.func.hasUnwindInfo_;
   }
 
   // A sorted array of CodeRanges can be looked up via BinarySearch and
@@ -625,6 +632,36 @@ struct TryNote {
 
 WASM_DECLARE_CACHEABLE_POD(TryNote);
 WASM_DECLARE_POD_VECTOR(TryNote, TryNoteVector)
+
+class CodeRangeUnwindInfo {
+ public:
+  enum UnwindHow {
+    Normal,
+    RestoreFpRa,
+    RestoreFp,
+    UseFpLr,
+    UseFp,
+  };
+
+ private:
+  uint32_t offset_;
+  UnwindHow unwindHow_;
+
+  WASM_CHECK_CACHEABLE_POD(offset_, unwindHow_);
+
+ public:
+  CodeRangeUnwindInfo(uint32_t offset, UnwindHow unwindHow)
+      : offset_(offset), unwindHow_(unwindHow) {}
+
+  uint32_t offset() const { return offset_; }
+  UnwindHow unwindHow() const { return unwindHow_; }
+
+  // Adjust all code offsets in this info by a delta.
+  void offsetBy(uint32_t offset) { offset_ += offset; }
+};
+
+WASM_DECLARE_CACHEABLE_POD(CodeRangeUnwindInfo);
+WASM_DECLARE_POD_VECTOR(CodeRangeUnwindInfo, CodeRangeUnwindInfoVector)
 
 enum class CallIndirectIdKind {
   // Generate a no-op signature check prologue, asm.js function tables are

@@ -9121,6 +9121,8 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
         return false;
       }
 
+      size_t unwindInfoBefore = masm.codeRangeUnwindInfos().length();
+
       CodeGenerator codegen(&mir, lir, &masm);
 
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
@@ -9133,8 +9135,10 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
         return false;
       }
 
+      bool hasUnwindInfo =
+          unwindInfoBefore != masm.codeRangeUnwindInfos().length();
       if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode,
-                                        offsets)) {
+                                        offsets, hasUnwindInfo)) {
         return false;
       }
     }
