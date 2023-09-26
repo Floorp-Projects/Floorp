@@ -1450,7 +1450,7 @@ void quant_all_bands(int encode, const CELTMode *m, int start, int end,
    if (encode && resynth)
       lowband_scratch = _lowband_scratch;
    else
-      lowband_scratch = X_+M*eBands[m->nbEBands-1];
+      lowband_scratch = X_+M*eBands[m->effEBands-1];
    ALLOC(X_save, resynth_alloc, celt_norm);
    ALLOC(Y_save, resynth_alloc, celt_norm);
    ALLOC(X_save2, resynth_alloc, celt_norm);
