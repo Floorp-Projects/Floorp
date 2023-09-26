@@ -78,7 +78,9 @@ class FinalizationObservers {
                               FinalizationRecordObject* record);
 
   // WeakRef support:
-  bool addWeakRefTarget(HandleObject target, HandleObject weakRef);
+  bool addWeakRefTarget(Handle<JSObject*> target, Handle<JSObject*> weakRef);
+  void removeWeakRefTarget(Handle<JSObject*> target,
+                           Handle<WeakRefObject*> weakRef);
 
   void unregisterWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
 

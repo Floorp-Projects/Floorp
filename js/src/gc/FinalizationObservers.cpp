@@ -360,6 +360,30 @@ bool FinalizationObservers::addWeakRefTarget(HandleObject target,
   return true;
 }
 
+static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
+  MOZ_ASSERT(!JS_IsDeadWrapper(obj));
+  obj = UncheckedUnwrapWithoutExpose(obj);
+  return &obj->as<WeakRefObject>();
+}
+
+void FinalizationObservers::removeWeakRefTarget(
+    Handle<JSObject*> target, Handle<WeakRefObject*> weakRef) {
+  MOZ_ASSERT(target);
+
+  WeakRefHeapPtrVector& weakRefs = weakRefMap.lookup(target)->value();
+  JSObject* wrapper = nullptr;
+  weakRefs.eraseIf([weakRef, &wrapper](JSObject* obj) {
+    if (UnwrapWeakRef(obj) == weakRef) {
+      wrapper = obj;
+      return true;
+    }
+    return false;
+  });
+
+  MOZ_ASSERT(wrapper);
+  updateForRemovedWeakRef(wrapper, weakRef);
+}
+
 void GCRuntime::nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef) {
   // WeakRef wrappers can exist independently of the ones we create for the
   // weakRefMap so don't assume |wrapper| is in the same zone as the WeakRef
@@ -403,12 +427,6 @@ void FinalizationObservers::updateForRemovedWeakRef(JSObject* wrapper,
   if (weakRefZone != zone) {
     removeCrossZoneWrapper(crossZoneWeakRefs, wrapper);
   }
-}
-
-static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
-  MOZ_ASSERT(!JS_IsDeadWrapper(obj));
-  obj = UncheckedUnwrapWithoutExpose(obj);
-  return &obj->as<WeakRefObject>();
 }
 
 void FinalizationObservers::traceWeakWeakRefEdges(JSTracer* trc) {
