@@ -267,9 +267,7 @@ struct EmbedderColorSchemes {
    * a content process. */                                                    \
   FIELD(EmbeddedInContentDocument, bool)                                      \
   /* If true, this browsing context is within a hidden embedded document. */  \
-  FIELD(IsUnderHiddenEmbedderElement, bool)                                   \
-  /* If true, this browsing context is offline */                             \
-  FIELD(ForceOffline, bool)
+  FIELD(IsUnderHiddenEmbedderElement, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -612,8 +610,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                                 : ExplicitActiveStatus::Inactive,
                       aRv);
   }
-
-  bool ForceOffline() const { return GetForceOffline(); }
 
   bool ForceDesktopViewport() const { return GetForceDesktopViewport(); }
 
@@ -1231,9 +1227,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
               const bool& aIsUnderHiddenEmbedderElement,
-              ContentParent* aSource);
-
-  bool CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
               ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_EmbeddedInContentDocument>, bool,
