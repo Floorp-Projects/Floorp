@@ -3744,15 +3744,11 @@ void nsWindow::EnableDragDrop(bool aEnable) {
     if (!mNativeDragTarget) {
       mNativeDragTarget = new nsNativeDragTarget(this);
       mNativeDragTarget->AddRef();
-      if (SUCCEEDED(::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, TRUE,
-                                           FALSE))) {
-        ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget);
-      }
+      ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget);
     }
   } else {
     if (mWnd && mNativeDragTarget) {
       ::RevokeDragDrop(mWnd);
-      ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE);
       mNativeDragTarget->DragCancel();
       NS_RELEASE(mNativeDragTarget);
     }
