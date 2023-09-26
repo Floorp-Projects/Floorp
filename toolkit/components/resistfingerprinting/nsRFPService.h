@@ -16,6 +16,7 @@
 #include "nsICookieJarSettings.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
+#include "nsIRFPService.h"
 #include "nsStringFwd.h"
 
 // Defines regarding spoofed values of Navigator object. These spoofed values
@@ -157,12 +158,13 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RFPTarget);
 
 // ============================================================================
 
-class nsRFPService final : public nsIObserver {
+class nsRFPService final : public nsIObserver, public nsIRFPService {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIRFPSERVICE
 
-  static nsRFPService* GetOrCreate();
+  static already_AddRefed<nsRFPService> GetOrCreate();
 
   // _Rarely_ you will need to know if RFP is enabled, or if FPP is enabled.
   // 98% of the time you should use nsContentUtils::ShouldResistFingerprinting

@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The singleton serivce which handles fingerprinting protection stuffs.
+ */
+[scriptable, builtinclass, uuid(20093b2e-d5d5-4ce0-8355-96b8d2dc7ff5)]
+interface nsIRFPService : nsISupports
+{
+};
