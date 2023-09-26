@@ -204,8 +204,11 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat32Array(
       [&](const Span<float>& aData, JS::AutoCheckCannotGC&& nogc) {
         const int length = aData.Length();
         const bool is2D = length == 6;
-        RefPtr<DOMMatrixReadOnly> obj =
-            new DOMMatrixReadOnly(global.forget(), is2D);
+        RefPtr<DOMMatrixReadOnly> obj;
+        {
+          JS::AutoSuppressGCAnalysis suppress;
+          obj = new DOMMatrixReadOnly(global.forget(), is2D);
+        }
         SetDataInMatrix(obj, aData.Elements(), length, aRv);
         nogc.reset();  // Done with aData
         return obj.forget();
@@ -220,8 +223,11 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat64Array(
       [&](const Span<double>& aData, JS::AutoCheckCannotGC&& nogc) {
         const int length = aData.Length();
         const bool is2D = length == 6;
-        RefPtr<DOMMatrixReadOnly> obj =
-            new DOMMatrixReadOnly(global.forget(), is2D);
+        RefPtr<DOMMatrixReadOnly> obj;
+        {
+          JS::AutoSuppressGCAnalysis suppress;
+          obj = new DOMMatrixReadOnly(global.forget(), is2D);
+        }
         SetDataInMatrix(obj, aData.Elements(), length, aRv);
         nogc.reset();  // Done with aData
         return obj.forget();
@@ -651,7 +657,11 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromFloat32Array(
       [&](const Span<float>& aData, JS::AutoCheckCannotGC&& nogc) {
         const int length = aData.Length();
         const bool is2D = length == 6;
-        RefPtr<DOMMatrix> obj = new DOMMatrix(global.forget(), is2D);
+        RefPtr<DOMMatrix> obj;
+        {
+          JS::AutoSuppressGCAnalysis suppress;
+          obj = new DOMMatrix(global.forget(), is2D);
+        }
         SetDataInMatrix(obj, aData.Elements(), length, aRv);
         nogc.reset();  // Done with aData
         return obj.forget();
@@ -666,7 +676,11 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromFloat64Array(
       [&](const Span<double>& aData, JS::AutoCheckCannotGC&& nogc) {
         const int length = aData.Length();
         const bool is2D = length == 6;
-        RefPtr<DOMMatrix> obj = new DOMMatrix(global.forget(), is2D);
+        RefPtr<DOMMatrix> obj;
+        {
+          JS::AutoSuppressGCAnalysis suppress;
+          obj = new DOMMatrix(global.forget(), is2D);
+        }
         SetDataInMatrix(obj, aData.Elements(), length, aRv);
         nogc.reset();  // Done with aData
         return obj.forget();
