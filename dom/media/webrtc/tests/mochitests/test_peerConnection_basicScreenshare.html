@@ -37,6 +37,7 @@
   }
 
   runNetworkTest(async () => {
+    await SpecialPowers.pushPrefEnv({ set: [["media.navigator.video.red_ulpfec_enabled", true]] });
     await matchPlatformH264CodecPrefs();
     const pts = await supportedVideoPayloadTypes();
     ok(pts.includes("120"), "VP8 is supported");
