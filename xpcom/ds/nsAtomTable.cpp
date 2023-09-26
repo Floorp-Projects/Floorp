@@ -65,9 +65,12 @@ enum class GCKind {
 // replaying.
 Atomic<int32_t, ReleaseAcquire> nsDynamicAtom::gUnusedAtomCount;
 
-nsDynamicAtom::nsDynamicAtom(const nsAString& aString, uint32_t aHash,
+nsDynamicAtom::nsDynamicAtom(already_AddRefed<nsStringBuffer> aBuffer,
+                             uint32_t aLength, uint32_t aHash,
                              bool aIsAsciiLowercase)
-    : nsAtom(aString, aHash, aIsAsciiLowercase), mRefCnt(1) {}
+    : nsAtom(aLength, /* aIsStatic = */ false, aHash, aIsAsciiLowercase),
+      mRefCnt(1),
+      mStringBuffer(aBuffer) {}
 
 // Returns true if ToLowercaseASCII would return the string unchanged.
 static bool IsAsciiLowercase(const char16_t* aString, const uint32_t aLength) {
@@ -76,34 +79,33 @@ static bool IsAsciiLowercase(const char16_t* aString, const uint32_t aLength) {
       return false;
     }
   }
-
   return true;
 }
 
 nsDynamicAtom* nsDynamicAtom::Create(const nsAString& aString, uint32_t aHash) {
   // We tack the chars onto the end of the nsDynamicAtom object.
-  size_t numCharBytes = (aString.Length() + 1) * sizeof(char16_t);
-  size_t numTotalBytes = sizeof(nsDynamicAtom) + numCharBytes;
-
-  bool isAsciiLower = ::IsAsciiLowercase(aString.Data(), aString.Length());
-
-  nsDynamicAtom* atom = (nsDynamicAtom*)moz_xmalloc(numTotalBytes);
-  new (atom) nsDynamicAtom(aString, aHash, isAsciiLower);
-  memcpy(const_cast<char16_t*>(atom->String()),
-         PromiseFlatString(aString).get(), numCharBytes);
-
+  const bool isAsciiLower =
+      ::IsAsciiLowercase(aString.Data(), aString.Length());
+  RefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aString);
+  if (!buffer) {
+    buffer = nsStringBuffer::Create(aString.Data(), aString.Length());
+    if (MOZ_UNLIKELY(!buffer)) {
+      MOZ_CRASH("Out of memory atomizing");
+    }
+  } else {
+    MOZ_ASSERT(aString.IsTerminated(),
+               "String buffers are always null-terminated");
+  }
+  auto* atom =
+      new nsDynamicAtom(buffer.forget(), aString.Length(), aHash, isAsciiLower);
   MOZ_ASSERT(atom->String()[atom->GetLength()] == char16_t(0));
   MOZ_ASSERT(atom->Equals(aString));
   MOZ_ASSERT(atom->mHash == HashString(atom->String(), atom->GetLength()));
   MOZ_ASSERT(atom->mIsAsciiLowercase == isAsciiLower);
-
   return atom;
 }
 
-void nsDynamicAtom::Destroy(nsDynamicAtom* aAtom) {
-  aAtom->~nsDynamicAtom();
-  free(aAtom);
-}
+void nsDynamicAtom::Destroy(nsDynamicAtom* aAtom) { delete aAtom; }
 
 void nsAtom::ToString(nsAString& aString) const {
   // See the comment on |mString|'s declaration.
@@ -113,7 +115,7 @@ void nsAtom::ToString(nsAString& aString) const {
     // which is what's important.
     aString.AssignLiteral(AsStatic()->String(), mLength);
   } else {
-    aString.Assign(AsDynamic()->String(), mLength);
+    AsDynamic()->StringBuffer()->ToString(mLength, aString);
   }
 }
 
@@ -563,6 +565,7 @@ already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsACString& aUTF8String) {
 
   nsString str;
   CopyUTF8toUTF16(aUTF8String, str);
+  MOZ_ASSERT(nsStringBuffer::FromString(str), "Should create a string buffer");
   RefPtr<nsAtom> atom = dont_AddRef(nsDynamicAtom::Create(str, key.mHash));
 
   he->mAtom = atom;

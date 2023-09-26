@@ -95,17 +95,10 @@ class nsAtom {
   using HasThreadSafeRefCnt = std::true_type;
 
  protected:
-  // Used by nsStaticAtom.
-  constexpr nsAtom(uint32_t aLength, uint32_t aHash, bool aIsAsciiLowercase)
+  constexpr nsAtom(uint32_t aLength, bool aIsStatic, uint32_t aHash,
+                   bool aIsAsciiLowercase)
       : mLength(aLength),
-        mIsStatic(true),
-        mIsAsciiLowercase(aIsAsciiLowercase),
-        mHash(aHash) {}
-
-  // Used by nsDynamicAtom.
-  nsAtom(const nsAString& aString, uint32_t aHash, bool aIsAsciiLowercase)
-      : mLength(aString.Length()),
-        mIsStatic(false),
+        mIsStatic(aIsStatic),
         mIsAsciiLowercase(aIsAsciiLowercase),
         mHash(aHash) {}
 
@@ -134,7 +127,7 @@ class nsStaticAtom : public nsAtom {
   // hashes match.
   constexpr nsStaticAtom(uint32_t aLength, uint32_t aHash,
                          uint32_t aStringOffset, bool aIsAsciiLowercase)
-      : nsAtom(aLength, aHash, aIsAsciiLowercase),
+      : nsAtom(aLength, /* aIsStatic = */ true, aHash, aIsAsciiLowercase),
         mStringOffset(aStringOffset) {}
 
   const char16_t* String() const {
@@ -184,12 +177,10 @@ class nsDynamicAtom : public nsAtom {
     return count;
   }
 
-  const char16_t* String() const {
-    return reinterpret_cast<const char16_t*>(this + 1);
-  }
+  nsStringBuffer* StringBuffer() const { return mStringBuffer; }
 
-  static nsDynamicAtom* FromChars(char16_t* chars) {
-    return reinterpret_cast<nsDynamicAtom*>(chars) - 1;
+  const char16_t* String() const {
+    return reinterpret_cast<const char16_t*>(mStringBuffer->Data());
   }
 
  private:
@@ -202,16 +193,15 @@ class nsDynamicAtom : public nsAtom {
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.
-  nsDynamicAtom(const nsAString& aString, uint32_t aHash,
-                bool aIsAsciiLowercase);
+  nsDynamicAtom(already_AddRefed<nsStringBuffer>, uint32_t aLength,
+                uint32_t aHash, bool aIsAsciiLowercase);
   ~nsDynamicAtom() = default;
 
   static nsDynamicAtom* Create(const nsAString& aString, uint32_t aHash);
   static void Destroy(nsDynamicAtom* aAtom);
 
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
-
-  // The atom's chars are stored at the end of the struct.
+  RefPtr<nsStringBuffer> mStringBuffer;
 };
 
 const nsStaticAtom* nsAtom::AsStatic() const {
@@ -275,11 +265,6 @@ nsStaticAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
 class nsAtomString : public nsString {
  public:
   explicit nsAtomString(const nsAtom* aAtom) { aAtom->ToString(*this); }
-};
-
-class nsAutoAtomString : public nsAutoString {
- public:
-  explicit nsAutoAtomString(const nsAtom* aAtom) { aAtom->ToString(*this); }
 };
 
 class nsAtomCString : public nsCString {
