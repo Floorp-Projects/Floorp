@@ -102,7 +102,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.11.153';
+    const workerVersion = '3.11.182';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -43638,18 +43638,22 @@ class StructTreeRoot {
         ref: pageRef
       } = await pdfManager.getPage(pageIndex);
       for (const {
-        accessibilityData: {
+        accessibilityData,
+        ref,
+        parentTreeId,
+        structTreeParent
+      } of elements) {
+        if (!accessibilityData?.type) {
+          continue;
+        }
+        const {
           type,
           title,
           lang,
           alt,
           expanded,
           actualText
-        },
-        ref,
-        parentTreeId,
-        structTreeParent
-      } of elements) {
+        } = accessibilityData;
         nextKey = Math.max(nextKey, parentTreeId);
         const tagRef = xref.getNewTemporaryRef();
         const tagDict = new _primitives.Dict(xref);
@@ -58289,8 +58293,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.11.153';
-const pdfjsBuild = '85568bd6c';
+const pdfjsVersion = '3.11.182';
+const pdfjsBuild = '3f7060e77';
 })();
 
 /******/ 	return __webpack_exports__;
