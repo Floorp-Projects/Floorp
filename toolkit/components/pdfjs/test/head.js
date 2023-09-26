@@ -327,9 +327,9 @@ function changeMimeHandler(preferredAction, alwaysAskBeforeHandling) {
   return oldAction;
 }
 
-function createTemporarySaveDirectory() {
+function createTemporarySaveDirectory(id = "") {
   var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
-  saveDir.append("testsavedir");
+  saveDir.append(`testsavedir${id}`);
   if (!saveDir.exists()) {
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   }

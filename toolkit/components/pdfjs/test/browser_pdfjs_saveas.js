@@ -170,3 +170,47 @@ add_task(async function test_pdf_saveas_customname() {
   );
   await SpecialPowers.popPrefEnv();
 });
+
+/**
+ * Check if the directory where the pdfs are saved is based on the original
+ * domain (see bug 1768383).
+ */
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:blank" },
+    async function (browser) {
+      const downloadLastDir = new DownloadLastDir(null);
+      const destDirs = [];
+      for (let i = 1; i <= 2; i++) {
+        const destDir = createTemporarySaveDirectory(i);
+        destDirs.push(destDir);
+        const url = `http://test${i}.example.com/browser/${RELATIVE_DIR}file_pdfjs_test.pdf`;
+        downloadLastDir.setFile(url, destDir);
+        await TestUtils.waitForTick();
+      }
+
+      const url = `http://test1.example.com/browser/${RELATIVE_DIR}file_pdfjs_hcm.pdf`;
+      await waitForPdfJS(browser, url);
+
+      const fileSavedPromise = new Promise(resolve => {
+        MockFilePicker.showCallback = fp => {
+          MockFilePicker.setFiles([]);
+          MockFilePicker.showCallback = null;
+          resolve(fp.displayDirectory.path);
+        };
+      });
+      registerCleanupFunction(() => {
+        for (const destDir of destDirs) {
+          destDir.remove(true);
+        }
+      });
+      saveBrowser(browser);
+      const dirPath = await fileSavedPromise;
+      is(
+        dirPath,
+        destDirs[0].path,
+        "Proposed directory must be based on the domain"
+      );
+    }
+  );
+});
