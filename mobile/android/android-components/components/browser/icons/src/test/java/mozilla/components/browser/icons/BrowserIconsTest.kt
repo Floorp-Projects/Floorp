@@ -63,7 +63,7 @@ class BrowserIconsTest {
         val generator: IconGenerator = mock()
         `when`(generator.generate(any(), any())).thenReturn(mockedIcon)
 
-        val request = IconRequest(url = "https://www.mozilla.org")
+        val request = IconRequest(url = "https://www.mozilla_test.org")
         val icon = BrowserIcons(testContext, httpClient = mock(), generator = generator)
             .loadIcon(request)
 
