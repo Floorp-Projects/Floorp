@@ -91,8 +91,8 @@ To enable a pre-commit git hook, run the following command:
 
 Note that the symlink will be interpreted as ``.git/hooks/../../tools/lint/hooks.py``.
 
-Fixing Lint Errors
-==================
+Automatically Fixing Lint Errors
+--------------------------------
 
 ``Mozlint`` has a best-effort ability to fix lint errors:
 
@@ -118,6 +118,10 @@ with your $EDITOR.
 
 Editor Integration
 ==================
+
+.. note::
+
+    See details on `how to set up your editor here </contributing/editor.html#editor-ide-integration>`_
 
 Editor integrations are highly recommended for linters, as they let you see
 errors in real time, and can help you fix issues before you compile or run tests.
