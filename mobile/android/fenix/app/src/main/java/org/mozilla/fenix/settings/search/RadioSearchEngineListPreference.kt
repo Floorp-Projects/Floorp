@@ -78,32 +78,14 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
 
-        val isLastGeneralOrCustomSearchEngine = state.searchEngines.filter {
-            it.isGeneral
-        }.size == 1
         state.searchEngines.filter { engine ->
-            if (context.settings().enableUnifiedSearchSettingsUI) {
-                engine.type != SearchEngine.Type.APPLICATION && engine.isGeneral
-            } else {
-                engine.type != SearchEngine.Type.APPLICATION
-            }
+            engine.type != SearchEngine.Type.APPLICATION && engine.isGeneral
         }.forEach { engine ->
-            val isLastSearchEngineAvailable =
-                state.searchEngines.count { it.type != SearchEngine.Type.APPLICATION } > 1
-            val allowDeletion = if (context.settings().enableUnifiedSearchSettingsUI) {
-                engine.type == SearchEngine.Type.CUSTOM
-            } else {
-                if (context.settings().showUnifiedSearchFeature) {
-                    isLastSearchEngineAvailable && !(engine.isGeneral && isLastGeneralOrCustomSearchEngine)
-                } else {
-                    isLastSearchEngineAvailable
-                }
-            }
             val searchEngineView = makeButtonFromSearchEngine(
                 engine = engine,
                 layoutInflater = layoutInflater,
                 res = context.resources,
-                allowDeletion = allowDeletion,
+                allowDeletion = engine.type == SearchEngine.Type.CUSTOM,
                 isSelected = engine == state.selectedOrDefaultSearchEngine,
             )
 
@@ -124,12 +106,13 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
 
         val binding = SearchEngineRadioButtonBinding.bind(wrapper)
 
-        if (context.settings().showUnifiedSearchFeature && !engine.isGeneral) {
+        if (!engine.isGeneral) {
             binding.radioButton.isEnabled = false
             wrapper.isEnabled = false
         } else {
             wrapper.setOnClickListener { binding.radioButton.isChecked = true }
         }
+
         binding.radioButton.tag = engine.id
         binding.radioButton.isChecked = isSelected
         binding.radioButton.setOnCheckedChangeListener(this)
@@ -189,18 +172,12 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         val selectedOrDefaultSearchEngine = context.components.core.store.state.search.selectedOrDefaultSearchEngine
         if (selectedOrDefaultSearchEngine == engine) {
             val nextSearchEngine =
-                if (context.settings().showUnifiedSearchFeature) {
-                    context.components.core.store.state.search.searchEngines.firstOrNull {
-                        it.id != engine.id && (it.isGeneral || it.type == SearchEngine.Type.CUSTOM)
-                    }
-                        ?: context.components.core.store.state.search.searchEngines.firstOrNull {
-                            it.id != engine.id
-                        }
-                } else {
-                    context.components.core.store.state.search.searchEngines.firstOrNull {
+                context.components.core.store.state.search.searchEngines.firstOrNull {
+                    it.id != engine.id && (it.isGeneral || it.type == SearchEngine.Type.CUSTOM)
+                }
+                    ?: context.components.core.store.state.search.searchEngines.firstOrNull {
                         it.id != engine.id
                     }
-                }
 
             nextSearchEngine?.let {
                 context.components.useCases.searchUseCases.selectSearchEngine(

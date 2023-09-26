@@ -286,11 +286,7 @@ class Core(
         BrowserStore(
             initialState = BrowserState(
                 search = SearchState(
-                    applicationSearchEngines = if (context.settings().showUnifiedSearchFeature) {
-                        applicationSearchEngines
-                    } else {
-                        emptyList()
-                    },
+                    applicationSearchEngines = applicationSearchEngines,
                 ),
             ),
             middleware = middlewareList + EngineMiddleware.create(

@@ -617,19 +617,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     /**
-     * If unified search is enabled try to migrate the topic specific engine to the
-     * first general or custom search engine available.
+     * Migrate the topic specific engine to the first general or custom search engine available.
      */
-    @Suppress("NestedBlockDepth")
     private fun migrateTopicSpecificSearchEngines() {
-        if (settings().showUnifiedSearchFeature) {
-            components.core.store.state.search.selectedOrDefaultSearchEngine.let { currentSearchEngine ->
-                if (currentSearchEngine?.isGeneral == false) {
-                    components.core.store.state.search.searchEngines.firstOrNull() { nextSearchEngine ->
-                        nextSearchEngine.isGeneral
-                    }?.let {
-                        components.useCases.searchUseCases.selectSearchEngine(it)
-                    }
+        components.core.store.state.search.selectedOrDefaultSearchEngine.let { currentSearchEngine ->
+            if (currentSearchEngine?.isGeneral == false) {
+                components.core.store.state.search.searchEngines.firstOrNull { nextSearchEngine ->
+                    nextSearchEngine.isGeneral
+                }?.let {
+                    components.useCases.searchUseCases.selectSearchEngine(it)
                 }
             }
         }

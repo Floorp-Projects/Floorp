@@ -236,7 +236,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             getPreviousDestination()?.destination?.id == R.id.homeFragment
 
         toolbarView = ToolbarView(
-            requireContext(),
             requireContext().settings(),
             requireComponents,
             interactor,
@@ -492,11 +491,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             toolbarView.update(it)
             awesomeBarView.update(it)
 
-            if (showUnifiedSearchFeature) {
-                addSearchSelector()
-                updateQrButton(it)
-            }
-
+            addSearchSelector()
+            updateQrButton(it)
             updateVoiceSearchButton()
         }
     }

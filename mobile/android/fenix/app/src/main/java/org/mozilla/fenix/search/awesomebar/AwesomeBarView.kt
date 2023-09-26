@@ -439,11 +439,7 @@ class AwesomeBarView(
                     engine,
                     shortcutSearchUseCase,
                     components.core.client,
-                    limit = if (activity.settings().showUnifiedSearchFeature) {
-                        METADATA_SHORTCUT_SUGGESTION_LIMIT
-                    } else {
-                        METADATA_SUGGESTION_LIMIT
-                    },
+                    limit = METADATA_SHORTCUT_SUGGESTION_LIMIT,
                     mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                     icon = searchBitmap,
                     engine = engineForSpeculativeConnects,

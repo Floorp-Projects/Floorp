@@ -6,8 +6,6 @@ package org.mozilla.fenix.home.toolbar
 
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
-import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -37,11 +35,6 @@ class SearchSelectorBinding(
 
     override fun start() {
         super.start()
-
-        context.settings().showUnifiedSearchFeature.let {
-            binding.searchSelectorButton.isVisible = it
-            binding.searchEngineIcon.isGone = it
-        }
 
         binding.searchSelectorButton.apply {
             setOnClickListener {
@@ -80,11 +73,7 @@ class SearchSelectorBinding(
                     }
                 }
 
-                if (context.settings().showUnifiedSearchFeature) {
-                    binding.searchSelectorButton.setIcon(icon, name)
-                } else {
-                    binding.searchEngineIcon.setImageDrawable(icon)
-                }
+                binding.searchSelectorButton.setIcon(icon, name)
             }
     }
 }

@@ -23,7 +23,6 @@ import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.SessionAutocompleteProvider
 import mozilla.components.feature.syncedtabs.SyncedTabsAutocompleteProvider
@@ -203,17 +202,6 @@ class ToolbarViewTest {
         )
 
         verify(exactly = 0) { toolbar.setSearchTerms("Search Terms") }
-    }
-
-    @Test
-    fun `searchEngine name and icon get set on update`() {
-        val editToolbar: EditToolbar = mockk(relaxed = true)
-        every { toolbar.edit } returns editToolbar
-
-        val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState)
-
-        verify { editToolbar.setIcon(any(), "Search Engine") }
     }
 
     @Test
@@ -863,7 +851,6 @@ class ToolbarViewTest {
         settings: Settings = context.settings(),
         components: Components = mockk(relaxed = true),
     ) = ToolbarView(
-        context = context,
         settings = settings,
         components = components,
         interactor = interactor,

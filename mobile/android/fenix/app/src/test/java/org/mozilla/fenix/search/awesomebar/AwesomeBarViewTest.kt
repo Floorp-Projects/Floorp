@@ -766,9 +766,7 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN a search is made by the user WHEN configuring providers THEN search engine suggestion provider should always be added`() {
-        val settings: Settings = mockk(relaxed = true) {
-            every { showUnifiedSearchFeature } returns true
-        }
+        val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
@@ -781,9 +779,7 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN a search from the default engine with all suggestions asked WHEN configuring providers THEN add them all`() {
-        val settings: Settings = mockk(relaxed = true) {
-            every { showUnifiedSearchFeature } returns false
-        }
+        val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
@@ -820,9 +816,7 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN add only search engine suggestion provider`() {
-        val settings: Settings = mockk(relaxed = true) {
-            every { showUnifiedSearchFeature } returns true
-        }
+        val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(

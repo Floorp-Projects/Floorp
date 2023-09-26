@@ -134,17 +134,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottom_bar">
 
-            <ImageView
-                android:id="@+id/search_engine_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="start|center_vertical"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="12dp"
-                android:clickable="false"
-                android:focusable="false"
-                android:importantForAccessibility="no" />
-
             <org.mozilla.fenix.search.toolbar.SearchSelector
                 android:id="@+id/search_selector_button"
                 android:layout_width="wrap_content"
