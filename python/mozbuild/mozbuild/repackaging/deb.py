@@ -74,11 +74,7 @@ def repackage_deb(
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
-        application_ini_data = _parse_application_ini_data(
-            _extract_application_ini_data(infile, version, build_number),
-            version,
-            build_number,
-        )
+        application_ini_data = _load_application_ini_data(infile, version, build_number)
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
@@ -132,10 +128,8 @@ def repackage_deb_l10n(
     try:
         langpack_metadata = _extract_langpack_metadata(input_xpi_file)
         langpack_dir = mozpath.join(source_dir, "firefox", "distribution", "extensions")
-        application_ini_data = _parse_application_ini_data(
-            _extract_application_ini_data(input_tar_file, version, build_number),
-            version,
-            build_number,
+        application_ini_data = _load_application_ini_data(
+            input_tar_file, version, build_number
         )
         langpack_id = langpack_metadata["langpack_id"]
         build_variables = _get_build_variables(
@@ -191,6 +185,14 @@ def _extract_application_ini_data(input_tar_file):
         application_ini_data = _extract_application_ini_data_from_directory(d)
 
         return application_ini_data
+
+
+def _load_application_ini_data(infile, version, build_number):
+    extracted_application_ini_data = _extract_application_ini_data(infile)
+    parsed_application_ini_data = _parse_application_ini_data(
+        extracted_application_ini_data, version, build_number
+    )
+    return parsed_application_ini_data
 
 
 def _parse_application_ini_data(application_ini_data, version, build_number):
