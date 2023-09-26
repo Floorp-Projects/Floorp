@@ -4829,6 +4829,38 @@ static bool InterruptRegexp(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
+static bool CheckRegExpSyntax(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (args.length() != 1) {
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments.");
+    return false;
+  }
+  if (!args[0].isString()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be a string.");
+    return false;
+  }
+
+  RootedString string(cx, args[0].toString());
+  AutoStableStringChars stableChars(cx);
+  if (!stableChars.initTwoByte(cx, string)) {
+    return false;
+  }
+
+  const char16_t* chars = stableChars.twoByteRange().begin().get();
+  size_t length = string->length();
+
+  Rooted<JS::Value> error(cx);
+  if (!JS::CheckRegExpSyntax(cx, chars, length, JS::RegExpFlag::NoFlags,
+                             &error)) {
+    return false;
+  }
+
+  args.rval().set(error);
+  return true;
+}
+
 static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -9298,10 +9330,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "interruptRegexp(<regexp>, <string>)",
 "  Interrrupt the execution of regular expression.\n"),
 #endif
+    JS_FN_HELP("checkRegExpSyntax", CheckRegExpSyntax, 1, 0,
+"checkRegExpSyntax(<string>)",
+"  Return undefined if the string parses as a RegExp. If the string does not\n"
+"  parse correctly, return the SyntaxError that occurred."),
+
     JS_FN_HELP("enableLastWarning", EnableLastWarning, 0, 0,
 "enableLastWarning()",
 "  Enable storing the last warning."),
-
     JS_FN_HELP("disableLastWarning", DisableLastWarning, 0, 0,
 "disableLastWarning()",
 "  Disable storing the last warning."),
