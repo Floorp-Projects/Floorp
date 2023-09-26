@@ -35,7 +35,7 @@ enum {
 // Spec 7.3.1 NAL unit syntax
 class H265NALU final {
  public:
-  H265NALU(const uint8_t* aData, uint32_t aSize);
+  H265NALU(const uint8_t* aData, uint32_t aByteSize);
 
   // Table 7-1
   enum NAL_TYPES {
