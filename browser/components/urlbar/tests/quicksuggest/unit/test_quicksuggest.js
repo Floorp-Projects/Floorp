@@ -10,8 +10,8 @@
 const TELEMETRY_REMOTE_SETTINGS_LATENCY =
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
-const SPONSORED_SEARCH_STRING = "frab";
-const NONSPONSORED_SEARCH_STRING = "nonspon";
+const SPONSORED_SEARCH_STRING = "amp";
+const NONSPONSORED_SEARCH_STRING = "wikipedia";
 
 const HTTP_SEARCH_STRING = "http prefix";
 const HTTPS_SEARCH_STRING = "https prefix";
@@ -25,32 +25,32 @@ const TIMESTAMP_SUGGESTION_CLICK_URL = `http://click.reporting.test.com/timestam
 const REMOTE_SETTINGS_RESULTS = [
   {
     id: 1,
-    url: "http://test.com/q=frabbits",
-    title: "frabbits",
+    url: "http://example.com/amp",
+    title: "AMP Suggestion",
     keywords: [SPONSORED_SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/",
-    impression_url: "http://impression.reporting.test.com/",
-    advertiser: "TestAdvertiser",
+    click_url: "http://example.com/amp-click",
+    impression_url: "http://example.com/amp-impression",
+    advertiser: "Amp",
     iab_category: "22 - Shopping",
   },
   {
     id: 2,
-    url: "http://test.com/?q=nonsponsored",
-    title: "Non-Sponsored",
+    url: "http://example.com/wikipedia",
+    title: "Wikipedia Suggestion",
     keywords: [NONSPONSORED_SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/nonsponsored",
-    impression_url: "http://impression.reporting.test.com/nonsponsored",
-    advertiser: "TestAdvertiserNonSponsored",
+    click_url: "http://example.com/wikipedia-click",
+    impression_url: "http://example.com/wikipedia-impression",
+    advertiser: "Wikipedia",
     iab_category: "5 - Education",
   },
   {
     id: 3,
     url: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    title: "http suggestion",
+    title: "HTTP Suggestion",
     keywords: [HTTP_SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/prefix",
-    impression_url: "http://impression.reporting.test.com/prefix",
-    advertiser: "TestAdvertiserPrefix",
+    click_url: "http://example.com/http-click",
+    impression_url: "http://example.com/http-impression",
+    advertiser: "HttpAdvertiser",
     iab_category: "22 - Shopping",
   },
   {
@@ -75,148 +75,43 @@ const REMOTE_SETTINGS_RESULTS = [
   },
 ];
 
-const EXPECTED_SPONSORED_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_sponsored",
-    qsSuggestion: "frab",
-    title: "frabbits",
-    url: "http://test.com/q=frabbits",
-    originalUrl: "http://test.com/q=frabbits",
-    icon: null,
-    sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-    sponsoredClickUrl: "http://click.reporting.test.com/",
-    sponsoredBlockId: 1,
-    sponsoredAdvertiser: "TestAdvertiser",
-    sponsoredIabCategory: "22 - Shopping",
-    isSponsored: true,
-    descriptionL10n: { id: "urlbar-result-action-sponsored" },
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
-    },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-    blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
-    },
-    displayUrl: "http://test.com/q=frabbits",
-    source: "remote-settings",
-    provider: "AdmWikipedia",
-  },
-};
+function expectedNonSponsoredResult() {
+  return makeWikipediaResult({
+    blockId: 2,
+  });
+}
 
-const EXPECTED_NONSPONSORED_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_nonsponsored",
-    qsSuggestion: "nonspon",
-    title: "Non-Sponsored",
-    url: "http://test.com/?q=nonsponsored",
-    originalUrl: "http://test.com/?q=nonsponsored",
-    icon: null,
-    sponsoredImpressionUrl: "http://impression.reporting.test.com/nonsponsored",
-    sponsoredClickUrl: "http://click.reporting.test.com/nonsponsored",
-    sponsoredBlockId: 2,
-    sponsoredAdvertiser: "TestAdvertiserNonSponsored",
-    sponsoredIabCategory: "5 - Education",
-    isSponsored: false,
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
-    },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-    blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
-    },
-    displayUrl: "http://test.com/?q=nonsponsored",
-    source: "remote-settings",
-    provider: "AdmWikipedia",
-  },
-};
+function expectedSponsoredResult() {
+  return makeAmpResult();
+}
 
-const EXPECTED_HTTP_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_sponsored",
-    qsSuggestion: HTTP_SEARCH_STRING,
-    title: "http suggestion",
-    url: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    originalUrl: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    icon: null,
-    sponsoredImpressionUrl: "http://impression.reporting.test.com/prefix",
-    sponsoredClickUrl: "http://click.reporting.test.com/prefix",
-    sponsoredBlockId: 3,
-    sponsoredAdvertiser: "TestAdvertiserPrefix",
-    sponsoredIabCategory: "22 - Shopping",
-    isSponsored: true,
-    descriptionL10n: { id: "urlbar-result-action-sponsored" },
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
-    },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-    blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
-    },
-    displayUrl: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    source: "remote-settings",
-    provider: "AdmWikipedia",
-  },
-};
+function expectedHttpResult() {
+  let suggestion = REMOTE_SETTINGS_RESULTS[2];
+  return makeAmpResult({
+    keyword: HTTP_SEARCH_STRING,
+    title: suggestion.title,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    impressionUrl: suggestion.impression_url,
+    clickUrl: suggestion.click_url,
+    blockId: suggestion.id,
+    advertiser: suggestion.advertiser,
+  });
+}
 
-const EXPECTED_HTTPS_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_sponsored",
-    qsSuggestion: HTTPS_SEARCH_STRING,
-    title: "https suggestion",
-    url: "https://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    originalUrl: "https://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
-    icon: null,
-    sponsoredImpressionUrl: "http://impression.reporting.test.com/prefix",
-    sponsoredClickUrl: "http://click.reporting.test.com/prefix",
-    sponsoredBlockId: 4,
-    sponsoredAdvertiser: "TestAdvertiserPrefix",
-    sponsoredIabCategory: "22 - Shopping",
-    isSponsored: true,
-    descriptionL10n: { id: "urlbar-result-action-sponsored" },
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
-    },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-    blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
-    },
-    displayUrl: PREFIX_SUGGESTIONS_STRIPPED_URL,
-    source: "remote-settings",
-    provider: "AdmWikipedia",
-  },
-};
+function expectedHttpsResult() {
+  let suggestion = REMOTE_SETTINGS_RESULTS[3];
+  return makeAmpResult({
+    keyword: HTTPS_SEARCH_STRING,
+    title: suggestion.title,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    impressionUrl: suggestion.impression_url,
+    clickUrl: suggestion.click_url,
+    blockId: suggestion.id,
+    advertiser: suggestion.advertiser,
+  });
+}
 
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
@@ -276,7 +171,7 @@ add_task(async function telemetryType_nonsponsored() {
 
 // Tests with only non-sponsored suggestions enabled with a matching search
 // string.
-add_task(async function nonsponsoredOnly_match() {
+add_tasks_with_rust(async function nonsponsoredOnly_match() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
 
@@ -286,13 +181,13 @@ add_task(async function nonsponsoredOnly_match() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_NONSPONSORED_RESULT],
+    matches: [expectedNonSponsoredResult()],
   });
 });
 
 // Tests with only non-sponsored suggestions enabled with a non-matching search
 // string.
-add_task(async function nonsponsoredOnly_noMatch() {
+add_tasks_with_rust(async function nonsponsoredOnly_noMatch() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
 
@@ -304,7 +199,7 @@ add_task(async function nonsponsoredOnly_noMatch() {
 });
 
 // Tests with only sponsored suggestions enabled with a matching search string.
-add_task(async function sponsoredOnly_sponsored() {
+add_tasks_with_rust(async function sponsoredOnly_sponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -314,13 +209,13 @@ add_task(async function sponsoredOnly_sponsored() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 });
 
 // Tests with only sponsored suggestions enabled with a non-matching search
 // string.
-add_task(async function sponsoredOnly_nonsponsored() {
+add_tasks_with_rust(async function sponsoredOnly_nonsponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -333,7 +228,7 @@ add_task(async function sponsoredOnly_nonsponsored() {
 
 // Tests with both sponsored and non-sponsored suggestions enabled with a
 // search string that matches the sponsored suggestion.
-add_task(async function both_sponsored() {
+add_tasks_with_rust(async function both_sponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -343,13 +238,13 @@ add_task(async function both_sponsored() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 });
 
 // Tests with both sponsored and non-sponsored suggestions enabled with a
 // search string that matches the non-sponsored suggestion.
-add_task(async function both_nonsponsored() {
+add_tasks_with_rust(async function both_nonsponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -359,13 +254,13 @@ add_task(async function both_nonsponsored() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_NONSPONSORED_RESULT],
+    matches: [expectedNonSponsoredResult()],
   });
 });
 
 // Tests with both sponsored and non-sponsored suggestions enabled with a
 // search string that doesn't match either suggestion.
-add_task(async function both_noMatch() {
+add_tasks_with_rust(async function both_noMatch() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -378,7 +273,7 @@ add_task(async function both_noMatch() {
 
 // Tests with both the main and sponsored prefs disabled with a search string
 // that matches the sponsored suggestion.
-add_task(async function neither_sponsored() {
+add_tasks_with_rust(async function neither_sponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
 
@@ -391,7 +286,7 @@ add_task(async function neither_sponsored() {
 
 // Tests with both the main and sponsored prefs disabled with a search string
 // that matches the non-sponsored suggestion.
-add_task(async function neither_nonsponsored() {
+add_tasks_with_rust(async function neither_nonsponsored() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
 
@@ -403,7 +298,7 @@ add_task(async function neither_nonsponsored() {
 });
 
 // Search string matching should be case insensitive and ignore leading spaces.
-add_task(async function caseInsensitiveAndLeadingSpaces() {
+add_tasks_with_rust(async function caseInsensitiveAndLeadingSpaces() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -413,13 +308,13 @@ add_task(async function caseInsensitiveAndLeadingSpaces() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 });
 
 // The provider should not be active for search strings that are empty or
 // contain only spaces.
-add_task(async function emptySearchStringsAndSpaces() {
+add_tasks_with_rust(async function emptySearchStringsAndSpaces() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -445,7 +340,7 @@ add_task(async function emptySearchStringsAndSpaces() {
 
 // Results should be returned even when `browser.search.suggest.enabled` is
 // false.
-add_task(async function browser_search_suggest_enabled() {
+add_tasks_with_rust(async function browser_search_suggest_enabled() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("browser.search.suggest.enabled", false);
@@ -456,7 +351,7 @@ add_task(async function browser_search_suggest_enabled() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 
   UrlbarPrefs.clear("browser.search.suggest.enabled");
@@ -464,7 +359,7 @@ add_task(async function browser_search_suggest_enabled() {
 
 // Results should be returned even when `browser.urlbar.suggest.searches` is
 // false.
-add_task(async function browser_search_suggest_enabled() {
+add_tasks_with_rust(async function browser_search_suggest_enabled() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("suggest.searches", false);
@@ -475,7 +370,7 @@ add_task(async function browser_search_suggest_enabled() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 
   UrlbarPrefs.clear("suggest.searches");
@@ -483,7 +378,7 @@ add_task(async function browser_search_suggest_enabled() {
 
 // Neither sponsored nor non-sponsored results should appear in private contexts
 // even when suggestions in private windows are enabled.
-add_task(async function privateContext() {
+add_tasks_with_rust(async function privateContext() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -507,7 +402,7 @@ add_task(async function privateContext() {
 
 // When search suggestions come before general results and the only general
 // result is a quick suggest result, it should come last.
-add_task(async function suggestionsBeforeGeneral_only() {
+add_tasks_with_rust(async function suggestionsBeforeGeneral_only() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("browser.search.suggest.enabled", true);
@@ -533,7 +428,7 @@ add_task(async function suggestionsBeforeGeneral_only() {
         suggestion: SPONSORED_SEARCH_STRING + " bar",
         engineName: Services.search.defaultEngine.name,
       }),
-      EXPECTED_SPONSORED_RESULT,
+      expectedSponsoredResult(),
     ],
   });
 
@@ -545,7 +440,7 @@ add_task(async function suggestionsBeforeGeneral_only() {
 // When search suggestions come before general results and there are other
 // general results besides quick suggest, the quick suggest result should come
 // last.
-add_task(async function suggestionsBeforeGeneral_others() {
+add_tasks_with_rust(async function suggestionsBeforeGeneral_others() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("browser.search.suggest.enabled", true);
@@ -588,7 +483,7 @@ add_task(async function suggestionsBeforeGeneral_others() {
         engineName: Services.search.defaultEngine.name,
       }),
       ...historyResults,
-      EXPECTED_SPONSORED_RESULT,
+      expectedSponsoredResult(),
     ],
   });
 
@@ -600,7 +495,7 @@ add_task(async function suggestionsBeforeGeneral_others() {
 
 // When general results come before search suggestions and the only general
 // result is a quick suggest result, it should come before suggestions.
-add_task(async function generalBeforeSuggestions_only() {
+add_tasks_with_rust(async function generalBeforeSuggestions_only() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("browser.search.suggest.enabled", true);
@@ -616,7 +511,7 @@ add_task(async function generalBeforeSuggestions_only() {
         query: SPONSORED_SEARCH_STRING,
         engineName: Services.search.defaultEngine.name,
       }),
-      EXPECTED_SPONSORED_RESULT,
+      expectedSponsoredResult(),
       makeSearchResult(context, {
         query: SPONSORED_SEARCH_STRING,
         suggestion: SPONSORED_SEARCH_STRING + " foo",
@@ -638,7 +533,7 @@ add_task(async function generalBeforeSuggestions_only() {
 // When general results come before search suggestions and there are other
 // general results besides quick suggest, the quick suggest result should be the
 // last general result.
-add_task(async function generalBeforeSuggestions_others() {
+add_tasks_with_rust(async function generalBeforeSuggestions_others() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("browser.search.suggest.enabled", true);
@@ -671,7 +566,7 @@ add_task(async function generalBeforeSuggestions_others() {
         engineName: Services.search.defaultEngine.name,
       }),
       ...historyResults,
-      EXPECTED_SPONSORED_RESULT,
+      expectedSponsoredResult(),
       makeSearchResult(context, {
         query: SPONSORED_SEARCH_STRING,
         suggestion: SPONSORED_SEARCH_STRING + " foo",
@@ -691,28 +586,28 @@ add_task(async function generalBeforeSuggestions_others() {
   await PlacesUtils.history.clear();
 });
 
-add_task(async function dedupeAgainstURL_samePrefix() {
+add_tasks_with_rust(async function dedupeAgainstURL_samePrefix() {
   await doDedupeAgainstURLTest({
     searchString: HTTP_SEARCH_STRING,
-    expectedQuickSuggestResult: EXPECTED_HTTP_RESULT,
+    expectedQuickSuggestResult: expectedHttpResult(),
     otherPrefix: "http://",
     expectOther: false,
   });
 });
 
-add_task(async function dedupeAgainstURL_higherPrefix() {
+add_tasks_with_rust(async function dedupeAgainstURL_higherPrefix() {
   await doDedupeAgainstURLTest({
     searchString: HTTPS_SEARCH_STRING,
-    expectedQuickSuggestResult: EXPECTED_HTTPS_RESULT,
+    expectedQuickSuggestResult: expectedHttpsResult(),
     otherPrefix: "http://",
     expectOther: false,
   });
 });
 
-add_task(async function dedupeAgainstURL_lowerPrefix() {
+add_tasks_with_rust(async function dedupeAgainstURL_lowerPrefix() {
   await doDedupeAgainstURLTest({
     searchString: HTTP_SEARCH_STRING,
-    expectedQuickSuggestResult: EXPECTED_HTTP_RESULT,
+    expectedQuickSuggestResult: expectedHttpResult(),
     otherPrefix: "https://",
     expectOther: true,
   });
@@ -824,7 +719,7 @@ add_task(async function latencyTelemetry() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_SPONSORED_RESULT],
+    matches: [expectedSponsoredResult()],
   });
 
   // In the latency histogram, there should be a single value across all
@@ -952,7 +847,7 @@ add_task(async function setupAndTeardown() {
 });
 
 // Timestamp templates in URLs should be replaced with real timestamps.
-add_task(async function timestamps() {
+add_tasks_with_rust(async function timestamps() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
@@ -996,7 +891,7 @@ add_task(async function timestamps() {
 // timestamp may be different from the one in the user's history. In that case,
 // the two URLs should be treated as dupes and only the quick suggest should be
 // shown, not the URL from history.
-add_task(async function dedupeAgainstURL_timestamps() {
+add_tasks_with_rust(async function dedupeAgainstURL_timestamps() {
   // Disable search suggestions.
   UrlbarPrefs.set("suggest.searches", false);
 
@@ -1065,40 +960,15 @@ add_task(async function dedupeAgainstURL_timestamps() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   context = createContext(TIMESTAMP_SEARCH_STRING, { isPrivate: false });
 
-  // The expected quick suggest result without the timestamp-related payload
-  // properties.
-  let expectedQuickSuggest = {
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    heuristic: false,
-    payload: {
-      telemetryType: "adm_sponsored",
-      originalUrl: TIMESTAMP_SUGGESTION_URL,
-      qsSuggestion: TIMESTAMP_SEARCH_STRING,
-      title: "Timestamp suggestion",
-      icon: null,
-      sponsoredImpressionUrl: "http://impression.reporting.test.com/timestamp",
-      sponsoredBlockId: 5,
-      sponsoredAdvertiser: "TestAdvertiserTimestamp",
-      sponsoredIabCategory: "22 - Shopping",
-      isSponsored: true,
-      descriptionL10n: { id: "urlbar-result-action-sponsored" },
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-          : "firefox-suggest-urlbar-learn-more",
-      },
-      isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-      blockL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-dismiss-firefox-suggest"
-          : "firefox-suggest-urlbar-block",
-      },
-      source: "remote-settings",
-      provider: "AdmWikipedia",
-    },
-  };
+  let expectedQuickSuggest = makeAmpResult({
+    originalUrl: TIMESTAMP_SUGGESTION_URL,
+    keyword: TIMESTAMP_SEARCH_STRING,
+    title: "Timestamp suggestion",
+    impressionUrl: "http://impression.reporting.test.com/timestamp",
+    blockId: 5,
+    advertiser: "TestAdvertiserTimestamp",
+    iabCategory: "22 - Shopping",
+  });
 
   let expectedResults = [
     expectedHeuristic,
@@ -1357,7 +1227,7 @@ add_task(async function blockedSuggestionsAPI() {
 });
 
 // Test whether the blocking for remote settings results works.
-add_task(async function block() {
+add_tasks_with_rust(async function block() {
   for (const result of REMOTE_SETTINGS_RESULTS) {
     await QuickSuggest.blockedSuggestions.add(result.url);
   }
@@ -1390,7 +1260,7 @@ add_task(async function remoteSettingsDataType() {
     let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(value);
 
     // Make the result for test data type.
-    let expected = EXPECTED_SPONSORED_RESULT;
+    let expected = expectedSponsoredResult();
     if (dataType) {
       expected = JSON.parse(JSON.stringify(expected));
       expected.payload.title = dataType;
@@ -1417,10 +1287,10 @@ add_task(async function remoteSettingsDataType() {
 // always isBestMatch will be true and suggestIndex will be 1.
 // It does not have descriptionL10n.
 const EXPECTED_SPONSORED_PRIORITY_RESULT = {
-  ...EXPECTED_SPONSORED_RESULT,
+  ...expectedSponsoredResult(),
   isBestMatch: true,
   payload: {
-    ...EXPECTED_SPONSORED_RESULT.payload,
+    ...expectedSponsoredResult().payload,
     descriptionL10n: undefined,
   },
 };
@@ -1438,7 +1308,7 @@ add_task(async function sponsoredPriority_nonsponsoredSuggestion() {
   await doSponsoredPriorityTest({
     searchWord: NONSPONSORED_SEARCH_STRING,
     remoteSettingsData: [REMOTE_SETTINGS_RESULTS[1]],
-    expectedMatches: [EXPECTED_NONSPONSORED_RESULT],
+    expectedMatches: [expectedNonSponsoredResult()],
   });
 });
 

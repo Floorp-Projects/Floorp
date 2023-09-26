@@ -74,6 +74,16 @@ export class BaseFeature {
   }
 
   /**
+   * @returns {Array}
+   *   If the feature manages one or more types of suggestions served by the
+   *   Suggest Rust component, the subclass should override this getter and
+   *   return an array of the type names as defined in `suggest.udl`.
+   */
+  get rustSuggestionTypes() {
+    return [];
+  }
+
+  /**
    * This method should initialize or uninitialize any state related to the
    * feature.
    *

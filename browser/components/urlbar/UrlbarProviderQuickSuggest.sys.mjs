@@ -160,11 +160,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];
-    if (
-      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled") &&
-      lazy.QuickSuggest.jsBackend?.isEnabled
-    ) {
-      promises.push(lazy.QuickSuggest.jsBackend.query(searchString));
+    if (lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
+      let { backend } = lazy.QuickSuggest;
+      if (backend?.isEnabled) {
+        promises.push(backend.query(searchString));
+      }
     }
     if (
       lazy.UrlbarPrefs.get("merinoEnabled") &&
@@ -203,8 +203,22 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     suggestions.sort((a, b) => b.score - a.score);
 
+    // All suggestions should have the following keys at this point. They are
+    // required for looking up the features that manage them.
+    let requiredKeys = ["source", "provider"];
+
     // Add a result for the first suggestion that can be shown.
     for (let suggestion of suggestions) {
+      for (let key of requiredKeys) {
+        if (!suggestion[key]) {
+          this.logger.error(
+            `Suggestion is missing required key '${key}': ` +
+              JSON.stringify(suggestion)
+          );
+          continue;
+        }
+      }
+
       let canAdd = await this._canAddSuggestion(suggestion);
       if (instance != this.queryInstance) {
         return;
@@ -291,19 +305,27 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @param {object} options
    *   Options object.
    * @param {string} options.source
-   *   The suggestion source, one of: "remote-settings", "merino"
+   *   The suggestion source, one of: "remote-settings", "merino", "rust"
    * @param {string} options.provider
-   *   If the suggestion source is remote settings, this should be the name of
-   *   the `BaseFeature` instance (`feature.name`) that manages the suggestion
-   *   type. If the suggestion source is Merino, this should be the name of the
-   *   Merino provider that serves the suggestion type.
+   *   This value depends on the value of `source`:
+   *   - remote-settings: The name of the `BaseFeature` instance
+   *     (`feature.name`) that manages the suggestion type.
+   *   - merino: The name of the Merino provider that serves the suggestion
+   *     type.
+   *   - rust: The name of the suggestion type as defined in `suggest.udl`.
    * @returns {BaseFeature}
    *   The feature instance or null if no feature was found.
    */
   #getFeature({ source, provider }) {
-    return source == "remote-settings"
-      ? lazy.QuickSuggest.getFeature(provider)
-      : lazy.QuickSuggest.getFeatureByMerinoProvider(provider);
+    switch (source) {
+      case "remote-settings":
+        return lazy.QuickSuggest.getFeature(provider);
+      case "merino":
+        return lazy.QuickSuggest.getFeatureByMerinoProvider(provider);
+      case "rust":
+        return lazy.QuickSuggest.getFeatureByRustSuggestionType(provider);
+    }
+    return null;
   }
 
   #getFeatureByResult(result) {
@@ -882,6 +904,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   The query context.
    */
   cancelQuery(queryContext) {
+    // Cancel the Rust query.
+    let backend = lazy.QuickSuggest.getFeature("SuggestBackendRust");
+    if (backend?.isEnabled) {
+      backend.cancelQuery();
+    }
+
     // Cancel the Merino timeout timer so it doesn't fire and record a timeout.
     // If it's already canceled or has fired, this is a no-op.
     this.#merino?.cancelTimeoutTimer();
