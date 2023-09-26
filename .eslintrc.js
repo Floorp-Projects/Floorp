@@ -656,7 +656,6 @@ module.exports = {
         "toolkit/crashreporter/test/browser/browser_aboutCrashesResubmit.js",
         // Exempt tests that set pref dom.security.https_first to false Bug 1758951
         "browser/tools/mozscreenshots/controlCenter/browser_controlCenter.js",
-        "dom/file/tests/test_agentcluster_bloburl.js",
         "dom/ipc/tests/test_bug1086684.js",
         "dom/manifest/test/browser_ManifestObtainer_obtain.js",
         "dom/media/test/test_access_control.html",
