@@ -31,6 +31,7 @@ enum class WMFStreamType {
   VP8,
   VP9,
   AV1,
+  HEVC,
   MP3,
   AAC,
   OPUS,
