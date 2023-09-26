@@ -64,7 +64,6 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - http2
-        - geckoview-fission-isolate-high-value
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -124,11 +123,6 @@ mochitest-plain:
             http2:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
-                    default: []
-            geckoview-fission-isolate-high-value:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    android-em.*: built-projects
                     default: []
             default:
                 by-test-platform:
