@@ -253,7 +253,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `WHEN handleRemovePrivateDownloadIntent with a privae download is called THEN removeDownloadJob must be called`() {
+    fun `WHEN handleRemovePrivateDownloadIntent with a private download is called THEN removeDownloadJob must be called`() {
         val downloadState = DownloadState(url = "mozilla.org/mozilla.txt", private = true)
         val downloadJobState = DownloadJobState(state = downloadState, status = COMPLETED)
         val browserStore = mock<BrowserStore>()
@@ -271,6 +271,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.handleRemovePrivateDownloadIntent(downloadState)
 
+        verify(service).cancelDownloadJob(downloadJobState)
         verify(service).removeDownloadJob(downloadJobState)
         verify(browserStore).dispatch(DownloadAction.RemoveDownloadAction(downloadState.id))
     }
