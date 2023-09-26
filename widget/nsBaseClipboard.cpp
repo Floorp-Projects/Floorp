@@ -31,8 +31,20 @@ ClipboardSetDataHelper::AsyncSetClipboardData::AsyncSetClipboardData(
 NS_IMETHODIMP
 ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
     nsITransferable* aTransferable, nsIClipboardOwner* aOwner) {
+  CLIPBOARD_LOG("AsyncSetClipboardData::SetData (%p): clipboard=%d", this,
+                mClipboardType);
+
   if (!IsValid()) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (CLIPBOARD_LOG_ENABLED()) {
+    nsTArray<nsCString> flavors;
+    if (NS_SUCCEEDED(aTransferable->FlavorsTransferableCanImport(flavors))) {
+      for (const auto& flavor : flavors) {
+        CLIPBOARD_LOG("    MIME %s", flavor.get());
+      }
+    }
   }
 
   MOZ_ASSERT(mClipboard);
@@ -115,8 +127,12 @@ ClipboardSetDataHelper::SetData(nsITransferable* aTransferable,
 NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
     int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+
   *_retval = nullptr;
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
@@ -165,6 +181,15 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
                   aWhichClipboard);
     return NS_ERROR_FAILURE;
+  }
+
+  if (CLIPBOARD_LOG_ENABLED()) {
+    nsTArray<nsCString> flavors;
+    if (NS_SUCCEEDED(aTransferable->FlavorsTransferableCanImport(flavors))) {
+      for (const auto& flavor : flavors) {
+        CLIPBOARD_LOG("    MIME %s", flavor.get());
+      }
+    }
   }
 
   const auto& clipboardCache = mCaches[aWhichClipboard];
