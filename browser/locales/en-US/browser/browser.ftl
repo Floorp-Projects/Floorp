@@ -974,24 +974,6 @@ unified-extensions-button-quarantined =
         Extensions
         Some extensions are not allowed
 
-## Private browsing reset button
-
-reset-pbm-toolbar-button =
-    .label = End Private Session
-    .tooltiptext = End Private Session
-reset-pbm-panel-heading = End your private session?
-reset-pbm-panel-description = Close all private tabs and delete history, cookies, and all other site data.
-reset-pbm-panel-always-ask-checkbox =
-     .label = Always ask me
-     .accesskey = A
-reset-pbm-panel-cancel-button =
-    .label = Cancel
-    .accesskey = C
-reset-pbm-panel-confirm-button =
-    .label = Delete session data
-    .accesskey = D
-reset-pbm-panel-complete = Private session data deleted
-
 ## Autorefresh blocker
 
 refresh-blocked-refresh-label = { -brand-short-name } prevented this page from automatically reloading.

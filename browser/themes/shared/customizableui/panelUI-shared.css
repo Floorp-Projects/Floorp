@@ -1972,34 +1972,3 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 .webextension-popup-stack {
   position: relative;
 }
-
-/* Reset/Restart Private Browsing Panel */
-
-#reset-pbm-panel {
-  max-width: var(--menu-panel-width-wide);
-}
-
-#reset-pbm-panel-container {
-  padding: 16px 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#reset-pbm-panel-header > description {
-  margin-bottom: 0;
-}
-
-#reset-pbm-panel-header > description,
-#reset-pbm-panel-description,
-#reset-pbm-panel-footer {
-  margin-inline: 0;
-}
-
-#reset-pbm-panel-header > description {
-  font-weight: var(--font-weight-bold);
-}
-
-#reset-pbm-panel-checkbox {
-  margin-inline: 0 8px;
-}

@@ -368,14 +368,6 @@
   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
 
-#reset-pbm-toolbar-button {
-  list-style-image: url("chrome://browser/skin/flame.svg");
-
-  :root:not([privatebrowsingmode]) & {
-    display: none;
-  }
-}
-
 #email-link-button {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }
