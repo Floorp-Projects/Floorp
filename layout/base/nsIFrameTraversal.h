@@ -72,12 +72,15 @@ class nsIFrameTraversal : public nsISupports {
    *        so the placeholders are logically part of the frame tree.
    * @param aSkipPopupChecks [in] if false, then don't iterate into or out of a
    *        popup frame. If true, skip any popup related checks.
+   * @param aLimiter [in] if this is non-null and an ancestor of aStart,
+   *        iteration will be limited to just the descendants of this frame.
    */
   NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator** aEnumerator,
                                nsPresContext* aPresContext, nsIFrame* aStart,
                                int32_t aType, bool aVisual,
                                bool aLockInScrollView, bool aFollowOOFs,
-                               bool aSkipPopupChecks) = 0;
+                               bool aSkipPopupChecks,
+                               nsIFrame* aLimiter = nullptr) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameTraversal, NS_IFRAMETRAVERSAL_IID)

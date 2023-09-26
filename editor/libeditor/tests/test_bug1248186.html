@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248186</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.waitForFocus(function () {
+    let editor0 = document.getElementById("editor0");
+    let editor1 = document.getElementById("editor1");
+    let editor2 = document.getElementById("editor2");
+    editor0.focus();
+    for (let i = 0; i < 5; i++) {
+      synthesizeKey("KEY_ArrowRight");
+      is(document.activeElement, editor0, "hitting right should not de-focus the editor");
+    }
+    editor1.focus();
+    for (let i = 0; i < 5; i++) {
+      synthesizeKey("KEY_ArrowRight");
+      is(document.activeElement, editor1, "hitting right should not de-focus the editor");
+    }
+    editor2.focus();
+    for (let i = 0; i < 8; i++) {
+      synthesizeKey("KEY_ArrowRight");
+      is(document.activeElement, editor2, "hitting right should not de-focus the editor");
+    }
+    // make sure we don't get stuck at the end of the "foo" span
+    let selection = getSelection();
+    is(selection.focusNode.parentElement.id, "bar");
+    is(selection.focusOffset, 3);
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<div>
+  <span id="editor0" contenteditable>foo</span>
+  <span></span>
+</div>
+<div>
+  <span id="editor1" contenteditable><b>foo</b></span>
+  <span></span>
+</div>
+<span id="editor2" contenteditable>
+  <span>foo</span><br>
+  <span id="bar">bar</span></span>
+</body>
+</html>
