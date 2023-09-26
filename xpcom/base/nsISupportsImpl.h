@@ -483,12 +483,6 @@ class InterfaceNeedsThreadSafeRefCnt : public std::false_type {};
                                                   \
  public:
 
-#define NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL_DELETECYCLECOLLECTABLE \
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_META(override)                     \
-  NS_IMETHOD_(void) DeleteCycleCollectable(void) final;                 \
-                                                                        \
- public:
-
 #define NS_DECL_CYCLE_COLLECTING_ISUPPORTS_META(...)                         \
  public:                                                                     \
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) __VA_ARGS__; \

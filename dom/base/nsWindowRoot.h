@@ -21,7 +21,8 @@ class nsWindowRoot final : public nsPIWindowRoot {
  public:
   explicit nsWindowRoot(nsPIDOMWindowOuter* aWindow);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_IMETHOD_(void) DeleteCycleCollectable() override;
 
   mozilla::EventListenerManager* GetExistingListenerManager() const override;
   mozilla::EventListenerManager* GetOrCreateListenerManager() override;
