@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transformWhile
@@ -107,15 +108,18 @@ class BrowserToolbarCFRPresenter(
 
             ToolbarCFR.SHOPPING, ToolbarCFR.SHOPPING_OPTED_IN -> {
                 scope = browserStore.flowScoped { flow ->
-                    flow.mapNotNull { it.selectedTab }
+                    val shouldShowCfr: Boolean? = flow.mapNotNull { it.selectedTab }
                         .filter { it.isProductUrl && it.content.progress == 100 && !it.content.loading }
                         .distinctUntilChanged()
-                        .collect {
-                            if (toolbar.findViewById<View>(R.id.mozac_browser_toolbar_page_actions).isVisible) {
-                                scope?.cancel()
-                                showShoppingCFR(getCFRToShow() == ToolbarCFR.SHOPPING_OPTED_IN)
-                            }
-                        }
+                        .map { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_page_actions).isVisible }
+                        .filter { it }
+                        .firstOrNull()
+
+                    if (shouldShowCfr == true) {
+                        showShoppingCFR(getCFRToShow() == ToolbarCFR.SHOPPING_OPTED_IN)
+                    }
+
+                    scope?.cancel()
                 }
             }
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ShoppingProductAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
@@ -255,7 +256,7 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
-    fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN the tab is not loading THEN the CFR is shown`() {
+    fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN the tab finishes loading THEN the CFR is shown`() {
         val tab = createTab(url = "")
         val browserStore = createBrowserStore(
             tab = tab,
@@ -288,6 +289,40 @@ class BrowserToolbarCFRPresenterTest {
 
         browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
         verify { presenter.showShoppingCFR(eq(true)) }
+    }
+
+    @Test
+    fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN opening a loaded product page THEN the CFR is shown`() {
+        val tab1 = createTab(url = "", id = "tab1")
+        val tab2 = createTab(url = "", id = "tab2")
+        val browserStore = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(tab1, tab2),
+                selectedTabId = tab2.id,
+            ),
+        )
+
+        val presenter = createPresenter(
+            settings = mockk {
+                every { shouldShowTotalCookieProtectionCFR } returns false
+                every { shouldShowReviewQualityCheckCFR } returns true
+                every { shouldShowEraseActionCFR } returns false
+                every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis() - Settings.TWO_DAYS_MS
+            },
+            browserStore = browserStore,
+        )
+        every { presenter.showShoppingCFR(any()) } just Runs
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab1.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab1.id, 100)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(any()) }
+
+        browserStore.dispatch(TabListAction.SelectTabAction(tab1.id)).joinBlocking()
+        verify(exactly = 1) { presenter.showShoppingCFR(any()) }
     }
 
     /**
