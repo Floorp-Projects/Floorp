@@ -660,8 +660,7 @@ bool TexUnpackImage::Validate(const WebGLContext* const webgl,
 
 Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
                                      const webgl::PackingInfo& pi,
-                                     const TexUnpackBlobDesc& desc,
-                                     const Limits& limits) {
+                                     const TexUnpackBlobDesc& desc) {
   const auto& size = desc.size;
   const auto& unpacking = desc.unpacking;
 
@@ -692,12 +691,8 @@ Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
     }();
     if (premultReason) return premultReason;
 
-    if (pi.format != LOCAL_GL_RGBA && pi.format != LOCAL_GL_RGB) {
-      return "`format` is not RGBA or RGB";
-    }
-
-    if (pi.format == LOCAL_GL_RGB && !limits.rgbColorRenderable) {
-      return "`format` is RGB, which is not color-renderable";
+    if (pi.format != LOCAL_GL_RGBA) {
+      return "`format` is not RGBA";
     }
 
     if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
@@ -729,8 +724,8 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   // -
 
-  const auto reason = BlitPreventReason(level, {xOffset, yOffset, zOffset}, pi,
-                                        mDesc, tex->mContext->Limits());
+  const auto reason =
+      BlitPreventReason(level, {xOffset, yOffset, zOffset}, pi, mDesc);
   if (reason) {
     webgl->GeneratePerfWarning(
         "Failed to hit GPU-copy fast-path."

@@ -237,8 +237,6 @@ static webgl::Limits MakeLimits(const WebGLContext& webgl) {
         gl::GLContext::KHR_texture_compression_astc_hdr);
   }
 
-  limits.rgbColorRenderable = webgl.gl->IsRGBColorRenderable();
-
   if (webgl.IsWebGL2() ||
       limits.supportedExtensions[WebGLExtensionID::WEBGL_draw_buffers]) {
     gl.GetUIntegerv(LOCAL_GL_MAX_DRAW_BUFFERS, &limits.maxColorDrawBuffers);
