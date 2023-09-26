@@ -7,6 +7,8 @@ support-files = ["file_background_redirect.sjs"]
 ["browser_console_logging.js"]
 support-files = ["file_console_logging.html"]
 
+["browser_continue_button_delay.js"]
+
 ["browser_cors_mixedcontent.js"]
 support-files = ["file_cors_mixedcontent.html"]
 
