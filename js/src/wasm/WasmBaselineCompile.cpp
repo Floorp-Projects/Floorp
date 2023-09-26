@@ -11531,6 +11531,8 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
       return false;
     }
 
+    size_t unwindInfoBefore = masm.codeRangeUnwindInfos().length();
+
     // One-pass baseline compilation.
 
     BaseCompiler f(moduleEnv, compilerEnv, func, locals, trapExitLayout,
@@ -11542,8 +11544,11 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
     if (!f.emitFunction()) {
       return false;
     }
-    if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode,
-                                      f.finish())) {
+    FuncOffsets offsets(f.finish());
+    bool hasUnwindInfo =
+        unwindInfoBefore != masm.codeRangeUnwindInfos().length();
+    if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode, offsets,
+                                      hasUnwindInfo)) {
       return false;
     }
   }

@@ -1932,7 +1932,7 @@ bool wasm::GenerateImportFunctions(const ModuleEnvironment& env,
       return false;
     }
     if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0,
-                                      offsets)) {
+                                      offsets, /* hasUnwindInfo = */ false)) {
       return false;
     }
   }
