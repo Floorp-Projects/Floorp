@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* import-globals-from ../../unit/head.js */
+/* eslint-disable jsdoc/require-param */
 
 ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
@@ -18,6 +19,178 @@ add_setup(async function setUpQuickSuggestXpcshellTest() {
   // TelemetryEnvironment initialization in xpcshell tests, so just skip it.
   UrlbarPrefs._testSkipTelemetryEnvironmentInit = true;
 });
+
+/**
+ * Adds two tasks: One with the Rust backend disabled and one with it enabled.
+ * The names of the task functions will be the name of the passed-in task
+ * function appended with "_rustDisabled" and "_rustEnabled" respectively. Call
+ * with the usual `add_task()` arguments.
+ */
+function add_tasks_with_rust(...args) {
+  let taskFnIndex = args.findIndex(a => typeof a == "function");
+  let taskFn = args[taskFnIndex];
+
+  for (let rustEnabled of [false, true]) {
+    let newTaskFn = async (...taskFnArgs) => {
+      info("Setting rustEnabled: " + rustEnabled);
+      UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
+      info("Done setting rustEnabled: " + rustEnabled);
+
+      let rv;
+      try {
+        info("Calling original task function: " + taskFn.name);
+        rv = await taskFn(...taskFnArgs);
+      } finally {
+        info("Done calling original task function: " + taskFn.name);
+        info("Clearing rustEnabled");
+        UrlbarPrefs.clear("quicksuggest.rustEnabled");
+        info("Done clearing rustEnabled");
+      }
+      return rv;
+    };
+
+    Object.defineProperty(newTaskFn, "name", {
+      value: taskFn.name + (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
+    });
+    let addTaskArgs = [...args];
+    addTaskArgs[taskFnIndex] = newTaskFn;
+    add_task(...addTaskArgs);
+  }
+}
+
+/**
+ * Returns an expected Wikipedia (non-sponsored) result that can be passed to
+ * `check_results()` regardless of whether the Rust backend is enabled.
+ *
+ * @returns {object}
+ *   An object that can be passed to `check_results()`.
+ */
+function makeWikipediaResult({
+  source,
+  provider,
+  keyword = "wikipedia",
+  title = "Wikipedia Suggestion",
+  url = "http://example.com/wikipedia",
+  originalUrl = "http://example.com/wikipedia",
+  icon = null,
+  impressionUrl = "http://example.com/wikipedia-impression",
+  clickUrl = "http://example.com/wikipedia-click",
+  blockId = 1,
+  advertiser = "Wikipedia",
+  iabCategory = "5 - Education",
+}) {
+  let result = {
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    payload: {
+      title,
+      url,
+      originalUrl,
+      icon,
+      displayUrl: url.replace(/^https:\/\//, ""),
+      isSponsored: false,
+      qsSuggestion: keyword,
+      helpUrl: QuickSuggest.HELP_URL,
+      helpL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
+      },
+      isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+      blockL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
+      },
+      telemetryType: "adm_nonsponsored",
+    },
+  };
+
+  if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
+    result.payload.source = source || "rust";
+    result.payload.provider = provider || "Wikipedia";
+  } else {
+    result.payload.source = source || "remote-settings";
+    result.payload.provider = provider || "AdmWikipedia";
+  }
+
+  if (result.payload.source != "rust") {
+    result.payload.sponsoredImpressionUrl = impressionUrl;
+    result.payload.sponsoredClickUrl = clickUrl;
+    result.payload.sponsoredBlockId = blockId;
+    result.payload.sponsoredAdvertiser = advertiser;
+    result.payload.sponsoredIabCategory = iabCategory;
+  }
+
+  return result;
+}
+
+/**
+ * Returns an expected AMP (sponsored) result that can be passed to
+ * `check_results()` regardless of whether the Rust backend is enabled.
+ *
+ * @returns {object}
+ *   An object that can be passed to `check_results()`.
+ */
+function makeAmpResult({
+  source,
+  provider,
+  keyword = "amp",
+  title = "AMP Suggestion",
+  url = "http://example.com/amp",
+  originalUrl = "http://example.com/amp",
+  icon = null,
+  impressionUrl = "http://example.com/amp-impression",
+  clickUrl = "http://example.com/amp-click",
+  blockId = 1,
+  advertiser = "Amp",
+  iabCategory = "22 - Shopping",
+} = {}) {
+  let result = {
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    payload: {
+      title,
+      url,
+      originalUrl,
+      icon,
+      displayUrl: url.replace(/^https:\/\//, ""),
+      isSponsored: true,
+      qsSuggestion: keyword,
+      sponsoredImpressionUrl: impressionUrl,
+      sponsoredClickUrl: clickUrl,
+      sponsoredBlockId: blockId,
+      sponsoredAdvertiser: advertiser,
+      sponsoredIabCategory: iabCategory,
+      helpUrl: QuickSuggest.HELP_URL,
+      helpL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
+      },
+      isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+      blockL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
+      },
+      telemetryType: "adm_sponsored",
+      descriptionL10n: { id: "urlbar-result-action-sponsored" },
+    },
+  };
+
+  if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
+    result.payload.source = source || "rust";
+    result.payload.provider = provider || "Amp";
+  } else {
+    result.payload.source = source || "remote-settings";
+    result.payload.provider = provider || "AdmWikipedia";
+  }
+
+  return result;
+}
 
 /**
  * Tests quick suggest prefs migrations.

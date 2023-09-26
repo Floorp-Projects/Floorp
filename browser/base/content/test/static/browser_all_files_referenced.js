@@ -275,10 +275,6 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
-
-  // Bug 1851255: RustSuggest.sys.mjs is currently unused while pending
-  // integration into urlbar.
-  { file: "resource://gre/modules/RustSuggest.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
