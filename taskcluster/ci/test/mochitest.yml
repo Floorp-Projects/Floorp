@@ -332,6 +332,7 @@ mochitest-browser-a11y:
     chunks:
         by-test-platform:
             .*tsan.*: 2
+            .*asan.*: 2
             default: 1
     instance-size: default
     allow-software-gl-layers: false
