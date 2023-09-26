@@ -31,7 +31,7 @@ PGO_SUBSTR="chrome-linux-main"
 # Logic for macosx64
 if [[ $(uname -s) == "Darwin" ]]; then
   # modify the config with fetched sdk path
-  export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX13.3.sdk"
+  export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX14.0.sdk"
   pip3 install importlib-metadata --user
   CONFIG=$(echo $CONFIG mac_sdk_path='"'$MACOS_SYSROOT'"')
 
