@@ -77,6 +77,8 @@ add_task(async function sponsored() {
           payload: {
             match_type,
             position,
+            suggested_index: -1,
+            suggested_index_relative_to_group: true,
             improve_suggest_experience_checked,
             is_clicked: false,
             block_id: REMOTE_SETTINGS_RESULT.id,
@@ -107,6 +109,8 @@ add_task(async function sponsored() {
               payload: {
                 match_type,
                 position,
+                suggested_index: -1,
+                suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 is_clicked: true,
                 block_id: REMOTE_SETTINGS_RESULT.id,
@@ -118,6 +122,8 @@ add_task(async function sponsored() {
               payload: {
                 match_type,
                 position,
+                suggested_index: -1,
+                suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 block_id: REMOTE_SETTINGS_RESULT.id,
                 advertiser: REMOTE_SETTINGS_RESULT.advertiser,
@@ -147,6 +153,8 @@ add_task(async function sponsored() {
               payload: {
                 match_type,
                 position,
+                suggested_index: -1,
+                suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 is_clicked: false,
                 block_id: REMOTE_SETTINGS_RESULT.id,
@@ -158,6 +166,8 @@ add_task(async function sponsored() {
               payload: {
                 match_type,
                 position,
+                suggested_index: -1,
+                suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 block_id: REMOTE_SETTINGS_RESULT.id,
                 advertiser: REMOTE_SETTINGS_RESULT.advertiser,
@@ -188,6 +198,8 @@ add_task(async function sponsored() {
               payload: {
                 match_type,
                 position,
+                suggested_index: -1,
+                suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 is_clicked: false,
                 block_id: REMOTE_SETTINGS_RESULT.id,
@@ -235,6 +247,8 @@ add_task(async function sponsoredBestMatch() {
         payload: {
           match_type,
           position,
+          suggested_index: 1,
+          suggested_index_relative_to_group: false,
           is_clicked: false,
           improve_suggest_experience_checked: false,
           block_id: REMOTE_SETTINGS_RESULT.id,
@@ -267,6 +281,8 @@ add_task(async function sponsoredBestMatch() {
             payload: {
               match_type,
               position,
+              suggested_index: 1,
+              suggested_index_relative_to_group: false,
               is_clicked: true,
               improve_suggest_experience_checked: false,
               block_id: REMOTE_SETTINGS_RESULT.id,
@@ -278,6 +294,8 @@ add_task(async function sponsoredBestMatch() {
             payload: {
               match_type,
               position,
+              suggested_index: 1,
+              suggested_index_relative_to_group: false,
               improve_suggest_experience_checked: false,
               block_id: REMOTE_SETTINGS_RESULT.id,
               advertiser: REMOTE_SETTINGS_RESULT.advertiser,
@@ -309,6 +327,8 @@ add_task(async function sponsoredBestMatch() {
             payload: {
               match_type,
               position,
+              suggested_index: 1,
+              suggested_index_relative_to_group: false,
               is_clicked: false,
               improve_suggest_experience_checked: false,
               block_id: REMOTE_SETTINGS_RESULT.id,
@@ -320,6 +340,8 @@ add_task(async function sponsoredBestMatch() {
             payload: {
               match_type,
               position,
+              suggested_index: 1,
+              suggested_index_relative_to_group: false,
               improve_suggest_experience_checked: false,
               block_id: REMOTE_SETTINGS_RESULT.id,
               advertiser: REMOTE_SETTINGS_RESULT.advertiser,
@@ -352,6 +374,8 @@ add_task(async function sponsoredBestMatch() {
             payload: {
               match_type,
               position,
+              suggested_index: 1,
+              suggested_index_relative_to_group: false,
               is_clicked: false,
               improve_suggest_experience_checked: false,
               block_id: REMOTE_SETTINGS_RESULT.id,

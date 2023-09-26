@@ -705,6 +705,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
+    // Contextual services ping paylod
     let payload = {
       match_type: result.isBestMatch ? "best-match" : "firefox-suggest",
       // Always use lowercase to make the reporting consistent
@@ -715,8 +716,36 @@ class ProviderQuickSuggest extends UrlbarProvider {
       ),
       // Quick suggest telemetry indexes are 1-based but `rowIndex` is 0-based
       position: result.rowIndex + 1,
+      suggested_index: result.suggestedIndex,
+      suggested_index_relative_to_group:
+        !!result.isSuggestedIndexRelativeToGroup,
       request_id: result.payload.requestId,
       source: result.payload.source,
+    };
+
+    // Glean ping key -> value
+    let defaultValuesByGleanKey = {
+      matchType: payload.match_type,
+      advertiser: payload.advertiser,
+      blockId: payload.block_id,
+      improveSuggestExperience: payload.improve_suggest_experience_checked,
+      position: payload.position,
+      suggestedIndex: payload.suggested_index.toString(),
+      suggestedIndexRelativeToGroup: payload.suggested_index_relative_to_group,
+      requestId: payload.request_id,
+      source: payload.source,
+      contextId: lazy.contextId,
+    };
+
+    let sendGleanPing = valuesByGleanKey => {
+      valuesByGleanKey = { ...defaultValuesByGleanKey, ...valuesByGleanKey };
+      for (let [gleanKey, value] of Object.entries(valuesByGleanKey)) {
+        let glean = Glean.quickSuggest[gleanKey];
+        if (value !== undefined) {
+          glean.set(value);
+        }
+      }
+      GleanPings.quickSuggest.submit();
     };
 
     // impression
@@ -728,26 +757,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
       },
       lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
     );
-    Glean.quickSuggest.pingType.set(
-      lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
-    );
-    Glean.quickSuggest.matchType.set(payload.match_type);
-    Glean.quickSuggest.advertiser.set(payload.advertiser);
-    Glean.quickSuggest.blockId.set(payload.block_id);
-    Glean.quickSuggest.improveSuggestExperience.set(
-      payload.improve_suggest_experience_checked
-    );
-    Glean.quickSuggest.position.set(payload.position);
-    Glean.quickSuggest.requestId.set(payload.request_id);
-    Glean.quickSuggest.source.set(payload.source);
-    Glean.quickSuggest.isClicked.set(resultClicked);
-    if (result.payload.sponsoredImpressionUrl) {
-      Glean.quickSuggest.reportingUrl.set(
-        result.payload.sponsoredImpressionUrl
-      );
-    }
-    Glean.quickSuggest.contextId.set(lazy.contextId);
-    GleanPings.quickSuggest.submit();
+    sendGleanPing({
+      pingType: lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+      isClicked: resultClicked,
+      reportingUrl: result.payload.sponsoredImpressionUrl,
+    });
 
     // click
     if (resultClicked) {
@@ -758,23 +772,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
         lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
       );
-      Glean.quickSuggest.pingType.set(
-        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
-      );
-      Glean.quickSuggest.matchType.set(payload.match_type);
-      Glean.quickSuggest.advertiser.set(payload.advertiser);
-      Glean.quickSuggest.blockId.set(payload.block_id);
-      Glean.quickSuggest.improveSuggestExperience.set(
-        payload.improve_suggest_experience_checked
-      );
-      Glean.quickSuggest.position.set(payload.position);
-      Glean.quickSuggest.requestId.set(payload.request_id);
-      Glean.quickSuggest.source.set(payload.source);
-      if (result.payload.sponsoredClickUrl) {
-        Glean.quickSuggest.reportingUrl.set(result.payload.sponsoredClickUrl);
-      }
-      Glean.quickSuggest.contextId.set(lazy.contextId);
-      GleanPings.quickSuggest.submit();
+      sendGleanPing({
+        pingType: lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+        reportingUrl: result.payload.sponsoredClickUrl,
+      });
     }
 
     // dismiss
@@ -786,21 +787,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
         lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
       );
-      Glean.quickSuggest.pingType.set(
-        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
-      );
-      Glean.quickSuggest.matchType.set(payload.match_type);
-      Glean.quickSuggest.advertiser.set(payload.advertiser);
-      Glean.quickSuggest.blockId.set(payload.block_id);
-      Glean.quickSuggest.improveSuggestExperience.set(
-        payload.improve_suggest_experience_checked
-      );
-      Glean.quickSuggest.position.set(payload.position);
-      Glean.quickSuggest.requestId.set(payload.request_id);
-      Glean.quickSuggest.source.set(payload.source);
-      Glean.quickSuggest.iabCategory.set(result.payload.sponsoredIabCategory);
-      Glean.quickSuggest.contextId.set(lazy.contextId);
-      GleanPings.quickSuggest.submit();
+      sendGleanPing({
+        pingType: lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
+        iabCategory: result.payload.sponsoredIabCategory,
+      });
     }
   }
 

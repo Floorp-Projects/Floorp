@@ -619,6 +619,9 @@ function _assertGleanPing(ping) {
   const keymap = {
     match_type: Glean.quickSuggest.matchType,
     position: Glean.quickSuggest.position,
+    suggested_index: Glean.quickSuggest.suggestedIndex,
+    suggested_index_relative_to_group:
+      Glean.quickSuggest.suggestedIndexRelativeToGroup,
     improve_suggest_experience_checked:
       Glean.quickSuggest.improveSuggestExperience,
     is_clicked: Glean.quickSuggest.isClicked,
