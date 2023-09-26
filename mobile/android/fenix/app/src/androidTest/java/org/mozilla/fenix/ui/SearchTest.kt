@@ -93,8 +93,9 @@ class SearchTest {
         searchMockServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154189
     @Test
-    fun searchBarItemsTest() {
+    fun verifySearchBarItemsTest() {
         navigationToolbar {
             verifyDefaultSearchEngine("Google")
             verifySearchBarPlaceholder("Search or enter address")
@@ -109,8 +110,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154190
     @Test
-    fun searchSelectorMenuItemsTest() {
+    fun verifySearchSelectorMenuItemsTest() {
         homeScreen {
         }.openSearch {
             verifySearchView()
@@ -123,8 +125,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154194
     @Test
-    fun searchPlaceholderForDefaultEnginesTest() {
+    fun verifySearchPlaceholderForGeneralDefaultSearchEnginesTest() {
         generalEnginesList.forEach {
             homeScreen {
             }.openSearch {
@@ -140,8 +143,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154195
     @Test
-    fun searchPlaceholderForOtherGeneralSearchEnginesTest() {
+    fun verifySearchPlaceholderForNotDefaultGeneralSearchEnginesTest() {
         val generalEnginesList = listOf("DuckDuckGo", "Bing")
 
         generalEnginesList.forEach {
@@ -154,8 +158,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154196
     @Test
-    fun searchPlaceholderForTopicSearchEngineTest() {
+    fun verifySearchPlaceholderForTopicSpecificSearchEnginesTest() {
         val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
 
         topicEnginesList.forEach {
@@ -203,8 +208,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154191
     @Test
-    fun scanButtonAvailableOnlyForGeneralSearchEnginesTest() {
+    fun verifyScanButtonAvailableOnlyForGeneralSearchEnginesTest() {
         generalEnginesList.forEach {
             homeScreen {
             }.openSearch {

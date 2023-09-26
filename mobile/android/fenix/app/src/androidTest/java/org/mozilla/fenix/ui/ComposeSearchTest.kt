@@ -80,7 +80,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun searchBarItemsTest() {
+    fun verifySearchBarItemsTest() {
         navigationToolbar {
             verifyDefaultSearchEngine("Google")
             verifySearchBarPlaceholder("Search or enter address")
@@ -96,7 +96,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun searchSelectorMenuItemsTest() {
+    fun verifySearchSelectorMenuItemsTest() {
         homeScreen {
         }.openSearch {
             verifySearchView()
@@ -110,7 +110,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun searchPlaceholderForDefaultEnginesTest() {
+    fun verifySearchPlaceholderForGeneralDefaultSearchEnginesTest() {
         generalEnginesList.forEach {
             homeScreen {
             }.openSearch {
@@ -127,7 +127,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun searchPlaceholderForOtherGeneralSearchEnginesTest() {
+    fun verifySearchPlaceholderForNotDefaultGeneralSearchEnginesTest() {
         val generalEnginesList = listOf("DuckDuckGo", "Bing")
 
         generalEnginesList.forEach {
@@ -141,7 +141,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun searchPlaceholderForTopicSearchEngineTest() {
+    fun verifySearchPlaceholderForTopicSpecificSearchEnginesTest() {
         val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
 
         topicEnginesList.forEach {
@@ -190,7 +190,7 @@ class ComposeSearchTest {
     }
 
     @Test
-    fun scanButtonAvailableOnlyForGeneralSearchEnginesTest() {
+    fun verifyScanButtonAvailableOnlyForGeneralSearchEnginesTest() {
         generalEnginesList.forEach {
             homeScreen {
             }.openSearch {
