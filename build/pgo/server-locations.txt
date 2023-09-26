@@ -378,3 +378,9 @@ https://foo.example.com:4433                privileged,cert=http2-cert.pem
 
 # Mochitest
 https://mochi.test:443                      privileged,cert=mochitest-cert.pem
+
+# condprof common transactions
+http://profile.stage.mozaws.net:80          privileged
+https://profile.stage.mozaws.net:443        privileged
+http://ocsp.pki.goog:80                     privileged
+https://ocsp.pki.goog:443                   privileged
