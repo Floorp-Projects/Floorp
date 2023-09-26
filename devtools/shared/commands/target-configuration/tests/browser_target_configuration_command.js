@@ -62,6 +62,34 @@ add_task(async function () {
     "Option colorSchemeSimulation was set, with a string value"
   );
 
+  await targetConfigurationCommand.updateConfiguration({
+    setTabOffline: true,
+  });
+  compareOptions(
+    targetConfigurationCommand.configuration,
+    {
+      cacheDisabled: false,
+      colorSchemeSimulation: "dark",
+      javascriptEnabled: false,
+      setTabOffline: true,
+    },
+    "Option setTabOffline was set on"
+  );
+
+  await targetConfigurationCommand.updateConfiguration({
+    setTabOffline: false,
+  });
+  compareOptions(
+    targetConfigurationCommand.configuration,
+    {
+      setTabOffline: false,
+      cacheDisabled: false,
+      colorSchemeSimulation: "dark",
+      javascriptEnabled: false,
+    },
+    "Option setTabOffline was set off"
+  );
+
   targetCommand.destroy();
   await commands.destroy();
 });

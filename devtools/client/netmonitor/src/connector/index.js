@@ -512,6 +512,9 @@ class Connector {
   async updateNetworkThrottling(enabled, profile) {
     if (!enabled) {
       this.networkFront.clearNetworkThrottling();
+      await this.commands.targetConfigurationCommand.updateConfiguration({
+        setTabOffline: false,
+      });
     } else {
       // The profile can be either a profile id which is used to
       // search the predefined throttle profiles or a profile object
@@ -520,6 +523,9 @@ class Connector {
         profile = throttlingProfiles.find(({ id }) => id == profile);
       }
       const { download, upload, latency } = profile;
+      await this.commands.targetConfigurationCommand.updateConfiguration({
+        setTabOffline: !download,
+      });
       await this.networkFront.setNetworkThrottling({
         downloadThroughput: download,
         uploadThroughput: upload,
