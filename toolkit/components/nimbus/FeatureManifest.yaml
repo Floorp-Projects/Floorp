@@ -1888,3 +1888,8 @@ feltPrivacy:
       description: >-
         When true, new styles and copy enabled on about:privatebrowsing. When true, 
         a toggle for showing or hiding quick suggestions appears in about:preferences.
+    resetPBMAction:
+      type: boolean
+      setPref: browser.privatebrowsing.resetPBM.enabled
+      description: >-
+        Enables the reset PBM feature button and confirmation panel.
