@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import pytest
 import webdriver
-from mozprofile import Profile
+from mozprofile import Preferences, Profile
 from mozrunner import FirefoxRunner
 
 from support.network import get_free_port
@@ -100,6 +100,19 @@ def geckodriver(configuration):
 
     if driver is not None:
         driver.stop()
+
+
+@pytest.fixture
+def user_prefs(configuration):
+    firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
+    _, profile_folder = firefox_options["args"]
+    user_js = os.path.join(profile_folder, "user.js")
+
+    prefs = {}
+    for pref_name, pref_value in Preferences().read_prefs(user_js):
+        prefs[pref_name] = pref_value
+
+    return prefs
 
 
 class Browser:
