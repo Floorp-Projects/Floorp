@@ -208,8 +208,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void ReallyCloseWindow();
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD_(void) DeleteCycleCollectable() override;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* cx,
