@@ -382,18 +382,7 @@
         <action
             android:id="@+id/action_bookmarkFragment_to_bookmarkAddFolderFragment"
             app:destination="@id/bookmarkAddFolderFragment" />
-        <action
-            android:id="@+id/action_bookmarkFragment_to_bookmarkSearchDialogFragment"
-            app:destination="@id/bookmarkSearchDialogFragment"
-            app:popUpTo="@id/bookmarkSearchDialogFragment"
-            app:popUpToInclusive="true" />
     </fragment>
-
-    <dialog
-        android:id="@+id/bookmarkSearchDialogFragment"
-        android:name="org.mozilla.fenix.library.bookmarks.BookmarkSearchDialogFragment"
-        tools:layout="@layout/fragment_bookmark_search_dialog">
-    </dialog>
 
     <fragment
         android:id="@+id/bookmarkEditFragment"

@@ -45,7 +45,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
 
 @Suppress("TooManyFunctions", "LargeClass")
 class BookmarkControllerTest {
@@ -65,7 +64,6 @@ class BookmarkControllerTest {
     private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
     private val navBackStackEntry: NavBackStackEntry = mockk(relaxed = true)
     private val navDestination: NavDestination = mockk(relaxed = true)
-    private val settings: Settings = mockk(relaxed = true)
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0u, "Mozilla", "http://mozilla.org", 0, null)
@@ -249,7 +247,7 @@ class BookmarkControllerTest {
 
         verify {
             navController.navigate(
-                BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkSearchDialogFragment(),
+                BookmarkFragmentDirections.actionGlobalSearchDialog(sessionId = null),
             )
         }
     }
@@ -562,7 +560,6 @@ class BookmarkControllerTest {
             deleteBookmarkFolder = deleteBookmarkFolder,
             showTabTray = showTabTray,
             warnLargeOpenAll = warnLargeOpenAll,
-            settings = settings,
         )
     }
 }
