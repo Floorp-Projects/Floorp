@@ -5,14 +5,9 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutHomeStartupCacheChild: "resource:///modules/AboutNewTabService.sys.mjs",
   WebRTCChild: "resource:///actors/WebRTCChild.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutHomeStartupCacheChild",
-  "resource:///modules/AboutNewTabService.jsm"
-);
 
 export class BrowserProcessChild extends JSProcessActorChild {
   receiveMessage(message) {
