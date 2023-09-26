@@ -171,6 +171,8 @@ Settings:
 Sharing:
   description: Corresponds to the [Feature:Sharing](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3ASharing)
     label on GitHub.
+Shopping:
+  description: Corresponds to the review quality check feature.
 Shortcuts:
   description: Top Sites/Topsites on the Firefox home page. Corresponds to the [Feature:Shortcuts](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AShortcuts)
     label on GitHub.

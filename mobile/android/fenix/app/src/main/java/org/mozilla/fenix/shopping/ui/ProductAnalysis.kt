@@ -58,6 +58,8 @@ import java.util.SortedMap
  * recommendations toggle state.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onFooterLinkClick Invoked when the user clicks on the footer link.
+ * @param onShowMoreRecentReviewsClicked Invoked when the user clicks to show more recent reviews.
+ * @param onExpandSettings Invoked when the user expands the settings card.
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
@@ -71,6 +73,8 @@ fun ProductAnalysis(
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: () -> Unit,
     onFooterLinkClick: () -> Unit,
+    onShowMoreRecentReviewsClicked: () -> Unit,
+    onExpandSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -119,6 +123,7 @@ fun ProductAnalysis(
                 highlights = productAnalysis.highlights,
                 highlightsFadeVisible = productAnalysis.highlightsFadeVisible,
                 showMoreButtonVisible = productAnalysis.showMoreButtonVisible,
+                onShowMoreRecentReviewsClicked = onShowMoreRecentReviewsClicked,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -133,6 +138,7 @@ fun ProductAnalysis(
             productRecommendationsEnabled = productRecommendationsEnabled,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
+            onExpandSettings = onExpandSettings,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -218,11 +224,13 @@ private fun AdjustedProductRatingCard(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun HighlightsCard(
     highlights: Map<HighlightType, List<String>>,
     highlightsFadeVisible: Boolean,
     showMoreButtonVisible: Boolean,
+    onShowMoreRecentReviewsClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ReviewQualityCheckCard(modifier = modifier) {
@@ -301,7 +309,12 @@ private fun HighlightsCard(
                 } else {
                     stringResource(R.string.review_quality_check_highlights_show_more)
                 },
-                onClick = { isExpanded = isExpanded.not() },
+                onClick = {
+                    if (!isExpanded) {
+                        onShowMoreRecentReviewsClicked()
+                    }
+                    isExpanded = isExpanded.not()
+                },
             )
         }
     }
@@ -484,6 +497,8 @@ private fun ProductAnalysisPreview(
                 },
                 onReviewGradeLearnMoreClick = {},
                 onFooterLinkClick = {},
+                onShowMoreRecentReviewsClicked = {},
+                onExpandSettings = {},
             )
         }
     }

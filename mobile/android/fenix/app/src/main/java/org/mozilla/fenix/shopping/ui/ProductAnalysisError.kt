@@ -32,6 +32,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onFooterLinkClick Invoked when the user clicks on the footer link.
+ * @param onExpandSettings Invoked when the user expands the settings card.
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
@@ -44,6 +45,7 @@ fun ProductAnalysisError(
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onFooterLinkClick: () -> Unit,
+    onExpandSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -96,6 +98,7 @@ fun ProductAnalysisError(
             productRecommendationsEnabled = productRecommendationsEnabled,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
+            onExpandSettings = onExpandSettings,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -123,6 +126,7 @@ private fun ProductAnalysisErrorPreview() {
                 onOptOutClick = {},
                 onProductRecommendationsEnabledStateChange = {},
                 onFooterLinkClick = {},
+                onExpandSettings = {},
                 modifier = Modifier.fillMaxWidth(),
             )
         }

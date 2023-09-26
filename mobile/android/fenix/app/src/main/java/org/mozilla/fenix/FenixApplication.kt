@@ -82,6 +82,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.ShoppingSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core
@@ -860,6 +861,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             } catch (e: LoginsApiException) {
                 logger.error("Failed to fetch list of logins", e)
             }
+        }
+
+        with(ShoppingSettings) {
+            componentOptedOut.set(!settings.isReviewQualityCheckEnabled)
+            nimbusDisabledShopping.set(!FxNimbus.features.shoppingExperience.value().enabled)
+            userHasOnboarded.set(settings.reviewQualityCheckOptInTimeInMillis != 0L)
         }
     }
 

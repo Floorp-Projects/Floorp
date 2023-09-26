@@ -46,6 +46,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
+ * @param onExpandSettings Invoked when the user expands the settings card.
  * @param modifier Modifier to be applied to the composable.
  */
 @Suppress("LongParameterList")
@@ -58,6 +59,7 @@ fun NoAnalysis(
     onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
+    onExpandSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -75,6 +77,7 @@ fun NoAnalysis(
             productRecommendationsEnabled = productRecommendationsEnabled,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
+            onExpandSettings = onExpandSettings,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -183,6 +186,7 @@ private fun NoAnalysisPreview() {
                 onReviewGradeLearnMoreClick = {},
                 onOptOutClick = {},
                 onProductRecommendationsEnabledStateChange = {},
+                onExpandSettings = {},
                 modifier = Modifier.fillMaxWidth(),
             )
         }

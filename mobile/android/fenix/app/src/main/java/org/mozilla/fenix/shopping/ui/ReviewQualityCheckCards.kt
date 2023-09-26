@@ -44,12 +44,14 @@ private val defaultCardContentPadding = 16.dp
  *
  * @param title The title of the card.
  * @param modifier Modifier to be applied to the card.
+ * @param onExpandToggleClick Callback invoked when card is collapsed or expanded.
  * @param content The content of the card.
  */
 @Composable
 fun ReviewQualityCheckExpandableCard(
     title: String,
     modifier: Modifier = Modifier,
+    onExpandToggleClick: (isExpanded: Boolean) -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     ReviewQualityCheckCard(
@@ -64,6 +66,7 @@ fun ReviewQualityCheckExpandableCard(
                 .fillMaxWidth()
                 .clickable {
                     isExpanded = isExpanded.not()
+                    onExpandToggleClick(isExpanded)
                 }
                 .padding(defaultCardContentPadding),
             verticalAlignment = Alignment.CenterVertically,

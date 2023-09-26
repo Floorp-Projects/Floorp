@@ -33,6 +33,11 @@ sealed interface ReviewQualityCheckAction : Action {
     sealed interface NetworkAction : ReviewQualityCheckAction
 
     /**
+     * Actions related to telemetry events.
+     */
+    sealed interface TelemetryAction : ReviewQualityCheckAction
+
+    /**
      * Triggered when the store is initialized.
      */
     object Init : PreferencesMiddlewareAction
@@ -40,12 +45,12 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user has opted in to the review quality check feature.
      */
-    object OptIn : PreferencesMiddlewareAction
+    object OptIn : PreferencesMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user has opted out of the review quality check feature.
      */
-    object OptOut : PreferencesMiddlewareAction, UpdateAction
+    object OptOut : PreferencesMiddlewareAction, UpdateAction, TelemetryAction
 
     /**
      * Triggered when the user has enabled or disabled product recommendations.
@@ -71,7 +76,7 @@ sealed interface ReviewQualityCheckAction : Action {
      */
     data class OptOutCompleted(
         val productVendors: List<ReviewQualityCheckState.ProductVendor>,
-    ) : UpdateAction
+    ) : UpdateAction, TelemetryAction
 
     /**
      * Triggered as a result of a [NetworkAction] to update the state.
@@ -91,12 +96,17 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user triggers product re-analysis.
      */
-    object ReanalyzeProduct : NetworkAction, UpdateAction
+    object ReanalyzeProduct : NetworkAction, UpdateAction, TelemetryAction
+
+    /**
+     * Triggered when the user clicks on the analyze button
+     */
+    object AnalyzeProduct : NetworkAction, UpdateAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on learn more link on the explainer card.
      */
-    object OpenExplainerLearnMoreLink : NavigationMiddlewareAction
+    object OpenExplainerLearnMoreLink : NavigationMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on the "Powered by" link in the footer.
@@ -106,15 +116,50 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user clicks on learn more link on the opt in card.
      */
-    object OpenOnboardingLearnMoreLink : NavigationMiddlewareAction
+    object OpenOnboardingLearnMoreLink : NavigationMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on terms and conditions link on the opt in card.
      */
-    object OpenOnboardingTermsLink : NavigationMiddlewareAction
+    object OpenOnboardingTermsLink : NavigationMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on privacy policy link on the opt in card.
      */
-    object OpenOnboardingPrivacyPolicyLink : NavigationMiddlewareAction
+    object OpenOnboardingPrivacyPolicyLink : NavigationMiddlewareAction, TelemetryAction
+
+    /**
+     * Triggered when the bottom sheet is closed.
+     */
+    object BottomSheetClosed : TelemetryAction
+
+    /**
+     * Triggered when the bottom sheet is opened.
+     */
+    object BottomSheetDisplayed : TelemetryAction
+
+    /**
+     * Triggered when the user clicks on the "Not now" button from the contextual onboarding card.
+     */
+    object NotNowClicked : TelemetryAction
+
+    /**
+     * Triggered when the user expands the recent reviews card.
+     */
+    object ShowMoreRecentReviewsClicked : TelemetryAction
+
+    /**
+     * Triggered when the user expands the settings card.
+     */
+    object ExpandSettingsClicked : TelemetryAction
+
+    /**
+     * Triggered when the No analysis card is displayed to the user.
+     */
+    object NoAnalysisDisplayed : TelemetryAction
+
+    /**
+     * Triggered when the user reports a product is back in stock.
+     */
+    object ReportProductBackInStock : TelemetryAction
 }

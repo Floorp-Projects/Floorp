@@ -10401,3 +10401,406 @@ sync:
       - android-probes@mozilla.com
       - cgordon@mozilla.com
     expires: never
+
+shopping:
+  address_bar_icon_displayed:
+    type: event
+    description: |
+      The shopping icon was displayed in the address bar.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  address_bar_icon_clicked:
+    type: event
+    description: |
+      The shopping icon from the address bar was clicked.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  address_bar_feature_callout_displayed:
+    type: event
+    description: |
+      The shopping CFR was displayed to the user.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_closed:
+    type: event
+    description: |
+      The shopping bottom sheet was closed.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_displayed:
+    type: event
+    description: |
+      The shopping bottom sheet was displayed.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_onboarding_displayed:
+    type: event
+    description: |
+      The shopping contextual onboarding card was displayed.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_review_quality_explainer_url_clicked:
+    type: event
+    description: |
+      User interacted with the learn more link from the shopping explanation card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_show_terms_clicked:
+    type: event
+    description: |
+      User interacted with the terms and conditions link from the shopping contextual onboarding card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_show_privacy_policy_clicked:
+    type: event
+    description: |
+      User interacted with the privacy policy link from the shopping contextual onboarding card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_not_now_clicked:
+    type: event
+    description: |
+      User interacted with the opt out button from the shopping contextual onboarding card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_opt_in_accepted:
+    type: event
+    description: |
+      User interacted with the opt in button from the shopping contextual onboarding card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_show_more_recent_reviews_clicked:
+    type: event
+    description: |
+      User interacted with the expand "show more" button from the shopping highlights card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_learn_more_clicked:
+    type: event
+    description: |
+      The user clicked on learn more link from the onboarding card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_expand_settings:
+    type: event
+    description: |
+      Settings card from the bottom sheet was expanded.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_no_review_reliability_available:
+    type: event
+    description: |
+      No analysis card was displayed to the user.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_analyze_reviews_none_available_clicked:
+    type: event
+    description: |
+      User clicked on the launch analyzer link from the no analysis card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_reanalyze_clicked:
+    type: event
+    description: |
+      User interacted with the launch analyzer link from the "New info to check" warning card.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  surface_reactivated_button_clicked:
+    type: event
+    description: |
+      User interacted with the button to report a product is back in stock.
+    send_in_pings:
+      - events
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+
+shopping.settings:
+  component_opted_out:
+    type: boolean
+    description: |
+      Whether or not the user opted out of review quality check feature.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  nimbus_disabled_shopping:
+    type: boolean
+    description: |
+      Whether or not Nimbus has disabled the use of the shopping component.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping
+  user_has_onboarded:
+    type: boolean
+    description: |
+      Whether or the user has completed the review quality check onboarding.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3619
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: 131
+    metadata:
+      tags:
+        - Shopping

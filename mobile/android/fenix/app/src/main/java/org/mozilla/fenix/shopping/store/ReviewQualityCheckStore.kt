@@ -79,7 +79,7 @@ private fun mapStateForUpdateAction(
             }
         }
 
-        ReviewQualityCheckAction.ReanalyzeProduct -> {
+        ReviewQualityCheckAction.ReanalyzeProduct, ReviewQualityCheckAction.AnalyzeProduct -> {
             state.mapIfOptedIn {
                 when (it.productReviewState) {
                     is ProductReviewState.AnalysisPresent -> {

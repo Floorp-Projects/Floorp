@@ -29,6 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onTurnOffReviewQualityCheckClick Invoked when the user opts out of the review quality check feature.
+ * @param onExpandSettings Invoked when the user expands the settings card.
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
@@ -36,11 +37,17 @@ fun ReviewQualityCheckSettingsCard(
     productRecommendationsEnabled: Boolean?,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onTurnOffReviewQualityCheckClick: () -> Unit,
+    onExpandSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ReviewQualityCheckExpandableCard(
         modifier = modifier,
         title = stringResource(R.string.review_quality_check_settings_title),
+        onExpandToggleClick = { isExpanded ->
+            if (isExpanded) {
+                onExpandSettings()
+            }
+        },
     ) {
         SettingsContent(
             productRecommendationsEnabled = productRecommendationsEnabled,
@@ -92,6 +99,7 @@ private fun ReviewQualityCheckSettingsCardPreview() {
                 productRecommendationsEnabled = true,
                 onProductRecommendationsEnabledStateChange = {},
                 onTurnOffReviewQualityCheckClick = {},
+                onExpandSettings = {},
                 modifier = Modifier.fillMaxWidth(),
             )
         }

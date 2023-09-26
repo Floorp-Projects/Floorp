@@ -59,7 +59,7 @@ class ReviewQualityCheckNetworkMiddleware(
                     store.updateProductReviewState(productReviewState)
                 }
 
-                ReviewQualityCheckAction.ReanalyzeProduct -> {
+                ReviewQualityCheckAction.ReanalyzeProduct, ReviewQualityCheckAction.AnalyzeProduct -> {
                     val reanalysis = reviewQualityCheckService.reanalyzeProduct()
 
                     if (reanalysis == null) {
