@@ -181,14 +181,21 @@ export class ProtonScreen extends React.PureComponent {
   }
 
   renderTitle({ title, title_logo }) {
-    return title_logo ? (
-      <div className="inline-icon-container">
-        {this.renderPicture(title_logo)}
-        <Localized text={title}>
-          <h1 id="mainContentHeader" />
-        </Localized>
-      </div>
-    ) : (
+    if (title_logo) {
+      const { alignment, ...rest } = title_logo;
+      return (
+        <div
+          className="inline-icon-container"
+          alignment={alignment ?? "center"}
+        >
+          {this.renderPicture({ ...rest })}
+          <Localized text={title}>
+            <h1 id="mainContentHeader" />
+          </Localized>
+        </div>
+      );
+    }
+    return (
       <Localized text={title}>
         <h1 id="mainContentHeader" />
       </Localized>
