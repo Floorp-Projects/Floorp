@@ -201,8 +201,7 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 }
 
 .detail-grid,
-.detail-row,
-.form-actions-row {
+.detail-row {
   margin-bottom: 40px;
 }
 
@@ -363,4 +362,14 @@ login-command-button {
   color: currentColor;
   text-decoration: underline;
   font-weight: var(--font-weight-bold);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+.action-buttons .form-actions-row {
+  margin-block: 5px 0;
+  margin-inline: 0 5px;
 }
