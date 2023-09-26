@@ -48,6 +48,7 @@ def browser(full_configuration):
             current_browser.quit()
 
         binary = full_configuration["browser"]["binary"]
+        env = full_configuration["browser"]["env"]
         firefox_options = full_configuration["capabilities"]["moz:firefoxOptions"]
         current_browser = Browser(
             binary,
@@ -56,6 +57,7 @@ def browser(full_configuration):
             use_cdp=use_cdp,
             extra_args=extra_args,
             extra_prefs=extra_prefs,
+            env=env,
         )
         current_browser.start()
         return current_browser
@@ -124,6 +126,7 @@ class Browser:
         use_cdp=False,
         extra_args=None,
         extra_prefs=None,
+        env=None,
     ):
         self.use_bidi = use_bidi
         self.bidi_port_file = None
@@ -161,7 +164,7 @@ class Browser:
         if self.extra_args is not None:
             cmdargs.extend(self.extra_args)
         self.runner = FirefoxRunner(
-            binary=binary, profile=self.profile, cmdargs=cmdargs
+            binary=binary, profile=self.profile, cmdargs=cmdargs, env=env
         )
 
     @property
@@ -215,6 +218,7 @@ class Geckodriver:
         self.requested_capabilities = configuration["capabilities"]
         self.hostname = hostname or configuration["host"]
         self.extra_args = extra_args or []
+        self.env = configuration["browser"]["env"]
 
         self.command = None
         self.proc = None
@@ -240,7 +244,7 @@ class Geckodriver:
         )
 
         print(f"Running command: {' '.join(self.command)}")
-        self.proc = subprocess.Popen(self.command)
+        self.proc = subprocess.Popen(self.command, env=self.env)
 
         # Wait for the port to become ready
         end_time = time.time() + 10
