@@ -6,7 +6,6 @@
 #include "RemoteDecoderManagerChild.h"
 
 #include "ErrorList.h"
-#include "MP4Decoder.h"
 #include "PDMFactory.h"
 #include "PlatformDecoderModule.h"
 #include "RemoteAudioDecoder.h"
@@ -267,12 +266,6 @@ bool RemoteDecoderManagerChild::Supports(
     const bool isAudio = aParams.mConfig.IsAudio();
     const auto trackSupport = GetTrackSupport(aLocation);
     if (isVideo) {
-      // Special condition for HEVC, which can only be supported in specific
-      // process. As HEVC support is still a experimental feature, we don't want
-      // to report support for it arbitrarily.
-      if (MP4Decoder::IsHEVC(aParams.mConfig.mMimeType)) {
-        return aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM;
-      }
       return trackSupport.contains(TrackSupport::Video);
     }
     if (isAudio) {

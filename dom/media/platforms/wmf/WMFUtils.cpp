@@ -46,7 +46,6 @@ bool StreamTypeIsVideo(const WMFStreamType& aType) {
     case WMFStreamType::VP8:
     case WMFStreamType::VP9:
     case WMFStreamType::AV1:
-    case WMFStreamType::HEVC:
       return true;
     default:
       return false;
@@ -76,8 +75,6 @@ const char* StreamTypeToString(WMFStreamType aStreamType) {
       return "VP9";
     case WMFStreamType::AV1:
       return "AV1";
-    case WMFStreamType::HEVC:
-      return "HEVC";
     case WMFStreamType::MP3:
       return "MP3";
     case WMFStreamType::AAC:
@@ -107,9 +104,6 @@ WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType) {
     return WMFStreamType::AV1;
   }
 #endif
-  if (MP4Decoder::IsHEVC(aMimeType)) {
-    return WMFStreamType::HEVC;
-  }
   if (aMimeType.EqualsLiteral("audio/mp4a-latm") ||
       aMimeType.EqualsLiteral("audio/mp4")) {
     return WMFStreamType::AAC;
@@ -326,9 +320,6 @@ GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
     return MFVideoFormat_AV1;
   }
 #endif
-  else if (MP4Decoder::IsHEVC(aMimeType)) {
-    return MFVideoFormat_HEVC;
-  }
   NS_WARNING("Unsupport video mimetype");
   return GUID_NULL;
 }

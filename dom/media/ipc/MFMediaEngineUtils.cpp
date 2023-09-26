@@ -115,7 +115,6 @@ const char* GUIDToStr(GUID aGUID) {
   ENUM_TO_STR2(aGUID, MFVideoFormat_VP80)
   ENUM_TO_STR2(aGUID, MFVideoFormat_VP90)
   ENUM_TO_STR2(aGUID, MFVideoFormat_AV1)
-  ENUM_TO_STR2(aGUID, MFVideoFormat_HEVC)
   ENUM_TO_STR2(aGUID, MFMediaType_Audio)
   return "Unknown GUID";
 }

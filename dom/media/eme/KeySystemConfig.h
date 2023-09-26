@@ -38,7 +38,6 @@ struct KeySystemConfig {
   static constexpr auto EME_CODEC_H264 = "h264"_ns;
   static constexpr auto EME_CODEC_VP8 = "vp8"_ns;
   static constexpr auto EME_CODEC_VP9 = "vp9"_ns;
-  static constexpr auto EME_CODEC_HEVC = "hevc"_ns;
 
   using EMEEncryptionSchemeString = nsCString;
   static constexpr auto EME_ENCRYPTION_SCHEME_CENC = "cenc"_ns;

@@ -11,7 +11,6 @@
 
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/EMEUtils.h"
-#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/KeySystemConfig.h"
 #include "MFCDMProxy.h"
 #include "MFMediaEngineUtils.h"
@@ -480,21 +479,17 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
 
   // TODO : check HW CDM creation
+  // TODO : add HEVC support?
   static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
       KeySystemConfig::EME_CODEC_H264,
       KeySystemConfig::EME_CODEC_VP8,
       KeySystemConfig::EME_CODEC_VP9,
-      KeySystemConfig::EME_CODEC_HEVC,
   });
   // Remember supported video codecs.
   // It will be used when collecting audio codec and encryption scheme
   // support.
   nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
   for (auto& codec : kVideoCodecs) {
-    if (codec == KeySystemConfig::EME_CODEC_HEVC &&
-        !StaticPrefs::media_wmf_hevc_enabled()) {
-      continue;
-    }
     if (FactorySupports(mFactory, mKeySystem, codec,
                         KeySystemConfig::EMECodecString(""), nsString(u""),
                         aIsHWSecure)) {
