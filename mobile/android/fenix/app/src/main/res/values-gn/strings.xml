@@ -636,7 +636,7 @@
 
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
-    <string name="wallpapers_item_name_content_description">Mba’erechaha rugua mba’epuru: %1$s</string>
+    <string name="wallpapers_item_name_content_description">Mba’erechaha rugua mba’eporu: %1$s</string>
     <!-- Snackbar message for when wallpaper is selected -->
     <string name="wallpaper_updated_snackbar_message">¡Mba’erechaha rugua hekopyahupyréva!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
@@ -1066,7 +1066,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">¿Añetehápepa emboguetese ko marandurenda?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
-    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s omboguéta umi mba’epuru poravopyre.</string>
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s omboguéta umi mba’eporu poravopyre.</string>
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">Heja</string>
     <!-- Screen title for adding a bookmarks folder -->

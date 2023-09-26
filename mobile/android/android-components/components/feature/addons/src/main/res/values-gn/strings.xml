@@ -59,7 +59,7 @@
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Ehechauka ñemomarandu</string>
     <!-- Description for pkcs11 permission. -->
-    <string name="mozac_feature_addons_permissions_pkcs11_description">Eikuave’ẽ mba’epururã criptografía ñemoneĩ</string>
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Eikuave’ẽ mba’eporurã criptografía ñemoneĩ</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Eñangareko kundaha proxy ñemboheko rehe</string>
     <!-- Description for sessions permission. -->

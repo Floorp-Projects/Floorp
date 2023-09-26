@@ -2116,6 +2116,8 @@
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name">සමාලෝචන සෝදිසිකරු</string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">%s ගැන තව දැනගන්න.</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">සැකසුම්</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
@@ -2130,6 +2132,10 @@
     <string name="review_quality_check_generic_error_title">දැනට තොරතුරු නැත</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">තව දැනගන්න</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">පෞද්ගලිකත්‍ව ප්‍රතිපත්තිය</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use">භාවිත නියම</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">දැන් නොවේ</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->

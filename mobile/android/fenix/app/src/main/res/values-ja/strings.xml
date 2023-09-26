@@ -2277,9 +2277,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">今すぐ確認</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">まだ十分な数のレビューがありません</string>
+    <string name="review_quality_check_no_reviews_warning_title">まだ十分な数のレビューがありません</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">この製品の品質を確認可能な数のレビューが掲載されるまでお待ちください。</string>
+    <string name="review_quality_check_no_reviews_warning_body">この製品の品質を確認可能な数のレビューが掲載されるまでお待ちください。</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">製品が利用できません</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2287,20 +2287,20 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">製品が再入荷されたことを報告する</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">レビューの品質の確認</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">レビューの品質の確認</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">レビューの品質の確認</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">レビューの品質の確認</string>
 
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">これには約 60 秒かかります。</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">これには約 60 秒かかります。</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">ご報告ありがとうございます。</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">この製品のレビュー情報は 24 時間以内に更新されます。後でもう一度確認してください。</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">これらのレビューは確認できません</string>
+    <string name="review_quality_check_not_analyzable_info_title">これらのレビューは確認できません</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">残念ながら、特定の種類の商品のレビュー品質は確認できません。たとえば、ギフトカードやストリーミングビデオ、音楽、ゲームなどです。</string>
+    <string name="review_quality_check_not_analyzable_info_body">残念ながら、特定の種類の商品のレビュー品質は確認できません。たとえば、ギフトカードやストリーミングビデオ、音楽、ゲームなどです。</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">情報は間もなく更新</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2310,20 +2310,20 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">OK</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">現在入手可能な情報はありません</string>
+    <string name="review_quality_check_generic_error_title">現在入手可能な情報はありません</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">現在、問題の解決に取り組んでいます。後でもう一度確認してください。</string>
+    <string name="review_quality_check_generic_error_body">現在、問題の解決に取り組んでいます。後でもう一度確認してください。</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">ネットワーク接続がありません</string>
+    <string name="review_quality_check_no_connection_title">ネットワーク接続がありません</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">ネットワーク接続を確認し、ページを再度読み込んでみてください。</string>
+    <string name="review_quality_check_no_connection_body">ネットワーク接続を確認し、ページを再度読み込んでみてください。</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">これらのレビューに関する情報はまだありません</string>
+    <string name="review_quality_check_no_analysis_title">これらのレビューに関する情報はまだありません</string>
 
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">この製品のレビューが信頼できるかどうかを確認するには、レビュー品質を確認してください。所要時間はわずか 60 秒ほどです。</string>
+    <string name="review_quality_check_no_analysis_body">この製品のレビューが信頼できるかどうかを確認するには、レビュー品質を確認してください。所要時間はわずか 60 秒ほどです。</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">レビューの品質を確認</string>
+    <string name="review_quality_check_no_analysis_link">レビューの品質を確認</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">製品レビューの信頼できるガイドをお試しください</string>
 
@@ -2355,9 +2355,9 @@
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">レビュー品質チェックを開く</string>
+    <string name="review_quality_check_open_handle_content_description">レビューチェッカーを開く</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">レビュー品質チェックを閉じる</string>
+    <string name="review_quality_check_close_handle_content_description">レビューチェッカーを閉じる</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">スター 5 個中 %1$s 個</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

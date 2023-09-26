@@ -103,7 +103,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Ko kuatiarogue ndoguerahajeýi hekoitépe</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Kundahára opytáma orujeysehápe mba’epuru jerurepyre. Pe tenda oguerahajeýta nde jerurepyre ysaja araka’eve noĩmbamo’ãiva rehegua.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Kundahára opytáma orujeysehápe mba’eporu jerurepyre. Pe tenda oguerahajeýta nde jerurepyre ysaja araka’eve noĩmbamo’ãiva rehegua.</p>
       <ul>
         <li>Erekópa mboguehápe térã jokohápe kookie oikotevẽva ko tenda.</li>
         <li>Emboajérõ jepe kookie tenda pegua nomyatyrõi apañuãi, ikatuhína apañuãi mohendahavusu ñemboheko ha ndaha’éi ne mohendaha rehegua.</li>
@@ -113,7 +113,7 @@
     <string name="mozac_browser_errorpages_offline_title">Jeikekatu’ỹre</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Pe kundaha omba’apo jeikekatu’ỹre ha ndaikatúi oike pe mba’epuru jerurepyrépe.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Pe kundaha omba’apo jeikekatu’ỹre ha ndaikatúi oike pe mba’eporu jerurepyrépe.</p>
       <ul>
         <li>¿Oñembojuaju mohendaha ñanduti oikóva rehe?</li>
         <li>Ejopy “Ha’ãjey” ehasa hag̃ua jeikekatúpe ha emonyhẽjey kuatiarogue.</li>
@@ -213,7 +213,7 @@
     <string name="mozac_browser_errorpages_file_not_found_title">Marandurenda ndojejuhúiva</string>
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
-        <li>¿Ikatu pe mba’epuru oñemboherajey, omboguévo térã omoambuévo tape?</li>
+        <li>¿Ikatu pe mba’eporu oñemboherajey, omboguévo térã omoambuévo tape?</li>
         <li>¿Oĩ jejavy jehaípe, taiguasu jepurúpe térã oimeraẽva ambuechagua kundaharapépe?</li>
         <li>¿Ereko jeikekuaa oikoitéva pe mba’epuru jerurepyrépe?</li>
       </ul>]]></string>
@@ -230,7 +230,7 @@
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Ko kundahára oñemboheko oiporu hag̃ua mohendahavusu proxy, hákatu pe proxy omboyke jeike.</p>
       <ul>
         <li>Oĩporãpa proxy ñemboheko kundahárape. Ehechajey ñemboheko ha eha’ãjey.</li>
-        <li>¿Omoneĩpa proxy mba’epuru jeike ko ñanduti guive?</li>
+        <li>¿Omoneĩpa proxy mba’eporu jeike ko ñanduti guive?</li>
         <li>Oguereko gueteri apañuãi? Eporandu ñanduti ñangarekoha térã ñanduti me’ẽhárape pytyvõrã aporekoguáva rehe.</li>
       </ul>]]></string>
 
