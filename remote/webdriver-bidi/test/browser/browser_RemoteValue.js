@@ -273,6 +273,18 @@ const REMOTE_COMPLEX_VALUES = [
   },
   { value: new WeakMap([[{}, 1]]), serialized: { type: "weakmap" } },
   { value: new WeakSet([{}]), serialized: { type: "weakset" } },
+  {
+    value: (function* () {
+      yield "a";
+    })(),
+    serialized: { type: "generator" },
+  },
+  {
+    value: (async function* () {
+      yield await Promise.resolve(1);
+    })(),
+    serialized: { type: "generator" },
+  },
   { value: new Error("error message"), serialized: { type: "error" } },
   {
     value: new SyntaxError("syntax error message"),
@@ -282,6 +294,7 @@ const REMOTE_COMPLEX_VALUES = [
     value: new TypeError("type error message"),
     serialized: { type: "error" },
   },
+  { value: new Proxy({}, {}), serialized: { type: "proxy" } },
   { value: new Promise(() => true), serialized: { type: "promise" } },
   { value: new Int8Array(), serialized: { type: "typedarray" } },
   { value: new ArrayBuffer(), serialized: { type: "arraybuffer" } },
