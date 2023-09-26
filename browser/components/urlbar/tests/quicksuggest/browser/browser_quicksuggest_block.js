@@ -160,6 +160,8 @@ add_combo_task(async function basic_keyShortcut({ result, isBestMatch }) {
 async function doBasicBlockTest({ result, isBestMatch, block }) {
   spy.resetHistory();
   let index = 2;
+  let suggested_index = isBestMatch ? 1 : -1;
+  let suggested_index_relative_to_group = !isBestMatch;
   let match_type = isBestMatch ? "best-match" : "firefox-suggest";
 
   let pingsSubmitted = 0;
@@ -173,6 +175,15 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
     Assert.equal(Glean.quickSuggest.matchType.testGetValue(), match_type);
     Assert.equal(Glean.quickSuggest.blockId.testGetValue(), result.id);
     Assert.equal(Glean.quickSuggest.isClicked.testGetValue(), false);
+    Assert.equal(Glean.quickSuggest.position.testGetValue(), index);
+    Assert.equal(
+      Glean.quickSuggest.suggestedIndex.testGetValue(),
+      suggested_index
+    );
+    Assert.equal(
+      Glean.quickSuggest.suggestedIndexRelativeToGroup.testGetValue(),
+      suggested_index_relative_to_group
+    );
     Assert.equal(Glean.quickSuggest.position.testGetValue(), index);
     GleanPings.quickSuggest.testBeforeNextSubmit(() => {
       pingsSubmitted++;
@@ -280,6 +291,8 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
       type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
       payload: {
         match_type,
+        suggested_index,
+        suggested_index_relative_to_group,
         block_id: result.id,
         is_clicked: false,
         position: index,
@@ -289,6 +302,8 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
       type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
       payload: {
         match_type,
+        suggested_index,
+        suggested_index_relative_to_group,
         block_id: result.id,
         iab_category: result.iab_category,
         position: index,
