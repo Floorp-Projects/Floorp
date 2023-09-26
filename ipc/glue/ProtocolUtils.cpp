@@ -79,9 +79,9 @@ IPCResult IPCResult::FailImpl(NotNull<IProtocol*> actor, const char* where,
   // We already leak the same information potentially on child process failures
   // even in release, and here we are only in DEBUG.
   MOZ_CRASH_UNSAFE(crashMsg.get());
-#endif
-
+#else
   return IPCResult(false);
+#endif
 }
 
 void AnnotateSystemError() {
