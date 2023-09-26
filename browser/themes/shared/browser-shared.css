@@ -162,36 +162,19 @@
   /* Toolbar / content area border */
   border-bottom: 1px solid var(--chrome-content-separator-color);
 
-  background-color: var(--toolbox-non-lwt-bgcolor);
-  color: var(--toolbox-non-lwt-textcolor);
-
-  &:-moz-window-inactive {
-    background-color: var(--toolbox-non-lwt-bgcolor-inactive, var(--toolbox-non-lwt-bgcolor));
-    color: var(--toolbox-non-lwt-textcolor-inactive, var(--toolbox-non-lwt-textcolor));
-  }
-
   :root[customizing] & {
     border-bottom-style: none;
   }
 
-  &:-moz-lwtheme {
-    background-image: var(--lwt-additional-images);
-    background-repeat: var(--lwt-background-tiling);
-    background-position: var(--lwt-background-alignment);
-    background-color: var(--lwt-accent-color);
-    color: inherit;
+  /* Lwtheme rules live in browser/base/content temporarily, see bug 1855151 */
+  &:not(:-moz-lwtheme) {
+    background-color: var(--toolbox-non-lwt-bgcolor);
+    color: var(--toolbox-non-lwt-textcolor);
 
     &:-moz-window-inactive {
-      background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+      background-color: var(--toolbox-non-lwt-bgcolor-inactive, var(--toolbox-non-lwt-bgcolor));
+      color: var(--toolbox-non-lwt-textcolor-inactive, var(--toolbox-non-lwt-textcolor));
     }
-  }
-
-  /* When a theme defines both theme_frame and additional_backgrounds, show
-     the latter atop the former. */
-  :root[lwtheme-image] & {
-    background-image: var(--lwt-header-image), var(--lwt-additional-images);
-    background-repeat: no-repeat, var(--lwt-background-tiling);
-    background-position: right top, var(--lwt-background-alignment);
   }
 }
 
