@@ -208,7 +208,13 @@ class nsAutoOwningEventTarget {
 
 // Support for ISupports classes which interact with cycle collector.
 
-#define NS_NUMBER_OF_FLAGS_IN_REFCNT 2
+#ifdef HAVE_64BIT_BUILD
+#  define NS_NUMBER_OF_FLAGS_IN_REFCNT 3
+#  define NS_IS_ON_MAINTHREAD (1 << 2)
+#else
+#  define NS_NUMBER_OF_FLAGS_IN_REFCNT 2
+#endif
+
 #define NS_IN_PURPLE_BUFFER (1 << 0)
 #define NS_IS_PURPLE (1 << 1)
 #define NS_REFCOUNT_CHANGE (1 << NS_NUMBER_OF_FLAGS_IN_REFCNT)
@@ -292,6 +298,24 @@ class nsCycleCollectingAutoRefCnt {
   MOZ_ALWAYS_INLINE bool IsInPurpleBuffer() const {
     return !!(mRefCntAndFlags & NS_IN_PURPLE_BUFFER);
   }
+
+  // Cycle collected objects can only be used on a single thread, so if we ever
+  // see an object on the main thread, it will always be on the main thread.
+  // The cycle collector then uses this information to utilize faster nursery
+  // purple buffer on the main thread.
+  // The method works only on 64 bit systems.
+  MOZ_ALWAYS_INLINE void SetIsOnMainThread() {
+#ifdef HAVE_64BIT_BUILD
+    mRefCntAndFlags |= NS_IS_ON_MAINTHREAD;
+#endif
+  }
+
+#ifdef HAVE_64BIT_BUILD
+  // The NS_IS_ON_MAINTHREAD flag only exists on 64-bit builds.
+  MOZ_ALWAYS_INLINE bool IsOnMainThread() {
+    return !!(mRefCntAndFlags & NS_IS_ON_MAINTHREAD);
+  }
+#endif
 
   MOZ_ALWAYS_INLINE nsrefcnt get() const {
     return NS_REFCOUNT_VALUE(mRefCntAndFlags);
