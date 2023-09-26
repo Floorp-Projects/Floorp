@@ -34,7 +34,7 @@ const val PLACEHOLDER_URL = "www.fakespot.com"
  * A placeholder UI for review quality check contextual onboarding. The actual UI will be
  * implemented as part of Bug 1840103 with the illustration.
  *
- * @param retailers List of retailers to be displayed in order.
+ * @param productVendors List of retailers to be displayed in order.
  * @param onLearnMoreClick Invoked when a user clicks on the learn more link.
  * @param onPrivacyPolicyClick Invoked when a user clicks on the privacy policy link.
  * @param onTermsOfUseClick Invoked when a user clicks on the terms of use link.
@@ -44,7 +44,7 @@ const val PLACEHOLDER_URL = "www.fakespot.com"
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 fun ReviewQualityCheckContextualOnboarding(
-    retailers: List<ProductVendor>,
+    productVendors: List<ProductVendor>,
     onLearnMoreClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onTermsOfUseClick: () -> Unit,
@@ -68,7 +68,7 @@ fun ReviewQualityCheckContextualOnboarding(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = createDescriptionString(retailers),
+            text = createDescriptionString(productVendors),
             color = FirefoxTheme.colors.textSecondary,
             style = FirefoxTheme.typography.body2,
         )

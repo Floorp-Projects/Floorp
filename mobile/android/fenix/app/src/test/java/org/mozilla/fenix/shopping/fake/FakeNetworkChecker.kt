@@ -7,7 +7,7 @@ package org.mozilla.fenix.shopping.fake
 import org.mozilla.fenix.shopping.middleware.NetworkChecker
 
 class FakeNetworkChecker(
-    private val isConnected: Boolean,
+    private val isConnected: Boolean = true,
 ) : NetworkChecker {
     override fun isConnected(): Boolean = isConnected
 }

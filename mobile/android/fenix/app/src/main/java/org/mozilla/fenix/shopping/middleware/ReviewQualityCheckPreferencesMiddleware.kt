@@ -20,6 +20,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
  */
 class ReviewQualityCheckPreferencesMiddleware(
     private val reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
+    private val reviewQualityCheckVendorsService: ReviewQualityCheckVendorsService,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
 
@@ -50,12 +51,14 @@ class ReviewQualityCheckPreferencesMiddleware(
                     val hasUserOptedIn = reviewQualityCheckPreferences.enabled()
                     val isProductRecommendationsEnabled =
                         reviewQualityCheckPreferences.productRecommendationsEnabled()
-                    store.dispatch(
-                        ReviewQualityCheckAction.UpdateUserPreferences(
-                            hasUserOptedIn = hasUserOptedIn,
-                            isProductRecommendationsEnabled = isProductRecommendationsEnabled,
-                        ),
-                    )
+
+                    val updateUserPreferences = if (hasUserOptedIn) {
+                        ReviewQualityCheckAction.OptInCompleted(isProductRecommendationsEnabled)
+                    } else {
+                        val productVendors = reviewQualityCheckVendorsService.productVendors()
+                        ReviewQualityCheckAction.OptOutCompleted(productVendors)
+                    }
+                    store.dispatch(updateUserPreferences)
                 }
             }
 
@@ -64,10 +67,7 @@ class ReviewQualityCheckPreferencesMiddleware(
                     val isProductRecommendationsEnabled =
                         reviewQualityCheckPreferences.productRecommendationsEnabled()
                     store.dispatch(
-                        ReviewQualityCheckAction.UpdateUserPreferences(
-                            hasUserOptedIn = true,
-                            isProductRecommendationsEnabled = isProductRecommendationsEnabled,
-                        ),
+                        ReviewQualityCheckAction.OptInCompleted(isProductRecommendationsEnabled),
                     )
 
                     // Update the preference

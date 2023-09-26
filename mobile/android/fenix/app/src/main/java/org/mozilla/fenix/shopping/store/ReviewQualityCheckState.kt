@@ -22,14 +22,10 @@ sealed interface ReviewQualityCheckState : State {
     /**
      * The state when the user has not opted in for the feature.
      *
-     * @property retailers List of retailer names to be displayed in order in the onboarding UI.
+     * @property productVendors List of vendors to be displayed in order in the onboarding UI.
      */
     data class NotOptedIn(
-        val retailers: List<ProductVendor> = listOf(
-            ProductVendor.AMAZON,
-            ProductVendor.BEST_BUY,
-            ProductVendor.WALMART,
-        ),
+        val productVendors: List<ProductVendor> = enumValues<ProductVendor>().toList(),
     ) : ReviewQualityCheckState
 
     /**

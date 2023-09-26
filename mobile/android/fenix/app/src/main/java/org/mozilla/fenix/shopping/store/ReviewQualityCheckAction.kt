@@ -53,15 +53,20 @@ sealed interface ReviewQualityCheckAction : Action {
     object ToggleProductRecommendation : PreferencesMiddlewareAction, UpdateAction
 
     /**
-     * Triggered as a result of a [PreferencesMiddlewareAction] to update the state.
+     * Triggered as a result of a [OptIn] or [Init] whe user has opted in for shopping experience.
      *
-     * @property hasUserOptedIn True when user has opted in for shopping experience.
      * @property isProductRecommendationsEnabled Reflects the user preference update to display
      * recommended product. Null when product recommendations feature is disabled.
      */
-    data class UpdateUserPreferences(
-        val hasUserOptedIn: Boolean,
-        val isProductRecommendationsEnabled: Boolean?,
+    data class OptInCompleted(val isProductRecommendationsEnabled: Boolean?) : UpdateAction
+
+    /**
+     * Triggered as a result of [Init] when user has opted out of shopping experience.
+     *
+     * @property productVendors List of product vendors in relevant order.
+     */
+    data class OptOutCompleted(
+        val productVendors: List<ReviewQualityCheckState.ProductVendor>,
     ) : UpdateAction
 
     /**
