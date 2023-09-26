@@ -15,8 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettings:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
@@ -167,18 +165,18 @@ class MockRemoteSettings {
   }
 
   async sync() {
-    if (!lazy.QuickSuggestRemoteSettings.rs) {
+    if (!lazy.QuickSuggest.jsBackend.rs) {
       // There are no registered features that use remote settings.
       return;
     }
 
     // Observe config-set event to recognize that the config is synced.
     const onConfigSync = new Promise(resolve => {
-      lazy.QuickSuggestRemoteSettings.emitter.once("config-set", resolve);
+      lazy.QuickSuggest.jsBackend.emitter.once("config-set", resolve);
     });
 
     // Make a stub for each feature to recognize that the features are synced.
-    const features = lazy.QuickSuggestRemoteSettings.features;
+    const features = lazy.QuickSuggest.jsBackend.features;
     const onFeatureSyncs = features.map(feature => {
       return new Promise(resolve => {
         const stub = this.#sandbox
@@ -375,7 +373,7 @@ class _QuickSuggestTestUtils {
    * @see {@link setConfig}
    */
   async withConfig({ config, callback }) {
-    let original = lazy.QuickSuggestRemoteSettings.config;
+    let original = lazy.QuickSuggest.jsBackend.config;
     await this.setConfig(config);
     await callback();
     await this.setConfig(original);

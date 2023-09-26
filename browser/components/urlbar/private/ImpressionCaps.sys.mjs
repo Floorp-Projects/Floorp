@@ -9,8 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettings:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
@@ -71,7 +69,7 @@ export class ImpressionCaps extends BaseFeature {
       JSON.stringify({
         type,
         currentStats: this.#stats,
-        impression_caps: lazy.QuickSuggestRemoteSettings.config.impression_caps,
+        impression_caps: lazy.QuickSuggest.jsBackend.config.impression_caps,
       })
     );
 
@@ -176,7 +174,7 @@ export class ImpressionCaps extends BaseFeature {
 
     // Validate stats against any changes to the impression caps in the config.
     this._onConfigSet = () => this.#validateStats();
-    lazy.QuickSuggestRemoteSettings.emitter.on("config-set", this._onConfigSet);
+    lazy.QuickSuggest.jsBackend.emitter.on("config-set", this._onConfigSet);
 
     // Periodically record impression counters reset telemetry.
     this.#setCountersResetInterval();
@@ -190,10 +188,7 @@ export class ImpressionCaps extends BaseFeature {
   }
 
   #uninit() {
-    lazy.QuickSuggestRemoteSettings.emitter.off(
-      "config-set",
-      this._onConfigSet
-    );
+    lazy.QuickSuggest.jsBackend.emitter.off("config-set", this._onConfigSet);
     this._onConfigSet = null;
 
     lazy.clearInterval(this._impressionCountersResetInterval);
@@ -235,7 +230,7 @@ export class ImpressionCaps extends BaseFeature {
    *   corresponding to each impression cap. See the `#stats` comment for info.
    */
   #validateStats() {
-    let { impression_caps } = lazy.QuickSuggestRemoteSettings.config;
+    let { impression_caps } = lazy.QuickSuggest.jsBackend.config;
 
     this.logger.info("Validating impression stats");
     this.logger.debug(
@@ -356,7 +351,7 @@ export class ImpressionCaps extends BaseFeature {
     this.logger.debug(
       JSON.stringify({
         currentStats: this.#stats,
-        impression_caps: lazy.QuickSuggestRemoteSettings.config.impression_caps,
+        impression_caps: lazy.QuickSuggest.jsBackend.config.impression_caps,
       })
     );
 
@@ -558,7 +553,7 @@ export class ImpressionCaps extends BaseFeature {
   // and interval. See `#validateStats()` for more.
   //
   // Impression caps are stored in the remote settings config. See
-  // `QuickSuggestRemoteSettingsClient.confg.impression_caps`.
+  // `SuggestBackendJs.config.impression_caps`.
   #stats = {};
 
   // Whether impression stats are currently being updated.

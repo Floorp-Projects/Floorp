@@ -843,12 +843,21 @@ add_task(async function latencyTelemetry() {
 // Tests setup and teardown of the remote settings client depending on whether
 // quick suggest is enabled.
 add_task(async function setupAndTeardown() {
+  Assert.ok(
+    QuickSuggest.jsBackend.isEnabled,
+    "Remote settings backend is enabled initially"
+  );
+
   // Disable the suggest prefs so the settings client starts out torn down.
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings.rs,
+    !QuickSuggest.jsBackend.rs,
     "Settings client is null after disabling suggest prefs"
+  );
+  Assert.ok(
+    QuickSuggest.jsBackend.isEnabled,
+    "Remote settings backend remains enabled"
   );
 
   // Setting one of the suggest prefs should cause the client to be set up. We
@@ -856,50 +865,80 @@ add_task(async function setupAndTeardown() {
   // task).
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings.rs,
+    QuickSuggest.jsBackend.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings.rs,
+    !QuickSuggest.jsBackend.rs,
     "Settings client is null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings.rs,
+    QuickSuggest.jsBackend.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings.rs,
+    QuickSuggest.jsBackend.rs,
     "Settings client remains non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   Assert.ok(
-    QuickSuggestRemoteSettings.rs,
+    QuickSuggest.jsBackend.rs,
     "Settings client remains non-null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings.rs,
+    !QuickSuggest.jsBackend.rs,
     "Settings client is null after disabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings.rs,
+    QuickSuggest.jsBackend.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("quicksuggest.enabled", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings.rs,
+    !QuickSuggest.jsBackend.rs,
     "Settings client is null after disabling quicksuggest.enabled"
+  );
+
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  Assert.ok(
+    QuickSuggest.jsBackend.rs,
+    "Settings client is non-null after re-enabling quicksuggest.enabled"
+  );
+  Assert.ok(
+    QuickSuggest.jsBackend.isEnabled,
+    "Remote settings backend is enabled after re-enabling quicksuggest.enabled"
+  );
+
+  UrlbarPrefs.set("quicksuggest.rustEnabled", true);
+  Assert.ok(
+    !QuickSuggest.jsBackend.rs,
+    "Settings client is null after enabling the Rust backend"
+  );
+  Assert.ok(
+    !QuickSuggest.jsBackend.isEnabled,
+    "Remote settings backend is disabled after enabling the Rust backend"
+  );
+
+  UrlbarPrefs.clear("quicksuggest.rustEnabled");
+  Assert.ok(
+    QuickSuggest.jsBackend.rs,
+    "Settings client is non-null after disabling the Rust backend"
+  );
+  Assert.ok(
+    QuickSuggest.jsBackend.isEnabled,
+    "Remote settings backend is enabled after disabling the Rust backend"
   );
 
   // Leave the prefs in the same state as when the task started.
@@ -907,7 +946,7 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
   UrlbarPrefs.set("quicksuggest.enabled", true);
   Assert.ok(
-    !QuickSuggestRemoteSettings.rs,
+    !QuickSuggest.jsBackend.rs,
     "Settings client remains null at end of task"
   );
 });

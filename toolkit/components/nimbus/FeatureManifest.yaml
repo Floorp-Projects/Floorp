@@ -307,6 +307,12 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled
       description: Whether Remote Settings is enabled as a quick suggest source
+    quickSuggestRustEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.rustEnabled
+      description: >-
+        Whether Firefox Suggest will use the new Rust backend instead of the
+        original JS backend.
     quickSuggestScenario:
       # IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.jsm.
       type: string

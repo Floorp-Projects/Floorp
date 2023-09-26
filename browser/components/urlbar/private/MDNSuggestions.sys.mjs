@@ -8,10 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettings:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
-  SuggestionsMap:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
+  SuggestionsMap: "resource:///modules/urlbar/private/SuggestBackendJs.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -49,9 +46,9 @@ export class MDNSuggestions extends BaseFeature {
 
   enable(enabled) {
     if (enabled) {
-      lazy.QuickSuggestRemoteSettings.register(this);
+      lazy.QuickSuggest.jsBackend.register(this);
     } else {
-      lazy.QuickSuggestRemoteSettings.unregister(this);
+      lazy.QuickSuggest.jsBackend.unregister(this);
     }
   }
 

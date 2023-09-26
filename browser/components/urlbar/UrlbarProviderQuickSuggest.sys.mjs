@@ -15,8 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  QuickSuggestRemoteSettings:
-    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
@@ -31,6 +29,9 @@ ChromeUtils.defineLazyGetter(lazy, "contextId", () => {
   }
   return _contextId;
 });
+
+// Used for suggestions that don't otherwise have a score.
+const DEFAULT_SUGGESTION_SCORE = 0.2;
 
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
@@ -85,6 +86,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.NETWORK;
+  }
+
+  /**
+   * @returns {number}
+   *   The default score for suggestions that don't otherwise have one. All
+   *   suggestions require scores so they can be ranked. Scores are numeric
+   *   values in the range [0, 1].
+   */
+  get DEFAULT_SUGGESTION_SCORE() {
+    return DEFAULT_SUGGESTION_SCORE;
   }
 
   /**
@@ -149,8 +160,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];
-    if (lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
-      promises.push(lazy.QuickSuggestRemoteSettings.query(searchString));
+    if (
+      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled") &&
+      lazy.QuickSuggest.jsBackend?.isEnabled
+    ) {
+      promises.push(lazy.QuickSuggest.jsBackend.query(searchString));
     }
     if (
       lazy.UrlbarPrefs.get("merinoEnabled") &&
@@ -168,18 +182,20 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     let suggestions = values.flat();
 
-    // Override suggestion scores with the ones defined in the Nimbus variable
-    // `quickSuggestScoreMap`. It maps telemetry types to scores.
+    // Ensure all suggestions have a `score` by falling back to the default
+    // score as necessary. If `quickSuggestScoreMap` is defined, override scores
+    // with the values it defines. It maps telemetry types to scores.
     let scoreMap = lazy.UrlbarPrefs.get("quickSuggestScoreMap");
-    if (scoreMap) {
-      for (let i = 0; i < suggestions.length; i++) {
-        let telemetryType = this.#getSuggestionTelemetryType(suggestions[i]);
+    for (let suggestion of suggestions) {
+      if (isNaN(suggestion.score)) {
+        suggestion.score = DEFAULT_SUGGESTION_SCORE;
+      }
+      if (scoreMap) {
+        let telemetryType = this.#getSuggestionTelemetryType(suggestion);
         if (scoreMap.hasOwnProperty(telemetryType)) {
           let score = parseFloat(scoreMap[telemetryType]);
           if (!isNaN(score)) {
-            // Don't modify the original suggestion object in case the feature
-            // that provided it returns the same object to all callers.
-            suggestions[i] = { ...suggestions[i], score };
+            suggestion.score = score;
           }
         }
       }
