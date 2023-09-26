@@ -216,7 +216,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   NS_FRAME_TRACE(
       NS_FRAME_TRACE_CALLS,
       ("enter nsVideoFrame::Reflow: availSize=%d,%d",
-       aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
+       aReflowInput.AvailableISize(), aReflowInput.AvailableBSize()));
 
   MOZ_ASSERT(HasAnyStateBits(NS_FRAME_IN_REFLOW), "frame is not in reflow");
 
@@ -232,8 +232,6 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     borderBoxBSize = contentBoxBSize + logicalBP.BStartEnd(myWM);
   }
 
-  nsMargin borderPadding = aReflowInput.ComputedPhysicalBorderPadding();
-
   nsIContent* videoControlsDiv = GetVideoControls();
 
   // Reflow the child frames. We may have up to three: an image
@@ -242,53 +240,40 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   for (nsIFrame* child : mFrames) {
     nsSize oldChildSize = child->GetSize();
     nsReflowStatus childStatus;
+    const WritingMode childWM = child->GetWritingMode();
+    LogicalSize availableSize = aReflowInput.ComputedSize(childWM);
+    availableSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, child,
+                               availableSize);
+    ReflowOutput kidDesiredSize(myWM);
+    const nsSize containerSize =
+        aReflowInput.ComputedSizeAsContainerIfConstrained();
 
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
-      nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
-      ReflowOutput kidDesiredSize(aReflowInput);
-      WritingMode wm = imageFrame->GetWritingMode();
-      LogicalSize availableSize = aReflowInput.AvailableSize(wm);
-      availableSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+      const LogicalPoint childOrigin = logicalBP.StartOffset(myWM);
+      const LogicalSize posterRenderSize = aReflowInput.ComputedSize(childWM);
+      kidReflowInput.SetComputedISize(posterRenderSize.ISize(childWM));
+      kidReflowInput.SetComputedBSize(posterRenderSize.BSize(childWM));
 
-      LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode())
-                               .ConvertTo(wm, aMetrics.GetWritingMode());
-      ReflowInput kidReflowInput(aPresContext, aReflowInput, imageFrame,
-                                 availableSize, Some(cbSize));
-
-      nsRect posterRenderRect;
-      if (ShouldDisplayPoster()) {
-        posterRenderRect =
-            nsRect(nsPoint(borderPadding.left, borderPadding.top),
-                   nsSize(aReflowInput.ComputedWidth(),
-                          aReflowInput.ComputedHeight()));
-      }
-      kidReflowInput.SetComputedWidth(posterRenderRect.width);
-      kidReflowInput.SetComputedHeight(posterRenderRect.height);
-      ReflowChild(imageFrame, aPresContext, kidDesiredSize, kidReflowInput,
-                  posterRenderRect.x, posterRenderRect.y,
-                  ReflowChildFlags::Default, childStatus);
+      ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput, myWM,
+                  childOrigin, containerSize, ReflowChildFlags::Default,
+                  childStatus);
       MOZ_ASSERT(childStatus.IsFullyComplete(),
                  "We gave our child unconstrained available block-size, "
                  "so it should be complete!");
 
-      FinishReflowChild(imageFrame, aPresContext, kidDesiredSize,
-                        &kidReflowInput, posterRenderRect.x, posterRenderRect.y,
+      FinishReflowChild(child, aPresContext, kidDesiredSize, &kidReflowInput,
+                        myWM, childOrigin, containerSize,
                         ReflowChildFlags::Default);
 
     } else if (child->GetContent() == mCaptionDiv ||
                child->GetContent() == videoControlsDiv) {
       // Reflow the caption and control bar frames.
-      WritingMode wm = child->GetWritingMode();
-      LogicalSize availableSize = aReflowInput.ComputedSize(wm);
-      availableSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-
-      ReflowInput kidReflowInput(aPresContext, aReflowInput, child,
-                                 availableSize);
-      ReflowOutput kidDesiredSize(kidReflowInput);
-      ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput,
-                  borderPadding.left, borderPadding.top,
-                  ReflowChildFlags::Default, childStatus);
+      const LogicalPoint childOrigin = logicalBP.StartOffset(myWM);
+      ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput, myWM,
+                  childOrigin, containerSize, ReflowChildFlags::Default,
+                  childStatus);
       MOZ_ASSERT(childStatus.IsFullyComplete(),
                  "We gave our child unconstrained available block-size, "
                  "so it should be complete!");
@@ -300,13 +285,12 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         if (GetContainSizeAxes().mBContained) {
           contentBoxBSize = 0;
         } else {
-          contentBoxBSize = myWM.IsOrthogonalTo(wm) ? kidDesiredSize.ISize(wm)
-                                                    : kidDesiredSize.BSize(wm);
+          contentBoxBSize = kidDesiredSize.BSize(myWM);
         }
       }
 
       FinishReflowChild(child, aPresContext, kidDesiredSize, &kidReflowInput,
-                        borderPadding.left, borderPadding.top,
+                        myWM, childOrigin, containerSize,
                         ReflowChildFlags::Default);
 
       if (child->GetSize() != oldChildSize) {
@@ -331,9 +315,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       // get one from our controls. Just use BSize of 0.
       contentBoxBSize = 0;
     }
-    contentBoxBSize =
-        NS_CSS_MINMAX(contentBoxBSize, aReflowInput.ComputedMinBSize(),
-                      aReflowInput.ComputedMaxBSize());
+    contentBoxBSize = aReflowInput.ApplyMinMaxBSize(contentBoxBSize);
     borderBoxBSize = contentBoxBSize + logicalBP.BStartEnd(myWM);
   }
 
