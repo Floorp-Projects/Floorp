@@ -48,6 +48,10 @@ button {
   margin: 0;
 }
 
+slot[name="rating"] {
+  color: var(--icon-color);
+}
+
 #content {
   align-self: stretch;
 }
@@ -72,6 +76,7 @@ details > summary:focus-visible {
   background-image: url("chrome://global/skin/icons/arrow-down.svg");
   background-position: center;
   background-repeat: no-repeat;
+  color: var(--icon-color);
   -moz-context-properties: fill;
   fill: currentColor;
   width: 24px;
