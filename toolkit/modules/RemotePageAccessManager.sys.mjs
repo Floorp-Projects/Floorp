@@ -66,6 +66,7 @@ export let RemotePageAccessManager = {
     },
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
+      RPMGetIntPref: ["security.dialog_enable_delay"],
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
       RPMAddMessageListener: ["WWWReachable"],
       RPMTryPingSecureWWWLink: ["*"],
