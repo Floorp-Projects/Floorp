@@ -150,9 +150,7 @@ impl Parse for OffsetPathFunction {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        use crate::values::specified::basic_shape::{
-            AllowedBasicShapes, DefaultPosition, ShapeType,
-        };
+        use crate::values::specified::basic_shape::{AllowedBasicShapes, ShapeType};
 
         // <offset-path> = <ray()> | <url> | <basic-shape>
         // https://drafts.fxtf.org/motion-1/#typedef-offset-path
@@ -175,14 +173,8 @@ impl Parse for OffsetPathFunction {
             AllowedBasicShapes::PATH
         };
 
-        BasicShape::parse(
-            context,
-            input,
-            allowed_shapes,
-            ShapeType::Outline,
-            DefaultPosition::Context,
-        )
-        .map(OffsetPathFunction::Shape)
+        BasicShape::parse(context, input, allowed_shapes, ShapeType::Outline)
+            .map(OffsetPathFunction::Shape)
     }
 }
 

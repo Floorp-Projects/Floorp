@@ -747,9 +747,9 @@ const basicShapesTests = [
   },
   // matching functions
   { start: "circle(100px)", end: "circle(500px)",
-    expected: ["circle", ["200px at 50% 50%"]] },
+    expected: ["circle", ["200px"]] },
   { start: "ellipse(100px 100px)", end: "ellipse(500px 500px)",
-    expected: ["ellipse", ["200px 200px at 50% 50%"]] },
+    expected: ["ellipse", ["200px 200px"]] },
   { start: "circle(100px at 100px 100px) border-box",
     end: "circle(500px at 500px 500px) border-box",
     expected: ["circle", ["200px at 200px 200px"], "border-box"]
@@ -768,9 +768,9 @@ const basicShapesTests = [
   },
   // matching functions percentage
   { start: "circle(100%)", end: "circle(500%)",
-    expected: ["circle", ["200% at 50% 50%"]] },
+    expected: ["circle", ["200%"]] },
   { start: "ellipse(100% 100%)", end: "ellipse(500% 500%)",
-    expected: ["ellipse", ["200% 200% at 50% 50%"]] },
+    expected: ["ellipse", ["200% 200%"]] },
   { start: "circle(100% at 100% 100%) border-box",
     end: "circle(500% at 500% 500%) border-box",
     expected: ["circle", ["200% at 200% 200%"], "border-box"]
@@ -788,14 +788,14 @@ const basicShapesTests = [
     expected: ["inset", ["200% round 200%"], "border-box"] },
   // matching functions with calc() values
   { start: "circle(calc(80px + 20px))", end: "circle(calc(200px + 300px))",
-    expected: ["circle", ["200px at 50% 50%"]] },
+    expected: ["circle", ["200px"]] },
   { start: "circle(calc(80% + 20%))", end: "circle(calc(200% + 300%))",
-    expected: ["circle", ["200% at 50% 50%"]] },
+    expected: ["circle", ["200%"]] },
   { start: "circle(calc(10px + 20%))", end: "circle(calc(50px + 40%))",
-    expected: ["circle", ["calc(25% + 20px) at 50% 50%"]] },
+    expected: ["circle", ["calc(25% + 20px)"]] },
   // matching functions with interpolation between percentage/pixel values
   { start: "circle(20px)", end: "circle(100%)",
-    expected: ["circle", ["calc(25% + 15px) at 50% 50%"]] },
+    expected: ["circle", ["calc(25% + 15px)"]] },
   { start: "ellipse(100% 100px at 8px 20%) border-box",
     end:   "ellipse(40px 4%    at 80% 60px) border-box",
     expected: ["ellipse", ["calc(75% + 10px) calc(1% + 75px) at " +
@@ -803,27 +803,27 @@ const basicShapesTests = [
                "border-box"] },
   // no interpolation for keywords
   { start: "circle()", end: "circle(50px)",
-    expected: ["circle", ["50px at 50% 50%"]] },
+    expected: ["circle", ["50px"]] },
   { start: "circle(closest-side)", end: "circle(500px)",
-    expected: ["circle", ["500px at 50% 50%"]] },
+    expected: ["circle", ["500px"]] },
   { start: "circle(farthest-side)", end: "circle(500px)",
-    expected: ["circle", ["500px at 50% 50%"]] },
+    expected: ["circle", ["500px"]] },
   { start: "circle(500px)", end: "circle(farthest-side)",
-    expected: ["circle", ["farthest-side at 50% 50%"]]},
+    expected: ["circle", ["farthest-side"]]},
   { start: "circle(500px)", end: "circle(closest-side)",
-    expected: ["circle", ["at 50% 50%"]]},
+    expected: ["circle", [""]]},
   { start: "ellipse()", end: "ellipse(50px 50px)",
-    expected: ["ellipse", ["50px 50px at 50% 50%"]] },
+    expected: ["ellipse", ["50px 50px"]] },
   { start: "ellipse(closest-side closest-side)", end: "ellipse(500px 500px)",
-    expected: ["ellipse", ["500px 500px at 50% 50%"]] },
+    expected: ["ellipse", ["500px 500px"]] },
   { start: "ellipse(farthest-side closest-side)", end: "ellipse(500px 500px)",
-    expected: ["ellipse", ["500px 500px at 50% 50%"]] },
+    expected: ["ellipse", ["500px 500px"]] },
   { start: "ellipse(farthest-side farthest-side)", end: "ellipse(500px 500px)",
-    expected: ["ellipse", ["500px 500px at 50% 50%"]] },
+    expected: ["ellipse", ["500px 500px"]] },
   { start: "ellipse(500px 500px)", end: "ellipse(farthest-side farthest-side)",
-    expected: ["ellipse", ["farthest-side farthest-side at 50% 50%"]] },
+    expected: ["ellipse", ["farthest-side farthest-side"]] },
   { start: "ellipse(500px 500px)", end: "ellipse(closest-side closest-side)",
-    expected: ["ellipse", ["at 50% 50%"]] },
+    expected: ["ellipse", [""]] },
   // mismatching boxes
   { start: "circle(100px at 100px 100px) border-box",
     end: "circle(500px at 500px 500px) content-box",
@@ -847,14 +847,14 @@ const basicShapesTests = [
     expected: ["ellipse", ["500px 500px at 500px 500px"], "border-box"]
   },
   { start: "inset(0px round 20px)", end: "ellipse(500px 500px)",
-    expected: ["ellipse", ["500px 500px at 50% 50%"]]
+    expected: ["ellipse", ["500px 500px"]]
   },
   // shape to reference box
   { start: "circle(20px)", end: "content-box", expected: ["content-box"] },
-  { start: "content-box", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
+  { start: "content-box", end: "circle(20px)", expected: ["circle", ["20px"]] },
   // url to shape
   { start: "circle(20px)", end: "url(http://localhost/a.png)", expected: ["url", ["\"http://localhost/a.png\""]] },
-  { start: "url(http://localhost/a.png)", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
+  { start: "url(http://localhost/a.png)", end: "circle(20px)", expected: ["circle", ["20px"]] },
   // url to none
   { start: "none", end: "url(http://localhost/a.png)", expected: ["url", ["\"http://localhost/a.png\""]] },
   { start: "http://localhost/a.png", end: "none", expected: ["none"] },
@@ -863,7 +863,7 @@ const basicShapesTests = [
 const basicShapesWithFragmentUrlTests = [
   // Fragment url to shape
   { start: "circle(20px)", end: "url('#a')", expected: ["url", ["\"#a\""]] },
-  { start: "url('#a')", end: "circle(20px)", expected: ["circle", ["20px at 50% 50%"]] },
+  { start: "url('#a')", end: "circle(20px)", expected: ["circle", ["20px"]] },
   // Fragment url to none
   { start: "none", end: "url('#a')", expected: ["url", ["\"#a\""]] },
   { start: "url('#a')", end: "none", expected: ["none"] },

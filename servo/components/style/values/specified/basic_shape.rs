@@ -129,25 +129,6 @@ pub enum ShapeType {
     Outline,
 }
 
-/// The default `at <position>` if it is omitted.
-///
-/// https://github.com/w3c/csswg-drafts/issues/8695
-///
-/// FIXME: Bug 1837340. It seems we should always omit this component if the author doesn't specify
-/// it. In order to avoid changing the behavior on the shipped clip-path and shape-outside, we
-/// still use center as their default value for now.
-pub enum DefaultPosition {
-    /// Use standard default value, center, if "at <position>" is omitted.
-    Center,
-    /// The default value depends on the context. For example, offset-path:circle() may use the
-    /// value of offset-position as its default position of the circle center. So we shouldn't
-    /// assign a default value to its specified value and computed value. This makes the
-    /// serialization ignore this component (and makes this value non-interpolated with other
-    /// values which specify `at <position>`).
-    /// https://drafts.fxtf.org/motion-1/#valdef-offset-path-basic-shape
-    Context,
-}
-
 bitflags! {
     /// The flags to represent which basic shapes we would like to support.
     ///
@@ -219,15 +200,7 @@ where
     loop {
         if shape.is_none() {
             shape = input
-                .try_parse(|i| {
-                    BasicShape::parse(
-                        context,
-                        i,
-                        flags,
-                        ShapeType::Filled,
-                        DefaultPosition::Center,
-                    )
-                })
+                .try_parse(|i| BasicShape::parse(context, i, flags, ShapeType::Filled))
                 .ok();
         }
 
@@ -311,7 +284,6 @@ impl BasicShape {
         input: &mut Parser<'i, 't>,
         flags: AllowedBasicShapes,
         shape_type: ShapeType,
-        default_position: DefaultPosition,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
         let function = input.expect_function()?.clone();
@@ -339,11 +311,11 @@ impl BasicShape {
                         .map(BasicShape::Rect)
                 },
                 "circle" if flags.contains(AllowedBasicShapes::CIRCLE) => {
-                    Circle::parse_function_arguments(context, i, default_position)
+                    Circle::parse_function_arguments(context, i)
                         .map(BasicShape::Circle)
                 },
                 "ellipse" if flags.contains(AllowedBasicShapes::ELLIPSE) => {
-                    Ellipse::parse_function_arguments(context, i, default_position)
+                    Ellipse::parse_function_arguments(context, i)
                         .map(BasicShape::Ellipse)
                 },
                 "polygon" if flags.contains(AllowedBasicShapes::POLYGON) => {
@@ -399,19 +371,12 @@ impl InsetRect {
 fn parse_at_position<'i, 't>(
     context: &ParserContext,
     input: &mut Parser<'i, 't>,
-    default_position: DefaultPosition,
 ) -> Result<PositionOrAuto, ParseError<'i>> {
     if input.try_parse(|i| i.expect_ident_matching("at")).is_ok() {
-        Position::parse(context, input).map(PositionOrAuto::Position)
-    } else {
-        // FIXME: Bug 1837340. Per spec issue, https://github.com/w3c/csswg-drafts/issues/8695, we
-        // may not serialize the optional `at <position>` for all basic shapes. So we will drop
-        // this later.
-        match default_position {
-            DefaultPosition::Center => Ok(PositionOrAuto::Position(Position::center())),
-            DefaultPosition::Context => Ok(PositionOrAuto::Auto),
-        }
+        return Position::parse(context, input).map(PositionOrAuto::Position);
     }
+
+    Ok(PositionOrAuto::Auto)
 }
 
 impl Parse for Circle {
@@ -420,9 +385,7 @@ impl Parse for Circle {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         input.expect_function_matching("circle")?;
-        input.parse_nested_block(|i| {
-            Self::parse_function_arguments(context, i, DefaultPosition::Center)
-        })
+        input.parse_nested_block(|i| Self::parse_function_arguments(context, i))
     }
 }
 
@@ -430,12 +393,11 @@ impl Circle {
     fn parse_function_arguments<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
-        default_position: DefaultPosition,
     ) -> Result<Self, ParseError<'i>> {
         let radius = input
             .try_parse(|i| ShapeRadius::parse(context, i))
             .unwrap_or_default();
-        let position = parse_at_position(context, input, default_position)?;
+        let position = parse_at_position(context, input)?;
 
         Ok(generic::Circle { radius, position })
     }
@@ -447,9 +409,7 @@ impl Parse for Ellipse {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         input.expect_function_matching("ellipse")?;
-        input.parse_nested_block(|i| {
-            Self::parse_function_arguments(context, i, DefaultPosition::Center)
-        })
+        input.parse_nested_block(|i| Self::parse_function_arguments(context, i))
     }
 }
 
@@ -457,7 +417,6 @@ impl Ellipse {
     fn parse_function_arguments<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
-        default_position: DefaultPosition,
     ) -> Result<Self, ParseError<'i>> {
         let (semiaxis_x, semiaxis_y) = input
             .try_parse(|i| -> Result<_, ParseError> {
@@ -467,7 +426,7 @@ impl Ellipse {
                 ))
             })
             .unwrap_or_default();
-        let position = parse_at_position(context, input, default_position)?;
+        let position = parse_at_position(context, input)?;
 
         Ok(generic::Ellipse {
             semiaxis_x,
