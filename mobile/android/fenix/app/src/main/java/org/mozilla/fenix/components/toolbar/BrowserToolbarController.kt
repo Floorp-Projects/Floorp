@@ -53,6 +53,11 @@ interface BrowserToolbarController {
      * @see [BrowserToolbarInteractor.onEraseButtonClicked]
      */
     fun handleEraseButtonClick()
+
+    /**
+     * @see [BrowserToolbarInteractor.onShoppingCfrActionClicked]
+     */
+    fun handleShoppingCfrActionClick()
 }
 
 @Suppress("LongParameterList")
@@ -190,6 +195,13 @@ class DefaultBrowserToolbarController(
         homeViewModel.sessionToDelete = HomeFragment.ALL_PRIVATE_TABS
         val directions = BrowserFragmentDirections.actionGlobalHome()
         navController.navigate(directions)
+    }
+
+    override fun handleShoppingCfrActionClick() {
+        activity.settings().shouldShowReviewQualityCheckCFR = false
+        navController.navigate(
+            BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment(),
+        )
     }
 
     companion object {

@@ -64,6 +64,7 @@ private const val CFR_MINIMUM_NUMBER_OPENED_TABS = 5
  * @param settings used to read and write persistent user settings
  * @param toolbar will serve as anchor for the CFRs
  * @param sessionId optional custom tab id used to identify the custom tab in which to show a CFR.
+ * @param onShoppingCfrActionClicked Triggered when the user taps on the shopping CFR action.
  * @param shoppingExperienceFeature Used to determine if [ShoppingExperienceFeature] is enabled.
  */
 class BrowserToolbarCFRPresenter(
@@ -73,6 +74,7 @@ class BrowserToolbarCFRPresenter(
     private val toolbar: BrowserToolbar,
     private val isPrivate: Boolean,
     private val sessionId: String? = null,
+    private val onShoppingCfrActionClicked: () -> Unit,
     private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(
         context.settings(),
     ),
@@ -335,6 +337,26 @@ class BrowserToolbarCFRPresenter(
                         },
                         color = FirefoxTheme.colors.textOnColorPrimary,
                         style = FirefoxTheme.typography.body2,
+                    )
+                }
+            },
+            action = {
+                FirefoxTheme {
+                    Text(
+                        text = if (shouldShowOptedInCFR) {
+                            stringResource(id = R.string.review_quality_check_second_cfr_action)
+                        } else {
+                            stringResource(id = R.string.review_quality_check_first_cfr_action)
+                        },
+                        color = FirefoxTheme.colors.textOnColorPrimary,
+                        modifier = Modifier
+                            .clickable {
+                                onShoppingCfrActionClicked()
+                                popup?.dismiss()
+                            },
+                        style = FirefoxTheme.typography.body2.copy(
+                            textDecoration = TextDecoration.Underline,
+                        ),
                     )
                 }
             },

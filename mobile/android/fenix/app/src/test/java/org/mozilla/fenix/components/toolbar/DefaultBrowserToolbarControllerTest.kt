@@ -378,6 +378,17 @@ class DefaultBrowserToolbarControllerTest {
         }
     }
 
+    @Test
+    fun handleShoppingCfrActionClick() {
+        val controller = createController()
+        controller.handleShoppingCfrActionClick()
+
+        verify {
+            activity.settings().shouldShowReviewQualityCheckCFR = false
+            navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment())
+        }
+    }
+
     private fun createController(
         activity: HomeActivity = this.activity,
         customTabSessionId: String? = null,

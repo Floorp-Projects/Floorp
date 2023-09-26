@@ -76,6 +76,7 @@ abstract class ToolbarIntegration(
     }
 }
 
+@Suppress("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
@@ -101,6 +102,7 @@ class DefaultToolbarIntegration(
         toolbar = toolbar,
         isPrivate = isPrivate,
         sessionId = sessionId,
+        onShoppingCfrActionClicked = interactor::onShoppingCfrActionClicked,
     )
 
     init {

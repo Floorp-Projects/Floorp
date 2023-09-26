@@ -348,6 +348,7 @@ class BrowserToolbarCFRPresenterTest {
             toolbar = toolbar,
             sessionId = sessionId,
             isPrivate = isPrivate,
+            onShoppingCfrActionClicked = {},
             shoppingExperienceFeature = shoppingExperienceFeature,
         ),
     )
