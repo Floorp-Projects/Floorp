@@ -32,3 +32,16 @@ macosx64-sdk-13.3:
             - macosx64-sdk
             - macosx64-sdk-toolchain
             - MacOSX13.3.sdk
+
+macosx64-sdk-14.0:
+    description: "MacOSX14.0 SDK"
+    treeherder:
+        symbol: TM(sdk14.0)
+    run:
+        arguments:
+            - https://swcdn.apple.com/content/downloads/48/60/042-46120-A_N66A5VQ6BX/qoleua6b09wgn0qyb8ci301cmwe3q0r8i6/CLTools_macOSNMOS_SDK.pkg
+            - e2ebee6d2c9bc3beba96029cd52780447c4c25f7429a3c8cd8b49ccdace84f9d
+            - Library/Developer/CommandLineTools/SDKs/MacOSX14.0.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX14.0.sdk.tar.zst
+        toolchain-alias:
+            - MacOSX14.0.sdk
