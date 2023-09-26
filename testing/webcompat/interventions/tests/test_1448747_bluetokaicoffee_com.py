@@ -5,8 +5,9 @@ SELECT_CSS = "select#SortBy"
 
 
 async def is_fastclick_active(client):
-    await client.navigate(URL)
-    return client.test_for_fastclick(client.await_css(SELECT_CSS))
+    async with client.ensure_fastclick_activates():
+        await client.navigate(URL)
+        return client.test_for_fastclick(client.await_css(SELECT_CSS))
 
 
 @pytest.mark.only_platforms("android")

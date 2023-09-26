@@ -1,6 +1,6 @@
 import pytest
 
-URL = "https://cov19ent.kdca.go.kr/"
+URL = "https://cov19ent.kdca.go.kr/cpassportal/biz/beffatstmnt/step1.do?flightPortSe=1&lang=en"
 HEADER_CSS = "header.mouseOn"
 
 

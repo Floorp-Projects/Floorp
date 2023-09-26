@@ -5,8 +5,9 @@ ADD_TO_CART_CSS = "#container a#menu-link"
 
 
 async def is_fastclick_active(client):
-    await client.navigate(URL)
-    return client.test_for_fastclick(client.await_css(ADD_TO_CART_CSS))
+    async with client.ensure_fastclick_activates():
+        await client.navigate(URL)
+        return client.test_for_fastclick(client.await_css(ADD_TO_CART_CSS))
 
 
 @pytest.mark.only_platforms("android")
