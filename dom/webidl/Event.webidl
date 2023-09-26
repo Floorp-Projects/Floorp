@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=(Window,Worker), ProbablyShortLivingWrapper]
+[Exposed=(Window,Worker,AudioWorklet), ProbablyShortLivingWrapper]
 interface Event {
   constructor(DOMString type, optional EventInit eventInitDict = {});
 

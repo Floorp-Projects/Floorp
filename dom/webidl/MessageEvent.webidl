@@ -7,7 +7,7 @@
  * https://html.spec.whatwg.org/#messageevent
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker,AudioWorklet)]
 interface MessageEvent : Event {
   constructor(DOMString type, optional MessageEventInit eventInitDict = {});
 
