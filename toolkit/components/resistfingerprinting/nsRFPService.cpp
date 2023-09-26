@@ -97,8 +97,6 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
 
-#define FP_OVERRIDES_DOMAIN_KEY_DELIMITER ','
-
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
 #ifdef NIGHTLY_BUILD
@@ -114,7 +112,7 @@ const RFPTarget kDefaultFingerintingProtections =
 // ============================================================================
 // Structural Stuff & Pref Observing
 
-NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver, nsIRFPService)
+NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
@@ -123,7 +121,7 @@ static bool sInitialized = false;
 static Atomic<RFPTarget> sEnabledFingerintingProtections;
 
 /* static */
-already_AddRefed<nsRFPService> nsRFPService::GetOrCreate() {
+nsRFPService* nsRFPService::GetOrCreate() {
   if (!sInitialized) {
     sRFPService = new nsRFPService();
     nsresult rv = sRFPService->Init();
@@ -137,7 +135,7 @@ already_AddRefed<nsRFPService> nsRFPService::GetOrCreate() {
     sInitialized = true;
   }
 
-  return do_AddRef(sRFPService);
+  return sRFPService;
 }
 
 static const char* gCallbackPrefs[] = {
@@ -220,8 +218,43 @@ void nsRFPService::UpdateFPPOverrideList() {
     return;
   }
 
-  RFPTarget enabled =
-      CreateOverridesFromText(targetOverrides, kDefaultFingerintingProtections);
+  RFPTarget enabled = kDefaultFingerintingProtections;
+  for (const nsAString& each : targetOverrides.Split(',')) {
+    Maybe<RFPTarget> mappedValue =
+        nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
+    if (mappedValue.isSome()) {
+      RFPTarget target = mappedValue.value();
+      if (target == RFPTarget::IsAlwaysEnabledForPrecompute) {
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("RFPTarget::%s is not a valid value",
+                 NS_ConvertUTF16toUTF8(each).get()));
+      } else if (each[0] == '+') {
+        enabled |= target;
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%" PRIx64
+                 "), to an addition, now we have 0x%" PRIx64,
+                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
+                 uint64_t(enabled)));
+      } else if (each[0] == '-') {
+        enabled &= ~target;
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%" PRIx64
+                 ") to a subtraction, now we have 0x%" PRIx64,
+                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
+                 uint64_t(enabled)));
+      } else {
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%" PRIx64
+                 ") to an RFPTarget Enum, but the first "
+                 "character wasn't + or -",
+                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target)));
+      }
+    } else {
+      MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+              ("Could not map the value %s to an RFPTarget Enum",
+               NS_ConvertUTF16toUTF8(each).get()));
+    }
+  }
 
   sEnabledFingerintingProtections = enabled;
 }
@@ -250,10 +283,6 @@ void nsRFPService::StartShutdown() {
       obs->RemoveObserver(this, LAST_PB_SESSION_EXITED_TOPIC);
       obs->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
     }
-  }
-
-  if (mWebCompatService) {
-    mWebCompatService->Shutdown();
   }
 
   Preferences::UnregisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
@@ -296,19 +325,6 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
             privacy_resistFingerprinting_randomization_daily_reset_private_enabled()) {
       ClearSessionKey(true);
     }
-  }
-
-  if (nsCRT::strcmp(aTopic, "profile-after-change") == 0 &&
-      XRE_IsParentProcess()) {
-    // Get the singleton of the remote override service if we are in the parent
-    // process.
-    nsresult rv;
-    mWebCompatService =
-        do_GetService(NS_FINGERPRINTINGWEBCOMPATSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mWebCompatService->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -1366,166 +1382,5 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   glean::fingerprinting_protection::canvas_noise_calculate_time
       .StopAndAccumulate(std::move(timerId));
 
-  return NS_OK;
-}
-
-/* static */
-nsresult nsRFPService::CreateOverrideDomainKey(
-    nsIFingerprintingOverride* aOverride, nsACString& aDomainKey) {
-  MOZ_ASSERT(aOverride);
-
-  aDomainKey.Truncate();
-
-  nsAutoCString firstPartyDomain;
-  nsresult rv = aOverride->GetFirstPartyDomain(firstPartyDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The first party domain shouldn't be empty. And it shouldn't contain a comma
-  // because we use a comma as a delimiter.
-  if (firstPartyDomain.IsEmpty() ||
-      firstPartyDomain.Contains(FP_OVERRIDES_DOMAIN_KEY_DELIMITER)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString thirdPartyDomain;
-  rv = aOverride->GetThirdPartyDomain(thirdPartyDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We don't accept both domains are wildcards.
-  if (firstPartyDomain.EqualsLiteral("*") &&
-      thirdPartyDomain.EqualsLiteral("*")) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (thirdPartyDomain.IsEmpty()) {
-    aDomainKey.Assign(firstPartyDomain);
-  } else {
-    // Ensure the third-party domain doesn't contain a delimiter.
-    if (thirdPartyDomain.Contains(FP_OVERRIDES_DOMAIN_KEY_DELIMITER)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    aDomainKey.Assign(firstPartyDomain);
-    aDomainKey.Append(FP_OVERRIDES_DOMAIN_KEY_DELIMITER);
-    aDomainKey.Append(thirdPartyDomain);
-  }
-
-  return NS_OK;
-}
-
-/* static */
-RFPTarget nsRFPService::CreateOverridesFromText(const nsString& aOverridesText,
-                                                RFPTarget aBaseOverrides) {
-  RFPTarget result = aBaseOverrides;
-
-  for (const nsAString& each : aOverridesText.Split(',')) {
-    Maybe<RFPTarget> mappedValue =
-        nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
-    if (mappedValue.isSome()) {
-      RFPTarget target = mappedValue.value();
-      if (target == RFPTarget::IsAlwaysEnabledForPrecompute) {
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("RFPTarget::%s is not a valid value",
-                 NS_ConvertUTF16toUTF8(each).get()));
-      } else if (each[0] == '+') {
-        result |= target;
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (0x%" PRIx64
-                 "), to an addition, now we have 0x%" PRIx64,
-                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
-                 uint64_t(result)));
-      } else if (each[0] == '-') {
-        result &= ~target;
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (0x%" PRIx64
-                 ") to a subtraction, now we have 0x%" PRIx64,
-                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
-                 uint64_t(result)));
-      } else {
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (0x%" PRIx64
-                 ") to an RFPTarget Enum, but the first "
-                 "character wasn't + or -",
-                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target)));
-      }
-    } else {
-      MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-              ("Could not map the value %s to an RFPTarget Enum",
-               NS_ConvertUTF16toUTF8(each).get()));
-    }
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsRFPService::SetFingerprintingOverrides(
-    const nsTArray<RefPtr<nsIFingerprintingOverride>>& aOverrides) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  // Clear all overrides before importing.
-  mFingerprintingOverrides.Clear();
-
-  for (const auto& fpOverride : aOverrides) {
-    nsAutoCString domainKey;
-
-    nsresult rv = nsRFPService::CreateOverrideDomainKey(fpOverride, domainKey);
-    // Skip the current overrides if we fail to create the domain key.
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    nsAutoCString overridesText;
-    rv = fpOverride->GetOverrides(overridesText);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    RFPTarget targets = nsRFPService::CreateOverridesFromText(
-        NS_ConvertUTF8toUTF16(overridesText),
-        mFingerprintingOverrides.Contains(domainKey)
-            ? mFingerprintingOverrides.Get(domainKey)
-            : sEnabledFingerintingProtections);
-
-    // The newly added one will replace the existing one for the given domain
-    // key.
-    mFingerprintingOverrides.InsertOrUpdate(domainKey, targets);
-  }
-
-  if (Preferences::GetBool(
-          "privacy.fingerprintingProtection.remoteOverrides.testing", false)) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
-
-    obs->NotifyObservers(nullptr, "fpp-test:set-overrides-finishes", nullptr);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRFPService::GetEnabledFingerprintingProtections(uint64_t* aProtections) {
-  RFPTarget enabled = sEnabledFingerintingProtections;
-
-  *aProtections = uint64_t(enabled);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRFPService::GetFingerprintingOverrides(const nsACString& aDomainKey,
-                                         uint64_t* aOverrides) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  Maybe<RFPTarget> overrides = mFingerprintingOverrides.MaybeGet(aDomainKey);
-
-  if (!overrides) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aOverrides = uint64_t(overrides.ref());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRFPService::CleanAllOverrides() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  mFingerprintingOverrides.Clear();
   return NS_OK;
 }
