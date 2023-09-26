@@ -156,11 +156,42 @@ function assertPanelVisibility(win, selector, expectVisible) {
   );
 }
 
+function transformGleanEvents(events) {
+  if (!events) {
+    return [];
+  }
+  return events.map(e => ({ ...e.extra }));
+}
+
+function assertTelemetry(expectedConfirmPanel, expectedResetAction, message) {
+  info(message);
+
+  let confirmPanelEvents = transformGleanEvents(
+    Glean.privateBrowsingResetPbm.confirmPanel.testGetValue()
+  );
+  Assert.deepEqual(
+    confirmPanelEvents,
+    expectedConfirmPanel,
+    "confirmPanel events should match."
+  );
+
+  let resetActionEvents = transformGleanEvents(
+    Glean.privateBrowsingResetPbm.resetAction.testGetValue()
+  );
+  Assert.deepEqual(
+    resetActionEvents,
+    expectedResetAction,
+    "resetAction events should match."
+  );
+}
+
 /**
  * Tests that the reset button is only visible in private browsing windows and
  * when the feature is enabled.
  */
 add_task(async function test_toolbar_button_visibility() {
+  assertTelemetry([], [], "No glean events initially.");
+
   for (let isEnabled of [false, true]) {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.privatebrowsing.resetPBM.enabled", isEnabled]],
@@ -211,6 +242,8 @@ add_task(async function test_toolbar_button_visibility() {
 
     await SpecialPowers.popPrefEnv();
   }
+
+  assertTelemetry([], [], "No glean events after test.");
 });
 
 /**
@@ -218,6 +251,8 @@ add_task(async function test_toolbar_button_visibility() {
  * actions.
  */
 add_task(async function test_panel() {
+  assertTelemetry([], [], "No glean events initially.");
+
   await SpecialPowers.pushPrefEnv({
     set: [["browser.privatebrowsing.resetPBM.enabled", true]],
   });
@@ -233,6 +268,12 @@ add_task(async function test_panel() {
 
   info("Open the panel.");
   await triggerResetBtn(privateWin);
+
+  assertTelemetry(
+    [{ action: "show", reason: "toolbar-btn" }],
+    [],
+    "There should be a panel show event."
+  );
 
   info("Check that all expected elements are present and visible.");
   [
@@ -294,11 +335,30 @@ add_task(async function test_panel() {
   );
   await promisePanelHidden;
 
+  assertTelemetry(
+    [
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "cancel-btn" },
+    ],
+    [],
+    "There should be a panel show and a hide event."
+  );
+
   assertPanelVisibility(privateWin, SELECTOR_PANELVIEW, false);
   assertPanelVisibility(privateWin, SELECTOR_PANEL_COMPLETION_TOAST, false);
 
   info("Reopen the panel.");
   await triggerResetBtn(privateWin);
+
+  assertTelemetry(
+    [
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "cancel-btn" },
+      { action: "show", reason: "toolbar-btn" },
+    ],
+    [],
+    "Should have added a show event."
+  );
 
   assertPanelVisibility(privateWin, SELECTOR_PANELVIEW, true);
   assertPanelVisibility(privateWin, SELECTOR_PANEL_COMPLETION_TOAST, false);
@@ -333,6 +393,17 @@ add_task(async function test_panel() {
     privateWin.browsingContext
   );
   await promisePanelHidden;
+
+  assertTelemetry(
+    [
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "cancel-btn" },
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "confirm-btn" },
+    ],
+    [{ did_confirm: "true" }],
+    "Should have added a hide and a reset event."
+  );
   await promiseCompletionToastShown;
   assertPanelVisibility(privateWin, SELECTOR_PANELVIEW, false);
   assertPanelVisibility(privateWin, SELECTOR_PANEL_COMPLETION_TOAST, true);
@@ -369,8 +440,22 @@ add_task(async function test_panel() {
   assertPanelVisibility(privateWin, SELECTOR_PANELVIEW, false);
   assertPanelVisibility(privateWin, SELECTOR_PANEL_COMPLETION_TOAST, true);
 
+  assertTelemetry(
+    [
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "cancel-btn" },
+      { action: "show", reason: "toolbar-btn" },
+      { action: "hide", reason: "confirm-btn" },
+    ],
+    [{ did_confirm: "true" }, { did_confirm: "false" }],
+    "Should have added a reset event."
+  );
+
   await BrowserTestUtils.closeWindow(privateWin);
   Services.prefs.clearUserPref(PREF_ID_ALWAYS_ASK);
+
+  // Clean up telemetry
+  Services.fog.testResetFOG();
 });
 
 /**
@@ -378,6 +463,8 @@ add_task(async function test_panel() {
  * tabs and triggers private browsing data clearing.
  */
 add_task(async function test_reset_action() {
+  assertTelemetry([], [], "No glean events initially.");
+
   await SpecialPowers.pushPrefEnv({
     set: [["browser.privatebrowsing.resetPBM.enabled", true]],
   });
@@ -468,4 +555,7 @@ add_task(async function test_reset_action() {
   // Close the private window that remained open.
   await BrowserTestUtils.closeWindow(win);
   await BrowserTestUtils.closeWindow(additionalNormalWindow);
+
+  // We bypass telemetry by calling ResetPBMPanel._restartPBM directly.
+  assertTelemetry([], [], "No glean events after the test.");
 });
