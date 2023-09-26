@@ -26,6 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
 });
 
 export var UrlbarUtils = {
@@ -1293,6 +1294,46 @@ export var UrlbarUtils = {
     return uri.length > UrlbarUtils.MAX_TEXT_LENGTH
       ? uri
       : Services.textToSubURI.unEscapeURIForUI(uri);
+  },
+
+  /**
+   * Checks whether a given text has right-to-left direction or not.
+   *
+   * @param {string} value The text which should be check for RTL direction.
+   * @param {Window} window The window where 'value' is going to be displayed.
+   * @returns {boolean} Returns true if text has right-to-left direction and
+   *                    false otherwise.
+   */
+  isTextDirectionRTL(value, window) {
+    let directionality = window.windowUtils.getDirectionFromText(value);
+    return directionality == window.windowUtils.DIRECTION_RTL;
+  },
+
+  /**
+   * Unescape, decode punycode, and trim (both protocol and trailing slash)
+   * the URL.
+   *
+   * @param {string} url The url that should be prepared for display.
+   * @returns {string} Prepared url.
+   */
+  prepareUrlForDisplay(url) {
+    // Some domains are encoded in punycode. The following ensures we display
+    // the url in utf-8.
+    try {
+      url = new URL(url).URI.displaySpec;
+    } catch {} // In some cases url is not a valid url.
+
+    if (url && lazy.UrlbarPrefs.get("trimURLs")) {
+      url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
+      if (url.startsWith("https://")) {
+        url = url.substring(8);
+        if (url.startsWith("www.")) {
+          url = url.substring(4);
+        }
+      }
+    }
+
+    return this.unEscapeURIForUI(url);
   },
 
   /**
