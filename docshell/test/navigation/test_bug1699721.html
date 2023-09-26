@@ -8,6 +8,17 @@
 <pre id="test">
 <script type="text/javascript">
   add_task(async function() {
+    // Induce a process switching behavior for example.com
+    // with isolateHighValue isolation strategy
+    // (because we test specifically process switching behavior here)
+    await SpecialPowers.pushPermissions([
+      {
+        type: "highValueCOOP",
+        allow: SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION,
+        context: "https://example.com",
+      }
+    ]);
+
     let popup = window.open("blank.html");
 
     info("opened popup");
@@ -18,7 +29,7 @@
     info("popup blank.html loaded");
     let tell_opener = new URL("file_tell_opener.html", location.href);
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    let xorigin_url = new URL(tell_opener.pathname, "http://example.com");
+    let xorigin_url = new URL(tell_opener.pathname, "https://example.com");
 
     let resolveStartedUnload;
     let startedUnload = new Promise(resolve => {
