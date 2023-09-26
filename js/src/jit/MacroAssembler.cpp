@@ -5613,6 +5613,23 @@ void MacroAssembler::wasmReturnCallRef(
 }
 #endif
 
+void MacroAssembler::wasmBoundsCheckRange32(
+    Register index, Register length, Register limit, Register tmp,
+    wasm::BytecodeOffset bytecodeOffset) {
+  Label ok;
+  Label fail;
+
+  mov(index, tmp);
+  branchAdd32(Assembler::CarrySet, length, tmp, &fail);
+  branch32(Assembler::Above, tmp, limit, &fail);
+  jump(&ok);
+
+  bind(&fail);
+  wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset);
+
+  bind(&ok);
+}
+
 bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
     wasm::RefType type) {
   MOZ_ASSERT(type.isValid());

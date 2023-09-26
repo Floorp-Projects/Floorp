@@ -17593,6 +17593,16 @@ void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
   }
 }
 
+void CodeGenerator::visitWasmBoundsCheckRange32(LWasmBoundsCheckRange32* ins) {
+  const MWasmBoundsCheckRange32* mir = ins->mir();
+  Register index = ToRegister(ins->index());
+  Register length = ToRegister(ins->length());
+  Register limit = ToRegister(ins->limit());
+  Register tmp = ToRegister(ins->temp0());
+
+  masm.wasmBoundsCheckRange32(index, length, limit, tmp, mir->bytecodeOffset());
+}
+
 void CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins) {
   const MWasmAlignmentCheck* mir = ins->mir();
   Register ptr = ToRegister(ins->ptr());

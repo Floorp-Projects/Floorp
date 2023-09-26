@@ -1730,6 +1730,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.new_data function";
     case SymbolicAddress::ArrayNewElem:
       return "call to native array.new_elem function";
+    case SymbolicAddress::ArrayInitData:
+      return "call to native array.init_data function";
+    case SymbolicAddress::ArrayInitElem:
+      return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
 #define OP(op, export, sa_name, abitype, entry, idx) \

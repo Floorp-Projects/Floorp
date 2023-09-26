@@ -827,6 +827,699 @@ assertErrorMessage(() => wasmEvalText(`(module
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// array.init_data
+/*
+  validation:
+    array-type imm-operand needs to be "in range"
+    array-type imm-operand must refer to an array type
+    array-type imm-operand must refer to an array of numeric elements
+    array-type imm-operand must be mutable
+    segment index must be "in range"
+  run:
+    array must not be null
+    if segment is "already used" (active, or passive that has subsequently
+      been dropped), then only a zero length array can be created
+    range to copy would require OOB read on data segment
+    range to copy would require OOB write on array
+    resulting array is as expected
+*/
+
+// validation: array-type imm-operand needs to be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array i8))
+  (data $d "1337")
+  (func (export "initData")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into data ;)  i32.const 0
+    (; size=4 elements ;)     i32.const 4
+    array.init_data 2 $d
+  )
+)`), WebAssembly.CompileError, /type index out of range/);
+
+// validation: array-type imm-operand must refer to an array type
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (func (param f32) (result f32)))
+  (data $d "1337")
+  (func (export "initData")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into data ;)  i32.const 0
+    (; size=4 elements ;)     i32.const 4
+    array.init_data $a $d
+  )
+)`), WebAssembly.CompileError, /not an array type/);
+
+// validation: array-type imm-operand must refer to an array of numeric elements
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array eqref))
+  (data $d "1337")
+  (func (export "initData")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into data ;)  i32.const 0
+    (; size=4 elements ;)     i32.const 4
+    array.init_data $a $d
+  )
+)`), WebAssembly.CompileError, /element type must be i8\/i16\/i32\/i64\/f32\/f64\/v128/);
+
+// validation: array-type imm-operand must be mutable
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array i8))
+  (data $d "1337")
+  (func (export "initData")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into data ;)  i32.const 0
+    (; size=4 elements ;)     i32.const 4
+    array.init_data $a $d
+  )
+)`), WebAssembly.CompileError,
+             /destination array is not mutable/);
+
+// validation: segment index must be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut i8)))
+  (data $d "1337")
+  (func (export "initData")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into data ;)  i32.const 0
+    (; size=4 elements ;)     i32.const 4
+    array.init_data $a 1  ;; 1 is the lowest invalid dseg index
+  )
+  (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+)`), WebAssembly.CompileError, /segment index is out of range/);
+
+// run: array must not be null
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      (; array to init ;)       (ref.null $a)
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  }, WebAssembly.RuntimeError, /dereferencing null pointer/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #1
+{
+  let { initData } = wasmEvalText(`(module
+    (memory 1)
+    (type $a (array (mut i8)))
+    (data $d (offset (i32.const 0)) "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  }, WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #2
+{
+  let { initData } = wasmEvalText(`(module
+    (memory 1)
+    (type $a (array (mut i8)))
+    (data $d (offset (i32.const 0)) "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=4 into data ;)  i32.const 4
+      (; size=0 elements ;)     i32.const 0
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #3
+{
+  let { initData } = wasmEvalText(`(module
+    (memory 1)
+    (type $a (array (mut i8)))
+    (data $d (offset (i32.const 0)) "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=0 elements ;)     i32.const 0
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  initData();
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #4
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      data.drop $d
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #5
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      data.drop $d
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=0 elements ;)     i32.const 0
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  initData();
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #6
+{
+  let { initData } = wasmEvalText(`(module
+    (memory 1)
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      data.drop $d
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=4 into array ;) i32.const 4
+      (; offset=0 into data ;)  i32.const 0
+      (; size=0 elements ;)     i32.const 0
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  initData();
+}
+
+// run: range to copy would require OOB read on data segment #1
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=1 into data ;)  i32.const 1
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: range to copy would require OOB read on data segment #2
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i16)))
+    (data $d "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=1 into data ;)  i32.const 1
+      (; size=2 elements ;)     i32.const 2 ;; still 4 bytes
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: range to copy would require OOB write on array #1
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=1 into array ;) i32.const 1
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: range to copy would require OOB write on array #2
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i16)))
+    (data $d "1337")
+    (func (export "initData")
+      (; array to init ;)       (array.new_default $a (i32.const 2))
+      (; offset=1 into array ;) i32.const 1
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 2
+      array.init_data $a $d
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  assertErrorMessage(() => {
+    initData();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: resulting array is as expected
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $other "\\\\9")
+    (data $d "1337")
+    (func (export "initData") (result eqref)
+      (local $arr (ref $a))
+      (local.set $arr (array.new_default $a (i32.const 4)))
+
+      (; array to init ;)       local.get $arr
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=4 elements ;)     i32.const 4
+      array.init_data $a $d
+
+      local.get $arr
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  let arr = initData();
+  assertEq(wasmGcArrayLength(arr), 4);
+  assertEq(wasmGcReadField(arr, 0), 48+1);
+  assertEq(wasmGcReadField(arr, 1), 48+3);
+  assertEq(wasmGcReadField(arr, 2), 48+3);
+  assertEq(wasmGcReadField(arr, 3), 48+7);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// array.init_elem
+/*
+  validation:
+    array-type imm-operand needs to be "in range"
+    array-type imm-operand must refer to an array type
+    array-type imm-operand must refer to an array of ref typed elements
+    array-type imm-operand must be mutable
+    destination elem type must be a supertype of src elem type
+    segment index must be "in range"
+  run:
+    array must not be null
+    if segment is "already used" (active, or passive that has subsequently
+      been dropped), then only a zero length array can be created
+    range to copy would require OOB read on element segment
+    range to copy would require OOB write on array
+    resulting array is as expected
+*/
+
+// validation: array-type imm-operand needs to be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut funcref)))
+  (elem $e func $f1 $f2 $f3 $f4)
+  (func $f1 (export "f1"))
+  (func $f2 (export "f2"))
+  (func $f3 (export "f3"))
+  (func $f4 (export "f4"))
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem 4 $e
+  )
+)`), WebAssembly.CompileError, /type index out of range/);
+
+// validation: array-type imm-operand must refer to an array type
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (func (param i64) (result f64)))
+  (elem $e func $f1 $f2 $f3 $f4)
+  (func $f1 (export "f1"))
+  (func $f2 (export "f2"))
+  (func $f3 (export "f3"))
+  (func $f4 (export "f4"))
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem $a $e
+  )
+)`), WebAssembly.CompileError, /not an array type/);
+
+// validation: array-type imm-operand must refer to an array of ref typed
+//   elements
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut f32)))
+  (elem $e func $f1 $f2 $f3 $f4)
+  (func $f1 (export "f1"))
+  (func $f2 (export "f2"))
+  (func $f3 (export "f3"))
+  (func $f4 (export "f4"))
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem $a $e
+  )
+)`), WebAssembly.CompileError, /element type is not a reftype/);
+
+// validation: array-type imm-operand must be mutable
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array funcref))
+  (elem $e func $f1 $f2 $f3 $f4)
+  (func $f1 (export "f1"))
+  (func $f2 (export "f2"))
+  (func $f3 (export "f3"))
+  (func $f4 (export "f4"))
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem $a $e
+  )
+)`), WebAssembly.CompileError, /destination array is not mutable/);
+
+// validation: destination elem type must be a supertype of src elem type
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut eqref)))
+  (elem $e func $f1)
+  (func $f1 (export "f1"))
+  ;; The copy here is from elem-seg-of-funcrefs to
+  ;; array-of-eqrefs, which must fail, because funcref isn't
+  ;; a subtype of eqref.
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem $a $e
+  )
+)`), WebAssembly.CompileError, /incompatible element types/);
+
+// validation: segment index must be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut funcref)))
+  (elem $e func $f1 $f2 $f3 $f4)
+  (func $f1 (export "f1"))
+  (func $f2 (export "f2"))
+  (func $f3 (export "f3"))
+  (func $f4 (export "f4"))
+  (func (export "initElem")
+    (; array to init ;)       (array.new_default $a (i32.const 4))
+    (; offset=0 into array ;) i32.const 0
+    (; offset=0 into elem ;)  i32.const 0
+    (; size=4 into elem ;)    i32.const 4
+    array.init_elem $a 1 ;; 1 is the lowest invalid eseg index
+  )
+)`), WebAssembly.CompileError, /segment index is out of range/);
+
+// run: array must not be null
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (ref.null $a)
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  }, WebAssembly.RuntimeError, /dereferencing null pointer/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #1
+{
+  let { initElem } = wasmEvalText(`(module
+    (table 4 funcref)
+    (type $a (array (mut funcref)))
+    (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  }, WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #2
+{
+  let { initElem } = wasmEvalText(`(module
+    (table 4 funcref)
+    (type $a (array (mut funcref)))
+    (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=4 into elem ;)  i32.const 4
+      (; size=0 into elem ;)    i32.const 0
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  }, WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #3
+{
+  let { initElem } = wasmEvalText(`(module
+    (table 4 funcref)
+    (type $a (array (mut funcref)))
+    (elem $e (offset (i32.const 0)) func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=0 into elem ;)    i32.const 0
+      array.init_elem $a $e
+    )
+  )`).exports;
+  initElem();
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #4
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      elem.drop $e
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #5
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      elem.drop $e
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 0
+      array.init_elem $a $e
+    )
+  )`).exports;
+  initElem();
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length init can be performed #6
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      elem.drop $e
+
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 4
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 0
+      array.init_elem $a $e
+    )
+  )`).exports;
+  initElem();
+}
+
+// run: range to copy would require OOB read on elem segment
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 1
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: range to copy would require OOB write on array
+{
+  let { initElem } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem")
+      (; array to init ;)       (array.new_default $a (i32.const 4))
+      (; offset=0 into array ;) i32.const 1
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    initElem();
+  },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: resulting array is as expected
+{
+  let { initElem, f1, f2, f3, f4 } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func $f1 $f2 $f3 $f4)
+    (func $f1 (export "f1"))
+    (func $f2 (export "f2"))
+    (func $f3 (export "f3"))
+    (func $f4 (export "f4"))
+    (func (export "initElem") (result eqref)
+      (local $arr (ref $a))
+      (local.set $arr (array.new_default $a (i32.const 4)))
+
+      (; array to init ;)       local.get $arr
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=4 into elem ;)    i32.const 4
+      array.init_elem $a $e
+
+      local.get $arr
+    )
+  )`).exports;
+  let arr = initElem();
+  assertEq(wasmGcArrayLength(arr), 4);
+  assertEq(wasmGcReadField(arr, 0), f1);
+  assertEq(wasmGcReadField(arr, 1), f2);
+  assertEq(wasmGcReadField(arr, 2), f3);
+  assertEq(wasmGcReadField(arr, 3), f4);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
 // array.copy
 /*
   validation:
@@ -1071,6 +1764,159 @@ for (let [elemTy, valueTy, src, exp1, exp2] of ARRAY_COPY_TESTS) {
   assertErrorMessage(() => {
     shouldTrap();
   }, WebAssembly.RuntimeError, /null/);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// array.fill
+/*
+  validation:
+    array must be mutable
+    value must be compatible with array element type
+  run:
+    null array causes a trap
+    OOB conditions on array for non-zero length copies
+    OOB conditions on array for zero length copies
+    resulting arrays are as expected (all types)
+*/
+
+// validation: array must be mutable
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array i32))
+  (func
+    (array.new_default $a (i32.const 8))
+    i32.const 0
+    i32.const 123
+    i32.const 8
+    array.fill $a
+  )
+)
+`), WebAssembly.CompileError, /array is not mutable/);
+
+// validation: value must be compatible with array element type #1
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut i32)))
+  (func
+    (array.new_default $a (i32.const 8))
+    i32.const 0
+    i64.const 123
+    i32.const 8
+    array.fill $a
+  )
+)
+`), WebAssembly.CompileError, /type mismatch/);
+
+// validation: value must be compatible with array element type #2
+assertErrorMessage(() => wasmEvalText(`(module
+  (type $a (array (mut eqref)))
+  (func
+    (array.new_default $a (i32.const 8))
+    i32.const 0
+    ref.null any
+    i32.const 8
+    array.fill $a
+  )
+)
+`), WebAssembly.CompileError, /type mismatch/);
+
+// run: null array causes a trap
+{
+  const { arrayFill } = wasmEvalText(`(module
+    (type $a (array (mut i32)))
+    (func (export "arrayFill")
+      ref.null $a
+      i32.const 0
+      i32.const 123
+      i32.const 8
+      array.fill $a
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    arrayFill();
+  }, WebAssembly.RuntimeError, /dereferencing null pointer/);
+}
+
+// run: OOB conditions on array for non-zero length copies
+{
+  const { arrayFill } = wasmEvalText(`(module
+    (type $a (array (mut i32)))
+    (func (export "arrayFill")
+      (array.new_default $a (i32.const 8))
+      i32.const 1
+      i32.const 123
+      i32.const 8
+      array.fill $a
+    )
+  )`).exports;
+  assertErrorMessage(() => {
+    arrayFill();
+  }, WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: OOB conditions on array for zero length copies
+{
+  const { arrayFill } = wasmEvalText(`(module
+    (type $a (array (mut i32)))
+    (func (export "arrayFill")
+      (array.new_default $a (i32.const 8))
+      i32.const 8
+      i32.const 123
+      i32.const 0
+      array.fill $a
+    )
+  )`).exports;
+  arrayFill();
+}
+
+// run: arrays are as expected (all types)
+{
+  const TESTS = [
+    { type: 'i8', val: 'i32.const 123', get: 'array.get_u', test: 'i32.eq' },
+    { type: 'i16', val: 'i32.const 123', get: 'array.get_u', test: 'i32.eq' },
+    { type: 'i32', val: 'i32.const 123', test: 'i32.eq' },
+    { type: 'i64', val: 'i64.const 123', test: 'i64.eq' },
+    { type: 'f32', val: 'f32.const 3.14', test: 'f32.eq' },
+    { type: 'f64', val: 'f64.const 3.14', test: 'f64.eq' },
+    { type: 'eqref', val: 'global.get 0', test: 'ref.eq' },
+  ];
+  if (wasmSimdEnabled()) {
+    TESTS.push({ type: 'v128', val: 'v128.const i32x4 111 222 333 444', test: '(v128.xor) (i32.eq (v128.any_true) (i32.const 0))' });
+  }
+
+  for (const { type, val, get = 'array.get', test } of TESTS) {
+    const { arrayFill, isDefault, isFilled } = wasmEvalText(`(module
+      (type $a (array (mut ${type})))
+      (type $s (struct))
+      (global (ref $s) (struct.new_default $s))
+      (func (export "arrayFill") (result (ref $a))
+        (local $arr (ref $a))
+        (local.set $arr (array.new_default $a (i32.const 4)))
+
+        local.get $arr
+        i32.const 1
+        ${val}
+        i32.const 2
+        array.fill $a
+
+        local.get $arr
+      )
+      (func (export "isDefault") (param (ref $a) i32) (result i32)
+        (${get} $a (local.get 0) (local.get 1))
+        (${get} $a (array.new_default $a (i32.const 1)) (i32.const 0))
+        ${test}
+      )
+      (func (export "isFilled") (param (ref $a) i32) (result i32)
+        (${get} $a (local.get 0) (local.get 1))
+        ${val}
+        ${test}
+      )
+    )`).exports;
+    const arr = arrayFill();
+    assertEq(isDefault(arr, 0), 1, `expected default value for ${type} but got filled`);
+    assertEq(isFilled(arr, 1), 1, `expected filled value for ${type} but got default`);
+    assertEq(isFilled(arr, 2), 1, `expected filled value for ${type} but got default`);
+    assertEq(isDefault(arr, 3), 1, `expected default value for ${type} but got filled`);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
