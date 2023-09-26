@@ -3,7 +3,6 @@
     "build_clang_tidy": true,
     "patches": [
         "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
-        "clang-tidy-ci.patch",
-        "clang-tidy-include_cleaner.patch"
+        "clang-tidy-ci.patch"
     ]
 }
