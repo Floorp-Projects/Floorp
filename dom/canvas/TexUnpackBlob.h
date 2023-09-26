@@ -43,7 +43,8 @@ struct DriverUnpackInfo;
 
 Maybe<std::string> BlitPreventReason(int32_t level, const ivec3& offset,
                                      const webgl::PackingInfo&,
-                                     const TexUnpackBlobDesc&);
+                                     const TexUnpackBlobDesc&,
+                                     const Limits& limits);
 
 class TexUnpackBlob {
  public:
