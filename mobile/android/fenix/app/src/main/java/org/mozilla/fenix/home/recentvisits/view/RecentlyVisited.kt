@@ -8,21 +8,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -41,16 +39,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Divider
-import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
@@ -58,6 +56,28 @@ import org.mozilla.fenix.theme.FirefoxTheme
 
 // Number of recently visited items per column.
 private const val VISITS_PER_COLUMN = 3
+
+private val itemRowHeight = 56.dp
+private val horizontalArrangementSpacing = 32.dp
+private val contentPadding = 16.dp
+private val imageSize = 24.dp
+private val imageSpacer = 16.dp
+
+/**
+ * The [Dp] width of UI elements to deduct from the screen width for a single column.
+ *
+ * Box start padding, Row start padding, Box end padding, Row end padding.
+ */
+private val singleColumnWidth: Dp = contentPadding * 4
+
+/**
+ * The [Dp] width of UI elements to deduct from the screen width for multiple columns to show (peek) the
+ * second column icons.
+ *
+ * Box start padding, Row start padding, Spacer, Image size, Image spacer.
+ */
+private val multipleColumnsWidth: Dp =
+    contentPadding + contentPadding + horizontalArrangementSpacing + imageSize + imageSpacer
 
 /**
  * A list of recently visited items.
@@ -75,54 +95,94 @@ fun RecentlyVisited(
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> },
 ) {
+    val itemsMatrix: List<List<RecentlyVisitedItem>> = recentVisits.chunked(VISITS_PER_COLUMN)
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.visits"
+            },
+    ) {
+        val boxWithConstraintsScope = this
+
+        val isSingleColumn = itemsMatrix.size == 1
+        val widthToDeduct = if (isSingleColumn) {
+            singleColumnWidth
+        } else {
+            multipleColumnsWidth
+        }
+        val rowWidth = boxWithConstraintsScope.maxWidth - widthToDeduct
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = contentPadding),
+        ) {
+            item {
+                RecentlyVisitedCard(backgroundColor) {
+                    Row(modifier = Modifier.padding(contentPadding)) {
+                        itemsMatrix.mapIndexed { pageIndex, items ->
+                            RecentlyVisitedColumn(
+                                modifier = Modifier.width(rowWidth),
+                                menuItems = menuItems,
+                                items = items,
+                                pageIndex = pageIndex,
+                                onRecentVisitClick = onRecentVisitClick,
+                            )
+
+                            val isLastColumn = pageIndex == itemsMatrix.lastIndex
+                            if (!isLastColumn) {
+                                Spacer(modifier = Modifier.width(horizontalArrangementSpacing))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentlyVisitedCard(backgroundColor: Color, content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
-        val listState = rememberLazyListState()
-        val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
+        content()
+    }
+}
 
-        LazyRow(
-            modifier = Modifier.semantics {
-                testTagsAsResourceId = true
-                testTag = "recent.visits"
-            },
-            state = listState,
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp),
-            flingBehavior = flingBehavior,
-        ) {
-            val itemsList = recentVisits.chunked(VISITS_PER_COLUMN)
+@Composable
+private fun RecentlyVisitedColumn(
+    modifier: Modifier,
+    menuItems: List<RecentVisitMenuItem>,
+    items: List<RecentlyVisitedItem>,
+    pageIndex: Int,
+    onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> },
+) {
+    Column(modifier = modifier) {
+        items.forEachIndexed { index, recentVisit ->
+            when (recentVisit) {
+                is RecentHistoryHighlight -> RecentlyVisitedHistoryHighlight(
+                    recentVisit = recentVisit,
+                    menuItems = menuItems,
+                    showDividerLine = index < items.size - 1,
+                    onRecentVisitClick = {
+                        onRecentVisitClick(it, pageIndex + 1)
+                    },
+                )
 
-            itemsIndexed(itemsList) { pageIndex, items ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    items.forEachIndexed { index, recentVisit ->
-                        when (recentVisit) {
-                            is RecentHistoryHighlight -> RecentlyVisitedHistoryHighlight(
-                                recentVisit = recentVisit,
-                                menuItems = menuItems,
-                                clickableEnabled = listState.atLeastHalfVisibleItems.contains(pageIndex),
-                                showDividerLine = index < items.size - 1,
-                                onRecentVisitClick = {
-                                    onRecentVisitClick(it, pageIndex + 1)
-                                },
-                            )
-                            is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
-                                recentVisit = recentVisit,
-                                menuItems = menuItems,
-                                clickableEnabled = listState.atLeastHalfVisibleItems.contains(pageIndex),
-                                showDividerLine = index < items.size - 1,
-                                onRecentVisitClick = {
-                                    onRecentVisitClick(it, pageIndex + 1)
-                                },
-                            )
-                        }
-                    }
-                }
+                is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
+                    recentVisit = recentVisit,
+                    menuItems = menuItems,
+                    showDividerLine = index < items.size - 1,
+                    onRecentVisitClick = {
+                        onRecentVisitClick(it, pageIndex + 1)
+                    },
+                )
             }
         }
     }
@@ -133,7 +193,6 @@ fun RecentlyVisited(
  *
  * @param recentVisit The [RecentHistoryGroup] to display.
  * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
- * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  */
@@ -145,7 +204,6 @@ fun RecentlyVisited(
 private fun RecentlyVisitedHistoryGroup(
     recentVisit: RecentHistoryGroup,
     menuItems: List<RecentVisitMenuItem>,
-    clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryGroup) -> Unit = { _ -> },
 ) {
@@ -154,11 +212,11 @@ private fun RecentlyVisitedHistoryGroup(
     Row(
         modifier = Modifier
             .combinedClickable(
-                enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
                 onLongClick = { isMenuExpanded = true },
             )
-            .size(268.dp, 56.dp)
+            .height(itemRowHeight)
+            .fillMaxWidth()
             .semantics {
                 testTagsAsResourceId = true
                 testTag = "recent.visits.group"
@@ -168,10 +226,10 @@ private fun RecentlyVisitedHistoryGroup(
         Image(
             painter = painterResource(R.drawable.ic_multiple_tabs),
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(imageSize),
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(imageSpacer))
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -219,7 +277,6 @@ private fun RecentlyVisitedHistoryGroup(
  *
  * @param recentVisit The [RecentHistoryHighlight] to display.
  * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
- * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  */
@@ -231,7 +288,6 @@ private fun RecentlyVisitedHistoryGroup(
 private fun RecentlyVisitedHistoryHighlight(
     recentVisit: RecentHistoryHighlight,
     menuItems: List<RecentVisitMenuItem>,
-    clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryHighlight) -> Unit = { _ -> },
 ) {
@@ -240,20 +296,20 @@ private fun RecentlyVisitedHistoryHighlight(
     Row(
         modifier = Modifier
             .combinedClickable(
-                enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
                 onLongClick = { isMenuExpanded = true },
             )
-            .size(268.dp, 56.dp)
+            .height(itemRowHeight)
+            .fillMaxWidth()
             .semantics {
                 testTagsAsResourceId = true
                 testTag = "recent.visits.highlight"
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Favicon(url = recentVisit.url, size = 24.dp)
+        Favicon(url = recentVisit.url, size = imageSize)
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(imageSpacer))
 
         Box(modifier = Modifier.fillMaxSize()) {
             RecentlyVisitedTitle(
@@ -334,21 +390,9 @@ private fun RecentlyVisitedCaption(
     )
 }
 
-/**
- * Get the indexes in list of all items which have more than half showing.
- */
-private val LazyListState.atLeastHalfVisibleItems
-    get() = layoutInfo
-        .visibleItemsInfo
-        .filter {
-            val startEdge = maxOf(0, layoutInfo.viewportStartOffset - it.offset)
-            val endEdge = maxOf(0, it.offset + it.size - layoutInfo.viewportEndOffset)
-            return@filter startEdge + endEdge < it.size / 2
-        }.map { it.index }
-
 @Composable
-@Preview
-private fun RecentlyVisitedPreview() {
+@LightDarkPreview
+private fun RecentlyVisitedMultipleColumnsPreview() {
     FirefoxTheme {
         RecentlyVisited(
             recentVisits = listOf(
@@ -356,6 +400,21 @@ private fun RecentlyVisitedPreview() {
                 RecentHistoryGroup(title = "mozilla"),
                 RecentHistoryGroup(title = "firefox"),
                 RecentHistoryGroup(title = "pocket"),
+            ),
+            menuItems = emptyList(),
+        )
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun RecentlyVisitedSingleColumnPreview() {
+    FirefoxTheme {
+        RecentlyVisited(
+            recentVisits = listOf(
+                RecentHistoryGroup(title = "running shoes"),
+                RecentHistoryGroup(title = "mozilla"),
+                RecentHistoryGroup(title = "firefox"),
             ),
             menuItems = emptyList(),
         )

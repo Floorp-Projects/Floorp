@@ -35,12 +35,6 @@ class RecentlyVisitedViewHolder(
     private val interactor: RecentVisitsInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
-    init {
-        val horizontalPadding =
-            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
-        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
-    }
-
     @Composable
     override fun Content() {
         val recentVisits = components.appStore
