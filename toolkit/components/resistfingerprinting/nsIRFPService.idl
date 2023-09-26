@@ -18,4 +18,26 @@ interface nsIRFPService : nsISupports
    *        An array of fingerprinting overrides.
    */
   void setFingerprintingOverrides(in Array<nsIFingerprintingOverride> aOverrides);
+
+  /**
+   * Get the fingerprinting overrides of the given scope. This is for testing
+   * purpose.
+   *
+   * @param aScope
+   *        The scope of the fingerprinting override.
+   * @return The RFPTarget flags for the fingerprinting overrides of the given
+   *         scope. 0 if the overridden scope doesn't exist.
+   *
+   */
+  uint64_t getFingerprintingOverrides(in ACString aDomainKey);
+
+  /**
+   * Clean all overrides. This is for testing purpose.
+   */
+  void cleanAllOverrides();
+
+  /**
+   * The bitfield of the default enabled RFP Targets.
+   */
+  readonly attribute uint64_t enabledFingerprintingProtections;
 };
