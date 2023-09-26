@@ -2,7 +2,6 @@
     "stages": "1",
     "build_clang_tidy": true,
     "patches": [
-        "clang-tidy-ci.patch",
-        "clang-tidy-include_cleaner.patch"
+        "clang-tidy-ci.patch"
     ]
 }

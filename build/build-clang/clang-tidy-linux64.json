@@ -5,7 +5,6 @@
     "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
     "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
-        "clang-tidy-ci.patch",
-        "clang-tidy-include_cleaner.patch"
+        "clang-tidy-ci.patch"
     ]
 }
