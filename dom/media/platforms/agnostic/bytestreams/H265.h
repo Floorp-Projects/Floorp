@@ -255,6 +255,7 @@ struct HVCCConfig final {
       const mozilla::MediaByteBuffer* aExtraData);
 
   uint8_t NALUSize() const { return mLengthSizeMinusOne + 1; }
+  bool HasSPS() const;
 
   uint8_t mConfigurationVersion;
   uint8_t mGeneralProfileSpace;
@@ -288,6 +289,8 @@ class H265 final {
  public:
   static Result<H265SPS, nsresult> DecodeSPSFromHVCCExtraData(
       const mozilla::MediaByteBuffer* aExtraData);
+  static Result<H265SPS, nsresult> DecodeSPSFromSPSNALU(
+      const H265NALU& aSPSNALU);
 
  private:
   // Return RAW BYTE SEQUENCE PAYLOAD (rbsp) from NAL content.
