@@ -92,33 +92,33 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
   HVCCConfig hvcc;
 
   BitReader reader(aExtraData);
-  hvcc.mConfigurationVersion = reader.ReadBits(8);
-  hvcc.mGeneralProfileSpace = reader.ReadBits(2);
-  hvcc.mGeneralTierFlag = reader.ReadBit();
-  hvcc.mGeneralProfileIdc = reader.ReadBits(5);
-  hvcc.mGeneralProfileCompatibilityFlags = reader.ReadU32();
+  hvcc.configurationVersion = reader.ReadBits(8);
+  hvcc.general_profile_space = reader.ReadBits(2);
+  hvcc.general_tier_flag = reader.ReadBit();
+  hvcc.general_profile_idc = reader.ReadBits(5);
+  hvcc.general_profile_compatibility_flags = reader.ReadU32();
 
   uint32_t flagHigh = reader.ReadU32();
   uint16_t flagLow = reader.ReadBits(16);
-  hvcc.mGeneralConstraintIndicatorFlags =
+  hvcc.general_constraint_indicator_flags =
       ((uint64_t)(flagHigh) << 16) | (uint64_t)(flagLow);
 
-  hvcc.mGeneralLevelIdc = reader.ReadBits(8);
+  hvcc.general_level_idc = reader.ReadBits(8);
   Unused << reader.ReadBits(4);  // reserved
-  hvcc.mMinSpatialSegmentationIdc = reader.ReadBits(12);
+  hvcc.min_spatial_segmentation_idc = reader.ReadBits(12);
   Unused << reader.ReadBits(6);  // reserved
-  hvcc.mParallelismType = reader.ReadBits(2);
+  hvcc.parallelismType = reader.ReadBits(2);
   Unused << reader.ReadBits(6);  // reserved
-  hvcc.mChromaFormatIdc = reader.ReadBits(2);
+  hvcc.chroma_format_idc = reader.ReadBits(2);
   Unused << reader.ReadBits(5);  // reserved
-  hvcc.mBitDepthLumaMinus8 = reader.ReadBits(3);
+  hvcc.bit_depth_luma_minus8 = reader.ReadBits(3);
   Unused << reader.ReadBits(5);  // reserved
-  hvcc.mBitDepthChromaMinus8 = reader.ReadBits(3);
-  hvcc.mAvgFrameRate = reader.ReadBits(16);
-  hvcc.mConstantFrameRate = reader.ReadBits(2);
-  hvcc.mNumTemporalLayers = reader.ReadBits(3);
-  hvcc.mTemporalIdNested = reader.ReadBit();
-  hvcc.mLengthSizeMinusOne = reader.ReadBits(2);
+  hvcc.bit_depth_chroma_minus8 = reader.ReadBits(3);
+  hvcc.avgFrameRate = reader.ReadBits(16);
+  hvcc.constantFrameRate = reader.ReadBits(2);
+  hvcc.numTemporalLayers = reader.ReadBits(3);
+  hvcc.temporalIdNested = reader.ReadBit();
+  hvcc.lengthSizeMinusOne = reader.ReadBits(2);
   const uint8_t numOfArrays = reader.ReadBits(8);
   for (uint8_t idx = 0; idx < numOfArrays; idx++) {
     Unused << reader.ReadBits(2);  // array_completeness + reserved
