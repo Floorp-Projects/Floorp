@@ -32,7 +32,7 @@ for path in paths:
     sys.path.insert(0, path)
 
 from chrome_trace import ChromeTrace
-from cmdline import FIREFOX_ANDROID_APPS, GECKO_PROFILER_APPS, TRACE_APPS
+from cmdline import FIREFOX_ANDROID_APPS, FIREFOX_APPS, GECKO_PROFILER_APPS, TRACE_APPS
 from condprof.client import ProfileNotFoundError, get_profile
 from condprof.util import get_current_platform
 from gecko_profile import GeckoProfile
@@ -382,19 +382,17 @@ class Perftest(object):
         return self.conditioned_profile_copy
 
     def build_browser_profile(self):
-        if self.config["app"] in ["safari"]:
+        if self.config["app"] in FIREFOX_APPS:
+            if self.config.get("conditioned_profile") is None:
+                self.profile = create_profile(self.profile_class)
+            else:
+                # use mozprofile to create a profile for us, from our conditioned profile's path
+                self.profile = create_profile(
+                    self.profile_class, profile=self.get_conditioned_profile()
+                )
+        else:
             self.profile = None
             return
-        elif (
-            self.config["app"] in ["chrome", "chromium", "chrome-m", "custom-car"]
-            or self.config.get("conditioned_profile") is None
-        ):
-            self.profile = create_profile(self.profile_class)
-        else:
-            # use mozprofile to create a profile for us, from our conditioned profile's path
-            self.profile = create_profile(
-                self.profile_class, profile=self.get_conditioned_profile()
-            )
         # Merge extra profile data from testing/profiles
         with open(os.path.join(self.profile_data_dir, "profiles.json"), "r") as fh:
             base_profiles = json.load(fh)["raptor"]
@@ -448,7 +446,7 @@ class Perftest(object):
         if test.get("playback") is not None and self.playback is None:
             self.start_playback(test)
 
-        if test.get("preferences") is not None and self.config["app"] not in "safari":
+        if test.get("preferences") is not None and self.config["app"] in FIREFOX_APPS:
             self.set_browser_test_prefs(test["preferences"])
 
     @abstractmethod
@@ -648,8 +646,7 @@ class PerftestAndroid(Perftest):
                     "Failed to get android browser meta data through mozversion: %s-%s"
                     % (e.__class__.__name__, e)
                 )
-
-        if self.config["app"] == "chrome-m" or browser_version is None:
+        elif self.config["app"] == "chrome-m" or browser_version is None:
             # We absolutely need to determine the chrome
             # version here so that we can select the correct
             # chromedriver for browsertime
@@ -707,13 +704,14 @@ class PerftestAndroid(Perftest):
     def build_browser_profile(self):
         super(PerftestAndroid, self).build_browser_profile()
 
-        # Merge in the Android profile.
-        path = os.path.join(self.profile_data_dir, "raptor-android")
-        LOG.info("Merging profile: {}".format(path))
-        self.profile.merge(path)
-        self.profile.set_preferences(
-            {"browser.tabs.remote.autostart": self.config["e10s"]}
-        )
+        if self.config["app"] in FIREFOX_ANDROID_APPS:
+            # Merge in the Android profile.
+            path = os.path.join(self.profile_data_dir, "raptor-android")
+            LOG.info("Merging profile: {}".format(path))
+            self.profile.merge(path)
+            self.profile.set_preferences(
+                {"browser.tabs.remote.autostart": self.config["e10s"]}
+            )
 
     def clear_app_data(self):
         LOG.info("clearing %s app data" % self.config["binary"])

@@ -9,6 +9,7 @@ import shutil
 import tempfile
 
 import mozcrash
+from cmdline import FIREFOX_ANDROID_APPS
 from logger.logger import RaptorLogger
 from mozdevice import ADBDeviceFactory
 from performance_tuning import tune_performance
@@ -44,7 +45,9 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
         super(BrowsertimeAndroid, self).__init__(
-            app, binary, profile_class="firefox", **kwargs
+            app,
+            binary,
+            **kwargs,
         )
 
         self.config.update({"activity": activity, "intent": intent})
@@ -180,18 +183,19 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     def build_browser_profile(self):
         super(BrowsertimeAndroid, self).build_browser_profile()
 
-        # Merge in the Android profile.
-        path = os.path.join(self.profile_data_dir, "raptor-android")
-        LOG.info("Merging profile: {}".format(path))
-        self.profile.merge(path)
-        self.profile.set_preferences(
-            {"browser.tabs.remote.autostart": self.config["e10s"]}
-        )
+        if self.config["app"] in FIREFOX_ANDROID_APPS:
+            # Merge in the Android profile.
+            path = os.path.join(self.profile_data_dir, "raptor-android")
+            LOG.info("Merging profile: {}".format(path))
+            self.profile.merge(path)
+            self.profile.set_preferences(
+                {"browser.tabs.remote.autostart": self.config["e10s"]}
+            )
 
-        # There's no great way to have "after" advice in Python, so we do this
-        # in super and then again here since the profile merging re-introduces
-        # the "#MozRunner" delimiters.
-        self.remove_mozprofile_delimiters_from_profile()
+            # There's no great way to have "after" advice in Python, so we do this
+            # in super and then again here since the profile merging re-introduces
+            # the "#MozRunner" delimiters.
+            self.remove_mozprofile_delimiters_from_profile()
 
     def setup_adb_device(self):
         self._initialize_device()
@@ -238,9 +242,10 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
         self.set_reverse_ports()
 
-        if self.playback:
-            self.turn_on_android_app_proxy()
-        self.remove_mozprofile_delimiters_from_profile()
+        if self.config["app"] in FIREFOX_ANDROID_APPS:
+            if self.playback:
+                self.turn_on_android_app_proxy()
+            self.remove_mozprofile_delimiters_from_profile()
 
     def run_tests(self, tests, test_names):
         self.setup_adb_device()
