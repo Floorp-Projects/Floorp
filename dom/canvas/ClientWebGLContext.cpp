@@ -4414,8 +4414,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     const auto& contextInfo = mNotLost->info;
 
     const auto fallbackReason = [&]() -> Maybe<std::string> {
-      auto fallbackReason =
-          BlitPreventReason(level, offset, pi, *desc, Limits());
+      auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
       if (fallbackReason) return fallbackReason;
 
       const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
