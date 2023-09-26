@@ -1260,38 +1260,6 @@
     "bug_numbers": [1580227],
     "description": "GC 'effectiveness', the amount of memory freed divided by main-thread collection time (MB/s)"
   },
-  "GC_WAIT_FOR_IDLE_MS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "dev-telemetry-gc-alerts@mozilla.org",
-      "pbone@mozilla.com"
-    ],
-    "expires_in_version": "120",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "low": 1,
-    "high": 120000,
-    "n_buckets": 60,
-    "bug_numbers": [1778621, 1801012],
-    "description": "The time a content process waits before the parent process said that it may begin a GC"
-  },
-  "GC_WAIT_FOR_IDLE_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "dev-telemetry-gc-alerts@mozilla.org",
-      "pbone@mozilla.com"
-    ],
-    "expires_in_version": "120",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "low": 1,
-    "high": 120,
-    "n_buckets": 25,
-    "bug_numbers": [1778621, 1801012],
-    "description": "The number of queued GCs, collected each time GCs are (de)queued)"
-  },
   "GC_PARALLEL_MARK_SPEEDUP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
