@@ -15,10 +15,12 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doAnswer
 
+@Ignore("Intermittent failure, see https://bugzilla.mozilla.org/show_bug.cgi?id=1849525.")
 class DefaultReviewQualityCheckServiceTest {
 
     @get:Rule

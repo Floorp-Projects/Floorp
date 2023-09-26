@@ -335,19 +335,7 @@
         android:name="org.mozilla.fenix.library.history.HistoryFragment"
         android:label="@string/library_history"
         tools:layout="@layout/fragment_history">
-
-        <action
-            android:id="@+id/action_global_history_search_dialog"
-            app:destination="@id/historySearchDialogFragment"
-            app:popUpTo="@id/historySearchDialogFragment"
-            app:popUpToInclusive="true" />
     </fragment>
-
-    <dialog
-        android:id="@+id/historySearchDialogFragment"
-        android:name="org.mozilla.fenix.library.history.HistorySearchDialogFragment"
-        tools:layout="@layout/fragment_history_search_dialog">
-    </dialog>
 
     <fragment
         android:id="@+id/historyMetadataGroupFragment"

@@ -30,7 +30,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryControllerTest {
@@ -56,7 +55,6 @@ class HistoryControllerTest {
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val historyProvider: DefaultPagedHistoryProvider = mockk(relaxed = true)
-    private val settings: Settings = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -146,7 +144,7 @@ class HistoryControllerTest {
         verify {
             navController.navigateSafe(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionGlobalHistorySearchDialog(),
+                HistoryFragmentDirections.actionGlobalSearchDialog(sessionId = null),
             )
         }
     }
@@ -269,7 +267,6 @@ class HistoryControllerTest {
             invalidateOptionsMenu,
             { items, _, _ -> deleteHistoryItems.invoke(items) },
             syncHistory,
-            settings,
         )
     }
 }
