@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaseVFS.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -18,6 +19,8 @@
 #include "mozStoragePrivateHelpers.h"
 #include "nsIObserverService.h"
 #include "nsIPropertyBag2.h"
+#include "ObfuscatingVFS.h"
+#include "QuotaVFS.h"
 #include "mozilla/Services.h"
 #include "mozilla/LateWriteChecks.h"
 #include "mozIStorageCompletionCallback.h"
@@ -306,14 +309,6 @@ void Service::minimizeMemory() {
   }
 }
 
-UniquePtr<sqlite3_vfs> ConstructBaseVFS(bool);
-const char* GetBaseVFSName(bool);
-
-UniquePtr<sqlite3_vfs> ConstructQuotaVFS(const char* aBaseVFSName);
-const char* GetQuotaVFSName();
-
-UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName);
-
 UniquePtr<sqlite3_vfs> ConstructReadOnlyNoLockVFS();
 
 static const char* sObserverTopics[] = {"memory-pressure",
@@ -347,23 +342,24 @@ nsresult Service::initialize() {
    *                 unix-excl     win32  unix       win32
    */
 
-  rc = mBaseSqliteVFS.Init(ConstructBaseVFS(false));
+  rc = mBaseSqliteVFS.Init(basevfs::ConstructVFS(false));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
 
-  rc = mBaseExclSqliteVFS.Init(ConstructBaseVFS(true));
+  rc = mBaseExclSqliteVFS.Init(basevfs::ConstructVFS(true));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
 
-  rc = mQuotaSqliteVFS.Init(ConstructQuotaVFS(
-      GetBaseVFSName(StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
+  rc = mQuotaSqliteVFS.Init(quotavfs::ConstructVFS(basevfs::GetVFSName(
+      StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
 
-  rc = mObfuscatingSqliteVFS.Init(ConstructObfuscatingVFS(GetQuotaVFSName()));
+  rc =
+      mObfuscatingSqliteVFS.Init(obfsvfs::ConstructVFS(quotavfs::GetVFSName()));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
