@@ -17,7 +17,7 @@ EXPORTS += [
 ]
 
 LOCAL_INCLUDES += [
-    "!/security/rlbox",
+    "!/media/libsoundtouch/src",
     "/dom/media",
 ]
 
