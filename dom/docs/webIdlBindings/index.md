@@ -212,11 +212,11 @@ class MyClass
                                                 ErrorResult& rv);
   void DoSomethingElse(MyClass& aOtherInstance, ErrorResult& rv);
 
-  void DoTheOther(JSContext* cx, JS::Value aSomething);
+  void DoTheOther(JSContext* cx, JS::Handle<JS::Value> aSomething);
 
   void DoYetAnotherThing(bool aActuallyDoIt);
 
-  static void StaticOperation(const GlobalObject& aGlobal, JS::Value aSomething);
+  static void StaticOperation(const GlobalObject& aGlobal, JS::Handle<JS::Value> aSomething);
 }
 ```
 
@@ -387,7 +387,7 @@ will correspond to these C++ function declarations:
 ``` cpp
 bool MyAttr();
 void SetMyAttr(bool value);
-JS::Value MyMethod(const Optional<bool>& arg);
+bool MyMethod(const Optional<bool>& arg);
 ```
 
 #### Integer types
