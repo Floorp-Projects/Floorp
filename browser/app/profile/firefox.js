@@ -2879,3 +2879,9 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
 #ifdef NIGHTLY_BUILD
   pref("dom.security.credentialmanagement.identity.enabled", true);
 #endif
+
+// Reset Private Browsing Session feature
+pref("browser.privatebrowsing.resetPBM.enabled", false);
+// Whether the reset private browsing panel should ask for confirmation before
+// performing the clear action.
+pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
