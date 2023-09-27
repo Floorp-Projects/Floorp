@@ -591,11 +591,11 @@ class SingleTestSource(TestSource):
 
     @classmethod
     def tests_by_group(cls, tests_by_type, **kwargs):
-        rv = {}
+        groups = defaultdict(list)
         for (subsuite, test_type), tests in tests_by_type.items():
             group_name = f"{subsuite}:{cls.group_metadata(None)['scope']}"
-            rv[group_name] = [t.id for t in tests]
-        return rv
+            groups[group_name].extend(test.id for test in tests)
+        return groups
 
 
 class PathGroupedSource(TestSource):
