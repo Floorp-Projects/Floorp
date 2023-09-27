@@ -279,7 +279,7 @@ $col4-header-font-size: 14;
         grid-template-columns: repeat(3, 1fr);
       }
 
-      @media (max-height: 1065px) {
+      @media (height <= 1065px) {
         .excerpt {
           display: none;
         }
@@ -289,7 +289,7 @@ $col4-header-font-size: 14;
         @include small-cards;
       }
 
-      @media (min-width: $break-point-widest) and (max-height: 964px) {
+      @media (min-width: $break-point-widest) and (height <= 964px) {
         @include small-cards;
 
         grid-template-columns: repeat(4, 1fr);

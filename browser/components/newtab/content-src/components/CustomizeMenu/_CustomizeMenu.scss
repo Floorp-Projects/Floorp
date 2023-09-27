@@ -1,4 +1,4 @@
-@media (max-height: 701px) {
+@media (height < 700px) {
   .personalize-button {
     position: absolute;
     top: 16px;
@@ -6,7 +6,7 @@
   }
 }
 
-@media (min-height: 700px) {
+@media (height >= 700px) {
   .personalize-button {
     position: fixed;
     top: 16px;

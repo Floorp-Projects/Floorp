@@ -241,20 +241,6 @@ module.exports = {
 
   overrides: [
     {
-      // TODO: Bug 1851544: Re-enable the rule or change the rule set-up.
-      files: [
-        "browser/components/newtab/content-src/aboutwelcome/aboutwelcome.scss",
-        "browser/components/newtab/content-src/asrouter/components/ModalOverlay/_ModalOverlay.scss",
-        "browser/components/newtab/content-src/asrouter/templates/SimpleBelowSearchSnippet/_SimpleBelowSearchSnippet.scss",
-        "browser/components/newtab/content-src/components/CustomizeMenu/_CustomizeMenu.scss",
-        "browser/components/newtab/content-src/components/DiscoveryStreamComponents/CardGrid/_CardGrid.scss",
-        "browser/components/newtab/content-src/components/Search/_Search.scss",
-      ],
-      rules: {
-        "media-feature-range-notation": null,
-      },
-    },
-    {
       files: "*.scss",
       customSyntax: "postcss-scss",
       extends: "stylelint-config-recommended-scss",

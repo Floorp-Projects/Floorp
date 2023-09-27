@@ -61,7 +61,7 @@
       width: 696px;
     }
 
-    @media (max-width: 865px) {
+    @media (width <= 865px) {
       margin-inline-start: 0;
     }
 

@@ -1478,7 +1478,7 @@ html {
   margin: 25px 0;
   padding-bottom: 30px;
 }
-@media only screen and (max-width: 800px) {
+@media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
     padding-bottom: unset;
   }
@@ -1486,7 +1486,7 @@ html {
 .onboardingContainer .screen[pos=split] .multi-select-container {
   margin-inline: 0 10px;
 }
-@media only screen and (max-width: 800px) {
+@media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split] .multi-select-container {
     flex-direction: row;
     align-self: stretch;
@@ -1519,12 +1519,12 @@ html {
     background-color: #2B2A33;
   }
 }
-@media only screen and (min-width: 800px) {
+@media only screen and (width >= 800px) {
   .onboardingContainer .screen[pos=split] .tiles-theme-section {
     margin-inline-start: -10px;
   }
 }
-@media only screen and (max-width: 800px) {
+@media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split] {
     flex-direction: column;
     min-height: 550px;
@@ -1652,12 +1652,12 @@ html {
     border-radius: 0 0 8px 8px;
   }
 }
-@media only screen and (max-height: 650px) and (min-width: 800px) and (max-width: 990px) {
+@media only screen and (height <= 650px) and (800px <= width <= 990px) {
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
     display: none;
   }
 }
-@media only screen and (max-height: 650px) and (max-width: 620px) {
+@media only screen and (height <= 650px) and (width <= 620px) {
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
     position: absolute;
     padding: 0;
@@ -1691,7 +1691,7 @@ html {
 .onboardingContainer .rtamo-icon {
   text-align: start;
 }
-@media only screen and (max-width: 800px) {
+@media only screen and (width <= 800px) {
   .onboardingContainer .rtamo-icon {
     text-align: center;
   }
