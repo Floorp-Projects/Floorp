@@ -49,11 +49,14 @@ impl From<State> for ffi::cubeb_state {
 bitflags! {
     /// Miscellaneous stream preferences.
     pub struct StreamPrefs: ffi::cubeb_stream_prefs {
-        const NONE = ffi::CUBEB_STREAM_PREF_NONE;
         const LOOPBACK = ffi::CUBEB_STREAM_PREF_LOOPBACK;
         const DISABLE_DEVICE_SWITCHING = ffi::CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING;
         const VOICE = ffi::CUBEB_STREAM_PREF_VOICE;
     }
+}
+
+impl StreamPrefs {
+    pub const NONE: Self = Self::empty();
 }
 
 ffi_type_stack! {
