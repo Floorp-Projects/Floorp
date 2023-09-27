@@ -1984,6 +1984,79 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
+  // Initialize type definitions in the instance data.
+  const SharedTypeContext& types = metadata().types;
+  Zone* zone = realm()->zone();
+  for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
+    const TypeDef& typeDef = types->type(typeIndex);
+    TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
+
+    // Set default field values.
+    new (typeDefData) TypeDefInstanceData();
+
+    // Store the runtime type for this type index
+    typeDefData->typeDef = &typeDef;
+    typeDefData->superTypeVector = typeDef.superTypeVector();
+
+    if (typeDef.kind() == TypeDefKind::Struct ||
+        typeDef.kind() == TypeDefKind::Array) {
+      // Compute the parameters that allocation will use.  First, the class
+      // and alloc kind for the type definition.
+      const JSClass* clasp;
+      gc::AllocKind allocKind;
+
+      if (typeDef.kind() == TypeDefKind::Struct) {
+        clasp = WasmStructObject::classForTypeDef(&typeDef);
+        allocKind = WasmStructObject::allocKindForTypeDef(&typeDef);
+      } else {
+        clasp = &WasmArrayObject::class_;
+        allocKind = WasmArrayObject::allocKind();
+      }
+
+      // Move the alloc kind to background if possible
+      if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+        allocKind = ForegroundToBackgroundAllocKind(allocKind);
+      }
+
+      // Find the shape using the class and recursion group
+      const ObjectFlags objectFlags = {ObjectFlag::NotExtensible};
+      typeDefData->shape =
+          WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
+                                &typeDef.recGroup(), objectFlags);
+      if (!typeDefData->shape) {
+        return false;
+      }
+
+      typeDefData->clasp = clasp;
+      typeDefData->allocKind = allocKind;
+
+      // Initialize the allocation site for pre-tenuring.
+      typeDefData->allocSite.initWasm(zone);
+
+      // If `typeDef` is a struct, cache its size here, so that allocators
+      // don't have to chase back through `typeDef` to determine that.
+      // Similarly, if `typeDef` is an array, cache its array element size
+      // here.
+      MOZ_ASSERT(typeDefData->unused == 0);
+      if (typeDef.kind() == TypeDefKind::Struct) {
+        typeDefData->structTypeSize = typeDef.structType().size_;
+        // StructLayout::close ensures this is an integral number of words.
+        MOZ_ASSERT((typeDefData->structTypeSize % sizeof(uintptr_t)) == 0);
+      } else {
+        uint32_t arrayElemSize = typeDef.arrayType().elementType_.size();
+        typeDefData->arrayElemSize = arrayElemSize;
+        MOZ_ASSERT(arrayElemSize == 16 || arrayElemSize == 8 ||
+                   arrayElemSize == 4 || arrayElemSize == 2 ||
+                   arrayElemSize == 1);
+      }
+    } else if (typeDef.kind() == TypeDefKind::Func) {
+      // Nothing to do; the default values are OK.
+    } else {
+      MOZ_ASSERT(typeDef.kind() == TypeDefKind::None);
+      MOZ_CRASH();
+    }
+  }
+
   // Initialize function imports in the instance data
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
@@ -2022,6 +2095,66 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
     }
   }
+
+  // Initialize globals in the instance data.
+  //
+  // This must be performed after we have initialized runtime types as a global
+  // initializer may reference them.
+  //
+  // We increment `maxInitializedGlobalsIndexPlus1_` every iteration of the
+  // loop, as we call out to `InitExpr::evaluate` which may call
+  // `constantGlobalGet` which uses this value to assert we're never accessing
+  // uninitialized globals.
+  maxInitializedGlobalsIndexPlus1_ = 0;
+  for (size_t i = 0; i < metadata().globals.length();
+       i++, maxInitializedGlobalsIndexPlus1_ = i) {
+    const GlobalDesc& global = metadata().globals[i];
+
+    // Constants are baked into the code, never stored in the global area.
+    if (global.isConstant()) {
+      continue;
+    }
+
+    uint8_t* globalAddr = data() + global.offset();
+    switch (global.kind()) {
+      case GlobalKind::Import: {
+        size_t imported = global.importIndex();
+        if (global.isIndirect()) {
+          *(void**)globalAddr =
+              (void*)&globalObjs[imported]->val().get().cell();
+        } else {
+          globalImportValues[imported].writeToHeapLocation(globalAddr);
+        }
+        break;
+      }
+      case GlobalKind::Variable: {
+        RootedVal val(cx);
+        const InitExpr& init = global.initExpr();
+        Rooted<WasmInstanceObject*> instanceObj(cx, object());
+        if (!init.evaluate(cx, instanceObj, &val)) {
+          return false;
+        }
+
+        if (global.isIndirect()) {
+          // Initialize the cell
+          wasm::GCPtrVal& cell = globalObjs[i]->val();
+          cell = val.get();
+          // Link to the cell
+          void* address = (void*)&cell.get().cell();
+          *(void**)globalAddr = address;
+        } else {
+          val.get().writeToHeapLocation(globalAddr);
+        }
+        break;
+      }
+      case GlobalKind::Constant: {
+        MOZ_CRASH("skipped at the top");
+      }
+    }
+  }
+
+  // All globals were initialized
+  MOZ_ASSERT(maxInitializedGlobalsIndexPlus1_ == metadata().globals.length());
 
   // Initialize memories in the instance data
   for (size_t i = 0; i < memories.length(); i++) {
@@ -2109,139 +2242,6 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       return false;
     }
   }
-
-  // Initialize type definitions in the instance data.
-  const SharedTypeContext& types = metadata().types;
-  Zone* zone = realm()->zone();
-  for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
-    const TypeDef& typeDef = types->type(typeIndex);
-    TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
-
-    // Set default field values.
-    new (typeDefData) TypeDefInstanceData();
-
-    // Store the runtime type for this type index
-    typeDefData->typeDef = &typeDef;
-    typeDefData->superTypeVector = typeDef.superTypeVector();
-
-    if (typeDef.kind() == TypeDefKind::Struct ||
-        typeDef.kind() == TypeDefKind::Array) {
-      // Compute the parameters that allocation will use.  First, the class
-      // and alloc kind for the type definition.
-      const JSClass* clasp;
-      gc::AllocKind allocKind;
-
-      if (typeDef.kind() == TypeDefKind::Struct) {
-        clasp = WasmStructObject::classForTypeDef(&typeDef);
-        allocKind = WasmStructObject::allocKindForTypeDef(&typeDef);
-      } else {
-        clasp = &WasmArrayObject::class_;
-        allocKind = WasmArrayObject::allocKind();
-      }
-
-      // Move the alloc kind to background if possible
-      if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
-        allocKind = ForegroundToBackgroundAllocKind(allocKind);
-      }
-
-      // Find the shape using the class and recursion group
-      const ObjectFlags objectFlags = {ObjectFlag::NotExtensible};
-      typeDefData->shape =
-          WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
-                                &typeDef.recGroup(), objectFlags);
-      if (!typeDefData->shape) {
-        return false;
-      }
-
-      typeDefData->clasp = clasp;
-      typeDefData->allocKind = allocKind;
-
-      // Initialize the allocation site for pre-tenuring.
-      typeDefData->allocSite.initWasm(zone);
-
-      // If `typeDef` is a struct, cache its size here, so that allocators
-      // don't have to chase back through `typeDef` to determine that.
-      // Similarly, if `typeDef` is an array, cache its array element size
-      // here.
-      MOZ_ASSERT(typeDefData->unused == 0);
-      if (typeDef.kind() == TypeDefKind::Struct) {
-        typeDefData->structTypeSize = typeDef.structType().size_;
-        // StructLayout::close ensures this is an integral number of words.
-        MOZ_ASSERT((typeDefData->structTypeSize % sizeof(uintptr_t)) == 0);
-      } else {
-        uint32_t arrayElemSize = typeDef.arrayType().elementType_.size();
-        typeDefData->arrayElemSize = arrayElemSize;
-        MOZ_ASSERT(arrayElemSize == 16 || arrayElemSize == 8 ||
-                   arrayElemSize == 4 || arrayElemSize == 2 ||
-                   arrayElemSize == 1);
-      }
-    } else if (typeDef.kind() == TypeDefKind::Func) {
-      // Nothing to do; the default values are OK.
-    } else {
-      MOZ_ASSERT(typeDef.kind() == TypeDefKind::None);
-      MOZ_CRASH();
-    }
-  }
-
-  // Initialize globals in the instance data.
-  //
-  // This must be performed after we have initialized runtime types as a global
-  // initializer may reference them.
-  //
-  // We increment `maxInitializedGlobalsIndexPlus1_` every iteration of the
-  // loop, as we call out to `InitExpr::evaluate` which may call
-  // `constantGlobalGet` which uses this value to assert we're never accessing
-  // uninitialized globals.
-  maxInitializedGlobalsIndexPlus1_ = 0;
-  for (size_t i = 0; i < metadata().globals.length();
-       i++, maxInitializedGlobalsIndexPlus1_ = i) {
-    const GlobalDesc& global = metadata().globals[i];
-
-    // Constants are baked into the code, never stored in the global area.
-    if (global.isConstant()) {
-      continue;
-    }
-
-    uint8_t* globalAddr = data() + global.offset();
-    switch (global.kind()) {
-      case GlobalKind::Import: {
-        size_t imported = global.importIndex();
-        if (global.isIndirect()) {
-          *(void**)globalAddr =
-              (void*)&globalObjs[imported]->val().get().cell();
-        } else {
-          globalImportValues[imported].writeToHeapLocation(globalAddr);
-        }
-        break;
-      }
-      case GlobalKind::Variable: {
-        RootedVal val(cx);
-        const InitExpr& init = global.initExpr();
-        Rooted<WasmInstanceObject*> instanceObj(cx, object());
-        if (!init.evaluate(cx, instanceObj, &val)) {
-          return false;
-        }
-
-        if (global.isIndirect()) {
-          // Initialize the cell
-          wasm::GCPtrVal& cell = globalObjs[i]->val();
-          cell = val.get();
-          // Link to the cell
-          void* address = (void*)&cell.get().cell();
-          *(void**)globalAddr = address;
-        } else {
-          val.get().writeToHeapLocation(globalAddr);
-        }
-        break;
-      }
-      case GlobalKind::Constant: {
-        MOZ_CRASH("skipped at the top");
-      }
-    }
-  }
-
-  // All globals were initialized
-  MOZ_ASSERT(maxInitializedGlobalsIndexPlus1_ == metadata().globals.length());
 
   // Take references to the passive data segments
   if (!passiveDataSegments_.resize(dataSegments.length())) {

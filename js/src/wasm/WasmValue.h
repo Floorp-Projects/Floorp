@@ -118,6 +118,8 @@ class FuncRef {
   // FuncRef.
   static FuncRef fromAnyRefUnchecked(AnyRef p);
 
+  static FuncRef null() { return FuncRef(nullptr); }
+
   AnyRef toAnyRef() { return AnyRef::fromJSObjectOrNull((JSObject*)value_); }
 
   void* forCompiledCode() const { return value_; }

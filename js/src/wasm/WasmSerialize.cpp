@@ -1163,9 +1163,19 @@ CoderResult CodeModule(Coder<MODE_DECODE>& coder, MutableModule* item) {
 
   MOZ_RELEASE_ASSERT(EqualContainers(currentBuildId, deserializedBuildId));
 
+  CustomSectionVector customSections;
+  MOZ_TRY(Magic(coder, Marker::CustomSections));
+  MOZ_TRY(
+      (CodeVector<MODE_DECODE, CustomSection, &CodeCustomSection<MODE_DECODE>>(
+          coder, &customSections)));
+
   LinkData linkData(Tier::Serialized);
   MOZ_TRY(Magic(coder, Marker::LinkData));
   MOZ_TRY(CodeLinkData(coder, &linkData));
+
+  SharedCode code;
+  MOZ_TRY(Magic(coder, Marker::Code));
+  MOZ_TRY(CodeSharedCode(coder, &code, linkData, customSections));
 
   ImportVector imports;
   MOZ_TRY(Magic(coder, Marker::Imports));
@@ -1184,21 +1194,12 @@ CoderResult CodeModule(Coder<MODE_DECODE>& coder, MutableModule* item) {
                                   &CodeDataSegment<MODE_DECODE>>>(
       coder, &dataSegments)));
 
+  // This must happen after deserializing code so we get type definitions.
   ModuleElemSegmentVector elemSegments;
   MOZ_TRY(Magic(coder, Marker::ElemSegments));
   MOZ_TRY(
       (CodeVector<MODE_DECODE, ModuleElemSegment,
                   &CodeModuleElemSegment<MODE_DECODE>>(coder, &elemSegments)));
-
-  CustomSectionVector customSections;
-  MOZ_TRY(Magic(coder, Marker::CustomSections));
-  MOZ_TRY(
-      (CodeVector<MODE_DECODE, CustomSection, &CodeCustomSection<MODE_DECODE>>(
-          coder, &customSections)));
-
-  SharedCode code;
-  MOZ_TRY(Magic(coder, Marker::Code));
-  MOZ_TRY(CodeSharedCode(coder, &code, linkData, customSections));
 
   *item = js_new<Module>(*code, std::move(imports), std::move(exports),
                          std::move(dataSegments), std::move(elemSegments),
@@ -1220,8 +1221,13 @@ CoderResult CodeModule(Coder<mode>& coder, CoderArg<mode, Module> item,
     return Err(OutOfMemory());
   }
   MOZ_TRY(CodePodVector(coder, &currentBuildId));
+  MOZ_TRY(Magic(coder, Marker::CustomSections));
+  MOZ_TRY((CodeVector<mode, CustomSection, &CodeCustomSection<mode>>(
+      coder, &item->customSections_)));
   MOZ_TRY(Magic(coder, Marker::LinkData));
   MOZ_TRY(CodeLinkData(coder, &linkData));
+  MOZ_TRY(Magic(coder, Marker::Code));
+  MOZ_TRY(CodeSharedCode(coder, &item->code_, linkData));
   MOZ_TRY(Magic(coder, Marker::Imports));
   MOZ_TRY(
       (CodeVector<mode, Import, &CodeImport<mode>>(coder, &item->imports_)));
@@ -1236,11 +1242,6 @@ CoderResult CodeModule(Coder<mode>& coder, CoderArg<mode, Module> item,
   MOZ_TRY(Magic(coder, Marker::ElemSegments));
   MOZ_TRY((CodeVector<mode, ModuleElemSegment, CodeModuleElemSegment<mode>>(
       coder, &item->elemSegments_)));
-  MOZ_TRY(Magic(coder, Marker::CustomSections));
-  MOZ_TRY((CodeVector<mode, CustomSection, &CodeCustomSection<mode>>(
-      coder, &item->customSections_)));
-  MOZ_TRY(Magic(coder, Marker::Code));
-  MOZ_TRY(CodeSharedCode(coder, &item->code_, linkData));
   return Ok();
 }
 
