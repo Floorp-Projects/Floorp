@@ -352,7 +352,8 @@ regexps = [item() for item in  # type: ignore
             rules.SpecialPowersRegexp,
             rules.AssertThrowsRegexp,
             rules.PromiseRejectsRegexp,
-            rules.AssertPreconditionRegexp]]
+            rules.AssertPreconditionRegexp,
+            rules.HTMLInvalidSyntaxRegexp]]
 
 
 def check_regexp_line(repo_root: Text, path: Text, f: IO[bytes]) -> List[rules.Error]:
