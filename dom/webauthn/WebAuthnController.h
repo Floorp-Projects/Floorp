@@ -25,57 +25,89 @@ class WebAuthnController final : public nsIWebAuthnController {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBAUTHNCONTROLLER
 
-  // Main thread only
   static void Initialize();
-
-  // IPDL Background thread only
   static WebAuthnController* Get();
-
-  // IPDL Background thread only
   void Register(PWebAuthnTransactionParent* aTransactionParent,
                 const uint64_t& aTransactionId,
                 const WebAuthnMakeCredentialInfo& aInfo);
 
-  // IPDL Background thread only
   void Sign(PWebAuthnTransactionParent* aTransactionParent,
             const uint64_t& aTransactionId,
             const WebAuthnGetAssertionInfo& aInfo);
 
-  // IPDL Background thread only
   void Cancel(PWebAuthnTransactionParent* aTransactionParent,
               const Tainted<uint64_t>& aTransactionId);
 
-  // IPDL Background thread only
   void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);
+
+  uint64_t GetCurrentTransactionId() {
+    return mTransaction.isNothing() ? 0 : mTransaction.ref().mTransactionId;
+  }
+
+  bool CurrentTransactionIsRegister() { return mPendingRegisterInfo.isSome(); }
+
+  bool CurrentTransactionIsSign() { return mPendingSignInfo.isSome(); }
+
+  // Sends a "webauthn-prompt" observer notification with the given data.
+  template <typename... T>
+  void SendPromptNotification(const char16_t* aFormat, T... aArgs);
+
+  // Same as SendPromptNotification, but with the already formatted string
+  // void SendPromptNotificationPreformatted(const nsACString& aJSON);
+  // The main thread runnable function for "SendPromptNotification".
+  void RunSendPromptNotification(const nsString& aJSON);
 
  private:
   WebAuthnController();
   ~WebAuthnController() = default;
-
-  // All of the private functions and members are to be
-  // accessed on the IPDL background thread only.
-
   nsCOMPtr<nsIWebAuthnTransport> GetTransportImpl();
-  nsCOMPtr<nsIWebAuthnTransport> mTransportImpl;
 
-  void AbortTransaction(const nsresult& aError);
-  void ClearTransaction();
-  void RunCancel(uint64_t aTransactionId);
+  void AbortTransaction(const uint64_t& aTransactionId, const nsresult& aError,
+                        bool shouldCancelActiveDialog);
+  void AbortOngoingTransaction();
+  void ClearTransaction(bool cancel_prompt);
+
+  void DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
+                  bool aForceNoneAttestation);
+  void DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo);
+
   void RunFinishRegister(uint64_t aTransactionId,
                          const RefPtr<nsICtapRegisterResult>& aResult);
   void RunFinishSign(uint64_t aTransactionId,
                      const RefPtr<nsICtapSignResult>& aResult);
+
+  // The main thread runnable function for "nsIU2FTokenManager.ResumeRegister".
+  void RunResumeRegister(uint64_t aTransactionId, bool aForceNoneAttestation);
+  void RunResumeSign(uint64_t aTransactionId);
+  void RunResumeWithSelectedSignResult(uint64_t aTransactionId, uint64_t idx);
+  void RunPinCallback(uint64_t aTransactionId, const nsCString& aPin);
+
+  // The main thread runnable function for "nsIU2FTokenManager.Cancel".
+  void RunCancel(uint64_t aTransactionId);
 
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
   PWebAuthnTransactionParent* mTransactionParent;
 
-  // The current transaction ID.
-  Maybe<uint64_t> mTransactionId;
+  nsCOMPtr<nsIWebAuthnTransport> mTransportImpl;
 
-  // Client data associated with mTransactionId.
-  Maybe<nsCString> mPendingClientData;
+  // Pending registration info while we wait for user input.
+  Maybe<WebAuthnMakeCredentialInfo> mPendingRegisterInfo;
+
+  // Pending registration info while we wait for user input.
+  Maybe<WebAuthnGetAssertionInfo> mPendingSignInfo;
+
+  class Transaction {
+   public:
+    Transaction(uint64_t aTransactionId, const nsCString& aClientDataJSON)
+        : mTransactionId(aTransactionId), mClientDataJSON(aClientDataJSON) {}
+    uint64_t mTransactionId;
+    nsCString mClientDataJSON;
+    bool mCredProps;
+  };
+
+  Maybe<Transaction> mTransaction;
 };
 
 }  // namespace mozilla::dom
