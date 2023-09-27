@@ -20,6 +20,7 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/NeverDestroyed.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -257,8 +258,8 @@ NS_IMPL_CI_INTERFACE_GETTER(nsThreadManager, nsIThreadManager)
 //-----------------------------------------------------------------------------
 
 /*static*/ nsThreadManager& nsThreadManager::get() {
-  static nsThreadManager sInstance;
-  return sInstance;
+  static NeverDestroyed<nsThreadManager> sInstance;
+  return *sInstance;
 }
 
 nsThreadManager::nsThreadManager()

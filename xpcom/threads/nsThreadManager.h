@@ -18,6 +18,9 @@ namespace mozilla {
 class IdleTaskManager;
 class SynchronizedEventQueue;
 class TaskQueue;
+
+template <typename T>
+class NeverDestroyed;
 }  // namespace mozilla
 
 class BackgroundEventTarget;
@@ -103,6 +106,8 @@ class nsThreadManager : public nsIThreadManager {
   }
 
  private:
+  friend class mozilla::NeverDestroyed<nsThreadManager>;
+
   nsThreadManager();
 
   nsresult SpinEventLoopUntilInternal(
