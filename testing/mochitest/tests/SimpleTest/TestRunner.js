@@ -205,7 +205,10 @@ TestRunner._checkForHangs = function () {
 
   if (TestRunner._currentTest < TestRunner._urls.length) {
     var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
-    if (runtime >= TestRunner.timeout * TestRunner._timeoutFactor) {
+    if (
+      !TestRunner.interactiveDebugger &&
+      runtime >= TestRunner.timeout * TestRunner._timeoutFactor
+    ) {
       let testIframe = $("testframe");
       var frameWindow =
         (!testInXOriginFrame() && testIframe.contentWindow.wrappedJSObject) ||
