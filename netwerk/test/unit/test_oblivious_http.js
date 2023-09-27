@@ -55,6 +55,15 @@ add_task(async function test_oblivious_http() {
         "I'm a teapot"
       )
     ),
+    new ObliviousHttpTestCase(
+      new ObliviousHttpTestRequest(
+        "GET",
+        NetUtil.newURI("http://example.test/404"),
+        { "X-Some-Header": "header value", "X-Some-Other-Header": "25" },
+        ""
+      ),
+      undefined // 404 relay
+    ),
   ];
 
   for (let testcase of testcases) {
@@ -123,6 +132,11 @@ async function run_one_testcase(testcase) {
   let relayURI = NetUtil.newURI(
     `http://localhost:${httpServer.identity.primaryPort}/`
   );
+  if (!testcase.response) {
+    relayURI = NetUtil.newURI(
+      `http://localhost:${httpServer.identity.primaryPort}/404`
+    );
+  }
   let obliviousHttpChannel = ohttpService
     .newChannel(relayURI, testcase.request.uri, ohttpServer.encodedConfig)
     .QueryInterface(Ci.nsIHttpChannel);
@@ -159,18 +173,32 @@ async function run_one_testcase(testcase) {
         "@mozilla.org/scriptableinputstream;1"
       ].createInstance(Ci.nsIScriptableInputStream);
       scriptableInputStream.init(inputStream);
+      try {
+        // If decoding failed just return undefined.
+        inputStream.available();
+      } catch (e) {
+        resolve(undefined);
+        return;
+      }
       let responseBody = scriptableInputStream.readBytes(
         inputStream.available()
       );
       resolve(responseBody);
     });
   });
-  equal(response, testcase.response.content);
-  for (let headerName of Object.keys(testcase.response.headers)) {
-    equal(
-      obliviousHttpChannel.getResponseHeader(headerName),
-      testcase.response.headers[headerName]
-    );
+  if (testcase.response) {
+    equal(response, testcase.response.content);
+    for (let headerName of Object.keys(testcase.response.headers)) {
+      equal(
+        obliviousHttpChannel.getResponseHeader(headerName),
+        testcase.response.headers[headerName]
+      );
+    }
+  } else {
+    let relayChannel = obliviousHttpChannel.QueryInterface(
+      Ci.nsIObliviousHttpChannel
+    ).relayChannel;
+    equal(relayChannel.responseStatus, 404);
   }
   await new Promise((resolve, reject) => {
     httpServer.stop(resolve);

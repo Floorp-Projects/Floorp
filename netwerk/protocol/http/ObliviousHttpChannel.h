@@ -12,6 +12,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIObliviousHttp.h"
+#include "nsIObliviousHttpChannel.h"
 #include "nsIStreamListener.h"
 #include "nsITimedChannel.h"
 #include "nsIUploadChannel2.h"
@@ -19,7 +20,7 @@
 
 namespace mozilla::net {
 
-class ObliviousHttpChannel final : public nsIHttpChannel,
+class ObliviousHttpChannel final : public nsIObliviousHttpChannel,
                                    public nsIHttpChannelInternal,
                                    public nsIStreamListener,
                                    public nsIUploadChannel2,
@@ -28,6 +29,7 @@ class ObliviousHttpChannel final : public nsIHttpChannel,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICHANNEL
   NS_DECL_NSIHTTPCHANNEL
+  NS_DECL_NSIOBLIVIOUSHTTPCHANNEL
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIUPLOADCHANNEL2
