@@ -1,32 +1,49 @@
-From: Jed Davis <jld@mozilla.com>
-Date: Sun, 17 Nov 2019 03:40:00 +0000
-Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
- r=jesup
+From: Dan Minor <dminor@mozilla.com>
+Date: Mon, 5 Nov 2018 10:33:00 -0500
+Subject: Bug 1376873 - Reduce thread stack size in platform_thread.cc; r=bwc
 
-PhysicalSocketServer isn't currently used by Mozilla's WebRTC
-integration, but just in case, let's make sure that this array index is
-bounds-checked in actual use, not just in debug builds (which tend to
-never see realistic test conditions).
+Summary:
+The current default stack size of 1M results in intermittent OOMs on win32
+builds while running web-platform tests. The value of 256k was chosen for
+consistency with the default value used elsewhere in Gecko, which is defined in
+nsIThreadManager.idl.
 
-Differential Revision: https://phabricator.services.mozilla.com/D52745
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
+Reviewers: bwc
+
+Tags: #secure-revision
+
+Bug #: 1376873
+
+Differential Revision: https://phabricator.services.mozilla.com/D11090
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e83c311e5293902be4db4ecea17cff87c633f7cf
 ---
- rtc_base/physical_socket_server.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ rtc_base/platform_thread.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 33ea941808..2dfdd9a5df 100644
---- a/rtc_base/physical_socket_server.cc
-+++ b/rtc_base/physical_socket_server.cc
-@@ -1431,7 +1431,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
-         int fd = pdispatcher->GetDescriptor();
-         // "select"ing a file descriptor that is equal to or larger than
-         // FD_SETSIZE will result in undefined behavior.
--        RTC_DCHECK_LT(fd, FD_SETSIZE);
-+        RTC_CHECK_LT(fd, FD_SETSIZE);
-         if (fd > fdmax)
-           fdmax = fd;
- 
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 6d369d747e..556204ac89 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -189,15 +189,17 @@ PlatformThread PlatformThread::SpawnThread(
+   // Set the reserved stack stack size to 1M, which is the default on Windows
+   // and Linux.
+   DWORD thread_id = 0;
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
+   PlatformThread::Handle handle = ::CreateThread(
+-      nullptr, 1024 * 1024, &RunPlatformThread, start_thread_function_ptr,
++      nullptr, 256 * 1024, &RunPlatformThread, start_thread_function_ptr,
+       STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
+   RTC_CHECK(handle) << "CreateThread failed";
+ #else
+   pthread_attr_t attr;
+   pthread_attr_init(&attr);
+   // Set the stack stack size to 1M.
+-  pthread_attr_setstacksize(&attr, 1024 * 1024);
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
++  pthread_attr_setstacksize(&attr, 256 * 1024);
+   pthread_attr_setdetachstate(
+       &attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
+   PlatformThread::Handle handle;
 -- 
 2.39.3 (Apple Git-145)
 

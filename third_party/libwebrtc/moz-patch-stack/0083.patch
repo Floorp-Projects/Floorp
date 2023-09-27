@@ -1,63 +1,66 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 91d5fc2ed6.
- r=webrtc-reviewers,mjf
+Date: Tue, 23 May 2023 06:14:00 +0000
+Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
+ r=ng,webrtc-reviewers
 
-Upstream commit: https://webrtc.googlesource.com/src/+/91d5fc2ed6ef347d90182868320267d45cf9525b
-    Support more pixel formats in v4l2 camera backend
+This restores libwebrtc's DesktopCapturer to their upstream state as far as
+the tab capturer is concerned.
 
-    These were tested with gstreamer and v4l2loopback, example setup:
-    $ sudo v4l2loopback-ctl add -n BGRA 10
-    $ gst-launch-1.0 videotestsrc pattern=smpte-rp-219 ! \
-      video/x-raw,format=BGRA ! v4l2sink device=/dev/video10 > /dev/null &
-
-    Then conversion was confirmed with video_loopback:
-    $ ./video_loopback --capture_device_index=3 --logs 2>&1 | grep -i \
-      capture
-
-    Bug: webrtc:14830
-    Change-Id: I35c8e453cf7f9a2923935b0ad82477a3144e8c12
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291532
-    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
-    Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39979}
-
-Differential Revision: https://phabricator.services.mozilla.com/D177232
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92dc582fdcf3a2fdb3fcdbcd96080d081de8f8d5
+Differential Revision: https://phabricator.services.mozilla.com/D174290
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
 ---
- .../video_capture/linux/device_info_v4l2.cc    | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ modules/desktop_capture/desktop_capturer.cc | 11 -----------
+ modules/desktop_capture/desktop_capturer.h  |  8 --------
+ 2 files changed, 19 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 04caaea592..abd2886f85 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -57,6 +57,24 @@
- #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
- #endif
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 1af19a1fd2..7f601821fc 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -128,17 +128,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+   return capturer;
+ }
  
-+// These defines are here to support building on kernel 3.16 which some
-+// downstream projects, e.g. Firefox, use.
-+// TODO(apehrson): Remove them and their undefs when no longer needed.
-+#ifndef V4L2_PIX_FMT_ABGR32
-+#define ABGR32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_ARGB32
-+#define ARGB32_OVERRIDE 1
-+#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
-+#endif
-+
-+#ifndef V4L2_PIX_FMT_RGBA32
-+#define RGBA32_OVERRIDE 1
-+#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
-+#endif
-+
- namespace webrtc {
- namespace videocapturemodule {
- #ifdef WEBRTC_LINUX
+-// static
+-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
+-    const DesktopCaptureOptions& options) {
+-  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
+-  if (capturer && options.detect_updated_region()) {
+-    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+-  }
+-
+-  return capturer;
+-}
+-
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ bool DesktopCapturer::IsRunningUnderWayland() {
+   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index 64f3187f51..5efd2efc0f 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -191,10 +191,6 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
+ 
+-  // Creates a DesktopCapturer instance which targets to capture tab.
+-  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
+-      const DesktopCaptureOptions& options);
+-
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
+ 
+@@ -225,10 +221,6 @@ class RTC_EXPORT DesktopCapturer {
+   // capture screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+       const DesktopCaptureOptions& options);
+-
+-  // Creates a DesktopCapturer instance which targets to capture tabs
+-  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
+-      const DesktopCaptureOptions& options);
+ };
+ 
+ }  // namespace webrtc
 -- 
 2.39.3 (Apple Git-145)
 
