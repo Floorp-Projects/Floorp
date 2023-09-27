@@ -14,6 +14,7 @@
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -344,7 +345,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
       nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) override;
 
   inline void CleanRedirectCacheChainIfNecessary() {
-    mRedirectedCachekeys = nullptr;
+    auto redirectedCachekeys = mRedirectedCachekeys.Lock();
+    redirectedCachekeys.ref() = nullptr;
   }
   NS_IMETHOD HTTPUpgrade(const nsACString& aProtocolName,
                          nsIHttpUpgradeListener* aListener) override;
@@ -751,7 +753,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
-  UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
+  // Accessed on MainThread and Cache2 IO thread
+  DataMutex<UniquePtr<nsTArray<nsCString>>> mRedirectedCachekeys{
+      "mRedirectedCacheKeys"};
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
   NetAddr mSelfAddr;
