@@ -7,11 +7,13 @@ authors = ["Martin Sirringhaus", "John Schanck"]
 [dependencies]
 authenticator = { version = "0.4.0-alpha.22", features = ["gecko"] }
 base64 = "^0.21"
+cstr = "0.2"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 rand = "0.8"
+serde = { version = "1", features = ["derive"] }
 serde_cbor = "0.11"
 serde_json = "1.0"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
