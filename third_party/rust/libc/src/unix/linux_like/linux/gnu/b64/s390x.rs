@@ -289,8 +289,10 @@ pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 32;
 
 align_const! {
     pub const PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP: ::pthread_mutex_t =

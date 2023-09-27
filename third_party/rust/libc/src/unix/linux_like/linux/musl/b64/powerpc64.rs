@@ -173,6 +173,9 @@ pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
 pub const MAP_SYNC: ::c_int = 0x080000;
 
+pub const PTRACE_SYSEMU: ::c_int = 0x1d;
+pub const PTRACE_SYSEMU_SINGLESTEP: ::c_int = 0x1e;
+
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 

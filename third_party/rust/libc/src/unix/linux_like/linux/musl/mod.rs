@@ -22,8 +22,6 @@ pub type fsblkcnt_t = ::c_ulonglong;
 pub type fsfilcnt_t = ::c_ulonglong;
 pub type rlim_t = ::c_ulonglong;
 
-pub type flock64 = flock;
-
 cfg_if! {
     if #[cfg(doc)] {
         // Used in `linux::arch` to define ioctl constants.
@@ -189,6 +187,14 @@ s! {
         pub l_pid: ::pid_t,
     }
 
+    pub struct flock64 {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off64_t,
+        pub l_len: ::off64_t,
+        pub l_pid: ::pid_t,
+    }
+
     pub struct regex_t {
         __re_nsub: ::size_t,
         __opaque: *mut ::c_void,
@@ -287,12 +293,14 @@ s_no_extra_traits! {
 
     // FIXME: musl added paddings and adjusted
     // layout in 1.2.0 but our CI is still 1.1.24.
-    // So, I'm leaving some fields as comments for now.
+    // So, I'm leaving some fields as cfg for now.
     // ref. https://github.com/bminor/musl/commit/
     // 1e7f0fcd7ff2096904fd93a2ee6d12a2392be392
+    //
+    // OpenHarmony uses the musl 1.2 layout.
     pub struct utmpx {
         pub ut_type: ::c_short,
-        //__ut_pad1: ::c_short,
+        __ut_pad1: ::c_short,
         pub ut_pid: ::pid_t,
         pub ut_line: [::c_char; 32],
         pub ut_id: [::c_char; 4],
@@ -300,15 +308,22 @@ s_no_extra_traits! {
         pub ut_host: [::c_char; 256],
         pub ut_exit: __exit_status,
 
-        //#[cfg(target_endian = "little")]
+        #[cfg(target_env = "musl")]
         pub ut_session: ::c_long,
-        //#[cfg(target_endian = "little")]
-        //__ut_pad2: ::c_long,
 
-        //#[cfg(not(target_endian = "little"))]
-        //__ut_pad2: ::c_int,
-        //#[cfg(not(target_endian = "little"))]
-        //pub ut_session: ::c_int,
+        #[cfg(target_env = "ohos")]
+        #[cfg(target_endian = "little")]
+        pub ut_session: ::c_int,
+        #[cfg(target_env = "ohos")]
+        #[cfg(target_endian = "little")]
+        __ut_pad2: ::c_int,
+
+        #[cfg(target_env = "ohos")]
+        #[cfg(not(target_endian = "little"))]
+        __ut_pad2: ::c_int,
+        #[cfg(target_env = "ohos")]
+        #[cfg(not(target_endian = "little"))]
+        pub ut_session: ::c_int,
 
         pub ut_tv: ::timeval,
         pub ut_addr_v6: [::c_uint; 4],
@@ -537,6 +552,7 @@ pub const SIGUNUSED: ::c_int = ::SIGSYS;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 
 pub const CPU_SETSIZE: ::c_int = 128;
 
@@ -709,8 +725,6 @@ extern "C" {
         timeout: *mut ::timespec,
     ) -> ::c_int;
 
-    pub fn getrlimit64(resource: ::c_int, rlim: *mut ::rlimit64) -> ::c_int;
-    pub fn setrlimit64(resource: ::c_int, rlim: *const ::rlimit64) -> ::c_int;
     pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
     pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
     pub fn prlimit(
@@ -719,13 +733,6 @@ extern "C" {
         new_limit: *const ::rlimit,
         old_limit: *mut ::rlimit,
     ) -> ::c_int;
-    pub fn prlimit64(
-        pid: ::pid_t,
-        resource: ::c_int,
-        new_limit: *const ::rlimit64,
-        old_limit: *mut ::rlimit64,
-    ) -> ::c_int;
-
     pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::c_void) -> ::c_int;
     pub fn ptrace(request: ::c_int, ...) -> ::c_long;
@@ -773,6 +780,10 @@ extern "C" {
     pub fn dirname(path: *mut ::c_char) -> *mut ::c_char;
     pub fn basename(path: *mut ::c_char) -> *mut ::c_char;
 }
+
+// Alias <foo> to <foo>64 to mimic glibc's LFS64 support
+mod lfs64;
+pub use self::lfs64::*;
 
 cfg_if! {
     if #[cfg(any(target_arch = "x86_64",

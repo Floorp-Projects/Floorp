@@ -481,6 +481,16 @@ safe_f! {
     }
 }
 
+f! {
+    pub fn major(dev: ::dev_t) -> ::c_int {
+        (((dev >> 32) & 0xffffff00) | ((dev >> 8) & 0xff)) as ::c_int
+    }
+
+    pub fn minor(dev: ::dev_t) -> ::c_int {
+        (((dev >> 24) & 0xff00) | (dev & 0xffff00ff)) as ::c_int
+    }
+}
+
 extern "C" {
     pub fn setgrent();
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
@@ -492,23 +502,6 @@ extern "C" {
         msgtyp: ::c_long,
         msgflg: ::c_int,
     ) -> ::ssize_t;
-    pub fn clock_nanosleep(
-        clk_id: ::clockid_t,
-        flags: ::c_int,
-        rqtp: *const ::timespec,
-        rmtp: *mut ::timespec,
-    ) -> ::c_int;
-
-    pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
-
-    pub fn fdatasync(fd: ::c_int) -> ::c_int;
-
-    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
-    pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
-    pub fn elf_aux_info(aux: ::c_int, buf: *mut ::c_void, buflen: ::c_int) -> ::c_int;
-    pub fn setproctitle_fast(fmt: *const ::c_char, ...);
-    pub fn timingsafe_bcmp(a: *const ::c_void, b: *const ::c_void, len: ::size_t) -> ::c_int;
-    pub fn timingsafe_memcmp(a: *const ::c_void, b: *const ::c_void, len: ::size_t) -> ::c_int;
 
     pub fn cpuset_getdomain(
         level: ::cpulevel_t,
