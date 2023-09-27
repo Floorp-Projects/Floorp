@@ -41,6 +41,7 @@
   "nsIProperties": "dirsvc",
   "nsIPropertyBag2": "sysinfo",
   "nsIQuotaManagerService": "qms",
+  "nsIRFPService": "rfp",
   "nsIScriptSecurityManager": "scriptSecurityManager",
   "nsISearchService": "search",
   "nsISessionStorageService": "sessionStorage",

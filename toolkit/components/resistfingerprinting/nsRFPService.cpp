@@ -112,7 +112,7 @@ const RFPTarget kDefaultFingerintingProtections =
 // ============================================================================
 // Structural Stuff & Pref Observing
 
-NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
+NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver, nsIRFPService)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
@@ -121,7 +121,7 @@ static bool sInitialized = false;
 static Atomic<RFPTarget> sEnabledFingerintingProtections;
 
 /* static */
-nsRFPService* nsRFPService::GetOrCreate() {
+already_AddRefed<nsRFPService> nsRFPService::GetOrCreate() {
   if (!sInitialized) {
     sRFPService = new nsRFPService();
     nsresult rv = sRFPService->Init();
@@ -135,7 +135,7 @@ nsRFPService* nsRFPService::GetOrCreate() {
     sInitialized = true;
   }
 
-  return sRFPService;
+  return do_AddRef(sRFPService);
 }
 
 static const char* gCallbackPrefs[] = {

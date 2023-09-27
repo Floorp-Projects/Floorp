@@ -26,3 +26,13 @@ EXPORTS.mozilla += [
 EXTRA_JS_MODULES += [
     "RFPHelper.sys.mjs",
 ]
+
+XPIDL_MODULE = "toolkit_resistfingerprinting"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+XPIDL_SOURCES += [
+    "nsIRFPService.idl",
+]
