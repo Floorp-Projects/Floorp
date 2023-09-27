@@ -32,6 +32,9 @@ const XPCStringConvert::LiteralExternalString
 const XPCStringConvert::DOMStringExternalString
     XPCStringConvert::sDOMStringExternalString;
 
+const XPCStringConvert::DynamicAtomExternalString
+    XPCStringConvert::sDynamicAtomExternalString;
+
 void XPCStringConvert::LiteralExternalString::finalize(char16_t* aChars) const {
   // Nothing to do.
 }
@@ -59,6 +62,22 @@ size_t XPCStringConvert::DOMStringExternalString::sizeOfBuffer(
   // the external string.  But only report here if we're unshared; if we're
   // shared then we don't know who really owns this data.
   return buf->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+}
+
+void XPCStringConvert::DynamicAtomExternalString::finalize(
+    char16_t* aChars) const {
+  nsDynamicAtom* atom = nsDynamicAtom::FromChars(aChars);
+  // nsDynamicAtom::Release is always-inline and defined in a translation unit
+  // we can't get to here.  So we need to go through nsAtom::Release to call
+  // it.
+  static_cast<nsAtom*>(atom)->Release();
+}
+
+size_t XPCStringConvert::DynamicAtomExternalString::sizeOfBuffer(
+    const char16_t* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  // We return 0 here because NS_AddSizeOfAtoms reports all memory associated
+  // with atoms in the atom table.
+  return 0;
 }
 
 // convert a readable to a JSString, copying string data
