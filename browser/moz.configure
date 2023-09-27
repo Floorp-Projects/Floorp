@@ -17,3 +17,4 @@ with only_when(target_has_linux_kernel & compile_environment):
     set_config("MOZ_NO_PIE_COMPAT", depends_if("MOZ_NO_PIE_COMPAT")(lambda _: True))
 
 include("../toolkit/moz.configure")
+include("../floorp/moz.configure")
