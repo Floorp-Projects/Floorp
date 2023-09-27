@@ -77,7 +77,7 @@ fn u128() {
 
 #[test]
 fn fill() {
-    let r = fastrand::Rng::new();
+    let mut r = fastrand::Rng::new();
     let mut a = [0u8; 64];
     let mut b = [0u8; 64];
 
@@ -89,7 +89,7 @@ fn fill() {
 
 #[test]
 fn rng() {
-    let r = fastrand::Rng::new();
+    let mut r = fastrand::Rng::new();
 
     assert_ne!(r.u64(..), r.u64(..));
 
@@ -102,8 +102,8 @@ fn rng() {
 
 #[test]
 fn rng_init() {
-    let a = fastrand::Rng::new();
-    let b = fastrand::Rng::new();
+    let mut a = fastrand::Rng::new();
+    let mut b = fastrand::Rng::new();
     assert_ne!(a.u64(..), b.u64(..));
 
     a.seed(7);
@@ -113,8 +113,31 @@ fn rng_init() {
 
 #[test]
 fn with_seed() {
-    let a = fastrand::Rng::with_seed(7);
-    let b = fastrand::Rng::new();
+    let mut a = fastrand::Rng::with_seed(7);
+    let mut b = fastrand::Rng::new();
     b.seed(7);
     assert_eq!(a.u64(..), b.u64(..));
+}
+
+#[test]
+fn choose_multiple() {
+    let mut a = fastrand::Rng::new();
+    let mut elements = (0..20).collect::<Vec<_>>();
+
+    while !elements.is_empty() {
+        let chosen = a.choose_multiple(0..20, 5);
+        for &x in &chosen {
+            elements.retain(|&y| y != x);
+        }
+    }
+}
+
+#[test]
+fn choice() {
+    let items = [1, 4, 9, 5, 2, 3, 6, 7, 8, 0];
+    let mut r = fastrand::Rng::new();
+
+    for item in &items {
+        while r.choice(&items).unwrap() != item {}
+    }
 }

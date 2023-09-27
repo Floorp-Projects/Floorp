@@ -14,9 +14,12 @@
 //!
 //! ## Resource Leaking
 //!
-//! `tempfile` will (almost) never fail to cleanup temporary resources, but `TempDir` and `NamedTempFile` will if
-//! their destructors don't run. This is because `tempfile` relies on the OS to cleanup the
-//! underlying file, while `TempDir` and `NamedTempFile` rely on their destructors to do so.
+//! `tempfile` will (almost) never fail to cleanup temporary resources. However `TempDir` and `NamedTempFile` will
+//! fail if their destructors don't run. This is because `tempfile` relies on the OS to cleanup the
+//! underlying file, while `TempDir` and `NamedTempFile` rely on rust destructors to do so.
+//! Destructors may fail to run if the process exits through an unhandled signal interrupt (like `SIGINT`),
+//! or if the instance is declared statically (like with [`lazy_static`]), among other possible
+//! reasons.
 //!
 //! ## Security
 //!
@@ -152,6 +155,7 @@
 //! [`TempDir`]: struct.TempDir.html
 //! [`NamedTempFile`]: struct.NamedTempFile.html
 //! [`std::env::temp_dir()`]: https://doc.rust-lang.org/std/env/fn.temp_dir.html
+//! [`lazy_static`]: https://github.com/rust-lang-nursery/lazy-static.rs/issues/62
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
@@ -161,7 +165,7 @@
 #![cfg_attr(test, deny(warnings))]
 #![deny(rust_2018_idioms)]
 #![allow(clippy::redundant_field_names)]
-#![cfg_attr(feature = "nightly", feature(wasi_ext))]
+#![cfg_attr(all(feature = "nightly", target_os = "wasi"), feature(wasi_ext))]
 
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
@@ -276,6 +280,15 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// Create a temporary directory with a chosen prefix under a chosen folder:
+    ///
+    /// ```ignore
+    /// let dir = Builder::new()
+    ///     .prefix("my-temporary-dir")
+    ///     .tempdir_in("folder-with-tempdirs")?;
+    /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -419,7 +432,7 @@ impl<'a, 'b> Builder<'a, 'b> {
     /// [security]: struct.NamedTempFile.html#security
     /// [resource-leaking]: struct.NamedTempFile.html#resource-leaking
     pub fn tempfile(&self) -> io::Result<NamedTempFile> {
-        self.tempfile_in(&env::temp_dir())
+        self.tempfile_in(env::temp_dir())
     }
 
     /// Create the named temporary file in the specified directory.
@@ -493,7 +506,7 @@ impl<'a, 'b> Builder<'a, 'b> {
     ///
     /// [resource-leaking]: struct.TempDir.html#resource-leaking
     pub fn tempdir(&self) -> io::Result<TempDir> {
-        self.tempdir_in(&env::temp_dir())
+        self.tempdir_in(env::temp_dir())
     }
 
     /// Attempts to make a temporary directory inside of `dir`.
@@ -533,5 +546,156 @@ impl<'a, 'b> Builder<'a, 'b> {
         }
 
         util::create_helper(dir, self.prefix, self.suffix, self.random_len, dir::create)
+    }
+
+    /// Attempts to create a temporary file (or file-like object) using the
+    /// provided closure. The closure is passed a temporary file path and
+    /// returns an [`std::io::Result`]. The path provided to the closure will be
+    /// inside of [`std::env::temp_dir()`]. Use [`Builder::make_in`] to provide
+    /// a custom temporary directory. If the closure returns one of the
+    /// following errors, then another randomized file path is tried:
+    ///  - [`std::io::ErrorKind::AlreadyExists`]
+    ///  - [`std::io::ErrorKind::AddrInUse`]
+    ///
+    /// This can be helpful for taking full control over the file creation, but
+    /// leaving the temporary file path construction up to the library. This
+    /// also enables creating a temporary UNIX domain socket, since it is not
+    /// possible to bind to a socket that already exists.
+    ///
+    /// Note that [`Builder::append`] is ignored when using [`Builder::make`].
+    ///
+    /// # Security
+    ///
+    /// This has the same [security implications][security] as
+    /// [`NamedTempFile`], but with additional caveats. Specifically, it is up
+    /// to the closure to ensure that the file does not exist and that such a
+    /// check is *atomic*. Otherwise, a [time-of-check to time-of-use
+    /// bug][TOCTOU] could be introduced.
+    ///
+    /// For example, the following is **not** secure:
+    ///
+    /// ```
+    /// # use std::io;
+    /// # use std::fs::File;
+    /// # fn main() {
+    /// #     if let Err(_) = run() {
+    /// #         ::std::process::exit(1);
+    /// #     }
+    /// # }
+    /// # fn run() -> Result<(), io::Error> {
+    /// # use tempfile::Builder;
+    /// // This is NOT secure!
+    /// let tempfile = Builder::new().make(|path| {
+    ///     if path.is_file() {
+    ///         return Err(io::ErrorKind::AlreadyExists.into());
+    ///     }
+    ///
+    ///     // Between the check above and the usage below, an attacker could
+    ///     // have replaced `path` with another file, which would get truncated
+    ///     // by `File::create`.
+    ///
+    ///     File::create(path)
+    /// })?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// Note that simply using [`std::fs::File::create`] alone is not correct
+    /// because it does not fail if the file already exists:
+    /// ```
+    /// # use std::io;
+    /// # use std::fs::File;
+    /// # fn main() {
+    /// #     if let Err(_) = run() {
+    /// #         ::std::process::exit(1);
+    /// #     }
+    /// # }
+    /// # fn run() -> Result<(), io::Error> {
+    /// # use tempfile::Builder;
+    /// // This could overwrite an existing file!
+    /// let tempfile = Builder::new().make(|path| File::create(path))?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// For creating regular temporary files, use [`Builder::tempfile`] instead
+    /// to avoid these problems. This function is meant to enable more exotic
+    /// use-cases.
+    ///
+    /// # Resource leaking
+    ///
+    /// See [the resource leaking][resource-leaking] docs on `NamedTempFile`.
+    ///
+    /// # Errors
+    ///
+    /// If the closure returns any error besides
+    /// [`std::io::ErrorKind::AlreadyExists`] or
+    /// [`std::io::ErrorKind::AddrInUse`], then `Err` is returned.
+    ///
+    /// # Examples
+    /// ```
+    /// # use std::io;
+    /// # fn main() {
+    /// #     if let Err(_) = run() {
+    /// #         ::std::process::exit(1);
+    /// #     }
+    /// # }
+    /// # fn run() -> Result<(), io::Error> {
+    /// # use tempfile::Builder;
+    /// # #[cfg(unix)]
+    /// use std::os::unix::net::UnixListener;
+    /// # #[cfg(unix)]
+    /// let tempsock = Builder::new().make(|path| UnixListener::bind(path))?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// [TOCTOU]: https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use
+    /// [security]: struct.NamedTempFile.html#security
+    /// [resource-leaking]: struct.NamedTempFile.html#resource-leaking
+    pub fn make<F, R>(&self, f: F) -> io::Result<NamedTempFile<R>>
+    where
+        F: FnMut(&Path) -> io::Result<R>,
+    {
+        self.make_in(env::temp_dir(), f)
+    }
+
+    /// This is the same as [`Builder::make`], except `dir` is used as the base
+    /// directory for the temporary file path.
+    ///
+    /// See [`Builder::make`] for more details and security implications.
+    ///
+    /// # Examples
+    /// ```
+    /// # use std::io;
+    /// # fn main() {
+    /// #     if let Err(_) = run() {
+    /// #         ::std::process::exit(1);
+    /// #     }
+    /// # }
+    /// # fn run() -> Result<(), io::Error> {
+    /// # use tempfile::Builder;
+    /// # #[cfg(unix)]
+    /// use std::os::unix::net::UnixListener;
+    /// # #[cfg(unix)]
+    /// let tempsock = Builder::new().make_in("./", |path| UnixListener::bind(path))?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn make_in<F, R, P>(&self, dir: P, mut f: F) -> io::Result<NamedTempFile<R>>
+    where
+        F: FnMut(&Path) -> io::Result<R>,
+        P: AsRef<Path>,
+    {
+        util::create_helper(
+            dir.as_ref(),
+            self.prefix,
+            self.suffix,
+            self.random_len,
+            move |path| {
+                Ok(NamedTempFile::from_parts(
+                    f(&path)?,
+                    TempPath::from_path(path),
+                ))
+            },
+        )
     }
 }

@@ -6,13 +6,12 @@ use std::os::windows::io::{AsRawHandle, FromRawHandle, RawHandle};
 use std::path::Path;
 use std::{io, iter};
 
-use winapi::um::fileapi::SetFileAttributesW;
-use winapi::um::handleapi::INVALID_HANDLE_VALUE;
-use winapi::um::winbase::{MoveFileExW, ReOpenFile};
-use winapi::um::winbase::{FILE_FLAG_DELETE_ON_CLOSE, MOVEFILE_REPLACE_EXISTING};
-use winapi::um::winnt::{FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_TEMPORARY};
-use winapi::um::winnt::{FILE_GENERIC_READ, FILE_GENERIC_WRITE, HANDLE};
-use winapi::um::winnt::{FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE};
+use windows_sys::Win32::Foundation::{HANDLE, INVALID_HANDLE_VALUE};
+use windows_sys::Win32::Storage::FileSystem::{
+    MoveFileExW, ReOpenFile, SetFileAttributesW, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_TEMPORARY,
+    FILE_FLAG_DELETE_ON_CLOSE, FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_SHARE_DELETE,
+    FILE_SHARE_READ, FILE_SHARE_WRITE, MOVEFILE_REPLACE_EXISTING,
+};
 
 use crate::util;
 
@@ -76,9 +75,6 @@ pub fn keep(path: &Path) -> io::Result<()> {
 }
 
 pub fn persist(old_path: &Path, new_path: &Path, overwrite: bool) -> io::Result<()> {
-    // TODO: We should probably do this in one-shot using SetFileInformationByHandle but the API is
-    // really painful.
-
     unsafe {
         let old_path_w = to_utf16(old_path);
         let new_path_w = to_utf16(new_path);
