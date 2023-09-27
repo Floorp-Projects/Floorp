@@ -8,7 +8,7 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-:host,
+:host(.anonymous-content-host),
 :root {
   --in-content-page-color: rgb(21, 20, 26);
   --in-content-page-background: #fff;
@@ -118,7 +118,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :host,
+  :host(.anonymous-content-host),
   :root {
     /* Keep these in sync with:
      *
@@ -169,17 +169,14 @@
    * this in High Contrast mode, as we should be using system colours then.
    */
   @media not (prefers-contrast) {
-    :root[dialogroot],
-    /* Also need this on dialog :hosts, or the rule above will override the
-     * value for this custom property again in the shadow DOM. */
-    :host(dialog) {
+    :root[dialogroot] {
       --in-content-page-background: #42414d;
     }
   }
 }
 
 @media (prefers-contrast) {
-  :host,
+  :host(.anonymous-content-host),
   :root {
     --in-content-page-color: CanvasText;
     --in-content-page-background: Canvas;
@@ -388,8 +385,7 @@ xul|button > .button-box > .button-text {
   margin: 0;
 }
 
-xul|button,
-html|button {
+button {
   /* Use the same margin of other elements for the alignment */
   margin-inline: 4px;
 }
@@ -400,7 +396,7 @@ html|button {
 
 button:focus-visible,
 html|select:focus-visible,
-html|input:is([type="checkbox"], [type="color"], [type="radio"]):focus-visible,
+html|input:where([type="checkbox"], [type="color"], [type="radio"]):focus-visible,
 xul|menulist:focus-visible,
 xul|checkbox:not([native]):focus-visible > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
 xul|radio[focused="true"] > .radio-check,
@@ -634,7 +630,7 @@ xul|menulist > xul|menupopup xul|menuseparator {
 
 /* textboxes */
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
 html|textarea,
 xul|search-textbox {
   appearance: none;
@@ -649,7 +645,7 @@ xul|search-textbox {
   padding-inline: 8px;
 }
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
 html|textarea {
   box-sizing: border-box;
   font-family: inherit;
@@ -660,7 +656,7 @@ html|textarea {
   min-height: var(--input-text-min-height);
 }
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
 html|textarea:focus,
 xul|search-textbox[focused],
 xul|tree:focus-visible,
@@ -670,14 +666,14 @@ xul|richlistbox:focus-visible {
   outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
 html|textarea:-moz-ui-invalid {
   border-color: transparent;
   outline: 2px solid var(--in-content-border-invalid);
   outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
 html|textarea:disabled,
 xul|search-textbox[disabled="true"] {
   opacity: 0.4;
