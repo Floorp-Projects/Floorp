@@ -120,6 +120,13 @@ struct AudioTimelineEvent final {
 
   void SetTimeInTicks(int64_t aTimeInTicks) { mTime = aTimeInTicks; }
 
+  template <class TimeType>
+  void FillTargetApproach(TimeType aBufferStartTime, Span<float> aBuffer,
+                          double v0) const;
+  template <class TimeType>
+  void FillFromValueCurve(TimeType aBufferStartTime, Span<float> aBuffer) const;
+
+ private:
   void SetCurveParams(const float* aCurve, uint32_t aCurveLength) {
     mCurveLength = aCurveLength;
     if (aCurveLength) {
@@ -130,6 +137,7 @@ struct AudioTimelineEvent final {
     }
   }
 
+ public:
   Type mType;
   union {
     float mValue;
@@ -410,9 +418,9 @@ class AudioEventTimeline {
                               const AudioTimelineEvent* aPrevious);
 
   template <class TimeType>
-  float GetValuesAtTimeHelperInternal(TimeType aTime,
-                                      const AudioTimelineEvent* aPrevious,
-                                      const AudioTimelineEvent* aNext);
+  void GetValuesAtTimeHelperInternal(TimeType aStartTime, Span<float> aBuffer,
+                                     const AudioTimelineEvent* aPrevious,
+                                     const AudioTimelineEvent* aNext);
 
   const AudioTimelineEvent* GetPreviousEvent(double aTime) const;
 
