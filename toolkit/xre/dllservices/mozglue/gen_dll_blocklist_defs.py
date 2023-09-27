@@ -562,7 +562,7 @@ class DllBlocklistEntry(object):
 
         flags_str = ""
 
-        flags = self.get_flags_list()
+        flags = sorted(self.get_flags_list())
         if flags:
             flags_str = ", " + " | ".join(map(self.get_flag_string, flags))
 
