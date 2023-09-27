@@ -14,7 +14,7 @@
 const { execFileSync } = require("child_process");
 const { readFileSync } = require("fs");
 const path = require("path");
-const meow = require("meow");
+const { pathToFileURL } = require("url");
 const chalk = require("chalk");
 
 function logErrors(tool, errors) {
@@ -191,8 +191,11 @@ const tests = {
   },
 };
 
-const cli = meow(
-  `
+async function main() {
+  const { default: meow } = await import("meow");
+  const fileUrl = pathToFileURL(__filename);
+  const cli = meow(
+    `
   Usage
     $ node bin/try-runner.js <tests> [options]
 
@@ -206,58 +209,65 @@ const cli = meow(
     $ node bin/try-runner.js bundles karma
     $ node bin/try-runner.js -t karma -t zip
 `,
-  {
-    description: false,
-    // `pkg` is a tiny optimization. It prevents meow from looking for a package
-    // that doesn't technically exist. meow searches for a package and changes
-    // the process name to the package name. It resolves to the newtab
-    // package.json, which would give a confusing name and be wasteful.
-    pkg: {
-      name: "try-runner",
-      version: "1.0.0",
-    },
-    flags: {
-      test: {
-        type: "string",
-        isMultiple: true,
-        alias: "t",
+    {
+      description: false,
+      // `pkg` is a tiny optimization. It prevents meow from looking for a package
+      // that doesn't technically exist. meow searches for a package and changes
+      // the process name to the package name. It resolves to the newtab
+      // package.json, which would give a confusing name and be wasteful.
+      pkg: {
+        name: "try-runner",
+        version: "1.0.0",
       },
-    },
-  }
-);
-const aliases = {
-  bundle: "bundles",
-  build: "bundles",
-  coverage: "karma",
-  cov: "karma",
-  zip: "zipCodeCoverage",
-};
+      // `importMeta` is required by meow 10+. It was added to support ESM, but
+      // meow now requires it, and no longer supports CJS style imports. But it
+      // only uses import.meta.url, which can be polyfilled like this:
+      importMeta: { url: fileUrl },
+      flags: {
+        test: {
+          type: "string",
+          isMultiple: true,
+          alias: "t",
+        },
+      },
+    }
+  );
+  const aliases = {
+    bundle: "bundles",
+    build: "bundles",
+    coverage: "karma",
+    cov: "karma",
+    zip: "zipCodeCoverage",
+  };
 
-const inputs = [...cli.input, ...cli.flags.test].map(input =>
-  (aliases[input] || input).toLowerCase()
-);
+  const inputs = [...cli.input, ...cli.flags.test].map(input =>
+    (aliases[input] || input).toLowerCase()
+  );
 
-function shouldRunTest(name) {
-  if (inputs.length) {
-    return inputs.includes(name.toLowerCase());
+  function shouldRunTest(name) {
+    if (inputs.length) {
+      return inputs.includes(name.toLowerCase());
+    }
+    return true;
   }
-  return true;
+
+  const results = [];
+  for (const name of Object.keys(tests)) {
+    if (shouldRunTest(name)) {
+      results.push([name, tests[name]()]);
+    } else {
+      logSkip(name);
+    }
+  }
+
+  for (const [name, result] of results) {
+    // colorize output based on result
+    console.log(result ? chalk.green(`✓ ${name}`) : chalk.red(`✗ ${name}`));
+  }
+
+  const success = results.every(([, result]) => result);
+  process.exitCode = success ? 0 : 1;
+  console.log("CODE", process.exitCode);
 }
 
-const results = [];
-for (const name of Object.keys(tests)) {
-  if (shouldRunTest(name)) {
-    results.push([name, tests[name]()]);
-  } else {
-    logSkip(name);
-  }
-}
-
-for (const [name, result] of results) {
-  // colorize output based on result
-  console.log(result ? chalk.green(`✓ ${name}`) : chalk.red(`✗ ${name}`));
-}
-
-const success = results.every(([, result]) => result);
-process.exitCode = success ? 0 : 1;
-console.log("CODE", process.exitCode);
+main();
