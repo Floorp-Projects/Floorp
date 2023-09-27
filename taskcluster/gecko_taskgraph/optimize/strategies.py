@@ -15,23 +15,6 @@ from gecko_taskgraph import files_changed
 logger = logging.getLogger(__name__)
 
 
-@register_strategy("skip-unless-changed")
-class SkipUnlessChanged(OptimizationStrategy):
-    def should_remove_task(self, task, params, file_patterns):
-        # pushlog_id == -1 - this is the case when run from a cron.yml job
-        if params.get("pushlog_id") == -1:
-            return False
-
-        changed = files_changed.check(params, file_patterns)
-        if not changed:
-            logger.debug(
-                "no files found matching a pattern in `skip-unless-changed` for "
-                + task.label
-            )
-            return True
-        return False
-
-
 @register_strategy("skip-unless-schedules")
 class SkipUnlessSchedules(OptimizationStrategy):
     @memoize
