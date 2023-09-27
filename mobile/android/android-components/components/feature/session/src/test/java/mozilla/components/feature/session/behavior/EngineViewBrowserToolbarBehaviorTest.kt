@@ -191,6 +191,25 @@ class EngineViewBrowserToolbarBehaviorTest {
 
         verify(engineView).setVerticalClipping(41)
     }
+
+    @Test
+    fun `GIVEN a bottom toolbar WHEN translation returns NaN THEN no exception thrown`() {
+        val engineView: EngineView = spy(FakeEngineView(testContext))
+        val toolbar: View = mock()
+        doReturn(100).`when`(toolbar).height
+        doReturn(Float.NaN).`when`(toolbar).translationY
+
+        val behavior = EngineViewBrowserToolbarBehavior(
+            mock(),
+            null,
+            engineView.asView(),
+            toolbar.height,
+            ToolbarPosition.BOTTOM,
+        )
+
+        behavior.onDependentViewChanged(mock(), mock(), toolbar)
+        assertEquals(0f, engineView.asView().translationY)
+    }
 }
 
 class BrowserToolbar(context: Context) : TextView(context)

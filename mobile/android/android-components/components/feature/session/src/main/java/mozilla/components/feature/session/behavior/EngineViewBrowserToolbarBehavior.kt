@@ -41,7 +41,9 @@ class EngineViewBrowserToolbarBehavior(
     @VisibleForTesting
     internal var toolbarChangedAction: (Float) -> Unit?
     private val bottomToolbarChangedAction = { newToolbarTranslationY: Float ->
-        engineView?.setVerticalClipping(-newToolbarTranslationY.roundToInt())
+        if (!newToolbarTranslationY.isNaN()) {
+            engineView?.setVerticalClipping(-newToolbarTranslationY.roundToInt())
+        }
     }
     private val topToolbarChangedAction = { newToolbarTranslationY: Float ->
         // the top toolbar is translated upwards when collapsing-> all values received are 0 or negative
