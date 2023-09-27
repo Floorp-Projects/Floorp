@@ -442,6 +442,16 @@ safe_f! {
     }
 }
 
+f! {
+    pub fn major(dev: ::dev_t) -> ::c_int {
+         ((dev >> 8) & 0xff) as ::c_int
+    }
+
+    pub fn minor(dev: ::dev_t) -> ::c_int {
+        (dev & 0xffff00ff) as ::c_int
+    }
+}
+
 extern "C" {
     // Return type ::c_int was removed in FreeBSD 12
     pub fn setgrent() -> ::c_int;
@@ -462,8 +472,8 @@ extern "C" {
         msgflg: ::c_int,
     ) -> ::c_int;
 
-    pub fn fdatasync(fd: ::c_int) -> ::c_int;
-
+    // Type of `path` argument changed from `const void*` to `void*`
+    // in FreeBSD 12
     pub fn dirname(path: *const ::c_char) -> *mut ::c_char;
     pub fn basename(path: *const ::c_char) -> *mut ::c_char;
 }

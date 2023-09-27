@@ -278,13 +278,17 @@ impl ::Clone for fpos_t {
 }
 
 // Special handling for all print and scan type functions because of https://github.com/rust-lang/libc/issues/2860
-#[cfg_attr(
-    all(windows, target_env = "msvc"),
-    link(name = "legacy_stdio_definitions")
-)]
-extern "C" {
-    pub fn printf(format: *const c_char, ...) -> ::c_int;
-    pub fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> ::c_int;
+cfg_if! {
+    if #[cfg(not(feature = "rustc-dep-of-std"))] {
+        #[cfg_attr(
+            all(windows, target_env = "msvc"),
+            link(name = "legacy_stdio_definitions")
+        )]
+        extern "C" {
+            pub fn printf(format: *const c_char, ...) -> ::c_int;
+            pub fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> ::c_int;
+        }
+    }
 }
 
 extern "C" {
@@ -341,6 +345,7 @@ extern "C" {
     pub fn strtoull(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_ulonglong;
     pub fn calloc(nobj: size_t, size: size_t) -> *mut c_void;
     pub fn malloc(size: size_t) -> *mut c_void;
+    pub fn _msize(p: *mut c_void) -> size_t;
     pub fn realloc(p: *mut c_void, size: size_t) -> *mut c_void;
     pub fn free(p: *mut c_void);
     pub fn abort() -> !;
