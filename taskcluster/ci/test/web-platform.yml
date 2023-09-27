@@ -460,7 +460,6 @@ web-platform-tests-crashtest:
                 by-test-platform:
                     android.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    .*wayland.*: []
                     default: built-projects
     tier: default
 
