@@ -81,12 +81,6 @@ extern mozilla::LazyLogModule gWidgetLog;
 using namespace mozilla;
 using namespace mozilla::widget;
 
-/* widget class methods */
-static void moz_container_wayland_map(GtkWidget* widget);
-static gboolean moz_container_wayland_map_event(GtkWidget* widget,
-                                                GdkEventAny* event);
-static void moz_container_wayland_size_allocate(GtkWidget* widget,
-                                                GtkAllocation* allocation);
 static bool moz_container_wayland_surface_create_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container);
 static void moz_container_wayland_set_opaque_region_locked(
@@ -108,9 +102,6 @@ MozContainerSurfaceLock::~MozContainerSurfaceLock() {
   moz_container_wayland_surface_unlock(mContainer, &mSurface);
 }
 struct wl_surface* MozContainerSurfaceLock::GetSurface() { return mSurface; }
-
-// Imlemented in MozContainer.cpp
-void moz_container_realize(GtkWidget* widget);
 
 // Invalidate gtk wl_surface to commit changes to wl_subsurface.
 // wl_subsurface changes are effective when parent surface is commited.
@@ -182,21 +173,6 @@ bool moz_container_wayland_egl_window_set_size(MozContainer* container,
 
   return moz_container_wayland_size_matches_scale_factor_locked(
       lock, container, aSize.width, aSize.height);
-}
-
-void moz_container_wayland_class_init(MozContainerClass* klass) {
-  /*GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-    GtkObjectClass *object_class = GTK_OBJECT_CLASS (klass); */
-  GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
-
-  widget_class->map = moz_container_wayland_map;
-  widget_class->map_event = moz_container_wayland_map_event;
-  widget_class->realize = moz_container_realize;
-  widget_class->size_allocate = moz_container_wayland_size_allocate;
-}
-
-void moz_container_wayland_init(MozContainerWayland* container) {
-  new (container) MozContainerWayland();
 }
 
 void moz_container_wayland_add_initial_draw_callback_locked(
@@ -374,8 +350,8 @@ void moz_container_wayland_unmap(GtkWidget* widget) {
   wl_container->current_fractional_scale = 0.0;
 }
 
-static gboolean moz_container_wayland_map_event(GtkWidget* widget,
-                                                GdkEventAny* event) {
+gboolean moz_container_wayland_map_event(GtkWidget* widget,
+                                         GdkEventAny* event) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(widget)->data.wl_container;
 
   LOGCONTAINER("%s [%p]\n", __FUNCTION__,
