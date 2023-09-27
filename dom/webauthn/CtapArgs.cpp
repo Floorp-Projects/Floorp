@@ -153,13 +153,7 @@ NS_IMETHODIMP
 CtapRegisterArgs::GetAttestationConveyancePreference(
     nsAString& aAttestationConveyancePreference) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-
-  if (mForceNoneAttestation) {
-    aAttestationConveyancePreference = NS_ConvertUTF8toUTF16(
-        MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE);
-  } else {
-    aAttestationConveyancePreference = mInfo.attestationConveyancePreference();
-  }
+  aAttestationConveyancePreference = mInfo.attestationConveyancePreference();
   return NS_OK;
 }
 
