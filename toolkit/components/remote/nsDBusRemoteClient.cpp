@@ -12,9 +12,9 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Base64.h"
 #include "nsPrintfCString.h"
+#include "mozilla/GUniquePtr.h"
 
 #include <dlfcn.h>
-#include <dbus/dbus-glib-lowlevel.h>
 
 #undef LOG
 #ifdef MOZ_LOGGING
@@ -25,38 +25,14 @@ static mozilla::LazyLogModule sRemoteLm("nsDBusRemoteClient");
 #  define LOG(...)
 #endif
 
+using namespace mozilla;
+
 nsDBusRemoteClient::nsDBusRemoteClient() {
-  mConnection = nullptr;
   LOG("nsDBusRemoteClient::nsDBusRemoteClient");
 }
 
 nsDBusRemoteClient::~nsDBusRemoteClient() {
   LOG("nsDBusRemoteClient::~nsDBusRemoteClient");
-  Shutdown();
-}
-
-nsresult nsDBusRemoteClient::Init() {
-  LOG("nsDBusRemoteClient::Init");
-
-  if (mConnection) return NS_OK;
-
-  mConnection =
-      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
-  if (!mConnection) {
-    LOG("  failed to get DBus session");
-    return NS_ERROR_FAILURE;
-  }
-
-  dbus_connection_set_exit_on_disconnect(mConnection, false);
-  dbus_connection_setup_with_g_main(mConnection, nullptr);
-
-  return NS_OK;
-}
-
-void nsDBusRemoteClient::Shutdown(void) {
-  LOG("nsDBusRemoteClient::Shutdown");
-  // This connection is owned by libdbus and we don't need to close it
-  mConnection = nullptr;
 }
 
 nsresult nsDBusRemoteClient::SendCommandLine(
@@ -156,31 +132,24 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
   LOG("  DBus path: %s\n", pathName.get());
   LOG("  DBus interface: %s\n", remoteInterfaceName.get());
 
-  RefPtr<DBusMessage> msg =
-      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
-          destinationName.get(),
-          pathName.get(),             // object to call on
-          remoteInterfaceName.get(),  // interface to call on
-          "OpenURL"));                // method name
-  if (!msg) {
-    LOG("  failed to create DBus message");
+  RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+      destinationName.get(), pathName.get(), remoteInterfaceName.get(), nullptr,
+      nullptr));
+  if (!proxy) {
+    LOG("  failed to create DBus proxy");
     return NS_ERROR_FAILURE;
   }
 
-  // append arguments
-  if (!dbus_message_append_args(msg, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &aBuffer,
-                                aLength, DBUS_TYPE_INVALID)) {
-    LOG("  failed to create DBus message");
-    return NS_ERROR_FAILURE;
-  }
-
-  // send message and get a handle for a reply
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-      dbus_connection_send_with_reply_and_block(mConnection, msg, -1, nullptr));
-
+  GUniquePtr<GError> error;
+  RefPtr<GVariant> reply = dont_AddRef(g_dbus_proxy_call_sync(
+      proxy, "OpenURL",
+      g_variant_new_from_data(G_VARIANT_TYPE("(ay)"), aBuffer, aLength, true,
+                              nullptr, nullptr),
+      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, getter_Transfers(error)));
 #ifdef MOZ_LOGGING
   if (!reply) {
-    LOG("  failed to get DBus reply");
+    LOG("  failed to OpenURL: %s", error->message);
   }
 #endif
 
