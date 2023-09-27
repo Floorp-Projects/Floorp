@@ -467,7 +467,7 @@ const SHOPPING_MICROSURVEY = {
           label: {
             string_id: "shopping-survey-next-button-label",
             paddingBlock: "5px",
-            marginBlock: "0px 10px",
+            marginBlock: "0 12px",
           },
           action: {
             type: "MULTI_ACTION",
@@ -566,7 +566,7 @@ const SHOPPING_MICROSURVEY = {
           label: {
             string_id: "shopping-survey-submit-button-label",
             paddingBlock: "5px",
-            marginBlock: "0px 10px",
+            marginBlock: "0 12px",
           },
           action: {
             type: "MULTI_ACTION",

@@ -14,7 +14,7 @@
   height: auto;
   margin: 0 auto;
   min-height: fit-content;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 2px 6px rgba(58, 57, 68, 20%);
 
   @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
@@ -45,7 +45,7 @@
 
       .welcome-text {
         text-align: start;
-        margin-block: 10px 20px;
+        margin-block: 10px 12px;
 
         h1 {
           width: auto;
@@ -118,7 +118,7 @@
 
 .onboardingContainer.shopping .screen[pos='split'][layout='survey'] {
   .main-content {
-    padding: 8px 12px 24px;
+    padding: 12px;
 
     .main-content-inner {
       min-height: auto;
@@ -126,7 +126,12 @@
       .welcome-text {
         align-items: initial;
         padding: 0;
-        margin-top: 12px;
+        margin-top: 0;
+
+        h1,
+        h2 {
+          line-height: 20px;
+        }
 
         h1 {
           font-size: 1em;
@@ -136,24 +141,46 @@
 
         h2 {
           color: inherit;
-          margin-block: 12px 0;
+          margin-block: 10px 0;
+        }
+      }
+
+      .action-buttons {
+        .cta-link {
+          padding: 4px;
+          margin-block: -4px;
+          outline-offset: 0;
+          min-height: revert;
         }
       }
 
       .multi-select-container {
         color: inherit;
         padding: 0;
-        margin-block: 12px;
+        margin-block: 0 24px;
         align-items: center;
         overflow: visible;
         font-size: 1em;
-        gap: 8px;
+        gap: 12px;
+
+        .multi-select-item input {
+          margin-block: 0;
+        }
       }
 
       .steps {
-        height: 24px;
+        height: auto;
+        margin-bottom: 12px;
       }
     }
+  }
+
+  .dismiss-button {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 10px;
   }
 }
 
