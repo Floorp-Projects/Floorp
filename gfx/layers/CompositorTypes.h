@@ -95,10 +95,10 @@ enum class TextureFlags : uint32_t {
   // The texture is dummy texture
   DUMMY_TEXTURE = 1 << 22,
   // Software decoded video
-  SOFTWARE_DECODED_VIDEO = 1 << 22,
+  SOFTWARE_DECODED_VIDEO = 1 << 23,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 23) - 1,
+  ALL_BITS = (1 << 24) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };
