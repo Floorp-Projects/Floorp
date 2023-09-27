@@ -679,9 +679,9 @@ set_define("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
 # ===========================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_tail_calls(is_nightly):
-    if is_nightly:
+@depends(target)
+def default_wasm_tail_calls(target):
+    if target.cpu in ("x86", "x86_64", "arm", "aarch64", "loongarch64", "mips64"):
         return True
 
 
@@ -699,6 +699,10 @@ def wasm_tail_calls(value, target):
 
     if target.cpu in ("x86", "x86_64", "arm", "aarch64", "loongarch64", "mips64"):
         return True
+
+    die(
+        "--enable-wasm-tail-calls only possible when targeting the x86_64/x86/arm64/arm/loongarch64/mips64 jits"
+    )
 
 
 set_config("ENABLE_WASM_TAIL_CALLS", wasm_tail_calls)
