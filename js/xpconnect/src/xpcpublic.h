@@ -276,14 +276,21 @@ class XPCStringConvert {
 
   static inline bool DynamicAtomToJSVal(JSContext* cx, nsDynamicAtom* atom,
                                         JS::MutableHandle<JS::Value> rval) {
-    bool shared = false;
-    nsStringBuffer* buf = atom->StringBuffer();
-    if (!StringBufferToJSVal(cx, buf, atom->GetLength(), rval, &shared)) {
+    bool sharedAtom;
+    JSString* str =
+        JS_NewMaybeExternalString(cx, atom->GetUTF16String(), atom->GetLength(),
+                                  &sDynamicAtomExternalString, &sharedAtom);
+    if (!str) {
       return false;
     }
-    if (shared) {
-      buf->AddRef();
+    if (sharedAtom) {
+      // We only have non-owning atoms in DOMString for now.
+      // nsDynamicAtom::AddRef is always-inline and defined in a
+      // translation unit we can't get to here.  So we need to go through
+      // nsAtom::AddRef to call it.
+      static_cast<nsAtom*>(atom)->AddRef();
     }
+    rval.setString(str);
     return true;
   }
 
@@ -318,8 +325,14 @@ class XPCStringConvert {
     size_t sizeOfBuffer(const char16_t* aChars,
                         mozilla::MallocSizeOf aMallocSizeOf) const override;
   };
+  struct DynamicAtomExternalString : public JSExternalStringCallbacks {
+    void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const char16_t* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
+  };
   static const LiteralExternalString sLiteralExternalString;
   static const DOMStringExternalString sDOMStringExternalString;
+  static const DynamicAtomExternalString sDynamicAtomExternalString;
 
   XPCStringConvert() = delete;
 };
