@@ -65,9 +65,9 @@ function naturalSort(a = "", b = "", sessionString, insensitive = false) {
 
   // Hex or date detection.
   const aHexOrDate =
-    parseInt(a.match(hexRx), 16) || (aChunks.length !== 1 && Date.parse(a));
+    parseInt(a.match(hexRx), 16) || (aChunks.length > 3 && Date.parse(a));
   const bHexOrDate =
-    parseInt(b.match(hexRx), 16) || (bChunks.length !== 1 && Date.parse(b));
+    parseInt(b.match(hexRx), 16) || (bChunks.length > 3 && Date.parse(b));
 
   if (
     (aHexOrDate || bHexOrDate) &&
