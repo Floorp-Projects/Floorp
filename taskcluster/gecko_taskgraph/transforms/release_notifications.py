@@ -39,6 +39,9 @@ def add_notifications(config, jobs):
             resolve_keyed_by(
                 notifications, "emails", label, project=config.params["project"]
             )
+            resolve_keyed_by(
+                notifications, "message", label, project=config.params["project"]
+            )
             emails = notifications["emails"]
             format_kwargs = dict(
                 task=job,
