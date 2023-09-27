@@ -89,6 +89,7 @@ void moz_container_unmap(GtkWidget* widget);
 void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
                        gint y);
 void moz_container_force_default_visual(MozContainer* container);
+void moz_container_class_init(MozContainerClass* klass);
 
 class nsWindow;
 nsWindow* moz_container_get_nsWindow(MozContainer* container);
