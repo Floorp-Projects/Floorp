@@ -108,11 +108,11 @@ input[type="url"]:read-only {
   flex-grow: 1;
 }
 
-input[type = "url"]:focus:not(:-moz-ui-invalid):invalid ~ .tooltip-container {
+input[type = "url"]:focus:not(:user-invalid):invalid ~ .tooltip-container {
   display: block;
 }
 
-input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-container {
+input[type = "url"]:focus:user-invalid:not(:placeholder-shown) ~ .tooltip-container {
   display: block;
 }
 
