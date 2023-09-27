@@ -297,6 +297,12 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
 
     /**
+     * This URI has a webexposed origin, meaning the URI has a non-null origin
+     * See https://url.spec.whatwg.org/#origin
+     */
+    const unsigned long URI_HAS_WEB_EXPOSED_ORIGIN = (1 << 25);
+
+    /**
      * Flags which are allowed to be different from the static flags when
      * returned from `nsIProtocolHandlerWithDynamicFlags::getFlagsForURI`.
      *
@@ -307,5 +313,5 @@ interface nsIProtocolHandler : nsISupports
         URI_LOADABLE_BY_ANYONE | URI_DANGEROUS_TO_LOAD |
         URI_IS_POTENTIALLY_TRUSTWORTHY | URI_FETCHABLE_BY_ANYONE |
         URI_LOADABLE_BY_EXTENSIONS | URI_DISALLOW_IN_PRIVATE_CONTEXT |
-        WEBEXT_URI_WEB_ACCESSIBLE;
+        WEBEXT_URI_WEB_ACCESSIBLE | URI_HAS_WEB_EXPOSED_ORIGIN;
 };
