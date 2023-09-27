@@ -118,6 +118,7 @@ skip-if(Android&&AndroidVersion=='22') load video-replay-after-audio-end.html # 
 skip-if(Android||ThreadSanitizer) load 691096-1.html # Bug 1365451
 load 1236639.html
 test-pref(media.navigator.permission.disabled,true) test-pref(media.devices.insecure.enabled,true) test-pref(media.getusermedia.insecure.enabled,true) load 1388372.html
+load 1414444.mp4
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
 load 1530897.webm
