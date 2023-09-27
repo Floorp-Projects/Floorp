@@ -183,8 +183,8 @@
 
     /* Note: switchtab entries show the url only in override mode,
        remotetab and sponsored ones only when selected or :hover. */
-    .urlbarView[action-override] &[has-url],
-    &[has-url]:not([type$=tab], [sponsored]),
+    .urlbarView[action-override] &[has-url]:not([restyled-search]),
+    &[has-url]:not([type$=tab], [sponsored], [restyled-search]),
     &[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]),
     &[type=tabtosearch] {
       /* This targets both rich and non-rich results, so not using the child selector here. */
@@ -614,7 +614,7 @@
 }
 
 .urlbarView-row:is([type=remotetab], [sponsored]):not([selected], :hover) > .urlbarView-row-inner > .urlbarView-url,
-.urlbarView-row:is([show-action-text]) > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row:is([show-action-text], [restyled-search]) > .urlbarView-row-inner > .urlbarView-url,
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
