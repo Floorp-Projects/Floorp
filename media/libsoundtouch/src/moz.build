@@ -49,11 +49,15 @@ if CONFIG["MOZ_WASM_SANDBOXING_SOUNDTOUCH"]:
     if CONFIG["MOZ_SAMPLE_TYPE_FLOAT32"]:
         WASM_DEFINES["MOZ_SAMPLE_TYPE_FLOAT32"] = 1
 
-        WASM_SOURCES += ['sse_optimized.cpp']
+        # Clang older than version 14 does not have the necessary
+        # WASMSIMD intrinsics, so we disable SoundTouch WASMSIMD.
+        # See Bug 1851301
+        if int(CONFIG["WASM_CC_VERSION"].split(".")[0]) > 13:
+            WASM_SOURCES += ['sse_optimized.cpp']
 
-        WASM_DEFINES["SOUNDTOUCH_ALLOW_SSE"] = 1
-        WASM_DEFINES["SOUNDTOUCH_WASM_SIMD"] = 1
-        WASM_DEFINES["SIMDE_ENABLE_NATIVE_ALIASES"] = 1
+            WASM_DEFINES["SOUNDTOUCH_ALLOW_SSE"] = 1
+            WASM_DEFINES["SOUNDTOUCH_WASM_SIMD"] = 1
+            WASM_DEFINES["SIMDE_ENABLE_NATIVE_ALIASES"] = 1
 
     soundtouch_sources = WASM_SOURCES
     soundtouch_defines = WASM_DEFINES
