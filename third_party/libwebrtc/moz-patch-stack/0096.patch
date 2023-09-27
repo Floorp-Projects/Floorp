@@ -1,48 +1,76 @@
 From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 27 Jul 2023 09:49:00 +0000
-Subject: Bug 1841851 - WebRTC backport: PipeWire capturer: increase buffer
- size to avoid buffer overflow r=jib,webrtc-reviewers,mjf
+Date: Tue, 8 Aug 2023 10:05:00 +0000
+Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
+ to avoid concurrent access r=jib,webrtc-reviewers,mjf
 
 This is a simple backport of an WebRTC upstream change.
 
-Upstream commit: 8fcc6df79daf1810cd4ecdb8d2ef1d361abfdc9c
+Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
 
-Differential Revision: https://phabricator.services.mozilla.com/D183355
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556e1da296eb18eb3d154eb99e
+Differential Revision: https://phabricator.services.mozilla.com/D184386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
 ---
- .../linux/wayland/shared_screencast_stream.cc               | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
+ modules/video_capture/linux/pipewire_session.h  |  5 ++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 5b4e23c32d..0c26e7a7d5 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index 2adb1cdb50..3f52b3dd61 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
+ }
  
-   that->stream_size_ = DesktopSize(width, height);
+ void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
+-  callback_ = callback;
++  {
++    webrtc::MutexLock lock(&callback_lock_);
++    callback_ = callback;
++  }
  
--  uint8_t buffer[1024] = {};
-+  uint8_t buffer[2048] = {};
-   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
+   if (fd != kInvalidPipeWireFd) {
+     InitPipeWire(fd);
+@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
+ }
  
-   // Setup buffers and meta header for new format.
-@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
-   {
-     PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
+ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
++  webrtc::MutexLock lock(&callback_lock_);
++
+   if (callback_) {
+     callback_->OnInitialized(status);
+     callback_ = nullptr;
+@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
+ }
  
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
+ void PipeWireSession::Cleanup() {
++  webrtc::MutexLock lock(&callback_lock_);
++  callback_ = nullptr;
++
+   StopPipeWire();
+ }
  
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
+index 982b468838..fdc06a6b2a 100644
+--- a/modules/video_capture/linux/pipewire_session.h
++++ b/modules/video_capture/linux/pipewire_session.h
+@@ -24,6 +24,7 @@
+ #include "modules/video_capture/linux/camera_portal.h"
+ #include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_options.h"
++#include "rtc_base/synchronization/mutex.h"
  
-@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+ namespace webrtc {
+ namespace videocapturemodule {
+@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
+   void Finish(VideoCaptureOptions::Status status);
+   void Cleanup();
  
-     pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
-                            &pw_stream_events_, this);
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
+-  VideoCaptureOptions::Callback* callback_ = nullptr;
++  webrtc::Mutex callback_lock_;
++  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
++      nullptr;
  
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+   VideoCaptureOptions::Status status_;
  
 -- 
 2.39.3 (Apple Git-145)
