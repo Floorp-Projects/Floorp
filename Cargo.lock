@@ -327,13 +327,11 @@ version = "0.1.0"
 dependencies = [
  "authenticator",
  "base64 0.21.3",
- "cstr",
  "log",
  "moz_task",
  "nserror",
  "nsstring",
  "rand",
- "serde",
  "serde_cbor",
  "serde_json",
  "static_prefs",

@@ -17,130 +17,104 @@ use authenticator::{
         PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
         ResidentKeyRequirement, UserVerificationRequirement,
     },
-    errors::AuthenticatorError,
+    errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
     Pin, RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
 };
 use base64::Engine;
-use cstr::cstr;
-use moz_task::{get_main_thread, RunnableBuilder};
+use moz_task::RunnableBuilder;
 use nserror::{
-    nsresult, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR, NS_ERROR_FAILURE,
+    nsresult, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
+    NS_ERROR_DOM_NOT_SUPPORTED_ERR, NS_ERROR_DOM_UNKNOWN_ERR, NS_ERROR_FAILURE,
     NS_ERROR_INVALID_ARG, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NULL_POINTER,
     NS_OK,
 };
 use nsstring::{nsACString, nsCString, nsString};
-use serde::Serialize;
 use serde_cbor;
 use serde_json::json;
 use std::cell::RefCell;
-use std::fmt::Write;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::sync::{Arc, Mutex};
 use thin_vec::{thin_vec, ThinVec};
 use xpcom::interfaces::{
     nsICredentialParameters, nsICtapRegisterArgs, nsICtapRegisterResult, nsICtapSignArgs,
-    nsICtapSignResult, nsIObserverService, nsIWebAuthnAttObj, nsIWebAuthnController,
-    nsIWebAuthnTransport,
+    nsICtapSignResult, nsIWebAuthnAttObj, nsIWebAuthnController, nsIWebAuthnTransport,
 };
 use xpcom::{xpcom_method, RefPtr};
 
 mod test_token;
 use test_token::TestTokenManager;
 
+fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
+    format!(
+        r#"{{"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
+    )
+}
+
+fn make_uv_invalid_error_prompt(
+    tid: u64,
+    origin: &str,
+    browsing_context_id: u64,
+    retries: i64,
+) -> String {
+    format!(
+        r#"{{"action":"uv-invalid","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"retriesLeft":{retries}}}"#,
+    )
+}
+
+fn make_pin_required_prompt(
+    tid: u64,
+    origin: &str,
+    browsing_context_id: u64,
+    was_invalid: bool,
+    retries: i64,
+) -> String {
+    format!(
+        r#"{{"action":"pin-required","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"wasInvalid":{was_invalid},"retriesLeft":{retries}}}"#,
+    )
+}
+
+fn make_user_selection_prompt(
+    tid: u64,
+    origin: &str,
+    browsing_context_id: u64,
+    user_entities: &[PublicKeyCredentialUserEntity],
+) -> String {
+    // Bug 1854280: "Unknown username" should be a localized string here.
+    let usernames: Vec<String> = user_entities
+        .iter()
+        .map(|entity| {
+            entity
+                .name
+                .clone()
+                .unwrap_or("<Unknown username>".to_string())
+        })
+        .collect();
+    let usernames_json = json!(usernames);
+    let out = format!(
+        r#"{{"action":"select-sign-result","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"usernames":{usernames_json}}}"#,
+    );
+    out
+}
+
 fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
     match e {
+        AuthenticatorError::U2FToken(U2FTokenError::NotSupported) => NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        AuthenticatorError::U2FToken(U2FTokenError::InvalidState) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::U2FToken(U2FTokenError::NotAllowed) => NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        AuthenticatorError::PinError(PinError::PinRequired) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::InvalidPin(_)) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_INVALID_STATE_ERR,
+        AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_INVALID_STATE_ERR,
         AuthenticatorError::CredentialExcluded => NS_ERROR_DOM_INVALID_STATE_ERR,
-        _ => NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
-
-fn error_cancels_prompts(e: &AuthenticatorError) -> bool {
-    match e {
-        AuthenticatorError::CredentialExcluded | AuthenticatorError::PinError(_) => false,
-        _ => true,
-    }
-}
-
-// Using serde(tag="type") makes it so that, for example, BrowserPromptType::Cancel is serialized
-// as '{ type: "cancel" }', and BrowserPromptType::PinInvalid { retries: 5 } is serialized as
-// '{type: "pin-invalid", retries: 5}'.
-#[derive(Serialize)]
-#[serde(tag = "type", rename_all = "kebab-case")]
-enum BrowserPromptType<'a> {
-    AlreadyRegistered,
-    Cancel,
-    DeviceBlocked,
-    PinAuthBlocked,
-    PinNotSet,
-    Presence,
-    SelectDevice,
-    UvBlocked,
-    PinRequired,
-    PinInvalid {
-        retries: Option<u8>,
-    },
-    RegisterDirect,
-    UvInvalid {
-        retries: Option<u8>,
-    },
-    SelectSignResult {
-        entities: &'a [PublicKeyCredentialUserEntity],
-    },
-}
-
-#[derive(Serialize)]
-struct BrowserPromptMessage<'a> {
-    prompt: BrowserPromptType<'a>,
-    tid: u64,
-    origin: Option<&'a str>,
-    #[serde(rename = "browsingContextId")]
-    browsing_context_id: Option<u64>,
-}
-
-fn send_prompt(
-    prompt: BrowserPromptType,
-    tid: u64,
-    origin: Option<&str>,
-    browsing_context_id: Option<u64>,
-) -> Result<(), nsresult> {
-    let main_thread = get_main_thread()?;
-    let mut json = nsString::new();
-    write!(
-        json,
-        "{}",
-        json!(&BrowserPromptMessage {
-            prompt,
-            tid,
-            origin,
-            browsing_context_id
-        })
-    )
-    .or(Err(NS_ERROR_FAILURE))?;
-    RunnableBuilder::new("AuthrsTransport::send_prompt", move || {
-        if let Ok(obs_svc) = xpcom::components::Observer::service::<nsIObserverService>() {
-            unsafe {
-                obs_svc.NotifyObservers(
-                    std::ptr::null(),
-                    cstr!("webauthn-prompt").as_ptr(),
-                    json.as_ptr(),
-                );
-            }
-        }
-    })
-    .dispatch(main_thread.coerce())
-}
-
-fn cancel_prompts(tid: u64) -> Result<(), nsresult> {
-    send_prompt(BrowserPromptType::Cancel, tid, None, None)?;
-    Ok(())
-}
-
-type RegisterResultOrError = Result<RegisterResult, AuthenticatorError>;
 
 #[xpcom(implement(nsICtapRegisterResult), atomic)]
 pub struct CtapRegisterResult {
-    result: RegisterResultOrError,
+    result: Result<RegisterResult, AuthenticatorError>,
 }
 
 impl CtapRegisterResult {
@@ -238,11 +212,9 @@ impl WebAuthnAttObj {
     }
 }
 
-type SignResultOrError = Result<SignResult, AuthenticatorError>;
-
 #[xpcom(implement(nsICtapSignResult), atomic)]
 pub struct CtapSignResult {
-    result: SignResultOrError,
+    result: Result<SignResult, AuthenticatorError>,
 }
 
 impl CtapSignResult {
@@ -316,7 +288,22 @@ impl Controller {
         Ok(())
     }
 
-    fn finish_register(&self, tid: u64, result: RegisterResultOrError) -> Result<(), nsresult> {
+    fn send_prompt(&self, tid: u64, msg: &str) {
+        if (*self.0.borrow()).is_null() {
+            warn!("Controller not initialized");
+            return;
+        }
+        let notification_str = nsCString::from(msg);
+        unsafe {
+            (**(self.0.borrow())).SendPromptNotificationPreformatted(tid, &*notification_str);
+        }
+    }
+
+    fn finish_register(
+        &self,
+        tid: u64,
+        result: Result<RegisterResult, AuthenticatorError>,
+    ) -> Result<(), nsresult> {
         if (*self.0.borrow()).is_null() {
             return Err(NS_ERROR_FAILURE);
         }
@@ -329,7 +316,11 @@ impl Controller {
         Ok(())
     }
 
-    fn finish_sign(&self, tid: u64, result: SignResultOrError) -> Result<(), nsresult> {
+    fn finish_sign(
+        &self,
+        tid: u64,
+        result: Result<SignResult, AuthenticatorError>,
+    ) -> Result<(), nsresult> {
         if (*self.0.borrow()).is_null() {
             return Err(NS_ERROR_FAILURE);
         }
@@ -338,16 +329,6 @@ impl Controller {
             .ok_or(NS_ERROR_FAILURE)?;
         unsafe {
             (**(self.0.borrow())).FinishSign(tid, wrapped_result.coerce());
-        }
-        Ok(())
-    }
-
-    fn cancel(&self, tid: u64) -> Result<(), nsresult> {
-        if (*self.0.borrow()).is_null() {
-            return Err(NS_ERROR_FAILURE);
-        }
-        unsafe {
-            (**(self.0.borrow())).Cancel(tid);
         }
         Ok(())
     }
@@ -365,88 +346,66 @@ fn status_callback(
     tid: u64,
     origin: &String,
     browsing_context_id: u64,
+    controller: Controller,
     pin_receiver: Arc<Mutex<PinReceiver>>, /* Shared with an AuthrsTransport */
     selection_receiver: Arc<Mutex<SelectionReceiver>>, /* Shared with an AuthrsTransport */
-) -> Result<(), nsresult> {
-    let origin = Some(origin.as_str());
-    let browsing_context_id = Some(browsing_context_id);
+) {
     loop {
         match status_rx.recv() {
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 debug!("STATUS: Please select a device by touching one of them.");
-                send_prompt(
-                    BrowserPromptType::SelectDevice,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str =
+                    make_prompt("select-device", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PresenceRequired) => {
                 debug!("STATUS: Waiting for user presence");
-                send_prompt(
-                    BrowserPromptType::Presence,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str = make_prompt("presence", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
                 pin_receiver.lock().unwrap().replace((tid, sender));
-                send_prompt(
-                    BrowserPromptType::PinRequired,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str =
+                    make_pin_required_prompt(tid, origin, browsing_context_id, false, -1);
+                controller.send_prompt(tid, &notification_str);
             }
-            Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, retries))) => {
+            Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, attempts))) => {
                 pin_receiver.lock().unwrap().replace((tid, sender));
-                send_prompt(
-                    BrowserPromptType::PinInvalid { retries },
+                let notification_str = make_pin_required_prompt(
                     tid,
                     origin,
                     browsing_context_id,
-                )?;
+                    true,
+                    attempts.map_or(-1, |x| x as i64),
+                );
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinAuthBlocked)) => {
-                send_prompt(
-                    BrowserPromptType::PinAuthBlocked,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str =
+                    make_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinBlocked)) => {
-                send_prompt(
-                    BrowserPromptType::DeviceBlocked,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str =
+                    make_prompt("device-blocked", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinNotSet)) => {
-                send_prompt(
-                    BrowserPromptType::PinNotSet,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str = make_prompt("pin-not-set", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
-            Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidUv(retries))) => {
-                send_prompt(
-                    BrowserPromptType::UvInvalid { retries },
+            Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidUv(attempts))) => {
+                let notification_str = make_uv_invalid_error_prompt(
                     tid,
                     origin,
                     browsing_context_id,
-                )?;
+                    attempts.map_or(-1, |x| x as i64),
+                );
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::UvBlocked)) => {
-                send_prompt(
-                    BrowserPromptType::UvBlocked,
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str = make_prompt("uv-blocked", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinIsTooShort))
             | Ok(StatusUpdate::PinUvError(StatusPinUv::PinIsTooLong(..))) => {
@@ -456,37 +415,19 @@ fn status_callback(
             Ok(StatusUpdate::InteractiveManagement(_)) => {
                 debug!("STATUS: interactive management");
             }
-            Ok(StatusUpdate::SelectResultNotice(sender, entities)) => {
+            Ok(StatusUpdate::SelectResultNotice(sender, choices)) => {
                 debug!("STATUS: select result notice");
                 selection_receiver.lock().unwrap().replace((tid, sender));
-                send_prompt(
-                    BrowserPromptType::SelectSignResult {
-                        entities: &entities,
-                    },
-                    tid,
-                    origin,
-                    browsing_context_id,
-                )?;
+                let notification_str =
+                    make_user_selection_prompt(tid, origin, browsing_context_id, &choices);
+                controller.send_prompt(tid, &notification_str);
             }
             Err(RecvError) => {
                 debug!("STATUS: end");
-                break;
+                return;
             }
         }
     }
-    Ok(())
-}
-
-enum TransactionArgs {
-    Register(/* timeout */ u64, RegisterArgs),
-    // Bug 1838932 - we'll need to cache SignArgs once we support conditional mediation
-    // Sign(/* timeout */ u64, SignArgs),
-}
-
-struct TransactionState {
-    tid: u64,
-    browsing_context_id: u64,
-    pending_args: Option<TransactionArgs>,
 }
 
 // AuthrsTransport provides an nsIWebAuthnTransport interface to an AuthenticatorService. This
@@ -501,7 +442,6 @@ pub struct AuthrsTransport {
     controller: Controller,
     pin_receiver: Arc<Mutex<PinReceiver>>,
     selection_receiver: Arc<Mutex<SelectionReceiver>>,
-    transaction: Arc<Mutex<Option<TransactionState>>>,
 }
 
 impl AuthrsTransport {
@@ -558,8 +498,6 @@ impl AuthrsTransport {
         browsing_context_id: u64,
         args: *const nsICtapRegisterArgs,
     ) -> Result<(), nsresult> {
-        self.reset()?;
-
         if args.is_null() {
             return Err(NS_ERROR_NULL_POINTER);
         }
@@ -643,9 +581,7 @@ impl AuthrsTransport {
         let mut attestation_conveyance_preference = nsString::new();
         unsafe { args.GetAttestationConveyancePreference(&mut *attestation_conveyance_preference) }
             .to_result()?;
-        let none_attestation = !(attestation_conveyance_preference.eq("indirect")
-            || attestation_conveyance_preference.eq("direct")
-            || attestation_conveyance_preference.eq("enterprise"));
+        let none_attestation = attestation_conveyance_preference.eq("none");
 
         let mut cred_props = false;
         unsafe { args.GetCredProps(&mut cred_props) }.to_result()?;
@@ -661,14 +597,13 @@ impl AuthrsTransport {
         //     _ => (),
         // }
 
-        let origin = origin.to_string();
         let info = RegisterArgs {
             client_data_hash: client_data_hash_arr,
             relying_party: RelyingParty {
                 id: relying_party_id.to_string(),
                 name: None,
             },
-            origin: origin.clone(),
+            origin: origin.to_string(),
             user: PublicKeyCredentialUserEntity {
                 id: user_id.to_vec(),
                 name: Some(user_name.to_string()),
@@ -687,103 +622,56 @@ impl AuthrsTransport {
             use_ctap1_fallback: !static_prefs::pref!("security.webauthn.ctap2"),
         };
 
-        *self.transaction.lock().unwrap() = Some(TransactionState {
-            tid,
-            browsing_context_id,
-            pending_args: Some(TransactionArgs::Register(timeout_ms as u64, info)),
-        });
-
-        if none_attestation
-            || static_prefs::pref!("security.webauth.webauthn_testing_allow_direct_attestation")
-        {
-            // TODO(Bug 1855290) Remove this presence prompt
-            send_prompt(
-                BrowserPromptType::Presence,
-                tid,
-                Some(&origin),
-                Some(browsing_context_id),
-            )?;
-            self.resume_make_credential(tid, none_attestation)
-        } else {
-            send_prompt(
-                BrowserPromptType::RegisterDirect,
-                tid,
-                Some(&origin),
-                Some(browsing_context_id),
-            )?;
-            Ok(())
-        }
-    }
-
-    xpcom_method!(resume_make_credential => ResumeMakeCredential(aTid: u64, aForceNoneAttestation: bool));
-    fn resume_make_credential(
-        &self,
-        tid: u64,
-        force_none_attestation: bool,
-    ) -> Result<(), nsresult> {
-        let mut guard = self.transaction.lock().unwrap();
-        let Some(state) = guard.as_mut() else {
-            return Err(NS_ERROR_FAILURE);
-        };
-        if state.tid != tid {
-            return Err(NS_ERROR_FAILURE);
-        };
-        let browsing_context_id = state.browsing_context_id;
-        let (timeout_ms, info) = match state.pending_args.take() {
-            Some(TransactionArgs::Register(timeout_ms, info)) => (timeout_ms, info),
-            _ => return Err(NS_ERROR_FAILURE),
-        };
-
         let (status_tx, status_rx) = channel::<StatusUpdate>();
         let pin_receiver = self.pin_receiver.clone();
         let selection_receiver = self.selection_receiver.clone();
-        let status_origin = info.origin.clone();
+        let controller = self.controller.clone();
+        let status_origin = origin.to_string();
         RunnableBuilder::new(
             "AuthrsTransport::MakeCredential::StatusReceiver",
             move || {
-                let _ = status_callback(
+                status_callback(
                     status_rx,
                     tid,
                     &status_origin,
                     browsing_context_id,
+                    controller,
                     pin_receiver,
                     selection_receiver,
-                );
+                )
             },
         )
         .may_block(true)
         .dispatch_background_task()?;
 
         let controller = self.controller.clone();
-        let callback_origin = info.origin.clone();
-        let state_callback = StateCallback::<RegisterResultOrError>::new(Box::new(move |result| {
-            let result = match result {
-                Ok(mut make_cred_res) => {
-                    // Tokens always provide attestation, but the user may have asked we not
-                    // include the attestation statement in the response.
-                    if force_none_attestation {
-                        make_cred_res.att_obj.anonymize();
+        let callback_origin = origin.to_string();
+        let state_callback = StateCallback::<Result<RegisterResult, AuthenticatorError>>::new(
+            Box::new(move |result| {
+                let result = match result {
+                    Ok(mut make_cred_res) => {
+                        // Tokens always provide attestation, but the user may have asked we not
+                        // include the attestation statement in the response.
+                        if none_attestation {
+                            make_cred_res.att_obj.anonymize();
+                        }
+                        Ok(make_cred_res)
                     }
-                    Ok(make_cred_res)
-                }
-                Err(e @ AuthenticatorError::CredentialExcluded) => {
-                    let _ = send_prompt(
-                        BrowserPromptType::AlreadyRegistered,
-                        tid,
-                        Some(&callback_origin),
-                        Some(browsing_context_id),
-                    );
-                    Err(e)
-                }
-                Err(e) => Err(e),
-            };
-            // Some errors are accompanied by prompts that should persist after the
-            // operation terminates.
-            if result.is_ok() || error_cancels_prompts(&result.as_ref().unwrap_err()) {
-                let _ = cancel_prompts(tid);
-            }
-            let _ = controller.finish_register(tid, result);
-        }));
+                    Err(e @ AuthenticatorError::CredentialExcluded) => {
+                        let notification_str = make_prompt(
+                            "already-registered",
+                            tid,
+                            &callback_origin,
+                            browsing_context_id,
+                        );
+                        controller.send_prompt(tid, &notification_str);
+                        Err(e)
+                    }
+                    Err(e) => Err(e),
+                };
+                let _ = controller.finish_register(tid, result);
+            }),
+        );
 
         // The authenticator crate provides an `AuthenticatorService` which can dispatch a request
         // in parallel to any number of transports. We only support the USB transport in production
@@ -791,14 +679,18 @@ impl AuthrsTransport {
         // We disable the USB transport in tests that use virtual devices.
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             self.usb_token_manager.borrow_mut().register(
-                timeout_ms,
+                timeout_ms as u64,
                 info.into(),
                 status_tx,
                 state_callback,
             );
         } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
-            self.test_token_manager
-                .register(timeout_ms, info.into(), status_tx, state_callback);
+            self.test_token_manager.register(
+                timeout_ms as u64,
+                info.into(),
+                status_tx,
+                state_callback,
+            );
         } else {
             return Err(NS_ERROR_FAILURE);
         }
@@ -817,8 +709,6 @@ impl AuthrsTransport {
         browsing_context_id: u64,
         args: *const nsICtapSignArgs,
     ) -> Result<(), nsresult> {
-        self.reset()?;
-
         if args.is_null() {
             return Err(NS_ERROR_NULL_POINTER);
         }
@@ -868,16 +758,18 @@ impl AuthrsTransport {
         let (status_tx, status_rx) = channel::<StatusUpdate>();
         let pin_receiver = self.pin_receiver.clone();
         let selection_receiver = self.selection_receiver.clone();
+        let controller = self.controller.clone();
         let status_origin = origin.to_string();
         RunnableBuilder::new("AuthrsTransport::GetAssertion::StatusReceiver", move || {
-            let _ = status_callback(
+            status_callback(
                 status_rx,
                 tid,
                 &status_origin,
                 browsing_context_id,
+                controller,
                 pin_receiver,
                 selection_receiver,
-            );
+            )
         })
         .may_block(true)
         .dispatch_background_task()?;
@@ -889,8 +781,8 @@ impl AuthrsTransport {
         };
 
         let controller = self.controller.clone();
-        let state_callback =
-            StateCallback::<SignResultOrError>::new(Box::new(move |mut result| {
+        let state_callback = StateCallback::<Result<SignResult, AuthenticatorError>>::new(
+            Box::new(move |mut result| {
                 if uniq_allowed_cred.is_some() {
                     // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
                     // "May be omitted if the allowList has exactly one credential." If we had
@@ -899,13 +791,9 @@ impl AuthrsTransport {
                         inner.assertion.credentials = uniq_allowed_cred;
                     }
                 }
-                // Some errors are accompanied by prompts that should persist after the
-                // operation terminates.
-                if result.is_ok() || error_cancels_prompts(&result.as_ref().unwrap_err()) {
-                    let _ = cancel_prompts(tid);
-                }
                 let _ = controller.finish_sign(tid, result);
-            }));
+            }),
+        );
 
         let info = SignArgs {
             client_data_hash: client_data_hash_arr,
@@ -921,20 +809,6 @@ impl AuthrsTransport {
             pin: None,
             use_ctap1_fallback: !static_prefs::pref!("security.webauthn.ctap2"),
         };
-
-        // TODO(Bug 1855290) Remove this presence prompt
-        send_prompt(
-            BrowserPromptType::Presence,
-            tid,
-            Some(&info.origin),
-            Some(browsing_context_id),
-        )?;
-
-        *self.transaction.lock().unwrap() = Some(TransactionState {
-            tid,
-            browsing_context_id,
-            pending_args: None,
-        });
 
         // As in `register`, we are intentionally avoiding `AuthenticatorService` here.
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
@@ -954,27 +828,14 @@ impl AuthrsTransport {
         Ok(())
     }
 
-    xpcom_method!(cancel => Cancel(aTransactionId: u64));
-    fn cancel(&self, tid: u64) -> Result<(), nsresult> {
-        let mut guard = self.transaction.lock().unwrap();
-        if guard.as_ref().is_some_and(|state| state.tid == tid) {
-            self.reset_helper()?;
-            self.controller.cancel(tid)?;
-            *guard = None;
-        }
-        Ok(())
-    }
-
-    xpcom_method!(reset => Reset());
-    fn reset(&self) -> Result<(), nsresult> {
-        if let Some(transaction) = self.transaction.lock().unwrap().take() {
-            self.reset_helper()?;
-            cancel_prompts(transaction.tid)?;
-        }
-        Ok(())
-    }
-
-    fn reset_helper(&self) -> Result<(), nsresult> {
+    // # Safety
+    //
+    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
+    // most one WebAuthn transaction is active at any given time.
+    xpcom_method!(cancel => Cancel());
+    fn cancel(&self) -> Result<(), nsresult> {
+        // The transaction thread may be waiting for user input. Dropping the associated channel
+        // will cause the transaction to error out with a "CancelledByUser" result.
         drop(self.pin_receiver.lock().or(Err(NS_ERROR_FAILURE))?.take());
         drop(
             self.selection_receiver
@@ -982,7 +843,9 @@ impl AuthrsTransport {
                 .or(Err(NS_ERROR_FAILURE))?
                 .take(),
         );
+
         self.usb_token_manager.borrow_mut().cancel();
+
         Ok(())
     }
 
@@ -1117,7 +980,6 @@ pub extern "C" fn authrs_transport_constructor(
         controller: Controller(RefCell::new(std::ptr::null())),
         pin_receiver: Arc::new(Mutex::new(None)),
         selection_receiver: Arc::new(Mutex::new(None)),
-        transaction: Arc::new(Mutex::new(None)),
     });
 
     #[cfg(feature = "fuzzing")]
