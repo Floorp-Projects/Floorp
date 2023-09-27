@@ -1984,13 +1984,13 @@ toolbar#nav-bar {
         d["runFailures"] = False
         if options.runFailures:
             d["runFailures"] = True
-        content = json.dumps(d)
 
         shutil.copy(
             os.path.join(SCRIPT_DIR, "ignorePrefs.json"),
             os.path.join(options.profilePath, "ignorePrefs.json"),
         )
         d["ignorePrefsFile"] = "ignorePrefs.json"
+        content = json.dumps(d)
 
         with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
             config.write(content)
