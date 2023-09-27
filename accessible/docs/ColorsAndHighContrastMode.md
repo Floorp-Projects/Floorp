@@ -36,6 +36,8 @@ System colors are colors queried from the operating system. They help Firefox ad
 
 Users on non-Windows platforms will see their selections in the colors dialog reflected automatically, but they will _not_ see OS changes until they check "Use system colors".
 
+For a simplified flow chart of this decision tree, check out our [HCM Settings page](/https://firefox-source-docs.mozilla.org/accessible/HCMSettings.html)
+
 ## High Contrast Mode
 
 ### Operating System High Contrast Mode (OS HCM)
