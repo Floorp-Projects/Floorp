@@ -996,9 +996,12 @@ function WaitForTestEnd(
   // always return false so we don't need a listener anyway
   CheckForLivenessOfContentRootElement();
   if (contentRootElement?.hasAttribute("class")) {
-    attrModifiedObserver = new contentRootElement.ownerGlobal.MutationObserver(
-      AttrModifiedListener
-    );
+    attrModifiedObserver =
+      // ownerGlobal doesn't exist in content windows.
+      // eslint-disable-next-line mozilla/use-ownerGlobal
+      new contentRootElement.ownerDocument.defaultView.MutationObserver(
+        AttrModifiedListener
+      );
     attrModifiedObserver.observe(contentRootElement, { attributes: true });
   }
   gTimeoutHook = RemoveListeners;
