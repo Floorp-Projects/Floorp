@@ -1,0 +1,22 @@
+name: Update Submodules
+
+on:
+    workflow_dispatch:
+    schedule:
+      - cron: "0 15 * * *"
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      with:
+        submodules: "recursive"
+    
+    - name: Update Submodules
+      run: |
+        git submodule update --init --recursive
+        git add .
+        git commit -m "[FB bot] Submodule | Update Submodules"
+        git push
