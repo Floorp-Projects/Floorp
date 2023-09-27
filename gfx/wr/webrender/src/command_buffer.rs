@@ -234,7 +234,7 @@ impl CommandBuffer {
                 self.commands.push(Command::draw_quad(prim_instance_index));
                 self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
                 self.commands.push(Command::data(transform_id.0));
-                self.commands.push(Command::data((quad_flags.bits as u32) << 16 | edge_flags.bits() as u32));
+                self.commands.push(Command::data((quad_flags.bits() as u32) << 16 | edge_flags.bits() as u32));
             }
         }
     }
