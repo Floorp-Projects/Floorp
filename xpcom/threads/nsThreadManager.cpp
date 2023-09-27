@@ -263,8 +263,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsThreadManager, nsIThreadManager)
   return sInstance;
 }
 
-nsThreadManager::nsThreadManager()
-    : mCurThreadIndex(0), mMainPRThread(nullptr), mInitialized(false) {}
+nsThreadManager::nsThreadManager() : mCurThreadIndex(0), mInitialized(false) {}
 
 nsThreadManager::~nsThreadManager() = default;
 
@@ -315,10 +314,6 @@ nsresult nsThreadManager::Init() {
 #ifdef MOZ_MEMORY
   jemalloc_set_main_thread();
 #endif
-
-  // We need to keep a pointer to the current thread, so we can satisfy
-  // GetIsMainThread calls that occur post-Shutdown.
-  mMainThread->GetPRThread(&mMainPRThread);
 
   // Init AbstractThread.
   AbstractThread::InitTLS();
