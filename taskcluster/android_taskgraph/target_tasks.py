@@ -58,7 +58,7 @@ def target_tasks_nightly_test(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
-@_target_task("promote")
+@_target_task("promote_android")
 def target_tasks_promote(full_task_graph, parameters, graph_config):
     return _filter_release_promotion(
         full_task_graph,
@@ -68,7 +68,7 @@ def target_tasks_promote(full_task_graph, parameters, graph_config):
     )
 
 
-@_target_task("push")
+@_target_task("push_android")
 def target_tasks_push(full_task_graph, parameters, graph_config):
     filtered_for_candidates = target_tasks_promote(
         full_task_graph,
@@ -80,7 +80,7 @@ def target_tasks_push(full_task_graph, parameters, graph_config):
     )
 
 
-@_target_task("ship")
+@_target_task("ship_android")
 def target_tasks_ship(full_task_graph, parameters, graph_config):
     filtered_for_candidates = target_tasks_push(
         full_task_graph,
@@ -100,10 +100,17 @@ def _filter_release_promotion(
         if task.label in filtered_for_candidates:
             return True
 
+        # TODO: get rid of this release_type match
         if task.attributes.get(
             "shipping_phase"
         ) == shipping_phase and does_task_match_release_type(
             task, parameters["release_type"]
+        ):
+            return True
+
+        if (
+            task.attributes.get("shipping_phase") == shipping_phase
+            and task.attributes.get("shipping_product") == parameters["release_product"]
         ):
             return True
 
