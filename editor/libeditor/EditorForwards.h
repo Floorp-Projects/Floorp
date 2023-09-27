@@ -39,6 +39,7 @@ class Text;
  * enum classes
  ******************************************************************************/
 
+enum class BlockInlineCheck : uint8_t;         // HTMLEditHelpers.h
 enum class CollectChildrenOption;              // HTMLEditUtils.h
 enum class EditAction;                         // mozilla/EditAction.h
 enum class EditorCommandParamType : uint16_t;  // mozilla/EditorCommands.h

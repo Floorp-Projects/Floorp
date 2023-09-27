@@ -521,7 +521,8 @@ void AutoRangeArray::
   Element* const maybeNonEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
           *aStartPoint.ContainerAs<nsIContent>(),
-          HTMLEditUtils::ClosestBlockElement);
+          HTMLEditUtils::ClosestBlockElement,
+          BlockInlineCheck::UseComputedDisplayStyle);
   if (!maybeNonEditableBlockElement) {
     return;
   }
@@ -548,7 +549,7 @@ void AutoRangeArray::
  *       outside of editing host.
  */
 static EditorDOMPoint
-GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
+GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
     const EditorDOMPoint& aPointInLine, EditSubAction aEditSubAction,
     const Element& aEditingHost) {
   // FYI: This was moved from
@@ -586,12 +587,15 @@ GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
           HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode,
           HTMLEditUtils::WalkTreeOption::StopAtBlockBoundary};
   for (nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
        previousEditableContent && previousEditableContent->GetParentNode() &&
        !HTMLEditUtils::IsVisibleBRElement(*previousEditableContent) &&
-       !HTMLEditUtils::IsBlockElement(*previousEditableContent);
+       !HTMLEditUtils::IsBlockElement(*previousEditableContent,
+                                      BlockInlineCheck::UseHTMLDefaultStyle);
        previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
     EditorDOMPoint atLastPreformattedNewLine =
         HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
             EditorRawDOMPoint::AtEndOf(*previousEditableContent));
@@ -606,11 +610,13 @@ GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
   // the container (typically, start of nearest block ancestor), and as long
   // as we haven't hit the body node.
   for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainerParent();
        nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
     // Don't keep looking up if we have found a blockquote element to act on
     // when we handle outdent.
     // XXX Sounds like this is hacky.  If possible, it should be check in
@@ -658,7 +664,7 @@ GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
  *                      If the line ends with a block boundary, returns the
  *                      point of the block.
  */
-static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
+static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
     const EditorDOMPoint& aPointInLine, const Element& aEditingHost) {
   // FYI: This was moved from
   // https://searchfox.org/mozilla-central/rev/3419858c997f422e3e70020a46baae7f0ec6dacc/editor/libeditor/HTMLEditSubActionHandler.cpp#6541
@@ -682,7 +688,7 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
     if (atNextPreformattedNewLine.IsSet()) {
       // If the linefeed is last character of the text node, it may be
       // invisible if it's immediately before a block boundary.  In such
-      // case, we should retrun the block boundary.
+      // case, we should return the block boundary.
       Element* maybeNonEditableBlockElement = nullptr;
       if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
               atNextPreformattedNewLine, &maybeNonEditableBlockElement) &&
@@ -730,19 +736,22 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
           HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode,
           HTMLEditUtils::WalkTreeOption::StopAtBlockBoundary};
   for (nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
        nextEditableContent &&
-       !HTMLEditUtils::IsBlockElement(*nextEditableContent) &&
+       !HTMLEditUtils::IsBlockElement(*nextEditableContent,
+                                      BlockInlineCheck::UseHTMLDefaultStyle) &&
        nextEditableContent->GetParent();
        nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
     EditorDOMPoint atFirstPreformattedNewLine =
         HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
             EditorDOMPoint>(EditorRawDOMPoint(nextEditableContent, 0));
     if (atFirstPreformattedNewLine.IsSet()) {
       // If the linefeed is last character of the text node, it may be
       // invisible if it's immediately before a block boundary.  In such
-      // case, we should retrun the block boundary.
+      // case, we should return the block boundary.
       Element* maybeNonEditableBlockElement = nullptr;
       if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
               atFirstPreformattedNewLine, &maybeNonEditableBlockElement) &&
@@ -780,11 +789,13 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
   // container (typically, block node), and as long as we haven't hit the body
   // node.
   for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
        !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
        point.GetContainerParent();
        nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
+           point, ignoreNonEditableNodeAndStopAtBlockBoundary,
+           BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost)) {
     // Don't walk past the editable section. Note that we need to check before
     // walking up to a parent because we need to return the parent object, so
     // the parent itself might not be in the editable area, but it's OK.
@@ -887,8 +898,9 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
   //     implement a method which checks both two DOM points in the editor
   //     root.
 
-  startPoint = GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
-      startPoint, aEditSubAction, aEditingHost);
+  startPoint =
+      GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
+          startPoint, aEditSubAction, aEditingHost);
   // XXX GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock() may
   //     return point of editing host.  Perhaps, we should change it and stop
   //     checking it here since this check may be expensive.
@@ -899,8 +911,8 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
           &aEditingHost)) {
     return NS_ERROR_FAILURE;
   }
-  endPoint =
-      GetPointAfterFollowingLineBreakOrAtFollowingBlock(endPoint, aEditingHost);
+  endPoint = GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
+      endPoint, aEditingHost);
   const EditorDOMPoint lastRawPoint =
       endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint();
   // XXX GetPointAfterFollowingLineBreakOrAtFollowingBlock() may return point of
@@ -924,7 +936,8 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
 
 Result<EditorDOMPoint, nsresult>
 AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
-    HTMLEditor& aHTMLEditor, const Element& aEditingHost,
+    HTMLEditor& aHTMLEditor, BlockInlineCheck aBlockInlineCheck,
+    const Element& aEditingHost,
     const nsIContent* aAncestorLimiter /* = nullptr */) {
   // FYI: The following code is originated in
   // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#6971
@@ -987,11 +1000,11 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
   for (const OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
     // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
     Result<EditorDOMPoint, nsresult> splitParentsResult =
-        aHTMLEditor.SplitParentInlineElementsAtRangeBoundaries(
-            MOZ_KnownLive(*item), aEditingHost, aAncestorLimiter);
+        aHTMLEditor.SplitInlineAncestorsAtRangeBoundaries(
+            MOZ_KnownLive(*item), aBlockInlineCheck, aEditingHost,
+            aAncestorLimiter);
     if (MOZ_UNLIKELY(splitParentsResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::SplitParentInlineElementsAtRangeBoundaries() failed");
+      NS_WARNING("HTMLEditor::SplitInlineAncestorsAtRangeBoundaries() failed");
       rv = splitParentsResult.unwrapErr();
       break;
     }
@@ -1122,8 +1135,8 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
           HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
               aOutArrayOfContents[0],
               {HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode},
-              nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
-              nsGkAtoms::ol, nsGkAtoms::dl);
+              BlockInlineCheck::Unused, nsGkAtoms::div, nsGkAtoms::blockquote,
+              nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl);
       if (!deepestDivBlockquoteOrListElement) {
         break;
       }

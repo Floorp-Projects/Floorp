@@ -8,6 +8,7 @@
 #include "EditorBase.h"               // for EditorBase
 #include "EditorUtils.h"              // for AutoTransactionBatchExternal
 #include "FilteredContentIterator.h"  // for FilteredContentIterator
+#include "HTMLEditHelpers.h"          // for BlockInlineCheck
 #include "HTMLEditUtils.h"            // for HTMLEditUtils
 #include "JoinSplitNodeDirection.h"   // for JoinNodesDirection
 
@@ -1653,11 +1654,13 @@ bool TextServicesDocument::HasSameBlockNodeParent(Text& aTextNode1,
   const Element* editableBlockElementOrInlineEditingHost1 =
       HTMLEditUtils::GetAncestorElement(
           aTextNode1,
-          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
+          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost,
+          BlockInlineCheck::UseHTMLDefaultStyle);
   const Element* editableBlockElementOrInlineEditingHost2 =
       HTMLEditUtils::GetAncestorElement(
           aTextNode2,
-          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
+          HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost,
+          BlockInlineCheck::UseHTMLDefaultStyle);
   return editableBlockElementOrInlineEditingHost1 &&
          editableBlockElementOrInlineEditingHost1 ==
              editableBlockElementOrInlineEditingHost2;
@@ -2307,8 +2310,11 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
+    // We don't observe layout updates, therefore, we should consider whether
+    // block or inline only with the default definition of the element.
     if (lastTextNode && content &&
-        (HTMLEditUtils::IsBlockElement(*content) ||
+        (HTMLEditUtils::IsBlockElement(*content,
+                                       BlockInlineCheck::UseHTMLDefaultStyle) ||
          content->IsHTMLElement(nsGkAtoms::br))) {
       break;
     }
@@ -2387,9 +2393,13 @@ nsresult TextServicesDocument::FirstTextNodeInNextBlock(
           break;
         }
         previousTextNode = content->AsText();
-      } else if (!crossedBlockBoundary &&
-                 (HTMLEditUtils::IsBlockElement(*content) ||
-                  content->IsHTMLElement(nsGkAtoms::br))) {
+      }
+      // We don't observe layout updates, therefore, we should consider whether
+      // block or inline only with the default definition of the element.
+      else if (!crossedBlockBoundary &&
+               (HTMLEditUtils::IsBlockElement(
+                    *content, BlockInlineCheck::UseHTMLDefaultStyle) ||
+                content->IsHTMLElement(nsGkAtoms::br))) {
         crossedBlockBoundary = true;
       }
     }
@@ -2517,7 +2527,10 @@ TextServicesDocument::OffsetEntryArray::Init(
             aFilteredIter.GetCurrentNode()->IsContent()
                 ? aFilteredIter.GetCurrentNode()->AsContent()
                 : nullptr) {
-      if (HTMLEditUtils::IsBlockElement(*content) ||
+      // We don't observe layout updates, therefore, we should consider whether
+      // block or inline only with the default definition of the element.
+      if (HTMLEditUtils::IsBlockElement(
+              *content, BlockInlineCheck::UseHTMLDefaultStyle) ||
           content->IsHTMLElement(nsGkAtoms::br)) {
         break;
       }

@@ -40,7 +40,12 @@ function nonCollapsedDeletionTest(host, clickCount) {
   is(selection.isCollapsed, false, "Noncollapsed selection should occur");
 
   synthesizeKey("KEY_Backspace");
-  is(host.textContent, "", "Backspace should delete the content of the editing host");
+  is(
+    host.textContent,
+    "",
+    `Backspace should delete the content of the editing host (<div contenteditable style="${
+      host.getAttribute("style")
+    }">)`);
 }
 
 function collapsedSelectionTest(host, clickCount) {

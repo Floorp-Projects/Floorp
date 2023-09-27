@@ -93,12 +93,14 @@ interface nsIHTMLEditor : nsISupports
   /* ------------ HTML content methods -------------- */
 
   /**
-   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD.
-   *   This does NOT consider CSS effect on display type
+   * Tests if a node is a BLOCK element.  It's depend on
+   * `editor.block_inline_check.use_computed_style` pref whether this refers
+   * the computed style or the default style.
    *
    * @param aNode      the node to test
    */
-  boolean nodeIsBlock(in Node node);
+  [can_run_script]
+  boolean nodeIsBlock(in Node aNode);
 
   /**
    * Insert some HTML source at the current location
