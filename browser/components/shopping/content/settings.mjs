@@ -36,8 +36,11 @@ class ShoppingSettings extends MozLitElement {
   }
 
   onDisableShopping() {
-    RPMSetPref("browser.shopping.experience2023.optedIn", 2);
+    // Unfortunately, order matters here. As soon as we set the optedIn pref
+    // to the opted out state, the sidebar gets torn down, and the active pref
+    // is never flipped, leaving the toolbar button in the active state.
     RPMSetPref("browser.shopping.experience2023.active", false);
+    RPMSetPref("browser.shopping.experience2023.optedIn", 2);
   }
 
   fakespotLinkClicked(e) {
