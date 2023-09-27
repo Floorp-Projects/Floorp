@@ -5,7 +5,7 @@
 <title>CSS UI Level 3: parsing outline-color with valid values</title>
 <link rel="author" title="Eric Willigers" href="mailto:ericwilligers@chromium.org">
 <link rel="help" href="https://drafts.csswg.org/css-ui-3/#outline-color">
-<meta name="assert" content="outline-color supports '<color>'.">
+<meta name="assert" content="outline-color supports '<color> | auto'.">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/css/support/parsing-testcommon.js"></script>
@@ -13,6 +13,7 @@
 <body>
 <script>
 test_valid_value("outline-color", "rgba(10, 20, 30, 0.4)");
+test_valid_value("outline-color", "auto");
 </script>
 </body>
 </html>
