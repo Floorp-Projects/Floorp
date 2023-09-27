@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MSE: HEVC playback test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="mediasource.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, el) => {
+  el.controls = true;
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
+
+  let sb;
+  try {
+    sb = ms.addSourceBuffer('video/mp4; codecs="hev1.1.6.L93.B0"');
+  }
+  catch (err) {
+    is(err.name, "NotSupportedError", "Should only receive NotSupportedError");
+    ok(SpecialPowers.Services.appinfo.OS != "WINNT",
+      "HEVC is not supported on current platform");
+    SimpleTest.finish();
+    return;
+  }
+  ok(sb, "Created a SourceBuffer");
+
+  await fetchAndLoad(sb, "hevc_white_frame", [""], ".mp4");
+  el.play();
+  ms.endOfStream();
+  await once(el, "ended");
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
