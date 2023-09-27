@@ -68,7 +68,7 @@ void PacketRouter::AddSendRtpModule(RtpRtcpInterface* rtp_module,
 void PacketRouter::AddSendRtpModuleToMap(RtpRtcpInterface* rtp_module,
                                          uint32_t ssrc) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
+  RTC_CHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
 
   // Signal to module that the pacer thread is attached and can send packets.
   rtp_module->OnPacketSendingThreadSwitched();
