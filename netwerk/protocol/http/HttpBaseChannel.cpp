@@ -3529,7 +3529,9 @@ HttpBaseChannel::SetChannelIsForDownload(bool aChannelIsForDownload) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetCacheKeysRedirectChain(nsTArray<nsCString>* cacheKeys) {
-  mRedirectedCachekeys = WrapUnique(cacheKeys);
+  auto RedirectedCachekeys = mRedirectedCachekeys.Lock();
+  auto& ref = RedirectedCachekeys.ref();
+  ref = WrapUnique(cacheKeys);
   return NS_OK;
 }
 
@@ -5025,14 +5027,17 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
     // if there is a chain of keys for redirect-responses we transfer it to
     // the new channel (see bug #561276)
-    if (mRedirectedCachekeys) {
-      LOG(
-          ("HttpBaseChannel::SetupReplacementChannel "
-           "[this=%p] transferring chain of redirect cache-keys",
-           this));
-      rv = httpInternal->SetCacheKeysRedirectChain(
-          mRedirectedCachekeys.release());
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    {
+      auto redirectedCachekeys = mRedirectedCachekeys.Lock();
+      auto& ref = redirectedCachekeys.ref();
+      if (ref) {
+        LOG(
+            ("HttpBaseChannel::SetupReplacementChannel "
+             "[this=%p] transferring chain of redirect cache-keys",
+             this));
+        rv = httpInternal->SetCacheKeysRedirectChain(ref.release());
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      }
     }
 
     // Preserve Request mode.
