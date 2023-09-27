@@ -14,6 +14,11 @@ const {
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
+const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+const l10n = new LocalizationHelper(
+  "devtools/client/locales/components.properties"
+);
+
 loader.lazyGetter(this, "SearchBoxAutocompletePopup", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/SearchBoxAutocompletePopup.js")
@@ -254,6 +259,7 @@ class SearchBox extends PureComponent {
         className: "devtools-searchinput-clear",
         hidden: value === "",
         onClick: this.onClearButtonClick,
+        title: l10n.getStr("searchBox.clearButtonTitle"),
       }),
       showAutocomplete &&
         SearchBoxAutocompletePopup({
