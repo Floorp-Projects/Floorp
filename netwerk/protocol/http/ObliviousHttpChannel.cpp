@@ -17,9 +17,9 @@
 namespace mozilla::net {
 
 NS_IMPL_ISUPPORTS(ObliviousHttpChannel, nsIChannel, nsIHttpChannel,
-                  nsIHttpChannelInternal, nsIIdentChannel, nsIRequest,
-                  nsIRequestObserver, nsIStreamListener, nsIUploadChannel2,
-                  nsITimedChannel)
+                  nsIObliviousHttpChannel, nsIHttpChannelInternal,
+                  nsIIdentChannel, nsIRequest, nsIRequestObserver,
+                  nsIStreamListener, nsIUploadChannel2, nsITimedChannel)
 
 ObliviousHttpChannel::ObliviousHttpChannel(
     nsIURI* targetURI, const nsTArray<uint8_t>& encodedConfig,
@@ -765,6 +765,19 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
   }
   Unused << mStreamListener->OnStopRequest(this, aStatusCode);
 
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// ObliviousHttpChannel::nsIObliviousHttpChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+ObliviousHttpChannel::GetRelayChannel(nsIHttpChannel** aChannel) {
+  if (!aChannel) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aChannel = do_AddRef(mInnerChannel).take();
   return NS_OK;
 }
 

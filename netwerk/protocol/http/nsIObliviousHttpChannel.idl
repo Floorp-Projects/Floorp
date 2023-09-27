@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIHttpChannel.idl"
+
+/**
+ * nsIObliviousHttpChannel
+ *
+ * This interface allows consumers to differentiate between the
+ * relayChannel request that transports the OHTTP payload
+ * and the virtual OHTTP channel represented by the
+ * nsIObliviousHttpChannel implementation.
+ */
+[builtinclass, scriptable, uuid(f829f761-0744-4d1c-9c2d-8931c22ae8d5)]
+interface nsIObliviousHttpChannel: nsIHttpChannel
+{
+  /**
+   * Returns the channel used to transport the binary serialization
+   * of the request and response to and from the OHTTP relay.
+   * This can be useful to determine if an HTTP status code or failure
+   * is due to the relay or the gateway response.
+   */
+  readonly attribute nsIHttpChannel relayChannel;
+};
