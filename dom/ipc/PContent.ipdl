@@ -278,7 +278,6 @@ struct BlobURLRegistrationData
   nsCString url;
   IPCBlob blob;
   nullable nsIPrincipal principal;
-  nsID? agentClusterId;
   nsCString partitionKey;
   bool revoked;
 };
@@ -868,8 +867,7 @@ child:
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
 
     async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
-                              nullable nsIPrincipal aPrincipal,
-                              nsID? aAgentClusterId, nsCString aPartitionKey);
+                              nullable nsIPrincipal aPrincipal, nsCString aPartitionKey);
 
     async BlobURLUnregistration(nsCString aURI);
 
@@ -1610,8 +1608,7 @@ parent:
      async DeleteGetFilesRequest(nsID aID);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
-                                                nullable nsIPrincipal principal,
-                                                nsID? aAgentClusterId, nsCString aPartitionKey);
+                                                nullable nsIPrincipal principal, nsCString aPartitionKey);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nullable nsIPrincipal principal);
 
@@ -1815,7 +1812,6 @@ parent:
                              nullable nsIPrincipal aLoadingPrincipal,
                              OriginAttributes aOriginAttributes,
                              uint64_t aInnerWindowId,
-                             nsID? aAgentClusterId,
                              nsCString aPartitionKey)
       returns (BlobURLDataRequestResult aResult);
 

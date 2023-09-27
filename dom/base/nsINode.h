@@ -2383,6 +2383,8 @@ class nsINode : public mozilla::dom::EventTarget {
   nsSlots* mSlots;
 };
 
+NON_VIRTUAL_ADDREF_RELEASE(nsINode)
+
 inline nsINode* mozilla::dom::EventTarget::GetAsNode() {
   return IsNode() ? AsNode() : nullptr;
 }
@@ -2421,7 +2423,7 @@ inline nsISupports* ToSupports(nsINode* aPointer) { return aPointer; }
 #define NS_IMPL_FROMNODE_GENERIC(_class, _check, _const)                 \
   template <typename T>                                                  \
   static auto FromNode(_const T& aNode)                                  \
-      ->decltype(static_cast<_const _class*>(&aNode)) {                  \
+      -> decltype(static_cast<_const _class*>(&aNode)) {                 \
     return aNode._check ? static_cast<_const _class*>(&aNode) : nullptr; \
   }                                                                      \
   template <typename T>                                                  \
@@ -2434,7 +2436,7 @@ inline nsISupports* ToSupports(nsINode* aPointer) { return aPointer; }
   }                                                                      \
   template <typename T>                                                  \
   static auto FromEventTarget(_const T& aEventTarget)                    \
-      ->decltype(static_cast<_const _class*>(&aEventTarget)) {           \
+      -> decltype(static_cast<_const _class*>(&aEventTarget)) {          \
     return aEventTarget.IsNode() && aEventTarget.AsNode()->_check        \
                ? static_cast<_const _class*>(&aEventTarget)              \
                : nullptr;                                                \

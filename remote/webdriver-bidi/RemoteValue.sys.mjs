@@ -889,8 +889,12 @@ export function serialize(
     ].includes(className)
   ) {
     return buildSerialized(className.toLowerCase(), handleId);
+  } else if (className.includes("Generator")) {
+    return buildSerialized("generator", handleId);
   } else if (lazy.error.isError(value)) {
     return buildSerialized("error", handleId);
+  } else if (Cu.isProxy(value)) {
+    return buildSerialized("proxy", handleId);
   } else if (TYPED_ARRAY_CLASSES.includes(className)) {
     return buildSerialized("typedarray", handleId);
   } else if (Node.isInstance(value)) {

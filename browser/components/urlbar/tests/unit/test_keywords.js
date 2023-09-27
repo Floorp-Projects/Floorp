@@ -177,7 +177,7 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     matches: [
       makeKeywordSearchResult(context, {
         uri: "http://mozilla.com/",
-        title: "http://mozilla.com/",
+        title: "http://mozilla.com",
         keyword: "moz",
         heuristic: true,
       }),

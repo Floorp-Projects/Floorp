@@ -1,0 +1,57 @@
+[DEFAULT]
+
+["browser_bug1701027-1.js"]
+support-files = ["helper_bug1701027-1.html"]
+
+["browser_bug1701027-2.js"]
+support-files = ["helper_bug1701027-2.html"]
+
+["browser_bug1757410.js"]
+run-if = [
+  "os == 'mac' && debug",
+  "os == 'win' && processor == 'x86_64' && debug"
+]
+
+["browser_bug1787079.js"]
+run-if = ["os == 'win' && processor == 'x86_64' && debug"]
+
+["browser_bug1791083.js"]
+skip-if = ["!sessionHistoryInParent"]
+
+["browser_bug617076.js"]
+
+["browser_disableDialogs_onbeforeunload.js"]
+
+["browser_onbeforeunload_only_after_interaction.js"]
+
+["browser_onbeforeunload_only_after_interaction_in_frame.js"]
+
+["browser_scroll_into_view_in_out_of_process_iframe.js"]
+support-files = [
+  "test_scroll_into_view_in_oopif.html",
+  "scroll_into_view_in_child.html"
+]
+
+["browser_select_popup_position_in_out_of_process_iframe.js"]
+skip-if = [
+  "verify && (os == 'mac')", # bug 1627874
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "os == 'linux' && socketprocess_networking && fission && !debug",
+] # high frequency intermittent
+support-files = [
+  "!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
+  "!/browser/base/content/test/forms/head.js"
+]
+
+["browser_stylesheet_change_events.js"]
+support-files = [
+  "file_stylesheet_change_events.html",
+  "stylesheet_change_events.css"
+]
+
+["browser_visual_viewport_iframe.js"]
+support-files = [
+  "test_visual_viewport_in_oopif.html",
+  "visual_viewport_in_child.html"
+]
+

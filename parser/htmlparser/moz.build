@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XML")
 
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.toml"]
 
 XPIDL_SOURCES += [
     "nsIExpatSink.idl",

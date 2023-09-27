@@ -39,7 +39,10 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow) { mWindow = aWindow; }
+nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow) {
+  SetIsOnMainThread();
+  mWindow = aWindow;
+}
 
 nsWindowRoot::~nsWindowRoot() {
   if (mListenerManager) {

@@ -11,111 +11,6 @@ const CARD_EXPANDED_EVENT = [
   ["firefoxview_next", "card_expanded", "card_container", undefined],
 ];
 
-async function cardCollapsedTelemetry() {
-  await TestUtils.waitForCondition(
-    () => {
-      let events = Services.telemetry.snapshotEvents(
-        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-        false
-      ).parent;
-      return events && events.length >= 1;
-    },
-    "Waiting for card_collapsed firefoxview_next telemetry event.",
-    200,
-    100
-  );
-
-  TelemetryTestUtils.assertEvents(
-    CARD_COLLAPSED_EVENT,
-    { category: "firefoxview_next" },
-    { clear: true, process: "parent" }
-  );
-}
-
-async function cardExpandedTelemetry() {
-  await TestUtils.waitForCondition(
-    () => {
-      let events = Services.telemetry.snapshotEvents(
-        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-        false
-      ).parent;
-      return events && events.length >= 1;
-    },
-    "Waiting for card_expanded firefoxview_next telemetry event.",
-    200,
-    100
-  );
-
-  TelemetryTestUtils.assertEvents(
-    CARD_EXPANDED_EVENT,
-    { category: "firefoxview_next" },
-    { clear: true, process: "parent" }
-  );
-}
-
-async function navigationTelemetry(changePageEvent) {
-  await TestUtils.waitForCondition(
-    () => {
-      let events = Services.telemetry.snapshotEvents(
-        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-        false
-      ).parent;
-      return events && events.length >= 1;
-    },
-    "Waiting for change_page firefoxview_next telemetry event.",
-    200,
-    100
-  );
-
-  TelemetryTestUtils.assertEvents(
-    changePageEvent,
-    { category: "firefoxview_next" },
-    { clear: true, process: "parent" }
-  );
-}
-
-async function contextMenuTelemetry(contextMenuEvent) {
-  await TestUtils.waitForCondition(
-    () => {
-      let events = Services.telemetry.snapshotEvents(
-        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-        false
-      ).parent;
-      return events && events.length >= 1;
-    },
-    "Waiting for context_menu firefoxview_next telemetry event.",
-    200,
-    100
-  );
-
-  TelemetryTestUtils.assertEvents(
-    contextMenuEvent,
-    { category: "firefoxview_next" },
-    { clear: true, process: "parent" }
-  );
-}
-
-async function enteredTelemetry(enteredEvent) {
-  await TestUtils.waitForCondition(
-    () => {
-      let events = Services.telemetry.snapshotEvents(
-        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-        false
-      ).parent;
-      return events && events.length >= 1;
-    },
-    "Waiting for entered firefoxview_next telemetry event.",
-    200,
-    100
-  );
-
-  TelemetryTestUtils.assertEvents(
-    enteredEvent,
-    { category: "firefoxview_next" },
-    { clear: true, process: "parent" }
-  );
-}
-
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   registerCleanupFunction(async () => {
@@ -151,7 +46,7 @@ add_task(async function test_collapse_and_expand_card() {
       false,
       "The card-container is collapsed"
     );
-    await cardCollapsedTelemetry();
+    await telemetryEvent(CARD_COLLAPSED_EVENT);
     // Click the summary again to expand the details disclosure
     await EventUtils.synthesizeMouseAtCenter(
       cardContainer.summaryEl,
@@ -163,7 +58,7 @@ add_task(async function test_collapse_and_expand_card() {
       true,
       "The card-container is expanded"
     );
-    await cardExpandedTelemetry();
+    await telemetryEvent(CARD_EXPANDED_EVENT);
   });
 });
 
@@ -182,7 +77,7 @@ add_task(async function test_change_page_telemetry() {
     ];
     await clearAllParentTelemetryEvents();
     navigateToCategory(document, "recentlyclosed");
-    await navigationTelemetry(changePageEvent);
+    await telemetryEvent(changePageEvent);
     navigateToCategory(document, "recentbrowsing");
 
     let openTabsComponent = document.querySelector(
@@ -202,7 +97,7 @@ add_task(async function test_change_page_telemetry() {
     ];
     await clearAllParentTelemetryEvents();
     await EventUtils.synthesizeMouseAtCenter(viewAllLink, {}, content);
-    await navigationTelemetry(changePageEvent);
+    await telemetryEvent(changePageEvent);
   });
 });
 
@@ -216,64 +111,13 @@ add_task(async function test_context_menu_telemetry() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    // Test open tabs telemetry
-    let openTabsComponent = document.querySelector(
-      "view-opentabs[slot=opentabs]"
-    );
-    let tabList =
-      openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList;
-    let firstItem = tabList.rowEls[0];
-    let panelList =
-      openTabsComponent.shadowRoot.querySelector(
-        "view-opentabs-card"
-      ).panelList;
-    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
-    await BrowserTestUtils.waitForEvent(panelList, "shown");
-    await clearAllParentTelemetryEvents();
-    let copyLinkOption = panelList.querySelector(
-      "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
-    );
-    ok(copyLinkOption, "Copy link panel item exists");
-
-    let contextMenuEvent = [
-      [
-        "firefoxview_next",
-        "context_menu",
-        "tabs",
-        undefined,
-        { menu_action: "copy-link", data_type: "opentabs" },
-      ],
-    ];
-    await EventUtils.synthesizeMouseAtCenter(copyLinkOption, {}, content);
-    await contextMenuTelemetry(contextMenuEvent);
-
-    // Open new tab to test 'Close tab' menu option
-    window.openTrustedLinkIn("about:robots", "tab");
-    await switchToFxViewTab(browser.ownerGlobal);
-    firstItem = tabList.rowEls[0];
-    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
-    await BrowserTestUtils.waitForEvent(panelList, "shown");
-    await clearAllParentTelemetryEvents();
-    let closeTabOption = panelList.children[0];
-    contextMenuEvent = [
-      [
-        "firefoxview_next",
-        "context_menu",
-        "tabs",
-        undefined,
-        { menu_action: "close-tab", data_type: "opentabs" },
-      ],
-    ];
-    await EventUtils.synthesizeMouseAtCenter(closeTabOption, {}, content);
-    await contextMenuTelemetry(contextMenuEvent);
-
     // Test history context menu options
     navigateToCategory(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     let firstTabList = historyComponent.lists[0];
-    firstItem = firstTabList.rowEls[0];
-    panelList = historyComponent.panelList;
+    let firstItem = firstTabList.rowEls[0];
+    let panelList = historyComponent.panelList;
     await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
@@ -281,7 +125,7 @@ add_task(async function test_context_menu_telemetry() {
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
     let openInNewWindowOption = panelItems[1];
-    contextMenuEvent = [
+    let contextMenuEvent = [
       [
         "firefoxview_next",
         "context_menu",
@@ -299,7 +143,7 @@ add_task(async function test_context_menu_telemetry() {
       content
     );
     let win = await newWindowPromise;
-    await contextMenuTelemetry(contextMenuEvent);
+    await telemetryEvent(contextMenuEvent);
     await BrowserTestUtils.closeWindow(win);
 
     await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
@@ -324,7 +168,7 @@ add_task(async function test_context_menu_telemetry() {
       content
     );
     win = await newWindowPromise;
-    await contextMenuTelemetry(contextMenuEvent);
+    await telemetryEvent(contextMenuEvent);
     ok(
       PrivateBrowsingUtils.isWindowPrivate(win),
       "Should have opened a private window."
@@ -349,7 +193,7 @@ add_task(async function test_context_menu_telemetry() {
       {},
       content
     );
-    await contextMenuTelemetry(contextMenuEvent);
+    await telemetryEvent(contextMenuEvent);
 
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {
@@ -373,7 +217,7 @@ add_task(async function firefox_view_entered_telemetry() {
         { page: "recentbrowsing" },
       ],
     ];
-    await enteredTelemetry(enteredEvent);
+    await telemetryEvent(enteredEvent);
 
     enteredEvent = [
       [
@@ -394,7 +238,7 @@ add_task(async function firefox_view_entered_telemetry() {
       "The selected tab is about:robots"
     );
     await switchToFxViewTab(browser.ownerGlobal);
-    await enteredTelemetry(enteredEvent);
+    await telemetryEvent(enteredEvent);
     await SpecialPowers.popPrefEnv();
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {

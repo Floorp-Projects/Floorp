@@ -973,6 +973,7 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   uintptr_t* spill = frame.spillBase();
   LiveGeneralRegisterSet gcRegs = safepoint.gcSpills();
   LiveGeneralRegisterSet valueRegs = safepoint.valueSpills();
+  LiveGeneralRegisterSet wasmAnyRefRegs = safepoint.wasmAnyRefSpills();
   for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills());
        iter.more(); ++iter) {
     --spill;
@@ -981,6 +982,9 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
                               "ion-gc-spill");
     } else if (valueRegs.has(*iter)) {
       TraceRoot(trc, reinterpret_cast<Value*>(spill), "ion-value-spill");
+    } else if (wasmAnyRefRegs.has(*iter)) {
+      TraceRoot(trc, reinterpret_cast<wasm::AnyRef*>(spill),
+                "ion-anyref-spill");
     }
   }
 

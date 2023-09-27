@@ -96,7 +96,7 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
         ]
       );
     } else {
-      title = UrlbarUtils.unEscapeURIForUI(url);
+      title = UrlbarUtils.prepareUrlForDisplay(url);
     }
 
     let result = new lazy.UrlbarResult(

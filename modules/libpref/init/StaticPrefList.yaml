@@ -7660,7 +7660,7 @@
 # anyway.
 - name: javascript.options.use_fdlibm_for_sin_cos_tan
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether to support parsing '//(#@) source(Mapping)?URL=' pragmas.
@@ -13197,11 +13197,6 @@
 
 # Exclude session storage from the above preference.
 - name: privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: privacy.partition.bloburl_per_agent_cluster
   type: RelaxedAtomicBool
   value: false
   mirror: always

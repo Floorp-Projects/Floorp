@@ -42,13 +42,9 @@ function receiveMessage(event) {
 }
 
 var w;
-// Set "privacy.partition.bloburl_per_agent_cluster" to false until Bug 1667348 is fixed.
-SpecialPowers.pushPrefEnv({
-  set: [["privacy.partition.bloburl_per_agent_cluster", false]]}, () => {
-    // start the test
-    document.getElementById("testframe").src = "file_blob_uri_blocks_modals.html";
-    w = window.open("file_blob_top_nav_block_modals.html");
-});
+document.getElementById("testframe").src = "file_blob_uri_blocks_modals.html";
+w = window.open("file_blob_top_nav_block_modals.html");
+
 
 // If alert window is not blocked by CSP then event message is not recieved and
 // test fails after setTimeout interval of 1 second.

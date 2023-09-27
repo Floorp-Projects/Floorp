@@ -340,6 +340,10 @@ void PublicKeyCredential::ParseCreationOptionsFromJSON(
       aResult.mExtensions.mHmacCreateSecret.Construct(
           aOptions.mExtensions.Value().mHmacCreateSecret.Value());
     }
+    if (aOptions.mExtensions.Value().mMinPinLength.WasPassed()) {
+      aResult.mExtensions.mMinPinLength.Construct(
+          aOptions.mExtensions.Value().mMinPinLength.Value());
+    }
   }
 }
 
@@ -396,6 +400,10 @@ void PublicKeyCredential::ParseRequestOptionsFromJSON(
     if (aOptions.mExtensions.Value().mHmacCreateSecret.WasPassed()) {
       aResult.mExtensions.mHmacCreateSecret.Construct(
           aOptions.mExtensions.Value().mHmacCreateSecret.Value());
+    }
+    if (aOptions.mExtensions.Value().mMinPinLength.WasPassed()) {
+      aResult.mExtensions.mMinPinLength.Construct(
+          aOptions.mExtensions.Value().mMinPinLength.Value());
     }
   }
 }

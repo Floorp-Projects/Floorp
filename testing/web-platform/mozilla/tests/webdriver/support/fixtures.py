@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import socket
@@ -8,10 +9,26 @@ from urllib.parse import urlparse
 
 import pytest
 import webdriver
-from mozprofile import Profile
+from mozprofile import Preferences, Profile
 from mozrunner import FirefoxRunner
 
 from support.network import get_free_port
+
+
+def get_arg_value(arg_names, args):
+    """Get an argument value from a list of arguments
+
+    This assumes that argparse argument parsing is close enough to the target
+    to be compatible, at least with the set of inputs we have.
+
+    :param arg_names: - List of names for the argument e.g. ["--foo", "-f"]
+    :param args: - List of arguments to parse
+    :returns: - Optional string argument value
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(*arg_names, action="store", dest="value", default=None)
+    parsed, _ = parser.parse_known_args(args)
+    return parsed.value
 
 
 @pytest.fixture(scope="module")
@@ -48,6 +65,7 @@ def browser(full_configuration):
             current_browser.quit()
 
         binary = full_configuration["browser"]["binary"]
+        env = full_configuration["browser"]["env"]
         firefox_options = full_configuration["capabilities"]["moz:firefoxOptions"]
         current_browser = Browser(
             binary,
@@ -56,6 +74,7 @@ def browser(full_configuration):
             use_cdp=use_cdp,
             extra_args=extra_args,
             extra_prefs=extra_prefs,
+            env=env,
         )
         current_browser.start()
         return current_browser
@@ -69,10 +88,14 @@ def browser(full_configuration):
 
 
 @pytest.fixture
-def custom_profile(configuration):
-    # Clone the known profile for automation preferences
+def profile_folder(configuration):
     firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
-    _, profile_folder = firefox_options["args"]
+    return get_arg_value(["--profile"], firefox_options["args"])
+
+
+@pytest.fixture
+def custom_profile(profile_folder):
+    # Clone the known profile for automation preferences
     profile = Profile.clone(profile_folder)
 
     yield profile
@@ -102,6 +125,17 @@ def geckodriver(configuration):
         driver.stop()
 
 
+@pytest.fixture
+def user_prefs(profile_folder):
+    user_js = os.path.join(profile_folder, "user.js")
+
+    prefs = {}
+    for pref_name, pref_value in Preferences().read_prefs(user_js):
+        prefs[pref_name] = pref_value
+
+    return prefs
+
+
 class Browser:
     def __init__(
         self,
@@ -111,6 +145,7 @@ class Browser:
         use_cdp=False,
         extra_args=None,
         extra_prefs=None,
+        env=None,
     ):
         self.use_bidi = use_bidi
         self.bidi_port_file = None
@@ -148,7 +183,7 @@ class Browser:
         if self.extra_args is not None:
             cmdargs.extend(self.extra_args)
         self.runner = FirefoxRunner(
-            binary=binary, profile=self.profile, cmdargs=cmdargs
+            binary=binary, profile=self.profile, cmdargs=cmdargs, env=env
         )
 
     @property
@@ -202,6 +237,7 @@ class Geckodriver:
         self.requested_capabilities = configuration["capabilities"]
         self.hostname = hostname or configuration["host"]
         self.extra_args = extra_args or []
+        self.env = configuration["browser"]["env"]
 
         self.command = None
         self.proc = None
@@ -227,7 +263,7 @@ class Geckodriver:
         )
 
         print(f"Running command: {' '.join(self.command)}")
-        self.proc = subprocess.Popen(self.command)
+        self.proc = subprocess.Popen(self.command, env=self.env)
 
         # Wait for the port to become ready
         end_time = time.time() + 10

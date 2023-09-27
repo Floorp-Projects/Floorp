@@ -1603,11 +1603,49 @@ static const char* const kMainThreadName = "GeckoMain";
 ////////////////////////////////////////////////////////////////////////
 // BEGIN sampling/unwinding code
 
+// Additional registers that have to be saved when thread is paused.
+#if defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android) || \
+    defined(GP_ARCH_x86)
+#  define UNWINDING_REGS_HAVE_ECX_EDX
+#elif defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android) || \
+    defined(GP_PLAT_amd64_freebsd) || defined(GP_ARCH_amd64) ||         \
+    defined(__x86_64__)
+#  define UNWINDING_REGS_HAVE_R10_R12
+#elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
+#  define UNWINDING_REGS_HAVE_LR_R7
+#elif defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android) || \
+    defined(GP_PLAT_arm64_freebsd) || defined(GP_ARCH_arm64) ||         \
+    defined(__aarch64__)
+#  define UNWINDING_REGS_HAVE_LR_R11
+#endif
+
 // The registers used for stack unwinding and a few other sampling purposes.
 // The ctor does nothing; users are responsible for filling in the fields.
 class Registers {
  public:
-  Registers() : mPC{nullptr}, mSP{nullptr}, mFP{nullptr}, mLR{nullptr} {}
+  Registers()
+      : mPC{nullptr},
+        mSP{nullptr},
+        mFP{nullptr}
+#if defined(UNWINDING_REGS_HAVE_ECX_EDX)
+        ,
+        mEcx{nullptr},
+        mEdx{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_R10_R12)
+        ,
+        mR10{nullptr},
+        mR12{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_LR_R7)
+        ,
+        mLR{nullptr},
+        mR7{nullptr}
+#elif defined(UNWINDING_REGS_HAVE_LR_R11)
+        ,
+        mLR{nullptr},
+        mR11{nullptr}
+#endif
+  {
+  }
 
   void Clear() { memset(this, 0, sizeof(*this)); }
 
@@ -1617,7 +1655,20 @@ class Registers {
   Address mPC;  // Instruction pointer.
   Address mSP;  // Stack pointer.
   Address mFP;  // Frame pointer.
-  Address mLR;  // ARM link register.
+#if defined(UNWINDING_REGS_HAVE_ECX_EDX)
+  Address mEcx;  // Temp for return address.
+  Address mEdx;  // Temp for frame pointer.
+#elif defined(UNWINDING_REGS_HAVE_R10_R12)
+  Address mR10;  // Temp for return address.
+  Address mR12;  // Temp for frame pointer.
+#elif defined(UNWINDING_REGS_HAVE_LR_R7)
+  Address mLR;  // ARM link register, or temp for return address.
+  Address mR7;  // Temp for frame pointer.
+#elif defined(UNWINDING_REGS_HAVE_LR_R11)
+  Address mLR;   // ARM link register, or temp for return address.
+  Address mR11;  // Temp for frame pointer.
+#endif
+
 #if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
   // This contains all the registers, which means it duplicates the four fields
   // above. This is ok.
@@ -1759,8 +1810,20 @@ static uint32_t ExtractJsFrames(
       JS::ProfilingFrameIterator::RegisterState registerState;
       registerState.pc = aRegs.mPC;
       registerState.sp = aRegs.mSP;
-      registerState.lr = aRegs.mLR;
       registerState.fp = aRegs.mFP;
+#if defined(UNWINDING_REGS_HAVE_ECX_EDX)
+      registerState.tempRA = aRegs.mEcx;
+      registerState.tempFP = aRegs.mEdx;
+#elif defined(UNWINDING_REGS_HAVE_R10_R12)
+      registerState.tempRA = aRegs.mR10;
+      registerState.tempFP = aRegs.mR12;
+#elif defined(UNWINDING_REGS_HAVE_LR_R7)
+      registerState.lr = aRegs.mLR;
+      registerState.tempFP = aRegs.mR7;
+#elif defined(UNWINDING_REGS_HAVE_LR_R11)
+      registerState.lr = aRegs.mLR;
+      registerState.tempFP = aRegs.mR11;
+#endif
 
       // Non-periodic sampling passes Nothing() as the buffer write position to
       // ProfilingFrameIterator to avoid incorrectly resetting the buffer
@@ -2545,6 +2608,11 @@ static inline void DoPeriodicSample(
                  aThreadData, jsFrames, aRegs, aSamplePos, aBufferRangeStart,
                  aBuffer);
 }
+
+#undef UNWINDING_REGS_HAVE_ECX_EDX
+#undef UNWINDING_REGS_HAVE_R10_R12
+#undef UNWINDING_REGS_HAVE_LR_R7
+#undef UNWINDING_REGS_HAVE_LR_R11
 
 // END sampling/unwinding code
 ////////////////////////////////////////////////////////////////////////

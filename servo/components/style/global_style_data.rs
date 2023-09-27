@@ -166,12 +166,21 @@ lazy_static! {
         let num_threads = if threads_pref >= 0 {
             threads_pref as usize
         } else {
-            use num_cpus;
-            // The default heuristic is num_virtual_cores * .75. This gives us three threads on a
-            // hyper-threaded dual core, and six threads on a hyper-threaded quad core.
-            let threads = cmp::max(num_cpus::get() * 3 / 4, 1);
-            // There's no point in creating a thread pool if there's one thread.
-            if threads == 1 { 0 } else { threads }
+            // Gecko may wish to override the default number of threads, for example on
+            // systems with heterogeneous CPUs.
+            #[cfg(feature = "gecko")]
+            let num_threads = unsafe { bindings::Gecko_GetNumStyleThreads() };
+            #[cfg(not(feature = "gecko"))]
+            let num_threads = -1;
+
+            if num_threads >= 0 {
+                num_threads as usize
+            } else {
+                use num_cpus;
+                // The default heuristic is num_virtual_cores * .75. This gives us three threads on a
+                // hyper-threaded dual core, and six threads on a hyper-threaded quad core.
+                cmp::max(num_cpus::get() * 3 / 4, 1)
+            }
         };
 
         let num_threads = cmp::min(num_threads, STYLO_MAX_THREADS);

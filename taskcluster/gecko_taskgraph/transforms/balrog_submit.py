@@ -120,16 +120,19 @@ def make_task_description(config, jobs):
         ]
 
         dependencies = {"beetmover": dep_job.label}
-        for kind_dep in config.kind_dependencies_tasks.values():
-            if (
-                kind_dep.kind == "startup-test"
-                and kind_dep.attributes["build_platform"]
-                == attributes.get("build_platform")
-                and kind_dep.attributes["build_type"] == attributes.get("build_type")
-                and kind_dep.attributes.get("shipping_product")
-                == job.get("shipping-product")
-            ):
-                dependencies["startup-test"] = kind_dep.label
+        # don't block on startup-test for release/esr, they block on manual testing anyway
+        if config.params["release_type"] in ("nightly", "beta", "release-rc"):
+            for kind_dep in config.kind_dependencies_tasks.values():
+                if (
+                    kind_dep.kind == "startup-test"
+                    and kind_dep.attributes["build_platform"]
+                    == attributes.get("build_platform")
+                    and kind_dep.attributes["build_type"]
+                    == attributes.get("build_type")
+                    and kind_dep.attributes.get("shipping_product")
+                    == job.get("shipping-product")
+                ):
+                    dependencies["startup-test"] = kind_dep.label
 
         task = {
             "label": label,

@@ -1064,6 +1064,17 @@ struct BaseCompiler final {
   inline void branchTo(Assembler::Condition c, RegRef lhs, ImmWord rhs,
                        Label* l);
 
+  // Helpers for accessing Instance::baselineScratchWords_.  Note that Word
+  // and I64 versions of these routines access the same area and it is up to
+  // the caller to use it in some way which makes sense.
+
+  // Store/load `r`, a machine word, to/from the `index`th scratch storage
+  // slot in the current Instance.  `instancePtr` must point at the current
+  // Instance; it will not be modified.  For ::stashWord, `r` must not be the
+  // same as `instancePtr`.
+  void stashWord(RegPtr instancePtr, size_t index, RegPtr r);
+  void unstashWord(RegPtr instancePtr, size_t index, RegPtr r);
+
 #ifdef JS_CODEGEN_X86
   // Store r in instance scratch storage after first loading the instance from
   // the frame into the regForInstance.  regForInstance must be neither of the
@@ -1664,10 +1675,13 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayNewDefault();
   [[nodiscard]] bool emitArrayNewData();
   [[nodiscard]] bool emitArrayNewElem();
+  [[nodiscard]] bool emitArrayInitData();
+  [[nodiscard]] bool emitArrayInitElem();
   [[nodiscard]] bool emitArrayGet(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen();
   [[nodiscard]] bool emitArrayCopy();
+  [[nodiscard]] bool emitArrayFill();
   [[nodiscard]] bool emitRefI31();
   [[nodiscard]] bool emitI31Get(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitRefTest(bool nullable);
@@ -1696,6 +1710,7 @@ struct BaseCompiler final {
   // Load a pointer to the SuperTypeVector for a given type index
   RegPtr loadSuperTypeVector(uint32_t typeIndex);
 
+  template <typename NullCheckPolicy>
   RegPtr emitGcArrayGetData(RegRef rp);
   template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);

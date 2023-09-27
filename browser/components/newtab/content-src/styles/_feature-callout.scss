@@ -215,6 +215,7 @@
             height: 16px;
             width: 16px;
             margin-inline-end: 6px;
+            box-sizing: border-box;
             -moz-context-properties: fill;
             fill: currentColor;
 
@@ -223,6 +224,26 @@
               width: 16px;
               margin: 0;
             }
+          }
+
+          &[alignment='top'],
+          &[alignment='bottom'] {
+            flex-wrap: nowrap;
+
+            .logo-container {
+              height: 1.5em; // match the title's line-height
+              align-items: center;
+              padding-bottom: 0.15em;
+              box-sizing: border-box;
+            }
+          }
+
+          &[alignment='top'] {
+            align-items: start;
+          }
+
+          &[alignment='bottom'] {
+            align-items: end;
           }
         }
 

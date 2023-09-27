@@ -1101,6 +1101,21 @@ static bool CanUnwindSignatureCheck(uint8_t* fp) {
   return code && !codeRange->isEntry();
 }
 
+static bool GetUnwindInfo(const CodeSegment* codeSegment,
+                          const CodeRange* codeRange, uint8_t* pc,
+                          const CodeRangeUnwindInfo** info) {
+  if (!codeSegment->isModule()) {
+    return false;
+  }
+  if (!codeRange->isFunction() || !codeRange->funcHasUnwindInfo()) {
+    return false;
+  }
+
+  const ModuleSegment* segment = codeSegment->asModule();
+  *info = segment->code().lookupUnwindInfo(pc);
+  return *info;
+}
+
 const Instance* js::wasm::GetNearestEffectiveInstance(const Frame* fp) {
   while (true) {
     uint8_t* returnAddress = fp->returnAddress();
@@ -1357,6 +1372,33 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
           fixedFP = frame->rawCaller();
           fixedPC = frame->returnAddress();
           AssertMatchesCallSite(fixedPC, fixedFP);
+          break;
+        }
+
+        const CodeRangeUnwindInfo* unwindInfo;
+        if (codeSegment &&
+            GetUnwindInfo(codeSegment, codeRange, pc, &unwindInfo)) {
+          switch (unwindInfo->unwindHow()) {
+            case CodeRangeUnwindInfo::RestoreFpRa:
+              fixedPC = (uint8_t*)registers.tempRA;
+              fixedFP = (uint8_t*)registers.tempFP;
+              break;
+            case CodeRangeUnwindInfo::RestoreFp:
+              fixedPC = sp[0];
+              fixedFP = (uint8_t*)registers.tempFP;
+              break;
+            case CodeRangeUnwindInfo::UseFpLr:
+              fixedPC = (uint8_t*)registers.lr;
+              fixedFP = fp;
+              break;
+            case CodeRangeUnwindInfo::UseFp:
+              fixedPC = sp[0];
+              fixedFP = fp;
+              break;
+            default:
+              MOZ_CRASH();
+          }
+          MOZ_ASSERT(fixedPC && fixedFP);
           break;
         }
 
@@ -1730,6 +1772,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.new_data function";
     case SymbolicAddress::ArrayNewElem:
       return "call to native array.new_elem function";
+    case SymbolicAddress::ArrayInitData:
+      return "call to native array.init_data function";
+    case SymbolicAddress::ArrayInitElem:
+      return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
 #define OP(op, export, sa_name, abitype, entry, idx) \

@@ -6,7 +6,7 @@ URL = (
 )
 
 
-@pytest.mark.skip_platforms("linux")
+@pytest.mark.only_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -19,7 +19,7 @@ async def test_enabled(client):
     assert client.is_displayed(submit)
 
 
-@pytest.mark.skip_platforms("linux")
+@pytest.mark.only_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

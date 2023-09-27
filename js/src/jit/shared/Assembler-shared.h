@@ -617,6 +617,8 @@ class AssemblerShared {
   wasm::TrapSiteVectorArray trapSites_;
   wasm::SymbolicAccessVector symbolicAccesses_;
   wasm::TryNoteVector tryNotes_;
+  wasm::CodeRangeUnwindInfoVector codeRangesUnwind_;
+
 #ifdef DEBUG
   // To facilitate figuring out which part of SM created each instruction as
   // shown by IONFLAGS=codegen, this maintains a stack of (notionally)
@@ -694,11 +696,19 @@ class AssemblerShared {
     return true;
   }
 
+  void append(wasm::CodeRangeUnwindInfo::UnwindHow unwindHow,
+              uint32_t pcOffset) {
+    enoughMemory_ &= codeRangesUnwind_.emplaceBack(pcOffset, unwindHow);
+  }
+
   wasm::CallSiteVector& callSites() { return callSites_; }
   wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
   wasm::TrapSiteVectorArray& trapSites() { return trapSites_; }
   wasm::SymbolicAccessVector& symbolicAccesses() { return symbolicAccesses_; }
   wasm::TryNoteVector& tryNotes() { return tryNotes_; }
+  wasm::CodeRangeUnwindInfoVector& codeRangeUnwindInfos() {
+    return codeRangesUnwind_;
+  }
 };
 
 // AutoCreatedBy pushes and later pops a who-created-these-insns? tag into the

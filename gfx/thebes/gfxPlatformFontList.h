@@ -213,7 +213,13 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // platform-specific font families.
   typedef nsTArray<FontFamily> PrefFontList;
 
-  static gfxPlatformFontList* PlatformFontList() {
+  // Return the global font-list singleton, or NULL if aMustInitialize is false
+  // and it has not yet been fully initialized.
+  static gfxPlatformFontList* PlatformFontList(bool aMustInitialize = true) {
+    if (!aMustInitialize &&
+        !(sPlatformFontList && sPlatformFontList->IsInitialized())) {
+      return nullptr;
+    }
     // If there is a font-list initialization thread, we need to let it run
     // to completion before the font list can be used for anything else.
     if (sInitFontListThread) {

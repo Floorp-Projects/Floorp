@@ -4161,6 +4161,23 @@ firefoxview_next:
       - 1833674
     expiry_version: "never"
     release_channel_collection: opt-out
+  open_tab:
+    objects: ["tabs"]
+    description: Recorded when an open tab is clicked
+    extra_keys:
+      page: The short page name where the open tab was clicked
+      window: The window the open tab belongs to
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1833669
+    expiry_version: "never"
+    release_channel_collection: opt-out
+
 
 search:
   engine:

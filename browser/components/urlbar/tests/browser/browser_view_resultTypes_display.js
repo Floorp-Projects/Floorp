@@ -169,7 +169,7 @@ add_task(async function test_keyword_result() {
     // Because only the keyword is typed, we show the bookmark url.
     assertElementsDisplayed(details, {
       separator: true,
-      title: TEST_URL + "?q=",
+      title: TEST_URL.substring("https://".length) + "?q=",
       type: UrlbarUtils.RESULT_TYPE.KEYWORD,
     });
 

@@ -18,6 +18,40 @@
 
 namespace mozilla::dom {
 
+#ifndef NS_BUILD_REFCNT_LOGGING
+MozExternalRefCountType EventTarget::NonVirtualAddRef() {
+  return mRefCnt.incr(this);
+}
+
+MozExternalRefCountType EventTarget::NonVirtualRelease() {
+  if (mRefCnt.get() == 1) {
+    return Release();
+  }
+  return mRefCnt.decr(this);
+}
+#endif
+
+NS_IMETHODIMP_(MozExternalRefCountType) EventTarget::AddRef() {
+  MOZ_ASSERT_UNREACHABLE("EventTarget::AddRef should not be called");
+  return 0;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType) EventTarget::Release() {
+  MOZ_ASSERT_UNREACHABLE("EventTarget::Release should not be called");
+  return 0;
+}
+
+NS_IMETHODIMP EventTarget::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
+  MOZ_ASSERT_UNREACHABLE("EventTarget::QueryInterface should not be called");
+  *aInstancePtr = nullptr;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP_(void) EventTarget::DeleteCycleCollectable() {
+  MOZ_ASSERT_UNREACHABLE(
+      "EventTarget::DeleteCycleCollectable should not be called");
+}
+
 /* static */
 already_AddRefed<EventTarget> EventTarget::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {

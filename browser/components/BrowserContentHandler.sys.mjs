@@ -692,7 +692,7 @@ nsBrowserContentHandler.prototype = {
               "startup.homepage_welcome_url.additional"
             );
             // Turn on 'later run' pages for new profiles.
-            lazy.LaterRun.enabled = true;
+            lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_NEW_PROFILE);
             break;
           case OVERRIDE_NEW_MSTONE:
             // Check whether we will restore a session. If we will, we assume
@@ -714,6 +714,7 @@ nsBrowserContentHandler.prototype = {
               overridePage = getPostUpdateOverridePage(update, overridePage);
               // Send the update ping to signal that the update was successful.
               lazy.UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
+              lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_UPDATE_APPLIED);
             }
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
@@ -722,6 +723,7 @@ nsBrowserContentHandler.prototype = {
             if (lazy.UpdateManager.readyUpdate) {
               // Send the update ping to signal that the update was successful.
               lazy.UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
+              lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_UPDATE_APPLIED);
             }
             break;
         }

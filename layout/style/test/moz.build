@@ -24,7 +24,7 @@ HostSimplePrograms(
 MOCHITEST_MANIFESTS += [
     "mochitest.ini",
 ]
-BROWSER_CHROME_MANIFESTS += ["browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.toml"]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [

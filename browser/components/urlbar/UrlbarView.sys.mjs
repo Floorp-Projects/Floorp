@@ -1822,11 +1822,17 @@ export class UrlbarView {
     item.toggleAttribute("has-url", setURL);
     let url = item._elements.get("url");
     if (setURL) {
-      this.#addTextContentWithHighlights(
-        url,
-        result.payload.displayUrl,
-        result.payloadHighlights.displayUrl || []
-      );
+      item.setAttribute("has-url", "true");
+      let displayedUrl = result.payload.displayUrl;
+      let urlHighlights = result.payloadHighlights.displayUrl || [];
+      if (lazy.UrlbarUtils.isTextDirectionRTL(displayedUrl, this.window)) {
+        // Stripping the url prefix may change the initial text directionality,
+        // causing parts of it to jump to the end. To prevent that we insert a
+        // LRM character in place of the prefix.
+        displayedUrl = "\u200e" + displayedUrl;
+        urlHighlights = this.#offsetHighlights(urlHighlights, 1);
+      }
+      this.#addTextContentWithHighlights(url, displayedUrl, urlHighlights);
       this.#updateOverflowTooltip(url, result.payload.displayUrl);
     } else {
       url.textContent = "";
@@ -2501,6 +2507,21 @@ export class UrlbarView {
       result.title,
       result.titleHighlights
     );
+  }
+
+  /**
+   * Offsets all highlight ranges by a given amount.
+   *
+   * @param {Array} highlights The highlights which should be offset.
+   * @param {int} startOffset
+   *    The number by which we want to offset the highlights range starts.
+   * @returns {Array} The offset highlights.
+   */
+  #offsetHighlights(highlights, startOffset) {
+    return highlights.map(highlight => [
+      highlight[0] + startOffset,
+      highlight[1],
+    ]);
   }
 
   /**

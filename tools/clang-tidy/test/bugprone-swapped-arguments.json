@@ -1,22 +1,22 @@
 [
   [
     "warning",
-    "argument with implicit conversion from 'double' to 'int' followed by argument converted from 'int' to 'double', potentially swapped arguments.",
-    "bugprone-swapped-arguments"
-  ],
-  [
-    "warning",
-    "argument with implicit conversion from 'int' to 'double' followed by argument converted from 'double' to 'int', potentially swapped arguments.",
-    "bugprone-swapped-arguments"
-  ],
-  [
-    "warning",
     "argument with implicit conversion from 'int' to 'double' followed by argument converted from 'double' to 'int', potentially swapped arguments.",
     "bugprone-swapped-arguments"
   ],
   [
     "warning",
     "argument with implicit conversion from 'double' to 'int' followed by argument converted from 'int' to 'double', potentially swapped arguments.",
+    "bugprone-swapped-arguments"
+  ],
+  [
+    "warning",
+    "argument with implicit conversion from 'double' to 'int' followed by argument converted from 'int' to 'double', potentially swapped arguments.",
+    "bugprone-swapped-arguments"
+  ],
+  [
+    "warning",
+    "argument with implicit conversion from 'int' to 'double' followed by argument converted from 'double' to 'int', potentially swapped arguments.",
     "bugprone-swapped-arguments"
   ],
   { "reliability": "high" }

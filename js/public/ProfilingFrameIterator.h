@@ -96,11 +96,30 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
 
  public:
   struct RegisterState {
-    RegisterState() : pc(nullptr), sp(nullptr), fp(nullptr), lr(nullptr) {}
+    RegisterState()
+        : pc(nullptr),
+          sp(nullptr),
+          fp(nullptr),
+          unused1(nullptr),
+          unused2(nullptr) {}
     void* pc;
     void* sp;
     void* fp;
-    void* lr;
+    union {
+      // Value of the LR register on ARM platforms.
+      void* lr;
+      // The return address during a tail call operation.
+      // Note that for ARM is still the value of LR register.
+      void* tempRA;
+      // Undefined on non-ARM plaforms outside tail calls operations.
+      void* unused1;
+    };
+    union {
+      // The FP reference during a tail call operation.
+      void* tempFP;
+      // Undefined outside tail calls operations.
+      void* unused2;
+    };
   };
 
   ProfilingFrameIterator(

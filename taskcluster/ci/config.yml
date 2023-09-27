@@ -54,6 +54,7 @@ treeherder:
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
         'M-condprof': "Mochitests with conditioned profile"
+        'M-fis-hv': "Mochitests that run on Fission with isolateHighValue isolation strategy (Android-specific)"
         'M-headless': 'Headless Mochitests'
         'M-headless-nofis': 'Headless Mochitests without fission enabled.'
         'M-headless-spi-nw': 'Headless Mochitests with fission and socketprocess networking.'

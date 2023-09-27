@@ -23,9 +23,8 @@ export class AboutNewTabParent extends JSWindowActorParent {
     return gLoadedTabs;
   }
 
-  getTabDetails(message) {
-    let browsingContext = message.target.browsingContext;
-    let browser = browsingContext.top.embedderElement;
+  getTabDetails() {
+    let browser = this.browsingContext.top.embedderElement;
     return browser ? gLoadedTabs.get(browser) : null;
   }
 
@@ -87,7 +86,7 @@ export class AboutNewTabParent extends JSWindowActorParent {
         break;
 
       case "Unload": {
-        let tabDetails = this.getTabDetails(message);
+        let tabDetails = this.getTabDetails();
         if (!tabDetails) {
           // When closing a tab, the embedderElement can already be disconnected, so
           // an a backup, look up the tab details by browsing context.
@@ -116,7 +115,7 @@ export class AboutNewTabParent extends JSWindowActorParent {
 
   notifyActivityStreamChannel(name, message, tabDetails) {
     if (!tabDetails) {
-      tabDetails = this.getTabDetails(message);
+      tabDetails = this.getTabDetails();
       if (!tabDetails) {
         return;
       }

@@ -131,6 +131,7 @@
 #include "nsIStringBundle.h"
 #include "nsIURIMutator.h"
 #include "nsQueryObject.h"
+#include "nsRefreshDriver.h"
 #include "nsSandboxFlags.h"
 #include "mozmemory.h"
 
@@ -222,6 +223,7 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "APKOpen.h"
+#  include <sched.h>
 #endif
 
 #ifdef XP_WIN
@@ -637,9 +639,9 @@ ContentChild::ContentChild()
 
 #ifdef _MSC_VER
 #  pragma warning(push)
-#  pragma warning(                                                      \
-          disable : 4722) /* Silence "destructor never returns" warning \
-                           */
+#  pragma warning(                                                  \
+      disable : 4722) /* Silence "destructor never returns" warning \
+                       */
 #endif
 
 ContentChild::~ContentChild() {
@@ -2718,9 +2720,9 @@ mozilla::ipc::IPCResult ContentChild::RecvInitBlobURLs(
     RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(registration.blob());
     MOZ_ASSERT(blobImpl);
 
-    BlobURLProtocolHandler::AddDataEntry(
-        registration.url(), registration.principal(),
-        registration.agentClusterId(), registration.partitionKey(), blobImpl);
+    BlobURLProtocolHandler::AddDataEntry(registration.url(),
+                                         registration.principal(),
+                                         registration.partitionKey(), blobImpl);
     // If we have received an already-revoked blobURL, we have to keep it alive
     // for a while (see BlobURLProtocolHandler) in order to support pending
     // operations such as navigation, download and so on.
@@ -2780,6 +2782,8 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
   if (mProcessPriority != hal::PROCESS_PRIORITY_UNKNOWN) {
     glean::RecordPowerMetrics();
   }
+
+  ConfigureThreadPerformanceHints(aPriority);
 
   mProcessPriority = aPriority;
 
@@ -3291,12 +3295,12 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(
 
 mozilla::ipc::IPCResult ContentChild::RecvBlobURLRegistration(
     const nsCString& aURI, const IPCBlob& aBlob, nsIPrincipal* aPrincipal,
-    const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey) {
+    const nsCString& aPartitionKey) {
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(blobImpl);
 
-  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aAgentClusterId,
-                                       aPartitionKey, blobImpl);
+  BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aPartitionKey,
+                                       blobImpl);
   return IPC_OK();
 }
 
@@ -4686,6 +4690,96 @@ IPCResult ContentChild::RecvUpdateMediaCodecsSupported(
   RemoteDecoderManagerChild::SetSupported(aLocation, aSupported);
 
   return IPC_OK();
+}
+
+void ContentChild::ConfigureThreadPerformanceHints(
+    const hal::ProcessPriority& aPriority) {
+  if (aPriority >= hal::PROCESS_PRIORITY_FOREGROUND) {
+    static bool canUsePerformanceHintSession = true;
+    if (!mPerformanceHintSession && canUsePerformanceHintSession) {
+      nsTArray<PlatformThreadHandle> threads;
+      Servo_ThreadPool_GetThreadHandles(&threads);
+#ifdef XP_WIN
+      threads.AppendElement(GetCurrentThread());
+#else
+      threads.AppendElement(pthread_self());
+#endif
+
+      mPerformanceHintSession = hal::CreatePerformanceHintSession(
+          threads, GetPerformanceHintTarget(TimeDuration::FromMilliseconds(
+                       nsRefreshDriver::DefaultInterval())));
+
+      // Avoid repeatedly attempting to create a session if it is not
+      // supported.
+      canUsePerformanceHintSession = mPerformanceHintSession != nullptr;
+    }
+
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android if we are unable to use PerformanceHintManager then fall back
+    // to setting the stylo threads' affinities to the performant cores. Android
+    // automatically sets each thread's affinity to all cores when a process is
+    // foregrounded, and to a subset of cores when the process is backgrounded.
+    // We must therefore override this each time the process is foregrounded,
+    // but we don't have to do anything when backgrounded.
+    if (!mPerformanceHintSession) {
+      if (const auto& cpuInfo = hal::GetHeterogeneousCpuInfo()) {
+        // If CPUs are homogeneous there is no point setting affinity.
+        if (cpuInfo->mBigCpus.Count() != cpuInfo->mTotalNumCpus) {
+          BitSet<hal::HeterogeneousCpuInfo::MAX_CPUS> cpus = cpuInfo->mBigCpus;
+          if (cpus.Count() < 2) {
+            // From testing on a variety of devices it appears using only the
+            // big cores gives best performance when there are 2 or more big
+            // cores. If there are fewer than 2 big cores then additionally
+            // using the medium cores performs better.
+            cpus |= cpuInfo->mMediumCpus;
+          }
+
+          static_assert(
+              hal::HeterogeneousCpuInfo::MAX_CPUS <= CPU_SETSIZE,
+              "HeterogeneousCpuInfo::MAX_CPUS is too large for CPU_SETSIZE");
+
+          cpu_set_t cpuset;
+          CPU_ZERO(&cpuset);
+          for (size_t i = 0; i < cpuInfo->mTotalNumCpus; i++) {
+            if (cpus.Test(i)) {
+              CPU_SET(i, &cpuset);
+            }
+          }
+
+          // Only set the affinity for the stylo threads, not the main thread.
+          // Testing showed no difference in performance between the two
+          // options, and as newly spawned threads automatically inherit their
+          // parent's affinity mask there may be unintended consequences to
+          // setting the main thread affinity.
+          nsTArray<PlatformThreadHandle> threads;
+          Servo_ThreadPool_GetThreadHandles(&threads);
+          for (pthread_t thread : threads) {
+            int ret = sched_setaffinity(pthread_gettid_np(thread),
+                                        sizeof(cpu_set_t), &cpuset);
+            // Occasionally sched_setaffinity fails, presumably due to a race
+            // between us receiving the process foreground signal and whatever
+            // is responsible for restricting which processes can use certain
+            // cores. Trying again in a runnable seems to do the trick, but if
+            // that still fails it's not the end of the world.
+            if (ret < 0) {
+              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                  "ContentChild::ConfigureThreadPerformanceHints",
+                  [threads = std::move(threads), cpuset] {
+                    for (pthread_t thread : threads) {
+                      sched_setaffinity(pthread_gettid_np(thread),
+                                        sizeof(cpu_set_t), &cpuset);
+                    }
+                  }));
+              break;
+            }
+          }
+        }
+      }
+    }
+#endif
+  } else {
+    mPerformanceHintSession = nullptr;
+  }
 }
 
 }  // namespace dom

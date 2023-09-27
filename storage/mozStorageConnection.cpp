@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaseVFS.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
@@ -34,6 +35,8 @@
 #include "mozStorageArgValueArray.h"
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageStatementData.h"
+#include "ObfuscatingVFS.h"
+#include "QuotaVFS.h"
 #include "StorageBaseStatementInternal.h"
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
@@ -78,10 +81,6 @@ using mozilla::dom::quota::QuotaObject;
 using mozilla::Telemetry::AccumulateCategoricalKeyed;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_OPEN;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_QUERY;
-
-const char* GetBaseVFSName(bool);
-const char* GetQuotaVFSName();
-const char* GetObfuscatingVFSName();
 
 namespace {
 
@@ -246,6 +245,12 @@ void basicFunctionHelper(sqlite3_context* aCtx, int aArgc,
     ::sqlite3_result_error(aCtx, "User function returned invalid data type",
                            -1);
   }
+}
+
+RefPtr<QuotaObject> GetQuotaObject(sqlite3_file* aFile, bool obfuscatingVFS) {
+  return obfuscatingVFS
+             ? mozilla::storage::obfsvfs::GetQuotaObjectForFile(aFile)
+             : mozilla::storage::quotavfs::GetQuotaObjectForFile(aFile);
 }
 
 /**
@@ -846,8 +851,8 @@ nsresult Connection::initialize(const nsACString& aStorageKey,
       mName.IsEmpty() ? nsAutoCString(":memory:"_ns)
                       : "file:"_ns + mName + "?mode=memory&cache=shared"_ns;
 
-  int srv =
-      ::sqlite3_open_v2(path.get(), &mDBConn, mFlags, GetBaseVFSName(true));
+  int srv = ::sqlite3_open_v2(path.get(), &mDBConn, mFlags,
+                              basevfs::GetVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     nsresult rv = convertResultCode(srv);
@@ -894,12 +899,12 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
                             "readonly-immutable-nolock");
   } else {
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetBaseVFSName(exclusive));
+                            basevfs::GetVFSName(exclusive));
     if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
       // Retry without trying to get an exclusive lock.
       exclusive = false;
       srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, GetBaseVFSName(false));
+                              mFlags, basevfs::GetVFSName(false));
     }
   }
   if (srv != SQLITE_OK) {
@@ -917,7 +922,7 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
     // first query execution. When initializeInternal fails it closes the
     // connection, so we can try to restart it in non-exclusive mode.
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetBaseVFSName(false));
+                            basevfs::GetVFSName(false));
     if (srv == SQLITE_OK) {
       rv = initializeInternal();
     }
@@ -971,9 +976,9 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
 
   bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
 
-  const char* const vfs = hasKey               ? GetObfuscatingVFSName()
-                          : hasDirectoryLockId ? GetQuotaVFSName()
-                                               : GetBaseVFSName(exclusive);
+  const char* const vfs = hasKey               ? obfsvfs::GetVFSName()
+                          : hasDirectoryLockId ? quotavfs::GetVFSName()
+                                               : basevfs::GetVFSName(exclusive);
 
   int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
@@ -2559,9 +2564,6 @@ Connection::EnableModule(const nsACString& aModuleName) {
   return NS_ERROR_FAILURE;
 }
 
-// Implemented in QuotaVFS.cpp
-already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile);
-
 NS_IMETHODIMP
 Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
                             QuotaObject** aJournalQuotaObject) {
@@ -2583,7 +2585,28 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
     return convertResultCode(srv);
   }
 
-  RefPtr<QuotaObject> databaseQuotaObject = GetQuotaObjectForFile(file);
+  sqlite3_vfs* vfs;
+  srv =
+      ::sqlite3_file_control(mDBConn, nullptr, SQLITE_FCNTL_VFS_POINTER, &vfs);
+  if (srv != SQLITE_OK) {
+    return convertResultCode(srv);
+  }
+
+  bool obfusactingVFS = false;
+
+  {
+    const nsDependentCString vfsName{vfs->zName};
+
+    if (vfsName == obfsvfs::GetVFSName()) {
+      obfusactingVFS = true;
+    } else if (vfsName != quotavfs::GetVFSName()) {
+      NS_WARNING("Got unexpected vfs");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  RefPtr<QuotaObject> databaseQuotaObject =
+      GetQuotaObject(file, obfusactingVFS);
   if (NS_WARN_IF(!databaseQuotaObject)) {
     return NS_ERROR_FAILURE;
   }
@@ -2594,7 +2617,7 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
     return convertResultCode(srv);
   }
 
-  RefPtr<QuotaObject> journalQuotaObject = GetQuotaObjectForFile(file);
+  RefPtr<QuotaObject> journalQuotaObject = GetQuotaObject(file, obfusactingVFS);
   if (NS_WARN_IF(!journalQuotaObject)) {
     return NS_ERROR_FAILURE;
   }

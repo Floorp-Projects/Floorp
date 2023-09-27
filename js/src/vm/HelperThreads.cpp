@@ -1535,39 +1535,43 @@ bool GlobalHelperThreadState::submitTask(PromiseHelperTask* task) {
 }
 
 void GlobalHelperThreadState::trace(JSTracer* trc) {
-  AutoLockHelperThreadState lock;
+  {
+    AutoLockHelperThreadState lock;
 
 #ifdef DEBUG
-  // Since we hold the helper thread lock here we must disable GCMarker's
-  // checking of the atom marking bitmap since that also relies on taking the
-  // lock.
-  GCMarker* marker = nullptr;
-  if (trc->isMarkingTracer()) {
-    marker = GCMarker::fromTracer(trc);
-    marker->setCheckAtomMarking(false);
-  }
-  auto reenableAtomMarkingCheck = mozilla::MakeScopeExit([marker] {
-    if (marker) {
-      marker->setCheckAtomMarking(true);
+    // Since we hold the helper thread lock here we must disable GCMarker's
+    // checking of the atom marking bitmap since that also relies on taking the
+    // lock.
+    GCMarker* marker = nullptr;
+    if (trc->isMarkingTracer()) {
+      marker = GCMarker::fromTracer(trc);
+      marker->setCheckAtomMarking(false);
     }
-  });
+    auto reenableAtomMarkingCheck = mozilla::MakeScopeExit([marker] {
+      if (marker) {
+        marker->setCheckAtomMarking(true);
+      }
+    });
 #endif
 
-  for (auto task : ionWorklist(lock)) {
-    task->alloc().lifoAlloc()->setReadWrite();
-    task->trace(trc);
-    task->alloc().lifoAlloc()->setReadOnly();
-  }
-  for (auto task : ionFinishedList(lock)) {
-    task->trace(trc);
-  }
+    for (auto task : ionWorklist(lock)) {
+      task->alloc().lifoAlloc()->setReadWrite();
+      task->trace(trc);
+      task->alloc().lifoAlloc()->setReadOnly();
+    }
+    for (auto task : ionFinishedList(lock)) {
+      task->trace(trc);
+    }
 
-  for (auto* helper : HelperThreadState().helperTasks(lock)) {
-    if (helper->is<jit::IonCompileTask>()) {
-      helper->as<jit::IonCompileTask>()->trace(trc);
+    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+      if (helper->is<jit::IonCompileTask>()) {
+        helper->as<jit::IonCompileTask>()->trace(trc);
+      }
     }
   }
 
+  // The lazy link list is only accessed on the main thread, so trace it after
+  // releasing the lock.
   JSRuntime* rt = trc->runtime();
   if (auto* jitRuntime = rt->jitRuntime()) {
     jit::IonCompileTask* task = jitRuntime->ionLazyLinkList(rt).getFirst();
