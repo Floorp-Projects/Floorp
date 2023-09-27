@@ -26,8 +26,12 @@ newtab-unit-tests:
         cache-dotcache: true
         cwd: '{checkout}'
         command: >
+            cd /builds/worker/checkouts/gecko &&
+            rm -rf node_modules &&
+            npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
-            npm install &&
+            rm -rf node_modules &&
+            npm ci &&
             node bin/try-runner.js
     when:
         files-changed:
@@ -59,8 +63,12 @@ newtab-unit-tests-ccov:
         cache-dotcache: true
         cwd: '{checkout}'
         command: >
+            cd /builds/worker/checkouts/gecko &&
+            rm -rf node_modules &&
+            npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
-            npm install &&
+            rm -rf node_modules &&
+            npm ci &&
             node bin/try-runner.js
     run-on-projects: ["mozilla-central"]
 
