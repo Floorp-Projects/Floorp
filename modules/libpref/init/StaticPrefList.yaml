@@ -4758,6 +4758,13 @@
   value: "#FFFFFF"
   mirror: never
 
+# Whether HTMLEditor consides block or inline element with computed style or
+# only with the default style of HTML definition.
+- name: editor.block_inline_check.use_computed_style
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Use compatible range computation when applying inline style.  This is used
 # for making it possible to backout with Normandy Pref Rollout.
 - name: editor.inline_style.range.compatible_with_the_other_browsers
