@@ -177,6 +177,7 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
       case WMFStreamType::VP8:
       case WMFStreamType::VP9:
       case WMFStreamType::AV1:
+      case WMFStreamType::HEVC:
         return E_FAIL;
       default:
         break;
@@ -235,6 +236,12 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
       return aDecoder->Create(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_AV1,
                               MFVideoFormat_NV12);
 #endif
+    case WMFStreamType::HEVC:
+      if (!StaticPrefs::media_wmf_hevc_enabled() || !sDXVAEnabled) {
+        return E_FAIL;
+      }
+      return SUCCEEDED(aDecoder->Create(
+          MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_HEVC, MFVideoFormat_NV12));
     case WMFStreamType::MP3:
       return aDecoder->Create(CLSID_CMP3DecMediaObject);
     case WMFStreamType::AAC:
@@ -275,6 +282,11 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
       }
       break;
 #endif
+    case WMFStreamType::HEVC:
+      if (!StaticPrefs::media_wmf_hevc_enabled()) {
+        return false;
+      }
+      break;
     case WMFStreamType::MP3:
       // Prefer ffvpx mp3 decoder over WMF.
       if (StaticPrefs::media_ffvpx_mp3_enabled()) {
@@ -293,6 +305,7 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
       case WMFStreamType::VP8:
       case WMFStreamType::VP9:
       case WMFStreamType::AV1:
+      case WMFStreamType::HEVC:
         return false;
       default:
         break;
