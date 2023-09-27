@@ -179,7 +179,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   margin-top: -48px;
 }
 
-@media (max-height: 700px) {
+@media (height <= 700px) {
   .search-wrapper {
     padding: 0 0 30px;
   }
@@ -262,7 +262,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   }
 }
 
-@media (min-height: 701px) {
+@media (height > 700px) {
   body:not(.inline-onboarding) .fixed-search {
     main {
       padding-top: 124px;

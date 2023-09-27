@@ -754,7 +754,7 @@ html {
             margin: 25px 0;
             padding-bottom: 30px;
 
-            @media only screen and (max-width: 800px) {
+            @media only screen and (width <= 800px) {
               padding-bottom: unset;
             }
           }
@@ -764,7 +764,7 @@ html {
       .multi-select-container {
         margin-inline: 0 10px;
 
-        @media only screen and (max-width: 800px) {
+        @media only screen and (width <= 800px) {
           flex-direction: row;
           align-self: stretch;
           align-items: center;
@@ -804,13 +804,13 @@ html {
         }
       }
 
-      @media only screen and (min-width: 800px) {
+      @media only screen and (width >= 800px) {
         .tiles-theme-section {
           margin-inline-start: -10px;
         }
       }
 
-      @media only screen and (max-width: 800px) {
+      @media only screen and (width <= 800px) {
         flex-direction: column;
         min-height: $small-main-section-height + $small-secondary-section-height;
 
@@ -976,12 +976,12 @@ html {
 
       }
 
-      @media only screen and (max-height: 650px) {
+      @media only screen and (height <= 650px) {
         // Hide the "Sign in" button on the welcome screen when it would
         // otherwise overlap the screen. We'd reposition it, but then it would
         // overlap the dismiss button. We may change the alignment so they don't
         // overlap in a future revision.
-        @media (min-width: 800px) and (max-width: 990px) {
+        @media (800px <= width <= 990px) {
           .section-main .secondary-cta.top {
             display: none;
           }
@@ -989,7 +989,7 @@ html {
 
         // Reposition the "Sign in" button on the welcome screen to move inside
         // the screen when it would otherwise overlap the screen.
-        @media (max-width: 620px) {
+        @media (width <= 620px) {
           .section-main .secondary-cta.top {
             position: absolute;
             padding: 0;
@@ -1032,7 +1032,7 @@ html {
   .rtamo-icon {
     text-align: start;
 
-    @media only screen and (max-width: 800px) {
+    @media only screen and (width <= 800px) {
       text-align: center;
     }
   }

@@ -36,7 +36,7 @@ $modal-scrollbar-z-index: 1100;
   z-index: $modal-scrollbar-z-index;
 
   // modal takes over entire screen
-  @media(max-width: 960px) {
+  @media(width <= 960px) {
     height: 100%;
     top: 0;
     left: 0;
@@ -57,11 +57,11 @@ $modal-scrollbar-z-index: 1100;
     line-height: 37px;
     letter-spacing: -0.13px;
 
-    @media(max-width: 960px) {
+    @media(width <= 960px) {
       margin-top: 100px;
     }
 
-    @media(max-width: 850px) {
+    @media(width <= 850px) {
       margin-top: 30px;
     }
   }
@@ -77,12 +77,12 @@ $modal-scrollbar-z-index: 1100;
     background-color: $white;
 
     // if modal is short enough, footer becomes sticky
-    @media(max-width: 850px) and (max-height: 730px) {
+    @media(width <= 850px) and (height <= 730px) {
       position: sticky;
     }
 
     // if modal is narrow enough, footer becomes sticky
-    @media(max-width: 650px) and (max-height: 600px) {
+    @media(width <= 650px) and (height <= 600px) {
       position: sticky;
     }
 
