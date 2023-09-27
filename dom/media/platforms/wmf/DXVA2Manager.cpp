@@ -115,6 +115,9 @@ static const DWORD sNVIDIABrokenNV12[] = {
 // sample) that works best to avoid driver bugs.
 static const uint32_t kSyncSurfaceSize = 16;
 
+extern mozilla::LazyLogModule sPDMLog;
+#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+
 namespace mozilla {
 
 using layers::D3D11RecycleAllocator;
@@ -294,6 +297,60 @@ static const GUID DXVA2_ModeAV1_VLD_12bit_Profile2_420 = {
     0x9cac,
     0x4835,
     {0x9e, 0x91, 0x32, 0x7b, 0xbc, 0x4f, 0x9e, 0xe8}};
+
+// D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN
+static const GUID DXVA2_ModeHEVC_VLD_MAIN = {
+    0x5b11d51b,
+    0x2f4c,
+    0x4452,
+    {0xbc, 0xc3, 0x09, 0xf2, 0xa1, 0x16, 0x0c, 0xc0}};
+
+// D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10
+static const GUID DXVA2_ModeHEVC_VLD_MAIN10 = {
+    0x107af0e0,
+    0xef1a,
+    0x4d19,
+    {0xab, 0xa8, 0x67, 0xa1, 0x63, 0x07, 0x3d, 0x13}};
+
+static const char* DecoderGUIDToStr(const GUID& aGuid) {
+  if (aGuid == DXVA2_ModeH264_VLD_NoFGT) {
+    return "H264";
+  }
+  if (aGuid == DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT) {
+    return "Intel H264";
+  }
+  if (aGuid == DXVA2_ModeVP8_VLD) {
+    return "VP8";
+  }
+  if (aGuid == DXVA2_ModeVP9_VLD_Profile0) {
+    return "VP9 Profile0";
+  }
+  if (aGuid == DXVA2_ModeVP9_VLD_10bit_Profile2) {
+    return "VP9 10bits Profile2";
+  }
+  if (aGuid == DXVA2_ModeAV1_VLD_Profile0) {
+    return "AV1 Profile0";
+  }
+  if (aGuid == DXVA2_ModeAV1_VLD_Profile1) {
+    return "AV1 Profile1";
+  }
+  if (aGuid == DXVA2_ModeAV1_VLD_Profile2) {
+    return "AV1 Profile2";
+  }
+  if (aGuid == DXVA2_ModeAV1_VLD_12bit_Profile2) {
+    return "AV1 12bits Profile2";
+  }
+  if (aGuid == DXVA2_ModeAV1_VLD_12bit_Profile2_420) {
+    return "AV1 12bits Profile2 420";
+  }
+  if (aGuid == DXVA2_ModeHEVC_VLD_MAIN) {
+    return "HEVC main";
+  }
+  if (aGuid == DXVA2_ModeHEVC_VLD_MAIN10) {
+    return "HEVC main10";
+  }
+  return "none";
+}
 
 // This tests if a DXVA video decoder can be created for the given media
 // type/resolution. It uses the same decoder device (DXVA2_ModeH264_E -
@@ -822,7 +879,22 @@ bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
       default:
         break;
     }
+  } else if (subtype == MFVideoFormat_HEVC) {
+    RefPtr<ID3D11VideoDevice> videoDevice;
+    hr = mDevice->QueryInterface(
+        static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
+    GUID guids[] = {DXVA2_ModeHEVC_VLD_MAIN, DXVA2_ModeHEVC_VLD_MAIN10};
+    for (const GUID& guid : guids) {
+      BOOL supported = false;
+      hr = videoDevice->CheckVideoDecoderFormat(&guid, DXGI_FORMAT_NV12,
+                                                &supported);
+      if (SUCCEEDED(hr) && supported) {
+        desc.Guid = guid;
+        break;
+      }
+    }
   }
+  LOG("Select %s GUID", DecoderGUIDToStr(desc.Guid));
 
   hr = aOutputType->GetGUID(MF_MT_SUBTYPE, &subtype);
   if (SUCCEEDED(hr)) {
@@ -1510,3 +1582,5 @@ bool DXVA2Manager::IsNV12Supported(uint32_t aVendorID, uint32_t aDeviceID,
 }
 
 }  // namespace mozilla
+
+#undef LOG
