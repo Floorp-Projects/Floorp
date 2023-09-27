@@ -306,7 +306,7 @@ static void SetupCurrentThreadForChaosMode() {
 namespace {
 
 struct ThreadInitData {
-  nsThread* thread;
+  RefPtr<nsThread> thread;
   nsCString name;
 };
 
@@ -346,7 +346,7 @@ void nsThread::ThreadFunc(void* aArg) {
   using mozilla::ipc::BackgroundChild;
 
   UniquePtr<ThreadInitData> initData(static_cast<ThreadInitData*>(aArg));
-  nsThread* self = initData->thread;  // strong reference
+  RefPtr<nsThread>& self = initData->thread;
 
   MOZ_ASSERT(self->mEventTarget);
   MOZ_ASSERT(self->mEvents);
@@ -468,7 +468,6 @@ void nsThread::ThreadFunc(void* aArg) {
   // The PRThread will be deleted in PR_JoinThread(), so clear references.
   self->mThread = nullptr;
   self->mEventTarget->ClearCurrentThread();
-  NS_RELEASE(self);
 }
 
 void nsThread::InitCommon() {
@@ -620,8 +619,6 @@ nsresult nsThread::Init(const nsACString& aName) {
   MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(!mThread);
 
-  NS_ADDREF_THIS();
-
   SetThreadNameInternal(aName);
 
   mShutdownRequired = true;
@@ -634,7 +631,6 @@ nsresult nsThread::Init(const nsACString& aName) {
   if (!(thread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, initData.get(),
                                  PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                                  PR_JOINABLE_THREAD, mStackSize))) {
-    NS_RELEASE_THIS();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
