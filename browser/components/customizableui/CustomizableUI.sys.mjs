@@ -57,7 +57,7 @@ const kSubviewEvents = ["ViewShowing", "ViewHiding"];
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 19;
+var kVersion = 20;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -185,6 +185,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "resetPBMToolbarButtonEnabled",
+  "browser.privatebrowsing.resetPBM.enabled",
+  false
+);
+
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
@@ -249,6 +256,7 @@ var CustomizableUIInternal = {
       "downloads-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
       "fxa-toolbar-menu-button",
+      lazy.resetPBMToolbarButtonEnabled ? "reset-pbm-toolbar-button" : null,
     ].filter(name => name);
 
     this.registerArea(
@@ -657,6 +665,18 @@ var CustomizableUIInternal = {
         ...extWidgets,
         ...addonsPlacements,
       ];
+    }
+
+    // Add the PBM reset button as the right most button item
+    if (currentVersion < 20) {
+      let navbarPlacements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      // Place the button as the first item to the left of the hamburger menu
+      if (
+        navbarPlacements &&
+        !navbarPlacements.includes("reset-pbm-toolbar-button")
+      ) {
+        navbarPlacements.push("reset-pbm-toolbar-button");
+      }
     }
   },
 
