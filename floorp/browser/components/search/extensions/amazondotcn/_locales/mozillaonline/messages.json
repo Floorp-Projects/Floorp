@@ -1,8 +1,0 @@
-{
-  "searchUrl": {
-    "message": "https://www.amazon.cn/gp/search"
-  },
-  "searchUrlGetParams": {
-    "message": "ie=UTF8&camp=536&creative=3200&index=aps&linkCode=ur2&tag=mozilla&keywords={searchTerms}"
-  }
-}
