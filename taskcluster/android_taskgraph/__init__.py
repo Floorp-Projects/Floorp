@@ -28,7 +28,6 @@ def register(graph_config):
             "target_tasks",
             "util.group_by",
             "worker_types",
-            "release_promotion",
         ]
     )
 
