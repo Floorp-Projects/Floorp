@@ -530,30 +530,6 @@ class SettingsSearchTest {
         }
     }
 
-    // Expected for app language set to Arabic
-    @Test
-    fun verifySearchEnginesWithRTLLocale() {
-        val arabicLocale = Locale("ar", "AR")
-
-        runWithSystemLocaleChanged(arabicLocale, activityTestRule.activityRule) {
-            homeScreen {
-            }.openSearch {
-                verifyTranslatedFocusedNavigationToolbar("ابحث أو أدخِل عنوانا")
-                clickSearchSelectorButton()
-                verifySearchShortcutListContains(
-                    "Google",
-                    "Bing",
-                    "Amazon.com",
-                    "DuckDuckGo",
-                    "ويكيبيديا (ar)",
-                )
-                selectTemporarySearchMethod("ويكيبيديا (ar)")
-            }.submitQuery("firefox") {
-                verifyUrl("firefox")
-            }
-        }
-    }
-
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2233337
     @Test
     fun verifyTheSearchEnginesListsRespectTheLocaleTest() {

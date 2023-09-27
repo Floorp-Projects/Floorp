@@ -32,6 +32,7 @@ import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
@@ -49,6 +50,7 @@ import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
+import java.util.Locale
 
 /**
  *  Tests for verifying the search fragment
@@ -173,9 +175,10 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1059459
     @SmokeTest
     @Test
-    fun scanButtonDenyPermissionTest() {
+    fun verifyQRScanningCameraAccessDialogTest() {
         val cameraManager = appContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
 
@@ -194,9 +197,10 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/235397
     @SmokeTest
     @Test
-    fun scanButtonAllowPermissionTest() {
+    fun scanQRCodeToOpenAWebpageTest() {
         val cameraManager = appContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
 
@@ -230,10 +234,11 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/235395
     // Verifies a temporary change of search engine from the Search shortcut menu
     @SmokeTest
     @Test
-    fun selectSearchEnginesShortcutTest() {
+    fun searchEnginesCanBeChangedTemporarilyFromSearchSelectorMenuTest() {
         val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay")
 
         enginesList.forEach {
@@ -249,8 +254,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/233589
     @Test
-    fun accessSearchSettingFromSearchSelectorMenuTest() {
+    fun defaultSearchEnginesCanBeSetFromSearchSelectorMenuTest() {
         searchScreen {
             clickSearchSelectorButton()
         }.clickSearchEngineSettings {
@@ -266,8 +272,9 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/522918
     @Test
-    fun clearSearchTest() {
+    fun verifyClearSearchButtonTest() {
         homeScreen {
         }.openSearch {
             typeSearch(queryString)
@@ -641,9 +648,10 @@ class SearchTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154215
     @SmokeTest
     @Test
-    fun verifySearchHistoryWithBrowsingDataTest() {
+    fun verifyHistorySearchWithBrowsingHistoryTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1)
         val secondPageUrl = getGenericAsset(searchMockServer, 2)
 
@@ -757,6 +765,31 @@ class SearchTest {
                     "test page 2",
                 ),
             )
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1232631
+    // Expected for app language set to Arabic
+    @Test
+    fun verifySearchEnginesFunctionalityUsingRTLLocaleTest() {
+        val arabicLocale = Locale("ar", "AR")
+
+        TestHelper.runWithSystemLocaleChanged(arabicLocale, activityTestRule.activityRule) {
+            homeScreen {
+            }.openSearch {
+                verifyTranslatedFocusedNavigationToolbar("ابحث أو أدخِل عنوانا")
+                clickSearchSelectorButton()
+                verifySearchShortcutListContains(
+                    "Google",
+                    "Bing",
+                    "Amazon.com",
+                    "DuckDuckGo",
+                    "ويكيبيديا (ar)",
+                )
+                selectTemporarySearchMethod("ويكيبيديا (ar)")
+            }.submitQuery("firefox") {
+                verifyUrl("firefox")
+            }
         }
     }
 }
