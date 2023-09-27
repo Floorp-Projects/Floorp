@@ -155,7 +155,7 @@ add_task(async function test_sidebar_navigation() {
   });
 });
 
-add_task(async function test_button_hidden_when_opted_out() {
+add_task(async function test_button_visible_when_opted_out() {
   await BrowserTestUtils.withNewTab(
     {
       url: PRODUCT_TEST_URL,
@@ -187,7 +187,6 @@ add_task(async function test_button_hidden_when_opted_out() {
       await SpecialPowers.spawn(shoppingBrowser, [], async () => {
         let shoppingContainer =
           content.document.querySelector("shopping-container").wrappedJSObject;
-        // shoppingContainer.data = Cu.cloneInto(mockData, content);
         await shoppingContainer.updateComplete;
         let shoppingSettings = shoppingContainer.settingsEl;
         await shoppingSettings.updateComplete;
@@ -199,8 +198,8 @@ add_task(async function test_button_hidden_when_opted_out() {
 
       await BrowserTestUtils.waitForMutationCondition(
         shoppingButton,
-        { attributes: true, attributeFilter: ["hidden"] },
-        () => shoppingButton.hidden
+        { attributes: false, attributeFilter: ["shoppingsidebaropen"] },
+        () => shoppingButton.getAttribute("shoppingsidebaropen")
       );
 
       ok(
@@ -214,8 +213,8 @@ add_task(async function test_button_hidden_when_opted_out() {
       );
 
       ok(
-        BrowserTestUtils.is_hidden(shoppingButton),
-        "Shopping Button should be hidden after opting out"
+        BrowserTestUtils.is_visible(shoppingButton),
+        "Shopping Button should be visible after opting out"
       );
 
       Services.prefs.setBoolPref(

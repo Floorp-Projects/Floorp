@@ -315,6 +315,10 @@ export class ShoppingSidebarChild extends RemotePageChild {
         });
       });
     } else {
+      // Don't bother continuing if the user has opted out.
+      if (lazy.optedIn == 2) {
+        return;
+      }
       let url = await this.sendQuery("GetProductURL");
 
       // Similar to canContinue() above, check to see if things
