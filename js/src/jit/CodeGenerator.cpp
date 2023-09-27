@@ -542,6 +542,15 @@ void CodeGenerator::visitOutOfLineCallVM(
     OutOfLineCallVM<Fn, fn, ArgSeq, StoreOutputTo>* ool) {
   LInstruction* lir = ool->lir();
 
+#ifdef JS_JITSPEW
+  JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
+               lir->opName());
+  if (const char* extra = lir->getExtraName()) {
+    JitSpewCont(JitSpew_Codegen, ":%s", extra);
+  }
+  JitSpewFin(JitSpew_Codegen);
+#endif
+  perfSpewer_.recordInstruction(masm, lir);
   saveLive(lir);
   ool->args().generate(this);
   callVM<Fn, fn>(lir);
