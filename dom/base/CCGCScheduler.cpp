@@ -12,6 +12,25 @@
 #include "mozilla/PerfStats.h"
 #include "nsRefreshDriver.h"
 
+/* Globally initialized constants
+ */
+namespace mozilla {
+const TimeDuration kOneMinute = TimeDuration::FromSeconds(60.0f);
+const TimeDuration kCCDelay = TimeDuration::FromSeconds(6);
+const TimeDuration kCCSkippableDelay = TimeDuration::FromMilliseconds(250);
+const TimeDuration kTimeBetweenForgetSkippableCycles =
+    TimeDuration::FromSeconds(2);
+const TimeDuration kForgetSkippableSliceDuration =
+    TimeDuration::FromMilliseconds(2);
+const TimeDuration kICCIntersliceDelay = TimeDuration::FromMilliseconds(64);
+const TimeDuration kICCSliceBudget = TimeDuration::FromMilliseconds(3);
+const TimeDuration kIdleICCSliceBudget = TimeDuration::FromMilliseconds(2);
+const TimeDuration kMaxICCDuration = TimeDuration::FromSeconds(2);
+
+const TimeDuration kCCForced = kOneMinute * 2;
+const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
+}  // namespace mozilla
+
 /*
  * GC Scheduling from Firefox
  * ==========================
