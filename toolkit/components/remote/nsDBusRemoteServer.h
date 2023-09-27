@@ -12,25 +12,31 @@
 #include "nsUnixRemoteServer.h"
 #include "mozilla/DBusHelpers.h"
 
+#include <gio/gio.h>
+#include "mozilla/RefPtr.h"
+#include "mozilla/GRefPtr.h"
+
 class nsDBusRemoteServer final : public nsRemoteServer,
                                  public nsUnixRemoteServer {
  public:
-  nsDBusRemoteServer() : mConnection(nullptr), mAppName(nullptr) {}
   ~nsDBusRemoteServer() override { Shutdown(); }
 
   nsresult Startup(const char* aAppName, const char* aProfileName) override;
   void Shutdown() override;
 
-  DBusHandlerResult HandleDBusMessage(DBusConnection* aConnection,
-                                      DBusMessage* msg);
-  void UnregisterDBusInterface(DBusConnection* aConnection);
+  void OnBusAcquired(GDBusConnection* aConnection);
+  void OnNameAcquired(GDBusConnection* aConnection);
+  void OnNameLost(GDBusConnection* aConnection);
+
+  bool HandleOpenURL(const gchar* aInterfaceName, const gchar* aMethodName,
+                     const nsACString& aParam);
 
  private:
-  DBusHandlerResult OpenURL(DBusMessage* msg);
-  DBusHandlerResult Introspect(DBusMessage* msg);
+  uint mDBusID = 0;
+  uint mRegistrationId = 0;
+  GDBusConnection* mConnection = nullptr;
+  RefPtr<GDBusNodeInfo> mIntrospectionData;
 
-  // The connection is owned by DBus library
-  RefPtr<DBusConnection> mConnection;
   nsCString mAppName;
   nsCString mPathName;
 };

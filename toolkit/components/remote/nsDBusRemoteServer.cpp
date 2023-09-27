@@ -11,25 +11,23 @@
 #include "mozilla/XREAppData.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/GUniquePtr.h"
+#include "MainThreadUtils.h"
 #include "nsPrintfCString.h"
-
 #include "nsGTKToolkit.h"
 
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-
 #include <dlfcn.h>
+
+using namespace mozilla;
+
+// Mozilla has old GIO version in build roots
+#define G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE GBusNameOwnerFlags(1 << 2)
 
 static const char* introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
     "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
     "<node>\n"
-    " <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-    "   <method name=\"Introspect\">\n"
-    "     <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-    "   </method>\n"
-    " </interface>\n"
     " <interface name=\"org.mozilla.%s\">\n"
     "   <method name=\"OpenURL\">\n"
     "     <arg name=\"url\" direction=\"in\" type=\"ay\"/>\n"
@@ -37,113 +35,163 @@ static const char* introspect_template =
     " </interface>\n"
     "</node>\n";
 
-DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage* msg) {
-  DBusMessage* reply = dbus_message_new_method_return(msg);
-  if (!reply) return DBUS_HANDLER_RESULT_NEED_MEMORY;
+bool nsDBusRemoteServer::HandleOpenURL(const gchar* aInterfaceName,
+                                       const gchar* aMethodName,
+                                       const nsACString& aParam) {
+  nsPrintfCString ourInterfaceName("org.mozilla.%s", mAppName.get());
 
-  nsAutoCString introspect_xml;
-  introspect_xml = nsPrintfCString(introspect_template, mAppName.get());
+  if ((strcmp("OpenURL", aMethodName) != 0) ||
+      (strcmp(ourInterfaceName.get(), aInterfaceName) != 0)) {
+    g_warning("nsDBusRemoteServer: HandleOpenURL() called with wrong params!");
+    return false;
+  }
 
-  const char* message = introspect_xml.get();
-  dbus_message_append_args(reply, DBUS_TYPE_STRING, &message,
-                           DBUS_TYPE_INVALID);
-
-  dbus_connection_send(mConnection, reply, nullptr);
-  dbus_message_unref(reply);
-
-  return DBUS_HANDLER_RESULT_HANDLED;
+  guint32 timestamp = gtk_get_current_event_time();
+  if (timestamp == GDK_CURRENT_TIME) {
+    timestamp = guint32(g_get_monotonic_time() / 1000);
+  }
+  HandleCommandLine(PromiseFlatCString(aParam).get(), timestamp);
+  return true;
 }
 
-DBusHandlerResult nsDBusRemoteServer::OpenURL(DBusMessage* msg) {
-  DBusMessage* reply = nullptr;
-  const char* commandLine;
-  int length;
+static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
+                             const gchar* aObjectPath,
+                             const gchar* aInterfaceName,
+                             const gchar* aMethodName, GVariant* aParameters,
+                             GDBusMethodInvocation* aInvocation,
+                             gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  if (!dbus_message_get_args(msg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE,
-                             &commandLine, &length, DBUS_TYPE_INVALID) ||
-      length == 0) {
-    nsAutoCString errorMsg;
-    errorMsg = nsPrintfCString("org.mozilla.%s.Error", mAppName.get());
-    reply = dbus_message_new_error(msg, errorMsg.get(), "Wrong argument");
+  if (!g_variant_is_of_type(aParameters, G_VARIANT_TYPE_TUPLE) ||
+      g_variant_n_children(aParameters) != 1) {
+    g_warning(
+        "nsDBusRemoteServer: HandleMethodCall: aParameters is not a tuple!");
+    g_dbus_method_invocation_return_error(
+        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
+        "Method %s.%s.%s has wrong params!", aObjectPath, aInterfaceName,
+        aMethodName);
+    return;
+  }
+
+  gsize len;
+  const auto* url = (const char*)g_variant_get_fixed_array(
+      g_variant_get_child_value(aParameters, 0), &len, sizeof(char));
+  if (!url) {
+    g_warning(
+        "nsDBusRemoteServer: HandleMethodCall: failed to get url string!");
+    g_dbus_method_invocation_return_error(
+        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
+        "Method %s.%s.%s has wrong params!", aObjectPath, aInterfaceName,
+        aMethodName);
+    return;
+  }
+
+  int ret = static_cast<nsDBusRemoteServer*>(aUserData)->HandleOpenURL(
+      aInterfaceName, aMethodName, nsDependentCString(url, len));
+  if (!ret) {
+    g_dbus_method_invocation_return_error(
+        aInvocation, G_DBUS_ERROR, G_DBUS_ERROR_NOT_SUPPORTED,
+        "Method %s.%s.%s doesn't match OpenURL()", aObjectPath, aInterfaceName,
+        aMethodName);
+    return;
+  }
+  g_dbus_method_invocation_return_value(aInvocation, nullptr);
+}
+
+static GVariant* HandleGetProperty(GDBusConnection* aConnection,
+                                   const gchar* aSender,
+                                   const gchar* aObjectPath,
+                                   const gchar* aInterfaceName,
+                                   const gchar* aPropertyName, GError** aError,
+                                   gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
+  g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
+              "%s:%s setting is not supported", aInterfaceName, aPropertyName);
+  return nullptr;
+}
+
+static gboolean HandleSetProperty(GDBusConnection* aConnection,
+                                  const gchar* aSender,
+                                  const gchar* aObjectPath,
+                                  const gchar* aInterfaceName,
+                                  const gchar* aPropertyName, GVariant* aValue,
+                                  GError** aError, gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
+  g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
+              "%s:%s setting is not supported", aInterfaceName, aPropertyName);
+  return false;
+}
+
+static const GDBusInterfaceVTable gInterfaceVTable = {
+    HandleMethodCall, HandleGetProperty, HandleSetProperty};
+
+void nsDBusRemoteServer::OnBusAcquired(GDBusConnection* aConnection) {
+  mPathName = nsPrintfCString("/org/mozilla/%s/Remote", mAppName.get());
+  static auto sDBusValidatePathName = (bool (*)(const char*, DBusError*))dlsym(
+      RTLD_DEFAULT, "dbus_validate_path");
+  if (!sDBusValidatePathName ||
+      !sDBusValidatePathName(mPathName.get(), nullptr)) {
+    g_warning("nsDBusRemoteServer: dbus_validate_path() failed!");
+    return;
+  }
+
+  GUniquePtr<GError> error;
+  mIntrospectionData = dont_AddRef(g_dbus_node_info_new_for_xml(
+      nsPrintfCString(introspect_template, mAppName.get()).get(),
+      getter_Transfers(error)));
+  if (!mIntrospectionData) {
+    g_warning("nsDBusRemoteServer: g_dbus_node_info_new_for_xml() failed! %s",
+              error->message);
+    return;
+  }
+
+  mRegistrationId = g_dbus_connection_register_object(
+      aConnection, mPathName.get(), mIntrospectionData->interfaces[0],
+      &gInterfaceVTable, this,  /* user_data */
+      nullptr,                  /* user_data_free_func */
+      getter_Transfers(error)); /* GError** */
+
+  if (mRegistrationId == 0) {
+    g_warning(
+        "nsDBusRemoteServer: g_dbus_connection_register_object() failed! %s",
+        error->message);
+    return;
+  }
+}
+
+void nsDBusRemoteServer::OnNameAcquired(GDBusConnection* aConnection) {
+  mConnection = aConnection;
+}
+
+void nsDBusRemoteServer::OnNameLost(GDBusConnection* aConnection) {
+  mConnection = nullptr;
+  if (!mRegistrationId) {
+    return;
+  }
+
+  if (g_dbus_connection_unregister_object(aConnection, mRegistrationId)) {
+    mRegistrationId = 0;
   } else {
-    guint32 timestamp = gtk_get_current_event_time();
-    if (timestamp == GDK_CURRENT_TIME) {
-      timestamp = guint32(g_get_monotonic_time() / 1000);
-    }
-    HandleCommandLine(commandLine, timestamp);
-    reply = dbus_message_new_method_return(msg);
+    // Note: Most code examples in the internet probably dont't even check the
+    // result here, but
+    // according to the spec it _can_ return false.
+    g_warning(
+        "nsDBusRemoteServer: Unable to unregister root object from within "
+        "onNameLost!");
   }
-
-  dbus_connection_send(mConnection, reply, nullptr);
-  dbus_message_unref(reply);
-
-  return DBUS_HANDLER_RESULT_HANDLED;
 }
-
-DBusHandlerResult nsDBusRemoteServer::HandleDBusMessage(
-    DBusConnection* aConnection, DBusMessage* msg) {
-  NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
-
-  const char* method = dbus_message_get_member(msg);
-  const char* iface = dbus_message_get_interface(msg);
-
-  if ((strcmp("Introspect", method) == 0) &&
-      (strcmp("org.freedesktop.DBus.Introspectable", iface) == 0)) {
-    return Introspect(msg);
-  }
-
-  nsAutoCString ourInterfaceName;
-  ourInterfaceName = nsPrintfCString("org.mozilla.%s", mAppName.get());
-
-  if ((strcmp("OpenURL", method) == 0) &&
-      (strcmp(ourInterfaceName.get(), iface) == 0)) {
-    return OpenURL(msg);
-  }
-
-  return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-}
-
-void nsDBusRemoteServer::UnregisterDBusInterface(DBusConnection* aConnection) {
-  NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
-  // Not implemented
-}
-
-static DBusHandlerResult message_handler(DBusConnection* conn, DBusMessage* msg,
-                                         void* user_data) {
-  auto interface = static_cast<nsDBusRemoteServer*>(user_data);
-  return interface->HandleDBusMessage(conn, msg);
-}
-
-static void unregister(DBusConnection* conn, void* user_data) {
-  auto interface = static_cast<nsDBusRemoteServer*>(user_data);
-  interface->UnregisterDBusInterface(conn);
-}
-
-static DBusObjectPathVTable remoteHandlersTable = {
-    .unregister_function = unregister,
-    .message_function = message_handler,
-};
 
 nsresult nsDBusRemoteServer::Startup(const char* aAppName,
                                      const char* aProfileName) {
-  if (mConnection && dbus_connection_get_is_connected(mConnection)) {
-    // We're already connected so we don't need to reconnect
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!mDBusID);
 
   // Don't even try to start without any application/profile name
   if (!aAppName || aAppName[0] == '\0' || !aProfileName ||
       aProfileName[0] == '\0')
     return NS_ERROR_INVALID_ARG;
-
-  mConnection = dont_AddRef(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
-  if (!mConnection) {
-    return NS_ERROR_FAILURE;
-  }
-  auto releaseDBusConnection =
-      mozilla::MakeScopeExit([&] { mConnection = nullptr; });
-  dbus_connection_set_exit_on_disconnect(mConnection, false);
-  dbus_connection_setup_with_g_main(mConnection, nullptr);
 
   mAppName = aAppName;
   mozilla::XREAppData::SanitizeNameForDBus(mAppName);
@@ -156,12 +204,14 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
 
   nsPrintfCString busName("org.mozilla.%s.%s", mAppName.get(),
                           profileName.get());
-  if (busName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
+  if (busName.Length() > DBUS_MAXIMUM_NAME_LENGTH) {
     busName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
+  }
 
   static auto sDBusValidateBusName = (bool (*)(const char*, DBusError*))dlsym(
       RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
+    g_warning("nsDBusRemoteServer: dbus_validate_bus_name() is missing!");
     return NS_ERROR_FAILURE;
   }
 
@@ -171,44 +221,39 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
     if (!sDBusValidateBusName(busName.get(), nullptr)) {
       // We failed completelly to get a valid bus name - just quit
       // to prevent crash at dbus_bus_request_name().
+      g_warning("nsDBusRemoteServer: dbus_validate_bus_name() failed!");
       return NS_ERROR_FAILURE;
     }
   }
 
-  DBusError err;
-  dbus_error_init(&err);
-  dbus_bus_request_name(mConnection, busName.get(), DBUS_NAME_FLAG_DO_NOT_QUEUE,
-                        &err);
-  // The interface is already owned - there is another application/profile
-  // instance already running.
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
+  mDBusID = g_bus_own_name(
+      G_BUS_TYPE_SESSION, busName.get(), G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE,
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsDBusRemoteServer*>(aUserData)->OnBusAcquired(aConnection);
+      },
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsDBusRemoteServer*>(aUserData)->OnNameAcquired(
+            aConnection);
+      },
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsDBusRemoteServer*>(aUserData)->OnNameLost(aConnection);
+      },
+      this, nullptr);
+  if (!mDBusID) {
+    g_warning("nsDBusRemoteServer: g_bus_own_name() failed!");
     return NS_ERROR_FAILURE;
   }
 
-  mPathName = nsPrintfCString("/org/mozilla/%s/Remote", mAppName.get());
-  static auto sDBusValidatePathName = (bool (*)(const char*, DBusError*))dlsym(
-      RTLD_DEFAULT, "dbus_validate_path");
-  if (!sDBusValidatePathName ||
-      !sDBusValidatePathName(mPathName.get(), nullptr)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!dbus_connection_register_object_path(mConnection, mPathName.get(),
-                                            &remoteHandlersTable, this)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  releaseDBusConnection.release();
   return NS_OK;
 }
 
 void nsDBusRemoteServer::Shutdown() {
-  if (!mConnection) {
-    return;
+  OnNameLost(mConnection);
+  if (mDBusID) {
+    g_bus_unown_name(mDBusID);
   }
-
-  dbus_connection_unregister_object_path(mConnection, mPathName.get());
-
-  // dbus_connection_unref() will be called by RefPtr here.
-  mConnection = nullptr;
+  mIntrospectionData = nullptr;
 }
