@@ -25,10 +25,10 @@
  */
 
 /* eslint-disable max-depth, no-console */
-const meow = require("meow");
 const chalk = require("chalk");
 const https = require("https");
 const path = require("path");
+const { pathToFileURL } = require("url");
 const fs = require("fs");
 const util = require("util");
 const prettier = require("prettier");
@@ -42,54 +42,6 @@ const OUTPUT_PATH = "./test/NimbusRolloutMessageProvider.sys.mjs";
 const LICENSE_STRING = `/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */`;
-
-const cli = meow(
-  `
-  Usage
-    $ node bin/import-rollouts.js [options]
-
-  Options
-    -c ID, --collection ID   The Nimbus collection ID to import from
-                             default: ${DEFAULT_COLLECTION_ID}
-    -e, --experiments        Import all messaging experiments, not just rollouts
-    -s, --skip-validation    Skip validation of experiments and messages
-    -h, --help               Show this help message
-
-  Examples
-    $ node bin/import-rollouts.js --collection nimbus-preview
-    $ ./mach npm run import-rollouts --prefix=browser/components/newtab -- -e
-`,
-  {
-    description: false,
-    // `pkg` is a tiny optimization. It prevents meow from looking for a package
-    // that doesn't technically exist. meow searches for a package and changes
-    // the process name to the package name. It resolves to the newtab
-    // package.json, which would give a confusing name and be wasteful.
-    pkg: {
-      name: "import-rollouts",
-      version: "1.0.0",
-    },
-    flags: {
-      collection: {
-        type: "string",
-        alias: "c",
-        default: DEFAULT_COLLECTION_ID,
-      },
-      experiments: {
-        type: "boolean",
-        alias: "e",
-        default: false,
-      },
-      skipValidation: {
-        type: "boolean",
-        alias: "s",
-        default: false,
-      },
-    },
-  }
-);
-
-const RECORDS_URL = `${BASE_URL}${cli.flags.collection}/records`;
 
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
@@ -228,9 +180,64 @@ async function format(content) {
 }
 
 async function main() {
+  const { default: meow } = await import("meow");
   const { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } = await import(
     "../lib/MessagingExperimentConstants.sys.mjs"
   );
+
+  const fileUrl = pathToFileURL(__filename);
+
+  const cli = meow(
+    `
+    Usage
+      $ node bin/import-rollouts.js [options]
+  
+    Options
+      -c ID, --collection ID   The Nimbus collection ID to import from
+                               default: ${DEFAULT_COLLECTION_ID}
+      -e, --experiments        Import all messaging experiments, not just rollouts
+      -s, --skip-validation    Skip validation of experiments and messages
+      -h, --help               Show this help message
+  
+    Examples
+      $ node bin/import-rollouts.js --collection nimbus-preview
+      $ ./mach npm run import-rollouts --prefix=browser/components/newtab -- -e
+  `,
+    {
+      description: false,
+      // `pkg` is a tiny optimization. It prevents meow from looking for a package
+      // that doesn't technically exist. meow searches for a package and changes
+      // the process name to the package name. It resolves to the newtab
+      // package.json, which would give a confusing name and be wasteful.
+      pkg: {
+        name: "import-rollouts",
+        version: "1.0.0",
+      },
+      // `importMeta` is required by meow 10+. It was added to support ESM, but
+      // meow now requires it, and no longer supports CJS style imports. But it
+      // only uses import.meta.url, which can be polyfilled like this:
+      importMeta: { url: fileUrl },
+      flags: {
+        collection: {
+          type: "string",
+          alias: "c",
+          default: DEFAULT_COLLECTION_ID,
+        },
+        experiments: {
+          type: "boolean",
+          alias: "e",
+          default: false,
+        },
+        skipValidation: {
+          type: "boolean",
+          alias: "s",
+          default: false,
+        },
+      },
+    }
+  );
+
+  const RECORDS_URL = `${BASE_URL}${cli.flags.collection}/records`;
 
   console.log(`Fetching records from ${chalk.underline.yellow(RECORDS_URL)}`);
 
