@@ -73,8 +73,8 @@ bitflags! {
 
         // The element is reached by a relative selector search in both sibling and ancestor directions.
         const RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING =
-            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING.bits |
-            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR.bits;
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING.bits() |
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR.bits();
     }
 }
 
