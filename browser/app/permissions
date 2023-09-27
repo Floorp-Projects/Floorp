@@ -11,10 +11,7 @@
 # Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.sys.mjs
 # Bug 1837407: support.mozilla.org gets a special workaround for similar reasons.
 origin	uitour	1	https://www.mozilla.org
-origin	uitour	1	https://monitor.firefox.com
-origin	uitour	1	https://screenshots.firefox.com
 origin	uitour	1	https://support.mozilla.org
-origin	uitour	1	https://truecolors.firefox.com
 origin	uitour	1	about:home
 origin	uitour	1	about:newtab
 
@@ -23,9 +20,6 @@ origin	install	1	https://addons.mozilla.org
 
 # Remote troubleshooting
 origin	remote-troubleshooting	1	https://support.mozilla.org
-
-# addon install
-origin	install	1	https://fpn.firefox.com
 
 # autoplay video/audio
 origin	autoplay-media	1	about:welcome
