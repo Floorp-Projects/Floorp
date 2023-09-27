@@ -78,6 +78,7 @@ jobs:
         attributes:
             release-type: release
             shipping-product: focus
+        shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Focus release AAB build from source code'
@@ -97,6 +98,7 @@ jobs:
         attributes:
             release-type: release
             shipping-product: focus
+        shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Klar release AAB build from source code'
@@ -116,6 +118,7 @@ jobs:
         attributes:
             release-type: release
             shipping-product: fenix
+        shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         description: 'Fenix release AAB build from source code'
@@ -171,6 +174,7 @@ jobs:
         attributes:
             release-type: beta
             shipping-product: focus
+        shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Focus beta AAB build from source code'
@@ -190,6 +194,7 @@ jobs:
         attributes:
             release-type: beta
             shipping-product: fenix
+        shipping-product: firefox-android
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         description: 'Fenix beta AAB build from source code'
