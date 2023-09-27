@@ -865,6 +865,9 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
     if (TheoraDecoder::IsTheora(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::Theora, aSupported);
     }
+    if (MP4Decoder::IsHEVC(aMimeType)) {
+      return MCSInfo::GetDecodeSupportSet(MediaCodec::HEVC, aSupported);
+    }
   }
 
   if (supports.contains(TrackSupport::Audio)) {
