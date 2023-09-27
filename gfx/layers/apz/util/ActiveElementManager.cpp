@@ -107,6 +107,10 @@ NS_IMETHODIMP DelayedClearElementActivation::GetName(nsACString& aName) {
 
 void DelayedClearElementActivation::StartTimer() {
   MOZ_ASSERT(mTimer);
+  // If the timer is null, active content state has already been cleared.
+  if (!mTimer) {
+    return;
+  }
   nsresult rv = mTimer->InitWithCallback(
       this, StaticPrefs::ui_touch_activation_duration_ms(),
       nsITimer::TYPE_ONE_SHOT);
