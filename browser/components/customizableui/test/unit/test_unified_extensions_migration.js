@@ -98,6 +98,7 @@ add_task(async function test_no_extensions() {
         "spring",
         "urlbar-container",
         "save-to-pocket-button",
+        "reset-pbm-toolbar-button",
       ],
       "toolbar-menubar": [
         "home-button",
@@ -144,6 +145,7 @@ add_task(async function test_existing_browser_actions_no_movement() {
         "spring",
         "urlbar-container",
         "save-to-pocket-button",
+        "reset-pbm-toolbar-button",
       ],
       "toolbar-menubar": [
         "home-button",
@@ -186,6 +188,7 @@ add_task(async function test_migrate_extension_buttons() {
         "spring",
         "urlbar-container",
         "save-to-pocket-button",
+        "reset-pbm-toolbar-button",
       ],
       "toolbar-menubar": [
         "home-button",
@@ -244,6 +247,7 @@ add_task(async function test_migrate_extension_buttons_no_overwrite() {
         "spring",
         "urlbar-container",
         "save-to-pocket-button",
+        "reset-pbm-toolbar-button",
       ],
       "toolbar-menubar": [
         "home-button",
@@ -308,6 +312,7 @@ add_task(async function test_migrate_extension_buttons_elsewhere() {
         "urlbar-container",
         "ext3-browser-action",
         "save-to-pocket-button",
+        "reset-pbm-toolbar-button",
         "ext4-browser-action",
       ],
       "toolbar-menubar": [

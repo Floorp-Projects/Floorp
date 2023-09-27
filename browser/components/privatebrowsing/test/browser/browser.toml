@@ -106,6 +106,8 @@ skip-if = ["verify"]
 ["browser_privatebrowsing_rememberprompt.js"]
 tags = "geolocation xr"
 
+["browser_privatebrowsing_resetPBM.js"]
+
 ["browser_privatebrowsing_sidebar.js"]
 
 ["browser_privatebrowsing_theming.js"]
