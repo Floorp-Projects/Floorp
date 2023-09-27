@@ -331,16 +331,19 @@ TEST(H265, HVCCParsingSuccess)
     EXPECT_EQ(hvcc.mNALUs[0].mNuhLayerId, 0);
     EXPECT_EQ(hvcc.mNALUs[0].mNuhTemporalIdPlus1, 0);
     EXPECT_EQ(hvcc.mNALUs[0].IsSPS(), true);
+    EXPECT_EQ(hvcc.mNALUs[0].mNALU.Length(), 8u);
 
     EXPECT_EQ(hvcc.mNALUs[1].mNalUnitType, H265NALU::NAL_TYPES::PPS_NUT);
     EXPECT_EQ(hvcc.mNALUs[1].mNuhLayerId, 0);
     EXPECT_EQ(hvcc.mNALUs[1].mNuhTemporalIdPlus1, 0);
     EXPECT_EQ(hvcc.mNALUs[1].IsSPS(), false);
+    EXPECT_EQ(hvcc.mNALUs[1].mNALU.Length(), 3u);
 
     EXPECT_EQ(hvcc.mNALUs[2].mNalUnitType, H265NALU::NAL_TYPES::PPS_NUT);
     EXPECT_EQ(hvcc.mNALUs[2].mNuhLayerId, 0);
     EXPECT_EQ(hvcc.mNALUs[2].mNuhTemporalIdPlus1, 0);
     EXPECT_EQ(hvcc.mNALUs[2].IsSPS(), false);
+    EXPECT_EQ(hvcc.mNALUs[2].mNALU.Length(), 3u);
   }
 }
 
@@ -476,6 +479,7 @@ TEST(H265, HVCCToAnnexB)
   EXPECT_EQ(sps.mNuhLayerId, 0);
   EXPECT_EQ(sps.mNuhTemporalIdPlus1, 0);
   EXPECT_EQ(sps.IsSPS(), true);
+  EXPECT_EQ(sps.mNALU.Length(), 3u);
 
   H265NALU pps(
       static_cast<uint8_t*>(annexBExtraData->Elements() +
@@ -485,6 +489,7 @@ TEST(H265, HVCCToAnnexB)
   EXPECT_EQ(pps.mNuhLayerId, 0);
   EXPECT_EQ(pps.mNuhTemporalIdPlus1, 0);
   EXPECT_EQ(pps.IsSPS(), false);
+  EXPECT_EQ(pps.mNALU.Length(), 3u);
 }
 
 }  // namespace mozilla
