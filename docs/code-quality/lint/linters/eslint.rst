@@ -4,6 +4,9 @@ ESLint
 `ESLint`__ is a popular linter for JavaScript. The ESLint integration also uses
 `Prettier`_ to enforce code formatting.
 
+.. contents::
+    :local:
+
 Run Locally
 -----------
 
@@ -53,6 +56,11 @@ Understanding Rules and Errors
   * `eslint-plugin-spidermonkey-js`_
 
 .. _eslint_common_issues:
+
+Enabling new rules and adding plugins
+-------------------------------------
+
+Please see `this page for enabling new rules <eslint/enabling-rules.html>`_.
 
 Common Issues and How To Solve Them
 -----------------------------------

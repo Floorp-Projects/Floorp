@@ -167,7 +167,8 @@ struct TestFileData {
   double mAudioDuration;  // For first audio track, -1 if N/A, in seconds.
   bool mHasCrypto;  // Note, MP4Metadata only considers pssh box for crypto.
   uint64_t mMoofReachedOffset;  // or 0 for the end.
-  bool mValidMoof;
+  bool mValidMoofForTrack1;
+  bool mValidMoofForAllTracks;
   int8_t mAudioProfile;
 };
 
@@ -175,39 +176,39 @@ static const TestFileData testFiles[] = {
     // filename parses? #V hasVideoIndex vDur w h #A aDur hasCrypto? moofOffset
     // validMoof? audio_profile
     {"test_case_1156505.mp4", false, 0, false, -1, 0, 0, 0, -1., false, 152,
-     false, 0},  // invalid ''trak box
+     false, false, 0},  // invalid ''trak box
     {"test_case_1181213.mp4", true, 1, true, 0.41666666, 320, 240, 1,
-     0.47746032, true, 0, false, 2},
+     0.47746032, true, 0, false, false, 2},
     {"test_case_1181215.mp4", true, 0, false, -1, 0, 0, 0, -1, false, 0, false,
-     0},
-    {"test_case_1181223.mp4", false, 0, false, 0.41666666, 320, 240, 0, -1,
-     false, 0, false, 0},
-    {"test_case_1181719.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
-     0},
-    {"test_case_1185230.mp4", true, 2, true, 0.41666666, 320, 240, 2,
-     0.0000059754907, false, 0, false, 2},
-    {"test_case_1187067.mp4", true, 1, true, 0.080000, 160, 90, 0, -1, false, 0,
      false, 0},
+    {"test_case_1181223.mp4", false, 0, false, 0.41666666, 320, 240, 0, -1,
+     false, 0, false, false, 0},
+    {"test_case_1181719.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
+     false, 0},
+    {"test_case_1185230.mp4", true, 2, true, 0.41666666, 320, 240, 2,
+     0.0000059754907, false, 0, false, false, 2},
+    {"test_case_1187067.mp4", true, 1, true, 0.080000, 160, 90, 0, -1, false, 0,
+     false, false, 0},
     {"test_case_1200326.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
-     0},
+     false, 0},
     {"test_case_1204580.mp4", true, 1, true, 0.502500, 320, 180, 0, -1, false,
-     0, false, 0},
+     0, false, false, 0},
     {"test_case_1216748.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 152,
-     false, 0},  // invalid 'trak' box
+     false, false, 0},  // invalid 'trak' box
     {"test_case_1296473.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
-     0},
+     false, 0},
     {"test_case_1296532.mp4", true, 1, true, 5.589333, 560, 320, 1, 5.589333,
-     true, 0, true, 2},
+     true, 0, true, false, 2},
     {"test_case_1301065.mp4", true, 0, false, -1, 0, 0, 1, 100079991719, false,
-     0, false, 2},
+     0, false, false, 2},
     {"test_case_1301065-u32max.mp4", true, 0, false, -1, 0, 0, 1, 97391.548639,
-     false, 0, false, 2},
+     false, 0, false, false, 2},
     {"test_case_1301065-max-ez.mp4", true, 0, false, -1, 0, 0, 1,
-     209146758.205306, false, 0, false, 2},
+     209146758.205306, false, 0, false, false, 2},
     {"test_case_1301065-harder.mp4", true, 0, false, -1, 0, 0, 1,
-     209146758.205328, false, 0, false, 2},
+     209146758.205328, false, 0, false, false, 2},
     {"test_case_1301065-max-ok.mp4", true, 0, false, -1, 0, 0, 1,
-     9223372036854.775, false, 0, false, 2},
+     9223372036854.775, false, 0, false, false, 2},
     // The duration is overflow for int64_t in TestFileData, parser uses
     // uint64_t so
     // this file is ignore.
@@ -216,41 +217,41 @@ static const TestFileData testFiles[] = {
     //                                                          false, 2
     //                                                          },
     {"test_case_1301065-i64max.mp4", true, 0, false, -1, 0, 0, 1,
-     std::numeric_limits<double>::infinity(), false, 0, false, 2},
+     std::numeric_limits<double>::infinity(), false, 0, false, false, 2},
     {"test_case_1301065-i64min.mp4", true, 0, false, -1, 0, 0, 1,
-     -std::numeric_limits<double>::infinity(), false, 0, false, 2},
+     -std::numeric_limits<double>::infinity(), false, 0, false, false, 2},
     {"test_case_1301065-u64max.mp4", true, 0, false, -1, 0, 0, 1, 0, false, 0,
-     false, 2},
+     false, false, 2},
     {"test_case_1329061.mov", false, 0, false, -1, 0, 0, 1, 234567981, false, 0,
-     false, 2},
-    {"test_case_1351094.mp4", true, 0, false, -1, 0, 0, 0, -1, false, 0, true,
-     0},
+     false, false, 2},
+    {"test_case_1351094.mp4", true, 0, false, -1, 0, 0, 0, -1, false, 0, false,
+     false, 0},
     {"test_case_1389299.mp4", true, 1, true, 5.589333, 560, 320, 1, 5.589333,
-     true, 0, true, 2},
+     true, 0, true, false, 2},
 
     {"test_case_1389527.mp4", true, 1, false, 5.005000, 80, 128, 1, 4.992000,
-     false, 0, false, 2},
+     false, 0, false, false, 2},
     {"test_case_1395244.mp4", true, 1, true, 0.41666666, 320, 240, 1,
-     0.47746032, false, 0, false, 2},
+     0.47746032, false, 0, false, false, 2},
     {"test_case_1388991.mp4", true, 0, false, -1, 0, 0, 1, 30.000181, false, 0,
-     false, 2},
+     false, false, 2},
     {"test_case_1410565.mp4", false, 0, false, 0, 0, 0, 0, 0, false, 955100,
-     true, 2},  // negative 'timescale'
+     false, false, 2},  // negative 'timescale'
     {"test_case_1513651-2-sample-description-entries.mp4", true, 1, true,
-     9.843344, 400, 300, 0, -1, true, 0, false, 0},
+     9.843344, 400, 300, 0, -1, true, 0, false, false, 0},
     {"test_case_1519617-cenc-init-with-track_id-0.mp4", true, 1, true, 0, 1272,
-     530, 0, -1, false, 0, false,
+     530, 0, -1, false, 0, false, false,
      0},  // Uses bad track id 0 and has a sinf but no pssh
     {"test_case_1519617-track2-trafs-removed.mp4", true, 1, true, 10.032000,
-     400, 300, 1, 10.032000, false, 0, true, 2},
+     400, 300, 1, 10.032000, false, 0, true, false, 2},
     {"test_case_1519617-video-has-track_id-0.mp4", true, 1, true, 10.032000,
-     400, 300, 1, 10.032000, false, 0, true, 2},  // Uses bad track id 0
+     400, 300, 1, 10.032000, false, 0, false, false, 2},  // Uses bad track id 0
     // The following file has multiple sample description entries with the same
     // crypto information. This does not cover multiple entries with different
     // crypto information which is tracked by
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1714626
     {"test_case_1714125-2-sample-description-entires-with-identical-crypto.mp4",
-     true, 1, true, 0, 1920, 1080, 0, 0, true, 0, false, 0},
+     true, 1, true, 0, 1920, 1080, 0, 0, true, 0, false, false, 0},
 };
 
 TEST(MP4Metadata, test_case_mp4)
@@ -441,7 +442,8 @@ TEST(MoofParser, test_case_mp4)
     EXPECT_FALSE(parser.mInitRange.IsEmpty()) << tests[test].mFilename;
     const MediaByteRangeSet byteRanges(
         MediaByteRange(0, int64_t(buffer.Length())));
-    EXPECT_EQ(tests[test].mValidMoof, parser.RebuildFragmentedIndex(byteRanges))
+    EXPECT_EQ(tests[test].mValidMoofForAllTracks,
+              parser.RebuildFragmentedIndex(byteRanges))
         << tests[test].mFilename;
     if (tests[test].mMoofReachedOffset == 0) {
       EXPECT_EQ(buffer.Length(), parser.mOffset) << tests[test].mFilename;
@@ -458,7 +460,7 @@ TEST(MoofParser, test_case_mp4)
     EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty())
         << tests[test].mFilename;
     // If we expect a valid moof we should have that moof's range stored.
-    EXPECT_EQ(tests[test].mValidMoof,
+    EXPECT_EQ(tests[test].mValidMoofForAllTracks,
               !parser.FirstCompleteMediaHeader().IsEmpty())
         << tests[test].mFilename;
   }
@@ -489,7 +491,8 @@ TEST(MoofParser, test_case_sample_description_entries)
 
     const MediaByteRangeSet byteRanges(
         MediaByteRange(0, int64_t(buffer.Length())));
-    EXPECT_EQ(tests[test].mValidMoof, parser.RebuildFragmentedIndex(byteRanges))
+    EXPECT_EQ(tests[test].mValidMoofForTrack1,
+              parser.RebuildFragmentedIndex(byteRanges))
         << tests[test].mFilename;
 
     // We only care about crypto data from the samples descriptions right now.

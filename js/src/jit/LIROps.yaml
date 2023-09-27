@@ -2893,6 +2893,15 @@
 - name: WasmBoundsCheck64
   gen_boilerplate: false
 
+- name: WasmBoundsCheckRange32
+  result_type: WordSized
+  operands:
+    index: WordSized
+    length: WordSized
+    limit: WordSized
+  mir_op: true
+  num_temps: 1
+
 - name: WasmExtendU32Index
   result_type: WordSized
   operands:

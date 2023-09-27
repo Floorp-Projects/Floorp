@@ -175,6 +175,7 @@ void WinWebAuthnManager::Register(
   mTransactionParent = aTransactionParent;
 
   BOOL HmacCreateSecret = FALSE;
+  BOOL MinPinLength = FALSE;
 
   // RP Information
   WEBAUTHN_RP_ENTITY_INFORMATION rpInfo = {
@@ -311,8 +312,8 @@ void WinWebAuthnManager::Register(
 
   // The number of entries in rgExtension should match the number of supported
   // extensions.
-  // Supported extensions: credProps, hmac-secret.
-  WEBAUTHN_EXTENSION rgExtension[2] = {};
+  // Supported extensions: credProps, hmac-secret, minPinLength.
+  WEBAUTHN_EXTENSION rgExtension[3] = {};
   DWORD cExtensions = 0;
   if (aInfo.Extensions().Length() >
       (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
@@ -332,6 +333,17 @@ void WinWebAuthnManager::Register(
             WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET;
         rgExtension[cExtensions].cbExtension = sizeof(BOOL);
         rgExtension[cExtensions].pvExtension = &HmacCreateSecret;
+        cExtensions++;
+      }
+    }
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionMinPinLength) {
+      MinPinLength =
+          ext.get_WebAuthnExtensionMinPinLength().minPinLength() == true;
+      if (MinPinLength) {
+        rgExtension[cExtensions].pwszExtensionIdentifier =
+            WEBAUTHN_EXTENSIONS_IDENTIFIER_MIN_PIN_LENGTH;
+        rgExtension[cExtensions].cbExtension = sizeof(BOOL);
+        rgExtension[cExtensions].pvExtension = &MinPinLength;
         cExtensions++;
       }
     }

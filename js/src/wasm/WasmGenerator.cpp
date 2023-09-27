@@ -56,6 +56,7 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   trapSites.swap(masm.trapSites());
   symbolicAccesses.swap(masm.symbolicAccesses());
   tryNotes.swap(masm.tryNotes());
+  codeRangeUnwindInfos.swap(masm.codeRangeUnwindInfos());
   codeLabels.swap(masm.codeLabels());
   return true;
 }
@@ -696,6 +697,14 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
+  auto unwindInfoOp = [=](uint32_t, CodeRangeUnwindInfo* i) {
+    i->offsetBy(offsetInModule);
+  };
+  if (!AppendForEach(&metadataTier_->codeRangeUnwindInfos,
+                     code.codeRangeUnwindInfos, unwindInfoOp)) {
+    return false;
+  }
+
   auto tryNoteFilter = [](const TryNote* tn) {
     // Filter out all try notes that were never given a try body. This may
     // happen due to dead code elimination.
@@ -973,6 +982,12 @@ bool ModuleGenerator::finishMetadataTier() {
       MOZ_ASSERT(trapSite.pcOffset >= last);
       last = trapSite.pcOffset;
     }
+  }
+
+  last = 0;
+  for (const CodeRangeUnwindInfo& info : metadataTier_->codeRangeUnwindInfos) {
+    MOZ_ASSERT(info.offset() >= last);
+    last = info.offset();
   }
 
   // Try notes should be sorted so that the end of ranges are in rising order

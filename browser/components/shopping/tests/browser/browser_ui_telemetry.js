@@ -83,14 +83,110 @@ add_task(async function test_shopping_sidebar_displayed() {
       BrowserTestUtils.is_visible(sidebar),
       "Sidebar should be visible."
     );
+
+    // open a new tab onto a page where sidebar is not visible.
+    let contentTab = await BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      url: CONTENT_PAGE,
+    });
+
+    // change the focused tab a few times to ensure we don't increment on tab
+    // switch.
+    await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
+    await BrowserTestUtils.switchTab(gBrowser, contentTab);
+    await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
+
+    BrowserTestUtils.removeTab(contentTab);
   });
 
   Services.fog.testFlushAllChildren();
-  var events = Glean.shopping.surfaceDisplayed.testGetValue();
 
-  Assert.greater(events.length, 0);
-  Assert.equal(events[0].category, "shopping");
-  Assert.equal(events[0].name, "surface_displayed");
+  var displayedEvents = Glean.shopping.surfaceDisplayed.testGetValue();
+  Assert.equal(1, displayedEvents.length);
+  assertEventMatches(displayedEvents[0], {
+    category: "shopping",
+    name: "surface_displayed",
+  });
+
+  var addressBarIconDisplayedEvents =
+    Glean.shopping.addressBarIconDisplayed.testGetValue();
+  assertEventMatches(addressBarIconDisplayedEvents[0], {
+    category: "shopping",
+    name: "address_bar_icon_displayed",
+  });
+
+  // reset FOG and check a page that should NOT have these events
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function (browser) {
+    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
+
+    Assert.equal(sidebar, null);
+  });
+
+  var emptyDisplayedEvents = Glean.shopping.surfaceDisplayed.testGetValue();
+  var emptyAddressBarIconDisplayedEvents =
+    Glean.shopping.addressBarIconDisplayed.testGetValue();
+
+  Assert.equal(emptyDisplayedEvents, null);
+  Assert.equal(emptyAddressBarIconDisplayedEvents, null);
+});
+
+add_task(async function test_close_telemetry_recorded() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await clickCloseButton(browser, MOCK_ANALYZED_PRODUCT_RESPONSE);
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+
+  var closeEvents = Glean.shopping.surfaceClosed.testGetValue();
+  assertEventMatches(closeEvents[0], {
+    category: "shopping",
+    name: "surface_closed",
+    extra: { source: "closeButton" },
+  });
+
+  // Ensure that the sidebar is open so we confirm the icon click closes it.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.shopping.experience2023.active", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+    let shoppingButton = document.getElementById("shopping-sidebar-button");
+    shoppingButton.click();
+  });
+
+  await Services.fog.testFlushAllChildren();
+  var urlBarIconEvents = Glean.shopping.addressBarIconClicked.testGetValue();
+  assertEventMatches(urlBarIconEvents[0], {
+    category: "shopping",
+    name: "address_bar_icon_clicked",
+    extra: { action: "closed" },
+  });
+
+  var closeSurfaceEvents = Glean.shopping.surfaceClosed.testGetValue();
+  assertEventMatches(closeSurfaceEvents[0], {
+    category: "shopping",
+    name: "surface_closed",
+    extra: { source: "closeButton" },
+  });
+
+  assertEventMatches(closeSurfaceEvents[1], {
+    category: "shopping",
+    name: "surface_closed",
+    extra: { source: "addressBarIcon" },
+  });
+
+  await SpecialPowers.popPrefEnv();
 });
 
 function clickReAnalyzeLink(browser, data) {
@@ -137,5 +233,20 @@ function clickSettingsChevronButton(browser, data) {
 
     chevron.click();
     return "clicked";
+  });
+}
+
+function clickCloseButton(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    await shoppingContainer.updateComplete;
+
+    let closeButton =
+      shoppingContainer.shadowRoot.querySelector("#close-button");
+    await closeButton.updateComplete;
+
+    closeButton.click();
   });
 }

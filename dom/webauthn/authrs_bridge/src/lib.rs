@@ -586,6 +586,9 @@ impl AuthrsTransport {
         let mut cred_props = false;
         unsafe { args.GetCredProps(&mut cred_props) }.to_result()?;
 
+        let mut min_pin_length = false;
+        unsafe { args.GetMinPinLength(&mut min_pin_length) }.to_result()?;
+
         // TODO(Bug 1593571) - Add this to the extensions
         // let mut hmac_create_secret = None;
         // let mut maybe_hmac_create_secret = false;
@@ -612,6 +615,7 @@ impl AuthrsTransport {
             resident_key_req,
             extensions: AuthenticationExtensionsClientInputs {
                 cred_props: Some(cred_props),
+                min_pin_length: Some(min_pin_length),
                 ..Default::default()
             },
             pin: None,

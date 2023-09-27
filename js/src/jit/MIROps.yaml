@@ -2918,6 +2918,17 @@
 - name: WasmBoundsCheck
   gen_boilerplate: false
 
+- name: WasmBoundsCheckRange32
+  operands:
+    index: Int32
+    length: Int32
+    limit: Int32
+  arguments:
+    bytecodeOffset: wasm::BytecodeOffset
+  result_type: Int32
+  congruent_to: if_operands_equal
+  type_policy: none
+
 - name: WasmExtendU32Index
   operands:
     input: Int32

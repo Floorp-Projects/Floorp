@@ -35,7 +35,6 @@ var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
-  // eslint-disable-next-line mozilla/use-chromeutils-generateqi
   QueryInterface(iid) {
     iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||

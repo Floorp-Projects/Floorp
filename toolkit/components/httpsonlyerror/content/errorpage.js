@@ -34,6 +34,11 @@ function initPage() {
     .getElementById("openInsecure")
     .addEventListener("click", onOpenInsecureButtonClick);
 
+  const delay = RPMGetIntPref("security.dialog_enable_delay", 1000);
+  setTimeout(() => {
+    document.getElementById("openInsecure").removeAttribute("inert");
+  }, delay);
+
   if (window.top == window) {
     document
       .getElementById("goBack")

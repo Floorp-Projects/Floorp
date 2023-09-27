@@ -2364,14 +2364,6 @@ export class UrlbarInput {
     return true;
   }
 
-  _checkForRtlText(value) {
-    let directionality = this.window.windowUtils.getDirectionFromText(value);
-    if (directionality == this.window.windowUtils.DIRECTION_RTL) {
-      return true;
-    }
-    return false;
-  }
-
   /**
    * Invoked on overflow/underflow/scrollend events to update attributes
    * related to the input text directionality. Overflow fade masks use these
@@ -2385,7 +2377,7 @@ export class UrlbarInput {
 
     let isRTL =
       this.getAttribute("domaindir") === "rtl" &&
-      this._checkForRtlText(this.value);
+      lazy.UrlbarUtils.isTextDirectionRTL(this.value, this.window);
 
     this.window.promiseDocumentFlushed(() => {
       // Check overflow again to ensure it didn't change in the meanwhile.
@@ -2607,8 +2599,7 @@ export class UrlbarInput {
       ? lazy.BrowserUIUtils.trimURL(val)
       : val;
     // Only trim value if the directionality doesn't change to RTL.
-    return this.window.windowUtils.getDirectionFromText(trimmedValue) ==
-      this.window.windowUtils.DIRECTION_RTL
+    return lazy.UrlbarUtils.isTextDirectionRTL(trimmedValue, this.window)
       ? val
       : trimmedValue;
   }

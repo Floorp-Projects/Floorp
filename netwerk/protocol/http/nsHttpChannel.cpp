@@ -156,7 +156,7 @@ namespace {
 #define BYPASS_LOCAL_CACHE(loadFlags, isPreferCacheLoadOverBypass) \
   ((loadFlags) & (nsIRequest::LOAD_BYPASS_CACHE |                  \
                   nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE) &&   \
-   !(((loadFlags)&nsIRequest::LOAD_FROM_CACHE) &&                  \
+   !(((loadFlags) & nsIRequest::LOAD_FROM_CACHE) &&                \
      (isPreferCacheLoadOverBypass)))
 
 #define RECOVER_FROM_CACHE_FILE_ERROR(result) \

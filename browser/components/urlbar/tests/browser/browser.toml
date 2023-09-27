@@ -367,6 +367,8 @@ https_first_disabled = true
 
 ["browser_result_onSelection.js"]
 
+["browser_results_format_displayValue.js"]
+
 ["browser_retainedResultsOnFocus.js"]
 
 ["browser_revert.js"]
@@ -523,6 +525,8 @@ support-files = ["slow-page.sjs"]
 ["browser_suppressFocusBorder.js"]
 
 ["browser_switchTab_closesUrlbarPopup.js"]
+
+["browser_switchTab_currentTab.js"]
 
 ["browser_switchTab_decodeuri.js"]
 

@@ -69,7 +69,8 @@
 **
 **    *   Requires SQLite 3.32.0 or later.
 */
-#include "sqlite3.h"
+#include "ObfuscatingVFS.h"
+
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h> /* For debugging only */
@@ -77,6 +78,8 @@
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
 #include "mozilla/ScopeExit.h"
 #include "nsPrintfCString.h"
+#include "QuotaVFS.h"
+#include "sqlite3.h"
 
 /*
 ** Forward declaration of objects used by this utility
@@ -635,15 +638,14 @@ static const char* obfsNextSystemCall(sqlite3_vfs* pVfs, const char* zName) {
   return ORIGVFS(pVfs)->xNextSystemCall(ORIGVFS(pVfs), zName);
 }
 
-namespace mozilla {
-namespace storage {
+namespace mozilla::storage::obfsvfs {
 
-const char* GetObfuscatingVFSName() { return "obfsvfs"; }
+const char* GetVFSName() { return "obfsvfs"; }
 
-UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
+UniquePtr<sqlite3_vfs> ConstructVFS(const char* aBaseVFSName) {
   MOZ_ASSERT(aBaseVFSName);
 
-  if (sqlite3_vfs_find(GetObfuscatingVFSName()) != nullptr) {
+  if (sqlite3_vfs_find(GetVFSName()) != nullptr) {
     return nullptr;
   }
   sqlite3_vfs* const pOrig = sqlite3_vfs_find(aBaseVFSName);
@@ -664,7 +666,7 @@ UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
       static_cast<int>(pOrig->szOsFile + sizeof(ObfsFile)), /* szOsFile */
       pOrig->mxPathname,                                    /* mxPathname */
       nullptr,                                              /* pNext */
-      GetObfuscatingVFSName(),                              /* zName */
+      GetVFSName(),                                         /* zName */
       pOrig,                                                /* pAppData */
       obfsOpen,                                             /* xOpen */
       obfsDelete,                                           /* xDelete */
@@ -687,5 +689,8 @@ UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
   return MakeUnique<sqlite3_vfs>(obfs_vfs);
 }
 
-}  // namespace storage
-}  // namespace mozilla
+already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile) {
+  return quotavfs::GetQuotaObjectForFile(ORIGFILE(pFile));
+}
+
+}  // namespace mozilla::storage::obfsvfs

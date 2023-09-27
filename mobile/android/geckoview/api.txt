@@ -846,7 +846,6 @@ package org.mozilla.geckoview {
     method public int getGlMsaaLevel();
     method public boolean getInputAutoZoomEnabled();
     method public boolean getJavaScriptEnabled();
-    method @NonNull public int getLargeKeepaliveFactor();
     method @Nullable public String[] getLocales();
     method public boolean getLoginAutofillEnabled();
     method public boolean getPauseForDebuggerEnabled();
@@ -855,8 +854,6 @@ package org.mozilla.geckoview {
     method @Nullable public GeckoRuntime getRuntime();
     method @Nullable public Rect getScreenSizeOverride();
     method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
-    method @NonNull public String getTrustedRecursiveResolverUri();
-    method public int getTrustedRecusiveResolverMode();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
     method public boolean getWebManifestEnabled();
@@ -875,13 +872,10 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setGlMsaaLevel(int);
     method @NonNull public GeckoRuntimeSettings setInputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setJavaScriptEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings setLargeKeepaliveFactor(int);
     method public void setLocales(@Nullable String[]);
     method @NonNull public GeckoRuntimeSettings setLoginAutofillEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setPreferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings setTrustedRecursiveResolverMode(int);
-    method @NonNull public GeckoRuntimeSettings setTrustedRecursiveResolverUri(@NonNull String);
     method @NonNull public GeckoRuntimeSettings setWebFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setWebManifestEnabled(boolean);
     field public static final int ALLOW_ALL = 0;
@@ -891,10 +885,6 @@ package org.mozilla.geckoview {
     field public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR;
     field public static final int HTTPS_ONLY = 2;
     field public static final int HTTPS_ONLY_PRIVATE = 1;
-    field public static final int TRR_MODE_DISABLED = 5;
-    field public static final int TRR_MODE_FIRST = 2;
-    field public static final int TRR_MODE_OFF = 0;
-    field public static final int TRR_MODE_ONLY = 3;
   }
 
   @AnyThread public static final class GeckoRuntimeSettings.Builder extends RuntimeSettings.Builder<GeckoRuntimeSettings> {
@@ -922,7 +912,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder glMsaaLevel(int);
     method @NonNull public GeckoRuntimeSettings.Builder inputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings.Builder largeKeepaliveFactor(int);
     method @NonNull public GeckoRuntimeSettings.Builder locales(@Nullable String[]);
     method @NonNull public GeckoRuntimeSettings.Builder loginAutofillEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
@@ -930,8 +919,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
     method @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
-    method @NonNull public GeckoRuntimeSettings.Builder trustedRecursiveResolverMode(int);
-    method @NonNull public GeckoRuntimeSettings.Builder trustedRecursiveResolverUri(@NonNull String);
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webManifest(boolean);
@@ -942,9 +929,6 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoRuntimeSettings.HttpsOnlyMode {
-  }
-
-  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoRuntimeSettings.TrustedRecursiveResolverMode {
   }
 
   public class GeckoSession {

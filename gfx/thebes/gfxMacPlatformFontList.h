@@ -17,8 +17,9 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
         gfxPlatformFontList::PlatformFontList());
   }
 
-  void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
-                        nsACString& aSystemFontName, gfxFontStyle& aFontStyle);
+  static void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
+                               nsACString& aSystemFontName,
+                               gfxFontStyle& aFontStyle);
 
  protected:
   bool DeprecatedFamilyIsAvailable(const nsACString& aName) override;

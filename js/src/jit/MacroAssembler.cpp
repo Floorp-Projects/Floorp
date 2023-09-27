@@ -4748,13 +4748,16 @@ static ReturnCallTrampolineData MakeReturnCallTrampoline(MacroAssembler& masm) {
   masm.moveToStackPtr(FramePointer);
 #  ifdef JS_CODEGEN_ARM64
   masm.pop(FramePointer, lr);
+  masm.append(wasm::CodeRangeUnwindInfo::UseFpLr, masm.currentOffset());
   masm.Mov(PseudoStackPointer64, vixl::sp);
   masm.abiret();
 #  else
   masm.pop(FramePointer);
+  masm.append(wasm::CodeRangeUnwindInfo::UseFp, masm.currentOffset());
   masm.ret();
 #  endif
 
+  masm.append(wasm::CodeRangeUnwindInfo::Normal, masm.currentOffset());
   masm.setFramePushed(savedPushed);
   return data;
 }
@@ -4829,6 +4832,7 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   masm.loadPtr(Address(FramePointer, wasm::Frame::callerFPOffset()), tempForFP);
   masm.loadPtr(Address(FramePointer, wasm::Frame::returnAddressOffset()),
                tempForRA);
+  masm.append(wasm::CodeRangeUnwindInfo::RestoreFpRa, masm.currentOffset());
   bool copyCallerSlot = oldSlotsAndStackArgBytes != newSlotsAndStackArgBytes;
   if (copyCallerSlot) {
     masm.loadPtr(
@@ -4868,12 +4872,21 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   masm.storePtr(tempForRA,
                 Address(FramePointer,
                         newFrameOffset + wasm::Frame::returnAddressOffset()));
-  masm.pop(tempForRA);
+  // Restore tempForRA, but keep RA on top of the stack.
+  // There is no non-locking exchange instruction between register and memory.
+  // Using tempForCaller as scratch register.
+  masm.loadPtr(Address(masm.getStackPointer(), 0), tempForCaller);
+  masm.storePtr(tempForRA, Address(masm.getStackPointer(), 0));
+  masm.mov(tempForCaller, tempForRA);
+  masm.append(wasm::CodeRangeUnwindInfo::RestoreFp, masm.currentOffset());
   masm.addToStackPtr(Imm32(framePushedAtStart + newFrameOffset +
-                           wasm::Frame::returnAddressOffset()));
+                           wasm::Frame::returnAddressOffset() + sizeof(void*)));
 #  endif
 
   masm.movePtr(tempForFP, FramePointer);
+  // Setting framePushed to pre-collapse state, to properly set that in the
+  // following code.
+  masm.setFramePushed(framePushedAtStart);
 }
 
 static void CollapseWasmFrameSlow(MacroAssembler& masm,
@@ -4938,6 +4951,7 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.loadPtr(Address(FramePointer, wasm::Frame::callerFPOffset()), tempForFP);
   masm.loadPtr(Address(FramePointer, wasm::Frame::returnAddressOffset()),
                tempForRA);
+  masm.append(wasm::CodeRangeUnwindInfo::RestoreFpRa, masm.currentOffset());
   masm.loadPtr(
       Address(FramePointer, newArgSrc + WasmCallerInstanceOffsetBeforeCall),
       tempForCaller);
@@ -4999,15 +5013,24 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.storePtr(tempForRA,
                 Address(FramePointer,
                         newFrameOffset + wasm::Frame::returnAddressOffset()));
-  masm.pop(tempForRA);
-  masm.freeStack(reserved);
+  // Restore tempForRA, but keep RA on top of the stack.
+  // There is no non-locking exchange instruction between register and memory.
+  // Using tempForCaller as scratch register.
+  masm.loadPtr(Address(masm.getStackPointer(), 0), tempForCaller);
+  masm.storePtr(tempForRA, Address(masm.getStackPointer(), 0));
+  masm.mov(tempForCaller, tempForRA);
+  masm.append(wasm::CodeRangeUnwindInfo::RestoreFp, masm.currentOffset());
   masm.addToStackPtr(Imm32(framePushedAtStart + newFrameOffset +
-                           wasm::Frame::returnAddressOffset()));
+                           wasm::Frame::returnAddressOffset() + reserved +
+                           sizeof(void*)));
 #  endif
 
   // Point FramePointer to hidden frame.
   masm.computeEffectiveAddress(Address(FramePointer, newFPOffset),
                                FramePointer);
+  // Setting framePushed to pre-collapse state, to properly set that in the
+  // following code.
+  masm.setFramePushed(framePushedAtStart);
 }
 
 void MacroAssembler::wasmCollapseFrameFast(
@@ -5028,6 +5051,7 @@ void MacroAssembler::wasmCollapseFrameSlow(
   wasmCheckSlowCallsite(temp1, &slow, temp1, temp2);
   CollapseWasmFrameFast(*this, retCallInfo);
   jump(&done);
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   ReturnCallTrampolineData data = MakeReturnCallTrampoline(*this);
 
@@ -5125,6 +5149,7 @@ CodeOffset MacroAssembler::wasmReturnCallImport(
                               wasm::CallSiteDesc::ReturnStub);
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(ABINonArgReg0);
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
   return CodeOffset(currentOffset());
 }
 
@@ -5134,6 +5159,7 @@ CodeOffset MacroAssembler::wasmReturnCall(
   wasmCollapseFrameFast(retCallInfo);
   CodeOffset offset = farJumpWithPatch();
   append(desc, offset, funcDefIndex);
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
   return offset;
 }
 #endif  // ENABLE_WASM_TAIL_CALLS
@@ -5476,6 +5502,7 @@ void MacroAssembler::wasmReturnCallIndirect(
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(calleeScratch);
   *slowCallOffset = CodeOffset(currentOffset());
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   // Fast path: just load the code pointer and go.
 
@@ -5487,6 +5514,7 @@ void MacroAssembler::wasmReturnCallIndirect(
   wasmCollapseFrameFast(retCallInfo);
   jump(calleeScratch);
   *fastCallOffset = CodeOffset(currentOffset());
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 }
 #endif  // ENABLE_WASM_TAIL_CALLS
 
@@ -5600,6 +5628,7 @@ void MacroAssembler::wasmReturnCallRef(
                               wasm::CallSiteDesc::ReturnStub);
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(calleeScratch);
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   // Fast path: just load WASM_FUNC_UNCHECKED_ENTRY_SLOT value and go.
   // The instance and pinned registers are the same as in the caller.
@@ -5610,8 +5639,26 @@ void MacroAssembler::wasmReturnCallRef(
 
   wasmCollapseFrameFast(retCallInfo);
   jump(calleeScratch);
+  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 }
 #endif
+
+void MacroAssembler::wasmBoundsCheckRange32(
+    Register index, Register length, Register limit, Register tmp,
+    wasm::BytecodeOffset bytecodeOffset) {
+  Label ok;
+  Label fail;
+
+  mov(index, tmp);
+  branchAdd32(Assembler::CarrySet, length, tmp, &fail);
+  branch32(Assembler::Above, tmp, limit, &fail);
+  jump(&ok);
+
+  bind(&fail);
+  wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset);
+
+  bind(&ok);
+}
 
 bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
     wasm::RefType type) {

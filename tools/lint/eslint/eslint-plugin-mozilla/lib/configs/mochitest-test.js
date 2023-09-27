@@ -54,6 +54,9 @@ module.exports = {
     // We mis-predict globals for HTML test files in directories shared
     // with browser tests, so don't try to "fix" imports that are needed.
     "mozilla/no-redeclare-with-import-autofix": "off",
+    // Turn off use-chromeutils-generateqi as these tests don't have ChromeUtils
+    // available.
+    "mozilla/use-chromeutils-generateqi": "off",
     "no-shadow": "error",
   },
 };

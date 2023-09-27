@@ -64,6 +64,7 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - http2
+        - geckoview-fission-isolate-high-value
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -123,6 +124,11 @@ mochitest-plain:
             http2:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
+                    default: []
+            geckoview-fission-isolate-high-value:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android-em.*: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -263,15 +269,21 @@ mochitest-browser-chrome:
                     default: default
             default: default
     chunks:
-        by-test-platform:
-            linux.*-qr/debug: 16
-            linux.*64-asan-qr/opt: 16
-            linux.*64-tsan-qr/opt: 32
-            macosx.*64/debug: 16
-            windows.*-ccov.*/.*: 14
-            windows.*-asan-qr/opt: 14
-            windows.*32-qr/debug: 12
-            default: 7
+        by-variant:
+            msix:
+                by-test-platform:
+                    .*/debug: 12
+                    default: 7
+            default:
+                by-test-platform:
+                    linux.*-qr/debug: 16
+                    linux.*64-asan-qr/opt: 16
+                    linux.*64-tsan-qr/opt: 32
+                    macosx.*64/debug: 16
+                    windows.*-ccov.*/.*: 14
+                    windows.*-asan-qr/opt: 14
+                    windows.*32-qr/debug: 12
+                    default: 7
     max-run-time:
         by-variant:
             msix: 5400
@@ -326,6 +338,7 @@ mochitest-browser-a11y:
     chunks:
         by-test-platform:
             .*tsan.*: 2
+            .*asan.*: 2
             default: 1
     instance-size: default
     allow-software-gl-layers: false

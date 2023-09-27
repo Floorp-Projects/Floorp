@@ -205,12 +205,14 @@ void Sampler::SuspendAndSampleAndResumeThread(
     regs.mPC = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
     regs.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
     regs.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
-    regs.mLR = 0;
+    regs.mR10 = reinterpret_cast<Address>(state.REGISTER_FIELD(10));
+    regs.mR12 = reinterpret_cast<Address>(state.REGISTER_FIELD(12));
 #elif defined(__aarch64__)
     regs.mPC = reinterpret_cast<Address>(state.REGISTER_FIELD(pc));
     regs.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
     regs.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(fp));
     regs.mLR = reinterpret_cast<Address>(state.REGISTER_FIELD(lr));
+    regs.mR11 = reinterpret_cast<Address>(state.REGISTER_FIELD(x[11]));
 #else
 #  error "unknown architecture"
 #endif
@@ -291,7 +293,6 @@ static void PlatformInit(PSLockRef aLock) {}
     regs.mFP = reinterpret_cast<Address>(__builtin_frame_address(1));         \
     _Pragma("GCC diagnostic pop")                                             \
     regs.mPC = reinterpret_cast<Address>(                                     \
-        __builtin_extract_return_addr(__builtin_return_address(0)));          \
-    regs.mLR = 0;
+        __builtin_extract_return_addr(__builtin_return_address(0)));
 #endif
 // clang-format on

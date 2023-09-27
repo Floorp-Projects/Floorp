@@ -211,11 +211,11 @@ void FontFaceSetWorkerImpl::FlushUserFontSet() {
 
   // If there was a change to the mNonRuleFaces array, then there could
   // have been a modification to the user font set.
-  bool modified = mNonRuleFacesDirty;
+  const bool modified = mNonRuleFacesDirty;
   mNonRuleFacesDirty = false;
 
   for (size_t i = 0, i_end = mNonRuleFaces.Length(); i < i_end; ++i) {
-    InsertNonRuleFontFace(mNonRuleFaces[i].mFontFace, modified);
+    InsertNonRuleFontFace(mNonRuleFaces[i].mFontFace);
   }
 
   // Remove any residual families that have no font entries.

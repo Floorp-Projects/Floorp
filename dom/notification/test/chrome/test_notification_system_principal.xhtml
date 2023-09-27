@@ -34,13 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874090
       this.showAlert();
     },
 
-    QueryInterface: function(aIID) {
-      if (aIID.equals(Ci.nsISupports) ||
-          aIID.equals(Ci.nsIAlertsService)) {
-        return this;
-      }
-      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIAlertsService"]),
 
     createInstance: function(aIID) {
       return this.QueryInterface(aIID);

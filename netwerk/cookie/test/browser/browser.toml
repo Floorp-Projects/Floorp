@@ -1,0 +1,33 @@
+[DEFAULT]
+support-files = [
+  "file_empty.html",
+  "file_empty.js",
+  "head.js"
+]
+
+["browser_broadcastChannel.js"]
+
+["browser_cookie_insecure_overwrites_secure.js"]
+
+["browser_cookies.js"]
+support-files = ["server.sjs"]
+
+["browser_cookies_ipv6.js"]
+
+["browser_domCache.js"]
+
+["browser_indexedDB.js"]
+
+["browser_originattributes.js"]
+
+["browser_oversize.js"]
+support-files = ["oversize.sjs"]
+
+["browser_sameSiteConsole.js"]
+support-files = ["sameSite.sjs"]
+
+["browser_serviceWorker.js"]
+
+["browser_sharedWorker.js"]
+
+["browser_storage.js"]

@@ -45,6 +45,7 @@ interface nsICtapRegisterArgs : nsISupports {
     // return code to signal presence.
     [must_use] readonly attribute bool credProps;
     [must_use] readonly attribute bool hmacCreateSecret;
+    [must_use] readonly attribute bool minPinLength;
 
     // Options.
     [must_use] readonly attribute AString residentKey;

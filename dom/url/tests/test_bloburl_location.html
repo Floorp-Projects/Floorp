@@ -19,14 +19,11 @@ onmessage = function(e) {
   }
 };
 
-SpecialPowers.pushPrefEnv({
-  "set": [["privacy.partition.bloburl_per_agent_cluster", false]]
-}).then(() => {
-  var ifr = document.createElement("iframe");
-  document.body.appendChild(ifr);
 
-  ifr.src = "data:text/html,<script>location=URL.createObjectURL(new%20Blob(['<script>parent.postMessage(location.pathname,\"*\");location.pathname=\"foo\";parent.postMessage(location.pathname,\"*\");<\/s' +'cript>'], {type:\"text/html\"}));<\/script>";
-});
+var ifr = document.createElement("iframe");
+document.body.appendChild(ifr);
+
+ifr.src = "data:text/html,<script>location=URL.createObjectURL(new%20Blob(['<script>parent.postMessage(location.pathname,\"*\");location.pathname=\"foo\";parent.postMessage(location.pathname,\"*\");<\/s' +'cript>'], {type:\"text/html\"}));<\/script>";
 
 SimpleTest.waitForExplicitFinish();
 

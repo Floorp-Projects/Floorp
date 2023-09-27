@@ -46,16 +46,13 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
   static nsresult AddDataEntry(BlobImpl*, nsIPrincipal*,
-                               const Maybe<nsID>& aAgentClusterId,
                                const nsCString& aPartitionKey,
                                nsACString& aUri);
   static nsresult AddDataEntry(MediaSource*, nsIPrincipal*,
-                               const Maybe<nsID>& aAgentClusterId,
                                const nsCString& aPartitionKey,
                                nsACString& aUri);
   // IPC only
   static void AddDataEntry(const nsACString& aURI, nsIPrincipal* aPrincipal,
-                           const Maybe<nsID>& aAgentClusterId,
                            const nsCString& aPartitionKey, BlobImpl* aBlobImpl);
 
   // These methods revoke a blobURL. Because some operations could still be in
@@ -65,7 +62,6 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                               bool aBroadcastToOTherProcesses = true);
   // Returns true if the entry was allowed to be removed.
   static bool RemoveDataEntry(const nsACString& aUri, nsIPrincipal* aPrincipal,
-                              const Maybe<nsID>& aAgentClusterId,
                               const nsCString& aPartitionKey);
 
   static void RemoveDataEntries();
@@ -77,7 +73,6 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                            nsIPrincipal* aTriggeringPrincipal,
                            const OriginAttributes& aOriginAttributes,
                            uint64_t aInnerWindowId,
-                           const Maybe<nsID>& aAgentClusterId,
                            const nsCString& aPartitionKey,
                            bool aAlsoIfRevoked = false);
 
@@ -90,9 +85,8 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
   // of an unexpected XPCOM or IPC error). This method returns false if already
   // shutdown or if the helper method returns false, true otherwise.
   static bool ForEachBlobURL(
-      std::function<bool(BlobImpl*, nsIPrincipal*, const Maybe<nsID>&,
-                         const nsCString&, const nsACString&, bool aRevoked)>&&
-          aCb);
+      std::function<bool(BlobImpl*, nsIPrincipal*, const nsCString&,
+                         const nsACString&, bool aRevoked)>&& aCb);
 
   // This method returns false if aURI is not a known BlobURL. Otherwise it
   // returns true.

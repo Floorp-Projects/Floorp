@@ -633,6 +633,16 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readArrayNewElem(&unusedUint1, &unusedUint2, &nothing,
                                         &nothing));
           }
+          case uint32_t(GcOp::ArrayInitData): {
+            uint32_t unusedUint1, unusedUint2;
+            CHECK(iter.readArrayInitData(&unusedUint1, &unusedUint2, &nothing,
+                                         &nothing, &nothing, &nothing));
+          }
+          case uint32_t(GcOp::ArrayInitElem): {
+            uint32_t unusedUint1, unusedUint2;
+            CHECK(iter.readArrayInitElem(&unusedUint1, &unusedUint2, &nothing,
+                                         &nothing, &nothing, &nothing));
+          }
           case uint32_t(GcOp::ArrayGet): {
             uint32_t unusedUint1;
             CHECK(iter.readArrayGet(&unusedUint1, FieldWideningOp::None,
@@ -661,6 +671,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             bool unusedBool;
             CHECK(iter.readArrayCopy(&unusedInt, &unusedBool, &nothing,
                                      &nothing, &nothing, &nothing, &nothing));
+          }
+          case uint32_t(GcOp::ArrayFill): {
+            uint32_t unusedTypeIndex;
+            CHECK(iter.readArrayFill(&unusedTypeIndex, &nothing, &nothing,
+                                     &nothing, &nothing));
           }
           case uint32_t(GcOp::RefI31): {
             CHECK(iter.readConversion(ValType::I32,

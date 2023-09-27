@@ -4171,6 +4171,144 @@ class FunctionCompiler {
     return getWasmArrayObjectData(arrayObject);
   }
 
+  [[nodiscard]] bool fillArray(uint32_t lineOrBytecode,
+                               const ArrayType& arrayType,
+                               MDefinition* arrayObject, MDefinition* index,
+                               MDefinition* numElements, MDefinition* val) {
+    mozilla::DebugOnly<MIRType> valMIRType = val->type();
+    FieldType valFieldType = arrayType.elementType_;
+    MOZ_ASSERT(valFieldType.widenToValType().toMIRType() == valMIRType);
+
+    uint32_t elemSize = valFieldType.size();
+    MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
+
+    // Make `arrayBase` point at the first byte of the (OOL) data area.
+    MDefinition* arrayBase = getWasmArrayObjectData(arrayObject);
+    if (!arrayBase) {
+      return false;
+    }
+
+    // We have:
+    //   arrayBase   : TargetWord
+    //   index       : Int32
+    //   numElements : Int32
+    //   val         : <any FieldType>
+    //   $elemSize = arrayType.elementType_.size(); 1, 2, 4, 8 or 16
+    //
+    // Generate MIR:
+    //   <in current block>
+    //     fillBase : TargetWord = arrayBase + numElements * index
+    //     limit : TargetWord = fillBase + numElements * elemSize
+    //     if (limit == fillBase) goto after; // skip loop if trip count == 0
+    //   loop:
+    //     ptrPhi = phi(fillBase, ptrNext)
+    //     *ptrPhi = val
+    //     ptrNext = ptrPhi + $elemSize
+    //     if (ptrNext <u limit) goto loop;
+    //   after:
+    //
+    // We construct the loop "manually" rather than using
+    // FunctionCompiler::{startLoop,closeLoop} as the latter have awareness of
+    // the wasm view of loops, whereas the loop we're building here is not a
+    // wasm-level loop.
+    // ==== Create the "loop" and "after" blocks ====
+    MBasicBlock* loopBlock;
+    if (!newBlock(curBlock_, &loopBlock, MBasicBlock::LOOP_HEADER)) {
+      return false;
+    }
+    MBasicBlock* afterBlock;
+    if (!newBlock(loopBlock, &afterBlock)) {
+      return false;
+    }
+
+    // ==== Fill in the remainder of the block preceding the loop ====
+    MDefinition* elemSizeDef = constantTargetWord(intptr_t(elemSize));
+    if (!elemSizeDef) {
+      return false;
+    }
+
+    MDefinition* fillBase =
+        computeBasePlusScaledIndex(arrayBase, elemSizeDef, index);
+    if (!fillBase) {
+      return false;
+    }
+    MDefinition* limit =
+        computeBasePlusScaledIndex(fillBase, elemSizeDef, numElements);
+    if (!limit) {
+      return false;
+    }
+
+    // Use JSOp::StrictEq, not ::Eq, so that the comparison (and eventually
+    // the entire initialisation loop) will be folded out in the case where
+    // the number of elements is zero.  See MCompare::tryFoldEqualOperands.
+    MDefinition* limitEqualsBase = compare(
+        limit, fillBase, JSOp::StrictEq,
+        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
+    if (!limitEqualsBase) {
+      return false;
+    }
+    MTest* skipIfLimitEqualsBase =
+        MTest::New(alloc(), limitEqualsBase, afterBlock, loopBlock);
+    if (!skipIfLimitEqualsBase) {
+      return false;
+    }
+    curBlock_->end(skipIfLimitEqualsBase);
+    if (!afterBlock->addPredecessor(alloc(), curBlock_)) {
+      return false;
+    }
+
+    // ==== Fill in the loop block as best we can ====
+    curBlock_ = loopBlock;
+    MPhi* ptrPhi = MPhi::New(alloc(), TargetWordMIRType());
+    if (!ptrPhi) {
+      return false;
+    }
+    if (!ptrPhi->reserveLength(2)) {
+      return false;
+    }
+    ptrPhi->addInput(fillBase);
+    curBlock_->addPhi(ptrPhi);
+    curBlock_->setLoopDepth(loopDepth_ + 1);
+
+    // Because we have the exact address to hand, use
+    // `writeGcValueAtBasePlusOffset` rather than
+    // `writeGcValueAtBasePlusScaledIndex` to do the store.
+    if (!writeGcValueAtBasePlusOffset(
+            lineOrBytecode, valFieldType, arrayObject,
+            AliasSet::WasmArrayDataArea, val, ptrPhi, /*offset=*/0,
+            /*needsTrapInfo=*/false, WasmPreBarrierKind::None)) {
+      return false;
+    }
+
+    auto* ptrNext =
+        MAdd::NewWasm(alloc(), ptrPhi, elemSizeDef, TargetWordMIRType());
+    if (!ptrNext) {
+      return false;
+    }
+    curBlock_->add(ptrNext);
+    ptrPhi->addInput(ptrNext);
+
+    MDefinition* ptrNextLtuLimit = compare(
+        ptrNext, limit, JSOp::Lt,
+        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
+    if (!ptrNextLtuLimit) {
+      return false;
+    }
+    auto* continueIfPtrNextLtuLimit =
+        MTest::New(alloc(), ptrNextLtuLimit, loopBlock, afterBlock);
+    if (!continueIfPtrNextLtuLimit) {
+      return false;
+    }
+    curBlock_->end(continueIfPtrNextLtuLimit);
+    if (!loopBlock->addPredecessor(alloc(), loopBlock)) {
+      return false;
+    }
+    // ==== Loop block completed ====
+
+    curBlock_ = afterBlock;
+    return true;
+  }
+
   // This routine generates all MIR required for `array.new`.  The returned
   // value is for the newly created array.
   [[nodiscard]] MDefinition* createArrayNewCallAndLoop(uint32_t lineOrBytecode,
@@ -4186,138 +4324,49 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    mozilla::DebugOnly<MIRType> fillValueMIRType = fillValue->type();
-    FieldType fillValueFieldType = arrayType.elementType_;
-    MOZ_ASSERT(fillValueFieldType.widenToValType().toMIRType() ==
-               fillValueMIRType);
-
-    uint32_t elemSize = fillValueFieldType.size();
-    MOZ_ASSERT(elemSize >= 1 && elemSize <= 16);
-
-    // Make `base` point at the first byte of the (OOL) data area.
-    MDefinition* base = getWasmArrayObjectData(arrayObject);
-    if (!base) {
-      return nullptr;
-    }
-
-    // We have:
-    //   base        : TargetWord
-    //   numElements : Int32
-    //   fillValue   : <any FieldType>
-    //   $elemSize = arrayType.elementType_.size(); 1, 2, 4, 8 or 16
-    //
-    // Generate MIR:
-    //   <in current block>
-    //     limit : TargetWord = base + nElems * elemSize
-    //     if (limit == base) goto after; // skip loop if trip count == 0
-    //     // optimisation (not done): skip loop if fill value == 0
-    //   loop:
-    //     ptrPhi = phi(base, ptrNext)
-    //     *ptrPhi = fillValue
-    //     ptrNext = ptrPhi + $elemSize
-    //     if (ptrNext <u limit) goto loop;
-    //   after:
-    //
-    // We construct the loop "manually" rather than using
-    // FunctionCompiler::{startLoop,closeLoop} as the latter have awareness of
-    // the wasm view of loops, whereas the loop we're building here is not a
-    // wasm-level loop.
-    // ==== Create the "loop" and "after" blocks ====
-    MBasicBlock* loopBlock;
-    if (!newBlock(curBlock_, &loopBlock, MBasicBlock::LOOP_HEADER)) {
-      return nullptr;
-    }
-    MBasicBlock* afterBlock;
-    if (!newBlock(loopBlock, &afterBlock)) {
-      return nullptr;
-    }
-
-    // ==== Fill in the remainder of the block preceding the loop ====
-    MDefinition* elemSizeDef = constantTargetWord(intptr_t(elemSize));
-    if (!elemSizeDef) {
-      return nullptr;
-    }
-
-    MDefinition* limit =
-        computeBasePlusScaledIndex(base, elemSizeDef, numElements);
-    if (!limit) {
-      return nullptr;
-    }
-
-    // Use JSOp::StrictEq, not ::Eq, so that the comparison (and eventually
-    // the entire initialisation loop) will be folded out in the case where
-    // the number of elements is zero.  See MCompare::tryFoldEqualOperands.
-    MDefinition* limitEqualsBase = compare(
-        limit, base, JSOp::StrictEq,
-        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
-    if (!limitEqualsBase) {
-      return nullptr;
-    }
-    MTest* skipIfLimitEqualsBase =
-        MTest::New(alloc(), limitEqualsBase, afterBlock, loopBlock);
-    if (!skipIfLimitEqualsBase) {
-      return nullptr;
-    }
-    curBlock_->end(skipIfLimitEqualsBase);
-    if (!afterBlock->addPredecessor(alloc(), curBlock_)) {
-      return nullptr;
-    }
     // Optimisation opportunity: if the fill value is zero, maybe we should
     // likewise skip over the initialisation loop entirely (and, if the zero
     // value is visible at JIT time, the loop will be removed).  For the
     // reftyped case, that would be a big win since each iteration requires a
     // call to the post-write barrier routine.
 
-    // ==== Fill in the loop block as best we can ====
-    curBlock_ = loopBlock;
-    MPhi* ptrPhi = MPhi::New(alloc(), TargetWordMIRType());
-    if (!ptrPhi) {
-      return nullptr;
-    }
-    if (!ptrPhi->reserveLength(2)) {
-      return nullptr;
-    }
-    ptrPhi->addInput(base);
-    curBlock_->addPhi(ptrPhi);
-    curBlock_->setLoopDepth(loopDepth_ + 1);
-
-    // Because we have the exact address to hand, use
-    // `writeGcValueAtBasePlusOffset` rather than
-    // `writeGcValueAtBasePlusScaledIndex` to do the store.
-    if (!writeGcValueAtBasePlusOffset(
-            lineOrBytecode, fillValueFieldType, arrayObject,
-            AliasSet::WasmArrayDataArea, fillValue, ptrPhi, /*offset=*/0,
-            /*needsTrapInfo=*/false, WasmPreBarrierKind::None)) {
+    if (!fillArray(lineOrBytecode, arrayType, arrayObject, constantI32(0),
+                   numElements, fillValue)) {
       return nullptr;
     }
 
-    auto* ptrNext =
-        MAdd::NewWasm(alloc(), ptrPhi, elemSizeDef, TargetWordMIRType());
-    if (!ptrNext) {
-      return nullptr;
-    }
-    curBlock_->add(ptrNext);
-    ptrPhi->addInput(ptrNext);
-
-    MDefinition* ptrNextLtuLimit = compare(
-        ptrNext, limit, JSOp::Lt,
-        targetIs64Bit() ? MCompare::Compare_UInt64 : MCompare::Compare_UInt32);
-    if (!ptrNextLtuLimit) {
-      return nullptr;
-    }
-    auto* continueIfPtrNextLtuLimit =
-        MTest::New(alloc(), ptrNextLtuLimit, loopBlock, afterBlock);
-    if (!continueIfPtrNextLtuLimit) {
-      return nullptr;
-    }
-    curBlock_->end(continueIfPtrNextLtuLimit);
-    if (!loopBlock->addPredecessor(alloc(), loopBlock)) {
-      return nullptr;
-    }
-    // ==== Loop block completed ====
-
-    curBlock_ = afterBlock;
     return arrayObject;
+  }
+
+  [[nodiscard]] bool createArrayFill(uint32_t lineOrBytecode,
+                                     uint32_t typeIndex,
+                                     MDefinition* arrayObject,
+                                     MDefinition* index, MDefinition* val,
+                                     MDefinition* numElements) {
+    MOZ_ASSERT(arrayObject->type() == MIRType::WasmAnyRef);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(numElements->type() == MIRType::Int32);
+
+    const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
+
+    // Check for null is done in getWasmArrayObjectNumElements.
+
+    // Get the array's actual size.
+    MDefinition* actualNumElements = getWasmArrayObjectNumElements(arrayObject);
+    if (!actualNumElements) {
+      return false;
+    }
+
+    // Create a bounds check.
+    auto* boundsCheck = MWasmBoundsCheckRange32::New(
+        alloc(), index, numElements, actualNumElements, bytecodeOffset());
+    if (!boundsCheck) {
+      return false;
+    }
+    curBlock_->add(boundsCheck);
+
+    return fillArray(lineOrBytecode, arrayType, arrayObject, index, numElements,
+                     val);
   }
 
   /*********************************************** WasmGC: other helpers ***/
@@ -7273,6 +7322,82 @@ static bool EmitArrayNewElem(FunctionCompiler& f) {
   return true;
 }
 
+static bool EmitArrayInitData(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, segIndex;
+  MDefinition* array;
+  MDefinition* arrayIndex;
+  MDefinition* segOffset;
+  MDefinition* length;
+  if (!f.iter().readArrayInitData(&typeIndex, &segIndex, &array, &arrayIndex,
+                                  &segOffset, &length)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Get the type definition data for the array as a whole.
+  MDefinition* typeDefData = f.loadTypeDefInstanceData(typeIndex);
+  if (!typeDefData) {
+    return false;
+  }
+
+  // Other values we need to pass to the instance call:
+  MDefinition* segIndexM = f.constantI32(int32_t(segIndex));
+  if (!segIndexM) {
+    return false;
+  }
+
+  // Create call:
+  // Instance::arrayInitData(array:word, index:u32, segByteOffset:u32,
+  // numElements:u32, typeDefData:word, segIndex:u32) If the requested size
+  // exceeds MaxArrayPayloadBytes, the MIR generated by this call will trap.
+  return f.emitInstanceCall6(lineOrBytecode, SASigArrayInitData, array,
+                             arrayIndex, segOffset, length, typeDefData,
+                             segIndexM);
+}
+
+static bool EmitArrayInitElem(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, segIndex;
+  MDefinition* array;
+  MDefinition* arrayIndex;
+  MDefinition* segOffset;
+  MDefinition* length;
+  if (!f.iter().readArrayInitElem(&typeIndex, &segIndex, &array, &arrayIndex,
+                                  &segOffset, &length)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Get the type definition data for the array as a whole.
+  MDefinition* typeDefData = f.loadTypeDefInstanceData(typeIndex);
+  if (!typeDefData) {
+    return false;
+  }
+
+  // Other values we need to pass to the instance call:
+  MDefinition* segIndexM = f.constantI32(int32_t(segIndex));
+  if (!segIndexM) {
+    return false;
+  }
+
+  // Create call:
+  // Instance::arrayInitElem(array:word, index:u32, segByteOffset:u32,
+  // numElements:u32, typeDefData:word, segIndex:u32) If the requested size
+  // exceeds MaxArrayPayloadBytes, the MIR generated by this call will trap.
+  return f.emitInstanceCall6(lineOrBytecode, SASigArrayInitElem, array,
+                             arrayIndex, segOffset, length, typeDefData,
+                             segIndexM);
+}
+
 static bool EmitArraySet(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
@@ -7411,6 +7536,26 @@ static bool EmitArrayCopy(FunctionCompiler& f) {
   return f.emitInstanceCall6(lineOrBytecode, SASigArrayCopy, dstArrayObject,
                              dstArrayIndex, srcArrayObject, srcArrayIndex,
                              numElements, elemSizeDef);
+}
+
+static bool EmitArrayFill(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  MDefinition* array;
+  MDefinition* index;
+  MDefinition* val;
+  MDefinition* numElements;
+  if (!f.iter().readArrayFill(&typeIndex, &array, &index, &val, &numElements)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  return f.createArrayFill(lineOrBytecode, typeIndex, array, index, val,
+                           numElements);
 }
 
 static bool EmitRefI31(FunctionCompiler& f) {
@@ -8151,6 +8296,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayNewData(f));
           case uint32_t(GcOp::ArrayNewElem):
             CHECK(EmitArrayNewElem(f));
+          case uint32_t(GcOp::ArrayInitData):
+            CHECK(EmitArrayInitData(f));
+          case uint32_t(GcOp::ArrayInitElem):
+            CHECK(EmitArrayInitElem(f));
           case uint32_t(GcOp::ArraySet):
             CHECK(EmitArraySet(f));
           case uint32_t(GcOp::ArrayGet):
@@ -8163,6 +8312,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitArrayLen(f));
           case uint32_t(GcOp::ArrayCopy):
             CHECK(EmitArrayCopy(f));
+          case uint32_t(GcOp::ArrayFill):
+            CHECK(EmitArrayFill(f));
           case uint32_t(GcOp::RefI31):
             CHECK(EmitRefI31(f));
           case uint32_t(GcOp::I31GetS):
@@ -8970,6 +9121,8 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
         return false;
       }
 
+      size_t unwindInfoBefore = masm.codeRangeUnwindInfos().length();
+
       CodeGenerator codegen(&mir, lir, &masm);
 
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
@@ -8982,8 +9135,10 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
         return false;
       }
 
+      bool hasUnwindInfo =
+          unwindInfoBefore != masm.codeRangeUnwindInfos().length();
       if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode,
-                                        offsets)) {
+                                        offsets, hasUnwindInfo)) {
         return false;
       }
     }

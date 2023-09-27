@@ -70,11 +70,15 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
       Moof moof(box, mTrackParseMode, mTrex, mMvhd, mMdhd, mEdts, mSinf,
                 &mLastDecodeTime, mIsAudio, mTracksEndCts);
 
-      if (!moof.IsValid() && !box.Next().IsAvailable()) {
-        // Moof isn't valid abort search for now.
-        LOG_WARN(Moof,
-                 "Could not find valid moof, moof may not be complete yet.");
-        break;
+      if (!moof.IsValid()) {
+        if (!box.Next().IsAvailable()) {
+          // Abort search for now, without advancing mOffset so that parsing
+          // can be attempted again when more of the resource is available.
+          LOG_WARN(Moof, "Invalid moof. moof may not be complete yet.");
+          break;
+        }
+        // moof is complete but invalid.  Skip to next box.
+        continue;
       }
 
       if (!mMoofs.IsEmpty()) {
@@ -720,7 +724,7 @@ void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
       } else {
         LOG_WARN(Moof, "ParseTrun failed");
         mValid = false;
-        break;
+        return;
       }
     }
   }
@@ -779,7 +783,7 @@ Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
   nsTArray<MP4Interval<TimeUnit>> timeRanges;
   uint64_t decodeTime = *aDecodeTime;
 
-  if (!mIndex.SetCapacity(sampleCount, fallible)) {
+  if (!mIndex.SetCapacity(mIndex.Length() + sampleCount, fallible)) {
     LOG_ERROR(Moof, "Out of Memory");
     return Err(NS_ERROR_FAILURE);
   }
@@ -822,7 +826,6 @@ Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
       // because every audio sample is a keyframe.
       sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
 
-      // FIXME: Make this infallible after bug 968520 is done.
       MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
 
       mMdatRange = mMdatRange.Span(sample.mByteRange);

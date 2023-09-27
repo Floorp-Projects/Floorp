@@ -2123,6 +2123,8 @@ inline bool Element::AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
 }  // namespace dom
 }  // namespace mozilla
 
+NON_VIRTUAL_ADDREF_RELEASE(mozilla::dom::Element)
+
 inline mozilla::dom::Element* nsINode::AsElement() {
   MOZ_ASSERT(IsElement());
   return static_cast<mozilla::dom::Element*>(this);

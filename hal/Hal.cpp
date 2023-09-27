@@ -423,6 +423,10 @@ UniquePtr<hal::PerformanceHintSession> CreatePerformanceHintSession(
   return hal_impl::CreatePerformanceHintSession(aThreads, aTargetWorkDuration);
 }
 
+const Maybe<hal::HeterogeneousCpuInfo>& GetHeterogeneousCpuInfo() {
+  return hal_impl::GetHeterogeneousCpuInfo();
+}
+
 void Init() {
   MOZ_ASSERT(!sInitialized);
 

@@ -11,7 +11,7 @@ MOCHITEST_MANIFESTS += [
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 
 EXPORTS.mozilla += [
     "EditAction.h",

@@ -47,6 +47,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/Hal.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
@@ -1660,6 +1661,26 @@ bool Gecko_IsInServoTraversal() { return ServoStyleSet::IsInServoTraversal(); }
 bool Gecko_IsMainThread() { return NS_IsMainThread(); }
 
 bool Gecko_IsDOMWorkerThread() { return !!GetCurrentThreadWorkerPrivate(); }
+
+int32_t Gecko_GetNumStyleThreads() {
+  if (const auto& cpuInfo = hal::GetHeterogeneousCpuInfo()) {
+    size_t numBigCpus = cpuInfo->mBigCpus.Count();
+    // If CPUs are homogeneous we do not need to override stylo's
+    // default number of threads.
+    if (numBigCpus != cpuInfo->mTotalNumCpus) {
+      // From testing on a variety of devices it appears using only
+      // the number of big cores gives best performance when there are
+      // 2 or more big cores. If there are fewer than 2 big cores then
+      // additionally using the medium cores performs better.
+      if (numBigCpus >= 2) {
+        return static_cast<int32_t>(numBigCpus);
+      }
+      return static_cast<int32_t>(numBigCpus + cpuInfo->mMediumCpus.Count());
+    }
+  }
+
+  return -1;
+}
 
 const nsAttrValue* Gecko_GetSVGAnimatedClass(const Element* aElement) {
   MOZ_ASSERT(aElement->IsSVGElement());
