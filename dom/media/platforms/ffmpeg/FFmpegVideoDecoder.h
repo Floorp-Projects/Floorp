@@ -112,7 +112,6 @@ class FFmpegVideoDecoder<LIBAV_VER>
     nsAutoCString dummy;
     return IsHardwareAccelerated(dummy);
   }
-  void UpdateDecodeTimes(TimeStamp aDecodeStart);
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
   layers::TextureClient* AllocateTextureClientForImage(
@@ -154,16 +153,35 @@ class FFmpegVideoDecoder<LIBAV_VER>
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
   VideoInfo mInfo;
-  int mDecodedFrames;
+
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  int mDecodedFramesLate;
-  // Tracks when decode time of recent frame and averange decode time of
-  // previous frames is bigger than frame interval,
-  // i.e. we fail to decode in time.
-  // We switch to SW decode when we hit HW_DECODE_LATE_FRAMES treshold.
-  int mMissedDecodeInAverangeTime;
+  class DecodeStats {
+   public:
+    void DecodeStart();
+    void UpdateDecodeTimes(const AVFrame* aFrame);
+    bool IsDecodingSlow() const;
+
+   private:
+    uint32_t mDecodedFrames = 0;
+
+    float mAverageFrameDecodeTime = 0;
+    float mAverageFrameDuration = 0;
+
+    // Number of delayed frames until we consider decoding as slow.
+    const uint32_t mMaxLateDecodedFrames = 15;
+    // How many frames is decoded behind its pts time, i.e. video decode lags.
+    uint32_t mDecodedFramesLate = 0;
+
+    // Reset mDecodedFramesLate every 3 seconds of correct playback.
+    const uint32_t mDelayedFrameReset = 3000;
+
+    uint32_t mLastDelayedFrameNum = 0;
+
+    TimeStamp mDecodeStart;
+  };
+
+  DecodeStats mDecodeStats;
 #endif
-  float mAverangeDecodeTime;
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
   class PtsCorrectionContext {
