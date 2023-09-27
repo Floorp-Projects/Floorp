@@ -17,13 +17,13 @@ use crate::custom_properties::{self, CustomPropertiesBuilder};
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
 use crate::parser::ParserContext;
 use crate::properties::animated_properties::{AnimationValue, AnimationValueMap};
-use crate::stylist::Stylist;
 use crate::rule_tree::CascadeLevel;
 use crate::selector_map::PrecomputedHashSet;
 use crate::selector_parser::SelectorImpl;
 use crate::shared_lock::Locked;
 use crate::str::{CssString, CssStringWriter};
 use crate::stylesheets::{layer_rule::LayerOrder, CssRuleType, Origin, UrlExtraData};
+use crate::stylist::Stylist;
 use crate::values::computed::Context;
 use cssparser::{
     parse_important, AtRuleParser, CowRcStr, DeclarationParser, Delimiter, ParseErrorKind, Parser,
@@ -233,7 +233,7 @@ pub struct AnimationValueIterator<'a, 'cx, 'cx_a: 'cx> {
     context: &'cx mut Context<'cx_a>,
     default_values: &'a ComputedValues,
     /// Custom properties in a keyframe if exists.
-    extra_custom_properties: Option<&'a Arc<crate::custom_properties::CustomPropertiesMap>>,
+    extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
 }
 
 impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
@@ -241,7 +241,7 @@ impl<'a, 'cx, 'cx_a: 'cx> AnimationValueIterator<'a, 'cx, 'cx_a> {
         declarations: &'a PropertyDeclarationBlock,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a Arc<crate::custom_properties::CustomPropertiesMap>>,
+        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
         AnimationValueIterator {
             iter: declarations.declaration_importance_iter(),
@@ -353,7 +353,7 @@ impl PropertyDeclarationBlock {
         &'a self,
         context: &'cx mut Context<'cx_a>,
         default_values: &'a ComputedValues,
-        extra_custom_properties: Option<&'a Arc<crate::custom_properties::CustomPropertiesMap>>,
+        extra_custom_properties: Option<&'a crate::custom_properties::ComputedCustomProperties>,
     ) -> AnimationValueIterator<'a, 'cx, 'cx_a> {
         AnimationValueIterator::new(self, context, default_values, extra_custom_properties)
     }
@@ -866,10 +866,10 @@ impl PropertyDeclarationBlock {
                 // feels like a hack anyway...
                 block.cascade_custom_properties(cv.custom_properties(), stylist)
             } else {
-                cv.custom_properties().cloned()
+                cv.custom_properties().clone()
             }
         } else {
-            None
+            crate::custom_properties::ComputedCustomProperties::default()
         };
 
         match (declaration, computed_values) {
@@ -886,7 +886,7 @@ impl PropertyDeclarationBlock {
                     .substitute_variables(
                         declaration.id,
                         computed_values.writing_mode,
-                        custom_properties.as_ref(),
+                        &custom_properties,
                         QuirksMode::NoQuirks,
                         stylist,
                         &mut Default::default(),
@@ -934,7 +934,7 @@ impl PropertyDeclarationBlock {
     pub fn cascade_custom_properties_with_context(
         &self,
         context: &Context,
-    ) -> Option<Arc<crate::custom_properties::CustomPropertiesMap>> {
+    ) -> crate::custom_properties::ComputedCustomProperties {
         self.cascade_custom_properties(context.style().custom_properties(), context.style().stylist.unwrap())
     }
 
@@ -943,9 +943,9 @@ impl PropertyDeclarationBlock {
     /// properties.
     fn cascade_custom_properties(
         &self,
-        inherited_custom_properties: Option<&Arc<crate::custom_properties::CustomPropertiesMap>>,
+        inherited_custom_properties: &crate::custom_properties::ComputedCustomProperties,
         stylist: &Stylist,
-    ) -> Option<Arc<crate::custom_properties::CustomPropertiesMap>> {
+    ) -> crate::custom_properties::ComputedCustomProperties {
         let mut builder = CustomPropertiesBuilder::new(inherited_custom_properties, stylist);
 
         for declaration in self.normal_declaration_iter() {

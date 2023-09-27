@@ -21,8 +21,9 @@ struct ServoWritingMode {
   uint8_t mBits;
 };
 
-struct ServoCustomPropertiesMap {
-  uintptr_t mPtr;
+struct ServoComputedCustomProperties {
+  uintptr_t mInherited;
+  uintptr_t mNonInherited;
 };
 
 struct ServoRuleNode {
@@ -72,7 +73,7 @@ class ServoComputedData {
   mozilla::ServoWritingMode WritingMode() const { return writing_mode; }
 
  private:
-  mozilla::ServoCustomPropertiesMap custom_properties;
+  mozilla::ServoComputedCustomProperties custom_properties;
   mozilla::ServoWritingMode writing_mode;
   mozilla::StyleComputedValueFlags flags;
   /// The rule node representing the ordered list of rules matched for this

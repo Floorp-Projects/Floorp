@@ -14,7 +14,6 @@ use crate::properties::{CSSWideKeyword, PropertyDeclaration, NonCustomPropertyIt
 use crate::properties::longhands;
 use crate::properties::longhands::visibility::computed_value::T as Visibility;
 use crate::properties::LonghandId;
-use servo_arc::Arc;
 use std::ptr;
 use std::mem;
 use fxhash::FxHashMap;
@@ -245,7 +244,7 @@ impl AnimationValue {
     pub fn from_declaration(
         decl: &PropertyDeclaration,
         context: &mut Context,
-        extra_custom_properties: Option<<&Arc<crate::custom_properties::CustomPropertiesMap>>,
+        extra_custom_properties: Option< &crate::custom_properties::ComputedCustomProperties>,
         initial: &ComputedValues,
     ) -> Option<Self> {
         use super::PropertyDeclarationVariantRepr;
@@ -365,8 +364,7 @@ impl AnimationValue {
             PropertyDeclaration::WithVariables(ref declaration) => {
                 let mut cache = Default::default();
                 let substituted = {
-                    let custom_properties =
-                        extra_custom_properties.or_else(|| context.style().custom_properties());
+                    let custom_properties = extra_custom_properties.unwrap_or(&context.style().custom_properties());
 
                     debug_assert!(
                         context.builder.stylist.is_some(),

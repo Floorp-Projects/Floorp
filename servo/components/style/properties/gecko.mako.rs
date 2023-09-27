@@ -13,7 +13,7 @@
 use crate::Atom;
 use app_units::Au;
 use crate::computed_value_flags::*;
-use crate::custom_properties::CustomPropertiesMap;
+use crate::custom_properties::ComputedCustomProperties;
 use crate::gecko_bindings::bindings;
 % for style_struct in data.style_structs:
 use crate::gecko_bindings::bindings::Gecko_Construct_Default_${style_struct.gecko_ffi_name};
@@ -65,7 +65,7 @@ impl ComputedValues {
 
     pub fn new(
         pseudo: Option<<&PseudoElement>,
-        custom_properties: Option<Arc<CustomPropertiesMap>>,
+        custom_properties: ComputedCustomProperties,
         writing_mode: WritingMode,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
@@ -88,7 +88,7 @@ impl ComputedValues {
 
     pub fn default_values(doc: &structs::Document) -> Arc<Self> {
         ComputedValuesInner::new(
-            /* custom_properties = */ None,
+            crate::custom_properties::ComputedCustomProperties::default(),
             /* writing_mode = */ WritingMode::empty(), // FIXME(bz): This seems dubious
             ComputedValueFlags::empty(),
             /* rules = */ None,
@@ -195,7 +195,7 @@ impl Drop for ComputedValuesInner {
 
 impl ComputedValuesInner {
     pub fn new(
-        custom_properties: Option<Arc<CustomPropertiesMap>>,
+        custom_properties: ComputedCustomProperties,
         writing_mode: WritingMode,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,

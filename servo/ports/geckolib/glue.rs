@@ -26,6 +26,7 @@ use style::color::{AbsoluteColor, ColorSpace};
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
+use style::custom_properties::ComputedCustomProperties;
 use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
@@ -6069,7 +6070,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
     let mut raw_custom_properties_block; // To make the raw block alive in the scope.
     for (index, keyframe) in keyframes.iter().enumerate() {
-        let mut custom_properties = None;
+        let mut custom_properties = ComputedCustomProperties::default();
         for property in keyframe.mPropertyValues.iter() {
             // Find the block for custom properties first.
             if property.mProperty == nsCSSPropertyID::eCSSPropertyExtra_variable {
@@ -6142,7 +6143,11 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             let iter = guard.to_animation_value_iter(
                 &mut context,
                 &default_values,
-                custom_properties.as_ref(),
+                if custom_properties.is_empty() {
+                    None
+                } else {
+                    Some(&custom_properties)
+                }
             );
 
             for value in iter {
@@ -7393,13 +7398,14 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     name: &nsACString,
     value: &mut nsACString,
 ) -> bool {
-    let custom_properties = match computed_values.custom_properties() {
+    // TODO(bug 1840478): Handle non-inherited properties.
+    let inherited = match &computed_values.custom_properties.inherited {
         Some(p) => p,
         None => return false,
     };
 
     let name = Atom::from(name.as_str_unchecked());
-    let computed_value = match custom_properties.get(&name) {
+    let computed_value = match inherited.get(&name) {
         Some(v) => v,
         None => return false,
     };
@@ -7410,8 +7416,9 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
 
 #[no_mangle]
 pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValues) -> u32 {
-    match computed_values.custom_properties() {
-        Some(p) => p.len() as u32,
+    // TODO(bug 1840478): Handle non-inherited properties.
+    match &computed_values.custom_properties().inherited {
+        Some(m) => m.len() as u32,
         None => 0,
     }
 }
@@ -7421,12 +7428,13 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
     computed_values: &ComputedValues,
     index: u32,
 ) -> *mut nsAtom {
-    let custom_properties = match computed_values.custom_properties() {
+    // TODO(bug 1840478): Handle non-inherited properties.
+    let inherited = match &computed_values.custom_properties.inherited {
         Some(p) => p,
         None => return ptr::null_mut(),
     };
 
-    let property_name = match custom_properties.get_index(index as usize) {
+    let property_name = match inherited.get_index(index as usize) {
         Some((key, _value)) => key,
         None => return ptr::null_mut(),
     };
