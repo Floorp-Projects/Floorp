@@ -268,13 +268,19 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 }
 
 void FFmpegVideoDecoder<LIBAV_VER>::AdjustHWDecodeLogging() {
-  if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug)) {
+  if (!getenv("MOZ_AV_LOG_LEVEL") &&
+      MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug)) {
     mLib->av_log_set_level(AV_LOG_DEBUG);
-    setenv("LIBVA_MESSAGING_LEVEL", "1", false);
-  } else if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Info)) {
-    setenv("LIBVA_MESSAGING_LEVEL", "2", false);
-  } else {
-    setenv("LIBVA_MESSAGING_LEVEL", "0", false);
+  }
+
+  if (!getenv("LIBVA_MESSAGING_LEVEL")) {
+    if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug)) {
+      setenv("LIBVA_MESSAGING_LEVEL", "1", false);
+    } else if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Info)) {
+      setenv("LIBVA_MESSAGING_LEVEL", "2", false);
+    } else {
+      setenv("LIBVA_MESSAGING_LEVEL", "0", false);
+    }
   }
 }
 
