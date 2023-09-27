@@ -68,12 +68,6 @@ body {
   color: var(--fxview-text-primary-color);
 }
 
-#pages {
-  overflow-y: auto;
-  max-height: 100vh;
-  max-width: 100%;
-}
-
 .main-container {
   width: 90%;
   margin: 0 auto;
