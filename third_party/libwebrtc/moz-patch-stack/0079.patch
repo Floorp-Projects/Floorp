@@ -1,34 +1,25 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 27 Feb 2023 16:22:00 +0000
-Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
- designated initializer. r=mjf,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 4 Apr 2023 16:34:00 -0500
+Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
+ that gcc is sad about.
 
-This fixes a build failure in the base-toolchain job with GCC 7.5.0:
-  In file included from Unified_cpp_threading_gn0.cpp:38:0:
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
-       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-                                                   ^
-
-Differential Revision: https://phabricator.services.mozilla.com/D171057
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
 ---
- rtc_base/physical_socket_server.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/audio_processing/audio_processing_impl.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 2dfdd9a5df..d0053dd82b 100644
---- a/rtc_base/physical_socket_server.cc
-+++ b/rtc_base/physical_socket_server.cc
-@@ -462,7 +462,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
-   int received = 0;
-   if (read_scm_timestamp_experiment_) {
-     iovec iov = {.iov_base = buffer, .iov_len = length};
--    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-+    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
-     if (out_addr) {
-       out_addr->Clear();
-       msg.msg_name = addr;
+diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
+index c80cc76a3d..c304453388 100644
+--- a/modules/audio_processing/audio_processing_impl.cc
++++ b/modules/audio_processing/audio_processing_impl.cc
+@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+                   },
+               .adaptive_digital_controller =
+                   {
++                      .enabled = false,
+                       .headroom_db = static_cast<float>(headroom_db.Get()),
+                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
+                       .initial_gain_db =
 -- 
 2.39.3 (Apple Git-145)
 

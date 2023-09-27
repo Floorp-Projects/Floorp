@@ -1,81 +1,31 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
 Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
- to gecko libyuv. r=webrtc-reviewers,mjf
+Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
+ the new mac camera backend. r=padenot
 
-Differential Revision: https://phabricator.services.mozilla.com/D163682
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
+Also includes:
+Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D163687
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
 ---
- BUILD.gn     | 4 ++++
- sdk/BUILD.gn | 6 ++++++
- 2 files changed, 10 insertions(+)
+ modules/video_capture/video_capture.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index f43142e055..72bfb3393c 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -584,6 +584,10 @@ if (!build_with_chromium) {
-       ]
-     }
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index 04203033b0..6614032299 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -154,6 +154,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+   // Return whether the rotation is applied or left pending.
+   virtual bool GetApplyRotation() = 0;
  
-+    if (build_with_mozilla && is_mac) {
-+      deps += [ "sdk:videocapture_objc" ]
-+    }
++  // Mozilla: TrackingId setter for use in profiler markers.
++  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
 +
-     if (rtc_enable_protobuf) {
-       deps += [ "logging:rtc_event_log_proto" ]
-     }
-diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index ff89b21721..bef4521dc6 100644
---- a/sdk/BUILD.gn
-+++ b/sdk/BUILD.gn
-@@ -461,6 +461,7 @@ if (is_ios || is_mac) {
-       }
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("videosource_objc") {
-       sources = [
-         "objc/api/peerconnection/RTCVideoSource+Private.h",
-@@ -490,6 +491,7 @@ if (is_ios || is_mac) {
-         ":used_from_extension",
-       ]
-     }
-+    }
- 
-     rtc_library("videoframebuffer_objc") {
-       visibility = [ "*" ]
-@@ -522,6 +524,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("opengl_objc") {
-       sources = [
-         "objc/components/renderer/opengl/RTCDefaultShader.h",
-@@ -674,6 +677,7 @@ if (is_ios || is_mac) {
-         ":videoframebuffer_objc",
-       ]
-     }
-+    }
- 
-     rtc_library("videocapture_objc") {
-       visibility = [ "*" ]
-@@ -702,6 +706,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("videocodec_objc") {
-       visibility = [ "*" ]
-       configs += [ "..:no_global_constructors" ]
-@@ -1753,5 +1758,6 @@ if (is_ios || is_mac) {
-         "VideoToolbox.framework",
-       ]
-     }
-+    }
-   }
- }
+  protected:
+   ~VideoCaptureModule() override {}
+ };
 -- 
 2.39.3 (Apple Git-145)
 
