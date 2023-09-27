@@ -10118,6 +10118,12 @@
 #endif
     mirror: always
 
+# Enable HEVC support via the windows media foundation
+-   name: media.wmf.hevc.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 #endif  # MOZ_WMF
 
 - name: media.decoder-doctor.testing
