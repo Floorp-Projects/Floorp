@@ -150,7 +150,7 @@ index ac934eb332..a5bf65d073 100644
    // happen if a hardware encoder was used.
    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 15a8da18ca..5e015a5910 100644
+index 163fcbdf67..b920efadff 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 @@ -53,6 +53,11 @@ class TransformableVideoReceiverFrame

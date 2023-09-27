@@ -15,12 +15,12 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d
  3 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index aa5c8dfa28..15a8da18ca 100644
+index 1e4d0540f0..163fcbdf67 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -79,8 +79,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
-     RtpVideoStreamReceiverFrameTransformerDelegate(
+@@ -80,8 +80,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
          RtpVideoFrameReceiver* receiver,
+         Clock* clock,
          rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
 -        rtc::Thread* network_thread,
 -        uint32_t ssrc)
@@ -29,12 +29,12 @@ index aa5c8dfa28..15a8da18ca 100644
        frame_transformer_(std::move(frame_transformer)),
        network_thread_(network_thread),
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
-index 3e8257f906..5adca0634c 100644
+index 62a42fdddf..20f9a5caa9 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
-@@ -39,8 +39,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
-   RtpVideoStreamReceiverFrameTransformerDelegate(
+@@ -41,8 +41,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
        RtpVideoFrameReceiver* receiver,
+       Clock* clock,
        rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
 -      rtc::Thread* network_thread,
 -      uint32_t ssrc);
@@ -42,25 +42,25 @@ index 3e8257f906..5adca0634c 100644
  
    void Init();
    void Reset();
-@@ -65,7 +64,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+@@ -67,7 +66,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
    RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
        RTC_GUARDED_BY(network_sequence_checker_);
 -  rtc::Thread* const network_thread_;
 +  TaskQueueBase* const network_thread_;
    const uint32_t ssrc_;
+   Clock* const clock_;
  };
- 
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index b6d8af8903..e28bb302fe 100644
+index 738da0758b..6daa18ae30 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
    if (frame_transformer) {
      frame_transformer_delegate_ =
          rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
--            this, std::move(frame_transformer), rtc::Thread::Current(),
-+            this, std::move(frame_transformer), TaskQueueBase::Current(),
+-            this, clock_, std::move(frame_transformer), rtc::Thread::Current(),
++            this, clock_, std::move(frame_transformer), TaskQueueBase::Current(),
              config_.rtp.remote_ssrc);
      frame_transformer_delegate_->Init();
    }
