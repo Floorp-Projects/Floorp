@@ -17,7 +17,7 @@
 test_valid_value("outline", "rgba(10, 20, 30, 0.4)");
 
 test_valid_value("outline", "auto");
-test_valid_value("outline", "none", ["invert", "currentcolor", "none", "medium"]);
+test_valid_value("outline", "none", ["currentcolor", "none", "medium"]);
 test_valid_value("outline", "dotted");
 test_valid_value("outline", "dashed");
 test_valid_value("outline", "solid");
@@ -31,7 +31,7 @@ test_valid_value("outline", "0", "0px");
 test_valid_value("outline", "1px");
 test_valid_value("outline", "calc(2em + 3ex)");
 test_valid_value("outline", "thin");
-test_valid_value("outline", "medium", ["invert", "currentcolor", "none", "medium"]);
+test_valid_value("outline", "medium", ["currentcolor", "none", "medium"]);
 test_valid_value("outline", "thick");
 
 test_valid_value("outline", "dashed thin");
