@@ -829,11 +829,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   bool rootHasSecureConnection = topWC->GetIsSecure();
   bool allowMixedContent = topWC->GetAllowMixedContent();
 
-  // When navigating an iframe, the iframe may be https
-  // but its parents may not be.  Check the parents to see if any of them are
-  // https. If none of the parents are https, allow the load.
+  // When navigating an iframe, the iframe may be https but its parents may not
+  // be. Check the parents to see if any of them are https. If none of the
+  // parents are https, allow the load.
   if (contentType == ExtContentPolicyType::TYPE_SUBDOCUMENT &&
-      !rootHasSecureConnection) {
+      !rootHasSecureConnection && !parentIsHttps) {
     bool httpsParentExists = false;
 
     RefPtr<WindowContext> curWindow = requestingWindow;
