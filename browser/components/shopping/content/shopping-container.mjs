@@ -254,7 +254,7 @@ export class ShoppingContainer extends MozLitElement {
         id="loading-wrapper"
         data-l10n-id="shopping-a11y-loading"
         role="img"
-        ${animate ? "class='animate'" : ""}
+        class=${animate ? "animate" : ""}
       >
         <div class="loading-box medium"></div>
         <div class="loading-box medium"></div>
