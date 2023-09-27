@@ -440,23 +440,23 @@ class Playstation3Remapper final : public GamepadRemapper {
       return;
     }
 
-    const std::vector<uint32_t> buttonMapping = {BUTTON_INDEX_BACK_SELECT,
-                                                 BUTTON_INDEX_LEFT_THUMBSTICK,
-                                                 BUTTON_INDEX_RIGHT_THUMBSTICK,
-                                                 BUTTON_INDEX_START,
-                                                 BUTTON_INDEX_DPAD_UP,
-                                                 BUTTON_INDEX_DPAD_RIGHT,
-                                                 BUTTON_INDEX_DPAD_DOWN,
-                                                 BUTTON_INDEX_DPAD_LEFT,
-                                                 BUTTON_INDEX_LEFT_TRIGGER,
-                                                 BUTTON_INDEX_RIGHT_TRIGGER,
-                                                 BUTTON_INDEX_LEFT_SHOULDER,
-                                                 BUTTON_INDEX_RIGHT_SHOULDER,
-                                                 BUTTON_INDEX_QUATERNARY,
-                                                 BUTTON_INDEX_SECONDARY,
-                                                 BUTTON_INDEX_PRIMARY,
-                                                 BUTTON_INDEX_TERTIARY,
-                                                 BUTTON_INDEX_META};
+    constexpr std::array buttonMapping = {BUTTON_INDEX_BACK_SELECT,
+                                          BUTTON_INDEX_LEFT_THUMBSTICK,
+                                          BUTTON_INDEX_RIGHT_THUMBSTICK,
+                                          BUTTON_INDEX_START,
+                                          BUTTON_INDEX_DPAD_UP,
+                                          BUTTON_INDEX_DPAD_RIGHT,
+                                          BUTTON_INDEX_DPAD_DOWN,
+                                          BUTTON_INDEX_DPAD_LEFT,
+                                          BUTTON_INDEX_LEFT_TRIGGER,
+                                          BUTTON_INDEX_RIGHT_TRIGGER,
+                                          BUTTON_INDEX_LEFT_SHOULDER,
+                                          BUTTON_INDEX_RIGHT_SHOULDER,
+                                          BUTTON_INDEX_QUATERNARY,
+                                          BUTTON_INDEX_SECONDARY,
+                                          BUTTON_INDEX_PRIMARY,
+                                          BUTTON_INDEX_TERTIARY,
+                                          BUTTON_INDEX_META};
 
     if (buttonMapping.size() <= aButton) {
       NS_WARNING(
@@ -631,20 +631,21 @@ class Dualshock4Remapper final : public GamepadRemapper {
       return;
     }
 
-    const std::vector<uint32_t> buttonMapping = {BUTTON_INDEX_TERTIARY,
-                                                 BUTTON_INDEX_PRIMARY,
-                                                 BUTTON_INDEX_SECONDARY,
-                                                 BUTTON_INDEX_QUATERNARY,
-                                                 BUTTON_INDEX_LEFT_SHOULDER,
-                                                 BUTTON_INDEX_RIGHT_SHOULDER,
-                                                 BUTTON_INDEX_LEFT_TRIGGER,
-                                                 BUTTON_INDEX_RIGHT_TRIGGER,
-                                                 BUTTON_INDEX_BACK_SELECT,
-                                                 BUTTON_INDEX_START,
-                                                 BUTTON_INDEX_LEFT_THUMBSTICK,
-                                                 BUTTON_INDEX_RIGHT_THUMBSTICK,
-                                                 BUTTON_INDEX_META,
-                                                 DUALSHOCK_BUTTON_TOUCHPAD};
+    constexpr std::array<uint32_t, 14> buttonMapping = {
+        BUTTON_INDEX_TERTIARY,
+        BUTTON_INDEX_PRIMARY,
+        BUTTON_INDEX_SECONDARY,
+        BUTTON_INDEX_QUATERNARY,
+        BUTTON_INDEX_LEFT_SHOULDER,
+        BUTTON_INDEX_RIGHT_SHOULDER,
+        BUTTON_INDEX_LEFT_TRIGGER,
+        BUTTON_INDEX_RIGHT_TRIGGER,
+        BUTTON_INDEX_BACK_SELECT,
+        BUTTON_INDEX_START,
+        BUTTON_INDEX_LEFT_THUMBSTICK,
+        BUTTON_INDEX_RIGHT_THUMBSTICK,
+        BUTTON_INDEX_META,
+        DUALSHOCK_BUTTON_TOUCHPAD};
 
     if (buttonMapping.size() <= aButton) {
       NS_WARNING(nsPrintfCString(
@@ -1689,7 +1690,7 @@ class BoomN64PsxRemapper final : public GamepadRemapper {
       return;
     }
 
-    const std::vector<uint32_t> buttonMapping = {
+    static constexpr std::array buttonMapping = {
         BUTTON_INDEX_QUATERNARY,       BUTTON_INDEX_SECONDARY,
         BUTTON_INDEX_PRIMARY,          BUTTON_INDEX_TERTIARY,
         BUTTON_INDEX_LEFT_TRIGGER,     BUTTON_INDEX_RIGHT_TRIGGER,
