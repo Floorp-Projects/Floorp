@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.34"
+rust-version = "1.36"
 name = "fastrand"
-version = "1.9.0"
+version = "2.0.0"
 authors = ["Stjepan Glavina <stjepang@gmail.com>"]
 exclude = ["/.*"]
 description = "A simple and fast random number generator"
@@ -29,6 +29,13 @@ categories = ["algorithms"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/smol-rs/fastrand"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
 [dev-dependencies.getrandom]
 version = "0.2"
 
@@ -38,16 +45,23 @@ version = "0.8"
 [dev-dependencies.wyhash]
 version = "0.5"
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))".dependencies.instant]
-version = "0.1"
+[features]
+alloc = []
+default = ["std"]
+js = [
+    "std",
+    "getrandom",
+]
+std = ["alloc"]
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))".dev-dependencies.getrandom]
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dependencies.getrandom]
+version = "0.2"
+features = ["js"]
+optional = true
+
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dev-dependencies.getrandom]
 version = "0.2"
 features = ["js"]
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))".dev-dependencies.instant]
-version = "0.1"
-features = ["wasm-bindgen"]
-
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))".dev-dependencies.wasm-bindgen-test]
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dev-dependencies.wasm-bindgen-test]
 version = "0.3"
