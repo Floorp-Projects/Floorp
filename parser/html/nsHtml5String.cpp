@@ -109,9 +109,8 @@ nsHtml5String nsHtml5String::FromBuffer(char16_t* aBuffer, int32_t aLength,
   // nsStringBuffer and to make sure the allocation strategy matches
   // nsAttrValue::GetStringBuffer, so that it doesn't need to reallocate and
   // copy.
-  RefPtr<nsStringBuffer> buffer(
-      nsStringBuffer::Alloc((aLength + 1) * sizeof(char16_t)));
-  if (!buffer) {
+  RefPtr<nsStringBuffer> buffer = nsStringBuffer::Create(aBuffer, aLength);
+  if (MOZ_UNLIKELY(!buffer)) {
     if (!aTreeBuilder) {
       MOZ_CRASH("Out of memory.");
     }
@@ -124,12 +123,7 @@ nsHtml5String nsHtml5String::FromBuffer(char16_t* aBuffer, int32_t aLength,
     char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
     data[0] = 0xFFFD;
     data[1] = 0;
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
-                         eStringBuffer);
   }
-  char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
-  memcpy(data, aBuffer, aLength * sizeof(char16_t));
-  data[aLength] = 0;
   return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
                        eStringBuffer);
 }
