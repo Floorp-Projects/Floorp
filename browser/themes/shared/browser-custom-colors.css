@@ -51,10 +51,11 @@
     --tab-icon-overlay-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
 
-    --toolbar-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
+    --toolbar-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --toolbar-non-lwt-bgcolor: light-dark(#f9f9fb, rgb(43, 42, 51));
     --toolbar-non-lwt-textcolor: var(--toolbar-color);
 
+    --toolbarbutton-icon-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --toolbarbutton-icon-fill-attention: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
 
     --urlbar-popup-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
