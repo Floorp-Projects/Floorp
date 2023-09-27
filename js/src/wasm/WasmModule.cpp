@@ -37,6 +37,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
+#include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmUtility.h"
 
@@ -476,12 +477,12 @@ bool Module::instantiateFunctions(JSContext* cx,
     Instance& instance = ExportedFunctionToInstance(f);
     Tier otherTier = instance.code().stableTier();
 
-    const FuncType& exportFuncType = instance.metadata().getFuncExportType(
+    const TypeDef& exportFuncType = instance.metadata().getFuncExportTypeDef(
         instance.metadata(otherTier).lookupFuncExport(funcIndex));
-    const FuncType& importFuncType =
-        metadata().getFuncImportType(metadata(tier).funcImports[i]);
+    const TypeDef& importFuncType =
+        metadata().getFuncImportTypeDef(metadata(tier).funcImports[i]);
 
-    if (!FuncType::strictlyEquals(exportFuncType, importFuncType)) {
+    if (!TypeDef::isSubTypeOf(&exportFuncType, &importFuncType)) {
       const Import& import = FindImportFunction(imports_, i);
       UniqueChars importModuleName = import.module.toQuotedString(cx);
       UniqueChars importFieldName = import.field.toQuotedString(cx);

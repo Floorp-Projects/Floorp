@@ -417,6 +417,9 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   MetadataCacheablePod& pod() { return *this; }
   const MetadataCacheablePod& pod() const { return *this; }
 
+  const TypeDef& getFuncImportTypeDef(const FuncImport& funcImport) const {
+    return types->type(funcImport.typeIndex());
+  }
   const FuncType& getFuncImportType(const FuncImport& funcImport) const {
     return types->type(funcImport.typeIndex()).funcType();
   }
