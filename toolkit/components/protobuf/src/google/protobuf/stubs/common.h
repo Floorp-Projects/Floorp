@@ -36,7 +36,6 @@
 #define GOOGLE_PROTOBUF_COMMON_H__
 
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <set>

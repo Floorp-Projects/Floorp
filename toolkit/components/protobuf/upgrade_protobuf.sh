@@ -62,14 +62,14 @@ rm -rf src/google/protobuf/SEBS
 
 # Apply custom changes for building as part of mozilla-central.
 
-cd ../../.. # Top level.
-
 echo
 echo Applying custom changes for mozilla-central. If this fails, you need to
 echo edit the 'toolkit/components/protobuf/src/google/*' sources manually and
-echo update the 'toolkit/components/protobuf/m-c-changes.patch' patch file
+echo update the 'toolkit/components/protobuf/*.patch' patch file
 echo accordingly.
 echo
+
+patch -p4 < 14174.patch
 
 echo
 echo Successfully upgraded the protobuf lib!
