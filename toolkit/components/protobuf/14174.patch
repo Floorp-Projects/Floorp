@@ -1,0 +1,38 @@
+From 292f3191dc63394cac1dbe9b31843ca3bd287812 Mon Sep 17 00:00:00 2001
+From: serge-sans-paille <sguelton@mozilla.com>
+Date: Fri, 22 Sep 2023 10:06:44 +0200
+Subject: [PATCH] Remove <iostream> from the common.h header
+
+<iostream> embeds a global constructor (to initialize std::cout and
+such), typically `static ios_base::Init __ioinit;` in libstdc++).
+
+This header is not directly necessary in the common header and has a
+small impact on every compilation unit that includes it.
+
+As an example, removing that header dependency in turns suppresses 33 global
+constructors from the firefox core library libxul.
+---
+diff --git a/toolkit/components/protobuf/src/google/protobuf/message_lite.cc b/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
+index da66c1965b4c4..a1790b167fdbd 100644
+--- a/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
++++ b/toolkit/components/protobuf/src/google/protobuf/message_lite.cc
+@@ -38,6 +38,7 @@
+ #include <climits>
+ #include <cstdint>
+ #include <string>
++#include <istream>
+ 
+ #include <google/protobuf/stubs/logging.h>
+ #include <google/protobuf/stubs/common.h>
+diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/common.h b/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
+index ebb1ca0e677cc..58739784db804 100644
+--- a/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
++++ b/toolkit/components/protobuf/src/google/protobuf/stubs/common.h
+@@ -36,7 +36,6 @@
+ #define GOOGLE_PROTOBUF_COMMON_H__
+ 
+ #include <algorithm>
+-#include <iostream>
+ #include <map>
+ #include <memory>
+ #include <set>
