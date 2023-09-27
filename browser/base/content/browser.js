@@ -7527,7 +7527,7 @@ var WebAuthnPromptHelper = {
     // If we receive a cancel, it might be a WebAuthn prompt starting in another
     // window, and the other window's browsing context will send out the
     // cancellations, so any cancel action we get should prompt us to cancel.
-    if (data.prompt.type == "cancel") {
+    if (data.action == "cancel") {
       this.cancel(data);
       return;
     }
@@ -7539,21 +7539,17 @@ var WebAuthnPromptHelper = {
       return;
     }
 
-    let mgr = Cc["@mozilla.org/webauthn/transport;1"].getService(
-      Ci.nsIWebAuthnTransport
-    );
+    let mgr = aSubject.QueryInterface(Ci.nsIWebAuthnController);
 
-    if (data.prompt.type == "presence") {
+    if (data.action == "presence") {
       this.presence_required(mgr, data);
-    } else if (data.prompt.type == "register-direct") {
+    } else if (data.action == "register-direct") {
       this.registerDirect(mgr, data);
-    } else if (data.prompt.type == "pin-required") {
-      this.pin_required(mgr, false, data);
-    } else if (data.prompt.type == "pin-invalid") {
-      this.pin_required(mgr, true, data);
-    } else if (data.prompt.type == "select-sign-result") {
+    } else if (data.action == "pin-required") {
+      this.pin_required(mgr, data);
+    } else if (data.action == "select-sign-result") {
       this.select_sign_result(mgr, data);
-    } else if (data.prompt.type == "already-registered") {
+    } else if (data.action == "already-registered") {
       this.show_info(
         mgr,
         data.origin,
@@ -7561,7 +7557,7 @@ var WebAuthnPromptHelper = {
         "alreadyRegistered",
         "webauthn.alreadyRegisteredPrompt"
       );
-    } else if (data.prompt.type == "select-device") {
+    } else if (data.action == "select-device") {
       this.show_info(
         mgr,
         data.origin,
@@ -7569,7 +7565,7 @@ var WebAuthnPromptHelper = {
         "selectDevice",
         "webauthn.selectDevicePrompt"
       );
-    } else if (data.prompt.type == "pin-auth-blocked") {
+    } else if (data.action == "pin-auth-blocked") {
       this.show_info(
         mgr,
         data.origin,
@@ -7577,7 +7573,7 @@ var WebAuthnPromptHelper = {
         "pinAuthBlocked",
         "webauthn.pinAuthBlockedPrompt"
       );
-    } else if (data.prompt.type == "uv-blocked") {
+    } else if (data.action == "uv-blocked") {
       this.show_info(
         mgr,
         data.origin,
@@ -7585,8 +7581,8 @@ var WebAuthnPromptHelper = {
         "uvBlocked",
         "webauthn.uvBlockedPrompt"
       );
-    } else if (data.prompt.type == "uv-invalid") {
-      let retriesLeft = data.prompt.retries;
+    } else if (data.action == "uv-invalid") {
+      let retriesLeft = data.retriesLeft;
       let dialogText;
       if (retriesLeft == 0) {
         // We can skip that because it will either be replaced
@@ -7604,7 +7600,7 @@ var WebAuthnPromptHelper = {
       }
       let mainAction = this.buildCancelAction(mgr, data.tid);
       this.show_formatted_msg(data.tid, "uvInvalid", dialogText, mainAction);
-    } else if (data.prompt.type == "device-blocked") {
+    } else if (data.action == "device-blocked") {
       this.show_info(
         mgr,
         data.origin,
@@ -7612,7 +7608,7 @@ var WebAuthnPromptHelper = {
         "deviceBlocked",
         "webauthn.deviceBlockedPrompt"
       );
-    } else if (data.prompt.type == "pin-not-set") {
+    } else if (data.action == "pin-not-set") {
       this.show_info(
         mgr,
         data.origin,
@@ -7655,18 +7651,14 @@ var WebAuthnPromptHelper = {
     return res;
   },
 
-  select_sign_result(mgr, { origin, tid, prompt: { entities } }) {
-    let unknownAccount = this._l10n.formatValueSync(
-      "webauthn-select-sign-result-unknown-account"
-    );
+  select_sign_result(mgr, { origin, tid, usernames }) {
     let secondaryActions = [];
-    for (let i = 0; i < entities.length; i++) {
-      let label = entities[i].name ?? unknownAccount;
+    for (let i = 0; i < usernames.length; i++) {
       secondaryActions.push({
-        label,
+        label: usernames[i],
         accessKey: i.toString(),
         callback(aState) {
-          mgr.selectionCallback(tid, i);
+          mgr.signatureSelectionCallback(tid, i);
         },
       });
     }
@@ -7683,9 +7675,14 @@ var WebAuthnPromptHelper = {
     );
   },
 
-  pin_required(mgr, wasInvalid, { origin, tid, prompt: { retries } }) {
+  pin_required(mgr, { origin, tid, wasInvalid, retriesLeft }) {
     let aPassword = Object.create(null); // create a "null" object
-    let res = this.prompt_for_password(origin, wasInvalid, retries, aPassword);
+    let res = this.prompt_for_password(
+      origin,
+      wasInvalid,
+      retriesLeft,
+      aPassword
+    );
     if (res) {
       mgr.pinCallback(tid, aPassword.value);
     } else {
@@ -7849,7 +7846,7 @@ var WebAuthnPromptHelper = {
       label: gNavigatorBundle.getString("webauthn.proceed"),
       accessKey: gNavigatorBundle.getString("webauthn.proceed.accesskey"),
       callback(state) {
-        mgr.resumeMakeCredential(tid, state.checkboxChecked);
+        mgr.resumeRegister(tid, state.checkboxChecked);
       },
     };
   },

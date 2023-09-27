@@ -25,8 +25,10 @@ class CtapRegisterArgs final : public nsICtapRegisterArgs {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICTAPREGISTERARGS
 
-  explicit CtapRegisterArgs(const WebAuthnMakeCredentialInfo& aInfo)
+  explicit CtapRegisterArgs(const WebAuthnMakeCredentialInfo& aInfo,
+                            bool aForceNoneAttestation)
       : mInfo(aInfo),
+        mForceNoneAttestation(aForceNoneAttestation),
         mCredProps(false),
         mHmacCreateSecret(false),
         mMinPinLength(false) {
@@ -56,6 +58,7 @@ class CtapRegisterArgs final : public nsICtapRegisterArgs {
   ~CtapRegisterArgs() = default;
 
   const WebAuthnMakeCredentialInfo& mInfo;
+  const bool mForceNoneAttestation;
 
   // Flags to indicate whether an extension is being requested.
   bool mCredProps;
