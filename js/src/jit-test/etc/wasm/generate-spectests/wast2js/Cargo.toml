@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.19"
-wast = "55.0.0"
+wast = "65.0.1"

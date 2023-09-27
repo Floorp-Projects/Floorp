@@ -139,3 +139,15 @@ excluded_tests = [
   # Empty test fails parsing
   "memory_copy1.wast",
 ]
+
+[[repos]]
+name = "gc"
+url = "https://github.com/WebAssembly/gc"
+branch = "main"
+parent = "function-references"
+directive = "; --wasm-gc; skip-if: !wasmGcEnabled()"
+excluded_tests = [
+  # tail call tests that snuck in
+  "return_call.wast",
+  "return_call_indirect.wast",
+]

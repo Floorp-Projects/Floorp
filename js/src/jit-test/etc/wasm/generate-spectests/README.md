@@ -6,6 +6,8 @@ This tool tries to be as robust as possible to deal with upstream breakage, whil
 
 ## Usage
 
+NOTE: Running this on its own will generate spec tests but not actually copy them to the jit-test folder or apply patches. If you want to run the whole process for real, use the makefile in the parent folder.
+
 ```bash
 # Configure the tests you want
 vim config.toml

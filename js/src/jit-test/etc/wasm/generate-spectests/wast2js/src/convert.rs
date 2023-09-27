@@ -533,14 +533,33 @@ fn return_value_to_js_value(v: &wast::core::WastRetCore<'_>) -> Result<String> {
         F32(x) => f32_pattern_to_js_value(x),
         F64(x) => f64_pattern_to_js_value(x),
         RefNull(x) => match x {
+            Some(wast::core::HeapType::Any) => format!("value('anyref', null)"),
+            Some(wast::core::HeapType::Eq) => format!("value('eqref', null)"),
+            Some(wast::core::HeapType::Array) => format!("value('arrayref', null)"),
+            Some(wast::core::HeapType::Struct) => format!("value('structref', null)"),
+            Some(wast::core::HeapType::I31) => format!("value('i31ref', null)"),
+            Some(wast::core::HeapType::None) => format!("value('nullref', null)"),
             Some(wast::core::HeapType::Func) => format!("value('anyfunc', null)"),
+            Some(wast::core::HeapType::NoFunc) => format!("value('nullfuncref', null)"),
             Some(wast::core::HeapType::Extern) => format!("value('externref', null)"),
+            Some(wast::core::HeapType::NoExtern) => format!("value('nullexternref', null)"),
+            None => "null".to_string(),
             other => bail!(
                 "couldn't convert ref.null {:?} to a js assertion value",
                 other
             ),
         },
-        RefExtern(x) => format!("value('externref', externref({}))", x),
+        RefFunc(_) => format!("new RefWithType('funcref')"),
+        RefExtern(x) => match x {
+            Some(v) => format!("new ExternRefResult({})", v),
+            None => format!("new RefWithType('externref')"),
+        },
+        RefHost(x) => format!("new HostRefResult({})", x),
+        RefAny => format!("new RefWithType('anyref')"),
+        RefEq => format!("new RefWithType('eqref')"),
+        RefArray => format!("new RefWithType('arrayref')"),
+        RefStruct => format!("new RefWithType('structref')"),
+        RefI31 => format!("new RefWithType('i31ref')"),
         V128(x) => {
             use wast::core::V128Pattern::*;
             match x {
@@ -667,6 +686,7 @@ fn arg_to_js_value(v: &wast::WastArg<'_>) -> Result<String> {
         }
         Core(RefNull(_)) => format!("null"),
         Core(RefExtern(x)) => format!("externref({})", x),
+        Core(RefHost(x)) => format!("hostref({})", x),
         other => bail!("couldn't convert {:?} to a js value", other),
     })
 }
