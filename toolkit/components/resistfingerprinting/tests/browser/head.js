@@ -50,3 +50,13 @@ function compareArrayBuffer(buffer1, buffer2) {
   // the two buffers are the same
   return false;
 }
+
+function promiseObserver(topic) {
+  return new Promise(resolve => {
+    let obs = (aSubject, aTopic, aData) => {
+      Services.obs.removeObserver(obs, aTopic);
+      resolve(aSubject);
+    };
+    Services.obs.addObserver(obs, topic);
+  });
+}
