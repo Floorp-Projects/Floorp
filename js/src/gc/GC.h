@@ -67,7 +67,7 @@ class TenuredChunk;
   _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                 \
   _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                     \
   _("parallelMarkingEnabled", JSGC_PARALLEL_MARKING_ENABLED, true)          \
-  _("parallelMarkingThresholdKB", JSGC_PARALLEL_MARKING_THRESHOLD_MB, true) \
+  _("parallelMarkingThresholdMB", JSGC_PARALLEL_MARKING_THRESHOLD_MB, true) \
   _("minLastDitchGCPeriod", JSGC_MIN_LAST_DITCH_GC_PERIOD, true)            \
   _("nurseryFreeThresholdForIdleCollection",                                \
     JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, true)                  \

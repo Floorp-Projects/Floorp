@@ -50,7 +50,7 @@ testChangeParam("minEmptyChunkCount");
 testChangeParam("maxEmptyChunkCount");
 testChangeParam("compactingEnabled");
 testChangeParam("parallelMarkingEnabled");
-testChangeParam("parallelMarkingThresholdKB");
+testChangeParam("parallelMarkingThresholdMB");
 testChangeParam("minLastDitchGCPeriod");
 testChangeParam("nurseryFreeThresholdForIdleCollection");
 testChangeParam("nurseryFreeThresholdForIdleCollectionPercent");
