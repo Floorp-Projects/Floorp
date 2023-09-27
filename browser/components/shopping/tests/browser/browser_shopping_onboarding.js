@@ -409,6 +409,14 @@ add_task(async function test_linkParagraph() {
 });
 
 add_task(async function test_onboarding_auto_activate_opt_in() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+        true,
+      ],
+    ],
+  });
   // Opt out of the feature
   setOnboardingPrefs({
     active: false,
@@ -608,4 +616,29 @@ add_task(async function test_hideOnboarding_OptIn_AfterSurveySeen() {
     }
   );
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_deactivate_sidebar_if_user_turns_off_cfr() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+        false,
+      ],
+    ],
+  });
+  // Opt out of the feature
+  setOnboardingPrefs({
+    active: false,
+    optedIn: 0,
+    lastAutoActivate: 0,
+    autoActivateCount: 0,
+    handledAutoActivate: false,
+  });
+  ShoppingUtils.handleAutoActivateOnProduct();
+
+  ok(
+    !Services.prefs.getBoolPref("browser.shopping.experience2023.active"),
+    "Shopping sidebar should not auto-activate if Recommended features is turned off"
+  );
 });
