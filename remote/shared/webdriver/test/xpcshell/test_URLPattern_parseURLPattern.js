@@ -14,7 +14,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://example.com/",
@@ -22,7 +22,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://EXAMPLE.com",
@@ -30,7 +30,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://example%2Ecom",
@@ -38,7 +38,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
 
     {
@@ -47,7 +47,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://example.com:8888",
@@ -55,7 +55,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "8888",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://example.com/a////b",
@@ -63,7 +63,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example.com",
       port: "",
       pathname: "/a////b",
-      search: null,
+      search: "",
     },
     {
       input: "http://example.com/?",
@@ -95,7 +95,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "",
       port: null,
       pathname: "/testfolder/test.zip",
-      search: null,
+      search: "",
     },
     {
       input: "http://example\\{.com/",
@@ -103,7 +103,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "example{.com",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://[2001:db8::1]/",
@@ -111,7 +111,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "[2001:db8::1]",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
     {
       input: "http://127.0.0.1/",
@@ -119,7 +119,7 @@ add_task(async function test_parseURLPattern_stringPatterns() {
       hostname: "127.0.0.1",
       port: "",
       pathname: "/",
-      search: null,
+      search: "",
     },
   ];
 
@@ -145,8 +145,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: "http",
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -155,8 +155,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: "http",
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -165,8 +165,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: "example.com",
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -175,8 +175,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: "example.com",
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -185,8 +185,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: "127.0.0.1",
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -195,8 +195,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: "[2001:db8::1]",
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: null,
     },
     {
@@ -206,7 +206,7 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       protocol: null,
       hostname: null,
       port: "",
-      pathname: "/",
+      pathname: null,
       search: null,
     },
     {
@@ -216,7 +216,7 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       protocol: null,
       hostname: null,
       port: "1234",
-      pathname: "/",
+      pathname: null,
       search: null,
     },
     {
@@ -225,7 +225,7 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
+      port: null,
       pathname: "/path/to",
       search: null,
     },
@@ -235,7 +235,7 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
+      port: null,
       pathname: "/path/to",
       search: null,
     },
@@ -245,7 +245,7 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
+      port: null,
       pathname: "/path/to/",
       search: null,
     },
@@ -255,8 +255,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: "search",
     },
     {
@@ -265,8 +265,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: "search",
     },
     {
@@ -275,8 +275,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: "search=something",
     },
     {
@@ -285,8 +285,8 @@ add_task(async function test_parseURLPattern_patternPatterns() {
       },
       protocol: null,
       hostname: null,
-      port: "",
-      pathname: "/",
+      port: null,
+      pathname: null,
       search: "search=something",
     },
   ];
