@@ -1488,5 +1488,44 @@ nsRFPService::SetFingerprintingOverrides(
     // key.
     mFingerprintingOverrides.InsertOrUpdate(domainKey, targets);
   }
+
+  if (Preferences::GetBool(
+          "privacy.fingerprintingProtection.remoteOverrides.testing", false)) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+    obs->NotifyObservers(nullptr, "fpp-test:set-overrides-finishes", nullptr);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::GetEnabledFingerprintingProtections(uint64_t* aProtections) {
+  RFPTarget enabled = sEnabledFingerintingProtections;
+
+  *aProtections = uint64_t(enabled);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::GetFingerprintingOverrides(const nsACString& aDomainKey,
+                                         uint64_t* aOverrides) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  Maybe<RFPTarget> overrides = mFingerprintingOverrides.MaybeGet(aDomainKey);
+
+  if (!overrides) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aOverrides = uint64_t(overrides.ref());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRFPService::CleanAllOverrides() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  mFingerprintingOverrides.Clear();
   return NS_OK;
 }
