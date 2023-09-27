@@ -79,9 +79,17 @@ impl JSNode {
                 name,
                 body,
             } => {
-                let body_string =
-                    body.output(line_remaining - "invoke".len() - instance.len() - name.len());
-                format!("invoke({}, `{}`, {})", instance, name, body_string)
+                let len_before_body = "invoke".len() + instance.len() + name.len();
+                if len_before_body > line_remaining {
+                    format!(
+                        "invoke({},\n{}\n)",
+                        instance,
+                        indent(format!("`{}`,\n{},", name, body.output(line_remaining - 2),)),
+                    )
+                } else {
+                    let body_string = body.output(line_remaining - len_before_body);
+                    format!("invoke({}, `{}`, {})", instance, name, body_string)
+                }
             }
             Self::Call { name, args } => {
                 if self.len() > line_remaining {

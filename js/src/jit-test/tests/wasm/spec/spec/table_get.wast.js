@@ -46,7 +46,7 @@ invoke($0, `init`, [externref(1)]);
 assert_return(() => invoke($0, `get-externref`, [0]), [value('externref', null)]);
 
 // ./test/core/table_get.wast:27
-assert_return(() => invoke($0, `get-externref`, [1]), [value('externref', externref(1))]);
+assert_return(() => invoke($0, `get-externref`, [1]), [new ExternRefResult(1)]);
 
 // ./test/core/table_get.wast:29
 assert_return(() => invoke($0, `get-funcref`, [0]), [value('anyfunc', null)]);

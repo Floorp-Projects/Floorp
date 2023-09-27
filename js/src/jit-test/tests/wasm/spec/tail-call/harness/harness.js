@@ -75,11 +75,33 @@ class F64x2Pattern {
   }
 }
 
-let externrefs = {};
+class RefWithType {
+  constructor(type) {
+    this.type = type;
+  }
+
+  formatExpected() {
+    return `RefWithType(${this.type})`;
+  }
+
+  test(refGlobal) {
+    try {
+      new WebAssembly.Global({value: this.type}, refGlobal.value);
+      return true;
+    } catch (err) {
+      assertEq(err instanceof TypeError, true, `wrong type of error when creating global: ${err}`);
+      assertEq(!!err.message.match(/can only pass/), true, `wrong type of error when creating global: ${err}`);
+      return false;
+    }
+  }
+}
+
+// ref.extern values created by spec tests will be JS objects of the form
+// { [externsym]: <number> }. Other externref values are possible to observe
+// if extern.externalize is used.
 let externsym = Symbol("externref");
 function externref(s) {
-  if (!(s in externrefs)) externrefs[s] = { [externsym]: s };
-  return externrefs[s];
+  return { [externsym]: s };
 }
 function is_externref(x) {
   return (x !== null && externsym in x) ? 1 : 0;
@@ -92,6 +114,59 @@ function eq_externref(x, y) {
 }
 function eq_funcref(x, y) {
   return x === y ? 1 : 0;
+}
+
+class ExternRefResult {
+  constructor(n) {
+    this.n = n;
+  }
+
+  formatExpected() {
+    return `ref.extern ${this.n}`;
+  }
+
+  test(global) {
+    // the global's value can either be an externref or just a plain old JS number
+    let result = global.value;
+    if (typeof global.value === "object" && externsym in global.value) {
+      result = global.value[externsym];
+    }
+    return result === this.n;
+  }
+}
+
+// ref.host values created by spectests will be whatever the JS API does to
+// convert the given value to anyref. It should implicitly be like extern.internalize.
+function hostref(v) {
+  if (!wasmGcEnabled()) {
+    throw new Error("ref.host only works when wasm GC is enabled");
+  }
+
+  const { internalizeNum } = new WebAssembly.Instance(
+    new WebAssembly.Module(wasmTextToBinary(`(module
+      (func (import "test" "coerce") (param i32) (result anyref))
+      (func (export "internalizeNum") (param i32) (result anyref)
+        (call 0 (local.get 0))
+      )
+    )`)),
+    { "test": { "coerce": x => x } },
+  ).exports;
+  return internalizeNum(v);
+}
+
+class HostRefResult {
+  constructor(n) {
+    this.n = n;
+  }
+
+  formatExpected() {
+    return `ref.host ${this.n}`;
+  }
+
+  test(externrefGlobal) {
+    assertEq(externsym in externrefGlobal.value, true, `HostRefResult only works with externref inputs`);
+    return externrefGlobal.value[externsym] === this.n;
+  }
 }
 
 let spectest = {
@@ -164,13 +239,12 @@ function get(instanceish, field) {
 function assert_trap(thunk, message) {
   try {
     thunk();
-    assertEq("normal return", "trap");
+    throw new Error("expected trap");
   } catch (err) {
-    assertEq(
-      err instanceof WebAssembly.RuntimeError,
-      true,
-      "expected trap",
-    );
+    if (err instanceof WebAssembly.RuntimeError) {
+      return;
+    }
+    throw err;
   }
 }
 
@@ -298,6 +372,12 @@ function formatExpected(expected) {
     })`;
   } else if (expected instanceof EitherVariants) {
     return expected.formatExpected();
+  } else if (expected instanceof RefWithType) {
+    return expected.formatExpected();
+  } else if (expected instanceof ExternRefResult) {
+    return expected.formatExpected();
+  } else if (expected instanceof HostRefResult) {
+    return expected.formatExpected();
   } else if (typeof (expected) === "object") {
     return wasmGlobalToString(expected);
   } else {
@@ -338,6 +418,8 @@ function compareResult(result, expected) {
     expected === `arithmetic_nan`
   ) {
     return wasmGlobalIsNaN(result, expected);
+  } else if (expected === null) {
+    return result.value === null;
   } else if (expected instanceof F32x4Pattern) {
     return compareResult(
       wasmGlobalExtractLane(result, "f32x4", 0),
@@ -352,6 +434,12 @@ function compareResult(result, expected) {
       expected.x,
     ) &&
       compareResult(wasmGlobalExtractLane(result, "f64x2", 1), expected.y);
+  } else if (expected instanceof RefWithType) {
+    return expected.test(result);
+  } else if (expected instanceof ExternRefResult) {
+    return expected.test(result);
+  } else if (expected instanceof HostRefResult) {
+    return expected.test(result);
   } else if (typeof (expected) === "object") {
     return wasmGlobalsEqual(result, expected);
   } else {

@@ -53,7 +53,7 @@ assert_return(() => invoke($0, `get`, [0]), [value('externref', null)]);
 assert_return(() => invoke($0, `set`, [0, externref(2)]), []);
 
 // ./test/core/table_grow.wast:24
-assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
+assert_return(() => invoke($0, `get`, [0]), [new ExternRefResult(2)]);
 
 // ./test/core/table_grow.wast:25
 assert_trap(() => invoke($0, `set`, [1, externref(2)]), `out of bounds table access`);
@@ -68,25 +68,25 @@ assert_return(() => invoke($0, `grow-abbrev`, [4, externref(3)]), [value("i32", 
 assert_return(() => invoke($0, `size`, []), [value("i32", 5)]);
 
 // ./test/core/table_grow.wast:30
-assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
+assert_return(() => invoke($0, `get`, [0]), [new ExternRefResult(2)]);
 
 // ./test/core/table_grow.wast:31
 assert_return(() => invoke($0, `set`, [0, externref(2)]), []);
 
 // ./test/core/table_grow.wast:32
-assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
+assert_return(() => invoke($0, `get`, [0]), [new ExternRefResult(2)]);
 
 // ./test/core/table_grow.wast:33
-assert_return(() => invoke($0, `get`, [1]), [value('externref', externref(3))]);
+assert_return(() => invoke($0, `get`, [1]), [new ExternRefResult(3)]);
 
 // ./test/core/table_grow.wast:34
-assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(3))]);
+assert_return(() => invoke($0, `get`, [4]), [new ExternRefResult(3)]);
 
 // ./test/core/table_grow.wast:35
 assert_return(() => invoke($0, `set`, [4, externref(4)]), []);
 
 // ./test/core/table_grow.wast:36
-assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(4))]);
+assert_return(() => invoke($0, `get`, [4]), [new ExternRefResult(4)]);
 
 // ./test/core/table_grow.wast:37
 assert_trap(() => invoke($0, `set`, [5, externref(2)]), `out of bounds table access`);

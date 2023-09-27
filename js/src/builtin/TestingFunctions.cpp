@@ -1317,8 +1317,8 @@ static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<WasmGlobalObject*> b(cx,
                               &args.get(1).toObject().as<WasmGlobalObject>());
 
-  if (a->type() != b->type()) {
-    JS_ReportErrorASCII(cx, "globals are of different type");
+  if (a->type().kind() != b->type().kind()) {
+    JS_ReportErrorASCII(cx, "globals are of different kind");
     return false;
   }
 
