@@ -307,7 +307,6 @@ TEST(EncodeAPI, SetRoi) {
 
 void InitCodec(const vpx_codec_iface_t &iface, int width, int height,
                vpx_codec_ctx_t *enc, vpx_codec_enc_cfg_t *cfg) {
-  ASSERT_EQ(vpx_codec_enc_config_default(&iface, cfg, 0), VPX_CODEC_OK);
   cfg->g_w = width;
   cfg->g_h = height;
   cfg->g_lag_in_frames = 0;
@@ -345,6 +344,7 @@ TEST(EncodeAPI, ConfigChangeThreadCount) {
         vpx_codec_ctx_t ctx = {};
       } enc;
 
+      ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
       EXPECT_NO_FATAL_FAILURE(
           InitCodec(*iface, kWidth, kHeight, &enc.ctx, &cfg));
       if (IsVP9(iface)) {
@@ -353,6 +353,50 @@ TEST(EncodeAPI, ConfigChangeThreadCount) {
         EXPECT_EQ(vpx_codec_control_(&enc.ctx, VP9E_SET_ROW_MT, i),
                   VPX_CODEC_OK);
       }
+
+      for (const auto threads : { 1, 4, 8, 6, 2, 1 }) {
+        cfg.g_threads = threads;
+        EXPECT_NO_FATAL_FAILURE(EncodeWithConfig(cfg, &enc.ctx))
+            << "iteration: " << i << " threads: " << threads;
+      }
+    }
+  }
+}
+
+TEST(EncodeAPI, ConfigResizeChangeThreadCount) {
+  constexpr int kInitWidth = 1024;
+  constexpr int kInitHeight = 1024;
+
+  for (const auto *iface : kCodecIfaces) {
+    SCOPED_TRACE(vpx_codec_iface_name(iface));
+    for (int i = 0; i < (IsVP9(iface) ? 2 : 1); ++i) {
+      vpx_codec_enc_cfg_t cfg = {};
+      struct Encoder {
+        ~Encoder() { EXPECT_EQ(vpx_codec_destroy(&ctx), VPX_CODEC_OK); }
+        vpx_codec_ctx_t ctx = {};
+      } enc;
+
+      ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+      // Start in threaded mode to ensure resolution and thread related
+      // allocations are updated correctly across changes in resolution and
+      // thread counts. See https://crbug.com/1486441.
+      cfg.g_threads = 4;
+      EXPECT_NO_FATAL_FAILURE(
+          InitCodec(*iface, kInitWidth, kInitHeight, &enc.ctx, &cfg));
+      if (IsVP9(iface)) {
+        EXPECT_EQ(vpx_codec_control_(&enc.ctx, VP9E_SET_TILE_COLUMNS, 6),
+                  VPX_CODEC_OK);
+        EXPECT_EQ(vpx_codec_control_(&enc.ctx, VP9E_SET_ROW_MT, i),
+                  VPX_CODEC_OK);
+      }
+
+      cfg.g_w = 1000;
+      cfg.g_h = 608;
+      EXPECT_EQ(vpx_codec_enc_config_set(&enc.ctx, &cfg), VPX_CODEC_OK)
+          << vpx_codec_error_detail(&enc.ctx);
+
+      cfg.g_w = 16;
+      cfg.g_h = 720;
 
       for (const auto threads : { 1, 4, 8, 6, 2, 1 }) {
         cfg.g_threads = threads;
