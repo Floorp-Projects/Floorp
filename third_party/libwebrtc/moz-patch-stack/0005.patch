@@ -33,5 +33,5 @@ index ad2303735e..9c2d3b0a39 100644
      return false;
    return streams_empty_.load(std::memory_order_relaxed);
 -- 
-2.37.3
+2.39.3 (Apple Git-145)
 

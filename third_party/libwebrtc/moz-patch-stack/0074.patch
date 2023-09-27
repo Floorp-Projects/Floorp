@@ -26,5 +26,5 @@ index f11e37e6b3..b6d8af8903 100644
    // issued by anything other than the LossNotificationController if it (the
    // sender) is relying on LNTF alone.
 -- 
-2.37.3
+2.39.3 (Apple Git-145)
 
