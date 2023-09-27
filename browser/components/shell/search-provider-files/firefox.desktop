@@ -51,6 +51,7 @@ StartupNotify=true
 Categories=Network;WebBrowser;
 Keywords=web;browser;internet;
 Actions=new-window;new-private-window;
+DBusActivatable=true
 
 X-Desktop-File-Install-Version=0.24
 

@@ -1,20 +1,24 @@
 In order to get gnome shell search provider registered and active
-you need to install the firefox-search-provider.ini and firefox.desktop files system wide.
+you need to install the org.mozilla.firefox.search-provider.ini,
+org.mozilla.firefox.SearchProvider.service and firefox.desktop files system wide.
 
 The locations may be distro specific, for instance Fedora and Ubuntu expect
 the files at:
 
-/usr/share/gnome-shell/search-providers/firefox-search-provider.ini
+/usr/share/gnome-shell/search-providers/org.mozilla.firefox.search-provider.ini
+/usr/share/dbus-1/services/org.mozilla.firefox.SearchProvider.service
 /usr/share/applications/firefox.desktop
 
 firefox.desktop is a system-wide Firefox launcher. It may come with your
-distribution or you can use this one. Update name of firefox desktop file at firefox-search-provider.ini
+distribution or you can use this one. Update name of firefox desktop file at org.mozilla.firefox.search-provider.ini
 according your actual file at /usr/share/applications.
 
-firefox-search-provider.ini registers Firefox as a search provider.
+org.mozilla.firefox.search-provider.ini registers Firefox as a search provider.
 When the file is correctly installed you can see Firefox as a searchable application
 at Settings -> Search at Gnome controll center.
 
-Gnome shell search provider is active only when Firefox is running. When it's active
-you can see it as org.mozilla.Firefox.SearchProvider D-Bus service.
+org.mozilla.firefox.SearchProvider.service file makes DBus search provider service
+activatable. Without it thw service is broken, see mzbz#1851393.
 
+Gnome shell search provider is active only when Firefox is running. When it's active
+you can see it as org.mozilla.firefox.SearchProvider D-Bus service.
