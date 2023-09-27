@@ -542,6 +542,21 @@ public class WebExtensionController {
     EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:EnableProcessSpawning", null);
   }
 
+  /**
+   * Disable extension process spawning.
+   *
+   * <p>Extension process spawning can be re-enabled with {@link
+   * WebExtensionController#enableExtensionProcessSpawning()}. This method does the opposite and
+   * stops the extension process. This method can be called when we no longer want to run extensions
+   * for the rest of the session.
+   *
+   * @see ExtensionProcessDelegate#onDisabledProcessSpawning()
+   */
+  @AnyThread
+  public void disableExtensionProcessSpawning() {
+    EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:DisableProcessSpawning", null);
+  }
+
   private static class InstallCanceller implements GeckoResult.CancellationDelegate {
     public final String installId;
 
