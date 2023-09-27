@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test HEVC video playback</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/**
+ * This test is used to check whether non-MSE HEVC video can be played on the
+ * platform. HEVC can only be played if we have platform decoder supports
+ * hardware decoding. Currently we can only do that on Windows.
+ */
+add_task(async function setupTestPrefs() {
+  await SpecialPowers.pushPrefEnv({"set": [["media.wmf.hevc.enabled", true]]});
+});
+
+add_task(async function testHEVCPlayback() {
+  let video = document.createElement('video');
+  const isHEVCSupported = video.canPlayType('video/mp4; codecs="hev1.1.6.L93.B0"');
+  info(`check if HEVC is supported, rv=${isHEVCSupported}`);
+  if (isHEVCSupported == "") {
+    ok(true, "HEVC is not supported on current platform");
+    return;
+  }
+  info(`try to play HEVC video`);
+  video.src = "hevc_white_frame.mp4";
+  video.controls = true;
+  document.body.appendChild(video);
+  ok(await video.play().then(_=>true, _=>false), "video started playing");
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>
