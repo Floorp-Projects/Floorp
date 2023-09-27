@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+#include "mozilla/CheckedInt.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 #include "nsTArray.h"
@@ -17,8 +20,17 @@ class BitReader;
 class MediaByteBuffer;
 class MediaRawData;
 
-// H265 spec
-// https://www.itu.int/rec/T-REC-H.265-202108-I/en
+// Most classes in this file are implemented according to the H265 spec
+// (https://www.itu.int/rec/T-REC-H.265-202108-I/en), except the HVCCConfig,
+// which is in the ISO/IEC 14496-15. To make it easier to read the
+// implementation with the spec, the naming style in this file follows the spec
+// instead of our usual style.
+
+enum {
+  kMaxLongTermRefPicSets = 32,   // See num_long_term_ref_pics_sps
+  kMaxShortTermRefPicSets = 64,  // See num_short_term_ref_pic_sets
+  kMaxSubLayers = 7,             // See [v/s]ps_max_sub_layers_minus1
+};
 
 // Spec 7.3.1 NAL unit syntax
 class H265NALU final {
@@ -107,6 +119,133 @@ class H265NALU final {
   const Span<const uint8_t> mNALU;
 };
 
+// H265 spec, 7.3.3 Profile, tier and level syntax
+struct H265ProfileTierLevel final {
+  H265ProfileTierLevel() = default;
+
+  enum H265ProfileIdc {
+    kProfileIdcMain = 1,
+    kProfileIdcMain10 = 2,
+    kProfileIdcMainStill = 3,
+    kProfileIdcRangeExtensions = 4,
+    kProfileIdcHighThroughput = 5,
+    kProfileIdcMultiviewMain = 6,
+    kProfileIdcScalableMain = 7,
+    kProfileIdc3dMain = 8,
+    kProfileIdcScreenContentCoding = 9,
+    kProfileIdcScalableRangeExtensions = 10,
+    kProfileIdcHighThroughputScreenContentCoding = 11,
+  };
+
+  // Syntax elements.
+  uint8_t general_profile_space = {};
+  bool general_tier_flag = {};
+  uint8_t general_profile_idc = {};
+  uint32_t general_profile_compatibility_flags = {};
+  bool general_progressive_source_flag = {};
+  bool general_interlaced_source_flag = {};
+  bool general_non_packed_constraint_flag = {};
+  bool general_frame_only_constraint_flag = {};
+  uint8_t general_level_idc = {};
+};
+
+// H265 spec, 7.3.7 Short-term reference picture set syntax
+struct H265StRefPicSet final {
+  H265StRefPicSet() = default;
+
+  // Syntax elements.
+  uint32_t num_negative_pics = {};
+  uint32_t num_positive_pics = {};
+
+  // Calculated fields
+  // From the H265 spec 7.4.8
+  bool usedByCurrPicS0[kMaxShortTermRefPicSets] = {};  // (7-65)
+  bool usedByCurrPicS1[kMaxShortTermRefPicSets] = {};  // (7-66)
+  uint32_t deltaPocS0[kMaxShortTermRefPicSets] = {};   // (7-67) + (7-69)
+  uint32_t deltaPocS1[kMaxShortTermRefPicSets] = {};   // (7-68) + (7-70)
+  uint32_t numDeltaPocs = {};                          // (7-72)
+};
+
+// H265 spec, E.2.1 VUI parameters syntax
+struct H265VUIParameters {
+  H265VUIParameters() = default;
+
+  // Syntax elements.
+  uint32_t sar_width = {};
+  uint32_t sar_height = {};
+  bool video_full_range_flag = {};
+  Maybe<uint8_t> colour_primaries;
+  Maybe<uint8_t> transfer_characteristics;
+  Maybe<uint8_t> matrix_coeffs;
+};
+
+// H265 spec, 7.3.2.2 Sequence parameter set RBSP syntax
+struct H265SPS final {
+  H265SPS() = default;
+
+  // Syntax elements.
+  uint8_t sps_video_parameter_set_id = {};
+  uint8_t sps_max_sub_layers_minus1 = {};
+  bool sps_temporal_id_nesting_flag = {};
+  H265ProfileTierLevel profile_tier_level = {};
+  uint32_t sps_seq_parameter_set_id = {};
+  uint32_t chroma_format_idc = {};
+  bool separate_colour_plane_flag = {};
+  uint32_t pic_width_in_luma_samples = {};
+  uint32_t pic_height_in_luma_samples = {};
+
+  bool conformance_window_flag = {};
+  uint32_t conf_win_left_offset = {};
+  uint32_t conf_win_right_offset = {};
+  uint32_t conf_win_top_offset = {};
+  uint32_t conf_win_bottom_offset = {};
+
+  uint32_t bit_depth_luma_minus8 = {};
+  uint32_t bit_depth_chroma_minus8 = {};
+  uint32_t log2_max_pic_order_cnt_lsb_minus4 = {};
+  bool sps_sub_layer_ordering_info_present_flag = {};
+  uint32_t sps_max_dec_pic_buffering_minus1[kMaxSubLayers] = {};
+  uint32_t sps_max_num_reorder_pics[kMaxSubLayers] = {};
+  uint32_t sps_max_latency_increase_plus1[kMaxSubLayers] = {};
+  uint32_t log2_min_luma_coding_block_size_minus3 = {};
+  uint32_t log2_diff_max_min_luma_coding_block_size = {};
+  uint32_t log2_min_luma_transform_block_size_minus2 = {};
+  uint32_t log2_diff_max_min_luma_transform_block_size = {};
+  uint32_t max_transform_hierarchy_depth_inter = {};
+  uint32_t max_transform_hierarchy_depth_intra = {};
+
+  bool pcm_enabled_flag = {};
+  uint8_t pcm_sample_bit_depth_luma_minus1 = {};
+  uint8_t pcm_sample_bit_depth_chroma_minus1 = {};
+  uint32_t log2_min_pcm_luma_coding_block_size_minus3 = {};
+  uint32_t log2_diff_max_min_pcm_luma_coding_block_size = {};
+  bool pcm_loop_filter_disabled_flag = {};
+
+  uint32_t num_short_term_ref_pic_sets = {};
+  H265StRefPicSet st_ref_pic_set[kMaxShortTermRefPicSets] = {};
+
+  bool sps_temporal_mvp_enabled_flag = {};
+  bool strong_intra_smoothing_enabled_flag = {};
+  Maybe<H265VUIParameters> vui_parameters;
+
+  // Calculated fields
+  uint32_t subWidthC = {};       // From Table 6-1.
+  uint32_t subHeightC = {};      // From Table 6-1.
+  CheckedUint32 mDisplayWidth;   // Per (E-68) + (E-69)
+  CheckedUint32 mDisplayHeight;  // Per (E-70) + (E-71)
+
+  // Often used information
+  uint32_t BitDepthLuma() const { return bit_depth_luma_minus8 + 8; }
+  uint32_t BitDepthChroma() const { return bit_depth_chroma_minus8 + 8; }
+  gfx::IntSize GetImageSize() const;
+  gfx::IntSize GetDisplaySize() const;
+  gfx::ColorDepth ColorDepth() const;
+  gfx::YUVColorSpace ColorSpace() const;
+  bool IsFullColorRange() const;
+  uint8_t ColorPrimaries() const;
+  uint8_t TransferFunction() const;
+};
+
 // ISO/IEC 14496-15 : hvcC.
 struct HVCCConfig final {
  public:
@@ -143,6 +282,45 @@ struct HVCCConfig final {
 
  private:
   HVCCConfig() = default;
+};
+
+class H265 final {
+ public:
+  static Result<H265SPS, nsresult> DecodeSPSFromHVCCExtraData(
+      const mozilla::MediaByteBuffer* aExtraData);
+
+ private:
+  // Return RAW BYTE SEQUENCE PAYLOAD (rbsp) from NAL content.
+  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
+      const Span<const uint8_t>& aNALU);
+
+  //  Parse the profile level based on the H265 spec, 7.3.3. MUST use a bit
+  //  reader which starts from the position of the first bit of the data.
+  static void ParseProfileTierLevel(BitReader& aReader,
+                                    bool aProfilePresentFlag,
+                                    uint8_t aMaxNumSubLayersMinus1,
+                                    H265ProfileTierLevel& aProfile);
+
+  //  Parse the short-term reference picture set based on the H265 spec, 7.3.7.
+  //  MUST use a bit reader which starts from the position of the first bit of
+  //  the data.
+  static Result<Ok, nsresult> ParseStRefPicSet(BitReader& aReader,
+                                               uint32_t aStRpsIdx,
+                                               H265SPS& aSPS);
+
+  //  Parse the VUI parameters based on the H265 spec, E.2.1. MUST use a bit
+  //  reader which starts from the position of the first bit of the data.
+  static Result<Ok, nsresult> ParseVuiParameters(BitReader& aReader,
+                                                 H265SPS& aSPS);
+
+  // Parse and ignore the structure. MUST use a bitreader which starts from the
+  // position of the first bit of the data.
+  static Result<Ok, nsresult> ParseAndIgnoreScalingListData(BitReader& aReader);
+  static Result<Ok, nsresult> ParseAndIgnoreHrdParameters(
+      BitReader& aReader, bool aCommonInfPresentFlag,
+      int aMaxNumSubLayersMinus1);
+  static Result<Ok, nsresult> ParseAndIgnoreSubLayerHrdParameters(
+      BitReader& aReader, int aCpbCnt, bool aSubPicHrdParamsPresentFlag);
 };
 
 }  // namespace mozilla
