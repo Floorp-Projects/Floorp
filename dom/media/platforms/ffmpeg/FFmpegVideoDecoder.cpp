@@ -443,6 +443,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitV4L2Decoder() {
 }
 #endif
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
 FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
     : mNumFaultyPts(0),
       mNumFaultyDts(0),
@@ -476,6 +477,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
   mLastPts = INT64_MIN;
   mLastDts = INT64_MIN;
 }
+#endif
 
 #ifdef MOZ_USE_HWDECODE
 void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
@@ -1570,8 +1572,10 @@ RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
   FFMPEG_LOG("ProcessFlush()");
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+#if LIBAVCODEC_VERSION_MAJOR < 58
   mPtsContext.Reset();
   mDurationMap.Clear();
+#endif
   mPerformanceRecorder.Record(std::numeric_limits<int64_t>::max());
   return FFmpegDataDecoder::ProcessFlush();
 }

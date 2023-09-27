@@ -165,6 +165,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #endif
   float mAverangeDecodeTime;
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
   class PtsCorrectionContext {
    public:
     PtsCorrectionContext();
@@ -180,8 +181,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
   };
 
   PtsCorrectionContext mPtsContext;
-
   DurationMap mDurationMap;
+#endif
+
   const bool mLowLatency;
   const Maybe<TrackingId> mTrackingId;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
