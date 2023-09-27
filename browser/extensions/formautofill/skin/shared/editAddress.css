@@ -47,7 +47,7 @@ dialog:not([subdialog]) .editAddressForm {
 }
 
 /* Invalid name fields should show the error outline instead of the focus border */
-#name-container:focus-within input:-moz-ui-invalid {
+#name-container:focus-within input:user-invalid {
   border-color: transparent;
 }
 
@@ -93,11 +93,11 @@ dialog:not([subdialog]) .editAddressForm {
   border-inline-color: var(--in-content-box-border-color) !important;
 }
 
-/* Since the name fields are adjacent, there isn't room for the -moz-ui-invalid
+/* Since the name fields are adjacent, there isn't room for the user-invalid
    box-shadow so raise invalid name fields and their labels above the siblings
    so the shadow is shown around all 4 sides. */
-#name-container input:-moz-ui-invalid,
-#name-container input:-moz-ui-invalid ~ .label-text {
+#name-container input:user-invalid,
+#name-container input:user-invalid ~ .label-text {
   z-index: 1;
 }
 

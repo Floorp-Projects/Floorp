@@ -666,8 +666,8 @@ xul|richlistbox:focus-visible {
   outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
-html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
-html|textarea:-moz-ui-invalid {
+html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):user-invalid,
+html|textarea:user-invalid {
   border-color: transparent;
   outline: 2px solid var(--in-content-border-invalid);
   outline-offset: -1px; /* Prevents antialising around the corners */

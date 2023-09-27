@@ -76,7 +76,7 @@ form :is(input, select, textarea):focus ~ .label-text {
 
 /* Focused error fields should get a darker text but not the blue one since it
  * doesn't look good with the red error outline. */
-form :is(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
+form :is(input, select, textarea):focus:user-invalid ~ .label-text {
   color: var(--in-content-text-color);
 }
 

@@ -211,7 +211,7 @@ add_task(async function test_editSparseAddress() {
     EDIT_ADDRESS_DIALOG_URL,
     win => {
       is(
-        win.document.querySelectorAll(":-moz-ui-invalid").length,
+        win.document.querySelectorAll(":user-invalid").length,
         0,
         "Check no fields are visually invalid"
       );
@@ -770,7 +770,7 @@ add_task(async function test_combined_name_fields_error() {
     givenNameField.value = "";
     givenNameField.focus();
     ok(
-      givenNameField.matches(":-moz-ui-invalid"),
+      givenNameField.matches(":user-invalid"),
       "Check field is visually invalid"
     );
 
