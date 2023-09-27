@@ -48,7 +48,7 @@ class nsHtml5TreeOpExecutor final
   NS_DECL_ISUPPORTS_INHERITED
 
  private:
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+#ifdef DEBUG
   static uint32_t sAppendBatchMaxSize;
   static uint32_t sAppendBatchSlotsExamined;
   static uint32_t sAppendBatchExaminations;

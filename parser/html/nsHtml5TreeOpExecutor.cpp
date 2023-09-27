@@ -47,8 +47,10 @@
 
 using namespace mozilla;
 
+static LazyLogModule gHtml5TreeOpExecutorLog("Html5TreeOpExecutor");
 static LazyLogModule gCharsetMenuLog("Chardetng");
 
+#define LOG(args) MOZ_LOG(gHtml5TreeOpExecutorLog, LogLevel::Debug, args)
 #define LOGCHARDETNG(args) MOZ_LOG(gCharsetMenuLog, LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor,
@@ -411,11 +413,11 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   printf("TOKENIZER-SAFE SCRIPTS: %d\n", sTokenSafeDocWrites);
   printf("TREEBUILDER-SAFE SCRIPTS: %d\n", sTreeSafeDocWrites);
 #endif
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-  printf("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize);
+#ifdef DEBUG
+  LOG(("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize));
   if (sAppendBatchExaminations != 0) {
-    printf("AVERAGE SLOTS EXAMINED: %d\n",
-           sAppendBatchSlotsExamined / sAppendBatchExaminations);
+    LOG(("AVERAGE SLOTS EXAMINED: %d\n",
+         sAppendBatchSlotsExamined / sAppendBatchExaminations));
   }
 #endif
   return NS_OK;
@@ -535,13 +537,13 @@ void nsHtml5TreeOpExecutor::FlushSpeculativeLoads() {
 class nsHtml5FlushLoopGuard {
  private:
   RefPtr<nsHtml5TreeOpExecutor> mExecutor;
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+#ifdef DEBUG
   uint32_t mStartTime;
 #endif
  public:
   explicit nsHtml5FlushLoopGuard(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+#ifdef DEBUG
         ,
         mStartTime(PR_IntervalToMilliseconds(PR_IntervalNow()))
 #endif
@@ -549,15 +551,15 @@ class nsHtml5FlushLoopGuard {
     mExecutor->mRunFlushLoopOnStack = true;
   }
   ~nsHtml5FlushLoopGuard() {
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+#ifdef DEBUG
     uint32_t timeOffTheEventLoop =
         PR_IntervalToMilliseconds(PR_IntervalNow()) - mStartTime;
     if (timeOffTheEventLoop >
         nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop) {
       nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop = timeOffTheEventLoop;
     }
-    printf("Longest time off the event loop: %d\n",
-           nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop);
+    LOG(("Longest time off the event loop: %d\n",
+         nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop));
 #endif
 
     mExecutor->mRunFlushLoopOnStack = false;
@@ -744,9 +746,9 @@ void nsHtml5TreeOpExecutor::RunFlushLoop() {
       StopDeflecting();
       if (nsContentSink::DidProcessATokenImpl() ==
           NS_ERROR_HTMLPARSER_INTERRUPTED) {
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-        printf("REFLUSH SCHEDULED (after script): %d\n",
-               ++sTimesFlushLoopInterrupted);
+#ifdef DEBUG
+        LOG(("REFLUSH SCHEDULED (after script): %d\n",
+             ++sTimesFlushLoopInterrupted));
 #endif
         nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync();
         return;
@@ -1399,7 +1401,7 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
   mDocument->ApplySettingsFromCSP(true);
 }
 
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+#ifdef DEBUG
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchMaxSize = 0;
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchSlotsExamined = 0;
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchExaminations = 0;
