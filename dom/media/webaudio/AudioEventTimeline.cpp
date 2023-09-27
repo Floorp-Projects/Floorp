@@ -249,11 +249,7 @@ float AudioEventTimeline::GetValueAtTimeOfEvent(
       // Start the curve, from the last value of the previous event.
       return ComputeSetTargetStartValue(aPrevious, time);
     case AudioTimelineEvent::SetValueCurve:
-      // SetValueCurve events can be handled no matter what their event
-      // node is (if they have one)
-      return ExtractValueFromCurve(time, aEvent->mCurve, aEvent->mCurveLength,
-                                   aEvent->mDuration, time);
-      break;
+      return aEvent->mCurve[0];
     default:
       // For other event types
       return aEvent->mValue;
@@ -321,13 +317,10 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
     case AudioTimelineEvent::SetValueAtTime:
     case AudioTimelineEvent::LinearRamp:
     case AudioTimelineEvent::ExponentialRamp:
-      // If the next event type is neither linear or exponential ramp, the
-      // value is constant.
-      return aPrevious->mValue;
+      break;
     case AudioTimelineEvent::SetValueCurve:
-      return ExtractValueFromCurve(aPrevious->Time<TimeType>(),
-                                   aPrevious->mCurve, aPrevious->mCurveLength,
-                                   aPrevious->mDuration, aTime);
+      MOZ_ASSERT(aTime >= TimeOf(aPrevious) + aPrevious->mDuration);
+      break;
     case AudioTimelineEvent::SetTarget:
       MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
     case AudioTimelineEvent::SetValue:
@@ -335,9 +328,9 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
     case AudioTimelineEvent::Track:
       MOZ_ASSERT(false, "Should have been handled earlier.");
   }
-
-  MOZ_ASSERT(false, "unreached");
-  return 0.0f;
+  // If the next event type is neither linear or exponential ramp, the
+  // value is constant.
+  return aPrevious->EndValue();
 }
 template float AudioEventTimeline::GetValuesAtTimeHelperInternal(
     double aTime, const AudioTimelineEvent* aPrevious,
