@@ -148,27 +148,24 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
   return hvcc;
 }
 
-/* static */
-Result<H265SPS, nsresult> H265::DecodeSPSFromHVCCExtraData(
-    const mozilla::MediaByteBuffer* aExtraData) {
-  auto rv = HVCCConfig::Parse(aExtraData);
-  if (rv.isErr()) {
-    LOG("Only support HVCC extra-data");
-    return Err(NS_ERROR_FAILURE);
+bool HVCCConfig::HasSPS() const {
+  if (mNALUs.IsEmpty()) {
+    return false;
   }
-  const auto& hvcc = rv.unwrap();
-  const H265NALU* spsNALU = nullptr;
-  for (const auto& nalu : hvcc.mNALUs) {
+  bool hasSPS = false;
+  for (const auto& nalu : mNALUs) {
     if (nalu.IsSPS()) {
-      spsNALU = &nalu;
+      hasSPS = true;
       break;
     }
   }
-  if (!spsNALU) {
-    LOG("No sps found");
-    return Err(NS_ERROR_FAILURE);
-  }
-  RefPtr<MediaByteBuffer> rbsp = H265::DecodeNALUnit(spsNALU->mNALU);
+  return hasSPS;
+}
+
+/* static */
+Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
+  MOZ_ASSERT(aSPSNALU.IsSPS());
+  RefPtr<MediaByteBuffer> rbsp = H265::DecodeNALUnit(aSPSNALU.mNALU);
   if (!rbsp) {
     LOG("Failed to decode NALU");
     return Err(NS_ERROR_FAILURE);
@@ -297,6 +294,29 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromHVCCExtraData(
 
   // The rest is extension data we don't care about, so no need to parse them.
   return sps;
+}
+
+/* static */
+Result<H265SPS, nsresult> H265::DecodeSPSFromHVCCExtraData(
+    const mozilla::MediaByteBuffer* aExtraData) {
+  auto rv = HVCCConfig::Parse(aExtraData);
+  if (rv.isErr()) {
+    LOG("Only support HVCC extra-data");
+    return Err(NS_ERROR_FAILURE);
+  }
+  const auto& hvcc = rv.unwrap();
+  const H265NALU* spsNALU = nullptr;
+  for (const auto& nalu : hvcc.mNALUs) {
+    if (nalu.IsSPS()) {
+      spsNALU = &nalu;
+      break;
+    }
+  }
+  if (!spsNALU) {
+    LOG("No sps found");
+    return Err(NS_ERROR_FAILURE);
+  }
+  return DecodeSPSFromSPSNALU(*spsNALU);
 }
 
 /* static */
