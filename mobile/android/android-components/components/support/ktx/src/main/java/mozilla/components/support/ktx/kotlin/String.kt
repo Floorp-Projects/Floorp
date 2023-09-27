@@ -14,6 +14,7 @@ import android.os.Build
 import android.util.Base64
 import android.util.Patterns
 import android.webkit.URLUtil
+import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.net.commonPrefixes
@@ -52,9 +53,6 @@ const val MAX_URI_LENGTH = 25000
 
 private const val FILE_PREFIX = "file://"
 private const val MAX_VALID_PORT = 65_535
-
-// Prefix for a valid image URI string
-private const val PNG_URI_PREFIX = "data:image/png;base64,"
 
 /**
  * Shortens URLs to be more user friendly.
@@ -413,20 +411,23 @@ fun String.trimmed(): String {
 }
 
 /**
- * Returns a bitmap from the base64 representation of a PNG.
- * Returns null if the string is not a valid base64 representation of a PNG
- */
-fun String.base64PngToBitmap(): Bitmap? = base64ToBitmap(PNG_URI_PREFIX)
-
-/**
  * Returns a bitmap from its base64 representation.
  * Returns null if the string is not a valid base64 representation of a bitmap
- * @param prefix the prefix expected for the string to be considered a valid base64 bitmap string
  */
-private fun String.base64ToBitmap(prefix: String): Bitmap? {
-    if (!startsWith(prefix)) {
-        return null
+fun String.base64ToBitmap(): Bitmap? =
+    extractBase6RawString()?.let { rawString ->
+        val raw = Base64.decode(rawString, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(raw, 0, raw.size)
     }
-    val raw = Base64.decode(substring(PNG_URI_PREFIX.length), Base64.DEFAULT)
-    return BitmapFactory.decodeByteArray(raw, 0, raw.size)
+
+@VisibleForTesting
+internal fun String.extractBase6RawString(): String? {
+    // Regex that identifies if the strings starts with:
+    // "(data:image/[ANY_FORMAT];base64,"
+    // For example, "data:image/png;base64,"
+    val base64BitmapRegex = "(data:image/[^;]+;base64,)(.*)".toRegex()
+    return base64BitmapRegex.find(this)?.let {
+        val (_, contentString) = it.destructured
+        contentString
+    }
 }

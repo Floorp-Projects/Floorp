@@ -29,7 +29,7 @@ import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.identitycredential.previews.DialogPreviewMaterialTheme
 import mozilla.components.feature.prompts.identitycredential.previews.LightDarkPreview
-import mozilla.components.support.ktx.kotlin.base64PngToBitmap
+import mozilla.components.support.ktx.kotlin.base64ToBitmap
 
 /**
  * A Federated Credential Management dialog for selecting a provider.
@@ -81,7 +81,7 @@ private fun ProviderItem(
         colors = colors,
         onClick = { onClick(provider) },
     ) {
-        provider.icon?.base64PngToBitmap()?.asImageBitmap()?.let { bitmap ->
+        provider.icon?.base64ToBitmap()?.asImageBitmap()?.let { bitmap ->
             Image(
                 bitmap = bitmap,
                 contentDescription = null,
