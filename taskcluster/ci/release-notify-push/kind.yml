@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
     - release-beetmover-push-to-release
+    - push-bundle
 
 job-defaults:
     name: notify-release-drivers-push
@@ -32,3 +33,15 @@ jobs:
         shipping-product: firefox
     devedition:
         shipping-product: devedition
+    firefox-android:
+        shipping-product: firefox-android
+        notifications:
+            subject: "Focus/Fenix {release_config[version]}-build{release_config[build_number]} has been pushed to the closed testing track on Google Play"
+            message:
+                by-level:
+                    '3':
+                        Focus/Fenix {release_config[version]}-build{release_config[build_number]} has been pushed to the closed testing track on Google Play
+                        and Android-Components {release_config[version]}-build{release_config[build_number]} have been pushed to https://maven.mozilla.org/
+                    default:
+                        Focus/Fenix {release_config[version]}-build{release_config[build_number]} has not been pushed to the closed testing track on Google Play
+                        and Android-Components {release_config[version]}-build{release_config[build_number]} have been pushed to https://maven-default.stage.mozaws.net/"

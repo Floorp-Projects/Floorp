@@ -14,6 +14,9 @@ kind-dependencies:
     - release-bouncer-aliases
     - release-version-bump
     - release-mark-as-shipped
+    - push-bundle
+    - post-beetmover-components-dummy
+    - version-bump
 
 job-defaults:
     name: notify-release-drivers-ship
@@ -39,3 +42,8 @@ jobs:
         notifications:
             subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
             message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} updates are ready for signoff in Balrog!"
+    firefox-android:
+        shipping-product: firefox-android
+        notifications:
+            subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is shipped!"
+            message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is shipped!"
