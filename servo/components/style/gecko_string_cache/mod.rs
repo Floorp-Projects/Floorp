@@ -190,8 +190,9 @@ impl WeakAtom {
             unsafe { u8_ptr.offset(string_offset) as *const u16 }
         } else {
             let atom_ptr = self.as_ptr() as *const nsDynamicAtom;
-            // Dynamic atom chars are stored at the end of the object.
-            unsafe { atom_ptr.offset(1) as *const u16 }
+            let buffer_ptr = unsafe { (*atom_ptr).mStringBuffer.mRawPtr };
+            // Dynamic atom chars are stored at the end of the string buffer.
+            unsafe { buffer_ptr.offset(1) as *const u16 }
         };
         unsafe { slice::from_raw_parts(string, self.len() as usize) }
     }

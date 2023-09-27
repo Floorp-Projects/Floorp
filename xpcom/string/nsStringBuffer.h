@@ -43,9 +43,23 @@ class nsStringBuffer {
    * (i.e., it is not required that the null terminator appear in the last
    * storage unit of the string buffer's data).
    *
+   * This guarantees that StorageSize() returns aStorageSize if the returned
+   * buffer is non-null. Some callers like nsAttrValue rely on it.
+   *
    * @return new string buffer or null if out of memory.
    */
   static already_AddRefed<nsStringBuffer> Alloc(size_t aStorageSize);
+
+  /**
+   * Returns a string buffer initialized with the given string on it, or null on
+   * OOM.
+   * Note that this will allocate extra space for the trailing null byte, which
+   * this method will add.
+   */
+  static already_AddRefed<nsStringBuffer> Create(const char16_t* aData,
+                                                 size_t aLength);
+  static already_AddRefed<nsStringBuffer> Create(const char* aData,
+                                                 size_t aLength);
 
   /**
    * Resizes the given string buffer to the specified storage size.  This
