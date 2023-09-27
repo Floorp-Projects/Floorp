@@ -36,6 +36,12 @@ function run_test() {
       ["01/01/1991", "01/01/1992", "01/01/2008", "01/10/2008"],
       "similar dates"
     );
+    // Years should expand to 0100, 2001, 2010
+    runTest(
+      ["1/1/100", "1/1/1", "1/1/10"],
+      ["1/1/100", "1/1/1", "1/1/10"],
+      "dates with short year formatting"
+    );
     runTest(
       [
         "Wed Jan 01 2010 00:00:00 GMT-0800 (Pacific Standard Time)",
