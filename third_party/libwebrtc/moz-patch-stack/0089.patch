@@ -1,36 +1,27 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 22 Jun 2023 16:23:00 +0000
-Subject: Bug 1837918 - libwebrtc update broke the build on
- OpenBSD;r=mjf,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-Differential Revision: https://phabricator.services.mozilla.com/D181791
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- modules/video_capture/video_capture_options.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ video/video_stream_encoder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
-index 6f72f7927e..37965305d9 100644
---- a/modules/video_capture/video_capture_options.h
-+++ b/modules/video_capture/video_capture_options.h
-@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index c3d855c1c6..eee99f41de 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1395,7 +1395,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
-   void Init(Callback* callback);
- 
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2() const { return allow_v4l2_; }
-   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
- #endif
-@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
- #endif
- 
-  private:
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2_ = false;
- #endif
- #if defined(WEBRTC_USE_PIPEWIRE)
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;
 -- 
-2.37.3
+2.39.3 (Apple Git-145)
 

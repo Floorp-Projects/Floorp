@@ -73,5 +73,5 @@ index b529077c6d..6a019c64b4 100644
    if (egl_.display == EGL_NO_DISPLAY) {
      RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
 -- 
-2.37.3
+2.39.3 (Apple Git-145)
 

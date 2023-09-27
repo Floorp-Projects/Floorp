@@ -1,50 +1,44 @@
-From: stransky <stransky@redhat.com>
-Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
- disabled r=ng,webrtc-reviewers
+From: Robert Mader <robert.mader@posteo.de>
+Date: Wed, 6 Sep 2023 16:37:00 +0000
+Subject: Bug 1843786 - webrtc: Filter out non-camera nodes,
+ r=webrtc-reviewers,pehrsons,@webrtc-reviewers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Depends on D172224
+This can be helpful in various situations, such as debugging with an
+unrestricted Pipewire socket or for downstream projects like
+B2G/Capyloon. Additionally it will help once we move from the camera
+portal to the more generic device portal.
 
-Differential Revision: https://phabricator.services.mozilla.com/D172229
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
+This is intended to get upstreamed but would be nice to carry downstream
+already.
+
+Original patch by Fabrice Desré <fabrice@desre.org>
+
+Upstream commit: a717c7ada811411e31bd7308168b4dbee5b956fa
+
+Differential Revision: https://phabricator.services.mozilla.com/D183650
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4c2505f533280d9012e28633e410a66b0db95412
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ modules/video_capture/linux/pipewire_session.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 22aa355e44..61c6957d27 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -419,7 +419,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
-     return false;
-   }
--  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
-+  if (mozilla::gfx::IsDMABufEnabled()) {
-+    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
-+  }
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index 3f52b3dd61..4d1b200aca 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -360,6 +360,10 @@ void PipeWireSession::OnRegistryGlobal(void* data,
+   if (!spa_dict_lookup(props, PW_KEY_NODE_DESCRIPTION))
+     return;
  
-   pw_stream_node_id_ = stream_node_id;
- 
-@@ -508,7 +510,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
-                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
-       // Modifiers can be used with PipeWire >= 0.3.33
--      if (has_required_pw_client_version && has_required_pw_server_version) {
-+      if (egl_dmabuf_ &&
-+          has_required_pw_client_version && has_required_pw_server_version) {
-         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
- 
-         if (!modifiers_.empty()) {
-@@ -927,7 +930,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
- 
-   const uint n_planes = spa_buffer->n_datas;
- 
--  if (!n_planes) {
-+  if (!n_planes || !egl_dmabuf_) {
-     return false;
-   }
- 
++  auto node_role = spa_dict_lookup(props, PW_KEY_MEDIA_ROLE);
++  if (!node_role || strcmp(node_role, "Camera"))
++    return;
++
+   that->nodes_.emplace_back(that, id, props);
+   that->PipeWireSync();
+ }
 -- 
-2.37.3
+2.39.3 (Apple Git-145)
 
