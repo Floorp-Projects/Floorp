@@ -1,27 +1,29 @@
-From: Mike Hommey <mh+mozilla@glandium.org>
-Date: Fri, 7 Jul 2023 00:58:00 +0000
-Subject: Bug 1841577 - Don't set WEBRTC_ENABLE_AVX2 on platforms that don't
- have AVX2. r=mjf,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
+ thread). r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D182695
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/46fb51c90709be64c35946a8cf69195121441024
+This was causing assertions.
+
+Differential Revision: https://phabricator.services.mozilla.com/D179731
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
 ---
- webrtc.gni | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ audio/channel_send.cc | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/webrtc.gni b/webrtc.gni
-index ae3f99cb67..e30bc6b9bb 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -290,7 +290,7 @@ declare_args() {
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 5ee97f290e..f784b8eebc 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -457,8 +457,6 @@ ChannelSend::ChannelSend(
  
-   # Set this to true to enable the avx2 support in webrtc.
-   # TODO: Make sure that AVX2 works also for non-clang compilers.
--  if (is_clang == true) {
-+  if (is_clang == true && (target_cpu == "x86" || target_cpu == "x64")) {
-     rtc_enable_avx2 = true
-   } else {
-     rtc_enable_avx2 = false
+   int error = audio_coding_->RegisterTransportCallback(this);
+   RTC_DCHECK_EQ(0, error);
+-  if (frame_transformer)
+-    InitFrameTransformerDelegate(std::move(frame_transformer));
+ }
+ 
+ ChannelSend::~ChannelSend() {
 -- 
 2.39.3 (Apple Git-145)
 

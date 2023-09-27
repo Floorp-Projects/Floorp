@@ -1,25 +1,27 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 1 Jun 2022 12:47:00 -0500
-Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
- config.emplace(...)
+Date: Tue, 21 Jun 2022 11:11:09 -0500
+Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
+ r=mjf,firefox-build-system-reviewers,ahochheiden
 
 ---
- modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ build_overrides/build.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index 4c0f5fc5ee..1afac9fb42 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-@@ -468,7 +468,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-   if (!enabled.Get()) {
-     return config;
-   }
--  config.emplace();
-+  config.emplace(Config());
-   config->bandwidth_rampup_upper_bound_factor =
-       bandwidth_rampup_upper_bound_factor.Get();
-   config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
+diff --git a/build_overrides/build.gni b/build_overrides/build.gni
+index 900367d0e1..e427ebba8e 100644
+--- a/build_overrides/build.gni
++++ b/build_overrides/build.gni
+@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
+   use_system_xcode = _result == 0
+ }
+ 
++use_system_xcode = false
++xcode_version = "10.15"
++mac_xcode_version = "default"
++
+ declare_args() {
+   # WebRTC doesn't depend on //base from production code but only for testing
+   # purposes. In any case, it doesn't depend on //third_party/perfetto which
 -- 
 2.39.3 (Apple Git-145)
 

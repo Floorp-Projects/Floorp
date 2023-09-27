@@ -1,29 +1,32 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 13 Nov 2020 14:34:00 -0500
-Subject: Bug 1654112 - Fully quality AudioLevel::kUri in channel_send.cc. r=ng
+Date: Tue, 1 Dec 2020 09:36:00 -0500
+Subject: Bug 1654112 - Disable creating av1 encoder and decoder. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D130082
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d607005042292ed9e4fbb892f440d
+Differential Revision: https://phabricator.services.mozilla.com/D130089
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e78d38af299c2296bf9d20ec9
 ---
- audio/channel_send.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ media/engine/internal_decoder_factory.cc | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index fccd58b76c..e1e44ef7e4 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -620,9 +620,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
-   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   include_audio_level_indication_.store(enable);
-   if (enable) {
--    rtp_rtcp_->RegisterRtpHeaderExtension(AudioLevel::Uri(), id);
-+    rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
-   } else {
--    rtp_rtcp_->DeregisterSendRtpHeaderExtension(AudioLevel::Uri());
-+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(webrtc::AudioLevel::Uri());
-   }
- }
+diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
+index e761fd60c8..001c666313 100644
+--- a/media/engine/internal_decoder_factory.cc
++++ b/media/engine/internal_decoder_factory.cc
+@@ -49,12 +49,14 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
+   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
+     formats.push_back(h264_format);
  
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   if (kDav1dIsIncluded) {
+     formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+     formats.push_back(SdpVideoFormat(
+         cricket::kAv1CodecName,
+         {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+   }
++#endif
+ 
+   return formats;
+ }
 -- 
 2.39.3 (Apple Git-145)
 

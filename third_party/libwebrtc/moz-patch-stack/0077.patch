@@ -1,100 +1,77 @@
 From: Jan Grulich <jgrulich@redhat.com>
-Date: Mon, 27 Feb 2023 13:57:00 +0000
-Subject: Bug 1819044 - fix build non-pipewire builds
- r=webrtc-reviewers,pehrsons
+Date: Fri, 10 Mar 2023 09:21:00 +0000
+Subject: Bug 1819035 - get EGL display based on the used platform in the
+ browser r=webrtc-reviewers,ng
 
-We should check only for PipeWire presence when building code specific
-to PipeWire.
+Because of a possible misconfiguration or a possible driver issue it
+might happen that the browser will use a different driver on X11 and
+end up using yet another one for wayland/gbm, which might lead to not
+working screen sharing in the better case, but also to a crash in the
+other driver (Nvidia). This adds a check for platform the browser runs
+on, if it's XWayland or Wayland and based on that query EGL display for
+that specific platform, rather than going for the Wayland one only.
 
-Differential Revision: https://phabricator.services.mozilla.com/D171071
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a879ad084a6e9768479c73cc5c3f4e9d95a2ab9
-
-Also includes:
-
-    Bug 1819044 - fix build non-pipewire builds (attempt #2) r=webrtc-reviewers,pehrsons
-
-    Make the new API available to everyone and just return an empty capturer
-    in case when building without PipeWire. It will not make any difference
-    because using X11 based capturers on Wayland is useless anyway so if we
-    fail for missing PipeWire on Wayland, it will have the same outcome.
-
-    Differential Revision: https://phabricator.services.mozilla.com/D171192
-    Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ad247b0aac896d884eba5e40f0ec8a9f50d8b85b
+Differential Revision: https://phabricator.services.mozilla.com/D171858
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
 ---
- modules/desktop_capture/desktop_capturer.cc | 7 +++----
- modules/desktop_capture/desktop_capturer.h  | 4 ----
- 2 files changed, 3 insertions(+), 8 deletions(-)
+ .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 7df6becb4e..1af19a1fd2 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -26,7 +26,7 @@
- #include "rtc_base/win/windows_version.h"
- #endif  // defined(RTC_ENABLE_WIN_WGC)
- 
--#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-+#if defined(WEBRTC_USE_PIPEWIRE)
- #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
- #endif
- 
-@@ -88,7 +88,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
-   return capturer;
- }
- 
--#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
-     const DesktopCaptureOptions& options) {
-@@ -100,17 +99,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
-   return capturer;
- }
- 
--// static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
-     const DesktopCaptureOptions& options) {
-+#if defined(WEBRTC_USE_PIPEWIRE)
-   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
-     return std::make_unique<BaseCapturerPipeWire>(options,
-                                                   CaptureType::kAnyScreenContent);
+diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+index b529077c6d..6a019c64b4 100644
+--- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
++++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+@@ -13,6 +13,7 @@
+ #include <asm/ioctl.h>
+ #include <dlfcn.h>
+ #include <fcntl.h>
++#include <gdk/gdk.h>
+ #include <libdrm/drm_fourcc.h>
+ #include <linux/types.h>
+ #include <spa/param/video/format-utils.h>
+@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
    }
-+#endif  // defined(WEBRTC_USE_PIPEWIRE)
- 
-   return nullptr;
  }
--#endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
  
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index f4e2861025..64f3187f51 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -179,11 +179,9 @@ class RTC_EXPORT DesktopCapturer {
-   // The return value if `pos` is out of the scope of the source is undefined.
-   virtual bool IsOccluded(const DesktopVector& pos);
++static bool IsWaylandDisplay() {
++  static auto sGdkWaylandDisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
++  if (!sGdkWaylandDisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkWaylandDisplayGetType()));
++}
++
++static bool IsX11Display() {
++  static auto sGdkX11DisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
++  if (!sGdkX11DisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkX11DisplayGetType()));
++}
++
+ static void* g_lib_egl = nullptr;
  
--#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   // Creates a DesktopCapturer instance which targets to capture windows and screens.
-   static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
-       const DesktopCaptureOptions& options);
--#endif
+ RTC_NO_SANITIZE("cfi-icall")
+@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
+     return;
+   }
  
-   // Creates a DesktopCapturer instance which targets to capture windows.
-   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
-@@ -213,12 +211,10 @@ class RTC_EXPORT DesktopCapturer {
-   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
-   // the following two functions are protected.
+-  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
+-                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  if (IsWaylandDisplay()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  } else if (IsX11Display()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  }
  
--#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   // Creates a platform specific DesktopCapturer instance which targets to
-   // capture windows and screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
-       const DesktopCaptureOptions& options);
--#endif
- 
-   // Creates a platform specific DesktopCapturer instance which targets to
-   // capture windows.
+   if (egl_.display == EGL_NO_DISPLAY) {
+     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
 -- 
 2.39.3 (Apple Git-145)
 
