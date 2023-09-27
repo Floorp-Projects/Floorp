@@ -581,7 +581,7 @@
   if (!runningInBrowser) {
     // Set the minimum heap size for parallel marking to zero for testing
     // purposes. We don't have access to gcparam in the browser.
-    gcparam('parallelMarkingThresholdKB', 0);
+    gcparam('parallelMarkingThresholdMB', 0);
   }
 })(this);
 
