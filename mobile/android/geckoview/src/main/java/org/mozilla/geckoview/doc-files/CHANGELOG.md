@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v120
+- Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
+
+[120.1]: {{javadoc_uri}}/WebExtensionController.html#disableExtensionProcessSpawning
+
 ## v119
 - Added `remoteType` to GeckoView child crash intent. ([bug 1851518]({{bugzilla}}1851518))
 [119.1]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
@@ -1431,4 +1436,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 596078a3ce21ff0aab1063e4e4150c141eadaf2f
+[api-version]: afb898d7ececc5cf154df9530c5fc6cf7125fe9e

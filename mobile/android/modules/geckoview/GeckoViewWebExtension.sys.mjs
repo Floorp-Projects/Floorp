@@ -699,6 +699,7 @@ class ExtensionProcessListener {
 
     lazy.EventDispatcher.instance.registerListener(this, [
       "GeckoView:WebExtension:EnableProcessSpawning",
+      "GeckoView:WebExtension:DisableProcessSpawning",
     ]);
   }
 
