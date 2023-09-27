@@ -111,7 +111,7 @@ export var Utils = {
     if (this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL) {
       return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
     }
-    if (this.SERVER_URL.includes("stage.")) {
+    if (this.SERVER_URL.includes("allizom.")) {
       return Ci.nsIContentSignatureVerifier.ContentSignatureStageRoot;
     }
     if (this.SERVER_URL.includes("dev.")) {
