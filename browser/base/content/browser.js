@@ -10052,8 +10052,10 @@ var ShoppingSidebarManager = {
     let optedOut = this.optedInPref === 2;
     let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
 
-    this._enabled =
-      NimbusFeatures.shopping2023.getVariable("enabled") && !isPBM && !optedOut;
+    // We are forced to cache this value because otherwise we access the pref
+    // too many times.
+    this.inEnabledBranch = NimbusFeatures.shopping2023.getVariable("enabled");
+    this._enabled = this.inEnabledBranch && !isPBM && !optedOut;
 
     if (!this.isActive) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
@@ -10061,15 +10063,12 @@ var ShoppingSidebarManager = {
       });
     }
 
+    this._maybeToggleButton();
+
     if (!this._enabled) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
         sidebar.remove();
       });
-
-      if (optedOut) {
-        let button = document.getElementById("shopping-sidebar-button");
-        button.hidden = true;
-      }
       return;
     }
 
@@ -10085,6 +10084,8 @@ var ShoppingSidebarManager = {
    */
   onLocationChange(aBrowser, aLocationURI, aFlags) {
     ShoppingUtils.maybeRecordExposure(aLocationURI, aFlags);
+
+    this._maybeToggleButton();
     this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags);
   },
 
@@ -10144,6 +10145,14 @@ var ShoppingSidebarManager = {
           context: { isSidebarClosing: !!sidebar },
         });
       }
+    }
+  },
+
+  _maybeToggleButton() {
+    let optedOut = this.optedInPref === 2;
+    let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
+    if (this.inEnabledBranch && !isPBM && optedOut) {
+      this._setShoppingButtonState(gBrowser.selectedBrowser);
     }
   },
 

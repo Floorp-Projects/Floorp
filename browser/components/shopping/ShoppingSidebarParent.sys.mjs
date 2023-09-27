@@ -4,6 +4,7 @@
 
 export class ShoppingSidebarParent extends JSWindowActorParent {
   static SHOPPING_ACTIVE_PREF = "browser.shopping.experience2023.active";
+  static SHOPPING_OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";
 
   updateProductURL(uri, flags) {
     this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
@@ -51,6 +52,18 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
       ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
       !activeState
     );
+
+    let optedIn = Services.prefs.getIntPref(
+      ShoppingSidebarParent.SHOPPING_OPTED_IN_PREF
+    );
+    // If the user was opted out, then clicked the button, reset the optedIn
+    // pref so they see onboarding.
+    if (optedIn == 2) {
+      Services.prefs.setIntPref(
+        ShoppingSidebarParent.SHOPPING_OPTED_IN_PREF,
+        0
+      );
+    }
     if (source == "urlBar") {
       if (activeState) {
         Glean.shopping.surfaceClosed.record({ source: "addressBarIcon" });
