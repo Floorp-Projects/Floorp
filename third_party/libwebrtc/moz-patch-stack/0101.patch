@@ -1,0 +1,34 @@
+From: Dan Baker <dbaker@mozilla.com>
+Date: Wed, 20 Sep 2023 17:40:00 -0600
+Subject: Bug 1851693 - (fix-279a05475d) Removing thread checks from start and
+ stop capture to resolve linux tsan build errors.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0fda7dbf514c0063c65433670285107936fa37fe
+---
+ modules/video_capture/linux/video_capture_v4l2.cc | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index d6813b13fd..83bc946a3e 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -119,8 +119,6 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
+ 
+ int32_t VideoCaptureModuleV4L2::StartCapture(
+     const VideoCaptureCapability& capability) {
+-  RTC_DCHECK_RUN_ON(&api_checker_);
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   if (_captureStarted) {
+     if (capability == _requestedCapability) {
+@@ -307,7 +305,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+ }
+ 
+ int32_t VideoCaptureModuleV4L2::StopCapture() {
+-  RTC_DCHECK_RUN_ON(&api_checker_);
+ 
+   if (!_captureThread.empty()) {
+     {
+-- 
+2.39.3 (Apple Git-145)
+
