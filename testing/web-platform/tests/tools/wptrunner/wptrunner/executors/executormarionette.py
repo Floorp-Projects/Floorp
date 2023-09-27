@@ -626,8 +626,8 @@ class MarionetteSetPermissionProtocolPart(SetPermissionProtocolPart):
         }
         try:
             self.marionette._send_message("WebDriver:SetPermission", body)
-        except errors.UnsupportedOperationException:
-            raise NotImplementedError("set_permission not yet implemented")
+        except errors.UnsupportedOperationException as e:
+            raise NotImplementedError("set_permission not yet implemented") from e
 
 
 class MarionettePrintProtocolPart(PrintProtocolPart):
