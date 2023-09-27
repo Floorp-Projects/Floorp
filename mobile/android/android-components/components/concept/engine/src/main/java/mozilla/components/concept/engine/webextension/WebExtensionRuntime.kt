@@ -153,4 +153,10 @@ interface WebExtensionRuntime {
      */
     fun enableExtensionProcessSpawning(): Unit =
         throw UnsupportedOperationException("Enabling extension process spawning is not available in this engine")
+
+    /**
+     * Disable the extensions process spawning.
+     */
+    fun disableExtensionProcessSpawning(): Unit =
+        throw UnsupportedOperationException("Disabling extension process spawning is not available in this engine")
 }

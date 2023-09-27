@@ -53,10 +53,11 @@ class ExtensionProcessDisabledController(
          * Present a dialog to the user notifying of extension process spawning disabled and also asking
          * whether they would like to continue trying or disable extensions. If the user chooses to retry,
          * enable the extension process spawning with [WebExtensionController.enableExtensionProcessSpawning].
+         * Otherwise, call [WebExtensionController.disableExtensionProcessSpawning].
          *
          * @param context to show the AlertDialog
          * @param store The [BrowserStore] which holds the state for showing the dialog
-         * @param webExtensionController to call when a user enables the process spawning
+         * @param webExtensionController to call when the user enables or disables the process spawning
          * @param builder to use for creating the dialog which can be styled as needed
          * @param appName to be added to the message. Necessary to be added as a param for testing
          */
@@ -84,6 +85,7 @@ class ExtensionProcessDisabledController(
                     onDismissDialog?.invoke()
                 }
                 findViewById<Button>(R.id.negative)?.setOnClickListener {
+                    engine.disableExtensionProcessSpawning()
                     Addons.extensionsProcessUiDisable.add()
                     store.dispatch(ExtensionProcessDisabledPopupAction(false))
                     onDismissDialog?.invoke()

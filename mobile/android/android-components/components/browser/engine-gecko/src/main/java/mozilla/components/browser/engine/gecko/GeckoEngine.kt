@@ -517,6 +517,13 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.disableExtensionProcessSpawning].
+     */
+    override fun disableExtensionProcessSpawning() {
+        runtime.webExtensionController.disableExtensionProcessSpawning()
+    }
+
+    /**
      * See [Engine.registerWebNotificationDelegate].
      */
     override fun registerWebNotificationDelegate(

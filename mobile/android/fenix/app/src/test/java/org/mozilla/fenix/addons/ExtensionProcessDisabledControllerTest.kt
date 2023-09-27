@@ -63,6 +63,7 @@ class ExtensionProcessDisabledControllerTest {
         store.waitUntilIdle()
 
         verify(engine).enableExtensionProcessSpawning()
+        verify(engine, never()).disableExtensionProcessSpawning()
         assertFalse(store.state.showExtensionProcessDisabledPopup)
         verify(dialog).dismiss()
     }
@@ -97,6 +98,7 @@ class ExtensionProcessDisabledControllerTest {
 
         assertFalse(store.state.showExtensionProcessDisabledPopup)
         verify(engine, never()).enableExtensionProcessSpawning()
+        verify(engine).disableExtensionProcessSpawning()
         verify(dialog).dismiss()
     }
 
