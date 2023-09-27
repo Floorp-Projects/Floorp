@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The object to represent a fingerprinting override entry.
+ */
+[scriptable, uuid(07f45442-1806-44be-9230-12eb79de9bac)]
+interface nsIFingerprintingOverride : nsISupports
+{
+  /**
+   * The scope where the override needs to apply.
+   */
+  readonly attribute ACString firstPartyDomain;
+  readonly attribute ACString thirdPartyDomain;
+
+  /**
+   * The fingerprinting overrides definition. This use the same format as the
+   * fingerprinting override pref "privacy.fingerprintingProtection.overrides".
+   */
+  readonly attribute ACString overrides;
+};
+
+/**
+ * A service that monitors updates to the overrides of fingerprinting protection
+ * from remote settings and the local pref.
+ */
+[scriptable, uuid(e7b1da06-2594-4670-aea4-131070baca4c)]
+interface nsIFingerprintingWebCompatService : nsISupports
+{
+  /**
+   * Init the service.
+   */
+  void init();
+
+  /**
+   * Shutdown the service.
+   */
+  void shutdown();
+};
+
+%{C++
+#define NS_FINGERPRINTINGWEBCOMPATSERVICE_CONTRACTID "@mozilla.org/fingerprinting-webcompat-service;1"
+%}
