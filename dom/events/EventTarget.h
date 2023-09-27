@@ -371,7 +371,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)
 #define NS_IMPL_FROMEVENTTARGET_GENERIC(_class, _check, _const)             \
   template <typename T>                                                     \
   static auto FromEventTarget(_const T& aEventTarget)                       \
-      ->decltype(static_cast<_const _class*>(&aEventTarget)) {              \
+      -> decltype(static_cast<_const _class*>(&aEventTarget)) {             \
     return aEventTarget._check ? static_cast<_const _class*>(&aEventTarget) \
                                : nullptr;                                   \
   }                                                                         \
