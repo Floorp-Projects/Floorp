@@ -297,6 +297,26 @@ bool HTMLEditUtils::IsInlineContent(const nsIContent& aContent,
          styleDisplay->IsRubyDisplayType();
 }
 
+bool HTMLEditUtils::IsInclusiveAncestorCSSDisplayNone(
+    const nsIContent& aContent) {
+  if (NS_WARN_IF(!aContent.IsInComposedDoc())) {
+    return true;
+  }
+  for (const Element* element :
+       aContent.InclusiveFlatTreeAncestorsOfType<Element>()) {
+    RefPtr<const ComputedStyle> elementStyle =
+        nsComputedDOMStyle::GetComputedStyleNoFlush(element);
+    if (NS_WARN_IF(!elementStyle)) {
+      continue;
+    }
+    const nsStyleDisplay* styleDisplay = elementStyle->StyleDisplay();
+    if (MOZ_UNLIKELY(styleDisplay->mDisplay == StyleDisplay::None)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool HTMLEditUtils::IsVisibleElementEvenIfLeafNode(const nsIContent& aContent) {
   if (!aContent.IsElement()) {
     return false;
@@ -687,12 +707,21 @@ Element* HTMLEditUtils::GetElementOfImmediateBlockBoundary(
       continue;
     }
 
-    Text* textNode = Text::FromNode(nextContent);
-    if (NS_WARN_IF(!textNode)) {
-      continue;  // XXX Is this possible?
+    switch (nextContent->NodeType()) {
+      case nsINode::TEXT_NODE:
+      case nsINode::CDATA_SECTION_NODE:
+        break;
+      default:
+        continue;
     }
+
+    Text* textNode = Text::FromNode(nextContent);
+    MOZ_ASSERT(textNode);
     if (!textNode->TextLength()) {
       continue;  // empty invisible text node, keep scanning next one.
+    }
+    if (HTMLEditUtils::IsInclusiveAncestorCSSDisplayNone(*textNode)) {
+      continue;  // Styled as invisible.
     }
     if (!textNode->TextIsOnlyWhitespace()) {
       return nullptr;  // found a visible text node.

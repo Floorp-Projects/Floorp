@@ -428,6 +428,11 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Return true if `display` of inclusive ancestor of aContent is `none`.
+   */
+  static bool IsInclusiveAncestorCSSDisplayNone(const nsIContent& aContent);
+
+  /**
    * IsVisiblePreformattedNewLine() and IsInvisiblePreformattedNewLine() return
    * true if the point is preformatted linefeed and it's visible or invisible.
    * If linefeed is immediately before a block boundary, it's invisible.
