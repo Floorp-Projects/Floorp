@@ -1,8 +1,235 @@
+# 2.4.0
+
+## What's Changed
+* Remove html_root_url by @eldruin in https://github.com/bitflags/bitflags/pull/368
+* Support unnamed flags by @KodrAus in https://github.com/bitflags/bitflags/pull/371
+* Update smoke test to verify all Clippy and rustc lints by @MitMaro in https://github.com/bitflags/bitflags/pull/374
+* Specify the behavior of bitflags by @KodrAus in https://github.com/bitflags/bitflags/pull/369
+
+## New Contributors
+* @eldruin made their first contribution in https://github.com/bitflags/bitflags/pull/368
+* @MitMaro made their first contribution in https://github.com/bitflags/bitflags/pull/374
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.3.3...2.4.0
+
+# 2.3.3
+
+## Changes to `-=`
+
+The `-=` operator was incorrectly changed to truncate bits that didn't correspond to valid flags in `2.3.0`. This has
+been fixed up so it once again behaves the same as `-` and `difference`.
+
+## Changes to `!`
+
+The `!` operator previously called `Self::from_bits_truncate`, which would truncate any bits that only partially
+overlapped with a valid flag. It will now use `bits & Self::all().bits()`, so any bits that overlap any bits
+specified by any flag will be respected. This is unlikely to have any practical implications, but enables defining
+a flag like `const ALL = !0` as a way to signal that any bit pattern is a known set of flags.
+
+## Changes to formatting
+
+Zero-valued flags will never be printed. You'll either get `0x0` for empty flags using debug formatting, or the
+set of flags with zero-valued flags omitted for others.
+
+Composite flags will no longer be redundantly printed if there are extra bits to print at the end that don't correspond
+to a valid flag.
+
+## What's Changed
+* Fix up incorrect sub assign behavior and other cleanups by @KodrAus in https://github.com/bitflags/bitflags/pull/366
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.3.2...2.3.3
+
+# 2.3.2
+
+## What's Changed
+* [doc] [src/lib.rs]  delete redundant path prefix by @OccupyMars2025 in https://github.com/bitflags/bitflags/pull/361
+
+## New Contributors
+* @OccupyMars2025 made their first contribution in https://github.com/bitflags/bitflags/pull/361
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.3.1...2.3.2
+
+# 2.3.1
+
+## What's Changed
+* Fix Self in flags value expressions by @KodrAus in https://github.com/bitflags/bitflags/pull/355
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.3.0...2.3.1
+
+# 2.3.0
+
+## What's Changed
+* Support ejecting flags types from the bitflags macro by @KodrAus in https://github.com/bitflags/bitflags/pull/351
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.2.1...2.3.0
+
+# 2.2.1
+
+## What's Changed
+* Refactor attribute filtering to apply per-flag by @KodrAus in https://github.com/bitflags/bitflags/pull/345
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.2.0...2.2.1
+
+# 2.2.0
+
+## What's Changed
+* Create SECURITY.md by @KodrAus in https://github.com/bitflags/bitflags/pull/338
+* add docs to describe the behavior of multi-bit flags by @nicholasbishop in https://github.com/bitflags/bitflags/pull/340
+* Add support for bytemuck by @KodrAus in https://github.com/bitflags/bitflags/pull/336
+* Add a top-level macro for filtering attributes by @KodrAus in https://github.com/bitflags/bitflags/pull/341
+
+## New Contributors
+* @nicholasbishop made their first contribution in https://github.com/bitflags/bitflags/pull/340
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.1.0...2.2.0
+
+# 2.1.0
+
+## What's Changed
+* Add docs for the internal Field0 and examples of formatting/parsing by @KodrAus in https://github.com/bitflags/bitflags/pull/328
+* Add support for arbitrary by @KodrAus in https://github.com/bitflags/bitflags/pull/324
+* Fix up missing docs for consts within consts by @KodrAus in https://github.com/bitflags/bitflags/pull/330
+* Ignore clippy lint in generated code by @Jake-Shadle in https://github.com/bitflags/bitflags/pull/331
+
+## New Contributors
+* @Jake-Shadle made their first contribution in https://github.com/bitflags/bitflags/pull/331
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.0.2...2.1.0
+
+# 2.0.2
+
+## What's Changed
+* Fix up missing isize and usize Bits impls by @KodrAus in https://github.com/bitflags/bitflags/pull/321
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.0.1...2.0.2
+
+# 2.0.1
+
+## What's Changed
+* Fix up some docs issues by @KodrAus in https://github.com/bitflags/bitflags/pull/309
+* Make empty_flag() const. by @tormeh in https://github.com/bitflags/bitflags/pull/313
+* Fix formatting of multi-bit flags with partial overlap by @KodrAus in https://github.com/bitflags/bitflags/pull/316
+
+## New Contributors
+* @tormeh made their first contribution in https://github.com/bitflags/bitflags/pull/313
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.0.0...2.0.1
+
+# 2.0.0
+
+## What's Changed
+* Fix a typo and call out MSRV bump by @KodrAus in https://github.com/bitflags/bitflags/pull/259
+* BitFlags trait by @arturoc in https://github.com/bitflags/bitflags/pull/220
+* Add a hidden trait to discourage manual impls of BitFlags by @KodrAus in https://github.com/bitflags/bitflags/pull/261
+* Sanitize `Ok` by @konsumlamm in https://github.com/bitflags/bitflags/pull/266
+* Fix bug in `Debug` implementation by @konsumlamm in https://github.com/bitflags/bitflags/pull/268
+* Fix a typo in the generated documentation by @wackbyte in https://github.com/bitflags/bitflags/pull/271
+* Use SPDX license format by @atouchet in https://github.com/bitflags/bitflags/pull/272
+* serde tests fail in CI by @arturoc in https://github.com/bitflags/bitflags/pull/277
+* Fix beta test output by @KodrAus in https://github.com/bitflags/bitflags/pull/279
+* Add example to the README.md file by @tiaanl in https://github.com/bitflags/bitflags/pull/270
+* Iterator over all the enabled options by @arturoc in https://github.com/bitflags/bitflags/pull/278
+* from_bits_(truncate) fail with composite flags by @arturoc in https://github.com/bitflags/bitflags/pull/276
+* Add more platform coverage to CI by @KodrAus in https://github.com/bitflags/bitflags/pull/280
+* rework the way cfgs are handled by @KodrAus in https://github.com/bitflags/bitflags/pull/281
+* Split generated code into two types by @KodrAus in https://github.com/bitflags/bitflags/pull/282
+* expose bitflags iters using nameable types by @KodrAus in https://github.com/bitflags/bitflags/pull/286
+* Support creating flags from their names by @KodrAus in https://github.com/bitflags/bitflags/pull/287
+* Update README.md by @KodrAus in https://github.com/bitflags/bitflags/pull/288
+* Prepare for 2.0.0-rc.1 release by @KodrAus in https://github.com/bitflags/bitflags/pull/289
+* Add missing "if" to contains doc-comment in traits.rs by @rusty-snake in https://github.com/bitflags/bitflags/pull/291
+* Forbid unsafe_code by @fintelia in https://github.com/bitflags/bitflags/pull/294
+* serde: enable no-std support by @nim65s in https://github.com/bitflags/bitflags/pull/296
+* Add a parser for flags formatted as bar-separated-values by @KodrAus in https://github.com/bitflags/bitflags/pull/297
+* Prepare for 2.0.0-rc.2 release by @KodrAus in https://github.com/bitflags/bitflags/pull/299
+* Use strip_prefix instead of starts_with + slice by @QuinnPainter in https://github.com/bitflags/bitflags/pull/301
+* Fix up some clippy lints by @KodrAus in https://github.com/bitflags/bitflags/pull/302
+* Prepare for 2.0.0-rc.3 release by @KodrAus in https://github.com/bitflags/bitflags/pull/303
+* feat: Add minimum permissions to rust.yml workflow by @gabibguti in https://github.com/bitflags/bitflags/pull/305
+
+## New Contributors
+* @wackbyte made their first contribution in https://github.com/bitflags/bitflags/pull/271
+* @atouchet made their first contribution in https://github.com/bitflags/bitflags/pull/272
+* @tiaanl made their first contribution in https://github.com/bitflags/bitflags/pull/270
+* @rusty-snake made their first contribution in https://github.com/bitflags/bitflags/pull/291
+* @fintelia made their first contribution in https://github.com/bitflags/bitflags/pull/294
+* @nim65s made their first contribution in https://github.com/bitflags/bitflags/pull/296
+* @QuinnPainter made their first contribution in https://github.com/bitflags/bitflags/pull/301
+* @gabibguti made their first contribution in https://github.com/bitflags/bitflags/pull/305
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/1.3.2...2.0.0
+
+# 2.0.0-rc.3
+
+## What's Changed
+* Use strip_prefix instead of starts_with + slice by @QuinnPainter in https://github.com/bitflags/bitflags/pull/301
+* Fix up some clippy lints by @KodrAus in https://github.com/bitflags/bitflags/pull/302
+
+## New Contributors
+* @QuinnPainter made their first contribution in https://github.com/bitflags/bitflags/pull/301
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.0.0-rc.2...2.0.0-rc.3
+
+# 2.0.0-rc.2
+
+## Changes to `serde` serialization
+
+**⚠️ NOTE ⚠️** This release changes the default serialization you'll get if you `#[derive(Serialize, Deserialize)]`
+on your generated flags types. It will now use a formatted string for human-readable formats and the underlying bits
+type for compact formats.
+
+To keep the old behavior, see the [`bitflags-serde-legacy`](https://github.com/KodrAus/bitflags-serde-legacy) library.
+
+## What's Changed
+
+* Add missing "if" to contains doc-comment in traits.rs by @rusty-snake in https://github.com/bitflags/bitflags/pull/291
+* Forbid unsafe_code by @fintelia in https://github.com/bitflags/bitflags/pull/294
+* serde: enable no-std support by @nim65s in https://github.com/bitflags/bitflags/pull/296
+* Add a parser for flags formatted as bar-separated-values by @KodrAus in https://github.com/bitflags/bitflags/pull/297
+
+## New Contributors
+* @rusty-snake made their first contribution in https://github.com/bitflags/bitflags/pull/291
+* @fintelia made their first contribution in https://github.com/bitflags/bitflags/pull/294
+* @nim65s made their first contribution in https://github.com/bitflags/bitflags/pull/296
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/2.0.0-rc.1...2.0.0-rc.2
+
+# 2.0.0-rc.1
+
+This is a big release including a few years worth of work on a new `BitFlags` trait, iteration, and better macro organization for future extensibility.
+
+## What's Changed
+* Fix a typo and call out MSRV bump by @KodrAus in https://github.com/bitflags/bitflags/pull/259
+* BitFlags trait by @arturoc in https://github.com/bitflags/bitflags/pull/220
+* Add a hidden trait to discourage manual impls of BitFlags by @KodrAus in https://github.com/bitflags/bitflags/pull/261
+* Sanitize `Ok` by @konsumlamm in https://github.com/bitflags/bitflags/pull/266
+* Fix bug in `Debug` implementation by @konsumlamm in https://github.com/bitflags/bitflags/pull/268
+* Fix a typo in the generated documentation by @wackbyte in https://github.com/bitflags/bitflags/pull/271
+* Use SPDX license format by @atouchet in https://github.com/bitflags/bitflags/pull/272
+* serde tests fail in CI by @arturoc in https://github.com/bitflags/bitflags/pull/277
+* Fix beta test output by @KodrAus in https://github.com/bitflags/bitflags/pull/279
+* Add example to the README.md file by @tiaanl in https://github.com/bitflags/bitflags/pull/270
+* Iterator over all the enabled options by @arturoc in https://github.com/bitflags/bitflags/pull/278
+* from_bits_(truncate) fail with composite flags by @arturoc in https://github.com/bitflags/bitflags/pull/276
+* Add more platform coverage to CI by @KodrAus in https://github.com/bitflags/bitflags/pull/280
+* rework the way cfgs are handled by @KodrAus in https://github.com/bitflags/bitflags/pull/281
+* Split generated code into two types by @KodrAus in https://github.com/bitflags/bitflags/pull/282
+* expose bitflags iters using nameable types by @KodrAus in https://github.com/bitflags/bitflags/pull/286
+* Support creating flags from their names by @KodrAus in https://github.com/bitflags/bitflags/pull/287
+* Update README.md by @KodrAus in https://github.com/bitflags/bitflags/pull/288
+
+## New Contributors
+* @wackbyte made their first contribution in https://github.com/bitflags/bitflags/pull/271
+* @atouchet made their first contribution in https://github.com/bitflags/bitflags/pull/272
+* @tiaanl made their first contribution in https://github.com/bitflags/bitflags/pull/270
+
+**Full Changelog**: https://github.com/bitflags/bitflags/compare/1.3.2...2.0.0-rc.1
+
 # 1.3.2
 
 - Allow `non_snake_case` in generated flags types ([#256])
 
-[#252]: https://github.com/bitflags/bitflags/pull/256
+[#256]: https://github.com/bitflags/bitflags/pull/256
 
 # 1.3.1
 
@@ -11,6 +238,8 @@
 [#252]: https://github.com/bitflags/bitflags/pull/252
 
 # 1.3.0 (yanked)
+
+**This release bumps the Minimum Supported Rust Version to `1.46.0`**
 
 - Add `#[repr(transparent)]` ([#187])
 

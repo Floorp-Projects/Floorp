@@ -1,14 +1,11 @@
 [package]
 name = "bitflags"
-version = "2.999.999"
+version = "1.999.999"
 edition = "2018"
 license = "MIT/Apache-2.0"
 
 [lib]
 path = "lib.rs"
 
-[features]
-serde = []
-
 [dependencies.bitflags]
-version = "1.0"
+version = "2"
