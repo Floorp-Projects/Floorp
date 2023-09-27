@@ -1350,16 +1350,6 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
   }
 }
 
-static bool MaybeApplyPageName(nsFrameConstructorState& aState,
-                               const StylePageName& aPageName) {
-  if (aPageName.IsPageName()) {
-    aState.mAutoPageNameValue = aPageName.AsPageName().AsAtom();
-    return true;
-  }
-  MOZ_ASSERT(aPageName.IsAuto(), "Impossible page name");
-  return false;
-}
-
 static void EnsureAutoPageName(nsFrameConstructorState& aState,
                                const nsContainerFrame* const aFrame) {
   // Check if we need to figure out our used page name.
@@ -1372,8 +1362,8 @@ static void EnsureAutoPageName(nsFrameConstructorState& aState,
 
   for (const nsContainerFrame* frame = aFrame; frame;
        frame = frame->GetParent()) {
-    const StylePageName& pageName = frame->StylePage()->mPage;
-    if (MaybeApplyPageName(aState, pageName)) {
+    if (const nsAtom* maybePageName = frame->GetStylePageName()) {
+      aState.mAutoPageNameValue = maybePageName;
       return;
     }
   }
@@ -1402,7 +1392,9 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
 
   MOZ_ASSERT(mNameToRestore,
              "Page name should have been found by EnsureAutoPageName");
-  MaybeApplyPageName(aState, aFrame->StylePage()->mPage);
+  if (const nsAtom* maybePageName = aFrame->GetStylePageName()) {
+    aState.mAutoPageNameValue = maybePageName;
+  }
   aFrame->SetAutoPageValue(aState.mAutoPageNameValue);
 }
 

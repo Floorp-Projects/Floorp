@@ -2135,12 +2135,17 @@ nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
 const nsAtom* nsIFrame::ComputePageValue() const {
   const nsAtom* value = nsGkAtoms::_empty;
   const nsIFrame* frame = this;
+  // Find what CSS page name value this frame's subtree has, if any.
+  // Starting with this frame, check if a page name other than auto is present,
+  // and record it if so. Then, if the current frame is a container frame, find
+  // the first non-placeholder child and repeat.
+  // This will find the most deeply nested first in-flow child of this frame's
+  // subtree, and return its page name (with auto resolved if applicable, and
+  // subtrees with no page-names returning the empty atom rather than null).
   do {
-    // If this has a non-auto start value, track that instead.
-    if (const nsAtom* const startValue = frame->GetStartPageValue()) {
-      value = startValue;
+    if (const nsAtom* maybePageName = frame->GetStylePageName()) {
+      value = maybePageName;
     }
-    MOZ_ASSERT(value, "Should not have a NULL page value.");
     // Get the next frame to read from.
     const nsIFrame* firstNonPlaceholderFrame = nullptr;
     // If this is a container frame, inspect its in-flow children.
