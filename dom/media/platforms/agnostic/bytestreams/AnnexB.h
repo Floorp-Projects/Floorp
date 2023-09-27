@@ -39,12 +39,19 @@ class AnnexB {
       mozilla::MediaRawData* aSample,
       const RefPtr<mozilla::MediaByteBuffer>& aAVCCHeader = nullptr);
 
+  // Covert sample to 4 bytes NALU byte stream.
   static mozilla::Result<mozilla::Ok, nsresult> ConvertAVCCTo4BytesAVCC(
+      mozilla::MediaRawData* aSample);
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertHVCCTo4BytesHVCC(
       mozilla::MediaRawData* aSample);
 
   // Parse an AVCC extradata and construct the Annex B sample header.
-  static already_AddRefed<mozilla::MediaByteBuffer> ConvertExtraDataToAnnexB(
-      const mozilla::MediaByteBuffer* aExtraData);
+  static already_AddRefed<mozilla::MediaByteBuffer>
+  ConvertAVCCExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData);
+  // Parse a HVCC extradata and construct the Annex B sample header.
+  static already_AddRefed<mozilla::MediaByteBuffer>
+  ConvertHVCCExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData);
+
   // Returns true if format is AVCC and sample has valid extradata.
   static bool IsAVCC(const mozilla::MediaRawData* aSample);
   // Returns true if format is AnnexB.
