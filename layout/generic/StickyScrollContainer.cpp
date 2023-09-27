@@ -142,9 +142,10 @@ void StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame) {
   }
 }
 
-static nscoord gUnboundedNegative = nscoord_MIN / 2;
-static nscoord gUnboundedExtent = nscoord_MAX;
-static nscoord gUnboundedPositive = gUnboundedNegative + gUnboundedExtent;
+static constexpr nscoord gUnboundedNegative = nscoord_MIN / 2;
+static constexpr nscoord gUnboundedExtent = nscoord_MAX;
+static constexpr nscoord gUnboundedPositive =
+    gUnboundedNegative + gUnboundedExtent;
 
 void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
                                                 nsRect* aStick,
