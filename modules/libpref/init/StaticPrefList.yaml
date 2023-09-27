@@ -10119,9 +10119,11 @@
     mirror: always
 
 # Enable HEVC support via the windows media foundation
+# 0 : disable, 1 : enable for media engine and MFT,
+# 2 : enable for media engine only
 -   name: media.wmf.hevc.enabled
-    type: RelaxedAtomicBool
-    value: false
+    type: RelaxedAtomicUint32
+    value: 2
     mirror: always
 
 #endif  # MOZ_WMF
