@@ -1708,7 +1708,7 @@ impl UnparsedValue {
         &self,
         longhand_id: LonghandId,
         writing_mode: WritingMode,
-        custom_properties: Option<<&Arc<crate::custom_properties::CustomPropertiesMap>>,
+        custom_properties: &crate::custom_properties::ComputedCustomProperties,
         quirks_mode: QuirksMode,
         stylist: &Stylist,
         shorthand_cache: &'cache mut ShorthandsWithPropertyReferencesCache,
@@ -2998,7 +2998,7 @@ pub struct ComputedValuesInner {
     % for style_struct in data.active_style_structs():
         ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
     % endfor
-    custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
+    custom_properties: crate::custom_properties::ComputedCustomProperties,
 
     /// The writing mode of this computed values struct.
     pub writing_mode: WritingMode,
@@ -3068,29 +3068,13 @@ impl ComputedValues {
     }
 
     /// Gets a reference to the custom properties map (if one exists).
-    pub fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
-        self.custom_properties.as_ref()
+    pub fn custom_properties(&self) -> &crate::custom_properties::ComputedCustomProperties {
+        &self.custom_properties
     }
 
     /// Returns whether we have the same custom properties as another style.
-    ///
-    /// This should effectively be just:
-    ///
-    ///   self.custom_properties() == other.custom_properties()
-    ///
-    /// But that's not really the case because IndexMap equality doesn't
-    /// consider ordering, which we have to account for. Also, for the same
-    /// reason, IndexMap equality comparisons are slower than needed.
-    ///
-    /// See https://github.com/bluss/indexmap/issues/153
     pub fn custom_properties_equal(&self, other: &Self) -> bool {
-        match (self.custom_properties(), other.custom_properties()) {
-            (Some(l), Some(r)) => {
-                l.len() == r.len() && l.iter().zip(r.iter()).all(|((k1, v1), (k2, v2))| k1 == k2 && v1 == v2)
-            },
-            (None, None) => true,
-            _ => false,
-        }
+      self.custom_properties() == other.custom_properties()
     }
 
 % for prop in data.longhands:
@@ -3227,7 +3211,7 @@ impl ComputedValues {
     /// Create a new refcounted `ComputedValues`
     pub fn new(
         pseudo: Option<<&PseudoElement>,
-        custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
+        custom_properties: crate::custom_properties::ComputedCustomProperties,
         writing_mode: WritingMode,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
@@ -3266,8 +3250,9 @@ impl ComputedValues {
                 s
             }
             PropertyDeclarationId::Custom(name) => {
-                self.custom_properties
-                    .as_ref()
+              // TODO(bug 1840478): Handle non-inherited properties.
+              self.custom_properties
+                    .as_ref().inherited.unwrap()
                     .and_then(|map| map.get(name))
                     .map_or(String::new(), |value| value.to_css_string())
             }
@@ -3637,7 +3622,7 @@ pub struct StyleBuilder<'a> {
     pub rules: Option<StrongRuleNode>,
 
     /// The computed custom properties.
-    pub custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
+    pub custom_properties: crate::custom_properties::ComputedCustomProperties,
 
     /// The pseudo-element this style will represent.
     pub pseudo: Option<<&'a PseudoElement>,
@@ -3691,7 +3676,7 @@ impl<'a> StyleBuilder<'a> {
             rules,
             modified_reset: false,
             is_root_element,
-            custom_properties: None,
+            custom_properties: crate::custom_properties::ComputedCustomProperties::default(),
             writing_mode: inherited_style.writing_mode,
             flags: Cell::new(flags),
             visited_style: None,
@@ -3728,7 +3713,7 @@ impl<'a> StyleBuilder<'a> {
             modified_reset: false,
             is_root_element: false,
             rules: None,
-            custom_properties: style_to_derive_from.custom_properties().cloned(),
+            custom_properties: style_to_derive_from.custom_properties().clone(),
             writing_mode: style_to_derive_from.writing_mode,
             flags: Cell::new(style_to_derive_from.flags),
             visited_style: None,
@@ -3848,7 +3833,7 @@ impl<'a> StyleBuilder<'a> {
                 ).build()
             })
         });
-        let custom_properties = parent.and_then(|p| p.custom_properties().cloned());
+        let custom_properties = if let Some(p) = parent { p.custom_properties().clone() } else { crate::custom_properties::ComputedCustomProperties::default() };
         let mut ret = Self::new(
             device,
             stylist,
@@ -3991,8 +3976,8 @@ impl<'a> StyleBuilder<'a> {
     }
 
     /// Get the custom properties map if necessary.
-    pub fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
-        self.custom_properties.as_ref()
+    pub fn custom_properties(&self) -> &crate::custom_properties::ComputedCustomProperties {
+        &self.custom_properties
     }
 
     /// Access to various information about our inherited styles.  We don't
@@ -4059,7 +4044,7 @@ mod lazy_static_module {
                         % endif
                     }),
                 % endfor
-                custom_properties: None,
+                custom_properties,
                 writing_mode: WritingMode::empty(),
                 rules: None,
                 visited_style: None,
@@ -4186,7 +4171,7 @@ macro_rules! longhand_properties_idents {
 }
 
 // Large pages generate tens of thousands of ComputedValues.
-size_of_test!(ComputedValues, 232);
+size_of_test!(ComputedValues, 240);
 // FFI relies on this.
 size_of_test!(Option<Arc<ComputedValues>>, 8);
 
