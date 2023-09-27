@@ -2545,6 +2545,171 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `WHEN session onProductUrlChange is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val delegate = engineSession.createContentDelegate()
+        var productUrlStatus = false
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onProductUrlChange(isProductUrl: Boolean) {
+                    productUrlStatus = isProductUrl
+                }
+            },
+        )
+
+        delegate.onProductUrl(geckoSession)
+
+        assertTrue(productUrlStatus)
+        assertEquals(true, productUrlStatus)
+    }
+
+    @Test
+    fun `WHEN session requestProductAnalysis is successful with analysis object THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<GeckoSession.ReviewAnalysis>()
+        whenever(geckoSession.requestAnalysis("mozilla.com")).thenReturn(ruleResult)
+
+        engineSession.requestProductAnalysis(
+            "mozilla.com",
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        val productId = "banana"
+        val grade = "A"
+        val adjustedRating = 4.5
+        val lastAnalysisTime = 12345.toLong()
+        val analysisURL = "https://analysis.com"
+        val analysisObject = GeckoSession.ReviewAnalysis.Builder(productId)
+            .grade(grade)
+            .adjustedRating(adjustedRating)
+            .analysisUrl(analysisURL)
+            .needsAnalysis(true)
+            .highlights(null)
+            .lastAnalysisTime(lastAnalysisTime)
+            .deletedProductReported(true)
+            .deletedProduct(true)
+            .build()
+
+        ruleResult.complete(analysisObject)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN requestProductAnalysis is not successful THEN onException callback for error is called`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<GeckoSession.ReviewAnalysis>()
+        whenever(geckoSession.requestAnalysis("mozilla.com")).thenReturn(ruleResult)
+
+        engineSession.requestProductAnalysis(
+            "mozilla.com",
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(onResultCalled)
+        assertTrue(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session requestProductRecommendations is successful with empty list THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<List<GeckoSession.Recommendation>>()
+        whenever(geckoSession.requestRecommendations("mozilla.com")).thenReturn(ruleResult)
+
+        engineSession.requestProductRecommendations(
+            "mozilla.com",
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.complete(emptyList())
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session requestProductRecommendations is successful with Recommendation THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<List<GeckoSession.Recommendation>>()
+        whenever(geckoSession.requestRecommendations("mozilla.com")).thenReturn(ruleResult)
+
+        engineSession.requestProductRecommendations(
+            "mozilla.com",
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        val recommendationUrl = "https://recommendation.com"
+        val adjustedRating = 3.5
+        val imageUrl = "http://image.com"
+        val aid = "banana"
+        val name = "apple"
+        val grade = "C"
+        val price = "450"
+        val currency = "USD"
+
+        val recommendationObject = GeckoSession.Recommendation.Builder(recommendationUrl)
+            .adjustedRating(adjustedRating)
+            .sponsored(true)
+            .imageUrl(imageUrl)
+            .aid(aid)
+            .name(name)
+            .grade(grade)
+            .price(price)
+            .currency(currency)
+            .build()
+
+        ruleResult.complete(listOf(recommendationObject))
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN requestProductRecommendations is not successful THEN onException callback for error is called`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<List<GeckoSession.Recommendation>>()
+        whenever(geckoSession.requestRecommendations("mozilla.com")).thenReturn(ruleResult)
+
+        engineSession.requestProductRecommendations(
+            "mozilla.com",
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(onResultCalled)
+        assertTrue(onExceptionCalled)
+    }
+
+    @Test
     fun `WHEN session reanalyzeProduct is successful THEN notify of completion`() {
         val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
         var onResultCalled = false
