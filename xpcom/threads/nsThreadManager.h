@@ -97,9 +97,7 @@ class nsThreadManager : public nsIThreadManager {
   static void ReleaseThread(void* aData);
 
   unsigned mCurThreadIndex;  // thread-local-storage index
-  RefPtr<mozilla::IdleTaskManager> mIdleTaskManager;
   RefPtr<nsThread> mMainThread;
-  PRThread* mMainPRThread;
   mozilla::Atomic<bool, mozilla::SequentiallyConsistent> mInitialized;
 
   // Shared event target used for background runnables.
