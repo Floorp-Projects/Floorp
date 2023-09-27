@@ -2252,7 +2252,7 @@
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Mba’éichapa jaikuaáta marandu’i iporãha</string>
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_explanation_body_reliability">Roipuru tembipurupyahu IA %s Mozilla rupive rohesa’ỹijo hag̃ua iporãpa marandu’i apopyregua. Ñehesa’ỹijo oipytyvõta roha’ã hag̃ua marandu’i porãngue, ndaha’éi apopyre porãngue.</string>
+    <string name="review_quality_check_explanation_body_reliability">Roipuru tembiporupyahu IA %s Mozilla rupive rohesa’ỹijo hag̃ua iporãpa marandu’i apopyregua. Ñehesa’ỹijo oipytyvõta roha’ã hag̃ua marandu’i porãngue, ndaha’éi apopyre porãngue.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Rome’ẽ marandu’i peteĩteĩva apopyrépe <b>papapy tai ndive</b> A guive F peve.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
@@ -2321,7 +2321,7 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Eikuaave</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">temiñemi purureko</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy">temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">temiñemi jeporurã</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->

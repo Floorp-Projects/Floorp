@@ -321,16 +321,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Nid nawr</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Gwnewch %s eich hoff borwr</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Gwnewch Firefox yn borwr i chi</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Mae %1$s yn rhoi pobl dros elw ac yn diogelu eich preifatrwydd drwy rwystro tracwyr traws-gwefan.\n\nDysgu rhagor yn ein %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Mae Firefox yn rhoi pobl o flaen elw ac yn diogelu eich preifatrwydd trwy rwystro tracwyr traws-gwefan.\n\nDysgwch ragor yn ein hysbysiad preifatrwydd.</string>
@@ -349,15 +342,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Mewngofnodi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud rhagor gyda Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Anfonwch dabiau rhwng dyfeisiau, rheoli llwytho a chael awgrymiadau ar sut i gael y gorau o %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Yn anfon tabiau rhwng dyfeisiau, rheoli llwythi, a chael awgrymiadau am sut i gael y gorau o Firefox.</string>
@@ -566,6 +553,14 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Awtogwblhau URLau</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Awgrymiadau gan noddwyr</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Cefnogwch %1$s gydag awgrymiadau noddedig achlysurol</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Awgrymiadau o %1$s</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
 
@@ -2245,9 +2240,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Gwirio nawr</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Dim digon o adolygiadau eto</string>
+    <string name="review_quality_check_no_reviews_warning_title">Dim digon o adolygiadau eto</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Pan fydd gan y cynnyrch hwn fwy o adolygiadau, byddwn yn gallu gwirio eu hansawdd.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Pan fydd gan y cynnyrch hwn fwy o adolygiadau, byddwn yn gallu gwirio eu hansawdd.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Nid yw’r cynnyrch ar gael</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2255,7 +2250,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Adrodd fod y cynnyrch hwn nôl mewn stoc</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Gwirio ansawdd adolygiadau</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Gwirio ansawdd adolygiadau</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Gwirio ansawdd adolygiadau</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2265,9 +2260,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Dylai fod gennym dadansoddiad wedi’i ddiweddaru o fewn 24 awr. Dewch nôl i weld.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Methu gwirio’r adolygiadau hyn</string>
+    <string name="review_quality_check_not_analyzable_info_title">Methu gwirio’r adolygiadau hyn</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Yn anffodus, ni allwn wirio ansawdd adolygu ar gyfer rhai mathau o gynnyrch. Er enghraifft, cardiau rhodd a ffrydio fideo, cerddoriaeth a gemau.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Yn anffodus, ni allwn wirio ansawdd adolygu ar gyfer rhai mathau o gynnyrch. Er enghraifft, cardiau rhodd a ffrydio fideo, cerddoriaeth a gemau.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Gwybodaeth yn dod cyn hir</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2277,13 +2272,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Iawn</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Dim gwybodaeth ar gael ar hyn o bryd</string>
+    <string name="review_quality_check_generic_error_title">Dim gwybodaeth ar gael ar hyn o bryd</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Rydym yn gweithio i ddatrys y mater. Dewch nôl cyn bo hir.</string>
+    <string name="review_quality_check_generic_error_body">Rydym yn gweithio i ddatrys y mater. Dewch nôl cyn bo hir.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Dim cysylltiad rhwydwaith</string>
+    <string name="review_quality_check_no_connection_title">Dim cysylltiad rhwydwaith</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Gwiriwch eich cysylltiad rhwydwaith ac yna ceisiwch ail-lwytho’r dudalen.</string>
+    <string name="review_quality_check_no_connection_body">Gwiriwch eich cysylltiad rhwydwaith ac yna ceisiwch ail-lwytho’r dudalen.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Dim gwybodaeth am yr adolygiadau hyn eto</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
@@ -2317,7 +2312,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Agor y gwiriwr adolygiadau</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Agor y gwiriwr adolygiadau</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

@@ -171,7 +171,7 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s ojavy emohendakuévo</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
-    <string name="mozac_feature_addons_failed_to_install_generic">Ndoikói ko tembipuru’i ñemohenda.</string>
+    <string name="mozac_feature_addons_failed_to_install_generic">Ndoikói ko tembiporu’i ñemohenda.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error">Ko moĩmbaha ndaikatúi oñemboguejy oĩ rupi jejavy jeikekatúpe.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->

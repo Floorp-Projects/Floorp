@@ -169,7 +169,7 @@
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>მითითებულ მისამართზე, ბრაუზერმა სერვერი ვერ მოიძია.</p>
       <ul>
-        <li>შეცდომა ხომ არ დაუშვით, აკრეფისას, მაგ.
+        <li>შეცდომა ხომ არ დაუშვით აკრეფისას, მაგ.
           <strong>ww</strong>.example.com კი არა, უნდა იყოს
           <strong>www</strong>.example.com.</li>
         <li>თუ სხვა გვერდების გახსნასაც ვერ ახერხებთ, შეამოწმეთ მოწყობილობის ფიჭური ან WiFi-კავშირი.</li>

@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">მოცილება მალსახმობებიდან</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">რა სიახლეებია</string>
     <string name="menu_settings">პარამეტრები</string>
     <string name="menu_about">შესახებ</string>
     <string name="menu_help">დახმარება</string>
@@ -938,7 +937,7 @@
     <string name="preference_https_only_title">მხოლოდ-HTTPS-რეჟიმი</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary3">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
+    <string name="preference_https_only_summary3">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით მეტი უსაფრთხოებისთვის.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">გამონაკლისები</string>
