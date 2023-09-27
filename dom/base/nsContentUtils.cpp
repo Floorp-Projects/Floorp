@@ -6506,12 +6506,13 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult) {
 /* static */
 nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
                                                           nsACString& aOrigin) {
+  nsresult rv;
   MOZ_ASSERT(aURI, "missing uri");
 
   // For Blob URI, the path is the URL of the owning page.
   if (aURI->SchemeIs(BLOBURI_SCHEME)) {
     nsAutoCString path;
-    nsresult rv = aURI->GetPathQueryRef(path);
+    rv = aURI->GetPathQueryRef(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
@@ -6524,13 +6525,30 @@ nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
     return GetWebExposedOriginSerialization(uri, aOrigin);
   }
 
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+
+  // If the protocol doesn't have URI_HAS_WEB_EXPOSED_ORIGIN, then
+  // return "null" as the origin serialization.
+  // We make an exception for "ftp" since we don't have a protocol handler
+  // for this scheme
+  uint32_t flags = 0;
+  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service(&rv);
+  if (!scheme.Equals("ftp") && NS_SUCCEEDED(rv) &&
+      NS_SUCCEEDED(io->GetProtocolFlags(scheme.get(), &flags))) {
+    if (!(flags & nsIProtocolHandler::URI_HAS_WEB_EXPOSED_ORIGIN)) {
+      aOrigin.AssignLiteral("null");
+      return NS_OK;
+    }
+  }
+
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsAutoCString host;
-  nsresult rv = uri->GetAsciiHost(host);
+  rv = uri->GetAsciiHost(host);
 
   if (NS_SUCCEEDED(rv) && !host.IsEmpty()) {
     nsAutoCString userPass;
