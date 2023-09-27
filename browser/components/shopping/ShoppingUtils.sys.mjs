@@ -61,9 +61,12 @@ export const ShoppingUtils = {
     this.onNimbusUpdate = this.onNimbusUpdate.bind(this);
 
     if (!this.registered) {
+      // Note (bug 1855545): we must set `this.registered` before calling
+      // `onUpdate`, as it will immediately invoke `this.onNimbusUpdate`,
+      // which in turn calls `ShoppingUtils.init`, creating an infinite loop.
+      this.registered = true;
       lazy.NimbusFeatures.shopping2023.onUpdate(this.onNimbusUpdate);
       this._updateNimbusVariables();
-      this.registered = true;
     }
 
     if (!this.nimbusEnabled) {
