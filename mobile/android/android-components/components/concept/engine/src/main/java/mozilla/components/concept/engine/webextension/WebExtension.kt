@@ -449,6 +449,7 @@ class DisabledFlags internal constructor(val value: Int) {
         const val USER: Int = 1 shl 1
         const val BLOCKLIST: Int = 1 shl 2
         const val APP_SUPPORT: Int = 1 shl 3
+        const val SIGNATURE: Int = 1 shl 4
 
         /**
          * Selects a combination of flags.
@@ -480,6 +481,14 @@ fun WebExtension.isUnsupported(): Boolean {
 fun WebExtension.isBlockListed(): Boolean {
     val flags = getMetadata()?.disabledFlags
     return flags?.contains(DisabledFlags.BLOCKLIST) == true
+}
+
+/**
+ * Returns whether the extension is disabled because it isn't correctly signed.
+ */
+fun WebExtension.isDisabledUnsigned(): Boolean {
+    val flags = getMetadata()?.disabledFlags
+    return flags?.contains(DisabledFlags.SIGNATURE) == true
 }
 
 /**

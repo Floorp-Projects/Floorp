@@ -18,6 +18,11 @@ interface AddonsManagerAdapterDelegate {
          * The [Addon] is blocklisted and the learn more link should give more information to the user.
          */
         BLOCKLISTED_ADDON,
+
+        /**
+         * The [Addon] is not correctly signed and the learn more link should give more information to the user.
+         */
+        ADDON_NOT_CORRECTLY_SIGNED,
     }
 
     /**

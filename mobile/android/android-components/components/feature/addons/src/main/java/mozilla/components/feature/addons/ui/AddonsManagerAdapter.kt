@@ -136,7 +136,7 @@ class AddonsManagerAdapter(
         val userCountView = view.findViewById<TextView>(R.id.users_count)
         val addButton = view.findViewById<ImageView>(R.id.add_button)
         val allowedInPrivateBrowsingLabel = view.findViewById<ImageView>(R.id.allowed_in_private_browsing_label)
-        val statusBlocklistedView = view.findViewById<View>(R.id.add_on_status_blocklisted)
+        val statusErrorView = view.findViewById<View>(R.id.add_on_status_error)
         return AddonViewHolder(
             view,
             iconView,
@@ -147,7 +147,7 @@ class AddonsManagerAdapter(
             userCountView,
             addButton,
             allowedInPrivateBrowsingLabel,
-            statusBlocklistedView,
+            statusErrorView,
         )
     }
 
@@ -270,21 +270,28 @@ class AddonsManagerAdapter(
         style?.maybeSetAddonNameTextColor(holder.titleView)
         style?.maybeSetAddonSummaryTextColor(holder.summaryView)
 
+        val statusErrorMessage = holder.statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)
+        val statusErrorLearnMoreLink = holder.statusErrorView.findViewById<TextView>(
+            R.id.add_on_status_error_learn_more_link,
+        )
         if (addon.isDisabledAsBlocklisted()) {
-            holder.statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message).text =
-                context.getString(
-                    R.string.mozac_feature_addons_status_blocklisted,
-                    addonName,
-                )
-            holder.statusBlocklistedView.findViewById<TextView>(
-                R.id.add_on_status_blocklisted_learn_more_link,
-            ).setOnClickListener {
+            statusErrorMessage.text = context.getString(R.string.mozac_feature_addons_status_blocklisted, addonName)
+            statusErrorLearnMoreLink.setOnClickListener {
                 addonsManagerDelegate.onLearnMoreLinkClicked(
                     AddonsManagerAdapterDelegate.LearnMoreLinks.BLOCKLISTED_ADDON,
                     addon,
                 )
             }
-            holder.statusBlocklistedView.isVisible = true
+            holder.statusErrorView.isVisible = true
+        } else if (addon.isDisabledAsNotCorrectlySigned()) {
+            statusErrorMessage.text = context.getString(R.string.mozac_feature_addons_status_unsigned, addonName)
+            statusErrorLearnMoreLink.setOnClickListener {
+                addonsManagerDelegate.onLearnMoreLinkClicked(
+                    AddonsManagerAdapterDelegate.LearnMoreLinks.ADDON_NOT_CORRECTLY_SIGNED,
+                    addon,
+                )
+            }
+            holder.statusErrorView.isVisible = true
         }
     }
 

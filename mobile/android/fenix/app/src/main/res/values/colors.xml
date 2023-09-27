@@ -353,4 +353,7 @@
 
     <!-- Material Design colors -->
     <color name="material_scrim_color">#52000000</color>
+
+    <!-- Add-ons colors -->
+    <color name="mozac_feature_addons_error_text_color" tools:ignore="UnusedResources">@color/photonRed70</color>
 </resources>

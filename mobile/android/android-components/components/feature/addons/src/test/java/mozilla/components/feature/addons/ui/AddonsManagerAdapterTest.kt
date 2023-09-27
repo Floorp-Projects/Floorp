@@ -200,7 +200,7 @@ class AddonsManagerAdapterTest {
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
-        val statusBlocklistedView: View = mock()
+        val statusErrorView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -211,7 +211,7 @@ class AddonsManagerAdapterTest {
             userCountView = userCountView,
             addButton = addButton,
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
-            statusBlocklistedView = statusBlocklistedView,
+            statusErrorView = statusErrorView,
         )
         val addon = Addon(
             id = "id",
@@ -375,7 +375,7 @@ class AddonsManagerAdapterTest {
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
-        val statusBlocklistedView: View = mock()
+        val statusErrorView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -386,7 +386,7 @@ class AddonsManagerAdapterTest {
             userCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
-            statusBlocklistedView = statusBlocklistedView,
+            statusErrorView = statusErrorView,
         )
         val addon = Addon(
             id = "id",
@@ -584,13 +584,13 @@ class AddonsManagerAdapterTest {
         whenever(titleView.context).thenReturn(testContext)
         val summaryView: TextView = mock()
         whenever(summaryView.context).thenReturn(testContext)
-        val statusBlocklistedView: View = mock()
+        val statusErrorView: View = mock()
         val messageTextView: TextView = mock()
         val learnMoreTextView = TextView(testContext)
-        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message)).thenReturn(
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
             messageTextView,
         )
-        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_learn_more_link)).thenReturn(
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
             learnMoreTextView,
         )
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
@@ -603,15 +603,15 @@ class AddonsManagerAdapterTest {
             userCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
-            statusBlocklistedView = statusBlocklistedView,
+            statusErrorView = statusErrorView,
         )
         val addonName = "some addon name"
-        val addon = makeBlocklistedAddon(addonName)
+        val addon = makeDisabledAddon(Addon.DisabledReason.BLOCKLISTED, addonName)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
         adapter.bindAddon(addonViewHolder, addon)
 
-        verify(statusBlocklistedView).isVisible = true
+        verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "$addonName has been disabled due to security or stability issues."
 
         // Verify that a click on the "learn more" link actually does something.
@@ -629,12 +629,12 @@ class AddonsManagerAdapterTest {
         whenever(titleView.context).thenReturn(testContext)
         val summaryView: TextView = mock()
         whenever(summaryView.context).thenReturn(testContext)
-        val statusBlocklistedView: View = mock()
+        val statusErrorView: View = mock()
         val messageTextView: TextView = mock()
-        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_message)).thenReturn(
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
             messageTextView,
         )
-        whenever(statusBlocklistedView.findViewById<TextView>(R.id.add_on_status_blocklisted_learn_more_link)).thenReturn(
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
             mock(),
         )
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
@@ -647,20 +647,101 @@ class AddonsManagerAdapterTest {
             userCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
-            statusBlocklistedView = statusBlocklistedView,
+            statusErrorView = statusErrorView,
         )
-        val addon = makeBlocklistedAddon()
+        val addon = makeDisabledAddon(Addon.DisabledReason.BLOCKLISTED)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
         adapter.bindAddon(addonViewHolder, addon)
 
-        verify(statusBlocklistedView).isVisible = true
+        verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "${addon.id} has been disabled due to security or stability issues."
     }
 
-    private fun makeBlocklistedAddon(name: String? = null): Addon {
+    @Test
+    fun `bind add-on not correctly signed`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusErrorView: View = mock()
+        val messageTextView: TextView = mock()
+        val learnMoreTextView = TextView(testContext)
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
+            learnMoreTextView,
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusErrorView = statusErrorView,
+        )
+        val addonName = "some addon name"
+        val addon = makeDisabledAddon(Addon.DisabledReason.NOT_CORRECTLY_SIGNED, addonName)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon)
+
+        verify(statusErrorView).isVisible = true
+        verify(messageTextView).text = "$addonName could not be verified as secure and has been disabled."
+
+        // Verify that a click on the "learn more" link actually does something.
+        learnMoreTextView.performClick()
+        verify(addonsManagerAdapterDelegate).onLearnMoreLinkClicked(
+            AddonsManagerAdapterDelegate.LearnMoreLinks.ADDON_NOT_CORRECTLY_SIGNED,
+            addon,
+        )
+    }
+
+    @Test
+    fun `bind add-on not correctly signed and without a name`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusErrorView: View = mock()
+        val messageTextView: TextView = mock()
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
+            mock(),
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusErrorView = statusErrorView,
+        )
+        val addon = makeDisabledAddon(Addon.DisabledReason.NOT_CORRECTLY_SIGNED)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon)
+
+        verify(statusErrorView).isVisible = true
+        verify(messageTextView).text = "${addon.id} could not be verified as secure and has been disabled."
+    }
+
+    private fun makeDisabledAddon(disabledReason: Addon.DisabledReason, name: String? = null): Addon {
         val installedState: Addon.InstalledState = mock()
-        whenever(installedState.disabledReason).thenReturn(Addon.DisabledReason.BLOCKLISTED)
+        whenever(installedState.disabledReason).thenReturn(disabledReason)
         return Addon(
             id = "@some-addon-id",
             translatableName = if (name != null) {

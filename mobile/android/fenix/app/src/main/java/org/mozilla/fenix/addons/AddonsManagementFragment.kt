@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.extension.WebExtensionPromptFeature
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -270,6 +271,8 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         val url = when (link) {
             AddonsManagerAdapterDelegate.LearnMoreLinks.BLOCKLISTED_ADDON ->
                 "${BuildConfig.AMO_BASE_URL}/android/blocked-addon/${addon.id}/"
+            AddonsManagerAdapterDelegate.LearnMoreLinks.ADDON_NOT_CORRECTLY_SIGNED ->
+                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.UNSIGNED_ADDONS)
         }
         openLinkInNewTab(url)
     }

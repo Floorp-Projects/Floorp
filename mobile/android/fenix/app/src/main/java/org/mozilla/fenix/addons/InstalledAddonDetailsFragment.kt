@@ -130,9 +130,9 @@ class InstalledAddonDetailsFragment : Fragment() {
         val switch = provideEnableSwitch()
         val privateBrowsingSwitch = providePrivateBrowsingSwitch()
         switch.setState(addon.isEnabled())
-        // When the ad-on is blocklisted, we do not want to enable the toggle switch
-        // because users shouldn't be able to re-enable a blocklisted add-on.
-        if (addon.isDisabledAsBlocklisted()) {
+        // When the ad-on is blocklisted or not correctly signed, we do not want to enable the toggle switch
+        // because users shouldn't be able to re-enable an add-on in this state.
+        if (addon.isDisabledAsBlocklisted() || addon.isDisabledAsNotCorrectlySigned()) {
             switch.isEnabled = false
             return
         }

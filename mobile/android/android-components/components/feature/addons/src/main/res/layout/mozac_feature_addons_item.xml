@@ -108,7 +108,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/add_on_status_blocklisted"
+            android:id="@+id/add_on_status_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
@@ -116,15 +116,15 @@
             android:visibility="gone">
 
             <TextView
-                    android:id="@+id/add_on_status_blocklisted_message"
+                    android:id="@+id/add_on_status_error_message"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
-                    android:textColor="@color/photonRed70"
+                    android:textColor="@color/mozac_feature_addons_error_text_color"
                     tools:text="@string/mozac_feature_addons_status_blocklisted" />
 
             <TextView
-                android:id="@+id/add_on_status_blocklisted_learn_more_link"
+                android:id="@+id/add_on_status_error_learn_more_link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"

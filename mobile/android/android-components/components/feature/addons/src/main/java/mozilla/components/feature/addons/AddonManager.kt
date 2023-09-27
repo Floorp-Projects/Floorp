@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webextension.isBlockListed
+import mozilla.components.concept.engine.webextension.isDisabledUnsigned
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
@@ -381,6 +382,8 @@ fun WebExtension.toInstalledState() =
 internal fun WebExtension.getDisabledReason(): Addon.DisabledReason? {
     return if (isBlockListed()) {
         Addon.DisabledReason.BLOCKLISTED
+    } else if (isDisabledUnsigned()) {
+        Addon.DisabledReason.NOT_CORRECTLY_SIGNED
     } else if (isUnsupported()) {
         Addon.DisabledReason.UNSUPPORTED
     } else if (getMetadata()?.disabledFlags?.contains(DisabledFlags.USER) == true) {

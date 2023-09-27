@@ -402,4 +402,20 @@ class AddonTest {
         assertFalse(addon.isDisabledAsBlocklisted())
         assertTrue(blockListedAddon.isDisabledAsBlocklisted())
     }
+
+    @Test
+    fun `isDisabledAsNotCorrectlySigned - true if installed state disabled status equals to NOT_CORRECTLY_SIGNED and otherwise false`() {
+        val addon = Addon(id = "id")
+        val blockListedAddon = addon.copy(
+            installedState = Addon.InstalledState(
+                id = "id",
+                version = "1.0",
+                optionsPageUrl = "",
+                disabledReason = Addon.DisabledReason.NOT_CORRECTLY_SIGNED,
+            ),
+        )
+
+        assertFalse(addon.isDisabledAsNotCorrectlySigned())
+        assertTrue(blockListedAddon.isDisabledAsNotCorrectlySigned())
+    }
 }

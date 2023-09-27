@@ -56,6 +56,7 @@ object SupportUtils {
         SPONSOR_PRIVACY("sponsor-privacy"),
         HTTPS_ONLY_MODE("https-only-mode-firefox-android"),
         COOKIE_BANNER("cookie-banner-reduction-firefox-android"),
+        UNSIGNED_ADDONS("unsigned-addons"),
     }
 
     enum class MozillaPage(internal val path: String) {
