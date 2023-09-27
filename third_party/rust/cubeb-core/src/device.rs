@@ -33,7 +33,6 @@ bitflags! {
     /// used, this can control inter-stream interruption, ducking, and volume
     /// control.
     pub struct DevicePref: ffi::cubeb_device_pref {
-        const NONE = ffi::CUBEB_DEVICE_PREF_NONE;
         const MULTIMEDIA = ffi::CUBEB_DEVICE_PREF_MULTIMEDIA;
         const VOICE = ffi::CUBEB_DEVICE_PREF_VOICE;
         const NOTIFICATION = ffi::CUBEB_DEVICE_PREF_NOTIFICATION;
@@ -41,14 +40,21 @@ bitflags! {
     }
 }
 
+impl DevicePref {
+    pub const NONE: Self = Self::empty();
+}
+
 bitflags! {
     /// Whether a particular device is an input device (e.g. a microphone), or an
     /// output device (e.g. headphones).
     pub struct DeviceType: ffi::cubeb_device_type {
-        const UNKNOWN = ffi::CUBEB_DEVICE_TYPE_UNKNOWN as _;
         const INPUT = ffi::CUBEB_DEVICE_TYPE_INPUT as _;
         const OUTPUT = ffi::CUBEB_DEVICE_TYPE_OUTPUT as _;
     }
+}
+
+impl DeviceType {
+    pub const UNKNOWN: Self = Self::empty();
 }
 
 /// An opaque handle used to refer to a particular input or output device

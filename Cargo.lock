@@ -1077,9 +1077,9 @@ dependencies = [
 
 [[package]]
 name = "cubeb-core"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6203cd567a2ae4382077cc2160738517462c93cf77f3910fa18b2a74549abc84"
+checksum = "4727331fcc9ab77948fe80166f99657290d09589ca0a6e0a948f63c790f09584"
 dependencies = [
  "bitflags 1.3.2",
  "cubeb-sys",

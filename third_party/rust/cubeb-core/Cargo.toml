@@ -11,7 +11,7 @@
 
 [package]
 name = "cubeb-core"
-version = "0.10.3"
+version = "0.10.4"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = """
 Common types and definitions for cubeb rust and C bindings. Not intended for direct use.

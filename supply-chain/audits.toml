@@ -1074,6 +1074,11 @@ notes = """
 Mozilla-developed package.
 """
 
+[[audits.cubeb-core]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.10.3 -> 0.10.4"
+
 [[audits.cubeb-sys]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
