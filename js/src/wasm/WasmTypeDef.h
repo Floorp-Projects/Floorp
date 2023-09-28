@@ -634,7 +634,7 @@ class TypeDef {
         superTypeVector_(nullptr),
         superTypeDef_(nullptr),
         subTypingDepth_(0),
-        isFinal_(false),
+        isFinal_(true),
         kind_(TypeDefKind::None) {
     setRecGroup(recGroup);
   }
