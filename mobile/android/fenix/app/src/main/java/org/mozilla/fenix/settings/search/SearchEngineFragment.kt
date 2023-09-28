@@ -148,18 +148,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            getPreferenceKey(R.string.pref_key_add_search_engine) -> {
-                val directions = SearchEngineFragmentDirections
-                    .actionSearchEngineFragmentToAddSearchEngineFragment()
-                context?.let {
-                    findNavController().navigateWithBreadcrumb(
-                        directions = directions,
-                        navigateFrom = "SearchEngineFragment",
-                        navigateTo = "ActionSearchEngineFragmentToAddSearchEngineFragment",
-                        it.components.analytics.crashReporter,
-                    )
-                }
-            }
             getPreferenceKey(R.string.pref_key_default_search_engine) -> {
                 val directions = SearchEngineFragmentDirections
                     .actionSearchEngineFragmentToDefaultEngineFragment()
