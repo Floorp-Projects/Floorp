@@ -48,7 +48,7 @@
             android:layout_alignStart="@id/displayName"
             android:textColor="?attr/textSecondary"
             android:maxLines="4"
-            android:text="@string/preferences_account_default_name" />
+            android:text="@string/preferences_account_default_name_2" />
 
     </RelativeLayout>
 

@@ -610,7 +610,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     updateFxAAllowDomesticChinaServerMenu()
                     Toast.makeText(
                         context,
-                        getString(R.string.toast_override_fxa_sync_server_done),
+                        getString(R.string.toast_override_account_sync_server_done),
                         Toast.LENGTH_LONG,
                     ).show()
                     Handler(Looper.getMainLooper()).postDelayed(

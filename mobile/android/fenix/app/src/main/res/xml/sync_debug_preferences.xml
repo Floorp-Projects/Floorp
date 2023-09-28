@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.EditTextPreference
         android:key="@string/pref_key_override_fxa_server"
-        android:title="@string/preferences_override_fxa_server"
+        android:title="@string/preferences_override_account_server"
         android:inputType="textUri"
         app:iconSpaceReserved="false" />
     <androidx.preference.EditTextPreference
