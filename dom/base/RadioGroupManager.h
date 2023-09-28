@@ -7,25 +7,32 @@
 #ifndef mozilla_dom_nsRadioGroupStruct_h
 #define mozilla_dom_nsRadioGroupStruct_h
 
+#include "nsCOMArray.h"
+#include "nsIFormControl.h"
+#include "nsIRadioGroupContainer.h"
 #include "nsClassHashtable.h"
 
 class nsIContent;
+
+namespace mozilla {
+
+namespace html {
 class nsIRadioVisitor;
+}
 
-namespace mozilla::dom {
-
+namespace dom {
 class HTMLInputElement;
 struct nsRadioGroupStruct;
 
-class RadioGroupContainer final {
+class RadioGroupManager {
  public:
-  RadioGroupContainer();
-  ~RadioGroupContainer();
+  RadioGroupManager();
 
-  static void Traverse(RadioGroupContainer* tmp,
+  static void Traverse(RadioGroupManager* tmp,
                        nsCycleCollectionTraversalCallback& cb);
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  static void Unlink(RadioGroupManager* tmp);
 
+  // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
   void SetCurrentRadioButton(const nsAString& aName, HTMLInputElement* aRadio);
   HTMLInputElement* GetCurrentRadioButton(const nsAString& aName);
@@ -48,6 +55,7 @@ class RadioGroupContainer final {
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_nsRadioGroupStruct_h
