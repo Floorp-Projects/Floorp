@@ -8764,22 +8764,6 @@
   value: false
   mirror: always
 
-- name: layout.css.text-wrap-balance.enabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Maximum number of lines to try balancing.
-- name: layout.css.text-wrap-balance.limit
-  type: int32_t
-  value: 10
-  mirror: always
-
-- name: layout.css.text-wrap-balance-after-clamp.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool
