@@ -137,13 +137,13 @@ void moz_container_class_init(MozContainerClass* klass) {
 #endif
     widget_class->map = moz_container_map;
     widget_class->size_allocate = moz_container_size_allocate;
-
-    container_class->remove = moz_container_remove;
-    container_class->forall = moz_container_forall;
-    container_class->add = moz_container_add;
 #ifdef MOZ_WAYLAND
   }
 #endif
+
+  container_class->remove = moz_container_remove;
+  container_class->forall = moz_container_forall;
+  container_class->add = moz_container_add;
 }
 
 void moz_container_init(MozContainer* container) {
