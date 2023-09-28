@@ -26,10 +26,6 @@ import org.mozilla.fenix.databinding.BrowserToolbarPopupWindowBinding
 import org.mozilla.fenix.ext.components
 import java.lang.ref.WeakReference
 
-/**
- * Since Android 12 reading the clipboard triggers an OS notification.
- * As such it is important that we do not read it prematurely and only when the user trigger a paste action.
- */
 object ToolbarPopupWindow {
     fun show(
         view: WeakReference<View>,
@@ -39,13 +35,12 @@ object ToolbarPopupWindow {
         copyVisible: Boolean = true,
     ) {
         val context = view.get()?.context ?: return
-        val isCustomTabSession = customTabId != null
         val clipboard = context.components.clipboardHandler
+        val clipboardUrl = clipboard.getUrl()
+        val clipboardText = clipboard.text
+        if (!copyVisible && clipboardUrl == null) return
 
-        val containsText = clipboard.containsText()
-        val containsUrl = clipboard.containsURL()
-        val pasteDeactivated = isCustomTabSession || (!containsText && !containsUrl)
-        if (!copyVisible && pasteDeactivated) return
+        val isCustomTabSession = customTabId != null
 
         val binding = BrowserToolbarPopupWindowBinding.inflate(LayoutInflater.from(context))
         val popupWindow = PopupWindow(
@@ -62,8 +57,9 @@ object ToolbarPopupWindow {
         popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         binding.copy.isVisible = copyVisible
-        binding.paste.isVisible = containsText && !isCustomTabSession
-        binding.pasteAndGo.isVisible = containsUrl && !isCustomTabSession
+
+        binding.paste.isVisible = clipboardText != null && !isCustomTabSession
+        binding.pasteAndGo.isVisible = clipboardUrl != null && !isCustomTabSession
 
         if (copyVisible) {
             binding.copy.setOnClickListener { copyView ->
@@ -86,21 +82,17 @@ object ToolbarPopupWindow {
             }
         }
 
-        if (binding.paste.isVisible) {
+        clipboardText?.let { text ->
             binding.paste.setOnClickListener {
                 popupWindow.dismiss()
-                handlePaste(clipboard.text.orEmpty())
+                handlePaste(text)
             }
         }
 
-        if (binding.pasteAndGo.isVisible) {
+        clipboardUrl?.let { url ->
             binding.pasteAndGo.setOnClickListener {
                 popupWindow.dismiss()
-                clipboard.extractURL()?.also {
-                    handlePasteAndGo(it)
-                } ?: run {
-                    Logger("ToolbarPopupWindow").error("Clipboard contains URL but unable to read text")
-                }
+                handlePasteAndGo(url)
             }
         }
 
@@ -126,5 +118,13 @@ object ToolbarPopupWindow {
             val selectedTab = store.state.selectedTab
             selectedTab?.readerState?.activeUrl ?: selectedTab?.content?.url
         }
+    }
+
+    private fun ClipboardHandler.getUrl(): String? {
+        if (containsURL()) {
+            text?.let { return it }
+            Logger("ToolbarPopupWindow").error("Clipboard contains URL but unable to read text")
+        }
+        return null
     }
 }
