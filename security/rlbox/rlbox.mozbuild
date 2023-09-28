@@ -39,7 +39,6 @@ def RLBoxLibrary(name):
         "-Wno-unused",
     ]
 
-    WASM_DEFINES["_WASI_EMULATED_PROCESS_CLOCKS"] = True
     WASM_DEFINES["MOZ_IN_WASM_SANDBOX"] = True
     if CONFIG["ENABLE_CLANG_PLUGIN"]:
         WASM_DEFINES["MOZ_CLANG_PLUGIN"] = True
