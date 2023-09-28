@@ -25,19 +25,12 @@ import org.mozilla.gecko.search.SearchWidgetProvider
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
-    private var unifiedSearchUI = false
-
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        unifiedSearchUI = requireContext().settings().enableUnifiedSearchSettingsUI
         setPreferencesFromResource(
-            if (unifiedSearchUI) R.xml.search_settings_preferences else R.xml.search_preferences,
+            R.xml.search_settings_preferences,
             rootKey,
         )
 
-        // Visibility should be set before the view has been created, to avoid visual glitches.
-        requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
-            isVisible = !context.settings().showUnifiedSearchFeature
-        }
         requirePreference<SwitchPreference>(R.string.pref_key_show_sponsored_suggestions).apply {
             isVisible = context.settings().enableFxSuggest
         }
@@ -54,11 +47,9 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         view?.hideKeyboard()
         showToolbar(getString(R.string.preferences_search))
 
-        if (unifiedSearchUI) {
-            with(requirePreference<Preference>(R.string.pref_key_default_search_engine)) {
-                summary =
-                    requireContext().components.core.store.state.search.selectedOrDefaultSearchEngine?.name
-            }
+        with(requirePreference<Preference>(R.string.pref_key_default_search_engine)) {
+            summary =
+                requireContext().components.core.store.state.search.selectedOrDefaultSearchEngine?.name
         }
 
         val searchSuggestionsPreference =
@@ -74,11 +65,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         val searchSuggestionsInPrivatePreference =
             requirePreference<CheckBoxPreference>(R.string.pref_key_show_search_suggestions_in_private).apply {
                 isChecked = context.settings().shouldShowSearchSuggestionsInPrivate
-            }
-
-        val showSearchShortcuts =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
-                isChecked = context.settings().shouldShowSearchShortcuts
             }
 
         val showHistorySuggestions =
@@ -125,7 +111,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
 
         searchSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showSearchShortcuts.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         showBookmarkSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         showSyncedTabsSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()

@@ -6,13 +6,17 @@ package org.mozilla.fenix.settings.search
 
 import android.content.SharedPreferences
 import androidx.preference.CheckBoxPreference
+import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,11 +69,6 @@ class SearchEngineFragmentTest {
                 every { context } returns testContext
             }
             every {
-                fragment.findPreference<SwitchPreference>(testContext.getString(R.string.pref_key_show_search_engine_shortcuts))
-            } returns mockk(relaxed = true) {
-                every { context } returns testContext
-            }
-            every {
                 fragment.findPreference<SwitchPreference>(testContext.getString(R.string.pref_key_search_browsing_history))
             } returns mockk(relaxed = true) {
                 every { context } returns testContext
@@ -103,6 +102,18 @@ class SearchEngineFragmentTest {
             every {
                 fragment.findPreference<SwitchPreference>(voiceSearchPreferenceKey)
             } returns voiceSearchPreference
+            every {
+                fragment.findPreference<Preference>(testContext.getString(R.string.pref_key_default_search_engine))
+            } returns mockk(relaxed = true) {
+                every { context } returns testContext
+
+                val searchEngineName = "MySearchEngine"
+                mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+                every { testContext.components.core.store.state.search } returns mockk(relaxed = true)
+                every { any<SearchState>().selectedOrDefaultSearchEngine } returns mockk {
+                    every { name } returns searchEngineName
+                }
+            }
 
             // Trigger the preferences setup.
             fragment.onResume()

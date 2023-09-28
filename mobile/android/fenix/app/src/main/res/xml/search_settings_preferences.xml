@@ -28,11 +28,6 @@
         <SwitchPreference
             app:iconSpaceReserved="false"
             android:defaultValue="true"
-            android:key="@string/pref_key_show_search_engine_shortcuts"
-            android:title="@string/preferences_show_search_engines" />
-        <SwitchPreference
-            app:iconSpaceReserved="false"
-            android:defaultValue="true"
             android:key="@string/pref_key_enable_autocomplete_urls"
             android:title="@string/preferences_enable_autocomplete_urls" />
         <SwitchPreference
