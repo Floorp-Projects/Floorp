@@ -96,5 +96,21 @@ export const kTestData = [
             internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
         }
         ]
+    },
+    {   testFileName: "link-initial-prefetch.h2.html",
+        expectedRequests: [
+        {   fileNameAndSuffix: "dummy.txt?1",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOWEST
+        },
+        {   fileNameAndSuffix: "dummy.txt?2",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOWEST
+        },
+        {   fileNameAndSuffix: "dummy.txt?3",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOWEST
+        },
+        {   fileNameAndSuffix: "dummy.txt?4",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOWEST
+        }
+        ]
     }
 ];
