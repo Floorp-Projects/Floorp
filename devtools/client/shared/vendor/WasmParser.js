@@ -271,9 +271,9 @@ var OperatorCode;
     OperatorCode[OperatorCode["ref_null"] = 208] = "ref_null";
     OperatorCode[OperatorCode["ref_is_null"] = 209] = "ref_is_null";
     OperatorCode[OperatorCode["ref_func"] = 210] = "ref_func";
-    OperatorCode[OperatorCode["ref_as_non_null"] = 211] = "ref_as_non_null";
-    OperatorCode[OperatorCode["br_on_null"] = 212] = "br_on_null";
-    OperatorCode[OperatorCode["ref_eq"] = 213] = "ref_eq";
+    OperatorCode[OperatorCode["ref_eq"] = 211] = "ref_eq";
+    OperatorCode[OperatorCode["ref_as_non_null"] = 212] = "ref_as_non_null";
+    OperatorCode[OperatorCode["br_on_null"] = 213] = "br_on_null";
     OperatorCode[OperatorCode["br_on_non_null"] = 214] = "br_on_non_null";
     OperatorCode[OperatorCode["memory_atomic_notify"] = 65024] = "memory_atomic_notify";
     OperatorCode[OperatorCode["memory_atomic_wait32"] = 65025] = "memory_atomic_wait32";
@@ -599,72 +599,38 @@ var OperatorCode;
     OperatorCode[OperatorCode["i16x8_relaxed_q15mulr_s"] = 1036561] = "i16x8_relaxed_q15mulr_s";
     OperatorCode[OperatorCode["i16x8_dot_i8x16_i7x16_s"] = 1036562] = "i16x8_dot_i8x16_i7x16_s";
     OperatorCode[OperatorCode["i32x4_dot_i8x16_i7x16_add_s"] = 1036563] = "i32x4_dot_i8x16_i7x16_add_s";
-    // GC proposal (milestone 6).
-    OperatorCode[OperatorCode["struct_new_with_rtt"] = 64257] = "struct_new_with_rtt";
-    OperatorCode[OperatorCode["struct_new_default_with_rtt"] = 64258] = "struct_new_default_with_rtt";
-    OperatorCode[OperatorCode["struct_get"] = 64259] = "struct_get";
-    OperatorCode[OperatorCode["struct_get_s"] = 64260] = "struct_get_s";
-    OperatorCode[OperatorCode["struct_get_u"] = 64261] = "struct_get_u";
-    OperatorCode[OperatorCode["struct_set"] = 64262] = "struct_set";
-    OperatorCode[OperatorCode["struct_new"] = 64263] = "struct_new";
-    OperatorCode[OperatorCode["struct_new_default"] = 64264] = "struct_new_default";
-    OperatorCode[OperatorCode["array_fill"] = 64271] = "array_fill";
-    OperatorCode[OperatorCode["array_new_with_rtt"] = 64273] = "array_new_with_rtt";
-    OperatorCode[OperatorCode["array_new_default_with_rtt"] = 64274] = "array_new_default_with_rtt";
-    OperatorCode[OperatorCode["array_get"] = 64275] = "array_get";
-    OperatorCode[OperatorCode["array_get_s"] = 64276] = "array_get_s";
-    OperatorCode[OperatorCode["array_get_u"] = 64277] = "array_get_u";
-    OperatorCode[OperatorCode["array_set"] = 64278] = "array_set";
-    OperatorCode[OperatorCode["array_len_"] = 64279] = "array_len_";
-    OperatorCode[OperatorCode["array_len"] = 64281] = "array_len";
-    OperatorCode[OperatorCode["array_copy"] = 64280] = "array_copy";
-    OperatorCode[OperatorCode["array_new_fixed"] = 64282] = "array_new_fixed";
-    OperatorCode[OperatorCode["array_new"] = 64283] = "array_new";
-    OperatorCode[OperatorCode["array_new_default"] = 64284] = "array_new_default";
-    OperatorCode[OperatorCode["array_new_data"] = 64285] = "array_new_data";
-    OperatorCode[OperatorCode["array_init_from_data"] = 64286] = "array_init_from_data";
-    OperatorCode[OperatorCode["array_new_elem"] = 64287] = "array_new_elem";
-    OperatorCode[OperatorCode["i31_new"] = 64288] = "i31_new";
-    OperatorCode[OperatorCode["i31_get_s"] = 64289] = "i31_get_s";
-    OperatorCode[OperatorCode["i31_get_u"] = 64290] = "i31_get_u";
-    OperatorCode[OperatorCode["rtt_canon"] = 64304] = "rtt_canon";
-    OperatorCode[OperatorCode["rtt_sub"] = 64305] = "rtt_sub";
-    OperatorCode[OperatorCode["rtt_fresh_sub"] = 64306] = "rtt_fresh_sub";
-    OperatorCode[OperatorCode["ref_test"] = 64320] = "ref_test";
-    OperatorCode[OperatorCode["ref_cast"] = 64321] = "ref_cast";
-    OperatorCode[OperatorCode["br_on_cast_"] = 64322] = "br_on_cast_";
-    OperatorCode[OperatorCode["br_on_cast_fail_"] = 64323] = "br_on_cast_fail_";
-    OperatorCode[OperatorCode["ref_test_"] = 64324] = "ref_test_";
-    OperatorCode[OperatorCode["ref_cast_"] = 64325] = "ref_cast_";
-    OperatorCode[OperatorCode["br_on_cast__"] = 64326] = "br_on_cast__";
-    OperatorCode[OperatorCode["br_on_cast_fail__"] = 64327] = "br_on_cast_fail__";
-    OperatorCode[OperatorCode["ref_test_null"] = 64328] = "ref_test_null";
-    OperatorCode[OperatorCode["ref_cast_null"] = 64329] = "ref_cast_null";
-    OperatorCode[OperatorCode["br_on_cast_null_"] = 64330] = "br_on_cast_null_";
-    OperatorCode[OperatorCode["br_on_cast_fail_null_"] = 64331] = "br_on_cast_fail_null_";
-    OperatorCode[OperatorCode["ref_cast_nop"] = 64332] = "ref_cast_nop";
-    OperatorCode[OperatorCode["br_on_cast"] = 64334] = "br_on_cast";
-    OperatorCode[OperatorCode["br_on_cast_fail"] = 64335] = "br_on_cast_fail";
-    OperatorCode[OperatorCode["ref_is_func_"] = 64336] = "ref_is_func_";
-    OperatorCode[OperatorCode["ref_is_data_"] = 64337] = "ref_is_data_";
-    OperatorCode[OperatorCode["ref_is_i31_"] = 64338] = "ref_is_i31_";
-    OperatorCode[OperatorCode["ref_is_array_"] = 64339] = "ref_is_array_";
-    OperatorCode[OperatorCode["array_init_data"] = 64340] = "array_init_data";
-    OperatorCode[OperatorCode["array_init_elem"] = 64341] = "array_init_elem";
-    OperatorCode[OperatorCode["ref_as_func_"] = 64344] = "ref_as_func_";
-    OperatorCode[OperatorCode["ref_as_data_"] = 64345] = "ref_as_data_";
-    OperatorCode[OperatorCode["ref_as_i31_"] = 64346] = "ref_as_i31_";
-    OperatorCode[OperatorCode["ref_as_array_"] = 64347] = "ref_as_array_";
-    OperatorCode[OperatorCode["br_on_func_"] = 64352] = "br_on_func_";
-    OperatorCode[OperatorCode["br_on_data_"] = 64353] = "br_on_data_";
-    OperatorCode[OperatorCode["br_on_i31_"] = 64354] = "br_on_i31_";
-    OperatorCode[OperatorCode["br_on_non_func_"] = 64355] = "br_on_non_func_";
-    OperatorCode[OperatorCode["br_on_non_data_"] = 64356] = "br_on_non_data_";
-    OperatorCode[OperatorCode["br_on_non_i31_"] = 64357] = "br_on_non_i31_";
-    OperatorCode[OperatorCode["br_on_array_"] = 64358] = "br_on_array_";
-    OperatorCode[OperatorCode["br_on_non_array_"] = 64359] = "br_on_non_array_";
-    OperatorCode[OperatorCode["extern_internalize"] = 64368] = "extern_internalize";
-    OperatorCode[OperatorCode["extern_externalize"] = 64369] = "extern_externalize";
+    // GC proposal.
+    OperatorCode[OperatorCode["struct_new"] = 64256] = "struct_new";
+    OperatorCode[OperatorCode["struct_new_default"] = 64257] = "struct_new_default";
+    OperatorCode[OperatorCode["struct_get"] = 64258] = "struct_get";
+    OperatorCode[OperatorCode["struct_get_s"] = 64259] = "struct_get_s";
+    OperatorCode[OperatorCode["struct_get_u"] = 64260] = "struct_get_u";
+    OperatorCode[OperatorCode["struct_set"] = 64261] = "struct_set";
+    OperatorCode[OperatorCode["array_new"] = 64262] = "array_new";
+    OperatorCode[OperatorCode["array_new_default"] = 64263] = "array_new_default";
+    OperatorCode[OperatorCode["array_new_fixed"] = 64264] = "array_new_fixed";
+    OperatorCode[OperatorCode["array_new_data"] = 64265] = "array_new_data";
+    OperatorCode[OperatorCode["array_new_elem"] = 64266] = "array_new_elem";
+    OperatorCode[OperatorCode["array_get"] = 64267] = "array_get";
+    OperatorCode[OperatorCode["array_get_s"] = 64268] = "array_get_s";
+    OperatorCode[OperatorCode["array_get_u"] = 64269] = "array_get_u";
+    OperatorCode[OperatorCode["array_set"] = 64270] = "array_set";
+    OperatorCode[OperatorCode["array_len"] = 64271] = "array_len";
+    OperatorCode[OperatorCode["array_fill"] = 64272] = "array_fill";
+    OperatorCode[OperatorCode["array_copy"] = 64273] = "array_copy";
+    OperatorCode[OperatorCode["array_init_data"] = 64274] = "array_init_data";
+    OperatorCode[OperatorCode["array_init_elem"] = 64275] = "array_init_elem";
+    OperatorCode[OperatorCode["ref_test"] = 64276] = "ref_test";
+    OperatorCode[OperatorCode["ref_test_null"] = 64277] = "ref_test_null";
+    OperatorCode[OperatorCode["ref_cast"] = 64278] = "ref_cast";
+    OperatorCode[OperatorCode["ref_cast_null"] = 64279] = "ref_cast_null";
+    OperatorCode[OperatorCode["br_on_cast"] = 64280] = "br_on_cast";
+    OperatorCode[OperatorCode["br_on_cast_fail"] = 64281] = "br_on_cast_fail";
+    OperatorCode[OperatorCode["extern_internalize"] = 64282] = "extern_internalize";
+    OperatorCode[OperatorCode["extern_externalize"] = 64283] = "extern_externalize";
+    OperatorCode[OperatorCode["ref_i31"] = 64284] = "ref_i31";
+    OperatorCode[OperatorCode["i31_get_s"] = 64285] = "i31_get_s";
+    OperatorCode[OperatorCode["i31_get_u"] = 64286] = "i31_get_u";
 })(OperatorCode = exports.OperatorCode || (exports.OperatorCode = {}));
 exports.OperatorCodeNames = [
     "unreachable",
@@ -878,9 +844,9 @@ exports.OperatorCodeNames = [
     "ref.null",
     "ref.is_null",
     "ref.func",
+    "ref.eq",
     "ref.as_non_null",
     "br_on_null",
-    "ref.eq",
     "br_on_non_null",
     undefined,
     undefined,
@@ -1309,71 +1275,41 @@ exports.OperatorCodeNames = [
 ].forEach(function (s, i) {
     exports.OperatorCodeNames[0xfe00 | i] = s;
 });
-exports.OperatorCodeNames[0xfb01] = "struct.new_with_rtt";
-exports.OperatorCodeNames[0xfb02] = "struct.new_default_with_rtt";
-exports.OperatorCodeNames[0xfb03] = "struct.get";
-exports.OperatorCodeNames[0xfb04] = "struct.get_s";
-exports.OperatorCodeNames[0xfb05] = "struct.get_u";
-exports.OperatorCodeNames[0xfb06] = "struct.set";
-exports.OperatorCodeNames[0xfb07] = "struct.new";
-exports.OperatorCodeNames[0xfb08] = "struct.new_default";
-exports.OperatorCodeNames[0xfb0f] = "array.fill";
-exports.OperatorCodeNames[0xfb11] = "array.new_with_rtt";
-exports.OperatorCodeNames[0xfb12] = "array.new_default_with_rtt";
-exports.OperatorCodeNames[0xfb13] = "array.get";
-exports.OperatorCodeNames[0xfb14] = "array.get_s";
-exports.OperatorCodeNames[0xfb15] = "array.get_u";
-exports.OperatorCodeNames[0xfb16] = "array.set";
-exports.OperatorCodeNames[0xfb17] = "array.len"; // TODO remove
-exports.OperatorCodeNames[0xfb18] = "array.copy";
-exports.OperatorCodeNames[0xfb19] = "array.len";
-exports.OperatorCodeNames[0xfb1a] = "array.new_fixed";
-exports.OperatorCodeNames[0xfb1b] = "array.new";
-exports.OperatorCodeNames[0xfb1c] = "array.new_default";
-exports.OperatorCodeNames[0xfb1d] = "array.new_data";
-exports.OperatorCodeNames[0xfb1e] = "array.init_from_data";
-exports.OperatorCodeNames[0xfb1f] = "array.new_elem";
-exports.OperatorCodeNames[0xfb20] = "i31.new";
-exports.OperatorCodeNames[0xfb21] = "i31.get_s";
-exports.OperatorCodeNames[0xfb22] = "i31.get_u";
-exports.OperatorCodeNames[0xfb30] = "rtt.canon";
-exports.OperatorCodeNames[0xfb31] = "rtt.sub";
-exports.OperatorCodeNames[0xfb32] = "rtt.fresh_sub";
-exports.OperatorCodeNames[0xfb40] = "ref.test";
-exports.OperatorCodeNames[0xfb41] = "ref.cast";
-exports.OperatorCodeNames[0xfb42] = "br_on_cast";
-exports.OperatorCodeNames[0xfb43] = "br_on_cast_fail";
-exports.OperatorCodeNames[0xfb44] = "ref.test_static";
-exports.OperatorCodeNames[0xfb45] = "ref.cast_static";
-exports.OperatorCodeNames[0xfb46] = "br_on_cast_static";
-exports.OperatorCodeNames[0xfb47] = "br_on_cast_static_fail";
-exports.OperatorCodeNames[0xfb48] = "ref.test_null";
-exports.OperatorCodeNames[0xfb49] = "ref.cast_null";
-exports.OperatorCodeNames[0xfb4a] = "br_on_cast_null";
-exports.OperatorCodeNames[0xfb4b] = "br_on_cast_fail_null";
-exports.OperatorCodeNames[0xfb4c] = "ref.cast_nop";
-exports.OperatorCodeNames[0xfb4e] = "br_on_cast";
-exports.OperatorCodeNames[0xfb4f] = "br_on_cast_fail";
-exports.OperatorCodeNames[0xfb50] = "ref.is_func";
-exports.OperatorCodeNames[0xfb51] = "ref.is_data";
-exports.OperatorCodeNames[0xfb52] = "ref.is_i31";
-exports.OperatorCodeNames[0xfb53] = "ref.is_array";
-exports.OperatorCodeNames[0xfb54] = "array.init_data";
-exports.OperatorCodeNames[0xfb55] = "array.init_elem";
-exports.OperatorCodeNames[0xfb58] = "ref.as_func";
-exports.OperatorCodeNames[0xfb59] = "ref.as_data";
-exports.OperatorCodeNames[0xfb5a] = "ref.as_i31";
-exports.OperatorCodeNames[0xfb5b] = "ref.as_array";
-exports.OperatorCodeNames[0xfb60] = "br_on_func";
-exports.OperatorCodeNames[0xfb61] = "br_on_data";
-exports.OperatorCodeNames[0xfb62] = "br_on_i31";
-exports.OperatorCodeNames[0xfb63] = "br_on_non_func";
-exports.OperatorCodeNames[0xfb64] = "br_on_non_data";
-exports.OperatorCodeNames[0xfb65] = "br_on_non_i31";
-exports.OperatorCodeNames[0xfb66] = "br_on_array";
-exports.OperatorCodeNames[0xfb67] = "br_on_non_array";
-exports.OperatorCodeNames[0xfb70] = "extern.internalize";
-exports.OperatorCodeNames[0xfb71] = "extern.externalize";
+[
+    "struct.new",
+    "struct.new_default",
+    "struct.get",
+    "struct.get_s",
+    "struct.get_u",
+    "struct.set",
+    "array.new",
+    "array.new_default",
+    "array.new_fixed",
+    "array.new_data",
+    "array.new_elem",
+    "array.get",
+    "array.get_s",
+    "array.get_u",
+    "array.set",
+    "array.len",
+    "array.fill",
+    "array.copy",
+    "array.init_data",
+    "array.init_elem",
+    "ref.test",
+    "ref.test null",
+    "ref.cast",
+    "ref.cast null",
+    "br_on_cast",
+    "br_on_cast_fail",
+    "extern.internalize",
+    "extern.externalize",
+    "ref.i31",
+    "i31.get_s",
+    "i31.get_u",
+].forEach(function (s, i) {
+    exports.OperatorCodeNames[0xfb00 | i] = s;
+});
 var ExternalKind;
 (function (ExternalKind) {
     ExternalKind[ExternalKind["Function"] = 0] = "Function";
@@ -1390,26 +1326,26 @@ var TypeKind;
     TypeKind[TypeKind["f32"] = -3] = "f32";
     TypeKind[TypeKind["f64"] = -4] = "f64";
     TypeKind[TypeKind["v128"] = -5] = "v128";
-    TypeKind[TypeKind["i8"] = -6] = "i8";
-    TypeKind[TypeKind["i16"] = -7] = "i16";
+    TypeKind[TypeKind["i8"] = -8] = "i8";
+    TypeKind[TypeKind["i16"] = -9] = "i16";
+    TypeKind[TypeKind["nullfuncref"] = -13] = "nullfuncref";
+    TypeKind[TypeKind["nullref"] = -15] = "nullref";
+    TypeKind[TypeKind["nullexternref"] = -14] = "nullexternref";
     TypeKind[TypeKind["funcref"] = -16] = "funcref";
     TypeKind[TypeKind["externref"] = -17] = "externref";
     TypeKind[TypeKind["anyref"] = -18] = "anyref";
     TypeKind[TypeKind["eqref"] = -19] = "eqref";
-    TypeKind[TypeKind["ref_null"] = -20] = "ref_null";
-    TypeKind[TypeKind["ref"] = -21] = "ref";
-    TypeKind[TypeKind["i31ref"] = -22] = "i31ref";
-    TypeKind[TypeKind["nullexternref"] = -23] = "nullexternref";
-    TypeKind[TypeKind["nullfuncref"] = -24] = "nullfuncref";
-    TypeKind[TypeKind["structref"] = -25] = "structref";
-    TypeKind[TypeKind["arrayref"] = -26] = "arrayref";
-    TypeKind[TypeKind["nullref"] = -27] = "nullref";
+    TypeKind[TypeKind["i31ref"] = -20] = "i31ref";
+    TypeKind[TypeKind["structref"] = -21] = "structref";
+    TypeKind[TypeKind["arrayref"] = -22] = "arrayref";
+    TypeKind[TypeKind["ref"] = -28] = "ref";
+    TypeKind[TypeKind["ref_null"] = -29] = "ref_null";
     TypeKind[TypeKind["func"] = -32] = "func";
     TypeKind[TypeKind["struct"] = -33] = "struct";
     TypeKind[TypeKind["array"] = -34] = "array";
     TypeKind[TypeKind["subtype"] = -48] = "subtype";
-    TypeKind[TypeKind["rec_group"] = -49] = "rec_group";
-    TypeKind[TypeKind["subtype_final"] = -50] = "subtype_final";
+    TypeKind[TypeKind["subtype_final"] = -49] = "subtype_final";
+    TypeKind[TypeKind["rec_group"] = -50] = "rec_group";
     TypeKind[TypeKind["empty_block_type"] = -64] = "empty_block_type";
 })(TypeKind = exports.TypeKind || (exports.TypeKind = {}));
 var FieldDef = /** @class */ (function () {
@@ -1458,7 +1394,7 @@ var RefType = /** @class */ (function (_super) {
     __extends(RefType, _super);
     function RefType(kind, ref_index) {
         var _this = this;
-        if (kind != -21 /* TypeKind.ref */ && kind !== -20 /* TypeKind.ref_null */) {
+        if (kind != -28 /* TypeKind.ref */ && kind !== -29 /* TypeKind.ref_null */) {
             throw new Error("Unexpected type kind: ".concat(kind, "}"));
         }
         _this = _super.call(this, kind) || this;
@@ -1467,7 +1403,7 @@ var RefType = /** @class */ (function (_super) {
     }
     Object.defineProperty(RefType.prototype, "isNullable", {
         get: function () {
-            return this.kind == -20 /* TypeKind.ref_null */;
+            return this.kind == -29 /* TypeKind.ref_null */;
         },
         enumerable: false,
         configurable: true
@@ -1865,8 +1801,8 @@ var BinaryReader = /** @class */ (function () {
             return new Type(kind);
         }
         switch (kind) {
-            case -20 /* TypeKind.ref_null */:
-            case -21 /* TypeKind.ref */:
+            case -29 /* TypeKind.ref_null */:
+            case -28 /* TypeKind.ref */:
                 var index = this.readHeapType();
                 return new RefType(kind, index);
             case -1 /* TypeKind.i32 */:
@@ -1874,24 +1810,24 @@ var BinaryReader = /** @class */ (function () {
             case -3 /* TypeKind.f32 */:
             case -4 /* TypeKind.f64 */:
             case -5 /* TypeKind.v128 */:
-            case -6 /* TypeKind.i8 */:
-            case -7 /* TypeKind.i16 */:
+            case -8 /* TypeKind.i8 */:
+            case -9 /* TypeKind.i16 */:
             case -16 /* TypeKind.funcref */:
             case -17 /* TypeKind.externref */:
             case -18 /* TypeKind.anyref */:
             case -19 /* TypeKind.eqref */:
-            case -22 /* TypeKind.i31ref */:
-            case -23 /* TypeKind.nullexternref */:
-            case -24 /* TypeKind.nullfuncref */:
-            case -25 /* TypeKind.structref */:
-            case -26 /* TypeKind.arrayref */:
-            case -27 /* TypeKind.nullref */:
+            case -20 /* TypeKind.i31ref */:
+            case -14 /* TypeKind.nullexternref */:
+            case -13 /* TypeKind.nullfuncref */:
+            case -21 /* TypeKind.structref */:
+            case -22 /* TypeKind.arrayref */:
+            case -15 /* TypeKind.nullref */:
             case -32 /* TypeKind.func */:
             case -33 /* TypeKind.struct */:
             case -34 /* TypeKind.array */:
             case -48 /* TypeKind.subtype */:
-            case -49 /* TypeKind.rec_group */:
-            case -50 /* TypeKind.subtype_final */:
+            case -50 /* TypeKind.rec_group */:
+            case -49 /* TypeKind.subtype_final */:
             case -64 /* TypeKind.empty_block_type */:
                 return new Type(kind);
             default:
@@ -2035,7 +1971,7 @@ var BinaryReader = /** @class */ (function () {
             case -48 /* TypeKind.subtype */:
                 this.result = this.readSubtype(false);
                 break;
-            case -50 /* TypeKind.subtype_final */:
+            case -49 /* TypeKind.subtype_final */:
                 this.result = this.readSubtype(true);
                 break;
             case -33 /* TypeKind.struct */:
@@ -2049,8 +1985,8 @@ var BinaryReader = /** @class */ (function () {
             case -3 /* TypeKind.f32 */:
             case -4 /* TypeKind.f64 */:
             case -5 /* TypeKind.v128 */:
-            case -6 /* TypeKind.i8 */:
-            case -7 /* TypeKind.i16 */:
+            case -8 /* TypeKind.i8 */:
+            case -9 /* TypeKind.i16 */:
             case -16 /* TypeKind.funcref */:
             case -17 /* TypeKind.externref */:
             case -18 /* TypeKind.anyref */:
@@ -2069,7 +2005,7 @@ var BinaryReader = /** @class */ (function () {
             return this.read();
         }
         var form = this.readVarInt7();
-        if (form == -49 /* TypeKind.rec_group */) {
+        if (form == -50 /* TypeKind.rec_group */) {
             this.state = 47 /* BinaryReaderState.BEGIN_REC_GROUP */;
             this.result = null;
             this._recGroupTypesLeft = this.readVarUint32();
@@ -2558,79 +2494,60 @@ var BinaryReader = /** @class */ (function () {
         var code, brDepth, refType, srcType, fieldIndex, segmentIndex, len, literal;
         code = this._data[this._pos++] | 0xfb00;
         switch (code) {
-            case 64334 /* OperatorCode.br_on_cast */:
-            case 64335 /* OperatorCode.br_on_cast_fail */:
+            case 64280 /* OperatorCode.br_on_cast */:
+            case 64281 /* OperatorCode.br_on_cast_fail */:
                 literal = this.readUint8();
                 brDepth = this.readVarUint32();
                 srcType = this.readHeapType();
                 refType = this.readHeapType();
                 break;
-            case 64322 /* OperatorCode.br_on_cast_ */:
-            case 64323 /* OperatorCode.br_on_cast_fail_ */:
-                brDepth = this.readVarUint32();
-                refType = this.readHeapType();
-                break;
-            case 64326 /* OperatorCode.br_on_cast__ */:
-            case 64327 /* OperatorCode.br_on_cast_fail__ */:
-                brDepth = this.readVarUint32();
+            case 64267 /* OperatorCode.array_get */:
+            case 64268 /* OperatorCode.array_get_s */:
+            case 64269 /* OperatorCode.array_get_u */:
+            case 64270 /* OperatorCode.array_set */:
+            case 64262 /* OperatorCode.array_new */:
+            case 64263 /* OperatorCode.array_new_default */:
+            case 64256 /* OperatorCode.struct_new */:
+            case 64257 /* OperatorCode.struct_new_default */:
                 refType = this.readVarUint32();
                 break;
-            case 64275 /* OperatorCode.array_get */:
-            case 64276 /* OperatorCode.array_get_s */:
-            case 64277 /* OperatorCode.array_get_u */:
-            case 64279 /* OperatorCode.array_len_ */:
-            case 64278 /* OperatorCode.array_set */:
-            case 64283 /* OperatorCode.array_new */:
-            case 64273 /* OperatorCode.array_new_with_rtt */:
-            case 64284 /* OperatorCode.array_new_default */:
-            case 64274 /* OperatorCode.array_new_default_with_rtt */:
-            case 64263 /* OperatorCode.struct_new */:
-            case 64257 /* OperatorCode.struct_new_with_rtt */:
-            case 64264 /* OperatorCode.struct_new_default */:
-            case 64258 /* OperatorCode.struct_new_default_with_rtt */:
-            case 64304 /* OperatorCode.rtt_canon */:
-            case 64305 /* OperatorCode.rtt_sub */:
-            case 64306 /* OperatorCode.rtt_fresh_sub */:
-                refType = this.readVarUint32();
-                break;
-            case 64282 /* OperatorCode.array_new_fixed */:
+            case 64264 /* OperatorCode.array_new_fixed */:
                 refType = this.readVarUint32();
                 len = this.readVarUint32();
                 break;
-            case 64280 /* OperatorCode.array_copy */:
+            case 64272 /* OperatorCode.array_fill */:
+                refType = this.readVarUint32();
+                break;
+            case 64273 /* OperatorCode.array_copy */:
                 refType = this.readVarUint32();
                 srcType = this.readVarUint32();
                 break;
-            case 64259 /* OperatorCode.struct_get */:
-            case 64260 /* OperatorCode.struct_get_s */:
-            case 64261 /* OperatorCode.struct_get_u */:
-            case 64262 /* OperatorCode.struct_set */:
+            case 64258 /* OperatorCode.struct_get */:
+            case 64259 /* OperatorCode.struct_get_s */:
+            case 64260 /* OperatorCode.struct_get_u */:
+            case 64261 /* OperatorCode.struct_set */:
                 refType = this.readVarUint32();
                 fieldIndex = this.readVarUint32();
                 break;
-            case 64285 /* OperatorCode.array_new_data */:
-            case 64287 /* OperatorCode.array_new_elem */:
-            case 64340 /* OperatorCode.array_init_data */:
-            case 64341 /* OperatorCode.array_init_elem */:
+            case 64265 /* OperatorCode.array_new_data */:
+            case 64266 /* OperatorCode.array_new_elem */:
+            case 64274 /* OperatorCode.array_init_data */:
+            case 64275 /* OperatorCode.array_init_elem */:
                 refType = this.readVarUint32();
                 segmentIndex = this.readVarUint32();
                 break;
-            case 64320 /* OperatorCode.ref_test */:
-            case 64328 /* OperatorCode.ref_test_null */:
-            case 64321 /* OperatorCode.ref_cast */:
-            case 64329 /* OperatorCode.ref_cast_null */:
+            case 64276 /* OperatorCode.ref_test */:
+            case 64277 /* OperatorCode.ref_test_null */:
+            case 64278 /* OperatorCode.ref_cast */:
+            case 64279 /* OperatorCode.ref_cast_null */:
                 refType = this.readHeapType();
                 break;
-            case 64324 /* OperatorCode.ref_test_ */:
-            case 64325 /* OperatorCode.ref_cast_ */:
-                refType = this.readVarUint32();
-                break;
-            case 64281 /* OperatorCode.array_len */:
-            case 64369 /* OperatorCode.extern_externalize */:
-            case 64368 /* OperatorCode.extern_internalize */:
-            case 64288 /* OperatorCode.i31_new */:
-            case 64289 /* OperatorCode.i31_get_s */:
-            case 64290 /* OperatorCode.i31_get_u */:
+            case 64271 /* OperatorCode.array_len */:
+            case 64283 /* OperatorCode.extern_externalize */:
+            case 64282 /* OperatorCode.extern_internalize */:
+            case 64284 /* OperatorCode.ref_i31 */:
+            case 64285 /* OperatorCode.i31_get_s */:
+            case 64286 /* OperatorCode.i31_get_u */:
                 break;
             default:
                 this.error = new Error("Unknown operator: 0x".concat(code.toString(16).padStart(4, "0")));
@@ -2788,6 +2705,17 @@ var BinaryReader = /** @class */ (function () {
             case 1036320 /* OperatorCode.f32x4_replace_lane */:
             case 1036321 /* OperatorCode.f64x2_extract_lane */:
             case 1036322 /* OperatorCode.f64x2_replace_lane */:
+                lineIndex = this.readUint8();
+                break;
+            case 1036372 /* OperatorCode.v128_load8_lane */:
+            case 1036373 /* OperatorCode.v128_load16_lane */:
+            case 1036374 /* OperatorCode.v128_load32_lane */:
+            case 1036375 /* OperatorCode.v128_load64_lane */:
+            case 1036376 /* OperatorCode.v128_store8_lane */:
+            case 1036377 /* OperatorCode.v128_store16_lane */:
+            case 1036378 /* OperatorCode.v128_store32_lane */:
+            case 1036379 /* OperatorCode.v128_store64_lane */:
+                memoryAddress = this.readMemoryImmediate();
                 lineIndex = this.readUint8();
                 break;
             case 1036302 /* OperatorCode.i8x16_swizzle */:
@@ -2956,8 +2884,8 @@ var BinaryReader = /** @class */ (function () {
             case 1036507 /* OperatorCode.i64x2_ge_s */:
             case 1036508 /* OperatorCode.i64x2_extmul_low_i32x4_s */:
             case 1036509 /* OperatorCode.i64x2_extmul_high_i32x4_s */:
-            case 1036508 /* OperatorCode.i64x2_extmul_low_i32x4_s */:
-            case 1036509 /* OperatorCode.i64x2_extmul_high_i32x4_s */:
+            case 1036510 /* OperatorCode.i64x2_extmul_low_i32x4_u */:
+            case 1036511 /* OperatorCode.i64x2_extmul_high_i32x4_u */:
             case 1036512 /* OperatorCode.f32x4_abs */:
             case 1036512 /* OperatorCode.f32x4_abs */:
             case 1036513 /* OperatorCode.f32x4_neg */:
@@ -3214,7 +3142,7 @@ var BinaryReader = /** @class */ (function () {
                     break;
                 case 12 /* OperatorCode.br */:
                 case 13 /* OperatorCode.br_if */:
-                case 212 /* OperatorCode.br_on_null */:
+                case 213 /* OperatorCode.br_on_null */:
                 case 214 /* OperatorCode.br_on_non_null */:
                     brDepth = this.readVarUint32();
                     break;
@@ -3485,8 +3413,8 @@ var BinaryReader = /** @class */ (function () {
                 case 195 /* OperatorCode.i64_extend16_s */:
                 case 196 /* OperatorCode.i64_extend32_s */:
                 case 209 /* OperatorCode.ref_is_null */:
-                case 211 /* OperatorCode.ref_as_non_null */:
-                case 213 /* OperatorCode.ref_eq */:
+                case 212 /* OperatorCode.ref_as_non_null */:
+                case 211 /* OperatorCode.ref_eq */:
                     break;
                 default:
                     this.error = new Error("Unknown operator: ".concat(code));
