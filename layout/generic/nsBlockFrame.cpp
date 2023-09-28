@@ -1449,9 +1449,25 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   bool tryBalance = StyleText()->mTextWrap == StyleTextWrap::Balance &&
                     !GetPrevContinuation();
 
-  // Target number of lines in the block while balancing; negative if no
-  // balancing is being done.
-  int32_t balanceTarget = -1;
+  // Struct used to hold the "target" number of lines or clamp position to
+  // maintain when doing text-wrap: balance.
+  struct BalanceTarget {
+    // If line-clamp is in effect, mContent and mOffset indicate the starting
+    // position of the first line after the clamp limit. If line-clamp is not
+    // in use, mContent is null and mOffset is the total number of lines that
+    // the block must contain.
+    nsIContent* mContent = nullptr;
+    int32_t mOffset = -1;
+
+    bool operator==(const BalanceTarget& aOther) const {
+      return mContent == aOther.mContent && mOffset == aOther.mOffset;
+    }
+    bool operator!=(const BalanceTarget& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
+  BalanceTarget balanceTarget;
 
   // Helpers for text-wrap: balance implementation:
 
@@ -1465,6 +1481,24 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       }
     }
     return n;
+  };
+
+  // Return a BalanceTarget record representing the position at which line-clamp
+  // will take effect for the current line list. Only to be used when there are
+  // enough lines that the clamp will apply.
+  auto getClampPosition = [&](int32_t aClampCount) -> BalanceTarget {
+    MOZ_ASSERT(aClampCount < mLines.size());
+    auto iter = mLines.begin();
+    for (auto i = 0; i < aClampCount; i++) {
+      ++iter;
+    }
+    nsIContent* content = iter->mFirstChild->GetContent();
+    int32_t offset = 0;
+    if (content && iter->mFirstChild->IsTextFrame()) {
+      auto* textFrame = static_cast<nsTextFrame*>(iter->mFirstChild);
+      offset = textFrame->GetContentOffset();
+    }
+    return BalanceTarget{content, offset};
   };
 
   // "balancing" is implemented by shortening the effective inline-size of the
@@ -1495,30 +1529,57 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       if (!reflowStatus.IsFullyComplete()) {
         break;
       }
-      balanceTarget =
+      balanceTarget.mOffset =
           countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      if (balanceTarget < 2) {
+      if (balanceTarget.mOffset < 2) {
         // If there are less than 2 lines, or the number exceeds the limit,
         // no balancing is needed; just break from the balance loop.
         break;
       }
       // Initialize the amount of inset to try, and the iteration step size.
-      balanceStep = aReflowInput.ComputedISize() / balanceTarget;
+      balanceStep = aReflowInput.ComputedISize() / balanceTarget.mOffset;
       trialState.ResetForBalance(balanceStep);
       balanceStep /= 2;
+
+      // If -webkit-line-clamp is in effect, then we need to maintain the
+      // content location at which clamping occurs, rather than the total
+      // number of lines in the block.
+      if (StaticPrefs::layout_css_text_wrap_balance_after_clamp_enabled() &&
+          IsLineClampRoot(this)) {
+        int32_t lineClampCount = aReflowInput.mStyleDisplay->mWebkitLineClamp;
+        if (balanceTarget.mOffset > lineClampCount) {
+          auto t = getClampPosition(lineClampCount);
+          if (t.mContent) {
+            balanceTarget = t;
+          }
+        }
+      }
 
       // Restore initial floatManager state for a new trial with updated inset.
       aReflowInput.mFloatManager->PopState(&floatManagerState);
       continue;
     }
 
+    // Helper to determine whether the current trial succeeded (i.e. was able
+    // to fit the content into the expected number of lines).
+    auto trialSucceeded = [&]() -> bool {
+      if (!reflowStatus.IsFullyComplete()) {
+        return false;
+      }
+      if (balanceTarget.mContent) {
+        auto t = getClampPosition(aReflowInput.mStyleDisplay->mWebkitLineClamp);
+        return t == balanceTarget;
+      }
+      int32_t numLines =
+          countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
+      return numLines == balanceTarget.mOffset;
+    };
+
     // If we're in the process of a balance operation, check whether we've
     // inset by too much and either increase or reduce the inset for the next
     // iteration.
     if (balanceStep > 0) {
-      int32_t numLines =
-          countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      if (reflowStatus.IsFullyComplete() && numLines == balanceTarget) {
+      if (trialSucceeded()) {
         trialState.ResetForBalance(balanceStep);
       } else {
         trialState.ResetForBalance(-balanceStep);
@@ -1531,10 +1592,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
     // If we were attempting to balance, check whether the final iteration was
     // successful, and if not, back up by one step.
-    if (balanceTarget >= 0) {
-      int32_t numLines =
-          countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      if (reflowStatus.IsFullyComplete() && numLines == balanceTarget) {
+    if (balanceTarget.mOffset >= 0) {
+      if (trialSucceeded()) {
         break;
       }
       trialState.ResetForBalance(-1);

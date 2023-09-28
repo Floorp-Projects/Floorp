@@ -8775,6 +8775,11 @@
   value: 10
   mirror: always
 
+- name: layout.css.text-wrap-balance-after-clamp.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled
   type: bool
