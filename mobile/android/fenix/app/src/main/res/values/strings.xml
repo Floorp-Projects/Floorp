@@ -2120,17 +2120,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">We use AI technology from %s by Mozilla to check the reliability of product reviews. This will only help you assess review quality, not product quality. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[We assign each product’s reviews a <b>letter grade</b> from A to F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[We assign each product’s reviews a <b>letter grade</b> from A to F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Reliable reviews. We believe the reviews are likely from real customers who left honest, unbiased reviews.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Reliable reviews. We believe the reviews are likely from real customers who left honest, unbiased reviews.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">We believe the reviews to be reliable.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">We believe there’s a mix of reliable and unreliable reviews.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Unreliable reviews. We believe the reviews are likely fake or from biased reviewers.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Unreliable reviews. We believe the reviews are likely fake or from biased reviewers.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">We believe the reviews are unreliable.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[The <b>adjusted rating</b> is based only on reviews we believe to be reliable.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Highlights</b> are from %s reviews within the last 80 days that we believe to be reliable.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Highlights</b> are from %s reviews within the last 80 days that we believe to be reliable.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Learn more about %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

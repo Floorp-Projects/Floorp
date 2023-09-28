@@ -47,6 +47,7 @@ private fun mapStateForUpdateAction(
             } else {
                 ReviewQualityCheckState.OptedIn(
                     productRecommendationsPreference = action.isProductRecommendationsEnabled,
+                    productVendor = action.productVendor,
                 )
             }
         }

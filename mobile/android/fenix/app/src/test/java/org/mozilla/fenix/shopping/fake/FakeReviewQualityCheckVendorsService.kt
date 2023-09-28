@@ -15,4 +15,6 @@ class FakeReviewQualityCheckVendorsService(
     ),
 ) : ReviewQualityCheckVendorsService {
     override fun productVendors(): List<ProductVendor> = productVendors
+
+    override fun productVendor(): ProductVendor = productVendors().first()
 }

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -39,6 +40,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param isAnalyzing Whether or not the displayed product is being analyzed.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
+ * @param productVendor The vendor of the product.
  * @param onAnalyzeClick Invoked when the user clicks on the check review button.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
@@ -51,6 +53,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun NoAnalysis(
     isAnalyzing: Boolean,
     productRecommendationsEnabled: Boolean?,
+    productVendor: ReviewQualityCheckState.ProductVendor,
     onAnalyzeClick: () -> Unit,
     onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
@@ -64,6 +67,7 @@ fun NoAnalysis(
         ReviewQualityNoAnalysisCard(isAnalyzing, onAnalyzeClick)
 
         ReviewQualityInfoCard(
+            productVendor = productVendor,
             onLearnMoreClick = onReviewGradeLearnMoreClick,
         )
 
@@ -173,6 +177,7 @@ private fun NoAnalysisPreview() {
         ) {
             NoAnalysis(
                 isAnalyzing = isAnalyzing,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 onAnalyzeClick = { isAnalyzing = !isAnalyzing },
                 productRecommendationsEnabled = false,
                 onReviewGradeLearnMoreClick = {},

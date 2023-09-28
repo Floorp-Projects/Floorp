@@ -53,7 +53,10 @@ class ReviewQualityCheckPreferencesMiddleware(
                         reviewQualityCheckPreferences.productRecommendationsEnabled()
 
                     val updateUserPreferences = if (hasUserOptedIn) {
-                        ReviewQualityCheckAction.OptInCompleted(isProductRecommendationsEnabled)
+                        ReviewQualityCheckAction.OptInCompleted(
+                            isProductRecommendationsEnabled = isProductRecommendationsEnabled,
+                            productVendor = reviewQualityCheckVendorsService.productVendor(),
+                        )
                     } else {
                         val productVendors = reviewQualityCheckVendorsService.productVendors()
                         ReviewQualityCheckAction.OptOutCompleted(productVendors)
@@ -67,7 +70,10 @@ class ReviewQualityCheckPreferencesMiddleware(
                     val isProductRecommendationsEnabled =
                         reviewQualityCheckPreferences.productRecommendationsEnabled()
                     store.dispatch(
-                        ReviewQualityCheckAction.OptInCompleted(isProductRecommendationsEnabled),
+                        ReviewQualityCheckAction.OptInCompleted(
+                            isProductRecommendationsEnabled = isProductRecommendationsEnabled,
+                            productVendor = reviewQualityCheckVendorsService.productVendor(),
+                        ),
                     )
 
                     // Update the preference

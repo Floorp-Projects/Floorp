@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -25,6 +26,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param error The error state to display.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
+ * @param productVendor The vendor of the product.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
@@ -37,6 +39,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun ProductAnalysisError(
     error: ProductReviewState.Error,
     productRecommendationsEnabled: Boolean?,
+    productVendor: ReviewQualityCheckState.ProductVendor,
     onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
@@ -85,6 +88,7 @@ fun ProductAnalysisError(
         )
 
         ReviewQualityInfoCard(
+            productVendor = productVendor,
             onLearnMoreClick = onReviewGradeLearnMoreClick,
         )
 
@@ -114,6 +118,7 @@ private fun ProductAnalysisErrorPreview() {
             ProductAnalysisError(
                 error = ProductReviewState.Error.NetworkError,
                 productRecommendationsEnabled = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 onReviewGradeLearnMoreClick = {},
                 onOptOutClick = {},
                 onProductRecommendationsEnabledStateChange = {},

@@ -46,6 +46,7 @@ sealed interface ReviewQualityCheckState : State {
     data class OptedIn(
         val productReviewState: ProductReviewState = ProductReviewState.Loading,
         val productRecommendationsPreference: Boolean?,
+        val productVendor: ProductVendor,
     ) : ReviewQualityCheckState {
 
         /**

@@ -116,6 +116,7 @@ private fun ProductReview(
                 ProductAnalysis(
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     productAnalysis = productReviewState,
+                    productVendor = state.productVendor,
                     onOptOutClick = onOptOutClick,
                     onReanalyzeClick = onReanalyzeClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
@@ -128,6 +129,7 @@ private fun ProductReview(
                 ProductAnalysisError(
                     error = productReviewState,
                     productRecommendationsEnabled = state.productRecommendationsPreference,
+                    productVendor = state.productVendor,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
@@ -142,8 +144,9 @@ private fun ProductReview(
 
             is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
                 NoAnalysis(
-                    productRecommendationsEnabled = state.productRecommendationsPreference,
                     isAnalyzing = productReviewState.isReanalyzing,
+                    productRecommendationsEnabled = state.productRecommendationsPreference,
+                    productVendor = state.productVendor,
                     onAnalyzeClick = onReanalyzeClick,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,

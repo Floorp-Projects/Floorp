@@ -20,22 +20,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.ClickableSubstringLink
+import org.mozilla.fenix.compose.LinkText
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.parseHtml
+import org.mozilla.fenix.shopping.ext.displayName
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Info card UI containing an explanation of the review quality.
  *
+ * @param productVendor The vendor of the product.
  * @param modifier Modifier to apply to the layout.
  * @param onLearnMoreClick Invoked when the user clicks to learn more about review grades.
  */
 @Composable
 fun ReviewQualityInfoCard(
+    productVendor: ReviewQualityCheckState.ProductVendor,
     modifier: Modifier = Modifier,
     onLearnMoreClick: () -> Unit,
 ) {
@@ -44,15 +49,17 @@ fun ReviewQualityInfoCard(
         modifier = modifier,
     ) {
         ReviewQualityInfo(
+            productVendor = productVendor,
             modifier = Modifier.fillMaxWidth(),
             onLearnMoreClick = onLearnMoreClick,
         )
     }
 }
 
-@Suppress("Deprecation")
+@Suppress("LongMethod")
 @Composable
 private fun ReviewQualityInfo(
+    productVendor: ReviewQualityCheckState.ProductVendor,
     modifier: Modifier = Modifier,
     onLearnMoreClick: () -> Unit,
 ) {
@@ -60,11 +67,15 @@ private fun ReviewQualityInfo(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
+        val letterGradeText =
+            stringResource(id = R.string.review_quality_check_info_review_grade_header)
         val adjustedGradingText =
             stringResource(id = R.string.review_quality_check_explanation_body_adjusted_grading)
-        // Any and all text formatting (bullets, inline substring bolding, etc.) will be handled as
-        // follow-up when the copy is finalized.
-        // Bug 1848219
+        val highlightsText = stringResource(
+            id = R.string.review_quality_check_explanation_body_highlights,
+            productVendor.displayName(),
+        )
+
         Text(
             text = stringResource(
                 id = R.string.review_quality_check_explanation_body_reliability,
@@ -74,19 +85,10 @@ private fun ReviewQualityInfo(
             style = FirefoxTheme.typography.body2,
         )
 
-        val link = stringResource(
-            id = R.string.review_quality_check_info_learn_more_link,
-            stringResource(R.string.shopping_product_name),
-        )
-        val text = stringResource(R.string.review_quality_check_info_learn_more, link)
-        val linkStartIndex = text.indexOf(link)
-        val linkEndIndex = linkStartIndex + link.length
-        ClickableSubstringLink(
-            text = text,
-            textStyle = FirefoxTheme.typography.body2,
-            clickableStartIndex = linkStartIndex,
-            clickableEndIndex = linkEndIndex,
-            onClick = onLearnMoreClick,
+        Text(
+            text = remember(letterGradeText) { parseHtml(letterGradeText) },
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
         )
 
         ReviewGradingScaleInfo(
@@ -94,7 +96,7 @@ private fun ReviewQualityInfo(
                 ReviewQualityCheckState.Grade.A,
                 ReviewQualityCheckState.Grade.B,
             ),
-            info = stringResource(id = R.string.review_quality_check_info_grade_info_AB),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_AB_2),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -109,7 +111,7 @@ private fun ReviewQualityInfo(
                 ReviewQualityCheckState.Grade.D,
                 ReviewQualityCheckState.Grade.F,
             ),
-            info = stringResource(id = R.string.review_quality_check_info_grade_info_DF),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_DF_2),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -117,6 +119,35 @@ private fun ReviewQualityInfo(
             text = remember(adjustedGradingText) { parseHtml(adjustedGradingText) },
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.body2,
+        )
+
+        Text(
+            text = remember(highlightsText) { parseHtml(highlightsText) },
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
+        )
+
+        val link = stringResource(
+            id = R.string.review_quality_check_info_learn_more_link,
+            stringResource(R.string.shopping_product_name),
+        )
+        val text = stringResource(R.string.review_quality_check_info_learn_more, link)
+        LinkText(
+            text = text,
+            linkTextStates = listOf(
+                LinkTextState(
+                    text = link,
+                    url = "",
+                    onClick = {
+                        onLearnMoreClick()
+                    },
+                ),
+            ),
+            style = FirefoxTheme.typography.body2.copy(
+                color = FirefoxTheme.colors.textPrimary,
+            ),
+            linkTextColor = FirefoxTheme.colors.textAccent,
+            linkTextDecoration = TextDecoration.Underline,
         )
     }
 }
@@ -159,6 +190,7 @@ private fun ReviewQualityInfoCardPreview() {
                 .padding(all = 16.dp),
         ) {
             ReviewQualityInfoCard(
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 modifier = Modifier.fillMaxWidth(),
                 onLearnMoreClick = {},
             )
@@ -177,6 +209,7 @@ private fun ReviewQualityInfoPreview() {
                 .padding(all = 16.dp),
         ) {
             ReviewQualityInfo(
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 modifier = Modifier.fillMaxWidth(),
                 onLearnMoreClick = {},
             )

@@ -24,7 +24,10 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
+import org.mozilla.fenix.shopping.ext.displayName
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -166,25 +169,18 @@ fun ReviewQualityCheckContextualOnboarding(
 private fun createDescriptionString(
     retailers: List<ProductVendor>,
 ) = buildAnnotatedString {
-    val retailerNames = retailers.map {
-        when (it) {
-            ProductVendor.AMAZON -> R.string.review_quality_check_retailer_name_amazon
-            ProductVendor.BEST_BUY -> R.string.review_quality_check_retailer_name_bestbuy
-            ProductVendor.WALMART -> R.string.review_quality_check_retailer_name_walmart
-        }
-    }
+    val retailerNames = retailers.map { it.displayName() }
 
     val description = stringResource(
         id = R.string.review_quality_check_contextual_onboarding_description,
-        stringResource(retailerNames[0]),
+        retailerNames[0],
         stringResource(R.string.app_name),
-        stringResource(retailerNames[1]),
-        stringResource(retailerNames[2]),
+        retailerNames[1],
+        retailerNames[2],
     )
     append(description)
 
-    retailerNames.forEach {
-        val retailer = stringResource(id = it)
+    retailerNames.forEach { retailer ->
         val start = description.indexOf(retailer)
 
         addStyle(
@@ -192,5 +188,24 @@ private fun createDescriptionString(
             start = start,
             end = start + retailer.length,
         )
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun ProductAnalysisPreview() {
+    FirefoxTheme {
+        ReviewQualityCheckScaffold(
+            onRequestDismiss = {},
+        ) {
+            ReviewQualityCheckContextualOnboarding(
+                productVendors = ReviewQualityCheckState.NotOptedIn().productVendors,
+                onPrimaryButtonClick = {},
+                onLearnMoreClick = {},
+                onPrivacyPolicyClick = {},
+                onTermsOfUseClick = {},
+                onSecondaryButtonClick = {},
+            )
+        }
     }
 }

@@ -83,7 +83,10 @@ class ReviewQualityCheckStoreTest {
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = false)
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
+            )
             assertEquals(expected, tested.state)
             assertEquals(true, cfrConditionUpdated)
         }
@@ -124,7 +127,10 @@ class ReviewQualityCheckStoreTest {
             dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
 
-            val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = null)
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = null,
+                productVendor = ProductVendor.BEST_BUY,
+            )
             assertEquals(expected, tested.state)
 
             // Even if toggle action is dispatched, state is not changed
@@ -150,7 +156,10 @@ class ReviewQualityCheckStoreTest {
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = true)
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
             assertEquals(expected, tested.state)
         }
 
@@ -171,7 +180,10 @@ class ReviewQualityCheckStoreTest {
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = false)
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
+            )
             assertEquals(expected, tested.state)
         }
 
@@ -197,6 +209,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(),
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
@@ -221,6 +234,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError,
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
@@ -245,6 +259,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.NetworkError,
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
@@ -271,6 +286,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError,
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
@@ -313,6 +329,7 @@ class ReviewQualityCheckStoreTest {
                     analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
                 ),
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
@@ -341,6 +358,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(),
                 productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
             )
             assertEquals(expected, tested.state)
         }
