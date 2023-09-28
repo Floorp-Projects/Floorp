@@ -1,16 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-import { div, input } from "react-dom-factories";
+import { div, input, label } from "react-dom-factories";
 import PropTypes from "prop-types";
 
 export default function ExceptionOption({
   className,
   isChecked = false,
-  label,
+  label: inputLabel,
   onChange,
 }) {
-  return div(
+  return label(
     {
       className,
       onClick: onChange,
@@ -24,7 +24,7 @@ export default function ExceptionOption({
       {
         className: "breakpoint-exceptions-label",
       },
-      label
+      inputLabel
     )
   );
 }
