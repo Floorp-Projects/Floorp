@@ -242,6 +242,11 @@ button::selection {
 :-moz-focusring {
   outline: var(--theme-focus-outline);
   outline-offset: -1px;
+
+  /* offset the outline for checkbox and radio buttons so it doesn't conflict with existing border */
+  :is(input[type="radio"], input[type="checkbox"], checkbox)& {
+    outline-offset: 2px;
+  }
 }
 
 textbox[focused="true"] {
@@ -252,14 +257,6 @@ textbox[focused="true"] {
 
 textbox :-moz-focusring {
   box-shadow: none;
-  outline: none;
-}
-
-/* Form fields should already have box-shadow hightlight */
-select:-moz-focusring,
-input[type="radio"]:-moz-focusring,
-input[type="checkbox"]:-moz-focusring,
-checkbox:-moz-focusring {
   outline: none;
 }
 
