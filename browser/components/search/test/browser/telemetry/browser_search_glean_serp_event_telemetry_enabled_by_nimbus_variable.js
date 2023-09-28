@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test to verify we can toggle the Glean SERP telemetry feature via a Nimbus
-// variable.
+// Test to verify we can toggle the Glean SERP event telemetry feature via a
+// Nimbus variable.
 
 const lazy = {};
 
