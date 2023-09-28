@@ -11,6 +11,7 @@
 #include "DOMSVGPathSegList.h"
 #include "SVGPathSegListSMILType.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/SVGElement.h"
 
 using namespace mozilla::dom;
