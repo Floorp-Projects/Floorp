@@ -30,8 +30,9 @@ if CONFIG["MOZ_WASM_SANDBOXING_HUNSPELL"]:
     WASM_SOURCES += [
         "/extensions/spellcheck/hunspell/src/" + s for s in hunspell_sources
     ]
-    WASM_DEFINES["_WASI_EMULATED_PROCESS_CLOCKS"] = True
-    WASM_LIBS += ["wasi-emulated-process-clocks"]
+    if CONFIG["MOZ_WASI_EMULATED_CLOCK"]:
+        WASM_DEFINES["_WASI_EMULATED_PROCESS_CLOCKS"] = True
+        WASM_LIBS += ["wasi-emulated-process-clocks"]
     LOCAL_INCLUDES += [
         "/extensions/spellcheck/hunspell/glue",
         "/extensions/spellcheck/hunspell/src",
