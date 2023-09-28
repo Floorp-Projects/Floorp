@@ -2919,22 +2919,6 @@ media:
       - 'main'
       - 'content'
 
-  device_hardware_decoding_support:
-    bug_numbers:
-      - 1850594
-    description: >
-      Record the hardware decoding availability on devices, the key is the name of video codec, eg. h264, av1.
-    expires: never
-    kind: boolean
-    keyed: true
-    notification_emails:
-      - media-alerts@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'gpu'
-
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
