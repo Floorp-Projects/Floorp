@@ -1,6 +1,6 @@
 // |jit-test| --wasm-gc; skip-if: !wasmGcEnabled()
 var ins = wasmEvalText(`(module
-    (type $t (sub (func (param i64 i64 funcref) (result i64))))
+    (type $t (func (param i64 i64 funcref) (result i64)))
     (elem declare func $fac-acc $fac-acc-broken)
     (func $fac-acc (export "fac-acc") (param i64 i64 funcref) (result i64)
         (if (result i64) (i64.eqz (local.get 0))
