@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Translations Test</title>
+  <style>
+    div {
+      margin: 10px auto;
+      width: 300px
+    }
+    p {
+      margin: 47px 0;
+      font-size: 21px;
+      line-height: 2;
+    }
+  </style>
+</head>
+<body>
+  <div id="host">
+    Esto se contenta en luz dom
+  <div>
+  <script>
+    const host = document.getElementById("host");
+    const root = host.attachShadow({mode: "open"});
+    root.innerHTML = "<slot></slot>";
+  </script>
+</body>
+</html>
