@@ -482,9 +482,9 @@ static void ReleaseValue(T* aPropertyValue) {
     return nsQueryFrame::class##_id;                                           \
   }
 
-#define NS_IMPL_FRAMEARENA_HELPERS(class)                             \
-  void* class ::operator new(size_t sz, mozilla::PresShell* aShell) { \
-    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);       \
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                              \
+  void* class ::operator new(size_t sz, mozilla::PresShell * aShell) { \
+    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);        \
   }
 
 #define NS_DECL_ABSTRACT_FRAME(class)                                         \
@@ -1589,8 +1589,7 @@ class nsIFrame : public nsQueryFrame {
   // during paginated reflow.
   // This only inspects the first in-flow child of this frame, and if that
   // is a container frame then its first in-flow child, until it reaches the
-  // deepest child of the tree. This will correctly find the page-name only for
-  // the first page that this frame is on.
+  // deepest child of the tree.
   // This will resolve auto values, including the case where no frame has a
   // page-name set in which case it will return the empty atom. It will never
   // return null.
