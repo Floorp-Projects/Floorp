@@ -111,8 +111,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -227,8 +226,7 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
