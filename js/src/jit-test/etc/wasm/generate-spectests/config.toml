@@ -113,7 +113,7 @@ name = "extended-const"
 url = "https://github.com/WebAssembly/extended-const"
 branch = "main"
 parent = "spec"
-directive = "; --wasm-extended-const; skip-if: !wasmExtendedConstEnabled()"
+directive = "; --wasm-extended-const; --no-wasm-gc; skip-if: !wasmExtendedConstEnabled()"
 excluded_tests = [
   # Changed order of operands
   "relaxed_fma_fms.wast",
