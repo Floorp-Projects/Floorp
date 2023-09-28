@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ExceptionOption renders with values 1`] = `
-<div
+<label
   className="testClassName"
   onClick={[Function]}
 >
@@ -15,5 +15,5 @@ exports[`ExceptionOption renders with values 1`] = `
   >
     testLabel
   </div>
-</div>
+</label>
 `;
