@@ -7544,14 +7544,14 @@
 #if defined(ENABLE_WASM_FUNCTION_REFERENCES)
 -   name: javascript.options.wasm_function_references
     type: bool
-    value: false
+    value: true
     mirror: always
 #endif // defined(ENABLE_WASM_FUNCTION_REFERENCES)
 
 #if defined(ENABLE_WASM_GC)
 -   name: javascript.options.wasm_gc
     type: bool
-    value: false
+    value: true
     mirror: always
 #endif // defined(ENABLE_WASM_GC)
 

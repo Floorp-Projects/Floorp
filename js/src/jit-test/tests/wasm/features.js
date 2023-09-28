@@ -27,14 +27,17 @@ let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
   [
-    'function-references',
-    wasmFunctionReferencesEnabled(),
-    `(module (func (param (ref extern))))`
+    'tail-calls',
+    wasmTailCallsEnabled(),
+    `(module (func (return_call 0)))`
   ],
   [
-    'gc',
-    wasmGcEnabled(),
-    `(module (type $s (struct)) (func (param (ref null $s))))`
+    'relaxed-simd',
+    wasmRelaxedSimdEnabled(),
+    `(module (func (result v128)
+      unreachable
+      i16x8.relaxed_laneselect
+    ))`
   ],
 ];
 
