@@ -17,6 +17,7 @@
 #  include "ICU4XWordSegmenter.hpp"
 #  include "mozilla/intl/ICU4XGeckoDataProvider.h"
 #  include "mozilla/StaticPrefs_intl.h"
+#  include "nsUnicharUtils.h"
 #endif
 
 using mozilla::intl::Script;
@@ -25,7 +26,6 @@ using mozilla::intl::WordBreaker;
 using mozilla::intl::WordRange;
 using mozilla::unicode::GetGenCategory;
 
-#define IS_ASCII(c) (0 == (0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c) \
   ((('a' <= (c)) && ((c) <= 'z')) || (('A' <= (c)) && ((c) <= 'Z')))
 #define ASCII_IS_DIGIT(c) (('0' <= (c)) && ((c) <= '9'))
@@ -103,7 +103,8 @@ WordBreaker::WordBreakClass WordBreaker::GetClass(char16_t c) {
   return kWbClassAlphaLetter;
 }
 
-WordRange WordBreaker::FindWord(const nsAString& aText, uint32_t aPos) {
+WordRange WordBreaker::FindWord(const nsAString& aText, uint32_t aPos,
+                                const FindWordOptions aOptions) {
   const CheckedInt<uint32_t> len = aText.Length();
   MOZ_RELEASE_ASSERT(len.isValid());
 
@@ -127,14 +128,41 @@ WordRange WordBreaker::FindWord(const nsAString& aText, uint32_t aPos) {
     while (true) {
       const int32_t nextPos = iterator.next();
       if (nextPos < 0) {
-        return {previousPos, len.value()};
+        range.mBegin = previousPos;
+        range.mEnd = len.value();
+        break;
       }
       if ((uint32_t)nextPos > aPos) {
-        return {previousPos, (uint32_t)nextPos};
+        range.mBegin = previousPos;
+        range.mEnd = (uint32_t)nextPos;
+        break;
       }
 
       previousPos = nextPos;
     }
+
+    if (aOptions != FindWordOptions::StopAtPunctuation) {
+      return range;
+    }
+
+    for (uint32_t i = range.mBegin; i < range.mEnd; i++) {
+      if (mozilla::IsPunctuationForWordSelect(aText[i])) {
+        if (i > aPos) {
+          range.mEnd = i;
+          break;
+        }
+        if (i == aPos) {
+          range.mBegin = i;
+          range.mEnd = i + 1;
+          break;
+        }
+        if (i < aPos) {
+          range.mBegin = i + 1;
+        }
+      }
+    }
+
+    return range;
   }
 #endif
 
