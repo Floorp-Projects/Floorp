@@ -20,6 +20,7 @@ class ShoppingMessageBar extends MozLitElement {
     ["analysis-in-progress", () => this.analysisInProgressTemplate()],
     ["reanalysis-in-progress", () => this.reanalysisInProgressTemplate()],
     ["page-not-supported", () => this.pageNotSupportedTemplate()],
+    ["thank-you-for-feedback", () => this.thankYouForFeedbackTemplate()],
   ]);
 
   static properties = {
@@ -192,6 +193,17 @@ class ShoppingMessageBar extends MozLitElement {
         <span
           data-l10n-id="shopping-message-bar-page-not-supported-message"
         ></span>
+      </article>
+    </message-bar>`;
+  }
+
+  thankYouForFeedbackTemplate() {
+    return html`<message-bar type="success" dismissable>
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-survey-thanks-message"
+        ></strong>
       </article>
     </message-bar>`;
   }

@@ -817,15 +817,15 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     if (this._destroyed) {
       return;
     }
-    let root = this.document.getElementById("multi-stage-message-root");
+    const root = this.document.getElementById("multi-stage-message-root");
     if (root) {
-      let { parentElement } = root;
-      let newRoot = this.document.createElement("div");
-      newRoot.id = "multi-stage-message-root";
-      newRoot.className = "onboardingContainer shopping";
-      newRoot.slot = "multi-stage-message-slot";
-      root.remove();
-      parentElement.appendChild(newRoot);
+      root.innerHTML = "";
+      root
+        .appendChild(this.document.createElement("shopping-message-bar"))
+        .setAttribute("type", "thank-you-for-feedback");
+      this.contentWindow.setTimeout(() => {
+        root.hidden = true;
+      }, 5000);
     }
   }
 
