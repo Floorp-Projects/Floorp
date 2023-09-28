@@ -981,22 +981,19 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     nextKey = fromProp.key();
     propValue = fromPlain->getSlot(fromProp.slot());
 
-    Maybe<PropertyInfo> toProp;
-    if (toWasEmpty) {
-      MOZ_ASSERT(!toPlain->containsPure(nextKey));
-      MOZ_ASSERT(toProp.isNothing());
-    } else {
-      toProp = toPlain->lookup(cx, nextKey);
+    if (!toWasEmpty) {
+      if (Maybe<PropertyInfo> toProp = toPlain->lookup(cx, nextKey)) {
+        MOZ_ASSERT(toProp->isDataProperty());
+        MOZ_ASSERT(toProp->writable());
+        toPlain->setSlot(toProp->slot(), propValue);
+        continue;
+      }
     }
 
-    if (toProp.isSome()) {
-      MOZ_ASSERT(toProp->isDataProperty());
-      MOZ_ASSERT(toProp->writable());
-      toPlain->setSlot(toProp->slot(), propValue);
-    } else {
-      if (!AddDataPropertyToPlainObject(cx, toPlain, nextKey, propValue)) {
-        return false;
-      }
+    MOZ_ASSERT(!toPlain->containsPure(nextKey));
+
+    if (!AddDataPropertyToPlainObject(cx, toPlain, nextKey, propValue)) {
+      return false;
     }
   }
 
