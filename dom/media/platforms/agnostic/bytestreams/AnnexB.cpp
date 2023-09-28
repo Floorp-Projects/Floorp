@@ -330,10 +330,11 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
     return true;
   }
 
-  if (parsedExtraData) {
-    aSample->mExtraData = parsedExtraData;
-    return true;
-  }
+// Bug 1855636: something is broken in this annexb -> avcc conversion
+//if (parsedExtraData) {
+//  aSample->mExtraData = parsedExtraData;
+//  return true;
+//}
 
   // Create the AVCC header.
   auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
