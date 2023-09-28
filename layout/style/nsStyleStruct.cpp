@@ -2894,8 +2894,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextShadow(aSource.mTextShadow),
       mTextEmphasisStyle(aSource.mTextEmphasisStyle),
       mHyphenateCharacter(aSource.mHyphenateCharacter),
-      mWebkitTextSecurity(aSource.mWebkitTextSecurity),
-      mTextWrap(aSource.mTextWrap) {
+      mWebkitTextSecurity(aSource.mWebkitTextSecurity) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
@@ -2929,8 +2928,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mWordSpacing != aNewData.mWordSpacing) ||
       (mTabSize != aNewData.mTabSize) ||
       (mHyphenateCharacter != aNewData.mHyphenateCharacter) ||
-      (mWebkitTextSecurity != aNewData.mWebkitTextSecurity) ||
-      (mTextWrap != aNewData.mTextWrap)) {
+      (mWebkitTextSecurity != aNewData.mWebkitTextSecurity)) {
     return NS_STYLE_HINT_REFLOW;
   }
 
