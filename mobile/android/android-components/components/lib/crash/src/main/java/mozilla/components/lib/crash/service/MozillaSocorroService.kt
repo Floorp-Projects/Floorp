@@ -531,7 +531,7 @@ class MozillaSocorroService(
 
                 val jsonObject = JSONObject(input)
                 for (key in jsonObject.keys()) {
-                    if (!ignoreKeys.contains(key)) {
+                    if (!key.isNullOrEmpty() && !ignoreKeys.contains(key)) {
                         resultMap[key] = jsonUnescape(jsonObject.getString(key))
                     }
                 }
