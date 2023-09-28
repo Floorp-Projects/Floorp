@@ -136,6 +136,54 @@ class NewPlainObjectWithPropsCache {
   }
 };
 
+// Cache for Object.assign's fast path for two plain objects. It's used to
+// optimize:
+//
+//   Object.assign(to, from)
+//
+// If the |to| object has shape |emptyToShape_| (shape with no properties) and
+// the |from| object has shape |fromShape_|, we can use |newToShape_| for |to|
+// and copy all (data)) properties from the |from| object.
+//
+// This is a one-entry cache for now. It has a hit rate of > 90% on both
+// Speedometer 2 and Speedometer 3.
+class MOZ_NON_TEMPORARY_CLASS PlainObjectAssignCache {
+  SharedShape* emptyToShape_ = nullptr;
+  SharedShape* fromShape_ = nullptr;
+  SharedShape* newToShape_ = nullptr;
+
+#ifdef DEBUG
+  void assertValid() const;
+#else
+  void assertValid() const {}
+#endif
+
+ public:
+  PlainObjectAssignCache() = default;
+  PlainObjectAssignCache(const PlainObjectAssignCache&) = delete;
+  void operator=(const PlainObjectAssignCache&) = delete;
+
+  SharedShape* lookup(Shape* emptyToShape, Shape* fromShape) const {
+    if (emptyToShape_ == emptyToShape && fromShape_ == fromShape) {
+      assertValid();
+      return newToShape_;
+    }
+    return nullptr;
+  }
+  void fill(SharedShape* emptyToShape, SharedShape* fromShape,
+            SharedShape* newToShape) {
+    emptyToShape_ = emptyToShape;
+    fromShape_ = fromShape;
+    newToShape_ = newToShape;
+    assertValid();
+  }
+  void purge() {
+    emptyToShape_ = nullptr;
+    fromShape_ = nullptr;
+    newToShape_ = nullptr;
+  }
+};
+
 // [SMDOC] Object MetadataBuilder API
 //
 // We must ensure that all newly allocated JSObjects get their metadata
@@ -334,6 +382,7 @@ class JS::Realm : public JS::shadow::Realm {
   js::DtoaCache dtoaCache;
   js::NewProxyCache newProxyCache;
   js::NewPlainObjectWithPropsCache newPlainObjectWithPropsCache;
+  js::PlainObjectAssignCache plainObjectAssignCache;
   js::ArraySpeciesLookup arraySpeciesLookup;
   js::PromiseLookup promiseLookup;
 
