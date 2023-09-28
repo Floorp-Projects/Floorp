@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
 #include <algorithm>
+#include "sqlite3.h"
 
 namespace mozilla {
 namespace storage {
@@ -284,7 +285,9 @@ void caseFunction(sqlite3_context* aCtx, int aArgc, sqlite3_value** aArgv) {
 void likeFunction(sqlite3_context* aCtx, int aArgc, sqlite3_value** aArgv) {
   NS_ASSERTION(2 == aArgc || 3 == aArgc, "Invalid number of arguments!");
 
-  if (::sqlite3_value_bytes(aArgv[0]) > SQLITE_MAX_LIKE_PATTERN_LENGTH) {
+  if (::sqlite3_value_bytes(aArgv[0]) >
+      ::sqlite3_limit(::sqlite3_context_db_handle(aCtx),
+                      SQLITE_LIMIT_LIKE_PATTERN_LENGTH, -1)) {
     ::sqlite3_result_error(aCtx, "LIKE or GLOB pattern too complex",
                            SQLITE_TOOBIG);
     return;
