@@ -25,6 +25,11 @@ static void FillLinearRamp(double aBufferStartTime, Span<float> aBuffer,
 
 static void FillExponentialRamp(double aBufferStartTime, Span<float> aBuffer,
                                 double t0, float v0, double t1, float v1) {
+  float ratio = v1 / v0;
+  if (v0 == 0.f || ratio < 0.f) {
+    std::fill_n(aBuffer.Elements(), aBuffer.Length(), v0);
+    return;
+  }
   for (size_t i = 0; i < aBuffer.Length(); ++i) {
     double exponent =
         (aBufferStartTime - t0 + static_cast<double>(i)) / (t1 - t0);
@@ -446,48 +451,6 @@ void AudioEventTimeline::GetValuesAtTimeHelperInternal(
   // If the next event type is neither linear or exponential ramp, the
   // value is constant.
   std::fill_n(aBuffer.Elements(), aBuffer.Length(), aPrevious->EndValue());
-}
-
-const AudioTimelineEvent* AudioEventTimeline::GetPreviousEvent(
-    double aTime) const {
-  const AudioTimelineEvent* previous = nullptr;
-  const AudioTimelineEvent* next = nullptr;
-
-  auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
-    return aEvent.Time<double>();
-  };
-
-  bool bailOut = false;
-  for (unsigned i = 0; !bailOut && i < mEvents.Length(); ++i) {
-    switch (mEvents[i].mType) {
-      case AudioTimelineEvent::SetValueAtTime:
-      case AudioTimelineEvent::SetTarget:
-      case AudioTimelineEvent::LinearRamp:
-      case AudioTimelineEvent::ExponentialRamp:
-      case AudioTimelineEvent::SetValueCurve:
-        if (aTime == TimeOf(mEvents[i])) {
-          // Find the last event with the same time
-          do {
-            ++i;
-          } while (i < mEvents.Length() && aTime == TimeOf(mEvents[i]));
-          return &mEvents[i - 1];
-        }
-        previous = next;
-        next = &mEvents[i];
-        if (aTime < TimeOf(mEvents[i])) {
-          bailOut = true;
-        }
-        break;
-      default:
-        MOZ_ASSERT(false, "unreached");
-    }
-  }
-  // Handle the case where the time is past all of the events
-  if (!bailOut) {
-    previous = next;
-  }
-
-  return previous;
 }
 
 }  // namespace mozilla::dom
