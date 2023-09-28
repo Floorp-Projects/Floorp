@@ -131,7 +131,7 @@ internal class ChoiceAdapter(
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
             labelView.choice = choice
-            labelView.isChecked = choice.selected
+            labelView.isChecked = choice in fragment.mapSelectChoice
 
             if (choice.enable) {
                 itemView.setOnClickListener {
