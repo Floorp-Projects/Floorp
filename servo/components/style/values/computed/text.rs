@@ -7,11 +7,9 @@
 #[cfg(feature = "servo")]
 use crate::properties::StyleBuilder;
 use crate::values::computed::length::{Length, LengthPercentage};
-use crate::values::computed::{Context, NonNegativeLength, NonNegativeNumber, ToComputedValue};
+use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::LineHeight as GenericLineHeight;
 use crate::values::generics::text::{GenericTextDecorationLength, Spacing};
-use crate::values::resolved::{Context as ResolvedContext, ToResolvedValue};
 use crate::values::specified::text::{self as specified, TextOverflowSide};
 use crate::values::specified::text::{TextEmphasisFillMode, TextEmphasisShapeKeyword};
 use crate::values::{CSSFloat, CSSInteger};
@@ -108,33 +106,6 @@ impl ToComputedValue for specified::WordSpacing {
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
         Spacing::Value(ToComputedValue::from_computed_value(computed))
-    }
-}
-
-/// A computed value for the `line-height` property.
-pub type LineHeight = GenericLineHeight<NonNegativeNumber, NonNegativeLength>;
-
-impl ToResolvedValue for LineHeight {
-    type ResolvedValue = Self;
-
-    fn to_resolved_value(self, context: &ResolvedContext) -> Self::ResolvedValue {
-        // Resolve <number> to an absolute <length> based on font size.
-        if matches!(self, Self::Normal | Self::MozBlockHeight) {
-            return self;
-        }
-        let wm = context.style.writing_mode;
-        let vertical = wm.is_vertical() && !wm.is_sideways();
-        Self::Length(context.device.calc_line_height(
-            &self,
-            vertical,
-            context.style.get_font(),
-            Some(context.element_info.element),
-        ))
-    }
-
-    #[inline]
-    fn from_resolved_value(value: Self::ResolvedValue) -> Self {
-        value
     }
 }
 

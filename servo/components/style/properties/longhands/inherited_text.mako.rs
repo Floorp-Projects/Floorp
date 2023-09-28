@@ -17,17 +17,6 @@ ${helpers.predefined_type(
     affects="paint",
 )}
 
-${helpers.predefined_type(
-    "line-height",
-    "LineHeight",
-    "computed::LineHeight::normal()",
-    engines="gecko servo-2013 servo-2020",
-    animation_value_type="LineHeight",
-    spec="https://drafts.csswg.org/css2/visudet.html#propdef-line-height",
-    servo_restyle_damage="reflow",
-    affects="layout",
-)}
-
 // CSS Text Module Level 3
 
 ${helpers.predefined_type(

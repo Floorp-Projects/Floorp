@@ -211,6 +211,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mFontSizeKeyword(aSrc.mFontSizeKeyword),
       mFontPalette(aSrc.mFontPalette),
       mMathDepth(aSrc.mMathDepth),
+      mLineHeight(aSrc.mLineHeight),
       mMathVariant(aSrc.mMathVariant),
       mMathStyle(aSrc.mMathStyle),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
@@ -239,6 +240,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mFontPalette(StyleFontPalette::Normal()),
       mMathDepth(0),
+      mLineHeight(StyleLineHeight::Normal()),
       mMathVariant(StyleMathVariant::None),
       mMathStyle(StyleMathStyle::Normal),
       mXTextScale(InitialTextScale(aDocument)),
@@ -265,7 +267,8 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
       mMathStyle != aNewData.mMathStyle ||
-      mMinFontSizeRatio != aNewData.mMinFontSizeRatio) {
+      mMinFontSizeRatio != aNewData.mMinFontSizeRatio ||
+      mLineHeight != aNewData.mLineHeight) {
     return NS_STYLE_HINT_REFLOW;
   }
 
@@ -2845,7 +2848,6 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTabSize(StyleNonNegativeLengthOrNumber::Number(8.f)),
       mWordSpacing(LengthPercentage::Zero()),
       mLetterSpacing({0.}),
-      mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
       mTextUnderlineOffset(LengthPercentageOrAuto::Auto()),
       mTextDecorationSkipInk(StyleTextDecorationSkipInk::Auto),
@@ -2885,7 +2887,6 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTabSize(aSource.mTabSize),
       mWordSpacing(aSource.mWordSpacing),
       mLetterSpacing(aSource.mLetterSpacing),
-      mLineHeight(aSource.mLineHeight),
       mTextIndent(aSource.mTextIndent),
       mTextUnderlineOffset(aSource.mTextUnderlineOffset),
       mTextDecorationSkipInk(aSource.mTextDecorationSkipInk),
@@ -2922,7 +2923,6 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mRubyPosition != aNewData.mRubyPosition) ||
       (mTextSizeAdjust != aNewData.mTextSizeAdjust) ||
       (mLetterSpacing != aNewData.mLetterSpacing) ||
-      (mLineHeight != aNewData.mLineHeight) ||
       (mTextIndent != aNewData.mTextIndent) ||
       (mTextJustify != aNewData.mTextJustify) ||
       (mWordSpacing != aNewData.mWordSpacing) ||

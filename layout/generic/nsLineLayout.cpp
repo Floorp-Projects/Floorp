@@ -1889,9 +1889,8 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
     // Special-case for a ::first-letter frame, set the line height to
     // the frame block size if the user has left line-height == normal
-    const nsStyleText* styleText = spanFrame->StyleText();
     if (spanFramePFD->mIsLetterFrame && !spanFrame->GetPrevInFlow() &&
-        styleText->mLineHeight.IsNormal()) {
+        spanFrame->StyleFont()->mLineHeight.IsNormal()) {
       logicalBSize = spanFramePFD->mBounds.BSize(lineWM);
     }
 
@@ -1899,7 +1898,8 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     psd->mBStartLeading = leading / 2;
     psd->mBEndLeading = leading - psd->mBStartLeading;
     psd->mLogicalBSize = logicalBSize;
-    AdjustLeadings(spanFrame, psd, styleText, inflation, &zeroEffectiveSpanBox);
+    AdjustLeadings(spanFrame, psd, spanFrame->StyleText(), inflation,
+                   &zeroEffectiveSpanBox);
 
     if (zeroEffectiveSpanBox) {
       // When the span-box is to be ignored, zero out the initial
@@ -2195,7 +2195,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
         // Only consider text frames if they're not empty and
         // line-height=normal.
         canUpdate = pfd->mIsNonWhitespaceTextFrame &&
-                    frame->StyleText()->mLineHeight.IsNormal();
+                    frame->StyleFont()->mLineHeight.IsNormal();
       } else {
         canUpdate = !pfd->mIsPlaceholder;
       }
