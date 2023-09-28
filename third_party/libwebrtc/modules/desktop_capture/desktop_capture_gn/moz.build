@@ -135,8 +135,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     SOURCES += [
@@ -347,8 +346,7 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -376,8 +374,7 @@ if CONFIG["CPU_ARCH"] == "riscv64":
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -520,8 +517,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_T
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -549,8 +545,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -578,8 +573,7 @@ if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -607,8 +601,7 @@ if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -636,8 +629,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
@@ -665,8 +657,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
         "Xext",
         "Xfixes",
         "Xrandr",
-        "Xrender",
-        "Xtst"
+        "Xrender"
     ]
 
     UNIFIED_SOURCES += [
