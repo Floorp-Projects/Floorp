@@ -30,11 +30,6 @@
  * SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #ifndef _NETINET_SCTP_CALLOUT_
 #define _NETINET_SCTP_CALLOUT_
 

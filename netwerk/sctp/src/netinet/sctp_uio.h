@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #ifndef _NETINET_SCTP_UIO_H_
 #define _NETINET_SCTP_UIO_H_
 
@@ -809,6 +804,10 @@ struct sctp_get_nonce_values {
 	uint32_t gn_peers_tag;
 	uint32_t gn_local_tag;
 };
+
+/* Values for SCTP_ACCEPT_ZERO_CHECKSUM */
+#define SCTP_EDMID_NONE             0
+#define SCTP_EDMID_LOWER_LAYER_DTLS 1
 
 /* Debugging logs */
 struct sctp_str_log {

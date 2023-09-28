@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_var.h>
 #include <netinet/sctp_pcb.h>
@@ -304,7 +299,14 @@ sctp_is_vmware_interface(struct ifnet *ifn)
 #endif
 
 #if defined(_WIN32) && defined(__Userspace__)
-#define SCTP_BSD_FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+#ifdef MALLOC
+#undef MALLOC
+#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+#endif
+#ifdef FREE
+#undef FREE
+#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+#endif
 static void
 sctp_init_ifns_for_vrf(int vrfid)
 {
@@ -334,7 +336,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 	/* Get actual adapter information */
 	if ((Err = GetAdaptersAddresses(AF_INET, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
 		SCTP_PRINTF("GetAdaptersV4Addresses() failed with error code %d\n", Err);
-		SCTP_BSD_FREE(pAdapterAddrs);
+		FREE(pAdapterAddrs);
 		return;
 	}
 	/* Enumerate through each returned adapter and save its information */
@@ -359,7 +361,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 			}
 		}
 	}
-	SCTP_BSD_FREE(pAdapterAddrs);
+	FREE(pAdapterAddrs);
 #endif
 #ifdef INET6
 	AdapterAddrsSize = 0;
@@ -379,7 +381,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 	/* Get actual adapter information */
 	if ((Err = GetAdaptersAddresses(AF_INET6, 0, NULL, pAdapterAddrs, &AdapterAddrsSize)) != ERROR_SUCCESS) {
 		SCTP_PRINTF("GetAdaptersV6Addresses() failed with error code %d\n", Err);
-		SCTP_BSD_FREE(pAdapterAddrs);
+		FREE(pAdapterAddrs);
 		return;
 	}
 	/* Enumerate through each returned adapter and save its information */
@@ -401,7 +403,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 			}
 		}
 	}
-	SCTP_BSD_FREE(pAdapterAddrs);
+	FREE(pAdapterAddrs);
 #endif
 }
 #elif defined(__Userspace__)

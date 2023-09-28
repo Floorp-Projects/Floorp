@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #ifndef _NETINET_SCTP_STRUCTS_H_
 #define _NETINET_SCTP_STRUCTS_H_
 
@@ -1008,15 +1003,6 @@ struct sctp_association {
 	uint32_t fast_recovery_tsn;
 	uint32_t sat_t3_recovery_tsn;
 	uint32_t tsn_last_delivered;
-	/*
-	 * For the pd-api we should re-write this a bit more efficient. We
-	 * could have multiple sctp_queued_to_read's that we are building at
-	 * once. Now we only do this when we get ready to deliver to the
-	 * socket buffer. Note that we depend on the fact that the struct is
-	 * "stuck" on the read queue until we finish all the pd-api.
-	 */
-	struct sctp_queued_to_read *control_pdapi;
-
 	uint32_t tsn_of_pdapi_last_delivered;
 	uint32_t pdapi_ppid;
 	uint32_t context;
@@ -1234,12 +1220,9 @@ struct sctp_association {
 	uint8_t pktdrop_supported;
 	uint8_t idata_supported;
 
-	/* Zero checksum supported information:
-	 * 0: disabled
-	 * 1: enabled for rcv
-	 * 2: enabled for snd/rcv
-	 */
-	uint8_t zero_checksum;
+	/* Zero checksum supported information */
+	uint8_t rcv_edmid;
+	uint8_t snd_edmid;
 
 	/* Did the peer make the stream config (add out) request */
 	uint8_t peer_req_out;

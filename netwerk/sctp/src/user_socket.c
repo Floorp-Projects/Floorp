@@ -308,22 +308,7 @@ sofree(struct socket *so)
 void
 soabort(struct socket *so)
 {
-#if defined(INET6)
-	struct sctp_inpcb *inp;
-#endif
-
-#if defined(INET6)
-	inp = (struct sctp_inpcb *)so->so_pcb;
-	if (inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) {
-		sctp6_abort(so);
-	} else {
-#if defined(INET)
-		sctp_abort(so);
-#endif
-	}
-#elif defined(INET)
 	sctp_abort(so);
-#endif
 	ACCEPT_LOCK();
 	SOCK_LOCK(so);
 	sofree(so);
