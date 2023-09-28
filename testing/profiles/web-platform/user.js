@@ -88,3 +88,5 @@ user_pref("security.OCSP.enabled", 0);
 user_pref("security.remote_settings.intermediates.enabled", false);
 // Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
 user_pref("general.smoothScroll", true);
+// Disable captive portal service
+user_pref("network.captive-portal-service.enabled", false);

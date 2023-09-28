@@ -186,9 +186,6 @@ const COMMON_PREFERENCES = new Map([
   // Do not warn on quitting Firefox
   ["browser.warnOnQuit", false],
 
-  // Disable captive portal
-  ["captivedetect.canonicalURL", ""],
-
   // Do not show datareporting policy notifications which can
   // interfere with tests
   [
