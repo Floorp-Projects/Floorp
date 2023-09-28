@@ -258,9 +258,11 @@ class Preferences final : public nsIPrefService,
   // Note: All preference strings *must* be statically-allocated string
   // literals.
   static nsresult AddStrongObservers(nsIObserver* aObserver,
-                                     const char** aPrefs);
-  static nsresult AddWeakObservers(nsIObserver* aObserver, const char** aPrefs);
-  static nsresult RemoveObservers(nsIObserver* aObserver, const char** aPrefs);
+                                     const char* const* aPrefs);
+  static nsresult AddWeakObservers(nsIObserver* aObserver,
+                                   const char* const* aPrefs);
+  static nsresult RemoveObservers(nsIObserver* aObserver,
+                                  const char* const* aPrefs);
 
   // Registers/Unregisters the callback function for the aPref.
   template <typename T = void>
@@ -324,28 +326,28 @@ class Preferences final : public nsIPrefService,
   // Unregister call as was passed to the Register call.
   template <typename T = void>
   static nsresult RegisterCallbacks(PrefChangedFunc aCallback,
-                                    const char** aPrefs,
+                                    const char* const* aPrefs,
                                     T* aClosure = nullptr) {
     return RegisterCallbacks(aCallback, aPrefs, aClosure, ExactMatch);
   }
   static nsresult RegisterCallbacksAndCall(PrefChangedFunc aCallback,
-                                           const char** aPrefs,
+                                           const char* const* aPrefs,
                                            void* aClosure = nullptr);
   template <typename T = void>
   static nsresult UnregisterCallbacks(PrefChangedFunc aCallback,
-                                      const char** aPrefs,
+                                      const char* const* aPrefs,
                                       T* aClosure = nullptr) {
     return UnregisterCallbacks(aCallback, aPrefs, aClosure, ExactMatch);
   }
   template <typename T = void>
   static nsresult RegisterPrefixCallbacks(PrefChangedFunc aCallback,
-                                          const char** aPrefs,
+                                          const char* const* aPrefs,
                                           T* aClosure = nullptr) {
     return RegisterCallbacks(aCallback, aPrefs, aClosure, PrefixMatch);
   }
   template <typename T = void>
   static nsresult UnregisterPrefixCallbacks(PrefChangedFunc aCallback,
-                                            const char** aPrefs,
+                                            const char* const* aPrefs,
                                             T* aClosure = nullptr) {
     return UnregisterCallbacks(aCallback, aPrefs, aClosure, PrefixMatch);
   }
@@ -483,10 +485,10 @@ class Preferences final : public nsIPrefService,
                                           void* aClosure, MatchKind aMatchKind);
 
   static nsresult RegisterCallbacks(PrefChangedFunc aCallback,
-                                    const char** aPrefs, void* aClosure,
+                                    const char* const* aPrefs, void* aClosure,
                                     MatchKind aMatchKind);
   static nsresult UnregisterCallbacks(PrefChangedFunc aCallback,
-                                      const char** aPrefs, void* aClosure,
+                                      const char* const* aPrefs, void* aClosure,
                                       MatchKind aMatchKind);
 
   template <typename T>
