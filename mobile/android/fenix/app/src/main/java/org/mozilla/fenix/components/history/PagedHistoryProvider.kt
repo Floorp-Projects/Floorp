@@ -92,7 +92,6 @@ class DefaultPagedHistoryProvider(
      * Types of visits we currently do not display in the History UI.
      */
     private val excludedVisitTypes = listOf(
-        VisitType.NOT_A_VISIT,
         VisitType.DOWNLOAD,
         VisitType.REDIRECT_PERMANENT,
         VisitType.REDIRECT_TEMPORARY,

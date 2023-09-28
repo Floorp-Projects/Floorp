@@ -909,7 +909,7 @@ class PlacesHistoryStorageTest {
             VisitObservation(
                 url = "https://www.youtube.com/watch?v=F7PQdCDiE44",
                 title = "DW next crisis",
-                visitType = mozilla.appservices.places.uniffi.VisitTransition.LINK,
+                visitType = mozilla.appservices.places.uniffi.VisitType.LINK,
             ),
         )
 
@@ -1033,7 +1033,7 @@ class PlacesHistoryStorageTest {
         )
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Media))
         history.noteHistoryMetadataObservation(metaKey1, HistoryMetadataObservation.ViewTimeObservation(20000))
-
+        Thread.sleep(10)
         val afterMeta1 = System.currentTimeMillis()
 
         val metaKey2 = HistoryMetadataKey(
@@ -1044,6 +1044,7 @@ class PlacesHistoryStorageTest {
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular))
         history.noteHistoryMetadataObservation(metaKey2, HistoryMetadataObservation.ViewTimeObservation(2000))
 
+        Thread.sleep(10)
         val afterMeta2 = System.currentTimeMillis()
 
         val metaKey3 = HistoryMetadataKey(

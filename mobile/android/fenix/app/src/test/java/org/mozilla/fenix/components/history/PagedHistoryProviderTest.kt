@@ -103,7 +103,6 @@ class PagedHistoryProviderTest {
                 offset = 10L,
                 count = 5,
                 excludeTypes = listOf(
-                    VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
                     VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
@@ -183,7 +182,6 @@ class PagedHistoryProviderTest {
                 offset = 0L,
                 count = 5,
                 excludeTypes = listOf(
-                    VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
                     VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
@@ -252,7 +250,6 @@ class PagedHistoryProviderTest {
                 offset = 0L,
                 count = 5,
                 excludeTypes = listOf(
-                    VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
                     VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
@@ -370,7 +367,6 @@ class PagedHistoryProviderTest {
                 any(),
                 eq(
                     listOf(
-                        VisitType.NOT_A_VISIT,
                         VisitType.DOWNLOAD,
                         VisitType.REDIRECT_PERMANENT,
                         VisitType.REDIRECT_TEMPORARY,
@@ -403,7 +399,6 @@ class PagedHistoryProviderTest {
                 offset = 10L,
                 count = 5,
                 excludeTypes = listOf(
-                    VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
                     VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,

@@ -72,7 +72,7 @@ open class PlacesHistoryStorage(
                 places.writer().noteObservation(
                     VisitObservation(
                         uri,
-                        visitType = visit.visitType.intoTransitionType(),
+                        visitType = visit.visitType.into(),
                         isRedirectSource = visit.redirectSource != null,
                         isPermanentRedirectSource = visit.redirectSource == RedirectSource.PERMANENT,
                     ),

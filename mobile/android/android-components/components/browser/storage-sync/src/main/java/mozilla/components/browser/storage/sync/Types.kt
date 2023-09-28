@@ -49,54 +49,28 @@ internal fun FrecencyThresholdOption.into() = when (this) {
  * Conversion from a generic [VisitType] into its richer comrade within the 'places' lib.
  */
 internal fun VisitType.into() = when (this) {
-    VisitType.NOT_A_VISIT -> mozilla.appservices.places.VisitType.UPDATE_PLACE
-    VisitType.LINK -> mozilla.appservices.places.VisitType.LINK
-    VisitType.RELOAD -> mozilla.appservices.places.VisitType.RELOAD
-    VisitType.TYPED -> mozilla.appservices.places.VisitType.TYPED
-    VisitType.BOOKMARK -> mozilla.appservices.places.VisitType.BOOKMARK
-    VisitType.EMBED -> mozilla.appservices.places.VisitType.EMBED
-    VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.VisitType.REDIRECT_PERMANENT
-    VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY
-    VisitType.DOWNLOAD -> mozilla.appservices.places.VisitType.DOWNLOAD
-    VisitType.FRAMED_LINK -> mozilla.appservices.places.VisitType.FRAMED_LINK
+    VisitType.LINK -> mozilla.appservices.places.uniffi.VisitType.LINK
+    VisitType.RELOAD -> mozilla.appservices.places.uniffi.VisitType.RELOAD
+    VisitType.TYPED -> mozilla.appservices.places.uniffi.VisitType.TYPED
+    VisitType.BOOKMARK -> mozilla.appservices.places.uniffi.VisitType.BOOKMARK
+    VisitType.EMBED -> mozilla.appservices.places.uniffi.VisitType.EMBED
+    VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.uniffi.VisitType.REDIRECT_PERMANENT
+    VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.uniffi.VisitType.REDIRECT_TEMPORARY
+    VisitType.DOWNLOAD -> mozilla.appservices.places.uniffi.VisitType.DOWNLOAD
+    VisitType.FRAMED_LINK -> mozilla.appservices.places.uniffi.VisitType.FRAMED_LINK
 }
 
-internal fun mozilla.appservices.places.VisitType.into() = when (this) {
-    mozilla.appservices.places.VisitType.UPDATE_PLACE -> VisitType.NOT_A_VISIT
-    mozilla.appservices.places.VisitType.LINK -> VisitType.LINK
-    mozilla.appservices.places.VisitType.RELOAD -> VisitType.RELOAD
-    mozilla.appservices.places.VisitType.TYPED -> VisitType.TYPED
-    mozilla.appservices.places.VisitType.BOOKMARK -> VisitType.BOOKMARK
-    mozilla.appservices.places.VisitType.EMBED -> VisitType.EMBED
-    mozilla.appservices.places.VisitType.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
-    mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
-    mozilla.appservices.places.VisitType.DOWNLOAD -> VisitType.DOWNLOAD
-    mozilla.appservices.places.VisitType.FRAMED_LINK -> VisitType.FRAMED_LINK
-}
-
-internal fun VisitType.intoTransitionType() = when (this) {
-    VisitType.NOT_A_VISIT -> null
-    VisitType.LINK -> mozilla.appservices.places.uniffi.VisitTransition.LINK
-    VisitType.RELOAD -> mozilla.appservices.places.uniffi.VisitTransition.RELOAD
-    VisitType.TYPED -> mozilla.appservices.places.uniffi.VisitTransition.TYPED
-    VisitType.BOOKMARK -> mozilla.appservices.places.uniffi.VisitTransition.BOOKMARK
-    VisitType.EMBED -> mozilla.appservices.places.uniffi.VisitTransition.EMBED
-    VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_PERMANENT
-    VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_TEMPORARY
-    VisitType.DOWNLOAD -> mozilla.appservices.places.uniffi.VisitTransition.DOWNLOAD
-    VisitType.FRAMED_LINK -> mozilla.appservices.places.uniffi.VisitTransition.FRAMED_LINK
-}
-
-internal fun mozilla.appservices.places.uniffi.VisitTransition.into() = when (this) {
-    mozilla.appservices.places.uniffi.VisitTransition.LINK -> VisitType.LINK
-    mozilla.appservices.places.uniffi.VisitTransition.RELOAD -> VisitType.RELOAD
-    mozilla.appservices.places.uniffi.VisitTransition.TYPED -> VisitType.TYPED
-    mozilla.appservices.places.uniffi.VisitTransition.BOOKMARK -> VisitType.BOOKMARK
-    mozilla.appservices.places.uniffi.VisitTransition.EMBED -> VisitType.EMBED
-    mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
-    mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
-    mozilla.appservices.places.uniffi.VisitTransition.DOWNLOAD -> VisitType.DOWNLOAD
-    mozilla.appservices.places.uniffi.VisitTransition.FRAMED_LINK -> VisitType.FRAMED_LINK
+internal fun mozilla.appservices.places.uniffi.VisitType.into() = when (this) {
+    mozilla.appservices.places.uniffi.VisitType.UPDATE_PLACE -> VisitType.LINK
+    mozilla.appservices.places.uniffi.VisitType.LINK -> VisitType.LINK
+    mozilla.appservices.places.uniffi.VisitType.RELOAD -> VisitType.RELOAD
+    mozilla.appservices.places.uniffi.VisitType.TYPED -> VisitType.TYPED
+    mozilla.appservices.places.uniffi.VisitType.BOOKMARK -> VisitType.BOOKMARK
+    mozilla.appservices.places.uniffi.VisitType.EMBED -> VisitType.EMBED
+    mozilla.appservices.places.uniffi.VisitType.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
+    mozilla.appservices.places.uniffi.VisitType.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
+    mozilla.appservices.places.uniffi.VisitType.DOWNLOAD -> VisitType.DOWNLOAD
+    mozilla.appservices.places.uniffi.VisitType.FRAMED_LINK -> VisitType.FRAMED_LINK
 }
 
 internal fun mozilla.appservices.places.uniffi.HistoryVisitInfo.into(): VisitInfo {
