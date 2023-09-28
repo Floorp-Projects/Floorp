@@ -74,7 +74,7 @@ impl Animate for Color {
 impl ComputeSquaredDistance for Color {
     #[inline]
     fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
-        let current_color = AbsoluteColor::TRANSPARENT;
+        let current_color = AbsoluteColor::TRANSPARENT_BLACK;
         self.resolve_to_absolute(&current_color)
             .compute_squared_distance(&other.resolve_to_absolute(&current_color))
     }
@@ -83,6 +83,6 @@ impl ComputeSquaredDistance for Color {
 impl ToAnimatedZero for Color {
     #[inline]
     fn to_animated_zero(&self) -> Result<Self, ()> {
-        Ok(Color::Absolute(AbsoluteColor::TRANSPARENT))
+        Ok(Color::Absolute(AbsoluteColor::TRANSPARENT_BLACK))
     }
 }
