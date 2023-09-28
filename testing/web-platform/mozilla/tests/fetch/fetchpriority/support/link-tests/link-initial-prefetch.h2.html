@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+  <link rel="prefetch" href="dummy.txt?1" fetchpriority="low">
+  <link rel="prefetch" href="dummy.txt?2" fetchpriority="high">
+  <link rel="prefetch" href="dummy.txt?3" fetchpriority="auto">
+  <link rel="prefetch" href="dummy.txt?4">
+</head>
+<body>
+<script>
+  onload = function() {
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>
