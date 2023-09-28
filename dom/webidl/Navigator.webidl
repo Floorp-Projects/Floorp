@@ -28,13 +28,7 @@ interface URI;
 
 // https://html.spec.whatwg.org/#the-navigator-object
 [HeaderFile="Navigator.h",
- Exposed=Window,
- InstrumentedProps=(canShare,
-                    clearAppBadge,
-                    setAppBadge,
-                    share,
-                    userActivation,
-                    wakeLock)]
+ Exposed=Window]
 interface Navigator {
   // objects implementing this interface also implement the interfaces given below
 };

@@ -13,8 +13,7 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window,
- InstrumentedProps=(loading)]
+[Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
   [HTMLConstructor] constructor();
 
