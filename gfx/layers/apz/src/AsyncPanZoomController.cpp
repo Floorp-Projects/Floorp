@@ -5908,9 +5908,10 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     // page), then the CSS content rect, in layers pixels, will be smaller than
     // the composition bounds. If this happens, we can't fill the target
     // composited area with this frame.
+    const CSSRect cssExpandedPageRect = Metrics().GetExpandedScrollableRect();
     CSSToParentLayerScale localMinZoom(
-        std::max(compositionBounds.Width() / cssPageRect.Width(),
-                 compositionBounds.Height() / cssPageRect.Height()));
+        std::max(compositionBounds.Width() / cssExpandedPageRect.Width(),
+                 compositionBounds.Height() / cssExpandedPageRect.Height()));
 
     localMinZoom.scale =
         clamped(localMinZoom.scale, mZoomConstraints.mMinZoom.scale,
