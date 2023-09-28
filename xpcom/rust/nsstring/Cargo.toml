@@ -10,5 +10,5 @@ edition = "2018"
 gecko_debug = []
 
 [dependencies]
-bitflags = "1.0"
+bitflags = "2"
 encoding_rs = "0.8.0"
