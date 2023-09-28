@@ -216,4 +216,9 @@ sealed class AppAction : Action {
     data class UpdateStandardSnackbarErrorAction(
         val standardSnackbarError: StandardSnackbarError?,
     ) : AppAction()
+
+    /**
+     * [AppAction] used to update the expansion state of the shopping sheet.
+     */
+    data class ShoppingSheetStateUpdated(val expanded: Boolean) : AppAction()
 }

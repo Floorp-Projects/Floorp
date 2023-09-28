@@ -231,6 +231,8 @@ internal object AppStoreReducer {
         is AppAction.UpdateStandardSnackbarErrorAction -> state.copy(
             standardSnackbarError = action.standardSnackbarError,
         )
+
+        is AppAction.ShoppingSheetStateUpdated -> state.copy(shoppingSheetExpanded = action.expanded)
     }
 }
 

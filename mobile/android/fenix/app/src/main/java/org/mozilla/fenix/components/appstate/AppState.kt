@@ -50,6 +50,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  * @property pendingDeletionHistoryItems The set of History items marked for removal in the UI,
  * awaiting to be removed once the Undo snackbar hides away.
  * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
+ * @property shoppingSheetExpanded Boolean indicating if the shopping sheet is expanded and visible.
  */
 data class AppState(
     val isForeground: Boolean = true,
@@ -73,4 +74,5 @@ data class AppState(
     val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
     val wallpaperState: WallpaperState = WallpaperState.default,
     val standardSnackbarError: StandardSnackbarError? = null,
+    val shoppingSheetExpanded: Boolean = false,
 ) : State

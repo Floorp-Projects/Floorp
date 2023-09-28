@@ -5,6 +5,7 @@
 package org.mozilla.fenix.shopping
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.shopping.di.ReviewQualityCheckMiddlewareProvider
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
@@ -79,5 +81,10 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
             owner = viewLifecycleOwner,
             view = view,
         )
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        requireComponents.appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = false))
     }
 }

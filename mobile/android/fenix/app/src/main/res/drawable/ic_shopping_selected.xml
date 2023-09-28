@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M13.452,2H6v1.75h7.088l6.629,6.656 1.24,-1.234 -6.885,-6.914a0.875,0.875 0,0 0,-0.62 -0.258zM8.933,12.379l1.414,-1.415L8.933,9.55l-1.415,1.414 1.415,1.415z" >
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24"
+                android:startY="0"
+                android:endX="0"
+                android:endY="24"
+                android:startColor="@color/fx_mobile_icon_color_gradient_start"
+                android:endColor="@color/fx_mobile_icon_color_gradient_end"/>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M3.5,6.375c0,-0.483 0.392,-0.875 0.875,-0.875h7.265c0.232,0 0.455,0.092 0.619,0.256l6.735,6.735a2.5,2.5 0,0 1,0 3.536l-5.215,5.215a2.5,2.5 0,0 1,-3.536 0l-6.487,-6.487a0.875,0.875 0,0 1,-0.256 -0.619L3.5,6.375zM5.25,7.25v6.524l6.23,6.23a0.75,0.75 0,0 0,1.061 0l5.215,-5.215a0.75,0.75 0,0 0,0 -1.06L11.278,7.25L5.25,7.25z" >
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24"
+                android:startY="0"
+                android:endX="0"
+                android:endY="24"
+                android:startColor="@color/fx_mobile_icon_color_gradient_start"
+                android:endColor="@color/fx_mobile_icon_color_gradient_end"/>
+        </aapt:attr>
+    </path>
+</vector>
