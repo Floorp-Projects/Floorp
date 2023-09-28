@@ -41,14 +41,11 @@ struct nsFont final {
   mozilla::StyleFontSizeAdjust sizeAdjust =
       mozilla::StyleFontSizeAdjust::None();
 
-#pragma push_macro("TRANSPARENT")
-#undef TRANSPARENT
   // The estimated background color behind the text. Enables a special
   // rendering mode when the alpha component > 0. Only used for text in the
   // chrome.
   mozilla::StyleAbsoluteColor fontSmoothingBackgroundColor =
-      mozilla::StyleAbsoluteColor::TRANSPARENT;
-#pragma pop_macro("TRANSPARENT")
+      mozilla::StyleAbsoluteColor::TRANSPARENT_BLACK;
 
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer

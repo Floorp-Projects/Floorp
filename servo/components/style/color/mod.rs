@@ -266,7 +266,7 @@ impl From<Option<f32>> for ComponentDetails {
 
 impl AbsoluteColor {
     /// A fully transparent color in the legacy syntax.
-    pub const TRANSPARENT: Self = Self {
+    pub const TRANSPARENT_BLACK: Self = Self {
         components: ColorComponents(0.0, 0.0, 0.0),
         alpha: 0.0,
         color_space: ColorSpace::Srgb,
