@@ -314,7 +314,7 @@ export class TranslationsDocument {
     const nodeIterator = node.ownerDocument.createTreeWalker(
       node,
       NodeFilter.SHOW_ELEMENT,
-      function(node) {
+      function (node) {
         return node.openOrClosedShadowRoot
           ? NodeFilter.FILTER_ACCEPT
           : NodeFilter.FILTER_SKIP;
@@ -324,7 +324,7 @@ export class TranslationsDocument {
     while ((currentNode = nodeIterator.nextNode())) {
       // Only shadow hosts are accepted nodes
       const shadowRoot = currentNode.openOrClosedShadowRoot;
-      this.observeNewRoot(shadowRoot)
+      this.observeNewRoot(shadowRoot);
       this.addShadowRootsToObserver(shadowRoot);
     }
   }
