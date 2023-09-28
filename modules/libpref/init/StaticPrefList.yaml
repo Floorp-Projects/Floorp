@@ -8775,6 +8775,11 @@
   value: 10
   mirror: always
 
+- name: layout.css.text-wrap-balance-after-clamp.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool
