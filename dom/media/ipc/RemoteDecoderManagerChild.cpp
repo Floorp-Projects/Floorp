@@ -271,7 +271,8 @@ bool RemoteDecoderManagerChild::Supports(
       // process. As HEVC support is still a experimental feature, we don't want
       // to report support for it arbitrarily.
       if (MP4Decoder::IsHEVC(aParams.mConfig.mMimeType)) {
-        return aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM;
+        return aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM ||
+               aLocation == RemoteDecodeIn::GpuProcess;
       }
       return trackSupport.contains(TrackSupport::Video);
     }
