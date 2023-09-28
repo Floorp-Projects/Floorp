@@ -4107,6 +4107,8 @@ firefoxview_next:
     objects: ["tabs"]
     description: >
       Recorded when a synced tab is clicked
+    extra_keys:
+      page: The short page name where the synced tab was clicked
     notification_emails:
       - firefoxview@mozilla.com
     products:
