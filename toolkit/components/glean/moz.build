@@ -115,28 +115,6 @@ include("metrics_index.py")
 metrics_yamls = ["../../../" + x for x in metrics_yamls]
 pings_yamls = ["../../../" + x for x in pings_yamls]
 tags_yamls = ["../../../" + x for x in tags_yamls]
-# If you change the length of this deps list, update DEPS_LEN in run_glean_parser.py
-deps = [
-    "metrics_index.py",
-    "build_scripts/glean_parser_ext/cpp.py",
-    "build_scripts/glean_parser_ext/jog.py",
-    "build_scripts/glean_parser_ext/js.py",
-    "build_scripts/glean_parser_ext/run_glean_parser.py",
-    "build_scripts/glean_parser_ext/rust.py",
-    "build_scripts/glean_parser_ext/string_table.py",
-    "build_scripts/glean_parser_ext/util.py",
-    "build_scripts/glean_parser_ext/templates/cpp.jinja2",
-    "build_scripts/glean_parser_ext/templates/cpp_pings.jinja2",
-    "build_scripts/glean_parser_ext/templates/gifft.jinja2",
-    "build_scripts/glean_parser_ext/templates/gifft_events.jinja2",
-    "build_scripts/glean_parser_ext/templates/jog_factory.jinja2",
-    "build_scripts/glean_parser_ext/templates/js.jinja2",
-    "build_scripts/glean_parser_ext/templates/js_h.jinja2",
-    "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
-    "build_scripts/glean_parser_ext/templates/js_pings_h.jinja2",
-    "build_scripts/glean_parser_ext/templates/rust.jinja2",
-    "build_scripts/glean_parser_ext/templates/rust_pings.jinja2",
-]
 
 GeneratedFile(
     "GleanMetrics.h",
@@ -150,7 +128,7 @@ GeneratedFile(
         "GleanJSMetricsLookup.cpp",
         "api/src/metrics.rs",
     ],
-    inputs=deps + metrics_yamls + tags_yamls,
+    inputs=metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -165,7 +143,7 @@ GeneratedFile(
         "GleanJSPingsLookup.cpp",
         "api/src/pings.rs",
     ],
-    inputs=deps + pings_yamls + tags_yamls,
+    inputs=pings_yamls + tags_yamls,
 )
 
 # Glean Interface For Firefox Telemetry Maps from Glean MetricId to Telemetry ProbeId
@@ -175,7 +153,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Event"],
-    inputs=deps + metrics_yamls + tags_yamls,
+    inputs=metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -183,7 +161,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Histogram"],
-    inputs=deps + metrics_yamls + tags_yamls,
+    inputs=metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -191,7 +169,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
-    inputs=deps + metrics_yamls + tags_yamls,
+    inputs=metrics_yamls + tags_yamls,
 )
 
 # JOG provides both the Rust factory for building runtime-registered metrics
@@ -203,7 +181,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="jog_factory",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + pings_yamls + metrics_yamls + tags_yamls,
+    inputs=pings_yamls + metrics_yamls + tags_yamls,
 )
 
 # Only generate jogfile.json in Artifact Builds since
@@ -214,7 +192,7 @@ if CONFIG["MOZ_ARTIFACT_BUILDS"]:
         script="build_scripts/glean_parser_ext/run_glean_parser.py",
         entry_point="jog_file",
         flags=[CONFIG["MOZ_APP_VERSION"]],
-        inputs=deps + pings_yamls + metrics_yamls + tags_yamls,
+        inputs=pings_yamls + metrics_yamls + tags_yamls,
     )
     # Once generated, it needs to be placed in GreD so it can be found.
     FINAL_TARGET_FILES += ["!jogfile.json"]
