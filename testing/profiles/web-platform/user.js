@@ -90,3 +90,5 @@ user_pref("security.webauth.webauthn_enable_usbtoken", false);
 user_pref("security.webauth.webauthn_enable_android_fido2", false);
 // Disable the WebAuthn direct attestation consent prompt.
 user_pref("security.webauth.webauthn_testing_allow_direct_attestation", true);
+// Disable captive portal service
+user_pref("network.captive-portal-service.enabled", false);
