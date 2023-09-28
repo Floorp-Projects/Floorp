@@ -23,6 +23,7 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/layers/VideoBridgeParent.h"
+#include "nsIObserverService.h"
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
 #  include "MFMediaEngineParent.h"
