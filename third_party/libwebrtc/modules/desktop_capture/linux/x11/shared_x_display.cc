@@ -11,7 +11,9 @@
 #include "modules/desktop_capture/linux/x11/shared_x_display.h"
 
 #include <X11/Xlib.h>
+#if !defined(WEBRTC_MOZILLA_BUILD)
 #include <X11/extensions/XTest.h>
+#endif
 
 #include <algorithm>
 
@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
 }
 
 void SharedXDisplay::IgnoreXServerGrabs() {
+#if !defined(WEBRTC_MOZILLA_BUILD)
   int test_event_base = 0;
   int test_error_base = 0;
   int major = 0;
@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
                           &minor)) {
     XTestGrabControl(display(), true);
   }
+#endif
 }
 
 }  // namespace webrtc

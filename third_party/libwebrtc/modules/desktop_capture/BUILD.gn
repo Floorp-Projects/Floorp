@@ -382,6 +382,9 @@ rtc_library("desktop_capture") {
       "Xrandr",
       "Xtst",
     ]
+    if (build_with_mozilla) {
+      libs -= [ "Xtst" ]
+    }
   }
 
   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
