@@ -65,9 +65,9 @@ using namespace mozilla::dom;
 // Default this to time out unused content viewers after 30 minutes
 #define CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT (30 * 60)
 
-static const char* kObservedPrefs[] = {PREF_SHISTORY_SIZE,
-                                       PREF_SHISTORY_MAX_TOTAL_VIEWERS,
-                                       PREF_FISSION_BFCACHEINPARENT, nullptr};
+static constexpr const char* kObservedPrefs[] = {
+    PREF_SHISTORY_SIZE, PREF_SHISTORY_MAX_TOTAL_VIEWERS,
+    PREF_FISSION_BFCACHEINPARENT, nullptr};
 
 static int32_t gHistoryMaxSize = 50;
 
