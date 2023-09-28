@@ -353,7 +353,7 @@ const OPTIN_DEFAULT = {
       content: {
         position: "split",
         title: { string_id: "shopping-onboarding-headline" },
-        subtitle: { string_id: "shopping-onboarding-dynamic-subtitle" },
+        subtitle: { string_id: "shopping-onboarding-dynamic-subtitle-1" },
         above_button_content: [
           {
             type: "text",
