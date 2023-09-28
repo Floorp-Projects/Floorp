@@ -27,17 +27,16 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-BlockReflowState::BlockReflowState(const ReflowInput& aReflowInput,
-                                   nsPresContext* aPresContext,
-                                   nsBlockFrame* aFrame, bool aBStartMarginRoot,
-                                   bool aBEndMarginRoot,
-                                   bool aBlockNeedsFloatManager,
-                                   const nscoord aConsumedBSize,
-                                   const nscoord aEffectiveContentBoxBSize)
+BlockReflowState::BlockReflowState(
+    const ReflowInput& aReflowInput, nsPresContext* aPresContext,
+    nsBlockFrame* aFrame, bool aBStartMarginRoot, bool aBEndMarginRoot,
+    bool aBlockNeedsFloatManager, const nscoord aConsumedBSize,
+    const nscoord aEffectiveContentBoxBSize, const nscoord aInset)
     : mBlock(aFrame),
       mPresContext(aPresContext),
       mReflowInput(aReflowInput),
       mContentArea(aReflowInput.GetWritingMode()),
+      mInsetForBalance(aInset),
       mPushedFloats(nullptr),
       mOverflowTracker(nullptr),
       mBorderPadding(
