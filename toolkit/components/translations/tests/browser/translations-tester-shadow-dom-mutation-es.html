@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Translations Test</title>
+  <style>
+    div {
+      margin: 10px auto;
+      width: 300px
+    }
+    p {
+      margin: 47px 0;
+      font-size: 21px;
+      line-height: 2;
+    }
+  </style>
+</head>
+<body>
+  <h1>This is content in light DOM</h1>
+  <div id="host1"></div>
+  <script>
+    const host1 = document.getElementById("host1");
+    host1.attachShadow({mode: "open"});
+  </script>
+</body>
+</html>
