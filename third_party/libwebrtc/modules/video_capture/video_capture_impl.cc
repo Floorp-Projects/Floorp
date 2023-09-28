@@ -235,7 +235,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
       buffer.get()->StrideV(), 0, 0,  // No Cropping
       width, height, dst_width, dst_height, rotation_mode,
       ConvertVideoType(frameInfo.videoType));
-  if (conversionResult < 0) {
+  if (conversionResult != 0) {
     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
                       << static_cast<int>(frameInfo.videoType) << "to I420.";
     return -1;
