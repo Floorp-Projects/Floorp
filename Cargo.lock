@@ -3941,7 +3941,7 @@ source = "git+https://github.com/mozilla/application-services?rev=1a59041d0c7d36
 name = "nsstring"
 version = "0.1.0"
 dependencies = [
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
  "encoding_rs",
 ]
 

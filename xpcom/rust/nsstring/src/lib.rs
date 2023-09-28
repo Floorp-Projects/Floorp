@@ -157,6 +157,7 @@ bitflags! {
     // While this has the same layout as u16, it cannot be passed
     // over FFI safely as a u16.
     #[repr(C)]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     struct DataFlags: u16 {
         const TERMINATED = 1 << 0; // IsTerminated returns true
         const VOIDED = 1 << 1; // IsVoid returns true
@@ -172,6 +173,7 @@ bitflags! {
     // While this has the same layout as u16, it cannot be passed
     // over FFI safely as a u16.
     #[repr(C)]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     struct ClassFlags: u16 {
         const INLINE = 1 << 0; // |this|'s buffer is inline
         const NULL_TERMINATED = 1 << 1; // |this| requires its buffer is null-terminated
