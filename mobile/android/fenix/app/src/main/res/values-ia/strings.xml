@@ -328,16 +328,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Non ora</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Face de %s tu companion de navigation</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Face de Firefox tu companion de navigation</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s antepone le personas al profitos e defende tu confidentialitate blocante traciatores trans-sitos.\n\nPro saper plus nostre %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox antepone le personas al profitos e defende tu confidentialitate blocante traciatores trans-sitos.\n\nPro saper plus nostre aviso de confidentialitate.</string>
@@ -356,16 +349,10 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Aperir session</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Non ora</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Le notificationes te adjuta a facer plus con %s</string>
 
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Le notificationes te adjuta a facer plus con Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Invia schedas inter apparatos, gere downloads, e recipe consilios re obtener le maximo per %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Invia schedas inter apparatos, gere downloads, e recipe consilios re obtener le maximo per Firefox.</string>
@@ -575,6 +562,16 @@
     <string name="preferences_account_settings">Parametros de conto</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Auto-completar URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Suggestiones de sponsors</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Supportar %1$s con occasional suggestiones sponsorisate</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Suggestiones de %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Recipe suggestiones del web relative a tu recerca</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Aperir ligamines in apps</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2305,9 +2302,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Controlar ora</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Revisiones ancora non bastante</string>
+    <string name="review_quality_check_no_reviews_warning_title">Revisiones ancora non bastante</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Quando iste producto habera plus de recensiones, nos potera controlar su qualitate.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Quando iste producto habera plus de recensiones, nos potera controlar su qualitate.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Le producto non es disponibile</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2315,7 +2312,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Reporta que iste producto es retro in stock</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Controlante qualitate de recension</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Controlante qualitate de recension</string>
 
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Controlante qualitate de recension</string>
@@ -2326,9 +2323,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Nos deberea haber info re iste recensiones de producto in 24 horas. Controla plus tarde.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Nos non pote controlar iste recensiones</string>
+    <string name="review_quality_check_not_analyzable_info_title">Nos non pote controlar iste recensiones</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Infortunatemente, nos non pote verificar le qualitate de recension pro certe typos de productos. Per exemplo, cartas dono e diffusion multimedial video, musica, e jocos.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Infortunatemente, nos non pote verificar le qualitate de recension pro certe typos de productos. Per exemplo, cartas dono e diffusion multimedial video, musica, e jocos.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Info a venir tosto</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2338,13 +2335,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Comprendite</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Nulle info disponibile al momento</string>
+    <string name="review_quality_check_generic_error_title">Nulle info disponibile al momento</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Nos labora pro resolver le problema. Retenta tosto.</string>
+    <string name="review_quality_check_generic_error_body">Nos labora pro resolver le problema. Retenta tosto.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Nulle connexion de rete</string>
+    <string name="review_quality_check_no_connection_title">Nulle connexion de rete</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Verifica tu connexion de rete e pois, tenta recargar le pagina.</string>
+    <string name="review_quality_check_no_connection_body">Verifica tu connexion de rete e pois, tenta recargar le pagina.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Nulle info ancora re iste recensiones</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
@@ -2378,7 +2375,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Aperir le verificator de recension</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Aperir le verificator de recension</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

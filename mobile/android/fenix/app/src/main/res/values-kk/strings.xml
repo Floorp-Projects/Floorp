@@ -321,16 +321,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Қазір емес</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s негізгі браузер етіп орнатыңыз</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox-ты негізгі браузер етіп орнатыңыз</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s сайтаралық трекерлерді блоктау арқылы адамдарды табыстан жоғары қояды және жекелігіңізді қорғайды.\n\nТолығырақ ақпаратты %2$s ішінен алыңыз.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox сайтаралық трекерлерді блоктау арқылы адамдарды табыстан жоғары қояды және жекелігіңізді қорғайды.\n\nТолығырақ ақпаратты жекелік хабарламамыздан алыңыз.</string>
@@ -349,15 +342,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Кіру</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Қазір емес</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Хабарландырулар %s арқылы көбірек жұмыс бітіруге көмектеседі</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Хабарландырулар Firefox арқылы көбірек жұмыс бітіруге көмектеседі</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Құрылғылар арасында беттерді жіберіңіз, жүктемелеріңізді басқарыңыз және %s мүмкіндігін барынша пайдалану туралы кеңестер алыңыз.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Құрылғылар арасында беттерді жіберіңіз, жүктемелеріңізді басқарыңыз және Firefox мүмкіндігін барынша пайдалану туралы кеңестер алыңыз.</string>
@@ -566,6 +553,16 @@
     <string name="preferences_account_settings">Тіркелгі баптаулары</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">URL адрестерін автотолықтыру</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Демеушілердің ұсыныстары</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Кездейсоқ демеушілік ұсыныстармен %1$s өніміне қолдау көрсету</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s ұсыныстары</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Сіздің іздеуіңізге қатысты интернеттен ұсыныстар алыңыз</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Сілтемелерді қолданбаларда ашу</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2319,7 +2316,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Пікірлерді тексеру құралын ашу</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Бета</string>
+    <string name="review_quality_check_beta_flag">Бета</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Пікірлерді тексеру құралын ашу</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

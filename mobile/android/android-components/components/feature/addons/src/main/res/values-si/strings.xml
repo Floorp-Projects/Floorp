@@ -172,6 +172,16 @@
     <string name="mozac_feature_addons_failed_to_install">%1$s ස්ථාපනයට අසමත් විය</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">එක්කහුව ස්ථාපනයට අසමත් විය.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">සම්බන්ධතාවයට බාධා වීමක් නිසා එක්කහුව බාගැනීමට නොහැකි විය.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">හානි වූ බව පෙනෙන නිසා මෙම එක්කහුව ස්ථාපනයට නොහැකිය.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">සත්‍යාපනය නොකළ එක්කහුවක් බැවින් ස්ථාපනය කිරීමට නොහැකිය.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%2$s %3$s සමඟ නොගැළපෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">ඉහළ අවදානමක් සහිත ආරක්‍ෂණ හෝ ස්ථායි ගැටළු තිබෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">ඉහළ අවදානමක් සහිත ආරක්‍ෂණ හෝ ස්ථායි ගැටළු තිබෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->

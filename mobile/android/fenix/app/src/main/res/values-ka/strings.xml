@@ -318,16 +318,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">ახლა არა</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">გამოიყენეთ %s ძირითად ბრაუზერად</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">გამოიყენეთ Firefox ძირითად ბრაუზერად</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s ხალხს მოგებაზე წინ აყენებს და იცავს თქვენს პირად მონაცემებს საიტთაშორისი მეთვალყურეებისგან.\n\nვრცლად იხილეთ %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ხალხს მოგებაზე წინ აყენებს და იცავს თქვენს პირად მონაცემებს საიტთაშორისი მეთვალყურეებისგან.\n\nვრცლად იხილეთ პირადულობის განაცხადი.</string>
@@ -346,15 +339,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">შესვლა</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ახლა არა</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">შეტყობინებებით შეძლებთ, უკეთ გამოიყენოთ %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">შეტყობინებები დაგეხმარებათ, სრულყოფილად გამოიყენოთ Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">გაგზავნეთ ჩანართები მოწყობილობებს შორის, მართეთ ჩამოტვირთვები და მიიღეთ რჩევები, რომ სრულყოფილად გამოიყენოთ %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">გაგზავნეთ ჩანართები მოწყობილობებს შორის, მართეთ ჩამოტვირთვები და მიიღეთ რჩევები, რომ სრულყოფილად გამოიყენოთ Firefox.</string>
@@ -563,6 +550,16 @@
     <string name="preferences_account_settings">ანგარიშის პარამეტრები</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">ბმულების თვითდასრულება</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">შემოთავაზებები დამფინანსებლებისგან</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">დაეხმარეთ %1$s-ს დროდადრო დაფინანსებული შემოთავაზებებით</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">შემოთავაზებების წყაროა %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">შემოთავაზებები ვებსივრციდან თქვენ მიერ მოძიებულის შესაბამისად</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ბმულების გახსნა პროგრამებში</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2323,7 +2320,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">მიმოხილვის შემმოწმებლის გახსნა</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">საცდელი Beta</string>
+    <string name="review_quality_check_beta_flag">საცდელი Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">მიმოხილვის შემმოწმებლის გახსნა</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

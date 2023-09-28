@@ -560,7 +560,9 @@
     <string name="preferences_show_sponsored_suggestions_summary">Cefnogwch %1$s gydag awgrymiadau noddedig achlysurol</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
-    <string name="preferences_show_nonsponsored_suggestions">Awgrymiadau o %1$s</string>
+    <string name="preferences_show_nonsponsored_suggestions">Awgrymiadau gan %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Cael awgrymiadau o’r we sy’n ymwneud â’ch chwilio</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
 

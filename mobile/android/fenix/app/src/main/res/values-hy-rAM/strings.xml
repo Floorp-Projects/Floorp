@@ -321,16 +321,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ոչ հիմա</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Դարձրեք %s-ը ձեր հիմնական դիտարկիչը</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Դարձրեք Firefox-ը ձեր հիմնական դիտարկիչը</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s-ը մարդկանց վեր է դասում շահույթից և պաշտպանում է ձեր գաղտնիությունը՝ արգելափակելով միջկայքի հետագծիչները:\n\nԻմացեք ավելին մեր %2$s-ում:</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox-ը մարդկանց վեր է դասում շահույթից և պաշտպանում է ձեր գաղտնիությունը՝ արգելափակելով միջկայքի հետագծիչները:\n\nԻմացեք ավելին մեր գաղտնիության ծանուցումներում:</string>
@@ -349,15 +342,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Մուտք գործել</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ոչ հիմա</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ծանուցումներն օգնում են ձեզ ավելին անել %s-ի հետ</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Ծանուցումներն օգնում են ձեզ ավելին անել Firefox-ի հետ</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Ուղարկեք ներդիրներ սարքերի միջև, կառավարեք ներբեռնումները և ստացեք խորհուրդներ %s-ից առավելագույնը քաղելու վերաբերյալ:</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Ուղարկեք ներդիրներ սարքերի միջև, կառավարեք ներբեռնումները և ստացեք խորհուրդներ Firefox-ից առավելագույնը քաղելու վերաբերյալ:</string>
@@ -564,6 +551,16 @@
     <string name="preferences_account_settings">Հաշվի կարգավորումներ</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Ինքնալրացում</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Առաջարկություններ հովանավորներից</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Աջակցեք %1$s-ին երբեմն հովանավորվող առաջարկներով</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Առաջարկներ %1$s-ից</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Ստացեք առաջարկներ համացանցից՝ կապված ձեր որոնման հետ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Բացել հղումները հավելվածներում</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2242,9 +2239,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Ստուգիր հիմա</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Դեռևս բավարար ակնարկներ չկան</string>
+    <string name="review_quality_check_no_reviews_warning_title">Դեռևս բավարար ակնարկներ չկան</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Երբ այս ապրանքն ավելի շատ կարծիքներ ունենա, մենք կկարողանանք ստուգել դրանց որակը:</string>
+    <string name="review_quality_check_no_reviews_warning_body">Երբ այս ապրանքն ավելի շատ կարծիքներ ունենա, մենք կկարողանանք ստուգել դրանց որակը:</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Ապրանքը հասանելի չէ</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2252,7 +2249,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Հաղորդեք, որ այս ապրանքը կրկին պահեստում է</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Կարծիքի որակի ստուգում</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Կարծիքի որակի ստուգում</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Կարծիքի որակի ստուգում</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2262,9 +2259,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Մենք պետք է 24 ժամվա ընթացքում տեղեկություններ ունենանք այս ապրանքի կարծիքների մասին: Խնդրում ենք նորից ստուգել:</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Մենք չենք կարող ստուգել այս կարծիքները</string>
+    <string name="review_quality_check_not_analyzable_info_title">Մենք չենք կարող ստուգել այս կարծիքները</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Ցավոք, մենք չենք կարող ստուգել որոշ տեսակի ապրանքների կարծիքների որակը: Օրինակ՝ նվեր քարտեր և հոսքային տեսանյութերի, երաժշտության և խաղեր:</string>
+    <string name="review_quality_check_not_analyzable_info_body">Ցավոք, մենք չենք կարող ստուգել որոշ տեսակի ապրանքների կարծիքների որակը: Օրինակ՝ նվեր քարտեր և հոսքային տեսանյութերի, երաժշտության և խաղեր:</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Տեղեկությունները շուտով</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2274,13 +2271,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Հասկացա</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Այս պահին տեղեկություններ չկան</string>
+    <string name="review_quality_check_generic_error_title">Այս պահին տեղեկություններ չկան</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Մենք աշխատում ենք խնդիրը լուծելու ուղղությամբ։ Խնդրում ենք նորից ստուգել շուտով:</string>
+    <string name="review_quality_check_generic_error_body">Մենք աշխատում ենք խնդիրը լուծելու ուղղությամբ։ Խնդրում ենք նորից ստուգել շուտով:</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Չկա ցանցային կապակցում</string>
+    <string name="review_quality_check_no_connection_title">Չկա ցանցային կապակցում</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Ստուգեք ձեր ցանցային կապակցումը և փորձեք վերաբեռնել էջը:</string>
+    <string name="review_quality_check_no_connection_body">Ստուգեք ձեր ցանցային կապակցումը և փորձեք վերաբեռնել էջը:</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Այս կարծիքների մասին դեռ տեղեկություններ չկան</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
@@ -2315,7 +2312,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Բացել կարծիքների ստուգիչը</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Բետա</string>
+    <string name="review_quality_check_beta_flag">Բետա</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Բացել կարծիքների ստուգիչը</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

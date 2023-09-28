@@ -328,16 +328,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ei nyt</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Aseta %s selaimeksesi</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Aseta Firefox selaimeksesi</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s asettaa ihmiset voittojen edelle ja suojaa yksityisyyttäsi estämällä sivustojen väliset seuraimet.\n\nLisätietoja on %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox asettaa ihmiset voittojen edelle ja suojaa yksityisyyttäsi estämällä sivustojen väliset seuraimet.\n\nLisätietoja on tietosuojaselosteessamme.</string>
@@ -356,15 +349,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kirjaudu sisään</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Ilmoitukset auttavat sinua tekemään enemmän %silla</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Ilmoitukset auttavat sinua tekemään enemmän Firefoxilla</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Lähetä välilehtiä laitteiden välillä, hallitse latauksia ja saa vinkkejä, joiden avulla saat kaiken irti %sista.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Lähetä välilehtiä laitteiden välillä, hallitse latauksia ja saa vinkkejä, joiden avulla saat kaiken irti Firefoxista.</string>
@@ -572,6 +559,16 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Täydennä osoitteet automaattisesti</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Ehdotuksia sponsoreilta</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Tue %1$sia satunnaisilla sponsoroiduilla ehdotuksilla</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Ehdotuksia %1$silta</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Vastaanota ehdotuksia verkosta hakuusi liittyen</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Avaa linkit sovelluksissa</string>
 
@@ -2257,9 +2254,9 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Tarkista nyt</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Ei vielä tarpeeksi arvosteluja</string>
+    <string name="review_quality_check_no_reviews_warning_title">Ei vielä tarpeeksi arvosteluja</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Kun tästä tuotteesta on enemmän arvosteluja, voimme tarkistaa niiden laadun.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Kun tästä tuotteesta on enemmän arvosteluja, voimme tarkistaa niiden laadun.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Tuote ei ole saatavilla</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2267,7 +2264,7 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Ilmoita, että tämä tuote on jälleen varastossa</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Tarkistetaan arvostelun laatua</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Tarkistetaan arvostelun laatua</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Tarkistetaan arvostelun laatua</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2277,9 +2274,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Meillä pitäisi olla tietoa tämän tuotteen arvosteluista 24 tunnin sisällä. Tarkista tilanne uudelleen.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Emme voi tarkistaa näitä arvosteluja</string>
+    <string name="review_quality_check_not_analyzable_info_title">Emme voi tarkistaa näitä arvosteluja</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Valitettavasti emme voi tarkistaa arvostelun laatua tietyntyyppisten tuotteiden osalta. Esimerkiksi lahjakortit ja suoratoistovideot, musiikki ja pelit.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Valitettavasti emme voi tarkistaa arvostelun laatua tietyntyyppisten tuotteiden osalta. Esimerkiksi lahjakortit ja suoratoistovideot, musiikki ja pelit.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Tietoa tulossa pian</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2289,13 +2286,13 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Selvä</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Tietoja ei juuri nyt saatavilla</string>
+    <string name="review_quality_check_generic_error_title">Tietoja ei juuri nyt saatavilla</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Pyrimme ratkaisemaan ongelman. Tarkista tilanne pian uudelleen.</string>
+    <string name="review_quality_check_generic_error_body">Pyrimme ratkaisemaan ongelman. Tarkista tilanne pian uudelleen.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Ei verkkoyhteyttä</string>
+    <string name="review_quality_check_no_connection_title">Ei verkkoyhteyttä</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Tarkista verkkoyhteytesi ja yritä sitten ladata sivu uudelleen.</string>
+    <string name="review_quality_check_no_connection_body">Tarkista verkkoyhteytesi ja yritä sitten ladata sivu uudelleen.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Näistä arvosteluista ei ole vielä tietoa</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
