@@ -393,16 +393,9 @@
 .urlbarView-dynamic-weather-bottom {
   font-size: var(--urlbarView-small-font-size);
   margin-top: 0.40em;
-  opacity: 0.6;
-}
 
-.urlbarView-row[dynamicType=weather][selected] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary {
-  > .urlbarView-dynamic-weather-top > .urlbarView-url {
-      color: inherit;
-    }
-
-  > .urlbarView-dynamic-weather-bottom {
-    opacity: 1;
+  .urlbarView-row[dynamicType=weather]:not([selected]) > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary > & {
+    opacity: 0.6;
   }
 }
 
