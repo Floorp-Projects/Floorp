@@ -31,7 +31,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
-#include "nsUnicodeProperties.h"
+#include "nsUnicharUtils.h"
 #include "Pivot.h"
 #include "TextAttrs.h"
 
@@ -300,30 +300,7 @@ static WordBreakClass GetWordBreakClass(char16_t aChar) {
     default:
       break;
   }
-  // Based on ClusterIterator::IsPunctuation in
-  // layout/generic/nsTextFrame.cpp.
-  uint8_t cat = unicode::GetGeneralCategory(aChar);
-  switch (cat) {
-    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
-      if (aChar == '_' &&
-          !StaticPrefs::layout_word_select_stop_at_underscore()) {
-        return eWbcOther;
-      }
-      [[fallthrough]];
-    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
-    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
-    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
-    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
-    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
-    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
-    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
-    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
-    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
-      return eWbcPunct;
-    default:
-      break;
-  }
-  return eWbcOther;
+  return mozilla::IsPunctuationForWordSelect(aChar) ? eWbcPunct : eWbcOther;
 }
 
 /**
