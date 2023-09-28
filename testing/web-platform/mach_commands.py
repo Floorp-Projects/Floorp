@@ -159,13 +159,16 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         kwargs = self.kwargs_common(kwargs)
 
-        # Add additional kwargs consumed by the run frontend. Currently we don't
-        # have a way to set these through mach
-        kwargs["channel"] = None
-        kwargs["prompt"] = True
-        kwargs["install_browser"] = False
-        kwargs["install_webdriver"] = None
-        kwargs["affected"] = None
+        # Our existing kwargs corresponds to the wptrunner command line arguments.
+        # `wpt run` extends this with some additional arguments that are consumed by
+        # the frontend. Copy over the default values of these extra arguments so they
+        # are present when we call into that frontend.
+        run_parser = run.create_parser()
+        run_kwargs = run_parser.parse_args([kwargs["product"], kwargs["test_list"]])
+
+        for key, value in vars(run_kwargs).items():
+            if key not in kwargs:
+                kwargs[key] = value
 
         # Install the deps
         # We do this explicitly to avoid calling pip with options that aren't
@@ -197,7 +200,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         for key, value in list(iteritems(kwargs["test_paths"])):
             meta_suffix = key.strip("/")
             meta_dir = os.path.join(
-                self._here, "products", kwargs["product"], meta_suffix
+                self._here, "products", kwargs["product"].name, meta_suffix
             )
             value["metadata_path"] = meta_dir
             if not os.path.exists(meta_dir):
