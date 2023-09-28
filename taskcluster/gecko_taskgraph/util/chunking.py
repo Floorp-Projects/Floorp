@@ -157,18 +157,19 @@ def chunk_manifests(suite, platform, chunks, manifests):
         A list of length `chunks` where each item contains a list of manifests
         that run in that chunk.
     """
-    manifests = set(manifests)
+    ini_manifests = set([x.replace(".toml", ".ini") for x in manifests])
 
     if "web-platform-tests" not in suite:
         runtimes = {
-            k: v for k, v in get_runtimes(platform, suite).items() if k in manifests
+            k: v for k, v in get_runtimes(platform, suite).items() if k in ini_manifests
         }
-        return [
-            c[1]
-            for c in chunk_by_runtime(None, chunks, runtimes).get_chunked_manifests(
-                manifests
+        retVal = []
+        for c in chunk_by_runtime(None, chunks, runtimes).get_chunked_manifests(
+            ini_manifests
+        ):
+            retVal.append(
+                [m if m in manifests else m.replace(".ini", ".toml") for m in c[1]]
             )
-        ]
 
     # Keep track of test paths for each chunk, and the runtime information.
     chunked_manifests = [[] for _ in range(chunks)]
