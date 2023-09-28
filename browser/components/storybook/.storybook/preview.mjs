@@ -61,6 +61,11 @@ class WithCommonStyles extends MozLitElement {
     context: { type: Object },
   };
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.classList.add("anonymous-content-host");
+  }
+
   storyContent() {
     if (this.story) {
       return this.story();
