@@ -102,7 +102,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.11.182';
+    const workerVersion = '3.11.196';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -431,6 +431,7 @@ class WorkerMessageHandler {
           }
         } else if (await _structTreeRoot.canUpdateStructTree({
           pdfManager,
+          xref,
           newAnnotationsByPage
         })) {
           structTreeRoot = _structTreeRoot;
@@ -43476,6 +43477,7 @@ class StructTreeRoot {
   }
   async canUpdateStructTree({
     pdfManager,
+    xref,
     newAnnotationsByPage
   }) {
     if (!this.ref) {
@@ -43497,21 +43499,17 @@ class StructTreeRoot {
       (0, _util.warn)("Cannot update the struct tree: nums isn't an array.");
       return false;
     }
-    const {
-      numPages
-    } = pdfManager.catalog;
+    const numberTree = new _name_number_tree.NumberTree(parentTree, xref);
     for (const pageIndex of newAnnotationsByPage.keys()) {
       const {
-        pageDict,
-        ref: pageRef
+        pageDict
       } = await pdfManager.getPage(pageIndex);
-      if (!(pageRef instanceof _primitives.Ref)) {
-        (0, _util.warn)(`Cannot save the struct tree: page ${pageIndex} has no ref.`);
-        return false;
+      if (!pageDict.has("StructParents")) {
+        continue;
       }
       const id = pageDict.get("StructParents");
-      if (!Number.isInteger(id) || id < 0 || id >= numPages) {
-        (0, _util.warn)(`Cannot save the struct tree: page ${pageIndex} has no id.`);
+      if (!Number.isInteger(id) || !Array.isArray(numberTree.get(id))) {
+        (0, _util.warn)(`Cannot save the struct tree: page ${pageIndex} has a wrong id.`);
         return false;
       }
     }
@@ -43524,7 +43522,7 @@ class StructTreeRoot {
         elements,
         xref: this.dict.xref,
         pageDict,
-        parentTree
+        numberTree
       });
       for (const element of elements) {
         if (element.accessibilityData?.type) {
@@ -43637,6 +43635,7 @@ class StructTreeRoot {
       const {
         ref: pageRef
       } = await pdfManager.getPage(pageIndex);
+      const isPageRef = pageRef instanceof _primitives.Ref;
       for (const {
         accessibilityData,
         ref,
@@ -43689,7 +43688,9 @@ class StructTreeRoot {
         const objDict = new _primitives.Dict(xref);
         tagDict.set("K", objDict);
         objDict.set("Type", objr);
-        objDict.set("Pg", pageRef);
+        if (isPageRef) {
+          objDict.set("Pg", pageRef);
+        }
         objDict.set("Obj", ref);
         buffer.length = 0;
         await (0, _writer.writeObject)(tagRef, tagDict, buffer, xref);
@@ -43707,7 +43708,7 @@ class StructTreeRoot {
     elements,
     xref,
     pageDict,
-    parentTree
+    numberTree
   }) {
     const idToElement = new Map();
     for (const element of elements) {
@@ -43717,11 +43718,10 @@ class StructTreeRoot {
       }
     }
     const id = pageDict.get("StructParents");
-    const numberTree = new _name_number_tree.NumberTree(parentTree, xref);
-    const parentArray = numberTree.get(id);
-    if (!Array.isArray(parentArray)) {
+    if (!Number.isInteger(id)) {
       return;
     }
+    const parentArray = numberTree.get(id);
     const updateElement = (kid, pageKid, kidRef) => {
       const element = idToElement.get(kid);
       if (element) {
@@ -58293,8 +58293,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.11.182';
-const pdfjsBuild = '3f7060e77';
+const pdfjsVersion = '3.11.196';
+const pdfjsBuild = 'b6d75e736';
 })();
 
 /******/ 	return __webpack_exports__;
