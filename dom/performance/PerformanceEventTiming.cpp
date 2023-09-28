@@ -6,6 +6,7 @@
 
 #include "PerformanceEventTiming.h"
 #include "PerformanceMainThread.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/PerformanceEventTimingBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Performance.h"
