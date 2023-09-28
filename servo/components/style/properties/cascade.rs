@@ -727,6 +727,10 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.compute_writing_mode();
         }
 
+        if self.apply_one_prioritary_property(data, PrioritaryPropertyId::Zoom) {
+            self.compute_zoom();
+        }
+
         // Compute font-family.
         let has_font_family =
             self.apply_one_prioritary_property(data, PrioritaryPropertyId::FontFamily);
@@ -879,6 +883,12 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         // To improve i-cache behavior, we outline the individual functions and
         // use virtual dispatch instead.
         (CASCADE_PROPERTY[longhand_id as usize])(&declaration, &mut self.context);
+    }
+
+    fn compute_zoom(&mut self) {
+        debug_assert!(matches!(self.cascade_mode, CascadeMode::Unvisited { .. }));
+        self.context.builder.effective_zoom =
+            self.context.builder.inherited_effective_zoom() * self.context.builder.specified_zoom();
     }
 
     fn compute_writing_mode(&mut self) {

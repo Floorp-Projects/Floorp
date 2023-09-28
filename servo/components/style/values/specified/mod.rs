@@ -43,7 +43,7 @@ pub use self::box_::{
     Clear, ContainIntrinsicSize, ContentVisibility, Display, Float, LineClamp, Overflow,
     OverflowAnchor, OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollbarGutter,
     ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType,
-    TouchAction, VerticalAlign, WillChange,
+    TouchAction, VerticalAlign, WillChange, Zoom
 };
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
@@ -513,6 +513,12 @@ impl NonNegativeNumberOrPercentage {
     #[inline]
     pub fn hundred_percent() -> Self {
         NonNegative(NumberOrPercentage::Percentage(Percentage::hundred()))
+    }
+
+    /// Return a particular number.
+    #[inline]
+    pub fn new_number(n: f32) -> Self {
+        NonNegative(NumberOrPercentage::Number(Number::new(n)))
     }
 }
 

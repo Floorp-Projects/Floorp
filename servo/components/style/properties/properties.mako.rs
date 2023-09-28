@@ -895,6 +895,8 @@ PRIORITARY_PROPERTIES = set([
     "color-scheme",
     # forced-color-adjust affects whether colors are adjusted.
     "forced-color-adjust",
+    # Zoom affects all absolute lengths.
+    "zoom",
 ])
 
 def is_visited_dependent(p):
@@ -3004,6 +3006,9 @@ pub struct ComputedValuesInner {
     /// The writing mode of this computed values struct.
     pub writing_mode: WritingMode,
 
+    /// The effective zoom value.
+    pub effective_zoom: Zoom,
+
     /// A set of flags we use to store misc information regarding this style.
     pub flags: ComputedValueFlags,
 
@@ -3214,6 +3219,7 @@ impl ComputedValues {
         pseudo: Option<<&PseudoElement>,
         custom_properties: crate::custom_properties::ComputedCustomProperties,
         writing_mode: WritingMode,
+        effective_zoom: computed::Zoom,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
         visited_style: Option<Arc<ComputedValues>>,
@@ -3227,6 +3233,7 @@ impl ComputedValues {
                 writing_mode,
                 rules,
                 visited_style,
+                effective_zoom,
                 flags,
             % for style_struct in data.active_style_structs():
                 ${style_struct.ident},
@@ -3641,6 +3648,9 @@ pub struct StyleBuilder<'a> {
     /// TODO(emilio): Make private.
     pub writing_mode: WritingMode,
 
+    /// The effective zoom.
+    pub effective_zoom: computed::Zoom,
+
     /// Flags for the computed value.
     pub flags: Cell<ComputedValueFlags>,
 
@@ -3667,7 +3677,6 @@ impl<'a> StyleBuilder<'a> {
         let inherited_style = parent_style.unwrap_or(reset_style);
 
         let flags = inherited_style.flags.inherited();
-
         StyleBuilder {
             device,
             stylist,
@@ -3679,6 +3688,7 @@ impl<'a> StyleBuilder<'a> {
             is_root_element,
             custom_properties: crate::custom_properties::ComputedCustomProperties::default(),
             writing_mode: inherited_style.writing_mode,
+            effective_zoom: inherited_style.effective_zoom,
             flags: Cell::new(flags),
             visited_style: None,
             % for style_struct in data.active_style_structs():
@@ -3716,6 +3726,7 @@ impl<'a> StyleBuilder<'a> {
             rules: None,
             custom_properties: style_to_derive_from.custom_properties().clone(),
             writing_mode: style_to_derive_from.writing_mode,
+            effective_zoom: style_to_derive_from.effective_zoom,
             flags: Cell::new(style_to_derive_from.flags),
             visited_style: None,
             % for style_struct in data.active_style_structs():
@@ -3967,6 +3978,7 @@ impl<'a> StyleBuilder<'a> {
             self.pseudo,
             self.custom_properties,
             self.writing_mode,
+            self.effective_zoom,
             self.flags.get(),
             self.rules,
             self.visited_style,
@@ -3989,6 +4001,21 @@ impl<'a> StyleBuilder<'a> {
     /// Inherited writing-mode.
     pub fn inherited_writing_mode(&self) -> &WritingMode {
         &self.inherited_style.writing_mode
+    }
+
+    /// The effective zoom value that we should multiply absolute lengths by.
+    pub fn effective_zoom(&self) -> computed::Zoom {
+        self.effective_zoom
+    }
+
+    /// The zoom specified on this element.
+    pub fn specified_zoom(&self) -> computed::Zoom {
+        self.get_box().clone_zoom()
+    }
+
+    /// Inherited zoom.
+    pub fn inherited_effective_zoom(&self) -> computed::Zoom {
+        self.inherited_style.effective_zoom
     }
 
     /// The computed value flags of our parent.

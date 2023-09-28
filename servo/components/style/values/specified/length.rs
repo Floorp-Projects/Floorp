@@ -696,8 +696,8 @@ impl AbsoluteLength {
 impl ToComputedValue for AbsoluteLength {
     type ComputedValue = CSSPixelLength;
 
-    fn to_computed_value(&self, _: &Context) -> Self::ComputedValue {
-        CSSPixelLength::new(self.to_px()).finite()
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        CSSPixelLength::new(context.builder.effective_zoom().zoom(self.to_px())).finite()
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {

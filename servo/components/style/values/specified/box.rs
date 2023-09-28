@@ -11,7 +11,7 @@ use crate::values::generics::box_::{
     VerticalAlignKeyword,
 };
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
-use crate::values::specified::{AllowQuirks, Integer};
+use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumberOrPercentage};
 use crate::values::CustomIdent;
 use cssparser::Parser;
 use num_traits::FromPrimitive;
@@ -157,8 +157,9 @@ impl Display {
     pub const Block: Self =
         Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Flow as u16);
     #[cfg(feature = "gecko")]
-    pub const FlowRoot: Self =
-        Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::FlowRoot as u16);
+    pub const FlowRoot: Self = Self(
+        ((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::FlowRoot as u16,
+    );
     pub const Flex: Self =
         Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Flex as u16);
     pub const InlineFlex: Self =
@@ -558,26 +559,26 @@ impl Parse for Display {
             DisplayKeyword::Full(d) => return Ok(d),
             DisplayKeyword::Outside(o) => {
                 outside = Some(o);
-            }
+            },
             DisplayKeyword::Inside(i) => {
                 inside = Some(i);
             },
             DisplayKeyword::ListItem => {
                 got_list_item = true;
-            }
+            },
         };
 
         while let Ok(kw) = input.try_parse(DisplayKeyword::parse) {
             match kw {
                 DisplayKeyword::ListItem if !got_list_item => {
                     got_list_item = true;
-                }
+                },
                 DisplayKeyword::Outside(o) if outside.is_none() => {
                     outside = Some(o);
-                }
+                },
                 DisplayKeyword::Inside(i) if inside.is_none() => {
                     inside = Some(i);
-                }
+                },
                 _ => return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
             }
         }
@@ -1878,5 +1879,23 @@ impl ScrollbarGutter {
     #[inline]
     fn has_stable(&self) -> bool {
         self.intersects(Self::STABLE)
+    }
+}
+
+/// A specified value for the zoom property.
+#[derive(
+    Clone, Copy, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem,
+)]
+#[allow(missing_docs)]
+pub enum Zoom {
+    Normal,
+    Value(NonNegativeNumberOrPercentage),
+}
+
+impl Zoom {
+    /// Return a particular number value of the zoom property.
+    #[inline]
+    pub fn new_number(n: f32) -> Self {
+        Self::Value(NonNegativeNumberOrPercentage::new_number(n))
     }
 }

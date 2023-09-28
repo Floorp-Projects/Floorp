@@ -10,7 +10,7 @@ use crate::properties::{ComputedValues, StyleBuilder};
 use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
 use crate::shared_lock::StylesheetGuards;
-use crate::values::computed::NonNegativeLength;
+use crate::values::computed::{NonNegativeLength, Zoom};
 use fxhash::FxHashMap;
 use servo_arc::Arc;
 use smallvec::SmallVec;
@@ -45,10 +45,19 @@ impl RuleCacheConditions {
     fn cacheable(&self) -> bool {
         !self.uncacheable
     }
+}
 
+#[derive(Debug)]
+struct CachedConditions {
+    font_size: Option<NonNegativeLength>,
+    writing_mode: Option<WritingMode>,
+    zoom: Zoom,
+}
+
+impl CachedConditions {
     /// Returns whether `style` matches the conditions.
     fn matches(&self, style: &StyleBuilder) -> bool {
-        if self.uncacheable {
+        if style.effective_zoom != self.zoom {
             return false;
         }
 
@@ -71,7 +80,7 @@ impl RuleCacheConditions {
 /// A TLS cache from rules matched to computed values.
 pub struct RuleCache {
     // FIXME(emilio): Consider using LRUCache or something like that?
-    map: FxHashMap<StrongRuleNode, SmallVec<[(RuleCacheConditions, Arc<ComputedValues>); 1]>>,
+    map: FxHashMap<StrongRuleNode, SmallVec<[(CachedConditions, Arc<ComputedValues>); 1]>>,
 }
 
 impl RuleCache {
@@ -177,11 +186,15 @@ impl RuleCache {
             "Inserting cached reset style with conditions {:?}",
             conditions
         );
+        let cached_conditions = CachedConditions {
+            writing_mode: conditions.writing_mode,
+            font_size: conditions.font_size,
+            zoom: style.effective_zoom,
+        };
         self.map
             .entry(rules)
-            .or_insert_with(SmallVec::new)
-            .push((conditions.clone(), style.clone()));
-
+            .or_default()
+            .push((cached_conditions, style.clone()));
         true
     }
 }
