@@ -241,10 +241,12 @@ module = wasmEvalText(`(module
 assertEq(Number(module.imported), 42);
 assertEq(Number(module.defined), 1337);
 
-// Initializer expressions can reference an imported immutable global.
-wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
-wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
-wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+if (!wasmGcEnabled()) {
+  // Initializer expressions can reference an imported immutable global.
+  wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+  wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+  wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+}
 
 wasmFailValidateText(`(module (import "globals" "a" (global f32)) (global i32 (global.get 0)))`, /type mismatch/);
 
