@@ -1498,6 +1498,31 @@ gfxFontFamily* gfxPlatformFontList::CheckFamily(gfxFontFamily* aFamily) {
   return aFamily;
 }
 
+bool gfxPlatformFontList::FindAndAddFamilies(
+    nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
+    const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
+    FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
+    gfxFloat aDevToCssSize) {
+  AutoLock lock(mLock);
+
+#ifdef DEBUG
+  auto initialLength = aOutput->Length();
+#endif
+
+  bool didFind =
+      FindAndAddFamiliesLocked(aPresContext, aGeneric, aFamily, aOutput, aFlags,
+                               aStyle, aLanguage, aDevToCssSize);
+#ifdef DEBUG
+  auto finalLength = aOutput->Length();
+  // Validate the expectation that the output-array grows if we return true,
+  // or remains the same (probably empty) if we return false.
+  MOZ_ASSERT_IF(didFind, finalLength > initialLength);
+  MOZ_ASSERT_IF(!didFind, finalLength == initialLength);
+#endif
+
+  return didFind;
+}
+
 bool gfxPlatformFontList::FindAndAddFamiliesLocked(
     nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
     const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,

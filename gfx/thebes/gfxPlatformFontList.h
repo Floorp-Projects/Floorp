@@ -332,11 +332,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
-      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) {
-    AutoLock lock(mLock);
-    return FindAndAddFamiliesLocked(aPresContext, aGeneric, aFamily, aOutput,
-                                    aFlags, aStyle, aLanguage, aDevToCssSize);
-  }
+      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0);
+
   virtual bool FindAndAddFamiliesLocked(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
