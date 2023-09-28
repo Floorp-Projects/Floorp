@@ -97,10 +97,6 @@ FINAL_LIBRARY = "xul"
 if CONFIG["MOZ_THUNDERBIRD"] or CONFIG["MOZ_SUITE"]:
     DEFINES["MOZ_SQLITE_FTS3_TOKENIZER"] = 1
 
-# This is the default value.  If we ever change it when compiling sqlite, we
-# will need to change it here as well.
-DEFINES["SQLITE_MAX_LIKE_PATTERN_LENGTH"] = 50000
-
 # Disable auxiliary files persistence if requested.
 if not CONFIG["MOZ_AVOID_DISK_REMNANT_ON_CLOSE"]:
     DEFINES["MOZ_SQLITE_PERSIST_AUXILIARY_FILES"] = 1
