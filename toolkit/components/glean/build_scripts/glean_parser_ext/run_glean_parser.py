@@ -13,10 +13,20 @@ import jinja2
 import jog
 import rust
 from glean_parser import lint, parser, translate, util
-from mozbuild.util import FileAvoidWrite
+from mozbuild.util import FileAvoidWrite, memoize
 from util import generate_metric_ids
 
 import js
+
+
+@memoize
+def get_deps():
+    # Any imported python module is added as a dep automatically,
+    # so we only need the index and the templates.
+    return {
+        "metrics_index.py",
+        *[str(p) for p in (Path(os.path.dirname(__file__)) / "templates").iterdir()],
+    }
 
 
 class ParserError(Exception):
@@ -92,16 +102,12 @@ def parse_with_options(input_files, options):
     return objects, options
 
 
-# Must be kept in sync with the length of `deps` in moz.build.
-DEPS_LEN = 19
-
-
 def main(cpp_fd, *args):
     def open_output(filename):
         return FileAvoidWrite(os.path.join(os.path.dirname(cpp_fd.name), filename))
 
     [js_h_path, js_cpp_path, rust_path] = args[-3:]
-    args = args[DEPS_LEN:-3]
+    args = args[:-3]
     all_objs, options = parse(args)
 
     cpp.output_cpp(all_objs, cpp_fd, options)
@@ -129,10 +135,12 @@ def main(cpp_fd, *args):
     with open_output(rust_path) as rust_fd:
         rust.output_rust(all_objs, rust_fd, ping_names_by_app_id, options)
 
+    return get_deps()
+
 
 def gifft_map(output_fd, *args):
     probe_type = args[-1]
-    args = args[DEPS_LEN:-1]
+    args = args[:-1]
     all_objs, options = parse(args)
 
     # Events also need to output maps from event extra enum to strings.
@@ -144,6 +152,8 @@ def gifft_map(output_fd, *args):
             output_gifft_map(output_fd, probe_type, all_objs, cpp_fd)
     else:
         output_gifft_map(output_fd, probe_type, all_objs, None)
+
+    return get_deps()
 
 
 def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
@@ -210,15 +220,15 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
 
 
 def jog_factory(output_fd, *args):
-    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     jog.output_factory(all_objs, output_fd, options)
+    return get_deps()
 
 
 def jog_file(output_fd, *args):
-    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     jog.output_file(all_objs, output_fd, options)
+    return get_deps()
 
 
 if __name__ == "__main__":
