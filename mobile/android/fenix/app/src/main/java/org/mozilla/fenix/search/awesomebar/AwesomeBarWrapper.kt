@@ -14,7 +14,9 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -62,6 +64,11 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                 ),
                 onSuggestionClicked = { suggestion ->
                     suggestion.onSuggestionClicked?.invoke()
+                    when {
+                        suggestion.flags.contains(AwesomeBar.Suggestion.Flag.HISTORY) -> {
+                            History.searchResultTapped.record(NoExtras())
+                        }
+                    }
                     onStopListener?.invoke()
                 },
                 onAutoComplete = { suggestion ->

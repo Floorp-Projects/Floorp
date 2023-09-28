@@ -114,6 +114,7 @@ internal suspend fun Iterable<HistoryMetadata>.into(
         AwesomeBar.Suggestion(
             provider = provider,
             icon = icon?.await()?.bitmap,
+            flags = setOf(AwesomeBar.Suggestion.Flag.HISTORY),
             title = result.title,
             description = result.key.url,
             editSuggestion = if (showEditSuggestion) result.key.url else null,
