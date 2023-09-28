@@ -88,6 +88,8 @@ add_task(async function test_execute() {
 
 add_task(async function killOnEnd() {
   let id = await NodeServer.fork();
+  await NodeServer.execute(id, `console.log("hello");`);
+  await NodeServer.execute(id, `console.error("hello");`);
   // Make the forked subprocess hang forever.
   NodeServer.execute(id, "while (true) {}").catch(e => {});
   await new Promise(resolve => do_timeout(10, resolve));
