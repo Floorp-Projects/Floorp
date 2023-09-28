@@ -3645,13 +3645,14 @@ void RestyleManager::MaybeRestyleForRelativeSelectorAttribute(
     auto* const oldAtom = aOldValue->Type() == nsAttrValue::eAtom
                               ? aOldValue->GetAtomValue()
                               : nullptr;
-    styleSet.MaybeInvalidateRelativeSelectorIDDependency(*aElement, oldAtom,
-                                                         aElement->GetID());
+    styleSet.MaybeInvalidateRelativeSelectorIDDependency(
+        *aElement, oldAtom, aElement->GetID(), Snapshots());
   } else if (aAttribute == nsGkAtoms::_class) {
-    styleSet.MaybeInvalidateRelativeSelectorClassDependency(*aElement);
+    styleSet.MaybeInvalidateRelativeSelectorClassDependency(*aElement,
+                                                            Snapshots());
   } else {
-    styleSet.MaybeInvalidateRelativeSelectorAttributeDependency(*aElement,
-                                                                aAttribute);
+    styleSet.MaybeInvalidateRelativeSelectorAttributeDependency(
+        *aElement, aAttribute, Snapshots());
   }
 }
 
@@ -3660,8 +3661,8 @@ void RestyleManager::MaybeRestyleForRelativeSelectorState(
   if (!aElement->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
     return;
   }
-  aStyleSet.MaybeInvalidateRelativeSelectorStateDependency(*aElement,
-                                                           aChangedBits);
+  aStyleSet.MaybeInvalidateRelativeSelectorStateDependency(
+      *aElement, aChangedBits, Snapshots());
 }
 
 void RestyleManager::ReparentComputedStyleForFirstLine(nsIFrame* aFrame) {
