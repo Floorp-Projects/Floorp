@@ -858,23 +858,6 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   }
 }
 
-#ifdef DEBUG
-void PlainObjectAssignCache::assertValid() const {
-  MOZ_ASSERT(emptyToShape_);
-  MOZ_ASSERT(fromShape_);
-  MOZ_ASSERT(newToShape_);
-
-  MOZ_ASSERT(emptyToShape_->propMapLength() == 0);
-  MOZ_ASSERT(emptyToShape_->base() == newToShape_->base());
-  MOZ_ASSERT(emptyToShape_->numFixedSlots() == newToShape_->numFixedSlots());
-
-  MOZ_ASSERT(emptyToShape_->getObjectClass() == &PlainObject::class_);
-  MOZ_ASSERT(fromShape_->getObjectClass() == &PlainObject::class_);
-
-  MOZ_ASSERT(fromShape_->slotSpan() == newToShape_->slotSpan());
-}
-#endif
-
 [[nodiscard]] static bool TryAssignPlain(JSContext* cx, HandleObject to,
                                          HandleObject from, bool* optimized) {
   // Object.assign is used with PlainObjects most of the time. This is a fast
@@ -906,25 +889,6 @@ void PlainObjectAssignCache::assertValid() const {
     return true;
   }
 
-  const bool toWasEmpty = toPlain->empty();
-  if (toWasEmpty) {
-    const PlainObjectAssignCache& cache = cx->realm()->plainObjectAssignCache;
-    SharedShape* newShape = cache.lookup(toPlain->shape(), fromPlain->shape());
-    if (newShape) {
-      *optimized = true;
-      uint32_t oldSpan = 0;
-      uint32_t newSpan = newShape->slotSpan();
-      if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
-        return false;
-      }
-      MOZ_ASSERT(fromPlain->slotSpan() == newSpan);
-      for (size_t i = 0; i < newSpan; i++) {
-        toPlain->initSlot(i, fromPlain->getSlot(i));
-      }
-      return true;
-    }
-  }
-
   // Get a list of all enumerable |from| properties.
 
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
@@ -934,7 +898,6 @@ void PlainObjectAssignCache::assertValid() const {
 #endif
 
   bool hasPropsWithNonDefaultAttrs = false;
-  bool hasOnlyEnumerableProps = true;
   for (ShapePropertyIter<NoGC> iter(fromPlain->shape()); !iter.done(); iter++) {
     // Symbol properties need to be assigned last. For now fall back to the
     // slow path if we see a symbol property.
@@ -951,22 +914,18 @@ void PlainObjectAssignCache::assertValid() const {
     }
     if (iter->flags() != PropertyFlags::defaultDataPropFlags) {
       hasPropsWithNonDefaultAttrs = true;
-      if (!iter->enumerable()) {
-        hasOnlyEnumerableProps = false;
-        continue;
-      }
+    }
+    if (!iter->enumerable()) {
+      continue;
     }
     if (MOZ_UNLIKELY(!props.append(*iter))) {
       return false;
     }
   }
 
-  MOZ_ASSERT_IF(hasOnlyEnumerableProps,
-                fromPlain->slotSpan() == props.length());
-
   *optimized = true;
 
-  Rooted<Shape*> origToShape(cx, toPlain->shape());
+  bool toWasEmpty = toPlain->empty();
 
   // If the |to| object has no properties and the |from| object only has plain
   // enumerable/writable/configurable data properties, try to use its shape or
@@ -1004,8 +963,6 @@ void PlainObjectAssignCache::assertValid() const {
       for (size_t i = 0; i < newSpan; i++) {
         toPlain->initSlot(i, fromPlain->getSlot(i));
       }
-      PlainObjectAssignCache& cache = cx->realm()->plainObjectAssignCache;
-      cache.fill(&origToShape->asShared(), fromPlain->sharedShape(), newShape);
       return true;
     }
   }
@@ -1024,27 +981,23 @@ void PlainObjectAssignCache::assertValid() const {
     nextKey = fromProp.key();
     propValue = fromPlain->getSlot(fromProp.slot());
 
-    if (!toWasEmpty) {
-      if (Maybe<PropertyInfo> toProp = toPlain->lookup(cx, nextKey)) {
-        MOZ_ASSERT(toProp->isDataProperty());
-        MOZ_ASSERT(toProp->writable());
-        toPlain->setSlot(toProp->slot(), propValue);
-        continue;
+    Maybe<PropertyInfo> toProp;
+    if (toWasEmpty) {
+      MOZ_ASSERT(!toPlain->containsPure(nextKey));
+      MOZ_ASSERT(toProp.isNothing());
+    } else {
+      toProp = toPlain->lookup(cx, nextKey);
+    }
+
+    if (toProp.isSome()) {
+      MOZ_ASSERT(toProp->isDataProperty());
+      MOZ_ASSERT(toProp->writable());
+      toPlain->setSlot(toProp->slot(), propValue);
+    } else {
+      if (!AddDataPropertyToPlainObject(cx, toPlain, nextKey, propValue)) {
+        return false;
       }
     }
-
-    MOZ_ASSERT(!toPlain->containsPure(nextKey));
-
-    if (!AddDataPropertyToPlainObject(cx, toPlain, nextKey, propValue)) {
-      return false;
-    }
-  }
-
-  if (toWasEmpty && hasOnlyEnumerableProps && !fromPlain->inDictionaryMode() &&
-      !toPlain->inDictionaryMode()) {
-    PlainObjectAssignCache& cache = cx->realm()->plainObjectAssignCache;
-    cache.fill(&origToShape->asShared(), fromPlain->sharedShape(),
-               toPlain->sharedShape());
   }
 
   return true;
