@@ -28,5 +28,57 @@ export const kTestData = [
             internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
         }
         ]
+    },
+    {   testFileName: "link-initial-preload.h2.html",
+        expectedRequests: [
+        {   fileNameAndSuffix: "dummy.txt?1",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        },
+        {   fileNameAndSuffix: "dummy.txt?2",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.txt?3",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+        },
+        {   fileNameAndSuffix: "dummy.txt?4",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+        },
+        {   fileNameAndSuffix: "dummy.font?1",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        },
+        {   fileNameAndSuffix: "dummy.font?2",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.font?3",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.font?4",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.image?1",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        },
+        {   fileNameAndSuffix: "dummy.image?2",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.image?3",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        },
+        {   fileNameAndSuffix: "dummy.image?4",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        },
+        {   fileNameAndSuffix: "dummy.css?1",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        },
+        {   fileNameAndSuffix: "dummy.css?2",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+        },
+        {   fileNameAndSuffix: "dummy.css?3",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+        },
+        {   fileNameAndSuffix: "dummy.css?4",
+            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+        },
+        ]
     }
 ];

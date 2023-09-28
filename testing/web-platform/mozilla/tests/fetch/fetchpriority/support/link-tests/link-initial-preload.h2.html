@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+  <!-- as="fetch"-->
+  <link rel="preload" as="fetch" href="dummy.txt?1" fetchpriority="low">
+  <link rel="preload" as="fetch" href="dummy.txt?2" fetchpriority="high">
+  <link rel="preload" as="fetch" href="dummy.txt?3" fetchpriority="auto">
+  <link rel="preload" as="fetch" href="dummy.txt?4">
+  <!-- as="font" -->
+  <link rel="preload" as="font" href="dummy.font?1" fetchpriority="low">
+  <link rel="preload" as="font" href="dummy.font?2" fetchpriority="high">
+  <link rel="preload" as="font" href="dummy.font?3" fetchpriority="auto">
+  <link rel="preload" as="font" href="dummy.font?4">
+  <!-- as="image" -->
+  <link rel="preload" as="image" href="dummy.image?1" fetchpriority="low">
+  <link rel="preload" as="image" href="dummy.image?2" fetchpriority="high">
+  <link rel="preload" as="image" href="dummy.image?3" fetchpriority="auto">
+  <link rel="preload" as="image" href="dummy.image?4">
+  <!-- as="script" -->
+  <link rel="preload" as="script" href="dummy.script?1" fetchpriority="low">
+  <link rel="preload" as="script" href="dummy.script?2" fetchpriority="high">
+  <link rel="preload" as="script" href="dummy.script?3" fetchpriority="auto">
+  <link rel="preload" as="script" href="dummy.script?4">
+  <!-- as="style" -->
+  <link rel="preload" as="style" href="dummy.css?1" fetchpriority="low">
+  <link rel="preload" as="style" href="dummy.css?2" fetchpriority="high">
+  <link rel="preload" as="style" href="dummy.css?3" fetchpriority="auto">
+  <link rel="preload" as="style" href="dummy.css?4">
+</head>
+<body>
+<script>
+  onload = function() {
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>

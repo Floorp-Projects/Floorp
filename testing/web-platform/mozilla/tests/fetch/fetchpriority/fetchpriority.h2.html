@@ -87,6 +87,9 @@
                 httpOnOpeningRequests.find(
                   (actualRequest) => actualRequest.fileNameAndSuffix ==
                                      expectedRequest.fileNameAndSuffix);
+              assert_not_equals(actualRequest, undefined,
+                "Found request for \"" + expectedRequest.fileNameAndSuffix +
+                "\"");
               assert_equals(actualRequest.internalPriority,
                 expectedRequest.internalPriority,
                 "Check internal priority for '" +
