@@ -308,6 +308,8 @@ impl SelectorMapEntry for TSStateDependency {
 
 /// Dependency mapping for tree-structural pseudo-class states.
 pub type TSStateDependencyMap = SelectorMap<TSStateDependency>;
+/// Dependency mapping for * selectors.
+pub type AnyDependencyMap = SmallVec<[Dependency; 1]>;
 
 /// A map to store all relative selector invalidations.
 /// This keeps a lot more data than the usual map, because any change can generate
@@ -321,7 +323,7 @@ pub struct RelativeSelectorInvalidationMap {
     /// A map from a given type name to all the relative selector dependencies with that type.
     pub type_to_selector: LocalNameDependencyMap,
     /// All relative selector dependencies that specify `*`.
-    pub any_to_selector: SmallVec<[Dependency; 1]>,
+    pub any_to_selector: AnyDependencyMap,
     /// Flag indicating if any relative selector is used.
     pub used: bool,
     /// Flag indicating if invalidating a relative selector requires ancestor traversal.
@@ -478,6 +480,28 @@ trait Collector {
     fn state_map(&mut self) -> &mut StateDependencyMap;
     fn attribute_map(&mut self) -> &mut LocalNameDependencyMap;
     fn update_states(&mut self, element_state: ElementState, document_state: DocumentState);
+
+    // In normal invalidations, type-based dependencies don't need to be explicitly tracked;
+    // elements don't change their types, and mutations cause invalidations to go descendant
+    // (Where they are about to be styled anyway), and/or later-sibling direction (Where they
+    // siblings after inserted/removed elements get restyled anyway).
+    // However, for relative selectors, a DOM mutation can affect and arbitrary ancestor and/or
+    // earlier siblings, so we need to keep track of them.
+    fn type_map(&mut self) -> &mut LocalNameDependencyMap {
+        unreachable!();
+    }
+
+    // Tree-structural pseudo-selectors generally invalidates in a well-defined way, which are
+    // handled by RestyleManager. However, for relative selectors, as with type invalidations,
+    // the direction of invalidation becomes arbitrary, so we need to keep track of them.
+    fn ts_state_map(&mut self) -> &mut TSStateDependencyMap {
+        unreachable!();
+    }
+
+    // Same story as type invalidation maps.
+    fn any_vec(&mut self) -> &mut AnyDependencyMap {
+        unreachable!();
+    }
 }
 
 fn on_attribute<C: Collector>(
@@ -601,12 +625,18 @@ struct SelectorDependencyCollector<'a> {
     alloc_error: &'a mut Option<AllocErr>,
 }
 
-fn parent_dependency(parent_selectors: &mut ParentSelectors) -> Option<Arc<Dependency>> {
+fn parent_dependency(
+    parent_selectors: &mut ParentSelectors,
+    outer_parent: Option<&Arc<Dependency>>,
+) -> Option<Arc<Dependency>> {
     if parent_selectors.is_empty() {
-        return None;
+        return outer_parent.cloned();
     }
 
-    fn dependencies_from(entries: &mut [ParentDependencyEntry]) -> Option<Arc<Dependency>> {
+    fn dependencies_from(
+        entries: &mut [ParentDependencyEntry],
+        outer_parent: &Option<&Arc<Dependency>>,
+    ) -> Option<Arc<Dependency>> {
         if entries.is_empty() {
             return None;
         }
@@ -622,7 +652,7 @@ fn parent_dependency(parent_selectors: &mut ParentSelectors) -> Option<Arc<Depen
                     Arc::new(Dependency {
                         selector: selector.clone(),
                         selector_offset,
-                        parent: dependencies_from(previous),
+                        parent: dependencies_from(previous, outer_parent),
                         relative_kind: None,
                     })
                 })
@@ -630,12 +660,12 @@ fn parent_dependency(parent_selectors: &mut ParentSelectors) -> Option<Arc<Depen
         )
     }
 
-    dependencies_from(parent_selectors)
+    dependencies_from(parent_selectors, &outer_parent)
 }
 
 impl<'a> Collector for SelectorDependencyCollector<'a> {
     fn dependency(&mut self) -> Dependency {
-        let parent = parent_dependency(self.parent_selectors);
+        let parent = parent_dependency(self.parent_selectors, None);
         Dependency {
             selector: self.selector.clone(),
             selector_offset: self.compound_state.offset,
@@ -874,56 +904,56 @@ struct RelativeSelectorDependencyCollector<'a> {
     alloc_error: &'a mut Option<AllocErr>,
 }
 
-impl<'a> RelativeSelectorDependencyCollector<'a> {
-    fn add_non_unique_info(&mut self) -> Result<(), AllocErr> {
-        // Go through this compound again.
-        for ss in self
-            .selector
-            .selector
-            .iter_from(self.compound_state.state.offset)
-        {
-            match ss {
-                Component::LocalName(ref name) => {
-                    let dependency = self.dependency();
+fn add_non_unique_info<C: Collector>(
+    selector: &Selector<SelectorImpl>,
+    offset: usize,
+    collector: &mut C,
+) -> Result<(), AllocErr> {
+    // Go through this compound again.
+    for ss in selector.iter_from(offset) {
+        match ss {
+            Component::LocalName(ref name) => {
+                let dependency = collector.dependency();
+                add_local_name(name.name.clone(), dependency, &mut collector.type_map())?;
+                if name.name != name.lower_name {
+                    let dependency = collector.dependency();
                     add_local_name(
-                        name.name.clone(),
+                        name.lower_name.clone(),
                         dependency,
-                        &mut self.map.type_to_selector,
+                        &mut collector.type_map(),
                     )?;
-                    if name.name != name.lower_name {
-                        let dependency = self.dependency();
-                        add_local_name(
-                            name.lower_name.clone(),
-                            dependency,
-                            &mut self.map.type_to_selector,
-                        )?;
-                    }
-                    return Ok(());
-                },
-                _ => (),
-            };
-        }
-        // Ouch. Add one for *.
-        self.map.any_to_selector.try_reserve(1)?;
-        let dependency = self.dependency();
-        self.map.any_to_selector.push(dependency);
-        Ok(())
-    }
-
-    fn add_ts_pseudo_class_dependency(&mut self) -> Result<(), AllocErr> {
-        if self.compound_state.ts_state.is_empty() {
-            return Ok(());
-        }
-        let dependency = self.dependency();
-        self.map.ts_state_to_selector.insert(
-            TSStateDependency {
-                dep: dependency,
-                state: self.compound_state.ts_state,
+                }
+                return Ok(());
             },
-            self.quirks_mode,
-        )
+            _ => (),
+        };
     }
+    // Ouch. Add one for *.
+    collector.any_vec().try_reserve(1)?;
+    let dependency = collector.dependency();
+    collector.any_vec().push(dependency);
+    Ok(())
+}
 
+fn add_ts_pseudo_class_dependency<C: Collector>(
+    state: TSStateForInvalidation,
+    quirks_mode: QuirksMode,
+    collector: &mut C,
+) -> Result<(), AllocErr> {
+    if state.is_empty() {
+        return Ok(());
+    }
+    let dependency = collector.dependency();
+    collector.ts_state_map().insert(
+        TSStateDependency {
+            dep: dependency,
+            state,
+        },
+        quirks_mode,
+    )
+}
+
+impl<'a> RelativeSelectorDependencyCollector<'a> {
     fn visit_whole_selector(&mut self) -> bool {
         let mut iter = self.selector.selector.iter_skip_relative_selector_anchor();
         let mut index = 0;
@@ -954,14 +984,20 @@ impl<'a> RelativeSelectorDependencyCollector<'a> {
                 *self.alloc_error = Some(err);
                 return false;
             }
-            if let Err(err) = self.add_ts_pseudo_class_dependency() {
+            if let Err(err) =
+                add_ts_pseudo_class_dependency(self.compound_state.ts_state, self.quirks_mode, self)
+            {
                 *self.alloc_error = Some(err);
                 return false;
             }
 
             if !self.compound_state.added_entry {
                 // Not great - we didn't add any uniquely identifiable information.
-                if let Err(err) = self.add_non_unique_info() {
+                if let Err(err) = add_non_unique_info(
+                    &self.selector.selector,
+                    self.compound_state.state.offset,
+                    self,
+                ) {
                     *self.alloc_error = Some(err);
                     return false;
                 }
@@ -988,7 +1024,7 @@ impl<'a> RelativeSelectorDependencyCollector<'a> {
 
 impl<'a> Collector for RelativeSelectorDependencyCollector<'a> {
     fn dependency(&mut self) -> Dependency {
-        let parent = parent_dependency(self.parent_selectors);
+        let parent = parent_dependency(self.parent_selectors, None);
         Dependency {
             selector: self.selector.selector.clone(),
             selector_offset: self.compound_state.state.offset,
@@ -1032,6 +1068,18 @@ impl<'a> Collector for RelativeSelectorDependencyCollector<'a> {
         self.compound_state.state.element_state |= element_state;
         *self.document_state |= document_state;
     }
+
+    fn type_map(&mut self) -> &mut LocalNameDependencyMap {
+        &mut self.map.type_to_selector
+    }
+
+    fn ts_state_map(&mut self) -> &mut TSStateDependencyMap {
+        &mut self.map.ts_state_to_selector
+    }
+
+    fn any_vec(&mut self) -> &mut AnyDependencyMap {
+        &mut self.map.any_to_selector
+    }
 }
 
 impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
@@ -1040,9 +1088,254 @@ impl<'a> SelectorVisitor for RelativeSelectorDependencyCollector<'a> {
     fn visit_selector_list(
         &mut self,
         _list_kind: SelectorListKind,
-        _list: &[Selector<SelectorImpl>],
+        list: &[Selector<SelectorImpl>],
     ) -> bool {
-        // TODO(dshin): Inner selector invalidation.
+        let mut parent_stack = ParentSelectors::new();
+        let parent_dependency = Arc::new(self.dependency());
+        for selector in list {
+            // Subjects inside relative selectors aren't really subjects.
+            // This simplifies compound state tracking as well (Additional
+            // states we track for relative selector's inner selectors should
+            // not leak out of the relevant selector).
+            let mut nested = RelativeSelectorInnerDependencyCollector {
+                map: &mut *self.map,
+                parent_dependency: &parent_dependency,
+                document_state: &mut *self.document_state,
+                selector,
+                parent_selectors: &mut parent_stack,
+                quirks_mode: self.quirks_mode,
+                compound_state: RelativeSelectorPerCompoundState::new(0),
+                alloc_error: &mut *self.alloc_error,
+            };
+            if !nested.visit_whole_selector() {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn visit_relative_selector_list(
+        &mut self,
+        _list: &[selectors::parser::RelativeSelector<Self::Impl>],
+    ) -> bool {
+        unreachable!("Nested relative selector?");
+    }
+
+    fn visit_simple_selector(&mut self, s: &Component<SelectorImpl>) -> bool {
+        match *s {
+            Component::ID(..) | Component::Class(..) => {
+                self.compound_state.added_entry = true;
+                if let Err(err) = on_id_or_class(s, self.quirks_mode, self) {
+                    *self.alloc_error = Some(err.into());
+                    return false;
+                }
+                true
+            },
+            Component::NonTSPseudoClass(ref pc) => {
+                if !pc
+                    .state_flag()
+                    .intersects(ElementState::VISITED_OR_UNVISITED)
+                {
+                    // Visited/Unvisited styling doesn't take the usual state invalidation path.
+                    self.compound_state.added_entry = true;
+                }
+                if let Err(err) = on_pseudo_class(pc, self) {
+                    *self.alloc_error = Some(err.into());
+                    return false;
+                }
+                true
+            },
+            Component::Empty => {
+                self.compound_state
+                    .ts_state
+                    .insert(TSStateForInvalidation::EMPTY);
+                true
+            },
+            Component::Nth(..) => {
+                self.compound_state
+                    .ts_state
+                    .insert(TSStateForInvalidation::NTH);
+                true
+            },
+            Component::RelativeSelectorAnchor => unreachable!("Should not visit this far"),
+            _ => true,
+        }
+    }
+
+    fn visit_attribute_selector(
+        &mut self,
+        _: &NamespaceConstraint<&Namespace>,
+        local_name: &LocalName,
+        local_name_lower: &LocalName,
+    ) -> bool {
+        self.compound_state.added_entry = true;
+        if let Err(err) = on_attribute(local_name, local_name_lower, self) {
+            *self.alloc_error = Some(err);
+            return false;
+        }
+        true
+    }
+}
+
+/// A struct that collects invalidations from a complex selector inside a relative selector.
+/// TODO(dshin): All of this duplication is not great Perhaps should be merged to the normal
+/// one, if possible? See bug 1855690.
+struct RelativeSelectorInnerDependencyCollector<'a, 'b> {
+    map: &'a mut RelativeSelectorInvalidationMap,
+
+    /// The document this _complex_ selector is affected by.
+    ///
+    /// We don't need to track state per compound selector, since it's global
+    /// state and it changes for everything.
+    document_state: &'a mut DocumentState,
+
+    /// Parent relative selector dependency.
+    parent_dependency: &'b Arc<Dependency>,
+
+    /// The current inner relative selector and offset we're iterating.
+    selector: &'a Selector<SelectorImpl>,
+
+    /// The stack of parent selectors that we have, and at which offset of the
+    /// sequence.
+    ///
+    /// This starts empty. It grows when we find nested :is and :where selector
+    /// lists. The dependency field is cached and reference counted.
+    parent_selectors: &'a mut ParentSelectors,
+
+    /// The quirks mode of the document where we're inserting dependencies.
+    quirks_mode: QuirksMode,
+
+    /// State relevant to a given compound selector.
+    compound_state: RelativeSelectorPerCompoundState,
+
+    /// The allocation error, if we OOM.
+    alloc_error: &'a mut Option<AllocErr>,
+}
+
+impl<'a, 'b> Collector for RelativeSelectorInnerDependencyCollector<'a, 'b> {
+    fn dependency(&mut self) -> Dependency {
+        let parent = parent_dependency(self.parent_selectors, Some(self.parent_dependency));
+        Dependency {
+            selector: self.selector.clone(),
+            selector_offset: self.compound_state.state.offset,
+            parent,
+            relative_kind: None,
+        }
+    }
+
+    fn id_map(&mut self) -> &mut IdOrClassDependencyMap {
+        &mut self.map.map.id_to_selector
+    }
+
+    fn class_map(&mut self) -> &mut IdOrClassDependencyMap {
+        &mut self.map.map.class_to_selector
+    }
+
+    fn state_map(&mut self) -> &mut StateDependencyMap {
+        &mut self.map.map.state_affecting_selectors
+    }
+
+    fn attribute_map(&mut self) -> &mut LocalNameDependencyMap {
+        &mut self.map.map.other_attribute_affecting_selectors
+    }
+
+    fn update_states(&mut self, element_state: ElementState, document_state: DocumentState) {
+        self.compound_state.state.element_state |= element_state;
+        *self.document_state |= document_state;
+    }
+
+    fn type_map(&mut self) -> &mut LocalNameDependencyMap {
+        &mut self.map.type_to_selector
+    }
+
+    fn ts_state_map(&mut self) -> &mut TSStateDependencyMap {
+        &mut self.map.ts_state_to_selector
+    }
+
+    fn any_vec(&mut self) -> &mut AnyDependencyMap {
+        &mut self.map.any_to_selector
+    }
+}
+
+impl<'a, 'b> RelativeSelectorInnerDependencyCollector<'a, 'b> {
+    fn visit_whole_selector(&mut self) -> bool {
+        let mut iter = self.selector.iter();
+        let mut index = 0;
+        loop {
+            // Reset the compound state.
+            self.compound_state = RelativeSelectorPerCompoundState::new(index);
+
+            // Visit all the simple selectors in this sequence.
+            for ss in &mut iter {
+                if !ss.visit(self) {
+                    return false;
+                }
+                index += 1; // Account for the simple selector.
+            }
+
+            if let Err(err) = add_pseudo_class_dependency(
+                self.compound_state.state.element_state,
+                self.quirks_mode,
+                self,
+            ) {
+                *self.alloc_error = Some(err);
+                return false;
+            }
+
+            if let Err(err) =
+                add_ts_pseudo_class_dependency(self.compound_state.ts_state, self.quirks_mode, self)
+            {
+                *self.alloc_error = Some(err);
+                return false;
+            }
+
+            if !self.compound_state.added_entry {
+                // Not great - we didn't add any uniquely identifiable information.
+                if let Err(err) =
+                    add_non_unique_info(&self.selector, self.compound_state.state.offset, self)
+                {
+                    *self.alloc_error = Some(err);
+                    return false;
+                }
+            }
+
+            let combinator = iter.next_sequence();
+            if combinator.is_none() {
+                return true;
+            }
+            index += 1; // account for the combinator
+        }
+    }
+}
+
+impl<'a, 'b> SelectorVisitor for RelativeSelectorInnerDependencyCollector<'a, 'b> {
+    type Impl = SelectorImpl;
+
+    fn visit_selector_list(
+        &mut self,
+        _list_kind: SelectorListKind,
+        list: &[Selector<SelectorImpl>],
+    ) -> bool {
+        let parent_dependency = Arc::new(self.dependency());
+        for selector in list {
+            // Subjects inside relative selectors aren't really subjects.
+            // This simplifies compound state tracking as well (Additional
+            // states we track for relative selector's inner selectors should
+            // not leak out of the relevant selector).
+            let mut nested = RelativeSelectorInnerDependencyCollector {
+                map: &mut *self.map,
+                parent_dependency: &parent_dependency,
+                document_state: &mut *self.document_state,
+                selector,
+                parent_selectors: &mut *self.parent_selectors,
+                quirks_mode: self.quirks_mode,
+                compound_state: RelativeSelectorPerCompoundState::new(0),
+                alloc_error: &mut *self.alloc_error,
+            };
+            if !nested.visit_whole_selector() {
+                return false;
+            }
+        }
         true
     }
 

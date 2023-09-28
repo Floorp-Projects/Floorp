@@ -1388,7 +1388,7 @@ bool ServoStyleSet::MightHaveNthOfClassDependency(const Element& aElement) {
 void ServoStyleSet::MaybeInvalidateRelativeSelectorIDDependency(
     const Element& aElement, nsAtom* aOldID, nsAtom* aNewID) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
-      mRawData.get(), &aElement, aOldID, aNewID);
+      mRawData.get(), &aElement, aOldID, aNewID, &Snapshots());
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorClassDependency(
@@ -1400,13 +1400,13 @@ void ServoStyleSet::MaybeInvalidateRelativeSelectorClassDependency(
 void ServoStyleSet::MaybeInvalidateRelativeSelectorAttributeDependency(
     const Element& aElement, nsAtom* aAttribute) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDependency(
-      mRawData.get(), &aElement, aAttribute);
+      mRawData.get(), &aElement, aAttribute, &Snapshots());
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorStateDependency(
     const Element& aElement, ElementState aState) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
-      mRawData.get(), &aElement, aState.GetInternalValue());
+      mRawData.get(), &aElement, aState.GetInternalValue(), &Snapshots());
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorForEmptyDependency(
