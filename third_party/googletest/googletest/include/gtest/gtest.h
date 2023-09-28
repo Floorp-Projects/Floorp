@@ -50,9 +50,13 @@
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <ostream>
+#include <set>
+#include <sstream>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -68,8 +72,6 @@
 #include "gtest/gtest_prod.h"
 #include "gtest/internal/gtest-internal.h"
 #include "gtest/internal/gtest-string.h"
-
-#include "mozilla/Attributes.h"
 
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
 /* class A needs to have dll-interface to be used by clients of class B */)
@@ -163,11 +165,7 @@ namespace testing {
 
 // Silence C4100 (unreferenced formal parameter) and 4805
 // unsafe mix of type 'const int' and type 'const bool'
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4805)
-#pragma warning(disable : 4100)
-#endif
+GTEST_DISABLE_MSC_WARNINGS_PUSH_(4805 4100)
 
 // The upper limit for valid stack trace depths.
 const int kMaxStackTraceDepth = 100;
@@ -191,6 +189,17 @@ class UnitTestImpl* GetUnitTestImpl();
 void ReportFailureInUnknownLocation(TestPartResult::Type result_type,
                                     const std::string& message);
 std::set<std::string>* GetIgnoredParameterizedTestSuites();
+
+// A base class that prevents subclasses from being copyable.
+// We do this instead of using '= delete' so as to avoid triggering warnings
+// inside user code regarding any of our declarations.
+class GTestNonCopyable {
+ public:
+  GTestNonCopyable() = default;
+  GTestNonCopyable(const GTestNonCopyable&) = delete;
+  GTestNonCopyable& operator=(const GTestNonCopyable&) = delete;
+  ~GTestNonCopyable() = default;
+};
 
 }  // namespace internal
 
@@ -287,7 +296,13 @@ class GTEST_API_ Test {
   // SetUp/TearDown method of Environment objects registered with Google
   // Test) will be output as attributes of the <testsuites> element.
   static void RecordProperty(const std::string& key, const std::string& value);
-  static void RecordProperty(const std::string& key, int value);
+  // We do not define a custom serialization except for values that can be
+  // converted to int64_t, but other values could be logged in this way.
+  template <typename T, std::enable_if_t<std::is_convertible<T, int64_t>::value,
+                                         bool> = true>
+  static void RecordProperty(const std::string& key, const T& value) {
+    RecordProperty(key, (Message() << value).GetString());
+  }
 
  protected:
   // Creates a Test object.
@@ -310,7 +325,7 @@ class GTEST_API_ Test {
   //
   // DO NOT OVERRIDE THIS FUNCTION DIRECTLY IN A USER PROGRAM.
   // Instead, use the TEST or TEST_F macro.
-  MOZ_CAN_RUN_SCRIPT virtual void TestBody() = 0;
+  virtual void TestBody() = 0;
 
   // Sets up, executes, and tears down the test.
   void Run();
@@ -535,14 +550,14 @@ class GTEST_API_ TestInfo {
   // Returns the name of the parameter type, or NULL if this is not a typed
   // or a type-parameterized test.
   const char* type_param() const {
-    if (type_param_.get() != nullptr) return type_param_->c_str();
+    if (type_param_ != nullptr) return type_param_->c_str();
     return nullptr;
   }
 
   // Returns the text representation of the value parameter, or NULL if this
   // is not a value-parameterized test.
   const char* value_param() const {
-    if (value_param_.get() != nullptr) return value_param_->c_str();
+    if (value_param_ != nullptr) return value_param_->c_str();
     return nullptr;
   }
 
@@ -584,7 +599,7 @@ class GTEST_API_ TestInfo {
   const TestResult* result() const { return &result_; }
 
  private:
-#if GTEST_HAS_DEATH_TEST
+#ifdef GTEST_HAS_DEATH_TEST
   friend class internal::DefaultDeathTestFactory;
 #endif  // GTEST_HAS_DEATH_TEST
   friend class Test;
@@ -681,7 +696,7 @@ class GTEST_API_ TestSuite {
   // Returns the name of the parameter type, or NULL if this is not a
   // type-parameterized test suite.
   const char* type_param() const {
-    if (type_param_.get() != nullptr) return type_param_->c_str();
+    if (type_param_ != nullptr) return type_param_->c_str();
     return nullptr;
   }
 
@@ -878,7 +893,7 @@ class GTEST_API_ TestSuite {
 class Environment {
  public:
   // The d'tor is virtual as we need to subclass Environment.
-  virtual ~Environment() {}
+  virtual ~Environment() = default;
 
   // Override this to define how to set up the environment.
   virtual void SetUp() {}
@@ -909,7 +924,7 @@ class GTEST_API_ AssertionException
 // the order the corresponding events are fired.
 class TestEventListener {
  public:
-  virtual ~TestEventListener() {}
+  virtual ~TestEventListener() = default;
 
   // Fired before any test activity starts.
   virtual void OnTestProgramStart(const UnitTest& unit_test) = 0;
@@ -1039,6 +1054,10 @@ class GTEST_API_ TestEventListeners {
     return default_xml_generator_;
   }
 
+  // Controls whether events will be forwarded by the repeater to the
+  // listeners in the list.
+  void SuppressEventForwarding(bool);
+
  private:
   friend class TestSuite;
   friend class TestInfo;
@@ -1068,7 +1087,6 @@ class GTEST_API_ TestEventListeners {
   // Controls whether events will be forwarded by the repeater to the
   // listeners in the list.
   bool EventForwardingEnabled() const;
-  void SuppressEventForwarding();
 
   // The actual list of listeners.
   internal::TestEventRepeater* repeater_;
@@ -1555,12 +1573,12 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   }
 
   ::std::stringstream lhs_ss;
-  lhs_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
-         << lhs_value;
+  lhs_ss.precision(std::numeric_limits<RawType>::digits10 + 2);
+  lhs_ss << lhs_value;
 
   ::std::stringstream rhs_ss;
-  rhs_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
-         << rhs_value;
+  rhs_ss.precision(std::numeric_limits<RawType>::digits10 + 2);
+  rhs_ss << rhs_value;
 
   return EqFailure(lhs_expression, rhs_expression,
                    StringStreamToString(&lhs_ss), StringStreamToString(&rhs_ss),
@@ -1627,7 +1645,7 @@ class GTEST_API_ AssertHelper {
 // the GetParam() method.
 //
 // Use it with one of the parameter generator defining functions, like Range(),
-// Values(), ValuesIn(), Bool(), and Combine().
+// Values(), ValuesIn(), Bool(), Combine(), and ConvertGenerator<T>().
 //
 // class FooTest : public ::testing::TestWithParam<int> {
 //  protected:
@@ -1655,7 +1673,7 @@ template <typename T>
 class WithParamInterface {
  public:
   typedef T ParamType;
-  virtual ~WithParamInterface() {}
+  virtual ~WithParamInterface() = default;
 
   // The current parameter value. Is also available in the test fixture's
   // constructor.
@@ -1725,13 +1743,13 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 #define GTEST_FAIL() GTEST_FATAL_FAILURE_("Failed")
 
 // Like GTEST_FAIL(), but at the given source file location.
-#define GTEST_FAIL_AT(file, line)         \
-  GTEST_MESSAGE_AT_(file, line, "Failed", \
-                    ::testing::TestPartResult::kFatalFailure)
+#define GTEST_FAIL_AT(file, line)                \
+  return GTEST_MESSAGE_AT_(file, line, "Failed", \
+                           ::testing::TestPartResult::kFatalFailure)
 
 // Define this macro to 1 to omit the definition of FAIL(), which is a
 // generic name and clashes with some other libraries.
-#if !GTEST_DONT_DEFINE_FAIL
+#if !(defined(GTEST_DONT_DEFINE_FAIL) && GTEST_DONT_DEFINE_FAIL)
 #define FAIL() GTEST_FAIL()
 #endif
 
@@ -1740,7 +1758,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 
 // Define this macro to 1 to omit the definition of SUCCEED(), which
 // is a generic name and clashes with some other libraries.
-#if !GTEST_DONT_DEFINE_SUCCEED
+#if !(defined(GTEST_DONT_DEFINE_SUCCEED) && GTEST_DONT_DEFINE_SUCCEED)
 #define SUCCEED() GTEST_SUCCEED()
 #endif
 
@@ -1784,19 +1802,19 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 // Define these macros to 1 to omit the definition of the corresponding
 // EXPECT or ASSERT, which clashes with some users' own code.
 
-#if !GTEST_DONT_DEFINE_EXPECT_TRUE
+#if !(defined(GTEST_DONT_DEFINE_EXPECT_TRUE) && GTEST_DONT_DEFINE_EXPECT_TRUE)
 #define EXPECT_TRUE(condition) GTEST_EXPECT_TRUE(condition)
 #endif
 
-#if !GTEST_DONT_DEFINE_EXPECT_FALSE
+#if !(defined(GTEST_DONT_DEFINE_EXPECT_FALSE) && GTEST_DONT_DEFINE_EXPECT_FALSE)
 #define EXPECT_FALSE(condition) GTEST_EXPECT_FALSE(condition)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_TRUE
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_TRUE) && GTEST_DONT_DEFINE_ASSERT_TRUE)
 #define ASSERT_TRUE(condition) GTEST_ASSERT_TRUE(condition)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_FALSE
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_FALSE) && GTEST_DONT_DEFINE_ASSERT_FALSE)
 #define ASSERT_FALSE(condition) GTEST_ASSERT_FALSE(condition)
 #endif
 
@@ -1875,27 +1893,27 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 // Define macro GTEST_DONT_DEFINE_ASSERT_XY to 1 to omit the definition of
 // ASSERT_XY(), which clashes with some users' own code.
 
-#if !GTEST_DONT_DEFINE_ASSERT_EQ
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_EQ) && GTEST_DONT_DEFINE_ASSERT_EQ)
 #define ASSERT_EQ(val1, val2) GTEST_ASSERT_EQ(val1, val2)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_NE
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_NE) && GTEST_DONT_DEFINE_ASSERT_NE)
 #define ASSERT_NE(val1, val2) GTEST_ASSERT_NE(val1, val2)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_LE
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_LE) && GTEST_DONT_DEFINE_ASSERT_LE)
 #define ASSERT_LE(val1, val2) GTEST_ASSERT_LE(val1, val2)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_LT
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_LT) && GTEST_DONT_DEFINE_ASSERT_LT)
 #define ASSERT_LT(val1, val2) GTEST_ASSERT_LT(val1, val2)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_GE
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_GE) && GTEST_DONT_DEFINE_ASSERT_GE)
 #define ASSERT_GE(val1, val2) GTEST_ASSERT_GE(val1, val2)
 #endif
 
-#if !GTEST_DONT_DEFINE_ASSERT_GT
+#if !(defined(GTEST_DONT_DEFINE_ASSERT_GT) && GTEST_DONT_DEFINE_ASSERT_GT)
 #define ASSERT_GT(val1, val2) GTEST_ASSERT_GT(val1, val2)
 #endif
 
@@ -1983,7 +2001,7 @@ GTEST_API_ AssertionResult FloatLE(const char* expr1, const char* expr2,
 GTEST_API_ AssertionResult DoubleLE(const char* expr1, const char* expr2,
                                     double val1, double val2);
 
-#if GTEST_OS_WINDOWS
+#ifdef GTEST_OS_WINDOWS
 
 // Macros that test for HRESULT failure and success, these are only useful
 // on Windows, and rely on Windows SDK macros and APIs to compile.
@@ -2065,9 +2083,7 @@ class GTEST_API_ ScopedTrace {
 
   ScopedTrace(const ScopedTrace&) = delete;
   ScopedTrace& operator=(const ScopedTrace&) = delete;
-} GTEST_ATTRIBUTE_UNUSED_;  // A ScopedTrace object does its job in its
-                            // c'tor and d'tor.  Therefore it doesn't
-                            // need to be used otherwise.
+};
 
 // Causes a trace (including the source file path, the current line
 // number, and the given message) to be included in every test failure
@@ -2084,8 +2100,8 @@ class GTEST_API_ ScopedTrace {
 // Assuming that each thread maintains its own stack of traces.
 // Therefore, a SCOPED_TRACE() would (correctly) only affect the
 // assertions in its own thread.
-#define SCOPED_TRACE(message)                                         \
-  ::testing::ScopedTrace GTEST_CONCAT_TOKEN_(gtest_trace_, __LINE__)( \
+#define SCOPED_TRACE(message)                                               \
+  const ::testing::ScopedTrace GTEST_CONCAT_TOKEN_(gtest_trace_, __LINE__)( \
       __FILE__, __LINE__, (message))
 
 // Compile-time assertion for type equality.
@@ -2155,7 +2171,7 @@ constexpr bool StaticAssertTypeEq() noexcept {
 
 // Define this macro to 1 to omit the definition of TEST(), which
 // is a generic name and clashes with some other libraries.
-#if !GTEST_DONT_DEFINE_TEST
+#if !(defined(GTEST_DONT_DEFINE_TEST) && GTEST_DONT_DEFINE_TEST)
 #define TEST(test_suite_name, test_name) GTEST_TEST(test_suite_name, test_name)
 #endif
 
@@ -2187,17 +2203,22 @@ constexpr bool StaticAssertTypeEq() noexcept {
 #define GTEST_TEST_F(test_fixture, test_name)        \
   GTEST_TEST_(test_fixture, test_name, test_fixture, \
               ::testing::internal::GetTypeId<test_fixture>())
-#if !GTEST_DONT_DEFINE_TEST_F
+#if !(defined(GTEST_DONT_DEFINE_TEST_F) && GTEST_DONT_DEFINE_TEST_F)
 #define TEST_F(test_fixture, test_name) GTEST_TEST_F(test_fixture, test_name)
 #endif
 
-// Returns a path to temporary directory.
-// Tries to determine an appropriate directory for the platform.
+// Returns a path to a temporary directory, which should be writable. It is
+// implementation-dependent whether or not the path is terminated by the
+// directory-separator character.
 GTEST_API_ std::string TempDir();
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+// Returns a path to a directory that contains ancillary data files that might
+// be used by tests. It is implementation dependent whether or not the path is
+// terminated by the directory-separator character. The directory and the files
+// in it should be considered read-only.
+GTEST_API_ std::string SrcDir();
+
+GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4805 4100
 
 // Dynamically registers a test with the framework.
 //
