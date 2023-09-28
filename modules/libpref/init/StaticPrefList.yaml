@@ -8764,6 +8764,11 @@
   value: false
   mirror: always
 
+- name: layout.css.text-wrap-balance.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled
   type: bool

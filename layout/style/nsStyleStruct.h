@@ -889,6 +889,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleTextSecurity mWebkitTextSecurity =
       mozilla::StyleTextSecurity::None;
 
+  mozilla::StyleTextWrap mTextWrap = mozilla::StyleTextWrap::Auto;
+
   char16_t TextSecurityMaskChar() const {
     switch (mWebkitTextSecurity) {
       case mozilla::StyleTextSecurity::None:
