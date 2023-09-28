@@ -324,7 +324,15 @@ add_task(async function test_tabs() {
       100
     );
     TelemetryTestUtils.assertEvents(
-      [["firefoxview_next", "synced_tabs", "tabs"]],
+      [
+        [
+          "firefoxview_next",
+          "synced_tabs",
+          "tabs",
+          null,
+          { page: "syncedtabs" },
+        ],
+      ],
       { category: "firefoxview_next" },
       { clear: true, process: "parent" }
     );
