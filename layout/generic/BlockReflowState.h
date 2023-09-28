@@ -98,8 +98,7 @@ class BlockReflowState {
                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
                    bool aBEndMarginRoot, bool aBlockNeedsFloatManager,
                    const nscoord aConsumedBSize,
-                   const nscoord aEffectiveContentBoxBSize,
-                   const nscoord aInset = 0);
+                   const nscoord aEffectiveContentBoxBSize);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -244,9 +243,9 @@ class BlockReflowState {
   // the block.
 
   // The block frame that is using this object
-  nsBlockFrame* const mBlock;
+  nsBlockFrame* mBlock;
 
-  nsPresContext* const mPresContext;
+  nsPresContext* mPresContext;
 
   const ReflowInput& mReflowInput;
 
@@ -302,10 +301,6 @@ class BlockReflowState {
     return mContentArea.Size(wm).ConvertTo(aWM, wm);
   }
 
-  // Amount of inset to apply during line-breaking, used by text-wrap:balance
-  // to adjust line-breaks for more consistent lengths throughout the block.
-  nscoord mInsetForBalance;
-
   // Physical size. Use only for physical <-> logical coordinate conversion.
   nsSize mContainerSize;
   const nsSize& ContainerSize() const { return mContainerSize; }
@@ -350,7 +345,7 @@ class BlockReflowState {
 
   // mBlock's computed logical border+padding with pre-reflow skip sides applied
   // (See the constructor and nsIFrame::PreReflowBlockLevelLogicalSkipSides).
-  const LogicalMargin mBorderPadding;
+  LogicalMargin mBorderPadding;
 
   // The overflow areas of all floats placed so far
   OverflowAreas mFloatOverflowAreas;
@@ -388,7 +383,7 @@ class BlockReflowState {
   // placed, since we're on a nowrap context.
   nsTArray<nsIFrame*> mNoWrapFloats;
 
-  const nscoord mMinLineHeight;
+  nscoord mMinLineHeight;
 
   int32_t mLineNumber;
 

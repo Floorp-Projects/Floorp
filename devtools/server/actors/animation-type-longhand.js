@@ -174,7 +174,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "-webkit-text-stroke-width",
       "text-transform",
       "text-underline-position",
-      "text-wrap",
       "touch-action",
       "transform-box",
       "transform-style",

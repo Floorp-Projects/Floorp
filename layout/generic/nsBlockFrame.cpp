@@ -1414,16 +1414,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     }
   }
 
-  if (IsFrameTreeTooDeep(aReflowInput, aMetrics, aStatus)) {
-    return;
-  }
-
-  // OK, some lines may be reflowed. Blow away any saved line cursor
-  // because we may invalidate the nondecreasing
-  // overflowArea.InkOverflow().y/yMost invariant, and we may even
-  // delete the line with the line cursor.
-  ClearLineCursors();
-
   // See comment below about oldSize. Use *only* for the
   // abs-pos-containing-block-size-change optimization!
   nsSize oldSize = GetSize();
@@ -1440,375 +1430,16 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     autoFloatManager.CreateFloatManager(aPresContext);
   }
 
-  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION) &&
-      PresContext()->BidiEnabled()) {
-    static_cast<nsBlockFrame*>(FirstContinuation())->ResolveBidi();
+  // OK, some lines may be reflowed. Blow away any saved line cursor
+  // because we may invalidate the nondecreasing
+  // overflowArea.InkOverflow().y/yMost invariant, and we may even
+  // delete the line with the line cursor.
+  ClearLineCursors();
+
+  if (IsFrameTreeTooDeep(aReflowInput, aMetrics, aStatus)) {
+    return;
   }
 
-  // Whether to apply text-wrap: balance behavior.
-  bool tryBalance = StyleText()->mTextWrap == StyleTextWrap::Balance &&
-                    !GetPrevContinuation();
-
-  // Struct used to hold the "target" number of lines or clamp position to
-  // maintain when doing text-wrap: balance.
-  struct BalanceTarget {
-    // If line-clamp is in effect, mContent and mOffset indicate the starting
-    // position of the first line after the clamp limit. If line-clamp is not
-    // in use, mContent is null and mOffset is the total number of lines that
-    // the block must contain.
-    nsIContent* mContent = nullptr;
-    int32_t mOffset = -1;
-
-    bool operator==(const BalanceTarget& aOther) const {
-      return mContent == aOther.mContent && mOffset == aOther.mOffset;
-    }
-    bool operator!=(const BalanceTarget& aOther) const {
-      return !(*this == aOther);
-    }
-  };
-
-  BalanceTarget balanceTarget;
-
-  // Helpers for text-wrap: balance implementation:
-
-  // Count the number of lines in the mLines list, but return -1 instead if the
-  // count is going to exceed aLimit.
-  auto countLinesUpTo = [&](int32_t aLimit) -> int32_t {
-    int32_t n = 0;
-    for (auto iter = mLines.begin(); iter != mLines.end(); ++iter) {
-      if (++n > aLimit) {
-        return -1;
-      }
-    }
-    return n;
-  };
-
-  // Return a BalanceTarget record representing the position at which line-clamp
-  // will take effect for the current line list. Only to be used when there are
-  // enough lines that the clamp will apply.
-  auto getClampPosition = [&](int32_t aClampCount) -> BalanceTarget {
-    MOZ_ASSERT(aClampCount < mLines.size());
-    auto iter = mLines.begin();
-    for (auto i = 0; i < aClampCount; i++) {
-      ++iter;
-    }
-    nsIContent* content = iter->mFirstChild->GetContent();
-    int32_t offset = 0;
-    if (content && iter->mFirstChild->IsTextFrame()) {
-      auto* textFrame = static_cast<nsTextFrame*>(iter->mFirstChild);
-      offset = textFrame->GetContentOffset();
-    }
-    return BalanceTarget{content, offset};
-  };
-
-  // "balancing" is implemented by shortening the effective inline-size of the
-  // lines, so that content will tend to be pushed down to fill later lines of
-  // the block. `balanceInset` is the current amount of "inset" to apply, and
-  // `balanceStep` is the increment to adjust it by for the next iteration.
-  nscoord balanceStep = 0;
-
-  // text-wrap: balance loop, executed only once if balancing is not required.
-  nsReflowStatus reflowStatus;
-  TrialReflowState trialState(consumedBSize, effectiveContentBoxBSize,
-                              needFloatManager);
-  while (true) {
-    // Save the initial floatManager state for repeated trial reflows.
-    // We'll restore (and re-save) the initial state each time we repeat the
-    // reflow.
-    nsFloatManager::SavedState floatManagerState;
-    aReflowInput.mFloatManager->PushState(&floatManagerState);
-
-    aMetrics = ReflowOutput(aMetrics.GetWritingMode());
-    reflowStatus =
-        TrialReflow(aPresContext, aMetrics, aReflowInput, trialState);
-
-    // Do we need to start a `text-wrap: balance` iteration?
-    if (tryBalance) {
-      tryBalance = false;
-      // Don't try to balance an incomplete block.
-      if (!reflowStatus.IsFullyComplete()) {
-        break;
-      }
-      balanceTarget.mOffset =
-          countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      if (balanceTarget.mOffset < 2) {
-        // If there are less than 2 lines, or the number exceeds the limit,
-        // no balancing is needed; just break from the balance loop.
-        break;
-      }
-      // Initialize the amount of inset to try, and the iteration step size.
-      balanceStep = aReflowInput.ComputedISize() / balanceTarget.mOffset;
-      trialState.ResetForBalance(balanceStep);
-      balanceStep /= 2;
-
-      // If -webkit-line-clamp is in effect, then we need to maintain the
-      // content location at which clamping occurs, rather than the total
-      // number of lines in the block.
-      if (StaticPrefs::layout_css_text_wrap_balance_after_clamp_enabled() &&
-          IsLineClampRoot(this)) {
-        int32_t lineClampCount = aReflowInput.mStyleDisplay->mWebkitLineClamp;
-        if (balanceTarget.mOffset > lineClampCount) {
-          auto t = getClampPosition(lineClampCount);
-          if (t.mContent) {
-            balanceTarget = t;
-          }
-        }
-      }
-
-      // Restore initial floatManager state for a new trial with updated inset.
-      aReflowInput.mFloatManager->PopState(&floatManagerState);
-      continue;
-    }
-
-    // Helper to determine whether the current trial succeeded (i.e. was able
-    // to fit the content into the expected number of lines).
-    auto trialSucceeded = [&]() -> bool {
-      if (!reflowStatus.IsFullyComplete()) {
-        return false;
-      }
-      if (balanceTarget.mContent) {
-        auto t = getClampPosition(aReflowInput.mStyleDisplay->mWebkitLineClamp);
-        return t == balanceTarget;
-      }
-      int32_t numLines =
-          countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      return numLines == balanceTarget.mOffset;
-    };
-
-    // If we're in the process of a balance operation, check whether we've
-    // inset by too much and either increase or reduce the inset for the next
-    // iteration.
-    if (balanceStep > 0) {
-      if (trialSucceeded()) {
-        trialState.ResetForBalance(balanceStep);
-      } else {
-        trialState.ResetForBalance(-balanceStep);
-      }
-      balanceStep /= 2;
-
-      aReflowInput.mFloatManager->PopState(&floatManagerState);
-      continue;
-    }
-
-    // If we were attempting to balance, check whether the final iteration was
-    // successful, and if not, back up by one step.
-    if (balanceTarget.mOffset >= 0) {
-      if (trialSucceeded()) {
-        break;
-      }
-      trialState.ResetForBalance(-1);
-
-      aReflowInput.mFloatManager->PopState(&floatManagerState);
-      continue;
-    }
-
-    // If we reach here, no balancing was required, so just exit; we don't
-    // reset (pop) the floatManager state because this is the reflow we're
-    // going to keep. So the saved state is just dropped.
-    break;
-  }  // End of text-wrap: balance retry loop
-
-  // If the block direction is right-to-left, we need to update the bounds of
-  // lines that were placed relative to mContainerSize during reflow, as
-  // we typically do not know the true container size until we've reflowed all
-  // its children. So we use a dummy mContainerSize during reflow (see
-  // BlockReflowState's constructor) and then fix up the positions of the
-  // lines here, once the final block size is known.
-  //
-  // Note that writing-mode:vertical-rl is the only case where the block
-  // logical direction progresses in a negative physical direction, and
-  // therefore block-dir coordinate conversion depends on knowing the width
-  // of the coordinate space in order to translate between the logical and
-  // physical origins.
-  if (aReflowInput.GetWritingMode().IsVerticalRL()) {
-    nsSize containerSize = aMetrics.PhysicalSize();
-    nscoord deltaX = containerSize.width - trialState.mContainerWidth;
-    if (deltaX != 0) {
-      // We compute our lines and markers' overflow areas later in
-      // ComputeOverflowAreas(), so we don't need to adjust their overflow areas
-      // here.
-      const nsPoint physicalDelta(deltaX, 0);
-      for (auto& line : Lines()) {
-        UpdateLineContainerSize(&line, containerSize);
-      }
-      trialState.mFcBounds.Clear();
-      for (nsIFrame* f : mFloats) {
-        f->MovePositionBy(physicalDelta);
-        ConsiderChildOverflow(trialState.mFcBounds, f);
-      }
-      nsFrameList* markerList = GetOutsideMarkerList();
-      if (markerList) {
-        for (nsIFrame* f : *markerList) {
-          f->MovePositionBy(physicalDelta);
-        }
-      }
-      if (nsFrameList* overflowContainers = GetOverflowContainers()) {
-        trialState.mOcBounds.Clear();
-        for (nsIFrame* f : *overflowContainers) {
-          f->MovePositionBy(physicalDelta);
-          ConsiderChildOverflow(trialState.mOcBounds, f);
-        }
-      }
-    }
-  }
-
-  aMetrics.SetOverflowAreasToDesiredBounds();
-  ComputeOverflowAreas(aMetrics.mOverflowAreas,
-                       trialState.mBlockEndEdgeOfChildren,
-                       aReflowInput.mStyleDisplay);
-  // Factor overflow container child bounds into the overflow area
-  aMetrics.mOverflowAreas.UnionWith(trialState.mOcBounds);
-  // Factor pushed float child bounds into the overflow area
-  aMetrics.mOverflowAreas.UnionWith(trialState.mFcBounds);
-
-  // Let the absolutely positioned container reflow any absolutely positioned
-  // child frames that need to be reflowed, e.g., elements with a percentage
-  // based width/height
-  // We want to do this under either of two conditions:
-  //  1. If we didn't do the incremental reflow above.
-  //  2. If our size changed.
-  // Even though it's the padding edge that's the containing block, we
-  // can use our rect (the border edge) since if the border style
-  // changed, the reflow would have been targeted at us so we'd satisfy
-  // condition 1.
-  // XXX checking oldSize is bogus, there are various reasons we might have
-  // reflowed but our size might not have been changed to what we
-  // asked for (e.g., we ended up being pushed to a new page)
-  // When WillReflowAgainForClearance is true, we will reflow again without
-  // resetting the size. Because of this, we must not reflow our abs-pos
-  // children in that situation --- what we think is our "new size" will not be
-  // our real new size. This also happens to be more efficient.
-  WritingMode parentWM = aMetrics.GetWritingMode();
-  if (HasAbsolutelyPositionedChildren()) {
-    nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
-    bool haveInterrupt = aPresContext->HasPendingInterrupt();
-    if (aReflowInput.WillReflowAgainForClearance() || haveInterrupt) {
-      // Make sure that when we reflow again we'll actually reflow all the abs
-      // pos frames that might conceivably depend on our size (or all of them,
-      // if we're dirty right now and interrupted; in that case we also need
-      // to mark them all with NS_FRAME_IS_DIRTY).  Sadly, we can't do much
-      // better than that, because we don't really know what our size will be,
-      // and it might in fact not change on the followup reflow!
-      if (haveInterrupt && HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
-        absoluteContainer->MarkAllFramesDirty();
-      } else {
-        absoluteContainer->MarkSizeDependentFramesDirty();
-      }
-      if (haveInterrupt) {
-        // We're not going to reflow absolute frames; make sure to account for
-        // their existing overflow areas, which is usually a side effect of this
-        // reflow.
-        //
-        // TODO(emilio): nsAbsoluteContainingBlock::Reflow already checks for
-        // interrupt, can we just rely on it and unconditionally take the else
-        // branch below? That's a bit more subtle / risky, since I don't see
-        // what would reflow them in that case if they depended on our size.
-        for (nsIFrame* kid = absoluteContainer->GetChildList().FirstChild();
-             kid; kid = kid->GetNextSibling()) {
-          ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
-        }
-      }
-    } else {
-      LogicalSize containingBlockSize =
-          CalculateContainingBlockSizeForAbsolutes(parentWM, aReflowInput,
-                                                   aMetrics.Size(parentWM));
-
-      // Mark frames that depend on changes we just made to this frame as dirty:
-      // Now we can assume that the padding edge hasn't moved.
-      // We need to reflow the absolutes if one of them depends on
-      // its placeholder position, or the containing block size in a
-      // direction in which the containing block size might have
-      // changed.
-
-      // XXX "width" and "height" in this block will become ISize and BSize
-      // when nsAbsoluteContainingBlock is logicalized
-      bool cbWidthChanged = aMetrics.Width() != oldSize.width;
-      bool isRoot = !GetContent()->GetParent();
-      // If isRoot and we have auto height, then we are the initial
-      // containing block and the containing block height is the
-      // viewport height, which can't change during incremental
-      // reflow.
-      bool cbHeightChanged =
-          !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedHeight()) &&
-          aMetrics.Height() != oldSize.height;
-
-      nsRect containingBlock(nsPoint(0, 0),
-                             containingBlockSize.GetPhysicalSize(parentWM));
-      AbsPosReflowFlags flags = AbsPosReflowFlags::ConstrainHeight;
-      if (cbWidthChanged) {
-        flags |= AbsPosReflowFlags::CBWidthChanged;
-      }
-      if (cbHeightChanged) {
-        flags |= AbsPosReflowFlags::CBHeightChanged;
-      }
-      // Setup the line cursor here to optimize line searching for
-      // calculating hypothetical position of absolutely-positioned
-      // frames.
-      SetupLineCursorForQuery();
-      absoluteContainer->Reflow(this, aPresContext, aReflowInput, reflowStatus,
-                                containingBlock, flags,
-                                &aMetrics.mOverflowAreas);
-    }
-  }
-
-  FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
-
-  aStatus = reflowStatus;
-
-#ifdef DEBUG
-  // Between when we drain pushed floats and when we complete reflow,
-  // we're allowed to have multiple continuations of the same float on
-  // our floats list, since a first-in-flow might get pushed to a later
-  // continuation of its containing block.  But it's not permitted
-  // outside that time.
-  nsLayoutUtils::AssertNoDuplicateContinuations(this, mFloats);
-
-  if (gNoisyReflow) {
-    IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": status=%s metrics=%d,%d carriedMargin=%d",
-           ToString(aStatus).c_str(), aMetrics.ISize(parentWM),
-           aMetrics.BSize(parentWM), aMetrics.mCarriedOutBEndMargin.get());
-    if (HasOverflowAreas()) {
-      printf(" overflow-vis={%d,%d,%d,%d}", aMetrics.InkOverflow().x,
-             aMetrics.InkOverflow().y, aMetrics.InkOverflow().width,
-             aMetrics.InkOverflow().height);
-      printf(" overflow-scr={%d,%d,%d,%d}", aMetrics.ScrollableOverflow().x,
-             aMetrics.ScrollableOverflow().y,
-             aMetrics.ScrollableOverflow().width,
-             aMetrics.ScrollableOverflow().height);
-    }
-    printf("\n");
-  }
-
-  if (gLameReflowMetrics) {
-    PRTime end = PR_Now();
-
-    int32_t ectc = nsLineBox::GetCtorCount();
-    int32_t numLines = mLines.size();
-    if (!numLines) {
-      numLines = 1;
-    }
-    PRTime delta, perLineDelta, lines;
-    lines = int64_t(numLines);
-    delta = end - start;
-    perLineDelta = delta / lines;
-
-    ListTag(stdout);
-    char buf[400];
-    SprintfLiteral(buf,
-                   ": %" PRId64 " elapsed (%" PRId64
-                   " per line) (%d lines; %d new lines)",
-                   delta, perLineDelta, numLines, ectc - ctc);
-    printf("%s\n", buf);
-  }
-#endif
-}
-
-nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
-                                         ReflowOutput& aMetrics,
-                                         const ReflowInput& aReflowInput,
-                                         TrialReflowState& aTrialState) {
 #ifdef DEBUG
   // Between when we drain pushed floats and when we complete reflow,
   // we're allowed to have multiple continuations of the same float on
@@ -1827,18 +1458,21 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
   IsMarginRoot(&blockStartMarginRoot, &blockEndMarginRoot);
 
   BlockReflowState state(aReflowInput, aPresContext, this, blockStartMarginRoot,
-                         blockEndMarginRoot, aTrialState.mNeedFloatManager,
-                         aTrialState.mConsumedBSize,
-                         aTrialState.mEffectiveContentBoxBSize,
-                         aTrialState.mInset);
+                         blockEndMarginRoot, needFloatManager, consumedBSize,
+                         effectiveContentBoxBSize);
+
+  if (HasAnyStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION) &&
+      PresContext()->BidiEnabled()) {
+    static_cast<nsBlockFrame*>(FirstContinuation())->ResolveBidi();
+  }
 
   // Handle paginated overflow (see nsContainerFrame.h)
+  OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(
-        aPresContext, aReflowInput, aTrialState.mOcBounds,
-        ReflowChildFlags::Default, ocStatus, DefaultChildFrameMerge,
-        Some(state.ContainerSize()));
+        aPresContext, aReflowInput, ocBounds, ReflowChildFlags::Default,
+        ocStatus, DefaultChildFrameMerge, Some(state.ContainerSize()));
   }
 
   // Now that we're done cleaning up our overflow container lists, we can
@@ -1848,7 +1482,8 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
 
   // Drain & handle pushed floats
   DrainPushedFloats();
-  ReflowPushedFloats(state, aTrialState.mFcBounds);
+  OverflowAreas fcBounds;
+  ReflowPushedFloats(state, fcBounds);
 
   // If we're not dirty (which means we'll mark everything dirty later)
   // and our inline-size has changed, mark the lines dirty that we need to
@@ -1865,13 +1500,7 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
     mLines.front()->MarkDirty();
   }
 
-  // For text-wrap:balance trials, we need to reflow all the lines even if
-  // they're not all "dirty".
-  if (aTrialState.mBalancing) {
-    MarkAllDescendantLinesDirty(this);
-  } else {
-    LazyMarkLinesDirty();
-  }
+  LazyMarkLinesDirty();
 
   // Now reflow...
   ReflowDirtyLines(state);
@@ -1984,12 +1613,204 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
 
   CheckFloats(state);
 
-  // Compute our final size (for this trial layout)
-  aTrialState.mBlockEndEdgeOfChildren =
-      ComputeFinalSize(aReflowInput, state, aMetrics);
-  aTrialState.mContainerWidth = state.ContainerSize().width;
+  // Compute our final size
+  nscoord blockEndEdgeOfChildren;
+  ComputeFinalSize(aReflowInput, state, aMetrics, &blockEndEdgeOfChildren);
 
-  return state.mReflowStatus;
+  // If the block direction is right-to-left, we need to update the bounds of
+  // lines that were placed relative to mContainerSize during reflow, as
+  // we typically do not know the true container size until we've reflowed all
+  // its children. So we use a dummy mContainerSize during reflow (see
+  // BlockReflowState's constructor) and then fix up the positions of the
+  // lines here, once the final block size is known.
+  //
+  // Note that writing-mode:vertical-rl is the only case where the block
+  // logical direction progresses in a negative physical direction, and
+  // therefore block-dir coordinate conversion depends on knowing the width
+  // of the coordinate space in order to translate between the logical and
+  // physical origins.
+  if (wm.IsVerticalRL()) {
+    nsSize containerSize = aMetrics.PhysicalSize();
+    nscoord deltaX = containerSize.width - state.ContainerSize().width;
+    if (deltaX != 0) {
+      // We compute our lines and markers' overflow areas later in
+      // ComputeOverflowAreas(), so we don't need to adjust their overflow areas
+      // here.
+      const nsPoint physicalDelta(deltaX, 0);
+      for (auto& line : Lines()) {
+        UpdateLineContainerSize(&line, containerSize);
+      }
+      fcBounds.Clear();
+      for (nsIFrame* f : mFloats) {
+        f->MovePositionBy(physicalDelta);
+        ConsiderChildOverflow(fcBounds, f);
+      }
+      nsFrameList* markerList = GetOutsideMarkerList();
+      if (markerList) {
+        for (nsIFrame* f : *markerList) {
+          f->MovePositionBy(physicalDelta);
+        }
+      }
+      if (nsFrameList* overflowContainers = GetOverflowContainers()) {
+        ocBounds.Clear();
+        for (nsIFrame* f : *overflowContainers) {
+          f->MovePositionBy(physicalDelta);
+          ConsiderChildOverflow(ocBounds, f);
+        }
+      }
+    }
+  }
+
+  aMetrics.SetOverflowAreasToDesiredBounds();
+  ComputeOverflowAreas(aMetrics.mOverflowAreas, blockEndEdgeOfChildren,
+                       aReflowInput.mStyleDisplay);
+  // Factor overflow container child bounds into the overflow area
+  aMetrics.mOverflowAreas.UnionWith(ocBounds);
+  // Factor pushed float child bounds into the overflow area
+  aMetrics.mOverflowAreas.UnionWith(fcBounds);
+
+  // Let the absolutely positioned container reflow any absolutely positioned
+  // child frames that need to be reflowed, e.g., elements with a percentage
+  // based width/height
+  // We want to do this under either of two conditions:
+  //  1. If we didn't do the incremental reflow above.
+  //  2. If our size changed.
+  // Even though it's the padding edge that's the containing block, we
+  // can use our rect (the border edge) since if the border style
+  // changed, the reflow would have been targeted at us so we'd satisfy
+  // condition 1.
+  // XXX checking oldSize is bogus, there are various reasons we might have
+  // reflowed but our size might not have been changed to what we
+  // asked for (e.g., we ended up being pushed to a new page)
+  // When WillReflowAgainForClearance is true, we will reflow again without
+  // resetting the size. Because of this, we must not reflow our abs-pos
+  // children in that situation --- what we think is our "new size" will not be
+  // our real new size. This also happens to be more efficient.
+  WritingMode parentWM = aMetrics.GetWritingMode();
+  if (HasAbsolutelyPositionedChildren()) {
+    nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+    bool haveInterrupt = aPresContext->HasPendingInterrupt();
+    if (aReflowInput.WillReflowAgainForClearance() || haveInterrupt) {
+      // Make sure that when we reflow again we'll actually reflow all the abs
+      // pos frames that might conceivably depend on our size (or all of them,
+      // if we're dirty right now and interrupted; in that case we also need
+      // to mark them all with NS_FRAME_IS_DIRTY).  Sadly, we can't do much
+      // better than that, because we don't really know what our size will be,
+      // and it might in fact not change on the followup reflow!
+      if (haveInterrupt && HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
+        absoluteContainer->MarkAllFramesDirty();
+      } else {
+        absoluteContainer->MarkSizeDependentFramesDirty();
+      }
+      if (haveInterrupt) {
+        // We're not going to reflow absolute frames; make sure to account for
+        // their existing overflow areas, which is usually a side effect of this
+        // reflow.
+        //
+        // TODO(emilio): nsAbsoluteContainingBlock::Reflow already checks for
+        // interrupt, can we just rely on it and unconditionally take the else
+        // branch below? That's a bit more subtle / risky, since I don't see
+        // what would reflow them in that case if they depended on our size.
+        for (nsIFrame* kid = absoluteContainer->GetChildList().FirstChild();
+             kid; kid = kid->GetNextSibling()) {
+          ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
+        }
+      }
+    } else {
+      LogicalSize containingBlockSize =
+          CalculateContainingBlockSizeForAbsolutes(parentWM, aReflowInput,
+                                                   aMetrics.Size(parentWM));
+
+      // Mark frames that depend on changes we just made to this frame as dirty:
+      // Now we can assume that the padding edge hasn't moved.
+      // We need to reflow the absolutes if one of them depends on
+      // its placeholder position, or the containing block size in a
+      // direction in which the containing block size might have
+      // changed.
+
+      // XXX "width" and "height" in this block will become ISize and BSize
+      // when nsAbsoluteContainingBlock is logicalized
+      bool cbWidthChanged = aMetrics.Width() != oldSize.width;
+      bool isRoot = !GetContent()->GetParent();
+      // If isRoot and we have auto height, then we are the initial
+      // containing block and the containing block height is the
+      // viewport height, which can't change during incremental
+      // reflow.
+      bool cbHeightChanged =
+          !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedHeight()) &&
+          aMetrics.Height() != oldSize.height;
+
+      nsRect containingBlock(nsPoint(0, 0),
+                             containingBlockSize.GetPhysicalSize(parentWM));
+      AbsPosReflowFlags flags = AbsPosReflowFlags::ConstrainHeight;
+      if (cbWidthChanged) {
+        flags |= AbsPosReflowFlags::CBWidthChanged;
+      }
+      if (cbHeightChanged) {
+        flags |= AbsPosReflowFlags::CBHeightChanged;
+      }
+      // Setup the line cursor here to optimize line searching for
+      // calculating hypothetical position of absolutely-positioned
+      // frames.
+      SetupLineCursorForQuery();
+      absoluteContainer->Reflow(this, aPresContext, aReflowInput,
+                                state.mReflowStatus, containingBlock, flags,
+                                &aMetrics.mOverflowAreas);
+    }
+  }
+
+  FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
+
+  aStatus = state.mReflowStatus;
+
+#ifdef DEBUG
+  // Between when we drain pushed floats and when we complete reflow,
+  // we're allowed to have multiple continuations of the same float on
+  // our floats list, since a first-in-flow might get pushed to a later
+  // continuation of its containing block.  But it's not permitted
+  // outside that time.
+  nsLayoutUtils::AssertNoDuplicateContinuations(this, mFloats);
+
+  if (gNoisyReflow) {
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": status=%s metrics=%d,%d carriedMargin=%d",
+           ToString(aStatus).c_str(), aMetrics.ISize(parentWM),
+           aMetrics.BSize(parentWM), aMetrics.mCarriedOutBEndMargin.get());
+    if (HasOverflowAreas()) {
+      printf(" overflow-vis={%d,%d,%d,%d}", aMetrics.InkOverflow().x,
+             aMetrics.InkOverflow().y, aMetrics.InkOverflow().width,
+             aMetrics.InkOverflow().height);
+      printf(" overflow-scr={%d,%d,%d,%d}", aMetrics.ScrollableOverflow().x,
+             aMetrics.ScrollableOverflow().y,
+             aMetrics.ScrollableOverflow().width,
+             aMetrics.ScrollableOverflow().height);
+    }
+    printf("\n");
+  }
+
+  if (gLameReflowMetrics) {
+    PRTime end = PR_Now();
+
+    int32_t ectc = nsLineBox::GetCtorCount();
+    int32_t numLines = mLines.size();
+    if (!numLines) {
+      numLines = 1;
+    }
+    PRTime delta, perLineDelta, lines;
+    lines = int64_t(numLines);
+    delta = end - start;
+    perLineDelta = delta / lines;
+
+    ListTag(stdout);
+    char buf[400];
+    SprintfLiteral(buf,
+                   ": %" PRId64 " elapsed (%" PRId64
+                   " per line) (%d lines; %d new lines)",
+                   delta, perLineDelta, numLines, ectc - ctc);
+    printf("%s\n", buf);
+  }
+#endif
 }
 
 bool nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine() {
@@ -2087,9 +1908,10 @@ static nscoord ApplyLineClamp(const ReflowInput& aReflowInput,
   return edge;
 }
 
-nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
-                                       BlockReflowState& aState,
-                                       ReflowOutput& aMetrics) {
+void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
+                                    BlockReflowState& aState,
+                                    ReflowOutput& aMetrics,
+                                    nscoord* aBEndEdgeOfChildren) {
   WritingMode wm = aState.mReflowInput.GetWritingMode();
   const LogicalMargin& borderPadding = aState.BorderPadding();
 #ifdef NOISY_FINAL_SIZE
@@ -2327,6 +2149,7 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 
   // Screen out negative block sizes --- can happen due to integer overflows :-(
   finalSize.BSize(wm) = std::max(0, finalSize.BSize(wm));
+  *aBEndEdgeOfChildren = blockEndEdgeOfChildren;
 
   if (blockEndEdgeOfChildren != finalSize.BSize(wm) - borderPadding.BEnd(wm)) {
     SetProperty(BlockEndEdgeOfChildrenProperty(), blockEndEdgeOfChildren);
@@ -2343,8 +2166,6 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     printf(": WARNING: desired:%d,%d\n", aMetrics.Width(), aMetrics.Height());
   }
 #endif
-
-  return blockEndEdgeOfChildren;
 }
 
 void nsBlockFrame::ConsiderBlockEndEdgeOfChildren(
@@ -4731,10 +4552,10 @@ void nsBlockFrame::DoReflowInlineFrames(
   // because it might get disabled there
   aLine->EnableResizeReflowOptimization();
 
-  aLineLayout.BeginLineReflow(
-      iStart, aState.mBCoord, availISize, availBSize,
-      aFloatAvailableSpace.HasFloats(), false, /*XXX isTopOfPage*/
-      lineWM, aState.mContainerSize, aState.mInsetForBalance);
+  aLineLayout.BeginLineReflow(iStart, aState.mBCoord, availISize, availBSize,
+                              aFloatAvailableSpace.HasFloats(),
+                              false, /*XXX isTopOfPage*/
+                              lineWM, aState.mContainerSize);
 
   aState.mFlags.mIsLineLayoutEmpty = false;
 
