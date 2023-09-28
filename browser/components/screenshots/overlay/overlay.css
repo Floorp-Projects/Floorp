@@ -67,6 +67,7 @@
 
 .screenshots-button {
   display: inline-flex;
+  align-items: center;
   cursor: pointer;
   text-align: center;
   user-select: none;
