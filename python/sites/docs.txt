@@ -64,11 +64,9 @@ vendored:third_party/python/frozenlist
 vendored:third_party/python/giturlparse
 vendored:third_party/python/jinja2_time
 vendored:third_party/python/json-e
-vendored:third_party/python/jsonschema
 vendored:third_party/python/mohawk
 vendored:third_party/python/mozilla_repo_urls
 vendored:third_party/python/packaging
-vendored:third_party/python/pkgutil_resolve_name
 vendored:third_party/python/python_dateutil
 vendored:third_party/python/python_slugify
 vendored:third_party/python/redo

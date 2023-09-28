@@ -70,11 +70,14 @@ vendored:third_party/python/importlib_metadata
 vendored:third_party/python/importlib_resources
 vendored:third_party/python/jinxed
 vendored:third_party/python/jsmin
+vendored:third_party/python/jsonschema
 vendored:third_party/python/looseversion
 vendored:third_party/python/mozilla_version
 vendored:third_party/python/packaging
 vendored:third_party/python/pip
 vendored:third_party/python/pip_tools
+vendored:third_party/python/pkgutil_resolve_name
+vendored:third_party/python/pyrsistent
 vendored:third_party/python/python-hglib
 vendored:third_party/python/requests
 vendored:third_party/python/sentry_sdk
