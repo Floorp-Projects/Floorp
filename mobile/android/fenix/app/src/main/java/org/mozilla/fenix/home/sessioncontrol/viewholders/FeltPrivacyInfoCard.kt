@@ -37,7 +37,7 @@ fun FeltPrivacyModeInfoCard(
     Card(
         modifier = Modifier
             .wrapContentHeight(),
-        backgroundColor = FirefoxTheme.colors.layerAccentNonOpaque,
+        backgroundColor = FirefoxTheme.colors.layer2,
         shape = RoundedCornerShape(8.dp),
         elevation = 5.dp,
     ) {
