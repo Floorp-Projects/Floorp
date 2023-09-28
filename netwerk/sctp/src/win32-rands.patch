@@ -1,6 +1,6 @@
 diff --git a/netinet/sctp_asconf.c b/netinet/sctp_asconf.c
---- a//netinet/sctp_asconf.c
-+++ b//netinet/sctp_asconf.c
+--- a/netinet/sctp_asconf.c
++++ b/netinet/sctp_asconf.c
 @@ -32,6 +32,14 @@
   * THE POSSIBILITY OF SUCH DAMAGE.
   */
@@ -13,9 +13,9 @@ diff --git a/netinet/sctp_asconf.c b/netinet/sctp_asconf.c
 +#endif
 +#endif
 +
- #if defined(__FreeBSD__) && !defined(__Userspace__)
- #include <sys/cdefs.h>
- __FBSDID("$FreeBSD$");
+ #include <netinet/sctp_os.h>
+ #include <netinet/sctp_var.h>
+ #include <netinet/sctp_sysctl.h>
 diff --git a/user_environment.h b/user_environment.h
 --- a/user_environment.h
 +++ b/user_environment.h
