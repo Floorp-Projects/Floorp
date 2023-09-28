@@ -35,15 +35,11 @@ add_task(async function test_resettingDefaults() {
   // Origin infos for default permissions in the format [origin, type].
   let originInfos = [
     ["https://www.mozilla.org", "uitour"],
-    ["https://monitor.firefox.com", "uitour"],
-    ["https://screenshots.firefox.com", "uitour"],
     ["https://support.mozilla.org", "uitour"],
-    ["https://truecolors.firefox.com", "uitour"],
     ["about:home", "uitour"],
     ["about:newtab", "uitour"],
     ["https://addons.mozilla.org", "install"],
     ["https://support.mozilla.org", "remote-troubleshooting"],
-    ["https://fpn.firefox.com", "install"],
     ["about:welcome", "autoplay-media"],
   ];
 
