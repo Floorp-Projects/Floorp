@@ -93,13 +93,6 @@ geckoview-fission-isolate-high-value:
             extra-options:
                 - "--setpref=fission.webContentIsolationStrategy=2"
 
-fission:
-    description: "{description} with fission enabled"
-    component: "Core::DOM: Content Processes"
-    expiration: "never"
-    suffix: "fis"
-    mozinfo: "fission"
-
 no-fission:
     description: "{description} without fission enabled"
     component: "Core::DOM: Content Processes"
