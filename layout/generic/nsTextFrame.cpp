@@ -7822,8 +7822,32 @@ bool ClusterIterator::IsNewline() const {
 
 bool ClusterIterator::IsPunctuation() const {
   NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
+  // Return true for all Punctuation categories (Unicode general category P?),
+  // and also for Symbol categories (S?) except for Modifier Symbol, which is
+  // kept together with any adjacent letter/number. (Bug 1066756)
   const char16_t ch = mFrag->CharAt(AssertedCast<uint32_t>(mCharIndex));
-  return mozilla::IsPunctuationForWordSelect(ch);
+  const uint8_t cat = unicode::GetGeneralCategory(ch);
+  switch (cat) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+      if (ch == '_' && !StaticPrefs::layout_word_select_stop_at_underscore()) {
+        return false;
+      }
+      [[fallthrough]];
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+    // Deliberately omitted:
+    // case HB_UNICODE_GENERAL_CATEGORY_MODIFIER_SYMBOL:     /* Sk */
+    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:  /* Sm */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL: /* So */
+      return true;
+    default:
+      return false;
+  }
 }
 
 int32_t ClusterIterator::GetAfterInternal() const {
