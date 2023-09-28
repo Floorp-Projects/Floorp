@@ -50,7 +50,10 @@ nsStreamListenerTee::OnStopRequest(nsIRequest* request, nsresult status) {
   }
 
   nsresult rv = mListener->OnStopRequest(request, status);
-  if (mObserver) mObserver->OnStopRequest(request, status);
+  mListener = nullptr;
+  if (mObserver) {
+    mObserver->OnStopRequest(request, status);
+  }
   if (!mIsMultiPart) {
     mObserver = nullptr;
   }
