@@ -12,6 +12,8 @@ function testProtoSetter() {
     assertEq(Object.getOwnPropertyNames(to).length, 0);
 }
 testProtoSetter();
+testProtoSetter();
+testProtoSetter();
 
 function testProtoDataProp() {
     var to = Object.create(null);
@@ -23,6 +25,8 @@ function testProtoDataProp() {
     assertEq(to.__proto__, 2);
 }
 testProtoDataProp();
+testProtoDataProp();
+testProtoDataProp();
 
 function testNonExtensible() {
     var to = Object.preventExtensions({x: 1});
@@ -33,11 +37,15 @@ function testNonExtensible() {
     assertEq("y" in to, false);
 }
 testNonExtensible();
+testNonExtensible();
+testNonExtensible();
 
 function testNonExtensibleNoProps() {
     var to = Object.preventExtensions({});
     Object.assign(to, {}); // No exception.
 }
+testNonExtensibleNoProps();
+testNonExtensibleNoProps();
 testNonExtensibleNoProps();
 
 function testDenseElements() {
@@ -45,6 +53,8 @@ function testDenseElements() {
     assertEq(to[0], 1);
     assertEq(to[1], 2);
 }
+testDenseElements();
+testDenseElements();
 testDenseElements();
 
 function testNonWritableOnProto() {
@@ -56,6 +66,8 @@ function testNonWritableOnProto() {
     assertEq(Object.getOwnPropertyNames(to).length, 0);
 }
 testNonWritableOnProto();
+testNonWritableOnProto();
+testNonWritableOnProto();
 
 function testAccessorOnProto() {
     var setterVal;
@@ -65,6 +77,8 @@ function testAccessorOnProto() {
     assertEq(Object.getOwnPropertyNames(to).length, 0);
 }
 testAccessorOnProto();
+testAccessorOnProto();
+testAccessorOnProto();
 
 function testSetAndAdd() {
     var to = Object.assign({x: 1, y: 2}, {x: 3, y: 4, z: 5});
@@ -72,6 +86,8 @@ function testSetAndAdd() {
     assertEq(to.y, 4);
     assertEq(to.z, 5);
 }
+testSetAndAdd();
+testSetAndAdd();
 testSetAndAdd();
 
 function testNonConfigurableFrom() {
@@ -82,6 +98,8 @@ function testNonConfigurableFrom() {
     assertEq(Object.getOwnPropertyDescriptor(to, "x").configurable, true);
 }
 testNonConfigurableFrom();
+testNonConfigurableFrom();
+testNonConfigurableFrom();
 
 function testNonEnumerableFrom() {
     var from = {};
@@ -91,6 +109,8 @@ function testNonEnumerableFrom() {
     assertEq(to.x, undefined);
 }
 testNonEnumerableFrom();
+testNonEnumerableFrom();
+testNonEnumerableFrom();
 
 function testNonWritableFrom() {
     var from = {};
@@ -99,6 +119,8 @@ function testNonWritableFrom() {
     assertEq(to.x, 1);
     assertEq(Object.getOwnPropertyDescriptor(to, "x").writable, true);
 }
+testNonWritableFrom();
+testNonWritableFrom();
 testNonWritableFrom();
 
 function testFrozenProto() {
@@ -110,6 +132,8 @@ function testFrozenProto() {
     assertEq(target.x, 1);
 }
 testFrozenProto();
+testFrozenProto();
+testFrozenProto();
 
 function testReuseShape() {
     var from = {};
@@ -119,4 +143,6 @@ function testReuseShape() {
     assertEq(to.x, 1);
     assertEq(to.y, 2);
 }
+testReuseShape();
+testReuseShape();
 testReuseShape();
