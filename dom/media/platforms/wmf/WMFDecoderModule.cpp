@@ -237,7 +237,7 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
                               MFVideoFormat_NV12);
 #endif
     case WMFStreamType::HEVC:
-      if (!StaticPrefs::media_wmf_hevc_enabled() || !sDXVAEnabled) {
+      if (StaticPrefs::media_wmf_hevc_enabled() != 1 || !sDXVAEnabled) {
         return E_FAIL;
       }
       return SUCCEEDED(aDecoder->Create(
@@ -283,7 +283,7 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
       break;
 #endif
     case WMFStreamType::HEVC:
-      if (!StaticPrefs::media_wmf_hevc_enabled()) {
+      if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
         return false;
       }
       break;
