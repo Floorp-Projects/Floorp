@@ -375,6 +375,10 @@ class GCMarker {
 
   static void moveWork(GCMarker* dst, GCMarker* src);
 
+  [[nodiscard]] bool initStack();
+  void resetStackCapacity();
+  void freeStack();
+
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static GCMarker* fromTracer(JSTracer* trc) {

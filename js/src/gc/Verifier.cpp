@@ -393,7 +393,6 @@ void gc::GCRuntime::endVerifyPreBarriers() {
   }
 
   marker().reset();
-  marker().stop();
   resetDelayedMarking();
 
   js_delete(trc);
@@ -586,7 +585,6 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       }
 
       MOZ_ASSERT(gcmarker->isDrained());
-      gcmarker->reset();
 
       ClearMarkBits<GCZonesIter>(gc);
     }

@@ -1269,6 +1269,24 @@ void GCMarker::moveWork(GCMarker* dst, GCMarker* src) {
   MarkStack::moveWork(dst->stack, src->stack);
 }
 
+bool GCMarker::initStack() {
+  MOZ_ASSERT(!isActive());
+  MOZ_ASSERT(markColor_ == gc::MarkColor::Black);
+  return stack.init();
+}
+
+void GCMarker::resetStackCapacity() {
+  MOZ_ASSERT(!isActive());
+  MOZ_ASSERT(markColor_ == gc::MarkColor::Black);
+  (void)stack.resetStackCapacity();
+}
+
+void GCMarker::freeStack() {
+  MOZ_ASSERT(!isActive());
+  MOZ_ASSERT(markColor_ == gc::MarkColor::Black);
+  stack.clearAndFreeStack();
+}
+
 bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
                                         ShouldReportMarkTime reportTime) {
 #ifdef DEBUG
@@ -2002,13 +2020,14 @@ void GCMarker::stop() {
   }
   state = NotActive;
 
-  (void)stack.resetStackCapacity();
   otherStack.clearAndFreeStack();
   ClearEphemeronEdges(runtime());
   unmarkGrayStack.clearAndFree();
 }
 
 void GCMarker::reset() {
+  state = NotActive;
+
   stack.clearAndResetCapacity();
   otherStack.clearAndFreeStack();
   ClearEphemeronEdges(runtime());
