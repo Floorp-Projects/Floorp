@@ -121,6 +121,7 @@ job-defaults:
         by-build-type:
             (nightly|beta|release): promote
             default: build
+    shipping-product: firefox-android
     treeherder:
         kind: build
         symbol:
