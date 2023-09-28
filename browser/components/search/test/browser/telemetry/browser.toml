@@ -2,7 +2,9 @@
 tags = "search-telemetry"
 support-files = ["head.js"]
 
-["browser_search_glean_serp_telemetry_enabled_by_nimbus_variable.js"]
+["browser_search_glean_serp_event_telemetry_categorization_enabled_by_nimbus_variable.js"]
+
+["browser_search_glean_serp_event_telemetry_enabled_by_nimbus_variable.js"]
 support-files = ["searchTelemetryAd.html"]
 
 ["browser_search_telemetry_abandonment.js"]

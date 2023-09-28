@@ -113,6 +113,10 @@ search:
       type: boolean
       setPref: browser.search.serpEventTelemetry.enabled
       description: Whether the Glean SERP event telemetry is enabled.
+    serpEventTelemetryCategorizationEnabled:
+      type: boolean
+      setPref: browser.search.serpEventTelemetryCategorization.enabled
+      description: Whether the Glean SERP event telemetry for SERP categorization is enabled.
     trendingEnabled:
       type: boolean
       setPref: browser.urlbar.trending.featureGate
