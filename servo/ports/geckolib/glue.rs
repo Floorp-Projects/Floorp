@@ -11,7 +11,7 @@ use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
 use selectors::matching::{ElementSelectorFlags, MatchingForInvalidation, SelectorCaches};
-use selectors::{Element, OpaqueElement};
+use selectors::Element;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use style::invalidation::element::element_wrapper::{ElementWrapper, ElementSnapshot};
@@ -6808,7 +6808,7 @@ fn relative_selector_invalidated_at(element: GeckoElement, result: &Invalidation
 
 fn add_relative_selector_attribute_dependency<'a>(
     element: &GeckoElement<'a>,
-    scope: &Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     attribute: &AtomIdent,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -6855,7 +6855,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
     element: &RawGeckoElement,
     old_id: *mut nsAtom,
     new_id: *mut nsAtom,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
@@ -6864,7 +6863,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -6906,7 +6904,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -6941,7 +6938,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDepende
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
     local_name: *mut nsAtom,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
@@ -6952,7 +6948,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDepende
             let invalidator = RelativeSelectorInvalidator {
                 element,
                 quirks_mode,
-                snapshot_table: Some(snapshots),
                 invalidated: relative_selector_invalidated_at,
                 sibling_traversal_map: SiblingTraversalMap::default(),
                 _marker: std::marker::PhantomData,
@@ -6979,7 +6974,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
     state: u64,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let element = GeckoElement(element);
 
@@ -6993,7 +6987,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7010,7 +7003,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
                     if !dependency.state.intersects(state) {
                         return true;
                     }
-                    collector.add_dependency(&dependency.dep, *element, scope);
+                    collector.add_dependency(&dependency.dep, *element, *scope);
                     true
                 });
         },
@@ -7026,7 +7019,6 @@ fn invalidate_relative_selector_prev_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: prev_sibling,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
         _marker: std::marker::PhantomData,
@@ -7048,7 +7040,6 @@ fn invalidate_relative_selector_next_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: next_sibling,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
         _marker: std::marker::PhantomData,
@@ -7072,7 +7063,6 @@ fn invalidate_relative_selector_ts_dependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7094,7 +7084,7 @@ fn invalidate_relative_selector_ts_dependency(
                         if !dependency.state.intersects(state) {
                             return true;
                         }
-                        collector.add_dependency(&dependency.dep, *element, scope);
+                        collector.add_dependency(&dependency.dep, *element, *scope);
                         true
                     },
                 );
@@ -7168,19 +7158,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     // Either way, there must be siblings to both sides of the element being inserted
     // to consider it.
     match (element.prev_sibling_element(), element.next_sibling_element()) {
-        (Some(prev_sibling), Some(next_sibling)) => 'sibling: {
-            // If the prev sibling is not on the sibling search path, skip.
-            if prev_sibling
-                .relative_selector_search_direction()
-                .map_or(true, |direction| {
-                    !direction.intersects(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
-                })
-            {
-                break 'sibling;
-            }
-            element.apply_selector_flags(
-                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
-            );
+        (Some(prev_sibling), Some(next_sibling)) => {
             invalidate_relative_selector_prev_sibling_side_effect(
                 prev_sibling,
                 quirks_mode,
@@ -7209,7 +7187,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7245,7 +7222,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(
         let invalidator = RelativeSelectorInvalidator {
             element: e,
             quirks_mode,
-            snapshot_table: None,
             sibling_traversal_map: SiblingTraversalMap::default(),
             invalidated: relative_selector_invalidated_at,
             _marker: std::marker::PhantomData,
@@ -7300,7 +7276,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         sibling_traversal_map: SiblingTraversalMap::new(element, prev_sibling, next_sibling),
         invalidated: relative_selector_invalidated_at,
         _marker: std::marker::PhantomData,
@@ -7476,7 +7451,7 @@ fn relative_selector_dependencies_for_id<'a>(
     old_id: *const nsAtom,
     new_id: *const nsAtom,
     element: &GeckoElement<'a>,
-    scope: Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     quirks_mode: QuirksMode,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -7487,7 +7462,7 @@ fn relative_selector_dependencies_for_id<'a>(
                 match invalidation_map.map.id_to_selector.get(atom, quirks_mode) {
                     Some(v) => {
                         for dependency in v {
-                            collector.add_dependency(dependency, *element, scope);
+                            collector.add_dependency(dependency, *element, *scope);
                         }
                     },
                     None => (),
@@ -7500,7 +7475,7 @@ fn relative_selector_dependencies_for_id<'a>(
 fn relative_selector_dependencies_for_class<'a>(
     classes_changed: &SmallVec<[Atom; 8]>,
     element: &GeckoElement<'a>,
-    scope: Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     quirks_mode: QuirksMode,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -7513,7 +7488,7 @@ fn relative_selector_dependencies_for_class<'a>(
         {
             Some(v) => {
                 for dependency in v {
-                    collector.add_dependency(dependency, *element, scope);
+                    collector.add_dependency(dependency, *element, *scope);
                 }
             },
             None => (),
@@ -7539,7 +7514,6 @@ fn process_relative_selector_invalidations(
         quirks_mode,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        snapshot_table: Some(snapshot_table),
         _marker: std::marker::PhantomData,
     };
 
@@ -7569,7 +7543,7 @@ fn process_relative_selector_invalidations(
                     if !dependency.state.intersects(states) {
                         return true;
                     }
-                    collector.add_dependency(&dependency.dep, *element, scope);
+                    collector.add_dependency(&dependency.dep, *element, *scope);
                     true
                 });
         },
