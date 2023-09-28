@@ -2483,6 +2483,14 @@ VARIABLES = {
         See ``DEFINES`` for specifics.
         """,
     ),
+    "WASM_LIBS": (
+        List,
+        list,
+        """Wasm system link libraries.
+
+        This variable contains a list of wasm system libaries to link against.
+        """,
+    ),
     "CMFLAGS": (
         List,
         list,
