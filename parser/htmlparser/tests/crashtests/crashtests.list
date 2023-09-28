@@ -65,3 +65,4 @@ load 1606499-1.html
 load 1547895-1.html
 skip-if(Android) skip-if(isDebugBuild) load 1747514.html # Bug 1780219
 HTTP load 1810896-1.html
+load 1854907-1.html

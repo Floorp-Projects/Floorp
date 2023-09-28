@@ -289,6 +289,8 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    */
   void DetermineKindFromType(const mozilla::dom::Document* aOwnerDoc);
 
+  bool IsClassicNonAsyncDefer();
+
   /**
    * The start line number of the script.
    */
