@@ -25,7 +25,6 @@ SOURCES += [
 
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
-# -DSQLITE_ENABLE_FTS3=1 enables the full-text index module.
 # -DSQLITE_CORE=1 statically links that module into the SQLite library.
 # -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
 # increases the page size from 1k, see bug 416330.  It must be kept in sync with
@@ -35,8 +34,7 @@ SOURCES += [
 # will be used.
 # Note: Be sure to update the configure.in checks when these change!
 for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
-            'SQLITE_ENABLE_FTS3', 'SQLITE_ENABLE_UNLOCK_NOTIFY',
-            'SQLITE_ENABLE_DBSTAT_VTAB'):
+            'SQLITE_ENABLE_UNLOCK_NOTIFY', 'SQLITE_ENABLE_DBSTAT_VTAB'):
     DEFINES[var] = 1
 
 DEFINES['SQLITE_DEFAULT_PAGE_SIZE'] = 32768
@@ -120,3 +118,8 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 # user doesn't move auxiliary files along with the main database.
 # This is in bytes.
 DEFINES['SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT'] = 1572864
+
+# Thunderbird/Mail uses the FTS3 extension, but it's not using enhanced query
+# syntax (SQLITE_ENABLE_FTS3_PARENTHESIS) yet.
+if CONFIG["MOZ_THUNDERBIRD"] or CONFIG["MOZ_SUITE"]:
+    DEFINES['SQLITE_ENABLE_FTS3'] = 1
