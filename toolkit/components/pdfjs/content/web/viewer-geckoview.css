@@ -13,1262 +13,1238 @@
  * limitations under the License.
  */
 
-:root {
-  --highlight-bg-color: rgba(180, 0, 170, 1);
-  --highlight-selected-bg-color: rgba(0, 100, 0, 1);
+:root{
+  --highlight-bg-color:rgba(180, 0, 170, 1);
+  --highlight-selected-bg-color:rgba(0, 100, 0, 1);
 }
 
-@media screen and (forced-colors: active) {
-  :root {
-    --highlight-bg-color: Highlight;
-    --highlight-selected-bg-color: ButtonText;
+@media screen and (forced-colors: active){
+  :root{
+    --highlight-bg-color:Highlight;
+    --highlight-selected-bg-color:ButtonText;
   }
 }
 
-.textLayer {
-  position: absolute;
-  text-align: initial;
-  inset: 0;
-  overflow: hidden;
-  opacity: 0.25;
-  line-height: 1;
-  text-size-adjust: none;
-  forced-color-adjust: none;
-  transform-origin: 0 0;
-  z-index: 2;
+.textLayer{
+  position:absolute;
+  text-align:initial;
+  inset:0;
+  overflow:hidden;
+  opacity:0.25;
+  line-height:1;
+  text-size-adjust:none;
+  forced-color-adjust:none;
+  transform-origin:0 0;
+  z-index:2;
 }
 
-.textLayer :is(span, br) {
-  color: transparent;
-  position: absolute;
-  white-space: pre;
-  cursor: text;
-  transform-origin: 0% 0%;
+.textLayer :is(span, br){
+  color:transparent;
+  position:absolute;
+  white-space:pre;
+  cursor:text;
+  transform-origin:0% 0%;
 }
 
-/* Only necessary in Google Chrome, see issue 14205, and most unfortunately
- * the problem doesn't show up in "text" reference tests. */
-
-.textLayer .highlight {
-  margin: -1px;
-  padding: 1px;
-  background-color: var(--highlight-bg-color);
-  border-radius: 4px;
+.textLayer .highlight{
+  margin:-1px;
+  padding:1px;
+  background-color:var(--highlight-bg-color);
+  border-radius:4px;
 }
 
-.textLayer .highlight.appended {
-  position: initial;
+.textLayer .highlight.appended{
+  position:initial;
 }
 
-.textLayer .highlight.begin {
-  border-radius: 4px 0 0 4px;
+.textLayer .highlight.begin{
+  border-radius:4px 0 0 4px;
 }
 
-.textLayer .highlight.end {
-  border-radius: 0 4px 4px 0;
+.textLayer .highlight.end{
+  border-radius:0 4px 4px 0;
 }
 
-.textLayer .highlight.middle {
-  border-radius: 0;
+.textLayer .highlight.middle{
+  border-radius:0;
 }
 
-.textLayer .highlight.selected {
-  background-color: var(--highlight-selected-bg-color);
+.textLayer .highlight.selected{
+  background-color:var(--highlight-selected-bg-color);
 }
 
-.textLayer ::selection {
-  background: AccentColor; /* stylelint-disable-line declaration-block-no-duplicate-properties */
+.textLayer ::selection{
+  background:AccentColor;
 }
 
-/* Avoids https://github.com/mozilla/pdf.js/issues/13840 in Chrome */
-
-.textLayer .endOfContent {
-  display: block;
-  position: absolute;
-  inset: 100% 0 0;
-  z-index: -1;
-  cursor: default;
-  user-select: none;
+.textLayer .endOfContent{
+  display:block;
+  position:absolute;
+  inset:100% 0 0;
+  z-index:-1;
+  cursor:default;
+  user-select:none;
 }
 
-.textLayer .endOfContent.active {
-  top: 0;
+.textLayer .endOfContent.active{
+  top:0;
 }
 
-
-:root {
-  --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
-  --input-focus-border-color: Highlight;
-  --input-focus-outline: 1px solid Canvas;
-  --input-unfocused-border-color: transparent;
-  --input-disabled-border-color: transparent;
-  --input-hover-border-color: black;
-  --link-outline: none;
+:root{
+  --annotation-unfocused-field-background:url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --input-focus-border-color:Highlight;
+  --input-focus-outline:1px solid Canvas;
+  --input-unfocused-border-color:transparent;
+  --input-disabled-border-color:transparent;
+  --input-hover-border-color:black;
+  --link-outline:none;
 }
 
-@media screen and (forced-colors: active) {
-  :root {
-    --input-focus-border-color: CanvasText;
-    --input-unfocused-border-color: ActiveText;
-    --input-disabled-border-color: GrayText;
-    --input-hover-border-color: Highlight;
-    --link-outline: 1.5px solid LinkText;
-    --hcm-highligh-filter: invert(100%);
+@media screen and (forced-colors: active){
+  :root{
+    --input-focus-border-color:CanvasText;
+    --input-unfocused-border-color:ActiveText;
+    --input-disabled-border-color:GrayText;
+    --input-hover-border-color:Highlight;
+    --link-outline:1.5px solid LinkText;
+    --hcm-highligh-filter:invert(100%);
   }
   .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
   .annotationLayer .choiceWidgetAnnotation select:required,
   .annotationLayer
     .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-    input:required {
-    outline: 1.5px solid selectedItem;
+    input:required{
+    outline:1.5px solid selectedItem;
   }
 
-  .annotationLayer .linkAnnotation:hover {
-    backdrop-filter: var(--hcm-highligh-filter);
+  .annotationLayer .linkAnnotation:hover{
+    backdrop-filter:var(--hcm-highligh-filter);
   }
 
-  .annotationLayer .linkAnnotation > a:hover {
-    opacity: 0 !important;
-    background: none !important;
-    box-shadow: none;
+  .annotationLayer .linkAnnotation > a:hover{
+    opacity:0 !important;
+    background:none !important;
+    box-shadow:none;
   }
 
-  .annotationLayer .popupAnnotation .popup {
-    outline: calc(1.5px * var(--scale-factor)) solid CanvasText !important;
-    background-color: ButtonFace !important;
-    color: ButtonText !important;
+  .annotationLayer .popupAnnotation .popup{
+    outline:calc(1.5px * var(--scale-factor)) solid CanvasText !important;
+    background-color:ButtonFace !important;
+    color:ButtonText !important;
   }
 
-  .annotationLayer .highlightArea:hover::after {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    backdrop-filter: var(--hcm-highligh-filter);
-    content: "";
-    pointer-events: none;
+  .annotationLayer .highlightArea:hover::after{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    backdrop-filter:var(--hcm-highligh-filter);
+    content:"";
+    pointer-events:none;
   }
 
-  .annotationLayer .popupAnnotation.focused .popup {
-    outline: calc(3px * var(--scale-factor)) solid Highlight !important;
+  .annotationLayer .popupAnnotation.focused .popup{
+    outline:calc(3px * var(--scale-factor)) solid Highlight !important;
   }
 }
 
-.annotationLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  transform-origin: 0 0;
-  z-index: 3;
+.annotationLayer{
+  position:absolute;
+  top:0;
+  left:0;
+  pointer-events:none;
+  transform-origin:0 0;
+  z-index:3;
 }
 
-.annotationLayer[data-main-rotation="90"] .norotate {
-  transform: rotate(270deg) translateX(-100%);
+.annotationLayer[data-main-rotation="90"] .norotate{
+  transform:rotate(270deg) translateX(-100%);
 }
-.annotationLayer[data-main-rotation="180"] .norotate {
-  transform: rotate(180deg) translate(-100%, -100%);
+.annotationLayer[data-main-rotation="180"] .norotate{
+  transform:rotate(180deg) translate(-100%, -100%);
 }
-.annotationLayer[data-main-rotation="270"] .norotate {
-  transform: rotate(90deg) translateY(-100%);
-}
-
-.annotationLayer canvas {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+.annotationLayer[data-main-rotation="270"] .norotate{
+  transform:rotate(90deg) translateY(-100%);
 }
 
-.annotationLayer section {
-  position: absolute;
-  text-align: initial;
-  pointer-events: auto;
-  box-sizing: border-box;
-  transform-origin: 0 0;
+.annotationLayer canvas{
+  position:absolute;
+  width:100%;
+  height:100%;
+  pointer-events:none;
 }
 
-.annotationLayer .linkAnnotation {
-  outline: var(--link-outline);
+.annotationLayer section{
+  position:absolute;
+  text-align:initial;
+  pointer-events:auto;
+  box-sizing:border-box;
+  transform-origin:0 0;
 }
 
-.annotationLayer :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton) > a {
-  position: absolute;
-  font-size: 1em;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+.annotationLayer .linkAnnotation{
+  outline:var(--link-outline);
+}
+
+.annotationLayer :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton) > a{
+  position:absolute;
+  font-size:1em;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
 }
 
 .annotationLayer
   :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder)
-  > a:hover {
-  opacity: 0.2;
-  background-color: rgba(255, 255, 0, 1);
-  box-shadow: 0 2px 10px rgba(255, 255, 0, 1);
+  > a:hover{
+  opacity:0.2;
+  background-color:rgba(255, 255, 0, 1);
+  box-shadow:0 2px 10px rgba(255, 255, 0, 1);
 }
 
-.annotationLayer .linkAnnotation.hasBorder:hover {
-  background-color: rgba(255, 255, 0, 0.2);
+.annotationLayer .linkAnnotation.hasBorder:hover{
+  background-color:rgba(255, 255, 0, 0.2);
 }
 
-.annotationLayer .hasBorder {
-  background-size: 100% 100%;
+.annotationLayer .hasBorder{
+  background-size:100% 100%;
 }
 
-.annotationLayer .textAnnotation img {
-  position: absolute;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
+.annotationLayer .textAnnotation img{
+  position:absolute;
+  cursor:pointer;
+  width:100%;
+  height:100%;
+  top:0;
+  left:0;
 }
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea),
 .annotationLayer .choiceWidgetAnnotation select,
-.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input {
-  background-image: var(--annotation-unfocused-field-background);
-  border: 2px solid var(--input-unfocused-border-color);
-  box-sizing: border-box;
-  font: calc(9px * var(--scale-factor)) sans-serif;
-  height: 100%;
-  margin: 0;
-  vertical-align: top;
-  width: 100%;
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input{
+  background-image:var(--annotation-unfocused-field-background);
+  border:2px solid var(--input-unfocused-border-color);
+  box-sizing:border-box;
+  font:calc(9px * var(--scale-factor)) sans-serif;
+  height:100%;
+  margin:0;
+  vertical-align:top;
+  width:100%;
 }
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
 .annotationLayer .choiceWidgetAnnotation select:required,
 .annotationLayer
   .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input:required {
-  outline: 1.5px solid red;
+  input:required{
+  outline:1.5px solid red;
 }
 
-.annotationLayer .choiceWidgetAnnotation select option {
-  padding: 0;
+.annotationLayer .choiceWidgetAnnotation select option{
+  padding:0;
 }
 
-.annotationLayer .buttonWidgetAnnotation.radioButton input {
-  border-radius: 50%;
+.annotationLayer .buttonWidgetAnnotation.radioButton input{
+  border-radius:50%;
 }
 
-.annotationLayer .textWidgetAnnotation textarea {
-  resize: none;
+.annotationLayer .textWidgetAnnotation textarea{
+  resize:none;
 }
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea)[disabled],
 .annotationLayer .choiceWidgetAnnotation select[disabled],
 .annotationLayer
   .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input[disabled] {
-  background: none;
-  border: 2px solid var(--input-disabled-border-color);
-  cursor: not-allowed;
+  input[disabled]{
+  background:none;
+  border:2px solid var(--input-disabled-border-color);
+  cursor:not-allowed;
 }
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
 .annotationLayer .choiceWidgetAnnotation select:hover,
 .annotationLayer
   .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input:hover {
-  border: 2px solid var(--input-hover-border-color);
+  input:hover{
+  border:2px solid var(--input-hover-border-color);
 }
 .annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
 .annotationLayer .choiceWidgetAnnotation select:hover,
-.annotationLayer .buttonWidgetAnnotation.checkBox input:hover {
-  border-radius: 2px;
+.annotationLayer .buttonWidgetAnnotation.checkBox input:hover{
+  border-radius:2px;
 }
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):focus,
-.annotationLayer .choiceWidgetAnnotation select:focus {
-  background: none;
-  border: 2px solid var(--input-focus-border-color);
-  border-radius: 2px;
-  outline: var(--input-focus-outline);
+.annotationLayer .choiceWidgetAnnotation select:focus{
+  background:none;
+  border:2px solid var(--input-focus-border-color);
+  border-radius:2px;
+  outline:var(--input-focus-outline);
 }
 
-.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) :focus {
-  background-image: none;
-  background-color: transparent;
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) :focus{
+  background-image:none;
+  background-color:transparent;
 }
 
-.annotationLayer .buttonWidgetAnnotation.checkBox :focus {
-  border: 2px solid var(--input-focus-border-color);
-  border-radius: 2px;
-  outline: var(--input-focus-outline);
+.annotationLayer .buttonWidgetAnnotation.checkBox :focus{
+  border:2px solid var(--input-focus-border-color);
+  border-radius:2px;
+  outline:var(--input-focus-outline);
 }
 
-.annotationLayer .buttonWidgetAnnotation.radioButton :focus {
-  border: 2px solid var(--input-focus-border-color);
-  outline: var(--input-focus-outline);
+.annotationLayer .buttonWidgetAnnotation.radioButton :focus{
+  border:2px solid var(--input-focus-border-color);
+  outline:var(--input-focus-outline);
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before,
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after,
-.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before {
-  background-color: CanvasText;
-  content: "";
-  display: block;
-  position: absolute;
+.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before{
+  background-color:CanvasText;
+  content:"";
+  display:block;
+  position:absolute;
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before,
-.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after {
-  height: 80%;
-  left: 45%;
-  width: 1px;
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after{
+  height:80%;
+  left:45%;
+  width:1px;
 }
 
-.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before {
-  transform: rotate(45deg);
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before{
+  transform:rotate(45deg);
 }
 
-.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after {
-  transform: rotate(-45deg);
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after{
+  transform:rotate(-45deg);
 }
 
-.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before {
-  border-radius: 50%;
-  height: 50%;
-  left: 30%;
-  top: 20%;
-  width: 50%;
+.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before{
+  border-radius:50%;
+  height:50%;
+  left:30%;
+  top:20%;
+  width:50%;
 }
 
-.annotationLayer .textWidgetAnnotation input.comb {
-  font-family: monospace;
-  padding-left: 2px;
-  padding-right: 0;
+.annotationLayer .textWidgetAnnotation input.comb{
+  font-family:monospace;
+  padding-left:2px;
+  padding-right:0;
 }
 
-.annotationLayer .textWidgetAnnotation input.comb:focus {
-  /*
-   * Letter spacing is placed on the right side of each character. Hence, the
-   * letter spacing of the last character may be placed outside the visible
-   * area, causing horizontal scrolling. We avoid this by extending the width
-   * when the element has focus and revert this when it loses focus.
-   */
-  width: 103%;
+.annotationLayer .textWidgetAnnotation input.comb:focus{
+  width:103%;
 }
 
-.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input {
-  appearance: none;
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input{
+  appearance:none;
 }
 
-.annotationLayer .fileAttachmentAnnotation .popupTriggerArea {
-  height: 100%;
-  width: 100%;
+.annotationLayer .fileAttachmentAnnotation .popupTriggerArea{
+  height:100%;
+  width:100%;
 }
 
-.annotationLayer .popupAnnotation {
-  position: absolute;
-  font-size: calc(9px * var(--scale-factor));
-  pointer-events: none;
-  width: max-content;
-  max-width: 45%;
-  height: auto;
+.annotationLayer .popupAnnotation{
+  position:absolute;
+  font-size:calc(9px * var(--scale-factor));
+  pointer-events:none;
+  width:max-content;
+  max-width:45%;
+  height:auto;
 }
 
-.annotationLayer .popup {
-  background-color: rgba(255, 255, 153, 1);
-  box-shadow: 0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor))
-    rgba(136, 136, 136, 1);
-  border-radius: calc(2px * var(--scale-factor));
-  outline: 1.5px solid rgb(255, 255, 74);
-  padding: calc(6px * var(--scale-factor));
-  cursor: pointer;
-  font: message-box;
-  white-space: normal;
-  word-wrap: break-word;
-  pointer-events: auto;
+.annotationLayer .popup{
+  background-color:rgba(255, 255, 153, 1);
+  box-shadow:0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgba(136, 136, 136, 1);
+  border-radius:calc(2px * var(--scale-factor));
+  outline:1.5px solid rgb(255, 255, 74);
+  padding:calc(6px * var(--scale-factor));
+  cursor:pointer;
+  font:message-box;
+  white-space:normal;
+  word-wrap:break-word;
+  pointer-events:auto;
 }
 
-.annotationLayer .popupAnnotation.focused .popup {
-  outline-width: 3px;
+.annotationLayer .popupAnnotation.focused .popup{
+  outline-width:3px;
 }
 
-.annotationLayer .popup * {
-  font-size: calc(9px * var(--scale-factor));
+.annotationLayer .popup *{
+  font-size:calc(9px * var(--scale-factor));
 }
 
-.annotationLayer .popup > .header {
-  display: inline-block;
+.annotationLayer .popup > .header{
+  display:inline-block;
 }
 
-.annotationLayer .popup > .header h1 {
-  display: inline;
+.annotationLayer .popup > .header h1{
+  display:inline;
 }
 
-.annotationLayer .popup > .header .popupDate {
-  display: inline-block;
-  margin-left: calc(5px * var(--scale-factor));
-  width: -moz-fit-content;
-  width: fit-content;
+.annotationLayer .popup > .header .popupDate{
+  display:inline-block;
+  margin-left:calc(5px * var(--scale-factor));
+  width:-moz-fit-content;
+  width:fit-content;
 }
 
-.annotationLayer .popupContent {
-  border-top: 1px solid rgba(51, 51, 51, 1);
-  margin-top: calc(2px * var(--scale-factor));
-  padding-top: calc(2px * var(--scale-factor));
+.annotationLayer .popupContent{
+  border-top:1px solid rgba(51, 51, 51, 1);
+  margin-top:calc(2px * var(--scale-factor));
+  padding-top:calc(2px * var(--scale-factor));
 }
 
-.annotationLayer .richText > * {
-  white-space: pre-wrap;
-  font-size: calc(9px * var(--scale-factor));
+.annotationLayer .richText > *{
+  white-space:pre-wrap;
+  font-size:calc(9px * var(--scale-factor));
 }
 
-.annotationLayer .popupTriggerArea {
-  cursor: pointer;
+.annotationLayer .popupTriggerArea{
+  cursor:pointer;
 }
 
-.annotationLayer section svg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
+.annotationLayer section svg{
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0;
+  left:0;
 }
 
-.annotationLayer .annotationTextContent {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  color: transparent;
-  user-select: none;
-  pointer-events: none;
+.annotationLayer .annotationTextContent{
+  position:absolute;
+  width:100%;
+  height:100%;
+  opacity:0;
+  color:transparent;
+  user-select:none;
+  pointer-events:none;
 }
 
-.annotationLayer .annotationTextContent span {
-  width: 100%;
-  display: inline-block;
+.annotationLayer .annotationTextContent span{
+  width:100%;
+  display:inline-block;
 }
 
-.annotationLayer svg.quadrilateralsContainer {
-  contain: strict;
-  width: 0;
-  height: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
+.annotationLayer svg.quadrilateralsContainer{
+  contain:strict;
+  width:0;
+  height:0;
+  position:absolute;
+  top:0;
+  left:0;
+  z-index:-1;
 }
 
-
-:root {
-  --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
-  --xfa-focus-outline: auto;
+:root{
+  --xfa-unfocused-field-background:url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --xfa-focus-outline:auto;
 }
 
-@media screen and (forced-colors: active) {
-  :root {
-    --xfa-focus-outline: 2px solid CanvasText;
+@media screen and (forced-colors: active){
+  :root{
+    --xfa-focus-outline:2px solid CanvasText;
   }
-  .xfaLayer *:required {
-    outline: 1.5px solid selectedItem;
+  .xfaLayer *:required{
+    outline:1.5px solid selectedItem;
   }
 }
 
-.xfaLayer {
-  background-color: transparent;
+.xfaLayer{
+  background-color:transparent;
 }
 
-.xfaLayer .highlight {
-  margin: -1px;
-  padding: 1px;
-  background-color: rgba(239, 203, 237, 1);
-  border-radius: 4px;
+.xfaLayer .highlight{
+  margin:-1px;
+  padding:1px;
+  background-color:rgba(239, 203, 237, 1);
+  border-radius:4px;
 }
 
-.xfaLayer .highlight.appended {
-  position: initial;
+.xfaLayer .highlight.appended{
+  position:initial;
 }
 
-.xfaLayer .highlight.begin {
-  border-radius: 4px 0 0 4px;
+.xfaLayer .highlight.begin{
+  border-radius:4px 0 0 4px;
 }
 
-.xfaLayer .highlight.end {
-  border-radius: 0 4px 4px 0;
+.xfaLayer .highlight.end{
+  border-radius:0 4px 4px 0;
 }
 
-.xfaLayer .highlight.middle {
-  border-radius: 0;
+.xfaLayer .highlight.middle{
+  border-radius:0;
 }
 
-.xfaLayer .highlight.selected {
-  background-color: rgba(203, 223, 203, 1);
+.xfaLayer .highlight.selected{
+  background-color:rgba(203, 223, 203, 1);
 }
 
-.xfaPage {
-  overflow: hidden;
-  position: relative;
+.xfaPage{
+  overflow:hidden;
+  position:relative;
 }
 
-.xfaContentarea {
-  position: absolute;
+.xfaContentarea{
+  position:absolute;
 }
 
-.xfaPrintOnly {
-  display: none;
+.xfaPrintOnly{
+  display:none;
 }
 
-.xfaLayer {
-  position: absolute;
-  text-align: initial;
-  top: 0;
-  left: 0;
-  transform-origin: 0 0;
-  line-height: 1.2;
+.xfaLayer{
+  position:absolute;
+  text-align:initial;
+  top:0;
+  left:0;
+  transform-origin:0 0;
+  line-height:1.2;
 }
 
-.xfaLayer * {
-  color: inherit;
-  font: inherit;
-  font-style: inherit;
-  font-weight: inherit;
-  font-kerning: inherit;
-  letter-spacing: -0.01px;
-  text-align: inherit;
-  text-decoration: inherit;
-  box-sizing: border-box;
-  background-color: transparent;
-  padding: 0;
-  margin: 0;
-  pointer-events: auto;
-  line-height: inherit;
+.xfaLayer *{
+  color:inherit;
+  font:inherit;
+  font-style:inherit;
+  font-weight:inherit;
+  font-kerning:inherit;
+  letter-spacing:-0.01px;
+  text-align:inherit;
+  text-decoration:inherit;
+  box-sizing:border-box;
+  background-color:transparent;
+  padding:0;
+  margin:0;
+  pointer-events:auto;
+  line-height:inherit;
 }
 
-.xfaLayer *:required {
-  outline: 1.5px solid red;
+.xfaLayer *:required{
+  outline:1.5px solid red;
 }
 
 .xfaLayer div,
 .xfaLayer svg,
-.xfaLayer svg * {
-  pointer-events: none;
+.xfaLayer svg *{
+  pointer-events:none;
 }
 
-.xfaLayer a {
-  color: blue;
+.xfaLayer a{
+  color:blue;
 }
 
-.xfaRich li {
-  margin-left: 3em;
+.xfaRich li{
+  margin-left:3em;
 }
 
-.xfaFont {
-  color: black;
-  font-weight: normal;
-  font-kerning: none;
-  font-size: 10px;
-  font-style: normal;
-  letter-spacing: 0;
-  text-decoration: none;
-  vertical-align: 0;
+.xfaFont{
+  color:black;
+  font-weight:normal;
+  font-kerning:none;
+  font-size:10px;
+  font-style:normal;
+  letter-spacing:0;
+  text-decoration:none;
+  vertical-align:0;
 }
 
-.xfaCaption {
-  overflow: hidden;
-  flex: 0 0 auto;
+.xfaCaption{
+  overflow:hidden;
+  flex:0 0 auto;
 }
 
-.xfaCaptionForCheckButton {
-  overflow: hidden;
-  flex: 1 1 auto;
+.xfaCaptionForCheckButton{
+  overflow:hidden;
+  flex:1 1 auto;
 }
 
-.xfaLabel {
-  height: 100%;
-  width: 100%;
+.xfaLabel{
+  height:100%;
+  width:100%;
 }
 
-.xfaLeft {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+.xfaLeft{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
 }
 
-.xfaRight {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
+.xfaRight{
+  display:flex;
+  flex-direction:row-reverse;
+  align-items:center;
 }
 
-:is(.xfaLeft, .xfaRight) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
-  max-height: 100%;
+:is(.xfaLeft, .xfaRight) > :is(.xfaCaption, .xfaCaptionForCheckButton){
+  max-height:100%;
 }
 
-.xfaTop {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.xfaTop{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
 }
 
-.xfaBottom {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-start;
+.xfaBottom{
+  display:flex;
+  flex-direction:column-reverse;
+  align-items:flex-start;
 }
 
-:is(.xfaTop, .xfaBottom) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
-  width: 100%;
+:is(.xfaTop, .xfaBottom) > :is(.xfaCaption, .xfaCaptionForCheckButton){
+  width:100%;
 }
 
-.xfaBorder {
-  background-color: transparent;
-  position: absolute;
-  pointer-events: none;
+.xfaBorder{
+  background-color:transparent;
+  position:absolute;
+  pointer-events:none;
 }
 
-.xfaWrapped {
-  width: 100%;
-  height: 100%;
+.xfaWrapped{
+  width:100%;
+  height:100%;
 }
 
-:is(.xfaTextfield, .xfaSelect):focus {
-  background-image: none;
-  background-color: transparent;
-  outline: var(--xfa-focus-outline);
-  outline-offset: -1px;
+:is(.xfaTextfield, .xfaSelect):focus{
+  background-image:none;
+  background-color:transparent;
+  outline:var(--xfa-focus-outline);
+  outline-offset:-1px;
 }
 
-:is(.xfaCheckbox, .xfaRadio):focus {
-  outline: var(--xfa-focus-outline);
+:is(.xfaCheckbox, .xfaRadio):focus{
+  outline:var(--xfa-focus-outline);
 }
 
 .xfaTextfield,
-.xfaSelect {
-  height: 100%;
-  width: 100%;
-  flex: 1 1 auto;
-  border: none;
-  resize: none;
-  background-image: var(--xfa-unfocused-field-background);
+.xfaSelect{
+  height:100%;
+  width:100%;
+  flex:1 1 auto;
+  border:none;
+  resize:none;
+  background-image:var(--xfa-unfocused-field-background);
 }
 
-.xfaSelect {
-  padding-inline: 2px;
+.xfaSelect{
+  padding-inline:2px;
 }
 
-:is(.xfaTop, .xfaBottom) > :is(.xfaTextfield, .xfaSelect) {
-  flex: 0 1 auto;
+:is(.xfaTop, .xfaBottom) > :is(.xfaTextfield, .xfaSelect){
+  flex:0 1 auto;
 }
 
-.xfaButton {
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  border: none;
-  text-align: center;
+.xfaButton{
+  cursor:pointer;
+  width:100%;
+  height:100%;
+  border:none;
+  text-align:center;
 }
 
-.xfaLink {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
+.xfaLink{
+  width:100%;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
 }
 
 .xfaCheckbox,
-.xfaRadio {
-  width: 100%;
-  height: 100%;
-  flex: 0 0 auto;
-  border: none;
+.xfaRadio{
+  width:100%;
+  height:100%;
+  flex:0 0 auto;
+  border:none;
 }
 
-.xfaRich {
-  white-space: pre-wrap;
-  width: 100%;
-  height: 100%;
+.xfaRich{
+  white-space:pre-wrap;
+  width:100%;
+  height:100%;
 }
 
-.xfaImage {
-  object-position: left top;
-  object-fit: contain;
-  width: 100%;
-  height: 100%;
+.xfaImage{
+  object-position:left top;
+  object-fit:contain;
+  width:100%;
+  height:100%;
 }
 
 .xfaLrTb,
 .xfaRlTb,
-.xfaTb {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+.xfaTb{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
 }
 
-.xfaLr {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
+.xfaLr{
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
 }
 
-.xfaRl {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: stretch;
+.xfaRl{
+  display:flex;
+  flex-direction:row-reverse;
+  align-items:stretch;
 }
 
-.xfaTb > div {
-  justify-content: left;
+.xfaTb > div{
+  justify-content:left;
 }
 
-.xfaPosition {
-  position: relative;
+.xfaPosition{
+  position:relative;
 }
 
-.xfaArea {
-  position: relative;
+.xfaArea{
+  position:relative;
 }
 
-.xfaValignMiddle {
-  display: flex;
-  align-items: center;
+.xfaValignMiddle{
+  display:flex;
+  align-items:center;
 }
 
-.xfaTable {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+.xfaTable{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
 }
 
-.xfaTable .xfaRow {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
+.xfaTable .xfaRow{
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
 }
 
-.xfaTable .xfaRlRow {
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: stretch;
-  flex: 1;
+.xfaTable .xfaRlRow{
+  display:flex;
+  flex-direction:row-reverse;
+  align-items:stretch;
+  flex:1;
 }
 
-.xfaTable .xfaRlRow > div {
-  flex: 1;
+.xfaTable .xfaRlRow > div{
+  flex:1;
 }
 
-:is(.xfaNonInteractive, .xfaDisabled, .xfaReadOnly) :is(input, textarea) {
-  background: initial;
+:is(.xfaNonInteractive, .xfaDisabled, .xfaReadOnly) :is(input, textarea){
+  background:initial;
 }
 
-@media print {
+@media print{
   .xfaTextfield,
-  .xfaSelect {
-    background: transparent;
+  .xfaSelect{
+    background:transparent;
   }
 
-  .xfaSelect {
-    appearance: none;
-    text-indent: 1px;
-    text-overflow: "";
-  }
-}
-
-/* Ignored in GECKOVIEW builds: */
-
-:root {
-  --viewer-container-height: 0;
-  --pdfViewer-padding-bottom: 0;
-  --page-margin: 1px auto -8px;
-  --page-border: 9px solid transparent;
-  --spreadHorizontalWrapped-margin-LR: -3.5px;
-  --loading-icon-delay: 400ms;
-}
-
-@media screen and (forced-colors: active) {
-  :root {
-    --pdfViewer-padding-bottom: 9px;
-    --page-margin: 8px auto -1px;
-    --page-border: 1px solid CanvasText;
-    --spreadHorizontalWrapped-margin-LR: 3.5px;
+  .xfaSelect{
+    appearance:none;
+    text-indent:1px;
+    text-overflow:"";
   }
 }
 
-[data-main-rotation="90"] {
-  transform: rotate(90deg) translateY(-100%);
-}
-[data-main-rotation="180"] {
-  transform: rotate(180deg) translate(-100%, -100%);
-}
-[data-main-rotation="270"] {
-  transform: rotate(270deg) translateX(-100%);
-}
-
-#hiddenCopyElement {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  display: none;
+:root{
+  --viewer-container-height:0;
+  --pdfViewer-padding-bottom:0;
+  --page-margin:1px auto -8px;
+  --page-border:9px solid transparent;
+  --spreadHorizontalWrapped-margin-LR:-3.5px;
+  --loading-icon-delay:400ms;
 }
 
-.pdfViewer {
-  /* Define this variable here and not in :root to avoid to reflow all the UI
-     when scaling (see #15929). */
-  --scale-factor: 1;
-
-  padding-bottom: var(--pdfViewer-padding-bottom);
+@media screen and (forced-colors: active){
+  :root{
+    --pdfViewer-padding-bottom:9px;
+    --page-margin:8px auto -1px;
+    --page-border:1px solid CanvasText;
+    --spreadHorizontalWrapped-margin-LR:3.5px;
+  }
 }
 
-.pdfViewer .canvasWrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
+[data-main-rotation="90"]{
+  transform:rotate(90deg) translateY(-100%);
+}
+[data-main-rotation="180"]{
+  transform:rotate(180deg) translate(-100%, -100%);
+}
+[data-main-rotation="270"]{
+  transform:rotate(270deg) translateX(-100%);
 }
 
-.pdfViewer .page {
-  direction: ltr;
-  width: 816px;
-  height: 1056px;
-  margin: var(--page-margin);
-  position: relative;
-  overflow: visible;
-  border: var(--page-border);
-  background-clip: content-box;
-  background-color: rgba(255, 255, 255, 1);
+#hiddenCopyElement{
+  position:absolute;
+  top:0;
+  left:0;
+  width:0;
+  height:0;
+  display:none;
 }
 
-.pdfViewer .dummyPage {
-  position: relative;
-  width: 0;
-  height: var(--viewer-container-height);
+.pdfViewer{
+  --scale-factor:1;
+
+  padding-bottom:var(--pdfViewer-padding-bottom);
 }
 
-.pdfViewer.noUserSelect {
-  user-select: none;
+.pdfViewer .canvasWrapper{
+  overflow:hidden;
+  width:100%;
+  height:100%;
+  z-index:1;
+}
+
+.pdfViewer .page{
+  direction:ltr;
+  width:816px;
+  height:1056px;
+  margin:var(--page-margin);
+  position:relative;
+  overflow:visible;
+  border:var(--page-border);
+  background-clip:content-box;
+  background-color:rgba(255, 255, 255, 1);
+}
+
+.pdfViewer .dummyPage{
+  position:relative;
+  width:0;
+  height:var(--viewer-container-height);
+}
+
+.pdfViewer.noUserSelect{
+  user-select:none;
 }
 
 .pdfViewer:is(.scrollHorizontal, .scrollWrapped),
-.spread {
-  margin-inline: 3.5px;
-  text-align: center;
+.spread{
+  margin-inline:3.5px;
+  text-align:center;
 }
 
 .pdfViewer.scrollHorizontal,
-.spread {
-  white-space: nowrap;
+.spread{
+  white-space:nowrap;
 }
 
-.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .spread {
-  margin-inline: 0;
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .spread{
+  margin-inline:0;
 }
 
 .spread :is(.page, .dummyPage),
-.pdfViewer:is(.scrollHorizontal, .scrollWrapped) :is(.page, .spread) {
-  display: inline-block;
-  vertical-align: middle;
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) :is(.page, .spread){
+  display:inline-block;
+  vertical-align:middle;
 }
 
 .spread .page,
-.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .page {
-  margin-inline: var(--spreadHorizontalWrapped-margin-LR);
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .page{
+  margin-inline:var(--spreadHorizontalWrapped-margin-LR);
 }
 
-.pdfViewer .page canvas {
-  margin: 0;
-  display: block;
+.pdfViewer .page canvas{
+  margin:0;
+  display:block;
 }
 
-.pdfViewer .page canvas .structTree {
-  contain: strict;
+.pdfViewer .page canvas .structTree{
+  contain:strict;
 }
 
-.pdfViewer .page canvas[hidden] {
-  display: none;
+.pdfViewer .page canvas[hidden]{
+  display:none;
 }
 
-.pdfViewer .page canvas[zooming] {
-  width: 100%;
-  height: 100%;
+.pdfViewer .page canvas[zooming]{
+  width:100%;
+  height:100%;
 }
 
-.pdfViewer .page.loadingIcon::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  content: "";
-  width: 100%;
-  height: 100%;
-  background: url("images/loading-icon.gif") center no-repeat;
-  display: none;
-  /* Using a delay with background-image doesn't work,
-     consequently we use the display. */
-  transition-property: display;
-  transition-delay: var(--loading-icon-delay);
-  z-index: 5;
-  contain: strict;
+.pdfViewer .page.loadingIcon::after{
+  position:absolute;
+  top:0;
+  left:0;
+  content:"";
+  width:100%;
+  height:100%;
+  background:url("images/loading-icon.gif") center no-repeat;
+  display:none;
+  transition-property:display;
+  transition-delay:var(--loading-icon-delay);
+  z-index:5;
+  contain:strict;
 }
 
-.pdfViewer .page.loading::after {
-  display: block;
+.pdfViewer .page.loading::after{
+  display:block;
 }
 
-.pdfViewer .page:not(.loading)::after {
-  transition-property: none;
-  display: none;
+.pdfViewer .page:not(.loading)::after{
+  transition-property:none;
+  display:none;
 }
 
-.pdfPresentationMode .pdfViewer {
-  padding-bottom: 0;
+.pdfPresentationMode .pdfViewer{
+  padding-bottom:0;
 }
 
-.pdfPresentationMode .spread {
-  margin: 0;
+.pdfPresentationMode .spread{
+  margin:0;
 }
 
-.pdfPresentationMode .pdfViewer .page {
-  margin: 0 auto;
-  border: 2px solid transparent;
+.pdfPresentationMode .pdfViewer .page{
+  margin:0 auto;
+  border:2px solid transparent;
 }
 
-:root {
-  --dir-factor: 1;
-  --scale-select-width: 140px;
+:root{
+  --dir-factor:1;
+  --scale-select-width:140px;
 
-  --toolbar-icon-opacity: 1;
-  --doorhanger-icon-opacity: 0.9;
+  --toolbar-icon-opacity:1;
+  --doorhanger-icon-opacity:0.9;
 
-  --main-color: rgba(12, 12, 13, 1);
-  --body-bg-color: rgba(212, 212, 215, 1);
-  --scrollbar-color: auto;
-  --scrollbar-bg-color: auto;
-  --field-color: rgba(6, 6, 6, 1);
-  --field-bg-color: rgba(255, 255, 255, 1);
-  --field-border-color: rgba(187, 187, 188, 1);
-  --doorhanger-bg-color: rgba(255, 255, 255, 1);
-  --dialog-button-border: none;
-  --dialog-button-bg-color: rgba(12, 12, 13, 0.1);
-  --dialog-button-hover-bg-color: rgba(12, 12, 13, 0.3);
+  --main-color:rgba(12, 12, 13, 1);
+  --body-bg-color:rgba(212, 212, 215, 1);
+  --scrollbar-color:auto;
+  --scrollbar-bg-color:auto;
+  --field-color:rgba(6, 6, 6, 1);
+  --field-bg-color:rgba(255, 255, 255, 1);
+  --field-border-color:rgba(187, 187, 188, 1);
+  --doorhanger-bg-color:rgba(255, 255, 255, 1);
+  --dialog-button-border:none;
+  --dialog-button-bg-color:rgba(12, 12, 13, 0.1);
+  --dialog-button-hover-bg-color:rgba(12, 12, 13, 0.3);
 
-  --toolbar-bg-color: #f9f9fb;
-  --toolbar-divider-color: #e0e0e6;
-  --toolbar-fg-color: #15141a;
+  --toolbar-bg-color:#f9f9fb;
+  --toolbar-divider-color:#e0e0e6;
+  --toolbar-fg-color:#15141a;
 
-  --toolbarButton-download-icon: url(images/gv-toolbarButton-download.svg);
-  --toolbarButton-openinapp-icon: url(images/gv-toolbarButton-openinapp.svg);
+  --toolbarButton-download-icon:url(images/gv-toolbarButton-download.svg);
+  --toolbarButton-openinapp-icon:url(images/gv-toolbarButton-openinapp.svg);
 }
 
-:root:dir(rtl) {
-  --dir-factor: -1;
+:root:dir(rtl){
+  --dir-factor:-1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --main-color: rgba(249, 249, 250, 1);
-    --body-bg-color: rgba(42, 42, 46, 1);
-    --scrollbar-color: rgba(121, 121, 123, 1);
-    --scrollbar-bg-color: rgba(35, 35, 39, 1);
-    --field-color: rgba(250, 250, 250, 1);
-    --field-bg-color: rgba(64, 64, 68, 1);
-    --field-border-color: rgba(115, 115, 115, 1);
-    --doorhanger-bg-color: rgba(74, 74, 79, 1);
-    --dialog-button-bg-color: rgba(92, 92, 97, 1);
-    --dialog-button-hover-bg-color: rgba(115, 115, 115, 1);
+@media (prefers-color-scheme: dark){
+  :root{
+    --main-color:rgba(249, 249, 250, 1);
+    --body-bg-color:rgba(42, 42, 46, 1);
+    --scrollbar-color:rgba(121, 121, 123, 1);
+    --scrollbar-bg-color:rgba(35, 35, 39, 1);
+    --field-color:rgba(250, 250, 250, 1);
+    --field-bg-color:rgba(64, 64, 68, 1);
+    --field-border-color:rgba(115, 115, 115, 1);
+    --doorhanger-bg-color:rgba(74, 74, 79, 1);
+    --dialog-button-bg-color:rgba(92, 92, 97, 1);
+    --dialog-button-hover-bg-color:rgba(115, 115, 115, 1);
 
-    --toolbar-bg-color: #2b2a33;
-    --toolbar-divider-color: #5b5b66;
-    --toolbar-fg-color: #fbfbfe;
+    --toolbar-bg-color:#2b2a33;
+    --toolbar-divider-color:#5b5b66;
+    --toolbar-fg-color:#fbfbfe;
   }
 }
 
-@media screen and (forced-colors: active) {
-  :root {
-    --dialog-button-border: 1px solid Highlight;
-    --dialog-button-hover-bg-color: Highlight;
-    --dialog-button-hover-color: ButtonFace;
-    --field-border-color: ButtonText;
-    --main-color: CanvasText;
+@media screen and (forced-colors: active){
+  :root{
+    --dialog-button-border:1px solid Highlight;
+    --dialog-button-hover-bg-color:Highlight;
+    --dialog-button-hover-color:ButtonFace;
+    --field-border-color:ButtonText;
+    --main-color:CanvasText;
   }
 }
 
-* {
-  padding: 0;
-  margin: 0;
+*{
+  padding:0;
+  margin:0;
 }
 
 html,
-body {
-  height: 100%;
-  width: 100%;
+body{
+  height:100%;
+  width:100%;
 }
 
-body {
-  background-color: var(--body-bg-color);
-  scrollbar-color: var(--scrollbar-color) var(--scrollbar-bg-color);
+body{
+  background-color:var(--body-bg-color);
+  scrollbar-color:var(--scrollbar-color) var(--scrollbar-bg-color);
 }
 
 .hidden,
-[hidden] {
-  display: none !important;
+[hidden]{
+  display:none !important;
 }
 
-#outerContainer {
-  width: 100%;
-  height: 100%;
-  position: relative;
+#outerContainer{
+  width:100%;
+  height:100%;
+  position:relative;
 }
 
-#mainContainer {
-  position: absolute;
-  inset: 0;
-  min-width: 350px;
+#mainContainer{
+  position:absolute;
+  inset:0;
+  min-width:350px;
 }
 
-#viewerContainer {
-  overflow: auto;
-  position: absolute;
-  inset-block: 41px 0;
-  inset-inline: 0;
-  outline: none;
+#viewerContainer{
+  overflow:auto;
+  position:absolute;
+  inset-block:41px 0;
+  inset-inline:0;
+  outline:none;
 }
 
-#viewerContainer.noToolbar {
-  inset-block-start: 0;
+#viewerContainer.noToolbar{
+  inset-block-start:0;
 }
 
-.dialogButton {
-  border: none;
-  background: none;
-  width: 28px;
-  height: 28px;
-  outline: none;
+.dialogButton{
+  border:none;
+  background:none;
+  width:28px;
+  height:28px;
+  outline:none;
 }
 
-.dialogButton:is(:hover, :focus-visible) {
-  background-color: var(--dialog-button-hover-bg-color);
+.dialogButton:is(:hover, :focus-visible){
+  background-color:var(--dialog-button-hover-bg-color);
 }
 
-.dialogButton:is(:hover, :focus-visible) > span {
-  color: var(--dialog-button-hover-color);
+.dialogButton:is(:hover, :focus-visible) > span{
+  color:var(--dialog-button-hover-color);
 }
 
-.dialogButton[disabled] {
-  opacity: 0.5;
+.dialogButton[disabled]{
+  opacity:0.5;
 }
 
-.dialogButton {
-  min-width: 16px;
-  margin: 2px 1px;
-  padding: 2px 6px 0;
-  border: none;
-  border-radius: 2px;
-  color: var(--main-color);
-  font-size: 12px;
-  line-height: 14px;
-  user-select: none;
-  cursor: default;
-  box-sizing: border-box;
+.dialogButton{
+  min-width:16px;
+  margin:2px 1px;
+  padding:2px 6px 0;
+  border:none;
+  border-radius:2px;
+  color:var(--main-color);
+  font-size:12px;
+  line-height:14px;
+  user-select:none;
+  cursor:default;
+  box-sizing:border-box;
 }
 
-.toolbarField {
-  padding: 4px 7px;
-  margin: 3px 0;
-  border-radius: 2px;
-  background-color: var(--field-bg-color);
-  background-clip: padding-box;
-  border: 1px solid var(--field-border-color);
-  box-shadow: none;
-  color: var(--field-color);
-  font-size: 12px;
-  line-height: 16px;
-  outline: none;
+.toolbarField{
+  padding:4px 7px;
+  margin:3px 0;
+  border-radius:2px;
+  background-color:var(--field-bg-color);
+  background-clip:padding-box;
+  border:1px solid var(--field-border-color);
+  box-shadow:none;
+  color:var(--field-color);
+  font-size:12px;
+  line-height:16px;
+  outline:none;
 }
 
-.toolbarField:focus {
-  border-color: #0a84ff;
+.toolbarField:focus{
+  border-color:#0a84ff;
 }
 
-#floatingToolbar {
-  display: flex;
-  align-items: center;
-  position: absolute;
-  width: 100%;
-  height: 40px;
-  top: 0;
-  left: 0;
-  box-sizing: content-box;
-  border-block-end: solid 1px var(--toolbar-divider-color);
-  background-color: var(--toolbar-bg-color);
+#floatingToolbar{
+  display:flex;
+  align-items:center;
+  position:absolute;
+  width:100%;
+  height:40px;
+  top:0;
+  left:0;
+  box-sizing:content-box;
+  border-block-end:solid 1px var(--toolbar-divider-color);
+  background-color:var(--toolbar-bg-color);
 }
 
-#floatingToolbar.show {
-  z-index: 100000;
-  opacity: 1;
+#floatingToolbar.show{
+  z-index:100000;
+  opacity:1;
 }
 
-#floatingToolbar:not(show) {
-  z-index: -1;
-  opacity: 0;
+#floatingToolbar:not(show){
+  z-index:-1;
+  opacity:0;
 }
 
-.toolbarButton {
-  display: flex;
-  align-items: center;
-  border-style: none;
-  user-select: none;
-  box-sizing: border-box;
-  background-color: transparent;
-  width: auto;
-  height: auto;
-  outline: none;
-  position: relative;
+.toolbarButton{
+  display:flex;
+  align-items:center;
+  border-style:none;
+  user-select:none;
+  box-sizing:border-box;
+  background-color:transparent;
+  width:auto;
+  height:auto;
+  outline:none;
+  position:relative;
 }
 
-.toolbarButton > span {
-  color: var(--toolbar-fg-color);
-  width: auto;
-  height: auto;
-  overflow: hidden;
+.toolbarButton > span{
+  color:var(--toolbar-fg-color);
+  width:auto;
+  height:auto;
+  overflow:hidden;
 }
 
-:is(.toolbarButton .dialogButton)[disabled] {
-  opacity: 0.5;
+:is(.toolbarButton .dialogButton)[disabled]{
+  opacity:0.5;
 }
 
-.toolbarButton::before {
-  width: 24px;
-  height: 24px;
-  content: "";
-  background-color: var(--toolbar-fg-color);
-  mask-size: cover;
-  margin-inline: 12px 8px;
+.toolbarButton::before{
+  width:24px;
+  height:24px;
+  content:"";
+  background-color:var(--toolbar-fg-color);
+  mask-size:cover;
+  margin-inline:12px 8px;
 }
 
-#download::before {
-  mask-image: var(--toolbarButton-download-icon);
+#download::before{
+  mask-image:var(--toolbarButton-download-icon);
 }
 
-#openInApp::before {
-  mask-image: var(--toolbarButton-openinapp-icon);
+#openInApp::before{
+  mask-image:var(--toolbarButton-openinapp-icon);
 }
 
-.dialogButton {
-  width: auto;
-  margin: 3px 4px 2px !important;
-  padding: 2px 11px;
-  color: var(--main-color);
-  background-color: var(--dialog-button-bg-color);
-  border: var(--dialog-button-border) !important;
+.dialogButton{
+  width:auto;
+  margin:3px 4px 2px !important;
+  padding:2px 11px;
+  color:var(--main-color);
+  background-color:var(--dialog-button-bg-color);
+  border:var(--dialog-button-border) !important;
 }
 
-dialog {
-  margin: auto;
-  padding: 15px;
-  border-spacing: 4px;
-  color: var(--main-color);
-  font: message-box;
-  font-size: 12px;
-  line-height: 14px;
-  background-color: var(--doorhanger-bg-color);
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+dialog{
+  margin:auto;
+  padding:15px;
+  border-spacing:4px;
+  color:var(--main-color);
+  font:message-box;
+  font-size:12px;
+  line-height:14px;
+  background-color:var(--doorhanger-bg-color);
+  border:1px solid rgba(0, 0, 0, 0.5);
+  border-radius:4px;
+  box-shadow:0 1px 4px rgba(0, 0, 0, 0.3);
 }
-dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-dialog > .row {
-  display: table-row;
+dialog::backdrop{
+  background-color:rgba(0, 0, 0, 0.2);
 }
 
-dialog > .row > * {
-  display: table-cell;
+dialog > .row{
+  display:table-row;
 }
 
-dialog .toolbarField {
-  margin: 5px 0;
+dialog > .row > *{
+  display:table-cell;
 }
 
-dialog .separator {
-  display: block;
-  margin: 4px 0;
-  height: 1px;
-  width: 100%;
-  background-color: var(--separator-color);
+dialog .toolbarField{
+  margin:5px 0;
 }
 
-dialog .buttonRow {
-  text-align: center;
-  vertical-align: middle;
+dialog .separator{
+  display:block;
+  margin:4px 0;
+  height:1px;
+  width:100%;
+  background-color:var(--separator-color);
 }
 
-dialog :link {
-  color: rgba(255, 255, 255, 1);
+dialog .buttonRow{
+  text-align:center;
+  vertical-align:middle;
 }
 
-#passwordDialog {
-  text-align: center;
-}
-#passwordDialog .toolbarField {
-  width: 200px;
+dialog :link{
+  color:rgba(255, 255, 255, 1);
 }
 
-@page {
-  margin: 0;
+#passwordDialog{
+  text-align:center;
+}
+#passwordDialog .toolbarField{
+  width:200px;
 }
 
-#printContainer {
-  display: none;
+@page{
+  margin:0;
 }
 
-@media print {
-  body {
-    background: rgba(0, 0, 0, 0) none;
+#printContainer{
+  display:none;
+}
+
+@media print{
+  body{
+    background:rgba(0, 0, 0, 0) none;
   }
-  body[data-pdfjsprinting] #outerContainer {
-    display: none;
+  body[data-pdfjsprinting] #outerContainer{
+    display:none;
   }
-  body[data-pdfjsprinting] #printContainer {
-    display: block;
+  body[data-pdfjsprinting] #printContainer{
+    display:block;
   }
-  #printContainer {
-    height: 100%;
+  #printContainer{
+    height:100%;
   }
-  /* wrapper around (scaled) print canvas elements */
-  #printContainer > .printedPage {
-    page-break-after: always;
-    page-break-inside: avoid;
+  #printContainer > .printedPage{
+    page-break-after:always;
+    page-break-inside:avoid;
+    height:100%;
+    width:100%;
 
-    /* The wrapper always cover the whole page. */
-    height: 100%;
-    width: 100%;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
   }
 
-  #printContainer > .xfaPrintedPage .xfaPage {
-    position: absolute;
+  #printContainer > .xfaPrintedPage .xfaPage{
+    position:absolute;
   }
 
-  #printContainer > .xfaPrintedPage {
-    page-break-after: always;
-    page-break-inside: avoid;
-    width: 100%;
-    height: 100%;
-    position: relative;
+  #printContainer > .xfaPrintedPage{
+    page-break-after:always;
+    page-break-inside:avoid;
+    width:100%;
+    height:100%;
+    position:relative;
   }
 
-  #printContainer > .printedPage :is(canvas, img) {
-    /* The intrinsic canvas / image size will make sure that we fit the page. */
-    max-width: 100%;
-    max-height: 100%;
+  #printContainer > .printedPage :is(canvas, img){
+    max-width:100%;
+    max-height:100%;
 
-    direction: ltr;
-    display: block;
+    direction:ltr;
+    display:block;
   }
 }
