@@ -125,6 +125,7 @@ def process_single_leak_file(
         if name in allowed:
             limit = leak_allowed[name]
             leak_allowed = limit is None or numLeaked <= limit
+
         log.mozleak_object(
             processType, numLeaked, name, scope=scope, allowed=leak_allowed
         )
