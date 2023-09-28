@@ -25,6 +25,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"

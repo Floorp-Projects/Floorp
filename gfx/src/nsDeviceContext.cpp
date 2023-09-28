@@ -16,6 +16,7 @@
 #include "mozilla/Preferences.h"  // for Preferences
 #include "mozilla/Services.h"     // for GetObserverService
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/Try.h"            // for MOZ_TRY
 #include "mozilla/mozalloc.h"       // for operator new
 #include "mozilla/widget/Screen.h"  // for Screen
 #include "nsCRT.h"                  // for nsCRT

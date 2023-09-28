@@ -56,6 +56,7 @@
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "mozilla/Try.h"
 
 #include "nsViewManager.h"
 #include "nsView.h"

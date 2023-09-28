@@ -65,6 +65,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/StackWalk.h"
+#include "mozilla/Try.h"
 #ifdef XP_WIN
 #  include "mozilla/NativeNt.h"
 #  include "mozilla/StackWalkThread.h"

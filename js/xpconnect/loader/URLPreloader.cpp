@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 #include "mozilla/scache/StartupCache.h"

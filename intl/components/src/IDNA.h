@@ -4,6 +4,7 @@
 #ifndef intl_components_IDNA_h_
 #define intl_components_IDNA_h_
 
+#include "mozilla/Try.h"
 #include "mozilla/intl/ICU4CGlue.h"
 
 #include "unicode/uidna.h"

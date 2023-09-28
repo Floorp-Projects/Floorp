@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Try.h"
 
 #include "MainThreadUtils.h"
 #include "nsContentUtils.h"

@@ -17,6 +17,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/intl/Segmenter.h"
 
 #include "gfxUtils.h"

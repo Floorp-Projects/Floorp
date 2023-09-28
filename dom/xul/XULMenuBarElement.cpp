@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/Try.h"
 
 namespace mozilla::dom {
 

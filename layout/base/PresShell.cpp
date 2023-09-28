@@ -39,6 +39,7 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_toolkit.h"
+#include "mozilla/Try.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"

@@ -10,6 +10,7 @@
 #include "nsIFile.h"
 #include "nsINIParser.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/URLPreloader.h"
 
 using namespace mozilla;

@@ -29,6 +29,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextServicesDocument.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"

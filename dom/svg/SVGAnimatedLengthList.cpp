@@ -11,6 +11,7 @@
 #include "DOMSVGAnimatedLengthList.h"
 #include "SVGLengthListSMILType.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 

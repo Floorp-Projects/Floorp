@@ -11,6 +11,7 @@
 #include "VideoUtils.h"
 #include "BufferReader.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 
 namespace mozilla {
 

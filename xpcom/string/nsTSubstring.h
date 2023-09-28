@@ -18,9 +18,9 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
+#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 
 #include "nsTStringRepr.h"
@@ -1446,8 +1446,8 @@ static_assert(sizeof(nsTSubstring<char>) ==
  * Span integration
  */
 namespace mozilla {
-Span(const nsTSubstring<char>&)->Span<const char>;
-Span(const nsTSubstring<char16_t>&)->Span<const char16_t>;
+Span(const nsTSubstring<char>&) -> Span<const char>;
+Span(const nsTSubstring<char16_t>&) -> Span<const char16_t>;
 
 }  // namespace mozilla
 

@@ -42,6 +42,7 @@
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/ToString.h"
+#include "mozilla/Try.h"
 #include "mozilla/ViewportUtils.h"
 
 #include "nsCOMPtr.h"

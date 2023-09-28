@@ -14,6 +14,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 #include "VideoUtils.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;

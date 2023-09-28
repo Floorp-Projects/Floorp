@@ -24,6 +24,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Try.h"
 #include "nsString.h"
 
 // Log module for nsObserverService logging...

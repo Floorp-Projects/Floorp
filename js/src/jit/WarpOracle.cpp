@@ -7,6 +7,7 @@
 #include "jit/WarpOracle.h"
 
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 
 #include <algorithm>
 

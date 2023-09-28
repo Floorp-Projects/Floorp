@@ -11,6 +11,7 @@
 #include "vm/JSObject-inl.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Try.h"
 
 #include <string.h>
 

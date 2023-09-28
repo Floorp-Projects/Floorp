@@ -16,6 +16,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h"  // For ParamTraits<GeckoProcessType>
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "shared-libraries.h"

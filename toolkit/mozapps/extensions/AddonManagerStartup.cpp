@@ -28,6 +28,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Services.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #include "nsAppDirectoryServiceDefs.h"

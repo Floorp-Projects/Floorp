@@ -21,6 +21,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/EncodedVideoChunk.h"

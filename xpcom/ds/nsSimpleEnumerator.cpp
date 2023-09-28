@@ -10,6 +10,7 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;

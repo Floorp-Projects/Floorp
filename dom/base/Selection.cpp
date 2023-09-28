@@ -35,6 +35,7 @@
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Try.h"
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"

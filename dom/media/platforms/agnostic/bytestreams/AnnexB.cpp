@@ -5,6 +5,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "AnnexB.h"
 #include "BufferReader.h"

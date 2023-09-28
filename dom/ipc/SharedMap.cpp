@@ -19,6 +19,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/ScriptPreloader.h"
+#include "mozilla/Try.h"
 
 using namespace mozilla::loader;
 

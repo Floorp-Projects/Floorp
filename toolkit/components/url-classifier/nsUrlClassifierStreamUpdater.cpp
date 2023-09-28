@@ -21,6 +21,7 @@
 #include "mozilla/Logging.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Try.h"
 #include "nsContentUtils.h"
 #include "nsIURLFormatter.h"
 #include "Classifier.h"

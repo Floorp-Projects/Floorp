@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #include "mozilla/FileUtils.h"
-#include "mozilla/Result.h"
+#include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 

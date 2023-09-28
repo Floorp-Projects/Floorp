@@ -12,6 +12,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 
 #include "LoadInfo.h"
 #include "nsContentUtils.h"

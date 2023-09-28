@@ -12,6 +12,7 @@
 #include "mozilla/HTMLEditor.h"               // for HTMLEditor
 #include "mozilla/mozalloc.h"                 // for operator new
 #include "mozilla/PresShell.h"                // for PresShell
+#include "mozilla/Try.h"                      // for MOZ_TRY
 #include "nsAString.h"
 #include "nsBaseCommandController.h"  // for nsBaseCommandController
 #include "nsCommandManager.h"         // for nsCommandManager

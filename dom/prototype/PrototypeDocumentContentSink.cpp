@@ -52,6 +52,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Try.h"
 
 #include "nsXULPrototypeCache.h"
 #include "nsXULElement.h"

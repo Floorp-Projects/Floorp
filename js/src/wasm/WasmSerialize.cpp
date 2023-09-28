@@ -9,6 +9,7 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Try.h"
 #include "mozilla/Vector.h"
 
 #include <cstdint>
