@@ -1,0 +1,54 @@
+<!DOCTYPE>
+<html>
+
+<head>
+  <title>Bug 1828235 - Dynamic toolbar causes errant zoom on input focus for certain page heights</title>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<style type="text/css">
+  .touch-none {
+    /* This size ensures the page height is taller than the viewport height without the dynamic toolbar
+     * but shorter than the viewport height with the dyanmic toolbar, which we need to trigger the bug. */
+    height: 98lvh;
+    margin: 0;
+    touch-action: none;
+  }
+</style>
+
+<body>
+  <div class="touch-none">
+    <input id="input1">
+  </div>
+  <script type="application/javascript">
+    async function test() {
+      let utils = SpecialPowers.getDOMWindowUtils(window);
+
+      let resolution = await getResolution();
+      ok(resolution > 0,
+        "The initial_resolution is " + resolution + ", which is some sane value");
+
+      document.getElementById('input1').focus();
+      await waitToClearOutAnyPotentialScrolls(window);
+      await promiseApzFlushedRepaints();
+      let prev_resolution = resolution;
+      resolution = await getResolution();
+      ok(resolution == prev_resolution, "focusing input1 did not change resolution " + resolution);
+
+      let transformEndPromise = promiseTransformEnd();
+      utils.zoomToFocusedInput();
+      await waitToClearOutAnyPotentialScrolls(window);
+      await transformEndPromise;
+      await promiseApzFlushedRepaints();
+      resolution = await getResolution();
+      ok(resolution == prev_resolution, "zoomToFocusedInput input1 did not change resolution " + resolution);
+    }
+
+    SpecialPowers.getDOMWindowUtils(window).setDynamicToolbarMaxHeight(100);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+  </script>
+</body>
+
+</html>
