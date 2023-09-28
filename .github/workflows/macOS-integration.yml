@@ -87,9 +87,10 @@ jobs:
    Integration:
     runs-on: macos-latest
     steps:
-        - uses: actions/checkout@v3
+        - name: Clone 📥
+          uses: actions/checkout@v3
           with:
-            ref: ESR115
+            submodules: 'recursive'
     
         - name: download M1 build artifact 📥
           uses: actions/download-artifact@v3
