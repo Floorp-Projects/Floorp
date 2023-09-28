@@ -7,6 +7,7 @@
 
 #include "nsIScriptElement.h"
 
+#include "js/loader/ScriptKind.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "nsIParser.h"
@@ -14,11 +15,21 @@
 
 using JS::loader::ScriptKind;
 
+bool nsIScriptElement::IsClassicNonAsyncDefer() {
+  return mKind == ScriptKind::eClassic && !mAsync && !mDefer;
+}
+
 void nsIScriptElement::SetCreatorParser(nsIParser* aParser) {
   mCreatorParser = do_GetWeakReference(aParser);
 }
 
 void nsIScriptElement::UnblockParser() {
+  if (!IsClassicNonAsyncDefer()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Tried to unblock parser for a script type that cannot block "
+        "the parser.");
+    return;
+  }
   nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
   if (parser) {
     parser->UnblockParser();
@@ -26,6 +37,11 @@ void nsIScriptElement::UnblockParser() {
 }
 
 void nsIScriptElement::ContinueParserAsync() {
+  if (!IsClassicNonAsyncDefer()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Tried to continue after a script type that cannot block the parser.");
+    return;
+  }
   nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
   if (parser) {
     parser->ContinueInterruptedParsingAsync();
@@ -33,6 +49,9 @@ void nsIScriptElement::ContinueParserAsync() {
 }
 
 void nsIScriptElement::BeginEvaluating() {
+  if (!IsClassicNonAsyncDefer()) {
+    return;
+  }
   nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
   if (parser) {
     parser->IncrementScriptNestingLevel();
@@ -40,6 +59,9 @@ void nsIScriptElement::BeginEvaluating() {
 }
 
 void nsIScriptElement::EndEvaluating() {
+  if (!IsClassicNonAsyncDefer()) {
+    return;
+  }
   nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
   if (parser) {
     parser->DecrementScriptNestingLevel();
