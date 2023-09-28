@@ -369,13 +369,14 @@ impl Side for VerticalPositionKeyword {
     }
 }
 
+/// Controls how the auto-placement algorithm works specifying exactly how auto-placed items
+/// get flowed into the grid.
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[value_info(other_values = "row,column,dense")]
+#[repr(C)]
+pub struct GridAutoFlow(u8);
 bitflags! {
-    /// Controls how the auto-placement algorithm works specifying exactly how auto-placed items
-    /// get flowed into the grid.
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[value_info(other_values = "row,column,dense")]
-    #[repr(C)]
-    pub struct GridAutoFlow: u8 {
+    impl GridAutoFlow: u8 {
         /// 'row' - mutually exclusive with 'column'
         const ROW = 1 << 0;
         /// 'column' - mutually exclusive with 'row'

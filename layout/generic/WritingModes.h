@@ -179,21 +179,21 @@ class WritingMode {
    * Return the absolute inline flow direction as an InlineDir
    */
   InlineDir GetInlineDir() const {
-    return InlineDir(mWritingMode.bits & eInlineMask);
+    return InlineDir(mWritingMode._0 & eInlineMask);
   }
 
   /**
    * Return the absolute block flow direction as a BlockDir
    */
   BlockDir GetBlockDir() const {
-    return BlockDir(mWritingMode.bits & eBlockMask);
+    return BlockDir(mWritingMode._0 & eBlockMask);
   }
 
   /**
    * Return the line-relative inline flow direction as a BidiDir
    */
   BidiDir GetBidiDir() const {
-    return BidiDir((mWritingMode & StyleWritingMode::RTL).bits);
+    return BidiDir((mWritingMode & StyleWritingMode::RTL)._0);
   }
 
   /**
@@ -303,10 +303,9 @@ class WritingMode {
   // StyleWritingMode::VERTICAL_SIDEWAYS or StyleWritingMode::TEXT_SIDEWAYS
   // flags.
   WritingMode IgnoreSideways() const {
-    return WritingMode(
-        mWritingMode.bits &
-        ~(StyleWritingMode::VERTICAL_SIDEWAYS | StyleWritingMode::TEXT_SIDEWAYS)
-             .bits);
+    return WritingMode(mWritingMode._0 & ~(StyleWritingMode::VERTICAL_SIDEWAYS |
+                                           StyleWritingMode::TEXT_SIDEWAYS)
+                                              ._0);
   }
 #endif
 
@@ -343,7 +342,7 @@ class WritingMode {
     // and hypothetical) values.  But this is fine; we only need to
     // distinguish between vertical and horizontal in
     // PhysicalAxisForLogicalAxis.
-    const auto wm = (mWritingMode & StyleWritingMode::VERTICAL).bits;
+    const auto wm = (mWritingMode & StyleWritingMode::VERTICAL)._0;
     return PhysicalAxisForLogicalAxis(wm, aAxis);
   }
 
@@ -404,12 +403,12 @@ class WritingMode {
     // StyleWritingMode::INLINE_REVERSED, StyleWritingMode::VERTICAL_LR and
     // StyleWritingMode::LINE_INVERTED bits.  Use these four bits to index into
     // kLogicalInlineSides.
-    MOZ_ASSERT(StyleWritingMode::VERTICAL.bits == 0x01 &&
-                   StyleWritingMode::INLINE_REVERSED.bits == 0x02 &&
-                   StyleWritingMode::VERTICAL_LR.bits == 0x04 &&
-                   StyleWritingMode::LINE_INVERTED.bits == 0x08,
+    MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                   StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
+                   StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
+                   StyleWritingMode::LINE_INVERTED._0 == 0x08,
                "unexpected mask values");
-    int index = mWritingMode.bits & 0x0F;
+    int index = mWritingMode._0 & 0x0F;
     return kLogicalInlineSides[index][aEdge];
   }
 
@@ -419,12 +418,12 @@ class WritingMode {
    */
   mozilla::Side PhysicalSide(LogicalSide aSide) const {
     if (IsBlock(aSide)) {
-      MOZ_ASSERT(StyleWritingMode::VERTICAL.bits == 0x01 &&
-                     StyleWritingMode::VERTICAL_LR.bits == 0x04,
+      MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                     StyleWritingMode::VERTICAL_LR._0 == 0x04,
                  "unexpected mask values");
       const uint8_t wm =
-          ((mWritingMode & StyleWritingMode::VERTICAL_LR).bits >> 1) |
-          (mWritingMode & StyleWritingMode::VERTICAL).bits;
+          ((mWritingMode & StyleWritingMode::VERTICAL_LR)._0 >> 1) |
+          (mWritingMode & StyleWritingMode::VERTICAL)._0;
       return PhysicalSideForBlockAxis(wm, GetEdge(aSide));
     }
 
@@ -481,12 +480,12 @@ class WritingMode {
     };
     // clang-format on
 
-    MOZ_ASSERT(StyleWritingMode::VERTICAL.bits == 0x01 &&
-                   StyleWritingMode::INLINE_REVERSED.bits == 0x02 &&
-                   StyleWritingMode::VERTICAL_LR.bits == 0x04 &&
-                   StyleWritingMode::LINE_INVERTED.bits == 0x08,
+    MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                   StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
+                   StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
+                   StyleWritingMode::LINE_INVERTED._0 == 0x08,
                "unexpected mask values");
-    int index = mWritingMode.bits & 0x0F;
+    int index = mWritingMode._0 & 0x0F;
     return kPhysicalToLogicalSides[index][aSide];
   }
 
@@ -586,7 +585,7 @@ class WritingMode {
     return myStartSide == otherWMStartSide;
   }
 
-  uint8_t GetBits() const { return mWritingMode.bits; }
+  uint8_t GetBits() const { return mWritingMode._0; }
 
  private:
   friend class LogicalPoint;

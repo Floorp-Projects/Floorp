@@ -40,7 +40,7 @@ impl Default for PrecomputedHasher {
 ///
 /// We can avoid selector-matching those global rules for all elements without
 /// these pseudo-class states.
-const RARE_PSEUDO_CLASS_STATES: ElementState = ElementState::from_bits_truncate(
+const RARE_PSEUDO_CLASS_STATES: ElementState = ElementState::from_bits_retain(
     ElementState::FULLSCREEN.bits() |
         ElementState::VISITED_OR_UNVISITED.bits() |
         ElementState::URLTARGET.bits() |

@@ -187,6 +187,7 @@ pub enum LineDirection {
 pub type EndingShape = generic::EndingShape<NonNegativeLength, NonNegativeLengthPercentage>;
 
 bitflags! {
+    #[derive(Clone, Copy)]
     struct ParseImageFlags: u8 {
         const FORBID_NONE = 1 << 0;
         const FORBID_IMAGE_SET = 1 << 1;

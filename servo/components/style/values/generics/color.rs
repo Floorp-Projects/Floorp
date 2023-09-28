@@ -23,11 +23,12 @@ pub enum GenericColor<Percentage> {
     ColorMix(Box<GenericColorMix<Self, Percentage>>),
 }
 
+/// Flags used to modify the calculation of a color mix result.
+#[derive(Clone, Copy, Debug, Default, MallocSizeOf, PartialEq, ToShmem)]
+#[repr(C)]
+pub struct ColorMixFlags(u8);
 bitflags! {
-    /// Flags used to modify the calculation of a color mix result.
-    #[derive(MallocSizeOf, ToShmem)]
-    #[repr(C)]
-    pub struct ColorMixFlags : u8 {
+    impl ColorMixFlags : u8 {
         /// Normalize the weights of the mix.
         const NORMALIZE_WEIGHTS = 1 << 0;
         /// The result should always be converted to the modern color syntax.

@@ -277,11 +277,13 @@ pub struct InvalidationMap {
     pub other_attribute_affecting_selectors: LocalNameDependencyMap,
 }
 
+/// Tree-structural pseudoclasses that we care about for (Relative selector) invalidation.
+/// Specifically, we need to store information on ones that don't generate the inner selector.
+#[derive(Clone, Copy, Debug, MallocSizeOf)]
+pub struct TSStateForInvalidation(u8);
+
 bitflags! {
-    /// Tree-structural pseudoclasses that we care about for (Relative selector) invalidation.
-    /// Specifically, we need to store information on ones that don't generate the inner selector.
-    #[derive(MallocSizeOf)]
-    pub struct TSStateForInvalidation : u8 {
+    impl TSStateForInvalidation : u8 {
         /// :empty
         const EMPTY = 1 << 0;
         /// :nth, :first-child, etc, without of.

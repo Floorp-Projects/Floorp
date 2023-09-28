@@ -70,7 +70,7 @@ pub trait SelectorVisitor: Sized {
 
 bitflags! {
     /// The kinds of components the visitor is visiting the selector list of, if any
-    #[derive(Default)]
+    #[derive(Clone, Copy, Default)]
     pub struct SelectorListKind: u8 {
         /// The visitor is inside :not(..)
         const NEGATION = 1 << 0;

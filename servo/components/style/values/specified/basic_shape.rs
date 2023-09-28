@@ -146,6 +146,7 @@ bitflags! {
     /// we use the bitflags to choose the supported basic shapes for each property at the parse
     /// time.
     /// https://github.com/w3c/csswg-drafts/issues/7390
+    #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct AllowedBasicShapes: u8 {
         /// inset().

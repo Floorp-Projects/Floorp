@@ -714,7 +714,7 @@ impl<'le> GeckoElement<'le> {
 
     #[inline]
     fn document_state(&self) -> DocumentState {
-        DocumentState::from_bits_truncate(self.as_node().owner_doc().0.mDocumentState.bits)
+        DocumentState::from_bits_retain(self.as_node().owner_doc().0.mDocumentState.bits)
     }
 
     #[inline]
@@ -1205,7 +1205,7 @@ impl<'le> TElement for GeckoElement<'le> {
 
     #[inline]
     fn state(&self) -> ElementState {
-        ElementState::from_bits_truncate(self.state_internal())
+        ElementState::from_bits_retain(self.state_internal())
     }
 
     #[inline]

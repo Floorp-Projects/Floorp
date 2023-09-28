@@ -1417,7 +1417,7 @@ dependencies = [
 name = "dom"
 version = "0.1.0"
 dependencies = [
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
 ]
 
 [[package]]
@@ -4820,7 +4820,7 @@ dependencies = [
 name = "selectors"
 version = "0.22.0"
 dependencies = [
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
  "cssparser",
  "derive_more 0.99.999",
  "fxhash",
@@ -5187,7 +5187,7 @@ dependencies = [
  "arrayvec",
  "atomic_refcell",
  "bindgen 0.66.1",
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
  "byteorder",
  "cssparser",
  "derive_more 0.99.999",
@@ -5254,7 +5254,7 @@ name = "style_traits"
 version = "0.0.1"
 dependencies = [
  "app_units",
- "bitflags 1.999.999",
+ "bitflags 2.4.0",
  "cssparser",
  "euclid",
  "lazy_static",

@@ -106,7 +106,7 @@ impl ElementSnapshot for GeckoElementSnapshot {
 
     fn state(&self) -> Option<ElementState> {
         if self.has_any(Flags::State) {
-            Some(ElementState::from_bits_truncate(self.mState))
+            Some(ElementState::from_bits_retain(self.mState))
         } else {
             None
         }
