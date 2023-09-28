@@ -64,6 +64,8 @@ def gradlewbuild(gradlewbuild_log):
 def fixture_experiment_data(experiment_url):
     data = requests.get(experiment_url).json()
     for item in data["branches"][0]["features"][0]["value"]["messages"].values():
+        item["surface"] = "homescreen"
+        item["style"] = "URGENT"
         for count, trigger in enumerate(item["trigger"]):
             if "USER_EN_SPEAKER" not in trigger:
                 del(item["trigger"][count])

@@ -882,12 +882,32 @@ class BrowserRobot {
         assertTrue(button.waitForExists(waitingTime))
     }
 
+    fun verifySurveyButtonDoesNotExist() {
+        val button = mDevice.findObject(
+            UiSelector().text(
+                getStringResource(
+                    R.string.preferences_take_survey,
+                ),
+            ),
+        )
+        assertTrue(button.waitUntilGone(waitingTime))
+    }
+
     fun verifySurveyNoThanksButton() {
         val button = mDevice.findObject(
             UiSelector().text(
                 getStringResource(
                     R.string.preferences_not_take_survey,
                 ),
+            ),
+        )
+        assertTrue(button.waitForExists(waitingTime))
+    }
+
+    fun verifyHomeScreenSurveyCloseButton() {
+        val button = mDevice.findObject(
+            UiSelector().descriptionContains(
+                "Close",
             ),
         )
         assertTrue(button.waitForExists(waitingTime))
@@ -1265,6 +1285,13 @@ class BrowserRobot {
             BrowserRobot().interact()
             return Transition()
         }
+        fun clickHomeScreenSurveyCloseButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            homescreenSurveyCloseButton.waitForExists(waitingTime)
+            homescreenSurveyCloseButton.click()
+
+            BrowserRobot().interact()
+            return Transition()
+        }
     }
 }
 
@@ -1420,3 +1447,6 @@ private val surveyButton =
 
 private val surveyNoThanksButton =
     itemContainingText(getStringResource(R.string.preferences_not_take_survey))
+
+private val homescreenSurveyCloseButton =
+    itemWithDescription("Close")
