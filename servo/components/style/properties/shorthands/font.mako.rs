@@ -36,7 +36,7 @@
     use crate::parser::Parse;
     use crate::properties::longhands::{font_family, font_style, font_size, font_weight, font_stretch};
     use crate::properties::longhands::font_variant_caps;
-    use crate::values::specified::text::LineHeight;
+    use crate::values::specified::font::LineHeight;
     use crate::values::specified::{FontSize, FontWeight};
     use crate::values::specified::font::{FontStretch, FontStretchKeyword};
     #[cfg(feature = "gecko")]

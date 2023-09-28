@@ -140,6 +140,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
 
   // math-depth support (used for MathML scriptlevel)
   int8_t mMathDepth;
+  mozilla::StyleLineHeight mLineHeight;
   // MathML  mathvariant support
   mozilla::StyleMathVariant mMathVariant;
   // math-style support (used for MathML displaystyle)
@@ -871,7 +872,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleNonNegativeLengthOrNumber mTabSize;
   mozilla::LengthPercentage mWordSpacing;
   mozilla::StyleLetterSpacing mLetterSpacing;
-  mozilla::StyleLineHeight mLineHeight;
   mozilla::LengthPercentage mTextIndent;
 
   mozilla::LengthPercentageOrAuto mTextUnderlineOffset;

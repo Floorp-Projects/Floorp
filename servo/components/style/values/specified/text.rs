@@ -6,17 +6,13 @@
 
 use crate::parser::{Parse, ParserContext};
 use crate::properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
-use crate::values::computed::text::LineHeight as ComputedLineHeight;
 use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
 use crate::values::computed::text::TextOverflow as ComputedTextOverflow;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::LineHeight as GenericLineHeight;
 use crate::values::generics::text::{GenericTextDecorationLength, Spacing};
-use crate::values::specified::length::NonNegativeLengthPercentage;
-use crate::values::specified::length::{FontRelativeLength, Length};
-use crate::values::specified::length::{LengthPercentage, NoCalcLength};
-use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumber, Number};
+use crate::values::specified::length::{Length, LengthPercentage};
+use crate::values::specified::{AllowQuirks, Integer, Number};
 use cssparser::{Parser, Token};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
@@ -33,9 +29,6 @@ pub type LetterSpacing = Spacing<Length>;
 
 /// A specified value for the `word-spacing` property.
 pub type WordSpacing = Spacing<LengthPercentage>;
-
-/// A specified value for the `line-height` property.
-pub type LineHeight = GenericLineHeight<NonNegativeNumber, NonNegativeLengthPercentage>;
 
 /// A value for the `hyphenate-character` property.
 #[derive(
@@ -96,55 +89,6 @@ impl Parse for WordSpacing {
         Spacing::parse_with(context, input, |c, i| {
             LengthPercentage::parse_quirky(c, i, AllowQuirks::Yes)
         })
-    }
-}
-
-impl ToComputedValue for LineHeight {
-    type ComputedValue = ComputedLineHeight;
-
-    #[inline]
-    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        use crate::values::specified::length::FontBaseSize;
-        match *self {
-            GenericLineHeight::Normal => GenericLineHeight::Normal,
-            #[cfg(feature = "gecko")]
-            GenericLineHeight::MozBlockHeight => GenericLineHeight::MozBlockHeight,
-            GenericLineHeight::Number(number) => {
-                GenericLineHeight::Number(number.to_computed_value(context))
-            },
-            GenericLineHeight::Length(ref non_negative_lp) => {
-                let result = match non_negative_lp.0 {
-                    LengthPercentage::Length(NoCalcLength::Absolute(ref abs)) => {
-                        context.maybe_zoom_text(abs.to_computed_value(context))
-                    },
-                    LengthPercentage::Length(ref length) => length.to_computed_value(context),
-                    LengthPercentage::Percentage(ref p) => FontRelativeLength::Em(p.0)
-                        .to_computed_value(context, FontBaseSize::CurrentStyle),
-                    LengthPercentage::Calc(ref calc) => {
-                        let computed_calc =
-                            calc.to_computed_value_zoomed(context, FontBaseSize::CurrentStyle);
-                        let base = context.style().get_font().clone_font_size().computed_size();
-                        computed_calc.resolve(base)
-                    },
-                };
-                GenericLineHeight::Length(result.into())
-            },
-        }
-    }
-
-    #[inline]
-    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        match *computed {
-            GenericLineHeight::Normal => GenericLineHeight::Normal,
-            #[cfg(feature = "gecko")]
-            GenericLineHeight::MozBlockHeight => GenericLineHeight::MozBlockHeight,
-            GenericLineHeight::Number(ref number) => {
-                GenericLineHeight::Number(NonNegativeNumber::from_computed_value(number))
-            },
-            GenericLineHeight::Length(ref length) => {
-                GenericLineHeight::Length(NoCalcLength::from_computed_value(&length.0).into())
-            },
-        }
     }
 }
 

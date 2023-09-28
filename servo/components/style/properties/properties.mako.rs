@@ -38,7 +38,7 @@ use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
 use crate::use_counters::UseCounters;
-use crate::values::generics::text::LineHeight;
+use crate::values::generics::font::LineHeight;
 use crate::values::{computed, resolved, serialize_atom_name};
 use crate::values::specified::font::SystemFont;
 use crate::rule_tree::StrongRuleNode;

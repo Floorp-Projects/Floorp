@@ -718,7 +718,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     dependsOnCBBSize |= (flexBasis.IsSize() && flexBasis.AsSize().HasPercent());
   }
 
-  if (mFrame->StyleText()->mLineHeight.IsMozBlockHeight()) {
+  if (mFrame->StyleFont()->mLineHeight.IsMozBlockHeight()) {
     // line-height depends on block bsize
     mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // but only on containing blocks if this frame is not a suitable block
@@ -2806,7 +2806,7 @@ nscoord ReflowInput::CalcLineHeight(const ComputedStyle& aStyle,
                                     const nsIContent* aContent,
                                     nscoord aBlockBSize,
                                     float aFontSizeInflation) {
-  const StyleLineHeight& lh = aStyle.StyleText()->mLineHeight;
+  const StyleLineHeight& lh = aStyle.StyleFont()->mLineHeight;
   WritingMode wm(&aStyle);
   const bool vertical = wm.IsVertical() && !wm.IsSideways();
   return CalcLineHeight(lh, *aStyle.StyleFont(), aPresContext, vertical,
