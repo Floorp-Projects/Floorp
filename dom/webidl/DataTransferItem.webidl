@@ -8,7 +8,7 @@
  * https://wicg.github.io/entries-api/#idl-index
  */
 
-[InstrumentedProps=(webkitGetAsEntry),Exposed=Window]
+[Exposed=Window]
 interface DataTransferItem {
   readonly attribute DOMString kind;
   readonly attribute DOMString type;

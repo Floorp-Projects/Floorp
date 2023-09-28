@@ -11,8 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window,
- InstrumentedProps=(disableRemotePlayback,remote)]
+[Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
 
   // error state
