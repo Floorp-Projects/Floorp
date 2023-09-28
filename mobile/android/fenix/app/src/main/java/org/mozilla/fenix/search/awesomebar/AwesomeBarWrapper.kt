@@ -16,6 +16,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -67,6 +68,9 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                     when {
                         suggestion.flags.contains(AwesomeBar.Suggestion.Flag.HISTORY) -> {
                             History.searchResultTapped.record(NoExtras())
+                        }
+                        suggestion.flags.contains(AwesomeBar.Suggestion.Flag.BOOKMARK) -> {
+                            BookmarksManagement.searchResultTapped.record(NoExtras())
                         }
                     }
                     onStopListener?.invoke()
