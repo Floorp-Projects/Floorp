@@ -17,7 +17,7 @@ def RLBoxLibrary(name):
     # Configuration for the wasm2c runtime used by RLBox
 
     # Enable SIMD autovectorization
-    if int(CONFIG["WASM_CC_VERSION"].split(".")[0]) >= 11:
+    if CONFIG["WASM_CC_VERSION"] and int(CONFIG["WASM_CC_VERSION"].split(".")[0]) >= 11:
         WASM_CXXFLAGS += ["-msimd128"]
 
     # Use a mmap style allocation
