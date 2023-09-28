@@ -4,13 +4,16 @@
 
 //! Computed types for box properties.
 
-use crate::values::animated::{Animate, Procedure};
+use crate::values::animated::{Animate, Procedure, ToAnimatedValue};
+use crate::values::computed::font::FixedPoint;
 use crate::values::computed::length::{LengthPercentage, NonNegativeLength};
-use crate::values::computed::{Context, Integer, ToComputedValue};
+use crate::values::computed::{Context, Integer, Number, ToComputedValue};
 use crate::values::generics::box_::{
     GenericContainIntrinsicSize, GenericLineClamp, GenericPerspective, GenericVerticalAlign,
 };
 use crate::values::specified::box_ as specified;
+use std::fmt;
+use style_traits::{CssWriter, ToCss};
 
 pub use crate::values::specified::box_::{
     Appearance, BaselineSource, BreakBetween, BreakWithin, Clear as SpecifiedClear, Contain,
@@ -261,5 +264,116 @@ impl ToComputedValue for specified::Resize {
             Resize::Horizontal => specified::Resize::Horizontal,
             Resize::Vertical => specified::Resize::Vertical,
         }
+    }
+}
+
+/// We use an unsigned 10.6 fixed-point value (range 0.0 - 1023.984375).
+pub const ZOOM_FRACTION_BITS: u16 = 6;
+
+/// This is an alias which is useful mostly as a cbindgen / C++ inference workaround.
+pub type ZoomFixedPoint = FixedPoint<u16, ZOOM_FRACTION_BITS>;
+
+/// The computed `zoom` property value. We store it as a 16-bit fixed point because we need to
+/// store it efficiently in the ComputedStyle representation. The assumption being that zooms over
+/// 1000 aren't quite useful.
+#[derive(
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Hash,
+    MallocSizeOf,
+    PartialEq,
+    PartialOrd,
+    ToResolvedValue,
+)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
+#[repr(C)]
+pub struct Zoom(ZoomFixedPoint);
+
+impl std::ops::Mul for Zoom {
+    type Output = Zoom;
+
+    fn mul(self, rhs: Self) -> Self {
+        if self == Self::ONE {
+            return rhs;
+        }
+        if rhs == Self::ONE {
+            return self;
+        }
+        Zoom(ZoomFixedPoint::from_float(self.value() * rhs.value()))
+    }
+}
+
+impl ToComputedValue for specified::Zoom {
+    type ComputedValue = Zoom;
+
+    #[inline]
+    fn to_computed_value(&self, _: &Context) -> Self::ComputedValue {
+        let n = match *self {
+            Self::Normal => return Zoom::ONE,
+            Self::Value(ref n) => n.0.to_number().get(),
+        };
+        if n == 0.0 {
+            // For legacy reasons, zoom: 0 (and 0%) computes to 1. ¯\_(ツ)_/¯
+            return Zoom::ONE;
+        }
+        Zoom(ZoomFixedPoint::from_float(n))
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        Self::new_number(computed.value())
+    }
+}
+
+impl ToCss for Zoom {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        self.value().to_css(dest)
+    }
+}
+
+impl ToAnimatedValue for Zoom {
+    type AnimatedValue = Number;
+
+    #[inline]
+    fn to_animated_value(self) -> Self::AnimatedValue {
+        self.value()
+    }
+
+    #[inline]
+    fn from_animated_value(animated: Self::AnimatedValue) -> Self {
+        Zoom(ZoomFixedPoint::from_float(animated.max(0.0)))
+    }
+}
+
+impl Zoom {
+    /// The value 1. This is by far the most common value.
+    pub const ONE: Zoom = Zoom(ZoomFixedPoint {
+        value: 1 << ZOOM_FRACTION_BITS,
+    });
+
+    /// Returns whether we're the number 1.
+    #[inline]
+    pub fn is_one(self) -> bool {
+        self == Self::ONE
+    }
+
+    /// Returns the value as a float.
+    #[inline]
+    pub fn value(&self) -> f32 {
+        self.0.to_float()
+    }
+
+    /// Returns the zoomed value.
+    #[inline]
+    pub fn zoom(self, value: f32) -> f32 {
+        if self == Self::ONE {
+            return value;
+        }
+        self.value() * value
     }
 }

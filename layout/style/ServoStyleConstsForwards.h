@@ -222,7 +222,6 @@ using StyleAtomicUsize = std::atomic<size_t>;
     uint16_t UnsignedRaw() const { return uint16_t(Raw()); }                   \
     float ToFloat() const { return Raw() * kInverseScale; }                    \
     RawT ToIntRounded() const { return (Raw() + kPointFive) >> FractionBits; } \
-    bool IsNormal() const { return *this == NORMAL; }                          \
     inline void ToString(nsACString&) const;
 
 }  // namespace mozilla

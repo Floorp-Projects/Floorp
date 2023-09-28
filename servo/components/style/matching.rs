@@ -765,6 +765,15 @@ trait PrivateMatchMethods: TElement {
             return ChildRestyleRequirement::MustCascadeChildren;
         }
 
+        if old_values.effective_zoom != new_values.effective_zoom {
+            // Zoom changes need to get propagated to children.
+            debug!(
+                " > zoom changed: {:?} != {:?}",
+                old_values.effective_zoom, new_values.effective_zoom
+            );
+            return ChildRestyleRequirement::MustCascadeChildren;
+        }
+
         match difference.change {
             StyleChange::Unchanged => return ChildRestyleRequirement::CanSkipCascade,
             StyleChange::Changed { reset_only } => {

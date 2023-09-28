@@ -554,6 +554,7 @@ class Longhand(Property):
                 "XSpan",
                 "XTextScale",
                 "ZIndex",
+                "Zoom",
             }
         if self.name == "overflow-y":
             return True
