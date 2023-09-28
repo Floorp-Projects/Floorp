@@ -466,29 +466,32 @@ class ServoStyleSet {
    * Maybe invalidate if a modification to an ID might require us to restyle
    * the relative selector it refers to.
    */
-  void MaybeInvalidateRelativeSelectorIDDependency(const dom::Element&,
-                                                   nsAtom* aOldID,
-                                                   nsAtom* aNewID);
+  void MaybeInvalidateRelativeSelectorIDDependency(
+      const dom::Element&, nsAtom* aOldID, nsAtom* aNewID,
+      const ServoElementSnapshotTable& aSnapshots);
 
   /**
    * Maybe invalidate if a modification to an attribute with the specified local
    * name might require us to restyle the relative selector it refers to.
    */
-  void MaybeInvalidateRelativeSelectorClassDependency(const dom::Element&);
+  void MaybeInvalidateRelativeSelectorClassDependency(
+      const dom::Element&, const ServoElementSnapshotTable& aSnapshots);
 
   /**
    * Maybe invalidate if a modification to an ID might require us to restyle
    * the relative selector it refers to.
    */
-  void MaybeInvalidateRelativeSelectorAttributeDependency(const dom::Element&,
-                                                          nsAtom* aAttribute);
+  void MaybeInvalidateRelativeSelectorAttributeDependency(
+      const dom::Element&, nsAtom* aAttribute,
+      const ServoElementSnapshotTable& aSnapshots);
 
   /**
    * Maybe invalidate if a change in event state on an element might require us
    * to restyle the relative selector it refers to.
    */
-  void MaybeInvalidateRelativeSelectorStateDependency(const dom::Element&,
-                                                      dom::ElementState);
+  void MaybeInvalidateRelativeSelectorStateDependency(
+      const dom::Element&, dom::ElementState,
+      const ServoElementSnapshotTable& aSnapshots);
 
   /**
    * Maybe invalidate if a change on an element that might be selected by :empty
