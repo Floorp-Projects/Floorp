@@ -1848,14 +1848,18 @@ class nsTArray_Impl
   // @param aCount The number of elements to remove.
   void RemoveElementsAt(index_type aStart, size_type aCount);
 
+ private:
   // Remove a range of elements from this array, but do not check that
   // the range is in bounds.
   // @param aStart The starting index of the elements to remove.
   // @param aCount The number of elements to remove.
   void RemoveElementsAtUnsafe(index_type aStart, size_type aCount);
 
-  // Same as above, but remove just one element.
+ public:
+  // Similar to the above, but it removes just one element. This does bounds
+  // checking only in debug builds.
   void RemoveElementAtUnsafe(index_type aIndex) {
+    MOZ_ASSERT(aIndex < Length(), "Trying to remove an invalid element");
     RemoveElementsAtUnsafe(aIndex, 1);
   }
 
