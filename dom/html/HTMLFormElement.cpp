@@ -145,21 +145,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLFormElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPastNameLookupTable)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTargetContext)
-  RadioGroupManager::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
                                                 nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTargetContext)
-  RadioGroupManager::Unlink(tmp);
   tmp->Clear();
   tmp->mExpandoAndGeneration.OwnerUnlinked();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
-                                             nsGenericHTMLElement,
-                                             nsIRadioGroupContainer)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLFormElement,
+                                               nsGenericHTMLElement)
 
 // EventTarget
 void HTMLFormElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
@@ -1251,7 +1248,7 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // being count twice.
   if (type == FormControlType::InputRadio) {
     RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aChild);
-    radio->AddedToRadioGroup();
+    radio->AddToRadioGroup();
   }
 
   return NS_OK;
@@ -1287,7 +1284,7 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   MOZ_ASSERT(fc);
   if (fc->ControlType() == FormControlType::InputRadio) {
     RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aChild);
-    radio->WillRemoveFromRadioGroup();
+    radio->RemoveFromRadioGroup();
   }
 
   // Determine whether to remove the child from the elements list
@@ -1858,59 +1855,6 @@ void HTMLFormElement::UpdateValidity(bool aElementValidity) {
 int32_t HTMLFormElement::IndexOfContent(nsIContent* aContent) {
   int32_t index = 0;
   return mControls->IndexOfContent(aContent, &index) == NS_OK ? index : 0;
-}
-
-void HTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
-                                            HTMLInputElement* aRadio) {
-  RadioGroupManager::SetCurrentRadioButton(aName, aRadio);
-}
-
-HTMLInputElement* HTMLFormElement::GetCurrentRadioButton(
-    const nsAString& aName) {
-  return RadioGroupManager::GetCurrentRadioButton(aName);
-}
-
-NS_IMETHODIMP
-HTMLFormElement::GetNextRadioButton(const nsAString& aName,
-                                    const bool aPrevious,
-                                    HTMLInputElement* aFocusedRadio,
-                                    HTMLInputElement** aRadioOut) {
-  return RadioGroupManager::GetNextRadioButton(aName, aPrevious, aFocusedRadio,
-                                               aRadioOut);
-}
-
-NS_IMETHODIMP
-HTMLFormElement::WalkRadioGroup(const nsAString& aName,
-                                nsIRadioVisitor* aVisitor) {
-  return RadioGroupManager::WalkRadioGroup(aName, aVisitor);
-}
-
-void HTMLFormElement::AddToRadioGroup(const nsAString& aName,
-                                      HTMLInputElement* aRadio) {
-  RadioGroupManager::AddToRadioGroup(aName, aRadio, this);
-}
-
-void HTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
-                                           HTMLInputElement* aRadio) {
-  RadioGroupManager::RemoveFromRadioGroup(aName, aRadio);
-}
-
-uint32_t HTMLFormElement::GetRequiredRadioCount(const nsAString& aName) const {
-  return RadioGroupManager::GetRequiredRadioCount(aName);
-}
-
-void HTMLFormElement::RadioRequiredWillChange(const nsAString& aName,
-                                              bool aRequiredAdded) {
-  RadioGroupManager::RadioRequiredWillChange(aName, aRequiredAdded);
-}
-
-bool HTMLFormElement::GetValueMissingState(const nsAString& aName) const {
-  return RadioGroupManager::GetValueMissingState(aName);
-}
-
-void HTMLFormElement::SetValueMissingState(const nsAString& aName,
-                                           bool aValue) {
-  RadioGroupManager::SetValueMissingState(aName, aValue);
 }
 
 void HTMLFormElement::Clear() {
