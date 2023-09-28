@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { div } from "react-dom-factories";
+import { div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -39,6 +39,7 @@ export class Thread extends Component {
       {
         className: classnames("thread", {
           selected: thread.actor == currentThread,
+          paused: isPaused,
         }),
         key: thread.actor,
         onClick: this.onSelectThread,
@@ -58,13 +59,12 @@ export class Thread extends Component {
         label
       ),
       isPaused
-        ? div(
+        ? span(
             {
               className: "pause-badge",
+              role: "status",
             },
-            React.createElement(AccessibleImage, {
-              className: "pause",
-            })
+            L10N.getStr("pausedThread")
           )
         : null
     );

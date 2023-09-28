@@ -13,6 +13,9 @@ const TEST_ORG_IFRAME_URI = `${URL_ROOT_ORG_SSL}examples/doc_dbg-fission-frame-s
 const DATA_URI = "data:text/html,<title>foo</title>";
 
 add_task(async function () {
+  // Make sure that the thread section is expanded
+  await pushPref("devtools.debugger.threads-visible", true);
+
   // Load a test page with a remote frame and wait for both sources to be visible.
   // simple1.js is imported by the main page. simple2.js comes from the frame.
   const dbg = await initDebuggerWithAbsoluteURL(

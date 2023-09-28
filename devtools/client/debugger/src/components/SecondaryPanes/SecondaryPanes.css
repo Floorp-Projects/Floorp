@@ -11,6 +11,13 @@
   white-space: nowrap;
   background-color: var(--theme-sidebar-background);
   --breakpoint-expression-right-clear-space: 36px;
+  --paused-background-color: hsl(54, 100%, 92%);
+  --paused-color: var(--theme-body-color);
+
+  .theme-dark & {
+    --paused-background-color: hsl(42, 37%, 19%);
+    --paused-color: hsl(43, 94%, 81%);
+  }
 }
 
 .secondary-panes .controlled > div {
