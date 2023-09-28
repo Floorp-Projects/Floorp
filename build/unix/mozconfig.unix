@@ -19,11 +19,4 @@ else
     mk_add_options "export PATH=$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
-case "$PERFHERDER_EXTRA_OPTIONS" in
-base-toolchains*)
-  # Clang versions < 8.0 don't support wasm.
-  export WASM_SANDBOXED_LIBRARIES=
-  ;;
-esac
-
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
