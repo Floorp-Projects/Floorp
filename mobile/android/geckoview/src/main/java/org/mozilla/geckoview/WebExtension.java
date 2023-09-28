@@ -1776,12 +1776,20 @@ public class WebExtension {
      * WebExtensionController.EnableSource#APP} as <code>source</code>.
      */
     public static final int APP = 1 << 3;
+
+    /** The extension has been disabled because it is not correctly signed. */
+    public static final int SIGNATURE = 1 << 4;
   }
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
-      value = {DisabledFlags.USER, DisabledFlags.BLOCKLIST, DisabledFlags.APP})
+      value = {
+        DisabledFlags.USER,
+        DisabledFlags.BLOCKLIST,
+        DisabledFlags.APP,
+        DisabledFlags.SIGNATURE,
+      })
   public @interface EnabledFlags {}
 
   /** Provides information about a {@link WebExtension}. */
@@ -2004,6 +2012,8 @@ public class WebExtension {
           disabledFlags |= DisabledFlags.BLOCKLIST;
         } else if (flag.equals("appDisabled")) {
           disabledFlags |= DisabledFlags.APP;
+        } else if (flag.equals("signatureDisabled")) {
+          disabledFlags |= DisabledFlags.SIGNATURE;
         } else {
           Log.e(LOGTAG, "Unrecognized disabledFlag state: " + flag);
         }
