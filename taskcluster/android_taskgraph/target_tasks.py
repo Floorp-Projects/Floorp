@@ -101,18 +101,14 @@ def _filter_release_promotion(
             return True
 
         # TODO: get rid of this release_type match
-        if task.attributes.get(
-            "shipping_phase"
-        ) == shipping_phase and does_task_match_release_type(
-            task, parameters["release_type"]
-        ):
-            return True
-
         if (
             task.attributes.get("shipping_phase") == shipping_phase
             and task.attributes.get("shipping_product") == parameters["release_product"]
+            and does_task_match_release_type(task, parameters["release_type"])
         ):
             return True
+
+        return False
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
