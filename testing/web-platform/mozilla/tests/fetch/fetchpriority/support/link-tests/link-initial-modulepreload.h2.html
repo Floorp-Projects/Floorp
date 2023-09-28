@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+  <link rel="modulepreload" href="dummy.js?1" fetchpriority="low">
+  <link rel="modulepreload" href="dummy.js?2" fetchpriority="high">
+  <link rel="modulepreload" href="dummy.js?3" fetchpriority="auto">
+  <link rel="modulepreload" href="dummy.js?4">
+</head>
+<body>
+<script>
+  onload = function() {
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>
