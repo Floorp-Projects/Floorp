@@ -11,18 +11,17 @@
  * platform. HEVC can only be played if we have platform decoder supports
  * hardware decoding. Currently we can only do that on Windows.
  */
-add_task(async function setupTestPrefs() {
-  await SpecialPowers.pushPrefEnv({"set": [["media.wmf.hevc.enabled", true]]});
-});
-
 add_task(async function testHEVCPlayback() {
   let video = document.createElement('video');
   const isHEVCSupported = video.canPlayType('video/mp4; codecs="hev1.1.6.L93.B0"');
-  info(`check if HEVC is supported, rv=${isHEVCSupported}`);
-  if (isHEVCSupported == "") {
-    ok(true, "HEVC is not supported on current platform");
+  const os = SpecialPowers.Services.appinfo.OS;
+  info(`check if HEVC is supported on ${os}, rv=${isHEVCSupported}`);
+  if (os != "WINNT") {
+    ok(isHEVCSupported == "", "HEVC is not supported on current platform");
     return;
   }
+  ok(isHEVCSupported != "", `HEVC is supported`);
+
   info(`try to play HEVC video`);
   video.src = "hevc_white_frame.mp4";
   video.controls = true;
