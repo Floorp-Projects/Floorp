@@ -3798,6 +3798,7 @@ toolbar#nav-bar {
                 ignore_missing_leaks=ignoreMissingLeaks,
                 log=self.log,
                 stack_fixer=get_stack_fixer_function(utilityPath, options.symbolsPath),
+                scope=manifestToFilter,
             )
 
         self.log.info("runtests.py | Running tests: end.")
