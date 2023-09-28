@@ -63,6 +63,8 @@ clang_checkers:
     reliability: high
   - name: bugprone-swapped-arguments
     reliability: high
+  - name: bugprone-switch-missing-default-case
+    reliability: high
   - name: bugprone-too-small-loop-variable
     reliability: high
   - name: bugprone-unused-raii
@@ -186,6 +188,11 @@ clang_checkers:
     reliability: high
   - name: mozilla-*
     reliability: high
+  - name: performance-avoid-endl
+    reliability: high
+    # enable from clang 18
+    #  - name: performance-enum-size
+    #    reliability: high
   - name: performance-faster-string-find
     reliability: high
   - name: performance-for-range-copy

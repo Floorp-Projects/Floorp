@@ -1,0 +1,8 @@
+[
+  [
+    "warning",
+    "do not use 'std::endl' with streams; use '\\n' instead",
+    "performance-avoid-endl"
+  ],
+  { "reliability": "high" }
+]

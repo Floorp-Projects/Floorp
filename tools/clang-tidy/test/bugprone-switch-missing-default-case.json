@@ -1,0 +1,8 @@
+[
+  [
+    "warning",
+    "switching on non-enum value without default case may not cover all cases",
+    "bugprone-switch-missing-default-case"
+  ],
+  { "reliability": "high" }
+]
