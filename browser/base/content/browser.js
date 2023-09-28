@@ -10007,24 +10007,6 @@ var FirefoxViewHandler = {
       const PREF_NAME = "browser.firefox-view.view-count";
       const MAX_VIEW_COUNT = 10;
       let viewCount = Services.prefs.getIntPref(PREF_NAME, 0);
-      let isFirefoxViewNext = Services.prefs.getBoolPref(
-        "browser.tabs.firefox-view-next",
-        false
-      );
-
-      // Record telemetry
-      Services.telemetry.setEventRecordingEnabled(
-        isFirefoxViewNext ? "firefoxview_next" : "firefoxview",
-        true
-      );
-      Services.telemetry.recordEvent(
-        isFirefoxViewNext ? "firefoxview_next" : "firefoxview",
-        "tab_selected",
-        "toolbarbutton",
-        null,
-        {}
-      );
-
       if (viewCount < MAX_VIEW_COUNT) {
         Services.prefs.setIntPref(PREF_NAME, viewCount + 1);
       }

@@ -45,6 +45,7 @@ function recordNavigationTelemetry(source, eventTarget) {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  Services.telemetry.setEventRecordingEnabled("firefoxview_next", true);
   recordEnteredTelemetry();
   let navigation = document.querySelector("fxview-category-navigation");
   for (const item of navigation.categoryButtons) {
