@@ -6,6 +6,9 @@
 const URL =
   "https://example.com/browser/toolkit/components/translations/tests/browser/translations-tester-shadow-dom-es.html";
 
+const URL_SLOT =
+  "https://example.com/browser/toolkit/components/translations/tests/browser/translations-tester-shadow-dom-slot-es.html";
+
 /**
  * Check that the translation feature works with ShadowDOM.
  */
@@ -51,6 +54,28 @@ add_task(async function test_shadow_dom_translation() {
           return root.querySelector("p");
         },
         "ESTO SE CONTENTO EN SHADOW DOM 2 [es to en, html]"
+      );
+    },
+  });
+});
+
+/**
+ * Check that the translation feature works with ShadowDOM with slotted text node.
+ */
+add_task(async function test_shadow_dom_translation_slotted() {
+  await autoTranslatePage({
+    page: URL_SLOT,
+    languagePairs: [
+      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es" },
+    ],
+    runInPage: async TranslationsTest => {
+      await TranslationsTest.assertTranslationResult(
+        "Slotted text node is translated",
+        function () {
+          return content.document.getElementById("host");
+        },
+        "ESTO SE CONTENTA EN LUZ DOM [es to en]"
       );
     },
   });

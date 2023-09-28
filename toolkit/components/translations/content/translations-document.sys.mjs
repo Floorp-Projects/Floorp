@@ -328,7 +328,7 @@ export class TranslationsDocument {
   processSubdivide(node) {
     const nodeIterator = node.ownerDocument.createTreeWalker(
       node,
-      NodeFilter.SHOW_ELEMENT,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
       this.determineTranslationStatusForUnprocessedNodes
     );
 
