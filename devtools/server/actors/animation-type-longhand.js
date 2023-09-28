@@ -422,6 +422,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "stop-opacity",
       "stroke-miterlimit",
       "stroke-opacity",
+      "zoom",
       "-moz-window-opacity",
     ]),
   ],
