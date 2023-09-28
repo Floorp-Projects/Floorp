@@ -28,6 +28,7 @@
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"

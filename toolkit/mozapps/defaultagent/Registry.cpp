@@ -14,6 +14,7 @@
 #include "UtfConvert.h"
 
 #include "mozilla/Buffer.h"
+#include "mozilla/Try.h"
 
 namespace mozilla::default_agent {
 

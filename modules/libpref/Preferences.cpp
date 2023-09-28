@@ -42,6 +42,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryEventEnums.h"
+#include "mozilla/Try.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Variant.h"

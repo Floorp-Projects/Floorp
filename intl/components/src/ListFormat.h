@@ -7,7 +7,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Result.h"
+#include "mozilla/Try.h"
 #include "mozilla/Vector.h"
 #include "unicode/ulistformatter.h"
 

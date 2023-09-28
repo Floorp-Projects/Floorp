@@ -14,6 +14,7 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/Try.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsGlobalWindowInner.h"

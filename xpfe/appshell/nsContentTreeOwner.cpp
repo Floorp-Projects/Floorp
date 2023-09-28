@@ -39,6 +39,7 @@
 #endif
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 

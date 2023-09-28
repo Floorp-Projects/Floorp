@@ -15,8 +15,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/InternalResponse.h"

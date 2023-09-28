@@ -15,6 +15,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"

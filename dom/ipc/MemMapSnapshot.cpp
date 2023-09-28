@@ -8,6 +8,7 @@
 
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
 namespace mozilla::ipc {

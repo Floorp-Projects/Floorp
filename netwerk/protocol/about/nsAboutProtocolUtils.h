@@ -5,6 +5,7 @@
 #ifndef nsAboutProtocolUtils_h
 #define nsAboutProtocolUtils_h
 
+#include "mozilla/Try.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"

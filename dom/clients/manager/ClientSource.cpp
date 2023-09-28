@@ -12,6 +12,7 @@
 #include "ClientSourceChild.h"
 #include "ClientState.h"
 #include "ClientValidation.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"

@@ -16,9 +16,9 @@
 #include "WebCodecsUtils.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Try.h"
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CanvasUtils.h"

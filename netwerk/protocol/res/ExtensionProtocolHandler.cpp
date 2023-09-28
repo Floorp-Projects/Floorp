@@ -19,6 +19,7 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 
 #include "FileDescriptorFile.h"
 #include "LoadInfo.h"

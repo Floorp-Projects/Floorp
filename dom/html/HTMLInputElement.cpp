@@ -30,6 +30,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Try.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 #include "nsIFilePicker.h"

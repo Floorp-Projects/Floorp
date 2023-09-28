@@ -9,6 +9,7 @@
 #include "nsSupportsPrimitives.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/IteratorResultBinding.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ToJSValue.h"

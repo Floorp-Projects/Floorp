@@ -27,6 +27,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Try.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
 #include "txXMLUtils.h"

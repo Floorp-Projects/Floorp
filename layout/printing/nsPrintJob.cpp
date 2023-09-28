@@ -27,6 +27,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Try.h"
 #include "nsIBrowserChild.h"
 #include "nsIOService.h"
 #include "nsIScriptGlobalObject.h"

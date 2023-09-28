@@ -17,6 +17,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/Try.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"

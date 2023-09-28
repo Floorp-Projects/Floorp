@@ -21,8 +21,8 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #if defined(QM_LOG_ERROR_ENABLED) && defined(QM_ERROR_STACKS_ENABLED)
 #  include "mozilla/Variant.h"
 #endif

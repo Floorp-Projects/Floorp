@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/Try.h"
 #include "nsHttpChannel.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"

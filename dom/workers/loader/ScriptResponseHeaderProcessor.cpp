@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptResponseHeaderProcessor.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/WorkerScope.h"
 
 namespace mozilla {

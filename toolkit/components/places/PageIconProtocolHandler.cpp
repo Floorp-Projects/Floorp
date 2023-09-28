@@ -7,6 +7,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Components.h"
+#include "mozilla/Try.h"
 #include "nsFaviconService.h"
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"

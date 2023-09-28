@@ -39,6 +39,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
+#include "mozilla/Try.h"
 
 #include "gfxPlatform.h"
 #include "gfxFont.h"

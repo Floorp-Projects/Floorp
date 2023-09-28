@@ -48,6 +48,7 @@
 #include "nsIConstraintValidation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"     // for Event
 #include "mozilla/dom/File.h"      // for input type=file

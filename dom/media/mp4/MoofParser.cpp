@@ -11,6 +11,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Try.h"
 
 extern mozilla::LogModule* GetDemuxerLog();
 

@@ -4,6 +4,7 @@
 
 #include "mozilla/intl/NumberRangeFormat.h"
 
+#include "mozilla/Try.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "NumberFormatFields.h"

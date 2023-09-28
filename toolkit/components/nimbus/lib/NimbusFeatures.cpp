@@ -7,6 +7,7 @@
 #include "mozilla/browser/NimbusFeatures.h"
 #include "mozilla/browser/NimbusFeatureManifest.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Try.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsapi.h"
 #include "js/JSON.h"

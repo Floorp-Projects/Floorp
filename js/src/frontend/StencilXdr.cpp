@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"             // mozilla::ArrayEqual
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/ScopeExit.h"              // mozilla::MakeScopeExit
+#include "mozilla/Try.h"                    // MOZ_TRY
 
 #include <stddef.h>     // size_t
 #include <stdint.h>     // uint8_t, uint16_t, uint32_t

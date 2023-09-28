@@ -4,6 +4,7 @@
 #ifndef intl_components_RelativeTimeFormat_h_
 #define intl_components_RelativeTimeFormat_h_
 
+#include "mozilla/Try.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/intl/NumberPart.h"

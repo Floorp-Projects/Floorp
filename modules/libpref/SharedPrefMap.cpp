@@ -10,6 +10,7 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
 using namespace mozilla::loader;

@@ -62,6 +62,7 @@
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/TextControlElement.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/Try.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AnimatableBinding.h"

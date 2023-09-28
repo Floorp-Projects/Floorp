@@ -10,8 +10,8 @@
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Result.h"
 #include "mozilla/Span.h"
+#include "mozilla/Try.h"
 
 #include "unicode/uchar.h"
 #include "unicode/unorm2.h"

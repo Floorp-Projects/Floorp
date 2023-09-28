@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Try.h"
 
 #define READSE(var, min, max)     \
   {                               \
