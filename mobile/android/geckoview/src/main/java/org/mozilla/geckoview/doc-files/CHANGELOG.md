@@ -15,6 +15,7 @@ exclude: true
 
 ## v120
 - Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
+- Added `DisabledFlags.SIGNATURE` for extensions disabled because they aren't correctly signed. ([bug 1847266]({{bugzilla}}1847266))
 
 [120.1]: {{javadoc_uri}}/WebExtensionController.html#disableExtensionProcessSpawning
 
@@ -1436,4 +1437,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: afb898d7ececc5cf154df9530c5fc6cf7125fe9e
+[api-version]: 150fd70ec1d59eba6d5354bdbb8f7c54ec7b0dba

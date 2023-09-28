@@ -2270,6 +2270,7 @@ package org.mozilla.geckoview {
     ctor public DisabledFlags();
     field public static final int APP = 8;
     field public static final int BLOCKLIST = 4;
+    field public static final int SIGNATURE = 16;
     field public static final int USER = 2;
   }
 

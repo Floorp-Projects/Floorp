@@ -15,6 +15,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
@@ -313,6 +314,7 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     isActive,
     isBuiltin,
     id,
+    isCorrectlySigned,
   } = aAddon;
   let creatorName = null;
   let creatorURL = null;
@@ -332,6 +334,11 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   }
   if (embedderDisabled) {
     disabledFlags.push("appDisabled");
+  }
+  // Add-ons without an `isCorrectlySigned` property are correctly signed as
+  // they aren't the correct type for signing.
+  if (lazy.AddonSettings.REQUIRE_SIGNING && isCorrectlySigned === false) {
+    disabledFlags.push("signatureDisabled");
   }
   const baseURL = policy ? policy.getURL() : "";
   const privateBrowsingAllowed = policy ? policy.privateBrowsingAllowed : false;

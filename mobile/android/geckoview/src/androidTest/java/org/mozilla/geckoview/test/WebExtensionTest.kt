@@ -119,8 +119,9 @@ class WebExtensionTest : BaseSessionTest() {
         userDisabled: Boolean = false,
         appDisabled: Boolean = false,
         blocklistDisabled: Boolean = false,
+        signatureDisabled: Boolean = false,
     ) {
-        val enabled = !userDisabled && !appDisabled && !blocklistDisabled
+        val enabled = !userDisabled && !appDisabled && !blocklistDisabled && !signatureDisabled
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -151,6 +152,11 @@ class WebExtensionTest : BaseSessionTest() {
             "blocklistDisabled should match",
             extension.metaData.disabledFlags and DisabledFlags.BLOCKLIST > 0,
             equalTo(blocklistDisabled),
+        )
+        assertThat(
+            "signatureDisabled should match",
+            extension.metaData.disabledFlags and DisabledFlags.SIGNATURE > 0,
+            equalTo(signatureDisabled),
         )
     }
 
@@ -3188,7 +3194,8 @@ class WebExtensionTest : BaseSessionTest() {
         )
     }
 
-    fun extensionProcessCrash() {
+    @Test
+    fun testExtensionProcessCrash() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "extensions.webextensions.remote" to true,
