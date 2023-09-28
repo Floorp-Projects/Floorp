@@ -242,26 +242,11 @@ class AudioEventTimeline {
 
     // Make sure that invalid values are not used for exponential curves
     if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
-      if (aEvent.mValue <= 0.f) {
+      if (aEvent.mValue == 0.f) {
         aRv.ThrowRangeError(
             "The value passed to exponentialRampToValueAtTime must be "
-            "positive.");
+            "non-zero.");
         return false;
-      }
-      const AudioTimelineEvent* previousEvent =
-          GetPreviousEvent(TimeOf(aEvent));
-      if (previousEvent) {
-        if (previousEvent->mValue <= 0.f) {
-          // XXXbz I see no mention of SyntaxError in the Web Audio API spec
-          aRv.ThrowSyntaxError("Previous event value must be positive");
-          return false;
-        }
-      } else {
-        if (mDefaultValue <= 0.f) {
-          // XXXbz I see no mention of SyntaxError in the Web Audio API spec
-          aRv.ThrowSyntaxError("Our value must be positive");
-          return false;
-        }
       }
     }
     return true;
@@ -421,8 +406,6 @@ class AudioEventTimeline {
   void GetValuesAtTimeHelperInternal(TimeType aStartTime, Span<float> aBuffer,
                                      const AudioTimelineEvent* aPrevious,
                                      const AudioTimelineEvent* aNext);
-
-  const AudioTimelineEvent* GetPreviousEvent(double aTime) const;
 
   static bool IsValid(double value) { return std::isfinite(value); }
 
