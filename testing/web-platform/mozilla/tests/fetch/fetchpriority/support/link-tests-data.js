@@ -66,6 +66,21 @@ const kExpectedRequestsOfLinkPreload = [
     },
 ];
 
+const kExpectedRequestsOfModulepreload = [
+    {   fileNameAndSuffix: "dummy.js?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.js?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.js?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.js?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    }
+];
+
 // The expected internal priorites of the test data are specified as
 // implementation-defined. See step 11. of
 // <https://html.spec.whatwg.org/#create-a-link-request> and step 15. of
@@ -92,20 +107,10 @@ export const kTestData = [
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
     {   testFileName: "link-initial-modulepreload.h2.html",
-        expectedRequests: [
-        {   fileNameAndSuffix: "dummy.js?1",
-            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
-        },
-        {   fileNameAndSuffix: "dummy.js?2",
-            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-        },
-        {   fileNameAndSuffix: "dummy.js?3",
-            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-        },
-        {   fileNameAndSuffix: "dummy.js?4",
-            internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-        }
-        ]
+        expectedRequests: kExpectedRequestsOfModulepreload
+    },
+    {   testFileName: "link-dynamic-modulepreload.h2.html",
+        expectedRequests: kExpectedRequestsOfModulepreload
     },
     {   testFileName: "link-initial-prefetch.h2.html",
         expectedRequests: [
