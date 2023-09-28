@@ -9,6 +9,8 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  SearchSERPDomainToCategoriesMap:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -58,6 +60,15 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
+const TEST_DOMAIN_TO_CATEGORIES_MAP = {
+  // foobar.org
+  "DqNorjpE3CBY9OZh0wf1uA==": [2, 90],
+  // abc.org
+  "kpuib0kvhtSp1moICEmGWg==": [2, 95],
+  // def.org
+  "+5WbbjV3Nmxp0mBZODcJWg==": [2, 78, 4, 10],
+};
+
 let stub;
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
@@ -84,6 +95,10 @@ add_setup(async function () {
 
 add_task(async function test_categorization_reporting() {
   resetTelemetry();
+  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+    TEST_DOMAIN_TO_CATEGORIES_MAP
+  );
+
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
   info("Load a sample SERP with organic results.");
   let promise = waitForPageWithCategorizedDomains();
@@ -91,7 +106,7 @@ add_task(async function test_categorization_reporting() {
   await promise;
 
   // TODO: This needs to be refactored to actually test the reporting of the
-  // categorization.
+  // categorization. (Bug 1854692)
   Assert.deepEqual(
     Array.from(stub.getCall(0).args[0]),
     ["foobar.org"],
@@ -102,6 +117,25 @@ add_task(async function test_categorization_reporting() {
     Array.from(stub.getCall(1).args[0]),
     ["abc.org", "def.org"],
     "Categorization of ads should match."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_no_reporting_if_no_records() {
+  // Simulate a failure to download attachments from Remote Settings.
+  SearchSERPDomainToCategoriesMap.overrideMapForTests(null);
+
+  let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
+  info("Load a sample SERP with organic results.");
+  let promise = waitForPageWithCategorizedDomains();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await promise;
+
+  Assert.equal(
+    stub.getCall(2),
+    null,
+    "dummyLogger should not have been called if attachments weren't downloaded."
   );
 
   BrowserTestUtils.removeTab(tab);
