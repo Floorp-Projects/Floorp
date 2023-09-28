@@ -3,7 +3,5 @@ pypi:coverage==5.1
 vendored:third_party/python/PyYAML/lib/
 vendored:third_party/python/dlmanager
 vendored:third_party/python/esprima
-vendored:third_party/python/jsonschema
-vendored:third_party/python/pyrsistent
 vendored:third_party/python/redo
 vendored:third_party/python/responses
