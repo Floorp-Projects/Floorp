@@ -131,7 +131,6 @@ jobs:
       run-on-projects:
           - mozilla-beta
           - mozilla-release
-          - mozilla-esr102
           - mozilla-esr115
           - elm
       # For all non m-c jobs we just run once daily matching the 10 UTC
@@ -231,7 +230,6 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
-          - mozilla-esr102
           - mozilla-esr115
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}

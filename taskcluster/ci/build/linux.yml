@@ -500,7 +500,6 @@ linux/opt:
     run-on-projects:
         - 'mozilla-beta'
         - 'mozilla-release'
-        - 'mozilla-esr102'
         - 'mozilla-esr115'
     use-sccache: true
     fetches:
