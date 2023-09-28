@@ -1871,7 +1871,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Add</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Save</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Save</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Edit</string>
     <!-- Text for the menu button to delete a search engine -->

@@ -155,13 +155,9 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     }
 
     private fun editCustomSearchEngine(view: View, engine: SearchEngine) {
-        val directions = if (view.context.settings().enableUnifiedSearchSettingsUI) {
+        val directions =
             DefaultSearchEngineFragmentDirections
                 .actionDefaultEngineFragmentToSaveSearchEngineFragment(engine.id)
-        } else {
-            SearchEngineFragmentDirections
-                .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.id)
-        }
         findNavController(view).navigate(directions)
     }
 
