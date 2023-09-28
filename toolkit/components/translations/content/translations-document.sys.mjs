@@ -128,6 +128,15 @@ const INLINE_TAGS = new Set([
 const GENERIC_TAGS = new Set(["A", "SPAN"]);
 
 /**
+ * Options used by the mutation observer
+ */
+const MUTATION_OBSERVER_OPTIONS = {
+  characterData: true,
+  childList: true,
+  subtree: true,
+};
+
+/**
  * This class manages the process of translating the DOM from one language to another.
  * A translateHTML and a translateText function are injected into the constructor. This
  * class is responsible for subdividing a Node into small enough pieces to where it
@@ -287,6 +296,40 @@ export class TranslationsDocument {
   }
 
   /**
+   * Helper function for adding a new root to the mutation
+   * observer.
+   * @param {Node} root
+   */
+  observeNewRoot(root) {
+    this.#rootNodes.add(root);
+    this.observer.observe(root, MUTATION_OBSERVER_OPTIONS);
+  }
+
+  /**
+   * This function finds all sub shadow trees of node and
+   * add the ShadowRoot of those subtrees to the mutation
+   * observer.
+   */
+  addShadowRootsToObserver(node) {
+    const nodeIterator = node.ownerDocument.createTreeWalker(
+      node,
+      NodeFilter.SHOW_ELEMENT,
+      function(node) {
+        return node.openOrClosedShadowRoot
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP;
+      }
+    );
+    let currentNode;
+    while ((currentNode = nodeIterator.nextNode())) {
+      // Only shadow hosts are accepted nodes
+      const shadowRoot = currentNode.openOrClosedShadowRoot;
+      this.observeNewRoot(shadowRoot)
+      this.addShadowRootsToObserver(shadowRoot);
+    }
+  }
+
+  /**
    * Add a new element to start translating. This root is tracked for mutations and
    * kept up to date with translations. This will be the body element and title tag
    * for the document.
@@ -312,11 +355,9 @@ export class TranslationsDocument {
 
     this.subdivideNodeForTranslations(node);
 
-    this.observer.observe(node, {
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
+    this.observer.observe(node, MUTATION_OBSERVER_OPTIONS);
+
+    this.addShadowRootsToObserver(node);
   }
 
   /**
@@ -358,13 +399,24 @@ export class TranslationsDocument {
   subdivideNodeForTranslations(node) {
     if (!this.#rootNodes.has(node)) {
       // This is a non-root node, which means it came from a mutation observer.
-      // Ensure that it is a valid node to translate by checking all of its ancestors.
-      for (let parent of getAncestorsIterator(node)) {
-        if (
-          this.determineTranslationStatus(parent) ===
-          NodeStatus.NOT_TRANSLATABLE
-        ) {
-          return;
+      // This new node could be a host element for shadow tree
+      const shadowRoot = node.openOrClosedShadowRoot;
+      if (shadowRoot && !this.#rootNodes.has(shadowRoot)) {
+        this.observeNewRoot(shadowRoot);
+      } else {
+        // Ensure that it is a valid node to translate by checking all of its ancestors.
+        for (let parent of getAncestorsIterator(node)) {
+          // Parent is ShadowRoot. We can stop here since this is
+          // the top ancestor of the shadow tree.
+          if (parent.containingShadowRoot == parent) {
+            break;
+          }
+          if (
+            this.determineTranslationStatus(parent) ===
+            NodeStatus.NOT_TRANSLATABLE
+          ) {
+            return;
+          }
         }
       }
     }
@@ -374,11 +426,18 @@ export class TranslationsDocument {
         // This node is rejected as it shouldn't be translated.
         return;
 
+      // SHADOW_HOST and READY_TO_TRANSLATE both map to FILTER_ACCEPT
+      case NodeStatus.SHADOW_HOST:
       case NodeStatus.READY_TO_TRANSLATE:
-        // This node is ready for translating, and doesn't need to be subdivided. There
-        // is no reason to run the TreeWalker, it can be directly submitted for
-        // translation.
-        this.queueNodeForTranslation(node);
+        const shadowRoot = node.openOrClosedShadowRoot;
+        if (shadowRoot) {
+          this.processSubdivide(shadowRoot);
+        } else {
+          // This node is ready for translating, and doesn't need to be subdivided. There
+          // is no reason to run the TreeWalker, it can be directly submitted for
+          // translation.
+          this.queueNodeForTranslation(node);
+        }
         break;
 
       case NodeStatus.SUBDIVIDE_FURTHER:
@@ -677,11 +736,7 @@ export class TranslationsDocument {
         // This node is no longer alive.
         continue;
       }
-      this.observer.observe(node, {
-        characterData: true,
-        childList: true,
-        subtree: true,
-      });
+      this.observer.observe(node, MUTATION_OBSERVER_OPTIONS);
     }
   }
 
@@ -804,7 +859,10 @@ export class TranslationsDocument {
  */
 function isNodeHidden(node) {
   /** @type {HTMLElement} */
-  const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+  const element = getElementForStyle(node);
+  if (!element) {
+    throw new Error("Unable to find the Element to compute the style for node");
+  }
 
   // This flushes the style, which is a performance cost.
   const style = element.ownerGlobal.getComputedStyle(element);
@@ -834,6 +892,31 @@ function langTagsMatch(knownLanguage, otherLanguage) {
 }
 
 /**
+ * This function returns the correct element to determine the
+ * style of node.
+ *
+ * @param {Node} node
+ * @returns {HTMLElement} */
+function getElementForStyle(node) {
+  if (node.nodeType != Node.TEXT_NODE) {
+    return node;
+  }
+
+  if (node.parentElement) {
+    return node.parentElement;
+  }
+
+  // For cases like text node where its parent is ShadowRoot,
+  // we'd like to use flattenedTreeParentNode
+  if (node.flattenedTreeParentNode) {
+    return node.flattenedTreeParentNode;
+  }
+
+  // If the text node is not connected or doesn't have a frame.
+  return null;
+}
+
+/**
  * This function runs when walking the DOM, which means it is a hot function. It runs
  * fairly fast even though it is computing the bounding box. This is all done in a tight
  * loop, and it is done on mutations. Care should be taken with reflows caused by
@@ -856,7 +939,10 @@ function isNodeInViewport(node) {
   const document = node.ownerDocument;
 
   /** @type {HTMLElement} */
-  const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+  const element = getElementForStyle(node);
+  if (!element) {
+    throw new Error("Unable to find the Element to compute the style for node");
+  }
 
   const rect = element.getBoundingClientRect();
   return (
