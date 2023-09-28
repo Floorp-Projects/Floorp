@@ -11,7 +11,8 @@
  */
 
 [Exposed=(Window,Worker),
- Serializable]
+ Serializable,
+ InstrumentedProps=(colorSpace)]
 interface ImageData {
  [Throws]
  constructor(unsigned long sw, unsigned long sh);

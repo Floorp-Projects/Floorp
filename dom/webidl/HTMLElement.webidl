@@ -12,7 +12,8 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window]
+[Exposed=Window,
+ InstrumentedProps=(attributeStyleMap,hidePopover,popover,showPopover,togglePopover)]
 interface HTMLElement : Element {
   [HTMLConstructor] constructor();
 
