@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+<script>
+  onload = function() {
+    const kData = [
+      { href: "dummy.txt?1", fetchPriority: "low" },
+      { href: "dummy.txt?2", fetchPriority: "high" },
+      { href: "dummy.txt?3", fetchPriority: "auto" },
+      { href: "dummy.txt?4" }
+    ];
+
+    let allLinkElements = [];
+    for (data of kData) {
+      let linkElement = document.createElement("link");
+      linkElement.rel = "prefetch";
+      linkElement.href = data.href;
+
+      if ("fetchPriority" in data) {
+        linkElement.fetchPriority = data.fetchPriority;
+      }
+
+      allLinkElements.push(linkElement);
+    }
+
+    document.head.append(...allLinkElements)
+
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>
