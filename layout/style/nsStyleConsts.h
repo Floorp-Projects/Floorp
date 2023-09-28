@@ -414,6 +414,17 @@ enum class StyleWhiteSpace : uint8_t {
   BreakSpaces,
 };
 
+// See nsStyleText
+// TODO: this will become StyleTextWrapStyle when we turn text-wrap
+// (see https://bugzilla.mozilla.org/show_bug.cgi?id=1758391) and
+// white-space (https://bugzilla.mozilla.org/show_bug.cgi?id=1852478)
+// into shorthands.
+enum class StyleTextWrap : uint8_t {
+  Auto = 0,
+  Stable,
+  Balance,
+};
+
 // ruby-align, see nsStyleText
 enum class StyleRubyAlign : uint8_t {
   Start,
