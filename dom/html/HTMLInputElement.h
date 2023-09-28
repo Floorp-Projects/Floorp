@@ -28,7 +28,6 @@
 #include "mozilla/dom/ConstraintValidation.h"
 #include "mozilla/dom/FileInputType.h"
 #include "mozilla/dom/HiddenInputType.h"
-#include "mozilla/dom/RadioGroupContainer.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsCOMPtr.h"
@@ -36,6 +35,7 @@
 #include "nsIContentPrefService2.h"
 #include "nsContentUtils.h"
 
+class nsIRadioGroupContainer;
 class nsIRadioVisitor;
 
 namespace mozilla {
@@ -277,9 +277,8 @@ class HTMLInputElement final : public TextControlElement,
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
   bool GetCheckedChanged() const { return mCheckedChanged; }
-  void AddToRadioGroup();
-  void RemoveFromRadioGroup();
-  void DisconnectRadioGroupContainer();
+  void AddedToRadioGroup();
+  void WillRemoveFromRadioGroup();
 
   /**
    * Helper function returning the currently selected button in the radio group.
@@ -1145,15 +1144,12 @@ class HTMLInputElement final : public TextControlElement,
   }
 
   /**
-   * Returns the radio group container within the DOM tree that the element
-   * is currently a member of, if one exists.
+   * Returns the radio group container if the element has one, null otherwise.
+   * The radio group container will be the form owner if there is one.
+   * The current document otherwise.
+   * @return the radio group container if the element has one, null otherwise.
    */
-  RadioGroupContainer* GetCurrentRadioGroupContainer() const;
-  /**
-   * Returns the radio group container within the DOM tree that the element
-   * should be added into, if one exists.
-   */
-  RadioGroupContainer* FindTreeRadioGroupContainer() const;
+  nsIRadioGroupContainer* GetRadioGroupContainer() const;
 
   /**
    * Parse a color string of the form #XXXXXX where X should be hexa characters
@@ -1636,12 +1632,6 @@ class HTMLInputElement final : public TextControlElement,
    * Checks if aDateTimeInputType should be supported.
    */
   static bool IsDateTimeTypeSupported(FormControlType);
-
-  /**
-   * The radio group container containing the group the element is a part of.
-   * This allows the element to only access a container it has been added to.
-   */
-  RadioGroupContainer* mRadioGroupContainer;
 
   struct nsFilePickerFilter {
     nsFilePickerFilter() : mFilterMask(0) {}

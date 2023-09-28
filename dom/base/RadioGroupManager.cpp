@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/RadioGroupContainer.h"
-#include "mozilla/Assertions.h"
+#include "RadioGroupManager.h"
 #include "nsIRadioVisitor.h"
-#include "nsRadioVisitor.h"
+#include "mozilla/dom/HTMLInputElement.h"
 
 namespace mozilla::dom {
 
@@ -28,24 +26,10 @@ struct nsRadioGroupStruct {
   bool mGroupSuffersFromValueMissing;
 };
 
-RadioGroupContainer::RadioGroupContainer() = default;
+RadioGroupManager::RadioGroupManager() = default;
 
-RadioGroupContainer::~RadioGroupContainer() {
-  for (const auto& group : mRadioGroups) {
-    for (const auto& button : group.GetData()->mRadioButtons) {
-      // When the radio group container is being cycle-collected, any remaining
-      // connected buttons will also be in the process of being cycle-collected.
-      // Here, we unset the button's reference to the container so that when it
-      // is collected it does not attempt to remove itself from a potentially
-      // already deleted radio group.
-      button->DisconnectRadioGroupContainer();
-    }
-  }
-}
-
-/* static */
-void RadioGroupContainer::Traverse(RadioGroupContainer* tmp,
-                                   nsCycleCollectionTraversalCallback& cb) {
+void RadioGroupManager::Traverse(RadioGroupManager* tmp,
+                                 nsCycleCollectionTraversalCallback& cb) {
   for (const auto& entry : tmp->mRadioGroups) {
     nsRadioGroupStruct* radioGroup = entry.GetWeak();
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
@@ -61,13 +45,12 @@ void RadioGroupContainer::Traverse(RadioGroupContainer* tmp,
   }
 }
 
-size_t RadioGroupContainer::SizeOfIncludingThis(
-    MallocSizeOf aMallocSizeOf) const {
-  return mRadioGroups.SizeOfIncludingThis(aMallocSizeOf);
+void RadioGroupManager::Unlink(RadioGroupManager* tmp) {
+  tmp->mRadioGroups.Clear();
 }
 
-nsresult RadioGroupContainer::WalkRadioGroup(const nsAString& aName,
-                                             nsIRadioVisitor* aVisitor) {
+nsresult RadioGroupManager::WalkRadioGroup(const nsAString& aName,
+                                           nsIRadioVisitor* aVisitor) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
   for (size_t i = 0; i < radioGroup->mRadioButtons.Length(); i++) {
@@ -79,20 +62,21 @@ nsresult RadioGroupContainer::WalkRadioGroup(const nsAString& aName,
   return NS_OK;
 }
 
-void RadioGroupContainer::SetCurrentRadioButton(const nsAString& aName,
-                                                HTMLInputElement* aRadio) {
+void RadioGroupManager::SetCurrentRadioButton(const nsAString& aName,
+                                              HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mSelectedRadioButton = aRadio;
 }
 
-HTMLInputElement* RadioGroupContainer::GetCurrentRadioButton(
+HTMLInputElement* RadioGroupManager::GetCurrentRadioButton(
     const nsAString& aName) {
   return GetOrCreateRadioGroup(aName)->mSelectedRadioButton;
 }
 
-nsresult RadioGroupContainer::GetNextRadioButton(
-    const nsAString& aName, const bool aPrevious,
-    HTMLInputElement* aFocusedRadio, HTMLInputElement** aRadioOut) {
+nsresult RadioGroupManager::GetNextRadioButton(const nsAString& aName,
+                                               const bool aPrevious,
+                                               HTMLInputElement* aFocusedRadio,
+                                               HTMLInputElement** aRadioOut) {
   *aRadioOut = nullptr;
 
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
@@ -130,9 +114,9 @@ nsresult RadioGroupContainer::GetNextRadioButton(
   return NS_OK;
 }
 
-void RadioGroupContainer::AddToRadioGroup(const nsAString& aName,
-                                          HTMLInputElement* aRadio,
-                                          nsIContent* aAncestor) {
+void RadioGroupManager::AddToRadioGroup(const nsAString& aName,
+                                        HTMLInputElement* aRadio,
+                                        nsIContent* aAncestor) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   nsContentUtils::AddElementToListByTreeOrder(radioGroup->mRadioButtons, aRadio,
                                               aAncestor);
@@ -142,13 +126,9 @@ void RadioGroupContainer::AddToRadioGroup(const nsAString& aName,
   }
 }
 
-void RadioGroupContainer::RemoveFromRadioGroup(const nsAString& aName,
-                                               HTMLInputElement* aRadio) {
+void RadioGroupManager::RemoveFromRadioGroup(const nsAString& aName,
+                                             HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
-  MOZ_ASSERT(
-      radioGroup->mRadioButtons.Contains(aRadio),
-      "Attempting to remove radio button from group it is not a part of!");
-
   radioGroup->mRadioButtons.RemoveElement(aRadio);
 
   if (aRadio->IsRequired()) {
@@ -158,14 +138,14 @@ void RadioGroupContainer::RemoveFromRadioGroup(const nsAString& aName,
   }
 }
 
-uint32_t RadioGroupContainer::GetRequiredRadioCount(
+uint32_t RadioGroupManager::GetRequiredRadioCount(
     const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
   return radioGroup ? radioGroup->mRequiredRadioCount : 0;
 }
 
-void RadioGroupContainer::RadioRequiredWillChange(const nsAString& aName,
-                                                  bool aRequiredAdded) {
+void RadioGroupManager::RadioRequiredWillChange(const nsAString& aName,
+                                                bool aRequiredAdded) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
   if (aRequiredAdded) {
@@ -177,25 +157,25 @@ void RadioGroupContainer::RadioRequiredWillChange(const nsAString& aName,
   }
 }
 
-bool RadioGroupContainer::GetValueMissingState(const nsAString& aName) const {
+bool RadioGroupManager::GetValueMissingState(const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
   return radioGroup && radioGroup->mGroupSuffersFromValueMissing;
 }
 
-void RadioGroupContainer::SetValueMissingState(const nsAString& aName,
-                                               bool aValue) {
+void RadioGroupManager::SetValueMissingState(const nsAString& aName,
+                                             bool aValue) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mGroupSuffersFromValueMissing = aValue;
 }
 
-nsRadioGroupStruct* RadioGroupContainer::GetRadioGroup(
+nsRadioGroupStruct* RadioGroupManager::GetRadioGroup(
     const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = nullptr;
   mRadioGroups.Get(aName, &radioGroup);
   return radioGroup;
 }
 
-nsRadioGroupStruct* RadioGroupContainer::GetOrCreateRadioGroup(
+nsRadioGroupStruct* RadioGroupManager::GetOrCreateRadioGroup(
     const nsAString& aName) {
   return mRadioGroups.GetOrInsertNew(aName);
 }

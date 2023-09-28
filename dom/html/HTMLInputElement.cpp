@@ -36,6 +36,8 @@
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 
+#include "nsIRadioVisitor.h"
+
 #include "HTMLDataListElement.h"
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/Telemetry.h"
@@ -83,9 +85,7 @@
 #include <algorithm>
 
 // input type=radio
-#include "mozilla/dom/RadioGroupContainer.h"
-#include "nsIRadioVisitor.h"
-#include "nsRadioVisitor.h"
+#include "nsIRadioGroupContainer.h"
 
 // input type=file
 #include "mozilla/dom/FileSystemEntry.h"
@@ -106,6 +106,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
+#include "nsRadioVisitor.h"
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -1013,8 +1014,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
       mPickerRunning(false),
       mIsPreviewEnabled(false),
       mHasBeenTypePassword(false),
-      mHasPatternAttribute(false),
-      mRadioGroupContainer(nullptr) {
+      mHasPatternAttribute(false) {
   // If size is above 512, mozjemalloc allocates 1kB, see
   // memory/build/mozjemalloc.cpp
   static_assert(sizeof(HTMLInputElement) <= 512,
@@ -1186,9 +1186,9 @@ void HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (mType == FormControlType::InputRadio) {
       if ((aName == nsGkAtoms::name || (aName == nsGkAtoms::type && !mForm)) &&
           (mForm || mDoneCreating)) {
-        RemoveFromRadioGroup();
+        WillRemoveFromRadioGroup();
       } else if (aName == nsGkAtoms::required) {
-        auto* container = GetCurrentRadioGroupContainer();
+        nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
 
         if (container && ((aValue && !HasAttr(aNameSpaceID, aName)) ||
                           (!aValue && HasAttr(aNameSpaceID, aName)))) {
@@ -1284,7 +1284,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     // If we are not done creating the radio, we also should not do it.
     if ((aName == nsGkAtoms::name || (aName == nsGkAtoms::type && !mForm)) &&
         mType == FormControlType::InputRadio && (mForm || mDoneCreating)) {
-      AddToRadioGroup();
+      AddedToRadioGroup();
       UpdateValueMissingValidityStateForRadio(false);
       needValidityUpdate = true;
     }
@@ -1416,7 +1416,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 void HTMLInputElement::BeforeSetForm(bool aBindToTree) {
   // No need to remove from radio group if we are just binding to tree.
   if (mType == FormControlType::InputRadio && !aBindToTree) {
-    RemoveFromRadioGroup();
+    WillRemoveFromRadioGroup();
   }
 }
 
@@ -1424,9 +1424,8 @@ void HTMLInputElement::AfterClearForm(bool aUnbindOrDelete) {
   MOZ_ASSERT(!mForm);
 
   // Do not add back to radio group if we are releasing or unbinding from tree.
-  if (mType == FormControlType::InputRadio && !aUnbindOrDelete &&
-      !GetCurrentRadioGroupContainer()) {
-    AddToRadioGroup();
+  if (mType == FormControlType::InputRadio && !aUnbindOrDelete) {
+    AddedToRadioGroup();
     UpdateValueMissingValidityStateForRadio(false);
   }
 }
@@ -2862,7 +2861,8 @@ void HTMLInputElement::DoSetChecked(bool aChecked, bool aNotify,
     return;
   }
 
-  if (auto* container = GetCurrentRadioGroupContainer()) {
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
+  if (container) {
     nsAutoString name;
     GetAttr(nsGkAtoms::name, name);
     container->SetCurrentRadioButton(name, nullptr);
@@ -2885,7 +2885,8 @@ void HTMLInputElement::RadioSetChecked(bool aNotify) {
   }
 
   // Let the group know that we are now the One True Radio Button
-  if (auto* container = GetCurrentRadioGroupContainer()) {
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
+  if (container) {
     nsAutoString name;
     GetAttr(nsGkAtoms::name, name);
     container->SetCurrentRadioButton(name, this);
@@ -2896,39 +2897,38 @@ void HTMLInputElement::RadioSetChecked(bool aNotify) {
   SetCheckedInternal(true, aNotify);
 }
 
-RadioGroupContainer* HTMLInputElement::GetCurrentRadioGroupContainer() const {
+nsIRadioGroupContainer* HTMLInputElement::GetRadioGroupContainer() const {
   NS_ASSERTION(
       mType == FormControlType::InputRadio,
       "GetRadioGroupContainer should only be called when type='radio'");
-  return mRadioGroupContainer;
-}
 
-RadioGroupContainer* HTMLInputElement::FindTreeRadioGroupContainer() const {
   nsAutoString name;
   GetAttr(nsGkAtoms::name, name);
 
   if (name.IsEmpty()) {
     return nullptr;
   }
+
   if (mForm) {
-    return &mForm->OwnedRadioGroupContainer();
+    return mForm;
   }
+
   if (IsInNativeAnonymousSubtree()) {
     return nullptr;
   }
-  if (Document* doc = GetUncomposedDoc()) {
-    return &doc->OwnedRadioGroupContainer();
-  }
-  return &static_cast<FragmentOrElement*>(SubtreeRoot())
-              ->OwnedRadioGroupContainer();
-}
 
-void HTMLInputElement::DisconnectRadioGroupContainer() {
-  mRadioGroupContainer = nullptr;
+  DocumentOrShadowRoot* docOrShadow = GetUncomposedDocOrConnectedShadowRoot();
+  if (!docOrShadow) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIRadioGroupContainer> container =
+      do_QueryInterface(&(docOrShadow->AsNode()));
+  return container;
 }
 
 HTMLInputElement* HTMLInputElement::GetSelectedRadioButton() const {
-  auto* container = GetCurrentRadioGroupContainer();
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
   if (!container) {
     return nullptr;
   }
@@ -4140,7 +4140,7 @@ nsresult HTMLInputElement::MaybeHandleRadioButtonNavigation(
   }
   // Arrow key pressed, focus+select prev/next radio button
   RefPtr<HTMLInputElement> selectedRadioButton;
-  if (auto* container = GetCurrentRadioGroupContainer()) {
+  if (nsIRadioGroupContainer* container = GetRadioGroupContainer()) {
     nsAutoString name;
     GetAttr(nsGkAtoms::name, name);
     container->GetNextRadioButton(name, move == RadioButtonMove::Back, this,
@@ -4270,12 +4270,6 @@ void HTMLInputElement::MaybeLoadImage() {
 }
 
 nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
-  // If we are currently bound to a disconnected subtree root, remove
-  // ourselves from it first.
-  if (!mForm && mType == FormControlType::InputRadio) {
-    RemoveFromRadioGroup();
-  }
-
   nsresult rv =
       nsGenericHTMLFormControlElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4298,8 +4292,9 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   // Add radio to document if we don't have a form already (if we do it's
   // already been added into that group)
-  if (!mForm && mType == FormControlType::InputRadio) {
-    AddToRadioGroup();
+  if (!mForm && mType == FormControlType::InputRadio &&
+      GetUncomposedDocOrConnectedShadowRoot()) {
+    AddedToRadioGroup();
   }
 
   // Set direction based on value if dir=auto
@@ -4351,7 +4346,7 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
   // of the case where we're removing from the document and we don't
   // have a form
   if (!mForm && mType == FormControlType::InputRadio) {
-    RemoveFromRadioGroup();
+    WillRemoveFromRadioGroup();
   }
 
   if (CreatesDateTimeWidget() && IsInComposedDoc()) {
@@ -4360,12 +4355,6 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
 
   nsImageLoadingContent::UnbindFromTree(aNullParent);
   nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
-
-  // If we are contained within a disconnected subtree, attempt to add
-  // ourselves to the subtree root's radio group.
-  if (!mForm && mType == FormControlType::InputRadio) {
-    AddToRadioGroup();
-  }
 
   // GetCurrentDoc is returning nullptr so we can update the value
   // missing validity state to reflect we are no longer into a doc.
@@ -6231,27 +6220,16 @@ bool HTMLInputElement::RestoreState(PresState* aState) {
  * Radio group stuff
  */
 
-void HTMLInputElement::AddToRadioGroup() {
-  MOZ_ASSERT(!mRadioGroupContainer,
-             "Radio button must be removed from previous radio group container "
-             "before being added to another!");
-
-  // If the element has no radio group container we can stop here.
-  auto* container = FindTreeRadioGroupContainer();
-  if (!container) {
+void HTMLInputElement::AddedToRadioGroup() {
+  // If the element is neither in a form nor a document, there is no group so we
+  // should just stop here.
+  if (!mForm && (!GetUncomposedDocOrConnectedShadowRoot() ||
+                 IsInNativeAnonymousSubtree())) {
     return;
   }
 
-  nsAutoString name;
-  GetAttr(nsGkAtoms::name, name);
-  // If we are part of a radio group, the element must have a name.
-  MOZ_ASSERT(!name.IsEmpty());
-
-  //
-  // Add the radio to the radio group container.
-  //
-  container->AddToRadioGroup(name, this, mForm);
-  mRadioGroupContainer = container;
+  // Make sure not to notify if we're still being created
+  bool notify = mDoneCreating;
 
   //
   // If the input element is checked, and we add it to the group, it will
@@ -6264,9 +6242,8 @@ void HTMLInputElement::AddToRadioGroup() {
     // radio button, but as adding a checked radio button into the group
     // should not be that common an occurrence, I think we can live with
     // that.
-    // Make sure not to notify if we're still being created.
     //
-    RadioSetChecked(mDoneCreating);
+    RadioSetChecked(notify);
   }
 
   //
@@ -6281,14 +6258,24 @@ void HTMLInputElement::AddToRadioGroup() {
 
   SetCheckedChangedInternal(checkedChanged);
 
-  // We initialize the validity of the element to the validity of the group
-  // because we assume UpdateValueMissingState() will be called after.
-  SetValidityState(VALIDITY_STATE_VALUE_MISSING,
-                   container->GetValueMissingState(name));
+  //
+  // Add the radio to the radio group container.
+  //
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
+  if (container) {
+    nsAutoString name;
+    GetAttr(nsGkAtoms::name, name);
+    container->AddToRadioGroup(name, this);
+
+    // We initialize the validity of the element to the validity of the group
+    // because we assume UpdateValueMissingState() will be called after.
+    SetValidityState(VALIDITY_STATE_VALUE_MISSING,
+                     container->GetValueMissingState(name));
+  }
 }
 
-void HTMLInputElement::RemoveFromRadioGroup() {
-  auto* container = GetCurrentRadioGroupContainer();
+void HTMLInputElement::WillRemoveFromRadioGroup() {
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
   if (!container) {
     return;
   }
@@ -6309,7 +6296,6 @@ void HTMLInputElement::RemoveFromRadioGroup() {
   // the group validity is updated (with this element being ignored).
   UpdateValueMissingValidityStateForRadio(true);
   container->RemoveFromRadioGroup(name, this);
-  mRadioGroupContainer = nullptr;
 }
 
 bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
@@ -6366,7 +6352,7 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
   // Current radio button is not selected.
   // But make it tabbable if nothing in group is selected.
-  auto* container = GetCurrentRadioGroupContainer();
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
   if (!container) {
     *aIsFocusable = defaultFocusable;
     return false;
@@ -6383,7 +6369,8 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 }
 
 nsresult HTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor) {
-  if (auto* container = GetCurrentRadioGroupContainer()) {
+  nsIRadioGroupContainer* container = GetRadioGroupContainer();
+  if (container) {
     nsAutoString name;
     GetAttr(nsGkAtoms::name, name);
     return container->WalkRadioGroup(name, aVisitor);
@@ -6674,14 +6661,20 @@ void HTMLInputElement::UpdateValueMissingValidityStateForRadio(
   bool selected = selection || (!aIgnoreSelf && mChecked);
   bool required = !aIgnoreSelf && IsRequired();
 
-  auto* container = GetCurrentRadioGroupContainer();
-  if (!container) {
-    SetValidityState(VALIDITY_STATE_VALUE_MISSING, false);
-    return;
-  }
+  nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
 
   nsAutoString name;
   GetAttr(nsGkAtoms::name, name);
+
+  if (!container) {
+    // As per the spec, a radio button not within a radio button group cannot
+    // suffer from being missing; however, we currently are failing to get a
+    // radio group in the case of a single, named radio button that has no
+    // form owner, forcing us to check for validity in that case here.
+    SetValidityState(VALIDITY_STATE_VALUE_MISSING,
+                     required && !selected && !name.IsEmpty());
+    return;
+  }
 
   // If the current radio is required and not ignored, we can assume the entire
   // group is required.
