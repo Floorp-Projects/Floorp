@@ -1783,7 +1783,7 @@ const selectors = {
   projectSearchRefreshButton: ".project-text-search button.refresh-btn",
   threadsPaneItems: ".threads-pane .thread",
   threadsPaneItem: i => `.threads-pane .thread:nth-child(${i})`,
-  threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)} .pause-badge`,
+  threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)}.paused`,
   CodeMirrorLines: ".CodeMirror-lines",
   inlinePreviewLabels: ".inline-preview .inline-preview-label",
   inlinePreviewValues: ".inline-preview .inline-preview-value",
