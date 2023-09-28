@@ -254,10 +254,8 @@ void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
 }
 
 void MIDIPort::DisconnectFromOwner() {
-  if (Port()) {
-    Port()->SendClose();
-  }
   DontKeepAliveOnStatechange();
+  Port()->SendClose();
 
   DOMEventTargetHelper::DisconnectFromOwner();
 }
