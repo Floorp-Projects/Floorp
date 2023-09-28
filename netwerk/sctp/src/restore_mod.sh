@@ -1,2 +1,2 @@
 #!/bin/sh
-find -name '*.[ch]' -exec chmod 644 {} \;
+find . -name '*.[ch]' -exec chmod 644 {} \;
