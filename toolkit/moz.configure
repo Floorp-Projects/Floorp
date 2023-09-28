@@ -2750,6 +2750,35 @@ def wasm_sandboxing_config_defines():
 wasm_sandboxing_config_defines()
 
 
+with only_when(compile_environment & wasm_sandboxing.hunspell):
+    clock_in_wasi_sysroot = wasm_cc.try_run(
+        header="#include <time.h>",
+        body="clock();",
+        check_msg="for clock() in wasi sysroot",
+        flags=depends(wasi_sysroot_flags)(
+            lambda sysroot_flags: ["-Werror"] + sysroot_flags
+        ),
+    )
+
+    wasi_emulated_clock = wasm_cc.try_run(
+        header="#include <time.h>",
+        body="clock();",
+        check_msg="for emulated clock() in wasi sysroot",
+        flags=depends(wasi_sysroot_flags)(
+            lambda sysroot_flags: [
+                "-Werror",
+                "-D_WASI_EMULATED_PROCESS_CLOCKS",
+                "-lwasi-emulated-process-clocks",
+            ]
+            + sysroot_flags
+        ),
+        when=depends(clock_in_wasi_sysroot)(lambda x: not x),
+        onerror=lambda: die("Can't find clock() in wasi sysroot."),
+    )
+
+    set_config("MOZ_WASI_EMULATED_CLOCK", True, when=wasi_emulated_clock)
+
+
 # new Notification Store implementation
 # ==============================================================
 
