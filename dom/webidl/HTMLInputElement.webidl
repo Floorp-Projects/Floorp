@@ -22,7 +22,14 @@ enum SelectionMode {
 
 interface XULControllers;
 
-[Exposed=Window]
+[Exposed=Window,
+ InstrumentedProps=(capture,
+                    incremental,
+                    onsearch,
+                    popoverTargetAction,
+                    popoverTargetElement,
+                    webkitEntries,
+                    webkitdirectory)]
 interface HTMLInputElement : HTMLElement {
   [HTMLConstructor] constructor();
 

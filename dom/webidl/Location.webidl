@@ -12,7 +12,8 @@
  */
 
 [LegacyUnforgeable,
- Exposed=Window]
+ Exposed=Window,
+ InstrumentedProps=(ancestorOrigins)]
 interface Location {
   [Throws, CrossOriginWritable, NeedsSubjectPrincipal]
   stringifier attribute USVString href;
