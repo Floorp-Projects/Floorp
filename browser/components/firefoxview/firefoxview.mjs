@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 window.addEventListener("DOMContentLoaded", async () => {
+  Services.telemetry.setEventRecordingEnabled("firefoxview", true);
   Services.telemetry.recordEvent("firefoxview", "entered", "firefoxview", null);
   document.getElementById("recently-closed-tabs-container").onLoad();
   // If Firefox View was reloaded by the user, force syncing of tabs

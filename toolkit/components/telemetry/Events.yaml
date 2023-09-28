@@ -3953,20 +3953,6 @@ firefoxview:
       - 1779642
     expiry_version: "never"
     release_channel_collection: opt-out
-  tab_selected:
-    objects: ["toolbarbutton"]
-    description: >
-      Recorded when the Firefox View tab is clicked
-    notification_emails:
-      - firefoxview@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1852989
-    expiry_version: "never"
-    release_channel_collection: opt-out
 
 firefoxview_next:
   recently_closed:
@@ -4191,20 +4177,7 @@ firefoxview_next:
       - 1833669
     expiry_version: "never"
     release_channel_collection: opt-out
-  tab_selected:
-    objects: ["toolbarbutton"]
-    description: >
-      Recorded when the Firefox View tab is clicked
-    notification_emails:
-      - firefoxview@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1852989
-    expiry_version: "never"
-    release_channel_collection: opt-out
+
 
 search:
   engine:
