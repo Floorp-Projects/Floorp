@@ -197,7 +197,7 @@ Release Promotion
    Specify the next version for version bump tasks.
 
 ``release_type``
-   The type of release being promoted. One of "nightly", "beta", "esr102", "esr115", "release-rc", or "release".
+   The type of release being promoted. One of "nightly", "beta", "esr115", "release-rc", or "release".
 
 ``release_eta``
    The time and date when a release is scheduled to live. This value is passed to Balrog.
