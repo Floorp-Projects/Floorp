@@ -243,6 +243,7 @@ pub enum PropertySyntaxParseError {
 
 bitflags! {
     /// The mode to use when parsing values.
+    #[derive(Clone, Copy, Eq, PartialEq)]
     #[repr(C)]
     pub struct ParsingMode: u8 {
         /// In CSS; lengths must have units, except for zero values, where the unit can be omitted.

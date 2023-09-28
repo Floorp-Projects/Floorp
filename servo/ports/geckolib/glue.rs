@@ -305,7 +305,7 @@ pub extern "C" fn Servo_TraverseSubtree(
     snapshots: *const ServoElementSnapshotTable,
     raw_flags: ServoTraversalFlags,
 ) -> bool {
-    let traversal_flags = TraversalFlags::from_bits_truncate(raw_flags);
+    let traversal_flags = TraversalFlags::from_bits_retain(raw_flags);
     debug_assert!(!snapshots.is_null());
 
     let element = GeckoElement(root);
@@ -5172,7 +5172,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         Clear => get_from_computed::<Clear>(value),
         VerticalAlign => VerticalAlign::Keyword(VerticalAlignKeyword::from_u32(value).unwrap()),
         TextAlign => get_from_computed::<TextAlign>(value),
-        TextEmphasisPosition => TextEmphasisPosition::from_bits_truncate(value as u8),
+        TextEmphasisPosition => TextEmphasisPosition::from_bits_retain(value as u8),
         FontSize => {
             // We rely on Gecko passing in font-size values (0...7) here.
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
@@ -7296,7 +7296,7 @@ pub extern "C" fn Servo_StyleSet_HasStateDependency(
 ) -> bool {
     let element = GeckoElement(element);
 
-    let state = ElementState::from_bits_truncate(state);
+    let state = ElementState::from_bits_retain(state);
     let data = raw_data.borrow();
 
     data.stylist
@@ -7311,7 +7311,7 @@ pub extern "C" fn Servo_StyleSet_HasNthOfStateDependency(
 ) -> bool {
     let element = GeckoElement(element);
 
-    let state = ElementState::from_bits_truncate(state);
+    let state = ElementState::from_bits_retain(state);
     let data = raw_data.borrow();
 
     data.stylist
@@ -7330,7 +7330,7 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
     raw_data: &PerDocumentStyleData,
     state: u64,
 ) -> bool {
-    let state = DocumentState::from_bits_truncate(state);
+    let state = DocumentState::from_bits_retain(state);
     let data = raw_data.borrow();
 
     data.stylist.has_document_state_dependency(state)
@@ -8099,7 +8099,7 @@ pub unsafe extern "C" fn Servo_InvalidateStyleForDocStateChanges(
     let root = GeckoElement(root);
     let mut processor = DocumentStateInvalidationProcessor::new(
         iter,
-        DocumentState::from_bits_truncate(states_changed),
+        DocumentState::from_bits_retain(states_changed),
         &mut selector_caches,
         root.as_node().owner_doc().quirks_mode(),
     );

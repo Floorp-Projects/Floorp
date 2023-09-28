@@ -11,11 +11,12 @@ use cssparser::Parser;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo, ToCss};
 
+/// Constants shared by multiple CSS Box Alignment properties
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+#[repr(C)]
+pub struct AlignFlags(u8);
 bitflags! {
-    /// Constants shared by multiple CSS Box Alignment properties
-    #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    pub struct AlignFlags: u8 {
+    impl AlignFlags: u8 {
         // Enumeration stored in the lower 5 bits:
         /// {align,justify}-{content,items,self}: 'auto'
         const AUTO = 0;

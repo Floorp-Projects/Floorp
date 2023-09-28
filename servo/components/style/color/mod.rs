@@ -165,11 +165,12 @@ impl ColorSpace {
     }
 }
 
+/// Flags used when serializing colors.
+#[derive(Clone, Copy, Debug, Default, MallocSizeOf, PartialEq, ToShmem)]
+#[repr(C)]
+pub struct ColorFlags(u8);
 bitflags! {
-    /// Flags used when serializing colors.
-    #[derive(Default, MallocSizeOf, ToShmem)]
-    #[repr(C)]
-    pub struct ColorFlags : u8 {
+    impl ColorFlags : u8 {
         /// Marks that this color is in the legacy color format. This flag is
         /// only valid for the `Srgb` color space.
         const IS_LEGACY_SRGB = 1 << 0;

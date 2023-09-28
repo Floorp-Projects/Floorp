@@ -1020,11 +1020,12 @@ impl WillChange {
     }
 }
 
+/// The change bits that we care about.
+#[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[repr(C)]
+pub struct WillChangeBits(u16);
 bitflags! {
-    /// The change bits that we care about.
-    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    pub struct WillChangeBits: u16 {
+    impl WillChangeBits: u16 {
         /// Whether a property which can create a stacking context **on any
         /// box** will change.
         const STACKING_CONTEXT_UNCONDITIONAL = 1 << 0;
@@ -1131,12 +1132,13 @@ impl Parse for WillChange {
     }
 }
 
+/// Values for the `touch-action` property.
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[css(bitflags(single = "none,auto,manipulation", mixed = "pan-x,pan-y,pinch-zoom"))]
+#[repr(C)]
+pub struct TouchAction(u8);
 bitflags! {
-    /// Values for the `touch-action` property.
-    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-    #[css(bitflags(single = "none,auto,manipulation", mixed = "pan-x,pan-y,pinch-zoom"))]
-    #[repr(C)]
-    pub struct TouchAction: u8 {
+    impl TouchAction: u8 {
         /// `none` variant
         const NONE = 1 << 0;
         /// `auto` variant
@@ -1160,12 +1162,13 @@ impl TouchAction {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[css(bitflags(single = "none,strict,content", mixed="size,layout,style,paint,inline-size", overlapping_bits))]
+#[repr(C)]
+/// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
+pub struct Contain(u8);
 bitflags! {
-    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-    #[css(bitflags(single = "none,strict,content", mixed="size,layout,style,paint,inline-size", overlapping_bits))]
-    #[repr(C)]
-    /// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
-    pub struct Contain: u8 {
+    impl Contain: u8 {
         /// `none` variant, just for convenience.
         const NONE = 0;
         /// `inline-size` variant, turns on single-axis inline size containment
@@ -1854,13 +1857,14 @@ impl Overflow {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[repr(C)]
+#[css(bitflags(single = "auto", mixed = "stable,both-edges", validate_mixed="Self::has_stable"))]
+/// Values for scrollbar-gutter:
+/// <https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property>
+pub struct ScrollbarGutter(u8);
 bitflags! {
-    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    #[css(bitflags(single = "auto", mixed = "stable,both-edges", validate_mixed="Self::has_stable"))]
-    /// Values for scrollbar-gutter:
-    /// <https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property>
-    pub struct ScrollbarGutter: u8 {
+    impl ScrollbarGutter: u8 {
         /// `auto` variant. Just for convenience if there is no flag set.
         const AUTO = 0;
         /// `stable` variant.

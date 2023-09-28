@@ -155,11 +155,12 @@ impl<I: style_traits::ToCss, R: style_traits::ToCss> ToCss for GenericImageSetIt
 pub use self::GenericImageSet as ImageSet;
 pub use self::GenericImageSetItem as ImageSetItem;
 
+/// State flags stored on each variant of a Gradient.
+#[derive(Clone, Copy, Debug, Default, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+#[repr(C)]
+pub struct GradientFlags(u8);
 bitflags! {
-    /// State flags stored on each variant of a Gradient.
-    #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    pub struct GradientFlags: u8 {
+    impl GradientFlags: u8 {
         /// Set if this is a repeating gradient.
         const REPEATING = 1 << 0;
         /// Set if the color interpolation method matches the default for the items.

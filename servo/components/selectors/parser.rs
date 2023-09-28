@@ -77,6 +77,7 @@ fn to_ascii_lowercase(s: &str) -> Cow<str> {
 
 bitflags! {
     /// Flags that indicate at which point of parsing a selector are we.
+    #[derive(Copy, Clone)]
     struct SelectorParsingState: u8 {
         /// Whether we should avoid adding default namespaces to selectors that
         /// aren't type or universal selectors.
@@ -1667,6 +1668,7 @@ pub struct RelativeSelector<Impl: SelectorImpl> {
 
 bitflags! {
     /// Composition of combinators in a given selector, not traversing selectors of pseudoclasses.
+    #[derive(Clone, Debug, Eq, PartialEq)]
     struct CombinatorComposition: u8 {
         const DESCENDANTS = 1 << 0;
         const SIBLINGS = 1 << 1;

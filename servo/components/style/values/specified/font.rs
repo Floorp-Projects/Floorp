@@ -1020,6 +1020,7 @@ impl Parse for FontSize {
 }
 
 bitflags! {
+    #[derive(Clone, Copy)]
     /// Flags of variant alternates in bit
     struct VariantAlternatesParsingFlags: u8 {
         /// None of variant alternates enabled
@@ -1245,10 +1246,11 @@ macro_rules! impl_variant_east_asian {
             $ident:ident / $css:expr => $gecko:ident = $value:expr,
         )+
     } => {
+        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+        /// Variants for east asian variant
+        pub struct FontVariantEastAsian(u16);
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-            /// Variants for east asian variant
-            pub struct FontVariantEastAsian: u16 {
+            impl FontVariantEastAsian: u16 {
                 /// None of the features
                 const NORMAL = 0;
                 $(
@@ -1416,10 +1418,11 @@ macro_rules! impl_variant_ligatures {
             $ident:ident / $css:expr => $gecko:ident = $value:expr,
         )+
     } => {
+        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+        /// Variants of ligatures
+        pub struct FontVariantLigatures(u16);
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-            /// Variants of ligatures
-            pub struct FontVariantLigatures: u16 {
+            impl FontVariantLigatures: u16 {
                 /// Specifies that common default features are enabled
                 const NORMAL = 0;
                 $(
@@ -1594,10 +1597,11 @@ macro_rules! impl_variant_numeric {
             $ident:ident / $css:expr => $gecko:ident = $value:expr,
         )+
     } => {
+        #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+        /// Variants of numeric values
+        pub struct FontVariantNumeric(u8);
         bitflags! {
-            #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
-            /// Vairants of numeric values
-            pub struct FontVariantNumeric: u8 {
+            impl FontVariantNumeric: u8 {
                 /// None of other variants are enabled.
                 const NORMAL = 0;
                 $(

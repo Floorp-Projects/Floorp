@@ -12,6 +12,7 @@ bitflags! {
     /// If we ever want to add some flags that shouldn't inherit for them,
     /// we might want to add a function to handle this.
     #[repr(C)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct ComputedValueFlags: u32 {
         /// Whether the style or any of the ancestors has a text-decoration-line
         /// property that should get propagated to descendants.

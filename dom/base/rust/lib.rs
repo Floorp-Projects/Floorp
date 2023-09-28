@@ -9,6 +9,7 @@ use bitflags::bitflags;
 bitflags! {
     /// Event-based element states.
     #[repr(C)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct ElementState: u64 {
         /// The mouse is down on this element.
         /// <https://html.spec.whatwg.org/multipage/#selector-active>
@@ -147,6 +148,7 @@ bitflags! {
 bitflags! {
     /// Event-based document states.
     #[repr(C)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct DocumentState: u64 {
         /// Window activation status
         const WINDOW_INACTIVE = 1 << 0;

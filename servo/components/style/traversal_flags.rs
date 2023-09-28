@@ -10,6 +10,7 @@
 
 bitflags! {
     /// Flags that control the traversal process.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct TraversalFlags: u32 {
         /// Traverse only elements for animation restyles.
         const AnimationOnly = 1 << 0;

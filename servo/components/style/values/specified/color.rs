@@ -1033,13 +1033,14 @@ impl Parse for CaretColor {
     }
 }
 
+/// Various flags to represent the color-scheme property in an efficient
+/// way.
+#[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[repr(C)]
+#[value_info(other_values = "light,dark,only")]
+pub struct ColorSchemeFlags(u8);
 bitflags! {
-    /// Various flags to represent the color-scheme property in an efficient
-    /// way.
-    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    #[value_info(other_values = "light,dark,only")]
-    pub struct ColorSchemeFlags: u8 {
+    impl ColorSchemeFlags: u8 {
         /// Whether the author specified `light`.
         const LIGHT = 1 << 0;
         /// Whether the author specified `dark`.

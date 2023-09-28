@@ -22,7 +22,7 @@ use std::ops::{Deref, DerefMut};
 
 bitflags! {
     /// Various flags stored on ElementData.
-    #[derive(Default)]
+    #[derive(Debug, Default)]
     pub struct ElementDataFlags: u8 {
         /// Whether the styles changed for this restyle.
         const WAS_RESTYLED = 1 << 0;

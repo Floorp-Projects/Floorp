@@ -231,12 +231,13 @@ impl ToComputedValue for TextOverflow {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[css(bitflags(single = "none", mixed = "underline,overline,line-through,blink"))]
+#[repr(C)]
+/// Specified keyword values for the text-decoration-line property.
+pub struct TextDecorationLine(u8);
 bitflags! {
-    #[derive(MallocSizeOf, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[css(bitflags(single = "none", mixed = "underline,overline,line-through,blink"))]
-    #[repr(C)]
-    /// Specified keyword values for the text-decoration-line property.
-    pub struct TextDecorationLine: u8 {
+    impl TextDecorationLine: u8 {
         /// No text decoration line is specified.
         const NONE = 0;
         /// underline
@@ -414,12 +415,13 @@ pub enum TextTransformCase {
     MathAuto,
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[css(bitflags(mixed = "full-width,full-size-kana"))]
+#[repr(C)]
+/// Specified keyword values for non-case transforms in the text-transform property. (Non-exclusive.)
+pub struct TextTransformOther(u8);
 bitflags! {
-    #[derive(MallocSizeOf, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[css(bitflags(mixed = "full-width,full-size-kana"))]
-    #[repr(C)]
-    /// Specified keyword values for non-case transforms in the text-transform property. (Non-exclusive.)
-    pub struct TextTransformOther: u8 {
+    impl TextTransformOther: u8 {
         /// full-width
         const FULL_WIDTH = 1 << 0;
         /// full-size-kana
@@ -754,13 +756,14 @@ impl Parse for TextEmphasisStyle {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[repr(C)]
+#[css(bitflags(mixed="over,under,left,right", validate_mixed="Self::validate_and_simplify"))]
+/// Values for text-emphasis-position:
+/// <https://drafts.csswg.org/css-text-decor/#text-emphasis-position-property>
+pub struct TextEmphasisPosition(u8);
 bitflags! {
-    #[derive(MallocSizeOf, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[repr(C)]
-    #[css(bitflags(mixed="over,under,left,right", validate_mixed="Self::validate_and_simplify"))]
-    /// Values for text-emphasis-position:
-    /// <https://drafts.csswg.org/css-text-decor/#text-emphasis-position-property>
-    pub struct TextEmphasisPosition: u8 {
+    impl TextEmphasisPosition: u8 {
         /// Draws marks to the right of the text in vertical writing mode.
         const OVER = 1 << 0;
         /// Draw marks under the text in horizontal writing mode.
@@ -966,15 +969,16 @@ impl TextDecorationLength {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[value_info(other_values = "auto,from-font,under,left,right")]
+#[repr(C)]
+/// Specified keyword values for the text-underline-position property.
+/// (Non-exclusive, but not all combinations are allowed: the spec grammar gives
+/// `auto | [ from-font | under ] || [ left | right ]`.)
+/// https://drafts.csswg.org/css-text-decor-4/#text-underline-position-property
+pub struct TextUnderlinePosition(u8);
 bitflags! {
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[value_info(other_values = "auto,from-font,under,left,right")]
-    #[repr(C)]
-    /// Specified keyword values for the text-underline-position property.
-    /// (Non-exclusive, but not all combinations are allowed: the spec grammar gives
-    /// `auto | [ from-font | under ] || [ left | right ]`.)
-    /// https://drafts.csswg.org/css-text-decor-4/#text-underline-position-property
-    pub struct TextUnderlinePosition: u8 {
+    impl TextUnderlinePosition: u8 {
         /// Use automatic positioning below the alphabetic baseline.
         const AUTO = 0;
         /// Use underline position from the first available font.

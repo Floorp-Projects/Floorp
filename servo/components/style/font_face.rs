@@ -94,12 +94,13 @@ pub enum FontFaceSourceFormatKeyword {
     Unknown,
 }
 
+/// Flags for the @font-face tech() function, indicating font technologies
+/// required by the resource.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ToShmem)]
+#[repr(C)]
+pub struct FontFaceSourceTechFlags(u16);
 bitflags! {
-    /// Flags for the @font-face tech() function, indicating font technologies
-    /// required by the resource.
-    #[derive(ToShmem)]
-    #[repr(C)]
-    pub struct FontFaceSourceTechFlags: u16 {
+    impl FontFaceSourceTechFlags: u16 {
         /// Font requires OpenType feature support.
         const FEATURES_OPENTYPE = 1 << 0;
         /// Font requires Apple Advanced Typography support.

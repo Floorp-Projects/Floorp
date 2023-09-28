@@ -1378,7 +1378,7 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
 
   StyleColorSchemeFlags style(aFlags);
   if (!style) {
-    style.bits = aDoc.GetColorSchemeBits();
+    style._0 = aDoc.GetColorSchemeBits();
   }
   const bool supportsDark = bool(style & StyleColorSchemeFlags::DARK);
   const bool supportsLight = bool(style & StyleColorSchemeFlags::LIGHT);
