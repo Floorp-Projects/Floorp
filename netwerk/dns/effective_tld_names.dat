@@ -1059,22 +1059,11 @@ gouv.fr
 nom.fr
 prd.fr
 tm.fr
-// Former "domaines sectoriels", still registration suffixes
-aeroport.fr
-avocat.fr
+// Other SLDs now selfmanaged out of AFNIC range. Former "domaines sectoriels", still registration suffixes
 avoues.fr
 cci.fr
-chambagri.fr
-chirurgiens-dentistes.fr
-experts-comptables.fr
-geometre-expert.fr
 greta.fr
 huissier-justice.fr
-medecin.fr
-notaires.fr
-pharmacien.fr
-port.fr
-veterinaire.fr
 
 // ga : https://en.wikipedia.org/wiki/.ga
 ga
@@ -14420,6 +14409,20 @@ siteleaf.net
 bounty-full.com
 alpha.bounty-full.com
 beta.bounty-full.com
+
+// Smallregistry by Promopixel SARL: https://www.smallregistry.net
+// Former AFNIC's SLDs 
+// Submitted by Jérôme Lipowicz <support@promopixel.com>
+aeroport.fr
+avocat.fr
+chambagri.fr
+chirurgiens-dentistes.fr
+experts-comptables.fr
+medecin.fr
+notaires.fr
+pharmacien.fr
+port.fr
+veterinaire.fr
 
 // Small Technology Foundation : https://small-tech.org
 // Submitted by Aral Balkan <aral@small-tech.org>
