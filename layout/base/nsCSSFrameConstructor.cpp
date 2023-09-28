@@ -2903,8 +2903,6 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   nsContainerFrame* pageContentFrame = NS_NewPageContentFrame(
       aPresShell, pageContentPseudoStyle, pageName.forget());
 
-  // Initialize the page content frame and force it to have a view. Also make it
-  // the containing block for fixed elements which are repeated on every page.
   nsIFrame* prevPageContentFrame = nullptr;
   if (aPrevPageFrame) {
     prevPageContentFrame = aPrevPageFrame->PrincipalChildList().FirstChild();
