@@ -19,7 +19,8 @@ enum ShadowRootMode {
 enum SlotAssignmentMode { "manual", "named" };
 
 // https://dom.spec.whatwg.org/#shadowroot
-[Exposed=Window]
+[Exposed=Window,
+ InstrumentedProps=(pictureInPictureElement)]
 interface ShadowRoot : DocumentFragment
 {
   // Shadow DOM v1
