@@ -1,5 +1,5 @@
 /*-
- * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ * SPDX-License-Identifier: BSD-2-Clause
  *
  * Copyright (c) 2010-2012, by Michael Tuexen. All rights reserved.
  * Copyright (c) 2010-2012, by Randall Stewart. All rights reserved.
@@ -28,15 +28,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
+#include <netinet/sctp_os.h>
 #include <netinet/sctp_pcb.h>
-#if defined(__Userspace__)
-#include <netinet/sctp_os_userspace.h>
-#endif
 
 /*
  * Default simple round-robin algorithm.
@@ -975,7 +968,7 @@ const struct sctp_ss_functions sctp_ss_functions[] = {
 	.sctp_ss_is_user_msgs_incomplete = sctp_ss_default_is_user_msgs_incomplete
 #endif
 },
-/* SCTP_SS_ROUND_ROBIN */
+/* SCTP_SS_RR */
 {
 #if defined(_WIN32)
 	sctp_ss_default_init,
@@ -1005,7 +998,7 @@ const struct sctp_ss_functions sctp_ss_functions[] = {
 	.sctp_ss_is_user_msgs_incomplete = sctp_ss_default_is_user_msgs_incomplete
 #endif
 },
-/* SCTP_SS_ROUND_ROBIN_PACKET */
+/* SCTP_SS_RR_PKT */
 {
 #if defined(_WIN32)
 	sctp_ss_default_init,
@@ -1035,7 +1028,7 @@ const struct sctp_ss_functions sctp_ss_functions[] = {
 	.sctp_ss_is_user_msgs_incomplete = sctp_ss_default_is_user_msgs_incomplete
 #endif
 },
-/* SCTP_SS_PRIORITY */
+/* SCTP_SS_PRIO */
 {
 #if defined(_WIN32)
 	sctp_ss_default_init,
@@ -1065,7 +1058,7 @@ const struct sctp_ss_functions sctp_ss_functions[] = {
 	.sctp_ss_is_user_msgs_incomplete = sctp_ss_default_is_user_msgs_incomplete
 #endif
 },
-/* SCTP_SS_FAIR_BANDWITH */
+/* SCTP_SS_FB */
 {
 #if defined(_WIN32)
 	sctp_ss_default_init,
@@ -1095,7 +1088,7 @@ const struct sctp_ss_functions sctp_ss_functions[] = {
 	.sctp_ss_is_user_msgs_incomplete = sctp_ss_default_is_user_msgs_incomplete
 #endif
 },
-/* SCTP_SS_FIRST_COME */
+/* SCTP_SS_FCFS */
 {
 #if defined(_WIN32)
 	sctp_ss_fcfs_init,

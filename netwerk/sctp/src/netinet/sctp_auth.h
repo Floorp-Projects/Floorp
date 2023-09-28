@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #ifndef _NETINET_SCTP_AUTH_H_
 #define _NETINET_SCTP_AUTH_H_
 
@@ -199,7 +194,7 @@ extern struct mbuf *sctp_add_auth_chunk(struct mbuf *m, struct mbuf **m_end,
 extern int sctp_handle_auth(struct sctp_tcb *stcb, struct sctp_auth_chunk *ch,
     struct mbuf *m, uint32_t offset);
 extern void sctp_notify_authentication(struct sctp_tcb *stcb,
-    uint32_t indication, uint16_t keyid, uint16_t alt_keyid, int so_locked);
+    uint32_t indication, uint16_t keyid, int so_locked);
 extern int sctp_validate_init_auth_params(struct mbuf *m, int offset,
     int limit);
 extern void sctp_initialize_auth_params(struct sctp_inpcb *inp,

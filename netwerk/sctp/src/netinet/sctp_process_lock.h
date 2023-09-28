@@ -98,10 +98,11 @@
 #define SCTP_ASOC_CREATE_LOCK(_inp)
 #define SCTP_ASOC_CREATE_UNLOCK(_inp)
 
-#define SCTP_INP_READ_INIT(_inp)
-#define SCTP_INP_READ_DESTROY(_inp)
+#define SCTP_INP_READ_LOCK_INIT(_inp)
+#define SCTP_INP_READ_LOCK_DESTROY(_inp)
 #define SCTP_INP_READ_LOCK(_inp)
 #define SCTP_INP_READ_UNLOCK(_inp)
+#define SCTP_INP_READ_LOCK_ASSERT(_inp)
 
 /* Lock for TCB */
 #define SCTP_TCB_LOCK_INIT(_tcb)
@@ -180,14 +181,15 @@
  * we want to change something at the endpoint level for example random_store
  * or cookie secrets we lock the INP level.
  */
-#define SCTP_INP_READ_INIT(_inp) \
+#define SCTP_INP_READ_LOCK_INIT(_inp) \
 	InitializeCriticalSection(&(_inp)->inp_rdata_mtx)
-#define SCTP_INP_READ_DESTROY(_inp) \
+#define SCTP_INP_READ_LOCK_DESTROY(_inp) \
 	DeleteCriticalSection(&(_inp)->inp_rdata_mtx)
 #define SCTP_INP_READ_LOCK(_inp) \
 	EnterCriticalSection(&(_inp)->inp_rdata_mtx)
 #define SCTP_INP_READ_UNLOCK(_inp) \
 	LeaveCriticalSection(&(_inp)->inp_rdata_mtx)
+#define SCTP_INP_READ_LOCK_ASSERT(_inp)
 
 #define SCTP_INP_LOCK_INIT(_inp) \
 	InitializeCriticalSection(&(_inp)->inp_mtx)
@@ -335,9 +337,9 @@
  * we want to change something at the endpoint level for example random_store
  * or cookie secrets we lock the INP level.
  */
-#define SCTP_INP_READ_INIT(_inp) \
+#define SCTP_INP_READ_LOCK_INIT(_inp) \
 	(void)pthread_mutex_init(&(_inp)->inp_rdata_mtx, &SCTP_BASE_VAR(mtx_attr))
-#define SCTP_INP_READ_DESTROY(_inp) \
+#define SCTP_INP_READ_LOCK_DESTROY(_inp) \
 	(void)pthread_mutex_destroy(&(_inp)->inp_rdata_mtx)
 #ifdef INVARIANTS
 #define SCTP_INP_READ_LOCK(_inp) \
@@ -350,6 +352,8 @@
 #define SCTP_INP_READ_UNLOCK(_inp) \
 	(void)pthread_mutex_unlock(&(_inp)->inp_rdata_mtx)
 #endif
+#define SCTP_INP_READ_LOCK_ASSERT(_inp) \
+	KASSERT(pthread_mutex_trylock(&(_inp)->inp_rdata_mtx) == EBUSY, ("%s:%d: inp_rdata_mtx not locked", __FILE__, __LINE__))
 
 #define SCTP_INP_LOCK_INIT(_inp) \
 	(void)pthread_mutex_init(&(_inp)->inp_mtx, &SCTP_BASE_VAR(mtx_attr))

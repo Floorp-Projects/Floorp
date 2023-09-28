@@ -30,15 +30,6 @@
 
 #ifndef _USER_ENVIRONMENT_H_
 #define _USER_ENVIRONMENT_H_
-
-#if defined(_WIN32)
-// Needed for unified build so that rand_s is available to all unified
-// sources.
-#if !defined(_CRT_RAND_S) && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-#define _CRT_RAND_S
-#endif
-#endif
-
 /* __Userspace__ */
 #include <sys/types.h>
 

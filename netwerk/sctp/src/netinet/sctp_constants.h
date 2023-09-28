@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #ifndef _NETINET_SCTP_CONSTANTS_H_
 #define _NETINET_SCTP_CONSTANTS_H_
 
@@ -727,12 +722,14 @@ extern void getwintimeofday(struct timeval *tv);
 #define SCTP_NOTIFY_STR_RESET_FAILED_IN         20
 #define SCTP_NOTIFY_STR_RESET_DENIED_OUT        21
 #define SCTP_NOTIFY_STR_RESET_DENIED_IN         22
-#define SCTP_NOTIFY_AUTH_NEW_KEY                23
-#define SCTP_NOTIFY_AUTH_FREE_KEY               24
-#define SCTP_NOTIFY_NO_PEER_AUTH                25
-#define SCTP_NOTIFY_SENDER_DRY                  26
-#define SCTP_NOTIFY_REMOTE_ERROR                27
-#define SCTP_NOTIFY_ASSOC_TIMEDOUT              28
+#define SCTP_NOTIFY_STR_RESET_ADD               23
+#define SCTP_NOTIFY_STR_RESET_TSN               24
+#define SCTP_NOTIFY_AUTH_NEW_KEY                25
+#define SCTP_NOTIFY_AUTH_FREE_KEY               26
+#define SCTP_NOTIFY_NO_PEER_AUTH                27
+#define SCTP_NOTIFY_SENDER_DRY                  28
+#define SCTP_NOTIFY_REMOTE_ERROR                29
+#define SCTP_NOTIFY_ASSOC_TIMEDOUT              30
 
 /* This is the value for messages that are NOT completely
  * copied down where we will start to split the message.

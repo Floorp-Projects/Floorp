@@ -32,11 +32,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-#endif
-
 #include <netinet/sctp_os.h>
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/proc.h>
@@ -1311,16 +1306,18 @@ sctp_add_chk_to_control(struct sctp_queued_to_read *control,
 	 * data from the chk onto the control and free
 	 * up the chunk resources.
 	 */
-	uint32_t added=0;
-	int i_locked = 0;
+	uint32_t added = 0;
+	bool i_locked = false;
 
-	if (control->on_read_q && (hold_rlock == 0)) {
-		/*
-		 * Its being pd-api'd so we must
-		 * do some locks.
-		 */
-		SCTP_INP_READ_LOCK(stcb->sctp_ep);
-		i_locked = 1;
+	if (control->on_read_q) {
+		if (hold_rlock == 0) {
+			/* Its being pd-api'd so we must do some locks. */
+			SCTP_INP_READ_LOCK(stcb->sctp_ep);
+			i_locked = true;
+		}
+		if (stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_CANT_READ) {
+			goto out;
+		}
 	}
 	if (control->data == NULL) {
 		control->data = chk->data;
@@ -1368,6 +1365,7 @@ sctp_add_chk_to_control(struct sctp_queued_to_read *control,
 		control->end_added = 1;
 		control->last_frag_seen = 1;
 	}
+out:
 	if (i_locked) {
 		SCTP_INP_READ_UNLOCK(stcb->sctp_ep);
 	}
@@ -5562,9 +5560,8 @@ sctp_handle_forward_tsn(struct sctp_tcb *stcb,
 	struct sctp_association *asoc;
 	uint32_t new_cum_tsn, gap;
 	unsigned int i, fwd_sz, m_size;
-	uint32_t str_seq;
 	struct sctp_stream_in *strm;
-	struct sctp_queued_to_read *control, *ncontrol, *sv;
+	struct sctp_queued_to_read *control, *ncontrol;
 
 	asoc = &stcb->asoc;
 	if ((fwd_sz = ntohs(fwd->ch.chunk_length)) < sizeof(struct sctp_forward_tsn_chunk)) {
@@ -5742,9 +5739,7 @@ sctp_handle_forward_tsn(struct sctp_tcb *stcb,
 			TAILQ_FOREACH(control, &stcb->sctp_ep->read_queue, next) {
 				if ((control->sinfo_stream == sid) &&
 				    (SCTP_MID_EQ(asoc->idata_supported, control->mid, mid))) {
-					str_seq = (sid << 16) | (0x0000ffff & mid);
 					control->pdapi_aborted = 1;
-					sv = stcb->asoc.control_pdapi;
 					control->end_added = 1;
 					if (control->on_strm_q == SCTP_ON_ORDERED) {
 						TAILQ_REMOVE(&strm->inqueue, control, next_instrm);
@@ -5767,13 +5762,11 @@ sctp_handle_forward_tsn(struct sctp_tcb *stcb,
 #endif
 					}
 					control->on_strm_q = 0;
-					stcb->asoc.control_pdapi = control;
 					sctp_ulp_notify(SCTP_NOTIFY_PARTIAL_DELVIERY_INDICATION,
 					                stcb,
 					                SCTP_PARTIAL_DELIVERY_ABORTED,
-					                (void *)&str_seq,
-							SCTP_SO_NOT_LOCKED);
-					stcb->asoc.control_pdapi = sv;
+					                (void *)control,
+					                SCTP_SO_NOT_LOCKED);
 					break;
 				} else if ((control->sinfo_stream == sid) &&
 					   SCTP_MID_GT(asoc->idata_supported, control->mid, mid)) {
