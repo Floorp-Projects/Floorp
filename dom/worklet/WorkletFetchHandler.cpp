@@ -6,6 +6,7 @@
 #include "WorkletFetchHandler.h"
 
 #include "js/loader/ModuleLoadRequest.h"
+#include "js/ContextOptions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Request.h"
@@ -24,6 +25,7 @@
 #include "mozilla/TaskQueue.h"
 #include "nsIInputStreamPump.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "xpcpublic.h"
 
 using JS::loader::ModuleLoadRequest;
 using JS::loader::ScriptFetchOptions;
@@ -49,6 +51,7 @@ class StartModuleLoadRunnable final : public Runnable {
             JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mParentRuntime);
+    xpc::SetPrefableContextOptions(mContextOptions);
   }
 
   ~StartModuleLoadRunnable() = default;
@@ -64,6 +67,7 @@ class StartModuleLoadRunnable final : public Runnable {
   nsCOMPtr<nsIURI> mReferrer;
   const nsTArray<nsString>& mLocalizedStrs;
   JSRuntime* mParentRuntime;
+  JS::ContextOptions mContextOptions;
 };
 
 NS_IMETHODIMP
@@ -78,7 +82,7 @@ StartModuleLoadRunnable::Run() {
 
 NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   // This can be called on a GraphRunner thread or a DOM Worklet thread.
-  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
+  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime, mContextOptions);
 
   WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
   if (!globalScope) {

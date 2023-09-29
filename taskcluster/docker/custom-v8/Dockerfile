@@ -18,4 +18,5 @@ RUN apt-get update && \
       tar \
       unzip \
       wget \
-      zip
+      zip \
+      procps

@@ -3969,9 +3969,11 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     rv = GenerateCacheKey(mPostID, cacheKey);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    if (!mRedirectedCachekeys) {
-      mRedirectedCachekeys = MakeUnique<nsTArray<nsCString>>();
-    } else if (mRedirectedCachekeys->Contains(cacheKey)) {
+    auto redirectedCachekeys = mRedirectedCachekeys.Lock();
+    auto& ref = redirectedCachekeys.ref();
+    if (!ref) {
+      ref = MakeUnique<nsTArray<nsCString>>();
+    } else if (ref->Contains(cacheKey)) {
       doValidation = true;
     }
 
@@ -3980,7 +3982,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
 
     // Append cacheKey if not in the chain already
     if (!doValidation) {
-      mRedirectedCachekeys->AppendElement(cacheKey);
+      ref->AppendElement(cacheKey);
     } else {
       prefetchStatus =
           Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Redirect;

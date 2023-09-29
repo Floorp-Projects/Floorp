@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1695307683026,
+      "derHash": "tyRQq/UEeor2PsnYfjMUhIULGEmiVQqCqG22tB7Th2A=",
+      "subject": "CN=Certum EC-384 CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MHQxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEZMBcGA1UEAxMQQ2VydHVtIEVDLTM4NCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9f6d0c980c92ac6a3e9e0a1e42717fa38645b16394d41c870163e37ad342f093",
+        "size": 1467,
+        "filename": "3ntpMunERYLODeB6vat-6pDHXW0qBzMd9XvVy4hVPRM=.pem",
+        "location": "security-state-staging/intermediates/f5b8aee1-184d-4879-a293-83a907ed9bb4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "3ntpMunERYLODeB6vat+6pDHXW0qBzMd9XvVy4hVPRM=",
+      "crlite_enrolled": false,
+      "id": "5c606c94-7cdb-4580-a055-0f6251dbdadf",
+      "last_modified": 1695308223101
+    },
+    {
+      "schema": 1695307682604,
+      "derHash": "+xOJDHqxT/e5SycUUD4xEjv900D8TZeXQxZuBGm0eog=",
+      "subject": "CN=Certum Trusted Root CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
+      "subjectDN": "MHoxCzAJBgNVBAYTAlBMMSEwHwYDVQQKExhBc3NlY28gRGF0YSBTeXN0ZW1zIFMuQS4xJzAlBgNVBAsTHkNlcnR1bSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEfMB0GA1UEAxMWQ2VydHVtIFRydXN0ZWQgUm9vdCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a586257fe96fc4e4a0d2e95d3c14a7d15541cc2858fa8f573dcac84fe1040205",
+        "size": 2060,
+        "filename": "aB3EgsKWyEAsbrsg5oMJo7yEZSOuNLmEqE7ml6MxLbc=.pem",
+        "location": "security-state-staging/intermediates/7a2c407a-2716-4f14-978e-9a399d955741.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aB3EgsKWyEAsbrsg5oMJo7yEZSOuNLmEqE7ml6MxLbc=",
+      "crlite_enrolled": false,
+      "id": "f655736e-e759-4498-8498-648772d8f63d",
+      "last_modified": 1695308223097
+    },
+    {
+      "schema": 1695221287209,
+      "derHash": "v7CIKOtpuZ7nzr3Wh8jog6H+B9P5mDR/ku6TVkFK0AI=",
+      "subject": "CN=GlobalSign Atlas R1 EV TLS CA 2023,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSswKQYDVQQDEyJHbG9iYWxTaWduIEF0bGFzIFIxIEVWIFRMUyBDQSAyMDIz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eb89274bd91cf84317c3b664e8a6e4e7ebdafe12f2d3f8bfd2047b9902c1805d",
+        "size": 1662,
+        "filename": "qN4R607e7UFOuFhqWN30zbutycDjfOym66glEPw88gQ=.pem",
+        "location": "security-state-staging/intermediates/41737f9c-d70d-4eea-b283-86c917b0b0ed.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qN4R607e7UFOuFhqWN30zbutycDjfOym66glEPw88gQ=",
+      "crlite_enrolled": false,
+      "id": "5175aa15-4120-4a0a-a452-8c56e3b5ff2d",
+      "last_modified": 1695221823081
+    },
+    {
       "schema": 1693406886101,
       "derHash": "Obbjs4j3SVId8rNUGC60zYfUvzZDm/rwIC5Vls/CyqQ=",
       "subject": "CN=SECOM Passport for Web EV 2.0 CA,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -8065,24 +8119,6 @@
       "last_modified": 1666727872206
     },
     {
-      "schema": 1666727450231,
-      "derHash": "iu/r2IvoejCxnGDFvQ+16fvNFdVYLV/Jp0mVeNaNzsA=",
-      "subject": "CN=Valid Certificadora Digital SSL EV CA 2018,O=VALID CERTIFICADORA DIGITAL,C=BR",
-      "subjectDN": "MGgxCzAJBgNVBAYTAkJSMSQwIgYDVQQKExtWQUxJRCBDRVJUSUZJQ0FET1JBIERJR0lUQUwxMzAxBgNVBAMTKlZhbGlkIENlcnRpZmljYWRvcmEgRGlnaXRhbCBTU0wgRVYgQ0EgMjAxOA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "54373e1e17726accdcc2879266317a44d0dc889c8003fa002f0337d0cd53627c",
-        "size": 1788,
-        "filename": "Fvvsf-SjFcNThumRKUfh4Zsz4ZsXqkoWTiLt7iT8DBo=.pem",
-        "location": "security-state-staging/intermediates/99da112f-62ba-48ac-bab6-84c650a53e74.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Fvvsf+SjFcNThumRKUfh4Zsz4ZsXqkoWTiLt7iT8DBo=",
-      "crlite_enrolled": false,
-      "id": "78ece4b8-9b37-4a56-b749-44224092bf79",
-      "last_modified": 1666727872193
-    },
-    {
       "schema": 1666727428992,
       "derHash": "lJ1rS3YcoTStPnqFcRhvWA7oh/LGtWi1FA9BV/mNaN0=",
       "subject": "CN=Microsoft Azure ECC TLS Issuing CA 01,O=Microsoft Corporation,C=US",
@@ -8371,24 +8407,6 @@
       "last_modified": 1666727871932
     },
     {
-      "schema": 1666727391235,
-      "derHash": "BN5Hqc3TCRz8Xvaqo7fUtT4TxNTcAjZPbAtAh0LsPHY=",
-      "subject": "CN=Valid Certificadora Digital AlphaSSL CA 2018,O=VALID CERTIFICADORA DIGITAL,C=BR",
-      "subjectDN": "MGoxCzAJBgNVBAYTAkJSMSQwIgYDVQQKExtWQUxJRCBDRVJUSUZJQ0FET1JBIERJR0lUQUwxNTAzBgNVBAMTLFZhbGlkIENlcnRpZmljYWRvcmEgRGlnaXRhbCBBbHBoYVNTTCBDQSAyMDE4",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d9ce06bfe7f10679316c826ca701910ff485eff604b066946a2f9397ac536aa7",
-        "size": 1772,
-        "filename": "sXlIJeJFOOvNqrgfAHM5544oX_ySPnrWUt8M7eFF0BM=.pem",
-        "location": "security-state-staging/intermediates/3aabb19d-dd3a-4e17-a8b6-f20866900e31.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "sXlIJeJFOOvNqrgfAHM5544oX/ySPnrWUt8M7eFF0BM=",
-      "crlite_enrolled": false,
-      "id": "f7f650da-4d1e-4e63-b573-a366d4553483",
-      "last_modified": 1666727871903
-    },
-    {
       "schema": 1666727380502,
       "derHash": "SP+LSUZox1IwS0i/6Bh1iYfe9lguXwm5IfS2C7PWqN0=",
       "subject": "CN=Microsoft Azure TLS Issuing CA 06,O=Microsoft Corporation,C=US",
@@ -8423,24 +8441,6 @@
       "crlite_enrolled": false,
       "id": "75e7a977-22ac-46fa-90d3-ac395c179b34",
       "last_modified": 1666727871875
-    },
-    {
-      "schema": 1666727397797,
-      "derHash": "a0+d4TZ4hGcw1Q6RSgjnvpt0LKOgp9U5M2eDC5Om9VM=",
-      "subject": "CN=Valid Certificadora Digital SSL OV CA 2018,O=VALID CERTIFICADORA DIGITAL,C=BR",
-      "subjectDN": "MGgxCzAJBgNVBAYTAkJSMSQwIgYDVQQKExtWQUxJRCBDRVJUSUZJQ0FET1JBIERJR0lUQUwxMzAxBgNVBAMTKlZhbGlkIENlcnRpZmljYWRvcmEgRGlnaXRhbCBTU0wgT1YgQ0EgMjAxOA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8b796428cc5e4733630431ccd7284dbe8bae53efc39384f0fccbbf1b490e4d49",
-        "size": 1788,
-        "filename": "OOlpcVGqLfZfl2rK7MdW2Ff6TMhVD-PwRf3XtFUUtLw=.pem",
-        "location": "security-state-staging/intermediates/b17454a8-9043-4dc5-b679-ed9623eee4d1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "OOlpcVGqLfZfl2rK7MdW2Ff6TMhVD+PwRf3XtFUUtLw=",
-      "crlite_enrolled": false,
-      "id": "0307e7dc-743d-40c0-8f16-105b522e2ad0",
-      "last_modified": 1666727871862
     },
     {
       "schema": 1666727366901,
@@ -9539,24 +9539,6 @@
       "crlite_enrolled": false,
       "id": "d2c86868-c6cc-4104-a8c1-c6d746c47f1c",
       "last_modified": 1666727870864
-    },
-    {
-      "schema": 1666727396133,
-      "derHash": "/PJvvBsqJadqtOqSssvvNn4BMQkcgC2kmJj3iuVLMPg=",
-      "subject": "CN=Valid Certificadora Digital SSL DV CA 2018,O=VALID CERTIFICADORA DIGITAL,C=BR",
-      "subjectDN": "MGgxCzAJBgNVBAYTAkJSMSQwIgYDVQQKExtWQUxJRCBDRVJUSUZJQ0FET1JBIERJR0lUQUwxMzAxBgNVBAMTKlZhbGlkIENlcnRpZmljYWRvcmEgRGlnaXRhbCBTU0wgRFYgQ0EgMjAxOA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "551d256b9e4988053973e8535709a6276d327de7d3ea6dd215e8c97deef2c69f",
-        "size": 1768,
-        "filename": "2UPUODmQxMZsvFIsK7JgdFSPY-kZ_qKP-7aXPh1_bx8=.pem",
-        "location": "security-state-staging/intermediates/0b8a8153-add9-4da7-bff1-be6cc31ba825.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "2UPUODmQxMZsvFIsK7JgdFSPY+kZ/qKP+7aXPh1/bx8=",
-      "crlite_enrolled": false,
-      "id": "2259a85b-27f3-422d-bc53-7fb3e8c2f4bc",
-      "last_modified": 1666727870850
     },
     {
       "schema": 1666727370109,
@@ -16937,24 +16919,6 @@
       "crlite_enrolled": false,
       "id": "51e492fd-63e9-4386-9e4c-107cf4cc16b1",
       "last_modified": 1665579462816
-    },
-    {
-      "schema": 1665168563351,
-      "derHash": "g0tb5r1mpAT2j27J3hweXFcj3aZafT9m+2IJlp2IVNg=",
-      "subject": "CN=GTS CA 2D4,O=Google Trust Services LLC,C=US",
-      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQ0",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1e4febf610eee65c5cb7c85256ee6af8460df9106ee0a4d0de519bdba64117ce",
-        "size": 1106,
-        "filename": "-LF9yCTjy5LY7eJFn2IYBuPcOym7KefZXEx8uH5FB7Q=.pem",
-        "location": "security-state-staging/intermediates/e166c649-7d75-4d19-87b9-4dc70af7709e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "+LF9yCTjy5LY7eJFn2IYBuPcOym7KefZXEx8uH5FB7Q=",
-      "crlite_enrolled": false,
-      "id": "16aee4c2-c5b9-42be-b02f-850af23363c5",
-      "last_modified": 1665169023257
     },
     {
       "schema": 1665168564306,
@@ -29017,5 +28981,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1694703423238
+  "timestamp": 1695308223101
 }

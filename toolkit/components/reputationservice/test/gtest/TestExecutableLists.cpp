@@ -25,6 +25,8 @@ static const char* const kTestFileExtensions[] = {
     ".applescript",
     ".application",  // MS ClickOnce
     ".appref-ms",    // MS ClickOnce
+    ".appx",
+    ".appxbundle",
     ".as",           // Mac archive
     ".asp",          // Windows Server script
     ".asx",          // Windows Media Player
@@ -155,6 +157,8 @@ static const char* const kTestFileExtensions[] = {
     ".msh2xml",            // Windows shell
     ".mshxml",             // Windows
     ".msi",                // Windows installer
+    ".msix",               // Windows installer
+    ".msixbundle",         // Windows installer
     ".msp",                // Windows installer
     ".mst",                // Windows installer
     ".ndif",               // Mac disk image
