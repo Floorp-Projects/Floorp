@@ -1429,5 +1429,5 @@ index 928a59104b..c25caf85e0 100644
      android_library(target_name) {
        forward_variables_from(invoker,
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 

@@ -54,5 +54,5 @@ index 5457402542..bceb321951 100644
  #else
    denoiser_state = kDenoiserOnAdaptive;
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 
