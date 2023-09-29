@@ -1,0 +1,9 @@
+[DEFAULT]
+skip-if = ["toolkit == 'android'"]
+head = "head.js"
+
+["browser_backgroundtask_specific_pref.js"]
+
+["browser_xpcom_graph_wait.js"]
+skip-if = ["tsan"] # TSan times out on pretty much all profiler-consuming tests.
+

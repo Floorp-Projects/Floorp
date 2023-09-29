@@ -10,7 +10,7 @@ TEST_DIRS += ["gtest"]
 
 XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")

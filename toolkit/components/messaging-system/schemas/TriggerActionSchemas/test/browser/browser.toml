@@ -1,0 +1,7 @@
+[DEFAULT]
+support-files = ["../../index.md"]
+
+["browser_asrouter_trigger_docs.js"]
+
+["browser_asrouter_trigger_listeners.js"]
+https_first_disabled = true

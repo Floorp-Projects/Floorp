@@ -9,4 +9,4 @@ with Files("**"):
 
 JAR_MANIFESTS += ["jar.mn"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]

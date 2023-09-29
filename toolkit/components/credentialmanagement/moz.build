@@ -26,7 +26,7 @@ EXTRA_JS_MODULES += [
     "IdentityCredentialPromptService.sys.mjs",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 XPCOM_MANIFESTS += [

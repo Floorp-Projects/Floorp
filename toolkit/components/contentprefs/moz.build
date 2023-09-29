@@ -8,7 +8,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     "tests/unit_cps2/xpcshell.ini",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 EXTRA_JS_MODULES += [
     "ContentPrefService2.sys.mjs",

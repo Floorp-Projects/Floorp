@@ -1,0 +1,29 @@
+[DEFAULT]
+
+["browser_auth_tokens.js"]
+
+["browser_css_cache.js"]
+https_first_disabled = true
+support-files = [
+  "file_css_cache.css",
+  "file_css_cache.html"
+]
+
+["browser_image_cache.js"]
+https_first_disabled = true
+support-files = [
+  "file_image_cache.html",
+  "file_image_cache.jpg"
+]
+
+["browser_preflight_cache.js"]
+https_first_disabled = true
+support-files = ["file_cors_preflight.sjs"]
+
+["browser_quota.js"]
+support-files = ["worker.js"]
+
+["browser_serviceworkers.js"]
+
+["browser_sessionStorage.js"]
+https_first_disabled = true
