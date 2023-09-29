@@ -109,8 +109,6 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - uses: rui314/setup-mold@v1
-
     - name: Create environment 🌲
       run: |
         import os
@@ -157,13 +155,6 @@ jobs:
         , ("mk_add_options 'export SCCACHE_GHA_ENABLED=on'")
         ]
         # SCCACHE SETTINGS END
-
-        # MOLD SETTINGS START
-        mozconfig += [
-          "export RUSTFLAGS='-Clink-arg=-fuse-ld=mold'"
-        , "ac_add_options --enable-linker=mold"
-        ]
-        # MOLD SETTINGS END
 
         mozconfig_file = open("mozconfig",'a')
         mozconfig_file.writelines('\n'.join(mozconfig))
