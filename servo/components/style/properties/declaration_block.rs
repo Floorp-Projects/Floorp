@@ -946,7 +946,7 @@ impl PropertyDeclarationBlock {
         inherited_custom_properties: &crate::custom_properties::ComputedCustomProperties,
         stylist: &Stylist,
     ) -> crate::custom_properties::ComputedCustomProperties {
-        let mut builder = CustomPropertiesBuilder::new(inherited_custom_properties, stylist);
+        let mut builder = CustomPropertiesBuilder::new(inherited_custom_properties, stylist, false);
 
         for declaration in self.normal_declaration_iter() {
             if let PropertyDeclaration::Custom(ref declaration) = *declaration {

@@ -7420,32 +7420,39 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     computed_values: &ComputedValues,
+    raw_style_set: &PerDocumentStyleData,
     name: &nsACString,
     value: &mut nsACString,
 ) -> bool {
-    // TODO(bug 1840478): Handle non-inherited properties.
-    let inherited = match &computed_values.custom_properties.inherited {
-        Some(p) => p,
-        None => return false,
-    };
-
+    let doc_data = raw_style_set.borrow();
     let name = Atom::from(name.as_str_unchecked());
-    let computed_value = match inherited.get(&name) {
-        Some(v) => v,
-        None => return false,
+    let stylist = &doc_data.stylist;
+    let custom_registration = stylist.get_custom_property_registration(&name);
+    let computed_value = if custom_registration.map_or(true, |r| r.inherits) {
+        computed_values.custom_properties.inherited.as_ref().and_then(|m| m.get(&name))
+    } else {
+        computed_values.custom_properties.non_inherited.as_ref().and_then(|m| m.get(&name))
+            .or_else(|| custom_registration.and_then(|m| m.initial_value.as_ref()))
     };
 
-    computed_value.to_css(&mut CssWriter::new(value)).unwrap();
-    true
+    if let Some(v) = computed_value {
+        v.to_css(&mut CssWriter::new(value)).unwrap();
+        true
+    } else {
+        false
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValues) -> u32 {
-    // TODO(bug 1840478): Handle non-inherited properties.
-    match &computed_values.custom_properties().inherited {
-        Some(m) => m.len() as u32,
-        None => 0,
-    }
+    // Just expose the custom property items from custom_properties.inherited,
+    // and custom_properties.non_inherited.
+    // TODO(bug 1855629): We should probably expose all properties that don't
+    // have the guaranteed-invalid-value (including non-inherited properties
+    // with an initial value), not just the ones in the maps.
+    let properties = computed_values.custom_properties();
+    (properties.inherited.as_ref().map_or(0, |m| m.len()) +
+        properties.non_inherited.as_ref().map_or(0, |m| m.len())) as u32
 }
 
 #[no_mangle]
@@ -7453,18 +7460,10 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
     computed_values: &ComputedValues,
     index: u32,
 ) -> *mut nsAtom {
-    // TODO(bug 1840478): Handle non-inherited properties.
-    let inherited = match &computed_values.custom_properties.inherited {
-        Some(p) => p,
-        None => return ptr::null_mut(),
-    };
-
-    let property_name = match inherited.get_index(index as usize) {
-        Some((key, _value)) => key,
-        None => return ptr::null_mut(),
-    };
-
-    property_name.as_ptr()
+    match &computed_values.custom_properties.property_at(index as usize) {
+        Some((name, _value)) => name.as_ptr(),
+        None => ptr::null_mut(),
+    }
 }
 
 #[no_mangle]
