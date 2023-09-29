@@ -9,7 +9,7 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
 XPIDL_SOURCES += [
     "nsIFormAutoComplete.idl",
