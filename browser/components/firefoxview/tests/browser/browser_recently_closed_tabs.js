@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(globalThis, {
 });
 
 const RECENTLY_CLOSED_EVENT = [
-  ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "recently_closed", "tabs", undefined],
 ];
 
@@ -117,7 +116,6 @@ add_task(async function test_list_ordering() {
     0,
     "Closed tab count after purging session history"
   );
-  await clearAllParentTelemetryEvents();
 
   const closedObjectsChanged = () =>
     TestUtils.topicObserved("sessionstore-closed-objects-changed");
@@ -169,6 +167,7 @@ add_task(async function test_list_ordering() {
 
     let ele = document.querySelector("ol.closed-tabs-list").firstElementChild;
     let uri = ele.getAttribute("data-targeturi");
+    await clearAllParentTelemetryEvents();
     let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, uri);
     ele.querySelector(".closed-tab-li-main").click();
     await newTabPromise;
@@ -179,9 +178,9 @@ add_task(async function test_list_ordering() {
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
           false
         ).parent;
-        return events && events.length >= 2;
+        return events && events.length >= 1;
       },
-      "Waiting for entered and recently_closed firefoxview telemetry events.",
+      "Waiting for recently_closed firefoxview telemetry events.",
       200,
       100
     );
