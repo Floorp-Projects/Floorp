@@ -10,6 +10,20 @@ const CARD_COLLAPSED_EVENT = [
 const CARD_EXPANDED_EVENT = [
   ["firefoxview_next", "card_expanded", "card_container", undefined],
 ];
+let tabSelectedTelemetry = [
+  "firefoxview_next",
+  "tab_selected",
+  "toolbarbutton",
+  undefined,
+  {},
+];
+let enteredTelemetry = [
+  "firefoxview_next",
+  "entered",
+  "firefoxview",
+  undefined,
+  { page: "recentbrowsing" },
+];
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
@@ -203,31 +217,15 @@ add_task(async function test_context_menu_telemetry() {
 });
 
 add_task(async function firefox_view_entered_telemetry() {
-  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   await clearAllParentTelemetryEvents();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
-    let enteredEvent = [
-      [
-        "firefoxview_next",
-        "entered",
-        "firefoxview",
-        null,
-        { page: "recentbrowsing" },
-      ],
-    ];
-    await telemetryEvent(enteredEvent);
+    let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
+    await telemetryEvent(enteredAndTabSelectedEvents);
 
-    enteredEvent = [
-      [
-        "firefoxview_next",
-        "entered",
-        "firefoxview",
-        null,
-        { page: "recentlyclosed" },
-      ],
-    ];
+    enteredTelemetry[4] = { page: "recentlyclosed" };
+    enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
 
     navigateToCategory(document, "recentlyclosed");
     await clearAllParentTelemetryEvents();
@@ -238,7 +236,7 @@ add_task(async function firefox_view_entered_telemetry() {
       "The selected tab is about:robots"
     );
     await switchToFxViewTab(browser.ownerGlobal);
-    await telemetryEvent(enteredEvent);
+    await telemetryEvent(enteredAndTabSelectedEvents);
     await SpecialPowers.popPrefEnv();
     // clean up extra tabs
     while (gBrowser.tabs.length > 1) {
