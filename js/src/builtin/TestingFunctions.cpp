@@ -1772,7 +1772,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     ReportOutOfMemory(cx);
     return false;
   }
-  sprinter.putString(sresult);
+  sprinter.putString(cx, sresult);
 
   if (args.length() > 1 && args[1].isString()) {
     RootedString str(cx, args[1].toString());
