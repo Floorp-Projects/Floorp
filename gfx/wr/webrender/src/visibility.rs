@@ -72,6 +72,7 @@ bitflags! {
     // TODO(gw): We should also move `is_compositor_surface` to be part of
     //           this flags struct.
     #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct PrimitiveVisibilityFlags: u8 {
         /// Implies that this primitive covers the entire picture cache slice,
         /// and can thus be dropped during batching and drawn with clear color.

@@ -416,7 +416,7 @@ impl ExternalTexture {
 }
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Default, Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct TextureFlags: u32 {
         /// This texture corresponds to one of the shared texture caches.
         const IS_SHARED_TEXTURE_CACHE = 1 << 0;
