@@ -6223,7 +6223,7 @@ name = "webrender"
 version = "0.62.0"
 dependencies = [
  "bincode",
- "bitflags 2.4.0",
+ "bitflags 1.999.999",
  "build-parallel",
  "byteorder",
  "derive_more 0.99.999",
@@ -6260,7 +6260,7 @@ name = "webrender_api"
 version = "0.62.0"
 dependencies = [
  "app_units",
- "bitflags 2.4.0",
+ "bitflags 1.999.999",
  "byteorder",
  "crossbeam-channel",
  "euclid",
@@ -6307,7 +6307,7 @@ dependencies = [
 name = "webrender_build"
 version = "0.0.2"
 dependencies = [
- "bitflags 2.4.0",
+ "bitflags 1.999.999",
  "lazy_static",
  "serde",
 ]

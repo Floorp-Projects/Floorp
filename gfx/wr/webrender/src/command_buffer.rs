@@ -71,7 +71,6 @@ bitflags! {
     #[repr(transparent)]
     #[cfg_attr(feature = "capture", derive(Serialize))]
     #[cfg_attr(feature = "replay", derive(Deserialize))]
-    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct QuadFlags : u8 {
         const IS_OPAQUE = 1 << 0;
 
@@ -94,7 +93,6 @@ bitflags! {
     #[repr(transparent)]
     #[cfg_attr(feature = "capture", derive(Serialize))]
     #[cfg_attr(feature = "replay", derive(Deserialize))]
-    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct MaskFlags : i32 {
         const PRIM_SPACE = 1 << 0;
     }
