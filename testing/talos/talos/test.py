@@ -911,6 +911,7 @@ class tsvgx(PageloaderTest):
         "layout.frame_rate": 0,
         "docshell.event_starvation_delay_hint": 1,
         "dom.send_after_paint_to_content": False,
+        "places.history.enabled": False,
     }
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = "ms"
