@@ -102,7 +102,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
 /* static */ const char PCCounts::numExecName[] = "interp";
 
-[[nodiscard]] static bool DumpIonScriptCounts(Sprinter* sp, HandleScript script,
+[[nodiscard]] static bool DumpIonScriptCounts(StringPrinter* sp, HandleScript script,
                                               jit::IonScriptCounts* ionCounts) {
   sp->printf("IonScript [%zu blocks]:\n", ionCounts->numBlocks());
 
@@ -128,7 +128,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 }
 
 [[nodiscard]] static bool DumpPCCounts(JSContext* cx, HandleScript script,
-                                       Sprinter* sp) {
+                                       StringPrinter* sp) {
   MOZ_ASSERT(script->hasScriptCounts());
 
   // Ensure the Disassemble1 call below does not discard the script counts.
@@ -981,7 +981,7 @@ bool js::ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc,
 
 static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
                              unsigned loc, bool lines,
-                             const BytecodeParser* parser, Sprinter* sp);
+                             const BytecodeParser* parser, StringPrinter* sp);
 
 /*
  * If pc != nullptr, include a prefix indicating whether the PC is at the
@@ -989,7 +989,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
  */
 [[nodiscard]] static bool DisassembleAtPC(
     JSContext* cx, JSScript* scriptArg, bool lines, const jsbytecode* pc,
-    bool showAll, Sprinter* sp,
+    bool showAll, StringPrinter* sp,
     DisassembleSkeptically skeptically = DisassembleSkeptically::No) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   RootedScript script(cx, scriptArg);
@@ -1061,7 +1061,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 }
 
 bool js::Disassemble(JSContext* cx, HandleScript script, bool lines,
-                     Sprinter* sp, DisassembleSkeptically skeptically) {
+                     StringPrinter* sp, DisassembleSkeptically skeptically) {
   return DisassembleAtPC(cx, script, lines, nullptr, false, sp, skeptically);
 }
 
@@ -1216,7 +1216,7 @@ static bool ToDisassemblySource(JSContext* cx, Handle<Scope*> scope,
 }
 
 static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
-                            const BytecodeParser* parser, Sprinter* sp) {
+                            const BytecodeParser* parser, StringPrinter* sp) {
   bool called = false;
   auto callback = [&script, &sp, &called](jsbytecode* pc,
                                           BytecodeParser::JumpKind kind) {
@@ -1265,9 +1265,9 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
 
 static bool DecompileAtPCForStackDump(
     JSContext* cx, HandleScript script,
-    const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp);
+    const OffsetAndDefIndex& offsetAndDefIndex, StringPrinter* sp);
 
-static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
+static bool PrintShapeProperties(JSContext* cx, StringPrinter* sp,
                                  SharedShape* shape) {
   // Add all property keys to a vector to allow printing them in property
   // definition order.
@@ -1300,7 +1300,7 @@ static bool PrintShapeProperties(JSContext* cx, Sprinter* sp,
 
 static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
                              unsigned loc, bool lines,
-                             const BytecodeParser* parser, Sprinter* sp) {
+                             const BytecodeParser* parser, StringPrinter* sp) {
   if (parser && parser->isReachable(pc)) {
     if (!DumpJumpOrigins(script, pc, parser, sp)) {
       return 0;
@@ -1576,7 +1576,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
 unsigned js::Disassemble1(JSContext* cx, JS::Handle<JSScript*> script,
                           jsbytecode* pc, unsigned loc, bool lines,
-                          Sprinter* sp) {
+                          StringPrinter* sp) {
   return Disassemble1(cx, script, pc, loc, lines, nullptr, sp);
 }
 
@@ -2222,7 +2222,7 @@ UniqueChars ExpressionDecompiler::getOutput() {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 static bool DecompileAtPCForStackDump(
     JSContext* cx, HandleScript script,
-    const OffsetAndDefIndex& offsetAndDefIndex, Sprinter* sp) {
+    const OffsetAndDefIndex& offsetAndDefIndex, StringPrinter* sp) {
   // The expression decompiler asserts the script is in the current realm.
   AutoRealm ar(cx, script);
 
@@ -2602,7 +2602,7 @@ size_t JS::GetPCCountScriptCount(JSContext* cx) {
   return rt->scriptAndCountsVector->length();
 }
 
-[[nodiscard]] static bool JSONStringProperty(Sprinter& sp, JSONPrinter& json,
+[[nodiscard]] static bool JSONStringProperty(StringPrinter& sp, JSONPrinter& json,
                                              const char* name, JSString* str) {
   json.beginStringProperty(name);
   JSONQuoteString(&sp, str);
@@ -2623,7 +2623,7 @@ JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
   const ScriptAndCounts& sac = (*rt->scriptAndCountsVector)[index];
   RootedScript script(cx, sac.script);
 
-  Sprinter sp(cx);
+  JSSprinter sp(cx);
   if (!sp.init()) {
     return nullptr;
   }
@@ -2684,11 +2684,11 @@ JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
 
   json.endObject();
 
-  return sp.releaseJS(cx);
+  return sp.release(cx);
 }
 
 static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
-                           Sprinter& sp) {
+                           StringPrinter& sp) {
   JSONPrinter json(sp, false);
 
   RootedScript script(cx, sac.script);
@@ -2832,7 +2832,7 @@ JSString* JS::GetPCCountScriptContents(JSContext* cx, size_t index) {
   const ScriptAndCounts& sac = (*rt->scriptAndCountsVector)[index];
   JSScript* script = sac.script;
 
-  Sprinter sp(cx);
+  JSSprinter sp(cx);
   if (!sp.init()) {
     return nullptr;
   }
@@ -2844,7 +2844,7 @@ JSString* JS::GetPCCountScriptContents(JSContext* cx, size_t index) {
     }
   }
 
-  return sp.releaseJS(cx);
+  return sp.release(cx);
 }
 
 struct CollectedScripts {

@@ -3391,7 +3391,7 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  Sprinter sprinter(cx);
+  JSSprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -3407,7 +3407,7 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  JSString* str = sprinter.release(cx);
   if (!str) {
     return false;
   }
@@ -3450,7 +3450,7 @@ struct DisassembleOptionParser {
 } /* anonymous namespace */
 
 static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
-                                  Sprinter* sprinter) {
+                                  StringPrinter* sp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   DisassembleOptionParser p(args.length(), args.array());
   if (!p.parse(cx)) {
@@ -3462,7 +3462,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
     RootedScript script(cx, GetTopScript(cx));
     if (script) {
       JSAutoRealm ar(cx, script);
-      if (!JSScript::dump(cx, script, p.options, sprinter)) {
+      if (!JSScript::dump(cx, script, p.options, sp)) {
         return false;
       }
     }
@@ -3483,7 +3483,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
         return false;
       }
 
-      if (!JSScript::dump(cx, script, p.options, sprinter)) {
+      if (!JSScript::dump(cx, script, p.options, sp)) {
         return false;
       }
     }
@@ -3494,7 +3494,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
 
 static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  Sprinter sprinter(cx);
+  JSSprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -3502,7 +3502,7 @@ static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  JSString* str = sprinter.release(cx);
   if (!str) {
     return false;
   }
