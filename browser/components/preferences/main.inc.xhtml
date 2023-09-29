@@ -97,7 +97,7 @@
               preference="browser.taskbar.previews.enable"/>
 #endif
 
-    <hbox align="center">
+    <hbox align="center" class="hide-if-lightning-build">
       <checkbox data-l10n-id="enable-tab-sleep"
                id="tab-sleep" preference="floorp.tabsleep.enabled"/>
       <spacer flex="1"/>
@@ -114,7 +114,7 @@
     <checkbox  data-l10n-id="enable-tab-scroll-reverse"
                id="tabscrollReverse" preference="floorp.tabscroll.reverse"/>
 
-    <checkbox  data-l10n-id="enable-tab-scroll-wrap"
+    <checkbox  data-l10n-id="enable-tab-scroll-wrap" class="hide-if-lightning-build"
                id="tabscrollWrap" preference="floorp.tabscroll.wrap"/>
 
     <hbox>
@@ -130,10 +130,10 @@
     <checkbox  data-l10n-id="enable-double-click-block"
                id="doubleClickClose" preference="browser.tabs.closeTabByDblclick"/>
 
-    <checkbox  data-l10n-id="enable-show-pinned-tabs-title"
+    <checkbox  data-l10n-id="enable-show-pinned-tabs-title" class="hide-if-lightning-build"
                id="showPinnedTabsTitle" preference="floorp.tabs.showPinnedTabsTitle"/>
 
-    <hbox>
+    <hbox class="hide-if-lightning-build">
       <description flex="1" data-l10n-id="tab-width"/>
       <html:input type="number" min="50" value="0" id="tabWidthValue"/>
     </hbox>
@@ -172,7 +172,7 @@
     </vbox>
 </groupbox>
 
-<groupbox data-category="paneGeneral" hidden="true">
+<groupbox data-category="paneGeneral" hidden="true" class="hide-if-lightning-build">
     <html:h2 data-l10n-id="preferences-tabs-newtab-position"/>
     <radiogroup id="openNewTabPosition" preference="floorp.browser.tabs.openNewTabPosition">
     <radio  value="-1"  data-l10n-id="open-new-tab-use-default"/>
@@ -181,7 +181,7 @@
     </radiogroup>
 </groupbox>
 
-<groupbox id="aboutMouseGesture" data-category="paneGeneral" hidden="true">
+<groupbox id="aboutMouseGesture" data-category="paneGeneral" class="hide-if-lightning-build" hidden="true">
   <html:h2 id="mouse-gesture-header" data-l10n-id="mouse-gesture"/>
   <description id="mouse-gesture-description" data-l10n-id="mouse-gesture-description"/>
   <vbox class="Gesturefy ContentBlockBox">
@@ -301,7 +301,7 @@
     </vbox>
   </vbox>
 
-  <vbox id="TWS-box" class="TWS ContentBlockBox">
+  <vbox id="TWS-box" class="TWS ContentBlockBox hide-if-lightning-build">
     <html:h3 class="TWS addonRecommend-header" data-l10n-id="TWS"/>
     <hbox class="addonRecommend-box">
       <image id="TWSImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/2623/2623538-64.png');"/>
@@ -621,7 +621,7 @@
     </menulist>
   </hbox>
 
-  <hbox>
+  <hbox class="hide-if-lightning-build">
     <description flex="1" data-l10n-id="userjs-select-option"/>
     <button data-l10n-id="userjs-button" is="highlightable-button"
             class="accessory-button" id="userjsOptionsButton"/>
@@ -667,13 +667,13 @@
 
 #if defined(XP_WIN) || defined(XP_LINUX)
  <hbox id="openInExternalCategory"
-      class="subcategory"
+      class="subcategory hide-if-lightning-build"
       hidden="true"
       data-category="paneGeneral">
    <html:h1 data-l10n-id="openInExternal-title"/>
  </hbox>
 
- <groupbox id="openInExternalGroup" data-category="paneGeneral" hidden="true">
+ <groupbox id="openInExternalGroup" class="hide-if-lightning-build" data-category="paneGeneral" hidden="true">
     <checkbox preference="floorp.openLinkInExternal.enabled" data-l10n-id="open-link-in-external-enabled-option" class="needreboot"/>
     <hbox>
       <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
@@ -741,13 +741,13 @@
           support-page="media-keyboard-control"
     />
   </hbox>
-  <checkbox preference="floorp.search.top.mode"
+  <checkbox preference="floorp.search.top.mode" class="hide-if-lightning-build"
               id="searchbartop" data-l10n-id="Search-positon-top"/>
 
-  <checkbox preference="floorp.enable.auto.restart"
+  <checkbox preference="floorp.enable.auto.restart" class="hide-if-lightning-build"
               id="autorestart" data-l10n-id="allow-auto-restart" />
   <hbox>
-   <checkbox preference="toolkit.legacyUserProfileCustomizations.script"
+   <checkbox preference="toolkit.legacyUserProfileCustomizations.script" 
              id ="legacytoolkit" data-l10n-id="enable-userscript" class="needreboot"/>
     <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/userChromeJSAndLegacyAddons"
             data-l10n-id="do-not-track-learn-more"/>
@@ -755,9 +755,9 @@
   <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
 
   <checkbox id="disableExtensionCheckCompatibility" data-l10n-id="disable-extension-check-compatibility-option"/>
-  <checkbox preference="floorp.browser.rest.mode"
+  <checkbox preference="floorp.browser.rest.mode" class="hide-if-lightning-build"
              id="restmode" data-l10n-id="browser-rest-mode"/>
-  <checkbox preference="floorp.disable.fullscreen.notification"
+  <checkbox preference="floorp.disable.fullscreen.notification" class="hide-if-lightning-build"
              id="disable-fullscreen-notify" data-l10n-id="disable-fullscreen-notification"/>
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
@@ -794,7 +794,7 @@
   </hbox>
 </groupbox>
 
-<groupbox id="uaGroup" data-category="paneGeneral" data-subcategory="userAgent" hidden="true">
+<groupbox id="uaGroup" data-category="paneGeneral" data-subcategory="userAgent" hidden="true" class="hide-if-lightning-build">
   <label><html:h2 data-l10n-id="UserAgent-preference"/></label>
    <radiogroup id="floorpUAs" preference="floorp.browser.UserAgent">
      <radio value="0" data-l10n-id="default-useragent-mode"/>
