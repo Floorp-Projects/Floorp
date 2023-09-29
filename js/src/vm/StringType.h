@@ -1395,10 +1395,9 @@ namespace js {
  * property, as follows:
  *
  *   - uint32_t indexes,
- *   - PropertyName strings which don't encode uint32_t indexes, and
- *   - jsspecial special properties (non-ES5 properties like object-valued
- *     jsids, JSID_EMPTY, JSID_VOID, and maybe in the future Harmony-proposed
- *     private names).
+ *   - PropertyName strings which don't encode uint32_t indexes,
+ *   - Symbol, and
+ *   - JS::PropertyKey::isVoid.
  */
 class PropertyName : public JSAtom {
  private:

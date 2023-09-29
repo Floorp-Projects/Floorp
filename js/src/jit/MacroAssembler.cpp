@@ -3644,7 +3644,7 @@ void MacroAssembler::movePropertyKey(PropertyKey key, Register dest) {
       JSString* str = key.toString();
       MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
       static_assert(PropertyKey::StringTypeTag == 0,
-                    "need to orPtr JSID_TYPE_STRING tag if it's not 0");
+                    "need to orPtr StringTypeTag tag if it's not 0");
       movePtr(ImmGCPtr(str), dest);
     } else {
       MOZ_ASSERT(key.isSymbol());

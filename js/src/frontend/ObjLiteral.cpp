@@ -17,7 +17,7 @@
 #include "frontend/ParserAtom.h"                   // frontend::ParserAtomTable
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "gc/AllocKind.h"                          // gc::AllocKind
-#include "js/Id.h"                                 // INT_TO_JSID
+#include "js/Id.h"                                 // JS::PropertyKey
 #include "js/Printer.h"                            // js::Fprinter
 #include "js/RootingAPI.h"                         // Rooted
 #include "js/TypeDecls.h"                          // RootedId, RootedValue
