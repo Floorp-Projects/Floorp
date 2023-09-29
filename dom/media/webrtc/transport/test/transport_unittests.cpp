@@ -1218,7 +1218,8 @@ static void ConfigureOneCipher(TransportTestPeer* peer, uint16_t suite) {
   std::vector<uint16_t> everythingElse(
       SSL_GetImplementedCiphers(),
       SSL_GetImplementedCiphers() + SSL_GetNumImplementedCiphers());
-  std::remove(everythingElse.begin(), everythingElse.end(), suite);
+  everythingElse.erase(
+      std::remove(everythingElse.begin(), everythingElse.end(), suite));
   peer->SetCipherSuiteChanges(justOne, everythingElse);
 }
 
