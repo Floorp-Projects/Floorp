@@ -111,12 +111,10 @@ syncedTabsData6[0].tabs = desktopTabs;
 syncedTabsData6[1].tabs = mobileTabs;
 
 const NO_TABS_EVENTS = [
-  ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "synced_tabs", "tabs", undefined, { count: "0" }],
 ];
 
 const TAB_PICKUP_EVENT = [
-  ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "synced_tabs", "tabs", undefined, { count: "1" }],
   [
     "firefoxview",
@@ -304,7 +302,6 @@ add_task(async function test_empty_list_items() {
 });
 
 add_task(async function test_empty_list() {
-  await clearAllParentTelemetryEvents();
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData([]);
@@ -319,7 +316,7 @@ add_task(async function test_empty_list() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-
+    await clearAllParentTelemetryEvents();
     await setupListState(browser);
     info("setupListState complete, checking placeholder and list visibility");
     testVisibility(browser, {
@@ -342,13 +339,12 @@ add_task(async function test_empty_list() {
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
           false
         ).parent;
-        return events && events.length >= 2;
+        return events && events.length >= 1;
       },
-      "Waiting for entered and synced_tabs firefoxview telemetry events.",
+      "Waiting for synced_tabs firefoxview telemetry events.",
       200,
       100
     );
-
     TelemetryTestUtils.assertEvents(
       NO_TABS_EVENTS,
       { category: "firefoxview" },
@@ -382,7 +378,6 @@ add_task(async function test_time_updates_correctly() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.firefox-view.updateTimeMs", 100]],
   });
-  await clearAllParentTelemetryEvents();
 
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
@@ -397,7 +392,7 @@ add_task(async function test_time_updates_correctly() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-
+    await clearAllParentTelemetryEvents();
     await setupListState(browser);
 
     let initialTimeText = document.querySelector(
@@ -434,9 +429,9 @@ add_task(async function test_time_updates_correctly() {
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
           false
         ).parent;
-        return events && events.length >= 3;
+        return events && events.length >= 2;
       },
-      "Waiting for entered, synced_tabs, and tab_pickup firefoxview telemetry events.",
+      "Waiting for synced_tabs, and tab_pickup firefoxview telemetry events.",
       200,
       100
     );

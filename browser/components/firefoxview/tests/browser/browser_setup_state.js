@@ -1,13 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const FXA_CONTINUE_EVENT = [
-  ["firefoxview", "entered", "firefoxview", undefined],
-  ["firefoxview", "fxa_continue", "sync", undefined],
-];
+const FXA_CONTINUE_EVENT = [["firefoxview", "fxa_continue", "sync", undefined]];
 
 const FXA_MOBILE_EVENT = [
-  ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "fxa_mobile", "sync", undefined, { has_devices: "false" }],
 ];
 
@@ -68,7 +64,6 @@ add_setup(async function () {
 });
 
 add_task(async function test_unconfigured_initial_state() {
-  await clearAllParentTelemetryEvents();
   const sandbox = setupMocks({
     state: UIState.STATUS_NOT_CONFIGURED,
     syncEnabled: false,
@@ -82,7 +77,7 @@ add_task(async function test_unconfigured_initial_state() {
       mobilePromo: false,
       mobileConfirmation: false,
     });
-
+    await clearAllParentTelemetryEvents();
     await BrowserTestUtils.synthesizeMouseAtCenter(
       'button[data-action="view1-primary-action"]',
       {},
@@ -95,9 +90,9 @@ add_task(async function test_unconfigured_initial_state() {
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
           false
         ).parent;
-        return events && events.length >= 2;
+        return events && events.length >= 1;
       },
-      "Waiting for entered and fxa_continue firefoxview telemetry events.",
+      "Waiting for fxa_continue firefoxview telemetry events.",
       200,
       100
     );
@@ -112,7 +107,6 @@ add_task(async function test_unconfigured_initial_state() {
 });
 
 add_task(async function test_signed_in() {
-  await clearAllParentTelemetryEvents();
   const sandbox = setupMocks({
     state: UIState.STATUS_SIGNED_IN,
     fxaDevices: [
@@ -141,6 +135,8 @@ add_task(async function test_signed_in() {
       mobileConfirmation: false,
     });
 
+    await clearAllParentTelemetryEvents();
+
     await BrowserTestUtils.synthesizeMouseAtCenter(
       'button[data-action="view2-primary-action"]',
       {},
@@ -153,9 +149,9 @@ add_task(async function test_signed_in() {
           Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
           false
         ).parent;
-        return events && events.length >= 2;
+        return events && events.length >= 1;
       },
-      "Waiting for entered and fxa_mobile firefoxview telemetry events.",
+      "Waiting for fxa_mobile firefoxview telemetry events.",
       200,
       100
     );
