@@ -655,7 +655,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitObjLiteralArray(ListNode* array);
 
-  // Is a field value OBJLITERAL-compatible?
+  // Is a field value JSOp::Object-compatible?
   [[nodiscard]] bool isRHSObjLiteralCompatible(ParseNode* value);
 
   [[nodiscard]] bool emitObjLiteralValue(ObjLiteralWriter& writer,
