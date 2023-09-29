@@ -14,7 +14,9 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 
-private const val POWERED_BY_URL = "www.fakespot.com"
+private const val POWERED_BY_URL =
+    "https://www.fakespot.com/review-checker?utm_source=review-checker" +
+        "&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sheet"
 
 /**
  * Middleware that handles navigation events for the review quality check feature.
