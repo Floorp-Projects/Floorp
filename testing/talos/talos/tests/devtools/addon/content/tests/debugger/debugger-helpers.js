@@ -184,7 +184,9 @@ async function waitForElement(dbg, name) {
 }
 
 async function waitForLoadedScopes(dbg) {
-  const element = '.scopes-list .tree-node[aria-level="1"]';
+  // Since scopes auto-expand, we can assume they are loaded when there is a tree node
+  // with the aria-level attribute equal to "2".
+  const element = '.scopes-list .tree-node[aria-level="2"]';
   return waitForElement(dbg, element);
 }
 
