@@ -519,7 +519,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // encompasses the entire source.
   [[nodiscard]] bool emitScript(ParseNode* body);
 
-  // Calculate the `nslots` value for BCEScriptStencil constructor parameter.
+  // Calculate the `nslots` value for ImmutableScriptData constructor parameter.
   // Fails if it overflows.
   [[nodiscard]] bool getNslots(uint32_t* nslots);
 
