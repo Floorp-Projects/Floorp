@@ -219,6 +219,9 @@ async function selectSource(dbg, url) {
       if (!location) {
         return false;
       }
+      if (location.source != source || location.line != line) {
+        return false;
+      }
       const sourceTextContent =
         dbg.selectors.getSelectedSourceTextContent(state);
       if (!sourceTextContent) {
