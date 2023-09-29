@@ -79,8 +79,14 @@ export var ChildCrashHandler = {
             ? "BACKGROUND_CHILD"
             : "FOREGROUND_CHILD";
 
-        const remoteType = this.childMap.get(childID);
+        let remoteType = this.childMap.get(childID);
         this.childMap.delete(childID);
+
+        if (remoteType?.length) {
+          // Only send the remote type prefix since everything after a "=" is
+          // dynamic, and used to control the process pool to use.
+          remoteType = remoteType.split("=")[0];
+        }
 
         lazy.EventDispatcher.instance.sendRequest({
           type: "GeckoView:ChildCrashReport",
