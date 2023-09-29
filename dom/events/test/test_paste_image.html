@@ -25,6 +25,7 @@
       info("returned=" + counter + " images.length=" + images.length);
       if (counter == images.length) {
         info("test finish");
+        SimpleTest.finish();
       }
     };
 
@@ -79,10 +80,8 @@
     documentViewer.copyImage(documentViewer.COPY_IMAGE_ALL);
   }
 
-  async function doTest(imageAsFileEnabled) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["clipboard.imageAsFile.enabled", imageAsFileEnabled]],
-    });
+  function doTest() {
+    SimpleTest.waitForExplicitFinish();
 
     copyImage('image');
 
@@ -99,26 +98,16 @@
     ok(clipboard.hasDataMatchingFlavors(["image/png"], clipboard.kGlobalClipboard),
        "clipboard contains image");
 
-    let promise = new Promise(resolve => {
-      window.addEventListener("paste", (e) => {
-        isDeeply(e.clipboardData.types,
-                 (navigator.platform.includes("Win") && imageAsFileEnabled) ?
-                    ["application/x-moz-file", "Files"] : ["text/html", "text/plain", "Files"]);
-        onPaste(e, imageAsFileEnabled);
-        resolve();
-      }, { once: true });
-    });
+    window.addEventListener("paste", onPaste);
 
     var textarea = SpecialPowers.wrap(document.getElementById('textarea'));
     textarea.focus();
     textarea.editor.paste(clipboard.kGlobalClipboard);
-
-    await promise;
   }
 
-  function onPaste(e, imageAsFileEnabled) {
+  function onPaste(e) {
     var imageTester = new ImageTester;
-    testFiles(e, imageTester, imageAsFileEnabled);
+    testFiles(e, imageTester);
     testItems(e, imageTester);
     imageTester.test();
   }
@@ -142,7 +131,7 @@
     }
   }
 
-  function testFiles(e, imageTester, imageAsFileEnabled) {
+  function testFiles(e, imageTester) {
     var files = e.clipboardData.files;
 
     is(files, e.clipboardData.files,
@@ -152,7 +141,15 @@
       var file = files[i];
       ok(file instanceof File, ".files should contain only File objects");
       ok(file.size > 0, "This file shouldn't have size 0");
-      is(file.name, (navigator.platform.includes("Win") && imageAsFileEnabled) ? "Untitled.png" : "image.png", "Check filename");
+      if (navigator.platform.includes("Win")) {
+        // On Windows the pasted file is (sometimes?) produced from the Windows only
+        // file promise added by AppendImagePromise.
+        ok(file.name == "image.png" || (file.name.startsWith("Untitled") && file.name.endsWith(".png")),
+           `Correct filename, got "${file.name}"`);
+      } else {
+        is(file.name, "image.png", "Correct filename");
+      }
+      is(file.type, "image/png", "This file should be a image/png");
 
       testSlice(file);
       imageTester.add(file);
@@ -180,16 +177,8 @@
     is(blob.type, "image/png", ".slice @type check");
   }
 
-  add_task(async function test_imageAsFile_enabled() {
-    await doTest(true);
-  });
-
-  add_task(async function test_imageAsFile_disabled() {
-    await doTest(false);
-  });
-
 </script>
-<body>
+<body onload="doTest();">
   <img id="image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAABHCA
   IAAADQjmMaAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3goUAwAgSAORBwAAABl0RVh0Q29
   tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABPSURBVGje7c4BDQAACAOga//OmuMbJGAurTbq
