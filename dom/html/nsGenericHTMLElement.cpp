@@ -3393,10 +3393,18 @@ void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
     return;
   }
 
-  // Run the focusing steps for previouslyFocusedElement.
-  FocusOptions options;
-  options.mPreventScroll = true;
-  control->Focus(options, CallerType::NonSystem, IgnoreErrors());
+  // Step 14.2 at
+  // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm
+  // If focusPreviousElement is true and document's focused area of the
+  // document's DOM anchor is a shadow-including inclusive descendant of
+  // element, then run the focusing steps for previouslyFocusedElement;
+  nsIContent* currentFocus = OwnerDoc()->GetUnretargetedFocusedContent();
+  if (currentFocus &&
+      currentFocus->IsShadowIncludingInclusiveDescendantOf(this)) {
+    FocusOptions options;
+    options.mPreventScroll = true;
+    control->Focus(options, CallerType::NonSystem, IgnoreErrors());
+  }
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
