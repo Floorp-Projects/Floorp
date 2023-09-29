@@ -39,3 +39,4 @@ development process and source code documentation.
    build/building_mobile_firefox
    build/supported
    engineering_show_and_tell
+   filing-good-bugs
