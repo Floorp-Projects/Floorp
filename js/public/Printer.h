@@ -207,20 +207,22 @@ class JS_PUBLIC_API GenericPrinter {
   virtual bool hadOutOfMemory() const { return hadOOM_; }
 };
 
-// Sprintf, but with unlimited and automatically allocated buffering.
-class JS_PUBLIC_API Sprinter final : public GenericPrinter {
+// Sprintf / JSSprintf, but with unlimited and automatically allocated
+// buffering.
+class JS_PUBLIC_API StringPrinter : public GenericPrinter {
  public:
+  // Check that the invariant holds at the entry and exit of a scope.
   struct InvariantChecker {
-    const Sprinter* parent;
+    const StringPrinter* parent;
 
-    explicit InvariantChecker(const Sprinter* p) : parent(p) {
+    explicit InvariantChecker(const StringPrinter* p) : parent(p) {
       parent->checkInvariants();
     }
 
     ~InvariantChecker() { parent->checkInvariants(); }
   };
 
-  JSContext* maybeCx;  // context executing the decompiler
+  JSContext* maybeCx;
 
  private:
   static const size_t DefaultSize;
@@ -232,9 +234,17 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   size_t size;           // size of buffer allocated at base
   ptrdiff_t offset;      // offset of next free char in buffer
 
+  // The arena to be used by jemalloc to allocate the string into. This is
+  // selected by the child classes when calling the constructor. JSStrings have
+  // a different arena than strings which do not belong to the JS engine, and as
+  // such when building a JSString with the intent of avoiding reallocation, the
+  // destination arena has to be selected upfront.
+  arena_id_t arena;
+
+ private:
   [[nodiscard]] bool realloc_(size_t newSize);
 
- public:
+ protected:
   // JSContext* parameter is optional and can be omitted if the following
   // are not used.
   //   * putString method with JSString
@@ -243,16 +253,18 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   //
   // If JSContext* parameter is not provided, or shouldReportOOM is false,
   // the consumer should manually report OOM on any failure.
-  explicit Sprinter(JSContext* maybeCx = nullptr, bool shouldReportOOM = true);
-  ~Sprinter();
+  explicit StringPrinter(arena_id_t arena, JSContext* maybeCx = nullptr,
+                         bool shouldReportOOM = true);
+  ~StringPrinter();
 
+  JS::UniqueChars releaseChars();
+  JSString* releaseJS(JSContext* cx);
+
+ public:
   // Initialize this sprinter, returns false on error.
   [[nodiscard]] bool init();
 
   void checkInvariants() const;
-
-  JS::UniqueChars release();
-  JSString* releaseJS(JSContext* cx);
 
   // Attempt to reserve len + 1 space (for a trailing nullptr byte). If the
   // attempt succeeds, return a pointer to the start of that space and adjust
@@ -262,18 +274,18 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
 
   // Puts |len| characters from |s| at the current position and
   // return true on success, false on failure.
-  virtual void put(const char* s, size_t len) override;
+  virtual void put(const char* s, size_t len) final;
   using GenericPrinter::put;  // pick up |inline bool put(const char* s);|
 
-  virtual bool canPutFromIndex() const override { return true; }
-  virtual void putFromIndex(size_t index, size_t length) override {
+  virtual bool canPutFromIndex() const final { return true; }
+  virtual void putFromIndex(size_t index, size_t length) final {
     MOZ_ASSERT(index <= this->index());
     MOZ_ASSERT(index + length <= this->index());
     put(base + index, length);
   }
-  virtual size_t index() const override { return length(); }
+  virtual size_t index() const final { return length(); }
 
-  virtual void putString(JSContext* cx, JSString* str) override;
+  virtual void putString(JSContext* cx, JSString* str) final;
 
   size_t length() const;
 
@@ -283,6 +295,26 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   // If no JSContext had been provided or the Sprinter is configured to not
   // report OOM, then nothing happens.
   void forwardOutOfMemory();
+};
+
+class Sprinter : public StringPrinter {
+ public:
+  explicit Sprinter(JSContext* maybeCx = nullptr, bool shouldReportOOM = true)
+      : StringPrinter(js::MallocArena, maybeCx, shouldReportOOM) {}
+  ~Sprinter() {}
+
+  JS::UniqueChars release() {
+    return releaseChars();
+  }
+};
+
+class JSSprinter : public StringPrinter {
+ public:
+  explicit JSSprinter(JSContext* cx)
+      : StringPrinter(js::StringBufferArena, cx, true) {}
+  ~JSSprinter() {}
+
+  JSString* release(JSContext* cx) { return releaseJS(cx); }
 };
 
 // Fprinter, print a string directly into a file.
@@ -458,7 +490,7 @@ extern JS_PUBLIC_API void QuoteString(Sprinter* sp, JSString* str,
 
 // Appends the quoted string to the given Sprinter. Follows the same
 // Appends the JSON quoted string to the given Sprinter.
-extern JS_PUBLIC_API void JSONQuoteString(Sprinter* sp, JSString* str);
+extern JS_PUBLIC_API void JSONQuoteString(StringPrinter* sp, JSString* str);
 
 // Internal implementation code for QuoteString methods above.
 enum class QuoteTarget { String, JSON };

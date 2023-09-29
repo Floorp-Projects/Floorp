@@ -3348,7 +3348,7 @@ static void DumpMutableScriptFlags(js::JSONPrinter& json,
 
 /* static */
 bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
-                    DumpOptions& options, js::Sprinter* sp) {
+                    DumpOptions& options, js::StringPrinter* sp) {
   {
     JSONPrinter json(*sp);
 
@@ -3449,7 +3449,7 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
 
 /* static */
 bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                            js::Sprinter* sp) {
+                            js::GenericPrinter* sp) {
   sp->put("\nSource notes:\n");
   sp->printf("%4s %4s %6s %5s %6s %-16s %s\n", "ofs", "line", "column",
              "pc", "delta", "desc", "args");
@@ -3537,7 +3537,7 @@ static const char* TryNoteName(TryNoteKind kind) {
 
 /* static */
 bool JSScript::dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                            js::Sprinter* sp) {
+                            js::GenericPrinter* sp) {
   sp->put("\nException table:\nkind               stack    start      end\n");
 
   for (const js::TryNote& tn : script->trynotes()) {
@@ -3549,7 +3549,7 @@ bool JSScript::dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
 /* static */
 bool JSScript::dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                              js::Sprinter* sp) {
+                              js::GenericPrinter* sp) {
   sp->put("\nScope notes:\n   index   parent    start      end\n");
 
   for (const ScopeNote& note : script->scopeNotes()) {
@@ -3570,7 +3570,7 @@ bool JSScript::dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
 /* static */
 bool JSScript::dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
-                            js::Sprinter* sp) {
+                            js::GenericPrinter* sp) {
   sp->put("\nGC things:\n   index   type       value\n");
 
   size_t i = 0;

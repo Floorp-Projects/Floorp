@@ -100,14 +100,14 @@ void GenericPrinter::vprintf(const char* fmt, va_list ap) {
   (void) printer.vprint(fmt, ap);
 }
 
-const size_t Sprinter::DefaultSize = 64;
+const size_t StringPrinter::DefaultSize = 64;
 
-bool Sprinter::realloc_(size_t newSize) {
+bool StringPrinter::realloc_(size_t newSize) {
   MOZ_ASSERT(newSize > (size_t)offset);
   if (hadOOM_) {
     return false;
   }
-  char* newBuf = (char*)js_realloc(base, newSize);
+  char* newBuf = (char*)js_arena_realloc(arena, base, newSize);
   if (!newBuf) {
     reportOutOfMemory();
     return false;
@@ -118,7 +118,7 @@ bool Sprinter::realloc_(size_t newSize) {
   return true;
 }
 
-Sprinter::Sprinter(JSContext* maybeCx, bool shouldReportOOM)
+StringPrinter::StringPrinter(arena_id_t arena, JSContext* maybeCx, bool shouldReportOOM)
     : maybeCx(maybeCx),
 #ifdef DEBUG
       initialized(false),
@@ -126,10 +126,11 @@ Sprinter::Sprinter(JSContext* maybeCx, bool shouldReportOOM)
       shouldReportOOM(maybeCx && shouldReportOOM),
       base(nullptr),
       size(0),
-      offset(0) {
+      offset(0),
+      arena(arena) {
 }
 
-Sprinter::~Sprinter() {
+StringPrinter::~StringPrinter() {
 #ifdef DEBUG
   if (initialized) {
     checkInvariants();
@@ -138,9 +139,9 @@ Sprinter::~Sprinter() {
   js_free(base);
 }
 
-bool Sprinter::init() {
+bool StringPrinter::init() {
   MOZ_ASSERT(!initialized);
-  base = js_pod_malloc<char>(DefaultSize);
+  base = js_pod_arena_malloc<char>(arena, DefaultSize);
   if (!base) {
     reportOutOfMemory();
     forwardOutOfMemory();
@@ -155,13 +156,13 @@ bool Sprinter::init() {
   return true;
 }
 
-void Sprinter::checkInvariants() const {
+void StringPrinter::checkInvariants() const {
   MOZ_ASSERT(initialized);
   MOZ_ASSERT((size_t)offset < size);
   MOZ_ASSERT(base[size - 1] == '\0');
 }
 
-UniqueChars Sprinter::release() {
+UniqueChars StringPrinter::releaseChars() {
   if (hadOOM_) {
     forwardOutOfMemory();
     return nullptr;
@@ -177,7 +178,7 @@ UniqueChars Sprinter::release() {
   return UniqueChars(str);
 }
 
-JSString* Sprinter::releaseJS(JSContext* cx) {
+JSString* StringPrinter::releaseJS(JSContext* cx) {
   if (hadOOM_) {
     MOZ_ASSERT_IF(maybeCx, maybeCx == cx);
     forwardOutOfMemory();
@@ -186,11 +187,11 @@ JSString* Sprinter::releaseJS(JSContext* cx) {
 
   checkInvariants();
 
-  // Extract Sprinter data.
+  // Extract StringPrinter data.
   size_t len = length();
   UniqueChars str(base);
 
-  // Reset Sprinter.
+  // Reset StringPrinter.
   base = nullptr;
   offset = 0;
   size = 0;
@@ -231,7 +232,7 @@ JSString* Sprinter::releaseJS(JSContext* cx) {
   return js::NewString<js::CanGC>(cx, std::move(utf16), length);
 }
 
-char* Sprinter::reserve(size_t len) {
+char* StringPrinter::reserve(size_t len) {
   InvariantChecker ic(this);
 
   while (len + 1 > size - offset) { /* Include trailing \0 */
@@ -245,7 +246,7 @@ char* Sprinter::reserve(size_t len) {
   return sb;
 }
 
-void Sprinter::put(const char* s, size_t len) {
+void StringPrinter::put(const char* s, size_t len) {
   InvariantChecker ic(this);
 
   const char* oldBase = base;
@@ -269,7 +270,7 @@ void Sprinter::put(const char* s, size_t len) {
   bp[len] = '\0';
 }
 
-void Sprinter::putString(JSContext* cx, JSString* s) {
+void StringPrinter::putString(JSContext* cx, JSString* s) {
   MOZ_ASSERT(cx);
   InvariantChecker ic(this);
 
@@ -292,9 +293,9 @@ void Sprinter::putString(JSContext* cx, JSString* s) {
   buffer[length] = '\0';
 }
 
-size_t Sprinter::length() const { return size_t(offset); }
+size_t StringPrinter::length() const { return size_t(offset); }
 
-void Sprinter::forwardOutOfMemory() {
+void StringPrinter::forwardOutOfMemory() {
   MOZ_ASSERT(hadOOM_);
   if (maybeCx && shouldReportOOM) {
     ReportOutOfMemory(maybeCx);
@@ -389,7 +390,7 @@ JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
   return sprinter.release();
 }
 
-JS_PUBLIC_API void JSONQuoteString(Sprinter* sp, JSString* str) {
+JS_PUBLIC_API void JSONQuoteString(StringPrinter* sp, JSString* str) {
   MOZ_ASSERT(sp->maybeCx);
   JSONEscape esc;
   EscapePrinter ep(*sp, esc);
