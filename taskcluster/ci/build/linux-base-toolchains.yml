@@ -115,7 +115,6 @@ linux64-base-toolchains-clang/opt:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils-2.31.1
             - linux64-clang-base
             - linux64-rust-base
             - linux64-cbindgen
@@ -154,7 +153,6 @@ linux64-base-toolchains-clang/debug:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils-2.31.1
             - linux64-clang-base
             - linux64-rust-base
             - linux64-cbindgen
