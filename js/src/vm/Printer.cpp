@@ -223,10 +223,15 @@ void Sprinter::reportOutOfMemory() {
   if (hadOOM_) {
     return;
   }
+  hadOOM_ = true;
+  forwardOutOfMemory();
+}
+
+void Sprinter::forwardOutOfMemory() {
+  MOZ_ASSERT(hadOOM_);
   if (maybeCx && shouldReportOOM) {
     ReportOutOfMemory(maybeCx);
   }
-  hadOOM_ = true;
 }
 
 bool Sprinter::jsprintf(const char* format, ...) {
