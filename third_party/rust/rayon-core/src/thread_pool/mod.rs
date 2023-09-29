@@ -461,39 +461,6 @@ pub fn yield_local() -> Option<Yield> {
     }
 }
 
-/// Waits for termination of the thread-pool (if pending), and cleans up resources allocated by
-/// [`ThreadPoolBuilder::use_current_thread()`]. Should only be called from the thread that built
-/// the thread-pool, and only when [`ThreadPoolBuilder::use_current_thread()`] is used.
-///
-/// Calling this function from a thread pool job will block indefinitely.
-///
-/// Calling this function before before the thread-pool has been dropped will cause the thread to
-/// not return control flow to the caller until that happens (stealing work as necessary).
-///
-/// # Panics
-///
-/// If the calling thread is no the creator thread of a thread-pool, or not part of that
-/// thread-pool, via [`ThreadPoolBuilder::use_current_thread()`].
-pub fn clean_up_use_current_thread() {
-    unsafe {
-        let thread = WorkerThread::current()
-            .as_ref()
-            .expect("Should be called from a worker thread");
-        assert!(
-            thread.registry().used_creator_thread(),
-            "Should only be used to clean up the pool creator constructor thread"
-        );
-        assert_eq!(
-            thread.index(),
-            0,
-            "Should be called from the thread that created the pool"
-        );
-        crate::registry::wait_until_out_of_work(thread);
-        let _ = Box::from_raw(WorkerThread::current() as *mut WorkerThread);
-    }
-    assert!(WorkerThread::current().is_null());
-}
-
 /// Result of [`yield_now()`] or [`yield_local()`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Yield {

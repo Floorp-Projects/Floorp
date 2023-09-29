@@ -165,9 +165,6 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 # Overrides to allow easier use of common internal crates.
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 
-# Patch rayon core to import https://github.com/rayon-rs/rayon/pull/1063
-rayon-core = { path = "third_party/rust/rayon-core" }
-
 # Patch `rure` to disable building the cdylib and staticlib targets
 # Cargo has no way to disable building targets your dependencies provide which
 # you don't depend on, and linking the cdylib breaks during instrumentation
