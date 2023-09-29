@@ -11,7 +11,7 @@
 
 [package]
 name = "coreaudio-sys"
-version = "0.2.12"
+version = "0.2.13"
 authors = ["Mitchell Nordine <mitchell.nordine@gmail.com>"]
 build = "build.rs"
 description = "Bindings for Apple's CoreAudio frameworks generated via rust-bindgen"
@@ -36,7 +36,7 @@ targets = [
 ]
 
 [build-dependencies.bindgen]
-version = "0.64"
+version = "0.68"
 features = ["runtime"]
 default-features = false
 

@@ -877,11 +877,11 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.12"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f034b2258e6c4ade2f73bf87b21047567fb913ee9550837c2316d139b0262b24"
+checksum = "d8478e5bdad14dce236b9898ea002eabfa87cbe14f0aa538dbe3b6a4bec4332d"
 dependencies = [
- "bindgen 0.64.999",
+ "bindgen 0.68.1",
 ]
 
 [[package]]
