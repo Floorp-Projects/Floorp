@@ -173,11 +173,36 @@ TEST(MediaCodecsSupport, GetMediaCodecsSupportedString)
   // Add H264 SW/HW support + VP8 Software decode support.
   MCSInfo::AddSupport({MediaCodecsSupport::H264SoftwareDecode,
                        MediaCodecsSupport::H264HardwareDecode,
-                       MediaCodecsSupport::VP8SoftwareDecode});
+                       MediaCodecsSupport::VP8SoftwareDecode,
+                       MediaCodecsSupport::VP9HardwareDecode});
 
   nsCString supportString;
+  nsCString targetString;
   MCSInfo::GetMediaCodecsSupportedString(supportString, MCSInfo::GetSupport());
-  EXPECT_TRUE(supportString.Equals("H264 SW\nH264 HW\nVP8 SW"_ns));
+
+  // MCSInfo should return support text for all possible codecs
+  for (const auto& it : MCSInfo::GetAllCodecDefinitions()) {
+    if (it.codec == MediaCodec::SENTINEL) {
+      break;
+    }
+    nsCString cn(it.commonName);
+    // H264/VP8/VP9 support text should reflect args to MCSInfo::AddSupport
+    if (cn == "H264"_ns) {
+      targetString += "H264 SW HW"_ns;
+    } else if (cn.Equals("VP8"_ns)) {
+      targetString += "VP8 SW"_ns;
+    } else if (cn.Equals("VP9"_ns)) {
+      targetString += "VP9 HW"_ns;
+    } else {
+      targetString += nsCString(it.commonName) + " NONE"_ns;
+    }
+    targetString += "\n"_ns;
+  }
+  // MCSInfo support string should not have a trailing newline
+  if (!targetString.IsEmpty()) {
+    targetString.Truncate(targetString.Length() - 1);
+  }
+  EXPECT_TRUE(supportString.Equals(targetString));
 }
 
 // Test MCSInfo::GetMediaCodecFromMimeType function.
