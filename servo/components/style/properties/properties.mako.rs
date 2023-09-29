@@ -3258,11 +3258,18 @@ impl ComputedValues {
                 s
             }
             PropertyDeclarationId::Custom(name) => {
-              // TODO(bug 1840478): Handle non-inherited properties.
-              self.custom_properties
-                    .as_ref().inherited.unwrap()
+                // FIXME(bug 1273706): This should use a stylist to determine
+                // whether the name corresponds to an inherited custom property
+                // and then choose the inherited/non_inherited map accordingly.
+                // It should also fallback to registered initial values for
+                // non-inherited properties. See Servo_GetCustomPropertyValue.
+                let p = &self.custom_properties;
+                let value = p
+                    .inherited
+                    .as_ref()
                     .and_then(|map| map.get(name))
-                    .map_or(String::new(), |value| value.to_css_string())
+                    .or_else(|| p.non_inherited.as_ref().and_then(|map| map.get(name)));
+                value.map_or(String::new(), |value| value.to_css_string())
             }
         }
     }

@@ -8,6 +8,7 @@ use crate::applicable_declarations::{
     ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
 };
 use crate::context::{CascadeInputs, QuirksMode};
+use crate::custom_properties::CustomPropertiesMap;
 use crate::dom::TElement;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
@@ -695,6 +696,39 @@ impl Stylist {
         None
     }
 
+    /// Returns a map of initial values for registered properties with the
+    /// inherits flag set and a specified initial value.
+    /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
+    pub fn get_custom_property_initial_values(&self) -> Option<CustomPropertiesMap> {
+        let mut seen_names = PrecomputedHashSet::default();
+        let mut map = CustomPropertiesMap::default();
+        for (k, v) in self.custom_property_script_registry().properties().iter() {
+            seen_names.insert(k.clone());
+            if v.inherits {
+                if let Some(value) = &v.initial_value {
+                    map.insert(k.clone(), value.clone());
+                }
+            }
+        }
+        for (data, _) in self.iter_origins() {
+            for (k, v) in data.custom_property_registrations.iter() {
+                if seen_names.insert(k.clone()) {
+                    let last_value = &v.last().unwrap().0;
+                    if last_value.inherits {
+                        if let Some(ref value) = last_value.initial_value {
+                            map.insert(k.clone(), value.clone());
+                        }
+                    }
+                }
+            }
+        }
+        if map.is_empty() {
+            None
+        } else {
+            map.shrink_to_fit();
+            Some(map)
+        }
+    }
 
     /// Rebuilds (if needed) the CascadeData given a sheet collection.
     pub fn rebuild_author_data<S>(

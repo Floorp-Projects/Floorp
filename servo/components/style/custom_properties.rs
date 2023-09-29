@@ -9,6 +9,7 @@
 use crate::applicable_declarations::CascadePriority;
 use crate::media_queries::Device;
 use crate::properties::{CSSWideKeyword, CustomDeclaration, CustomDeclarationValue};
+use crate::properties_and_values::registry::PropertyRegistration;
 use crate::properties_and_values::value::ComputedValue as ComputedRegisteredValue;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, PrecomputedHasher};
 use crate::stylist::Stylist;
@@ -207,13 +208,30 @@ impl ToCss for SpecifiedValue {
 pub type CustomPropertiesMap =
     IndexMap<Name, Arc<VariableValue>, BuildHasherDefault<PrecomputedHasher>>;
 
+// IndexMap equality doesn't consider ordering, which we have to account for.
+// Also, for the same reason, IndexMap equality comparisons are slower than needed.
+//
+// See https://github.com/bluss/indexmap/issues/153
+fn maps_equal(l: Option<&CustomPropertiesMap>, r: Option<&CustomPropertiesMap>) -> bool {
+    match (l, r) {
+        (Some(l), Some(r)) => {
+            l.len() == r.len() &&
+                l.iter()
+                    .zip(r.iter())
+                    .all(|((k1, v1), (k2, v2))| k1 == k2 && v1 == v2)
+        },
+        (None, None) => true,
+        _ => false,
+    }
+}
+
 /// A pair of separate CustomPropertiesMaps, split between custom properties
 /// that have the inherit flag set and those with the flag unset.
 #[repr(C)]
 #[derive(Clone, Debug, Default)]
 pub struct ComputedCustomProperties {
-    /// Map for custom properties with inherit flag set, including classical CSS
-    /// variables. Defined as ref-counted for cheap copy.
+    /// Map for custom properties with inherit flag set, including non-registered
+    /// ones. Defined as ref-counted for cheap copy.
     pub inherited: Option<Arc<CustomPropertiesMap>>,
     /// Map for custom properties with inherit flag unset.
     pub non_inherited: Option<Box<CustomPropertiesMap>>,
@@ -225,31 +243,47 @@ impl ComputedCustomProperties {
         self.inherited.is_none() && self.non_inherited.is_none()
     }
 
+    /// Return the name and value of the property at specified index, if any.
+    pub fn property_at(&self, index: usize) -> Option<(&Name, &Arc<VariableValue>)> {
+        // Just expose the custom property items from
+        // custom_properties.inherited, followed by custom property items from
+        // custom_properties.non_inherited.
+        // TODO(bug 1855629): We should probably expose all properties that
+        // don't have the guaranteed-invalid-value (including non-inherited
+        // properties with an initial value), not just the ones in the maps.
+        // TODO(bug 1855629): In which order should we expose these properties?
+        match (&self.inherited, &self.non_inherited) {
+            (Some(p1), Some(p2)) => p1
+                .get_index(index)
+                .or_else(|| p2.get_index(index - p1.len())),
+            (Some(p1), None) => p1.get_index(index),
+            (None, Some(p2)) => p2.get_index(index),
+            (None, None) => None,
+        }
+    }
+
     fn read(&self) -> ReadOnlyCustomProperties {
         ReadOnlyCustomProperties {
             inherited: self.inherited.as_deref(),
             non_inherited: self.non_inherited.as_deref(),
         }
     }
+
+    fn inherited_equal(&self, other: &Self) -> bool {
+        maps_equal(self.inherited.as_deref(), other.inherited.as_deref())
+    }
+
+    fn non_inherited_equal(&self, other: &Self) -> bool {
+        maps_equal(
+            self.non_inherited.as_deref(),
+            other.non_inherited.as_deref(),
+        )
+    }
 }
 
 impl PartialEq for ComputedCustomProperties {
     fn eq(&self, other: &Self) -> bool {
-        // IndexMap equality doesn't consider ordering, which we have to account for.
-        // Also, for the same reason, IndexMap equality comparisons are slower than needed.
-        //
-        // See https://github.com/bluss/indexmap/issues/153
-        // TODO(bug 1840478): Handle non-inherited properties.
-        match (&self.inherited, &other.inherited) {
-            (Some(l), Some(r)) => {
-                l.len() == r.len() &&
-                    l.iter()
-                        .zip(r.iter())
-                        .all(|((k1, v1), (k2, v2))| k1 == k2 && v1 == v2)
-            },
-            (None, None) => true,
-            _ => false,
-        }
+        self.inherited_equal(other) && self.non_inherited_equal(other)
     }
 }
 
@@ -265,31 +299,44 @@ impl MutableCustomProperties {
     /// map, depending on whether the inherit flag is set or unset.
     fn insert(
         &mut self,
+        registration: Option<&PropertyRegistration>,
         name: Name,
         value: Arc<VariableValue>,
     ) -> Option<Arc<VariableValue>> {
-        // TODO(bug 1840478): Handle non-inherited properties.
-        let map = self
-            .inherited
-            .get_or_insert_with(|| UniqueArc::new(CustomPropertiesMap::default()));
-        map.insert(name, value)
+        self.get_map(registration).insert(name, value)
     }
 
     /// Remove a custom property from the corresponding inherited/non_inherited
     /// map, depending on whether the inherit flag is set or unset.
-    fn remove(&mut self, name: &Name) -> Option<Arc<VariableValue>> {
-        // TODO(bug 1840478): Handle non-inherited properties.
-        self.inherited.as_mut()?.remove(name)
+    fn remove(
+        &mut self,
+        registration: Option<&PropertyRegistration>,
+        name: &Name,
+    ) -> Option<Arc<VariableValue>> {
+        self.get_map(registration).remove(name)
     }
 
-    /// Shrink the capacity of the inherited/non_inherited maps as much as
-    /// possible.
-    fn shrink_to_fit(&mut self) {
+    /// Shrink the capacity of the inherited map as much as possible. An empty
+    /// map is just replaced with None.
+    fn inherited_shrink_to_fit(&mut self) {
         if let Some(ref mut map) = self.inherited {
-            map.shrink_to_fit();
+            if map.is_empty() {
+                self.inherited = None;
+            } else {
+                map.shrink_to_fit();
+            }
         }
+    }
+
+    /// Shrink the capacity of the non_inherited map as much as possible. An
+    /// empty map is just replaced with None.
+    fn non_inherited_shrink_to_fit(&mut self) {
         if let Some(ref mut map) = self.non_inherited {
-            map.shrink_to_fit();
+            if map.is_empty() {
+                self.non_inherited = None;
+            } else {
+                map.shrink_to_fit();
+            }
         }
     }
 
@@ -297,6 +344,16 @@ impl MutableCustomProperties {
         ReadOnlyCustomProperties {
             inherited: self.inherited.as_deref(),
             non_inherited: self.non_inherited.as_deref(),
+        }
+    }
+
+    fn get_map(&mut self, registration: Option<&PropertyRegistration>) -> &mut CustomPropertiesMap {
+        if registration.map_or(true, |r| r.inherits) {
+            self.inherited
+                .get_or_insert_with(|| UniqueArc::new(Default::default()))
+        } else {
+            self.non_inherited
+                .get_or_insert_with(|| Box::new(Default::default()))
         }
     }
 }
@@ -308,9 +365,13 @@ struct ReadOnlyCustomProperties<'a> {
 }
 
 impl<'a> ReadOnlyCustomProperties<'a> {
-    fn get(&self, name: &Name) -> Option<&Arc<VariableValue>> {
-        // TODO(bug 1840478): Handle non-inherited properties.
-        self.inherited?.get(name)
+    fn get(&self, stylist: &Stylist, name: &Name) -> Option<&Arc<VariableValue>> {
+        let registration = stylist.get_custom_property_registration(&name);
+        if registration.map_or(true, |r| r.inherits) {
+            self.inherited?.get(name)
+        } else {
+            self.non_inherited?.get(name)
+        }
     }
 }
 
@@ -697,7 +758,6 @@ fn parse_and_substitute_fallback<'i>(
     custom_properties: ReadOnlyCustomProperties,
     stylist: &Stylist,
 ) -> Result<ComputedValue, ParseError<'i>> {
-    debug_assert!(custom_properties.non_inherited.is_none());
     input.skip_whitespace();
     let after_comma = input.state();
     let first_token_type = input
@@ -766,12 +826,29 @@ pub struct CustomPropertiesBuilder<'a> {
 
 impl<'a> CustomPropertiesBuilder<'a> {
     /// Create a new builder, inheriting from a given custom properties map.
-    pub fn new(inherited: &'a ComputedCustomProperties, stylist: &'a Stylist) -> Self {
+    pub fn new(
+        inherited: &'a ComputedCustomProperties,
+        stylist: &'a Stylist,
+        is_root_element: bool,
+    ) -> Self {
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
             may_have_cycles: false,
-            custom_properties: MutableCustomProperties::default(),
+            custom_properties: MutableCustomProperties {
+                inherited: if is_root_element {
+                    debug_assert!(inherited.is_empty());
+                    stylist
+                        .get_custom_property_initial_values()
+                        .map(UniqueArc::new)
+                } else {
+                    // This should just be a copy of inherited.inherited, but
+                    // do it lazily and postpone that to when that actually
+                    // becomes necessary in the cascade and build methods.
+                    None
+                },
+                non_inherited: None,
+            },
             inherited,
             stylist,
         }
@@ -799,15 +876,16 @@ impl<'a> CustomPropertiesBuilder<'a> {
             return;
         }
 
-        // TODO(bug 1840478): Handle non-inherited properties.
+        // TODO(bug 1855887): Try to postpone cloning of inherited.inherited.
         if self.custom_properties.inherited.is_none() {
-            self.custom_properties.inherited = Some(match &self.inherited.inherited {
-                Some(inherited) => UniqueArc::new((**inherited).clone()),
-                None => UniqueArc::new(CustomPropertiesMap::default()),
-            });
+            self.custom_properties.inherited = self
+                .inherited
+                .inherited
+                .as_ref()
+                .map(|i| UniqueArc::new((**i).clone()));
         }
-
         let map = &mut self.custom_properties;
+        let custom_registration = self.stylist.get_custom_property_registration(&name);
         match *value {
             CustomDeclarationValue::Value(ref unparsed_value) => {
                 let has_custom_property_references =
@@ -828,17 +906,20 @@ impl<'a> CustomPropertiesBuilder<'a> {
                         );
                         return;
                     }
-                    if let Some(registration) = self.stylist.get_custom_property_registration(&name)
-                    {
+                    if let Some(registration) = custom_registration {
                         let mut input = ParserInput::new(&unparsed_value.css);
                         let mut input = Parser::new(&mut input);
                         if ComputedRegisteredValue::compute(&mut input, registration).is_err() {
-                            map.remove(name);
+                            map.remove(custom_registration, name);
                             return;
                         }
                     }
                 }
-                map.insert(name.clone(), Arc::clone(unparsed_value));
+                map.insert(
+                    custom_registration,
+                    name.clone(),
+                    Arc::clone(unparsed_value),
+                );
             },
             CustomDeclarationValue::CSSWideKeyword(keyword) => match keyword {
                 CSSWideKeyword::RevertLayer | CSSWideKeyword::Revert => {
@@ -847,43 +928,130 @@ impl<'a> CustomPropertiesBuilder<'a> {
                     self.reverted.insert(name, (priority, origin_revert));
                 },
                 CSSWideKeyword::Initial => {
-                    map.remove(name);
+                    // For non-inherited custom properties, 'initial' was handled in value_may_affect_style.
+                    debug_assert!(
+                        custom_registration.map_or(true, |r| r.inherits),
+                        "Should've been handled earlier"
+                    );
+                    map.remove(custom_registration, name);
+                    if let Some(registration) = custom_registration {
+                        if let Some(ref initial_value) = registration.initial_value {
+                            map.insert(custom_registration, name.clone(), initial_value.clone());
+                        }
+                    }
+                },
+                CSSWideKeyword::Inherit => {
+                    // For inherited custom properties, 'inherit' was handled in value_may_affect_style.
+                    debug_assert!(
+                        !custom_registration.map_or(true, |r| r.inherits),
+                        "Should've been handled earlier"
+                    );
+                    if let Some(inherited_value) = self
+                        .inherited
+                        .non_inherited
+                        .as_ref()
+                        .and_then(|m| m.get(name))
+                    {
+                        map.insert(custom_registration, name.clone(), inherited_value.clone());
+                    }
                 },
                 // handled in value_may_affect_style
-                CSSWideKeyword::Unset | CSSWideKeyword::Inherit => unreachable!(),
+                CSSWideKeyword::Unset => unreachable!(),
             },
         }
     }
 
     fn value_may_affect_style(&self, name: &Name, value: &CustomDeclarationValue) -> bool {
+        let custom_registration = self.stylist.get_custom_property_registration(&name);
         match *value {
-            CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Unset) |
             CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Inherit) => {
-                // Custom properties are inherited by default. So
-                // explicit 'inherit' or 'unset' means we can just use
-                // any existing value in the inherited CustomPropertiesMap.
+                // For inherited custom properties, explicit 'inherit' means we
+                // can just use any existing value in the inherited
+                // CustomPropertiesMap.
+                if custom_registration.map_or(true, |r| r.inherits) {
+                    return false;
+                }
+            },
+            CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Initial) => {
+                // For non-inherited custom properties, explicit 'initial' means
+                // we can just use any initial value in the registration.
+                if !custom_registration.map_or(true, |r| r.inherits) {
+                    return false;
+                }
+            },
+            CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Unset) => {
+                // Explicit 'unset' means we can either just use any existing
+                // value in the inherited CustomPropertiesMap or the initial
+                // value in the registration.
                 return false;
             },
             _ => {},
         }
 
-        // TODO(bug 1840478): Handle non-inherited properties.
-        let existing_value = self
-            .custom_properties
-            .inherited
-            .as_ref()
-            .and_then(|m| m.get(name))
-            .or_else(|| self.inherited.inherited.as_ref().and_then(|m| m.get(name)));
+        let existing_value = if custom_registration.map_or(true, |r| r.inherits) {
+            self.custom_properties
+                .inherited
+                .as_ref()
+                .and_then(|m| m.get(name))
+                .or_else(|| self.inherited.inherited.as_ref().and_then(|m| m.get(name)))
+        } else {
+            debug_assert!(self
+                .custom_properties
+                .non_inherited
+                .as_ref()
+                .map_or(true, |m| !m.contains_key(name)));
+            custom_registration.and_then(|m| m.initial_value.as_ref())
+        };
 
         match (existing_value, value) {
             (None, &CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Initial)) => {
-                // The initial value of a custom property is the same as it
+                debug_assert!(
+                    custom_registration.map_or(true, |r| r.inherits),
+                    "Should've been handled earlier"
+                );
+                // The initial value of a custom property without a
+                // guaranteed-invalid initial value is the same as it
                 // not existing in the map.
-                return false;
+                if custom_registration.map_or(true, |r| r.initial_value.is_none()) {
+                    return false;
+                }
+            },
+            (
+                Some(existing_value),
+                &CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Initial),
+            ) => {
+                debug_assert!(
+                    custom_registration.map_or(true, |r| r.inherits),
+                    "Should've been handled earlier"
+                );
+                // Don't bother overwriting an existing value with the initial
+                // value specified in the registration.
+                if let Some(registration) = custom_registration {
+                    if Some(existing_value) == registration.initial_value.as_ref() {
+                        return false;
+                    }
+                }
+            },
+            (Some(_), &CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Inherit)) => {
+                debug_assert!(
+                    !custom_registration.map_or(true, |r| r.inherits),
+                    "Should've been handled earlier"
+                );
+                // existing_value is the registered initial value.
+                // Don't bother adding it to self.custom_properties.non_inherited
+                // if the key is also absent from self.inherited.non_inherited.
+                if self
+                    .inherited
+                    .non_inherited
+                    .as_ref()
+                    .map_or(true, |m| !m.contains_key(name))
+                {
+                    return false;
+                }
             },
             (Some(existing_value), &CustomDeclarationValue::Value(ref value)) => {
-                // Don't bother overwriting an existing inherited value with
-                // the same specified value.
+                // Don't bother overwriting an existing value with the same
+                // specified value.
                 if existing_value == value {
                     return false;
                 }
@@ -895,16 +1063,18 @@ impl<'a> CustomPropertiesBuilder<'a> {
     }
 
     fn inherited_properties_match(&self, custom_properties: &MutableCustomProperties) -> bool {
-        // TODO(bug 1840478): Handle non-inherited properties.
         let (inherited, map) = match (&self.inherited.inherited, &custom_properties.inherited) {
             (Some(inherited), Some(map)) => (inherited, map),
-            (None, None) => return true,
+            (_, None) => return true,
             _ => return false,
         };
         if inherited.len() != map.len() {
             return false;
         }
         for name in self.seen.iter() {
+            // IndexMap.get() returns None if the element is not in the map, so
+            // we don't bother checking whether name actually corresponds to an
+            // inherited custom property here.
             if inherited.get(*name) != map.get(*name) {
                 return false;
             }
@@ -914,19 +1084,36 @@ impl<'a> CustomPropertiesBuilder<'a> {
 
     /// Returns the final map of applicable custom properties.
     ///
-    /// If there was any specified property, we've created a new map and now we
+    /// If there was any specified property or non-inherited custom property
+    /// with an initial value, we've created a new map and now we
     /// need to remove any potential cycles, and wrap it in an arc.
     ///
     /// Otherwise, just use the inherited custom properties map.
     pub fn build(mut self) -> ComputedCustomProperties {
-        // TODO(bug 1840478): Handle non-inherited properties.
-        debug_assert!(self.custom_properties.non_inherited.is_none());
-        debug_assert!(self.inherited.non_inherited.is_none());
         if self.custom_properties.inherited.is_none() {
-            return self.inherited.clone();
+            // Return early when self.custom_properties is empty, covering the
+            // common case of nodes without any custom property specified. In
+            // that situation, inherited properties will just use the value from
+            // self.inherited while non-inherited properties will use their
+            // initial values. These initial values are required to be
+            // 'computationally independent' but may still differ from the ones
+            // in self.inherited, so ensure they are used in the parent too.
+            if self.custom_properties.non_inherited.is_none() &&
+                self.inherited.non_inherited.is_none()
+            {
+                return self.inherited.clone();
+            }
         }
 
         if self.may_have_cycles {
+            // TODO(bug 1855887): Try to postpone cloning of inherited.inherited.
+            if self.custom_properties.inherited.is_none() {
+                self.custom_properties.inherited = self
+                    .inherited
+                    .inherited
+                    .as_ref()
+                    .map(|i| UniqueArc::new((**i).clone()));
+            }
             substitute_all(
                 &mut self.custom_properties,
                 self.inherited,
@@ -940,10 +1127,15 @@ impl<'a> CustomPropertiesBuilder<'a> {
         // haven't really changed, and save some memory by reusing the inherited
         // map in that case.
         if self.inherited_properties_match(&self.custom_properties) {
-            return self.inherited.clone();
+            self.custom_properties.non_inherited_shrink_to_fit();
+            return ComputedCustomProperties {
+                inherited: self.inherited.inherited.clone(),
+                non_inherited: self.custom_properties.non_inherited.take(),
+            };
         }
 
-        self.custom_properties.shrink_to_fit();
+        self.custom_properties.inherited_shrink_to_fit();
+        self.custom_properties.non_inherited_shrink_to_fit();
         ComputedCustomProperties {
             inherited: self
                 .custom_properties
@@ -1028,7 +1220,7 @@ fn substitute_all(
         // Some shortcut checks.
         let (name, value) = {
             let props = context.map.read();
-            let value = props.get(name)?;
+            let value = props.get(context.stylist, name)?;
 
             // Nothing to resolve.
             if value.references.custom_properties.is_empty() {
@@ -1127,12 +1319,18 @@ fn substitute_all(
             // Anything here is in a loop which can traverse to the
             // variable we are handling, so remove it from the map, it's invalid
             // at computed-value time.
-            context.map.remove(&var_name);
+            context.map.remove(
+                context.stylist.get_custom_property_registration(&var_name),
+                &var_name,
+            );
             in_loop = true;
         }
         if in_loop {
             // This variable is in loop. Resolve to invalid.
-            context.map.remove(&name);
+            context.map.remove(
+                context.stylist.get_custom_property_registration(&name),
+                &name,
+            );
             return None;
         }
 
@@ -1177,6 +1375,7 @@ fn substitute_references_in_value_and_apply(
 ) {
     debug_assert!(value.has_references());
 
+    let custom_registration = stylist.get_custom_property_registration(&name);
     let mut computed_value = ComputedValue::empty();
 
     {
@@ -1196,7 +1395,7 @@ fn substitute_references_in_value_and_apply(
             Ok(t) => t,
             Err(..) => {
                 // Invalid at computed value time.
-                custom_properties.remove(name);
+                custom_properties.remove(custom_registration, name);
                 return;
             },
         };
@@ -1205,7 +1404,7 @@ fn substitute_references_in_value_and_apply(
             .push_from(&input, position, last_token_type)
             .is_err()
         {
-            custom_properties.remove(name);
+            custom_properties.remove(custom_registration, name);
             return;
         }
     }
@@ -1215,34 +1414,53 @@ fn substitute_references_in_value_and_apply(
         let mut input = Parser::new(&mut input);
 
         // If variable fallback results in a wide keyword, deal with it now.
+        let inherits = custom_registration.map_or(true, |r| r.inherits);
+
         if let Ok(kw) = input.try_parse(CSSWideKeyword::parse) {
-            match kw {
-                CSSWideKeyword::Initial => {
-                    custom_properties.remove(name);
+            match (kw, inherits) {
+                (CSSWideKeyword::Initial, _) |
+                (CSSWideKeyword::Revert, false) |
+                (CSSWideKeyword::RevertLayer, false) |
+                (CSSWideKeyword::Unset, false) => {
+                    // TODO(bug 1273706): Do we really need to insert the initial value if inherits==false?
+                    custom_properties.remove(custom_registration, name);
+                    if let Some(registration) = custom_registration {
+                        if let Some(ref initial_value) = registration.initial_value {
+                            custom_properties.insert(
+                                custom_registration,
+                                name.clone(),
+                                Arc::clone(initial_value),
+                            );
+                        }
+                    }
                 },
-                CSSWideKeyword::Revert |
-                CSSWideKeyword::RevertLayer |
-                CSSWideKeyword::Inherit |
-                CSSWideKeyword::Unset => {
+                (CSSWideKeyword::Revert, true) |
+                (CSSWideKeyword::RevertLayer, true) |
+                (CSSWideKeyword::Inherit, _) |
+                (CSSWideKeyword::Unset, true) => {
+                    // TODO(bug 1273706): Do we really need to insert the inherited value if inherits==true?
                     // TODO: It's unclear what this should do for revert / revert-layer, see
                     // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
                     // seems fine?
-                    // TODO(bug 1840478): Handle non-inherited properties.
-                    match inherited.inherited.as_ref().and_then(|map| map.get(name)) {
+                    match inherited.read().get(stylist, name) {
                         Some(value) => {
-                            custom_properties.insert(name.clone(), Arc::clone(value));
+                            custom_properties.insert(
+                                custom_registration,
+                                name.clone(),
+                                Arc::clone(value),
+                            );
                         },
                         None => {
-                            custom_properties.remove(name);
+                            custom_properties.remove(custom_registration, name);
                         },
                     };
                 },
             }
             false
         } else {
-            if let Some(registration) = stylist.get_custom_property_registration(&name) {
+            if let Some(registration) = custom_registration {
                 if ComputedRegisteredValue::compute(&mut input, registration).is_err() {
-                    custom_properties.remove(name);
+                    custom_properties.remove(custom_registration, name);
                     return;
                 }
             }
@@ -1251,7 +1469,7 @@ fn substitute_references_in_value_and_apply(
     };
     if should_insert {
         computed_value.css.shrink_to_fit();
-        custom_properties.insert(name.clone(), Arc::new(computed_value));
+        custom_properties.insert(custom_registration, name.clone(), Arc::new(computed_value));
     }
 }
 
@@ -1272,7 +1490,6 @@ fn substitute_block<'i>(
     custom_properties: ReadOnlyCustomProperties,
     stylist: &Stylist,
 ) -> Result<TokenSerializationType, ParseError<'i>> {
-    debug_assert!(custom_properties.non_inherited.is_none());
     let mut last_token_type = TokenSerializationType::nothing();
     let mut set_position_at_next_iteration = false;
     loop {
@@ -1328,9 +1545,15 @@ fn substitute_block<'i>(
                             None
                         }
                     } else {
-                        // TODO(bug 1840478): Handle non-inherited properties.
                         registration = stylist.get_custom_property_registration(&name);
-                        custom_properties.get(&name).map(|v| &**v)
+                        let value = custom_properties.get(stylist, &name);
+                        if registration.map_or(true, |r| r.inherits) {
+                            value.map(|v| &**v)
+                        } else {
+                            value
+                                .or_else(|| registration.and_then(|m| m.initial_value.as_ref()))
+                                .map(|v| &**v)
+                        }
                     };
 
                     if let Some(v) = value {

@@ -290,7 +290,7 @@ where
 
     {
         let mut builder =
-            CustomPropertiesBuilder::new(inherited_style.custom_properties(), stylist);
+            CustomPropertiesBuilder::new(inherited_style.custom_properties(), stylist, is_root_element);
         for (declaration, priority) in iter {
             if let PropertyDeclaration::Custom(ref declaration) = *declaration {
                 builder.cascade(declaration, priority);
