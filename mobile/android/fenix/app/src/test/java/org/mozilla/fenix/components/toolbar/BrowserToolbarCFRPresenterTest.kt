@@ -256,6 +256,36 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
+    fun `GIVEN the current tab is showing a product page WHEN the tab is not loading AND another CFR is shown THEN the shopping CFR is not shown`() {
+        val tab = createTab(url = "")
+        val browserStore = createBrowserStore(
+            tab = tab,
+            selectedTabId = tab.id,
+        )
+        val presenter = createPresenter(
+            browserStore = browserStore,
+            settings = mockk {
+                every { shouldShowTotalCookieProtectionCFR } returns false
+                every { shouldShowReviewQualityCheckCFR } returns true
+                every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis()
+                every { shouldShowEraseActionCFR } returns false
+            },
+        )
+        every { presenter.popup } returns mockk()
+        every { presenter.showShoppingCFR(any()) } just Runs
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
+
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
+    }
+
+    @Test
     fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN the tab finishes loading THEN the CFR is shown`() {
         val tab = createTab(url = "")
         val browserStore = createBrowserStore(

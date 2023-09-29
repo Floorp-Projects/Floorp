@@ -99,7 +99,7 @@ class BrowserToolbarCFRPresenter(
                         .transformWhile { progress ->
                             emit(progress)
                             progress != 100
-                        }.filter { it == 100 }.collect {
+                        }.filter { popup == null && it == 100 }.collect {
                             scope?.cancel()
                             showTcpCfr()
                         }
@@ -112,7 +112,7 @@ class BrowserToolbarCFRPresenter(
                         .filter { it.isProductUrl && it.content.progress == 100 && !it.content.loading }
                         .distinctUntilChanged()
                         .map { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_page_actions).isVisible }
-                        .filter { it }
+                        .filter { popup == null && it }
                         .firstOrNull()
 
                     if (shouldShowCfr == true) {
@@ -134,7 +134,7 @@ class BrowserToolbarCFRPresenter(
                             emit(progress)
                             progress != 100
                         }
-                        .filter { it == 100 }
+                        .filter { popup == null && it == 100 }
                         .collect {
                             scope?.cancel()
                             showEraseCfr()
