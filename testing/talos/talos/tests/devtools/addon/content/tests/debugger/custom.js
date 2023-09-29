@@ -34,7 +34,7 @@ const {
 const IFRAME_BASE_URL =
   "http://damp.top.com/tests/devtools/addon/content/pages/";
 const EXPECTED = {
-  sources: 107,
+  sources: 1134,
   file: "App.js",
   sourceURL: `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/App.js`,
   text: "import React, { Component } from 'react';",
