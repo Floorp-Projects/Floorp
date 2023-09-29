@@ -166,6 +166,28 @@ impl SwSurface {
         let device_rect = transform.map_rect(&bounds.to_f32()).round_out();
         Some(device_rect.intersection(&clip_rect.to_f32())?.to_i32())
     }
+
+    /// Check that there are no missing tiles in the interior, or rather, that
+    /// the grid of tiles is solidly rectangular.
+    fn has_all_tiles(&self) -> bool {
+        if self.tiles.is_empty() {
+            return false;
+        }
+        // Find the min and max tile ids to identify the tile id bounds.
+        let mut min_x = i32::MAX;
+        let mut min_y = i32::MAX;
+        let mut max_x = i32::MIN;
+        let mut max_y = i32::MIN;
+        for tile in &self.tiles {
+            min_x = min_x.min(tile.x);
+            min_y = min_y.min(tile.y);
+            max_x = max_x.max(tile.x);
+            max_y = max_y.max(tile.y);
+        }
+        // If all tiles are present within the bounds, then the number of tiles
+        // should equal the area of the bounds.
+        (max_x + 1 - min_x) as usize * (max_y + 1 - min_y) as usize == self.tiles.len()
+    }
 }
 
 fn image_rendering_to_gl_filter(filter: ImageRendering) -> gl::GLenum {
@@ -830,6 +852,11 @@ impl SwCompositor {
             base.start.min(extra.start)..base.end.max(extra.end)
         }
 
+        // Ensure an occluder surface is both opaque and has all interior tiles.
+        fn valid_occluder(surface: &SwSurface) -> bool {
+            surface.is_opaque && surface.has_all_tiles()
+        }
+
         // Before we can try to occlude any surfaces, we need to fix their clip rects to tightly
         // bound the valid region. The clip rect might otherwise enclose an invalid area that
         // can't fully occlude anything even if the surface is opaque.
@@ -845,7 +872,7 @@ impl SwCompositor {
         for occlude_index in 0..self.frame_surfaces.len() {
             let (ref occlude_id, _, ref occlude_rect, _) = self.frame_surfaces[occlude_index];
             match self.surfaces.get(occlude_id) {
-                Some(occluder) if occluder.is_opaque && !occlude_rect.is_empty() => {}
+                Some(occluder) if valid_occluder(occluder) && !occlude_rect.is_empty() => {}
                 _ => continue,
             }
 
@@ -866,14 +893,14 @@ impl SwCompositor {
                     if includes(&occlude_x, &clip_x) {
                         if let Some(visible) = overlaps(&occlude_y, &clip_y) {
                             set_y_range(clip_rect, &visible);
-                            if surface.is_opaque && occlude_x == clip_x {
+                            if occlude_x == clip_x && valid_occluder(surface) {
                                 occlude_y = union(occlude_y, visible);
                             }
                         }
                     } else if includes(&occlude_y, &clip_y) {
                         if let Some(visible) = overlaps(&occlude_x, &clip_x) {
                             set_x_range(clip_rect, &visible);
-                            if surface.is_opaque && occlude_y == clip_y {
+                            if occlude_y == clip_y && valid_occluder(surface) {
                                 occlude_x = union(occlude_x, visible);
                             }
                         }
