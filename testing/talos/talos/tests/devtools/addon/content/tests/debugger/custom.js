@@ -213,28 +213,7 @@ async function testPreview(dbg, tab, testFunction) {
 }
 
 async function testOpeningLargeMinifiedFile(dbg, tab) {
-  dump("Add minified.js (large minified file)\n");
   const file = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
-
-  const messageManager = tab.linkedBrowser.messageManager;
-
-  // We don't want to impact the other tests from this file, so we add a new big minified
-  // file from the content process instead of having it directly in iframe.html.
-  messageManager.loadFrameScript(
-    `data:application/javascript,(${encodeURIComponent(
-      `function () {
-        const scriptEl = content.document.createElement("script");
-        scriptEl.setAttribute("type", "text/javascript");
-        scriptEl.setAttribute("src", "${file}");
-        content.document.body.append(scriptEl);
-      }`
-    )})()`,
-    true
-  );
-
-  dump("Wait until source is available\n");
-  await waitUntil(() => findSource(dbg, file));
-
   const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
 
   dump("Open minified.js (large minified file)\n");
