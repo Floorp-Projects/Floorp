@@ -88,20 +88,6 @@ export function formatSymbol(symbol) {
   };
 }
 
-export function formatSymbols(symbols, maxResults) {
-  if (!symbols) {
-    return { functions: [] };
-  }
-
-  let { functions } = symbols;
-  // Avoid formating more symbols than necessary
-  functions = functions.slice(0, maxResults);
-
-  return {
-    functions: functions.map(formatSymbol),
-  };
-}
-
 export function formatShortcutResults() {
   return [
     {
