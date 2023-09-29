@@ -150,15 +150,18 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
    */
   waitForContentPresented(browser) {
     return new Promise(resolve => {
-      browser.addEventListener(
-        "MozLayerTreeReady",
-        function onLayersReady(event) {
-          let now = Cu.now();
-          TalosParentProfiler.mark("MozLayerTreeReady seen by tabswitch");
-          resolve(now);
-        },
-        { once: true }
-      );
+      function onLayersReady() {
+        let now = Cu.now();
+        TalosParentProfiler.mark("Browser layers seen by tabswitch");
+        resolve(now);
+      }
+      if (browser.hasLayers) {
+        onLayersReady();
+        return;
+      }
+      browser.addEventListener("MozLayerTreeReady", onLayersReady, {
+        once: true,
+      });
     });
   }
 
