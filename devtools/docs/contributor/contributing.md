@@ -28,9 +28,9 @@ If you're more interested in user experience (think: wireframes, workflows, navi
 
 ## Help with BUGS! 🐛🐞 <!--TODO: we might want to split this out to another page with more detail, in addition to this introductory section-->
 
-Not less importantly, we also love **when people file bugs**. They help us a lot and are very valuable (specially when they come with reproducible steps, e.g. in the case of crashes or malfunctions). Here is a short [guide on how to file good bugs](./contributing/filing-good-bugs.md) if you've never done it before (or if you need a reminder).
+Not less importantly, we also love **when people file bugs**. They help us a lot and are very valuable (specially when they come with reproducible steps, e.g. in the case of crashes or malfunctions). Here is a short [guide on how to file good bugs](/contributing/filing-good-bugs.html) if you've never done it before (or if you need a reminder).
 
-Another thing that is super valuable is **reproducing** bugs (to validate they're happening in more than one environment), and also **completing** bugs, i.e. ensuring the bug has steps to reproduce, a test case, etc, as [mentioned on the guide](./contributing/filing-good-bugs.md). This saves time for the person(s) who will work on the bug, as then they can jump straight to fixing or implementing whatever is needed, instead of doing research work. If you can do any of these for a given bug, add a comment with the additional data that you found out.
+Another thing that is super valuable is **reproducing** bugs (to validate they're happening in more than one environment), and also **completing** bugs, i.e. ensuring the bug has steps to reproduce, a test case, etc, as [mentioned on the guide](/contributing/filing-good-bugs.html). This saves time for the person(s) who will work on the bug, as then they can jump straight to fixing or implementing whatever is needed, instead of doing research work. If you can do any of these for a given bug, add a comment with the additional data that you found out.
 
 Likewise, if you think that a bug is solved, because you can't reproduce it and doesn't happen any more, this is also useful to know. We can always do with closing more bugs, so please leave a comment detailing as much information as you can provide 😀
 
