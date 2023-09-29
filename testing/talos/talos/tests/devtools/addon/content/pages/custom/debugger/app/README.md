@@ -7,6 +7,6 @@ This package assumes yarn is installed.
 This `app` is built into `app-build/` folder which is used for the damp tests
 
 To build and copy this `app`:
-- Run `yarn install` to install all the dependencies
+- Run `yarn` to install all the dependencies
 - Make any needed changes in the `src` or `public` folders
 - Run `yarn copy-assets` to re build the `app`
