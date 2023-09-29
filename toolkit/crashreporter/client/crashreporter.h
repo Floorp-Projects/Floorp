@@ -16,7 +16,6 @@
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
-#include <iostream>
 #include <fstream>
 
 #define MAX_COMMENT_LENGTH 10000
