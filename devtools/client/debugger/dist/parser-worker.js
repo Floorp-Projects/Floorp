@@ -41974,13 +41974,27 @@
       return symbols;
     }
 
+    function getFunctionSymbols(sourceId, maxResults) {
+      const symbols = getInternalSymbols(sourceId);
+      if (!symbols) {
+        return [];
+      }
+      let { functions } = symbols;
+      // Avoid transferring more symbols than necessary
+      if (maxResults && functions.length > maxResults) {
+        functions = functions.slice(0, maxResults);
+      }
+      // The Outline & the Quick open panels do not need anonymous functions
+      return functions.filter(fn => fn.name !== "anonymous");
+    }
+
     // This is only called from the main thread and we return a subset of attributes
     function getSymbols(sourceId) {
       const symbols = getInternalSymbols(sourceId);
       return {
         // This is used in the main thread by:
         // - Outline panel
-        // - Quick Open
+        // - The `getFunctionSymbols` function
         // - The mapping of frame function names
         // And within the worker by `findOutOfScopeLocations`
         functions: symbols.functions,
@@ -43889,6 +43903,7 @@
       findOutOfScopeLocations,
       findBestMatchExpression,
       getSymbols,
+      getFunctionSymbols,
       getScopes,
       clearSources: clearAllHelpersForSources,
       hasSyntaxError,

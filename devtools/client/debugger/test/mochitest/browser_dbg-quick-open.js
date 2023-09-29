@@ -82,7 +82,7 @@ add_task(async function () {
   pressKey(dbg, "Tab");
   assertQuickOpenDisabled(dbg);
 
-  info("Testing function search");
+  info("Testing function search (anonymous fuctions should not display)");
   await quickOpen(dbg, "", "quickOpenFunc");
   await waitForResults(dbg, ["secondCall", "foo"]);
   is(resultCount(dbg), 2, "two function results");

@@ -17,6 +17,7 @@ export class ParserDispatcher extends WorkerDispatcher {
   getScopes = this.task("getScopes");
 
   getSymbols = this.task("getSymbols");
+  getFunctionSymbols = this.task("getFunctionSymbols");
 
   async setSource(sourceId, content) {
     const astSource = {
