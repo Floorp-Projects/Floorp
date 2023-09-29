@@ -11,7 +11,7 @@ General Notes
 =============
 
 * Enabling of new rules and adding plugins should happen in agreement with the
-  `JavaScript Usage, Tools and Style module owner and peers <mots/index.html#javascript-usage-tools-and-style>`_.
+  `JavaScript Usage, Tools and Style module owner and peers </mots/index.html#javascript-usage-tools-and-style>`_.
 
 * Enabling of rules for sub-components should also be discussed with the owner
   and peers.
