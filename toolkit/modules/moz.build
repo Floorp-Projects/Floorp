@@ -128,7 +128,7 @@ with Files("WindowsRegistry.sys.mjs"):
 
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 
 TESTING_JS_MODULES += [

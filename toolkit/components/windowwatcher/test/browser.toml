@@ -1,0 +1,35 @@
+[DEFAULT]
+tags = "openwindow"
+support-files = ["head.js"]
+
+["browser_new_content_window_chromeflags.js"]
+
+["browser_new_content_window_from_chrome_principal.js"]
+
+["browser_new_remote_window_flags.js"]
+
+["browser_new_sized_window.js"]
+skip-if = ["os == 'win'"] # Bug 1276802 - Opening windows from content on Windows might not get the size right
+
+["browser_non_popup_from_popup.js"]
+
+["browser_popup_condition_current.js"]
+skip-if = [
+  "debug", # Opening many windows takes a long time on slow builds
+  "tsan", # Opening many windows takes a long time on slow builds
+  "socketprocess_networking",
+]
+
+["browser_popup_condition_tab.js"]
+skip-if = [
+  "debug", # Opening many windows takes a long time on slow builds
+  "tsan", # Opening many windows takes a long time on slow builds
+  "socketprocess_networking",
+]
+
+["browser_popup_condition_window.js"]
+skip-if = [
+  "debug", # Opening many windows takes a long time on slow builds
+  "tsan", # Opening many windows takes a long time on slow builds
+  "socketprocess_networking",
+]

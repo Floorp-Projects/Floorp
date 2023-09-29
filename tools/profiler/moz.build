@@ -142,7 +142,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
 
     XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
     MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
-    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 UNIFIED_SOURCES += [
     "core/MicroGeckoProfiler.cpp",
