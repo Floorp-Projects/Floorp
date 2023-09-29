@@ -227,17 +227,15 @@ async function testOpeningLargeMinifiedFile(dbg, tab) {
   await onSelected;
   fullTest.done();
 
-  dbg.actions.closeTabs([MINIFIED_URL]);
+  await dbg.actions.closeTabs([findSource(dbg, MINIFIED_URL)]);
+
+  // Also clear to prevent reselecting this source
+  await dbg.actions.clearSelectedLocation();
 
   await garbageCollect();
 }
 
 async function testPrettyPrint(dbg, toolbox) {
-  // Close all existing tabs to have a clean state
-  const state = dbg.getState();
-  const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
-  await dbg.actions.closeTabs(tabURLs);
-
   const formattedFileUrl = `${MINIFIED_URL}:formatted`;
   const filePrettyChars = "82603: (e, t, n) => {\n";
 
@@ -270,7 +268,16 @@ async function testPrettyPrint(dbg, toolbox) {
     threadsCount: EXPECTED.threadsCount,
   });
 
-  dbg.actions.closeTabs([MINIFIED_URL, formattedFileUrl]);
+  // Clear the selection to avoid the source to be re-pretty printed on next load
+  // Clear the selection before closing the tabs, otherwise closeTabs will reselect a random source.
+  await dbg.actions.clearSelectedLocation();
+
+  // Close tabs and especially the pretty printed one to stop pretty printing it.
+  // Given that it is hard to find the non-pretty printed source via `findSource`
+  // (because bundle and pretty print sources use almost the same URL except ':formatted' for the pretty printed one)
+  // let's close all the tabs.
+  const sources = dbg.selectors.getSourceList(dbg.getState());
+  await dbg.actions.closeTabs(sources);
 
   await garbageCollect();
 }
