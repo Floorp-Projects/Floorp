@@ -2153,7 +2153,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
       end =
           this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
     } else {
-      // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
+      // NoSubsTemplate is of the form   |`...`|   or   |}...`|
       end =
           this->sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
     }
