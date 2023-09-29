@@ -33,10 +33,10 @@
 <div id="start">Start from here!!</div>
 <div id="div"></div>
 <div id="target">
-  <iframe id="frame" frameborder="0" scrolling="no" src="http://example.com/tests/dom/events/test/file_mouse_enterleave.html"></iframe>
+  <iframe id="frame" frameborder="0" scrolling="no"></iframe>
 </div>
 <div id="target2">
-  <iframe id="frame2" frameborder="0" scrolling="no" src="http://example.com/tests/dom/events/test/file_mouse_enterleave.html"></iframe>
+  <iframe id="frame2" frameborder="0" scrolling="no"></iframe>
 </div>
 <div id="reflow"></div>
 <script>
@@ -163,6 +163,18 @@ add_setup(async function() {
 
   // Move mouse to initial position.
   await moveMouseToInitialPosition();
+
+  // After initializing the mouse cursor position, we should load <iframe>s.
+  // This avoids the case that the cursor is over one of them.
+  info("Load child documents into the iframes");
+  let promiseLoadingIFrames = [];
+  for (const iframe of document.querySelectorAll("iframe")) {
+    promiseLoadingIFrames.push(
+      new Promise(resolve => { iframe.addEventListener("load", resolve, {once: true}); })
+    );
+    iframe.src = "http://example.com/tests/dom/events/test/file_mouse_enterleave.html";
+  }
+  await Promise.all(promiseLoadingIFrames);
 });
 
 add_task(async function testMouseEnterLeave() {
