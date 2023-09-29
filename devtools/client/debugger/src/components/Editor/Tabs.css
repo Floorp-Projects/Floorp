@@ -24,9 +24,11 @@
 .source-tabs {
   flex: auto;
   align-self: flex-start;
-  align-items: flex-start;
   /* Reserve space for the overflow button (even if not visible) */
   padding-inline-end: 28px;
+  /* Make sure that overflowing tabs don't show through other elements (see Bug 1855458) */
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .source-tab {
