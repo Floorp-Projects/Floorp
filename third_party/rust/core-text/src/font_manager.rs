@@ -7,41 +7,45 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::font_descriptor::{CTFontDescriptor, CTFontDescriptorRef};
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
+use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::string::CFString;
 use core_foundation::url::CFURLRef;
-use core_foundation::data::{CFDataRef, CFData};
-use crate::font_descriptor::{CTFontDescriptorRef, CTFontDescriptor};
 
 pub fn copy_available_font_family_names() -> CFArray<CFString> {
-    unsafe {
-        TCFType::wrap_under_create_rule(CTFontManagerCopyAvailableFontFamilyNames())
-    }
+    unsafe { TCFType::wrap_under_create_rule(CTFontManagerCopyAvailableFontFamilyNames()) }
 }
 
 pub fn create_font_descriptor(buffer: &[u8]) -> Result<CTFontDescriptor, ()> {
     let cf_data = CFData::from_buffer(buffer);
     unsafe {
-        let ct_font_descriptor_ref = CTFontManagerCreateFontDescriptorFromData(cf_data.as_concrete_TypeRef());
+        let ct_font_descriptor_ref =
+            CTFontManagerCreateFontDescriptorFromData(cf_data.as_concrete_TypeRef());
         if ct_font_descriptor_ref.is_null() {
             return Err(());
         }
-        Ok(CTFontDescriptor::wrap_under_create_rule(ct_font_descriptor_ref))
+        Ok(CTFontDescriptor::wrap_under_create_rule(
+            ct_font_descriptor_ref,
+        ))
     }
 }
 
 pub fn create_font_descriptor_with_data(data: CFData) -> Result<CTFontDescriptor, ()> {
     unsafe {
-        let ct_font_descriptor_ref = CTFontManagerCreateFontDescriptorFromData(data.as_concrete_TypeRef());
+        let ct_font_descriptor_ref =
+            CTFontManagerCreateFontDescriptorFromData(data.as_concrete_TypeRef());
         if ct_font_descriptor_ref.is_null() {
             return Err(());
         }
-        Ok(CTFontDescriptor::wrap_under_create_rule(ct_font_descriptor_ref))
+        Ok(CTFontDescriptor::wrap_under_create_rule(
+            ct_font_descriptor_ref,
+        ))
     }
 }
 
-extern {
+extern "C" {
     /*
      * CTFontManager.h
      */

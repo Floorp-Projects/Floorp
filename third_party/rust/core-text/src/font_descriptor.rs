@@ -15,7 +15,7 @@ use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::set::CFSetRef;
 use core_foundation::string::{CFString, CFStringRef};
-use core_foundation::url::{CFURL, CFURLRef};
+use core_foundation::url::{CFURLRef, CFURL};
 use core_graphics::base::CGFloat;
 
 use std::os::raw::c_void;
@@ -56,12 +56,24 @@ pub trait SymbolicTraitAccessors {
 }
 
 impl SymbolicTraitAccessors for CTFontSymbolicTraits {
-    fn is_italic(&self) -> bool { (*self & kCTFontItalicTrait) != 0 }
-    fn is_bold(&self) -> bool { (*self & kCTFontBoldTrait) != 0 }
-    fn is_expanded(&self) -> bool { (*self & kCTFontExpandedTrait) != 0 }
-    fn is_condensed(&self) -> bool { (*self & kCTFontCondensedTrait) != 0 }
-    fn is_monospace(&self) -> bool { (*self & kCTFontMonoSpaceTrait) != 0 }
-    fn is_vertical(&self) -> bool { (*self & kCTFontVerticalTrait) != 0 }
+    fn is_italic(&self) -> bool {
+        (*self & kCTFontItalicTrait) != 0
+    }
+    fn is_bold(&self) -> bool {
+        (*self & kCTFontBoldTrait) != 0
+    }
+    fn is_expanded(&self) -> bool {
+        (*self & kCTFontExpandedTrait) != 0
+    }
+    fn is_condensed(&self) -> bool {
+        (*self & kCTFontCondensedTrait) != 0
+    }
+    fn is_monospace(&self) -> bool {
+        (*self & kCTFontMonoSpaceTrait) != 0
+    }
+    fn is_vertical(&self) -> bool {
+        (*self & kCTFontVerticalTrait) != 0
+    }
 }
 
 pub type CTFontStylisticClass = u32;
@@ -134,7 +146,6 @@ impl TraitAccessorPrivate for CTFontTraits {
         let cftype = self.get(key);
         cftype.downcast::<CFNumber>().unwrap()
     }
-
 }
 
 impl TraitAccessors for CTFontTraits {
@@ -171,9 +182,12 @@ impl TraitAccessors for CTFontTraits {
 * CTFontDescriptor.h
 */
 pub type CTFontOrientation = u32;
-pub const kCTFontDefaultOrientation: CTFontOrientation = 0;
-pub const kCTFontHorizontalOrientation: CTFontOrientation = 1;
-pub const kCTFontVerticalOrientation: CTFontOrientation = 2;
+pub const kCTFontDefaultOrientation: CTFontOrientation = 0; // deprecated since macOS 10.11, iOS 9
+pub const kCTFontOrientationDefault: CTFontOrientation = 0; // introduced in macOS 10.8, iOS 6
+pub const kCTFontHorizontalOrientation: CTFontOrientation = 1; // deprecated since macOS 10.11, iOS 9
+pub const kCTFontOrientationHorizontal: CTFontOrientation = 1; // introduced in macOS 10.8, iOS 6
+pub const kCTFontVerticalOrientation: CTFontOrientation = 2; // deprecated since macOS 10.11, iOS 9
+pub const kCTFontOrientationVertical: CTFontOrientation = 2; // introduced in macOS 10.8, iOS 6
 
 pub type CTFontPriority = u32;
 pub const kCTFontPrioritySystem: CTFontPriority = 10000;
@@ -191,7 +205,11 @@ pub type CTFontDescriptorRef = *const __CTFontDescriptor;
 declare_TCFType! {
     CTFontDescriptor, CTFontDescriptorRef
 }
-impl_TCFType!(CTFontDescriptor, CTFontDescriptorRef, CTFontDescriptorGetTypeID);
+impl_TCFType!(
+    CTFontDescriptor,
+    CTFontDescriptorRef,
+    CTFontDescriptorGetTypeID
+);
 impl_CFTypeDescription!(CTFontDescriptor);
 
 // "Font objects (CTFont, CTFontDescriptor, and associated objects) can be used
@@ -204,7 +222,7 @@ impl CTFontDescriptor {
         unsafe {
             let value = CTFontDescriptorCopyAttribute(self.0, attribute);
             if value.is_null() {
-                return None
+                return None;
             }
 
             let value = CFType::wrap_under_create_rule(value);
@@ -213,7 +231,6 @@ impl CTFontDescriptor {
             Some(s.to_string())
         }
     }
-
 }
 
 impl CTFontDescriptor {
@@ -285,8 +302,10 @@ impl CTFontDescriptor {
 
     pub fn create_copy_with_attributes(&self, attr: CFDictionary) -> Result<CTFontDescriptor, ()> {
         unsafe {
-            let desc = CTFontDescriptorCreateCopyWithAttributes(self.as_concrete_TypeRef(),
-                                                                attr.as_concrete_TypeRef());
+            let desc = CTFontDescriptorCreateCopyWithAttributes(
+                self.as_concrete_TypeRef(),
+                attr.as_concrete_TypeRef(),
+            );
             if desc.is_null() {
                 return Err(());
             }
@@ -336,7 +355,7 @@ pub fn debug_descriptor(desc: &CTFontDescriptor) {
     desc.show();
 }
 
-extern {
+extern "C" {
     /*
      * CTFontTraits.h
      */
@@ -354,51 +373,69 @@ extern {
     // font attribute constants. Note that the name-related attributes
     // here are somewhat flaky. Servo creates CTFont instances and
     // then uses CTFontCopyName to get more fine-grained names.
-    pub static kCTFontURLAttribute:                  CFStringRef; // value: CFURLRef
-    pub static kCTFontNameAttribute:                 CFStringRef; // value: CFStringRef
-    pub static kCTFontDisplayNameAttribute:          CFStringRef; // value: CFStringRef
-    pub static kCTFontFamilyNameAttribute:           CFStringRef; // value: CFStringRef
-    pub static kCTFontStyleNameAttribute:            CFStringRef; // value: CFStringRef
-    pub static kCTFontTraitsAttribute:               CFStringRef;
-    pub static kCTFontVariationAttribute:            CFStringRef;
-    pub static kCTFontSizeAttribute:                 CFStringRef;
-    pub static kCTFontMatrixAttribute:               CFStringRef;
-    pub static kCTFontCascadeListAttribute:          CFStringRef;
-    pub static kCTFontCharacterSetAttribute:         CFStringRef;
-    pub static kCTFontLanguagesAttribute:            CFStringRef;
-    pub static kCTFontBaselineAdjustAttribute:       CFStringRef;
-    pub static kCTFontMacintoshEncodingsAttribute:   CFStringRef;
-    pub static kCTFontFeaturesAttribute:             CFStringRef;
-    pub static kCTFontFeatureSettingsAttribute:      CFStringRef;
-    pub static kCTFontFixedAdvanceAttribute:         CFStringRef;
-    pub static kCTFontOrientationAttribute:          CFStringRef;
-    pub static kCTFontFormatAttribute:               CFStringRef;
-    pub static kCTFontRegistrationScopeAttribute:    CFStringRef;
-    pub static kCTFontPriorityAttribute:             CFStringRef;
-    pub static kCTFontEnabledAttribute:              CFStringRef;
+    pub static kCTFontURLAttribute: CFStringRef; // value: CFURLRef
+    pub static kCTFontNameAttribute: CFStringRef; // value: CFStringRef
+    pub static kCTFontDisplayNameAttribute: CFStringRef; // value: CFStringRef
+    pub static kCTFontFamilyNameAttribute: CFStringRef; // value: CFStringRef
+    pub static kCTFontStyleNameAttribute: CFStringRef; // value: CFStringRef
+    pub static kCTFontTraitsAttribute: CFStringRef;
+    pub static kCTFontVariationAttribute: CFStringRef;
+    pub static kCTFontSizeAttribute: CFStringRef;
+    pub static kCTFontMatrixAttribute: CFStringRef;
+    pub static kCTFontCascadeListAttribute: CFStringRef;
+    pub static kCTFontCharacterSetAttribute: CFStringRef;
+    pub static kCTFontLanguagesAttribute: CFStringRef;
+    pub static kCTFontBaselineAdjustAttribute: CFStringRef;
+    pub static kCTFontMacintoshEncodingsAttribute: CFStringRef;
+    pub static kCTFontFeaturesAttribute: CFStringRef;
+    pub static kCTFontFeatureSettingsAttribute: CFStringRef;
+    pub static kCTFontFixedAdvanceAttribute: CFStringRef;
+    pub static kCTFontOrientationAttribute: CFStringRef;
+    pub static kCTFontFormatAttribute: CFStringRef;
+    pub static kCTFontRegistrationScopeAttribute: CFStringRef;
+    pub static kCTFontPriorityAttribute: CFStringRef;
+    pub static kCTFontEnabledAttribute: CFStringRef;
 
-    pub fn CTFontDescriptorCopyAttribute(descriptor: CTFontDescriptorRef,
-                                         attribute: CFStringRef) -> CFTypeRef;
+    pub fn CTFontDescriptorCopyAttribute(
+        descriptor: CTFontDescriptorRef,
+        attribute: CFStringRef,
+    ) -> CFTypeRef;
     pub fn CTFontDescriptorCopyAttributes(descriptor: CTFontDescriptorRef) -> CFDictionaryRef;
-    pub fn CTFontDescriptorCopyLocalizedAttribute(descriptor: CTFontDescriptorRef,
-                                                  attribute: CFStringRef,
-                                                  language: *mut CFStringRef) -> CFTypeRef;
-    pub fn CTFontDescriptorCreateCopyWithAttributes(original: CTFontDescriptorRef,
-                                                    attributes: CFDictionaryRef) -> CTFontDescriptorRef;
-    pub fn CTFontDescriptorCreateCopyWithFeature(original: CTFontDescriptorRef,
-                                                 featureTypeIdentifier: CFNumberRef,
-                                                 featureSelectorIdentifier: CFNumberRef) -> CTFontDescriptorRef;
-    pub fn CTFontDescriptorCreateCopyWithVariation(original: CTFontDescriptorRef,
-                                                   variationIdentifier: CFNumberRef,
-                                                   variationValue: CGFloat) -> CTFontDescriptorRef;
-    pub fn CTFontDescriptorCreateMatchingFontDescriptor(descriptor: CTFontDescriptorRef,
-                                                        mandatoryAttributes: CFSetRef) -> CTFontDescriptorRef;
-    pub fn CTFontDescriptorCreateWithAttributes(attributes: CFDictionaryRef) -> CTFontDescriptorRef;
-    pub fn CTFontDescriptorCreateWithNameAndSize(name: CFStringRef, size: CGFloat) -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCopyLocalizedAttribute(
+        descriptor: CTFontDescriptorRef,
+        attribute: CFStringRef,
+        language: *mut CFStringRef,
+    ) -> CFTypeRef;
+    pub fn CTFontDescriptorCreateCopyWithAttributes(
+        original: CTFontDescriptorRef,
+        attributes: CFDictionaryRef,
+    ) -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCreateCopyWithFeature(
+        original: CTFontDescriptorRef,
+        featureTypeIdentifier: CFNumberRef,
+        featureSelectorIdentifier: CFNumberRef,
+    ) -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCreateCopyWithVariation(
+        original: CTFontDescriptorRef,
+        variationIdentifier: CFNumberRef,
+        variationValue: CGFloat,
+    ) -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCreateMatchingFontDescriptor(
+        descriptor: CTFontDescriptorRef,
+        mandatoryAttributes: CFSetRef,
+    ) -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCreateWithAttributes(attributes: CFDictionaryRef)
+        -> CTFontDescriptorRef;
+    pub fn CTFontDescriptorCreateWithNameAndSize(
+        name: CFStringRef,
+        size: CGFloat,
+    ) -> CTFontDescriptorRef;
     pub fn CTFontDescriptorGetTypeID() -> CFTypeID;
 }
 
-extern {
-    pub fn CTFontDescriptorCreateMatchingFontDescriptors(descriptor: CTFontDescriptorRef,
-                                                         mandatoryAttributes: CFSetRef) -> CFArrayRef;
+extern "C" {
+    pub fn CTFontDescriptorCreateMatchingFontDescriptors(
+        descriptor: CTFontDescriptorRef,
+        mandatoryAttributes: CFSetRef,
+    ) -> CFArrayRef;
 }
