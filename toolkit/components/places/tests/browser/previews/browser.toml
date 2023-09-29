@@ -1,0 +1,9 @@
+[DEFAULT]
+prefs = [
+  "browser.pagethumbnails.capturing_disabled=false",
+  "places.previews.enabled=true",
+  "places.previews.log=true",
+]
+
+["browser_thumbnails.js"]
+

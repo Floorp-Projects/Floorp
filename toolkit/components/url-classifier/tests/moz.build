@@ -7,7 +7,7 @@
 MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 
 TESTING_JS_MODULES += [
     "UrlClassifierTestUtils.sys.mjs",

@@ -9,7 +9,7 @@ XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini", "unit_ipc/xpcshell.ini"]
 if CONFIG["MOZ_PHC"]:
     XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell-phc.ini", "unit_ipc/xpcshell-phc.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 
 UNIFIED_SOURCES += [
     "../google-breakpad/src/processor/basic_code_modules.cc",

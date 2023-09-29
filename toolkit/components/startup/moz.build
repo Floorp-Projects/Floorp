@@ -10,7 +10,7 @@ EXPORTS.mozilla += [
     "StartupTimeline.h",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 UNIFIED_SOURCES += [

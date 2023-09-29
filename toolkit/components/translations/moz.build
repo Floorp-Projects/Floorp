@@ -11,7 +11,7 @@ with Files("**"):
 
 DIRS += ["actors"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
