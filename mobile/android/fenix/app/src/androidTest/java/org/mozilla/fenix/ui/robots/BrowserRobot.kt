@@ -800,13 +800,31 @@ class BrowserRobot {
         )
     }
 
-    fun verifyPrivateBrowsingOpenLinkInAnotherAppPrompt(url: String) =
-        assertItemContainingTextExists(
-            itemContainingText(
-                getStringResource(R.string.mozac_feature_applinks_confirm_dialog_title),
-            ),
-            itemContainingText(url),
-        )
+    fun verifyPrivateBrowsingOpenLinkInAnotherAppPrompt(url: String, pageObject: UiObject) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertItemContainingTextExists(
+                    itemContainingText(
+                        getStringResource(R.string.mozac_feature_applinks_confirm_dialog_title),
+                    ),
+                    itemContainingText(url),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage {
+                        waitForPageToLoad()
+                        clickPageObject(pageObject)
+                    }
+                }
+            }
+        }
+    }
 
     fun verifyFindInPageBar(exists: Boolean) =
         assertItemWithResIdExists(
