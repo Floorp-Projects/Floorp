@@ -1850,6 +1850,13 @@ cookieBannerHandling:
       description: >-
         Enables use of global CookieBannerRules, which apply to all sites.
         This enables handling of CMPs across sites without the use of site-specific rules.
+    enableGlobalRulesSubFrames:
+      type: boolean
+      setPref: cookiebanners.service.enableGlobalRules.subFrames
+      description: >-
+        Whether global rules are allowed to run in sub-frames. Running query
+        selectors in every sub-frame may negatively impact performance, but is
+        required for some CMPs.
     enableDetectOnly:
       type: boolean
       setPref: cookiebanners.service.detectOnly
@@ -1884,7 +1891,7 @@ feltPrivacy:
   description: Prefs for Felt Privacy v1 experiments
   owner: cmeador@mozilla.com
   hasExposure: true
-  exposureDescription: Exposure when user opens a private browsing window. 
+  exposureDescription: Exposure when user opens a private browsing window.
   variables:
     feltPrivacy:
       type: boolean

@@ -2027,6 +2027,14 @@
   value: false
   mirror: always
 
+# Whether global rules are allowed to run in sub-frames. Running query selectors
+# in every sub-frame may negatively impact performance, but is required for some
+# CMPs.
+- name: cookiebanners.service.enableGlobalRules.subFrames
+  type: bool
+  value: true
+  mirror: always
+
 # Enables the cookie banner cookie injector. The cookie banner cookie injector
 # depends on the `cookiebanners.service.mode` pref above.
 - name: cookiebanners.cookieInjector.enabled
