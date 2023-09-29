@@ -12,7 +12,6 @@
 #  include <windows.h>
 #  include <winnt.h>
 #  include <imagehlp.h>
-#  include <iostream>
 #  include <set>
 #  include <sstream>
 #  include <string>

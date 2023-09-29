@@ -8,7 +8,6 @@
 #include <shlwapi.h>
 #include <objbase.h>
 #include <string.h>
-#include <iostream>
 #include <vector>
 
 #include "mozilla/mscom/EnsureMTA.h"

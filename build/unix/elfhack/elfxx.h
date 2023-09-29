@@ -6,7 +6,6 @@
 #include <list>
 #include <vector>
 #include <cstring>
-#include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <elf.h>

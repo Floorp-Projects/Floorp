@@ -6,7 +6,7 @@
 
 #include "PseudoStyleType.h"
 
-#include <iostream>
+#include <ostream>
 
 namespace mozilla {
 
