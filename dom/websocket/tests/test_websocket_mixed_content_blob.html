@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket mixed content tests - load secure and insecure websockets</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="container"></div>
+<script class="testbody" type="text/javascript">
+
+let testsCompleted = 0;
+const numberOfTestCases = 2;
+
+function markTestCaseComplete() {
+  testsCompleted++;
+
+  if (testsCompleted == numberOfTestCases) {
+    SimpleTest.finish();
+  }
+}
+
+onmessage = (event) => {
+  if (event.data.method === "ws://mochi.test:8888") {
+    is(event.data.result, "SecurityError", "SecurityError should be received from insecure websocket creation in Secure Context.");
+    markTestCaseComplete();
+  }
+  else if (event.data.method === "wss://example.com") {
+    is(event.data.result, "WS onopen", "onopen method should be run from secure websocket creation in Secure Context.");
+    markTestCaseComplete();
+  }
+}
+
+function testWebSocketBlob (method) {
+  let blob = URL.createObjectURL(
+    new Blob(
+      [`<!DOCTYPE html><script>
+        try {
+          let socket = new WebSocket("${method}/tests/dom/websocket/tests/file_websocket_hello");
+          socket.onerror = (e) => {
+            opener.postMessage({result: 'WS onerror', method: '${method}'}, '*');
+            close();
+          };
+          socket.onopen = (e) => {
+            socket.close();
+            opener.postMessage({result: 'WS onopen', method: '${method}'}, '*');
+            close();
+          };
+        }
+        catch(e) {
+          if (e instanceof DOMException) {
+            opener.postMessage({result: 'SecurityError', method: '${method}'}, '*');
+            close();
+          } else {
+            opener.postMessage({result: 'WS Throws something else!', method: '${method}'}, '*');
+            close();
+          }
+        }
+        <\/script>`],
+      {type: 'text/html'}
+    )
+  );
+
+  window.open(blob);
+}
+
+SimpleTest.waitForExplicitFinish();
+testWebSocketBlob("ws://mochi.test:8888");
+testWebSocketBlob("wss://example.com");
+
+</script>
+</body>
+</html>

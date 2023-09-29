@@ -6,30 +6,30 @@ onmessage = function(e) {
 }
 
 try{
-    let socket;
-    if (location.search == '?insecure') {
-      socket = new WebSocket('ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello');
-    }
-    else {
-      socket = new WebSocket('wss://example.com/tests/dom/websocket/tests/file_websocket_hello');
-    }
-    socket.onerror = function(e) {
-      parent.postMessage('WS onerror', '*');
-      close();
-    };
-    socket.onopen = function(event) {
-      socket.close();
-      parent.postMessage('WS onopen', '*');
-      close();
-    };
-  } catch(e) {
-    if (e.name == 'SecurityError') {
-      parent.postMessage('SecurityError', '*');
-    } else {
-      parent.postMessage('WS Throws something else!', '*');
-    }
-    close();
+  let socket;
+  if (location.search == '?insecure') {
+    socket = new WebSocket('ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello');
   }
+  else {
+    socket = new WebSocket('wss://example.com/tests/dom/websocket/tests/file_websocket_hello');
+  }
+  socket.onerror = function(e) {
+    parent.postMessage('WS onerror', '*');
+    close();
+  };
+  socket.onopen = function(e) {
+    socket.close();
+    parent.postMessage('WS onopen', '*');
+    close();
+  };
+} catch(e) {
+  if (e.name == 'SecurityError') {
+    parent.postMessage('SecurityError', '*');
+  } else {
+    parent.postMessage('WS Throws something else!', '*');
+  }
+  close();
+}
 
 </script>
 </body></html>
