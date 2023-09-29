@@ -296,54 +296,6 @@ class AudioEventTimeline {
     }
   }
 
-  void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv) {
-    AudioTimelineEvent event(AudioTimelineEvent::SetValueAtTime, aStartTime,
-                             aValue);
-
-    if (ValidateEvent(event, aRv)) {
-      InsertEvent<double>(event);
-    }
-  }
-
-  void LinearRampToValueAtTime(float aValue, double aEndTime,
-                               ErrorResult& aRv) {
-    AudioTimelineEvent event(AudioTimelineEvent::LinearRamp, aEndTime, aValue);
-
-    if (ValidateEvent(event, aRv)) {
-      InsertEvent<double>(event);
-    }
-  }
-
-  void ExponentialRampToValueAtTime(float aValue, double aEndTime,
-                                    ErrorResult& aRv) {
-    AudioTimelineEvent event(AudioTimelineEvent::ExponentialRamp, aEndTime,
-                             aValue);
-
-    if (ValidateEvent(event, aRv)) {
-      InsertEvent<double>(event);
-    }
-  }
-
-  void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant,
-                       ErrorResult& aRv) {
-    AudioTimelineEvent event(AudioTimelineEvent::SetTarget, aStartTime, aTarget,
-                             aTimeConstant);
-
-    if (ValidateEvent(event, aRv)) {
-      InsertEvent<double>(event);
-    }
-  }
-
-  void SetValueCurveAtTime(const float* aValues, uint32_t aValuesLength,
-                           double aStartTime, double aDuration,
-                           ErrorResult& aRv) {
-    AudioTimelineEvent event(AudioTimelineEvent::SetValueCurve, aStartTime,
-                             0.0f, 0.0f, aDuration, aValues, aValuesLength);
-    if (ValidateEvent(event, aRv)) {
-      InsertEvent<double>(event);
-    }
-  }
-
   template <typename TimeType>
   void CancelScheduledValues(TimeType aStartTime) {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
