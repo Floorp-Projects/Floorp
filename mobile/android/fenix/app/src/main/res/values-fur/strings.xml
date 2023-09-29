@@ -320,16 +320,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">No cumò</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Rint %s il to navigadôr di riferiment</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Rint Firefox il to navigadôr di riferiment</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s al met lis personis denant dai profits e al difint la tô riservatece blocant lis spiis inter-sît.\n\nPlui informazions sul nestri %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox al met lis personis denant dai profits e al difint la tô riservatece blocant lis spiis inter-sît.\n\nPlui informazions su la nestre informative su la riservatece.</string>
@@ -349,15 +342,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Jentre</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">No cumò</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Lis notifichis ti judin a jessi plui produtîf cun %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Lis notifichis ti judin a jessi plui produtîf cun Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Mande lis schedis tra dispositîfs, gjestìs i discjariaments e oten sugjeriments su cemût otignî il massim di %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Mande lis schedis tra dispositîfs, gjestìs i files discjamâts e oten sugjeriments su cemût tirâ fûr il massim di Firefox.</string>
@@ -569,6 +556,16 @@
     <string name="preferences_account_settings">Impostazions account</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Complete in automatic i URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Sugjeriments dai sponsors</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Supuarte %1$s cun sugjeriments sponsorizâts ocasionâi</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Sugjeriments di %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Oten sugjeriments dal web relatîfs ae tô ricercje</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Vierç i links tes aplicazions</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2242,10 +2239,10 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Controle cumò</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">No son ancjemò vonde recensions</string>
+    <string name="review_quality_check_no_reviews_warning_title">No son ancjemò vonde recensions</string>
 
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">A pene che chest prodot al varà plui recensions, o rivarìn a verificâ la lôr cualitât.</string>
+    <string name="review_quality_check_no_reviews_warning_body">A pene che chest prodot al varà plui recensions, o rivarìn a verificâ la lôr cualitât.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Il prodot nol è disponibil</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2254,7 +2251,7 @@
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Segnale che chest prodot al è di gnûf disponibil</string>
 
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Daûr a verificâ la cualitât recensions</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Daûr a verificâ la cualitât recensions</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Daûr a verificâ la cualitât recensions</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2264,9 +2261,9 @@
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">O varessin di vê informazions su lis recensions di chest prodot dentri di 24 oris. Torne controle plui tart.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Impussibil verificâ chestis recensions</string>
+    <string name="review_quality_check_not_analyzable_info_title">Impussibil verificâ chestis recensions</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Magari cussì no, ma nol è pussibil verificâ la cualitât des recensions par cualchi gjenar di prodot, come par esempli lis cjartis regâl, trasmissions video, musiche e zûcs.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Magari cussì no, ma nol è pussibil verificâ la cualitât des recensions par cualchi gjenar di prodot, come par esempli lis cjartis regâl, trasmissions video, musiche e zûcs.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Informazions disponibilis ca di pôc</string>
 
@@ -2277,14 +2274,14 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Capît</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Nissune informazion disponibile in chest moment</string>
+    <string name="review_quality_check_generic_error_title">Nissune informazion disponibile in chest moment</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">O stin lavorant par risolvi il probleme. Torne controle ca di pôc.</string>
+    <string name="review_quality_check_generic_error_body">O stin lavorant par risolvi il probleme. Torne controle ca di pôc.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Nissune conession di rêt</string>
+    <string name="review_quality_check_no_connection_title">Nissune conession di rêt</string>
 
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Controle la conession di rêt e prove a tornâ a cjariâ la pagjine.</string>
+    <string name="review_quality_check_no_connection_body">Controle la conession di rêt e prove a tornâ a cjariâ la pagjine.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">No son ancjemò informazions su chestis recensions</string>
 
@@ -2320,7 +2317,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Vierç verifiche recensions</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
 
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Vierç verifiche recensions</string>

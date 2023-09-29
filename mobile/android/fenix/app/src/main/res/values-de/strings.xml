@@ -2352,7 +2352,7 @@
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Rezensionsprüfer öffnen</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_close_handle_content_description">Rezensionsprüfer schliessen</string>
+    <string name="review_quality_check_close_handle_content_description">Rezensionsprüfer schließen</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s von 5 Sternen</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

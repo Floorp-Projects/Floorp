@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_alert_title">توربەت %1$s دا مۇنداق دېيىلگەن:</string>
+    <string name="mozac_browser_engine_system_alert_title">بەت %1$s تە دېيىلگىنى:</string>
     <!-- Text for the message of an auth dialog displayed by a web page.
     %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
     <string name="mozac_browser_engine_system_auth_message">%2$s ئىشلەتكۈچى ئىسمى بىلەن ئىمنى تەلەپ قىلىۋاتىدۇ. توربەتتە مۇنداق دېيىلگەن: «%1$s»</string>
