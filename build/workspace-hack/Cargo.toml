@@ -49,7 +49,7 @@ uuid = { version = "1", features = ["serde", "v4"], optional = true }
 scopeguard = { version = "1", optional = true }
 
 [build-dependencies]
-bindgen = { version = "0.66", default-features = false, features = ["runtime"], optional = true }
+bindgen = { version = "0.68", default-features = false, features = ["runtime"], optional = true }
 libc = "0.2"
 memchr = { version = "2", optional = true }
 nom = { version = "7", optional = true }

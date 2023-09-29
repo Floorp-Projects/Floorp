@@ -132,8 +132,9 @@ base64 = { path = "build/rust/base64" }
 # Patch wasi 0.10 to 0.11
 wasi = { path = "build/rust/wasi" }
 
-# Patch bindgen 0.63 and 0.64 to 0.66
+# Patch bindgen 0.63, 0.64 and 0.66 to 0.68
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
+bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }
 bindgen = { path = "build/rust/bindgen" }
 
 # Patch nix 0.24 to 0.26

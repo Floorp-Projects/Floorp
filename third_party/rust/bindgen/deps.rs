@@ -8,11 +8,11 @@ pub(crate) struct DepfileSpec {
 }
 
 impl DepfileSpec {
-    pub fn write(&self, deps: &BTreeSet<String>) -> std::io::Result<()> {
+    pub fn write(&self, deps: &BTreeSet<Box<str>>) -> std::io::Result<()> {
         std::fs::write(&self.depfile_path, self.to_string(deps))
     }
 
-    fn to_string(&self, deps: &BTreeSet<String>) -> String {
+    fn to_string(&self, deps: &BTreeSet<Box<str>>) -> String {
         // Transforms a string by escaping spaces and backslashes.
         let escape = |s: &str| s.replace('\\', "\\\\").replace(' ', "\\ ");
 
@@ -35,14 +35,14 @@ mod tests {
             depfile_path: PathBuf::new(),
         };
 
-        let deps: BTreeSet<String> = vec![
-            r"/absolute/path".to_owned(),
-            r"C:\win\absolute\path".to_owned(),
-            r"../relative/path".to_owned(),
-            r"..\win\relative\path".to_owned(),
-            r"../path/with spaces/in/it".to_owned(),
-            r"..\win\path\with spaces\in\it".to_owned(),
-            r"path\with/mixed\separators".to_owned(),
+        let deps: BTreeSet<_> = vec![
+            r"/absolute/path".into(),
+            r"C:\win\absolute\path".into(),
+            r"../relative/path".into(),
+            r"..\win\relative\path".into(),
+            r"../path/with spaces/in/it".into(),
+            r"..\win\path\with spaces\in\it".into(),
+            r"path\with/mixed\separators".into(),
         ]
         .into_iter()
         .collect();

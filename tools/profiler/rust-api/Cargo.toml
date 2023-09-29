@@ -14,7 +14,7 @@ mozbuild = "0.1"
 
 [build-dependencies]
 lazy_static = "1"
-bindgen = {version = "0.66", default-features = false}
+bindgen = {version = "0.68", default-features = false}
 mozbuild = "0.1"
 
 [features]
