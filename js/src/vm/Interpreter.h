@@ -364,7 +364,8 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        *  until we see the matching for-of.
        *
        *  Breaking out of multiple levels of for-of at once is handled
-       *  using nested FOR_OF_ITERCLOSE try-notes. Consider this code:
+       *  using nested TryNoteKind::ForOfIterClose try-notes. Consider this
+       * code:
        *
        *  try {
        *    loop: for (i of first) {
@@ -389,12 +390,12 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        *
        *  - At A, we find the outer for-of.
        *  - At B, we find the inner for-of.
-       *  - At C1, we find one FOR_OF_ITERCLOSE, skip past one FOR_OF, and find
-       *    the outer for-of. (This occurs if an exception is thrown while
-       *    closing the inner iterator.)
-       *  - At C2, we find two FOR_OF_ITERCLOSE, skip past two FOR_OF, and reach
-       *    the outer try-catch. (This occurs if an exception is thrown while
-       *    closing the outer iterator.)
+       *  - At C1, we find one TryNoteKind::ForOfIterClose, skip past one
+       *    TryNoteKind::ForOf, and find the outer for-of. (This occurs if an
+       *    exception is thrown while closing the inner iterator.)
+       *  - At C2, we find two TryNoteKind::ForOfIterClose, skip past two
+       *    TryNoteKind::ForOf, and reach the outer try-catch. (This occurs if
+       *    an exception is thrown while closing the outer iterator.)
        */
       if (tn_->kind() == TryNoteKind::ForOfIterClose) {
         uint32_t iterCloseDepth = 1;
