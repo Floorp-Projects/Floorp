@@ -3197,9 +3197,15 @@ export class UrlbarView {
     this.#mousedownSelectedElement = null;
   }
 
+  #isRelevantOverflowEvent(event) {
+    // We're interested only in the horizontal axis.
+    // 0 - vertical, 1 - horizontal, 2 - both
+    return event.detail != 0;
+  }
+
   on_overflow(event) {
     if (
-      event.detail == 1 /* horizontal overflow */ &&
+      this.#isRelevantOverflowEvent(event) &&
       this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, true);
@@ -3208,7 +3214,7 @@ export class UrlbarView {
 
   on_underflow(event) {
     if (
-      event.detail == 1 /* horizontal underflow */ &&
+      this.#isRelevantOverflowEvent(event) &&
       this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, false);
