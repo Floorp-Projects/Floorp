@@ -11,7 +11,6 @@
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
 #  include "mozilla/StackWalkThread.h"
-#  include "nsWindowsHelpers.h"
 #  include <io.h>
 #else
 #  include <unistd.h>
@@ -553,37 +552,26 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr,
   return retval;
 }
 
-// Returns a HANDLE to be used as the first parameter for Sym functions from
-// DbgHelp.dll, or nullptr if initialization failed.
-static HANDLE EnsureSymInitialized() {
-  static HANDLE sSymSession = []() -> HANDLE {
+static bool EnsureSymInitialized() {
+  static bool sInitialized = []() {
     if (!EnsureDbgHelpInitialized()) {
-      return nullptr;
+      return false;
     }
-
-    HANDLE symSession{};
-    if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(),
-                         GetCurrentProcess(), &symSession, 0, FALSE,
-                         DUPLICATE_SAME_ACCESS)) {
-      return nullptr;
-    }
-    nsAutoHandle autoSymSession{symSession};
 
     EnterCriticalSection(&gDbgHelpCS);
     SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    bool success = SymInitializeW(autoSymSession.get(), nullptr, TRUE);
+    bool success = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
     /* XXX At some point we need to arrange to call SymCleanup */
     LeaveCriticalSection(&gDbgHelpCS);
 
     if (!success) {
-      PrintError("SymInitializeW");
+      PrintError("SymInitialize");
     }
 
     MOZ_ASSERT(success);
-
-    return success ? autoSymSession.disown() : nullptr;
+    return success;
   }();
-  return sSymSession;
+  return sInitialized;
 }
 
 MFBT_API bool MozDescribeCodeAddress(void* aPC,
@@ -595,11 +583,11 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
   aDetails->function[0] = '\0';
   aDetails->foffset = 0;
 
-  HANDLE symSession = EnsureSymInitialized();
-  if (!symSession) {
+  if (!EnsureSymInitialized()) {
     return false;
   }
 
+  HANDLE myProcess = ::GetCurrentProcess();
   BOOL ok;
 
   // debug routines are not threadsafe, so grab the lock.
@@ -614,8 +602,7 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
   IMAGEHLP_MODULE64 modInfo;
   IMAGEHLP_LINE64 lineInfo;
   BOOL modInfoRes;
-  modInfoRes =
-      SymGetModuleInfoEspecial64(symSession, addr, &modInfo, &lineInfo);
+  modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
   if (modInfoRes) {
     strncpy(aDetails->library, modInfo.LoadedImageName,
@@ -639,7 +626,7 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
   pSymbol->MaxNameLen = MAX_SYM_NAME;
 
   DWORD64 displacement;
-  ok = SymFromAddr(symSession, addr, &displacement, pSymbol);
+  ok = SymFromAddr(myProcess, addr, &displacement, pSymbol);
 
   if (ok) {
     strncpy(aDetails->function, pSymbol->Name, sizeof(aDetails->function));
