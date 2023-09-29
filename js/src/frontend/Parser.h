@@ -1125,15 +1125,15 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   // with sub-functionality split out into the remaining methods.
 
   // |blockScope| may be non-null only when |kind| corresponds to a lexical
-  // declaration (that is, PNK_LET or PNK_CONST).
+  // declaration (that is, ParseNodeKind::LetDecl or ParseNodeKind::ConstDecl).
   //
   // The for* parameters, for normal declarations, should be null/ignored.
   // They should be non-null only when Parser::forHeadStart parses a
   // declaration at the start of a for-loop head.
   //
-  // In this case, on success |*forHeadKind| is PNK_FORHEAD, PNK_FORIN, or
-  // PNK_FOROF, corresponding to the three for-loop kinds.  The precise value
-  // indicates what was parsed.
+  // In this case, on success |*forHeadKind| is ParseNodeKind::ForHead,
+  // ParseNodeKind::ForIn, or ParseNodeKind::ForOf, corresponding to the three
+  // for-loop kinds.  The precise value indicates what was parsed.
   //
   // If parsing recognized a for(;;) loop, the next token is the ';' within
   // the loop-head that separates the init/test parts.
