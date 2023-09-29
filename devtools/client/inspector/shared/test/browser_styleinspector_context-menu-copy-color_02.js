@@ -35,7 +35,8 @@ async function testCopyToClipboard(inspector, view) {
     "color"
   ).valueSpan.querySelector(".ruleview-colorswatch");
 
-  const allMenuItems = openStyleContextMenuAndGetAllItems(view, element);
+  const menu = view.contextMenu._openMenu({ target: element });
+  const allMenuItems = buildContextMenuItems(menu);
   const menuitemCopyColor = allMenuItems.find(
     item =>
       item.label ===
@@ -45,29 +46,31 @@ async function testCopyToClipboard(inspector, view) {
   ok(menuitemCopyColor.visible, "Copy color is visible");
 
   await waitForClipboardPromise(() => menuitemCopyColor.click(), "#123ABC");
+  ok(true, "expected color was copied to clipboard");
 
-  EventUtils.synthesizeKey("KEY_Escape");
+  // close context menu
+  const onContextMenuClose = menu.once("close");
+  menu.hide(element.ownerDocument);
+  await onContextMenuClose;
 }
 
 async function testManualEdit(inspector, view) {
   info("Testing manually edited colors");
   await selectNode("div", inspector);
 
-  const { valueSpan } = getRuleViewProperty(view, "div", "color");
-
+  const colorTextProp = getTextProperty(view, 1, { color: "#123ABC" });
   const newColor = "#C9184E";
-  const editor = await focusEditableField(view, valueSpan);
+  await setProperty(view, colorTextProp, newColor);
 
-  info("Typing new value");
-  const input = editor.input;
-  const onBlur = once(input, "blur");
-  EventUtils.sendString(newColor + ";", view.styleWindow);
-  await onBlur;
-  await wait(1);
+  const colorValueElement = await waitFor(() => {
+    const el = getRuleViewProperty(view, "div", "color").valueSpan.firstChild;
+    if (el?.dataset?.color !== newColor) {
+      return false;
+    }
+    return el;
+  });
 
-  const colorValueElement = getRuleViewProperty(view, "div", "color").valueSpan
-    .firstChild;
-  is(colorValueElement.dataset.color, newColor, "data-color was updated");
+  ok(!!colorValueElement, "data-color was updated");
 
   const contextMenu = view.contextMenu;
   contextMenu.currentTarget = colorValueElement;
