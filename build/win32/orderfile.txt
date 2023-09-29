@@ -17078,6 +17078,7 @@ neqo_http3conn_is_zero_rtt
 ?ClassName@js@@YA?AV?$Handle@PAVPropertyName@js@@@JS@@W4JSProtoKey@@PAUJSContext@@@Z
 ?FormatStackDump@JS@@YA?AV?$UniquePtr@$$BY0A@DUFreePolicy@JS@@@mozilla@@PAUJSContext@@_N11@Z
 ?callee@FrameIter@js@@QBEPAVJSFunction@@PAUJSContext@@@Z
+?jsprintf@Sprinter@js@@QAA_NPBDZZ
 ?vprintf@GenericPrinter@js@@QAE_NPBDPAD@Z
 ?release@Sprinter@js@@QAE?AV?$UniquePtr@$$BY0A@DUFreePolicy@JS@@@mozilla@@XZ
 ??1Sprinter@js@@QAE@XZ
