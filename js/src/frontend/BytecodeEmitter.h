@@ -19,7 +19,7 @@
 #include <stdint.h>  // uint16_t, uint32_t
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/BytecodeSection.h"  // BytecodeSection, PerScriptData, CGScopeList
+#include "frontend/BytecodeSection.h"  // BytecodeSection, PerScriptData, GCThingList
 #include "frontend/DestructuringFlavor.h"  // DestructuringFlavor
 #include "frontend/EitherParser.h"         // EitherParser
 #include "frontend/IteratorKind.h"         // IteratorKind
