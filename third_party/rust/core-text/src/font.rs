@@ -20,10 +20,10 @@ use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef, UniChar};
-use core_foundation::url::{CFURL, CFURLRef};
+use core_foundation::url::{CFURLRef, CFURL};
 use core_graphics::base::CGFloat;
 use core_graphics::context::CGContext;
-use core_graphics::font::{CGGlyph, CGFont};
+use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
 use core_graphics::path::CGPath;
 
@@ -99,10 +99,10 @@ pub enum CTFontNameSpecifier {
     PostScriptCID,
 }
 
-impl Into<CFStringRef> for CTFontNameSpecifier {
-    fn into(self) -> CFStringRef {
+impl From<CTFontNameSpecifier> for CFStringRef {
+    fn from(val: CTFontNameSpecifier) -> Self {
         unsafe {
-            match self {
+            match val {
                 CTFontNameSpecifier::Copyright => kCTFontCopyrightNameKey,
                 CTFontNameSpecifier::Family => kCTFontFamilyNameKey,
                 CTFontNameSpecifier::SubFamily => kCTFontSubFamilyNameKey,
@@ -142,33 +142,56 @@ unsafe impl Sync for CTFont {}
 
 pub fn new_from_CGFont(cgfont: &CGFont, pt_size: f64) -> CTFont {
     unsafe {
-        let font_ref = CTFontCreateWithGraphicsFont(cgfont.as_ptr() as *mut _,
-                                                    pt_size as CGFloat,
-                                                    ptr::null(),
-                                                    ptr::null());
+        let font_ref = CTFontCreateWithGraphicsFont(
+            cgfont.as_ptr() as *mut _,
+            pt_size as CGFloat,
+            ptr::null(),
+            ptr::null(),
+        );
         CTFont::wrap_under_create_rule(font_ref)
     }
 }
 
-pub fn new_from_CGFont_with_variations(cgfont: &CGFont,
-                                       pt_size: f64,
-                                       variations: &CFDictionary<CFString, CFNumber>)
-                                       -> CTFont {
+pub fn new_from_CGFont_with_variations(
+    cgfont: &CGFont,
+    pt_size: f64,
+    variations: &CFDictionary<CFString, CFNumber>,
+) -> CTFont {
     unsafe {
         let font_desc = font_descriptor::new_from_variations(variations);
-        let font_ref = CTFontCreateWithGraphicsFont(cgfont.as_ptr() as *mut _,
-                                                    pt_size as CGFloat,
-                                                    ptr::null(),
-                                                    font_desc.as_concrete_TypeRef());
+        let font_ref = CTFontCreateWithGraphicsFont(
+            cgfont.as_ptr() as *mut _,
+            pt_size as CGFloat,
+            ptr::null(),
+            font_desc.as_concrete_TypeRef(),
+        );
         CTFont::wrap_under_create_rule(font_ref)
     }
 }
 
 pub fn new_from_descriptor(desc: &CTFontDescriptor, pt_size: f64) -> CTFont {
     unsafe {
-        let font_ref = CTFontCreateWithFontDescriptor(desc.as_concrete_TypeRef(),
-                                                      pt_size as CGFloat,
-                                                      ptr::null());
+        let font_ref = CTFontCreateWithFontDescriptor(
+            desc.as_concrete_TypeRef(),
+            pt_size as CGFloat,
+            ptr::null(),
+        );
+        CTFont::wrap_under_create_rule(font_ref)
+    }
+}
+
+pub fn new_from_descriptor_and_options(
+    desc: &CTFontDescriptor,
+    pt_size: f64,
+    options: CTFontOptions,
+) -> CTFont {
+    unsafe {
+        let font_ref = CTFontCreateWithFontDescriptorAndOptions(
+            desc.as_concrete_TypeRef(),
+            pt_size as CGFloat,
+            ptr::null(),
+            options,
+        );
         CTFont::wrap_under_create_rule(font_ref)
     }
 }
@@ -181,9 +204,8 @@ pub fn new_from_buffer(buffer: &[u8]) -> Result<CTFont, ()> {
 pub fn new_from_name(name: &str, pt_size: f64) -> Result<CTFont, ()> {
     unsafe {
         let name: CFString = name.parse().unwrap();
-        let font_ref = CTFontCreateWithName(name.as_concrete_TypeRef(),
-                                            pt_size as CGFloat,
-                                            ptr::null());
+        let font_ref =
+            CTFontCreateWithName(name.as_concrete_TypeRef(), pt_size as CGFloat, ptr::null());
         if font_ref.is_null() {
             Err(())
         } else {
@@ -192,15 +214,38 @@ pub fn new_from_name(name: &str, pt_size: f64) -> Result<CTFont, ()> {
     }
 }
 
-pub fn new_ui_font_for_language(ui_type: CTFontUIFontType,
-                                size: f64,
-                                language: Option<CFString>)
-                                -> CTFont {
+pub fn new_from_name_and_options(
+    name: &str,
+    pt_size: f64,
+    options: CTFontOptions,
+) -> Result<CTFont, ()> {
+    unsafe {
+        let name: CFString = name.parse().unwrap();
+        let font_ref = CTFontCreateWithNameAndOptions(
+            name.as_concrete_TypeRef(),
+            pt_size as CGFloat,
+            ptr::null(),
+            options,
+        );
+        if font_ref.is_null() {
+            Err(())
+        } else {
+            Ok(CTFont::wrap_under_create_rule(font_ref))
+        }
+    }
+}
+
+pub fn new_ui_font_for_language(
+    ui_type: CTFontUIFontType,
+    size: f64,
+    language: Option<CFString>,
+) -> CTFont {
     unsafe {
         let font_ref = CTFontCreateUIFontForLanguage(
             ui_type,
             size,
-            language.as_ref()
+            language
+                .as_ref()
                 .map(|x| x.as_concrete_TypeRef())
                 .unwrap_or(std::ptr::null()),
         );
@@ -218,9 +263,7 @@ pub fn new_ui_font_for_language(ui_type: CTFontUIFontType,
 impl CTFont {
     // Properties
     pub fn symbolic_traits(&self) -> CTFontSymbolicTraits {
-        unsafe {
-            CTFontGetSymbolicTraits(self.0)
-        }
+        unsafe { CTFontGetSymbolicTraits(self.0) }
     }
 }
 
@@ -242,24 +285,25 @@ impl CTFont {
 
     pub fn clone_with_font_size(&self, size: f64) -> CTFont {
         unsafe {
-            let font_ref = CTFontCreateCopyWithAttributes(self.0,
-                                                          size as CGFloat,
-                                                          ptr::null(),
-                                                          ptr::null());
+            let font_ref =
+                CTFontCreateCopyWithAttributes(self.0, size as CGFloat, ptr::null(), ptr::null());
             CTFont::wrap_under_create_rule(font_ref)
         }
     }
 
-    pub fn clone_with_symbolic_traits(&self,
-                                      trait_value: CTFontSymbolicTraits,
-                                      trait_mask: CTFontSymbolicTraits)
-                                      -> Option<CTFont> {
+    pub fn clone_with_symbolic_traits(
+        &self,
+        trait_value: CTFontSymbolicTraits,
+        trait_mask: CTFontSymbolicTraits,
+    ) -> Option<CTFont> {
         unsafe {
-            let font_ref = CTFontCreateCopyWithSymbolicTraits(self.0,
-                                                              0.0,
-                                                              ptr::null(),
-                                                              trait_value,
-                                                              trait_mask);
+            let font_ref = CTFontCreateCopyWithSymbolicTraits(
+                self.0,
+                0.0,
+                ptr::null(),
+                trait_value,
+                trait_mask,
+            );
             if font_ref.is_null() {
                 None
             } else {
@@ -311,119 +355,95 @@ impl CTFont {
     }
 
     pub fn all_traits(&self) -> CTFontTraits {
-        unsafe {
-            CTFontTraits::wrap_under_create_rule(CTFontCopyTraits(self.0))
-        }
+        unsafe { CTFontTraits::wrap_under_create_rule(CTFontCopyTraits(self.0)) }
     }
 
     // Font metrics
     pub fn ascent(&self) -> CGFloat {
-        unsafe {
-            CTFontGetAscent(self.0)
-        }
+        unsafe { CTFontGetAscent(self.0) }
     }
 
     pub fn descent(&self) -> CGFloat {
-        unsafe {
-            CTFontGetDescent(self.0)
-        }
+        unsafe { CTFontGetDescent(self.0) }
     }
 
     pub fn underline_thickness(&self) -> CGFloat {
-        unsafe {
-            CTFontGetUnderlineThickness(self.0)
-        }
+        unsafe { CTFontGetUnderlineThickness(self.0) }
     }
 
     pub fn underline_position(&self) -> CGFloat {
-        unsafe {
-            CTFontGetUnderlinePosition(self.0)
-        }
+        unsafe { CTFontGetUnderlinePosition(self.0) }
     }
 
     pub fn slant_angle(&self) -> CGFloat {
-        unsafe {
-            CTFontGetSlantAngle(self.0)
-        }
+        unsafe { CTFontGetSlantAngle(self.0) }
     }
 
     pub fn cap_height(&self) -> CGFloat {
-        unsafe {
-            CTFontGetCapHeight(self.0)
-        }
+        unsafe { CTFontGetCapHeight(self.0) }
     }
 
     pub fn bounding_box(&self) -> CGRect {
-        unsafe {
-            CTFontGetBoundingBox(self.0)
-        }
+        unsafe { CTFontGetBoundingBox(self.0) }
     }
 
     pub fn leading(&self) -> CGFloat {
-        unsafe {
-            CTFontGetLeading(self.0)
-        }
+        unsafe { CTFontGetLeading(self.0) }
     }
 
     pub fn units_per_em(&self) -> libc::c_uint {
-        unsafe {
-            CTFontGetUnitsPerEm(self.0)
-        }
+        unsafe { CTFontGetUnitsPerEm(self.0) }
     }
 
     pub fn x_height(&self) -> CGFloat {
-        unsafe {
-            CTFontGetXHeight(self.0)
-        }
+        unsafe { CTFontGetXHeight(self.0) }
     }
 
     pub fn pt_size(&self) -> CGFloat {
-        unsafe {
-            CTFontGetSize(self.0)
-        }
+        unsafe { CTFontGetSize(self.0) }
     }
 
     pub fn get_glyph_with_name(&self, glyph_name: &str) -> CGGlyph {
         let glyph_name = CFString::new(glyph_name);
-        unsafe {
-            CTFontGetGlyphWithName(self.0, glyph_name.as_concrete_TypeRef())
-        }
+        unsafe { CTFontGetGlyphWithName(self.0, glyph_name.as_concrete_TypeRef()) }
     }
 
-    pub unsafe fn get_glyphs_for_characters(&self,
-                                            characters: *const UniChar,
-                                            glyphs: *mut CGGlyph,
-                                            count: CFIndex)
-                                            -> bool {
+    pub unsafe fn get_glyphs_for_characters(
+        &self,
+        characters: *const UniChar,
+        glyphs: *mut CGGlyph,
+        count: CFIndex,
+    ) -> bool {
         CTFontGetGlyphsForCharacters(self.0, characters, glyphs, count)
     }
 
-    pub unsafe fn get_advances_for_glyphs(&self,
-                                          orientation: CTFontOrientation,
-                                          glyphs: *const CGGlyph,
-                                          advances: *mut CGSize,
-                                          count: CFIndex)
-                                          -> f64 {
-        CTFontGetAdvancesForGlyphs(self.0, orientation, glyphs, advances, count) as f64
+    pub unsafe fn get_advances_for_glyphs(
+        &self,
+        orientation: CTFontOrientation,
+        glyphs: *const CGGlyph,
+        advances: *mut CGSize,
+        count: CFIndex,
+    ) -> f64 {
+        CTFontGetAdvancesForGlyphs(self.0, orientation, glyphs, advances, count)
     }
 
-    pub unsafe fn get_vertical_translations_for_glyphs(&self,
-                                                       orientation: CTFontOrientation,
-                                                       glyphs: *const CGGlyph,
-                                                       translations: *mut CGSize,
-                                                       count: CFIndex) {
-        CTFontGetVerticalTranslationsForGlyphs(self.0,
-                                               orientation,
-                                               glyphs,
-                                               translations,
-                                               count)
+    pub unsafe fn get_vertical_translations_for_glyphs(
+        &self,
+        orientation: CTFontOrientation,
+        glyphs: *const CGGlyph,
+        translations: *mut CGSize,
+        count: CFIndex,
+    ) {
+        CTFontGetVerticalTranslationsForGlyphs(self.0, orientation, glyphs, translations, count)
     }
 
     pub fn get_font_table(&self, tag: u32) -> Option<CFData> {
         unsafe {
-            let result = CTFontCopyTable(self.0,
-                                         tag as CTFontTableTag,
-                                         kCTFontTableOptionsExcludeSynthetic);
+            let result = CTFontCopyTable(
+                self.0,
+                tag as CTFontTableTag,
+                kCTFontTableOptionsExcludeSynthetic,
+            );
             if result.is_null() {
                 None
             } else {
@@ -443,25 +463,32 @@ impl CTFont {
         }
     }
 
-    pub fn get_bounding_rects_for_glyphs(&self, orientation: CTFontOrientation, glyphs: &[CGGlyph])
-                                         -> CGRect {
+    pub fn get_bounding_rects_for_glyphs(
+        &self,
+        orientation: CTFontOrientation,
+        glyphs: &[CGGlyph],
+    ) -> CGRect {
         unsafe {
-            CTFontGetBoundingRectsForGlyphs(self.as_concrete_TypeRef(),
-                                            orientation,
-                                            glyphs.as_ptr(),
-                                            ptr::null_mut(),
-                                            glyphs.len() as CFIndex)
+            CTFontGetBoundingRectsForGlyphs(
+                self.as_concrete_TypeRef(),
+                orientation,
+                glyphs.as_ptr(),
+                ptr::null_mut(),
+                glyphs.len() as CFIndex,
+            )
         }
     }
 
     pub fn draw_glyphs(&self, glyphs: &[CGGlyph], positions: &[CGPoint], context: CGContext) {
         assert_eq!(glyphs.len(), positions.len());
         unsafe {
-            CTFontDrawGlyphs(self.as_concrete_TypeRef(),
-                             glyphs.as_ptr(),
-                             positions.as_ptr(),
-                             glyphs.len() as size_t,
-                             context.as_ptr())
+            CTFontDrawGlyphs(
+                self.as_concrete_TypeRef(),
+                glyphs.as_ptr(),
+                positions.as_ptr(),
+                glyphs.len() as size_t,
+                context.as_ptr(),
+            )
         }
     }
 
@@ -486,8 +513,11 @@ impl CTFont {
         }
     }
 
-    pub fn create_path_for_glyph(&self, glyph: CGGlyph, matrix: &CGAffineTransform)
-                                 -> Result<CGPath, ()> {
+    pub fn create_path_for_glyph(
+        &self,
+        glyph: CGGlyph,
+        matrix: &CGAffineTransform,
+    ) -> Result<CGPath, ()> {
         unsafe {
             let path = CTFontCreatePathForGlyph(self.0, glyph, matrix);
             if path.is_null() {
@@ -500,9 +530,7 @@ impl CTFont {
 
     #[inline]
     pub fn glyph_count(&self) -> CFIndex {
-        unsafe {
-            CTFontGetGlyphCount(self.0)
-        }
+        unsafe { CTFontGetGlyphCount(self.0) }
     }
 }
 
@@ -512,12 +540,30 @@ pub fn debug_font_names(font: &CTFont) {
         font.get_string_by_name_key(key).unwrap()
     }
 
-    println!("kCTFontFamilyNameKey: {}", get_key(font, CTFontNameSpecifier::Family));
-    println!("kCTFontSubFamilyNameKey: {}", get_key(font, CTFontNameSpecifier::SubFamily));
-    println!("kCTFontStyleNameKey: {}", get_key(font, CTFontNameSpecifier::Style));
-    println!("kCTFontUniqueNameKey: {}", get_key(font, CTFontNameSpecifier::Unique));
-    println!("kCTFontFullNameKey: {}", get_key(font, CTFontNameSpecifier::Full));
-    println!("kCTFontPostScriptNameKey: {}", get_key(font, CTFontNameSpecifier::PostScript));
+    println!(
+        "kCTFontFamilyNameKey: {}",
+        get_key(font, CTFontNameSpecifier::Family)
+    );
+    println!(
+        "kCTFontSubFamilyNameKey: {}",
+        get_key(font, CTFontNameSpecifier::SubFamily)
+    );
+    println!(
+        "kCTFontStyleNameKey: {}",
+        get_key(font, CTFontNameSpecifier::Style)
+    );
+    println!(
+        "kCTFontUniqueNameKey: {}",
+        get_key(font, CTFontNameSpecifier::Unique)
+    );
+    println!(
+        "kCTFontFullNameKey: {}",
+        get_key(font, CTFontNameSpecifier::Full)
+    );
+    println!(
+        "kCTFontPostScriptNameKey: {}",
+        get_key(font, CTFontNameSpecifier::PostScript)
+    );
 }
 
 pub fn debug_font_traits(font: &CTFont) {
@@ -531,21 +577,25 @@ pub fn debug_font_traits(font: &CTFont) {
     let traits = font.all_traits();
     println!("kCTFontWeightTrait: {}", traits.normalized_weight());
     println!("kCTFontWidthTrait: {}", traits.normalized_width());
-//    println!("kCTFontSlantTrait: {}", traits.normalized_slant());
+    //    println!("kCTFontSlantTrait: {}", traits.normalized_slant());
 }
 
 #[cfg(feature = "mountainlion")]
-pub fn cascade_list_for_languages(font: &CTFont, language_pref_list: &CFArray<CFString>) -> CFArray<CTFontDescriptor> {
+pub fn cascade_list_for_languages(
+    font: &CTFont,
+    language_pref_list: &CFArray<CFString>,
+) -> CFArray<CTFontDescriptor> {
     unsafe {
-        let font_collection_ref =
-            CTFontCopyDefaultCascadeListForLanguages(font.as_concrete_TypeRef(),
-                                                     language_pref_list.as_concrete_TypeRef());
+        let font_collection_ref = CTFontCopyDefaultCascadeListForLanguages(
+            font.as_concrete_TypeRef(),
+            language_pref_list.as_concrete_TypeRef(),
+        );
         CFArray::wrap_under_create_rule(font_collection_ref)
     }
 }
 
 #[link(name = "CoreText", kind = "framework")]
-extern {
+extern "C" {
     /*
      * CTFont.h
      */
@@ -593,20 +643,46 @@ extern {
     // to the documentation's Functions By Task listing, because there so many functions.
 
     /* Creating Fonts */
-    fn CTFontCreateWithName(name: CFStringRef, size: CGFloat, matrix: *const CGAffineTransform) -> CTFontRef;
-    //fn CTFontCreateWithNameAndOptions
-    fn CTFontCreateWithFontDescriptor(descriptor: CTFontDescriptorRef, size: CGFloat,
-                                      matrix: *const CGAffineTransform) -> CTFontRef;
-    //fn CTFontCreateWithFontDescriptorAndOptions
-    fn CTFontCreateUIFontForLanguage(uiType: CTFontUIFontType, size: CGFloat, language: CFStringRef) -> CTFontRef;
-    fn CTFontCreateCopyWithAttributes(font: CTFontRef, size: CGFloat, matrix: *const CGAffineTransform,
-                                      attributes: CTFontDescriptorRef) -> CTFontRef;
-    fn CTFontCreateCopyWithSymbolicTraits(font: CTFontRef,
-                                          size: CGFloat,
-                                          matrix: *const CGAffineTransform,
-                                          symTraitValue: CTFontSymbolicTraits,
-                                          symTraitMask: CTFontSymbolicTraits)
-                                          -> CTFontRef;
+    fn CTFontCreateWithName(
+        name: CFStringRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+    ) -> CTFontRef;
+    fn CTFontCreateWithNameAndOptions(
+        name: CFStringRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+        options: CTFontOptions,
+    ) -> CTFontRef;
+    fn CTFontCreateWithFontDescriptor(
+        descriptor: CTFontDescriptorRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+    ) -> CTFontRef;
+    fn CTFontCreateWithFontDescriptorAndOptions(
+        descriptor: CTFontDescriptorRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+        options: CTFontOptions,
+    ) -> CTFontRef;
+    fn CTFontCreateUIFontForLanguage(
+        uiType: CTFontUIFontType,
+        size: CGFloat,
+        language: CFStringRef,
+    ) -> CTFontRef;
+    fn CTFontCreateCopyWithAttributes(
+        font: CTFontRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+        attributes: CTFontDescriptorRef,
+    ) -> CTFontRef;
+    fn CTFontCreateCopyWithSymbolicTraits(
+        font: CTFontRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+        symTraitValue: CTFontSymbolicTraits,
+        symTraitMask: CTFontSymbolicTraits,
+    ) -> CTFontRef;
     //fn CTFontCreateCopyWithFamily
     //fn CTFontCreateForString
 
@@ -627,8 +703,10 @@ extern {
     //fn CTFontCopyLocalizedName(font: CTFontRef, nameKey: CFStringRef,
     //                           language: *CFStringRef) -> CFStringRef;
     #[cfg(feature = "mountainlion")]
-    fn CTFontCopyDefaultCascadeListForLanguages(font: CTFontRef, languagePrefList: CFArrayRef) -> CFArrayRef;
-
+    fn CTFontCopyDefaultCascadeListForLanguages(
+        font: CTFontRef,
+        languagePrefList: CFArrayRef,
+    ) -> CFArrayRef;
 
     /* Working With Encoding */
     //fn CTFontCopyCharacterSet
@@ -649,26 +727,33 @@ extern {
     fn CTFontGetXHeight(font: CTFontRef) -> CGFloat;
 
     /* Getting Glyph Data */
-    fn CTFontCreatePathForGlyph(font: CTFontRef, glyph: CGGlyph, matrix: *const CGAffineTransform)
-                                -> CGPathRef;
+    fn CTFontCreatePathForGlyph(
+        font: CTFontRef,
+        glyph: CGGlyph,
+        matrix: *const CGAffineTransform,
+    ) -> CGPathRef;
     fn CTFontGetGlyphWithName(font: CTFontRef, glyphName: CFStringRef) -> CGGlyph;
-    fn CTFontGetBoundingRectsForGlyphs(font: CTFontRef,
-                                       orientation: CTFontOrientation,
-                                       glyphs: *const CGGlyph,
-                                       boundingRects: *mut CGRect,
-                                       count: CFIndex)
-                                       -> CGRect;
-    fn CTFontGetAdvancesForGlyphs(font: CTFontRef,
-                                  orientation: CTFontOrientation,
-                                  glyphs: *const CGGlyph,
-                                  advances: *mut CGSize,
-                                  count: CFIndex)
-                                  -> libc::c_double;
-    fn CTFontGetVerticalTranslationsForGlyphs(font: CTFontRef,
-                                              orientation: CTFontOrientation,
-                                              glyphs: *const CGGlyph,
-                                              translations: *mut CGSize,
-                                              count: CFIndex);
+    fn CTFontGetBoundingRectsForGlyphs(
+        font: CTFontRef,
+        orientation: CTFontOrientation,
+        glyphs: *const CGGlyph,
+        boundingRects: *mut CGRect,
+        count: CFIndex,
+    ) -> CGRect;
+    fn CTFontGetAdvancesForGlyphs(
+        font: CTFontRef,
+        orientation: CTFontOrientation,
+        glyphs: *const CGGlyph,
+        advances: *mut CGSize,
+        count: CFIndex,
+    ) -> libc::c_double;
+    fn CTFontGetVerticalTranslationsForGlyphs(
+        font: CTFontRef,
+        orientation: CTFontOrientation,
+        glyphs: *const CGGlyph,
+        translations: *mut CGSize,
+        count: CFIndex,
+    );
 
     /* Working With Font Variations */
     fn CTFontCopyVariationAxes(font: CTFontRef) -> CFArrayRef;
@@ -679,27 +764,40 @@ extern {
     //fn CTFontCopyFeatureSettings
 
     /* Working with Glyphs */
-    fn CTFontGetGlyphsForCharacters(font: CTFontRef, characters: *const UniChar, glyphs: *mut CGGlyph, count: CFIndex) -> bool;
-    fn CTFontDrawGlyphs(font: CTFontRef,
-                        glyphs: *const CGGlyph,
-                        positions: *const CGPoint,
-                        count: size_t,
-                        context: CGContextRef);
+    fn CTFontGetGlyphsForCharacters(
+        font: CTFontRef,
+        characters: *const UniChar,
+        glyphs: *mut CGGlyph,
+        count: CFIndex,
+    ) -> bool;
+    fn CTFontDrawGlyphs(
+        font: CTFontRef,
+        glyphs: *const CGGlyph,
+        positions: *const CGPoint,
+        count: size_t,
+        context: CGContextRef,
+    );
     //fn CTFontGetLigatureCaretPositions
 
     /* Converting Fonts */
-    fn CTFontCopyGraphicsFont(font: CTFontRef, attributes: *mut CTFontDescriptorRef)
-                              -> CGFontRef;
-    fn CTFontCreateWithGraphicsFont(graphicsFont: CGFontRef, size: CGFloat,
-                                    matrix: *const CGAffineTransform,
-                                    attributes: CTFontDescriptorRef) -> CTFontRef;
+    fn CTFontCopyGraphicsFont(font: CTFontRef, attributes: *mut CTFontDescriptorRef) -> CGFontRef;
+    fn CTFontCreateWithGraphicsFont(
+        graphicsFont: CGFontRef,
+        size: CGFloat,
+        matrix: *const CGAffineTransform,
+        attributes: CTFontDescriptorRef,
+    ) -> CTFontRef;
     //fn CTFontGetPlatformFont
     //fn CTFontCreateWithPlatformFont
     //fn CTFontCreateWithQuickdrawInstance
 
     /* Getting Font Table Data */
     fn CTFontCopyAvailableTables(font: CTFontRef, options: CTFontTableOptions) -> CFArrayRef;
-    fn CTFontCopyTable(font: CTFontRef, table: CTFontTableTag, options: CTFontTableOptions) -> CFDataRef;
+    fn CTFontCopyTable(
+        font: CTFontRef,
+        table: CTFontTableTag,
+        options: CTFontTableOptions,
+    ) -> CFDataRef;
 
     fn CTFontGetTypeID() -> CFTypeID;
 }
@@ -730,20 +828,35 @@ fn macos_version() -> (i32, i32, i32) {
     f.read_to_end(&mut system_version_data).unwrap();
 
     use core_foundation::propertylist;
-    let (list, _) = propertylist::create_with_data(core_foundation::data::CFData::from_buffer(&system_version_data), propertylist::kCFPropertyListImmutable).unwrap();
+    let (list, _) = propertylist::create_with_data(
+        core_foundation::data::CFData::from_buffer(&system_version_data),
+        propertylist::kCFPropertyListImmutable,
+    )
+    .unwrap();
     let k = unsafe { propertylist::CFPropertyList::wrap_under_create_rule(list) };
 
-    let dict = unsafe { std::mem::transmute::<_, CFDictionary<CFType, CFType>>(k.downcast::<CFDictionary>().unwrap()) };
+    let dict = unsafe {
+        std::mem::transmute::<_, CFDictionary<CFType, CFType>>(
+            k.downcast::<CFDictionary>().unwrap(),
+        )
+    };
 
-    let version = dict.find(&CFString::new("ProductVersion").as_CFType())
-        .as_ref().unwrap()
-        .downcast::<CFString>().unwrap()
+    let version = dict
+        .find(&CFString::new("ProductVersion").as_CFType())
+        .as_ref()
+        .unwrap()
+        .downcast::<CFString>()
+        .unwrap()
         .to_string();
 
-    match version.split(".").map(|x| x.parse().unwrap()).collect::<Vec<_>>()[..] {
+    match version
+        .split('.')
+        .map(|x| x.parse().unwrap())
+        .collect::<Vec<_>>()[..]
+    {
         [a, b, c] => (a, b, c),
         [a, b] => (a, b, 0),
-        _ => panic!()
+        _ => panic!(),
     }
 }
 
@@ -791,16 +904,32 @@ fn copy_system_font() {
     let cgfont = new_from_CGFont(&cgfont, 0.);
     println!("{:?}", cgfont);
     let desc = cgfont.copy_descriptor();
-    let matching  = unsafe { crate::font_descriptor::CTFontDescriptorCreateMatchingFontDescriptor(desc.as_concrete_TypeRef(), std::ptr::null()) };
-    let matching =         unsafe { CTFontDescriptor::wrap_under_create_rule(matching) };
+    let matching = unsafe {
+        crate::font_descriptor::CTFontDescriptorCreateMatchingFontDescriptor(
+            desc.as_concrete_TypeRef(),
+            std::ptr::null(),
+        )
+    };
+    let matching = unsafe { CTFontDescriptor::wrap_under_create_rule(matching) };
 
     println!("{:?}", cgfont.copy_descriptor());
-    assert!(desc.attributes().find(CFString::from_static_string("NSFontSizeAttribute")).is_some());
+    assert!(desc
+        .attributes()
+        .find(CFString::from_static_string("NSFontSizeAttribute"))
+        .is_some());
 
     println!("{:?}", matching);
-    println!("{:?}", matching.attributes().find(CFString::from_static_string("NSFontSizeAttribute")));
+    println!(
+        "{:?}",
+        matching
+            .attributes()
+            .find(CFString::from_static_string("NSFontSizeAttribute"))
+    );
 
-    assert!(matching.attributes().find(CFString::from_static_string("NSFontSizeAttribute")).is_none());
+    assert!(matching
+        .attributes()
+        .find(CFString::from_static_string("NSFontSizeAttribute"))
+        .is_none());
 
     assert_eq!(small.postscript_name(), cgfont.postscript_name());
 }
@@ -821,17 +950,30 @@ fn out_of_range_variations() {
     let mut vals = Vec::new();
     dbg!(&axes);
     for axis in axes.iter() {
-        let tag = axis.find(unsafe { kCTFontVariationAxisIdentifierKey } )
-        .unwrap().downcast::<CFNumber>().unwrap().to_i64().unwrap();
-        let max = axis.find(unsafe { kCTFontVariationAxisMaximumValueKey } )
-            .unwrap().downcast::<CFNumber>().unwrap().to_f64().unwrap();
+        let tag = axis
+            .find(unsafe { kCTFontVariationAxisIdentifierKey })
+            .unwrap()
+            .downcast::<CFNumber>()
+            .unwrap()
+            .to_i64()
+            .unwrap();
+        let max = axis
+            .find(unsafe { kCTFontVariationAxisMaximumValueKey })
+            .unwrap()
+            .downcast::<CFNumber>()
+            .unwrap()
+            .to_f64()
+            .unwrap();
         vals.push((CFNumber::from(tag), CFNumber::from(max + 1.)));
-
     }
     let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-    let variation_attribute = unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
+    let variation_attribute =
+        unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
     let attrs_dict = CFDictionary::from_CFType_pairs(&[(variation_attribute.clone(), vals_dict)]);
-    let ct_var_font_desc = small.copy_descriptor().create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
+    let ct_var_font_desc = small
+        .copy_descriptor()
+        .create_copy_with_attributes(attrs_dict.to_untyped())
+        .unwrap();
     let variation_font = crate::font::new_from_descriptor(&ct_var_font_desc, 19.);
     let var_desc = variation_font.copy_descriptor();
     let var_attrs = var_desc.attributes();
@@ -839,17 +981,29 @@ fn out_of_range_variations() {
     // attributes greater than max are dropped on macOS <= 11
     // on macOS 12 they seem to be preserved as is.
     let var_attrs = var_attrs.find(variation_attribute);
-    if macos_version() >= (12, 0, 0) {
+    if macos_version() >= (12, 0, 0) && macos_version() < (13, 0, 0) {
         let var_attrs = var_attrs.unwrap().downcast::<CFDictionary>().unwrap();
         assert!(!var_attrs.is_empty());
         let var_attrs: CFDictionary<CFType, CFType> = unsafe { std::mem::transmute(var_attrs) };
         // attributes greater than max remain
         for axis in axes.iter() {
-            let tag = axis.find(unsafe { kCTFontVariationAxisIdentifierKey } )
-            .unwrap();
-            let max = axis.find(unsafe { kCTFontVariationAxisMaximumValueKey } )
-                .unwrap().downcast::<CFNumber>().unwrap().to_f64().unwrap();
-            let val = var_attrs.find(tag.clone()).unwrap().downcast::<CFNumber>().unwrap().to_f64().unwrap();
+            let tag = axis
+                .find(unsafe { kCTFontVariationAxisIdentifierKey })
+                .unwrap();
+            let max = axis
+                .find(unsafe { kCTFontVariationAxisMaximumValueKey })
+                .unwrap()
+                .downcast::<CFNumber>()
+                .unwrap()
+                .to_f64()
+                .unwrap();
+            let val = var_attrs
+                .find(tag.clone())
+                .unwrap()
+                .downcast::<CFNumber>()
+                .unwrap()
+                .to_f64()
+                .unwrap();
             assert_eq!(val, max + 1.);
         }
     } else if macos_version() >= (10, 15, 0) {
@@ -864,51 +1018,74 @@ fn out_of_range_variations() {
 fn equal_descriptor_different_font() {
     use crate::*;
 
-    let variation_attribute = unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
-    let size_attribute = unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontSizeAttribute) };
+    let variation_attribute =
+        unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
+    let size_attribute =
+        unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontSizeAttribute) };
 
     let sys_font = new_ui_font_for_language(kCTFontSystemDetailFontType, 19., None);
 
-
     // but we can still construct the CGFont by name
     let create_vars = |desc| {
-        let mut vals: Vec<(CFNumber, CFNumber)> = Vec::new();
-        vals.push((CFNumber::from(0x6f70737a), CFNumber::from(17.)));
+        let vals: Vec<(CFNumber, CFNumber)> =
+            vec![(CFNumber::from(0x6f70737a), CFNumber::from(17.))];
         let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-        let attrs_dict = CFDictionary::from_CFType_pairs(&[(variation_attribute.clone(), vals_dict)]);
-        let size_attrs_dict = CFDictionary::from_CFType_pairs(&[(size_attribute.clone(), CFNumber::from(120.))]);
+        let attrs_dict =
+            CFDictionary::from_CFType_pairs(&[(variation_attribute.clone(), vals_dict)]);
+        let size_attrs_dict =
+            CFDictionary::from_CFType_pairs(&[(size_attribute.clone(), CFNumber::from(120.))]);
         dbg!(&desc);
         let from_font_desc = new_from_descriptor(&desc, 120.).copy_descriptor();
-        let resized_font_desc = desc.create_copy_with_attributes(size_attrs_dict.to_untyped()).unwrap();
+        let resized_font_desc = desc
+            .create_copy_with_attributes(size_attrs_dict.to_untyped())
+            .unwrap();
         if macos_version() >= (11, 0, 0) {
             assert_eq!(from_font_desc, resized_font_desc);
         } else {
             // we won't have a name if we're using system font desc
-            if from_font_desc.attributes().find(unsafe { font_descriptor::kCTFontNameAttribute }).is_none() {
+            if from_font_desc
+                .attributes()
+                .find(unsafe { font_descriptor::kCTFontNameAttribute })
+                .is_none()
+            {
                 // it's surprising that desc's are the not equal but the attributes are
                 assert_ne!(from_font_desc, resized_font_desc);
-                assert_eq!(from_font_desc.attributes().to_untyped(), resized_font_desc.attributes().to_untyped());
+                assert_eq!(
+                    from_font_desc.attributes().to_untyped(),
+                    resized_font_desc.attributes().to_untyped()
+                );
+            } else if macos_version() >= (10, 13, 0) {
+                // this is unsurprising
+                assert_ne!(from_font_desc, resized_font_desc);
+                assert_ne!(
+                    from_font_desc.attributes().to_untyped(),
+                    resized_font_desc.attributes().to_untyped()
+                );
             } else {
-                if macos_version() >= (10, 13, 0) {
-                    // this is unsurprising
-                    assert_ne!(from_font_desc, resized_font_desc);
-                    assert_ne!(from_font_desc.attributes().to_untyped(), resized_font_desc.attributes().to_untyped());
-                } else {
-                    assert_ne!(from_font_desc, resized_font_desc);
-                    assert_eq!(from_font_desc.attributes().to_untyped(), resized_font_desc.attributes().to_untyped());
-                }
+                assert_ne!(from_font_desc, resized_font_desc);
+                assert_eq!(
+                    from_font_desc.attributes().to_untyped(),
+                    resized_font_desc.attributes().to_untyped()
+                );
             }
         }
 
-        let from_font_desc = from_font_desc.create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
-        let resized_font_desc = resized_font_desc.create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
+        let from_font_desc = from_font_desc
+            .create_copy_with_attributes(attrs_dict.to_untyped())
+            .unwrap();
+        let resized_font_desc = resized_font_desc
+            .create_copy_with_attributes(attrs_dict.to_untyped())
+            .unwrap();
         (from_font_desc, resized_font_desc)
     };
 
     // setting the variation works properly if we use system font desc
     let (from_font_desc, resized_font_desc) = create_vars(sys_font.copy_descriptor());
     assert_eq!(from_font_desc, resized_font_desc);
-    assert!(resized_font_desc.attributes().find(variation_attribute.clone()).is_some());
+    assert!(resized_font_desc
+        .attributes()
+        .find(variation_attribute.clone())
+        .is_some());
 
     // but doesn't if we refer to it by name
     let ps = sys_font.postscript_name();
@@ -921,11 +1098,20 @@ fn equal_descriptor_different_font() {
     }
 
     if macos_version() >= (10, 13, 0) {
-        assert!(from_font_desc.attributes().find(variation_attribute.clone()).is_some());
+        assert!(from_font_desc
+            .attributes()
+            .find(variation_attribute.clone())
+            .is_some());
         if macos_version() >= (11, 0, 0) {
-            assert!(resized_font_desc.attributes().find(variation_attribute).is_none());
+            assert!(resized_font_desc
+                .attributes()
+                .find(variation_attribute)
+                .is_none());
         } else {
-            assert!(resized_font_desc.attributes().find(variation_attribute).is_some());
+            assert!(resized_font_desc
+                .attributes()
+                .find(variation_attribute)
+                .is_some());
         };
     }
 }
@@ -942,12 +1128,15 @@ fn system_font_variation() {
     let cgfont = new_from_CGFont(&cgfont, 0.);
     let desc = cgfont.copy_descriptor();
 
-    let mut vals: Vec<(CFNumber, CFNumber)> = Vec::new();
-    vals.push((CFNumber::from(0x6f70737a /* opsz */), CFNumber::from(17.)));
+    let vals: Vec<(CFNumber, CFNumber)> =
+        vec![(CFNumber::from(0x6f70737a /* opsz */), CFNumber::from(17.))];
     let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-    let variation_attribute = unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
+    let variation_attribute =
+        unsafe { CFString::wrap_under_get_rule(font_descriptor::kCTFontVariationAttribute) };
     let attrs_dict = CFDictionary::from_CFType_pairs(&[(variation_attribute, vals_dict)]);
-    let ct_var_font_desc = desc.create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
+    let ct_var_font_desc = desc
+        .create_copy_with_attributes(attrs_dict.to_untyped())
+        .unwrap();
     let attrs = ct_var_font_desc.attributes();
     let var_attr = attrs.find(CFString::from_static_string("NSCTFontVariationAttribute"));
     if macos_version() >= (11, 0, 0) {
@@ -963,5 +1152,9 @@ fn system_font_variation() {
 #[test]
 fn ui_font() {
     // pass some garbagey inputs
-    new_ui_font_for_language(kCTFontSystemDetailFontType, 10000009., Some(CFString::from("Gofld")));
+    new_ui_font_for_language(
+        kCTFontSystemDetailFontType,
+        10000009.,
+        Some(CFString::from("Gofld")),
+    );
 }

@@ -7,14 +7,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::os::raw::c_void;
+use crate::line::CTLine;
+use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFRange, CFTypeID, TCFType};
-use core_foundation::array::{CFArrayRef, CFArray};
 use core_graphics::context::{CGContext, CGContextRef};
 use core_graphics::geometry::CGPoint;
 use core_graphics::path::{CGPath, SysCGPathRef};
 use foreign_types::{ForeignType, ForeignTypeRef};
-use crate::line::CTLine;
+use std::os::raw::c_void;
 
 #[repr(C)]
 pub struct __CTFrame(c_void);
@@ -30,9 +30,7 @@ impl_CFTypeDescription!(CTFrame);
 impl CTFrame {
     /// The `CGPath` used to create this `CTFrame`.
     pub fn get_path(&self) -> CGPath {
-        unsafe {
-            CGPath::from_ptr(CTFrameGetPath(self.as_concrete_TypeRef())).clone()
-        }
+        unsafe { CGPath::from_ptr(CTFrameGetPath(self.as_concrete_TypeRef())).clone() }
     }
 
     /// Returns an owned copy of the underlying lines.
@@ -42,7 +40,10 @@ impl CTFrame {
         unsafe {
             let array_ref = CTFrameGetLines(self.as_concrete_TypeRef());
             let array: CFArray<CTLine> = CFArray::wrap_under_get_rule(array_ref);
-            array.iter().map(|l| CTLine::wrap_under_get_rule(l.as_concrete_TypeRef())).collect()
+            array
+                .iter()
+                .map(|l| CTLine::wrap_under_get_rule(l.as_concrete_TypeRef()))
+                .collect()
         }
     }
 
@@ -65,7 +66,7 @@ impl CTFrame {
                 let array_ref = CTFrameGetLines(self.as_concrete_TypeRef());
                 let array: CFArray<CTLine> = CFArray::wrap_under_get_rule(array_ref);
                 array.len() - range.location
-            }
+            },
             n => n,
         };
         let len = len.max(0) as usize;
@@ -84,7 +85,7 @@ impl CTFrame {
 }
 
 #[link(name = "CoreText", kind = "framework")]
-extern {
+extern "C" {
     fn CTFrameGetTypeID() -> CFTypeID;
     fn CTFrameGetLines(frame: CTFrameRef) -> CFArrayRef;
     fn CTFrameDraw(frame: CTFrameRef, context: *mut <CGContext as ForeignType>::CType);

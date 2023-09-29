@@ -865,9 +865,9 @@ dependencies = [
 
 [[package]]
 name = "core-text"
-version = "20.0.0"
+version = "20.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02083d15989d6247553e1a63753561555a72b2038bba1e4239db70602a798742"
+checksum = "c9d2790b5c08465d49f8dc05c8bcae9fea467855947db39b0f8145c091aaced5"
 dependencies = [
  "core-foundation",
  "core-graphics",
