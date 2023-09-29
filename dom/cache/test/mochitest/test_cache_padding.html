@@ -35,7 +35,8 @@ function clearStorage() {
 function resetStorage() {
   return new Promise(function(resolve, reject) {
     var qms = SpecialPowers.Services.qms;
-    var request = qms.reset();
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var request = qms.resetStoragesForPrincipal(principal);
     var cb = SpecialPowers.wrapCallback(resolve);
     request.callback = cb;
   });
