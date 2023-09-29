@@ -1181,7 +1181,7 @@ var snapshotFormatters = {
       for (const codec_string of data.codecSupportInfo.split("\n")) {
         const s = codec_string.split(" ");
         const codec_name = s[0];
-        const codec_support = s[1];
+        const codec_support = s.slice(1);
 
         if (!(codec_name in codecs)) {
           codecs[codec_name] = {
@@ -1191,9 +1191,10 @@ var snapshotFormatters = {
           };
         }
 
-        if (codec_support === "SW") {
+        if (codec_support.includes("SW")) {
           codecs[codec_name].sw = true;
-        } else if (codec_support === "HW") {
+        }
+        if (codec_support.includes("HW")) {
           codecs[codec_name].hw = true;
         }
       }
