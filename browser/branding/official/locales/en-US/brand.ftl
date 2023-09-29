@@ -16,12 +16,12 @@
 ## For further details, consult:
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
--brand-shorter-name = Firefox
--brand-short-name = Firefox
--brand-shortcut-name = Firefox
--brand-full-name = Mozilla Firefox
+-brand-shorter-name = Floorp
+-brand-short-name = Floorp
+-brand-shortcut-name = Floorp
+-brand-full-name = Ablaze Floorp
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
--brand-product-name = Firefox
--vendor-short-name = Mozilla
-trademarkInfo = Firefox and the Firefox logos are trademarks of the Mozilla Foundation.
+-brand-product-name = Floorp
+-vendor-short-name = Ablaze
+trademarkInfo = Floorp and the Floorp logos are trademarks of the Ablaze.

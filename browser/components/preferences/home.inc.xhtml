@@ -33,7 +33,7 @@
                 class="check-home-page-controlled"
                 data-preference-related="browser.startup.homepage">
         <menupopup>
-          <menuitem value="0" data-l10n-id="home-mode-choice-default-fx" />
+          <menuitem value="0" data-l10n-id="floorp-home-mode-choice-default" />
           <menuitem value="2" data-l10n-id="home-mode-choice-custom" />
           <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
         </menupopup>
@@ -74,19 +74,52 @@
       </vbox>
     </vbox>
   </hbox>
-  <hbox id="newTabsOption" data-subcategory="newtabOverride" align="center">
-    <label control="newTabMode" data-l10n-id="home-newtabs-mode-label" flex="1" />
+  <vbox data-subcategory="newtabOverride">
+    <hbox id="newTabsOption" align="center">
+      <label control="newTabMode" data-l10n-id="home-newtabs-mode-label" flex="1" />
 
-    <vbox flex="1">
       <!-- This can be set to an extension value which is managed outside of
         Preferences so we need to handle setting the pref manually.-->
       <menulist id="newTabMode" flex="1" data-preference-related="browser.newtabpage.enabled">
         <menupopup>
-          <menuitem value="0" data-l10n-id="home-mode-choice-default-fx" />
+          <menuitem value="0" data-l10n-id="floorp-home-mode-choice-default" />
           <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
         </menupopup>
       </menulist>
-    </vbox>
-  </hbox>
+    </hbox>
+  </vbox>
+
+  <vbox data-subcategory="newTabBG">
+    <hbox id="newTabBackground_" align="center">
+      <label control="newTabbackground" data-l10n-id="newtab-background" flex="1" />
+
+      <menulist id="newTabbackground" flex="1" data-preference-related="browser.newtabpage.activity-stream.floorp.background.type">
+        <menupopup>
+          <menuitem value="1" data-l10n-id="newtab-background-random-image" />
+          <menuitem value="2" data-l10n-id="newtab-background-gradation" />
+          <menuitem value="3" data-l10n-id="newtab-background-selected-image" />
+          <menuitem value="0" data-l10n-id="newtab-background-not-background" />
+        </menupopup>
+      </menulist>
+    </hbox>
+    <label data-l10n-id="newtab-background-folder" style="margin-inline-end:1em;" class="pictureFolderDisplay"/>
+    <html:input id="pictureFolder" type="text" readonly="readonly" class="pictureFolderDisplay"/>
+    <hbox class="pictureFolderDisplay">
+      <button id="openImagesFolder" class="accessory-button" data-l10n-id="newtab-background-folder-open" style="-moz-box-flex:1"/>
+      <button id="reloadImages" class="accessory-button" data-l10n-id="newtab-background-folder-reload" style="-moz-box-flex:1"/>
+      <button id="resetFolder" class="accessory-button" data-l10n-id="newtab-background-folder-default" style="-moz-box-flex:1"/>
+      <button id="chooseImagesFolder" class="accessory-button" data-l10n-id="download-choose-folder" style="-moz-box-flex:1"/>
+    </hbox>
+
+    <label data-l10n-id="newtab-background-extensions" class="pictureFolderDisplay"/>
+    <hbox style="-moz-box-align:center;" class="pictureFolderDisplay">  
+      <html:input id="pictureExtensions" type="text" style="-moz-box-flex:1"/>
+      <button id="resetExtensions" class="accessory-button" data-l10n-id="newtab-background-folder-default"/>
+      <button id="saveExtensions" class="accessory-button" data-l10n-id="bookmark-panel-save-button"/>
+    </hbox>
+
+    <checkbox id="disableBlur" data-l10n-id="disable-blur-on-newtab"
+              preference="browser.newtabpage.activity-stream.floorp.newtab.backdrop.blur.disable"/>
+  </vbox>
 </groupbox>
 </html:template>

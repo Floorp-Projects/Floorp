@@ -1,0 +1,302 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#! SELF HOST DOES NOT SUPPORTED
+#TODO! buildjet config not implemented
+#TODO: separate Publish to other workflow
+
+name: "(A) ⚒ macOS Universal Build"
+on:
+  workflow_call:
+    inputs:
+      profgen:
+        description: generate profile for PGO.
+        type: boolean
+        default: false
+      beta:
+        type: boolean
+        default: false
+      #? if set this, use profdata, jarlog in build
+      build-with-profdata-and-jarlog:
+        description: build with profdata and jarlog
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
+      release-note-url:
+        type: string
+        required: false
+        default: ""
+    secrets:
+      MACOS_CROSS_TOOLS_KEY:
+        description: macOS cross tools 7z password
+        required: true
+  workflow_dispatch:
+    inputs:
+      profgen:
+        description: generate profile for PGO.
+        type: boolean
+        default: false
+      #? if set this, use profdata, jarlog in build
+      build-with-profdata-and-jarlog:
+        description: build with profdata and jarlog
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
+
+jobs:
+  mac-build:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson('[["ubuntu-latest"], ["buildjet-16vcpu-ubuntu-2204"]]')[inputs.buildjet] }}
+        arch: [x86_64, aarch64]
+    steps:
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "lts/*"
+    - name: Check Argument Compatibility
+      shell: node {0}
+      run: |
+        if (
+          process.env.GHA_profgen == "true"
+          && process.env.GHA_profdata_jarlog_artifact_name == "true"
+        ) {process.exit(-1); console.log("profgen and use-profdata is not compatible")}
+
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_profdata_jarlog_artifact_name: ${{inputs.build-with-profdata-and-jarlog}}
+        GHA_out-artifact-name: ${{inputs.out_artifact_name}}
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+        echo "$GHA_aarch64"
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+      with:
+        submodules: 'recursive'
+    
+    - name: Clone l10n-central 🧬
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/l10n-central
+        path: l10n-central
+
+    #! ON UBUNTU RUNNER
+    - name: Setup Disk & Swap Space 💿
+      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
+
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+    - uses: actions/download-artifact@v3
+      name: Download artifact if use profdata📥
+      if: inputs.build-with-profdata-and-jarlog
+      with:
+        name: floorp-${{ matrix.arch }}-apple-darwin-profdata-and-jarlog
+        path: ~/artifact
+
+    - name: Setup Cross Build tools 🪛
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    ## TODO: move mozconfig_darwin_pgo_base to src/macOS
+    - name: Create config for "${{ matrix.arch }}" 📦
+      run: |
+        sudo apt update
+        sudo apt upgrade -y
+
+        cp ./.github/workflows/src/mac/shared/mozconfig_darwin_pgo_base mozconfig
+
+        if [[ $GHA_ARCH == 'x86_64' ]];then
+          cat ./.github/workflows/src/mac/x86_64/x86_64-optimize-base >> mozconfig
+        else
+          cat ./.github/workflows/src/mac/aarch64/aarch64-optimize-base >> mozconfig
+        fi
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+      env:
+        GHA_ARCH: ${{matrix.arch}}
+
+    - name: Bootstrap 🥾
+      run: |
+
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        if [[ $GHA_profgen == 'true' ]]; then
+          echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        elif [[ $GHA_profdata_jarlog_artifact_name == 'true' ]]; then
+          echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+          echo 'ac_add_options --with-pgo-profile-path=$(echo ~)/artifact/merged.profdata' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog=$(echo ~)/artifact/en-US.log' >> mozconfig
+        fi
+
+        # SCCACHE START
+        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # SCCACHE END
+
+        ./mach --no-interactive bootstrap --application-choice browser
+
+        echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_profdata_jarlog_artifact_name : ${{inputs.build-with-profdata-and-jarlog}}
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: setup Rust 🦀
+      run: |
+        if [[ $GHA_ARCH == 'x86_64' ]];then
+          rustup target add x86_64-apple-darwin
+        else
+          rustup target add aarch64-apple-darwin
+        fi
+
+        #? https://github.com/mozilla/sccache#known-caveats
+        export CARGO_INCREMENTAL=0
+      env:
+        GHA_ARCH: ${{matrix.arch}}
+
+    - name: Change update url if beta
+      if: inputs.beta
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{github.repository}}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    #On Package, if not copies, error occur
+    - name: Copy l10n files if beta
+      if: inputs.beta
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
+
+    - name: Change Release Note URL
+      if: inputs.release-note-url
+      run: |
+        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
+        echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
+
+    - name: Build 🔨
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+
+        ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Retry Build if 1st build is failed 🔨
+      if: failure()
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+  
+        ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+  
+    - name: Package 📦
+
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+        ./mach package
+
+        ./mach package-multi-locale --locales ar cs da de el en-US en-GB es-ES es-MX fr hu id it ja-JP-mac ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th tr vi zh-CN zh-TW
+
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Copy & Compress Artifacts 📁
+      run: |
+        mkdir ~/output
+        if [[ $GHA_ARCH == 'aarch64' ]];then
+          arch="aarch64"
+        else
+          arch="x86_64"
+        fi
+
+        if [[ $GHA_profgen = 'true' ]];then
+        tar zcvf ${arch}-apple-darwin-output.tar.xz ./obj-${arch}-apple-darwin/dist/floorp
+          mv ${arch}-apple-darwin-output.tar.xz ~/output/
+        else
+          tar -czf floorp-${arch}-apple-darwin-with-pgo.tar.gz ./obj-${arch}-apple-darwin/dist/
+          mv floorp-${arch}-apple-darwin-with-pgo.tar.gz ~/output/
+        fi
+
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_ARCH: ${{matrix.arch}}
+
+    # Publish START
+    - name: make name of publish archive
+      shell: node {0}
+      run: |
+        const fs = require('fs');
+        let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
+        fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
+      env:
+        GHA_out_artifact_name : ${{inputs.out_artifact_name}}
+        GHA_default_name: floorp-mac-${{ matrix.arch }}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}
+
+    - name: Publish Package🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{env.ARTIFACT_NAME}}
+        path: ~/output
+    # Publish END

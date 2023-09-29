@@ -1,0 +1,223 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#! SELF HOST DOES NOT SUPPORTED
+#TODO! buildjet config not implemented
+#TODO: separate Publish to other workflow
+
+on:
+  workflow_call:
+    inputs:
+      beta:
+        type: boolean
+        default: false
+      mar:
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      x86_64_artifact_name:
+        type: string
+        default: ""
+      aarch64_artifact_name:
+        type: string
+        default: ""
+      display_version:
+        type: string
+        default: ""
+      inside_version:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+    secrets:
+        macOS_CERTIFICATES_P12_For_App_BASE64:
+            description: "macOS CERTIFICATES P12 For App BASE64"
+            required: true
+        macOS_CERTIFICATES_P12_PASSWORD:
+            description: "macOS CERTIFICATES P12 PASSWORD"
+            required: true
+        macOS_AppleDeveloperId:
+            description: "macOS AppleDeveloperId"
+            required: true
+        macOS_AppleAccountId:
+            description: "macOS AppleAccountId"
+            required: true
+        macOS_AppleTeamId:
+            description: "macOS AppleTeamId"
+            required: true
+        macOS_AppleAccountAppSpecificPassword:
+            description: "macOS AppleAccountAppSpecificPassword"
+            required: true
+
+  workflow_dispatch:
+    inputs:
+      beta:
+        type: boolean
+        default: false
+      mar:
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      x86_64_artifact_url:
+        type: string
+        default: ""
+      aarch64_artifact_url:
+        type: string
+        default: ""
+      display_version:
+        type: string
+        default: ""
+      inside_version:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+
+jobs:
+   Integration:
+    runs-on: macos-latest
+    steps:
+        - name: Clone 📥
+          uses: actions/checkout@v3
+          with:
+            submodules: 'recursive'
+    
+        - name: download M1 build artifact 📥
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ inputs.aarch64_artifact_name }}
+            path: ./
+    
+        - name: download Intel build artifact 📥
+          uses: actions/download-artifact@v3
+          with:
+            name: ${{ inputs.x86_64_artifact_name }}
+            path: ./
+
+
+        - name: Extract 📦
+          run: |
+            brew install gnu-tar
+            export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+            tar -xf ./floorp-aarch64-apple-darwin-with-pgo.tar.gz
+            tar -xf ./floorp-x86_64-apple-darwin-with-pgo.tar.gz
+
+        - name: Create environment 🌲
+          shell: bash
+          run: |
+            ./mach --no-interactive bootstrap --application-choice browser
+            echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+      
+            echo 'mozconfig: **********************'
+            cat ./mozconfig
+            echo '*********************************'
+
+            echo 'folder structure: **********************'
+            ls -l ./
+            echo '*********************************'
+
+            echo "****************************************************************************************************"
+            echo "floorp.app folder structure: x86_64-apple-darwin"
+            ls -l ./obj-x86_64-apple-darwin/dist/
+            echo "****************************************************************************************************"
+            echo "floorp.app folder structure: aarch64-apple-darwin"
+            ls -l ./obj-aarch64-apple-darwin/dist/
+            echo "****************************************************************************************************"
+            
+        - name: Integration 🗃
+          run: |
+              ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+
+        - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
+          uses: apple-actions/import-codesign-certs@v2
+          with:
+           p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+           p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+
+        - name: Sign to .app 🖋️
+          run: |
+            chmod +x ./floorp/build/codesign/mac/codesign.bash
+            ./floorp/build/codesign/mac/codesign.bash \
+              -a ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app \
+              -i "${{ secrets.macOS_AppleDeveloperId }}" \
+              -b ./floorp/build/codesign/mac/browser.developer.entitlements.xml \
+              -p ./floorp/build/codesign/mac/plugin-container.developer.entitlements.xml
+
+        - name: Check Certificates 💳
+          run: |
+            echo "Sign Complete ! ****************************************" 
+            pkgutil --check-signature ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app
+
+        - name: Create DMG 📦
+          run: |
+            ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
+            unzip ./.github/base.zip
+            hdiutil attach ./floorp-macOS-universal-temp.dmg
+            hdiutil attach ./base.dmg
+            cp -r /Volumes/Floorp/Floorp.app /Volumes/Floorp\ Installer/
+            hdiutil detach /Volumes/Floorp\ Installer/
+            hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg 
+
+        - name: Sign to .dmg 🖋️
+          run: |
+            codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
+      
+            xcrun notarytool submit "floorp-macOS-universal.dmg" \
+                --apple-id "${{ secrets.macOS_AppleAccountId }}" \
+                --team-id "${{ secrets.macOS_AppleTeamId }}" \
+                --password "${{ secrets.macOS_AppleAccountAppSpecificPassword }}" \
+                --wait
+      
+            mkdir -p ./output
+            mv ./floorp-macOS-universal.dmg ./output/floorp-macOS-universal.dmg
+
+        - name: Create MAR artifact 📦
+          run: |
+           brew install tree
+           chmod +x ./floorp/build/bin/mac/mar
+           chmod +x ./tools/update-packaging/make_full_update.sh
+           touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
+           MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ inputs.display_version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+
+           export MACOS_MAR_SIZE=`stat -f%z ./output/DARWIN-Universal.mar`
+           echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
+        
+        - name: Create Update XML for "BETA" Build 🚩
+          if : ${{ inputs.beta }} == 'true'
+          run: |
+           echo '<?xml version="1.0" encoding="UTF-8"?>
+             <updates>
+              <update type="minor" displayVersion="${{ inputs.display_version }}" appVersion="${{ inputs.inside_version }}" platformVersion="${{ inputs.inside_version }}" buildID="${{ inputs.MOZ_BUILD_DATE }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
+              <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/DARWIN-Universal.mar" size="${{ env.MACOS_MAR_SIZE }}" />
+             </update>
+           </updates>' > DARWIN-Universal.xml
+        
+           cp DARWIN-Universal.xml output/DARWIN-Universal.xml
+
+        - name: make name of publish archive
+          shell: node {0}
+          run: |
+           const fs = require('fs');
+           let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
+           fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
+          env:
+            GHA_out_artifact_name: ${{inputs.out_artifact_name}}
+            GHA_default_name: Universal-Artifact
+
+        - name: Publish 🎁
+          uses: actions/upload-artifact@v3
+          with:
+            name: ${{ env.ARTIFACT_NAME }}
+            if-no-files-found: ignore
+            path: |
+             ./output/

@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(U) 🧰 Pull upstream"
+
+on: workflow_dispatch
+
+jobs:
+  pull-upstream:
+    name: Pull upstream
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup 🪛
+      run: |
+        export DATE_STR=`date +"%Y%m%d%I%M%S"`
+        echo "DATE_STR=$DATE_STR" >> $GITHUB_ENV
+
+    - name: Setup git 🪛
+      run: |
+        git config --global user.name github-actions
+        git config --global user.email github-actions@github.com
+
+    - name: Setup git-cinnabar 🪛
+      run: |
+        cd ~
+        git clone https://github.com/glandium/git-cinnabar
+        cd git-cinnabar
+        git checkout 0.5.11
+        export PATH=~/git-cinnabar:$PATH
+        cd ~
+        git cinnabar download
+
+    - name: Clone mozilla-unified 🧬
+      run: |
+        export PATH=~/git-cinnabar:$PATH
+        git clone hg::https://hg.mozilla.org/mozilla-unified
+        cd mozilla-unified
+        git rev-list --count origin/bookmarks/esr115
+        git checkout -b upstream-esr115-${DATE_STR} origin/bookmarks/esr115
+
+    - name: Fetch Floorp 📥
+      run: |
+        cd mozilla-unified
+        git remote add floorp https://${GITHUB_ACTOR}:${{ github.token }}@github.com/${{ github.repository }}
+        git fetch floorp
+
+    - name: Push 🎁
+      run: |
+        cd mozilla-unified
+        git push floorp upstream-esr115-${DATE_STR}
+
+    - name: Create Pull Request
+      run: |
+        cd mozilla-unified
+        gh pr create --repo ${{ github.repository }} --base ESR115 --head upstream-esr115-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
+      env:
+        GH_TOKEN: ${{ github.token }}

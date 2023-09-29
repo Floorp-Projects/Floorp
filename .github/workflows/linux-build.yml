@@ -1,0 +1,298 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#! SELF HOST DOES NOT SUPPORTED
+#TODO! buildjet config not implemented
+#TODO: separate Publish to other workflow
+
+#? On linux x86_64 build, pgo build is enabled on default.
+
+#? In GitHub, boolean DOES NOT return `true`, DOES return `'true'`
+#? So, In `if:`(github) or `if [];then`(bash), you may SHOULD write like
+#? `if: ${{boolean == 'true'}}`(github), `if [ ${{boolean}} == 'true' ];then`(bash)
+#? ref https://github.com/actions/runner/issues/1483
+#? and in bash, space between [ and value is important like [ ${{}} ]
+on:
+  workflow_call:
+    inputs:
+      disable-updater:
+        description: disable updater esp. for deb
+        type: boolean
+        default: false
+      aarch64:
+        description: "aarch64 option is not compartiable with deb option"
+        type: boolean
+        default: false
+      beta:
+        type: boolean
+        default: false
+      mar:
+        type: boolean
+        default: false
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+      release-note-url:
+        type: string
+        required: false
+    outputs:
+      mar_name:
+        value: ${{jobs.linux-build.outputs.mar_name}}
+      mar_size:
+        value: ${{jobs.linux-build.outputs.mar_size}}
+
+
+# name: Linux Build
+# description: Action of Floorp Linux build (x64, aarch64)
+
+jobs:
+  linux-build:
+    runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
+    outputs:
+      mar_name: ${{steps.gen-mar.outputs.MAR_NAME}}
+      mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
+    steps:
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+      with:
+        submodules: 'recursive'
+
+    - name: Clone l10n-central 🧬
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/l10n-central
+        path: l10n-central
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    #! ON UBUNTU RUNNER
+    - name: Setup Disk & Swap Space 💿
+      if: ${{ !inputs.buildjet }}
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
+
+    - name: Prepare cross compiler (aarch64)⚒
+      if: ${{ inputs.aarch64 }}
+      run: |
+        sudo apt update
+        sudo apt -y install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+    - name: setup Rust 🦀
+      run: |
+        if [[ $GHA_aarch64 == 'true' ]];then
+          rustup target add aarch64-unknown-linux-gnu
+        fi
+
+        #? https://github.com/mozilla/sccache#known-caveats
+        export CARGO_INCREMENTAL=0
+      env:
+        GHA_aarch64: ${{inputs.aarch64}}
+
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+    - name: Create environment 🌲
+      run: |
+        import os
+        import sys
+        import shutil
+
+        disable_updater = os.environ["GHA_disable_updater"] == "true"
+        aarch64 = os.environ["GHA_aarch64"] == "true"
+        beta= os.environ["GHA_beta"] == "true"
+        MOZ_BUILD_DATE= os.environ["GHA_MOZ_BUILD_DATE"]
+
+        os.system("sudo apt update")
+        os.system("sudo apt install xvfb")
+
+        shutil.copyfile("./.github/workflows/src/linux/shared/mozconfig_linux_base","./mozconfig")
+        # os.system("cp ./.github/workflows/src/linux/shared/mozconfig_linux_base ./mozconfig")
+        if MOZ_BUILD_DATE != "":
+          os.system("export MOZ_BUILD_DATE="+MOZ_BUILD_DATE)
+
+        mozconfig = []
+
+        if beta:
+          mozconfig.append('ac_add_options --with-branding=browser/branding/beta')
+        else:
+          mozconfig.append('ac_add_options --with-branding=browser/branding/official')
+
+        if disable_updater:
+          mozconfig.append('ac_add_options --disable-updater')
+
+        if aarch64:
+          mozconfig += [
+            ('ac_add_options --enable-rust-simd')
+          , ('ac_add_options --target=aarch64-unknown-linux-gnu')
+          ]
+
+        if not aarch64:
+          mozconfig.append('ac_add_options MOZ_PGO=1')
+
+        # SCCACHE SETTINGS START
+        mozconfig += [
+          ("mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'")
+        , ("mk_add_options 'export CCACHE_CPP2=yes'")
+        , ("ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache")
+        , ("mk_add_options 'export SCCACHE_GHA_ENABLED=on'")
+        ]
+        # SCCACHE SETTINGS END
+
+        mozconfig_file = open("mozconfig",'a')
+        mozconfig_file.writelines('\n'.join(mozconfig))
+
+        mozconfig_file.close()
+        os.system("cat mozconfig")
+        os.system("./mach --no-interactive bootstrap --application-choice browser")
+
+      env:
+        # `-` character sometimes bugs on env esp. nodejs
+        GHA_disable_updater: ${{inputs.disable-updater}}
+        GHA_aarch64: ${{inputs.aarch64}}
+        GHA_beta: ${{inputs.beta}}
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+      shell: python3 {0}
+
+    - name: Change update url if beta
+      if: inputs.beta
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/LINUX-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    #On Package, if not copies, error occur
+    - name: Copy l10n files if beta
+      if: inputs.beta
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
+    
+    - name: Change Release Note URL
+      if: inputs.release-note-url
+      run: |
+        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
+        echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
+
+    - name: Build 🔨
+      continue-on-error: true
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+        rm -rf ./l10n-central/.git
+
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+
+        ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Retry Build if 1st build is failed 🔨
+      if: failure()
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+        rm -rf ./l10n-central/.git
+
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+
+        ./mach build
+      env:
+          GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Package 1 - mach 🎁
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+        ./mach package
+
+        ./mach package-multi-locale --locales ar cs da de el en-US en-GB es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th tr vi zh-CN zh-TW
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Package 2 - zip 📦
+      run: |
+        export DISPVER=`cat browser/config/version_display.txt`
+
+        mkdir ~/output
+        if [[ $GHA_aarch64 != 'true' ]];then
+          cp obj-x86_64-pc-linux-gnu/dist/*.tar.bz2 ~/output/floorp-$DISPVER.linux-x86_64.tar.bz2
+          # echo "OUTPUT=obj-x86_64-pc-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
+          # zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
+        else
+          #aarch64
+          cp obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2 ~/output/floorp-$DISPVER.linux-aarch64.tar.bz2
+          # echo "OUTPUT=obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2" >> $GITHUB_ENV
+          # zip -r dist.zip obj-aarch64-unknown-linux-gnu/dist/*.tar.bz2
+        fi
+      env:
+        GHA_aarch64: ${{inputs.aarch64}}
+
+    - name: Create MAR artifact if mar📦
+      id: gen-mar
+      if: inputs.mar
+      run: |
+        if [[ $GHA_ARCH == 'aarch64' ]];then
+
+          touch "obj-aarch64-unknown-linux-gnu/dist/floorp/precomplete"
+
+          MAR="obj-aarch64-unknown-linux-gnu/dist/host/bin/mar" \
+          MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+          MAR_CHANNEL_ID=release \
+          ./tools/update-packaging/make_full_update.sh ~/output "obj-aarch64-unknown-linux-gnu/dist/floorp"
+
+          mv ~/output/*.mar ~/output/LINUX-aarch64.mar
+
+          echo "MAR_NAME=LINUX-aarch64.mar" >> $GITHUB_OUTPUT
+          echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-aarch64.mar)" >> $GITHUB_OUTPUT
+  
+        else
+
+          touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
+
+          MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" \
+          MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+          MAR_CHANNEL_ID=release \
+          ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-linux-gnu/dist/floorp"
+
+          mv ~/output/*.mar ~/output/LINUX-x86_64.mar
+
+          echo "MAR_NAME=LINUX-x86_64.mar" >> $GITHUB_OUTPUT
+          echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-x86_64.mar)" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GHA_ARCH: ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}
+
+    #PUBLISH START
+    - name: Publish🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: floorp-linux-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
+        path: ~/output
+        # path: dist.zip
+    #PUBLISH END

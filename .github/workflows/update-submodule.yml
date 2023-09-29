@@ -1,0 +1,33 @@
+name: Update Submodules
+
+on:
+    workflow_dispatch:
+    schedule:
+      - cron: "0 15 * * *"
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      with:
+        submodules: "recursive"
+
+    - name: configure git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    
+    - name: Update Submodules
+      run: |
+        git submodule update --remote
+        git add .
+
+        if git diff-index --quiet HEAD --; then
+          echo "No submodule changes; exiting."
+          exit 0
+        fi
+
+        git commit -m "[FB bot] Update submodules" -a
+        git push

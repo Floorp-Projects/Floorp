@@ -199,6 +199,7 @@ for (const type of [
   "SETTINGS_CLOSE",
   "SETTINGS_OPEN",
   "SET_PREF",
+  "GET_IMAGE",
   "SHOW_DOWNLOAD_FILE",
   "SHOW_FIREFOX_ACCOUNTS",
   "SHOW_PERSONALIZE",
@@ -451,6 +452,11 @@ function SetPref(name, value, importContext = globalImportContext) {
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
+function GetImageSend(path, importContext = globalImportContext) {
+  const action = { type: actionTypes.GET_IMAGE, data: { path } };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
 function WebExtEvent(type, data, importContext = globalImportContext) {
   if (!data || !data.source) {
     throw new Error(
@@ -473,6 +479,7 @@ const actionCreators = {
   OnlyToMain,
   AlsoToPreloaded,
   SetPref,
+  GetImageSend,
   WebExtEvent,
   DiscoveryStreamImpressionStats,
   DiscoveryStreamLoadedContent,
@@ -12097,6 +12104,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       onDragEnter: this.onDragEvent,
       onDragLeave: this.onDragEvent
     }, draggableProps), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "background"
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-inner"
     }, /*#__PURE__*/external_React_default().createElement("a", {
       className: "top-site-button",
@@ -14744,12 +14753,102 @@ class _Search extends (external_React_default()).PureComponent {
 const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
+;// CONCATENATED MODULE: ./content-src/components/Background/Background.jsx
+
+const imgLength = 100;
+function Background(props) {
+  if (props.className == "random_image") {
+    let [imgSrc, setImgSrc] = (0,external_React_namespaceObject.useState)({
+      "url": `chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+    });
+
+    if (!imgSrc.url.startsWith("chrome://browser/skin/newtabbg-")) {
+      setImgSrc({
+        "url": `chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+      });
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background_back",
+      className: props.className
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background",
+      style: {
+        "--background-url": `url(${imgSrc.url})`
+      }
+    }));
+  } else if (props.className == "selected_folder" && props.imageList != undefined) {
+    let [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
+      "url": props.imageList.urls.length != 0 ? props.imageList.urls[Math.floor(Math.random() * props.imageList.urls.length)] : ""
+    });
+
+    if (props.imageList.urls.length != 0) {
+      var _props$pref, _props$pref2;
+
+      if (props.imageList.urls.indexOf(fileImgSrc.url) == -1 || ((_props$pref = props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url]) === null || _props$pref === void 0 ? void 0 : _props$pref.data) === null) {
+        fileImgSrc.url = props.imageList.urls.length != 0 ? props.imageList.urls[Math.floor(Math.random() * props.imageList.urls.length)] : "";
+        setFileImgSrc({
+          "url": fileImgSrc.url
+        });
+        if ("blobData" in fileImgSrc) delete fileImgSrc.blobData;
+      }
+
+      if ("data" in fileImgSrc) {
+        return /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background_back",
+          className: props.className
+        }, /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background",
+          style: {
+            "--background-url": `url(${fileImgSrc.data})`
+          }
+        }));
+      } else if (((_props$pref2 = props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url]) === null || _props$pref2 === void 0 ? void 0 : _props$pref2.data) != undefined) {
+        setImgData(props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url].data, fileImgSrc.url, props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url].type, setFileImgSrc);
+      } else {
+        props.getImg(fileImgSrc.url);
+      }
+
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background_back",
+        className: props.className
+      }, /*#__PURE__*/external_React_default().createElement("div", {
+        id: "background",
+        style: {
+          "--background-url": `url(${fileImgSrc.data})`
+        }
+      }));
+    } else if (fileImgSrc.url != "") {
+      setFileImgSrc({
+        "url": ""
+      });
+    }
+  }
+
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background_back",
+    className: props.className
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background"
+  }));
+}
+
+async function setImgData(data, url, type, result) {
+  let blobURL = URL.createObjectURL(new Blob([data], {
+    type: type
+  }));
+  result({
+    "url": url,
+    "data": blobURL
+  });
+}
 ;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
 function Base_extends() { Base_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Base_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -14849,6 +14948,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
+    this.setPref = this.setPref.bind(this);
     this.state = {
       fixedSearch: false
     };
@@ -14918,6 +15018,10 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.props.dispatch(actionCreators.SetPref(pref, value));
   }
 
+  getImageSend(path) {
+    this.props.dispatch(actionCreators.GetImageSend(path));
+  }
+
   render() {
     const {
       props
@@ -14950,7 +15054,34 @@ class BaseContent extends (external_React_default()).PureComponent {
     } = prefs;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo"].filter(v => v).join(" ");
     const hasSnippet = prefs["feeds.snippets"] && this.props.adminContent && this.props.adminContent.message && this.props.adminContent.message.id;
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
+    let Background_ClassName = "";
+
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"
+    }, /*#__PURE__*/external_React_default().createElement(Background, {
+      className: Background_ClassName,
+      imageList: prefs["backgroundPaths"],
+      getImg: this.getImageSend.bind(this),
+      pref: prefs
+    }), /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
       onClose: this.closeCustomizationMenu,
       onOpen: this.openCustomizationMenu,
       openPreferences: this.openPreferences,
@@ -14980,7 +15111,28 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
       locale: props.App.locale
-    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
+    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))), /*#__PURE__*/external_React_default().createElement("div", {
+      id: "floorp"
+    }, /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://support.ablaze.one",
+      target: "_blank"
+    }, "Support"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
+      target: "_blank"
+    }, "Release Note")), /*#__PURE__*/external_React_default().createElement("a", {
+      href: "https://unsplash.com/",
+      style: {
+        position: "fixed",
+        bottom: "1em",
+        left: "1em",
+        fontSize: "16px",
+        color: "#ffffff"
+      },
+      target: "_blank",
+      id: "unsplash"
+    }, "Unsplash"));
   }
 
 }
