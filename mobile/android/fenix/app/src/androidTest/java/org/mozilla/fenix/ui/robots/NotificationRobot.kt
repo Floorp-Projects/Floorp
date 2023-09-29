@@ -117,23 +117,26 @@ class NotificationRobot {
         shouldDismissNotification: Boolean,
         canExpandNotification: Boolean = true,
     ) {
-        // In case it fails, retry max 6x the swipe action on download system notifications
-        for (i in 1..6) {
+        // In case it fails, retry max 3x the swipe action on download system notifications
+        for (i in 1..RETRY_COUNT) {
             try {
-                // Swipe left the download system notification
-                if (direction == "Left") {
-                    itemContainingText(appName)
-                        .also {
-                            it.waitForExists(waitingTime)
-                            it.swipeLeft(3)
-                        }
-                } else {
-                    // Swipe right the download system notification
-                    itemContainingText(appName)
-                        .also {
-                            it.waitForExists(waitingTime)
-                            it.swipeRight(3)
-                        }
+                var retries = 0
+                while (itemContainingText(appName).exists() && retries++ < 3) {
+                    // Swipe left the download system notification
+                    if (direction == "Left") {
+                        itemContainingText(appName)
+                            .also {
+                                it.waitForExists(waitingTime)
+                                it.swipeLeft(3)
+                            }
+                    } else {
+                        // Swipe right the download system notification
+                        itemContainingText(appName)
+                            .also {
+                                it.waitForExists(waitingTime)
+                                it.swipeRight(3)
+                            }
+                    }
                 }
                 // Not all download related system notifications can be dismissed
                 if (shouldDismissNotification) {
@@ -144,7 +147,7 @@ class NotificationRobot {
 
                 break
             } catch (e: AssertionError) {
-                if (i == 6) {
+                if (i == RETRY_COUNT) {
                     throw e
                 } else {
                     notificationShade {
@@ -167,7 +170,7 @@ class NotificationRobot {
 
     fun clickNotification(notificationMessage: String) {
         mDevice.findObject(UiSelector().text(notificationMessage)).waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().text(notificationMessage)).click()
+        mDevice.findObject(UiSelector().text(notificationMessage)).clickAndWaitForNewWindow(waitingTimeShort)
     }
 
     class Transition {

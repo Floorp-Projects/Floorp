@@ -138,6 +138,7 @@ class DownloadTest {
             assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
             mDevice.pressBack()
             mDevice.openNotification()
+            verifySystemNotificationExists("Download completed")
             swipeDownloadNotification(
                 direction = "Left",
                 shouldDismissNotification = true,
