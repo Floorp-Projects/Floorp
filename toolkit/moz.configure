@@ -1499,9 +1499,14 @@ with only_when("--enable-compile-environment"):
         if enable and enable != ("relr",):
             return enable
 
-    @depends("--enable-elf-hack", when=has_elfhack)
-    def may_enable_relrhack(enable):
-        if enable and enable != ("legacy",):
+    @depends("--enable-elf-hack", "MOZ_AUTOMATION", when=has_elfhack)
+    def may_enable_relrhack(enable, automation):
+        # For now, only enable relrhack when explicitly given with
+        # --enable-elf-hack=relr. On automation, we automatically
+        # enable it when possible.
+        if automation and enable and enable != ("legacy",):
+            return enable
+        if enable == ("relr",):
             return enable
 
     @depends(
