@@ -175,10 +175,6 @@
 
 /**
  * Weather
- *
- * All em units used below are based on the spec where 1em is 13px.
- * Thus using 13px as a base to calculate the other relative em sizes, either
- * a bigger or smaller ratio to 13px.
  */
 .urlbarView-dynamic-weather-currentConditions {
   color: var(--urlbar-box-text-color);
@@ -202,13 +198,6 @@
 .urlbarView-dynamic-weather-temperature {
   margin-inline-end: 0.3em;
   font-weight: 600;
-  /* The units from the spec:
-     - 1em is 13px
-     - temperature is 18px
-     - We need to figure out the temperature in units of em.
-     - 18px / 13px = 1.385em
-     Therefore, the temperature is 1.385em units.
-  */
   font-size: 1.385em;
   vertical-align: middle;
 }
