@@ -4269,6 +4269,9 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     // Similarly, -x-lang can influence the font-family fallback we have for the initial
     // font-family so remove it as well.
     differing_properties.remove(LonghandId::FontFamily);
+    // We reset font-size to an explicit pixel value, and thus it can get affected by our inherited
+    // effective zoom. But we don't care about it for the same reason as above.
+    differing_properties.remove(LonghandId::FontSize);
 
     // Ignore any difference in pref-controlled, inherited properties.  These properties may or may
     // not be set by the 'all' declaration in scrollbars.css, depending on whether the pref was
