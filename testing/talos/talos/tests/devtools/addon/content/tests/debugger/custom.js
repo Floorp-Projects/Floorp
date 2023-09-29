@@ -73,7 +73,7 @@ module.exports = async function () {
   await testProjectSearch(dbg, tab);
   await testPreview(dbg, tab, EXPECTED_FUNCTION);
   await testOpeningLargeMinifiedFile(dbg, tab);
-  await testPrettyPrint(dbg);
+  await testPrettyPrint(dbg, toolbox);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -232,7 +232,7 @@ async function testOpeningLargeMinifiedFile(dbg, tab) {
   await garbageCollect();
 }
 
-async function testPrettyPrint(dbg) {
+async function testPrettyPrint(dbg, toolbox) {
   // Close all existing tabs to have a clean state
   const state = dbg.getState();
   const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
@@ -262,6 +262,13 @@ async function testPrettyPrint(dbg) {
   await waitForSource(dbg, formattedFileUrl);
   await waitForText(dbg, filePrettyChars);
   test.done();
+
+  await reloadDebuggerAndLog("custom.pretty-print", toolbox, {
+    sources: 1105,
+    sourceURL: formattedFileUrl,
+    text: filePrettyChars,
+    threadsCount: EXPECTED.threadsCount,
+  });
 
   dbg.actions.closeTabs([MINIFIED_URL, formattedFileUrl]);
 
