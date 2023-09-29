@@ -84,19 +84,23 @@ size_t LimitedCountForDuration<int64_t>(size_t aMax, double aDuration) {
 namespace mozilla::dom {
 
 AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
-                                       double aTimeConstant, double aDuration,
-                                       const float* aCurve,
-                                       uint32_t aCurveLength)
+                                       double aTimeConstant)
     : mType(aType),
+      mValue(aValue),
       mCurve(nullptr),
       mTimeConstant(aTimeConstant),
+      mDuration(0.0),
+      mTime(aTime) {}
+
+AudioTimelineEvent::AudioTimelineEvent(Type aType,
+                                       const nsTArray<float>& aValues,
+                                       double aStartTime, double aDuration)
+    : mType(aType),
+      mTimeConstant(0.0),
       mDuration(aDuration),
-      mTime(aTime) {
-  if (aType == AudioTimelineEvent::SetValueCurve) {
-    SetCurveParams(aCurve, aCurveLength);
-  } else {
-    mValue = aValue;
-  }
+      mTime(aStartTime) {
+  MOZ_ASSERT(aType == AudioTimelineEvent::SetValueCurve);
+  SetCurveParams(aValues.Elements(), aValues.Length());
 }
 
 AudioTimelineEvent::AudioTimelineEvent(AudioNodeTrack* aTrack)

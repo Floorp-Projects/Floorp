@@ -50,10 +50,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve, aStartTime,
-                         0.0f, 0.0f, aDuration, aValues.Elements(),
-                         aValues.Length());
-
+    AudioTimelineEvent event(AudioTimelineEvent::SetValueCurve, aValues,
+                             aStartTime, aDuration);
+    ValidateAndInsertEvent(event, aRv);
     return this;
   }
 
@@ -89,9 +88,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueAtTime, aStartTime,
-                         aValue);
-
+    AudioTimelineEvent event(AudioTimelineEvent::SetValueAtTime, aStartTime,
+                             aValue);
+    ValidateAndInsertEvent(event, aRv);
     return this;
   }
 
@@ -102,7 +101,8 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
-    EventInsertionHelper(aRv, AudioTimelineEvent::LinearRamp, aEndTime, aValue);
+    AudioTimelineEvent event(AudioTimelineEvent::LinearRamp, aEndTime, aValue);
+    ValidateAndInsertEvent(event, aRv);
     return this;
   }
 
@@ -113,8 +113,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
-    EventInsertionHelper(aRv, AudioTimelineEvent::ExponentialRamp, aEndTime,
-                         aValue);
+    AudioTimelineEvent event(AudioTimelineEvent::ExponentialRamp, aEndTime,
+                             aValue);
+    ValidateAndInsertEvent(event, aRv);
     return this;
   }
 
@@ -126,9 +127,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    EventInsertionHelper(aRv, AudioTimelineEvent::SetTarget, aStartTime,
-                         aTarget, aTimeConstant);
-
+    AudioTimelineEvent event(AudioTimelineEvent::SetTarget, aStartTime, aTarget,
+                             aTimeConstant);
+    ValidateAndInsertEvent(event, aRv);
     return this;
   }
 
@@ -200,21 +201,15 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   }
 
  private:
-  void EventInsertionHelper(ErrorResult& aRv, AudioTimelineEvent::Type aType,
-                            double aTime, float aValue,
-                            double aTimeConstant = 0.0, double aDuration = 0.0,
-                            const float* aCurve = nullptr,
-                            uint32_t aCurveLength = 0) {
-    AudioTimelineEvent event(aType, aTime, aValue, aTimeConstant, aDuration,
-                             aCurve, aCurveLength);
-
-    if (!ValidateEvent(event, aRv)) {
+  void ValidateAndInsertEvent(const AudioTimelineEvent& aEvent,
+                              ErrorResult& aRv) {
+    if (!ValidateEvent(aEvent, aRv)) {
       return;
     }
 
-    AudioEventTimeline::InsertEvent<double>(event);
+    AudioEventTimeline::InsertEvent<double>(aEvent);
 
-    SendEventToEngine(event);
+    SendEventToEngine(aEvent);
 
     CleanupOldEvents();
   }

@@ -100,8 +100,10 @@ struct AudioTimelineEvent final {
   };
 
   AudioTimelineEvent(Type aType, double aTime, float aValue,
-                     double aTimeConstant = 0.0, double aDuration = 0.0,
-                     const float* aCurve = nullptr, uint32_t aCurveLength = 0);
+                     double aTimeConstant = 0.0);
+  // For SetValueCurve
+  AudioTimelineEvent(Type aType, const nsTArray<float>& aValues,
+                     double aStartTime, double aDuration);
   explicit AudioTimelineEvent(AudioNodeTrack* aTrack);
   AudioTimelineEvent(const AudioTimelineEvent& rhs);
   ~AudioTimelineEvent();
