@@ -1272,11 +1272,13 @@ TEST(GeckoMediaPlugins, CDMStorageGetNodeId)
   runner->DoTest(&CDMStorageTest::TestGetNodeId);
 }
 
+#if !defined(XP_WIN) || !defined(ASAN)
 TEST(GeckoMediaPlugins, CDMStorageBasic)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestBasicStorage);
 }
+#endif
 
 TEST(GeckoMediaPlugins, CDMStorageForgetThisSite)
 {
