@@ -6,6 +6,8 @@ check-alphabetical-order = false
 [ignore]
 # Ignored packages with duplicated versions
 packages = [
+    # transition to bitflags 2 is underway.
+    "bitflags",
     "cfg-if",
     "core-foundation",
     "core-foundation-sys",

@@ -59,20 +59,22 @@ use smallvec::SmallVec;
 // clip mask overhead, and possibly exceeding the maximum row size of the GPU cache.
 const MAX_SEGMENTS: usize = 64;
 
-bitflags! {
-    // Note: This can use up to 4 bits due to how it will be packed in
-    // the instance data.
+// Note: This can use up to 4 bits due to how it will be packed in
+// the instance data.
 
-    /// Each bit of the edge AA mask is:
-    /// 0, when the edge of the primitive needs to be considered for AA
-    /// 1, when the edge of the segment needs to be considered for AA
-    ///
-    /// *Note*: the bit values have to match the shader logic in
-    /// `write_transform_vertex()` function.
-    #[cfg_attr(feature = "capture", derive(Serialize))]
-    #[cfg_attr(feature = "replay", derive(Deserialize))]
-    #[derive(MallocSizeOf)]
-    pub struct EdgeAaSegmentMask: u8 {
+/// Each bit of the edge AA mask is:
+/// 0, when the edge of the primitive needs to be considered for AA
+/// 1, when the edge of the segment needs to be considered for AA
+///
+/// *Note*: the bit values have to match the shader logic in
+/// `write_transform_vertex()` function.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
+pub struct EdgeAaSegmentMask(u8);
+
+bitflags! {
+    impl EdgeAaSegmentMask: u8 {
         ///
         const LEFT = 0x1;
         ///
@@ -85,6 +87,7 @@ bitflags! {
 }
 
 bitflags! {
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct ItemFlags: u8 {
         const X_ACTIVE = 0x1;
         const Y_ACTIVE = 0x2;

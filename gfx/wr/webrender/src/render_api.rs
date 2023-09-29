@@ -832,6 +832,7 @@ impl fmt::Debug for FrameMsg {
 bitflags!{
     /// Bit flags for WR stages to store in a capture.
     // Note: capturing `FRAME` without `SCENE` is not currently supported.
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct CaptureBits: u8 {
         ///
         const SCENE = 0x1;
@@ -846,6 +847,7 @@ bitflags!{
 
 bitflags!{
     /// Mask for clearing caches in debug commands.
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct ClearCache: u8 {
         ///
         const IMAGES = 0b1;

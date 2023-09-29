@@ -523,6 +523,7 @@ bitflags! {
     /// Not all shaders necessarily implement all of these features.
     #[cfg_attr(feature = "capture", derive(Serialize))]
     #[cfg_attr(feature = "replay", derive(Deserialize))]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct BatchFeatures: u8 {
         const ALPHA_PASS = 1 << 0;
         const ANTIALIASING = 1 << 1;

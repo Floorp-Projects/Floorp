@@ -576,11 +576,13 @@ pub enum IntParameter {
     BatchedUploadThreshold = 0,
 }
 
+/// Flags to track why we are rendering.
+#[repr(C)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Default, Deserialize, MallocSizeOf, Serialize)]
+pub struct RenderReasons(u32);
+
 bitflags! {
-    /// Flags to track why we are rendering.
-    #[repr(C)]
-    #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
-    pub struct RenderReasons: u32 {
+    impl RenderReasons: u32 {
         /// Equivalent of empty() for the C++ side.
         const NONE                          = 0;
         const SCENE                         = 1 << 0;
@@ -618,11 +620,13 @@ impl RenderReasons {
     pub const NUM_BITS: u32 = 17;
 }
 
+/// Flags to enable/disable various builtin debugging tools.
+#[repr(C)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Default, Deserialize, MallocSizeOf, Serialize)]
+pub struct DebugFlags(u32);
+
 bitflags! {
-    /// Flags to enable/disable various builtin debugging tools.
-    #[repr(C)]
-    #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
-    pub struct DebugFlags: u32 {
+    impl DebugFlags: u32 {
         /// Display the frame profiler on screen.
         const PROFILER_DBG          = 1 << 0;
         /// Display intermediate render targets on screen.

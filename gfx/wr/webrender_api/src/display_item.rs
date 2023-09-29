@@ -34,10 +34,12 @@ pub type ItemTag = (u64, u16);
 /// refers to individual display items, but this may change later.
 pub type ItemKey = u16;
 
+#[repr(C)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+pub struct PrimitiveFlags(u8);
+
 bitflags! {
-    #[repr(C)]
-    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
-    pub struct PrimitiveFlags: u8 {
+    impl PrimitiveFlags: u8 {
         /// The CSS backface-visibility property (yes, it can be really granular)
         const IS_BACKFACE_VISIBLE = 1 << 0;
         /// If set, this primitive represents a scroll bar container
@@ -930,10 +932,12 @@ impl Hash for RasterSpace {
     }
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+pub struct StackingContextFlags(u8);
+
 bitflags! {
-    #[repr(C)]
-    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
-    pub struct StackingContextFlags: u8 {
+    impl StackingContextFlags: u8 {
         /// If true, this stacking context is a blend container than contains
         /// mix-blend-mode children (and should thus be isolated).
         const IS_BLEND_CONTAINER = 1 << 0;

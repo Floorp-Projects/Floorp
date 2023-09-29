@@ -108,6 +108,7 @@ pub enum CompositeSurfaceFormat {
 bitflags! {
     /// Optional features that can be opted-out of when compositing,
     /// possibly allowing a fast path to be selected.
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct CompositeFeatures: u8 {
         // UV coordinates do not require clamping, for example because the
         // entire texture is being composited.

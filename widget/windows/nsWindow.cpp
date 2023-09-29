@@ -7101,7 +7101,7 @@ void nsWindow::OnSizeModeChange() {
         this, mode != nsSizeMode_Minimized);
 
     wr::DebugFlags flags{0};
-    flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+    flags._0 = gfx::gfxVars::WebRenderDebugFlags();
     bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
     if (debugEnabled && mCompositorWidgetDelegate) {
       mCompositorWidgetDelegate->NotifyVisibilityUpdated(mode,
