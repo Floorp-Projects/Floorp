@@ -53,11 +53,13 @@ export class BaseFeature {
 
   /**
    * @returns {Array}
-   *   If the subclass's `shouldEnable` implementation depends on preferences
-   *   instead of Nimbus variables, the subclass should override this getter and
-   *   return their names in this array so that `enable()` can be called when
-   *   they change. Names should be in the same format that `UrlbarPrefs.get()`
-   *   expects.
+   *   If the subclass's `shouldEnable` implementation depends on any prefs that
+   *   are not fallbacks for Nimbus variables, the subclass should override this
+   *   getter and return their names in this array so that `update()` can be
+   *   called when they change. Names should be relative to `browser.urlbar.`.
+   *   It doesn't hurt to include prefs that are fallbacks for Nimbus variables,
+   *   it's just not necessary because `QuickSuggest` will update all features
+   *   whenever a `urlbar` Nimbus variable or its fallback pref changes.
    */
   get enablingPreferences() {
     return null;

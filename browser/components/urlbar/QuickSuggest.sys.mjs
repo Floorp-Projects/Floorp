@@ -105,11 +105,17 @@ class _QuickSuggest {
    *   The currently active backend.
    */
   get backend() {
-    return this.getFeature(
-      lazy.UrlbarPrefs.get("quickSuggestRustEnabled")
-        ? "SuggestBackendRust"
-        : "SuggestBackendJs"
-    );
+    return lazy.UrlbarPrefs.get("quickSuggestRustEnabled")
+      ? this.rustBackend
+      : this.jsBackend;
+  }
+
+  /**
+   * @returns {SuggestBackendRust}
+   *   The Rust backend. Not used when the JS backend is enabled.
+   */
+  get rustBackend() {
+    return this.#features.SuggestBackendRust;
   }
 
   /**

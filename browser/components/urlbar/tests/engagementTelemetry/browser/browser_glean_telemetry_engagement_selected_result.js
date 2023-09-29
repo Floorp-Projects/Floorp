@@ -607,7 +607,7 @@ add_task(async function selected_result_experimental_addon() {
   await extension.unload();
 });
 
-add_task(async function selected_result_adm_sponsored() {
+add_task(async function selected_result_rs_adm_sponsored() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
   await doTest(async browser => {
@@ -626,10 +626,10 @@ add_task(async function selected_result_adm_sponsored() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 });
 
-add_task(async function selected_result_adm_nonsponsored() {
+add_task(async function selected_result_rs_adm_nonsponsored() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
   await doTest(async browser => {
@@ -648,7 +648,7 @@ add_task(async function selected_result_adm_nonsponsored() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 });
 
 add_task(async function selected_result_input_field() {
@@ -699,7 +699,7 @@ add_task(async function selected_result_weather() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
   await SpecialPowers.popPrefEnv();
 });
 
@@ -734,7 +734,7 @@ add_task(async function selected_result_navigational() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 });
 
 add_task(async function selected_result_dynamic_wikipedia() {
@@ -769,7 +769,7 @@ add_task(async function selected_result_dynamic_wikipedia() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 });
 
 add_task(async function selected_result_search_shortcut_button() {
@@ -986,6 +986,54 @@ add_task(async function selected_result_addons() {
     ]);
   });
 
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function selected_result_rust_adm_sponsored() {
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    rustEnabled: true,
+  });
+
+  await doTest(async browser => {
+    await openPopup("sponsored");
+    await selectRowByURL("https://example.com/sponsored");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "rust_adm_sponsored",
+        selected_result_subtype: "",
+        selected_position: 2,
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,rust_adm_sponsored",
+      },
+    ]);
+  });
+
+  await cleanupQuickSuggest();
+});
+
+add_task(async function selected_result_rust_adm_nonsponsored() {
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    rustEnabled: true,
+  });
+
+  await doTest(async browser => {
+    await openPopup("nonsponsored");
+    await selectRowByURL("https://example.com/nonsponsored");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "rust_adm_nonsponsored",
+        selected_result_subtype: "",
+        selected_position: 2,
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,rust_adm_nonsponsored",
+      },
+    ]);
+  });
+
+  await cleanupQuickSuggest();
 });
