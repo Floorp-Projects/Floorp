@@ -18,7 +18,7 @@ use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
-use core_text::font::{CTFont, kCTFontOptionsPreferSystemFont};
+use core_text::font::CTFont;
 use core_text::font_descriptor::{CTFontDescriptor, kCTFontDefaultOrientation, kCTFontVariationAttribute};
 use core_text::font_manager;
 use euclid::default::Size2D;
@@ -206,7 +206,7 @@ fn get_glyph_metrics(
 }
 
 fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, variations: &[FontVariation]) -> CTFont {
-    let ct_font = core_text::font::new_from_descriptor_and_options(ct_font_desc, size, kCTFontOptionsPreferSystemFont);
+    let ct_font = core_text::font::new_from_descriptor(ct_font_desc, size);
     if variations.is_empty() {
         return ct_font;
     }
@@ -221,7 +221,7 @@ fn new_ct_font_with_variations(ct_font_desc: &CTFontDescriptor, size: f64, varia
     let variation_attribute = unsafe { CFString::wrap_under_get_rule(kCTFontVariationAttribute) };
     let attrs_dict = CFDictionary::from_CFType_pairs(&[(variation_attribute, vals_dict)]);
     let ct_var_font_desc = ct_font.copy_descriptor().create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
-    core_text::font::new_from_descriptor_and_options(&ct_var_font_desc, size, kCTFontOptionsPreferSystemFont)
+    core_text::font::new_from_descriptor(&ct_var_font_desc, size)
 
 }
 

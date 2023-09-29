@@ -709,8 +709,8 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
       *reinterpret_cast<const ScaledFontMac::InstanceData*>(aInstanceData);
   RefPtr<ScaledFontMac> scaledFont;
   if (mFontDesc) {
-    AutoRelease<CTFontRef> font(CTFontCreateWithFontDescriptorAndOptions(
-        mFontDesc, aGlyphSize, nullptr, kCTFontOptionsPreferSystemFont));
+    AutoRelease<CTFontRef> font(
+        CTFontCreateWithFontDescriptor(mFontDesc, aGlyphSize, nullptr));
     if (aNumVariations > 0) {
       AutoRelease<CFDictionaryRef> varDict(CreateVariationTagDictionaryOrNull(
           font, aNumVariations, aVariations));
@@ -724,8 +724,7 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
         if (!fontDesc) {
           return nullptr;
         }
-        font = CTFontCreateWithFontDescriptorAndOptions(
-            fontDesc, aGlyphSize, nullptr, kCTFontOptionsPreferSystemFont);
+        font = CTFontCreateWithFontDescriptor(fontDesc, aGlyphSize, nullptr);
       }
     }
     scaledFont = new ScaledFontMac(

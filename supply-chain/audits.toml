@@ -853,19 +853,6 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "19.2.0 -> 20.0.0"
 
-[[audits.core-text]]
-who = "Jonathan Kew <jfkthame@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "20.0.0 -> 20.1.0"
-notes = """
-The bulk of the 20.0.0 -> 20.1.0 changes were purely cosmetic clippy and rustfmt changes.
-
-The only substantive change was the addition of wrappers to expose two additional Core Text APIs,
-the variants of CTFontCreateWithName and CTFontCreateWithFontDescriptor that accept a CTFontOptions
-parameter. These are directly parallel to the existing versions without CTFontOptions, and do not
-introduce any new forms of risk.
-"""
-
 [[audits.coreaudio-sys]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
