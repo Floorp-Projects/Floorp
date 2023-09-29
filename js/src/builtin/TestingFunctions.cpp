@@ -1711,12 +1711,11 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
   uint8_t* jit_end = nullptr;
 
   if (fun->isAsmJSNative() || fun->isWasmWithJitEntry()) {
-    if (fun->isAsmJSNative() && !sprinter.jsprintf("; backend=asmjs\n")) {
+    if (fun->isAsmJSNative()) {
       return false;
     }
-    if (!sprinter.jsprintf("; backend=wasm\n")) {
-      return false;
-    }
+    sprinter.jsprintf("; backend=asmjs\n");
+    sprinter.jsprintf("; backend=wasm\n");
 
     js::wasm::Instance& inst = fun->wasmInstance();
     const js::wasm::Code& code = inst.code();
@@ -1742,17 +1741,11 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     js::jit::BaselineScript* baseline =
         script->hasBaselineScript() ? script->baselineScript() : nullptr;
     if (ion && ion->method()) {
-      if (!sprinter.jsprintf("; backend=ion\n")) {
-        return false;
-      }
-
+      sprinter.jsprintf("; backend=ion\n");
       jit_begin = ion->method()->raw();
       jit_end = ion->method()->rawEnd();
     } else if (baseline) {
-      if (!sprinter.jsprintf("; backend=baseline\n")) {
-        return false;
-      }
-
+      sprinter.jsprintf("; backend=baseline\n");
       jit_begin = baseline->method()->raw();
       jit_end = baseline->method()->rawEnd();
     }
