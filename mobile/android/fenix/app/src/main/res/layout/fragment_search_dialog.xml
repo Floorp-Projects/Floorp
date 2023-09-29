@@ -57,7 +57,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="top"
-        app:constraint_referenced_ids="awesome_bar,pill_wrapper"/>
+        app:constraint_referenced_ids="awesome_bar,keyboard_divider"/>
 
     <org.mozilla.fenix.search.awesomebar.AwesomeBarWrapper
         android:id="@+id/awesome_bar"
@@ -69,7 +69,7 @@
         android:requiresFadingEdge="vertical"
         android:background="?attr/layer1"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/pill_wrapper"
+        app:layout_constraintBottom_toTopOf="@+id/keyboard_divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/search_suggestions_hint" />
@@ -149,44 +149,9 @@
         app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
 
     <View
-        android:id="@+id/pill_wrapper_divider"
+        android:id="@+id/keyboard_divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?borderPrimary"
-        app:layout_constraintBottom_toTopOf="@id/pill_wrapper" />
-
-    <View
-        android:id="@+id/pill_wrapper"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/search_fragment_pill_height"
-        android:background="?attr/layer1"
-        android:importantForAccessibility="no"
-        android:paddingStart="@dimen/search_fragment_pill_padding_start"
-        android:paddingTop="@dimen/search_fragment_pill_padding_vertical"
-        android:paddingEnd="@dimen/search_fragment_pill_padding_end"
-        android:paddingBottom="@dimen/search_fragment_pill_padding_vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <ToggleButton
-        android:id="@+id/qr_scan_button"
-        style="@style/search_pill"
-        android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
-        android:textOff="@string/search_scan_button"
-        android:textOn="@string/search_scan_button"
-        app:drawableStartCompat="@drawable/ic_qr"
-        app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
-        app:layout_constraintStart_toStartOf="@id/pill_wrapper"
-        app:layout_constraintTop_toTopOf="@id/pill_wrapper" />
-
-    <ToggleButton
-        android:id="@+id/search_engines_shortcut_button"
-        style="@style/search_pill"
-        android:textOff="@string/search_engine_button"
-        android:textOn="@string/search_engine_button"
-        app:drawableStartCompat="@drawable/ic_search"
-        app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
-        app:layout_constraintStart_toEndOf="@id/qr_scan_button"
-        app:layout_constraintTop_toTopOf="@id/pill_wrapper" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 </org.mozilla.fenix.perf.SearchDialogFragmentConstraintLayout>

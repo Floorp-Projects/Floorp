@@ -87,13 +87,6 @@ class SearchDialogInteractorTest {
     }
 
     @Test
-    fun onSearchShortcutsButtonClicked() {
-        interactor.onSearchShortcutsButtonClicked()
-
-        verify { searchController.handleSearchShortcutsButtonClicked() }
-    }
-
-    @Test
     fun onClickSearchEngineSettings() {
         interactor.onClickSearchEngineSettings()
 

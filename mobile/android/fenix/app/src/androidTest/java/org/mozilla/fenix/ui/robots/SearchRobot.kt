@@ -323,9 +323,9 @@ class SearchRobot {
         onView(withId(R.id.toolbar))
             .check(
                 if (bottomPosition) {
-                    PositionAssertions.isCompletelyBelow(withId(R.id.pill_wrapper_divider))
+                    PositionAssertions.isCompletelyBelow(withId(R.id.keyboard_divider))
                 } else {
-                    PositionAssertions.isCompletelyAbove(withId(R.id.pill_wrapper_divider))
+                    PositionAssertions.isCompletelyAbove(withId(R.id.keyboard_divider))
                 },
             )
     }

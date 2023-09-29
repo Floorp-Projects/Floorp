@@ -252,7 +252,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scan</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Search engine</string>
+    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Search engine</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Search engine settings</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->

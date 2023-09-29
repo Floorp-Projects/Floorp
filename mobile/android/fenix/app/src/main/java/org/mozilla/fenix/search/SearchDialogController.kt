@@ -22,7 +22,6 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -52,7 +51,6 @@ interface SearchController {
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
     fun handleExistingSessionSelected(tabId: String)
-    fun handleSearchShortcutsButtonClicked()
     fun handleCameraPermissionsNeeded()
     fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine)
 
@@ -158,18 +156,7 @@ class SearchDialogController(
     }
 
     override fun handleTextChanged(text: String) {
-        // Display the search shortcuts on each entry of the search fragment (see #5308)
-        val textMatchesCurrentUrl = fragmentStore.state.url == text
-        val textMatchesCurrentSearch = fragmentStore.state.searchTerms == text
-
         fragmentStore.dispatch(SearchFragmentAction.UpdateQuery(text))
-        fragmentStore.dispatch(
-            SearchFragmentAction.ShowSearchShortcutEnginePicker(
-                !settings.showUnifiedSearchFeature &&
-                    (textMatchesCurrentUrl || textMatchesCurrentSearch || text.isEmpty()) &&
-                    settings.shouldShowSearchShortcuts,
-            ),
-        )
 
         // For felt private browsing mode we're no longer going to prompt the user to enable search
         // suggestions while using private browsing mode. The preference to enable them will still
@@ -275,16 +262,7 @@ class SearchDialogController(
             }
         }
 
-        if (settings.showUnifiedSearchFeature) {
-            UnifiedSearch.engineSelected.record(UnifiedSearch.EngineSelectedExtra(searchEngine.telemetryName()))
-        } else {
-            SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(searchEngine.telemetryName()))
-        }
-    }
-
-    override fun handleSearchShortcutsButtonClicked() {
-        val isOpen = fragmentStore.state.showSearchShortcuts
-        fragmentStore.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(!isOpen))
+        UnifiedSearch.engineSelected.record(UnifiedSearch.EngineSelectedExtra(searchEngine.telemetryName()))
     }
 
     override fun handleClickSearchEngineSettings() {

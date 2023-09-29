@@ -70,7 +70,6 @@ import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
@@ -372,46 +371,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             else -> {}
         }
 
-        binding.searchEnginesShortcutButton.increaseTapArea(TAP_INCREASE_DPS)
-        binding.searchEnginesShortcutButton.isVisible = !showUnifiedSearchFeature
-
-        binding.searchEnginesShortcutButton.setOnClickListener {
-            interactor.onSearchShortcutsButtonClicked()
-        }
-
         qrFeature.set(
             createQrFeature(),
             owner = this,
             view = view,
         )
-
-        binding.qrScanButton.isVisible = when {
-            showUnifiedSearchFeature -> false
-            requireContext().hasCamera() -> true
-            else -> false
-        }
-
-        binding.qrScanButton.increaseTapArea(TAP_INCREASE_DPS)
-
-        binding.qrScanButton.setOnClickListener {
-            if (!requireContext().hasCamera()) { return@setOnClickListener }
-            view.hideKeyboard()
-            toolbarView.view.clearFocus()
-
-            if (requireContext().settings().shouldShowCameraPermissionPrompt) {
-                qrFeature.get()?.scan(binding.searchWrapper.id)
-            } else {
-                if (requireContext().isPermissionGranted(Manifest.permission.CAMERA)) {
-                    qrFeature.get()?.scan(binding.searchWrapper.id)
-                } else {
-                    interactor.onCameraPermissionsNeeded()
-                    resetFocus()
-                    view.hideKeyboard()
-                    toolbarView.view.requestFocus()
-                }
-            }
-            requireContext().settings().setCameraPermissionNeededState = false
-        }
 
         binding.fillLinkFromClipboard.setOnClickListener {
             Awesomebar.clipboardSuggestionClicked.record(NoExtras())
@@ -480,7 +444,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         observeClipboardState()
         observeAwesomeBarState()
-        observeShortcutsState()
         observeSuggestionProvidersState()
 
         consumeFrom(store) {
@@ -528,7 +491,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun hideClipboardSection() {
         binding.fillLinkFromClipboard.isVisible = false
         binding.fillLinkDivider.isVisible = false
-        binding.pillWrapperDivider.isVisible = false
+        binding.keyboardDivider.isVisible = false
         binding.clipboardUrl.isVisible = false
         binding.clipboardTitle.isVisible = false
         binding.linkIcon.isVisible = false
@@ -538,11 +501,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         flow.map { state -> state.toSearchProviderState() }
             .distinctUntilChanged()
             .collect { state -> awesomeBarView.updateSuggestionProvidersVisibility(state) }
-    }
-
-    private fun observeShortcutsState() = consumeFlow(store) { flow ->
-        flow.ifAnyChanged { state -> arrayOf(state.areShortcutsAvailable, state.showSearchShortcuts) }
-            .collect { state -> updateSearchShortcutsIcon(state.areShortcutsAvailable, state.showSearchShortcuts) }
     }
 
     private fun observeAwesomeBarState() = consumeFlow(store) { flow ->
@@ -577,11 +535,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun updateAccessibilityTraversalOrder() {
-        val searchWrapperId = binding.searchWrapper.id
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            binding.qrScanButton.accessibilityTraversalAfter = searchWrapperId
-            binding.searchEnginesShortcutButton.accessibilityTraversalAfter = searchWrapperId
-            binding.fillLinkFromClipboard.accessibilityTraversalAfter = searchWrapperId
+            binding.fillLinkFromClipboard.accessibilityTraversalAfter = binding.searchWrapper.id
         } else {
             viewLifecycleOwner.lifecycleScope.launch {
                 binding.searchWrapper.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
@@ -692,7 +647,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         }.show()
                     }
                 } else {
-                    binding.qrScanButton.isChecked = false
                     activity?.let {
                         AlertDialog.Builder(it).apply {
                             val spannable = resources.getSpanned(
@@ -741,7 +695,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     private fun resetFocus() {
-        binding.qrScanButton.isChecked = false
         toolbarView.view.edit.focus()
         toolbarView.view.requestFocus()
     }
@@ -754,13 +707,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 clear(binding.toolbar.id, TOP)
                 connect(binding.toolbar.id, BOTTOM, PARENT_ID, BOTTOM)
 
-                clear(binding.pillWrapper.id, BOTTOM)
-                connect(binding.pillWrapper.id, BOTTOM, binding.toolbar.id, TOP)
+                clear(binding.keyboardDivider.id, BOTTOM)
+                connect(binding.keyboardDivider.id, BOTTOM, binding.toolbar.id, TOP)
 
                 clear(binding.awesomeBar.id, TOP)
                 clear(binding.awesomeBar.id, BOTTOM)
                 connect(binding.awesomeBar.id, TOP, binding.searchSuggestionsHint.id, BOTTOM)
-                connect(binding.awesomeBar.id, BOTTOM, binding.pillWrapper.id, TOP)
+                connect(binding.awesomeBar.id, BOTTOM, binding.keyboardDivider.id, TOP)
 
                 clear(binding.searchSuggestionsHint.id, TOP)
                 clear(binding.searchSuggestionsHint.id, BOTTOM)
@@ -768,7 +721,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 connect(binding.searchSuggestionsHint.id, BOTTOM, binding.searchHintBottomBarrier.id, TOP)
 
                 clear(binding.fillLinkFromClipboard.id, TOP)
-                connect(binding.fillLinkFromClipboard.id, BOTTOM, binding.pillWrapper.id, TOP)
+                connect(binding.fillLinkFromClipboard.id, BOTTOM, binding.keyboardDivider.id, TOP)
 
                 clear(binding.fillLinkDivider.id, TOP)
                 connect(binding.fillLinkDivider.id, BOTTOM, binding.fillLinkFromClipboard.id, TOP)
@@ -936,7 +889,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     ) {
         binding.fillLinkFromClipboard.isVisible = shouldShowView
         binding.fillLinkDivider.isVisible = shouldShowView
-        binding.pillWrapperDivider.isVisible =
+        binding.keyboardDivider.isVisible =
             !(shouldShowView && requireComponents.settings.shouldUseBottomToolbar)
         binding.clipboardTitle.isVisible = shouldShowView
         binding.linkIcon.isVisible = shouldShowView
@@ -992,25 +945,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         inlineAutocompleteEditText.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
-    private fun updateSearchShortcutsIcon(
-        areShortcutsAvailable: Boolean,
-        showShortcuts: Boolean,
-    ) {
-        val showUnifiedSearchFeature = requireContext().settings().showUnifiedSearchFeature
-
-        view?.apply {
-            binding.searchEnginesShortcutButton.isVisible =
-                !showUnifiedSearchFeature && areShortcutsAvailable
-            binding.pillWrapper.isVisible = !showUnifiedSearchFeature
-            binding.searchEnginesShortcutButton.isChecked = showShortcuts
-
-            val color = if (showShortcuts) R.attr.textOnColorPrimary else R.attr.textPrimary
-            binding.searchEnginesShortcutButton.compoundDrawables[0]?.setTint(
-                requireContext().getColorFromAttr(color),
-            )
-        }
-    }
-
     /**
      * Gets the previous visible [NavBackStackEntry].
      * This skips over any [NavBackStackEntry] that is associated with a [NavGraph] or refers to this
@@ -1043,7 +977,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     }
 
     companion object {
-        private const val TAP_INCREASE_DPS = 8
         private const val TAP_INCREASE_DPS_4 = 4
         private const val QR_FRAGMENT_TAG = "MOZAC_QR_FRAGMENT"
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1

@@ -964,16 +964,6 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun showSearchShortcutEnginePicker() = runTest {
-        val initialState = emptyDefaultState()
-        val store = SearchFragmentStore(initialState)
-
-        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(true)).join()
-        assertNotSame(initialState, store.state)
-        assertEquals(true, store.state.showSearchShortcuts)
-    }
-
-    @Test
     fun showSearchSuggestions() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)

@@ -381,26 +381,6 @@
         <item name="android:textColor">?textActionPrimary</item>
     </style>
 
-    <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">40dp</item>
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">4dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/toggle_text_color</item>
-        <item name="drawableTint">@color/toggle_text_color</item>
-        <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:paddingStart">8dp</item>
-        <item name="android:paddingEnd">16dp</item>
-        <item name="android:drawablePadding">8dp</item>
-        <item name="android:minWidth">0dp</item>
-        <item name="android:minHeight">0dp</item>
-        <item name="android:background">@drawable/search_pill_drawable_button_background</item>
-    </style>
-
     <style name="DialogStyleBase" parent="NormalTheme">
         <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
         <item name="android:colorControlNormal">?accentHighContrast</item>
