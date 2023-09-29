@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 bitflags! {
-    #[derive(Default, Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
+    #[derive(Default)]
     pub struct ShaderFeatureFlags: u32 {
         const GL = 1 << 0;
         const GLES = 1 << 1;

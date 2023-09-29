@@ -605,18 +605,16 @@ pub struct MaskInstance {
 }
 
 
-// Note: This can use up to 12 bits due to how it will
-// be packed in the instance data.
-
-/// Flags that define how the common brush shader
-/// code should process this instance.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, MallocSizeOf)]
-pub struct BrushFlags(u16);
-
 bitflags! {
-    impl BrushFlags: u16 {
+    // Note: This can use up to 12 bits due to how it will
+    // be packed in the instance data.
+
+    /// Flags that define how the common brush shader
+    /// code should process this instance.
+    #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[cfg_attr(feature = "replay", derive(Deserialize))]
+    #[derive(MallocSizeOf)]
+    pub struct BrushFlags: u16 {
         /// Apply perspective interpolation to UVs
         const PERSPECTIVE_INTERPOLATION = 1;
         /// Do interpolation relative to segment rect,

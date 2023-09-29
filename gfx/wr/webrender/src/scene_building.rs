@@ -417,7 +417,6 @@ impl PictureChainBuilder {
 
 bitflags! {
     /// Slice flags
-    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct SliceFlags : u8 {
         /// Slice created by a prim that has PrimitiveFlags::IS_SCROLLBAR_CONTAINER
         const IS_SCROLLBAR = 1;
