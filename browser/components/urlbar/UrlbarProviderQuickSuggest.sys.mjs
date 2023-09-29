@@ -307,12 +307,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @param {string} options.source
    *   The suggestion source, one of: "remote-settings", "merino", "rust"
    * @param {string} options.provider
-   *   This value depends on the value of `source`:
-   *   - remote-settings: The name of the `BaseFeature` instance
-   *     (`feature.name`) that manages the suggestion type.
-   *   - merino: The name of the Merino provider that serves the suggestion
-   *     type.
-   *   - rust: The name of the suggestion type as defined in `suggest.udl`.
+   *   This value depends on `source`. The possible values per source are:
+   *
+   *   remote-settings:
+   *     The name of the `BaseFeature` instance (`feature.name`) that manages
+   *     the suggestion type
+   *   merino:
+   *     The name of the Merino provider that serves the suggestion type
+   *   rust:
+   *     The name of the suggestion type as defined in `suggest.udl`
    * @returns {BaseFeature}
    *   The feature instance or null if no feature was found.
    */
@@ -370,13 +373,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
     }
 
-    // `source` will be one of: "remote-settings", "merino"
+    // `source` will be one of: "remote-settings", "merino", "rust"
     result.payload.source = suggestion.source;
 
-    // If the suggestion source is remote settings, `provider` will be the name
-    // of the `BaseFeature` instance (`feature.name`) that manages the
-    // suggestion type. If the source is Merino, it will be the name of the
-    // Merino provider that served the suggestion.
+    // `provider` depends on `source`. See `#getFeature()` for possible values.
     result.payload.provider = suggestion.provider;
 
     result.payload.telemetryType = this.#getSuggestionTelemetryType(suggestion);

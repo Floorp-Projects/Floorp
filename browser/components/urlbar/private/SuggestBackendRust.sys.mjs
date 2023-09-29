@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SuggestIngestionConstraints: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
@@ -61,14 +62,41 @@ export class SuggestBackendRust extends BaseFeature {
   }
 
   async enable(enabled) {
+    // Create a new deferred. If one already exists, then this method is being
+    // re-entered. In that case, chain the old deferred's promise to the new one
+    // by resolving it when the new one is resolved. See `enablePromise`.
+    let oldDeferred = this.#enabledDeferred;
+    this.#enabledDeferred = lazy.PromiseUtils.defer();
+    this.#enabledDeferred.promise.then(() => oldDeferred?.resolve());
+
     if (!enabled) {
       this.#store = null;
+      this.#enabledDeferred.resolve();
     } else {
       let store = await this.#initStore(this.#storePath);
       if (this.isEnabled) {
         this.#store = store;
+        this.#enabledDeferred.resolve();
+        this.#enabledDeferred = null;
       }
     }
+  }
+
+  /**
+   * @returns {Promise|null}
+   *   If the feature is currently being enabled or disabled (see `enable()`),
+   *   this will be a promise that is resolved when the enable/disable is fully
+   *   complete. On enable, the feature initializes the backing `SuggestStore`
+   *   and performs ingestion, and the promise will be resolved once that's
+   *   done. If enable/disable is not currently happening, this will be null.
+   *
+   *   Since `enable()` is async, it can be re-entered. When that happens, any
+   *   promises returned by this getter will not be resolved until the final
+   *   call completes. (Currently only enable is actually async; disable is
+   *   sync. Consumers should not rely on that behavior.)
+   */
+  get enablePromise() {
+    return this.#enabledDeferred?.promise;
   }
 
   async query(searchString) {
@@ -151,6 +179,8 @@ export class SuggestBackendRust extends BaseFeature {
 
   // The `SuggestStore` instance.
   #store;
+
+  #enabledDeferred = null;
 }
 
 /**

@@ -111,7 +111,7 @@ async function doTopPickTest({ trigger, assert }) {
   });
 
   await SpecialPowers.popPrefEnv();
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 }
 
 async function doTopSiteTest({ trigger, assert }) {
@@ -223,7 +223,7 @@ async function doSuggestTest({ trigger, assert }) {
   });
 
   await SpecialPowers.popPrefEnv();
-  cleanupQuickSuggest();
+  await cleanupQuickSuggest();
 }
 
 async function doAboutPageTest({ trigger, assert }) {
