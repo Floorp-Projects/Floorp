@@ -2453,10 +2453,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
         // CSP Frame Ancestor and X-Frame-Options check has failed
         // Do not prompt http auth - Bug 1629307
         rv = NS_ERROR_FAILURE;
-      } else if (httpStatus == 401 &&
-                 mLoadInfo->GetTainting() == mozilla::LoadTainting::CORS) {
-        // CORS does not allow Authentication headers on 401 (see bug 1554538)
-        rv = NS_ERROR_FAILURE;
       } else {
         rv = mAuthProvider->ProcessAuthentication(
             httpStatus, mConnectionInfo->EndToEndSSL() && mTransaction &&
