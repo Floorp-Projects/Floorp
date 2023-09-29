@@ -997,28 +997,6 @@ async function assertTooltipHiddenOnMouseOut(tooltip, target) {
 }
 
 /**
- * Get the rule editor from the rule-view given its index
- *
- * @param {CssRuleView} view
- *        The instance of the rule-view panel
- * @param {Number} childrenIndex
- *        The children index of the element to get
- * @param {Number} nodeIndex
- *        The child node index of the element to get
- * @return {DOMNode} The rule editor if any at this index
- */
-function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
-  const child = view.element.children[childrenIndex];
-  if (!child) {
-    return null;
-  }
-
-  return nodeIndex !== undefined
-    ? child.childNodes[nodeIndex]?._ruleEditor
-    : child._ruleEditor;
-}
-
-/**
  * Get the text displayed for a given DOM Element's textContent within the
  * markup view.
  *

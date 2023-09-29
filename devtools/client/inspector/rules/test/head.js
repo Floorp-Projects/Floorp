@@ -344,89 +344,6 @@ var addProperty = async function (
 };
 
 /**
- * Simulate changing the value of a property in a rule in the rule-view.
- *
- * @param {CssRuleView} view
- *        The instance of the rule-view panel
- * @param {TextProperty} textProp
- *        The instance of the TextProperty to be changed
- * @param {String} value
- *        The new value to be used. If null is passed, then the value will be
- *        deleted
- * @param {Object} options
- * @param {Boolean} options.blurNewProperty
- *        After the value has been changed, a new property would have been
- *        focused. This parameter is true by default, and that causes the new
- *        property to be blurred. Set to false if you don't want this.
- * @param {number} options.flushCount
- *        The ruleview uses a manual flush for tests only, and some properties are
- *        only updated after several flush. Allow tests to trigger several flushes
- *        if necessary. Defaults to 1.
- */
-var setProperty = async function (
-  view,
-  textProp,
-  value,
-  { blurNewProperty = true, flushCount = 1 } = {}
-) {
-  info("Set property to: " + value);
-  await focusEditableField(view, textProp.editor.valueSpan);
-
-  // Because of the manual flush approach used for tests, we might have an
-  // unknown number of debounced "preview" requests . Each preview should
-  // synchronously emit "start-preview-property-value".
-  // Listen to both this event and "ruleview-changed" which is emitted at the
-  // end of a preview and make sure each preview completes successfully.
-  let previewStartedCounter = 0;
-  const onStartPreview = () => previewStartedCounter++;
-  view.on("start-preview-property-value", onStartPreview);
-
-  let previewCounter = 0;
-  const onPreviewApplied = () => previewCounter++;
-  view.on("ruleview-changed", onPreviewApplied);
-
-  if (value === null) {
-    const onPopupOpened = once(view.popup, "popup-opened");
-    EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
-    await onPopupOpened;
-  } else {
-    EventUtils.sendString(value, view.styleWindow);
-  }
-
-  info(`Flush debounced ruleview methods (remaining: ${flushCount})`);
-  view.debounce.flush();
-  await waitFor(() => previewCounter >= previewStartedCounter);
-
-  flushCount--;
-
-  while (flushCount > 0) {
-    // Wait for some time before triggering a new flush to let new debounced
-    // functions queue in-between.
-    await wait(100);
-
-    info(`Flush debounced ruleview methods (remaining: ${flushCount})`);
-    view.debounce.flush();
-    await waitFor(() => previewCounter >= previewStartedCounter);
-
-    flushCount--;
-  }
-
-  view.off("start-preview-property-value", onStartPreview);
-  view.off("ruleview-changed", onPreviewApplied);
-
-  const onValueDone = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-
-  info("Waiting for another ruleview-changed after setting property");
-  await onValueDone;
-
-  if (blurNewProperty) {
-    info("Force blur on the active element");
-    view.styleDocument.activeElement.blur();
-  }
-};
-
-/**
  * Change the name of a property in a rule in the rule-view.
  *
  * @param {CssRuleView} view
@@ -854,35 +771,6 @@ async function updateDeclaration(
     );
     await setProperty(view, textProp, newValue);
   }
-}
-
-/**
- * Get the TextProperty instance corresponding to a CSS declaration
- * from a CSS rule in the Rules view.
- *
- * @param  {RuleView} view
- *         Instance of RuleView.
- * @param  {Number} ruleIndex
- *         The index of the CSS rule where to find the declaration.
- * @param  {Object} declaration
- *         An object representing the target declaration e.g. { color: red }.
- *         The first TextProperty instance which matches will be returned.
- * @return {TextProperty}
- */
-function getTextProperty(view, ruleIndex, declaration) {
-  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
-  const [[name, value]] = Object.entries(declaration);
-  const textProp = ruleEditor.rule.textProps.find(prop => {
-    return prop.name === name && prop.value === value;
-  });
-
-  if (!textProp) {
-    throw Error(
-      `Declaration ${name}:${value} not found on rule at index ${ruleIndex}`
-    );
-  }
-
-  return textProp;
 }
 
 /**
