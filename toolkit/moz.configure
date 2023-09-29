@@ -1407,7 +1407,6 @@ def x11_libs(webrtc):
             "xdamage",
             "xfixes",
             "xi",
-            "xtst",
         ]
     return libs
 
