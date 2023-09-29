@@ -2034,12 +2034,33 @@
   value: true
   mirror: always
 
+
 # By default, how many seconds in the future cookies should expire after they
 # have been injected. Defaults to 12 months. Individual cookie rules may
 # override this.
 - name: cookiebanners.cookieInjector.defaultExpiryRelative
   type: uint32_t
   value: 31536000
+  mirror: always
+
+# Enables the cookie banner auto clicking. The cookie banner auto clicking
+# depends on the `cookiebanners.service.mode` pref above.
+- name: cookiebanners.bannerClicking.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# The maximum time in ms for detecting banner and button elements for cookie
+# banner auto clicking.
+- name: cookiebanners.bannerClicking.timeout
+  type: uint32_t
+  value: 3000
+  mirror: always
+
+# Whether or not banner auto clicking test mode is enabled.
+- name: cookiebanners.bannerClicking.testing
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
