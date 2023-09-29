@@ -329,6 +329,7 @@ const ProxyMessenger = {
     if (!extension) {
       return Promise.reject({ message: ERROR_NO_RECEIVERS });
     }
+    // TODO bug 1852317: This should not be unconditional.
     await extension.wakeupBackground?.();
 
     arg.sender = this.getSender(extension, sender);
