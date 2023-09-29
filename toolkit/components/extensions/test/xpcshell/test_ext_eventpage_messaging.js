@@ -1,5 +1,11 @@
 "use strict";
 
+// This test checks that the suspension of the event page is delayed when the
+// runtime.onConnect / runtime.onMessage events are involved.
+//
+// Another test (test_ext_eventpage_messaging_wakeup.js) verifies that the event
+// page wakes up when these events are to be triggered.
+
 const { ExtensionTestCommon } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionTestCommon.sys.mjs"
 );
