@@ -130,8 +130,8 @@ class MOZ_STACK_CLASS TryEmitter {
   //     catch-block
   //
   // Additionally, a finally block may be emitted for non-syntactic
-  // try-catch-finally, even if the kind is TryCatch, because GOSUBs are not
-  // emitted.
+  // try-catch-finally, even if the kind is TryCatch, because JSOp::Goto is
+  // not emitted.
   mozilla::Maybe<TryFinallyControl> controlInfo_;
 
   // The stack depth before emitting JSOp::Try.

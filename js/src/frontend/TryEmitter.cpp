@@ -149,7 +149,7 @@ bool TryEmitter::emitFinally(
   // close. For internal non-syntactic try blocks, like those emitted for
   // yield* and IteratorClose inside for-of loops, we can emitFinally even
   // without specifying up front, since the internal non-syntactic try
-  // blocks emit no GOSUBs.
+  // blocks emit no JSOp::Goto.
   if (!controlInfo_) {
     if (kind_ == Kind::TryCatch) {
       kind_ = Kind::TryCatchFinally;
