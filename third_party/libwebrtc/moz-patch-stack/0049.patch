@@ -26,5 +26,5 @@ index ccfef49bc5..d58c02e17c 100644
    // owned by the current process. The APIs will send messages to the window's
    // message loop, and if the message loop is waiting on this operation we will
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 

@@ -96,5 +96,5 @@ index f4e2861025..64f3187f51 100644
    // Creates a platform specific DesktopCapturer instance which targets to
    // capture windows.
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 

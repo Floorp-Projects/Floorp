@@ -1694,5 +1694,5 @@ index 5e4a5d3c81..928a59104b 100644
    # Selects whether the audio processing module should be excluded.
    rtc_exclude_audio_processing_module = false
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 

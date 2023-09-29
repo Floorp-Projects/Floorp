@@ -149,5 +149,5 @@ index eff720371a..94aed09c48 100644
    if (number_of_cores <= 0) {
      RTC_LOG(LS_ERROR) << "Failed to get number of cores";
 -- 
-2.39.3 (Apple Git-145)
+2.37.3
 
