@@ -407,7 +407,7 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
            mIsFullyOccluded, mFrameState->GetSizeMode()));
 
   wr::DebugFlags flags{0};
-  flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+  flags._0 = gfx::gfxVars::WebRenderDebugFlags();
   bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
   if (debugEnabled && mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->NotifyVisibilityUpdated(
@@ -434,7 +434,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
       WinWindowOcclusionTracker::Get()->Enable(this, mWnd);
 
       wr::DebugFlags flags{0};
-      flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+      flags._0 = gfx::gfxVars::WebRenderDebugFlags();
       bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
       if (debugEnabled && mCompositorWidgetDelegate) {
         mCompositorWidgetDelegate->NotifyVisibilityUpdated(
@@ -455,7 +455,7 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
   NotifyOcclusionState(OcclusionState::VISIBLE);
 
   wr::DebugFlags flags{0};
-  flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+  flags._0 = gfx::gfxVars::WebRenderDebugFlags();
   bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
   if (debugEnabled && mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->NotifyVisibilityUpdated(

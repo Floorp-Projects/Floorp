@@ -229,7 +229,7 @@ impl ColorDepth {
 
 bitflags! {
     /// Various flags that are part of an image descriptor.
-    #[derive(Deserialize, Serialize)]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, Serialize)]
     pub struct ImageDescriptorFlags: u32 {
         /// Whether this image is opaque, or has an alpha channel. Avoiding blending
         /// for opaque surfaces is an important optimization.

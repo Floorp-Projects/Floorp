@@ -574,7 +574,7 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
                       wr::DebugFlags::WINDOW_VISIBILITY_DBG)
   GFX_WEBRENDER_DEBUG(".restrict-blob-size", wr::DebugFlags::RESTRICT_BLOB_SIZE)
 #undef GFX_WEBRENDER_DEBUG
-  gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
+  gfx::gfxVars::SetWebRenderDebugFlags(flags._0);
 }
 
 static void WebRenderQualityPrefChangeCallback(const char* aPref, void*) {

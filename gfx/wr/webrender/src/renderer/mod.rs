@@ -5484,7 +5484,7 @@ impl Renderer {
 
 bitflags! {
     /// Flags that control how shaders are pre-cached, if at all.
-    #[derive(Default)]
+    #[derive(Default, Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct ShaderPrecacheFlags: u32 {
         /// Needed for const initialization
         const EMPTY                 = 0;

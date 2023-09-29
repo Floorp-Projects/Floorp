@@ -15,7 +15,7 @@ display_list_stats = []
 
 [dependencies]
 app_units = "0.7.3"
-bitflags = "1.2"
+bitflags = { version = "2", features = ["serde"] }
 byteorder = "1.2.1"
 euclid = { version = "0.22.6", features = ["serde"] }
 malloc_size_of_derive = "0.1"

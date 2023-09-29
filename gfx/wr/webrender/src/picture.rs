@@ -3962,6 +3962,7 @@ pub struct RasterConfig {
 bitflags! {
     /// A set of flags describing why a picture may need a backing surface.
     #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct BlitReason: u32 {
         /// Mix-blend-mode on a child that requires isolation.
         const ISOLATE = 1;
@@ -4219,6 +4220,7 @@ pub struct OrderedPictureChild {
 bitflags! {
     /// A set of flags describing why a picture may need a backing surface.
     #[cfg_attr(feature = "capture", derive(Serialize))]
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct ClusterFlags: u32 {
         /// Whether this cluster is visible when the position node is a backface.
         const IS_BACKFACE_VISIBLE = 1;
@@ -4424,6 +4426,7 @@ impl PrimitiveList {
 bitflags! {
     #[cfg_attr(feature = "capture", derive(Serialize))]
     /// Flags describing properties for a given PicturePrimitive
+    #[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
     pub struct PictureFlags : u8 {
         /// This picture is a resolve target (doesn't actually render content itself,
         /// will have content copied in to it)
