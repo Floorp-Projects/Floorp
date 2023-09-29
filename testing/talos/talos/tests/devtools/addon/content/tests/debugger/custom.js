@@ -44,6 +44,7 @@ const EXPECTED = {
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 
 const TEST_URL = PAGES_BASE_URL + "custom/debugger/app-build/index.html";
+const MINIFIED_URL = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
 
 module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
@@ -213,21 +214,20 @@ async function testPreview(dbg, tab, testFunction) {
 }
 
 async function testOpeningLargeMinifiedFile(dbg, tab) {
-  const file = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
-  const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
+  const fileFirstMinifiedChars = `(()=>{var e,t,n,r,o={82603`;
 
   dump("Open minified.js (large minified file)\n");
   const fullTest = runTest(
     "custom.jsdebugger.open-large-minified-file.full-selection.DAMP"
   );
   const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
-  const onSelected = selectSource(dbg, file);
-  await waitForText(dbg, fileFirstChars);
+  const onSelected = selectSource(dbg, MINIFIED_URL);
+  await waitForText(dbg, fileFirstMinifiedChars);
   test.done();
   await onSelected;
   fullTest.done();
 
-  dbg.actions.closeTabs([file]);
+  dbg.actions.closeTabs([MINIFIED_URL]);
 
   await garbageCollect();
 }
@@ -238,14 +238,11 @@ async function testPrettyPrint(dbg) {
   const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
   await dbg.actions.closeTabs(tabURLs);
 
-  // Disable source map so we can prettyprint main.js
-  await dbg.actions.toggleSourceMapsEnabled(false);
-
-  const fileUrl = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/main.js`;
-  const formattedFileUrl = `${fileUrl}:formatted`;
+  const formattedFileUrl = `${MINIFIED_URL}:formatted`;
+  const filePrettyChars = "82603: (e, t, n) => {\n";
 
   dump("Select minified file\n");
-  await selectSource(dbg, fileUrl);
+  await selectSource(dbg, MINIFIED_URL);
 
   dump("Wait until CodeMirror highlighting is done\n");
   const cm = getCM(dbg);
@@ -263,11 +260,10 @@ async function testPrettyPrint(dbg) {
   const test = runTest("custom.jsdebugger.pretty-print.DAMP");
   prettyPrintButton.click();
   await waitForSource(dbg, formattedFileUrl);
-  await waitForText(dbg, "!function (n) {\n");
+  await waitForText(dbg, filePrettyChars);
   test.done();
 
-  await dbg.actions.toggleSourceMapsEnabled(true);
-  dbg.actions.closeTabs([fileUrl, formattedFileUrl]);
+  dbg.actions.closeTabs([MINIFIED_URL, formattedFileUrl]);
 
   await garbageCollect();
 }
