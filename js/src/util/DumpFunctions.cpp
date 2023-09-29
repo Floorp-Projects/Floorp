@@ -346,8 +346,9 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
 
         first = false;
       } else {
-        sp.put("    <Failed to get argument while inspecting stack "
-               "frame>\n");
+        sp.put(
+            "    <Failed to get argument while inspecting stack "
+            "frame>\n");
       }
     }
   }
@@ -403,8 +404,9 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
           return false;
         }
         cx->clearPendingException();
-        sp.put("    <Failed to fetch property while inspecting stack "
-               "frame>\n");
+        sp.put(
+            "    <Failed to fetch property while inspecting stack "
+            "frame>\n");
         continue;
       }
 
@@ -430,8 +432,9 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
         sp.printf("    this.%s = %s%s%s\n", name, v.isString() ? "\"" : "",
                   value, v.isString() ? "\"" : "");
       } else {
-        sp.put("    <Failed to format values while inspecting stack "
-               "frame>\n");
+        sp.put(
+            "    <Failed to format values while inspecting stack "
+            "frame>\n");
       }
     }
   }

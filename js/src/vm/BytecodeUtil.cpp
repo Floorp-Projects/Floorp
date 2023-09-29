@@ -102,7 +102,8 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
 /* static */ const char PCCounts::numExecName[] = "interp";
 
-[[nodiscard]] static bool DumpIonScriptCounts(StringPrinter* sp, HandleScript script,
+[[nodiscard]] static bool DumpIonScriptCounts(StringPrinter* sp,
+                                              HandleScript script,
                                               jit::IonScriptCounts* ionCounts) {
   sp->printf("IonScript [%zu blocks]:\n", ionCounts->numBlocks());
 
@@ -1004,8 +1005,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   }
 
   if (showAll) {
-    sp->printf("%s:%u\n", script->filename(),
-               unsigned(script->lineno()));
+    sp->printf("%s:%u\n", script->filename(), unsigned(script->lineno()));
   }
 
   if (pc != nullptr) {
@@ -1249,7 +1249,7 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
     }
 
     sp->printf("from %s @ %05u", CodeName(JSOp(*pc)),
-                 unsigned(script->pcToOffset(pc)));
+               unsigned(script->pcToOffset(pc)));
 
     return true;
   };
@@ -1397,7 +1397,8 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         return 0;
       }
       EnvironmentCoordinate ec(pc);
-      sp->printf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot());
+      sp->printf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(),
+                 ec.slot());
       break;
     }
     case JOF_DEBUGCOORD: {
@@ -2213,9 +2214,7 @@ JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
   MOZ_CRASH("No binding");
 }
 
-UniqueChars ExpressionDecompiler::getOutput() {
-  return sprinter.release();
-}
+UniqueChars ExpressionDecompiler::getOutput() { return sprinter.release(); }
 
 }  // anonymous namespace
 
@@ -2602,7 +2601,8 @@ size_t JS::GetPCCountScriptCount(JSContext* cx) {
   return rt->scriptAndCountsVector->length();
 }
 
-[[nodiscard]] static bool JSONStringProperty(StringPrinter& sp, JSONPrinter& json,
+[[nodiscard]] static bool JSONStringProperty(StringPrinter& sp,
+                                             JSONPrinter& json,
                                              const char* name, JSString* str) {
   json.beginStringProperty(name);
   JSONQuoteString(&sp, str);
