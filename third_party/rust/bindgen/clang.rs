@@ -1813,14 +1813,14 @@ impl TranslationUnit {
     pub(crate) fn parse(
         ix: &Index,
         file: &str,
-        cmd_args: &[String],
+        cmd_args: &[Box<str>],
         unsaved: &[UnsavedFile],
         opts: CXTranslationUnit_Flags,
     ) -> Option<TranslationUnit> {
         let fname = CString::new(file).unwrap();
         let _c_args: Vec<CString> = cmd_args
             .iter()
-            .map(|s| CString::new(s.clone()).unwrap())
+            .map(|s| CString::new(s.clone().into_boxed_bytes()).unwrap())
             .collect();
         let c_args: Vec<*const c_char> =
             _c_args.iter().map(|s| s.as_ptr()).collect();
@@ -1923,9 +1923,9 @@ pub(crate) struct UnsavedFile {
 
 impl UnsavedFile {
     /// Construct a new unsaved file with the given `name` and `contents`.
-    pub(crate) fn new(name: String, contents: String) -> UnsavedFile {
-        let name = CString::new(name).unwrap();
-        let contents = CString::new(contents).unwrap();
+    pub(crate) fn new(name: &str, contents: &str) -> UnsavedFile {
+        let name = CString::new(name.as_bytes()).unwrap();
+        let contents = CString::new(contents.as_bytes()).unwrap();
         let x = CXUnsavedFile {
             Filename: name.as_ptr(),
             Contents: contents.as_ptr(),

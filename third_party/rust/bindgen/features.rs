@@ -4,266 +4,227 @@
 #![deny(clippy::missing_docs_in_private_items)]
 #![allow(deprecated)]
 
+use std::cmp::Ordering;
 use std::io;
 use std::str::FromStr;
 
-/// Define RustTarget struct definition, Default impl, and conversions
-/// between RustTarget and String.
-macro_rules! rust_target_def {
-    ( $( $( #[$attr:meta] )* => $release:ident => $value:expr; )* ) => {
+/// This macro defines the [`RustTarget`] and [`RustFeatures`] types.
+macro_rules! define_rust_targets {
+    (
+        Nightly => {$($nightly_feature:ident $(: #$issue:literal)?),* $(,)?} $(,)?
+        $(
+            $(#[$attrs:meta])*
+            $variant:ident($minor:literal) => {$($feature:ident $(: #$pull:literal)?),* $(,)?},
+        )*
+        $(,)?
+    ) => {
         /// Represents the version of the Rust language to target.
         ///
         /// To support a beta release, use the corresponding stable release.
         ///
         /// This enum will have more variants added as necessary.
-        #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Hash)]
         #[allow(non_camel_case_types)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         pub enum RustTarget {
+            /// Rust Nightly
+            $(#[doc = concat!(
+                "- [`", stringify!($nightly_feature), "`]",
+                "(", $("https://github.com/rust-lang/rust/pull/", stringify!($issue),)* ")",
+            )])*
+            Nightly,
             $(
-                $(
-                    #[$attr]
-                )*
-                $release,
+                #[doc = concat!("Rust 1.", stringify!($minor))]
+                $(#[doc = concat!(
+                    "- [`", stringify!($feature), "`]",
+                    "(", $("https://github.com/rust-lang/rust/pull/", stringify!($pull),)* ")",
+                )])*
+                $(#[$attrs])*
+                $variant,
             )*
         }
 
-        impl Default for RustTarget {
-            /// Gives the latest stable Rust version
-            fn default() -> RustTarget {
-                LATEST_STABLE_RUST
-            }
-        }
-
-        impl FromStr for RustTarget {
-            type Err = io::Error;
-
-            /// Create a `RustTarget` from a string.
-            ///
-            /// * The stable/beta versions of Rust are of the form "1.0",
-            /// "1.19", etc.
-            /// * The nightly version should be specified with "nightly".
-            fn from_str(s: &str) -> Result<Self, Self::Err> {
-                match s.as_ref() {
-                    $(
-                        stringify!($value) => Ok(RustTarget::$release),
-                    )*
-                    _ => Err(
-                        io::Error::new(
-                            io::ErrorKind::InvalidInput,
-                            concat!(
-                                "Got an invalid rust target. Accepted values ",
-                                "are of the form ",
-                                "\"1.0\" or \"nightly\"."))),
+        impl RustTarget {
+            fn minor(self) -> Option<u64> {
+                match self {
+                    $( Self::$variant => Some($minor),)*
+                    Self::Nightly => None
                 }
             }
-        }
 
-        impl From<RustTarget> for String {
-            fn from(target: RustTarget) -> Self {
-                match target {
-                    $(
-                        RustTarget::$release => stringify!($value),
-                    )*
-                }.into()
+            const fn stable_releases() -> [(Self, u64); [$($minor,)*].len()] {
+                [$((Self::$variant, $minor),)*]
             }
         }
-    }
-}
 
-/// Defines an array slice with all RustTarget values
-macro_rules! rust_target_values_def {
-    ( $( $( #[$attr:meta] )* => $release:ident => $value:expr; )* ) => {
+        #[cfg(feature = "__cli")]
         /// Strings of allowed `RustTarget` values
-        pub static RUST_TARGET_STRINGS: &'static [&str] = &[
-            $(
-                stringify!($value),
-            )*
-        ];
-    }
-}
+        pub const RUST_TARGET_STRINGS: &[&str] = &[$(concat!("1.", stringify!($minor)),)*];
 
-/// Defines macro which takes a macro
-macro_rules! rust_target_base {
-    ( $x_macro:ident ) => {
-        $x_macro!(
-            /// Rust stable 1.0
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_0 => 1.0;
-            /// Rust stable 1.17
-            ///  * Static lifetime elision ([RFC 1623](https://github.com/rust-lang/rfcs/blob/master/text/1623-static.md))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_17 => 1.17;
-            /// Rust stable 1.19
-            ///  * Untagged unions ([RFC 1444](https://github.com/rust-lang/rfcs/blob/master/text/1444-union.md))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_19 => 1.19;
-            /// Rust stable 1.20
-            ///  * Associated constants ([PR](https://github.com/rust-lang/rust/pull/42809))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_20 => 1.20;
-            /// Rust stable 1.21
-            ///  * Builtin impls for `Clone` ([PR](https://github.com/rust-lang/rust/pull/43690))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_21 => 1.21;
-            /// Rust stable 1.25
-            ///  * `repr(align)` ([PR](https://github.com/rust-lang/rust/pull/47006))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_25 => 1.25;
-            /// Rust stable 1.26
-            ///  * [i128 / u128 support](https://doc.rust-lang.org/std/primitive.i128.html)
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_26 => 1.26;
-            /// Rust stable 1.27
-            ///  * `must_use` attribute on functions ([PR](https://github.com/rust-lang/rust/pull/48925))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_27 => 1.27;
-            /// Rust stable 1.28
-            ///  * `repr(transparent)` ([PR](https://github.com/rust-lang/rust/pull/51562))
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_28 => 1.28;
-            /// Rust stable 1.30
-            ///  * `const fn` support for limited cases ([PR](https://github.com/rust-lang/rust/pull/54835/)
-            /// *  [c_void available in core](https://doc.rust-lang.org/core/ffi/enum.c_void.html)
-            #[deprecated = "This rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues"] => Stable_1_30 => 1.30;
-            /// Rust stable 1.33
-            ///  * repr(packed(N)) ([PR](https://github.com/rust-lang/rust/pull/57049))
-            => Stable_1_33 => 1.33;
-            /// Rust stable 1.36
-            ///  * `MaybeUninit` instead of `mem::uninitialized()` ([PR](https://github.com/rust-lang/rust/pull/60445))
-            => Stable_1_36 => 1.36;
-            /// Rust stable 1.40
-            /// * `non_exhaustive` enums/structs ([Tracking issue](https://github.com/rust-lang/rust/issues/44109))
-            => Stable_1_40 => 1.40;
-            /// Rust stable 1.47
-            /// * `larger_arrays` ([Tracking issue](https://github.com/rust-lang/rust/pull/74060))
-            => Stable_1_47 => 1.47;
-            /// Rust stable 1.59
-            /// * `CStr::from_bytes_with_nul_unchecked` in `const` contexts ([PR](https://github.com/rust-lang/rust/pull/54745))
-            => Stable_1_59 => 1.59;
-            /// Rust stable 1.64
-            ///  * `core_ffi_c` ([Tracking issue](https://github.com/rust-lang/rust/issues/94501))
-            => Stable_1_64 => 1.64;
-            /// Rust stable 1.68
-            ///  * `abi_efiapi` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/65815))
-            => Stable_1_68 => 1.68;
-            /// Nightly rust
-            ///  * `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
-            ///  * `vectorcall` calling convention (no tracking issue)
-            ///  * `c_unwind` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/74990))
-            => Nightly => nightly;
-        );
-    }
-}
-
-rust_target_base!(rust_target_def);
-rust_target_base!(rust_target_values_def);
-
-/// Latest stable release of Rust
-pub const LATEST_STABLE_RUST: RustTarget = RustTarget::Stable_1_68;
-
-/// Create RustFeatures struct definition, new(), and a getter for each field
-macro_rules! rust_feature_def {
-    (
-        $( $rust_target:ident {
-            $( $( #[$attr:meta] )* => $feature:ident; )*
-        } )*
-    ) => {
-        /// Features supported by a rust target
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-        #[allow(missing_docs)] // Documentation should go into the relevant variants.
         pub(crate) struct RustFeatures {
-            $( $(
-                $(
-                    #[$attr]
-                )*
-                pub $feature: bool,
-            )* )*
-        }
-
-        impl RustFeatures {
-            /// Gives a RustFeatures struct with all features disabled
-            fn new() -> Self {
-                RustFeatures {
-                    $( $(
-                        $feature: false,
-                    )* )*
-                }
-            }
+            $($(pub(crate) $feature: bool,)*)*
+            $(pub(crate) $nightly_feature: bool,)*
         }
 
         impl From<RustTarget> for RustFeatures {
-            fn from(rust_target: RustTarget) -> Self {
-                let mut features = RustFeatures::new();
-
-                $(
-                if rust_target >= RustTarget::$rust_target {
-                    $(
-                    features.$feature = true;
-                    )*
+            fn from(target: RustTarget) -> Self {
+                if target == RustTarget::Nightly {
+                    return Self {
+                        $($($feature: true,)*)*
+                        $($nightly_feature: true,)*
+                    };
                 }
-                )*
+
+                let mut features = Self {
+                    $($($feature: false,)*)*
+                    $($nightly_feature: false,)*
+                };
+
+                $(if target >= RustTarget::$variant {
+                    $(features.$feature = true;)*
+                })*
 
                 features
             }
         }
+    };
+}
+
+// NOTE: When adding or removing features here, make sure to add the stabilization PR
+// number for the feature if it has been stabilized or the tracking issue number if the feature is
+// not stable.
+define_rust_targets! {
+    Nightly => {
+        thiscall_abi: #42202,
+        vectorcall_abi,
+    },
+    Stable_1_71(71) => { c_unwind_abi: #106075 },
+    Stable_1_68(68) => { abi_efiapi: #105795 },
+    Stable_1_64(64) => { core_ffi_c: #94503 },
+    Stable_1_59(59) => { const_cstr: #54745 },
+    Stable_1_47(47) => { larger_arrays: #74060 },
+    Stable_1_40(40) => { non_exhaustive: #44109 },
+    Stable_1_36(36) => { maybe_uninit: #60445 },
+    Stable_1_33(33) => { repr_packed_n: #57049 },
+    #[deprecated]
+    Stable_1_30(30) => {
+        core_ffi_c_void: #53910,
+        min_const_fn: #54835,
+    },
+    #[deprecated]
+    Stable_1_28(28) => { repr_transparent: #51562 },
+    #[deprecated]
+    Stable_1_27(27) => { must_use_function: #48925 },
+    #[deprecated]
+    Stable_1_26(26) => { i128_and_u128: #49101 },
+    #[deprecated]
+    Stable_1_25(25) => { repr_align: #47006 },
+    #[deprecated]
+    Stable_1_21(21) => { builtin_clone_impls: #43690 },
+    #[deprecated]
+    Stable_1_20(20) => { associated_const: #42809 },
+    #[deprecated]
+    Stable_1_19(19) => { untagged_union: #42068 },
+    #[deprecated]
+    Stable_1_17(17) => { static_lifetime_elision: #39265 },
+    #[deprecated]
+    Stable_1_0(0) => {},
+}
+
+/// Latest stable release of Rust
+pub const LATEST_STABLE_RUST: RustTarget = {
+    // FIXME: replace all this code by
+    // ```
+    // RustTarget::stable_releases()
+    //     .into_iter()
+    //     .max_by_key(|(_, m)| m)
+    //     .map(|(t, _)| t)
+    //     .unwrap_or(RustTarget::Nightly)
+    // ```
+    // once those operations can be used in constants.
+    let targets = RustTarget::stable_releases();
+
+    let mut i = 0;
+    let mut latest_target = None;
+    let mut latest_minor = 0;
+
+    while i < targets.len() {
+        let (target, minor) = targets[i];
+
+        if latest_minor < minor {
+            latest_minor = minor;
+            latest_target = Some(target);
+        }
+
+        i += 1;
+    }
+
+    match latest_target {
+        Some(target) => target,
+        None => unreachable!(),
+    }
+};
+
+impl Default for RustTarget {
+    fn default() -> Self {
+        LATEST_STABLE_RUST
     }
 }
 
-// NOTE(emilio): When adding or removing features here, make sure to update the
-// documentation for the relevant variant in the rust_target_base macro
-// definition.
-rust_feature_def!(
-    Stable_1_17 {
-        => static_lifetime_elision;
+impl PartialOrd for RustTarget {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
-    Stable_1_19 {
-        => untagged_union;
+}
+
+impl Ord for RustTarget {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self.minor(), other.minor()) {
+            (Some(a), Some(b)) => a.cmp(&b),
+            (Some(_), None) => Ordering::Less,
+            (None, Some(_)) => Ordering::Greater,
+            (None, None) => Ordering::Equal,
+        }
     }
-    Stable_1_20 {
-        => associated_const;
+}
+
+impl FromStr for RustTarget {
+    type Err = io::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "nightly" {
+            return Ok(Self::Nightly);
+        }
+
+        if let Some(("1", str_minor)) = s.split_once('.') {
+            if let Ok(minor) = str_minor.parse::<u64>() {
+                for (target, target_minor) in Self::stable_releases() {
+                    if minor == target_minor {
+                        return Ok(target);
+                    }
+                }
+            }
+        }
+
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Got an invalid Rust target. Accepted values are of the form \"1.71\" or \"nightly\"."
+        ))
     }
-    Stable_1_21 {
-        => builtin_clone_impls;
+}
+
+impl std::fmt::Display for RustTarget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.minor() {
+            Some(minor) => write!(f, "1.{}", minor),
+            None => "nightly".fmt(f),
+        }
     }
-    Stable_1_25 {
-        => repr_align;
-    }
-    Stable_1_26 {
-        => i128_and_u128;
-    }
-    Stable_1_27 {
-        => must_use_function;
-    }
-    Stable_1_28 {
-        => repr_transparent;
-    }
-    Stable_1_30 {
-        => min_const_fn;
-        => core_ffi_c_void;
-    }
-    Stable_1_33 {
-        => repr_packed_n;
-    }
-    Stable_1_36 {
-        => maybe_uninit;
-    }
-    Stable_1_40 {
-        => non_exhaustive;
-    }
-    Stable_1_47 {
-        => larger_arrays;
-    }
-    Stable_1_59 {
-        => const_cstr;
-    }
-    Stable_1_64 {
-        => core_ffi_c;
-    }
-    Stable_1_68 {
-        => abi_efiapi;
-    }
-    Nightly {
-        => thiscall_abi;
-        => vectorcall_abi;
-        => c_unwind_abi;
-    }
-);
+}
 
 impl Default for RustFeatures {
     fn default() -> Self {
-        let default_rust_target: RustTarget = Default::default();
-        Self::from(default_rust_target)
+        RustTarget::default().into()
     }
 }
 
@@ -296,6 +257,12 @@ mod test {
                 !f_1_21.thiscall_abi &&
                 !f_1_21.vectorcall_abi
         );
+        let features = RustFeatures::from(RustTarget::Stable_1_71);
+        assert!(
+            features.c_unwind_abi &&
+                features.abi_efiapi &&
+                !features.thiscall_abi
+        );
         let f_nightly = RustFeatures::from(RustTarget::Nightly);
         assert!(
             f_nightly.static_lifetime_elision &&
@@ -306,13 +273,12 @@ mod test {
                 f_nightly.maybe_uninit &&
                 f_nightly.repr_align &&
                 f_nightly.thiscall_abi &&
-                f_nightly.vectorcall_abi &&
-                f_nightly.c_unwind_abi
+                f_nightly.vectorcall_abi
         );
     }
 
     fn test_target(target_str: &str, target: RustTarget) {
-        let target_string: String = target.into();
+        let target_string = target.to_string();
         assert_eq!(target_str, target_string);
         assert_eq!(target, RustTarget::from_str(target_str).unwrap());
     }
@@ -324,6 +290,7 @@ mod test {
         test_target("1.19", RustTarget::Stable_1_19);
         test_target("1.21", RustTarget::Stable_1_21);
         test_target("1.25", RustTarget::Stable_1_25);
+        test_target("1.71", RustTarget::Stable_1_71);
         test_target("nightly", RustTarget::Nightly);
     }
 }

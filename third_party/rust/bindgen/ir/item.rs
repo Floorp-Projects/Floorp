@@ -1465,7 +1465,7 @@ impl Item {
                                 cb.include_file(&included_file);
                             }
 
-                            ctx.add_dep(included_file);
+                            ctx.add_dep(included_file.into_boxed_str());
                         }
                     }
                 }

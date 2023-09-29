@@ -257,13 +257,19 @@ impl ObjCMethod {
                 if name.is_empty() {
                     None
                 } else {
-                    // Try to parse the current name as an identifier. This might fail if the
-                    // name is a keyword so we try to prepend "r#" to it and parse again. If
-                    // this also fails, we panic with the first error.
+                    // Try to parse the current name as an identifier. This might fail if the name
+                    // is a keyword, so we try to  "r#" to it and parse again, this could also fail
+                    // if the name is `crate`, `self`, `super` or `Self`, so we try to add the `_`
+                    // suffix to it and parse again. If this also fails, we panic with the first
+                    // error.
                     Some(
                         syn::parse_str::<Ident>(name)
                             .or_else(|err| {
                                 syn::parse_str::<Ident>(&format!("r#{}", name))
+                                    .map_err(|_| err)
+                            })
+                            .or_else(|err| {
+                                syn::parse_str::<Ident>(&format!("{}_", name))
                                     .map_err(|_| err)
                             })
                             .expect("Invalid identifier"),

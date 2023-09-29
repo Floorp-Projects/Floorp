@@ -28,7 +28,7 @@ features = ["gecko"]
 
 # Make sure to use bindgen's runtime-loading of libclang, as it allows for a wider range of clang versions to be used
 [build-dependencies]
-bindgen = {version = "0.66", default-features = false, features = ["runtime"] }
+bindgen = {version = "0.68", default-features = false, features = ["runtime"] }
 
 [[bin]]
 name = "http3server"

@@ -408,21 +408,28 @@ dependencies = [
 name = "bindgen"
 version = "0.63.999"
 dependencies = [
- "bindgen 0.66.1",
+ "bindgen 0.66.999",
 ]
 
 [[package]]
 name = "bindgen"
 version = "0.64.999"
 dependencies = [
- "bindgen 0.66.1",
+ "bindgen 0.66.999",
 ]
 
 [[package]]
 name = "bindgen"
-version = "0.66.1"
+version = "0.66.999"
+dependencies = [
+ "bindgen 0.68.1",
+]
+
+[[package]]
+name = "bindgen"
+version = "0.68.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b84e06fc203107bfbad243f4aba2af864eb7db3b1cf46ea0a023b0b433d2a7"
+checksum = "726e4313eb6ec35d2730258ad4e15b547ee75d6afaa1361a922e78e59b7d8078"
 dependencies = [
  "bitflags 2.4.0",
  "cexpr",
@@ -567,7 +574,7 @@ dependencies = [
 name = "builtins-static"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.66.1",
+ "bindgen 0.68.1",
  "mozilla-central-workspace-hack",
  "nom",
  "pkcs11-bindings",
@@ -2008,7 +2015,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen 0.66.1",
+ "bindgen 0.68.1",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2548,7 +2555,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64 0.21.3",
- "bindgen 0.66.1",
+ "bindgen 0.68.1",
  "cfg-if 1.0.0",
  "http",
  "hyper",
@@ -3618,7 +3625,7 @@ name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
- "bindgen 0.66.1",
+ "bindgen 0.68.1",
  "bytes",
  "chrono",
  "env_logger",
@@ -3923,7 +3930,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c17aec6d4e1822c023689899f09311592a36cbf6de8f85dfaf5f01976790d8d"
 dependencies = [
- "bindgen 0.66.1",
+ "bindgen 0.66.999",
  "mozbuild",
  "once_cell",
  "pkcs11-bindings",
@@ -4275,7 +4282,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0fabbdbe64b22820753da90995b3a73d02907eaeeac6f2414962a566aaa18ea"
 dependencies = [
- "bindgen 0.66.1",
+ "bindgen 0.66.999",
 ]
 
 [[package]]
@@ -5186,7 +5193,7 @@ dependencies = [
  "app_units",
  "arrayvec",
  "atomic_refcell",
- "bindgen 0.66.1",
+ "bindgen 0.68.1",
  "bitflags 2.4.0",
  "byteorder",
  "cssparser",
