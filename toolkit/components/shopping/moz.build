@@ -9,6 +9,6 @@ with Files("**"):
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]

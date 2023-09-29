@@ -6,7 +6,7 @@
 
 JAR_MANIFESTS += ["jar.mn"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Printing")

@@ -34,7 +34,7 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = "xul"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 # Platform-specific implementations of `ProcInfo`.
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
