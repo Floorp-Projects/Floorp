@@ -18,7 +18,7 @@ import okhttp3.Cache
 import okhttp3.CacheControl
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.CookieHandler
 import java.net.CookieManager
 
@@ -104,20 +104,20 @@ private fun OkHttpClient.rebuildFor(request: Request, context: Context?): OkHttp
 }
 
 private fun okhttp3.Response.toResponse(): Response {
-    val body = body()
-    val headers = translateHeaders(headers())
+    val body = body
+    val headers = translateHeaders(headers)
 
     return Response(
-        url = request().url().toString(),
+        url = request.url.toString(),
         headers = headers,
-        status = code(),
+        status = code,
         body = if (body != null) Response.Body(body.byteStream(), headers["Content-Type"]) else Response.Body.empty(),
     )
 }
 
 private fun createRequestBuilderWithBody(request: Request): RequestBuilder {
-    val requestBody = request.body?.let { body ->
-        RequestBody.create(null, body.useStream { it.readBytes() })
+    val requestBody = request.body?.useStream { it.readBytes() }?.let {
+        it.toRequestBody(null, 0, it.size)
     }
 
     return RequestBuilder()
@@ -141,7 +141,7 @@ private fun RequestBuilder.addHeadersFrom(request: Request, defaultHeaders: Head
 private fun translateHeaders(actualHeaders: okhttp3.Headers): Headers {
     val headers = MutableHeaders()
 
-    for (i in 0 until actualHeaders.size()) {
+    for (i in 0 until actualHeaders.size) {
         headers.append(actualHeaders.name(i), actualHeaders.value(i))
     }
 

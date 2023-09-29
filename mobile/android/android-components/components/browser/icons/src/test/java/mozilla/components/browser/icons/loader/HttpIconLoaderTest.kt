@@ -81,7 +81,7 @@ class HttpIconLoaderTest {
                 assertEquals("GET", request.method)
 
                 val headers = request.headers
-                for (i in 0 until headers.size()) {
+                for (i in 0 until headers.size) {
                     println(headers.name(i) + ": " + headers.value(i))
                 }
             } finally {

@@ -15,7 +15,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
 import okio.GzipSink
-import okio.Okio
+import okio.buffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -92,7 +92,7 @@ abstract class FetchTestCases {
 
             val request = takeRequest()
 
-            assertTrue(request.headers.size() >= 5)
+            assertTrue(request.headers.size >= 5)
 
             val names = request.headers.names()
             assertTrue(names.contains("Accept"))
@@ -359,7 +359,7 @@ abstract class FetchTestCases {
 
             val request = takeRequest()
 
-            for (i in 0 until request.headers.size()) {
+            for (i in 0 until request.headers.size) {
                 println(" Header: " + request.headers.name(i) + " = " + request.headers.value(i))
             }
 
@@ -516,7 +516,7 @@ abstract class FetchTestCases {
 @Throws(IOException::class)
 private fun gzip(data: String): Buffer {
     val result = Buffer()
-    val sink = Okio.buffer(GzipSink(result))
+    val sink = GzipSink(result).buffer()
     sink.writeUtf8(data)
     sink.close()
     return result

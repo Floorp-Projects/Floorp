@@ -14,7 +14,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import mozilla.components.tooling.fetch.tests.FetchTestCases
-import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
@@ -297,7 +297,7 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
         whenever(request.method).thenReturn(method)
 
         headerMap?.let {
-            whenever(request.headers).thenReturn(Headers.of(headerMap))
+            whenever(request.headers).thenReturn(headerMap.toHeaders())
             whenever(request.getHeader(any())).thenAnswer { inv -> it[inv.getArgument(0)] }
         }
 
