@@ -112,9 +112,6 @@ impl StyleThreadPool {
         while let Some(join_handle) = STYLE_THREAD_JOIN_HANDLES.lock().pop() {
             let _ = join_handle.join();
         }
-
-        // Clean up the current thread too.
-        rayon_core::clean_up_use_current_thread();
     }
 
     /// Returns a reference to the thread pool.
