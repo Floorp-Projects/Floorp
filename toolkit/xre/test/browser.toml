@@ -1,6 +1,0 @@
-[DEFAULT]
-
-["browser_checkdllblockliststate.js"]
-run-if = ["os == 'win'"]
-skip-if = ["ccov"] # Bug 1531789
-

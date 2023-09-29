@@ -40,7 +40,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     "dap/tests/xpcshell/xpcshell.ini",
     "tests/unit/xpcshell.ini",
 ]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 XPIDL_SOURCES += [
     "core/nsITelemetry.idl",
