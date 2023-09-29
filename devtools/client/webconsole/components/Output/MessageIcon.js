@@ -9,6 +9,9 @@ const dom = require("resource://devtools/client/shared/vendor/react-dom-factorie
 const {
   l10n,
 } = require("resource://devtools/client/webconsole/utils/messages.js");
+const {
+  MESSAGE_TYPE,
+} = require("resource://devtools/client/webconsole/constants.js");
 
 const l10nLevels = {
   error: "level.error",
@@ -40,15 +43,17 @@ function getIconElement(level, type, title) {
     classnames.push("logtrace");
   } else if (type === "blockedReason") {
     title = l10n.getStr("blockedrequest.label");
+  } else if (type === MESSAGE_TYPE.COMMAND) {
+    title = l10n.getStr("command.title");
+  } else if (type === MESSAGE_TYPE.RESULT) {
+    title = l10n.getStr("result.title");
   }
 
-  {
-    return dom.span({
-      className: classnames.join(" "),
-      title,
-      "aria-live": "off",
-    });
-  }
+  return dom.span({
+    className: classnames.join(" "),
+    title,
+    "aria-live": "off",
+  });
 }
 
 MessageIcon.displayName = "MessageIcon";
