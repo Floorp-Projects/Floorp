@@ -112,10 +112,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
 
   void checkInvariants() const;
 
-  const char* string() const {
-    MOZ_ASSERT(!hadOutOfMemory());
-    return base;
-  }
   JS::UniqueChars release();
   JSString* releaseJS(JSContext* cx);
 
@@ -137,7 +133,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
 
   bool putString(JSString* str);
 
-  ptrdiff_t getOffset() const;
   size_t length() const;
 
   // Report that a string operation failed to get the memory it requested. The
