@@ -101,31 +101,14 @@ jobs:
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
-  Part1-win-x86-build-with-profgen-zstd:
-    uses: ./.github/workflows/windows-build.yml
-    with:
-      profgen: true
-      aarch64: false
-      build32bit: true
-      zstd: true
-      buildjet: ${{ inputs.buildjet }}
-
-  Part2-win-x86-gen-profdata-and-jarlog:
-    needs: Part1-win-x86-build-with-profgen-zstd
-    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
-    with:
-      browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
-      arch: x86
-
-  Part3-win-x86-build-with-profdata-and-jarlog:
-    needs: [Part2-win-x86-gen-profdata-and-jarlog, get-buildid]
+  Part1-win-x86-build-with-profdata-and-jarlog:
+    needs: [get-buildid]
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
       build32bit: true
       beta: false
       buildjet: ${{ inputs.buildjet }}
-      profdata_jarlog_artifact_name: "floorp-windows-x86-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
@@ -280,7 +263,7 @@ jobs:
 ####################################################################### macOS Universal #######################################################################
 
   Deploy-to-installer:
-    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, Part3-win-x86-build-with-profdata-and-jarlog, get-display-version]
+    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
     environment: 
       name: Deploy-to-installer-release
