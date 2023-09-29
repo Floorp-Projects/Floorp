@@ -2903,10 +2903,11 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   nsContainerFrame* pageContentFrame = NS_NewPageContentFrame(
       aPresShell, pageContentPseudoStyle, pageName.forget());
 
-  nsIFrame* prevPageContentFrame = nullptr;
+  nsPageContentFrame* prevPageContentFrame = nullptr;
   if (aPrevPageFrame) {
-    prevPageContentFrame = aPrevPageFrame->PrincipalChildList().FirstChild();
-    NS_ASSERTION(prevPageContentFrame, "missing page content frame");
+    MOZ_ASSERT(aPrevPageFrame->IsPageFrame());
+    prevPageContentFrame =
+        static_cast<nsPageFrame*>(aPrevPageFrame)->PageContentFrame();
   }
   pageContentFrame->Init(nullptr, pageFrame, prevPageContentFrame);
   if (!prevPageContentFrame) {
