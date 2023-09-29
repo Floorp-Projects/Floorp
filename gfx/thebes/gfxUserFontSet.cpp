@@ -21,6 +21,7 @@
 #include "gfxOTSUtils.h"
 #include "nsIFontLoadCompleteCallback.h"
 #include "nsProxyRelease.h"
+#include "nsContentUtils.h"
 #include "nsTHashSet.h"
 
 using namespace mozilla;
@@ -395,7 +396,7 @@ void gfxUserFontEntry::ContinueLoad() {
              gfxFontFaceSrc::eSourceType_URL);
 
   SetLoadState(STATUS_LOADING);
-  DoLoadNextSrc(true);
+  DoLoadNextSrc(/* aIsContinue = */ true);
   if (LoadState() != STATUS_LOADING) {
     MOZ_ASSERT(mUserFontLoadState != STATUS_LOAD_PENDING,
                "Not in parallel traversal, shouldn't get LOAD_PENDING again");
@@ -418,7 +419,7 @@ static bool IgnorePrincipal(gfxFontSrcURI* aURI) {
   return aURI->InheritsSecurityContext();
 }
 
-void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
+void gfxUserFontEntry::DoLoadNextSrc(bool aIsContinue) {
   RefPtr<gfxUserFontSet> fontSet = GetUserFontSet();
   if (NS_WARN_IF(!fontSet)) {
     LOG(("userfonts (%p) failed expired font set for (%s)\n", fontSet.get(),
@@ -530,7 +531,7 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
         mPrincipal = currSrc.LoadPrincipal(*fontSet);
 
         const bool loadDoesntSpin =
-            !aForceAsync && currSrc.mURI->SyncLoadIsOK();
+            !aIsContinue && currSrc.mURI->SyncLoadIsOK();
         if (loadDoesntSpin) {
           uint8_t* buffer = nullptr;
           uint32_t bufferLength = 0;
@@ -548,8 +549,26 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
           }
           fontSet->LogMessage(this, mCurrentSrcIndex, "font load failed",
                               nsIScriptError::errorFlag, rv);
+        } else if (!aIsContinue) {
+          RefPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+              "gfxUserFontSet::AsyncContinueLoad",
+              [loader = RefPtr{this}] { loader->ContinueLoad(); });
+          SetLoadState(STATUS_LOAD_PENDING);
+          // We don't want to trigger the channel open at random points in
+          // time, because it can run privileged JS.
+          if (!nsContentUtils::IsSafeToRunScript()) {
+            // There's a script-blocker on the stack. We know the sooner point
+            // where we can trigger the load.
+            nsContentUtils::AddScriptRunner(runnable.forget());
+          } else {
+            // We dispatch with a rather high priority, since somebody actually
+            // cares about this font.
+            NS_DispatchToCurrentThreadQueue(runnable.forget(),
+                                            EventQueuePriority::Vsync);
+          }
+          return;
         } else {
-          // otherwise load font async
+          // Actually start the async load.
           nsresult rv = fontSet->StartLoad(this, mCurrentSrcIndex);
           if (NS_SUCCEEDED(rv)) {
             LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
