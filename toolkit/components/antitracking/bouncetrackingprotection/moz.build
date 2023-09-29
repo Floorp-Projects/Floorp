@@ -41,7 +41,7 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = "xul"
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.ini",
+    "test/browser/browser.toml",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

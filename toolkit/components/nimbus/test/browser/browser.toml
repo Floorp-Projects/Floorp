@@ -1,0 +1,31 @@
+[DEFAULT]
+support-files = ["head.js"]
+prefs = [
+  "app.normandy.run_interval_seconds=0", # This turns off the update interval for fetching recipes from Remote Settings
+]
+skip-if = [
+  "toolkit == 'android'",
+  "appname == 'thunderbird'",
+]
+
+["browser_experiment_evaluate_jexl.js"]
+
+["browser_experiment_single_feature_enrollment.js"]
+
+["browser_experimentstore_load.js"]
+
+["browser_experimentstore_load_single_feature.js"]
+
+["browser_nimbus_telemetry.js"]
+tags = "remote-settings"
+
+
+["browser_prefs.js"]
+
+["browser_remotesettings_experiment_enroll.js"]
+
+["browser_remotesettingsexperimentloader_force_enrollment.js"]
+
+["browser_remotesettingsexperimentloader_init.js"]
+
+["browser_remotesettingsexperimentloader_remote_defaults.js"]

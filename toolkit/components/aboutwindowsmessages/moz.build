@@ -9,7 +9,7 @@ with Files("**"):
 
 FINAL_LIBRARY = "xul"
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 JAR_MANIFESTS += ["jar.mn"]
 XPCOM_MANIFESTS += ["components.conf"]
 XPIDL_MODULE = "AboutWindowsMessages"

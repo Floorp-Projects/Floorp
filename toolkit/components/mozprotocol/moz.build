@@ -15,4 +15,4 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
