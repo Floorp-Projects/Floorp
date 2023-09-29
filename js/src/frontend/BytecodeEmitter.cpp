@@ -6916,7 +6916,7 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
    * expression statement as the script's result, despite the fact
    * that it appears useless to the compiler.
    *
-   * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
+   * API users may also set the ReadOnlyCompileOptions::noScriptRval option when
    * calling JS_Compile* to suppress JSOp::SetRval.
    */
   bool wantval = false;
