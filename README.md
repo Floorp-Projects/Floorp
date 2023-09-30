@@ -85,7 +85,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 - List of supported package managers:
 
 ```md
-1. PPA (Ubuntu, Linux Mint, etc.)       "https://ppa.ablaze.one"
+1. PPA (Ubuntu, Linux Mint, etc.)       "https://ppa.floorp.app"
 
 2. Flatpak (All Linux Distributions)    "https://flathub.org/apps/one.ablaze.floorp"
 
