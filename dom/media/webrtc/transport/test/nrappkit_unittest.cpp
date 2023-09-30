@@ -86,7 +86,7 @@ class TimerTest : public MtransportTest {
   }
 
   static void cb(NR_SOCKET r, int how, void* arg) {
-    std::cerr << "Timer fired " << std::endl;
+    std::cerr << "Timer fired\n";
 
     TimerTest* t = static_cast<TimerTest*>(arg);
 

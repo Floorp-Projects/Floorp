@@ -91,8 +91,7 @@ void CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
                    << (aTimestamp - mOriginTime).ToMilliseconds() << " rect "
                    << sColors[aProperty] << " " << aRect.X() << " " << aRect.Y()
                    << " " << aRect.Width() << " " << aRect.Height() << " "
-                   << "// " << sDescriptions[aProperty] << aExtraInfo
-                   << std::endl;
+                   << "// " << sDescriptions[aProperty] << aExtraInfo << '\n';
 }
 
 bool CheckerboardEvent::RecordFrameInfo(uint32_t aCssPixelsCheckerboarded) {
@@ -140,7 +139,7 @@ void CheckerboardEvent::StartEvent() {
   for (const PropertyValue& p : history) {
     LogInfo(p.mProperty, p.mTimeStamp, p.mRect, p.mExtraInfo, lock);
   }
-  mRendertraceInfo << " -- checkerboarding starts below --" << std::endl;
+  mRendertraceInfo << " -- checkerboarding starts below --\n";
 }
 
 void CheckerboardEvent::StopEvent() {
@@ -158,7 +157,7 @@ void CheckerboardEvent::StopEvent() {
   mRendertraceInfo << "Checkerboarded for " << mFrameCount << " frames ("
                    << (mEndTime - mStartTime).ToMilliseconds() << " ms), "
                    << mPeakPixels << " peak, " << GetSeverity() << " severity."
-                   << std::endl;
+                   << '\n';
 }
 
 bool CheckerboardEvent::PropertyValue::operator<(
