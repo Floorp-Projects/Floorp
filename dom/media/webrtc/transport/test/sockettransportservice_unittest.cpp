@@ -97,7 +97,7 @@ class SocketHandler : public nsASocketHandler {
     int32_t rv;
     rv = PR_Recv(fd, buf, sizeof(buf), 0, PR_INTERVAL_NO_WAIT);
     if (rv > 0) {
-      std::cerr << "Read " << rv << " bytes" << std::endl;
+      std::cerr << "Read " << rv << " bytes\n";
       test_->ReceivePacket();
     }
   }

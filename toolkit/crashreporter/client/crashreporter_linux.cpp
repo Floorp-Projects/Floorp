@@ -78,7 +78,7 @@ static string Escape(const string& str) {
 
 static bool WriteStrings(std::ostream& out, const string& header,
                          StringTable& strings, bool escape) {
-  out << "[" << header << "]" << std::endl;
+  out << "[" << header << "]\n";
   for (const auto& iter : strings) {
     out << iter.first << "=";
     if (escape) {
@@ -87,7 +87,7 @@ static bool WriteStrings(std::ostream& out, const string& header,
       out << iter.second;
     }
 
-    out << std::endl;
+    out << '\n';
   }
 
   return true;
