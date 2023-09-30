@@ -228,4 +228,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">메뉴에서 열기</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">확인</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">더 알아보기</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s 부가 기능은 보안 또는 안정성의 문제로 사용할 수 없습니다.</string>
 </resources>

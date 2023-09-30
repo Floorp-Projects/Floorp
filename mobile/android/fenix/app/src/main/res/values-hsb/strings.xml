@@ -2211,17 +2211,21 @@
     <string name="review_quality_check_explanation_body_reliability">Wužiwamy technologiju KI z %s wot Mozilla, zo bychmy spušćomnosć produktowych pohódnoćenjow kontrolowali.
 To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produktow.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Přirjadujemy pohódnoćenjam kóždeho produkta <b>pismikowu znamku</b> wot A do F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Přirjadujemy pohódnoćenjam kóždeho produkta <b>pismikowu znamku</b> wot A do F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Spušćomne pohódnoćenja. Myslimy sej, zo pohódnoćenja su najskerje wot woprawdźitych kupcow, kotřiž su sprawne, bjezpředsudne pohódnoćenja zawostajili.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Spušćomne pohódnoćenja. Myslimy sej, zo pohódnoćenja su najskerje wot woprawdźitych kupcow, kotřiž su sprawne, bjezpředsudne pohódnoćenja zawostajili.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Wěrimy, zo pohódnoćenja su spušćomne.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Wěrimy, zo je měšeńca spušćomnych a njespušćomnych pohódnoćenjow.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Njespušćomne pohódnoćenja. Myslimy sej, zo pohódnoćenja su najskerje sfalšowane abo wot pohódnoćowacych z předsudkami.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Njespušćomne pohódnoćenja. Myslimy sej, zo pohódnoćenja su najskerje sfalšowane abo wot pohódnoćowacych z předsudkami.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Wěrimy, zo pohódnoćenja spušćomne njejsu.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Přiměrjene hódnoćenje</b> jenož na pohódnoćenjach bazuje, kotrež mamy za spušćomne.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Wjerški</b> su z pohódnoćenjow %s w běhu poslednich 80 dnjow, kotrež mamy za spušćomne.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Wjerški</b> su z pohódnoćenjow %s w běhu poslednich 80 dnjow, kotrež mamy za spušćomne.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Zhońće wjace wo %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

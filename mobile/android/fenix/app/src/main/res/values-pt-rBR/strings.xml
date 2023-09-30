@@ -83,7 +83,7 @@
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Aba a próxima aba privativa com apenas um toque.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
-    <string name="private_mode_cfr_pos_button_text">Adicionar à tela inicial do dispositivo</string>
+    <string name="private_mode_cfr_pos_button_text">Adicionar à tela do dispositivo</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Não, obrigado</string>
 
@@ -204,7 +204,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Site do desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Adicionar à tela</string>
+    <string name="browser_menu_add_to_homescreen">Adicionar à tela do dispositivo</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -1702,7 +1702,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copiada para área de transferência</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Adicionar à tela inicial do dispositivo</string>
+    <string name="add_to_homescreen_title">Adicionar à tela do dispositivo</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Cancelar</string>
     <!-- Add button text for the Add to Homescreen dialog -->

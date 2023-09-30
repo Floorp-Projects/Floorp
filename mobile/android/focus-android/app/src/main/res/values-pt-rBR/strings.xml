@@ -45,7 +45,7 @@
     <string name="menu_open_with_a_browser2">Abrir no…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">Adicionar à tela inicial</string>
+    <string name="menu_add_to_home_screen">Adicionar à tela do dispositivo</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">Adicionar aos atalhos</string>
@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Remover dos atalhos</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Novidades</string>
     <string name="menu_settings">Configurações</string>
     <string name="menu_about">Sobre</string>
     <string name="menu_help">Ajuda</string>

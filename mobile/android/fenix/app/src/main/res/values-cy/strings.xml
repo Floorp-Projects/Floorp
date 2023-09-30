@@ -2202,17 +2202,19 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Rydym yn defnyddio technoleg AI o %s gan Mozilla i wirio dibynadwyedd adolygiadau cynnyrch. Bydd hyn dim ond yn eich helpu i asesu ansawdd adolygiad, nid ansawdd y cynnyrch.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Rydym yn gosod <b>gradd llythyren</b> o A i F i adolygiadau pob cynnyrch.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Rydym yn gosod <b>gradd llythyren</b> o A i F i adolygiadau pob cynnyrch.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Adolygiadau dibynadwy. Rydym yn credu fod yr adolygiadau’n debygol o fod gan gwsmeriaid go iawn sydd wedi gadael adolygiadau gonest, diduedd.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Adolygiadau dibynadwy. Rydym yn credu fod yr adolygiadau’n debygol o fod gan gwsmeriaid go iawn sydd wedi gadael adolygiadau gonest, diduedd.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Credwn fod yr adolygiadau yn ddibynadwy.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Rydym yn credu fod yna gymysgedd o adolygiadau dibynadwy ac annibynadwy.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Adolygiadau annibynadwy. Rydym yn credu fod yr adolygiadau yn debygol o fod yn rhai ffug neu gan adolygwyr rhagfarnllyd.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Adolygiadau annibynadwy. Rydym yn credu fod yr adolygiadau yn debygol o fod yn rhai ffug neu gan adolygwyr rhagfarnllyd.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Mae’r <b>gradd wedi’i addasu</b> yn seiliedig ar adolygiadau y credwn eu bod yn ddibynadwy yn unig.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[Daw’r <b>Uchafbwyntiau</b> o adolygiadau %s o fewn yr 80 diwrnod diwethaf y credwn eu bod yn ddibynadwy.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Daw’r <b>Uchafbwyntiau</b> o adolygiadau %s o fewn yr 80 diwrnod diwethaf y credwn eu bod yn ddibynadwy.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Dysgwch ragor am %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

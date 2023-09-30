@@ -2,40 +2,65 @@
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">شەخسىي %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (شەخسىي)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">تېخىمۇ كۆپ تاللاش تۈرى</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">ئىزدەڭ ياكى تور ئادرېسىنى كىرگۈزۈپ زىيارەت قىلىڭ</string>
+    <string name="content_description_menu">تېخىمۇ كۆپ تاللانما</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">شەخسىي زىيارەتنى قوزغات</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">شەخسىي زىيارەتنى چەكلە</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
+    <string name="search_hint">ئىزدەيدۇ ياكى ئادرېس كىرگۈزۈلىدۇ</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">توردىن ئىزدەيدۇ</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">تارىختىن ئىزدەيدۇ</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">خەتكۈچ ئىزدەيدۇ</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">بەتكۈچ ئىزدەيدۇ</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">ئىزدەيدىغان ئاتالغۇ كىرگۈزۈلىدۇ</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">ئوچۇق بەتكۈچلىرىڭىز بۇ يەردە كۆرۈنىدۇ.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">شەخسىي بەتكۈچلىرىڭىز بۇ يەردە كۆرۈنىدۇ.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d تاللاندى</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">يېڭى ساقلانما قۇرۇش</string>
+    <string name="tab_tray_add_new_collection">يېڭى يىغقۇچ قۇر</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
-    <string name="tab_tray_add_new_collection_name">ساقلانما نامى</string>
+    <string name="tab_tray_add_new_collection_name">ئىسمى</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
-    <string name="tab_tray_select_collection">ساقلانمىنى تاللاش</string>
+    <string name="tab_tray_select_collection">يىغقۇچ تاللا</string>
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">كۆپ تاللاش ھالىتىدىن چېكىنىش</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">تاللانغان بەتكۈچلەرنى ساقلاڭ</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">تاللانغان بەتكۈچلەرنى يىغقۇچقا ساقلايدۇ</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">تاللانغان</string>
 
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">يېقىنقى خەتكۈچلەر</string>
+    <string name="recently_saved_title">يېقىنداق ساقلانغان</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">ساقلانغان بارلىق خەتكۈچنى كۆرسەت</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla ياسىغان.</string>
 
-    <!-- Text for the negative button -->
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">بولدى رەھمەت</string>
 
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">بولدىلا</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">بولدىلا</string>
 
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">بولدىلا</string>
@@ -105,13 +130,10 @@
     <string name="search_suggestions_onboarding_allow_button">رۇخسەت بەر</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">رۇخسەت بەرمە</string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">ئىزدەش%s</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">ئىزدەش تەڭشىكى</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">يېقىنقى ئىزدەشلەر</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ئىزدەش</string>
@@ -132,9 +154,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">ھەققىدە %1$s</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">ئوچۇق</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">تاقاق</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">تەپسىلاتى</string>
@@ -217,17 +238,12 @@
 	<string name="remove_top_site">چىقىرىۋەت</string>
 
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">باشقا بەتكۈچلەر</string>
-
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">بۈگۈن</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">تۈنۈگۈن</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">تېخىمۇ بۇرۇن</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">كىرىش</string>
 
 
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -250,13 +266,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">چېكىنىش</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header"> %sگە خۇش كەپسىز!</string>
-
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">ئاپتوماتىك</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ئاپتوماتىك</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">تەپسىلاتى</string>
@@ -293,4 +304,5 @@
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">تەڭشەكنى ئاچ</string>
+
     </resources>
