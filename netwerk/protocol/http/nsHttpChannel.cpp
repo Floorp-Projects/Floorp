@@ -7823,7 +7823,6 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
 
     nsresult rv = gHttpHandler->CompleteUpgrade(aTransWithStickyConn,
                                                 mUpgradeProtocolCallback);
-    mUpgradeProtocolCallback = nullptr;
     if (NS_FAILED(rv)) {
       LOG(("  CompleteUpgrade failed with %" PRIx32,
            static_cast<uint32_t>(rv)));

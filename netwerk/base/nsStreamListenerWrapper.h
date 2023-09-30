@@ -27,21 +27,10 @@ class nsStreamListenerWrapper final
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_SAFE_NSIREQUESTOBSERVER(mListener)
   NS_FORWARD_SAFE_NSISTREAMLISTENER(mListener)
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
-
-  //  Don't use NS_FORWARD_NSIREQUESTOBSERVER(mListener->) here, because we need
-  //  to release mListener in OnStopRequest, and IDL-generated function doesn't.
-  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
-    return mListener->OnStartRequest(aRequest);
-  }
-  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
-                           nsresult aStatusCode) override {
-    nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
-    mListener = nullptr;
-    return rv;
-  }
 
  private:
   ~nsStreamListenerWrapper() = default;
