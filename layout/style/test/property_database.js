@@ -8561,6 +8561,17 @@ var gCSSProperties = {
     ],
     invalid_values: [],
   },
+  "text-wrap": {
+    domProp: "textWrap",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_placeholder: true,
+    applies_to_cue: true,
+    applies_to_marker: true,
+    initial_values: ["auto"],
+    other_values: ["stable", "balance"],
+    invalid_values: ["wrap", "nowrap", "normal"],
+  },
   width: {
     domProp: "width",
     inherited: false,
