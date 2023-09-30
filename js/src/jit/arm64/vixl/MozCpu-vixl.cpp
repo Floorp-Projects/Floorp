@@ -112,7 +112,7 @@ void CPU::EnsureIAndDCacheCoherency(void* address, size_t length) {
   sys_icache_invalidate(address, length);
 #elif defined(__aarch64__) && (defined(__linux__) || defined(__android__))
   // Implement the cache synchronisation for all targets where AArch64 is the
-  // host, even if we're building the simulator for an AAarch64 host. This
+  // host, even if we're building the simulator for an AArch64 host. This
   // allows for cases where the user wants to simulate code as well as run it
   // natively.
 
