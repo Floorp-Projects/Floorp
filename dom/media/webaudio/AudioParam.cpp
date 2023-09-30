@@ -127,13 +127,14 @@ void AudioParam::SendEventToEngine(const AudioParamEvent& aEvent) {
       ToString(aEvent.mType),
       aEvent.mType == AudioTimelineEvent::SetValueCurve ? "length" : "value",
       aEvent.mType == AudioTimelineEvent::SetValueCurve
-          ? static_cast<double>(aEvent.mCurveLength)
-          : static_cast<double>(aEvent.mValue),
+          ? static_cast<double>(aEvent.CurveLength())
+          : static_cast<double>(aEvent.NominalValue()),
       aEvent.Time<double>(),
       aEvent.mType == AudioTimelineEvent::SetValueCurve ? "duration"
                                                         : "constant",
-      aEvent.mType == AudioTimelineEvent::SetValueCurve ? aEvent.mDuration
-                                                        : aEvent.mTimeConstant);
+      aEvent.mType == AudioTimelineEvent::SetValueCurve
+          ? aEvent.Duration()
+          : aEvent.TimeConstant());
 
   AudioNodeTrack* track = mNode->GetTrack();
   if (track) {
