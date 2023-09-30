@@ -10,16 +10,16 @@ job-defaults:
         script: build-llvm-symbolizer.sh
         toolchain-artifact: public/build/llvm-symbolizer.tar.zst
 
-linux32-llvm-symbolizer-16:
+linux32-llvm-symbolizer-17:
     description: "llvm-symbolizer for Linux"
     treeherder:
         symbol: TL32(llvm-symbolizer)
     run:
         arguments:
             - i686-unknown-linux-gnu
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
         resources:
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -27,21 +27,21 @@ linux32-llvm-symbolizer-16:
                 default: linux32-llvm-symbolizer
     fetches:
         fetch:
-            - clang-16
+            - clang-17
         toolchain:
-            - linux64-clang-16-stage1
+            - linux64-clang-17-stage1
             - linux32-toolchain-sysroot
 
-linux64-llvm-symbolizer-16:
+linux64-llvm-symbolizer-17:
     description: "llvm-symbolizer for Linux"
     treeherder:
         symbol: TL(llvm-symbolizer)
     run:
         arguments:
             - x86_64-unknown-linux-gnu
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
         resources:
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -49,21 +49,21 @@ linux64-llvm-symbolizer-16:
                 default: linux64-llvm-symbolizer
     fetches:
         fetch:
-            - clang-16
+            - clang-17
         toolchain:
-            - linux64-clang-16-stage1
+            - linux64-clang-17-stage1
             - linux64-toolchain-sysroot
 
-macosx64-llvm-symbolizer-16:
+macosx64-llvm-symbolizer-17:
     description: "llvm-symbolizer for macOS x64"
     treeherder:
         symbol: TM(llvm-symbolizer)
     run:
         arguments:
             - x86_64-apple-darwin
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
         resources:
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -71,21 +71,21 @@ macosx64-llvm-symbolizer-16:
                 default: macosx64-llvm-symbolizer
     fetches:
         fetch:
-            - clang-16
+            - clang-17
         toolchain:
-            - linux64-clang-16-stage1
+            - linux64-clang-17-stage1
             - macosx64-sdk-toolchain
 
-macosx64-aarch64-llvm-symbolizer-16:
+macosx64-aarch64-llvm-symbolizer-17:
     description: "llvm-symbolizer for macOS aarch64"
     treeherder:
         symbol: TM(llvm-symbolizer-aarch64)
     run:
         arguments:
             - aarch64-apple-darwin
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
         resources:
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -93,21 +93,21 @@ macosx64-aarch64-llvm-symbolizer-16:
                 default: macosx64-aarch64-llvm-symbolizer
     fetches:
         fetch:
-            - clang-16
+            - clang-17
         toolchain:
-            - linux64-clang-16-stage1
+            - linux64-clang-17-stage1
             - macosx64-sdk-toolchain
 
-win64-llvm-symbolizer-16:
+win64-llvm-symbolizer-17:
     description: "llvm-symbolizer for Windows"
     treeherder:
         symbol: TW64(llvm-symbolizer)
     run:
         arguments:
             - x86_64-pc-windows-msvc
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
         resources:
-            - build/build-clang/clang-16.json
+            - build/build-clang/clang-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -115,9 +115,9 @@ win64-llvm-symbolizer-16:
                 default: win64-llvm-symbolizer
     fetches:
         fetch:
-            - clang-16
+            - clang-17
         toolchain:
-            - linux64-clang-16-stage1
+            - linux64-clang-17-stage1
             - vs-toolchain
 
 linux32-llvm-symbolizer-trunk:
