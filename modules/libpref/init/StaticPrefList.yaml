@@ -8772,6 +8772,11 @@
   value: false
   mirror: always
 
+- name: layout.css.text-wrap-balance.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool

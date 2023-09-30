@@ -427,3 +427,15 @@ ${helpers.single_keyword(
     spec="https://drafts.csswg.org/css-text/#MISSING",
     affects="layout",
 )}
+
+${helpers.single_keyword(
+    "text-wrap",
+    "auto stable balance",
+    engines="gecko",
+    gecko_pref="layout.css.text-wrap-balance.enabled",
+    has_effect_on_gecko_scrollbars=False,
+    gecko_enum_prefix="StyleTextWrap",
+    animation_value_type="discrete",
+    spec="https://drafts.csswg.org/css-text-4/#text-wrap",
+    affects="layout",
+)}
