@@ -103,21 +103,11 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType,
   SetCurveParams(aValues.Elements(), aValues.Length());
 }
 
-AudioTimelineEvent::AudioTimelineEvent(AudioNodeTrack* aTrack)
-    : mType(Track),
-      mCurve(nullptr),
-      mTrack(aTrack),
-      mTimeConstant(0.0),
-      mDuration(0.0),
-      mTime(0.0) {}
-
 AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs) {
   PodCopy(this, &rhs, 1);
 
   if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
     SetCurveParams(rhs.mCurve, rhs.mCurveLength);
-  } else if (rhs.mType == AudioTimelineEvent::Track) {
-    new (&mTrack) decltype(mTrack)(rhs.mTrack);
   }
 }
 
@@ -233,9 +223,6 @@ void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
   auto end = mEvents.cend();
   auto event = begin + 1;
   for (; event < end && aTime > TimeOf(event); ++event) {
-    MOZ_ASSERT(!(event - 1)->mTrack,
-               "AudioParam tracks should never be destroyed on the real-time "
-               "thread.");
   }
   auto firstToKeep = event - 1;
 
@@ -267,7 +254,6 @@ void AudioEventTimeline::CleanupEventsOlderThan(TimeType aTime) {
     return;
   }
 
-  JS::AutoSuppressGCAnalysis suppress;  // for null mTrack
   mEvents.RemoveElementsRange(begin, firstToKeep);
 }
 

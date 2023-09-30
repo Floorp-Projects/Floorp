@@ -34,7 +34,7 @@ class GainNodeEngine final : public AudioNodeEngine {
         mGain(1.f) {}
 
   enum Parameters { GAIN };
-  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 

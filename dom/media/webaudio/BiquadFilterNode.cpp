@@ -96,7 +96,7 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
         NS_ERROR("Bad BiquadFilterNode Int32Parameter");
     }
   }
-  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
 
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
