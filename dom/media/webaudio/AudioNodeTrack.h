@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace dom {
 struct ThreeDPoint;
-struct AudioTimelineEvent;
+struct AudioParamEvent;
 class AudioContext;
 }  // namespace dom
 
@@ -96,8 +96,7 @@ class AudioNodeTrack : public ProcessedMediaTrack {
   void SetBuffer(AudioChunk&& aBuffer);
   void SetReverb(WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount);
   // This sends a single event to the timeline on the MTG thread side.
-  void SendTimelineEvent(uint32_t aIndex,
-                         const dom::AudioTimelineEvent& aEvent);
+  void SendTimelineEvent(uint32_t aIndex, const dom::AudioParamEvent& aEvent);
   // This consumes the contents of aData.  aData will be emptied after this
   // returns.
   void SetRawArrayData(nsTArray<float>&& aData);

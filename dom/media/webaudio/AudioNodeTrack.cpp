@@ -201,11 +201,11 @@ void AudioNodeTrack::SetInt32Parameter(uint32_t aIndex, int32_t aValue) {
 }
 
 void AudioNodeTrack::SendTimelineEvent(uint32_t aIndex,
-                                       const AudioTimelineEvent& aEvent) {
+                                       const AudioParamEvent& aEvent) {
   class Message final : public ControlMessage {
    public:
     Message(AudioNodeTrack* aTrack, uint32_t aIndex,
-            const AudioTimelineEvent& aEvent)
+            const AudioParamEvent& aEvent)
         : ControlMessage(aTrack),
           mEvent(aEvent),
           mSampleRate(aTrack->mSampleRate),
@@ -215,7 +215,7 @@ void AudioNodeTrack::SendTimelineEvent(uint32_t aIndex,
       static_cast<AudioNodeTrack*>(mTrack)->Engine()->RecvTimelineEvent(mIndex,
                                                                         mEvent);
     }
-    AudioTimelineEvent mEvent;
+    AudioParamEvent mEvent;
     TrackRate mSampleRate;
     uint32_t mIndex;
   };

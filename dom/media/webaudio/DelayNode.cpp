@@ -49,7 +49,7 @@ class DelayNodeEngine final : public AudioNodeEngine {
   enum Parameters {
     DELAY,
   };
-  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 

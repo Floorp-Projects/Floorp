@@ -43,7 +43,7 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
         mCompressor(new DynamicsCompressor(mDestination->mSampleRate, 2)) {}
 
   enum Parameters { THRESHOLD, KNEE, RATIO, ATTACK, RELEASE };
-  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
 
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);

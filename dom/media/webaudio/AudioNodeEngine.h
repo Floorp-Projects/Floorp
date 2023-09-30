@@ -21,7 +21,7 @@ namespace dom {
 struct ThreeDPoint;
 class AudioParamTimeline;
 class DelayNodeEngine;
-struct AudioTimelineEvent;
+struct AudioParamEvent;
 }  // namespace dom
 
 class AbstractThread;
@@ -277,7 +277,7 @@ class AudioNodeEngine {
     NS_ERROR("Invalid SetInt32Parameter index");
   }
   virtual void RecvTimelineEvent(uint32_t aIndex,
-                                 dom::AudioTimelineEvent& aValue) {
+                                 dom::AudioParamEvent& aValue) {
     NS_ERROR("Invalid RecvTimelineEvent index");
   }
   virtual void SetBuffer(AudioChunk&& aBuffer) {
