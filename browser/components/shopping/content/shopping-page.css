@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --in-content-page-background: light-dark(#f9f9fb, #2b2a33);
-  --shopping-header-background: var(--in-content-page-background);
+  --shopping-header-background: light-dark(#f9f9fb, #2b2a33);
+  background-color: var(--shopping-header-background);
   font: menu;
 }
