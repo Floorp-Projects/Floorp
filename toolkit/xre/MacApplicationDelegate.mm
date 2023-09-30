@@ -13,7 +13,6 @@
 // http://developer.apple.com/documentation/Cocoa/Conceptual/ScriptableCocoaApplications/SApps_handle_AEs/chapter_11_section_3.html
 // for details.
 
-#include <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
 #include "NativeMenuMac.h"
 #import <Carbon/Carbon.h>
@@ -54,9 +53,7 @@ class AutoAutoreleasePool {
 
 @end
 
-enum class LaunchStatus { Initial, ProcessingURLs, ProcessedURLs };
-
-static LaunchStatus sLaunchStatus = LaunchStatus::Initial;
+static bool sProcessedGetURLEvent = false;
 
 // Methods that can be called from non-Objective-C code.
 
@@ -93,7 +90,7 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
   // Ensure that ProcessPendingGetURLAppleEvents() doesn't regress bug 377166.
   [GeckoNSApplication sharedApplication];
 
-  // This call makes it so that application:openURLs: doesn't get bogus calls
+  // This call makes it so that application:openFile: doesn't get bogus calls
   // from Cocoa doing its own parsing of the argument string. And yes, we need
   // to use a string with a boolean value in it. That's just how it works.
   [[NSUserDefaults standardUserDefaults]
@@ -117,14 +114,17 @@ void SetupMacApplicationDelegate(bool* gRestartedByOS) {
 // never itself be an Apple event, and it may be 'nil' even when Apple events
 // are processed.
 void ProcessPendingGetURLAppleEvents() {
-  if (sLaunchStatus != LaunchStatus::Initial) {
-    // If NSApp has been launched already
-    return;
+  AutoAutoreleasePool pool;
+  bool keepSpinning = true;
+  while (keepSpinning) {
+    sProcessedGetURLEvent = false;
+    NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                        untilDate:nil
+                                           inMode:NSDefaultRunLoopMode
+                                          dequeue:YES];
+    if (event) [NSApp sendEvent:event];
+    keepSpinning = sProcessedGetURLEvent;
   }
-
-  sLaunchStatus = LaunchStatus::ProcessingURLs;
-  [NSApp run];
-  sLaunchStatus = LaunchStatus::ProcessedURLs;
 }
 
 @implementation MacApplicationDelegate
@@ -133,6 +133,23 @@ void ProcessPendingGetURLAppleEvents() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
+    NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
+
+    [aeMgr setEventHandler:self
+               andSelector:@selector(handleAppleEvent:withReplyEvent:)
+             forEventClass:kInternetEventClass
+                andEventID:kAEGetURL];
+
+    [aeMgr setEventHandler:self
+               andSelector:@selector(handleAppleEvent:withReplyEvent:)
+             forEventClass:'WWW!'
+                andEventID:'OURL'];
+
+    [aeMgr setEventHandler:self
+               andSelector:@selector(handleAppleEvent:withReplyEvent:)
+             forEventClass:kCoreEventClass
+                andEventID:kAEOpenDocuments];
+
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
@@ -144,6 +161,20 @@ void ProcessPendingGetURLAppleEvents() {
   return self;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+}
+
+- (void)dealloc {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
+  [aeMgr removeEventHandlerForEventClass:kInternetEventClass
+                              andEventID:kAEGetURL];
+  [aeMgr removeEventHandlerForEventClass:'WWW!' andEventID:'OURL'];
+  [aeMgr removeEventHandlerForEventClass:kCoreEventClass
+                              andEventID:kAEOpenDocuments];
+  [super dealloc];
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // The method that NSApplication calls upon a request to reopen, such as when
@@ -160,6 +191,53 @@ void ProcessPendingGetURLAppleEvents() {
 
   // NO says we don't want NSApplication to do anything else for us.
   return NO;
+}
+
+// The method that NSApplication calls when documents are requested to be
+// opened. It will be called once for each selected document.
+- (BOOL)application:(NSApplication*)theApplication
+           openFile:(NSString*)filename {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  NSURL* url = [NSURL fileURLWithPath:filename];
+  if (!url) return NO;
+
+  NSString* urlString = [url absoluteString];
+  if (!urlString) return NO;
+
+  // Add the URL to any command line we're currently setting up.
+  if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
+    return YES;
+
+  nsCOMPtr<nsILocalFileMac> inFile;
+  nsresult rv =
+      NS_NewLocalFileWithCFURL((CFURLRef)url, true, getter_AddRefs(inFile));
+  if (NS_FAILED(rv)) return NO;
+
+  nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
+
+  nsCString filePath;
+  rv = inFile->GetNativePath(filePath);
+  if (NS_FAILED(rv)) return NO;
+
+  nsCOMPtr<nsIFile> workingDir;
+  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
+                              getter_AddRefs(workingDir));
+  if (NS_FAILED(rv)) {
+    // Couldn't find a working dir. Uh oh. Good job cmdline::Init can cope.
+    workingDir = nullptr;
+  }
+
+  const char* argv[3] = {nullptr, "-file", filePath.get()};
+  rv =
+      cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  if (NS_FAILED(rv)) return NO;
+
+  if (NS_SUCCEEDED(cmdLine->Run())) return YES;
+
+  return NO;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(NO);
 }
 
 // The method that NSApplication calls when documents are requested to be
@@ -228,18 +306,6 @@ void ProcessPendingGetURLAppleEvents() {
        forKey:@"NSFullScreenMenuItemEverywhere"];
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification*)notification {
-  if (sLaunchStatus == LaunchStatus::ProcessingURLs) {
-    // We are in an inner `run` loop that we are spinning in order to get
-    // URLs that were requested while launching. `application:openURLs:` will
-    // have been called by this point and we will have finished reconstructing
-    // the command line. We now stop the app loop for the rest of startup to be
-    // processed and will call `run` again when the main event loop should
-    // start.
-    [NSApp stop:self];
-  }
-}
-
 // If we don't handle applicationShouldTerminate:, a call to [NSApp terminate:]
 // (from the browser or from the OS) can result in an unclean shutdown.
 - (NSApplicationTerminateReply)applicationShouldTerminate:
@@ -272,9 +338,43 @@ void ProcessPendingGetURLAppleEvents() {
   return NSTerminateNow;
 }
 
-- (void)application:(NSApplication*)application
-           openURLs:(NSArray<NSURL*>*)urls {
-  [self openURLs:urls];
+- (void)handleAppleEvent:(NSAppleEventDescriptor*)event
+          withReplyEvent:(NSAppleEventDescriptor*)replyEvent {
+  if (!event) return;
+
+  AutoAutoreleasePool pool;
+
+  bool isGetURLEvent = ([event eventClass] == kInternetEventClass &&
+                        [event eventID] == kAEGetURL);
+  if (isGetURLEvent) sProcessedGetURLEvent = true;
+
+  if (isGetURLEvent ||
+      ([event eventClass] == 'WWW!' && [event eventID] == 'OURL')) {
+    NSString* urlString =
+        [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
+    NSURL* url = [NSURL URLWithString:urlString];
+
+    [self openURL:url];
+  } else if ([event eventClass] == kCoreEventClass &&
+             [event eventID] == kAEOpenDocuments) {
+    NSAppleEventDescriptor* fileListDescriptor =
+        [event paramDescriptorForKeyword:keyDirectObject];
+    if (!fileListDescriptor) return;
+
+    // Descriptor list indexing is one-based...
+    NSInteger numberOfFiles = [fileListDescriptor numberOfItems];
+    for (NSInteger i = 1; i <= numberOfFiles; i++) {
+      NSString* urlString =
+          [[fileListDescriptor descriptorAtIndex:i] stringValue];
+      if (!urlString) continue;
+
+      // We need a path, not a URL
+      NSURL* url = [NSURL URLWithString:urlString];
+      if (!url) continue;
+
+      [self application:NSApp openFile:[url path]];
+    }
+  }
 }
 
 - (BOOL)application:(NSApplication*)application
@@ -291,7 +391,7 @@ void ProcessPendingGetURLAppleEvents() {
     return NO;
   }
 
-  return [self openURLs:@[ userActivity.webpageURL ]];
+  return [self openURL:userActivity.webpageURL];
 }
 
 - (void)application:(NSApplication*)application
@@ -300,29 +400,15 @@ void ProcessPendingGetURLAppleEvents() {
   NSLog(@"Failed to continue user activity %@: %@", userActivityType, error);
 }
 
-- (BOOL)openURLs:(NSArray<NSURL*>*)urls {
-  nsTArray<const char*> args([urls count] * 2 + 2);
-  // Placeholder for unused program name.
-  args.AppendElement(nullptr);
-
-  for (NSURL* url in urls) {
-    if (!url || !url.scheme ||
-        [url.scheme caseInsensitiveCompare:@"chrome"] == NSOrderedSame) {
-      continue;
-    }
-
-    const char* const urlString = [[url absoluteString] UTF8String];
-    // Add the URL to any command line we're currently setting up.
-    if (CommandLineServiceMac::AddURLToCurrentCommandLine(urlString)) {
-      continue;
-    }
-
-    args.AppendElement("-url");
-    args.AppendElement(urlString);
+- (BOOL)openURL:(NSURL*)url {
+  if (!url || !url.scheme ||
+      [url.scheme caseInsensitiveCompare:@"chrome"] == NSOrderedSame) {
+    return NO;
   }
 
-  if (args.Length() <= 1) {
-    // No URLs were added to the command line.
+  const char* const urlString = [[url absoluteString] UTF8String];
+  // Add the URL to any command line we're currently setting up.
+  if (CommandLineServiceMac::AddURLToCurrentCommandLine(urlString)) {
     return NO;
   }
 
@@ -335,8 +421,9 @@ void ProcessPendingGetURLAppleEvents() {
     workingDir = nullptr;
   }
 
-  rv = cmdLine->Init(args.Length() - 1, args.Elements(), workingDir,
-                     nsICommandLine::STATE_REMOTE_EXPLICIT);
+  const char* argv[3] = {nullptr, "-url", urlString};
+  rv =
+      cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
   if (NS_FAILED(rv)) {
     return NO;
   }
