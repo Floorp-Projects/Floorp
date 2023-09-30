@@ -140,7 +140,8 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
                                    nscoord aISize, nscoord aBSize,
                                    bool aImpactedByFloats, bool aIsTopOfPage,
                                    WritingMode aWritingMode,
-                                   const nsSize& aContainerSize) {
+                                   const nsSize& aContainerSize,
+                                   nscoord aInset) {
   NS_ASSERTION(nullptr == mRootSpan, "bad linelayout user");
   LAYOUT_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
                        "have unconstrained width; this should only result from "
@@ -193,6 +194,9 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIStart = aICoord;
   psd->mICoord = aICoord;
   psd->mIEnd = aICoord + aISize;
+  // Set up inset to be used for text-wrap:balance implementation, but only if
+  // the available size is at least 2*inset.
+  psd->mInset = aISize < aInset * 2 ? 0 : aInset;
   mContainerSize = aContainerSize;
 
   mBStartEdge = aBCoord;
@@ -406,6 +410,7 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mIStart = aIStart;
   psd->mICoord = aIStart;
   psd->mIEnd = aIEnd;
+  psd->mInset = mCurrentSpan->mInset;
   psd->mBaseline = aBaseline;
 
   nsIFrame* frame = aSpanReflowInput->mFrame;
@@ -801,7 +806,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
                        "have unconstrained width; this should only result from "
                        "very large sizes, not attempts at intrinsic width "
                        "calculation");
-  nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord;
+  nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord - psd->mInset;
 
   // Setup reflow input for reflowing the frame
   Maybe<ReflowInput> reflowInputHolder;
