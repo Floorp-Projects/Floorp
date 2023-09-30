@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebAudioUtils.h"
-#include "AudioNodeTrack.h"
 #include "blink/HRTFDatabaseLoader.h"
 
 #include "nsComponentManagerUtils.h"
@@ -14,7 +13,6 @@
 #include "nsIScriptError.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "AudioEventTimeline.h"
 
 #include "mozilla/SchedulerGroup.h"
 
@@ -23,14 +21,6 @@ namespace mozilla {
 LazyLogModule gWebAudioAPILog("WebAudioAPI");
 
 namespace dom {
-
-void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
-                                                     AudioNodeTrack* aDest) {
-  aEvent.SetTimeInTicks(
-      aDest->SecondsToNearestTrackTime(aEvent.Time<double>()));
-  aEvent.mTimeConstant *= aDest->mSampleRate;
-  aEvent.mDuration *= aDest->mSampleRate;
-}
 
 void WebAudioUtils::Shutdown() { WebCore::HRTFDatabaseLoader::shutdown(); }
 

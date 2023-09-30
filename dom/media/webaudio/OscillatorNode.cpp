@@ -61,7 +61,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
 
     MOZ_ASSERT(mDestination);
 
-    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
+    aEvent.ConvertToTicks(mDestination);
 
     switch (aIndex) {
       case FREQUENCY:

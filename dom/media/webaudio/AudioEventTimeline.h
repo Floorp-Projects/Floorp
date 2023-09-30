@@ -119,7 +119,16 @@ struct AudioTimelineEvent {
   // last element of the curve.
   float EndValue() const;
 
-  void SetTimeInTicks(int64_t aTimeInTicks) { mTime = aTimeInTicks; }
+  /**
+   * Converts an AudioTimelineEvent's floating point time members to tick
+   * values with respect to a destination AudioNodeTrack.
+   *
+   * This needs to be called for each AudioTimelineEvent that gets sent to an
+   * AudioNodeEngine, on the engine side where the AudioTimlineEvent is
+   * received.  This means that such engines need to be aware of their
+   * destination tracks as well.
+   */
+  void ConvertToTicks(AudioNodeTrack* aDestination);
 
   template <class TimeType>
   void FillTargetApproach(TimeType aBufferStartTime, Span<float> aBuffer,

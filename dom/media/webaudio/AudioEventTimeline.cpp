@@ -133,6 +133,12 @@ float AudioTimelineEvent::EndValue() const {
   return mValue;
 };
 
+void AudioTimelineEvent::ConvertToTicks(AudioNodeTrack* aDestination) {
+  mTime = aDestination->SecondsToNearestTrackTime(mTime.Get<double>());
+  mTimeConstant *= aDestination->mSampleRate;
+  mDuration *= aDestination->mSampleRate;
+}
+
 template <class TimeType>
 void AudioTimelineEvent::FillTargetApproach(TimeType aBufferStartTime,
                                             Span<float> aBuffer,
