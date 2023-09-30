@@ -6103,7 +6103,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.11.196';
+    const viewerVersion = '3.11.208';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6289,9 +6289,9 @@ class PDFViewer {
   get pagesPromise() {
     return this.pdfDocument ? this._pagesCapability.promise : null;
   }
-  #layerProperties() {
+  get _layerProperties() {
     const self = this;
-    return {
+    return (0, _pdfjsLib.shadow)(this, "_layerProperties", {
       get annotationEditorUIManager() {
         return self.#annotationEditorUIManager;
       },
@@ -6316,7 +6316,7 @@ class PDFViewer {
       get linkService() {
         return self.linkService;
       }
-    };
+    });
   }
   #initializePermissions(permissions) {
     const params = {
@@ -6500,7 +6500,6 @@ class PDFViewer {
           console.error(`Invalid AnnotationEditor mode: ${mode}`);
         }
       }
-      const layerProperties = this.#layerProperties.bind(this);
       const viewerElement = this._scrollMode === _ui_utils.ScrollMode.PAGE ? null : this.viewer;
       const scale = this.currentScale;
       const viewport = firstPdfPage.getViewport({
@@ -6526,7 +6525,7 @@ class PDFViewer {
           maxCanvasPixels: this.maxCanvasPixels,
           pageColors: this.pageColors,
           l10n: this.l10n,
-          layerProperties
+          layerProperties: this._layerProperties
         });
         this._pages.push(pageView);
       }
@@ -7599,9 +7598,7 @@ var _text_highlighter = __webpack_require__(24);
 var _text_layer_builder = __webpack_require__(25);
 var _xfa_layer_builder = __webpack_require__(26);
 const MAX_CANVAS_PIXELS = _app_options.compatibilityParams.maxCanvasPixels || 16777216;
-const DEFAULT_LAYER_PROPERTIES = () => {
-  return null;
-};
+const DEFAULT_LAYER_PROPERTIES = null;
 class PDFPageView {
   #annotationMode = _pdfjsLib.AnnotationMode.ENABLE_FORMS;
   #hasRestrictedScaling = false;
@@ -7721,7 +7718,7 @@ class PDFPageView {
     return (0, _pdfjsLib.shadow)(this, "_textHighlighter", new _text_highlighter.TextHighlighter({
       pageIndex: this.id - 1,
       eventBus: this.eventBus,
-      findController: this.#layerProperties().findController
+      findController: this.#layerProperties.findController
     }));
   }
   async #renderAnnotationLayer() {
@@ -8143,7 +8140,7 @@ class PDFPageView {
         fieldObjectsPromise,
         hasJSActionsPromise,
         linkService
-      } = this.#layerProperties();
+      } = this.#layerProperties;
       this._annotationCanvasMap ||= new Map();
       this.annotationLayer = new _annotation_layer_builder.AnnotationLayerBuilder({
         pageDiv: div,
@@ -8236,7 +8233,7 @@ class PDFPageView {
       if (!this.annotationEditorLayer) {
         const {
           annotationEditorUIManager
-        } = this.#layerProperties();
+        } = this.#layerProperties;
         if (!annotationEditorUIManager) {
           return;
         }
@@ -8261,7 +8258,7 @@ class PDFPageView {
         const {
           annotationStorage,
           linkService
-        } = this.#layerProperties();
+        } = this.#layerProperties;
         this.xfaLayer = new _xfa_layer_builder.XfaLayerBuilder({
           pageDiv: div,
           pdfPage,
@@ -9743,8 +9740,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.11.196';
-const pdfjsBuild = 'b6d75e736';
+const pdfjsVersion = '3.11.208';
+const pdfjsBuild = '3ca63c68e';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
