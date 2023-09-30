@@ -7,6 +7,7 @@
         "fuzzing_ccov_build_clang_12.patch",
         "partial-revert-llvmorg-16-init-17151-gaa0883b59ae1.patch",
         "revert-llvmorg-16-init-11301-g163bb6d64e5f.patch",
+        "revert-llvmorg-16-init-7598-g54bfd0484615.patch",
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
         "revert-llvmorg-15-init-11205-gcead4eceb01b_clang_16.patch",
         "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
