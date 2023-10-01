@@ -918,11 +918,17 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   // Returns first valid font in the fontlist or default font.
   // Initiates userfont loads if userfont not loaded.
+  // aCh: character to look for, or kCSSFirstAvailableFont for default "first
+  //      available font" as defined by CSS Fonts (i.e. the first font whose
+  //      unicode-range includes <space>, but does not require space to
+  //      actually be present)
   // aGeneric: if non-null, returns the CSS generic type that was mapped to
   //           this font
   // aIsFirst: if non-null, returns whether the font was first in the list
+  static constexpr uint32_t kCSSFirstAvailableFont = UINT32_MAX;
   already_AddRefed<gfxFont> GetFirstValidFont(
-      uint32_t aCh = 0x20, mozilla::StyleGenericFontFamily* aGeneric = nullptr,
+      uint32_t aCh = kCSSFirstAvailableFont,
+      mozilla::StyleGenericFontFamily* aGeneric = nullptr,
       bool* aIsFirst = nullptr);
 
   // Returns the first font in the font-group that has an OpenType MATH table,
