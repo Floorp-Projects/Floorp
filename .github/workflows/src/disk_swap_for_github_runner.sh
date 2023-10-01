@@ -14,6 +14,7 @@ sudo swapon /mnt/swapfile
 sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' clang azure-cli google-cloud-sdk google-chrome-stable microsoft-edge firefox powershell mono-devel libgl1-mesa-dri
 sudo apt autoremove -y
 sudo apt clean
+sudo rm -rf  ./git
 sudo rm -rf /usr/share/dotnet
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /usr/local/graalvm
