@@ -157,18 +157,6 @@ struct AudioTimelineEvent {
   template <class TimeType>
   void FillFromValueCurve(TimeType aBufferStartTime, Span<float> aBuffer) const;
 
- private:
-  void SetCurveParams(const float* aCurve, uint32_t aCurveLength) {
-    mCurveLength = aCurveLength;
-    if (aCurveLength) {
-      mCurve = new float[aCurveLength];
-      PodCopy(mCurve, aCurve, aCurveLength);
-    } else {
-      mCurve = nullptr;
-    }
-  }
-
- public:
   const Type mType;
 
  private:
