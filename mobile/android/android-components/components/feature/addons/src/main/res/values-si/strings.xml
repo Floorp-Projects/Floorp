@@ -226,4 +226,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">වට්ටෝරුවෙහි එය අරින්න</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">හරි, තේරුණා</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">තව දැනගන්න</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">ආරක්‍ෂණ හෝ ස්ථායිතා දෝෂ නිසා %1$s අබල කර ඇත.</string>
 </resources>

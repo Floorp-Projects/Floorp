@@ -2221,17 +2221,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Vi använder AI-teknik från %s av Mozilla för att kontrollera pålitligheten av produktrecensioner. Detta hjälper dig bara att bedöma recensionens kvalitet, inte produktkvaliteten.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Vi tilldelar varje produkts recensioner ett <b>bokstavsbetyg</b> från A till F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Vi tilldelar varje produkts recensioner ett <b>bokstavsbetyg</b> från A till F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Pålitliga recensioner. Vi tror att recensionerna troligen kommer från riktiga kunder som lämnat ärliga, opartiska recensioner.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Pålitliga recensioner. Vi tror att recensionerna troligen kommer från riktiga kunder som lämnat ärliga, opartiska recensioner.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Vi anser att recensionerna är pålitliga.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Vi tror att det finns en blandning av pålitliga och opålitliga recensioner.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Opålitliga recensioner. Vi tror att recensionerna sannolikt är falska eller från partiska granskare.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Opålitliga recensioner. Vi tror att recensionerna sannolikt är falska eller från partiska granskare.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Vi anser att recensionerna är opålitliga.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Det <b>justerade betyget</b> baseras endast på recensioner som vi anser vara pålitliga.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Höjdpunkter</b> är från %s recensioner under de senaste 80 dagarna som vi tror är pålitliga.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Höjdpunkter</b> är från %s recensioner under de senaste 80 dagarna som vi tror är pålitliga.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Läs mer om %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

@@ -228,4 +228,6 @@
     <string name="mozac_feature_addons_installed_dialog_description">Dorbissètz-lo del menú estant</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Òc, plan comprés</string>
-</resources>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Ne saber mai</string>
+    </resources>

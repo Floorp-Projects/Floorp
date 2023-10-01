@@ -2261,18 +2261,22 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Nos usa le technologia de intelligentia artificial de %s per Mozilla pro controlar le fidabilitate del recensiones de producto. Iste solo te adjutara evalutar le qualitate del recensiones, non qualitate del productos.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Nos assigna a cata recensiones de producto un <b>littera de classification</b> ab A a F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Nos assigna a cata recensiones de producto un <b>littera de classification</b> ab A a F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Recensiones fidabile. Nos crede probabile que le recensiones es de clientes real qui lassava honeste, recensiones sin prejudicios.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensiones fidabile. Nos crede probabile que le recensiones es de clientes real qui lassava honeste, recensiones sin prejudicios.</string>
 
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Nos crede que le revisiones es fidabile.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Nos crede que il ha un mixtura de recensiones fidabile e non fidabile.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Recensiones non fidabile. Nos crede probabile que le recensiones es false o de revisores prevenite.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensiones non fidabile. Nos crede probabile que le recensiones es false o de revisores prevenite.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Nos crede que le revisiones non es fidabile.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Le <b>classification adjustate</b> es basate solo sur recensiones que nos crede fidabile.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Aspectos notabile</b> es ab %s recensiones in le ultime 80 dies que nos crede fidabile.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Aspectos notabile</b> es ab %s recensiones in le ultime 80 dies que nos crede fidabile.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Pro saper plus re %s. </string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

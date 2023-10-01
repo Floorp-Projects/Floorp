@@ -132,9 +132,11 @@
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Выберыце правайдара ўваходу</string>
     <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Выберыце ўліковы запіс</string>
+    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Выберыце ўліковы запіс</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Выкарыстоўваць %1$s у якасці правайдара ўваходу</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Уваход у %1$s з уліковым запісам %2$s рэгулюецца іх <a href="%3$s">палітыкай прыватнасці</a> і <a href="%4$s">умовамі выкарыстання</a>]]></string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Працягнуць</string>
 </resources>

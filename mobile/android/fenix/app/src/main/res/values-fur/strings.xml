@@ -2195,19 +2195,23 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">O doprìn la tecnologjie IA di %s di Mozilla par verificâ la afidabilitât des recensions sui prodots. Chest ti judarà a valutâ dome la cualitât des recensions, no la cualitât dal prodot.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[O assegnìn aes recensions di ogni prodot un <b>vôt in letaris</b> de A ae F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[O assegnìn aes recensions di ogni prodot un <b>vôt in letaris</b> de A ae F.]]></string>
 
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Recensions afidabilis. O crodìn che lis recensions a rivedin cun buine probabilitât di clients vêrs che a àn lassât recensions onestis e imparziâls.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensions afidabilis. O crodìn che lis recensions a rivedin cun buine probabilitât di clients vêrs che a àn lassât recensions onestis e imparziâls.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">O crodìn che lis recensions a sedin afidabilis.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">O crodìn che e sedi une misture di recensions afidabilis e inafidabilis.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Recensions inafidabilis. O crodìn che lis recensions a sedin falsis o che a rivedin di recensôrs di part.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensions inafidabilis. O crodìn che lis recensions a sedin falsis o che a rivedin di recensôrs di part.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">O crodìn che lis recensions no sedin afidabilis.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>valutazion retificade</b> si base dome su recensions che o crodìn afidabilis.]]></string>
 
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[I elements <b>in evidence</b> a rivin des recensions su %s dai ultins 80 dîs che o ritignìn afidabilis.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[I elements <b>in evidence</b> a rivin des recensions su %s dai ultins 80 dîs che o ritignìn afidabilis.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Scuvierç altris informazions su %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

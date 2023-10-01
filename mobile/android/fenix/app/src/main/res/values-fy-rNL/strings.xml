@@ -2202,17 +2202,21 @@
     <string name="review_quality_check_explanation_body_reliability">Wy brûke AI-technology fan %s troch Mozilla om de betrouberens fan produktbeoardielingen te analysearjen.
 Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen, net de produktkwaliteit.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Wy jouwe oan de beoardielingen fan elk produkt in <b>letterwearde</b> fan A oant F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Wy jouwe oan de beoardielingen fan elk produkt in <b>letterwearde</b> fan A oant F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Betroubere beoardielingen. Wy leauwe dat de beoardielingen wierskynlik ôfkomstich binne fan echte klanten dy’t earlike, ûnpartidige beoardielingen efterlitten hawwe.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Betroubere beoardielingen. Wy leauwe dat de beoardielingen wierskynlik ôfkomstich binne fan echte klanten dy’t earlike, ûnpartidige beoardielingen efterlitten hawwe.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Wy tinke dat de beoardielingen betrouber binne.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Wy leauwe dat der in miks is fan betroubere en ûnbetroubere beoardielingen.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Unbetroubere beoardielingen. Wy leauwe dat de beoardielingen wierskynlik nep binne of fan befoaroardiele beoardielers.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Unbetroubere beoardielingen. Wy leauwe dat de beoardielingen wierskynlik nep binne of fan befoaroardiele beoardielers.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Wy tinke dat de beoardielingen net betrouber binne.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[De <b>oanpaste wurdearring</b> is allinnich basearre op beoardielingen wêrfan wy tinke dat se betrouber binne.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Hichtepunten</b> binne ôfkomstich fan beoardielingen fan %s yn de ôfrûne 80 dagen dy’t neffens ús betrouber binne.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Hichtepunten</b> binne ôfkomstich fan beoardielingen fan %s yn de ôfrûne 80 dagen dy’t neffens ús betrouber binne.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Mear ynfo oer %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

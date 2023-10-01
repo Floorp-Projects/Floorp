@@ -2254,18 +2254,22 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">我们使用由 Mozilla 支持的 %s 的人工智能技术来分析商品评价的可信度。分析结果只能辅助您评估评价的质量，不能反映商品质量。</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[我们会以<b>字母等级</b>（从 A 到 F）给商品评价打分。]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[我们会以<b>字母等级</b>（从 A 到 F）给商品评价打分。]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">评价可信。分析认为这些评价大概率是由真实消费者作出的诚实公正的评价。</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">评价可信。分析认为这些评价大概率是由真实消费者作出的诚实公正的评价。</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">分析认为这些评价真实可信。</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">分析认为对此商品的评价鱼龙混杂。</string>
 
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">评价不可信。分析认为这些评价大概率不实，或是由“水军”所作出。</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">评价不可信。分析认为这些评价大概率不实，或是由“水军”所作出。</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">分析认为这些评价不可信。</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>调整后的评分</b>仅基于我们认为可信的评价作出。]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>最有帮助的评价</b>选自我们认为可信的最近 80 天内的 %s 评价。]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>最有帮助的评价</b>选自我们认为可信的最近 80 天内的 %s 评价。]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">详细了解%s</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
