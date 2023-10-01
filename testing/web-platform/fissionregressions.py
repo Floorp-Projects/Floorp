@@ -63,6 +63,7 @@ run_infos = {
         "win11_2009": False,
         "domstreams": True,
         "isolated_process": False,
+        "display": "x11",
     },
     "linux-debug": {
         "os": "linux",
@@ -116,6 +117,7 @@ run_infos = {
         "win11_2009": False,
         "domstreams": True,
         "isolated_process": False,
+        "display": "x11",
     },
     "win-opt": {
         "os": "win",
@@ -169,6 +171,7 @@ run_infos = {
         "win11_2009": False,
         "domstreams": True,
         "isolated_process": False,
+        "display": None,
     },
 }
 
