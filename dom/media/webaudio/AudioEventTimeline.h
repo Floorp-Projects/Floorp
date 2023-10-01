@@ -174,16 +174,18 @@ struct AudioTimelineEvent {
  private:
   union {
     float mValue;
-    uint32_t mCurveLength;
+    uint32_t mCurveLength;  // for SetValueCurve
   };
-  // mCurve contains a buffer of SetValueCurve samples.  We sample the
-  // values in the buffer depending on how far along we are in time.
-  // If we're at time T and the event has started as time T0 and has a
-  // duration of D, we sample the buffer at floor(mCurveLength*(T-T0)/D)
-  // if T<T0+D, and just take the last sample in the buffer otherwise.
-  float* mCurve;
-  double mTimeConstant;
-  double mDuration;
+  union {
+    double mTimeConstant;
+    // mCurve contains a buffer of SetValueCurve samples.  We sample the
+    // values in the buffer depending on how far along we are in time.
+    // If we're at time T and the event has started as time T0 and has a
+    // duration of D, we sample the buffer at floor(mCurveLength*(T-T0)/D)
+    // if T<T0+D, and just take the last sample in the buffer otherwise.
+    float* mCurve;
+  };
+  double mDuration;  // for SetValueCurve
 
   // This member is accessed using the `Time` method.
   //
