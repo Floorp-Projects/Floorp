@@ -81,6 +81,16 @@ size_t LimitedCountForDuration<int64_t>(size_t aMax, double aDuration) {
              : static_cast<size_t>(aDuration);
 }
 
+static float* NewCurveCopy(Span<const float> aCurve) {
+  if (aCurve.Length() == 0) {
+    return nullptr;
+  }
+
+  float* curve = new float[aCurve.Length()];
+  mozilla::PodCopy(curve, aCurve.Elements(), aCurve.Length());
+  return curve;
+}
+
 namespace mozilla::dom {
 
 AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
@@ -94,9 +104,12 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
 AudioTimelineEvent::AudioTimelineEvent(Type aType,
                                        const nsTArray<float>& aValues,
                                        double aStartTime, double aDuration)
-    : mType(aType), mDuration(aDuration), mTime(aStartTime) {
+    : mType(aType),
+      mCurveLength(aValues.Length()),
+      mCurve(NewCurveCopy(aValues)),
+      mDuration(aDuration),
+      mTime(aStartTime) {
   MOZ_ASSERT(aType == AudioTimelineEvent::SetValueCurve);
-  SetCurveParams(aValues.Elements(), aValues.Length());
 }
 
 AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs)
@@ -104,7 +117,7 @@ AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs)
   PodCopy(this, &rhs, 1);
 
   if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
-    SetCurveParams(rhs.mCurve, rhs.mCurveLength);
+    mCurve = NewCurveCopy(Span(rhs.mCurve, rhs.mCurveLength));
   }
 }
 
