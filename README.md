@@ -78,7 +78,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 - Debian-based distributions (such as Ubuntu and Linux Mint) and Arch-based distributions (such as Manjaro) are supported.
 
-- x86_64 & AAarch64 CPU architecture.
+- x86_64 & AArch64 CPU architecture.
 
 - Floorp Browser Requirements: ["Firefox Linux Requirements"](https://www.mozilla.org/en-US/firefox/115.0beta/system-requirements/#gnulinux)
 
