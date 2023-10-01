@@ -112,6 +112,8 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType,
   MOZ_ASSERT(aType == AudioTimelineEvent::SetValueCurve);
 }
 
+// cppcoreguidelines-pro-type-member-init does not know PodCopy().
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs)
     : mType(rhs.mType) {
   PodCopy(this, &rhs, 1);
