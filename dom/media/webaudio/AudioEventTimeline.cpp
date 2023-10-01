@@ -87,7 +87,6 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
                                        double aTimeConstant)
     : mType(aType),
       mValue(aValue),
-      mCurve(nullptr),
       mTimeConstant(aTimeConstant),
       mDuration(0.0),
       mTime(aTime) {}
@@ -95,10 +94,7 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
 AudioTimelineEvent::AudioTimelineEvent(Type aType,
                                        const nsTArray<float>& aValues,
                                        double aStartTime, double aDuration)
-    : mType(aType),
-      mTimeConstant(0.0),
-      mDuration(aDuration),
-      mTime(aStartTime) {
+    : mType(aType), mDuration(aDuration), mTime(aStartTime) {
   MOZ_ASSERT(aType == AudioTimelineEvent::SetValueCurve);
   SetCurveParams(aValues.Elements(), aValues.Length());
 }
