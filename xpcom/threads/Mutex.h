@@ -10,6 +10,7 @@
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/ThreadSafety.h"
 #include "mozilla/PlatformMutex.h"
+#include "mozilla/Maybe.h"
 #include "nsISupports.h"
 
 //
@@ -286,6 +287,38 @@ BaseAutoLock(MutexType&) -> BaseAutoLock<MutexType&>;
 typedef detail::BaseAutoLock<Mutex&> MutexAutoLock;
 typedef detail::BaseAutoLock<MutexSingleWriter&> MutexSingleWriterAutoLock;
 typedef detail::BaseAutoLock<OffTheBooksMutex&> OffTheBooksMutexAutoLock;
+
+// Specialization of Maybe<*AutoLock> for space efficiency and to silence
+// thread-safety analysis, which cannot track what's going on.
+template <class MutexType>
+class Maybe<detail::BaseAutoLock<MutexType&>> {
+ public:
+  Maybe() : mLock(nullptr) {}
+  ~Maybe() MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    if (mLock) {
+      mLock->Unlock();
+    }
+  }
+
+  constexpr bool isSome() const { return mLock; }
+  constexpr bool isNothing() const { return !mLock; }
+
+  void emplace(MutexType& aMutex) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_RELEASE_ASSERT(!mLock);
+    mLock = &aMutex;
+    mLock->Lock();
+  }
+
+  void reset() MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    if (mLock) {
+      mLock->Unlock();
+      mLock = nullptr;
+    }
+  }
+
+ private:
+  MutexType* mLock;
+};
 
 // Use if we've done AssertOnWritingThread(), and then later need to take the
 // lock to write to a protected member. Instead of
