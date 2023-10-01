@@ -7197,8 +7197,12 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
       ComputeDescentLimitForSelectionUnderline(aPresContext, metrics);
   params.vertical = verticalRun;
 
-  EnsureTextRun(nsTextFrame::eInflated);
-  params.sidewaysLeft = mTextRun ? mTextRun->IsSidewaysLeft() : false;
+  if (verticalRun) {
+    EnsureTextRun(nsTextFrame::eInflated);
+    params.sidewaysLeft = mTextRun ? mTextRun->IsSidewaysLeft() : false;
+  } else {
+    params.sidewaysLeft = false;
+  }
 
   UniquePtr<SelectionDetails> details = GetSelectionDetails();
   for (SelectionDetails* sd = details.get(); sd; sd = sd->mNext.get()) {
