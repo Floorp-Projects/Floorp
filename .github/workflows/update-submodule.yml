@@ -1,4 +1,4 @@
-name: Update Submodules
+name: (U) 🧰 Update Submodules
 
 on:
     workflow_dispatch:
