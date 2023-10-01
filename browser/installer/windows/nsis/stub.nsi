@@ -231,7 +231,7 @@ Var ArchToInstall
 !undef URLStubDownloadX86
 !undef URLStubDownloadAMD64
 !undef URLStubDownloadAArch64
-!define URLStubDownloadX86 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
+!define URLStubDownloadX86 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-win32.installer.exe"
 !define URLStubDownloadAMD64 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-win64.installer.exe"
 !define URLStubDownloadAArch64 "https://download.mozilla.org/?os=win64-aarch64&lang=${AB_CD}&product=firefox-beta-latest"
 !undef URLManualDownload
@@ -1749,7 +1749,7 @@ Function GetDownloadURL
   ${If} $ArchToInstall == ${ARCH_AMD64}
     StrCpy $0 "${URLStubDownloadAMD64}${URLStubDownloadAppend}"
   ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
-    StrCpy $0 "${URLStubDownloadAArch64}${URLStubDownloadAppend}"
+  
   ${Else}
     StrCpy $0 "${URLStubDownloadX86}${URLStubDownloadAppend}"
   ${EndIf}
