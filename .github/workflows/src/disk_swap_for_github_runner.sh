@@ -11,7 +11,7 @@ sudo fallocate -l 10G /mnt/swapfile
 sudo chmod 600 /mnt/swapfile
 sudo mkswap /mnt/swapfile
 sudo swapon /mnt/swapfile
-sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' clang azure-cli google-cloud-sdk google-chrome-stable microsoft-edge firefox powershell mono-devel libgl1-mesa-dri
 sudo apt autoremove -y
 sudo apt clean
 sudo rm -rf /usr/share/dotnet
@@ -29,6 +29,8 @@ sudo rm -rf /usr/local/share/chrome_driver
 sudo rm -rf /usr/local/share/edge_driver
 sudo rm -rf /usr/local/share/gecko_driver
 sudo rm -rf /usr/share/java
+sudo rm -rf /usr/share/miniconda
+sudo rm -rf /usr/local/share/vcpkg
 sudo fallocate -l 15G /home/runner/swapfile2
 sudo chmod 600 /home/runner/swapfile2
 sudo mkswap /home/runner/swapfile2
