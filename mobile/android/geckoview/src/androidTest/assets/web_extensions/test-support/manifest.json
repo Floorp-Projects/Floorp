@@ -11,6 +11,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "match_about_blank": true,
       "js": ["test-support.js"],
       "run_at": "document_start"
     }
