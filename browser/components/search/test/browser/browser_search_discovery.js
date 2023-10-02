@@ -73,7 +73,7 @@ async function searchDiscovery() {
       let head = doc.getElementById("linkparent");
       let link = doc.createElement("link");
       link.rel = test.rel || "search";
-      link.href = test.href || "http://so.not.here.mozilla.com/search.xml";
+      link.href = test.href || "https://so.not.here.mozilla.com/search.xml";
       link.type = test.type || "application/opensearchdescription+xml";
       link.title = test.title;
       head.appendChild(link);
@@ -101,7 +101,7 @@ async function searchDiscovery() {
     gBrowser.selectedBrowser,
     "DOMLinkAdded",
     false,
-    e => e.target.href == "http://second.mozilla.com/search.xml",
+    e => e.target.href == "https://second.mozilla.com/search.xml",
     true
   );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -109,11 +109,11 @@ async function searchDiscovery() {
     let head = doc.getElementById("linkparent");
     let link = doc.createElement("link");
     link.rel = "search";
-    link.href = "http://first.mozilla.com/search.xml";
+    link.href = "https://first.mozilla.com/search.xml";
     link.type = "application/opensearchdescription+xml";
     link.title = "Test Engine";
     let link2 = link.cloneNode(false);
-    link2.href = "http://second.mozilla.com/search.xml";
+    link2.href = "https://second.mozilla.com/search.xml";
     head.appendChild(link);
     head.appendChild(link2);
   });
@@ -125,7 +125,7 @@ async function searchDiscovery() {
   is(browser.engines.length, 1, "only one engine");
   is(
     browser.engines[0].uri,
-    "http://first.mozilla.com/search.xml",
+    "https://first.mozilla.com/search.xml",
     "first engine wins"
   );
   browser.engines = null;

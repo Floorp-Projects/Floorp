@@ -15,7 +15,7 @@ add_setup(async function () {
 
 add_task(async function test_composition_with_focus() {
   info("Open a page");
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com");
 
   info("Focus on the search bar");
   const searchBarTextBox = BrowserSearch.searchBar.textbox;
