@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Bugs with -moz-transform: rotate() and box-shadow</title>
+  <title>Bugs with transform: rotate() and box-shadow</title>
 
   <style>
     body {
@@ -17,7 +17,7 @@
         margin: 0;
         height: 16px;
         width: 300px;
-        -moz-transform: translate(96px);
+        transform: translate(96px);
         box-shadow: 0 0 .7em black;
         border: 1px black solid;
     }
@@ -38,10 +38,10 @@
 
 <p class="label"></p>
 <p class="label" style="top: 400px; box-shadow:none; outline: 3px dashed blue;"></p>
-<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; -moz-transform: rotate(90deg);"></p>
-<p class="label" style="left:-40px; top: 200px; -moz-transform: rotate(90deg);"></p>
-<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; -moz-transform: translate(0,396px) rotate(90deg);"></p>
-<p class="label" style="left:-40px; top: 200px; -moz-transform: translate(0,396px) rotate(90deg);"></p>
+<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; transform: rotate(90deg);"></p>
+<p class="label" style="left:-40px; top: 200px; transform: rotate(90deg);"></p>
+<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; transform: translate(0,396px) rotate(90deg);"></p>
+<p class="label" style="left:-40px; top: 200px; transform: translate(0,396px) rotate(90deg);"></p>
 
 <!-- cover a few shadow corners which are a bit different -->
 <div style="position:absolute; top:40px; left:85px; width:50px; height:50px; background:black; z-index:99;"></div>

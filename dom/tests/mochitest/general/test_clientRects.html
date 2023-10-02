@@ -61,7 +61,7 @@ function checkElement(id, list, eps, doc) {
 <!-- No boxes -->
 <div id="d3" style="display:none"></div>
 <!-- Element in transform -->
-<div style="-moz-transform:translate(50px, 50px); transform:translate(50px,50px); position:absolute; left:0; top:200px">
+<div style="transform:translate(50px, 50px); transform:translate(50px,50px); position:absolute; left:0; top:200px">
   <div id="d4" style="width:50px; height:50px; background:blue;"></div>  
 </div>
 <svg style="position:absolute; left:50px; top:300px; width:100px; height:100px;">
@@ -73,12 +73,12 @@ function checkElement(id, list, eps, doc) {
   <circle id="s1" cx="60" cy="60" r="10" fill="yellow"/>
 </svg>
 <!-- Element in transform with bounding-box -->
-<div style="-moz-transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:450px; width:100px; height:100px;">
+<div style="transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:450px; width:100px; height:100px;">
   <div id="d6" style="width:100px; height:100px; background:orange;"></div>  
 </div>
 <!-- Element in two transforms; we should combine transforms instead of taking bounding-box twice -->
-<div style="-moz-transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:550px; width:100px; height:100px;">
-  <div style="-moz-transform:rotate(-45deg); transform:rotate(-45deg); width:100px; height:100px;">
+<div style="transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:550px; width:100px; height:100px;">
+  <div style="transform:rotate(-45deg); transform:rotate(-45deg); width:100px; height:100px;">
     <div id="d7" style="width:100px; height:100px; background:lime;"></div>
   </div>
 </div>

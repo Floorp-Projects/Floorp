@@ -8,7 +8,7 @@
 </head>
 <body onload="startTest()">
 <div>
-<div id="t" style="position:absolute; left:0; top:500px; -moz-transform: translatex(-100px); width:200px; height:100px; background:yellow;">
+<div id="t" style="position:absolute; left:0; top:500px; transform: translatex(-100px); width:200px; height:100px; background:yellow;">
   <div style="text-align:right">Hello</div>
   <div style="text-align:left">Kitty</div>
 </div>
@@ -23,14 +23,14 @@ var utils = window.windowUtils;
 function startTest() {
   // Do a couple of transform changes to ensure we've triggered activity heuristics
   waitForAllPaintsFlushed(function () {
-    t.style.MozTransform = "translatex(-75px)";
+    t.style.transform = "translatex(-75px)";
     waitForAllPaintsFlushed(function () {
-      t.style.MozTransform = "translatex(-50px)";
+      t.style.transform = "translatex(-50px)";
       waitForAllPaintsFlushed(function () {
         // Clear paint state now and move again.
         utils.checkAndClearPaintedState(t);
         // Don't move to 0 since that might trigger some special case that turns off transforms.
-        t.style.MozTransform = "translatex(-1px)";
+        t.style.transform = "translatex(-1px)";
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(t);
           is(painted, false, "Transformed element should not have been painted");
