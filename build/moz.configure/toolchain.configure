@@ -96,7 +96,7 @@ with only_when(host_is_osx | target_is_osx):
         return Version(obj["Version"])
 
     def sdk_min_version():
-        return "14.0"
+        return "13.3"
 
     @depends(
         "--with-macos-sdk",
