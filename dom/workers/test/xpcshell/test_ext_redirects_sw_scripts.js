@@ -47,7 +47,7 @@ server.registerPathHandler("/sw-imported.js", (request, response) => {
   response.setHeader("Content-Type", "application/javascript");
   response.write(`
     dump('importScript loaded from http://localhost/sw-imported.js\\n');
-    self.onmessage = evt => evt.ports[0].postMessage('original-imported-script'); 
+    self.onmessage = evt => evt.ports[0].postMessage('original-imported-script');
   `);
 });
 
@@ -58,11 +58,13 @@ Services.prefs.setBoolPref(
   "extensions.filterResponseServiceWorkerScript.disabled",
   false
 );
+Services.prefs.setBoolPref("extensions.dnr.enabled", true);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("dom.serviceWorkers.testing.enabled");
   Services.prefs.clearUserPref(
     "extensions.filterResponseServiceWorkerScript.disabled"
   );
+  Services.prefs.clearUserPref("extensions.dnr.enabled");
 });
 
 // Helper function used to be sure to clear any data that a previous test case
@@ -86,11 +88,12 @@ async function ensureDataCleanup() {
 // resulting install invocation. The installation's call to importScripts when evaluated
 // will load the script directly out of the Cache API.
 function testSWUpdate(contentPage) {
-  return contentPage.legacySpawn([], async () => {
+  return contentPage.spawn([], async () => {
     const oldReg = await this.content.navigator.serviceWorker.ready;
     const reg = await oldReg.update();
     const sw = reg.installing || reg.waiting || reg.active;
     return new Promise(resolve => {
+      const { MessageChannel } = this.content;
       const { port1, port2 } = new MessageChannel();
       port1.onmessage = evt => resolve(evt.data);
       sw.postMessage("worker-message", [port2]);
@@ -102,6 +105,11 @@ add_task(async function test_extension_invalid_sw_scripts_redirect_ignored() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["<all_urls>", "webRequest", "webRequestBlocking"],
+      // In this test task, the extension resource is not expected to be
+      // requested at all, so it does not really matter whether the file is
+      // listed in web_accessible_resources. Regardless, add it to make sure
+      // that any load failure is not caused by the lack of being listed here.
+      web_accessible_resources: ["sw-unexpected-redirect.js"],
     },
     background() {
       browser.webRequest.onBeforeRequest.addListener(
@@ -142,8 +150,8 @@ add_task(async function test_extension_invalid_sw_scripts_redirect_ignored() {
     },
     files: {
       "sw-unexpected-redirect.js": `
-        dump('importScript redirected to moz-extension://UUID/sw-unexpected-redirect.js\\n');
-        self.onmessage = evt => evt.ports[0].postMessage('sw-unexpected-redirect'); 
+        dump('main worker redirected to moz-extension://UUID/sw-unexpected-redirect.js\\n');
+        self.onmessage = evt => evt.ports[0].postMessage('sw-unexpected-redirect');
       `,
     },
   });
@@ -173,12 +181,14 @@ add_task(async function test_extension_invalid_sw_scripts_redirect_ignored() {
     "http://localhost/page.html"
   );
 
-  // Register the worker while the test extension isn't loaded and cannot
-  // intercept and redirect the importedScripts requests.
+  // Register the worker after loading the test extension, which should not be
+  // able to intercept and redirect the importedScripts requests because of
+  // invalid destinations.
   info("Register service worker from a content webpage");
-  let workerMessage = await contentPage.legacySpawn([], async () => {
+  let workerMessage = await contentPage.spawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
+      const { MessageChannel } = this.content;
       const { port1, port2 } = new MessageChannel();
       port1.onmessage = evt => resolve(evt.data);
       const sw = reg.active || reg.waiting || reg.installing;
@@ -279,9 +289,10 @@ add_task(async function test_filter_sw_script() {
     "http://localhost/page.html"
   );
 
-  let workerMessage = await contentPage.legacySpawn([], async () => {
+  let workerMessage = await contentPage.spawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
+      const { MessageChannel } = this.content;
       const { port1, port2 } = new MessageChannel();
       port1.onmessage = evt => resolve(evt.data);
       const sw = reg.active || reg.waiting || reg.installing;
@@ -331,11 +342,11 @@ add_task(async function test_extension_redirect_sw_imported_script() {
     files: {
       "sw-imported-1.js": `
         dump('importScript redirected to moz-extension://UUID/sw-imported1.js \\n');
-        self.onmessage = evt => evt.ports[0].postMessage('redirected-imported-script-1'); 
+        self.onmessage = evt => evt.ports[0].postMessage('redirected-imported-script-1');
       `,
       "sw-imported-2.js": `
         dump('importScript redirected to moz-extension://UUID/sw-imported2.js \\n');
-        self.onmessage = evt => evt.ports[0].postMessage('redirected-imported-script-2'); 
+        self.onmessage = evt => evt.ports[0].postMessage('redirected-imported-script-2');
       `,
     },
   });
@@ -347,9 +358,10 @@ add_task(async function test_extension_redirect_sw_imported_script() {
 
   // Register the worker while the test extension isn't loaded and cannot
   // intercept and redirect the importedScripts requests.
-  let workerMessage = await contentPage.legacySpawn([], async () => {
+  let workerMessage = await contentPage.spawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
+      const { MessageChannel } = this.content;
       const { port1, port2 } = new MessageChannel();
       port1.onmessage = evt => resolve(evt.data);
       const sw = reg.active || reg.waiting || reg.installing;
@@ -409,5 +421,138 @@ add_task(async function test_extension_redirect_sw_imported_script() {
     "Got expected worker reply (importScripts not intercepted)"
   );
 
+  await contentPage.close();
+});
+
+// Test cases for redirects with declarativeNetRequest instead of webRequest,
+// testing the same scenarios as:
+// - test_extension_invalid_sw_scripts_redirect_ignored
+//   i.e. fail to redirect SW main script, fail to redirect SW to about:blank.
+// - test_extension_redirect_sw_imported_script
+//   i.e. allowed to redirect importScripts to moz-extension.
+add_task(async function test_dnr_redirect_sw_script_or_import() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["declarativeNetRequest"],
+      host_permissions: ["<all_urls>"],
+      granted_host_permissions: true,
+      web_accessible_resources: [
+        {
+          resources: ["sw-bad-redirect.js", "sw-dnr-redirect.js", "sw-nest.js"],
+          matches: ["*://*/*"],
+        },
+      ],
+    },
+    temporarilyInstalled: true, // <-- for granted_host_permissions
+    background: async () => {
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: { urlFilter: "|http://localhost/sw.js?dnr_redir_bad" },
+            action: {
+              type: "redirect",
+              redirect: { extensionPath: "/sw-bad-redirect.js" },
+            },
+          },
+          {
+            id: 2,
+            condition: { urlFilter: "|http://localhost/sw-imported.js|" },
+            action: {
+              type: "redirect",
+              redirect: { extensionPath: "/sw-dnr-redirect.js" },
+            },
+          },
+          {
+            id: 3,
+            condition: { urlFilter: "|http://localhost/sw-nest.js|" },
+            action: {
+              type: "redirect",
+              redirect: { extensionPath: "/sw-nest.js" },
+            },
+          },
+          {
+            id: 4,
+            condition: { urlFilter: "|http://localhost/sw-imported.js?about|" },
+            action: {
+              type: "redirect",
+              redirect: { url: "about:blank" },
+            },
+          },
+        ],
+      });
+      browser.test.sendMessage("dnr_registered");
+    },
+    files: {
+      "sw-bad-redirect.js": String.raw`
+        dump('main worker redirected to moz-extension://UUID/sw-bad-redirect.js\n');
+        self.onmessage = evt => evt.ports[0].postMessage('sw-bad-redirect');
+      `,
+      "sw-dnr-redirect.js": String.raw`
+        dump('importScript redirected to moz-extension://UUID/sw-dnr-redirect.js\n');
+        self.onmessage = evt => evt.ports[0].postMessage('sw-dnr-before-nest');
+
+        importScripts("/sw-nest.js");
+        // ^ sw-nest.js does not exist on the server, so if importScripts()
+        // succeeded, then that means that the DNR-triggered redirect worked.
+
+        self.onmessage = evt => evt.ports[0].postMessage('sw-before-about');
+        try {
+          importScripts("/sw-imported.js?about");
+          // ^ DNR redirects to about:blank, which should throw here.
+          self.onmessage = evt => evt.ports[0].postMessage('sw-dnr-about-bad');
+        } catch (e) {
+          // All is good.
+          self.onmessage = evt => evt.ports[0].postMessage('sw-dnr-redirect');
+        }
+      `,
+      "sw-nest.js": String.raw`
+        dump('importScript redirected to moz-extension://UUID/sw-nest.js\n');
+        // No other code here. The caller verifies success by confirming that
+        // the importScripts() call did not throw.
+      `,
+    },
+  });
+
+  // Start the test extension to redirect importScripts requests.
+  await extension.startup();
+  await extension.awaitMessage("dnr_registered");
+
+  await ensureDataCleanup();
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://localhost/page.html"
+  );
+
+  // Register the worker after loading the test extension, which should not be
+  // able to intercept and redirect the importedScripts requests because of
+  // invalid destinations.
+  info("Register service worker from a content webpage (disallowed redirects)");
+  await contentPage.spawn([], async () => {
+    await Assert.rejects(
+      this.content.navigator.serviceWorker.register("/sw.js?dnr_redir_bad1"),
+      /SecurityError: The operation is insecure/,
+      "Redirect of main service worker script is not allowed"
+    );
+  });
+  info("Register service worker from a content webpage (with import redirect)");
+  let workerMessage = await contentPage.spawn([], async () => {
+    const reg = await this.content.navigator.serviceWorker.register("/sw.js");
+    return new Promise(resolve => {
+      const { MessageChannel } = this.content;
+      const { port1, port2 } = new MessageChannel();
+      port1.onmessage = evt => resolve(evt.data);
+      const sw = reg.active || reg.waiting || reg.installing;
+      sw.postMessage("worker-message", [port2]);
+    });
+  });
+
+  equal(
+    workerMessage,
+    "sw-dnr-redirect",
+    "Got expected worker reply (importScripts redirected to moz-extension:-URL)"
+  );
+
+  await extension.unload();
   await contentPage.close();
 });
