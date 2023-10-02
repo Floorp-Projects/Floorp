@@ -610,18 +610,23 @@ void CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access,
     Imm32 cst =
         Imm32(mir->type() == MIRType::Int32 ? mir->toInt32() : mir->toInt64());
 
-    masm.append(access, masm.size());
     switch (access.type()) {
       case Scalar::Int8:
       case Scalar::Uint8:
+        masm.append(access, wasm::TrapMachineInsn::Store8,
+                    FaultingCodeOffset(masm.currentOffset()));
         masm.movb(cst, dstAddr);
         break;
       case Scalar::Int16:
       case Scalar::Uint16:
+        masm.append(access, wasm::TrapMachineInsn::Store16,
+                    FaultingCodeOffset(masm.currentOffset()));
         masm.movw(cst, dstAddr);
         break;
       case Scalar::Int32:
       case Scalar::Uint32:
+        masm.append(access, wasm::TrapMachineInsn::Store32,
+                    FaultingCodeOffset(masm.currentOffset()));
         masm.movl(cst, dstAddr);
         break;
       case Scalar::Int64:

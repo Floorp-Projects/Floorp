@@ -9087,13 +9087,15 @@ void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
 
 template <typename InstructionWithMaybeTrapSite>
 void EmitSignalNullCheckTrapSite(MacroAssembler& masm,
-                                 InstructionWithMaybeTrapSite* ins) {
+                                 InstructionWithMaybeTrapSite* ins,
+                                 FaultingCodeOffset fco,
+                                 wasm::TrapMachineInsn tmi) {
   if (!ins->maybeTrap()) {
     return;
   }
   wasm::BytecodeOffset trapOffset(ins->maybeTrap()->offset);
   masm.append(wasm::Trap::NullPointerDereference,
-              wasm::TrapSite(masm.currentOffset(), trapOffset));
+              wasm::TrapSite(tmi, fco, trapOffset));
 }
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
@@ -9103,24 +9105,34 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
   Address addr(container, ins->offset());
   AnyRegister dst = ToAnyRegister(ins->output());
 
-  EmitSignalNullCheckTrapSite(masm, ins);
+  FaultingCodeOffset fco;
   switch (type) {
     case MIRType::Int32:
       switch (wideningOp) {
         case MWideningOp::None:
-          masm.load32(addr, dst.gpr());
+          fco = masm.load32(addr, dst.gpr());
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Load32);
           break;
         case MWideningOp::FromU16:
-          masm.load16ZeroExtend(addr, dst.gpr());
+          fco = masm.load16ZeroExtend(addr, dst.gpr());
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Load16);
           break;
         case MWideningOp::FromS16:
-          masm.load16SignExtend(addr, dst.gpr());
+          fco = masm.load16SignExtend(addr, dst.gpr());
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Load16);
           break;
         case MWideningOp::FromU8:
-          masm.load8ZeroExtend(addr, dst.gpr());
+          fco = masm.load8ZeroExtend(addr, dst.gpr());
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Load8);
           break;
         case MWideningOp::FromS8:
-          masm.load8SignExtend(addr, dst.gpr());
+          fco = masm.load8SignExtend(addr, dst.gpr());
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Load8);
           break;
         default:
           MOZ_CRASH("unexpected widening op in ::visitWasmLoadSlot");
@@ -9128,21 +9140,29 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
       break;
     case MIRType::Float32:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      masm.loadFloat32(addr, dst.fpu());
+      fco = masm.loadFloat32(addr, dst.fpu());
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Load32);
       break;
     case MIRType::Double:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      masm.loadDouble(addr, dst.fpu());
+      fco = masm.loadDouble(addr, dst.fpu());
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Load64);
       break;
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      masm.loadPtr(addr, dst.gpr());
+      fco = masm.loadPtr(addr, dst.gpr());
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsnForLoadWord());
       break;
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      masm.loadUnalignedSimd128(addr, dst.fpu());
+      fco = masm.loadUnalignedSimd128(addr, dst.fpu());
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Load128);
       break;
 #endif
     default:
@@ -9160,28 +9180,38 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
     MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
   }
 
-  EmitSignalNullCheckTrapSite(masm, ins);
+  FaultingCodeOffset fco;
   switch (type) {
     case MIRType::Int32:
       switch (narrowingOp) {
         case MNarrowingOp::None:
-          masm.store32(src.gpr(), addr);
+          fco = masm.store32(src.gpr(), addr);
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Store32);
           break;
         case MNarrowingOp::To16:
-          masm.store16(src.gpr(), addr);
+          fco = masm.store16(src.gpr(), addr);
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Store16);
           break;
         case MNarrowingOp::To8:
-          masm.store8(src.gpr(), addr);
+          fco = masm.store8(src.gpr(), addr);
+          EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                      wasm::TrapMachineInsn::Store8);
           break;
         default:
           MOZ_CRASH();
       }
       break;
     case MIRType::Float32:
-      masm.storeFloat32(src.fpu(), addr);
+      fco = masm.storeFloat32(src.fpu(), addr);
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Store32);
       break;
     case MIRType::Double:
-      masm.storeDouble(src.fpu(), addr);
+      fco = masm.storeDouble(src.fpu(), addr);
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Store64);
       break;
     case MIRType::Pointer:
       // This could be correct, but it would be a new usage, so check carefully.
@@ -9190,7 +9220,9 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
       MOZ_CRASH("Bad type in visitWasmStoreSlot. Use LWasmStoreRef.");
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
-      masm.storeUnalignedSimd128(src.fpu(), addr);
+      fco = masm.storeUnalignedSimd128(src.fpu(), addr);
+      EmitSignalNullCheckTrapSite(masm, ins, fco,
+                                  wasm::TrapMachineInsn::Store128);
       break;
 #endif
     default:
@@ -9234,8 +9266,9 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
     masm.bind(&skipPreBarrier);
   }
 
-  EmitSignalNullCheckTrapSite(masm, ins);
-  masm.storePtr(value, Address(valueBase, offset));
+  FaultingCodeOffset fco = masm.storePtr(value, Address(valueBase, offset));
+  EmitSignalNullCheckTrapSite(masm, ins, fco,
+                              wasm::TrapMachineInsnForStoreWord());
   // The postbarrier is handled separately.
 }
 
@@ -9310,16 +9343,37 @@ void CodeGenerator::visitWasmLoadSlotI64(LWasmLoadSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 output = ToOutRegister64(ins);
-  EmitSignalNullCheckTrapSite(masm, ins);
-  masm.load64(addr, output);
+  // Either 1 or 2 words.  On a 32-bit target, it is hard to argue that one
+  // transaction will always trap before the other, so it seems safest to
+  // register both of them as potentially trapping.
+#ifdef JS_64BIT
+  FaultingCodeOffset fco = masm.load64(addr, output);
+  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Load64);
+#else
+  FaultingCodeOffsetPair fcop = masm.load64(addr, output);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
+                              wasm::TrapMachineInsn::Load32);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
+                              wasm::TrapMachineInsn::Load32);
+#endif
 }
 
 void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 value = ToRegister64(ins->value());
-  EmitSignalNullCheckTrapSite(masm, ins);
-  masm.store64(value, addr);
+  // Either 1 or 2 words.  As above we register both transactions in the
+  // 2-word case.
+#ifdef JS_64BIT
+  FaultingCodeOffset fco = masm.store64(value, addr);
+  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Store64);
+#else
+  FaultingCodeOffsetPair fcop = masm.store64(value, addr);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
+                              wasm::TrapMachineInsn::Store32);
+  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
+                              wasm::TrapMachineInsn::Store32);
+#endif
 }
 
 void CodeGenerator::visitArrayBufferByteLength(LArrayBufferByteLength* lir) {

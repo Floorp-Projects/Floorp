@@ -213,15 +213,16 @@ void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
   masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
                     skipBarrier);
 
+  // If the previous value is not a GC thing, we don't need the barrier.
+  FaultingCodeOffset fco =
+      masm.loadPtr(Address(valueAddr, valueOffset), scratch);
+  masm.branchWasmAnyRefIsGCThing(false, scratch, skipBarrier);
+
   // Emit metadata for a potential null access when reading the previous value.
   if (trapOffset) {
     masm.append(wasm::Trap::NullPointerDereference,
-                wasm::TrapSite(masm.currentOffset(), *trapOffset));
+                wasm::TrapSite(TrapMachineInsnForLoadWord(), fco, *trapOffset));
   }
-
-  // If the previous value is not a GC thing, we don't need the barrier.
-  masm.loadPtr(Address(valueAddr, valueOffset), scratch);
-  masm.branchWasmAnyRefIsGCThing(false, scratch, skipBarrier);
 }
 
 void wasm::EmitWasmPreBarrierCall(MacroAssembler& masm, Register instance,

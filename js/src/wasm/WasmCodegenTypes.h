@@ -241,14 +241,31 @@ static_assert(sizeof(FaultingCodeOffsetPair) == 8);
 // stub.
 
 struct TrapSite {
+#ifdef DEBUG
+  TrapMachineInsn insn;
+#endif
   uint32_t pcOffset;
   BytecodeOffset bytecode;
 
   WASM_CHECK_CACHEABLE_POD(pcOffset, bytecode);
 
-  TrapSite() : pcOffset(-1), bytecode() {}
-  TrapSite(uint32_t pcOffset, BytecodeOffset bytecode)
-      : pcOffset(pcOffset), bytecode(bytecode) {}
+  TrapSite()
+      :
+#ifdef DEBUG
+        insn(TrapMachineInsn::OfficialUD),
+#endif
+        pcOffset(-1),
+        bytecode() {
+  }
+  TrapSite(TrapMachineInsn insn, FaultingCodeOffset fco,
+           BytecodeOffset bytecode)
+      :
+#ifdef DEBUG
+        insn(insn),
+#endif
+        pcOffset(fco.get()),
+        bytecode(bytecode) {
+  }
 
   void offsetBy(uint32_t offset) { pcOffset += offset; }
 };

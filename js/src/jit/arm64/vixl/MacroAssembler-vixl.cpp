@@ -1172,18 +1172,18 @@ void MacroAssembler::AddSubWithCarryMacro(const Register& rd,
   }
 }
 
-
-#define DEFINE_FUNCTION(FN, REGTYPE, REG, OP)                         \
-void MacroAssembler::FN(const REGTYPE REG, const MemOperand& addr) {  \
-  LoadStoreMacro(REG, addr, OP);                                      \
-}
+#define DEFINE_FUNCTION(FN, REGTYPE, REG, OP)                               \
+  js::wasm::FaultingCodeOffset MacroAssembler::FN(const REGTYPE REG,        \
+                                                  const MemOperand& addr) { \
+    return LoadStoreMacro(REG, addr, OP);                                   \
+  }
 LS_MACRO_LIST(DEFINE_FUNCTION)
 #undef DEFINE_FUNCTION
 
-
-void MacroAssembler::LoadStoreMacro(const CPURegister& rt,
-                                    const MemOperand& addr,
-                                    LoadStoreOp op) {
+js::wasm::FaultingCodeOffset MacroAssembler::LoadStoreMacro(
+    const CPURegister& rt,
+    const MemOperand& addr,
+    LoadStoreOp op) {
   // Worst case is ldr/str pre/post index:
   //  * 1 instruction for ldr/str
   //  * up to 4 instructions to materialise the constant
@@ -1196,6 +1196,7 @@ void MacroAssembler::LoadStoreMacro(const CPURegister& rt,
   // Check if an immediate offset fits in the immediate field of the
   // appropriate instruction. If not, emit two instructions to perform
   // the operation.
+  js::wasm::FaultingCodeOffset fco;
   if (addr.IsImmediateOffset() && !IsImmLSScaled(offset, access_size) &&
       !IsImmLSUnscaled(offset)) {
     // Immediate offset that can't be encoded using unsigned or unscaled
@@ -1205,21 +1206,36 @@ void MacroAssembler::LoadStoreMacro(const CPURegister& rt,
     VIXL_ASSERT(!temp.Is(rt));
     VIXL_ASSERT(!temp.Is(addr.base()) && !temp.Is(addr.regoffset()));
     Mov(temp, addr.offset());
-    LoadStore(rt, MemOperand(addr.base(), temp), op);
+    {
+      js::jit::AutoForbidPoolsAndNops afp(this, 1);
+      fco = js::wasm::FaultingCodeOffset(currentOffset());
+      LoadStore(rt, MemOperand(addr.base(), temp), op);
+    }
   } else if (addr.IsPostIndex() && !IsImmLSUnscaled(offset)) {
     // Post-index beyond unscaled addressing range.
-    LoadStore(rt, MemOperand(addr.base()), op);
+    {
+      js::jit::AutoForbidPoolsAndNops afp(this, 1);
+      fco = js::wasm::FaultingCodeOffset(currentOffset());
+      LoadStore(rt, MemOperand(addr.base()), op);
+    }
     Add(addr.base(), addr.base(), Operand(offset));
   } else if (addr.IsPreIndex() && !IsImmLSUnscaled(offset)) {
     // Pre-index beyond unscaled addressing range.
     Add(addr.base(), addr.base(), Operand(offset));
-    LoadStore(rt, MemOperand(addr.base()), op);
+    {
+      js::jit::AutoForbidPoolsAndNops afp(this, 1);
+      fco = js::wasm::FaultingCodeOffset(currentOffset());
+      LoadStore(rt, MemOperand(addr.base()), op);
+    }
   } else {
     // Encodable in one load/store instruction.
+    js::jit::AutoForbidPoolsAndNops afp(this, 1);
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     LoadStore(rt, addr, op);
   }
-}
 
+  return fco;
+}
 
 #define DEFINE_FUNCTION(FN, REGTYPE, REG, REG2, OP)  \
 void MacroAssembler::FN(const REGTYPE REG,           \

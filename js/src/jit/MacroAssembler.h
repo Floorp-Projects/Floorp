@@ -2185,38 +2185,40 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   // ========================================================================
   // Memory access primitives.
-  inline void storeUncanonicalizedDouble(FloatRegister src, const Address& dest)
+  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
+                                                       const Address& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline void storeUncanonicalizedDouble(FloatRegister src,
-                                         const BaseIndex& dest)
+  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
+                                                       const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline void storeUncanonicalizedDouble(FloatRegister src, const Operand& dest)
+  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
+                                                       const Operand& dest)
       DEFINED_ON(x86_shared);
 
   template <class T>
-  inline void storeDouble(FloatRegister src, const T& dest);
+  inline FaultingCodeOffset storeDouble(FloatRegister src, const T& dest);
 
   template <class T>
   inline void boxDouble(FloatRegister src, const T& dest);
 
   using MacroAssemblerSpecific::boxDouble;
 
-  inline void storeUncanonicalizedFloat32(FloatRegister src,
-                                          const Address& dest)
+  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
+                                                        const Address& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline void storeUncanonicalizedFloat32(FloatRegister src,
-                                          const BaseIndex& dest)
+  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
+                                                        const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline void storeUncanonicalizedFloat32(FloatRegister src,
-                                          const Operand& dest)
+  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
+                                                        const Operand& dest)
       DEFINED_ON(x86_shared);
 
   template <class T>
-  inline void storeFloat32(FloatRegister src, const T& dest);
+  inline FaultingCodeOffset storeFloat32(FloatRegister src, const T& dest);
 
   template <typename T>
   void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
@@ -3171,18 +3173,22 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void loadUnalignedSimd128(const Operand& src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
-  inline void loadUnalignedSimd128(const Address& src, FloatRegister dest)
+  inline FaultingCodeOffset loadUnalignedSimd128(const Address& src,
+                                                 FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void loadUnalignedSimd128(const BaseIndex& src, FloatRegister dest)
+  inline FaultingCodeOffset loadUnalignedSimd128(const BaseIndex& src,
+                                                 FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   // Store
 
-  inline void storeUnalignedSimd128(FloatRegister src, const Address& dest)
+  inline FaultingCodeOffset storeUnalignedSimd128(FloatRegister src,
+                                                  const Address& dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void storeUnalignedSimd128(FloatRegister src, const BaseIndex& dest)
+  inline FaultingCodeOffset storeUnalignedSimd128(FloatRegister src,
+                                                  const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm64);
 
   // Floating point negation
@@ -3632,7 +3638,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ========================================================================
   // wasm support
 
-  CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
+  FaultingCodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
 
   void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
 

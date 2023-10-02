@@ -2479,31 +2479,36 @@ void MacroAssembler::spectreBoundsCheckPtr(Register index,
 
 // ========================================================================
 // Memory access primitives.
-void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
-                                                const Address& addr) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
+    FloatRegister src, const Address& addr) {
   ScratchRegisterScope scratch(*this);
-  ma_vstr(src, addr, scratch);
+  BufferOffset offset = ma_vstr(src, addr, scratch);
+  return FaultingCodeOffset(offset.getOffset());
 }
-void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
-                                                const BaseIndex& addr) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
+    FloatRegister src, const BaseIndex& addr) {
   ScratchRegisterScope scratch(*this);
   SecondScratchRegisterScope scratch2(*this);
   uint32_t scale = Imm32::ShiftOf(addr.scale).value;
-  ma_vstr(src, addr.base, addr.index, scratch, scratch2, scale, addr.offset);
+  BufferOffset offset = ma_vstr(src, addr.base, addr.index, scratch, scratch2,
+                                scale, addr.offset);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
-                                                 const Address& addr) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
+    FloatRegister src, const Address& addr) {
   ScratchRegisterScope scratch(*this);
-  ma_vstr(src.asSingle(), addr, scratch);
+  BufferOffset offset = ma_vstr(src.asSingle(), addr, scratch);
+  return FaultingCodeOffset(offset.getOffset());
 }
-void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
-                                                 const BaseIndex& addr) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
+    FloatRegister src, const BaseIndex& addr) {
   ScratchRegisterScope scratch(*this);
   SecondScratchRegisterScope scratch2(*this);
   uint32_t scale = Imm32::ShiftOf(addr.scale).value;
-  ma_vstr(src.asSingle(), addr.base, addr.index, scratch, scratch2, scale,
-          addr.offset);
+  BufferOffset offset = ma_vstr(src.asSingle(), addr.base, addr.index, scratch,
+                                scratch2, scale, addr.offset);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
