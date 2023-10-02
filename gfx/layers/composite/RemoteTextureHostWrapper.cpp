@@ -116,14 +116,6 @@ void RemoteTextureHostWrapper::CreateRenderTexture(
   }
 }
 
-void RemoteTextureHostWrapper::MaybeDestroyRenderTexture() {
-  if (mExternalImageId.isNothing() || !mRemoteTextureForDisplayList) {
-    // RenderTextureHost was not created
-    return;
-  }
-  TextureHost::DestroyRenderTexture(mExternalImageId.ref());
-}
-
 uint32_t RemoteTextureHostWrapper::NumSubTextures() {
   if (!mRemoteTextureForDisplayList) {
     return 0;
