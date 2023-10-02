@@ -511,8 +511,14 @@
 #define EVENT__SIZEOF_SIZE_T 4
 #endif
 
+/* ------------------------------------------------------------------------------------- */
+/* MOZILLA NOTE: some BSD system increased time_t size from 32-bit to 64-bit             */
+/* OpenBSD https://www.openbsd.org/55.html                                               */
+/* NetBSD https://man.netbsd.org/NetBSD-9.1/time.3                                       */
+/* FreeBSD/powerpc https://lists.freebsd.org/pipermail/freebsd-ppc/2017-June/008907.html */
+/* ------------------------------------------------------------------------------------- */
 /* The size of `time_t', as computed by sizeof. */
-#ifdef __LP64__
+#if defined(__LP64__) || defined(__OpenBSD__) || defined(__NetBSD__) || (defined(__FreeBSD__) && !defined(__i386__))
 #define EVENT__SIZEOF_TIME_T 8
 #else
 #define EVENT__SIZEOF_TIME_T 4
