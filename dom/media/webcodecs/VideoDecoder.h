@@ -20,11 +20,9 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RootedDictionary.h"
-#include "mozilla/dom/VideoColorSpaceBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStringFwd.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/VideoDecoderBinding.h"
 
 class nsIGlobalObject;
 
@@ -44,6 +42,7 @@ class ThreadSafeWorkerRef;
 class VideoFrameOutputCallback;
 class WebCodecsErrorCallback;
 enum class CodecState : uint8_t;
+enum class HardwareAcceleration : uint8_t;
 struct VideoDecoderConfig;
 struct VideoDecoderInit;
 
@@ -57,43 +56,7 @@ class ShutdownBlockingTicket;
 
 namespace mozilla::dom {
 
-struct VideoColorSpaceInternal {
-  explicit VideoColorSpaceInternal(const VideoColorSpaceInit& aColorSpaceInit);
-  VideoColorSpaceInternal() = default;
-  VideoColorSpaceInit ToColorSpaceInit() const;
-  Maybe<bool> mFullRange;
-  Maybe<VideoMatrixCoefficients> mMatrix;
-  Maybe<VideoColorPrimaries> mPrimaries;
-  Maybe<VideoTransferCharacteristics> mTransfer;
-};
-
-class VideoDecoderConfigInternal {
- public:
-  static UniquePtr<VideoDecoderConfigInternal> Create(
-      const VideoDecoderConfig& aConfig);
-  ~VideoDecoderConfigInternal() = default;
-
-  nsString mCodec;
-  Maybe<uint32_t> mCodedHeight;
-  Maybe<uint32_t> mCodedWidth;
-  Maybe<VideoColorSpaceInternal> mColorSpace;
-  Maybe<RefPtr<MediaByteBuffer>> mDescription;
-  Maybe<uint32_t> mDisplayAspectHeight;
-  Maybe<uint32_t> mDisplayAspectWidth;
-  HardwareAcceleration mHardwareAcceleration;
-  Maybe<bool> mOptimizeForLatency;
-
- private:
-  VideoDecoderConfigInternal(const nsAString& aCodec,
-                             Maybe<uint32_t>&& aCodedHeight,
-                             Maybe<uint32_t>&& aCodedWidth,
-                             Maybe<VideoColorSpaceInternal>&& aColorSpace,
-                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
-                             Maybe<uint32_t>&& aDisplayAspectHeight,
-                             Maybe<uint32_t>&& aDisplayAspectWidth,
-                             const HardwareAcceleration& aHardwareAcceleration,
-                             Maybe<bool>&& aOptimizeForLatency);
-};
+class VideoDecoderConfigInternal;
 
 class ConfigureMessage;
 class DecodeMessage;
