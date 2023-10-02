@@ -1067,9 +1067,9 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
 #ifdef DEBUG
   // Check that each stackmap is associated with a plausible instruction.
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
-    MOZ_ASSERT(IsValidStackMapKey(compilerEnv_->debugEnabled(),
-                                  metadataTier_->stackMaps.get(i).nextInsnAddr),
-               "wasm stackmap does not reference a valid insn");
+    MOZ_ASSERT(
+        IsPlausibleStackMapKey(metadataTier_->stackMaps.get(i).nextInsnAddr),
+        "wasm stackmap does not reference a valid insn");
   }
 #endif
 
