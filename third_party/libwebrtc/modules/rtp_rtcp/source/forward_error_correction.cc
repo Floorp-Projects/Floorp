@@ -19,7 +19,7 @@
 #include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
-#include "modules/rtp_rtcp/source/flexfec_header_reader_writer.h"
+#include "modules/rtp_rtcp/source/flexfec_03_header_reader_writer.h"
 #include "modules/rtp_rtcp/source/forward_error_correction_internal.h"
 #include "modules/rtp_rtcp/source/ulpfec_header_reader_writer.h"
 #include "rtc_base/checks.h"
@@ -99,8 +99,10 @@ std::unique_ptr<ForwardErrorCorrection> ForwardErrorCorrection::CreateUlpfec(
 std::unique_ptr<ForwardErrorCorrection> ForwardErrorCorrection::CreateFlexfec(
     uint32_t ssrc,
     uint32_t protected_media_ssrc) {
-  std::unique_ptr<FecHeaderReader> fec_header_reader(new FlexfecHeaderReader());
-  std::unique_ptr<FecHeaderWriter> fec_header_writer(new FlexfecHeaderWriter());
+  std::unique_ptr<FecHeaderReader> fec_header_reader(
+      new Flexfec03HeaderReader());
+  std::unique_ptr<FecHeaderWriter> fec_header_writer(
+      new Flexfec03HeaderWriter());
   return std::unique_ptr<ForwardErrorCorrection>(new ForwardErrorCorrection(
       std::move(fec_header_reader), std::move(fec_header_writer), ssrc,
       protected_media_ssrc));
@@ -326,9 +328,13 @@ void ForwardErrorCorrection::FinalizeFecHeaders(size_t num_fec_packets,
                                                 uint32_t media_ssrc,
                                                 uint16_t seq_num_base) {
   for (size_t i = 0; i < num_fec_packets; ++i) {
-    fec_header_writer_->FinalizeFecHeader(
-        media_ssrc, seq_num_base, &packet_masks_[i * packet_mask_size_],
-        packet_mask_size_, &generated_fec_packets_[i]);
+    const FecHeaderWriter::ProtectedStream protected_streams[] = {
+        {.ssrc = media_ssrc,
+         .seq_num_base = seq_num_base,
+         .packet_mask = {&packet_masks_[i * packet_mask_size_],
+                         packet_mask_size_}}};
+    fec_header_writer_->FinalizeFecHeader(protected_streams,
+                                          generated_fec_packets_[i]);
   }
 }
 

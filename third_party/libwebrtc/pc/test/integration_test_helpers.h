@@ -651,7 +651,6 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
         received_stats->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>()[0];
     ASSERT_TRUE(rtp_stats->relative_packet_arrival_delay.is_defined());
     ASSERT_TRUE(rtp_stats->packets_received.is_defined());
-    ASSERT_TRUE(rtp_stats->track_id.is_defined());
     rtp_stats_id_ = rtp_stats->id();
     audio_packets_stat_ = *rtp_stats->packets_received;
     audio_delay_stat_ = *rtp_stats->relative_packet_arrival_delay;
@@ -1875,10 +1874,6 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(DtlsConnected(), kDefaultTimeout);
     EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(expected_cipher_suite),
                    caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-    // TODO(bugs.webrtc.org/9456): Fix it.
-    EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                            "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                            expected_cipher_suite));
   }
 
   void TestGcmNegotiationUsesCipherSuite(bool local_gcm_enabled,

@@ -657,6 +657,7 @@ if (rtc_build_libvpx) {
       "../../api:field_trials_view",
       "../../api/video:video_frame",
       "../../api/video_codecs:video_codecs_api",
+      "../../media:media_constants",
       "../../modules/video_coding:frame_dependencies_calculator",
       "../../modules/video_coding:webrtc_libvpx_interface",
       "../../modules/video_coding:webrtc_vp9",

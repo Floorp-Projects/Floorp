@@ -407,7 +407,17 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
   return success;
 }
 
-- (BOOL)setCategory:(NSString *)category
+- (BOOL)setCategory:(AVAudioSessionCategory)category
+               mode:(AVAudioSessionMode)mode
+            options:(AVAudioSessionCategoryOptions)options
+              error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  return [self.session setCategory:category mode:mode options:options error:outError];
+}
+
+- (BOOL)setCategory:(AVAudioSessionCategory)category
         withOptions:(AVAudioSessionCategoryOptions)options
               error:(NSError **)outError {
   if (![self checkLock:outError]) {
@@ -416,7 +426,7 @@ ABSL_CONST_INIT thread_local bool mutex_locked = false;
   return [self.session setCategory:category withOptions:options error:outError];
 }
 
-- (BOOL)setMode:(NSString *)mode error:(NSError **)outError {
+- (BOOL)setMode:(AVAudioSessionMode)mode error:(NSError **)outError {
   if (![self checkLock:outError]) {
     return NO;
   }

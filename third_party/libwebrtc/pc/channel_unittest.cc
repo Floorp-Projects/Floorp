@@ -57,11 +57,15 @@ using webrtc::RtpTransceiverDirection;
 using webrtc::SdpType;
 
 namespace {
-const cricket::AudioCodec kPcmuCodec(0, "PCMU", 64000, 8000, 1);
-const cricket::AudioCodec kPcmaCodec(8, "PCMA", 64000, 8000, 1);
-const cricket::AudioCodec kIsacCodec(103, "ISAC", 40000, 16000, 1);
-const cricket::VideoCodec kH264Codec(97, "H264");
-const cricket::VideoCodec kH264SvcCodec(99, "H264-SVC");
+const cricket::AudioCodec kPcmuCodec =
+    cricket::CreateAudioCodec(0, "PCMU", 64000, 1);
+const cricket::AudioCodec kPcmaCodec =
+    cricket::CreateAudioCodec(8, "PCMA", 64000, 1);
+const cricket::AudioCodec kIsacCodec =
+    cricket::CreateAudioCodec(103, "ISAC", 40000, 1);
+const cricket::VideoCodec kH264Codec = cricket::CreateVideoCodec(97, "H264");
+const cricket::VideoCodec kH264SvcCodec =
+    cricket::CreateVideoCodec(99, "H264-SVC");
 const uint32_t kSsrc1 = 0x1111;
 const uint32_t kSsrc2 = 0x2222;
 const uint32_t kSsrc3 = 0x3333;
@@ -1472,29 +1476,28 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // T::MediaChannel is either FakeVoiceMediaChannel or FakeVideoMediaChannel.
   typename T::MediaChannel* media_send_channel1_impl() {
     RTC_DCHECK(channel1_);
-    RTC_DCHECK(channel1_->media_send_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel1_->media_send_channel()->ImplForTesting());
+        channel1_->media_send_channel());
   }
 
   typename T::MediaChannel* media_send_channel2_impl() {
     RTC_DCHECK(channel2_);
     RTC_DCHECK(channel2_->media_send_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel2_->media_send_channel()->ImplForTesting());
+        channel2_->media_send_channel());
   }
   typename T::MediaChannel* media_receive_channel1_impl() {
     RTC_DCHECK(channel1_);
     RTC_DCHECK(channel1_->media_receive_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel1_->media_receive_channel()->ImplForTesting());
+        channel1_->media_receive_channel());
   }
 
   typename T::MediaChannel* media_receive_channel2_impl() {
     RTC_DCHECK(channel2_);
     RTC_DCHECK(channel2_->media_receive_channel());
     return static_cast<typename T::MediaChannel*>(
-        channel2_->media_receive_channel()->ImplForTesting());
+        channel2_->media_receive_channel());
   }
 
   rtc::AutoThread main_thread_;
@@ -2096,8 +2099,8 @@ TEST_F(VideoChannelSingleThreadTest, UpdateLocalStreamsWithSimulcast) {
 }
 
 TEST_F(VideoChannelSingleThreadTest, TestSetLocalOfferWithPacketization) {
-  const cricket::VideoCodec kVp8Codec(97, "VP8");
-  cricket::VideoCodec vp9_codec(98, "VP9");
+  const cricket::VideoCodec kVp8Codec = cricket::CreateVideoCodec(97, "VP8");
+  cricket::VideoCodec vp9_codec = cricket::CreateVideoCodec(98, "VP9");
   vp9_codec.packetization = cricket::kPacketizationParamRaw;
   cricket::VideoContentDescription video;
   video.set_codecs({kVp8Codec, vp9_codec});
@@ -2119,8 +2122,8 @@ TEST_F(VideoChannelSingleThreadTest, TestSetLocalOfferWithPacketization) {
 }
 
 TEST_F(VideoChannelSingleThreadTest, TestSetRemoteOfferWithPacketization) {
-  const cricket::VideoCodec kVp8Codec(97, "VP8");
-  cricket::VideoCodec vp9_codec(98, "VP9");
+  const cricket::VideoCodec kVp8Codec = cricket::CreateVideoCodec(97, "VP8");
+  cricket::VideoCodec vp9_codec = cricket::CreateVideoCodec(98, "VP9");
   vp9_codec.packetization = cricket::kPacketizationParamRaw;
   cricket::VideoContentDescription video;
   video.set_codecs({kVp8Codec, vp9_codec});
@@ -2143,8 +2146,8 @@ TEST_F(VideoChannelSingleThreadTest, TestSetRemoteOfferWithPacketization) {
 }
 
 TEST_F(VideoChannelSingleThreadTest, TestSetAnswerWithPacketization) {
-  const cricket::VideoCodec kVp8Codec(97, "VP8");
-  cricket::VideoCodec vp9_codec(98, "VP9");
+  const cricket::VideoCodec kVp8Codec = cricket::CreateVideoCodec(97, "VP8");
+  cricket::VideoCodec vp9_codec = cricket::CreateVideoCodec(98, "VP9");
   vp9_codec.packetization = cricket::kPacketizationParamRaw;
   cricket::VideoContentDescription video;
   video.set_codecs({kVp8Codec, vp9_codec});
@@ -2177,8 +2180,8 @@ TEST_F(VideoChannelSingleThreadTest, TestSetAnswerWithPacketization) {
 }
 
 TEST_F(VideoChannelSingleThreadTest, TestSetLocalAnswerWithoutPacketization) {
-  const cricket::VideoCodec kLocalCodec(98, "VP8");
-  cricket::VideoCodec remote_codec(99, "VP8");
+  const cricket::VideoCodec kLocalCodec = cricket::CreateVideoCodec(98, "VP8");
+  cricket::VideoCodec remote_codec = cricket::CreateVideoCodec(99, "VP8");
   remote_codec.packetization = cricket::kPacketizationParamRaw;
   cricket::VideoContentDescription local_video;
   local_video.set_codecs({kLocalCodec});
@@ -2199,9 +2202,9 @@ TEST_F(VideoChannelSingleThreadTest, TestSetLocalAnswerWithoutPacketization) {
 }
 
 TEST_F(VideoChannelSingleThreadTest, TestSetRemoteAnswerWithoutPacketization) {
-  cricket::VideoCodec local_codec(98, "VP8");
+  cricket::VideoCodec local_codec = cricket::CreateVideoCodec(98, "VP8");
   local_codec.packetization = cricket::kPacketizationParamRaw;
-  const cricket::VideoCodec kRemoteCodec(99, "VP8");
+  const cricket::VideoCodec kRemoteCodec = cricket::CreateVideoCodec(99, "VP8");
   cricket::VideoContentDescription local_video;
   local_video.set_codecs({local_codec});
   cricket::VideoContentDescription remote_video;
@@ -2223,9 +2226,9 @@ TEST_F(VideoChannelSingleThreadTest, TestSetRemoteAnswerWithoutPacketization) {
 
 TEST_F(VideoChannelSingleThreadTest,
        TestSetRemoteAnswerWithInvalidPacketization) {
-  cricket::VideoCodec local_codec(98, "VP8");
+  cricket::VideoCodec local_codec = cricket::CreateVideoCodec(98, "VP8");
   local_codec.packetization = cricket::kPacketizationParamRaw;
-  cricket::VideoCodec remote_codec(99, "VP8");
+  cricket::VideoCodec remote_codec = cricket::CreateVideoCodec(99, "VP8");
   remote_codec.packetization = "unknownpacketizationattributevalue";
   cricket::VideoContentDescription local_video;
   local_video.set_codecs({local_codec});
@@ -2248,9 +2251,9 @@ TEST_F(VideoChannelSingleThreadTest,
 
 TEST_F(VideoChannelSingleThreadTest,
        TestSetLocalAnswerWithInvalidPacketization) {
-  cricket::VideoCodec local_codec(98, "VP8");
+  cricket::VideoCodec local_codec = cricket::CreateVideoCodec(98, "VP8");
   local_codec.packetization = cricket::kPacketizationParamRaw;
-  const cricket::VideoCodec kRemoteCodec(99, "VP8");
+  const cricket::VideoCodec kRemoteCodec = cricket::CreateVideoCodec(99, "VP8");
   cricket::VideoContentDescription local_video;
   local_video.set_codecs({local_codec});
   cricket::VideoContentDescription remote_video;

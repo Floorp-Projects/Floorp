@@ -20,10 +20,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e2
  11 files changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 9939f17095..605a27624a 100644
+index 427bde39c0..ac93b47716 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -414,12 +414,12 @@ config("common_config") {
+@@ -410,12 +410,12 @@ config("common_config") {
      }
    }
  
@@ -38,7 +38,7 @@ index 9939f17095..605a27624a 100644
      defines += [ "WEBRTC_ARCH_ARM" ]
      if (arm_version >= 7) {
        defines += [ "WEBRTC_ARCH_ARM_V7" ]
-@@ -429,7 +429,7 @@ config("common_config") {
+@@ -425,7 +425,7 @@ config("common_config") {
      }
    }
  
@@ -276,7 +276,7 @@ index 42d72865b9..c184e2fbbc 100644
  config("x11_config") {
    if (rtc_use_x11_extensions) {
 diff --git a/webrtc.gni b/webrtc.gni
-index 962cb07866..72677752e1 100644
+index c25caf85e0..9e49573c98 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -171,13 +171,13 @@ declare_args() {
@@ -296,5 +296,5 @@ index 962cb07866..72677752e1 100644
    # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported on
    # all platforms except Android and iOS. Because FFmpeg can be built
 -- 
-2.34.1
+2.37.3
 

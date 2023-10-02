@@ -1079,8 +1079,6 @@ if (is_win) {
     sources = [
       "win32.cc",
       "win32.h",
-      "win32_window.cc",
-      "win32_window.h",
     ]
 
     deps = [
@@ -1492,6 +1490,7 @@ if (!build_with_mozilla) {
     "../api/task_queue:pending_task_safety_flag",
     "../api/units:time_delta",
     "../system_wrappers:field_trial",
+    "synchronization:mutex",
     "system:rtc_export",
     "task_utils:repeating_task",
     "third_party/base64",
@@ -2080,10 +2079,7 @@ if (rtc_include_tests) {
         deps += [ "synchronization:synchronization_unittests" ]
       }
       if (is_win) {
-        sources += [
-          "win32_unittest.cc",
-          "win32_window_unittest.cc",
-        ]
+        sources += [ "win32_unittest.cc" ]
         deps += [ ":win32" ]
       }
       if (is_posix || is_fuchsia) {

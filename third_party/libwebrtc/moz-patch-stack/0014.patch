@@ -45,5 +45,5 @@ index 6d369d747e..556204ac89 100644
        &attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
    PlatformThread::Handle handle;
 -- 
-2.34.1
+2.37.3
 

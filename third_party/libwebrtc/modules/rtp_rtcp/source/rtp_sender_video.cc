@@ -224,6 +224,11 @@ size_t RTPSenderVideo::FecPacketOverhead() const {
   return overhead;
 }
 
+void RTPSenderVideo::SetRetransmissionSetting(int32_t retransmission_settings) {
+  RTC_DCHECK_RUNS_SERIALIZED(&send_checker_);
+  retransmission_settings_ = retransmission_settings;
+}
+
 void RTPSenderVideo::SetVideoStructure(
     const FrameDependencyStructure* video_structure) {
   if (frame_transformer_delegate_) {
@@ -429,8 +434,8 @@ void RTPSenderVideo::AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
               video_header.generic->frame_id - dep);
         }
 
-        uint8_t spatial_bimask = 1 << video_header.generic->spatial_index;
-        generic_descriptor.SetSpatialLayersBitmask(spatial_bimask);
+        uint8_t spatial_bitmask = 1 << video_header.generic->spatial_index;
+        generic_descriptor.SetSpatialLayersBitmask(spatial_bitmask);
 
         generic_descriptor.SetTemporalLayer(
             video_header.generic->temporal_index);

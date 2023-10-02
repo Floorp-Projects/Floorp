@@ -34,7 +34,7 @@ namespace webrtc {
 class TestH264Impl : public VideoCodecUnitTest {
  protected:
   std::unique_ptr<VideoEncoder> CreateEncoder() override {
-    return H264Encoder::Create(cricket::VideoCodec(cricket::kH264CodecName));
+    return H264Encoder::Create();
   }
 
   std::unique_ptr<VideoDecoder> CreateDecoder() override {

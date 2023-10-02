@@ -435,10 +435,10 @@ index c40cfcf28e..63a3a2d53d 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 4d6b36bafe..797a783f38 100644
+index 48a1ad0758..372fe211d0 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -202,6 +202,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -206,6 +206,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
        // disabled.
        KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
  
@@ -1340,10 +1340,10 @@ index 563ef5abd2..e085ac2df8 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index ef1300f9b6..184e865365 100644
+index a1461fb687..66fd0a0ebe 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
-@@ -76,7 +76,6 @@ VideoCaptureImpl::VideoCaptureImpl()
+@@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
        _requestedCapability(),
        _lastProcessTimeNanos(rtc::TimeNanos()),
        _lastFrameRateCallbackTimeNanos(rtc::TimeNanos()),
@@ -1351,15 +1351,15 @@ index ef1300f9b6..184e865365 100644
        _rawDataCallBack(NULL),
        _lastProcessFrameTimeNanos(rtc::TimeNanos()),
        _rotateFrame(kVideoRotation_0),
-@@ -89,7 +88,6 @@ VideoCaptureImpl::VideoCaptureImpl()
- }
+@@ -91,7 +90,6 @@ VideoCaptureImpl::VideoCaptureImpl()
  
  VideoCaptureImpl::~VideoCaptureImpl() {
+   RTC_DCHECK_RUN_ON(&api_checker_);
 -  DeRegisterCaptureDataCallback();
    if (_deviceUniqueId)
      delete[] _deviceUniqueId;
  }
-@@ -98,26 +96,39 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
+@@ -100,28 +98,41 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
      rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
    MutexLock lock(&api_lock_);
    RTC_DCHECK(!_rawDataCallBack);
@@ -1396,6 +1396,8 @@ index ef1300f9b6..184e865365 100644
 +}
 +
  int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
+   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
    UpdateFrameCount();  // frame count used for local frame rate callback.
  
 -  if (_dataCallBack) {
@@ -1405,7 +1407,7 @@ index ef1300f9b6..184e865365 100644
    }
  
    return 0;
-@@ -210,7 +221,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -214,7 +225,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
        buffer.get()->StrideV(), 0, 0,  // No Cropping
        width, height, target_width, target_height, rotation_mode,
        ConvertVideoType(frameInfo.videoType));
@@ -1414,7 +1416,7 @@ index ef1300f9b6..184e865365 100644
      RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
                        << static_cast<int>(frameInfo.videoType) << "to I420.";
      return -1;
-@@ -225,6 +236,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -229,6 +240,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
            .build();
    captureFrame.set_ntp_time_ms(captureTime);
  
@@ -1429,10 +1431,10 @@ index ef1300f9b6..184e865365 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index 1f7aa89883..a9fdaf6307 100644
+index 5ec1fd4a83..e46e050609 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -62,8 +62,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+@@ -64,8 +64,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
        rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
    virtual void RegisterCaptureDataCallback(
        RawVideoSinkInterface* dataCallback) override;
@@ -1444,15 +1446,15 @@ index 1f7aa89883..a9fdaf6307 100644
    int32_t SetCaptureRotation(VideoRotation rotation) override;
    bool SetApplyRotation(bool enable) override;
    bool GetApplyRotation() override;
-@@ -105,7 +107,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+@@ -115,7 +117,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
    // last time the frame rate callback function was called.
-   int64_t _lastFrameRateCallbackTimeNanos;
+   int64_t _lastFrameRateCallbackTimeNanos RTC_GUARDED_BY(capture_checker_);
  
--  rtc::VideoSinkInterface<VideoFrame>* _dataCallBack;
-+  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
-   RawVideoSinkInterface* _rawDataCallBack;
+-  rtc::VideoSinkInterface<VideoFrame>* _dataCallBack RTC_GUARDED_BY(api_lock_);
++  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks RTC_GUARDED_BY(api_lock_);
+   RawVideoSinkInterface* _rawDataCallBack RTC_GUARDED_BY(api_lock_);
  
-   int64_t _lastProcessFrameTimeNanos;
+   int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 index e460625aea..7437e01509 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
@@ -1560,7 +1562,7 @@ index 0474e7bc17..1953923f81 100644
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index cbbf359ecb..1909c0ece0 100644
+index ac27ee8251..0005503341 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -423,6 +423,12 @@ rtc_library("logging") {
@@ -1692,5 +1694,5 @@ index 5e4a5d3c81..928a59104b 100644
    # Selects whether the audio processing module should be excluded.
    rtc_exclude_audio_processing_module = false
 -- 
-2.34.1
+2.37.3
 

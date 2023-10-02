@@ -12,24 +12,6 @@
       'android_examples_junit_tests': {},
       'android_sdk_junit_tests': {},
     },
-    'android_perf_tests': {
-      'low_bandwidth_audio_perf_test': {
-        'mixins': ['perf-low-bandwidth-audio-perf-test'],
-        'args': [
-          '.',
-          '--remove',
-          '--android',
-          '--adb-path',
-          '../../third_party/android_sdk/public/platform-tools/adb',
-        ]
-      },
-      'video_codec_perf_tests': {
-        'mixins': ['perf-video-codec-perf-tests'],
-      },
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-      },
-    },
     'android_tests': {
       'AppRTCMobile_test_apk': {},
       'android_instrumentation_test_apk': {},
@@ -66,35 +48,16 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'android_webrtc_perf_tests_tryserver': {
+    'android_tests_tryserver_specific': {
       'webrtc_perf_tests': {
         'mixins': ['quick-perf-tests'],
       }
-    },
-    'desktop_perf_tests': {
-      'low_bandwidth_audio_perf_test': {
-        'mixins': ['perf-low-bandwidth-audio-perf-test'],
-        'args': ['.', '--remove'],
-      },
-      'video_codec_perf_tests': {
-        'mixins': ['perf-video-codec-perf-tests'],
-      },
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-        'args': [
-          '--test_artifacts_dir=${ISOLATED_OUTDIR}',
-          '--save_worst_frame',
-        ],
-      },
     },
     'desktop_tests': {
       'audio_decoder_unittests': {},
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'dcsctp_unittests': {},
-      'low_bandwidth_audio_test': {
-        'args': ['--quick']
-      },
       'modules_tests': {
         'mixins': ['shards-2'],
       },
@@ -124,21 +87,25 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'fuchsia_compatible_perf_tests': {
-      'fuchsia_perf_tests': {
-        'mixins': [
-          'perf-fuchsia-perf-tests',
-        ],
+    'desktop_tests_linux_specific': {
+      'shared_screencast_stream_test': {},
+    },
+    'desktop_tests_try_server_specific': {
+      'video_capture_tests': {
+        'mixins': ['baremetal-try-pool'],
       },
+      'video_codec_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      }
     },
     'fuchsia_compatible_tests': {
       'audio_decoder_unittests': {},
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'dcsctp_unittests': {},
-      'low_bandwidth_audio_test': {
-        'args': ['--quick']
-      },
       'rtc_media_unittests': {},
       # TODO(bugs.webrtc.org/14705): Enable when NonGlobalFieldTrialsInstanceDoesNotModifyGlobalString is fixed.
       # TODO(bugs.webrtc.org/14700):  Enable when NetworkTest tests are fixed.
@@ -228,9 +195,6 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'linux_desktop_specific_tests': {
-      'shared_screencast_stream_test': {},
-    },
     'more_configs_tests': {
       'peerconnection_unittests': {
         'swarming': {
@@ -238,29 +202,34 @@
         },
       },
     },
-    'video_capture_tests': {
-      'video_capture_tests': {
-        'mixins': ['baremetal-pool'],
-      }
-    },
-    'video_capture_tests_tryserver': {
-      'video_capture_tests': {
-        'mixins': ['baremetal-try-pool'],
-      }
-    },
-    'video_codec_perf_tests_tryserver': {
+    'perf_tests': {
       'video_codec_perf_tests': {
-        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
-      }
-    },
-    'webrtc_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
+      },
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
       },
     },
-    'webrtc_perf_tests_tryserver': {
+    'perf_tests_no_video_codec': {
       'webrtc_perf_tests': {
-        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+        'mixins': ['perf-webrtc-perf-tests'],
+      },
+    },
+    'perf_tests_save_worst_frame': {
+      'video_codec_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+        'args': [
+          '--test_artifacts_dir=${ISOLATED_OUTDIR}',
+          '--save_worst_frame',
+        ],
+      },
+    },
+    'video_capture_tests': {
+      'video_capture_tests': {
+        'mixins': ['baremetal-pool'],
       }
     },
   },
@@ -271,12 +240,11 @@
   'compound_suites': {
     'android_tests_tryserver': [
       'android_tests',
-      'android_webrtc_perf_tests_tryserver',
+      'android_tests_tryserver_specific',
     ],
     'desktop_tests_tryserver': [
       'desktop_tests',
-      'video_capture_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
+      'desktop_tests_try_server_specific',
     ],
     'desktop_tests_with_video_capture': [
       'desktop_tests',
@@ -284,19 +252,17 @@
     ],
     'linux_desktop_tests_tryserver': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
-      'video_capture_tests_tryserver',
-      'video_codec_perf_tests_tryserver',
-      'webrtc_perf_tests_tryserver',
+      'desktop_tests_linux_specific',
+      'desktop_tests_try_server_specific',
     ],
     'linux_desktop_tests_with_video_capture': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
+      'desktop_tests_linux_specific',
       'video_capture_tests',
     ],
     'linux_tests': [
       'desktop_tests',
-      'linux_desktop_specific_tests',
+      'desktop_tests_linux_specific',
     ],
   },
 

@@ -149,6 +149,10 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   // place as the other rate stats.
   DataRate PostEncodeOverhead() const;
 
+  // 'retransmission_mode' is either a value of enum RetransmissionMode, or
+  // computed with bitwise operators on values of enum RetransmissionMode.
+  void SetRetransmissionSetting(int32_t retransmission_settings);
+
  protected:
   static uint8_t GetTemporalId(const RTPVideoHeader& header);
   bool AllowRetransmission(uint8_t temporal_id,
@@ -201,11 +205,10 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   RTPSender* const rtp_sender_;
   Clock* const clock_;
 
-  const int32_t retransmission_settings_;
-
   // These members should only be accessed from within SendVideo() to avoid
   // potential race conditions.
   rtc::RaceChecker send_checker_;
+  int32_t retransmission_settings_ RTC_GUARDED_BY(send_checker_);
   VideoRotation last_rotation_ RTC_GUARDED_BY(send_checker_);
   absl::optional<ColorSpace> last_color_space_ RTC_GUARDED_BY(send_checker_);
   bool transmit_color_space_next_frame_ RTC_GUARDED_BY(send_checker_);

@@ -1,27 +1,29 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 5 Jul 2023 19:15:00 +0000
-Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
- of encoder_config_.simulcast_layers. r=jib
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
+ thread). r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D182813
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
+This was causing assertions.
+
+Differential Revision: https://phabricator.services.mozilla.com/D179731
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
 ---
- video/video_stream_encoder.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ audio/channel_send.cc | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index c3d855c1c6..eee99f41de 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -1395,7 +1395,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 5ee97f290e..f784b8eebc 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -457,8 +457,6 @@ ChannelSend::ChannelSend(
  
-   bool is_svc = false;
-   bool single_stream_or_non_first_inactive = true;
--  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
-+  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
-     if (encoder_config_.simulcast_layers[i].active) {
-       single_stream_or_non_first_inactive = false;
-       break;
+   int error = audio_coding_->RegisterTransportCallback(this);
+   RTC_DCHECK_EQ(0, error);
+-  if (frame_transformer)
+-    InitFrameTransformerDelegate(std::move(frame_transformer));
+ }
+ 
+ ChannelSend::~ChannelSend() {
 -- 
-2.34.1
+2.37.3
 

@@ -1,31 +1,27 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 4 Jul 2023 08:34:00 +0000
-Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
- pw_stream raw pointer member r=webrtc-reviewers,ng
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
-
-Differential Revision: https://phabricator.services.mozilla.com/D182671
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- modules/video_capture/linux/video_capture_pipewire.h | 2 +-
+ video/video_stream_encoder.cc | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index e2c8d1b168..2a58c7d3e0 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-   VideoCaptureCapability frameInfo_;
-   bool started_;
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index c3d855c1c6..eee99f41de 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1395,7 +1395,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
--  struct pw_stream* stream_;
-+  struct pw_stream* stream_ = nullptr;
-   struct spa_hook stream_listener_;
- };
- }  // namespace videocapturemodule
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;
 -- 
-2.34.1
+2.37.3
 

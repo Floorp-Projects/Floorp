@@ -107,7 +107,7 @@ class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
   MOCK_METHOD(void, OnReceivedNack, (const std::vector<uint16_t>&), (override));
   MOCK_METHOD(void,
               OnReceivedRtcpReportBlocks,
-              (const ReportBlockList&),
+              (rtc::ArrayView<const ReportBlockData>),
               (override));
 };
 
@@ -135,6 +135,7 @@ constexpr uint32_t kNotToUsSsrc = 0x654321;
 constexpr uint32_t kUnknownSenderSsrc = 0x54321;
 
 constexpr int64_t kRtcpIntervalMs = 1000;
+constexpr TimeDelta kEpsilon = TimeDelta::Millis(1);
 
 }  // namespace
 
@@ -780,8 +781,7 @@ TEST(RtcpReceiverTest, ExtendedReportsDlrrPacketNotToUsIgnored) {
 
   receiver.IncomingPacket(xr.Build());
 
-  int64_t rtt_ms = 0;
-  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt());
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_FALSE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -798,8 +798,7 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithSubBlock) {
 
   const uint32_t kLastRR = 0x12345;
   const uint32_t kDelay = 0x23456;
-  int64_t rtt_ms = 0;
-  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt());
 
   rtcp::ExtendedReports xr;
   xr.SetSenderSsrc(kSenderSsrc);
@@ -808,9 +807,9 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithSubBlock) {
   receiver.IncomingPacket(xr.Build());
 
   uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
-  EXPECT_NEAR(CompactNtpRttToTimeDelta(rtt_ntp).ms(), rtt_ms, 1);
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(),
+              Near(CompactNtpRttToTimeDelta(rtt_ntp), kEpsilon));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_GT(non_sender_rtt_stats.round_trip_time(), TimeDelta::Zero());
@@ -837,10 +836,9 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithMultipleSubBlocks) {
   receiver.IncomingPacket(xr.Build());
 
   uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
-  int64_t rtt_ms = 0;
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
-  EXPECT_NEAR(CompactNtpRttToTimeDelta(rtt_ntp).ms(), rtt_ms, 1);
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(),
+              Near(CompactNtpRttToTimeDelta(rtt_ntp), kEpsilon));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_GT(non_sender_rtt_stats.round_trip_time(), TimeDelta::Zero());
@@ -866,8 +864,7 @@ TEST(RtcpReceiverTest, InjectExtendedReportsPacketWithMultipleReportBlocks) {
   std::vector<rtcp::ReceiveTimeInfo> last_xr_rtis =
       receiver.ConsumeReceivedXrReferenceTimeInfo();
   EXPECT_THAT(last_xr_rtis, SizeIs(1));
-  int64_t rtt_ms = 0;
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_TRUE(receiver.GetAndResetXrRrRtt());
 }
 
 TEST(RtcpReceiverTest, InjectExtendedReportsPacketWithUnknownReportBlock) {
@@ -894,8 +891,7 @@ TEST(RtcpReceiverTest, InjectExtendedReportsPacketWithUnknownReportBlock) {
       receiver.ConsumeReceivedXrReferenceTimeInfo();
   EXPECT_THAT(last_xr_rtis, SizeIs(1));
   // Validate Dlrr report wasn't processed.
-  int64_t rtt_ms = 0;
-  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt());
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_FALSE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -910,8 +906,7 @@ TEST(RtcpReceiverTest, TestExtendedReportsRrRttInitiallyFalse) {
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
-  int64_t rtt_ms;
-  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt());
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_FALSE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -940,9 +935,7 @@ TEST(RtcpReceiverTest, RttCalculatedAfterExtendedReportsDlrr) {
 
   receiver.IncomingPacket(xr.Build());
 
-  int64_t rtt_ms = 0;
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
-  EXPECT_NEAR(kRtt.ms(), rtt_ms, 1);
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt, kEpsilon));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_TRUE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -975,9 +968,7 @@ TEST(RtcpReceiverTest, SetterEnablesReceiverRtt) {
 
   receiver.IncomingPacket(xr.Build());
 
-  int64_t rtt_ms = 0;
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
-  EXPECT_NEAR(rtt_ms, kRtt.ms(), 1);
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt, kEpsilon));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_TRUE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -1011,8 +1002,7 @@ TEST(RtcpReceiverTest, DoesntCalculateRttOnReceivedDlrr) {
   receiver.IncomingPacket(xr.Build());
 
   // We expect that no RTT is available (because receive-side RTT was disabled).
-  int64_t rtt_ms = 0;
-  EXPECT_FALSE(receiver.GetAndResetXrRrRtt(&rtt_ms));
+  EXPECT_FALSE(receiver.GetAndResetXrRrRtt());
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_FALSE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -1020,7 +1010,7 @@ TEST(RtcpReceiverTest, DoesntCalculateRttOnReceivedDlrr) {
   EXPECT_EQ(non_sender_rtt_stats.round_trip_time_measurements(), 0);
 }
 
-TEST(RtcpReceiverTest, XrDlrrCalculatesNegativeRttAsOne) {
+TEST(RtcpReceiverTest, XrDlrrCalculatesNegativeRttAsOneMillisecond) {
   ReceiverMocks mocks;
   auto config = DefaultConfiguration(&mocks);
   config.non_sender_rtt_measurement = true;
@@ -1041,9 +1031,7 @@ TEST(RtcpReceiverTest, XrDlrrCalculatesNegativeRttAsOne) {
 
   receiver.IncomingPacket(xr.Build());
 
-  int64_t rtt_ms = 0;
-  EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
-  EXPECT_EQ(1, rtt_ms);
+  EXPECT_EQ(receiver.GetAndResetXrRrRtt(), TimeDelta::Millis(1));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_TRUE(non_sender_rtt_stats.round_trip_time().has_value());

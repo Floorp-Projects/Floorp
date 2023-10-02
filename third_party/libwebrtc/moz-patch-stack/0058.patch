@@ -72,5 +72,5 @@ index 119cb07ab8..0bec3eb765 100644
    int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
    std::atomic<bool> _isShutdown;
 -- 
-2.34.1
+2.37.3
 

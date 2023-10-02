@@ -1,49 +1,31 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 27 Jul 2023 09:49:00 +0000
-Subject: Bug 1841851 - WebRTC backport: PipeWire capturer: increase buffer
- size to avoid buffer overflow r=jib,webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Sat, 12 Aug 2023 18:57:00 +0000
+Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
+ ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
+rtc::strcpyn second param should be the size of the destination buffer,
+not the size of the source string.  This has been masked because FormFileName
+helpfully adds a trailing path separator if one is missing.
 
-Upstream commit: 8fcc6df79daf1810cd4ecdb8d2ef1d361abfdc9c
-
-Differential Revision: https://phabricator.services.mozilla.com/D183355
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556e1da296eb18eb3d154eb99e
+Differential Revision: https://phabricator.services.mozilla.com/D185862
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
 ---
- .../linux/wayland/shared_screencast_stream.cc               | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ modules/audio_processing/logging/apm_data_dumper.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 17c895088a..0102346036 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
- 
-   that->stream_size_ = DesktopSize(width, height);
- 
--  uint8_t buffer[1024] = {};
-+  uint8_t buffer[2048] = {};
-   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
- 
-   // Setup buffers and meta header for new format.
-@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
-   {
-     PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
- 
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
- 
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
- 
-@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
- 
-     pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
-                            &pw_stream_events_, this);
--    uint8_t buffer[2048] = {};
-+    uint8_t buffer[4096] = {};
- 
-     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
+index 4ab6baad83..76f8b34c0b 100644
+--- a/modules/audio_processing/logging/apm_data_dumper.h
++++ b/modules/audio_processing/logging/apm_data_dumper.h
+@@ -91,7 +91,7 @@ class ApmDataDumper {
+   static void SetOutputDirectory(absl::string_view output_dir) {
+ #if WEBRTC_APM_DEBUG_DUMP == 1
+     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
+-    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
++    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
+ #endif
+   }
  
 -- 
-2.34.1
+2.37.3
 

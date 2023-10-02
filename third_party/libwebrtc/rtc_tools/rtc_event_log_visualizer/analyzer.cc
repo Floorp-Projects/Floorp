@@ -621,23 +621,25 @@ void EventLogAnalyzer::CreateTotalPacketRateGraph(PacketDirection direction,
     Timestamp log_time_;
   };
   std::vector<LogTime> packet_times;
-  auto handle_rtp = [&](const LoggedRtpPacket& packet) {
+  auto handle_rtp = [&packet_times](const LoggedRtpPacket& packet) {
     packet_times.emplace_back(packet.log_time());
   };
   RtcEventProcessor process;
   for (const auto& stream : parsed_log_.rtp_packets_by_ssrc(direction)) {
-    process.AddEvents(stream.packet_view, handle_rtp);
+    process.AddEvents(stream.packet_view, handle_rtp, direction);
   }
   if (direction == kIncomingPacket) {
-    auto handle_incoming_rtcp = [&](const LoggedRtcpPacketIncoming& packet) {
-      packet_times.emplace_back(packet.log_time());
-    };
+    auto handle_incoming_rtcp =
+        [&packet_times](const LoggedRtcpPacketIncoming& packet) {
+          packet_times.emplace_back(packet.log_time());
+        };
     process.AddEvents(parsed_log_.incoming_rtcp_packets(),
                       handle_incoming_rtcp);
   } else {
-    auto handle_outgoing_rtcp = [&](const LoggedRtcpPacketOutgoing& packet) {
-      packet_times.emplace_back(packet.log_time());
-    };
+    auto handle_outgoing_rtcp =
+        [&packet_times](const LoggedRtcpPacketOutgoing& packet) {
+          packet_times.emplace_back(packet.log_time());
+        };
     process.AddEvents(parsed_log_.outgoing_rtcp_packets(),
                       handle_outgoing_rtcp);
   }

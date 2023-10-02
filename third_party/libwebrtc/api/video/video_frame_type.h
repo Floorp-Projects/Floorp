@@ -11,6 +11,8 @@
 #ifndef API_VIDEO_VIDEO_FRAME_TYPE_H_
 #define API_VIDEO_VIDEO_FRAME_TYPE_H_
 
+#include "absl/strings/string_view.h"
+
 namespace webrtc {
 
 enum class VideoFrameType {
@@ -20,6 +22,20 @@ enum class VideoFrameType {
   kVideoFrameKey = 3,
   kVideoFrameDelta = 4,
 };
+
+inline constexpr absl::string_view VideoFrameTypeToString(
+    VideoFrameType frame_type) {
+  if (frame_type == VideoFrameType::kEmptyFrame) {
+    return "empty";
+  }
+  if (frame_type == VideoFrameType::kVideoFrameKey) {
+    return "key";
+  }
+  if (frame_type == VideoFrameType::kVideoFrameDelta) {
+    return "delta";
+  }
+  return "";
+}
 
 }  // namespace webrtc
 

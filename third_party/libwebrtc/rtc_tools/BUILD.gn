@@ -424,6 +424,27 @@ if (!build_with_chromium) {
       ]
     }
   }
+
+  rtc_executable("video_encoder") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "video_encoder/video_encoder.cc" ]
+    deps = [
+      "//api:create_frame_generator",
+      "//api:frame_generator_api",
+      "//api/video:builtin_video_bitrate_allocator_factory",
+      "//api/video_codecs:builtin_video_encoder_factory",
+      "//api/video_codecs:video_codecs_api",
+      "//modules/video_coding:video_codec_interface",
+      "//modules/video_coding:video_coding_utility",
+      "//modules/video_coding/codecs/av1:av1_svc_config",
+      "//modules/video_coding/svc:scalability_mode_util",
+      "//rtc_base:logging",
+      "//third_party/abseil-cpp/absl/flags:flag",
+      "//third_party/abseil-cpp/absl/flags:parse",
+      "//third_party/abseil-cpp/absl/flags:usage",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

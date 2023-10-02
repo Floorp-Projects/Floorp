@@ -5,46 +5,6 @@
     "gtest_tests": [
       {
         "args": [
-          ".",
-          "--remove",
-          "--android",
-          "--adb-path",
-          "../../third_party/android_sdk/public/platform-tools/adb",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
-        ],
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "walleye",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800,
-          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
-        },
-        "test": "low_bandwidth_audio_perf_test",
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
-      {
-        "args": [
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
         ],
         "merge": {
@@ -118,46 +78,6 @@
   },
   "Perf Android32 (R Pixel5)": {
     "gtest_tests": [
-      {
-        "args": [
-          ".",
-          "--remove",
-          "--android",
-          "--adb-path",
-          "../../third_party/android_sdk/public/platform-tools/adb",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
-        ],
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800,
-          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
-        },
-        "test": "low_bandwidth_audio_perf_test",
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
       {
         "args": [
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
@@ -235,46 +155,6 @@
     "gtest_tests": [
       {
         "args": [
-          ".",
-          "--remove",
-          "--android",
-          "--adb-path",
-          "../../third_party/android_sdk/public/platform-tools/adb",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
-        ],
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "walleye",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800,
-          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
-        },
-        "test": "low_bandwidth_audio_perf_test",
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
-      {
-        "args": [
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
         ],
         "merge": {
@@ -348,46 +228,6 @@
   },
   "Perf Android64 (R Pixel5)": {
     "gtest_tests": [
-      {
-        "args": [
-          ".",
-          "--remove",
-          "--android",
-          "--adb-path",
-          "../../third_party/android_sdk/public/platform-tools/adb",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
-        ],
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800,
-          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
-        },
-        "test": "low_bandwidth_audio_perf_test",
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
       {
         "args": [
           "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
@@ -469,18 +309,17 @@
           "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
           "--test-arg=--undefok=test_launcher_summary_output",
-          "--nologs",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json"
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
         ],
-        "isolate_name": "fuchsia_perf_tests",
+        "isolate_name": "video_codec_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
-            "fuchsia_perf_tests"
+            "video_codec_perf_tests"
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "name": "fuchsia_perf_tests",
+        "name": "video_codec_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
           "result_format": "gtest_json"
@@ -500,27 +339,26 @@
           "idempotent": false,
           "io_timeout": 10800
         },
-        "test_id_prefix": "ninja://:fuchsia_perf_tests/"
-      }
-    ]
-  },
-  "Perf Linux Bionic": {
-    "isolated_scripts": [
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
       {
         "args": [
-          ".",
-          "--remove",
-          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
+          "--nologs"
         ],
-        "isolate_name": "low_bandwidth_audio_perf_test",
+        "isolate_name": "webrtc_perf_tests",
         "merge": {
           "args": [
             "--test-suite",
-            "low_bandwidth_audio_perf_test"
+            "webrtc_perf_tests"
           ],
           "script": "//tools_webrtc/perf/process_perf_results.py"
         },
-        "name": "low_bandwidth_audio_perf_test",
+        "name": "webrtc_perf_tests",
         "resultdb": {
           "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
           "result_format": "gtest_json"
@@ -529,7 +367,8 @@
           "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
-              "gce": "0",
+              "cpu": "x86-64",
+              "gce": "1",
               "os": "Ubuntu-18.04",
               "pool": "WebRTC-perf"
             }
@@ -539,8 +378,12 @@
           "idempotent": false,
           "io_timeout": 10800
         },
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Perf Linux Bionic": {
+    "isolated_scripts": [
       {
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
@@ -614,42 +457,6 @@
   },
   "Perf Mac 11": {
     "isolated_scripts": [
-      {
-        "args": [
-          ".",
-          "--remove",
-          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
-        ],
-        "isolate_name": "low_bandwidth_audio_perf_test",
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "name": "low_bandwidth_audio_perf_test",
-        "resultdb": {
-          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
-          "result_format": "gtest_json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "gce": "0",
-              "os": "Mac-11",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800
-        },
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
       {
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
@@ -727,6 +534,42 @@
     "isolated_scripts": [
       {
         "args": [
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "isolate_name": "video_codec_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "video_codec_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "arm64-64-Apple_M1",
+              "gce": "0",
+              "os": "Mac-12",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "expiration": 10800,
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--nologs"
         ],
@@ -764,41 +607,6 @@
   },
   "Perf Win 10": {
     "isolated_scripts": [
-      {
-        "args": [
-          ".",
-          "--remove",
-          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
-        ],
-        "isolate_name": "low_bandwidth_audio_perf_test",
-        "merge": {
-          "args": [
-            "--test-suite",
-            "low_bandwidth_audio_perf_test"
-          ],
-          "script": "//tools_webrtc/perf/process_perf_results.py"
-        },
-        "name": "low_bandwidth_audio_perf_test",
-        "resultdb": {
-          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
-          "result_format": "gtest_json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "gce": "0",
-              "os": "Windows-10",
-              "pool": "WebRTC-perf"
-            }
-          ],
-          "expiration": 10800,
-          "hard_timeout": 10800,
-          "idempotent": false,
-          "io_timeout": 10800
-        },
-        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
-      },
       {
         "args": [
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"

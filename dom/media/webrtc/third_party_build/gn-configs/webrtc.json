@@ -56,7 +56,7 @@
     "third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc",
     "third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc",
     "third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc",
-    "third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer2.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_03_header_reader_writer.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc",

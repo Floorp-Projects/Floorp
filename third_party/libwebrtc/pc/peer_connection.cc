@@ -303,7 +303,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     int max_ipv6_networks;
     bool disable_link_local_networks;
     absl::optional<int> screencast_min_bitrate;
-    absl::optional<bool> combined_audio_video_bwe;
 #if defined(WEBRTC_FUCHSIA)
     absl::optional<bool> enable_dtls_srtp;
 #endif
@@ -372,7 +371,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
          screencast_min_bitrate == o.screencast_min_bitrate &&
-         combined_audio_video_bwe == o.combined_audio_video_bwe &&
 #if defined(WEBRTC_FUCHSIA)
          enable_dtls_srtp == o.enable_dtls_srtp &&
 #endif
@@ -2852,31 +2850,6 @@ void PeerConnection::ReportNegotiatedCiphers(
   if (srtp_crypto_suite == rtc::kSrtpInvalidCryptoSuite &&
       ssl_cipher_suite == rtc::kTlsNullWithNullNull) {
     return;
-  }
-
-  if (srtp_crypto_suite != rtc::kSrtpInvalidCryptoSuite) {
-    for (cricket::MediaType media_type : media_types) {
-      switch (media_type) {
-        case cricket::MEDIA_TYPE_AUDIO:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Audio", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        case cricket::MEDIA_TYPE_VIDEO:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Video", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        case cricket::MEDIA_TYPE_DATA:
-          RTC_HISTOGRAM_ENUMERATION_SPARSE(
-              "WebRTC.PeerConnection.SrtpCryptoSuite.Data", srtp_crypto_suite,
-              rtc::kSrtpCryptoSuiteMaxValue);
-          break;
-        default:
-          RTC_DCHECK_NOTREACHED();
-          continue;
-      }
-    }
   }
 
   if (ssl_cipher_suite != rtc::kTlsNullWithNullNull) {

@@ -49,43 +49,17 @@
   // everything we can.
   NSError *error = nil;
 
-  if (self.category != configuration.category ||
+  if (self.category != configuration.category || self.mode != configuration.mode ||
       self.categoryOptions != configuration.categoryOptions) {
-    NSError *categoryError = nil;
+    NSError *configuringError = nil;
     if (![self setCategory:configuration.category
-               withOptions:configuration.categoryOptions
-                     error:&categoryError]) {
-      RTCLogError(@"Failed to set category: %@",
-                  categoryError.localizedDescription);
-      error = categoryError;
+                      mode:configuration.mode
+                   options:configuration.categoryOptions
+                     error:&configuringError]) {
+      RTCLogError(@"Failed to set category and mode: %@", configuringError.localizedDescription);
+      error = configuringError;
     } else {
-      RTCLog(@"Set category to: %@", configuration.category);
-    }
-  }
-
-  if (self.mode != configuration.mode) {
-    NSError *modeError = nil;
-    if (![self setMode:configuration.mode error:&modeError]) {
-      RTCLogError(@"Failed to set mode: %@",
-                  modeError.localizedDescription);
-      error = modeError;
-    } else {
-      RTCLog(@"Set mode to: %@", configuration.mode);
-    }
-  }
-
-  // Sometimes category options don't stick after setting mode.
-  if (self.categoryOptions != configuration.categoryOptions) {
-    NSError *categoryError = nil;
-    if (![self setCategory:configuration.category
-               withOptions:configuration.categoryOptions
-                     error:&categoryError]) {
-      RTCLogError(@"Failed to set category options: %@",
-                  categoryError.localizedDescription);
-      error = categoryError;
-    } else {
-      RTCLog(@"Set category options to: %ld",
-             (long)configuration.categoryOptions);
+      RTCLog(@"Set category to: %@, mode: %@", configuration.category, configuration.mode);
     }
   }
 

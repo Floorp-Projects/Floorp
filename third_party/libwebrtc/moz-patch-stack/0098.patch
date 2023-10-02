@@ -1,31 +1,50 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Sat, 12 Aug 2023 18:57:00 +0000
-Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
- ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
+ disabled r=ng,webrtc-reviewers
 
-rtc::strcpyn second param should be the size of the destination buffer,
-not the size of the source string.  This has been masked because FormFileName
-helpfully adds a trailing path separator if one is missing.
+Depends on D172224
 
-Differential Revision: https://phabricator.services.mozilla.com/D185862
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
+Differential Revision: https://phabricator.services.mozilla.com/D172229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
 ---
- modules/audio_processing/logging/apm_data_dumper.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
-index 4ab6baad83..76f8b34c0b 100644
---- a/modules/audio_processing/logging/apm_data_dumper.h
-+++ b/modules/audio_processing/logging/apm_data_dumper.h
-@@ -91,7 +91,7 @@ class ApmDataDumper {
-   static void SetOutputDirectory(absl::string_view output_dir) {
- #if WEBRTC_APM_DEBUG_DUMP == 1
-     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
--    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
-+    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
- #endif
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 22aa355e44..61c6957d27 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -419,7 +419,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
+     return false;
+   }
+-  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  if (mozilla::gfx::IsDMABufEnabled()) {
++    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  }
+ 
+   pw_stream_node_id_ = stream_node_id;
+ 
+@@ -508,7 +510,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
+                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
+       // Modifiers can be used with PipeWire >= 0.3.33
+-      if (has_required_pw_client_version && has_required_pw_server_version) {
++      if (egl_dmabuf_ &&
++          has_required_pw_client_version && has_required_pw_server_version) {
+         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
+ 
+         if (!modifiers_.empty()) {
+@@ -927,7 +930,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
+ 
+   const uint n_planes = spa_buffer->n_datas;
+ 
+-  if (!n_planes) {
++  if (!n_planes || !egl_dmabuf_) {
+     return false;
    }
  
 -- 
-2.34.1
+2.37.3
 
