@@ -835,28 +835,6 @@ already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
   return p.forget();
 }
 
-// https://w3c.github.io/webcodecs/#dom-videodecoder-reset
-void VideoDecoder::Reset(ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  LOG("VideoDecoder %p, Reset", this);
-
-  if (auto r = ResetInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
-    aRv.Throw(r.unwrapErr());
-  }
-}
-
-// https://w3c.github.io/webcodecs/#dom-videodecoder-close
-void VideoDecoder::Close(ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  LOG("VideoDecoder %p, Close", this);
-
-  if (auto r = CloseInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
-    aRv.Throw(r.unwrapErr());
-  }
-}
-
 // https://w3c.github.io/webcodecs/#dom-videodecoder-isconfigsupported
 /* static */
 already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
