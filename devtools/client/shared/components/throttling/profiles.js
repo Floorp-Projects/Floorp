@@ -99,6 +99,12 @@ const profiles = [
     upload: 15 * MBps,
     latency: 2,
   },
+  {
+    id: "Offline",
+    download: 0,
+    upload: 0,
+    latency: 5,
+  },
 ].map(profile => new ThrottlingProfile(profile));
 
 module.exports = profiles;
