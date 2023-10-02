@@ -319,6 +319,7 @@ tasks.withType(Detekt).configureEach() {
     exclude "**/tooling/fetch/tests/**"
     exclude "**/tooling/fetch-tests/**"
     exclude "**/src/main/assets/extensions/**"
+    exclude "**/docs/**"
 }
 
 // Apply same path exclusions as for the main task
