@@ -199,16 +199,10 @@ button.text-link .button-text {
 
 /* Panel footer buttons */
 
-.panel-footer:not(moz-button-group) {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .panel-footer {
   margin: 8px 16px 16px;
 }
 
-.panel-footer > button,
 .panel-footer-button {
   appearance: none;
   border: 0;
@@ -223,49 +217,34 @@ button.text-link .button-text {
   margin-bottom: 0;
 }
 
-.panel-footer > button[disabled],
 .panel-footer-button[disabled] {
   opacity: 0.4;
 }
 
-.panel-footer > button:focus-visible,
 .panel-footer-button:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-offset);
 }
 
-.panel-footer > button:not([disabled]):hover,
 .panel-footer-button:not([disabled]):hover {
   background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
 }
 
-.panel-footer > button:not([disabled]):hover:active,
 .panel-footer-button:not([disabled]):hover:active {
   background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
 }
 
-.panel-footer > button:not([disabled])[default],
 .panel-footer-button:not([disabled])[default] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
 }
 
-.panel-footer > button:not([disabled])[default]:hover,
 .panel-footer-button:not([disabled])[default]:hover {
   background-color: var(--button-primary-hover-bgcolor);
 }
 
-.panel-footer > button:not([disabled])[default]:hover:active,
 .panel-footer-button:not([disabled])[default]:hover:active {
   background-color: var(--button-primary-active-bgcolor);
-}
-
-@media (-moz-platform: windows) {
-  /* Swap the primary and secondary action, because Windows
-   * platform conventions put the primary action on the left. */
-  .panel-footer:not(moz-button-group) > button[default] {
-    order: -1;
-  }
 }
 
 /* Autoscroll popup */
