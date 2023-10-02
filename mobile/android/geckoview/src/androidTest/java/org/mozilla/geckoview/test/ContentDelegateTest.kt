@@ -728,12 +728,12 @@ class ContentDelegateTest : BaseSessionTest() {
             }
 
             // verify product with no analysis data
-            val noAnalysisResult = mainSession.requestAnalysis("https://www.amazon.com/Travel-Self-Inflatable-Sleeping-Airplane-Adjustable/dp/B0B8NVW9YX")
+            val noAnalysisResult = mainSession.requestAnalysis("https://www.amazon.com/Philips-LED-Aluminum-Resistant-Certified/dp/B0BRQS99T2")
             sessionRule.waitForResult(noAnalysisResult).let {
-                assertThat("Product grade should match", it.grade, equalTo("F"))
-                assertThat("Product id should match", it.productId, equalTo("B0B8NVW9YX"))
-                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(0.5))
-                assertThat("Product highlights should match", it.highlights, notNullValue())
+                assertThat("Product grade should match", it.grade, equalTo(null))
+                assertThat("Product id should match", it.productId, equalTo(null))
+                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(null))
+                assertThat("Product highlights should match", it.highlights, equalTo(null))
             }
 
             val result = mainSession.requestAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
