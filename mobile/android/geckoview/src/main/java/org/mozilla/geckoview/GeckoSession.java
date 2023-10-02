@@ -3578,7 +3578,7 @@ public class GeckoSession {
     @Nullable public final String grade;
 
     /** Product rating adjusted to exclude untrusted reviews. */
-    @NonNull public final Double adjustedRating;
+    @Nullable public final Double adjustedRating;
 
     /** Boolean indicating if the analysis is stale. */
     public final boolean needsAnalysis;
@@ -3599,7 +3599,7 @@ public class GeckoSession {
       analysisURL = message.getString("analysis_url");
       productId = message.getString("product_id");
       grade = message.getString("grade");
-      adjustedRating = message.getDouble("adjusted_rating");
+      adjustedRating = message.getDoubleObject("adjusted_rating");
       needsAnalysis = message.getBoolean("needs_analysis", true);
       if (message.getBundle("highlights") == null) {
         highlights = null;

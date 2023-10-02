@@ -1653,7 +1653,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class GeckoSession.ReviewAnalysis {
     ctor protected ReviewAnalysis(@NonNull GeckoSession.ReviewAnalysis.Builder);
-    field @NonNull public final Double adjustedRating;
+    field @Nullable public final Double adjustedRating;
     field @Nullable public final String analysisURL;
     field public final boolean deletedProduct;
     field public final boolean deletedProductReported;
