@@ -91,7 +91,7 @@ bool ParseGlobs(GlobalObject& aGlobal,
       aResult.AppendElement(elem.GetAsMatchGlob()->Core());
     } else {
       RefPtr<MatchGlobCore> glob =
-          new MatchGlobCore(elem.GetAsUTF8String(), true, aRv);
+          new MatchGlobCore(elem.GetAsUTF8String(), true, false, aRv);
       if (aRv.Failed()) {
         return false;
       }

@@ -273,6 +273,11 @@ add_task(async function test_MatchPattern_matches() {
     pattern: ["unknown-scheme:*"],
     options: { restrictSchemes: false },
   });
+  pass({
+    url: "unknown-scheme:/foo",
+    pattern: ["unknown-scheme:/*"],
+    options: { restrictSchemes: false },
+  });
   fail({
     url: "unknown-scheme://foo",
     pattern: ["unknown-scheme:foo"],
@@ -286,6 +291,11 @@ add_task(async function test_MatchPattern_matches() {
   fail({
     url: "unknown-scheme:foo",
     pattern: ["unknown-scheme://*"],
+    options: { restrictSchemes: false },
+  });
+  fail({
+    url: "unknown-scheme:foo",
+    pattern: ["unknown-scheme:/*"],
     options: { restrictSchemes: false },
   });
 
@@ -599,4 +609,65 @@ add_task(async function test_MatchPattern_subsumes() {
   fail({ oldPat: ["ws://example.com/*"], newPat: "wss://example.com/*" });
   fail({ oldPat: ["http://example.com/*"], newPat: "ws://example.com/*" });
   fail({ oldPat: ["https://example.com/*"], newPat: "wss://example.com/*" });
+});
+
+add_task(async function test_MatchPattern_matchesAllWebUrls() {
+  function test(patterns, options) {
+    let m = new MatchPatternSet(patterns, options);
+    if (patterns.length === 1) {
+      // Sanity check: with a single pattern, MatchPatternSet and MatchPattern
+      // have equivalent outputs.
+      equal(
+        new MatchPattern(patterns[0], options).matchesAllWebUrls,
+        m.matchesAllWebUrls,
+        "matchesAllWebUrls() is consistent in MatchPattern and MatchPatternSet"
+      );
+    }
+    return m.matchesAllWebUrls;
+  }
+  function pass(patterns, options) {
+    ok(
+      test(patterns, options),
+      `${JSON.stringify(patterns)} ${
+        options ? JSON.stringify(options) : ""
+      } matches all web URLs`
+    );
+  }
+
+  function fail(patterns, options) {
+    ok(
+      !test(patterns, options),
+      `${JSON.stringify(patterns)} ${
+        options ? JSON.stringify(options) : ""
+      } doesn't match all web URLs`
+    );
+  }
+
+  pass(["<all_urls>"]);
+  pass(["*://*/*"]);
+  pass(["*://*/"], { ignorePath: true });
+
+  fail(["*://*/"]); // missing path wildcard.
+  fail(["http://*/*"]);
+  fail(["https://*/*"]);
+  fail(["wss://*/*"]);
+  fail(["ws://*/*"]);
+  fail(["file://*/*"]);
+
+  // Edge case: unusual number of wildcards in path.
+  pass(["*://*/**"]);
+  pass(["*://*/***"]);
+  pass(["*://*/***"], { ignorePath: true });
+  fail(["*://*//***"]);
+
+  // After the singular cases, test non-single cases.
+  fail([]);
+  pass(["<all_urls>", "https://example.com/"]);
+  pass(["https://example.com/", "http://example.com/", "*://*/*"]);
+
+  pass(["https://*/*", "http://*/*"]);
+  pass(["https://*/", "http://*/"], { ignorePath: true });
+  fail(["https://*/", "http://*/"]); // missing path wildcard everywhere.
+  fail(["https://*/*", "http://*/"]); // missing http://*/*.
+  fail(["https://*/", "http://*/*"]); // missing https://*/*.
 });

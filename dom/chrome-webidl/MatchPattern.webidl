@@ -75,6 +75,12 @@ interface MatchPattern {
    */
   [Constant]
   readonly attribute DOMString pattern;
+
+  /**
+   * Whether the match pattern matches all http(s) URLs.
+   */
+  [Constant]
+  readonly attribute boolean matchesAllWebUrls;
 };
 
 /**
@@ -133,6 +139,12 @@ interface MatchPatternSet {
 
   [Cached, Constant, Frozen]
   readonly attribute sequence<MatchPattern> patterns;
+
+  /**
+   * Whether all http(s) URLs are matched by any of the sub-patterns.
+   */
+  [Constant]
+  readonly attribute boolean matchesAllWebUrls;
 };
 
 dictionary MatchPatternOptions {
