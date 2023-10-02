@@ -8,7 +8,7 @@ function boom()
 {
   var e = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
   document.body.appendChild(e);
-  e.setAttribute("style", "-moz-transform: rotate3d(2, 3, 4, 45deg) scale(10);");
+  e.setAttribute("style", "transform: rotate3d(2, 3, 4, 45deg) scale(10);");
   e.offsetHeight;
   e.setAttribute("style", "-moz-transition-duration: 1ms;");
 }

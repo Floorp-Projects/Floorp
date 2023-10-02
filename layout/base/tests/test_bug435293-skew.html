@@ -31,39 +31,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435293
        hit mathematically interesting angles with radians.
        Degrees and grads do not suffer this problem.  */
     #test1 {
-      -moz-transform: skewx(30deg);
+      transform: skewx(30deg);
     }
     #test2 {
-      -moz-transform: skewy(60deg);
+      transform: skewy(60deg);
     }
     #test3 {
-      -moz-transform: skew(45deg, 45deg);
+      transform: skew(45deg, 45deg);
     }
     #test4 {
-      -moz-transform: skew(360deg, 45deg);
+      transform: skew(360deg, 45deg);
     }
     #test5 {
-      -moz-transform: skew(45deg, 150grad);
+      transform: skew(45deg, 150grad);
     }
     #test6 {
-      -moz-transform: skew(80%, 78px);
+      transform: skew(80%, 78px);
     }
     #test7 {
-      -moz-transform: skew(2em, 40ex);
+      transform: skew(2em, 40ex);
     }
     #test8 {
-      -moz-transform: skew(-45deg, -465deg);
+      transform: skew(-45deg, -465deg);
     }
     #test9 {
-      -moz-transform: skew(30deg, 30deg, 30deg);
+      transform: skew(30deg, 30deg, 30deg);
     }
 
     /* approach the singularity from the negative side */
     #test10 {
-      -moz-transform: skew(50grad, 90.001deg);
+      transform: skew(50grad, 90.001deg);
     }
     #test11 {
-      -moz-transform: skew(300grad, 90.001deg);
+      transform: skew(300grad, 90.001deg);
     }
   </style>
 </head>

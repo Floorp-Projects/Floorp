@@ -45,8 +45,8 @@
     ["tranSlatex( 16px )rotatez(-90deg)  rotate(100grad)\ttranslate3d(12pt, 0pc, 0.0em)",
      "translateX(16px) rotateZ(-90deg) rotate(100grad) translate3d(12pt, 0pc, 0em)"],
   ].forEach(function(arr) {
-    document.documentElement.style.MozTransform = arr[0];
-    is(document.documentElement.style.MozTransform, arr[1],
+    document.documentElement.style.transform = arr[0];
+    is(document.documentElement.style.transform, arr[1],
       "bug-721136 incorrect serialization");
   });
 

@@ -3,8 +3,8 @@
   <style type="text/css">
 
 .parentWithPerspective {
-  -moz-perspective: 100px;
-  -moz-perspective-origin: 150px 150px;
+  perspective: 100px;
+  perspective-origin: 150px 150px;
   -webkit-perspective: 100px;
   -webkit-perspective-origin: 150px 150px;
   /* Changing width/height to 500px should not change the rendering. */
@@ -25,8 +25,8 @@
 
 .transformed {
   background:blue;
-  -moz-transform-origin: 0% 0%;
-  -moz-transform: rotateY(45deg);
+  transform-origin: 0% 0%;
+  transform: rotateY(45deg);
   -webkit-transform-origin: 0% 0%;
   -webkit-transform: rotateY(45deg);
 }

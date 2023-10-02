@@ -8,7 +8,7 @@
 function forceFree() {
   var str = ' rotate(1deg)';
   for(var i=0;i<17;i++) {str += str;}
- document.getElementsByTagName('div')[0].style.MozTransform = str;  
+ document.getElementsByTagName('div')[0].style.transform = str;  
 }
 setTimeout(forceFree,100);
 </script>
