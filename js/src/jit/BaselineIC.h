@@ -436,6 +436,11 @@ extern bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
 extern bool DoCloseIterFallback(JSContext* cx, BaselineFrame* frame,
                                 ICFallbackStub* stub, HandleObject iter);
 
+extern bool DoOptimizeGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
+                                          ICFallbackStub* stub,
+                                          HandleValue value,
+                                          MutableHandleValue res);
+
 }  // namespace jit
 }  // namespace js
 

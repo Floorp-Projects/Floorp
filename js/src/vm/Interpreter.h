@@ -623,6 +623,8 @@ bool SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 bool OptimizeSpreadCall(JSContext* cx, HandleValue arg,
                         MutableHandleValue result);
 
+bool OptimizeGetIterator(JSContext* cx, HandleValue arg, bool* result);
+
 ArrayObject* ArrayFromArgumentsObject(JSContext* cx,
                                       Handle<ArgumentsObject*> args);
 

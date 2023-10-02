@@ -2157,6 +2157,11 @@
     completionKind: uint8_t
   possibly_calls: true
 
+- name: OptimizeGetIteratorCache
+  operands:
+    value: Value
+  result_type: Boolean
+
 - name: InCache
   gen_boilerplate: false
 

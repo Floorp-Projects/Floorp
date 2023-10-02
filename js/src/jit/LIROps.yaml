@@ -2362,6 +2362,13 @@
   num_temps: 1
   mir_op: true
 
+- name: OptimizeGetIteratorCache
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  num_temps: 1
+  mir_op: true
+
 # Read the number of actual arguments.
 - name: ArgumentsLength
   result_type: WordSized

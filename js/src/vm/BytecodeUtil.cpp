@@ -2165,6 +2165,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::ObjWithProto:
         return write("OBJ");
 
+      case JSOp::OptimizeGetIterator:
       case JSOp::OptimizeSpreadCall:
         return write("OPTIMIZED");
 

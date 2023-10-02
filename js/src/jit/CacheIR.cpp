@@ -114,6 +114,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::Call:
     case CacheKind::OptimizeSpreadCall:
     case CacheKind::CloseIter:
+    case CacheKind::OptimizeGetIterator:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
@@ -5603,8 +5604,13 @@ static bool IsArrayPrototypeOptimizable(JSContext* cx, Handle<ArrayObject*> arr,
   return IsSelfHostedFunctionWithName(iterFun, cx->names().dollar_ArrayValues_);
 }
 
+enum class AllowIteratorReturn : bool {
+  No,
+  Yes,
+};
 static bool IsArrayIteratorPrototypeOptimizable(
-    JSContext* cx, MutableHandle<NativeObject*> arrIterProto, uint32_t* slot,
+    JSContext* cx, AllowIteratorReturn allowReturn,
+    MutableHandle<NativeObject*> arrIterProto, uint32_t* slot,
     MutableHandle<JSFunction*> nextFun) {
   auto* proto =
       GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global());
@@ -5629,7 +5635,18 @@ static bool IsArrayIteratorPrototypeOptimizable(
   }
 
   nextFun.set(&nextVal.toObject().as<JSFunction>());
-  return IsSelfHostedFunctionWithName(nextFun, cx->names().ArrayIteratorNext);
+  if (!IsSelfHostedFunctionWithName(nextFun, cx->names().ArrayIteratorNext)) {
+    return false;
+  }
+
+  if (allowReturn == AllowIteratorReturn::No) {
+    // Ensure that %ArrayIteratorPrototype% doesn't define "return".
+    if (!CheckHasNoSuchProperty(cx, proto, NameToId(cx->names().return_))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
@@ -5660,8 +5677,9 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t iterNextSlot;
   Rooted<JSFunction*> nextFun(cx_);
-  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto,
-                                           &iterNextSlot, &nextFun)) {
+  if (!IsArrayIteratorPrototypeOptimizable(cx_, AllowIteratorReturn::Yes,
+                                           &arrayIteratorProto, &iterNextSlot,
+                                           &nextFun)) {
     return AttachDecision::NoAction;
   }
 
@@ -5720,7 +5738,8 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
   Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t slot;
   Rooted<JSFunction*> nextFun(cx_);
-  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
+  if (!IsArrayIteratorPrototypeOptimizable(cx_, AllowIteratorReturn::Yes,
+                                           &arrayIteratorProto, &slot,
                                            &nextFun)) {
     return AttachDecision::NoAction;
   }
@@ -9895,7 +9914,8 @@ InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable() {
   Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t slot;
   Rooted<JSFunction*> nextFun(cx_);
-  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
+  if (!IsArrayIteratorPrototypeOptimizable(cx_, AllowIteratorReturn::Yes,
+                                           &arrayIteratorProto, &slot,
                                            &nextFun)) {
     return AttachDecision::NoAction;
   }
@@ -13405,6 +13425,107 @@ AttachDecision CloseIterIRGenerator::tryAttachStub() {
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
+}
+
+OptimizeGetIteratorIRGenerator::OptimizeGetIteratorIRGenerator(
+    JSContext* cx, HandleScript script, jsbytecode* pc, ICState state,
+    HandleValue value)
+    : IRGenerator(cx, script, pc, CacheKind::OptimizeGetIterator, state),
+      val_(value) {}
+
+AttachDecision OptimizeGetIteratorIRGenerator::tryAttachStub() {
+  MOZ_ASSERT(cacheKind_ == CacheKind::OptimizeGetIterator);
+
+  AutoAssertNoPendingException aanpe(cx_);
+
+  TRY_ATTACH(tryAttachArray());
+  TRY_ATTACH(tryAttachNotOptimizable());
+
+  MOZ_CRASH("Failed to attach unoptimizable case.");
+}
+
+AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
+  if (!isFirstStub_) {
+    return AttachDecision::NoAction;
+  }
+
+  // The value must be a packed array.
+  if (!val_.isObject()) {
+    return AttachDecision::NoAction;
+  }
+  Rooted<JSObject*> obj(cx_, &val_.toObject());
+  if (!IsPackedArray(obj)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Prototype must be Array.prototype and Array.prototype[@@iterator] must not
+  // be modified.
+  Rooted<NativeObject*> arrProto(cx_);
+  uint32_t arrProtoIterSlot;
+  Rooted<JSFunction*> iterFun(cx_);
+  if (!IsArrayPrototypeOptimizable(cx_, obj.as<ArrayObject>(), &arrProto,
+                                   &arrProtoIterSlot, &iterFun)) {
+    return AttachDecision::NoAction;
+  }
+
+  // %ArrayIteratorPrototype%.next must not be modified and
+  // %ArrayIteratorPrototype%.return must not be present.
+  Rooted<NativeObject*> arrayIteratorProto(cx_);
+  uint32_t slot;
+  Rooted<JSFunction*> nextFun(cx_);
+  if (!IsArrayIteratorPrototypeOptimizable(
+          cx_, AllowIteratorReturn::No, &arrayIteratorProto, &slot, &nextFun)) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  ObjOperandId objId = writer.guardToObject(valId);
+
+  // Guard the object is a packed array with Array.prototype as proto.
+  MOZ_ASSERT(obj->is<ArrayObject>());
+  writer.guardShape(objId, obj->shape());
+  writer.guardArrayIsPacked(objId);
+
+  // Guard on Array.prototype[@@iterator].
+  ObjOperandId arrProtoId = writer.loadObject(arrProto);
+  ObjOperandId iterId = writer.loadObject(iterFun);
+  writer.guardShape(arrProtoId, arrProto->shape());
+  writer.guardDynamicSlotIsSpecificObject(arrProtoId, iterId, arrProtoIterSlot);
+
+  // Guard on %ArrayIteratorPrototype%.next.
+  ObjOperandId iterProtoId = writer.loadObject(arrayIteratorProto);
+  ObjOperandId nextId = writer.loadObject(nextFun);
+  writer.guardShape(iterProtoId, arrayIteratorProto->shape());
+  writer.guardDynamicSlotIsSpecificObject(iterProtoId, nextId, slot);
+
+  // Guard on the prototype chain to ensure no "return" method is present.
+  ShapeGuardProtoChain(writer, arrayIteratorProto, iterProtoId);
+
+  writer.loadBooleanResult(true);
+  writer.returnFromIC();
+
+  trackAttached("OptimizeGetIterator.Array");
+  return AttachDecision::Attach;
+}
+
+AttachDecision OptimizeGetIteratorIRGenerator::tryAttachNotOptimizable() {
+  ValOperandId valId(writer.setInputOperandId(0));
+
+  writer.loadBooleanResult(false);
+  writer.returnFromIC();
+
+  trackAttached("OptimizeGetIterator.NotOptimizable");
+  return AttachDecision::Attach;
+}
+
+void OptimizeGetIteratorIRGenerator::trackAttached(const char* name) {
+  stubName_ = name ? name : "NotAttached";
+
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("val", val_);
+  }
+#endif
 }
 
 #ifdef JS_SIMULATOR

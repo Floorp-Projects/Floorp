@@ -3167,6 +3167,16 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
   //   let a, b, c, d;
   //   let iter, next, lref, result, done, value; // stack values
   //
+  //   // NOTE: the fast path for this example is not applicable, because of
+  //   // the spread and the assignment |c=y|, but it is documented here for a
+  //   // simpler example, |let [a,b] = x;|
+  //   //
+  //   // if (IsOptimizableArray(x)) {
+  //   //   a = x[0];
+  //   //   b = x[1];
+  //   //   goto end: // (skip everything below)
+  //   // }
+  //
   //   iter = x[Symbol.iterator]();
   //   next = iter.next;
   //
@@ -3243,6 +3253,36 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
   //   // === emitted after loop ===
   //   if (!done)
   //      IteratorClose(iter);
+  //
+  //   end:
+
+  bool isEligibleForArrayOptimizations = true;
+  for (ParseNode* member : pattern->contents()) {
+    switch (member->getKind()) {
+      case ParseNodeKind::Elision:
+        break;
+      case ParseNodeKind::Name: {
+        auto name = member->as<NameNode>().name();
+        NameLocation loc = lookupName(name);
+        if (loc.kind() != NameLocation::Kind::ArgumentSlot &&
+            loc.kind() != NameLocation::Kind::FrameSlot &&
+            loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+          isEligibleForArrayOptimizations = false;
+        }
+        break;
+      }
+      default:
+        // Unfortunately we can't handle any recursive destructuring,
+        // because we can't guarantee that the recursed-into parts
+        // won't run code which invalidates our constraints. We also
+        // cannot handle ParseNodeKind::AssignExpr for similar reasons.
+        isEligibleForArrayOptimizations = false;
+        break;
+    }
+    if (!isEligibleForArrayOptimizations) {
+      break;
+    }
+  }
 
   // Use an iterator to destructure the RHS, instead of index lookup. We
   // must leave the *original* value on the stack.
@@ -3250,6 +3290,126 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     //              [stack] ... OBJ OBJ
     return false;
   }
+
+  Maybe<InternalIfEmitter> ifArrayOptimizable;
+
+  if (isEligibleForArrayOptimizations) {
+    ifArrayOptimizable.emplace(
+        this, BranchEmitterBase::LexicalKind::MayContainLexicalAccessInBranch);
+
+    if (!emit1(JSOp::Dup)) {
+      //            [stack] OBJ OBJ
+      return false;
+    }
+
+    if (!emit1(JSOp::OptimizeGetIterator)) {
+      //            [stack] OBJ OBJ IS_OPTIMIZABLE
+      return false;
+    }
+
+    if (!ifArrayOptimizable->emitThenElse()) {
+      //            [stack] OBJ OBJ
+      return false;
+    }
+
+    if (!emitAtomOp(JSOp::GetProp,
+                    TaggedParserAtomIndex::WellKnown::length())) {
+      //            [stack] OBJ LENGTH
+      return false;
+    }
+
+    if (!emit1(JSOp::Swap)) {
+      //            [stack] LENGTH OBJ
+      return false;
+    }
+
+    uint32_t idx = 0;
+    for (ParseNode* member : pattern->contents()) {
+      if (member->isKind(ParseNodeKind::Elision)) {
+        idx += 1;
+        continue;
+      }
+
+      if (!emit1(JSOp::Dup)) {
+        //          [stack] LENGTH OBJ OBJ
+        return false;
+      }
+
+      if (!emitNumberOp(idx)) {
+        //          [stack] LENGTH OBJ OBJ IDX
+        return false;
+      }
+
+      if (!emit1(JSOp::Dup)) {
+        //          [stack] LENGTH OBJ OBJ IDX IDX
+        return false;
+      }
+
+      if (!emitDupAt(4)) {
+        //          [stack] LENGTH OBJ OBJ IDX IDX LENGTH
+        return false;
+      }
+
+      if (!emit1(JSOp::Lt)) {
+        //          [stack] LENGTH OBJ OBJ IDX IS_IN_DENSE_BOUNDS
+        return false;
+      }
+
+      InternalIfEmitter isInDenseBounds(this);
+      if (!isInDenseBounds.emitThenElse()) {
+        //          [stack] LENGTH OBJ OBJ IDX
+        return false;
+      }
+
+      if (!emit1(JSOp::GetElem)) {
+        //          [stack] LENGTH OBJ VALUE
+        return false;
+      }
+
+      if (!isInDenseBounds.emitElse()) {
+        //          [stack] LENGTH OBJ OBJ IDX
+        return false;
+      }
+
+      if (!emitPopN(2)) {
+        //          [stack] LENGTH OBJ
+        return false;
+      }
+
+      if (!emit1(JSOp::Undefined)) {
+        //          [stack] LENGTH OBJ UNDEFINED
+        return false;
+      }
+
+      if (!isInDenseBounds.emitEnd()) {
+        //          [stack] LENGTH OBJ VALUE|UNDEFINED
+        return false;
+      }
+
+      if (!emitSetOrInitializeDestructuring(member, flav)) {
+        //          [stack] LENGTH OBJ
+        return false;
+      }
+
+      idx += 1;
+    }
+
+    if (!emit1(JSOp::Swap)) {
+      //            [stack] OBJ LENGTH
+      return false;
+    }
+
+    if (!emit1(JSOp::Pop)) {
+      //            [stack] OBJ
+      return false;
+    }
+
+    if (!ifArrayOptimizable->emitElse()) {
+      //            [stack] OBJ OBJ
+      return false;
+    }
+  }
+
   if (!emitIterator(SelfHostedIter::Deny)) {
     //              [stack] ... OBJ NEXT ITER
     return false;
@@ -3267,8 +3427,19 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       return false;
     }
 
-    return emitIteratorCloseInInnermostScope();
-    //              [stack] ... OBJ
+    if (!emitIteratorCloseInInnermostScope()) {
+      //            [stack] ... OBJ
+      return false;
+    }
+
+    if (ifArrayOptimizable.isSome()) {
+      if (!ifArrayOptimizable->emitEnd()) {
+        //          [stack] OBJ
+        return false;
+      }
+    }
+
+    return true;
   }
 
   // Push an initial FALSE value for DONE.
@@ -3571,6 +3742,13 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
   }
   if (!ifDone.emitEnd()) {
     return false;
+  }
+
+  if (ifArrayOptimizable.isSome()) {
+    if (!ifArrayOptimizable->emitEnd()) {
+      //            [stack] OBJ
+      return false;
+    }
   }
 
   return true;

@@ -5324,6 +5324,18 @@ bool BaselineCodeGen<Handler>::emit_CloseIter() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_OptimizeGetIterator() {
+  frame.popRegsAndSync(1);
+
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_IsGenClosing() {
   return emitIsMagicValue();
 }

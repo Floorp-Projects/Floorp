@@ -1605,6 +1605,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::IsNoIter:
     case JSOp::EndIter:
     case JSOp::CloseIter:
+    case JSOp::OptimizeGetIterator:
     case JSOp::IsNullOrUndefined:
     case JSOp::In:
     case JSOp::HasOwn:

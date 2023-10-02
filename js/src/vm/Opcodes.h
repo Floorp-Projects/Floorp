@@ -1411,6 +1411,18 @@
      */ \
     MACRO(CloseIter, close_iter, NULL, 2, 1, 0, JOF_UINT8|JOF_IC) \
     /*
+     * If we can optimize iteration for `iterable`, meaning that it is a packed
+     * array and nothing important has been tampered with, then we replace it
+     * with `true`, otherwise we replace it with `false`. This is similar in
+     * operation to OptimizeSpreadCall.
+     *
+     *   Category: Objects
+     *   Type: Iteration
+     *   Operands:
+     *   Stack: iterable => is_optimizable
+     */ \
+    MACRO(OptimizeGetIterator, optimize_get_iterator, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
      * message.
@@ -3573,14 +3585,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(237))     \
-  MACRO(238)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(238))     \
   MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \
