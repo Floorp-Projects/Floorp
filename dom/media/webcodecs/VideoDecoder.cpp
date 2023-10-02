@@ -750,33 +750,6 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
       RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
 }
 
-// https://w3c.github.io/webcodecs/#dom-videodecoder-flush
-already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  LOG("VideoDecoder %p, Flush", this);
-
-  if (mState != CodecState::Configured) {
-    LOG("VideoDecoder %p, wrong state!", this);
-    aRv.ThrowInvalidStateError("Decoder must be configured first");
-    return nullptr;
-  }
-
-  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return p.forget();
-  }
-
-  mKeyChunkRequired = true;
-
-  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
-      new FlushMessage(++mFlushCounter, mLatestConfigureId, p)));
-  LOG("VideoDecoder %p enqueues %s", this,
-      mControlMessageQueue.back()->ToString().get());
-  ProcessControlMessageQueue();
-  return p.forget();
-}
-
 // https://w3c.github.io/webcodecs/#dom-videodecoder-isconfigsupported
 /* static */
 already_AddRefed<Promise> VideoDecoder::IsConfigSupported(

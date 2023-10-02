@@ -157,6 +157,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   virtual void Decode(InputType& aInput, ErrorResult& aRv);
 
+  virtual already_AddRefed<Promise> Flush(ErrorResult& aRv);
+
   virtual void Reset(ErrorResult& aRv);
 
   virtual void Close(ErrorResult& aRv);
