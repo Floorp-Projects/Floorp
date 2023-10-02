@@ -58,6 +58,9 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
 });
 
 export class CookieBannerChild extends JSWindowActorChild {
+  // Caches the enabled state to ensure we only compute it once for the lifetime
+  // of the actor. Particularly the private browsing check can be expensive.
+  #isEnabledCached = null;
   #clickRules;
   #originalBannerDisplay = null;
   #observerCleanUp;
@@ -104,13 +107,22 @@ export class CookieBannerChild extends JSWindowActorChild {
    * @type {boolean} true if feature is enabled, false otherwise.
    */
   get #isEnabled() {
-    if (!lazy.bannerClickingEnabled) {
-      return false;
+    if (this.#isEnabledCached != null) {
+      return this.#isEnabledCached;
     }
-    if (this.#isPrivateBrowsing) {
-      return lazy.serviceModePBM != Ci.nsICookieBannerService.MODE_DISABLED;
-    }
-    return lazy.serviceMode != Ci.nsICookieBannerService.MODE_DISABLED;
+
+    let checkIsEnabled = () => {
+      if (!lazy.bannerClickingEnabled) {
+        return false;
+      }
+      if (this.#isPrivateBrowsing) {
+        return lazy.serviceModePBM != Ci.nsICookieBannerService.MODE_DISABLED;
+      }
+      return lazy.serviceMode != Ci.nsICookieBannerService.MODE_DISABLED;
+    };
+
+    this.#isEnabledCached = checkIsEnabled();
+    return this.#isEnabledCached;
   }
 
   /**
