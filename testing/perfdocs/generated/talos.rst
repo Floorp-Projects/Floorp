@@ -8259,7 +8259,7 @@ For the sample commands found below, note that the capitalization used is import
    * they just mean that we need to re-baseline our
         expectations from the test.
    * gecko_profile_interval: 10
-   * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False, 'places.history.enabled': False}
    * timeout: 600
    * tpchrome: False
    * tpcycles: 1
