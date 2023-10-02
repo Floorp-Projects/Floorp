@@ -13,16 +13,6 @@
 #include "krml/internal/types.h"
 #include "krml/internal/target.h"
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-#endif
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
-
 extern krml_checked_int_t FStar_UInt64_n;
 
 extern bool FStar_UInt64_uu___is_Mk(uint64_t projectee);
@@ -41,7 +31,7 @@ extern uint64_t FStar_UInt64_minus(uint64_t a);
 
 extern uint32_t FStar_UInt64_n_minus_one;
 
-static inline uint64_t
+static KRML_NOINLINE uint64_t
 FStar_UInt64_eq_mask(uint64_t a, uint64_t b)
 {
     uint64_t x = a ^ b;
@@ -51,7 +41,7 @@ FStar_UInt64_eq_mask(uint64_t a, uint64_t b)
     return xnx - (uint64_t)1U;
 }
 
-static inline uint64_t
+static KRML_NOINLINE uint64_t
 FStar_UInt64_gte_mask(uint64_t a, uint64_t b)
 {
     uint64_t x = a;
@@ -91,7 +81,7 @@ extern uint32_t FStar_UInt32_minus(uint32_t a);
 
 extern uint32_t FStar_UInt32_n_minus_one;
 
-static inline uint32_t
+static KRML_NOINLINE uint32_t
 FStar_UInt32_eq_mask(uint32_t a, uint32_t b)
 {
     uint32_t x = a ^ b;
@@ -101,7 +91,7 @@ FStar_UInt32_eq_mask(uint32_t a, uint32_t b)
     return xnx - (uint32_t)1U;
 }
 
-static inline uint32_t
+static KRML_NOINLINE uint32_t
 FStar_UInt32_gte_mask(uint32_t a, uint32_t b)
 {
     uint32_t x = a;
@@ -141,7 +131,7 @@ extern uint16_t FStar_UInt16_minus(uint16_t a);
 
 extern uint32_t FStar_UInt16_n_minus_one;
 
-static inline uint16_t
+static KRML_NOINLINE uint16_t
 FStar_UInt16_eq_mask(uint16_t a, uint16_t b)
 {
     uint16_t x = a ^ b;
@@ -151,7 +141,7 @@ FStar_UInt16_eq_mask(uint16_t a, uint16_t b)
     return xnx - (uint16_t)1U;
 }
 
-static inline uint16_t
+static KRML_NOINLINE uint16_t
 FStar_UInt16_gte_mask(uint16_t a, uint16_t b)
 {
     uint16_t x = a;
@@ -191,7 +181,7 @@ extern uint8_t FStar_UInt8_minus(uint8_t a);
 
 extern uint32_t FStar_UInt8_n_minus_one;
 
-static inline uint8_t
+static KRML_NOINLINE uint8_t
 FStar_UInt8_eq_mask(uint8_t a, uint8_t b)
 {
     uint8_t x = a ^ b;
@@ -201,7 +191,7 @@ FStar_UInt8_eq_mask(uint8_t a, uint8_t b)
     return xnx - (uint8_t)1U;
 }
 
-static inline uint8_t
+static KRML_NOINLINE uint8_t
 FStar_UInt8_gte_mask(uint8_t a, uint8_t b)
 {
     uint8_t x = a;
@@ -224,14 +214,6 @@ extern Prims_string FStar_UInt8_to_string_hex_pad(uint8_t uu___);
 extern uint8_t FStar_UInt8_of_string(Prims_string uu___);
 
 typedef uint8_t FStar_UInt8_byte;
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
 
 #define __FStar_UInt_8_16_32_64_H_DEFINED
 #endif

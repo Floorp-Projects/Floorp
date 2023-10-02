@@ -99,28 +99,7 @@ SECMOD_Shutdown()
 PRBool
 SECMOD_GetSystemFIPSEnabled(void)
 {
-#ifdef LINUX
-#ifndef NSS_FIPS_DISABLED
-    FILE *f;
-    char d;
-    size_t size;
-
-    f = fopen("/proc/sys/crypto/fips_enabled", "r");
-    if (!f) {
-        return PR_FALSE;
-    }
-
-    size = fread(&d, 1, sizeof(d), f);
-    fclose(f);
-    if (size != sizeof(d)) {
-        return PR_FALSE;
-    }
-    if (d == '1') {
-        return PR_TRUE;
-    }
-#endif
-#endif
-    return PR_FALSE;
+    return NSS_GetSystemFIPSEnabled();
 }
 
 /*

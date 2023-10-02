@@ -93,6 +93,17 @@ static PRIntervalTime loginWaitTime;
 
 #include "pkcs11f.h"
 
+#ifndef NSS_FIPS_DISABLE
+/* ------------- forward declare all the FIPS functions ------------- */
+#undef CK_NEED_ARG_LIST
+#undef CK_PKCS11_FUNCTION_INFO
+
+#define CK_PKCS11_FUNCTION_INFO(name) CK_RV __PASTE(F, name)
+#define CK_NEED_ARG_LIST 1
+
+#include "pkcs11f.h"
+#endif
+
 /* build the crypto module table */
 static CK_FUNCTION_LIST_3_0 sftk_funcList = {
     { CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR },
@@ -2497,7 +2508,15 @@ NSC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 CK_RV
 C_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 {
+#ifdef NSS_FIPS_DISABLED
     return NSC_GetFunctionList(pFunctionList);
+#else
+    if (NSS_GetSystemFIPSEnabled()) {
+        return FC_GetFunctionList(pFunctionList);
+    } else {
+        return NSC_GetFunctionList(pFunctionList);
+    }
+#endif
 }
 
 CK_RV
@@ -2518,7 +2537,15 @@ NSC_GetInterfaceList(CK_INTERFACE_PTR interfaces, CK_ULONG_PTR pulCount)
 CK_RV
 C_GetInterfaceList(CK_INTERFACE_PTR interfaces, CK_ULONG_PTR pulCount)
 {
+#ifdef NSS_FIPS_DISABLED
     return NSC_GetInterfaceList(interfaces, pulCount);
+#else
+    if (NSS_GetSystemFIPSEnabled()) {
+        return FC_GetInterfaceList(interfaces, pulCount);
+    } else {
+        return NSC_GetInterfaceList(interfaces, pulCount);
+    }
+#endif
 }
 
 /*
@@ -2551,7 +2578,15 @@ CK_RV
 C_GetInterface(CK_UTF8CHAR_PTR pInterfaceName, CK_VERSION_PTR pVersion,
                CK_INTERFACE_PTR_PTR ppInterface, CK_FLAGS flags)
 {
+#ifdef NSS_FIPS_DISABLED
     return NSC_GetInterface(pInterfaceName, pVersion, ppInterface, flags);
+#else
+    if (NSS_GetSystemFIPSEnabled()) {
+        return FC_GetInterface(pInterfaceName, pVersion, ppInterface, flags);
+    } else {
+        return NSC_GetInterface(pInterfaceName, pVersion, ppInterface, flags);
+    }
+#endif
 }
 
 static PLHashNumber

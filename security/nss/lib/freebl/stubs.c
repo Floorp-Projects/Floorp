@@ -182,6 +182,9 @@ STUB_DECLARE(SECOidTag, SECOID_FindOIDTag_Util, (const SECItem *oid));
 STUB_DECLARE(int, NSS_SecureMemcmp, (const void *a, const void *b, size_t n));
 STUB_DECLARE(unsigned int, NSS_SecureMemcmpZero, (const void *mem, size_t n));
 STUB_DECLARE(void, NSS_SecureSelect, (void *dest, const void *src0, const void *src1, size_t n, unsigned char b));
+#ifndef NSS_FIPS_DISABLED
+STUB_DECLARE(PRBool, NSS_GetSystemFIPSEnabled, (void));
+#endif
 
 #define PORT_ZNew_stub(type) (type *)PORT_ZAlloc_stub(sizeof(type))
 #define PORT_New_stub(type) (type *)PORT_Alloc_stub(sizeof(type))
@@ -711,6 +714,47 @@ NSS_SecureSelect_stub(void *dest, const void *src0, const void *src1, size_t n, 
     STUB_SAFE_CALL5(NSS_SecureSelect, dest, src0, src1, n, b);
     abort();
 }
+
+#ifndef NSS_FIPS_DISABLED
+PRBool
+NSS_GetSystemFIPSEnabled_stub(void)
+{
+    STUB_SAFE_CALL0(NSS_GetSystemFIPSEnabled);
+    const char *env;
+
+    /* The environment variable is active for all platforms */
+    env = PR_GetEnvSecure_stub("NSS_FIPS");
+    /* we generally accept y, Y, 1, FIPS, TRUE, and ON as turning on FIPS
+     * mode. Anything else is considered 'off' */
+    if (env && (*env == 'y' || *env == '1' || *env == 'Y' ||
+                (strcasecmp(env, "fips") == 0) ||
+                (strcasecmp(env, "true") == 0) ||
+                (strcasecmp(env, "on") == 0))) {
+        return PR_TRUE;
+    }
+
+/* currently only Linux has a system FIPS indicator. Add others here
+ * as they become available/known */
+#ifdef LINUX
+    {
+        FILE *f;
+        char d;
+        size_t size;
+        f = fopen("/proc/sys/crypto/fips_enabled", "r");
+        if (!f)
+            return PR_FALSE;
+
+        size = fread(&d, 1, 1, f);
+        fclose(f);
+        if (size != 1)
+            return PR_FALSE;
+        if (d == '1')
+            return PR_TRUE;
+    }
+#endif /* LINUX */
+    return PR_FALSE;
+}
+#endif /* NSS_FIPS_DISABLED = 0 */
 
 #ifdef FREEBL_NO_WEAK
 

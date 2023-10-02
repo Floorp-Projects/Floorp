@@ -36,13 +36,13 @@ extern "C" {
 
 #include "../Hacl_Krmllib.h"
 
-static inline uint32_t FStar_UInt32_eq_mask(uint32_t a, uint32_t b);
+static KRML_NOINLINE uint32_t FStar_UInt32_eq_mask(uint32_t a, uint32_t b);
 
-static inline uint32_t FStar_UInt32_gte_mask(uint32_t a, uint32_t b);
+static KRML_NOINLINE uint32_t FStar_UInt32_gte_mask(uint32_t a, uint32_t b);
 
-static inline uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
+static KRML_NOINLINE uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
 
-static inline uint16_t FStar_UInt16_eq_mask(uint16_t a, uint16_t b);
+static KRML_NOINLINE uint16_t FStar_UInt16_eq_mask(uint16_t a, uint16_t b);
 
 static inline FStar_UInt128_uint128
 FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);

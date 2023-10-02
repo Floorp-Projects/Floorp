@@ -354,3 +354,9 @@ NSS_SecureSelect;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.94 {         # NSS Utilities 3.94 release
+;+    global:
+NSS_GetSystemFIPSEnabled;
+;+    local:
+;+       *;
+;+};

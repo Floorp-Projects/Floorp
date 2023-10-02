@@ -1135,8 +1135,8 @@ static const uint8_t example_com[] = {
 static const uint8_t ipv4_addr_bytes[] = {
   1, 2, 3, 4
 };
-static const uint8_t ipv4_addr_bytes_as_str[] = "\x01\x02\x03\x04";
-static const uint8_t ipv4_addr_str[] = "1.2.3.4";
+static const char ipv4_addr_bytes_as_str[] = "\x01\x02\x03\x04";
+static const char ipv4_addr_str[] = "1.2.3.4";
 static const uint8_t ipv4_addr_bytes_FFFFFFFF[8] = {
   1, 2, 3, 4, 0xff, 0xff, 0xff, 0xff
 };
@@ -1147,7 +1147,7 @@ static const uint8_t ipv4_compatible_ipv6_addr_bytes[] = {
   0, 0, 0, 0,
   1, 2, 3, 4
 };
-static const uint8_t ipv4_compatible_ipv6_addr_str[] = "::1.2.3.4";
+static const char ipv4_compatible_ipv6_addr_str[] = "::1.2.3.4";
 
 static const uint8_t ipv4_mapped_ipv6_addr_bytes[] = {
   0, 0, 0, 0,
@@ -1155,7 +1155,7 @@ static const uint8_t ipv4_mapped_ipv6_addr_bytes[] = {
   0, 0, 0xFF, 0xFF,
   1, 2, 3, 4
 };
-static const uint8_t ipv4_mapped_ipv6_addr_str[] = "::FFFF:1.2.3.4";
+static const char ipv4_mapped_ipv6_addr_str[] = "::FFFF:1.2.3.4";
 
 static const uint8_t ipv6_addr_bytes[] = {
   0x11, 0x22, 0x33, 0x44,
@@ -1163,13 +1163,13 @@ static const uint8_t ipv6_addr_bytes[] = {
   0x99, 0xaa, 0xbb, 0xcc,
   0xdd, 0xee, 0xff, 0x11
 };
-static const uint8_t ipv6_addr_bytes_as_str[] =
+static const char ipv6_addr_bytes_as_str[] =
   "\x11\x22\x33\x44"
   "\x55\x66\x77\x88"
   "\x99\xaa\xbb\xcc"
   "\xdd\xee\xff\x11";
 
-static const uint8_t ipv6_addr_str[] =
+static const char ipv6_addr_str[] =
   "1122:3344:5566:7788:99aa:bbcc:ddee:ff11";
 
 static const uint8_t ipv6_other_addr_bytes[] = {

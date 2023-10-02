@@ -84,6 +84,7 @@ split_softoken() {
   copy_top $nssdir/cmd $dstdir/cmd
   cp -R $nssdir/cmd/bltest $dstdir/cmd/bltest
   cp -R $nssdir/cmd/ecperf $dstdir/cmd/ecperf
+  cp -R $nssdir/cmd/dbtool $dstdir/cmd/dbtool
   cp -R $nssdir/cmd/fbectest $dstdir/cmd/fbectest
   cp -R $nssdir/cmd/fipstest $dstdir/cmd/fipstest
   cp -R $nssdir/cmd/lib $dstdir/cmd/lib
