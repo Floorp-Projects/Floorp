@@ -1,9 +1,3 @@
-pypi:pytest==7.0.1
-pypi:Flask==2.1.3
-# (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
-pypi:MarkupSafe==2.0.1
-# (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
-pypi:werkzeug==2.1.2
 vendored:testing/web-platform/tests/tools/third_party/h2
 vendored:testing/web-platform/tests/tools/third_party/hpack
 vendored:testing/web-platform/tests/tools/third_party/html5lib
@@ -40,14 +34,17 @@ vendored:third_party/python/glean_parser
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/jinja2_time
 vendored:third_party/python/json-e
+vendored:third_party/python/jsonschema
 vendored:third_party/python/mohawk
 vendored:third_party/python/mozilla_repo_urls
 vendored:third_party/python/multidict
 vendored:third_party/python/pathspec
+vendored:third_party/python/pkgutil_resolve_name
 vendored:third_party/python/ply
 vendored:third_party/python/pyasn1
 vendored:third_party/python/pyasn1_modules
 vendored:third_party/python/pylru
+vendored:third_party/python/pyrsistent
 vendored:third_party/python/python_dateutil
 vendored:third_party/python/python_slugify
 vendored:third_party/python/redo
@@ -63,3 +60,10 @@ vendored:third_party/python/toml
 vendored:third_party/python/voluptuous
 vendored:third_party/python/yamllint
 vendored:third_party/python/yarl
+
+pypi:auth0-python==4.4.1
+pypi:Flask==2.1.3
+# (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
+pypi:MarkupSafe==2.0.1
+# (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
+pypi:werkzeug==2.1.2

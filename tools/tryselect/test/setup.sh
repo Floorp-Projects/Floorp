@@ -18,6 +18,8 @@ eval $cmd > /dev/null 2>&1
 # Now run it again to get the actual directory.
 cachedir=$(eval $cmd)/cache/taskgraph
 mkdir -p $cachedir
+# Run `mach try --help` to generate virtualenv.
+eval "$topsrcdir/mach try --help" > /dev/null 2>&1
 
 cat > $cachedir/target_task_set << EOF
 {

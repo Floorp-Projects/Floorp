@@ -1,3 +1,0 @@
-Flask==2.1.3
-MarkupSafe==2.0.1 # (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser
-werkzeug==2.1.2 # (indirect) avoids dependency on markupsafe >= 2.1.0, which is currently incompatible with glean-parser

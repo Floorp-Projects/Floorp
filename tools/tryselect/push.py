@@ -13,6 +13,7 @@ from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import MissingVCSExtension, get_repository_object
 
+from .lando import push_to_lando_try
 from .util.estimates import duration_summary
 from .util.manage_estimates import (
     download_task_history_data,
@@ -178,6 +179,7 @@ def push_to_try(
     closed_tree=False,
     files_to_change=None,
     allow_log_capture=False,
+    push_to_lando=False,
 ):
     push = not stage_changes and not dry_run
     check_working_directory(push)
@@ -225,7 +227,10 @@ def push_to_try(
         vcs.add_remove_files(*changed_files)
 
         try:
-            vcs.push_to_try(commit_message, allow_log_capture=allow_log_capture)
+            if push_to_lando:
+                push_to_lando_try(vcs, commit_message)
+            else:
+                vcs.push_to_try(commit_message, allow_log_capture=allow_log_capture)
         except MissingVCSExtension as e:
             if e.ext == "push-to-try":
                 print(HG_PUSH_TO_TRY_NOT_FOUND)
