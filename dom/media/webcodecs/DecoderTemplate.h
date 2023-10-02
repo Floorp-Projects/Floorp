@@ -142,6 +142,12 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   virtual ~DecoderTemplate() = default;
 
+  /* WebCodecs interfaces */
+ public:
+  CodecState State() const { return mState; };
+
+  uint32_t DecodeQueueSize() const { return mDecodeQueueSize; };
+
   /* Type conversion functions for the Decoder implementation */
  protected:
   virtual already_AddRefed<MediaRawData> InputDataToMediaRawData(
