@@ -488,9 +488,14 @@ void EmitWasmPostBarrierGuard(jit::MacroAssembler& masm,
                               Label* skipBarrier);
 
 #ifdef DEBUG
-// Check whether |nextPC| is a valid code address for a stackmap created by
-// this compiler.
-bool IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC);
+// Check (approximately) whether `nextPC` is a valid code address for a
+// stackmap created by this compiler.  This is done by examining the
+// instruction at `nextPC`.  The matching is inexact, so it may err on the
+// side of returning `true` if it doesn't know.  Doing so reduces the
+// effectiveness of the MOZ_ASSERTs that use this function, so at least for
+// the four primary platforms we should keep it as exact as possible.
+
+bool IsPlausibleStackMapKey(const uint8_t* nextPC);
 #endif
 
 }  // namespace wasm

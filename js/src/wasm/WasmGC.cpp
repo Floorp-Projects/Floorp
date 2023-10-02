@@ -270,7 +270,7 @@ void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
 }
 
 #ifdef DEBUG
-bool wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
+bool wasm::IsPlausibleStackMapKey(const uint8_t* nextPC) {
 #  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   const uint8_t* insn = nextPC;
   return (insn[-2] == 0x0F && insn[-1] == 0x0B) ||           // ud2
