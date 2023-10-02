@@ -8,6 +8,10 @@
 #ifndef __nsGNOMEShellSearchProvider_h__
 #define __nsGNOMEShellSearchProvider_h__
 
+#include <gio/gio.h>
+
+#include "mozilla/RefPtr.h"
+#include "mozilla/GRefPtr.h"
 #include "nsINavHistoryService.h"
 #include "nsUnixRemoteServer.h"
 #include "nsString.h"
@@ -51,17 +55,18 @@ class nsGNOMEShellHistorySearchResult : public nsUnixRemoteServer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsGNOMEShellHistorySearchResult)
 
   nsGNOMEShellHistorySearchResult(nsGNOMEShellSearchProvider* aSearchProvider,
-                                  DBusConnection* aConnection, int aTimeStamp)
+                                  GDBusConnection* aConnection, int aTimeStamp)
       : mSearchProvider(aSearchProvider),
-        mReply(nullptr),
         mConnection(aConnection),
         mTimeStamp(aTimeStamp){};
 
-  void SetReply(DBusMessage* aReply) { mReply = aReply; }
+  void SetReply(RefPtr<GDBusMethodInvocation> aReply) {
+    mReply = std::move(aReply);
+  }
   void SetSearchTerm(const char* aSearchTerm) {
     mSearchTerm = nsAutoCString(aSearchTerm);
   }
-  DBusConnection* GetDBusConnection() { return mConnection; }
+  GDBusConnection* GetDBusConnection() { return mConnection; }
   void SetTimeStamp(int aTimeStamp) { mTimeStamp = aTimeStamp; }
   int GetTimeStamp() { return mTimeStamp; }
   nsAutoCString& GetSearchTerm() { return mSearchTerm; }
@@ -92,8 +97,8 @@ class nsGNOMEShellHistorySearchResult : public nsUnixRemoteServer {
   nsGNOMEShellSearchProvider* mSearchProvider;
   nsCOMPtr<nsINavHistoryContainerResultNode> mHistResultContainer;
   nsAutoCString mSearchTerm;
-  DBusMessage* mReply;
-  DBusConnection* mConnection;
+  RefPtr<GDBusMethodInvocation> mReply;
+  GDBusConnection* mConnection = nullptr;
   int mTimeStamp;
   GnomeHistoryIcon mHistoryIcons[MAX_SEARCH_RESULTS_NUM];
 };
@@ -115,21 +120,30 @@ class nsGNOMEShellSearchProvider {
   nsresult Startup();
   void Shutdown();
 
-  DBusHandlerResult HandleDBusMessage(DBusConnection* aConnection,
-                                      DBusMessage* msg);
-  void UnregisterDBusInterface(DBusConnection* aConnection);
+  void UnregisterDBusInterface(GDBusConnection* aConnection);
 
   bool SetSearchResult(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult);
 
- private:
-  DBusHandlerResult HandleSearchResultSet(DBusMessage* msg,
-                                          bool aInitialSearch);
-  DBusHandlerResult HandleResultMetas(DBusMessage* msg);
-  DBusHandlerResult ActivateResult(DBusMessage* msg);
-  DBusHandlerResult LaunchSearch(DBusMessage* msg);
+  void HandleSearchResultSet(GVariant* aParameters,
+                             GDBusMethodInvocation* aInvocation,
+                             bool aInitialSearch);
+  void HandleResultMetas(GVariant* aParameters,
+                         GDBusMethodInvocation* aInvocation);
+  void ActivateResult(GVariant* aParameters,
+                      GDBusMethodInvocation* aInvocation);
+  void LaunchSearch(GVariant* aParameters, GDBusMethodInvocation* aInvocation);
 
+  void OnBusAcquired(GDBusConnection* aConnection);
+  void OnNameAcquired(GDBusConnection* aConnection);
+  void OnNameLost(GDBusConnection* aConnection);
+
+ private:
   // The connection is owned by DBus library
-  RefPtr<DBusConnection> mConnection;
+  uint mDBusID = 0;
+  uint mRegistrationId = 0;
+  GDBusConnection* mConnection = nullptr;
+  RefPtr<GDBusNodeInfo> mIntrospectionData;
+
   RefPtr<nsGNOMEShellHistorySearchResult> mSearchResult;
   int mSearchResultTimeStamp;
 };
