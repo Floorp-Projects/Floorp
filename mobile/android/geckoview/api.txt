@@ -1620,7 +1620,7 @@ package org.mozilla.geckoview {
   }
 
   @AnyThread public static class GeckoSession.Recommendation {
-    ctor protected Recommendation();
+    ctor protected Recommendation(@NonNull GeckoSession.Recommendation.Builder);
     field @Nullable public final Double adjustedRating;
     field @Nullable public final String aid;
     field @Nullable public final String analysisUrl;
@@ -1633,11 +1633,26 @@ package org.mozilla.geckoview {
     field @Nullable public final String url;
   }
 
+  public static class GeckoSession.Recommendation.Builder {
+    ctor public Builder(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder adjustedRating(@NonNull Double);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder aid(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder analysisUrl(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation build();
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder currency(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder grade(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder imageUrl(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder name(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder price(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder sponsored(@NonNull Boolean);
+    method @AnyThread @NonNull public GeckoSession.Recommendation.Builder url(@NonNull String);
+  }
+
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.RestartReason {
   }
 
   @AnyThread public static class GeckoSession.ReviewAnalysis {
-    ctor protected ReviewAnalysis();
+    ctor protected ReviewAnalysis(@NonNull GeckoSession.ReviewAnalysis.Builder);
     field @NonNull public final Double adjustedRating;
     field @Nullable public final String analysisURL;
     field public final boolean deletedProduct;
@@ -1649,7 +1664,21 @@ package org.mozilla.geckoview {
     field @Nullable public final String productId;
   }
 
-  public class GeckoSession.ReviewAnalysis.Highlight {
+  public static class GeckoSession.ReviewAnalysis.Builder {
+    ctor public Builder(@Nullable String);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder adjustedRating(@NonNull Double);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder analysisUrl(@Nullable String);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis build();
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder deletedProduct(@NonNull Boolean);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder deletedProductReported(@NonNull Boolean);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder grade(@Nullable String);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder highlights(@Nullable GeckoSession.ReviewAnalysis.Highlight);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder lastAnalysisTime(long);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder needsAnalysis(@NonNull Boolean);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder productId(@Nullable String);
+  }
+
+  public static class GeckoSession.ReviewAnalysis.Highlight {
     ctor protected Highlight();
     field @Nullable public final String[] appearance;
     field @Nullable public final String[] competitiveness;

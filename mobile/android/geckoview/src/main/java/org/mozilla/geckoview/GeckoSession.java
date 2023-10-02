@@ -3611,21 +3611,164 @@ public class GeckoSession {
       deletedProduct = message.getBoolean("deleted_product");
     }
 
-    /** Empty constructor for tests. */
-    protected ReviewAnalysis() {
-      analysisURL = "";
-      productId = "";
-      grade = null;
-      adjustedRating = 0.0;
-      needsAnalysis = false;
-      highlights = null;
-      lastAnalysisTime = 0;
-      deletedProductReported = false;
-      deletedProduct = false;
+    /**
+     * Initialize a ReviewAnalysis object with a builder object
+     *
+     * @param builder A ReviewAnalysis.Builder instance
+     */
+    protected ReviewAnalysis(final @NonNull Builder builder) {
+      adjustedRating = builder.mAdjustedRating;
+      analysisURL = builder.mAnalysisUrl;
+      productId = builder.mProductId;
+      grade = builder.mGrade;
+      needsAnalysis = builder.mNeedsAnalysis;
+      highlights = builder.mHighlights;
+      lastAnalysisTime = builder.mLastAnalysisTime;
+      deletedProduct = builder.mDeletedProduct;
+      deletedProductReported = builder.mDeletedProductReported;
+    }
+
+    /** This is a Builder used by ReviewAnalysis class */
+    public static class Builder {
+      /* package */ String mAnalysisUrl = "";
+      /* package */ String mProductId = "";
+      /* package */ String mGrade = null;
+      /* package */ Double mAdjustedRating = 0.0;
+      /* package */ Boolean mNeedsAnalysis = false;
+      /* package */ Highlight mHighlights = new Highlight();
+      /* package */ long mLastAnalysisTime = 0;
+      /* package */ Boolean mDeletedProductReported = false;
+      /* package */ Boolean mDeletedProduct = false;
+
+      /**
+       * Construct a Builder instance with the specified product ID.
+       *
+       * @param productId A String with the product ID.
+       */
+      public Builder(final @Nullable String productId) {
+        productId(productId);
+      }
+
+      /**
+       * Set the analysis URL
+       *
+       * @param analysisUrl A URI String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder analysisUrl(final @Nullable String analysisUrl) {
+        mAnalysisUrl = analysisUrl;
+        return this;
+      }
+
+      /**
+       * Set the product identifier
+       *
+       * @param productId A product ID String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder productId(final @Nullable String productId) {
+        mProductId = productId;
+        return this;
+      }
+
+      /**
+       * Set the grade of the product
+       *
+       * @param grade A grade String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder grade(final @Nullable String grade) {
+        mGrade = grade;
+        return this;
+      }
+
+      /**
+       * Set the adjusted rating
+       *
+       * @param adjustedRating the adjusted rating of the product
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder adjustedRating(final @NonNull Double adjustedRating) {
+        mAdjustedRating = adjustedRating;
+        return this;
+      }
+
+      /**
+       * Set the flag that indicates whether this product needs analysis
+       *
+       * @param needsAnalysis indicates whether this product needs analysis
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder needsAnalysis(final @NonNull Boolean needsAnalysis) {
+        mNeedsAnalysis = needsAnalysis;
+        return this;
+      }
+
+      /**
+       * Set an empty highlights object for the product
+       *
+       * @param highlight A Highlight object (can be null) to overwrite the default empty Highlight
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder highlights(final @Nullable Highlight highlight) {
+        mHighlights = highlight;
+        return this;
+      }
+
+      /**
+       * Set the time of the analysis
+       *
+       * @param lastAnalysisTime The time of the analysis
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder lastAnalysisTime(final long lastAnalysisTime) {
+        mLastAnalysisTime = lastAnalysisTime;
+        return this;
+      }
+
+      /**
+       * Set the flag that indicates whether this deleted product was reported
+       *
+       * @param deletedProductReported Boolean to indicate whether this deleted product was reported
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder deletedProductReported(
+          final @NonNull Boolean deletedProductReported) {
+        mDeletedProductReported = deletedProductReported;
+        return this;
+      }
+
+      /**
+       * Set the flag that indicates whether the product is deleted
+       *
+       * @param deletedProduct Boolean to indicate whether the product is deleted
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder deletedProduct(final @NonNull Boolean deletedProduct) {
+        mDeletedProduct = deletedProduct;
+        return this;
+      }
+
+      /**
+       * @return A {@link ReviewAnalysis} constructed with the values from this Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis build() {
+        return new ReviewAnalysis(this);
+      }
     }
 
     /** Contains information about highlights of a product's reviews. */
-    public class Highlight {
+    public static class Highlight {
       /** Highlights about the quality of a product. */
       @Nullable public final String[] quality;
 
@@ -3706,18 +3849,173 @@ public class GeckoSession {
       currency = message.getString("currency");
     }
 
-    /** Empty constructor for tests. */
-    protected Recommendation() {
-      analysisUrl = "";
-      adjustedRating = 0.0;
-      sponsored = false;
-      imageUrl = "";
-      aid = "";
-      url = "";
-      name = "";
-      grade = "";
-      price = "";
-      currency = "";
+    /**
+     * Initialize Recommendation with a builder object
+     *
+     * @param builder A Recommendation.Builder instance
+     */
+    protected Recommendation(final @NonNull Builder builder) {
+      url = builder.mUrl;
+      analysisUrl = builder.mAnalysisUrl;
+      adjustedRating = builder.mAdjustedRating;
+      sponsored = builder.mSponsored;
+      imageUrl = builder.mImageUrl;
+      aid = builder.mAid;
+      name = builder.mName;
+      grade = builder.mGrade;
+      price = builder.mPrice;
+      currency = builder.mCurrency;
+    }
+
+    /** This is a Builder used by Recommendation class */
+    public static class Builder {
+      /* package */ String mAnalysisUrl = "";
+      /* package */ Double mAdjustedRating = 0.0;
+      /* package */ Boolean mSponsored = false;
+      /* package */ String mImageUrl = "";
+      /* package */ String mAid = "";
+      /* package */ String mUrl = "";
+      /* package */ String mName = "";
+      /* package */ String mGrade = "";
+      /* package */ String mPrice = "";
+      /* package */ String mCurrency = "";
+
+      /**
+       * Construct a Builder instance with the specified recommendation URL.
+       *
+       * @param recommendationUrl A URI String.
+       */
+      public Builder(final @NonNull String recommendationUrl) {
+        url(recommendationUrl);
+      }
+
+      /**
+       * Set the analysis URL
+       *
+       * @param analysisUrl A URI String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder analysisUrl(final @NonNull String analysisUrl) {
+        mAnalysisUrl = analysisUrl;
+        return this;
+      }
+
+      /**
+       * Set the adjusted rating
+       *
+       * @param adjustedRating the adjusted rating of the product
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder adjustedRating(final @NonNull Double adjustedRating) {
+        mAdjustedRating = adjustedRating;
+        return this;
+      }
+
+      /**
+       * Set the flag that indicates whether this recommendation is sponsored or not
+       *
+       * @param sponsored indicates whether this recommendation is sponsored
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder sponsored(final @NonNull Boolean sponsored) {
+        mSponsored = sponsored;
+        return this;
+      }
+
+      /**
+       * Set the image URL
+       *
+       * @param imageUrl An image URL String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder imageUrl(final @NonNull String imageUrl) {
+        mImageUrl = imageUrl;
+        return this;
+      }
+
+      /**
+       * Set the ad identifier
+       *
+       * @param aid The id String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder aid(final @NonNull String aid) {
+        mAid = aid;
+        return this;
+      }
+
+      /**
+       * Set the recommendation URL
+       *
+       * @param url A URI String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder url(final @NonNull String url) {
+        mUrl = url;
+        return this;
+      }
+
+      /**
+       * Set the name of the recommended product
+       *
+       * @param name A name String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder name(final @NonNull String name) {
+        mName = name;
+        return this;
+      }
+
+      /**
+       * Set the grade of the recommended product
+       *
+       * @param grade A grade String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder grade(final @NonNull String grade) {
+        mGrade = grade;
+        return this;
+      }
+
+      /**
+       * Set the price of the recommended product
+       *
+       * @param price A price String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder price(final @NonNull String price) {
+        mPrice = price;
+        return this;
+      }
+
+      /**
+       * Set the currency of the price of the recommended product
+       *
+       * @param currency A currency String
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation.Builder currency(final @NonNull String currency) {
+        mCurrency = currency;
+        return this;
+      }
+
+      /**
+       * @return A {@link Recommendation} constructed with the values from this Builder instance.
+       */
+      @AnyThread
+      public @NonNull Recommendation build() {
+        return new Recommendation(this);
+      }
     }
   }
 
@@ -6470,8 +6768,8 @@ public class GeckoSession {
    * Get a matrix for transforming from screen coordinates to Android's current window coordinates.
    *
    * @param matrix Matrix to be replaced by the transformation matrix.
-   * @see
-   *     https://developer.android.com/guide/topics/large-screens/multi-window-support#window_metrics
+   * @see <a
+   *     href="https://developer.android.com/guide/topics/large-screens/multi-window-support#window_metrics">...</a>
    */
   @UiThread
   /* package */ void getScreenToWindowManagerOffsetMatrix(@NonNull final Matrix matrix) {
