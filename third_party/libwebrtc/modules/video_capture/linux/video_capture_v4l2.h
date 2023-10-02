@@ -45,12 +45,11 @@ class VideoCaptureModuleV4L2 : public VideoCaptureImpl {
   Mutex capture_lock_ RTC_ACQUIRED_BEFORE(api_lock_);
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   int32_t _deviceId RTC_GUARDED_BY(api_checker_);
-  int32_t _deviceFd RTC_GUARDED_BY(capture_checker_);
+  int32_t _deviceFd;
 
   int32_t _buffersAllocatedByDevice RTC_GUARDED_BY(capture_lock_);
-  VideoCaptureCapability configured_capability_
-      RTC_GUARDED_BY(capture_checker_);
-  bool _captureStarted RTC_GUARDED_BY(capture_checker_);
+  VideoCaptureCapability configured_capability_;
+  bool _captureStarted;
   struct Buffer {
     void* start;
     size_t length;
