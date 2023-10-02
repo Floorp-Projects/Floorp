@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_03_header_reader_writer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_format_vp8.cc",
@@ -51,7 +52,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/dtmf_queue.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_random.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_03_header_reader_writer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction.cc",

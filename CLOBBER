@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1851693 - Vendor libwebrtc from ade07ca45e
+Modified build files in third_party/libwebrtc - Bug 1851693 (MOZ) - Moved flexfec_03_header_reader_writer.cc back under non-unified sources to fix build after rename from upstream change ade07ca45e.
