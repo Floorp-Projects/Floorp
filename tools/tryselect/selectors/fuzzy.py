@@ -130,6 +130,7 @@ def run(
     closed_tree=False,
     show_estimates=False,
     disable_target_task_filter=False,
+    push_to_lando=False,
 ):
     fzf = fzf_bootstrap(update)
 
@@ -252,4 +253,5 @@ def run(
         stage_changes=stage_changes,
         dry_run=dry_run,
         closed_tree=closed_tree,
+        push_to_lando=push_to_lando,
     )

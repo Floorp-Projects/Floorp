@@ -29,6 +29,7 @@ def run(
     stage_changes=False,
     dry_run=False,
     closed_tree=False,
+    push_to_lando=False,
 ):
     msg = 'No try selector specified, use "Add New Jobs" to select tasks.'
     return push_to_try(
@@ -38,4 +39,5 @@ def run(
         stage_changes=stage_changes,
         dry_run=dry_run,
         closed_tree=closed_tree,
+        push_to_lando=push_to_lando,
     )

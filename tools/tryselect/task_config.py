@@ -10,20 +10,41 @@ They are added to 'try_task_config.json' and processed by the transforms.
 
 import json
 import os
+import pathlib
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import SUPPRESS, Action
+from contextlib import contextmanager
 from textwrap import dedent
 
 import mozpack.path as mozpath
 import six
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+from mozversioncontrol import Repository
 
 from .tasks import resolve_tests_by_suite
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
+
+
+@contextmanager
+def try_config_commit(vcs: Repository, commit_message: str):
+    """Context manager that creates and removes a try config commit."""
+    # Add the `try_task_config.json` file if it exists.
+    try_task_config_path = pathlib.Path(build.topsrcdir) / "try_task_config.json"
+    if try_task_config_path.exists():
+        vcs.add_remove_files("try_task_config.json")
+
+    try:
+        # Create a try config commit.
+        vcs.create_try_commit(commit_message)
+
+        yield
+    finally:
+        # Revert the try config commit.
+        vcs.remove_current_commit()
 
 
 class TryConfig:

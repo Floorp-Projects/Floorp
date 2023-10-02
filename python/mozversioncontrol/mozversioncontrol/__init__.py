@@ -9,7 +9,11 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional, Union
+from typing import (
+    List,
+    Optional,
+    Union,
+)
 
 from mach.util import to_optional_path
 from mozfile import which
@@ -317,6 +321,26 @@ class Repository(object):
                 stderr=process.stderr,
             )
 
+    @abc.abstractmethod
+    def get_branch_nodes(self) -> List[str]:
+        """Return a list of commit SHAs for nodes on the current branch."""
+
+    @abc.abstractmethod
+    def get_commit_patches(self, nodes: str) -> List[bytes]:
+        """Return the contents of the patch `node` in the VCS's standard format."""
+
+    @abc.abstractmethod
+    def create_try_commit(self, commit_message: str):
+        """Create a temporary try commit.
+
+        Create a new commit using `commit_message` as the commit message. The commit
+        may be empty, for example when only including try syntax.
+        """
+
+    @abc.abstractmethod
+    def remove_current_commit(self):
+        """Remove the currently checked out commit from VCS history."""
+
 
 class HgRepository(Repository):
     """An implementation of `Repository` for Mercurial repositories."""
@@ -548,6 +572,13 @@ class HgRepository(Repository):
     def update(self, ref):
         return self._run("update", "--check", ref)
 
+    def raise_for_missing_extension(self, extension: str):
+        """Raise `MissingVCSExtension` if `extension` is not installed and enabled."""
+        try:
+            self._run("showconfig", f"extensions.{extension}")
+        except subprocess.CalledProcessError:
+            raise MissingVCSExtension(extension)
+
     def push_to_try(self, message, allow_log_capture=False):
         try:
             cmd = (str(self._tool), "push-to-try", "-m", message)
@@ -570,13 +601,73 @@ class HgRepository(Repository):
                     env=self._env,
                 )
         except subprocess.CalledProcessError:
-            try:
-                self._run("showconfig", "extensions.push-to-try")
-            except subprocess.CalledProcessError:
-                raise MissingVCSExtension("push-to-try")
+            self.raise_for_missing_extension("push-to-try")
             raise
         finally:
             self._run("revert", "-a")
+
+    def get_branch_nodes(self, base_ref: Optional[str] = None) -> List[str]:
+        """Return a list of commit SHAs for nodes on the current branch."""
+        if not base_ref:
+            base_ref = self.base_ref
+
+        head_ref = self.head_ref
+
+        return self._run(
+            "log",
+            "-r",
+            f"{base_ref}::{head_ref} and not {base_ref}",
+            "-T",
+            "{node}\n",
+        ).splitlines()
+
+    def get_commit_patches(self, nodes: List[str]) -> List[bytes]:
+        """Return the contents of the patch `node` in the VCS' standard format."""
+        # Running `hg export` once for each commit in a large stack is
+        # slow, so instead we run it once and parse the output for each
+        # individual patch.
+        args = ["export"]
+
+        for node in nodes:
+            args.extend(("-r", node))
+
+        output = self._run(*args).encode("utf-8")
+
+        patches = []
+
+        current_patch = []
+        for i, line in enumerate(output.splitlines()):
+            if i != 0 and line == b"# HG changeset patch":
+                # When we see the first line of a new patch, add the patch we have been
+                # building to the patches list and start building a new patch.
+                patches.append(b"\n".join(current_patch))
+                current_patch = [line]
+            else:
+                # Add a new line to the patch being built.
+                current_patch.append(line)
+
+        # Add the last patch to the stack.
+        patches.append(b"\n".join(current_patch))
+
+        return patches
+
+    def create_try_commit(self, commit_message: str):
+        """Create a temporary try commit.
+
+        Create a new commit using `commit_message` as the commit message. The commit
+        may be empty, for example when only including try syntax.
+        """
+        # Allow empty commit messages in case we only use try-syntax.
+        self._run("--config", "ui.allowemptycommit=1", "commit", "-m", commit_message)
+
+    def remove_current_commit(self):
+        """Remove the currently checked out commit from VCS history."""
+        try:
+            self._run("prune", ".")
+        except subprocess.CalledProcessError:
+            # The `evolve` extension is required for `uncommit` and `prune`.
+            self.raise_for_missing_extension("evolve")
+            raise
 
 
 class GitRepository(Repository):
@@ -605,7 +696,7 @@ class GitRepository(Repository):
     def base_ref_as_hg(self):
         base_ref = self.base_ref
         try:
-            return self._run("cinnabar", "git2hg", base_ref)
+            return self._run("cinnabar", "git2hg", base_ref).strip()
         except subprocess.CalledProcessError:
             return
 
@@ -727,9 +818,7 @@ class GitRepository(Repository):
         if not self.has_git_cinnabar:
             raise MissingVCSExtension("cinnabar")
 
-        self._run(
-            "-c", "commit.gpgSign=false", "commit", "--allow-empty", "-m", message
-        )
+        self.create_try_commit(message)
         try:
             cmd = (
                 str(self._tool),
@@ -751,10 +840,42 @@ class GitRepository(Repository):
             else:
                 subprocess.check_call(cmd, cwd=self.path)
         finally:
-            self._run("reset", "HEAD~")
+            self.remove_current_commit()
 
     def set_config(self, name, value):
         self._run("config", name, value)
+
+    def get_branch_nodes(self) -> List[str]:
+        """Return a list of commit SHAs for nodes on the current branch."""
+        return self._run(
+            "log",
+            "HEAD",
+            "--reverse",
+            "--not",
+            "--remotes",
+            "--pretty=%H",
+        ).splitlines()
+
+    def get_commit_patches(self, nodes: List[str]) -> List[bytes]:
+        """Return the contents of the patch `node` in the VCS' standard format."""
+        return [
+            self._run("format-patch", node, "-1", "--stdout").encode("utf-8")
+            for node in nodes
+        ]
+
+    def create_try_commit(self, message: str):
+        """Create a temporary try commit.
+
+        Create a new commit using `commit_message` as the commit message. The commit
+        may be empty, for example when only including try syntax.
+        """
+        self._run(
+            "-c", "commit.gpgSign=false", "commit", "--allow-empty", "-m", message
+        )
+
+    def remove_current_commit(self):
+        """Remove the currently checked out commit from VCS history."""
+        self._run("reset", "HEAD~")
 
 
 class SrcRepository(Repository):

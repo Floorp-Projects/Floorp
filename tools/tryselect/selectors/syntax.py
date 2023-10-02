@@ -699,6 +699,7 @@ class AutoTry:
             stage_changes=kwargs["stage_changes"],
             dry_run=kwargs["dry_run"],
             closed_tree=kwargs["closed_tree"],
+            push_to_lando=kwargs["push_to_lando"],
         )
 
 
