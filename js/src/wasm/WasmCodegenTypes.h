@@ -206,10 +206,39 @@ const char* NameOfTrap(Trap trap);
 const char* NameOfTrapMachineInsn(TrapMachineInsn tmi);
 #endif  // DEBUG
 
+// This holds an assembler buffer offset, which indicates the offset of a
+// faulting instruction, and is used for the construction of TrapSites below.
+// It is wrapped up as a new type only to avoid getting it confused with any
+// other uint32_t or with CodeOffset.
+
+class FaultingCodeOffset {
+  static constexpr uint32_t INVALID = UINT32_MAX;
+  uint32_t offset_;
+
+ public:
+  FaultingCodeOffset() : offset_(INVALID) {}
+  explicit FaultingCodeOffset(uint32_t offset) : offset_(offset) {
+    MOZ_ASSERT(offset != INVALID);
+  }
+  bool isValid() const { return offset_ != INVALID; }
+  uint32_t get() const {
+    MOZ_ASSERT(isValid());
+    return offset_;
+  }
+};
+static_assert(sizeof(FaultingCodeOffset) == 4);
+
+// And this holds two such offsets.  Needed for 64-bit integer transactions on
+// 32-bit targets.
+using FaultingCodeOffsetPair =
+    std::pair<FaultingCodeOffset, FaultingCodeOffset>;
+static_assert(sizeof(FaultingCodeOffsetPair) == 8);
+
 // A TrapSite (in the TrapSiteVector for a given Trap code) represents a wasm
-// instruction at a given bytecode offset that can fault at the given pc offset.
-// When such a fault occurs, a signal/exception handler looks up the TrapSite to
-// confirm the fault is intended/safe and redirects pc to the trap stub.
+// instruction at a given bytecode offset that can fault at the given pc
+// offset.  When such a fault occurs, a signal/exception handler looks up the
+// TrapSite to confirm the fault is intended/safe and redirects pc to the trap
+// stub.
 
 struct TrapSite {
   uint32_t pcOffset;
