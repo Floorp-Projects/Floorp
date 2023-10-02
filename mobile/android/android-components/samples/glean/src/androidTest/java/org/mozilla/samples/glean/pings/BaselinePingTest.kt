@@ -88,7 +88,7 @@ class BaselinePingTest {
         do {
             attempts += 1
             val request = server.takeRequest(20L, TimeUnit.SECONDS)
-            val docType = request.path.split("/")[3]
+            val docType = request?.path?.split("/")?.get(3)
             if (pingName == docType) {
                 val parsedPayload = JSONObject(request.getPlainBody())
                 if (pingReason == null) {
