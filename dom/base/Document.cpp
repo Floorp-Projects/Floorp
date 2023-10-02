@@ -14423,16 +14423,15 @@ void Document::SetFullscreenRoot(Document* aRoot) {
 void Document::HandleEscKey() {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
-      dialog->QueueCancelDialog();
-      break;
-    }
-    if (RefPtr<nsGenericHTMLElement> popoverHTMLEl =
-            nsGenericHTMLElement::FromNodeOrNull(element)) {
+    if (RefPtr popoverHTMLEl = nsGenericHTMLElement::FromNodeOrNull(element)) {
       if (element->IsAutoPopover() && element->IsPopoverOpen()) {
         popoverHTMLEl->HidePopover(IgnoreErrors());
         break;
       }
+    }
+    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
+      dialog->QueueCancelDialog();
+      break;
     }
   }
 }
