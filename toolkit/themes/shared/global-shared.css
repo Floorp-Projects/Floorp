@@ -215,36 +215,35 @@ button.text-link .button-text {
   min-width: 0;
   margin-inline: 8px 0;
   margin-bottom: 0;
-}
 
-.panel-footer-button[disabled] {
-  opacity: 0.4;
-}
+  &[disabled] {
+    opacity: 0.4;
+  }
 
-.panel-footer-button:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
-}
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-offset);
+  }
 
-.panel-footer-button:not([disabled]):hover {
-  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
-}
+  &:not([disabled]) {
+    &:hover {
+      background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
+    }
+    &:hover:active {
+      background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
+    }
+    &[default] {
+      color: var(--button-primary-color);
+      background-color: var(--button-primary-bgcolor);
 
-.panel-footer-button:not([disabled]):hover:active {
-  background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
-}
-
-.panel-footer-button:not([disabled])[default] {
-  color: var(--button-primary-color);
-  background-color: var(--button-primary-bgcolor);
-}
-
-.panel-footer-button:not([disabled])[default]:hover {
-  background-color: var(--button-primary-hover-bgcolor);
-}
-
-.panel-footer-button:not([disabled])[default]:hover:active {
-  background-color: var(--button-primary-active-bgcolor);
+      &:hover {
+        background-color: var(--button-primary-hover-bgcolor);
+      }
+      &:hover:active {
+        background-color: var(--button-primary-active-bgcolor);
+      }
+    }
+  }
 }
 
 /* Autoscroll popup */
