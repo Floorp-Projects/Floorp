@@ -100,6 +100,10 @@ sealed class SearchEngineSource {
  * @property showSessionSuggestionsForCurrentEngine Whether or not to show local tabs suggestions for only
  * the current search engine.
  * @property showAllSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar.
+ * @property showSponsoredSuggestions Whether or not to show sponsored Firefox Suggest search suggestions in the
+ * AwesomeBar. Always `false` when a non-default engine is selected.
+ * @property showNonSponsoredSuggestions Whether or not to show Firefox Suggest search suggestions for web content
+ * in the AwesomeBar. Always `false` when a non-default engine is selected.
  * @property tabId The ID of the current tab.
  * @property pastedText The text pasted from the long press toolbar menu.
  * @property searchAccessPoint The source of the performed search.
@@ -126,6 +130,8 @@ data class SearchFragmentState(
     val showAllSyncedTabsSuggestions: Boolean,
     val showSessionSuggestionsForCurrentEngine: Boolean,
     val showAllSessionSuggestions: Boolean,
+    val showSponsoredSuggestions: Boolean,
+    val showNonSponsoredSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: MetricsUtils.Source,
@@ -178,6 +184,8 @@ fun createInitialSearchFragmentState(
         showAllSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
         showSessionSuggestionsForCurrentEngine = false,
         showAllSessionSuggestions = true,
+        showSponsoredSuggestions = settings.showSponsoredSuggestions,
+        showNonSponsoredSuggestions = settings.showNonSponsoredSuggestions,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint,
@@ -275,6 +283,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSyncedTabsSuggestionsForCurrentEngine = false, // we'll show all synced tabs
                 showAllSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
                 showSessionSuggestionsForCurrentEngine = false, // we'll show all local tabs
+                showSponsoredSuggestions = action.settings.showSponsoredSuggestions,
+                showNonSponsoredSuggestions = action.settings.showNonSponsoredSuggestions,
                 showAllSessionSuggestions = true,
             )
         is SearchFragmentAction.SearchShortcutEngineSelected ->
@@ -312,6 +322,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     true -> false
                     false -> true
                 },
+                showSponsoredSuggestions = false,
+                showNonSponsoredSuggestions = false,
             )
         is SearchFragmentAction.SearchHistoryEngineSelected ->
             state.copy(
@@ -328,6 +340,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showAllSyncedTabsSuggestions = false,
                 showSessionSuggestionsForCurrentEngine = false,
                 showAllSessionSuggestions = false,
+                showSponsoredSuggestions = false,
+                showNonSponsoredSuggestions = false,
             )
         is SearchFragmentAction.SearchBookmarksEngineSelected ->
             state.copy(
@@ -344,6 +358,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showAllSyncedTabsSuggestions = false,
                 showSessionSuggestionsForCurrentEngine = false,
                 showAllSessionSuggestions = false,
+                showSponsoredSuggestions = false,
+                showNonSponsoredSuggestions = false,
             )
         is SearchFragmentAction.SearchTabsEngineSelected ->
             state.copy(
@@ -360,6 +376,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showAllSyncedTabsSuggestions = true,
                 showSessionSuggestionsForCurrentEngine = false,
                 showAllSessionSuggestions = true,
+                showSponsoredSuggestions = false,
+                showNonSponsoredSuggestions = false,
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
             state.copy(showSearchShortcuts = action.show && state.areShortcutsAvailable)
