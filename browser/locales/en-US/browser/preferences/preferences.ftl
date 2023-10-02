@@ -16,6 +16,11 @@ global-privacy-control-description =
     .label = Tell websites not to sell or share my data
     .accesskey = s
 
+# Do not translate.
+# "Global Privacy Control" or "GPC" are a web platform feature name and abbreviation
+# included to facilitate power-user search of the about:preferences page.
+global-privacy-control-search = Global Privacy Control (GPC)
+
 settings-page-title = Settings
 
 # This is used to determine the width of the search field in about:preferences,
