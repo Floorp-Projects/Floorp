@@ -6934,6 +6934,14 @@
   value: 4
   mirror: once
 
+# Maximum size in kilobytes that we allow to allocate an imgFrame, meant for
+# testing/fuzzing purposes. -1 disables this limit (there are other limits in
+# place).
+- name: image.mem.max_legal_imgframe_size_kb
+  type: int32_t
+  value: -1
+  mirror: once
+
 # Whether we record SVG images as blobs or not.
 - name: image.svg.blob-image
   type: RelaxedAtomicBool
