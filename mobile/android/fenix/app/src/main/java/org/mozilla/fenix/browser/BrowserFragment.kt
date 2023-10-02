@@ -252,7 +252,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 shoppingExperienceFeature = DefaultShoppingExperienceFeature(
                     settings = requireContext().settings(),
                 ),
-                onAvailabilityChange = { reviewQualityCheckAvailable = it },
+                onAvailabilityChange = {
+                    reviewQualityCheckAvailable = it
+                    safeInvalidateBrowserToolbarView()
+                },
                 onBottomSheetCollapsed = {
                     reviewQualityCheck.setSelected(selected = false, notifyListener = false)
                 },
