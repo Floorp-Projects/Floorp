@@ -4,7 +4,8 @@
 
 "use strict";
 
-add_task(async function () {
+// Test that the values of the scope nodes are displayed correctly.
+add_task(async function testScopeNodes() {
   const dbg = await initDebugger("doc-script-switching.html");
 
   const ready = Promise.all([
@@ -28,4 +29,29 @@ add_task(async function () {
   is(getScopeNodeLabel(dbg, 4), "foo()");
   is(getScopeNodeLabel(dbg, 5), "Window");
   is(getScopeNodeValue(dbg, 5), "Global");
+
+  info("Resuming the thread");
+  await resume(dbg);
+});
+
+// Test scope nodes for anonymous functions display correctly.
+add_task(async function testAnonymousScopeNodes() {
+  const dbg = await initDebuggerWithAbsoluteURL(
+    "data:text/html;charset=utf8,<!DOCTYPE html><script>(function(){const x = 3; debugger;})()</script>"
+  );
+
+  info("Reload the page to hit the debugger statement while loading");
+  const onReloaded = reload(dbg);
+  await waitForPaused(dbg);
+  ok(true, "We're paused");
+
+  is(
+    getScopeNodeLabel(dbg, 1),
+    "<anonymous>",
+    "The scope node for the anonymous function is displayed correctly"
+  );
+
+  info("Resuming the thread");
+  await resume(dbg);
+  await onReloaded;
 });
