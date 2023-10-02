@@ -4,23 +4,21 @@
 
 package org.mozilla.fenix.shopping.middleware
 
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.shopping.ProductAnalysis
-import mozilla.components.support.test.any
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.doAnswer
+import org.mozilla.fenix.shopping.ProductAnalysisTestData
 
-@Ignore("Intermittent failure, see https://bugzilla.mozilla.org/show_bug.cgi?id=1849525.")
 class DefaultReviewQualityCheckServiceTest {
 
     @get:Rule
@@ -29,13 +27,14 @@ class DefaultReviewQualityCheckServiceTest {
     @Test
     fun `GIVEN fetch is called WHEN onResult is invoked THEN product analysis returns the same data`() =
         runTest {
-            val engineSession = mock<EngineSession>()
-            val expected = mock<ProductAnalysis>()
+            val engineSession = mockk<EngineSession>()
+            val expected = ProductAnalysisTestData.productAnalysis()
 
-            doAnswer { invocation ->
-                val onResult: (ProductAnalysis) -> Unit = invocation.getArgument(1)
-                onResult(expected)
-            }.`when`(engineSession).requestProductAnalysis(any(), any(), any())
+            every {
+                engineSession.requestProductAnalysis(any(), any(), any())
+            }.answers {
+                secondArg<(ProductAnalysis) -> Unit>().invoke(expected)
+            }
 
             val tab = createTab(
                 url = "https://www.shopping.org/product",
@@ -57,12 +56,13 @@ class DefaultReviewQualityCheckServiceTest {
     @Test
     fun `GIVEN fetch is called WHEN onException is invoked THEN product analysis returns null`() =
         runTest {
-            val engineSession = mock<EngineSession>()
+            val engineSession = mockk<EngineSession>()
 
-            doAnswer { invocation ->
-                val onException: (Throwable) -> Unit = invocation.getArgument(2)
-                onException(RuntimeException())
-            }.`when`(engineSession).requestProductAnalysis(any(), any(), any())
+            every {
+                engineSession.requestProductAnalysis(any(), any(), any())
+            }.answers {
+                thirdArg<(Throwable) -> Unit>().invoke(RuntimeException())
+            }
 
             val tab = createTab(
                 url = "https://www.shopping.org/product",
@@ -81,13 +81,14 @@ class DefaultReviewQualityCheckServiceTest {
 
     @Test
     fun `WHEN fetch is called THEN fetch is called for the selected tab`() = runTest {
-        val engineSession = mock<EngineSession>()
+        val engineSession = mockk<EngineSession>()
+        val expected = ProductAnalysisTestData.productAnalysis()
 
-        val expected = mock<ProductAnalysis>()
-        doAnswer { invocation ->
-            val onResult: (ProductAnalysis) -> Unit = invocation.getArgument(1)
-            onResult(expected)
-        }.`when`(engineSession).requestProductAnalysis(any(), any(), any())
+        every {
+            engineSession.requestProductAnalysis(any(), any(), any())
+        }.answers {
+            secondArg<(ProductAnalysis) -> Unit>().invoke(expected)
+        }
 
         val tab1 = createTab(
             url = "https://www.mozilla.org",
