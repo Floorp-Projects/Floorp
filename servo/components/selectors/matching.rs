@@ -646,6 +646,37 @@ enum Rightmost {
     No,
 }
 
+fn host_for_part<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
+where
+    E: Element,
+{
+    let scope = context.current_host;
+    let mut curr = element.containing_shadow_host()?;
+    if scope == Some(curr.opaque()) {
+        return Some(curr);
+    }
+    loop {
+        let parent = curr.containing_shadow_host();
+        if parent.as_ref().map(|h| h.opaque()) == scope {
+            return Some(curr);
+        }
+        curr = parent?;
+    }
+}
+
+fn assigned_slot<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
+where
+    E: Element,
+{
+    debug_assert!(element.assigned_slot().map_or(true, |s| s.is_html_slot_element()));
+    let scope = context.current_host?;
+    let mut current_slot = element.assigned_slot()?;
+    while current_slot.containing_shadow_host().unwrap().opaque() != scope {
+        current_slot = current_slot.assigned_slot()?;
+    }
+    Some(current_slot)
+}
+
 #[inline(always)]
 fn next_element_for_combinator<E>(
     element: &E,
@@ -690,18 +721,8 @@ where
 
             element.containing_shadow_host()
         },
-        Combinator::Part => element.containing_shadow_host(),
-        Combinator::SlotAssignment => {
-            debug_assert!(element
-                .assigned_slot()
-                .map_or(true, |s| s.is_html_slot_element()));
-            let scope = context.current_host?;
-            let mut current_slot = element.assigned_slot()?;
-            while current_slot.containing_shadow_host().unwrap().opaque() != scope {
-                current_slot = current_slot.assigned_slot()?;
-            }
-            Some(current_slot)
-        },
+        Combinator::Part => host_for_part(element, context),
+        Combinator::SlotAssignment => assigned_slot(element, context),
         Combinator::PseudoElement => element.pseudo_element_originating_element(),
     }
 }
