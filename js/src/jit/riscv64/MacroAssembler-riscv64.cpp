@@ -2122,12 +2122,12 @@ CodeOffset MacroAssembler::nopPatchableToCall() {
   nop();  // jirl
   return CodeOffset(currentOffset());
 }
-CodeOffset MacroAssembler::wasmTrapInstruction() {
-  CodeOffset offset(currentOffset());
+FaultingCodeOffset MacroAssembler::wasmTrapInstruction() {
   BlockTrampolinePoolScope block_trampoline_pool(this, 2);
+  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   illegal_trap(kWasmTrapCode);
   ebreak();
-  return offset;
+  return fco;
 }
 size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
   return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();

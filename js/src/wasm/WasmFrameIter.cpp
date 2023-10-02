@@ -890,14 +890,16 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm,
     offsets->begin = masm.currentOffset();
     masm.push(ra);
 #elif defined(JS_CODEGEN_ARM64)
-    AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 4);
-    offsets->begin = masm.currentOffset();
-    static_assert(BeforePushRetAddr == 0);
-    // Subtract from SP first as SP must be aligned before offsetting.
-    masm.Sub(sp, sp, 16);
-    static_assert(JitFrameLayout::offsetOfReturnAddress() == 8);
-    masm.Str(ARMRegister(lr, 64), MemOperand(sp, 8));
+    {
+      AutoForbidPoolsAndNops afp(&masm,
+                                 /* number of instructions in scope = */ 4);
+      offsets->begin = masm.currentOffset();
+      static_assert(BeforePushRetAddr == 0);
+      // Subtract from SP first as SP must be aligned before offsetting.
+      masm.Sub(sp, sp, 16);
+      static_assert(JitFrameLayout::offsetOfReturnAddress() == 8);
+      masm.Str(ARMRegister(lr, 64), MemOperand(sp, 8));
+    }
 #else
     // The x86/x64 call instruction pushes the return address.
     offsets->begin = masm.currentOffset();
@@ -925,23 +927,25 @@ void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm,
                                     CallableOffsets* offsets) {
   DebugOnly<uint32_t> poppedFP{};
 #ifdef JS_CODEGEN_ARM64
-  RegisterOrSP sp = masm.getStackPointer();
-  AutoForbidPoolsAndNops afp(&masm,
-                             /* number of instructions in scope = */ 5);
-  masm.loadPtr(Address(sp, 8), lr);
-  masm.loadPtr(Address(sp, 0), FramePointer);
-  poppedFP = masm.currentOffset();
+  {
+    RegisterOrSP sp = masm.getStackPointer();
+    AutoForbidPoolsAndNops afp(&masm,
+                               /* number of instructions in scope = */ 5);
+    masm.loadPtr(Address(sp, 8), lr);
+    masm.loadPtr(Address(sp, 0), FramePointer);
+    poppedFP = masm.currentOffset();
 
-  masm.addToStackPtr(Imm32(2 * sizeof(void*)));
-  // Copy SP into PSP to enforce return-point invariants (SP == PSP).
-  // `addToStackPtr` won't sync them because SP is the active pointer here.
-  // For the same reason, we can't use initPseudoStackPtr to do the sync, so
-  // we have to do it "by hand".  Omitting this causes many tests to segfault.
-  masm.moveStackPtrTo(PseudoStackPointer);
+    masm.addToStackPtr(Imm32(2 * sizeof(void*)));
+    // Copy SP into PSP to enforce return-point invariants (SP == PSP).
+    // `addToStackPtr` won't sync them because SP is the active pointer here.
+    // For the same reason, we can't use initPseudoStackPtr to do the sync, so
+    // we have to do it "by hand".  Omitting this causes many tests to segfault.
+    masm.moveStackPtrTo(PseudoStackPointer);
 
-  offsets->ret = masm.currentOffset();
-  masm.Ret(ARMRegister(lr, 64));
-  masm.setFramePushed(0);
+    offsets->ret = masm.currentOffset();
+    masm.Ret(ARMRegister(lr, 64));
+    masm.setFramePushed(0);
+  }
 #else
   // Forbid pools for the same reason as described in GenerateCallablePrologue.
 #  if defined(JS_CODEGEN_ARM)

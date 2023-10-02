@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include <limits.h>
+#include <utility>  // std::pair
 
 #include "gc/Barrier.h"
 #include "jit/AtomicOp.h"
@@ -40,6 +41,8 @@
 // describing how Bind() should patch them.
 #  define JS_CODELABEL_LINKMODE
 #endif
+
+using js::wasm::FaultingCodeOffset;
 
 namespace js {
 namespace jit {
@@ -675,12 +678,11 @@ class AssemblerShared {
   void append(wasm::Trap trap, wasm::TrapSite site) {
     enoughMemory_ &= trapSites_[trap].append(site);
   }
-  void append(const wasm::MemoryAccessDesc& access, uint32_t pcOffset) {
-    appendOutOfBoundsTrap(access.trapOffset(), pcOffset);
-  }
-  void appendOutOfBoundsTrap(wasm::BytecodeOffset trapOffset,
-                             uint32_t pcOffset) {
-    append(wasm::Trap::OutOfBounds, wasm::TrapSite(pcOffset, trapOffset));
+  void append(const wasm::MemoryAccessDesc& access, wasm::TrapMachineInsn insn,
+              FaultingCodeOffset assemblerOffsetOfFaultingMachineInsn) {
+    append(wasm::Trap::OutOfBounds,
+           wasm::TrapSite(insn, assemblerOffsetOfFaultingMachineInsn,
+                          access.trapOffset()));
   }
   void append(wasm::SymbolicAccess access) {
     enoughMemory_ &= symbolicAccesses_.append(access);

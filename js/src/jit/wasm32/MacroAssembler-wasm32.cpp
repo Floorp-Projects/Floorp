@@ -219,9 +219,9 @@ CodeOffset MacroAssembler::nopPatchableToCall() {
   return CodeOffset(0);
 }
 
-CodeOffset MacroAssembler::wasmTrapInstruction() {
+FaultingCodeOffset MacroAssembler::wasmTrapInstruction() {
   MOZ_CRASH();
-  return CodeOffset(0);
+  return FaultingCodeOffset();
 }
 
 template void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,

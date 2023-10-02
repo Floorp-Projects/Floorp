@@ -1170,55 +1170,59 @@ void MacroAssembler::spectreZeroRegister(Condition cond, Register scratch,
 
 // ========================================================================
 // Memory access primitives.
-void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
-                                                const Address& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
+    FloatRegister src, const Address& dest) {
+  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   vmovsd(src, dest);
+  return fco;
 }
-void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
-                                                const BaseIndex& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
+    FloatRegister src, const BaseIndex& dest) {
+  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   vmovsd(src, dest);
+  return fco;
 }
-void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
-                                                const Operand& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
+    FloatRegister src, const Operand& dest) {
   switch (dest.kind()) {
     case Operand::MEM_REG_DISP:
-      storeUncanonicalizedDouble(src, dest.toAddress());
-      break;
+      return storeUncanonicalizedDouble(src, dest.toAddress());
     case Operand::MEM_SCALE:
-      storeUncanonicalizedDouble(src, dest.toBaseIndex());
-      break;
+      return storeUncanonicalizedDouble(src, dest.toBaseIndex());
     default:
       MOZ_CRASH("unexpected operand kind");
   }
 }
 
-template void MacroAssembler::storeDouble(FloatRegister src,
-                                          const Operand& dest);
+template FaultingCodeOffset MacroAssembler::storeDouble(FloatRegister src,
+                                                        const Operand& dest);
 
-void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
-                                                 const Address& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
+    FloatRegister src, const Address& dest) {
+  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   vmovss(src, dest);
+  return fco;
 }
-void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
-                                                 const BaseIndex& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
+    FloatRegister src, const BaseIndex& dest) {
+  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   vmovss(src, dest);
+  return fco;
 }
-void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
-                                                 const Operand& dest) {
+FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
+    FloatRegister src, const Operand& dest) {
   switch (dest.kind()) {
     case Operand::MEM_REG_DISP:
-      storeUncanonicalizedFloat32(src, dest.toAddress());
-      break;
+      return storeUncanonicalizedFloat32(src, dest.toAddress());
     case Operand::MEM_SCALE:
-      storeUncanonicalizedFloat32(src, dest.toBaseIndex());
-      break;
+      return storeUncanonicalizedFloat32(src, dest.toBaseIndex());
     default:
       MOZ_CRASH("unexpected operand kind");
   }
 }
 
-template void MacroAssembler::storeFloat32(FloatRegister src,
-                                           const Operand& dest);
+template FaultingCodeOffset MacroAssembler::storeFloat32(FloatRegister src,
+                                                         const Operand& dest);
 
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
   if (barrier & MembarStoreLoad) {
@@ -2679,26 +2683,26 @@ void MacroAssembler::loadUnalignedSimd128(const Operand& src,
   loadUnalignedSimd128Int(src, dest);
 }
 
-void MacroAssembler::loadUnalignedSimd128(const Address& src,
-                                          FloatRegister dest) {
-  loadUnalignedSimd128Int(src, dest);
+FaultingCodeOffset MacroAssembler::loadUnalignedSimd128(const Address& src,
+                                                        FloatRegister dest) {
+  return loadUnalignedSimd128Int(src, dest);
 }
 
-void MacroAssembler::loadUnalignedSimd128(const BaseIndex& src,
-                                          FloatRegister dest) {
-  loadUnalignedSimd128Int(src, dest);
+FaultingCodeOffset MacroAssembler::loadUnalignedSimd128(const BaseIndex& src,
+                                                        FloatRegister dest) {
+  return loadUnalignedSimd128Int(src, dest);
 }
 
 // Store.  See comments above regarding integer operation.
 
-void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
-                                           const Address& dest) {
-  storeUnalignedSimd128Int(src, dest);
+FaultingCodeOffset MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                                         const Address& dest) {
+  return storeUnalignedSimd128Int(src, dest);
 }
 
-void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
-                                           const BaseIndex& dest) {
-  storeUnalignedSimd128Int(src, dest);
+FaultingCodeOffset MacroAssembler::storeUnalignedSimd128(
+    FloatRegister src, const BaseIndex& dest) {
+  return storeUnalignedSimd128Int(src, dest);
 }
 
 // Floating point negation

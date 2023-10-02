@@ -1631,7 +1631,7 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 #ifndef WASM_HAS_HEAPREG
   OutOfLineCode* nullref = addOutOfLineCode(new (alloc_) OutOfLineAbortingTrap(
       Trap::IndirectCallToNull, bytecodeOffset()));
-  if (!oob) {
+  if (!nullref) {
     return false;
   }
   nullCheckFailed = nullref->entry();
@@ -6696,11 +6696,13 @@ void BaseCompiler::SignalNullCheck::emitNullCheck(BaseCompiler* bc, RegRef rp) {
 }
 
 /* static */
-void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc) {
+void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc,
+                                                 FaultingCodeOffset fco,
+                                                 TrapMachineInsn tmi) {
   wasm::BytecodeOffset trapOffset(bc->bytecodeOffset());
   MacroAssembler& masm = bc->masm;
   masm.append(wasm::Trap::NullPointerDereference,
-              wasm::TrapSite(masm.currentOffset(), trapOffset));
+              wasm::TrapSite(tmi, fco, trapOffset));
 }
 
 template <typename NullCheckPolicy>
@@ -6708,8 +6710,9 @@ RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
   // `rp` points at a WasmArrayObject.  Return a reg holding the value of its
   // `data_` field.
   RegPtr rdata = needPtr();
-  NullCheckPolicy::emitTrapSite(this);
-  masm.loadPtr(Address(rp, WasmArrayObject::offsetOfData()), rdata);
+  FaultingCodeOffset fco =
+      masm.loadPtr(Address(rp, WasmArrayObject::offsetOfData()), rdata);
+  NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
   return rdata;
 }
 
@@ -6719,8 +6722,9 @@ RegI32 BaseCompiler::emitGcArrayGetNumElements(RegRef rp) {
   // `numElements_` field.
   STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
   RegI32 numElements = needI32();
-  NullCheckPolicy::emitTrapSite(this);
-  masm.load32(Address(rp, WasmArrayObject::offsetOfNumElements()), numElements);
+  FaultingCodeOffset fco = masm.load32(
+      Address(rp, WasmArrayObject::offsetOfNumElements()), numElements);
+  NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
   return numElements;
 }
 
@@ -6738,56 +6742,64 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::I8: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      NullCheckPolicy::emitTrapSite(this);
+      FaultingCodeOffset fco;
       if (wideningOp == FieldWideningOp::Unsigned) {
-        masm.load8ZeroExtend(src, r);
+        fco = masm.load8ZeroExtend(src, r);
       } else {
-        masm.load8SignExtend(src, r);
+        fco = masm.load8SignExtend(src, r);
       }
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load8);
       pushI32(r);
       break;
     }
     case FieldType::I16: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      NullCheckPolicy::emitTrapSite(this);
+      FaultingCodeOffset fco;
       if (wideningOp == FieldWideningOp::Unsigned) {
-        masm.load16ZeroExtend(src, r);
+        fco = masm.load16ZeroExtend(src, r);
       } else {
-        masm.load16SignExtend(src, r);
+        fco = masm.load16SignExtend(src, r);
       }
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load16);
       pushI32(r);
       break;
     }
     case FieldType::I32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI32 r = needI32();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.load32(src, r);
+      FaultingCodeOffset fco = masm.load32(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
       pushI32(r);
       break;
     }
     case FieldType::I64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI64 r = needI64();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.load64(src, r);
+#  ifdef JS_64BIT
+      FaultingCodeOffset fco = masm.load64(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load64);
+#  else
+      FaultingCodeOffsetPair fcop = masm.load64(src, r);
+      NullCheckPolicy::emitTrapSite(this, fcop.first, TrapMachineInsn::Load32);
+      NullCheckPolicy::emitTrapSite(this, fcop.second, TrapMachineInsn::Load32);
+#  endif
       pushI64(r);
       break;
     }
     case FieldType::F32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF32 r = needF32();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.loadFloat32(src, r);
+      FaultingCodeOffset fco = masm.loadFloat32(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
       pushF32(r);
       break;
     }
     case FieldType::F64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF64 r = needF64();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.loadDouble(src, r);
+      FaultingCodeOffset fco = masm.loadDouble(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load64);
       pushF64(r);
       break;
     }
@@ -6795,8 +6807,8 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::V128: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegV128 r = needV128();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.loadUnalignedSimd128(src, r);
+      FaultingCodeOffset fco = masm.loadUnalignedSimd128(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load128);
       pushV128(r);
       break;
     }
@@ -6804,8 +6816,8 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::Ref: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegRef r = needRef();
-      NullCheckPolicy::emitTrapSite(this);
-      masm.loadPtr(src, r);
+      FaultingCodeOffset fco = masm.loadPtr(src, r);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
       pushRef(r);
       break;
     }
@@ -6817,35 +6829,48 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
 
 template <typename T, typename NullCheckPolicy>
 void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
-  NullCheckPolicy::emitTrapSite(this);
   switch (type.kind()) {
     case FieldType::I8: {
-      masm.store8(value.i32(), dst);
+      FaultingCodeOffset fco = masm.store8(value.i32(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store8);
       break;
     }
     case FieldType::I16: {
-      masm.store16(value.i32(), dst);
+      FaultingCodeOffset fco = masm.store16(value.i32(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store16);
       break;
     }
     case FieldType::I32: {
-      masm.store32(value.i32(), dst);
+      FaultingCodeOffset fco = masm.store32(value.i32(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
       break;
     }
     case FieldType::I64: {
-      masm.store64(value.i64(), dst);
+#  ifdef JS_64BIT
+      FaultingCodeOffset fco = masm.store64(value.i64(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
+#  else
+      FaultingCodeOffsetPair fcop = masm.store64(value.i64(), dst);
+      NullCheckPolicy::emitTrapSite(this, fcop.first, TrapMachineInsn::Store32);
+      NullCheckPolicy::emitTrapSite(this, fcop.second,
+                                    TrapMachineInsn::Store32);
+#  endif
       break;
     }
     case FieldType::F32: {
-      masm.storeFloat32(value.f32(), dst);
+      FaultingCodeOffset fco = masm.storeFloat32(value.f32(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
       break;
     }
     case FieldType::F64: {
-      masm.storeDouble(value.f64(), dst);
+      FaultingCodeOffset fco = masm.storeDouble(value.f64(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
       break;
     }
 #  ifdef ENABLE_WASM_SIMD
     case FieldType::V128: {
-      masm.storeUnalignedSimd128(value.v128(), dst);
+      FaultingCodeOffset fco = masm.storeUnalignedSimd128(value.v128(), dst);
+      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store128);
       break;
     }
 #  endif
@@ -7096,9 +7121,9 @@ bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
   RegRef object = popRef();
   if (areaIsOutline) {
     RegPtr outlineBase = needPtr();
-    SignalNullCheck::emitTrapSite(this);
-    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
-                 outlineBase);
+    FaultingCodeOffset fco = masm.loadPtr(
+        Address(object, WasmStructObject::offsetOfOutlineData()), outlineBase);
+    SignalNullCheck::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
     // Load the value
     emitGcGet<Address, NoNullCheck>(fieldType, wideningOp,
                                     Address(outlineBase, areaOffset));
@@ -7155,9 +7180,9 @@ bool BaseCompiler::emitStructSet() {
 
   // Make outlineBase point at the first byte of the relevant area
   if (areaIsOutline) {
-    SignalNullCheck::emitTrapSite(this);
-    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
-                 outlineBase);
+    FaultingCodeOffset fco = masm.loadPtr(
+        Address(object, WasmStructObject::offsetOfOutlineData()), outlineBase);
+    SignalNullCheck::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
     if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset,
                                       fieldType, value,
                                       PreBarrierKind::Normal)) {

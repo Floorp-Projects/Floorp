@@ -750,7 +750,9 @@ uint32_t MacroAssembler::pushFakeReturnAddress(Register scratch) {
 // ===============================================================
 // WebAssembly
 
-CodeOffset MacroAssembler::wasmTrapInstruction() { return ud2(); }
+FaultingCodeOffset MacroAssembler::wasmTrapInstruction() {
+  return FaultingCodeOffset(ud2().offset());
+}
 
 void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
                                        Register boundsCheckLimit, Label* ok) {
@@ -1123,7 +1125,8 @@ static void CompareExchange(MacroAssembler& masm,
   }
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   // NOTE: the generated code must match the assembly code in gen_cmpxchg in
@@ -1139,6 +1142,8 @@ static void CompareExchange(MacroAssembler& masm,
     case 4:
       masm.lock_cmpxchgl(newval, Operand(mem));
       break;
+    default:
+      MOZ_CRASH("Invalid");
   }
 
   ExtendTo32(masm, type, output);
@@ -1181,7 +1186,8 @@ static void AtomicExchange(MacroAssembler& masm,
   }
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   switch (Scalar::byteSize(type)) {
@@ -1253,18 +1259,20 @@ static void AtomicFetchOp(MacroAssembler& masm,
 
   // NOTE: the generated code must match the assembly code in gen_fetchop in
   // GenerateAtomicOperations.py
-#define ATOMIC_BITOP_BODY(LOAD, OP, LOCK_CMPXCHG)  \
-  do {                                             \
-    MOZ_ASSERT(output != temp);                    \
-    MOZ_ASSERT(output == eax);                     \
-    if (access) masm.append(*access, masm.size()); \
-    masm.LOAD(Operand(mem), eax);                  \
-    Label again;                                   \
-    masm.bind(&again);                             \
-    masm.movl(eax, temp);                          \
-    masm.OP(value, temp);                          \
-    masm.LOCK_CMPXCHG(temp, Operand(mem));         \
-    masm.j(MacroAssembler::NonZero, &again);       \
+#define ATOMIC_BITOP_BODY(LOAD, LOAD_DESCR, OP, LOCK_CMPXCHG) \
+  do {                                                        \
+    MOZ_ASSERT(output != temp);                               \
+    MOZ_ASSERT(output == eax);                                \
+    if (access)                                               \
+      masm.append(*access, LOAD_DESCR,                        \
+                  FaultingCodeOffset(masm.currentOffset()));  \
+    masm.LOAD(Operand(mem), eax);                             \
+    Label again;                                              \
+    masm.bind(&again);                                        \
+    masm.movl(eax, temp);                                     \
+    masm.OP(value, temp);                                     \
+    masm.LOCK_CMPXCHG(temp, Operand(mem));                    \
+    masm.j(MacroAssembler::NonZero, &again);                  \
   } while (0)
 
   MOZ_ASSERT_IF(op == AtomicFetchAddOp || op == AtomicFetchSubOp,
@@ -1278,20 +1286,26 @@ static void AtomicFetchOp(MacroAssembler& masm,
         case AtomicFetchSubOp:
           CheckBytereg(value);  // But not for the bitwise ops
           SetupValue(masm, op, value, output);
-          if (access) masm.append(*access, masm.size());
+          if (access) {
+            masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                        FaultingCodeOffset(masm.currentOffset()));
+          }
           masm.lock_xaddb(output, Operand(mem));
           break;
         case AtomicFetchAndOp:
           CheckBytereg(temp);
-          ATOMIC_BITOP_BODY(movb, andl, lock_cmpxchgb);
+          ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, andl,
+                            lock_cmpxchgb);
           break;
         case AtomicFetchOrOp:
           CheckBytereg(temp);
-          ATOMIC_BITOP_BODY(movb, orl, lock_cmpxchgb);
+          ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, orl,
+                            lock_cmpxchgb);
           break;
         case AtomicFetchXorOp:
           CheckBytereg(temp);
-          ATOMIC_BITOP_BODY(movb, xorl, lock_cmpxchgb);
+          ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, xorl,
+                            lock_cmpxchgb);
           break;
         default:
           MOZ_CRASH();
@@ -1302,17 +1316,23 @@ static void AtomicFetchOp(MacroAssembler& masm,
         case AtomicFetchAddOp:
         case AtomicFetchSubOp:
           SetupValue(masm, op, value, output);
-          if (access) masm.append(*access, masm.size());
+          if (access) {
+            masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                        FaultingCodeOffset(masm.currentOffset()));
+          }
           masm.lock_xaddw(output, Operand(mem));
           break;
         case AtomicFetchAndOp:
-          ATOMIC_BITOP_BODY(movw, andl, lock_cmpxchgw);
+          ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, andl,
+                            lock_cmpxchgw);
           break;
         case AtomicFetchOrOp:
-          ATOMIC_BITOP_BODY(movw, orl, lock_cmpxchgw);
+          ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, orl,
+                            lock_cmpxchgw);
           break;
         case AtomicFetchXorOp:
-          ATOMIC_BITOP_BODY(movw, xorl, lock_cmpxchgw);
+          ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, xorl,
+                            lock_cmpxchgw);
           break;
         default:
           MOZ_CRASH();
@@ -1323,22 +1343,30 @@ static void AtomicFetchOp(MacroAssembler& masm,
         case AtomicFetchAddOp:
         case AtomicFetchSubOp:
           SetupValue(masm, op, value, output);
-          if (access) masm.append(*access, masm.size());
+          if (access) {
+            masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                        FaultingCodeOffset(masm.currentOffset()));
+          }
           masm.lock_xaddl(output, Operand(mem));
           break;
         case AtomicFetchAndOp:
-          ATOMIC_BITOP_BODY(movl, andl, lock_cmpxchgl);
+          ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, andl,
+                            lock_cmpxchgl);
           break;
         case AtomicFetchOrOp:
-          ATOMIC_BITOP_BODY(movl, orl, lock_cmpxchgl);
+          ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, orl,
+                            lock_cmpxchgl);
           break;
         case AtomicFetchXorOp:
-          ATOMIC_BITOP_BODY(movl, xorl, lock_cmpxchgl);
+          ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, xorl,
+                            lock_cmpxchgl);
           break;
         default:
           MOZ_CRASH();
       }
       break;
+    default:
+      MOZ_CRASH("Invalid size");
   }
   ExtendTo32(masm, arrayType, output);
 
@@ -1407,7 +1435,8 @@ static void AtomicEffectOp(MacroAssembler& masm,
                            Scalar::Type arrayType, AtomicOp op, V value,
                            const T& mem) {
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Atomic,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   switch (Scalar::byteSize(arrayType)) {
