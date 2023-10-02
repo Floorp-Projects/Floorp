@@ -36,9 +36,9 @@
           let firstBounds = a.getBoundingClientRect();
           let secondBounds = b.getBoundingClientRect();
 
-          ok(firstBounds.x < secondBounds.x, `First button comes first`);
-          let locationDiff = Math.abs(secondBounds.x - firstBounds.x - firstBounds.width - 8);
-          ok(locationDiff < 1, `Second button is 8px after first (${locationDiff})`);
+          ok(firstBounds.right < secondBounds.left, `First button comes first`);
+          let locationDiff = Math.abs(secondBounds.left - firstBounds.right - 12);
+          ok(locationDiff < 1, `Second button is 12px after first (${locationDiff}, ${firstBounds.right}, ${secondBounds.left})`);
         };
 
         ok(buttons.length >= 2, "There are at least 2 buttons to check");
