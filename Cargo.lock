@@ -3857,6 +3857,7 @@ dependencies = [
  "qlog",
  "static_prefs",
  "thin-vec",
+ "uuid",
  "winapi",
  "xpcom",
 ]
