@@ -877,3 +877,49 @@ NSS_SecureSelect(void *dest, const void *src0, const void *src1, size_t n, unsig
         ((unsigned char *)dest)[i] = s0i ^ (mask & (s0i ^ s1i));
     }
 }
+
+/*
+ * consolidate all the calls to get the system FIPS status in one spot.
+ * This function allows an environment variable to override what is returned.
+ */
+PRBool
+NSS_GetSystemFIPSEnabled(void)
+{
+/* if FIPS is disabled in NSS, always return FALSE, even if the environment
+ * variable is set, or the system is in FIPS mode */
+#ifndef NSS_FIPS_DISABLED
+    const char *env;
+
+    /* The environment variable is active for all platforms */
+    env = PR_GetEnvSecure("NSS_FIPS");
+    /* we generally accept y, Y, 1, FIPS, TRUE, and ON as turning on FIPS
+     * mode. Anything else is considered 'off' */
+    if (env && (*env == 'y' || *env == '1' || *env == 'Y' ||
+                (PORT_Strcasecmp(env, "fips") == 0) ||
+                (PORT_Strcasecmp(env, "true") == 0) ||
+                (PORT_Strcasecmp(env, "on") == 0))) {
+        return PR_TRUE;
+    }
+
+/* currently only Linux has a system FIPS indicator. Add others here
+ * as they become available/known */
+#ifdef LINUX
+    {
+        FILE *f;
+        char d;
+        size_t size;
+        f = fopen("/proc/sys/crypto/fips_enabled", "r");
+        if (!f)
+            return PR_FALSE;
+
+        size = fread(&d, 1, 1, f);
+        fclose(f);
+        if (size != 1)
+            return PR_FALSE;
+        if (d == '1')
+            return PR_TRUE;
+    }
+#endif /* LINUX */
+#endif /* NSS_FIPS_DISABLED == 0 */
+    return PR_FALSE;
+}
