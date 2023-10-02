@@ -1,0 +1,94 @@
+From: Dan Baker <dbaker@mozilla.com>
+Date: Mon, 2 Oct 2023 17:17:00 +0000
+Subject: Bug 1851693 - (fix-279a05475d) Revert addition of race checker which
+ is causing tsan failurs until better fix is landed upstream.r=pehrsons
+
+This merely reverses a race checker that is too strict for our use, maintaining the code we had before, so we can fix upstream in the meantime tracked with Bug 1856392.
+
+Differential Revision: https://phabricator.services.mozilla.com/D189396
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e626ce7279e6575e68d0e43de3dfd3ed59b00a75
+---
+ modules/video_capture/linux/video_capture_v4l2.cc | 7 -------
+ modules/video_capture/linux/video_capture_v4l2.h  | 7 +++----
+ 2 files changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index d6813b13fd..c887683dc8 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -110,7 +110,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8) {
+ 
+ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
+   RTC_DCHECK_RUN_ON(&api_checker_);
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   StopCapture();
+   if (_deviceFd != -1)
+@@ -120,7 +119,6 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
+ int32_t VideoCaptureModuleV4L2::StartCapture(
+     const VideoCaptureCapability& capability) {
+   RTC_DCHECK_RUN_ON(&api_checker_);
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   if (_captureStarted) {
+     if (capability == _requestedCapability) {
+@@ -318,7 +316,6 @@ int32_t VideoCaptureModuleV4L2::StopCapture() {
+     _captureThread.Finalize();
+   }
+ 
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   MutexLock lock(&capture_lock_);
+   if (_captureStarted) {
+     _captureStarted = false;
+@@ -336,7 +333,6 @@ int32_t VideoCaptureModuleV4L2::StopCapture() {
+ // critical section protected by the caller
+ 
+ bool VideoCaptureModuleV4L2::AllocateVideoBuffers() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   struct v4l2_requestbuffers rbuffer;
+   memset(&rbuffer, 0, sizeof(v4l2_requestbuffers));
+ 
+@@ -387,7 +383,6 @@ bool VideoCaptureModuleV4L2::AllocateVideoBuffers() {
+ }
+ 
+ bool VideoCaptureModuleV4L2::DeAllocateVideoBuffers() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   // unmap buffers
+   for (int i = 0; i < _buffersAllocatedByDevice; i++)
+     munmap(_pool[i].start, _pool[i].length);
+@@ -405,12 +400,10 @@ bool VideoCaptureModuleV4L2::DeAllocateVideoBuffers() {
+ }
+ 
+ bool VideoCaptureModuleV4L2::CaptureStarted() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   return _captureStarted;
+ }
+ 
+ bool VideoCaptureModuleV4L2::CaptureProcess() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   int retVal = 0;
+   struct pollfd rSet;
+diff --git a/modules/video_capture/linux/video_capture_v4l2.h b/modules/video_capture/linux/video_capture_v4l2.h
+index 0191e41876..61358d0325 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.h
++++ b/modules/video_capture/linux/video_capture_v4l2.h
+@@ -45,12 +45,11 @@ class VideoCaptureModuleV4L2 : public VideoCaptureImpl {
+   Mutex capture_lock_ RTC_ACQUIRED_BEFORE(api_lock_);
+   bool quit_ RTC_GUARDED_BY(capture_lock_);
+   int32_t _deviceId RTC_GUARDED_BY(api_checker_);
+-  int32_t _deviceFd RTC_GUARDED_BY(capture_checker_);
++  int32_t _deviceFd;
+ 
+   int32_t _buffersAllocatedByDevice RTC_GUARDED_BY(capture_lock_);
+-  VideoCaptureCapability configured_capability_
+-      RTC_GUARDED_BY(capture_checker_);
+-  bool _captureStarted RTC_GUARDED_BY(capture_checker_);
++  VideoCaptureCapability configured_capability_;
++  bool _captureStarted;
+   struct Buffer {
+     void* start;
+     size_t length;
+-- 
+2.37.3
+
