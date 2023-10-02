@@ -133,7 +133,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
                 @AssertCalled(count = 1, order = [2])
                 override fun onTitleChange(session: GeckoSession, title: String?) {
-                    assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                    if (!errorPageUrl.startsWith("about:")) {
+                        assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                    }
                 }
             })
         }
@@ -162,7 +164,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             testLoader,
             expectedCategory,
             expectedError,
-            null,
+            "about:blank",
         )
     }
 
@@ -234,18 +236,15 @@ class NavigationDelegateTest : BaseSessionTest() {
             WebRequestError.ERROR_FILE_NOT_FOUND,
         )
 
-        // This is temporarily disabled on Fission. See bug 1673954
-        if (!sessionRule.env.isFission) {
-            val promise = mainSession.evaluatePromiseJS("document.addCertException(false)")
-            var exceptionCaught = false
-            try {
-                val result = promise.value as Boolean
-                assertThat("Promise should not resolve", result, equalTo(false))
-            } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-                exceptionCaught = true
-            }
-            assertThat("document.addCertException failed with exception", exceptionCaught, equalTo(true))
+        val promise = mainSession.evaluatePromiseJS("document.addCertException(false)")
+        var exceptionCaught = false
+        try {
+            val result = promise.value as Boolean
+            assertThat("Promise should not resolve", result, equalTo(false))
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            exceptionCaught = true
         }
+        assertThat("document.addCertException failed with exception", exceptionCaught, equalTo(true))
     }
 
     @Test fun loadUnknownHost() {
@@ -534,8 +533,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun bypassHTTPSOnlyError() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
+        // Bug 1849060. Hit debug assertion with fission
+        assumeThat(sessionRule.env.isFission and sessionRule.env.isDebugBuild, equalTo(false))
 
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY)
 
@@ -636,7 +635,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                         error.code,
                         equalTo(WebRequestError.ERROR_HTTPS_ONLY),
                     )
-                    return GeckoResult.fromValue(null)
+                    // When returning null then process is switched, web extension won't be loaded
+                    // since there is no document element.
+                    // So we shouldn't return null with fission if we want to use `evaluateJS`.
+                    return GeckoResult.fromValue("about:blank")
                 }
 
                 @AssertCalled(count = 1, order = [5])
@@ -648,6 +650,21 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         mainSession.load(testLoader)
         sessionRule.waitForPageStop()
+
+        // No good way to wait for loading about:blank error page. Use onLocaitonChange etc.
+        sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>,
+            ) {
+                assertThat("URL should match", url, equalTo(httpsUri))
+            }
+
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+            }
+        })
 
         sessionRule.delegateDuringNextWait(
             object : ProgressDelegate, NavigationDelegate, ContentDelegate {
@@ -673,7 +690,9 @@ class NavigationDelegateTest : BaseSessionTest() {
             },
         )
 
-        mainSession.waitForJS("document.reloadWithHttpsOnlyException()")
+        // Calling eloadWithHttpsOnlyException may causes that the document will be unloaded
+        // immediately before native message isn't handled.
+        mainSession.evaluateJS("window.setTimeout(() => { document.reloadWithHttpsOnlyException(); }, 100)")
         mainSession.waitForPageStop()
 
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
