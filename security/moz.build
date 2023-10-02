@@ -149,7 +149,10 @@ sandbox_vars = {
 }
 if CONFIG["OS_TARGET"] == "WINNT":
     # We want to remove XP_WIN32 eventually. See bug 1535219 for details.
-    sandbox_vars["CFLAGS"] = ["-DXP_WIN32"]
+    sandbox_vars["CFLAGS"] = [
+        "-DXP_WIN32",
+        "-Wno-error=unused-function",  # bug 1856445
+    ]
     if CONFIG["CPU_ARCH"] == "x86":
         # This should really be the default.
         sandbox_vars["ASFLAGS"] = ["-safeseh"]

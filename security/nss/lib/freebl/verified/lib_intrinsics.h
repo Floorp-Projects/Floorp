@@ -8,8 +8,20 @@
 #endif
 #endif
 
-#if !defined(HACL_CAN_COMPILE_INTRINSICS) || \
-    (defined(__clang__) && (__clang_major__ < 5))
+/*
+   GCC versions prior to 5.5 incorrectly optimize certain intrinsics.
+
+   See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81300
+
+   CLANG versions prior to 5 crash on certain intrinsics.
+
+   See https://bugs.llvm.org/show_bug.cgi?id=24943
+*/
+
+#if !defined(HACL_CAN_COMPILE_INTRINSICS) ||         \
+    (defined(__clang__) && (__clang_major__ < 5)) || \
+    (defined(__GNUC__) && !defined(__clang__) &&     \
+     (__GNUC__ < 5 || (__GNUC__ == 5 && (__GNUC_MINOR__ < 5))))
 
 #include "Hacl_IntTypes_Intrinsics.h"
 

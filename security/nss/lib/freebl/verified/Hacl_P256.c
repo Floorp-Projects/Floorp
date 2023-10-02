@@ -211,8 +211,7 @@ bn_sub_mod4(uint64_t *res, uint64_t *n, uint64_t *x, uint64_t *y)
         c = Lib_IntTypes_Intrinsics_add_carry_u64(c, t12, t2, res_i);
     }
     uint64_t c1 = c;
-    // TODO: remove unused variable
-    (void)c1;
+    KRML_HOST_IGNORE(c1);
     uint64_t c2 = (uint64_t)0U - c00;
     KRML_MAYBE_FOR4(i,
                     (uint32_t)0U,
@@ -285,8 +284,7 @@ bn_sqr4(uint64_t *res, uint64_t *x)
         } uint64_t r = c;
         res[i0 + i0] = r;);
     uint64_t c0 = Hacl_Bignum_Addition_bn_add_eq_len_u64((uint32_t)8U, res, res, res);
-    // TODO: remove unused variable
-    (void)c0;
+    KRML_HOST_IGNORE(c0);
     uint64_t tmp[8U] = { 0U };
     KRML_MAYBE_FOR4(i,
                     (uint32_t)0U,
@@ -298,13 +296,14 @@ bn_sqr4(uint64_t *res, uint64_t *x)
                     tmp[(uint32_t)2U * i] = lo;
                     tmp[(uint32_t)2U * i + (uint32_t)1U] = hi;);
     uint64_t c1 = Hacl_Bignum_Addition_bn_add_eq_len_u64((uint32_t)8U, res, tmp, res);
-    // TODO: remove unused variable
-    (void)c1;
+    KRML_HOST_IGNORE(c1);
 }
 
 static inline void
 bn_to_bytes_be4(uint8_t *res, uint64_t *f)
 {
+    uint8_t tmp[32U] = { 0U };
+    KRML_HOST_IGNORE(tmp);
     KRML_MAYBE_FOR4(i,
                     (uint32_t)0U,
                     (uint32_t)4U,
@@ -1040,38 +1039,33 @@ point_mul_g(uint64_t *res, uint64_t *scalar)
 {
     uint64_t q1[12U] = { 0U };
     make_base_point(q1);
-    /*
     uint64_t
-    q2[12U] =
-      {
-        (uint64_t)1499621593102562565U, (uint64_t)16692369783039433128U,
-        (uint64_t)15337520135922861848U, (uint64_t)5455737214495366228U,
-        (uint64_t)17827017231032529600U, (uint64_t)12413621606240782649U,
-        (uint64_t)2290483008028286132U, (uint64_t)15752017553340844820U,
-        (uint64_t)4846430910634234874U, (uint64_t)10861682798464583253U,
-        (uint64_t)15404737222404363049U, (uint64_t)363586619281562022U
-      };
+        q2[12U] = {
+            (uint64_t)1499621593102562565U, (uint64_t)16692369783039433128U,
+            (uint64_t)15337520135922861848U, (uint64_t)5455737214495366228U,
+            (uint64_t)17827017231032529600U, (uint64_t)12413621606240782649U,
+            (uint64_t)2290483008028286132U, (uint64_t)15752017553340844820U,
+            (uint64_t)4846430910634234874U, (uint64_t)10861682798464583253U,
+            (uint64_t)15404737222404363049U, (uint64_t)363586619281562022U
+        };
     uint64_t
-    q3[12U] =
-      {
-        (uint64_t)14619254753077084366U, (uint64_t)13913835116514008593U,
-        (uint64_t)15060744674088488145U, (uint64_t)17668414598203068685U,
-        (uint64_t)10761169236902342334U, (uint64_t)15467027479157446221U,
-        (uint64_t)14989185522423469618U, (uint64_t)14354539272510107003U,
-        (uint64_t)14298211796392133693U, (uint64_t)13270323784253711450U,
-        (uint64_t)13380964971965046957U, (uint64_t)8686204248456909699U
-      };
+        q3[12U] = {
+            (uint64_t)14619254753077084366U, (uint64_t)13913835116514008593U,
+            (uint64_t)15060744674088488145U, (uint64_t)17668414598203068685U,
+            (uint64_t)10761169236902342334U, (uint64_t)15467027479157446221U,
+            (uint64_t)14989185522423469618U, (uint64_t)14354539272510107003U,
+            (uint64_t)14298211796392133693U, (uint64_t)13270323784253711450U,
+            (uint64_t)13380964971965046957U, (uint64_t)8686204248456909699U
+        };
     uint64_t
-    q4[12U] =
-      {
-        (uint64_t)7870395003430845958U, (uint64_t)18001862936410067720U,
-        (uint64_t)8006461232116967215U, (uint64_t)5921313779532424762U,
-        (uint64_t)10702113371959864307U, (uint64_t)8070517410642379879U,
-        (uint64_t)7139806720777708306U, (uint64_t)8253938546650739833U,
-        (uint64_t)17490482834545705718U, (uint64_t)1065249776797037500U,
-        (uint64_t)5018258455937968775U, (uint64_t)14100621120178668337U
-      };
-    */
+        q4[12U] = {
+            (uint64_t)7870395003430845958U, (uint64_t)18001862936410067720U,
+            (uint64_t)8006461232116967215U, (uint64_t)5921313779532424762U,
+            (uint64_t)10702113371959864307U, (uint64_t)8070517410642379879U,
+            (uint64_t)7139806720777708306U, (uint64_t)8253938546650739833U,
+            (uint64_t)17490482834545705718U, (uint64_t)1065249776797037500U,
+            (uint64_t)5018258455937968775U, (uint64_t)14100621120178668337U
+        };
     uint64_t *r1 = scalar;
     uint64_t *r2 = scalar + (uint32_t)1U;
     uint64_t *r3 = scalar + (uint32_t)2U;
@@ -1099,6 +1093,10 @@ point_mul_g(uint64_t *res, uint64_t *scalar)
                      uint64_t bits_l2 = Hacl_Bignum_Lib_bn_get_bits_u64((uint32_t)1U, r1, k2, (uint32_t)4U);
                      precomp_get_consttime(Hacl_P256_PrecompTable_precomp_basepoint_table_w4, bits_l2, tmp);
                      point_add(res, res, tmp););
+    KRML_HOST_IGNORE(q1);
+    KRML_HOST_IGNORE(q2);
+    KRML_HOST_IGNORE(q3);
+    KRML_HOST_IGNORE(q4);
 }
 
 static inline void
@@ -1607,6 +1605,7 @@ Hacl_P256_ecdsa_sign_p256_without_hash(
     uint64_t m_q[4U] = { 0U };
     uint8_t mHash[32U] = { 0U };
     memcpy(mHash, msg, (uint32_t)32U * sizeof(uint8_t));
+    KRML_HOST_IGNORE(msg_len);
     uint8_t *mHash32 = mHash;
     bn_from_bytes_be4(m_q, mHash32);
     qmod_short(m_q, m_q);
@@ -1645,6 +1644,7 @@ Hacl_P256_ecdsa_verif_without_hash(
     uint64_t m_q[4U] = { 0U };
     uint8_t mHash[32U] = { 0U };
     memcpy(mHash, msg, (uint32_t)32U * sizeof(uint8_t));
+    KRML_HOST_IGNORE(msg_len);
     uint8_t *mHash32 = mHash;
     bn_from_bytes_be4(m_q, mHash32);
     qmod_short(m_q, m_q);
