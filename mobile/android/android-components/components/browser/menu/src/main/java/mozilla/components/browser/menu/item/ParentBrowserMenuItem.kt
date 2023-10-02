@@ -50,7 +50,7 @@ class ParentBrowserMenuItem(
 ) : AbstractParentBrowserMenuItem(subMenu, isCollapsingMenuLimit, endOfMenuAlwaysVisible) {
 
     override var visible: () -> Boolean = { true }
-    override fun getLayoutResource() = R.layout.mozac_browser_menu_item_image_text
+    override fun getLayoutResource() = R.layout.mozac_browser_menu_item_parent_menu
 
     override fun bind(menu: BrowserMenu, view: View) {
         bindText(view)
