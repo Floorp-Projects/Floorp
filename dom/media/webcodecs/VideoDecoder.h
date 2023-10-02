@@ -66,8 +66,6 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoDecoder, DOMEventTargetHelper)
 
-  IMPL_EVENT_HANDLER(dequeue)
-
  public:
   VideoDecoder(nsIGlobalObject* aParent,
                RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
