@@ -29,12 +29,12 @@
 # NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
           oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
-<button id="customization-toolbar-visibility-button" class="customizationmode-button" type="menu" data-l10n-id="customize-mode-toolbars">
+<button id="customization-toolbar-visibility-button" class="footer-button" type="menu" data-l10n-id="customize-mode-toolbars">
   <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
 </button>
 <button id="customization-uidensity-button"
         data-l10n-id="customize-mode-uidensity"
-        class="customizationmode-button"
+        class="footer-button"
         type="menu"
         hidden="true">
   <panel type="arrow" id="customization-uidensity-menu"
@@ -90,30 +90,31 @@
 
 <button id="whimsy-button"
         type="checkbox"
-        class="customizationmode-button"
+        class="footer-button"
         oncommand="gCustomizeMode.togglePong(this.checked);"
         hidden="true"/>
 
 <spacer id="customization-footer-spacer"/>
 #ifdef XP_MACOSX
     <button id="customization-touchbar-button"
-        class="customizationmode-button"
+        class="footer-button"
         hidden="true"
         oncommand="gCustomizeMode.customizeTouchBar();"
         data-l10n-id="customize-mode-touchbar-cmd"/>
     <spacer hidden="true" id="customization-touchbar-spacer"/>
 #endif
 <button id="customization-undo-reset-button"
-        class="customizationmode-button"
+        class="footer-button"
         hidden="true"
         oncommand="gCustomizeMode.undoReset();"
         data-l10n-id="customize-mode-undo-cmd"/>
 <button id="customization-reset-button"
         oncommand="gCustomizeMode.reset();"
         data-l10n-id="customize-mode-restore-defaults"
-        class="customizationmode-button"/>
+        class="footer-button"/>
 <button id="customization-done-button"
         oncommand="gCustomizeMode.exit();"
         data-l10n-id="customize-mode-done"
-        class="customizationmode-button"/>
+        default="true"
+        class="footer-button"/>
 </hbox>
