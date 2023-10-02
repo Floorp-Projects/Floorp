@@ -115,7 +115,7 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup() {
     "default",
   ]);
 
-  if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+  if (AppConstants.platform !== "win") {
     return;
   }
 

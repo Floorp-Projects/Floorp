@@ -8,9 +8,6 @@ const DUMMY_URL =
     "http://example.com"
   ) + "/dummy.html";
 
-const HAS_THREAD_NAMES =
-  AppConstants.platform != "win" ||
-  AppConstants.isPlatformAndVersionAtLeast("win", 10);
 const isFissionEnabled = SpecialPowers.useRemoteSubframes;
 
 const SAMPLE_SIZE = 10;
@@ -67,13 +64,10 @@ add_task(async function test_proc_info() {
 
         checkProcessCpuTime(parentProc);
 
-        // Under Windows, thread names appeared with Windows 10.
-        if (HAS_THREAD_NAMES) {
-          Assert.ok(
-            parentProc.threads.some(thread => thread.name),
-            "At least one of the threads of the parent process is named"
-          );
-        }
+        Assert.ok(
+          parentProc.threads.some(thread => thread.name),
+          "At least one of the threads of the parent process is named"
+        );
 
         Assert.ok(parentProc.memory > 0, "Memory was set");
 

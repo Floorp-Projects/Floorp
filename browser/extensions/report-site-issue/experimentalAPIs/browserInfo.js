@@ -177,7 +177,7 @@ this.browserInfo = class extends ExtensionAPI {
             memoryMb,
           };
 
-          if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
+          if (AppConstants.platform == "win") {
             data.sec = getSecurityAppData();
           }
 

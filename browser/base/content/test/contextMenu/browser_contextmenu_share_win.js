@@ -41,12 +41,6 @@ add_task(async function test_contextmenu_share_win() {
       "hidden"
     );
     let itemCreated = contextMenu.querySelector(".share-tab-url-item");
-    if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
-      Assert.ok(!itemCreated, "We only expose share on windows 10 and above");
-      contextMenu.hidePopup();
-      await contextMenuClosedPromise;
-      return;
-    }
 
     ok(itemCreated, "Got Share item on Windows 10");
 
