@@ -73,10 +73,6 @@ const importCalls = [
 
 const singleLazyGetterCalls = [
   {
-    from: ["XPCOMUtils", "defineLazyModuleGetter"],
-    to: ["ChromeUtils", "defineESModuleGetters"],
-  },
-  {
     from: ["ChromeUtils", "defineModuleGetter"],
     to: ["ChromeUtils", "defineESModuleGetters"],
   },

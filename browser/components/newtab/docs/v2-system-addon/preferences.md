@@ -49,7 +49,7 @@ To read/set/observe Activity Stream preferences, construct a `Prefs` instance fo
 
 ```js
 // Import Prefs
-XPCOMUtils.defineLazyModuleGetter(
+ChromeUtils.defineModuleGetter(
   this,
   "Prefs",
   "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
