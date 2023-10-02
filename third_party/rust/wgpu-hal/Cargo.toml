@@ -87,7 +87,7 @@ rev = "df8107b7"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
-version = "0.28.6"
+version = "0.28.7"
 features = ["android-native-activity"]
 
 [features]
