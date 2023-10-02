@@ -84,10 +84,6 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
       const GlobalObject& aGlobal, const VideoDecoderInit& aInit,
       ErrorResult& aRv);
 
-  CodecState State() const;
-
-  uint32_t DecodeQueueSize() const;
-
   void Configure(const VideoDecoderConfig& aConfig, ErrorResult& aRv);
 
   void Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv);
