@@ -6,6 +6,12 @@ revision fed07efcde72824ac1ada80d4af4e91ac4fcfc14
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 git checkout fed07efcde72824ac1ada80d4af4e91ac4fcfc14
 
+This copy has a single patch backported from a later revision to fix the build with recent binutils:
+
+http://git.videolan.org/?p=ffmpeg.git;a=patch;h=effadce6c756247ea8bae32dc13bb3e6f464f0eb
+that is available as `1846703.patch` in this directory. As usual this has other
+changes that don't come from upstream, in `changes.patch`
+
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8, vp9, av1 (libdav1d), mp3, and flac portion of
