@@ -658,7 +658,6 @@ function BuildConditionSandbox(aURL) {
 
   var canvasBackend = readGfxInfo(gfxInfo, "AzureCanvasBackend");
   var contentBackend = readGfxInfo(gfxInfo, "AzureContentBackend");
-  var windowProtocol = readGfxInfo(gfxInfo, "windowProtocol");
 
   sandbox.gpuProcess = gfxInfo.usingGPUProcess;
   sandbox.azureCairo = canvasBackend == "cairo";
@@ -669,7 +668,6 @@ function BuildConditionSandbox(aURL) {
   sandbox.contentSameGfxBackendAsCanvas =
     contentBackend == canvasBackend ||
     (contentBackend == "none" && canvasBackend == "cairo");
-  sandbox.wayland = windowProtocol == "wayland";
 
   sandbox.remoteCanvas =
     Services.prefs.getBoolPref("gfx.canvas.remote") &&
