@@ -762,6 +762,7 @@ if (rtc_include_tests) {
         "../rtc_base:rtc_task_queue",
         "../rtc_base/synchronization:mutex",
         "../rtc_base/system:file_wrapper",
+        "jitter:jitter_unittests",
         "pc/e2e:e2e_unittests",
         "pc/e2e/analyzer/video:video_analyzer_unittests",
         "pc/e2e/analyzer/video/dvqa:dvqa_unittests",

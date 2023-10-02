@@ -442,10 +442,10 @@ TEST_F(RtpRtcpImpl2Test, Rtt) {
 }
 
 TEST_F(RtpRtcpImpl2Test, RttForReceiverOnly) {
-  // Receiver module should send a Receiver time reference report (RTRR).
+  // Receiver module should send a Receiver reference time report block (RRTR).
   EXPECT_EQ(0, receiver_.impl_->SendRTCP(kRtcpReport));
 
-  // Sender module should send a response to the last received RTRR (DLRR).
+  // Sender module should send a response to the last received RRTR (DLRR).
   AdvanceTime(TimeDelta::Millis(1000));
   // Send Frame before sending a SR.
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
@@ -494,8 +494,8 @@ TEST_F(RtpRtcpImpl2Test, RtcpPacketTypeCounter_Nack) {
 
 TEST_F(RtpRtcpImpl2Test, AddStreamDataCounters) {
   StreamDataCounters rtp;
-  const int64_t kStartTimeMs = 1;
-  rtp.first_packet_time_ms = kStartTimeMs;
+  const Timestamp kStartTime = Timestamp::Seconds(1);
+  rtp.first_packet_time = kStartTime;
   rtp.transmitted.packets = 1;
   rtp.transmitted.payload_bytes = 1;
   rtp.transmitted.header_bytes = 2;
@@ -505,7 +505,6 @@ TEST_F(RtpRtcpImpl2Test, AddStreamDataCounters) {
                                               rtp.transmitted.padding_bytes);
 
   StreamDataCounters rtp2;
-  rtp2.first_packet_time_ms = -1;
   rtp2.transmitted.packets = 10;
   rtp2.transmitted.payload_bytes = 10;
   rtp2.retransmitted.header_bytes = 4;
@@ -516,7 +515,7 @@ TEST_F(RtpRtcpImpl2Test, AddStreamDataCounters) {
 
   StreamDataCounters sum = rtp;
   sum.Add(rtp2);
-  EXPECT_EQ(kStartTimeMs, sum.first_packet_time_ms);
+  EXPECT_EQ(sum.first_packet_time, kStartTime);
   EXPECT_EQ(11U, sum.transmitted.packets);
   EXPECT_EQ(11U, sum.transmitted.payload_bytes);
   EXPECT_EQ(2U, sum.transmitted.header_bytes);
@@ -530,9 +529,9 @@ TEST_F(RtpRtcpImpl2Test, AddStreamDataCounters) {
             rtp.transmitted.TotalBytes() + rtp2.transmitted.TotalBytes());
 
   StreamDataCounters rtp3;
-  rtp3.first_packet_time_ms = kStartTimeMs + 10;
+  rtp3.first_packet_time = kStartTime + TimeDelta::Millis(10);
   sum.Add(rtp3);
-  EXPECT_EQ(kStartTimeMs, sum.first_packet_time_ms);  // Holds oldest time.
+  EXPECT_EQ(sum.first_packet_time, kStartTime);  // Holds oldest time.
 }
 
 TEST_F(RtpRtcpImpl2Test, SendsInitialNackList) {
@@ -1077,10 +1076,10 @@ TEST_F(RtpRtcpImpl2Test, RtpStateReflectsCurrentState) {
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
 
   // Simulate an RTCP receiver report in order to populate `ssrc_has_acked`.
-  RTCPReportBlock ack;
-  ack.source_ssrc = kSenderSsrc;
-  ack.extended_highest_sequence_number = kSeq;
-  sender_.impl_->OnReceivedRtcpReportBlocks({ack});
+  ReportBlockData ack[1];
+  ack[0].set_source_ssrc(kSenderSsrc);
+  ack[0].set_extended_highest_sequence_number(kSeq);
+  sender_.impl_->OnReceivedRtcpReportBlocks(ack);
 
   RtpState state = sender_.impl_->GetRtpState();
   EXPECT_EQ(state.sequence_number, kSeq);
@@ -1125,10 +1124,10 @@ TEST_F(RtpRtcpImpl2Test, RtxRtpStateReflectsCurrentState) {
   EXPECT_EQ(rtx_packet.Ssrc(), kRtxSenderSsrc);
 
   // Simulate an RTCP receiver report in order to populate `ssrc_has_acked`.
-  RTCPReportBlock ack;
-  ack.source_ssrc = kRtxSenderSsrc;
-  ack.extended_highest_sequence_number = rtx_packet.SequenceNumber();
-  sender_.impl_->OnReceivedRtcpReportBlocks({ack});
+  ReportBlockData ack[1];
+  ack[0].set_source_ssrc(kRtxSenderSsrc);
+  ack[0].set_extended_highest_sequence_number(rtx_packet.SequenceNumber());
+  sender_.impl_->OnReceivedRtcpReportBlocks(ack);
 
   RtpState rtp_state = sender_.impl_->GetRtpState();
   RtpState rtx_state = sender_.impl_->GetRtxState();

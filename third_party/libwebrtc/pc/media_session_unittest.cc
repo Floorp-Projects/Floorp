@@ -23,6 +23,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/crypto_params.h"
 #include "media/base/codec.h"
@@ -111,34 +112,38 @@ using webrtc::RtpExtension;
 using webrtc::RtpTransceiverDirection;
 
 static const AudioCodec kAudioCodecs1[] = {
-    AudioCodec(103, "ISAC", 16000, -1, 1),
-    AudioCodec(102, "iLBC", 8000, 13300, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
-    AudioCodec(8, "PCMA", 8000, 64000, 1),
-    AudioCodec(117, "red", 8000, 0, 1),
-    AudioCodec(107, "CN", 48000, 0, 1)};
+    cricket::CreateAudioCodec(103, "ISAC", 16000, 1),
+    cricket::CreateAudioCodec(102, "iLBC", 8000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
+    cricket::CreateAudioCodec(8, "PCMA", 8000, 1),
+    cricket::CreateAudioCodec(117, "red", 8000, 1),
+    cricket::CreateAudioCodec(107, "CN", 48000, 1)};
 
 static const AudioCodec kAudioCodecs2[] = {
-    AudioCodec(126, "foo", 16000, 22000, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
-    AudioCodec(127, "iLBC", 8000, 13300, 1),
+    cricket::CreateAudioCodec(126, "foo", 16000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
+    cricket::CreateAudioCodec(127, "iLBC", 8000, 1),
 };
 
 static const AudioCodec kAudioCodecsAnswer[] = {
-    AudioCodec(102, "iLBC", 8000, 13300, 1),
-    AudioCodec(0, "PCMU", 8000, 64000, 1),
+    cricket::CreateAudioCodec(102, "iLBC", 8000, 1),
+    cricket::CreateAudioCodec(0, "PCMU", 8000, 1),
 };
 
-static const VideoCodec kVideoCodecs1[] = {VideoCodec(96, "H264-SVC"),
-                                           VideoCodec(97, "H264")};
+static const VideoCodec kVideoCodecs1[] = {
+    cricket::CreateVideoCodec(96, "H264-SVC"),
+    cricket::CreateVideoCodec(97, "H264")};
 
-static const VideoCodec kVideoCodecs1Reverse[] = {VideoCodec(97, "H264"),
-                                                  VideoCodec(96, "H264-SVC")};
+static const VideoCodec kVideoCodecs1Reverse[] = {
+    cricket::CreateVideoCodec(97, "H264"),
+    cricket::CreateVideoCodec(96, "H264-SVC")};
 
-static const VideoCodec kVideoCodecs2[] = {VideoCodec(126, "H264"),
-                                           VideoCodec(127, "H263")};
+static const VideoCodec kVideoCodecs2[] = {
+    cricket::CreateVideoCodec(126, "H264"),
+    cricket::CreateVideoCodec(127, "H263")};
 
-static const VideoCodec kVideoCodecsAnswer[] = {VideoCodec(97, "H264")};
+static const VideoCodec kVideoCodecsAnswer[] = {
+    cricket::CreateVideoCodec(97, "H264")};
 
 static const RtpExtension kAudioRtpExtension1[] = {
     RtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level", 8),
@@ -1312,10 +1317,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "audio",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {AudioCodec(96, "opus", 48000, -1, 1)};
+  std::vector f1_codecs = {cricket::CreateAudioCodec(96, "opus", 48000, 1)};
   f1_.set_audio_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {AudioCodec(0, "PCMU", 8000, -1, 1)};
+  std::vector f2_codecs = {cricket::CreateAudioCodec(0, "PCMU", 8000, 1)};
   f2_.set_audio_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -1383,10 +1388,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {VideoCodec(96, "H264")};
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264")};
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {VideoCodec(97, "VP8")};
+  std::vector f2_codecs = {cricket::CreateVideoCodec(97, "VP8")};
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -1405,12 +1410,12 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);
-  std::vector f1_codecs = {VideoCodec(96, "H264"),
-                           VideoCodec(118, "flexfec-03")};
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264"),
+                           cricket::CreateVideoCodec(118, "flexfec-03")};
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
-  std::vector f2_codecs = {VideoCodec(97, "VP8"),
-                           VideoCodec(118, "flexfec-03")};
+  std::vector f2_codecs = {cricket::CreateVideoCodec(97, "VP8"),
+                           cricket::CreateVideoCodec(118, "flexfec-03")};
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -2948,12 +2953,14 @@ TEST_F(MediaSessionDescriptionFactoryTest,
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates rtx for H264 with the payload type `f1_` uses.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   // This creates rtx for H264 with the payload type `f2_` uses.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs2[0].id), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs2[0].id),
+              &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
@@ -2965,7 +2972,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
       GetFirstVideoContentDescription(answer.get());
 
   std::vector<VideoCodec> expected_codecs = MAKE_VECTOR(kVideoCodecsAnswer);
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id),
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
               &expected_codecs);
 
   EXPECT_EQ(expected_codecs, vcd->codecs());
@@ -2998,14 +3005,14 @@ TEST_F(MediaSessionDescriptionFactoryTest,
                              &opts);
   // We specifically choose different preferred payload types for VP8 to
   // trigger the issue.
-  cricket::VideoCodec vp8_offerer(100, "VP8");
+  cricket::VideoCodec vp8_offerer = cricket::CreateVideoCodec(100, "VP8");
   cricket::VideoCodec vp8_offerer_rtx =
-      VideoCodec::CreateRtxCodec(101, vp8_offerer.id);
-  cricket::VideoCodec vp8_answerer(110, "VP8");
+      cricket::CreateVideoRtxCodec(101, vp8_offerer.id);
+  cricket::VideoCodec vp8_answerer = cricket::CreateVideoCodec(110, "VP8");
   cricket::VideoCodec vp8_answerer_rtx =
-      VideoCodec::CreateRtxCodec(111, vp8_answerer.id);
-  cricket::VideoCodec vp9(120, "VP9");
-  cricket::VideoCodec vp9_rtx = VideoCodec::CreateRtxCodec(121, vp9.id);
+      cricket::CreateVideoRtxCodec(111, vp8_answerer.id);
+  cricket::VideoCodec vp9 = cricket::CreateVideoCodec(120, "VP9");
+  cricket::VideoCodec vp9_rtx = cricket::CreateVideoRtxCodec(121, vp9.id);
 
   std::vector<VideoCodec> f1_codecs = {vp8_offerer, vp8_offerer_rtx};
   // We also specifically cause the answerer to prefer VP9, such that if it
@@ -3048,7 +3055,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
        RespondentCreatesOfferWithVideoAndRtxAfterCreatingAudioAnswer) {
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates rtx for H264 with the payload type `f1_` uses.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   MediaSessionOptions opts;
@@ -3073,7 +3081,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   int used_pl_type = acd->codecs()[0].id;
   f2_codecs[0].id = used_pl_type;  // Set the payload type for H264.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, used_pl_type), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, used_pl_type), &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> updated_offer(
@@ -3109,7 +3117,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   // This creates rtx for H264 with the payload type `f2_` uses.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs2[0].id), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs2[0].id),
+              &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -3135,7 +3144,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
 
   // New offer should attempt to add H263, and RTX for H264.
   expected_codecs.push_back(kVideoCodecs2[1]);
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs1[1].id),
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs1[1].id),
               &expected_codecs);
   EXPECT_EQ(expected_codecs, updated_vcd->codecs());
 }
@@ -3148,12 +3157,14 @@ TEST_F(MediaSessionDescriptionFactoryTest, RtxWithoutApt) {
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates RTX without associated payload type parameter.
-  AddRtxCodec(VideoCodec(126, cricket::kRtxCodecName), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoCodec(126, cricket::kRtxCodecName),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   // This creates RTX for H264 with the payload type `f2_` uses.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs2[0].id), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs2[0].id),
+              &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
@@ -3191,12 +3202,14 @@ TEST_F(MediaSessionDescriptionFactoryTest, FilterOutRtxIfAptDoesntMatch) {
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates RTX for H264 in sender.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   // This creates RTX for H263 in receiver.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs2[1].id), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs2[1].id),
+              &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f2_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
@@ -3221,16 +3234,19 @@ TEST_F(MediaSessionDescriptionFactoryTest,
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates RTX for H264-SVC in sender.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs1[0].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs1[0].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // This creates RTX for H264 in sender.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::vector<VideoCodec> f2_codecs = MAKE_VECTOR(kVideoCodecs2);
   // This creates RTX for H264 in receiver.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(124, kVideoCodecs2[0].id), &f2_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(124, kVideoCodecs2[0].id),
+              &f2_codecs);
   f2_.set_video_codecs(f2_codecs, f1_codecs);
 
   // H264-SVC codec is removed in the answer, therefore, associated RTX codec
@@ -3242,7 +3258,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   const VideoContentDescription* vcd =
       GetFirstVideoContentDescription(answer.get());
   std::vector<VideoCodec> expected_codecs = MAKE_VECTOR(kVideoCodecsAnswer);
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id),
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
               &expected_codecs);
 
   EXPECT_EQ(expected_codecs, vcd->codecs());
@@ -3257,7 +3273,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, AddSecondRtxInNewOffer) {
                              &opts);
   std::vector<VideoCodec> f1_codecs = MAKE_VECTOR(kVideoCodecs1);
   // This creates RTX for H264 for the offerer.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
@@ -3266,12 +3283,13 @@ TEST_F(MediaSessionDescriptionFactoryTest, AddSecondRtxInNewOffer) {
       GetFirstVideoContentDescription(offer.get());
 
   std::vector<VideoCodec> expected_codecs = MAKE_VECTOR(kVideoCodecs1);
-  AddRtxCodec(VideoCodec::CreateRtxCodec(126, kVideoCodecs1[1].id),
+  AddRtxCodec(cricket::CreateVideoRtxCodec(126, kVideoCodecs1[1].id),
               &expected_codecs);
   EXPECT_EQ(expected_codecs, vcd->codecs());
 
   // Now, attempt to add RTX for H264-SVC.
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs1[0].id), &f1_codecs);
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs1[0].id),
+              &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   std::unique_ptr<SessionDescription> updated_offer(
@@ -3279,7 +3297,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, AddSecondRtxInNewOffer) {
   ASSERT_TRUE(updated_offer);
   vcd = GetFirstVideoContentDescription(updated_offer.get());
 
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, kVideoCodecs1[0].id),
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, kVideoCodecs1[0].id),
               &expected_codecs);
   EXPECT_EQ(expected_codecs, vcd->codecs());
 }
@@ -3297,8 +3315,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateMultipleRtxSsrcs) {
 
   // Use a single real codec, and then add RTX for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
-  AddRtxCodec(VideoCodec::CreateRtxCodec(125, 97), &f1_codecs);
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
+  AddRtxCodec(cricket::CreateVideoRtxCodec(125, 97), &f1_codecs);
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // Ensure that the offer has an RTX ssrc for each regular ssrc, and that there
@@ -3341,8 +3359,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, GenerateFlexfecSsrc) {
 
   // Use a single real codec, and then add FlexFEC for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
-  f1_codecs.push_back(VideoCodec(118, "flexfec-03"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(118, "flexfec-03"));
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // Ensure that the offer has a single FlexFEC ssrc and that
@@ -3384,8 +3402,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateNoFlexfecSsrcs) {
 
   // Use a single real codec, and then add FlexFEC for it.
   std::vector<VideoCodec> f1_codecs;
-  f1_codecs.push_back(VideoCodec(97, "H264"));
-  f1_codecs.push_back(VideoCodec(118, "flexfec-03"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(97, "H264"));
+  f1_codecs.push_back(cricket::CreateVideoCodec(118, "flexfec-03"));
   f1_.set_video_codecs(f1_codecs, f1_codecs);
 
   // Ensure that the offer has no FlexFEC ssrcs for each regular ssrc, and that
@@ -4226,6 +4244,76 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   EXPECT_EQ(vcd1->codecs()[0].id, vcd2->codecs()[0].id);
 }
 
+// Test verifying that negotiating codecs with the same packetization retains
+// the packetization value.
+TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsEqual) {
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264")};
+  f1_codecs.back().packetization = "raw";
+  f1_.set_video_codecs(f1_codecs, f1_codecs);
+
+  std::vector f2_codecs = {cricket::CreateVideoCodec(96, "H264")};
+  f2_codecs.back().packetization = "raw";
+  f2_.set_video_codecs(f2_codecs, f2_codecs);
+
+  MediaSessionOptions opts;
+  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+
+  // Create an offer with two video sections using same codecs.
+  std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
+  ASSERT_TRUE(offer);
+  ASSERT_EQ(1u, offer->contents().size());
+  const VideoContentDescription* vcd1 =
+      offer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, "raw");
+
+  // Create answer and negotiate the codecs.
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswer(offer.get(), opts, nullptr);
+  ASSERT_TRUE(answer);
+  ASSERT_EQ(1u, answer->contents().size());
+  vcd1 = answer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, "raw");
+}
+
+// Test verifying that negotiating codecs with different packetization removes
+// the packetization value.
+TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsDifferent) {
+  std::vector f1_codecs = {cricket::CreateVideoCodec(96, "H264")};
+  f1_codecs.back().packetization = "raw";
+  f1_.set_video_codecs(f1_codecs, f1_codecs);
+
+  std::vector f2_codecs = {cricket::CreateVideoCodec(96, "H264")};
+  f2_codecs.back().packetization = "notraw";
+  f2_.set_video_codecs(f2_codecs, f2_codecs);
+
+  MediaSessionOptions opts;
+  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+
+  // Create an offer with two video sections using same codecs.
+  std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
+  ASSERT_TRUE(offer);
+  ASSERT_EQ(1u, offer->contents().size());
+  const VideoContentDescription* vcd1 =
+      offer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, "raw");
+
+  // Create answer and negotiate the codecs.
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswer(offer.get(), opts, nullptr);
+  ASSERT_TRUE(answer);
+  ASSERT_EQ(1u, answer->contents().size());
+  vcd1 = answer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].packetization, absl::nullopt);
+}
+
 // Test that the codec preference order per media section is respected in
 // subsequent offer.
 TEST_F(MediaSessionDescriptionFactoryTest,
@@ -4363,10 +4451,10 @@ TEST_F(MediaSessionDescriptionFactoryTest,
        H264MatchCriteriaIncludesPacketizationMode) {
   // Create two H264 codecs with the same profile level ID and different
   // packetization modes.
-  VideoCodec h264_pm0(96, "H264");
+  VideoCodec h264_pm0 = cricket::CreateVideoCodec(96, "H264");
   h264_pm0.params[cricket::kH264FmtpProfileLevelId] = "42c01f";
   h264_pm0.params[cricket::kH264FmtpPacketizationMode] = "0";
-  VideoCodec h264_pm1(97, "H264");
+  VideoCodec h264_pm1 = cricket::CreateVideoCodec(97, "H264");
   h264_pm1.params[cricket::kH264FmtpProfileLevelId] = "42c01f";
   h264_pm1.params[cricket::kH264FmtpPacketizationMode] = "1";
 
@@ -4582,13 +4670,13 @@ void TestAudioCodecsOffer(RtpTransceiverDirection direction) {
 }
 
 static const AudioCodec kOfferAnswerCodecs[] = {
-    AudioCodec(0, "codec0", 16000, -1, 1),
-    AudioCodec(1, "codec1", 8000, 13300, 1),
-    AudioCodec(2, "codec2", 8000, 64000, 1),
-    AudioCodec(3, "codec3", 8000, 64000, 1),
-    AudioCodec(4, "codec4", 8000, 0, 2),
-    AudioCodec(5, "codec5", 32000, 0, 1),
-    AudioCodec(6, "codec6", 48000, 0, 1)};
+    cricket::CreateAudioCodec(0, "codec0", 16000, 1),
+    cricket::CreateAudioCodec(1, "codec1", 8000, 1),
+    cricket::CreateAudioCodec(2, "codec2", 8000, 1),
+    cricket::CreateAudioCodec(3, "codec3", 8000, 1),
+    cricket::CreateAudioCodec(4, "codec4", 8000, 2),
+    cricket::CreateAudioCodec(5, "codec5", 32000, 1),
+    cricket::CreateAudioCodec(6, "codec6", 48000, 1)};
 
 /* The codecs groups below are chosen as per the matrix below. The objective
  * is to have different sets of codecs in the inputs, to get unique sets of

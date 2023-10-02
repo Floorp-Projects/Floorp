@@ -1087,7 +1087,8 @@ void ModifyPayloadTypesAndRemoveMidExtension(
     media->set_rtp_header_extensions(extensions);
     cricket::VideoContentDescription* video = media->as_video();
     ASSERT_TRUE(video != nullptr);
-    std::vector<cricket::VideoCodec> codecs = {{pt++, "VP8"}};
+    std::vector<cricket::VideoCodec> codecs = {
+        cricket::CreateVideoCodec(pt++, "VP8")};
     video->set_codecs(codecs);
   }
 }
@@ -1418,7 +1419,6 @@ TEST_P(PeerConnectionIntegrationTest,
   ASSERT_EQ(1U, inbound_stream_stats.size());
   ASSERT_TRUE(inbound_stream_stats[0]->bytes_received.is_defined());
   ASSERT_GT(*inbound_stream_stats[0]->bytes_received, 0U);
-  ASSERT_TRUE(inbound_stream_stats[0]->track_id.is_defined());
 }
 
 // Same as above but for the legacy stats implementation.
@@ -1469,105 +1469,6 @@ TEST_P(PeerConnectionIntegrationTest,
   EXPECT_TRUE(inbound_rtps[index]->audio_level.is_defined());
 }
 
-// Helper for test below.
-void ModifySsrcs(cricket::SessionDescription* desc) {
-  for (ContentInfo& content : desc->contents()) {
-    for (StreamParams& stream :
-         content.media_description()->mutable_streams()) {
-      for (uint32_t& ssrc : stream.ssrcs) {
-        ssrc = rtc::CreateRandomId();
-      }
-    }
-  }
-}
-
-// Test that the "DEPRECATED_RTCMediaStreamTrackStats"  object is updated
-// correctly when SSRCs are unsignaled, and the SSRC of the received (audio)
-// stream changes. This should result in two "RTCInboundRtpStreamStats", but
-// only one "DEPRECATED_RTCMediaStreamTrackStats", whose counters go up
-// continuously rather than being reset to 0 once the SSRC change occurs.
-//
-// Regression test for this bug:
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=8158
-//
-// The bug causes the track stats to only represent one of the two streams:
-// whichever one has the higher SSRC. So with this bug, there was a 50% chance
-// that the track stat counters would reset to 0 when the new stream is
-// received, and a 50% chance that they'll stop updating (while
-// "concealed_samples" continues increasing, due to silence being generated for
-// the inactive stream).
-TEST_P(PeerConnectionIntegrationTest,
-       TrackStatsUpdatedCorrectlyWhenUnsignaledSsrcChanges) {
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
-  ConnectFakeSignaling();
-  caller()->AddAudioTrack();
-  // Remove SSRCs and MSIDs from the received offer SDP, simulating an endpoint
-  // that doesn't signal SSRCs (from the callee's perspective).
-  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
-  caller()->CreateAndSetAndSignalOffer();
-  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-  // Wait for 50 audio frames (500ms of audio) to be received by the callee.
-  {
-    MediaExpectations media_expectations;
-    media_expectations.CalleeExpectsSomeAudio(50);
-    ASSERT_TRUE(ExpectNewFrames(media_expectations));
-  }
-  // Some audio frames were received, so we should have nonzero "samples
-  // received" for the track.
-  rtc::scoped_refptr<const webrtc::RTCStatsReport> report =
-      callee()->NewGetStats();
-  ASSERT_NE(nullptr, report);
-  auto track_stats =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  ASSERT_EQ(1U, track_stats.size());
-  ASSERT_TRUE(track_stats[0]->total_samples_received.is_defined());
-  ASSERT_GT(*track_stats[0]->total_samples_received, 0U);
-  // uint64_t prev_samples_received = *track_stats[0]->total_samples_received;
-
-  // Create a new offer and munge it to cause the caller to use a new SSRC.
-  caller()->SetGeneratedSdpMunger(ModifySsrcs);
-  caller()->CreateAndSetAndSignalOffer();
-  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-  // Wait for 25 more audio frames (250ms of audio) to be received, from the new
-  // SSRC.
-  {
-    MediaExpectations media_expectations;
-    media_expectations.CalleeExpectsSomeAudio(25);
-    ASSERT_TRUE(ExpectNewFrames(media_expectations));
-  }
-
-  report = callee()->NewGetStats();
-  ASSERT_NE(nullptr, report);
-  track_stats =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  ASSERT_EQ(1U, track_stats.size());
-  ASSERT_TRUE(track_stats[0]->total_samples_received.is_defined());
-  // The "total samples received" stat should only be greater than it was
-  // before.
-  // TODO(deadbeef): Uncomment this assertion once the bug is completely fixed.
-  // Right now, the new SSRC will cause the counters to reset to 0.
-  // EXPECT_GT(*track_stats[0]->total_samples_received, prev_samples_received);
-
-  // Additionally, the percentage of concealed samples (samples generated to
-  // conceal packet loss) should be less than 50%. If it's greater, that's a
-  // good sign that we're seeing stats from the old stream that's no longer
-  // receiving packets, and is generating concealed samples of silence.
-  constexpr double kAcceptableConcealedSamplesPercentage = 0.50;
-  ASSERT_TRUE(track_stats[0]->concealed_samples.is_defined());
-  EXPECT_LT(*track_stats[0]->concealed_samples,
-            *track_stats[0]->total_samples_received *
-                kAcceptableConcealedSamplesPercentage);
-
-  // Also ensure that we have two "RTCInboundRtpStreamStats" as expected, as a
-  // sanity check that the SSRC really changed.
-  // TODO(deadbeef): This isn't working right now, because we're not returning
-  // *any* stats for the inactive stream. Uncomment when the bug is completely
-  // fixed.
-  // auto inbound_stream_stats =
-  //     report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
-  // ASSERT_EQ(2U, inbound_stream_stats.size());
-}
-
 // Test that DTLS 1.0 is used if both sides only support DTLS 1.0.
 TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithDtls10) {
   PeerConnectionFactory::Options dtls_10_options;
@@ -1602,10 +1503,6 @@ TEST_P(PeerConnectionIntegrationTest, Dtls10CipherStatsAndUmaMetrics) {
                    kDefaultTimeout);
   EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(kDefaultSrtpCryptoSuite),
                  caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-  // TODO(bugs.webrtc.org/9456): Fix it.
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                          kDefaultSrtpCryptoSuite));
 }
 
 // Test getting cipher stats and UMA metrics when DTLS 1.2 is negotiated.
@@ -1624,10 +1521,6 @@ TEST_P(PeerConnectionIntegrationTest, Dtls12CipherStatsAndUmaMetrics) {
                    kDefaultTimeout);
   EXPECT_EQ_WAIT(rtc::SrtpCryptoSuiteToName(kDefaultSrtpCryptoSuite),
                  caller()->OldGetStats()->SrtpCipher(), kDefaultTimeout);
-  // TODO(bugs.webrtc.org/9456): Fix it.
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.SrtpCryptoSuite.Audio",
-                          kDefaultSrtpCryptoSuite));
 }
 
 // Test that DTLS 1.0 can be used if the caller supports DTLS 1.2 and the

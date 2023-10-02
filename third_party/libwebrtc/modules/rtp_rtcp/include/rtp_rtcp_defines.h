@@ -13,7 +13,6 @@
 
 #include <stddef.h>
 
-#include <list>
 #include <memory>
 #include <vector>
 
@@ -124,20 +123,6 @@ enum RtxMode {
 };
 
 const size_t kRtxHeaderSize = 2;
-
-struct RTCPReportBlock {
-  // Fields as described by RFC 3550 6.4.2.
-  uint32_t sender_ssrc = 0;  // SSRC of sender of this report.
-  uint32_t source_ssrc = 0;  // SSRC of the RTP packet sender.
-  uint8_t fraction_lost = 0;
-  int32_t packets_lost = 0;  // 24 bits valid.
-  uint32_t extended_highest_sequence_number = 0;
-  uint32_t jitter = 0;
-  uint32_t last_sender_report_timestamp = 0;
-  uint32_t delay_since_last_sender_report = 0;
-};
-
-typedef std::list<RTCPReportBlock> ReportBlockList;
 
 struct RtpState {
   uint16_t sequence_number = 0;
@@ -294,19 +279,6 @@ struct RtpPacketCounter {
     total_packet_delay += other.total_packet_delay;
   }
 
-  void Subtract(const RtpPacketCounter& other) {
-    RTC_DCHECK_GE(header_bytes, other.header_bytes);
-    header_bytes -= other.header_bytes;
-    RTC_DCHECK_GE(payload_bytes, other.payload_bytes);
-    payload_bytes -= other.payload_bytes;
-    RTC_DCHECK_GE(padding_bytes, other.padding_bytes);
-    padding_bytes -= other.padding_bytes;
-    RTC_DCHECK_GE(packets, other.packets);
-    packets -= other.packets;
-    RTC_DCHECK_GE(total_packet_delay, other.total_packet_delay);
-    total_packet_delay -= other.total_packet_delay;
-  }
-
   bool operator==(const RtpPacketCounter& other) const {
     return header_bytes == other.header_bytes &&
            payload_bytes == other.payload_bytes &&
@@ -339,28 +311,24 @@ struct StreamDataCounters {
     transmitted.Add(other.transmitted);
     retransmitted.Add(other.retransmitted);
     fec.Add(other.fec);
-    if (other.first_packet_time_ms != -1 &&
-        (other.first_packet_time_ms < first_packet_time_ms ||
-         first_packet_time_ms == -1)) {
-      // Use oldest time.
-      first_packet_time_ms = other.first_packet_time_ms;
+    if (other.first_packet_time < first_packet_time) {
+      // Use oldest time (excluding unsed value represented as plus infinity.
+      first_packet_time = other.first_packet_time;
     }
   }
 
-  void Subtract(const StreamDataCounters& other) {
-    transmitted.Subtract(other.transmitted);
-    retransmitted.Subtract(other.retransmitted);
-    fec.Subtract(other.fec);
-    if (other.first_packet_time_ms != -1 &&
-        (other.first_packet_time_ms > first_packet_time_ms ||
-         first_packet_time_ms == -1)) {
-      // Use youngest time.
-      first_packet_time_ms = other.first_packet_time_ms;
+  void MaybeSetFirstPacketTime(Timestamp now) {
+    if (first_packet_time == Timestamp::PlusInfinity()) {
+      first_packet_time = now;
     }
   }
 
-  int64_t TimeSinceFirstPacketInMs(int64_t now_ms) const {
-    return (first_packet_time_ms == -1) ? -1 : (now_ms - first_packet_time_ms);
+  // Return time since first packet is send/received, or zero if such event
+  // haven't happen.
+  TimeDelta TimeSinceFirstPacket(Timestamp now) const {
+    return first_packet_time == Timestamp::PlusInfinity()
+               ? TimeDelta::Zero()
+               : now - first_packet_time;
   }
 
   // Returns the number of bytes corresponding to the actual media payload (i.e.
@@ -371,7 +339,9 @@ struct StreamDataCounters {
            fec.payload_bytes;
   }
 
-  int64_t first_packet_time_ms;    // Time when first packet is sent/received.
+  // Time when first packet is sent/received.
+  Timestamp first_packet_time = Timestamp::PlusInfinity();
+
   RtpPacketCounter transmitted;    // Number of transmitted packets/bytes.
   RtpPacketCounter retransmitted;  // Number of retransmitted packets/bytes.
   RtpPacketCounter fec;            // Number of redundancy packets/bytes.
@@ -425,9 +395,12 @@ struct RtpReceiveStats {
   // Interarrival jitter in time.
   webrtc::TimeDelta interarrival_jitter = webrtc::TimeDelta::Zero();
 
-  // Timestamp and counters exposed in RTCInboundRtpStreamStats, see
+  // Time of the last packet received in unix epoch,
+  // i.e. Timestamp::Zero() represents 1st Jan 1970 00:00
+  absl::optional<Timestamp> last_packet_received;
+
+  // Counters exposed in RTCInboundRtpStreamStats, see
   // https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*
-  absl::optional<int64_t> last_packet_received_timestamp_ms;
   RtpPacketCounter packet_counter;
 };
 

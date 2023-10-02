@@ -81,6 +81,8 @@ class WgcCaptureSession final {
 
   void RemoveEventHandler();
 
+  bool FrameContentCanBeCompared();
+
   bool allow_zero_hertz() const { return allow_zero_hertz_; }
 
   std::unique_ptr<EventRegistrationToken> item_closed_token_;

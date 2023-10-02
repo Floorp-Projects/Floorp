@@ -342,7 +342,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                 return;
               }
 
-              if (!audioStats->last_packet_received_timestamp_ms) {
+              if (!audioStats->last_packet_received.has_value()) {
                 // By spec: "The lifetime of all RTP monitored objects starts
                 // when the RTP stream is first used: When the first RTP packet
                 // is sent or received on the SSRC it represents"
@@ -400,12 +400,12 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
               local.mConcealedSamples.Construct(audioStats->concealed_samples);
               local.mSilentConcealedSamples.Construct(
                   audioStats->silent_concealed_samples);
-              if (audioStats->last_packet_received_timestamp_ms) {
+              if (audioStats->last_packet_received.has_value()) {
                 local.mLastPacketReceivedTimestamp.Construct(
                     RTCStatsTimestamp::FromNtp(
                         aConduit->GetTimestampMaker(),
                         webrtc::Timestamp::Millis(
-                            *audioStats->last_packet_received_timestamp_ms) +
+                            audioStats->last_packet_received->ms()) +
                             webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
                         .ToDom());
               }
@@ -444,7 +444,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                 return;
               }
 
-              if (!videoStats->rtp_stats.last_packet_received_timestamp_ms) {
+              if (!videoStats->rtp_stats.last_packet_received.has_value()) {
                 // By spec: "The lifetime of all RTP monitored objects starts
                 // when the RTP stream is first used: When the first RTP packet
                 // is sent or received on the SSRC it represents"
@@ -510,7 +510,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                   videoStats->frame_counts.key_frames +
                   videoStats->frame_counts.delta_frames);
               local.mJitterBufferDelay.Construct(
-                  videoStats->jitter_buffer_delay_seconds);
+                  videoStats->jitter_buffer_delay.seconds<double>());
               local.mJitterBufferEmittedCount.Construct(
                   videoStats->jitter_buffer_emitted_count);
 
@@ -523,13 +523,12 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
                   videoStats->total_inter_frame_delay);
               local.mTotalSquaredInterFrameDelay.Construct(
                   videoStats->total_squared_inter_frame_delay);
-              if (videoStats->rtp_stats.last_packet_received_timestamp_ms) {
+              if (videoStats->rtp_stats.last_packet_received.has_value()) {
                 local.mLastPacketReceivedTimestamp.Construct(
                     RTCStatsTimestamp::FromNtp(
                         aConduit->GetTimestampMaker(),
                         webrtc::Timestamp::Millis(
-                            *videoStats->rtp_stats
-                                 .last_packet_received_timestamp_ms) +
+                            videoStats->rtp_stats.last_packet_received->ms()) +
                             webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
                         .ToDom());
               }

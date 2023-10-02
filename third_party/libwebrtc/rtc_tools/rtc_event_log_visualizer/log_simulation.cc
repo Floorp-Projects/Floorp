@@ -186,19 +186,22 @@ void LogBasedNetworkControllerSimulation::ProcessEventsInLog(
       [this](const LoggedBweProbeClusterCreatedEvent& probe_cluster) {
         OnProbeCreated(probe_cluster);
       });
-  processor.AddEvents(packet_infos, [this](const LoggedPacketInfo& packet) {
-    OnPacketSent(packet);
-  });
+  processor.AddEvents(
+      packet_infos,
+      [this](const LoggedPacketInfo& packet) { OnPacketSent(packet); },
+      PacketDirection::kOutgoingPacket);
   processor.AddEvents(
       parsed_log_.transport_feedbacks(PacketDirection::kIncomingPacket),
       [this](const LoggedRtcpPacketTransportFeedback& feedback) {
         OnFeedback(feedback);
-      });
+      },
+      PacketDirection::kIncomingPacket);
   processor.AddEvents(
       parsed_log_.receiver_reports(PacketDirection::kIncomingPacket),
       [this](const LoggedRtcpPacketReceiverReport& report) {
         OnReceiverReport(report);
-      });
+      },
+      PacketDirection::kIncomingPacket);
   processor.AddEvents(parsed_log_.ice_candidate_pair_configs(),
                       [this](const LoggedIceCandidatePairConfig& candidate) {
                         OnIceConfig(candidate);

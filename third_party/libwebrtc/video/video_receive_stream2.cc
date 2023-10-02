@@ -774,6 +774,7 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
       frame->FrameType() == VideoFrameType::kVideoFrameKey;
 
   // Current OnPreDecode only cares about QP for VP8.
+  // TODO(brandtr): Move to stats_proxy_.OnDecodableFrame in VSBC, or deprecate.
   int qp = -1;
   if (frame->CodecSpecific()->codecType == kVideoCodecVP8) {
     if (!vp8::GetQp(frame->data(), frame->size(), &qp)) {

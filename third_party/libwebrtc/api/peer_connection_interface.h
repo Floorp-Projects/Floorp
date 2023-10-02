@@ -448,9 +448,6 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // when switching from a static scene to one with motion.
     absl::optional<int> screencast_min_bitrate;
 
-    // Use new combined audio/video bandwidth estimation?
-    absl::optional<bool> combined_audio_video_bwe;
-
 #if defined(WEBRTC_FUCHSIA)
     // TODO(bugs.webrtc.org/11066): Remove entirely once Fuchsia does not use.
     // TODO(bugs.webrtc.org/9891) - Move to crypto_options

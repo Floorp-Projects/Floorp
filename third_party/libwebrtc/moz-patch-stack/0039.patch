@@ -5,30 +5,32 @@ Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
 Differential Revision: https://phabricator.services.mozilla.com/D113438
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
 ---
- modules/video_capture/video_capture_impl.h          | 4 +++-
+ modules/video_capture/video_capture_impl.h          | 6 ++++--
  rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
  sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index a9fdaf6307..005c5c1fde 100644
+index e46e050609..dcc93fd3a0 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -88,6 +88,9 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-   VideoCaptureImpl();
-   ~VideoCaptureImpl() override;
- 
-+  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
-+  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
+@@ -97,6 +97,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   rtc::RaceChecker capture_checker_;
+   // current Device unique name;
+   char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
 +
-   char* _deviceUniqueId;  // current Device unique name;
++  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
++  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
++      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
    Mutex api_lock_;
-   VideoCaptureCapability _requestedCapability;  // Should be set by platform
-@@ -96,7 +99,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   // Should be set by platform dependent code in StartCapture.
+   VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
+@@ -104,8 +108,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
   private:
    void UpdateFrameCount();
    uint32_t CalculateFrameRate(int64_t now_ns);
--  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
+-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
+-      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
    void DeliverRawFrame(uint8_t* videoFrame,
                         size_t videoFrameLength,
                         const VideoCaptureCapability& frameInfo,
@@ -59,5 +61,5 @@ index 4f97cf74cf..363be347b5 100644
    }
  }
 -- 
-2.34.1
+2.37.3
 

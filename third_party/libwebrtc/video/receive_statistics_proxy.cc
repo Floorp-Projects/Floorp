@@ -224,7 +224,7 @@ void ReceiveStatisticsProxy::UpdateHistograms(
     log_stream << "WebRTC.Video.DecodeTimeInMs " << *decode_ms << '\n';
   }
   absl::optional<int> jb_delay_ms =
-      jitter_buffer_delay_counter_.Avg(kMinRequiredSamples);
+      jitter_delay_counter_.Avg(kMinRequiredSamples);
   if (jb_delay_ms) {
     RTC_HISTOGRAM_COUNTS_10000("WebRTC.Video.JitterBufferDelayInMs",
                                *jb_delay_ms);
@@ -392,10 +392,9 @@ void ReceiveStatisticsProxy::UpdateHistograms(
   if (rtx_stats)
     rtp_rtx_stats.Add(*rtx_stats);
 
-  int64_t elapsed_sec =
-      rtp_rtx_stats.TimeSinceFirstPacketInMs(clock_->TimeInMilliseconds()) /
-      1000;
-  if (elapsed_sec >= metrics::kMinRunTimeInSeconds) {
+  TimeDelta elapsed = rtp_rtx_stats.TimeSinceFirstPacket(clock_->CurrentTime());
+  if (elapsed >= TimeDelta::Seconds(metrics::kMinRunTimeInSeconds)) {
+    int64_t elapsed_sec = elapsed.seconds();
     RTC_HISTOGRAM_COUNTS_10000(
         "WebRTC.Video.BitrateReceivedInKbps",
         static_cast<int>(rtp_rtx_stats.transmitted.TotalBytes() * 8 /
@@ -507,10 +506,6 @@ VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
 
   stats_.content_type = last_content_type_;
   stats_.timing_frame_info = timing_frame_info_counter_.Max(now_ms);
-  stats_.jitter_buffer_delay_seconds =
-      static_cast<double>(current_delay_counter_.Sum(1).value_or(0)) /
-      rtc::kNumMillisecsPerSec;
-  stats_.jitter_buffer_emitted_count = current_delay_counter_.NumSamples();
   stats_.estimated_playout_ntp_timestamp_ms =
       GetCurrentEstimatedPlayoutNtpTimestampMs(now_ms);
   return stats_;
@@ -537,21 +532,35 @@ void ReceiveStatisticsProxy::OnDecoderInfo(
       }));
 }
 
+void ReceiveStatisticsProxy::OnDecodableFrame(TimeDelta jitter_buffer_delay,
+                                              TimeDelta target_delay,
+                                              TimeDelta minimum_delay) {
+  RTC_DCHECK_RUN_ON(&main_thread_);
+  // Cumulative stats exposed through standardized GetStats.
+  stats_.jitter_buffer_delay += jitter_buffer_delay;
+  stats_.jitter_buffer_target_delay += target_delay;
+  ++stats_.jitter_buffer_emitted_count;
+  stats_.jitter_buffer_minimum_delay += minimum_delay;
+}
+
 void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
     int estimated_max_decode_time_ms,
     int current_delay_ms,
     int target_delay_ms,
-    int jitter_buffer_ms,
+    int jitter_delay_ms,
     int min_playout_delay_ms,
     int render_delay_ms) {
   RTC_DCHECK_RUN_ON(&main_thread_);
+  // Instantaneous stats exposed through legacy GetStats.
   stats_.max_decode_ms = estimated_max_decode_time_ms;
   stats_.current_delay_ms = current_delay_ms;
   stats_.target_delay_ms = target_delay_ms;
-  stats_.jitter_buffer_ms = jitter_buffer_ms;
+  stats_.jitter_buffer_ms = jitter_delay_ms;
   stats_.min_playout_delay_ms = min_playout_delay_ms;
   stats_.render_delay_ms = render_delay_ms;
-  jitter_buffer_delay_counter_.Add(jitter_buffer_ms);
+
+  // UMA stats.
+  jitter_delay_counter_.Add(jitter_delay_ms);
   target_delay_counter_.Add(target_delay_ms);
   current_delay_counter_.Add(current_delay_ms);
   // Estimated one-way delay: network delay (rtt/2) + target_delay_ms (jitter

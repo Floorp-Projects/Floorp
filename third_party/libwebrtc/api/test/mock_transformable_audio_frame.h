@@ -20,6 +20,7 @@ class MockTransformableAudioFrame : public TransformableAudioFrameInterface {
  public:
   MOCK_METHOD(rtc::ArrayView<const uint8_t>, GetData, (), (const, override));
   MOCK_METHOD(void, SetData, (rtc::ArrayView<const uint8_t>), (override));
+  MOCK_METHOD(void, SetRTPTimestamp, (uint32_t), (override));
   MOCK_METHOD(uint8_t, GetPayloadType, (), (const, override));
   MOCK_METHOD(uint32_t, GetSsrc, (), (const, override));
   MOCK_METHOD(uint32_t, GetTimestamp, (), (const, override));
@@ -28,6 +29,14 @@ class MockTransformableAudioFrame : public TransformableAudioFrameInterface {
               GetContributingSources,
               (),
               (const override));
+  MOCK_METHOD(const absl::optional<uint16_t>,
+              SequenceNumber,
+              (),
+              (const, override));
+  MOCK_METHOD(TransformableFrameInterface::Direction,
+              GetDirection,
+              (),
+              (const, override));
 };
 
 }  // namespace webrtc

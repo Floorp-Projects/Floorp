@@ -1241,9 +1241,9 @@ class WebRtcSdpTest : public ::testing::Test {
         "inline:NzB4d1BINUAvLEw6UzF3WSJ+PSdFcGdUJShpX1Zj|2^20|1:32",
         "dummy_session_params"));
     audio->set_protocol(cricket::kMediaProtocolSavpf);
-    audio->AddCodec(AudioCodec(111, "opus", 48000, 0, 2));
-    audio->AddCodec(AudioCodec(103, "ISAC", 16000, 0, 1));
-    audio->AddCodec(AudioCodec(104, "ISAC", 32000, 0, 1));
+    audio->AddCodec(cricket::CreateAudioCodec(111, "opus", 48000, 2));
+    audio->AddCodec(cricket::CreateAudioCodec(103, "ISAC", 16000, 1));
+    audio->AddCodec(cricket::CreateAudioCodec(104, "ISAC", 32000, 1));
     return audio;
   }
 
@@ -1317,7 +1317,7 @@ class WebRtcSdpTest : public ::testing::Test {
         1, "AES_CM_128_HMAC_SHA1_80",
         "inline:d0RmdmcmVCspeEc3QGZiNWpVLFJhQX1cfHAwJSoj|2^20|1:32", ""));
     video->set_protocol(cricket::kMediaProtocolSavpf);
-    video->AddCodec(VideoCodec(120, "VP8"));
+    video->AddCodec(cricket::CreateVideoCodec(120, "VP8"));
     return video;
   }
 
@@ -2344,7 +2344,7 @@ TEST_F(WebRtcSdpTest, ParseSslTcpCandidate) {
 }
 
 TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithH264) {
-  cricket::VideoCodec h264_codec("H264");
+  cricket::VideoCodec h264_codec = cricket::CreateVideoCodec("H264");
   h264_codec.SetParam("profile-level-id", "42e01f");
   h264_codec.SetParam("level-asymmetry-allowed", "1");
   h264_codec.SetParam("packetization-mode", "1");
@@ -2435,9 +2435,9 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutRtpmap) {
   AudioCodecs ref_codecs;
   // The codecs in the AudioContentDescription should be in the same order as
   // the payload types (<fmt>s) on the m= line.
-  ref_codecs.push_back(AudioCodec(0, "PCMU", 8000, 0, 1));
-  ref_codecs.push_back(AudioCodec(18, "G729", 8000, 0, 1));
-  ref_codecs.push_back(AudioCodec(103, "ISAC", 16000, 0, 1));
+  ref_codecs.push_back(cricket::CreateAudioCodec(0, "PCMU", 8000, 1));
+  ref_codecs.push_back(cricket::CreateAudioCodec(18, "G729", 8000, 1));
+  ref_codecs.push_back(cricket::CreateAudioCodec(103, "ISAC", 16000, 1));
   EXPECT_EQ(ref_codecs, audio->codecs());
 }
 
@@ -3483,7 +3483,8 @@ TEST_F(WebRtcSdpTest, SerializeAudioFmtpWithTelephoneEvent) {
   AudioContentDescription* acd = GetFirstAudioContentDescription(&desc_);
 
   cricket::AudioCodecs codecs = acd->codecs();
-  cricket::AudioCodec dtmf(105, "telephone-event", 8000, 0, 1);
+  cricket::AudioCodec dtmf =
+      cricket::CreateAudioCodec(105, "telephone-event", 8000, 1);
   dtmf.params[""] = "0-15";
   codecs.push_back(dtmf);
   acd->set_codecs(codecs);

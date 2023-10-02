@@ -173,7 +173,8 @@ class RTC_EXPORT Candidate {
 
   uint32_t GetPriority(uint32_t type_preference,
                        int network_adapter_preference,
-                       int relay_preference) const;
+                       int relay_preference,
+                       bool adjust_local_preference) const;
 
   bool operator==(const Candidate& o) const;
   bool operator!=(const Candidate& o) const;

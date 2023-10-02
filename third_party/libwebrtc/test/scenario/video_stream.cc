@@ -40,7 +40,7 @@ enum : int {  // The first valid value is 1.
   kVideoRotationRtpExtensionId,
 };
 
-constexpr int kDefaultMaxQp = cricket::WebRtcVideoChannel::kDefaultQpMax;
+constexpr int kDefaultMaxQp = cricket::WebRtcVideoSendChannel::kDefaultQpMax;
 uint8_t CodecTypeToPayloadType(VideoCodecType codec_type) {
   switch (codec_type) {
     case VideoCodecType::kVideoCodecGeneric:

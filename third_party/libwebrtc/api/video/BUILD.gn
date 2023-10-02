@@ -125,6 +125,7 @@ rtc_source_set("recordable_encoded_frame") {
 rtc_source_set("video_frame_type") {
   visibility = [ "*" ]
   sources = [ "video_frame_type.h" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_source_set("render_resolution") {

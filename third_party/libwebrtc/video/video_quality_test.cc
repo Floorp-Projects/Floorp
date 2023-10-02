@@ -76,7 +76,7 @@ constexpr int kFramesSentInQuickTest = 1;
 constexpr uint32_t kThumbnailSendSsrcStart = 0xE0000;
 constexpr uint32_t kThumbnailRtxSsrcStart = 0xF0000;
 
-constexpr int kDefaultMaxQp = cricket::WebRtcVideoChannel::kDefaultQpMax;
+constexpr int kDefaultMaxQp = cricket::WebRtcVideoSendChannel::kDefaultQpMax;
 
 const VideoEncoder::Capabilities kCapabilities(false);
 

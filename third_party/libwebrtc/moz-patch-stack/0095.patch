@@ -1,41 +1,77 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 8 Aug 2023 10:05:00 +0000
+Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
+ to avoid concurrent access r=jib,webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
+
+Differential Revision: https://phabricator.services.mozilla.com/D184386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
+ modules/video_capture/linux/pipewire_session.h  |  5 ++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 5a68019a8b..fb133ff73a 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -17,6 +17,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
- 
- namespace webrtc {
- namespace {
-@@ -223,6 +224,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
-   }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index 2adb1cdb50..3f52b3dd61 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
  }
  
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+ void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
+-  callback_ = callback;
++  {
++    webrtc::MutexLock lock(&callback_lock_);
++    callback_ = callback;
++  }
+ 
+   if (fd != kInvalidPipeWireFd) {
+     InitPipeWire(fd);
+@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
+ }
+ 
+ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
++  webrtc::MutexLock lock(&callback_lock_);
++
+   if (callback_) {
+     callback_->OnInitialized(status);
+     callback_ = nullptr;
+@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
+ }
+ 
+ void PipeWireSession::Cleanup() {
++  webrtc::MutexLock lock(&callback_lock_);
++  callback_ = nullptr;
++
+   StopPipeWire();
+ }
+ 
+diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
+index 982b468838..fdc06a6b2a 100644
+--- a/modules/video_capture/linux/pipewire_session.h
++++ b/modules/video_capture/linux/pipewire_session.h
+@@ -24,6 +24,7 @@
+ #include "modules/video_capture/linux/camera_portal.h"
+ #include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_options.h"
++#include "rtc_base/synchronization/mutex.h"
+ 
+ namespace webrtc {
+ namespace videocapturemodule {
+@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
+   void Finish(VideoCaptureOptions::Status status);
+   void Cleanup();
+ 
+-  VideoCaptureOptions::Callback* callback_ = nullptr;
++  webrtc::Mutex callback_lock_;
++  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
++      nullptr;
+ 
+   VideoCaptureOptions::Status status_;
+ 
 -- 
-2.34.1
+2.37.3
 

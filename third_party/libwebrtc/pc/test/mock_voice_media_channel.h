@@ -67,9 +67,14 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               ChooseReceiverReportSsrc,
               (const std::set<uint32_t>&),
               (override));
+  MOCK_METHOD(bool, SendCodecHasNack, (), (const, override));
   MOCK_METHOD(void,
               SetSsrcListChangedCallback,
               (absl::AnyInvocable<void(const std::set<uint32_t>&)>),
+              (override));
+  MOCK_METHOD(void,
+              SetSendCodecChangedCallback,
+              (absl::AnyInvocable<void()>),
               (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdatePending, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdateComplete, (), (override));

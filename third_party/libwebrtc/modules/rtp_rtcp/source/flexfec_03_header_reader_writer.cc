@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/rtp_rtcp/source/flexfec_header_reader_writer2.h"
+#include "modules/rtp_rtcp/source/flexfec_03_header_reader_writer.h"
 
 #include <string.h>
 
@@ -61,9 +61,9 @@ constexpr size_t kPacketMaskOffset =
     kBaseHeaderSize + kStreamSpecificHeaderSize;
 
 // Here we count the K-bits as belonging to the packet mask.
-// This can be used in conjunction with FlexfecHeaderWriter::MinPacketMaskSize,
-// which calculates a bound on the needed packet mask size including K-bits,
-// given a packet mask without K-bits.
+// This can be used in conjunction with
+// Flexfec03HeaderWriter::MinPacketMaskSize, which calculates a bound on the
+// needed packet mask size including K-bits, given a packet mask without K-bits.
 size_t FlexfecHeaderSize(size_t packet_mask_size) {
   RTC_DCHECK_LE(packet_mask_size, kFlexfecPacketMaskSizes[2]);
   if (packet_mask_size <= kFlexfecPacketMaskSizes[0]) {
@@ -76,14 +76,14 @@ size_t FlexfecHeaderSize(size_t packet_mask_size) {
 
 }  // namespace
 
-FlexfecHeaderReader2::FlexfecHeaderReader2()
+Flexfec03HeaderReader::Flexfec03HeaderReader()
     : FecHeaderReader(kMaxTrackedMediaPackets, kMaxFecPackets) {}
 
-FlexfecHeaderReader2::~FlexfecHeaderReader2() = default;
+Flexfec03HeaderReader::~Flexfec03HeaderReader() = default;
 
 // TODO(brandtr): Update this function when we support flexible masks,
 // retransmissions, and/or several protected SSRCs.
-bool FlexfecHeaderReader2::ReadFecHeader(
+bool Flexfec03HeaderReader::ReadFecHeader(
     ForwardErrorCorrection::ReceivedFecPacket* fec_packet) const {
   if (fec_packet->pkt->data.size() <=
       kBaseHeaderSize + kStreamSpecificHeaderSize) {
@@ -206,13 +206,13 @@ bool FlexfecHeaderReader2::ReadFecHeader(
   return true;
 }
 
-FlexfecHeaderWriter2::FlexfecHeaderWriter2()
+Flexfec03HeaderWriter::Flexfec03HeaderWriter()
     : FecHeaderWriter(kMaxMediaPackets, kMaxFecPackets, kHeaderSizes[2]) {}
 
-FlexfecHeaderWriter2::~FlexfecHeaderWriter2() = default;
+Flexfec03HeaderWriter::~Flexfec03HeaderWriter() = default;
 
-size_t FlexfecHeaderWriter2::MinPacketMaskSize(const uint8_t* packet_mask,
-                                               size_t packet_mask_size) const {
+size_t Flexfec03HeaderWriter::MinPacketMaskSize(const uint8_t* packet_mask,
+                                                size_t packet_mask_size) const {
   if (packet_mask_size == kUlpfecPacketMaskSizeLBitClear &&
       (packet_mask[1] & 0x01) == 0) {
     // Packet mask is 16 bits long, with bit 15 clear.
@@ -237,7 +237,7 @@ size_t FlexfecHeaderWriter2::MinPacketMaskSize(const uint8_t* packet_mask,
   return kFlexfecPacketMaskSizes[2];
 }
 
-size_t FlexfecHeaderWriter2::FecHeaderSize(size_t packet_mask_size) const {
+size_t Flexfec03HeaderWriter::FecHeaderSize(size_t packet_mask_size) const {
   return FlexfecHeaderSize(packet_mask_size);
 }
 
@@ -245,16 +245,16 @@ size_t FlexfecHeaderWriter2::FecHeaderSize(size_t packet_mask_size) const {
 // FlexFEC header standard. Note that the header size is computed by
 // FecHeaderSize(), so in this function we can be sure that we are
 // writing in space that is intended for the header.
-//
-// TODO(brandtr): Update this function when we support offset-based masks,
-// retransmissions, and protecting multiple SSRCs.
-void FlexfecHeaderWriter2::FinalizeFecHeader(
-    uint32_t media_ssrc,
-    uint16_t seq_num_base,
-    const uint8_t* packet_mask,
-    size_t packet_mask_size,
-    ForwardErrorCorrection::Packet* fec_packet) const {
-  uint8_t* data = fec_packet->data.MutableData();
+void Flexfec03HeaderWriter::FinalizeFecHeader(
+    rtc::ArrayView<const ProtectedStream> protected_streams,
+    ForwardErrorCorrection::Packet& fec_packet) const {
+  RTC_CHECK_EQ(protected_streams.size(), 1);
+  uint32_t media_ssrc = protected_streams[0].ssrc;
+  uint16_t seq_num_base = protected_streams[0].seq_num_base;
+  const uint8_t* packet_mask = protected_streams[0].packet_mask.data();
+  size_t packet_mask_size = protected_streams[0].packet_mask.size();
+
+  uint8_t* data = fec_packet.data.MutableData();
   data[0] &= 0x7f;  // Clear R bit.
   data[0] &= 0xbf;  // Clear F bit.
   ByteWriter<uint8_t>::WriteBigEndian(&data[8], kSsrcCount);

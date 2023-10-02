@@ -17,7 +17,6 @@
 #include <spa/pod/parser.h>
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/portal/pipewire_utils.h"
 #include "modules/video_capture/device_info_impl.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
@@ -238,7 +237,7 @@ void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
     callback_ = callback;
   }
 
-  if (fd != -1) {
+  if (fd != kInvalidPipeWireFd) {
     InitPipeWire(fd);
   } else {
     portal_notifier_ = std::make_unique<CameraPortalNotifier>(this);

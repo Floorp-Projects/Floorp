@@ -1,66 +1,58 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 23 May 2023 06:14:00 +0000
-Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
- r=ng,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-This restores libwebrtc's DesktopCapturer to their upstream state as far as
-the tab capturer is concerned.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174290
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 -----------
- modules/desktop_capture/desktop_capturer.h  |  8 --------
- 2 files changed, 19 deletions(-)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 3 ++-
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 1af19a1fd2..7f601821fc 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -128,17 +128,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
- }
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index 8f89918359..45a0272eee 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -104,6 +104,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index 1dee78f5ee..2cb6161514 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -47,7 +47,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
  
--// static
--std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
--    const DesktopCaptureOptions& options) {
--  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
--  if (capturer && options.detect_updated_region()) {
--    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
--  }
--
--  return capturer;
--}
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 64f3187f51..5efd2efc0f 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -191,10 +191,6 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
- 
--  // Creates a DesktopCapturer instance which targets to capture tab.
--  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
--      const DesktopCaptureOptions& options);
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
- 
-@@ -225,10 +221,6 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
--
--  // Creates a DesktopCapturer instance which targets to capture tabs
--  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
--      const DesktopCaptureOptions& options);
- };
- 
- }  // namespace webrtc
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index a006c85d1b..724717be5e 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
 -- 
-2.34.1
+2.37.3
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER2_H_
-#define MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER2_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_FLEXFEC_03_HEADER_READER_WRITER_H_
+#define MODULES_RTP_RTCP_SOURCE_FLEXFEC_03_HEADER_READER_WRITER_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -56,19 +56,19 @@ namespace webrtc {
 // 16 |           SN base_i           |  M (columns)  |    N (rows)   |
 //    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-class FlexfecHeaderReader2 : public FecHeaderReader {
+class Flexfec03HeaderReader : public FecHeaderReader {
  public:
-  FlexfecHeaderReader2();
-  ~FlexfecHeaderReader2() override;
+  Flexfec03HeaderReader();
+  ~Flexfec03HeaderReader() override;
 
   bool ReadFecHeader(
       ForwardErrorCorrection::ReceivedFecPacket* fec_packet) const override;
 };
 
-class FlexfecHeaderWriter2 : public FecHeaderWriter {
+class Flexfec03HeaderWriter : public FecHeaderWriter {
  public:
-  FlexfecHeaderWriter2();
-  ~FlexfecHeaderWriter2() override;
+  Flexfec03HeaderWriter();
+  ~Flexfec03HeaderWriter() override;
 
   size_t MinPacketMaskSize(const uint8_t* packet_mask,
                            size_t packet_mask_size) const override;
@@ -76,13 +76,10 @@ class FlexfecHeaderWriter2 : public FecHeaderWriter {
   size_t FecHeaderSize(size_t packet_mask_row_size) const override;
 
   void FinalizeFecHeader(
-      uint32_t media_ssrc,
-      uint16_t seq_num_base,
-      const uint8_t* packet_mask,
-      size_t packet_mask_size,
-      ForwardErrorCorrection::Packet* fec_packet) const override;
+      rtc::ArrayView<const ProtectedStream> protected_streams,
+      ForwardErrorCorrection::Packet& fec_packet) const override;
 };
 
 }  // namespace webrtc
 
-#endif  // MODULES_RTP_RTCP_SOURCE_FLEXFEC_HEADER_READER_WRITER2_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_FLEXFEC_03_HEADER_READER_WRITER_H_

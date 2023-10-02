@@ -207,7 +207,7 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
           return VP9Encoder::Create();
         }
         if (format.name == "H264") {
-          return H264Encoder::Create(cricket::VideoCodec("H264"));
+          return H264Encoder::Create();
         }
         RTC_DCHECK_NOTREACHED() << format.name;
         return nullptr;

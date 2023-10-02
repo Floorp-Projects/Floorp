@@ -23,7 +23,6 @@ bool Matches(const PeerConnectionInterface::RTCConfiguration& a,
   return a.audio_jitter_buffer_max_packets ==
              b.audio_jitter_buffer_max_packets &&
          a.screencast_min_bitrate == b.screencast_min_bitrate &&
-         a.combined_audio_video_bwe == b.combined_audio_video_bwe &&
          a.media_config == b.media_config;
 }
 

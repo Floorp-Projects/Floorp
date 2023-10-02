@@ -252,7 +252,7 @@
           'chromium-tester-service-account'
         ],
         'test_suites': {
-          'gtest_tests': 'android_perf_tests',
+          'gtest_tests': 'perf_tests',
         },
       },
       'Perf Android32 (R Pixel5)': {
@@ -261,7 +261,7 @@
           'has_native_resultdb_integration', 'chromium-tester-service-account'
         ],
         'test_suites': {
-          'gtest_tests': 'android_perf_tests',
+          'gtest_tests': 'perf_tests',
         },
       },
       'Perf Android64 (O Pixel2)': {
@@ -271,7 +271,7 @@
           'chromium-tester-service-account'
         ],
         'test_suites': {
-          'gtest_tests': 'android_perf_tests',
+          'gtest_tests': 'perf_tests',
         },
       },
       'Perf Android64 (R Pixel5)': {
@@ -280,7 +280,7 @@
           'has_native_resultdb_integration', 'chromium-tester-service-account'
         ],
         'test_suites': {
-          'gtest_tests': 'android_perf_tests',
+          'gtest_tests': 'perf_tests',
         },
       },
       'Perf Fuchsia': {
@@ -288,10 +288,10 @@
         'linux',
         'mixins': [
           'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h',
-          'resultdb-gtest-json-format', 'fuchsia-gtest-output'
+          'resultdb-gtest-json-format', 'fuchsia-gtest-output', 'perf-output'
         ],
         'test_suites': {
-          'isolated_scripts': 'fuchsia_compatible_perf_tests',
+          'isolated_scripts': 'perf_tests',
         }
       },
       'Perf Linux Bionic': {
@@ -302,7 +302,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Mac 11': {
@@ -313,7 +313,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Mac M1 Arm64 12': {
@@ -324,7 +324,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'webrtc_perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
       'Perf Win 10': {
@@ -333,7 +333,7 @@
         'mixins':
         ['win10-any', 'perf-pool', 'timeout-3h', 'resultdb-gtest-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
+          'isolated_scripts': 'perf_tests_save_worst_frame',
         },
       },
     },
@@ -359,7 +359,7 @@
           'has_native_resultdb_integration', 'out_dir_arg'
         ],
         'test_suites': {
-          'isolated_scripts': 'webrtc_perf_tests',
+          'isolated_scripts': 'perf_tests_no_video_codec',
         },
         'args': [
           '--write_perf_output_on_ios',

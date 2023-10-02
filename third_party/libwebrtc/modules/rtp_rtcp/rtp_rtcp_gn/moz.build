@@ -32,7 +32,7 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer2.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_03_header_reader_writer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_format_vp8.cc",

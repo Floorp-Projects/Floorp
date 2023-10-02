@@ -586,7 +586,7 @@ function pedanticChecks(report) {
       let avgJitterBufferDelay =
         stat.jitterBufferDelay / stat.jitterBufferEmittedCount;
       ok(
-        avgJitterBufferDelay > 0.01 && avgJitterBufferDelay < 10,
+        avgJitterBufferDelay > 0.001 && avgJitterBufferDelay < 10,
         `${stat.type}.jitterBufferDelay is a sane number for a short ` +
           `${stat.kind} test. value=${stat.jitterBufferDelay}/${stat.jitterBufferEmittedCount}=${avgJitterBufferDelay}`
       );

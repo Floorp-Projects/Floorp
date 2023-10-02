@@ -43,5 +43,5 @@ index 7cccdb51a7..2a6afb3147 100644
      const int32_t diffWidth = capability.width - requested.width;
      const int32_t diffHeight = capability.height - requested.height;
 -- 
-2.34.1
+2.37.3
 

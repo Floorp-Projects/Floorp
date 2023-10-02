@@ -44,7 +44,7 @@ const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
 
 ModuleRtpRtcpImpl::RtpSenderContext::RtpSenderContext(
     const RtpRtcpInterface::Configuration& config)
-    : packet_history(config.clock, config.enable_rtx_padding_prioritization),
+    : packet_history(config.clock, RtpPacketHistory::PaddingMode::kPriority),
       sequencer_(config.local_media_ssrc,
                  config.rtx_send_ssrc,
                  /*require_marker_before_media_padding=*/!config.audio,
@@ -141,10 +141,10 @@ void ModuleRtpRtcpImpl::Process() {
     }
   } else {
     // Report rtt from receiver.
-    if (process_rtt) {
-      int64_t rtt_ms;
-      if (rtt_stats_ && rtcp_receiver_.GetAndResetXrRrRtt(&rtt_ms)) {
-        rtt_stats_->OnRttUpdate(rtt_ms);
+    if (process_rtt && rtt_stats_ != nullptr) {
+      absl::optional<TimeDelta> rtt = rtcp_receiver_.GetAndResetXrRrRtt();
+      if (rtt.has_value()) {
+        rtt_stats_->OnRttUpdate(rtt->ms());
       }
     }
   }
@@ -680,7 +680,7 @@ void ModuleRtpRtcpImpl::OnReceivedNack(
 }
 
 void ModuleRtpRtcpImpl::OnReceivedRtcpReportBlocks(
-    const ReportBlockList& report_blocks) {
+    rtc::ArrayView<const ReportBlockData> report_blocks) {
   if (rtp_sender_) {
     uint32_t ssrc = SSRC();
     absl::optional<uint32_t> rtx_ssrc;
@@ -688,13 +688,13 @@ void ModuleRtpRtcpImpl::OnReceivedRtcpReportBlocks(
       rtx_ssrc = rtp_sender_->packet_generator.RtxSsrc();
     }
 
-    for (const RTCPReportBlock& report_block : report_blocks) {
-      if (ssrc == report_block.source_ssrc) {
+    for (const ReportBlockData& report_block : report_blocks) {
+      if (ssrc == report_block.source_ssrc()) {
         rtp_sender_->packet_generator.OnReceivedAckOnSsrc(
-            report_block.extended_highest_sequence_number);
-      } else if (rtx_ssrc && *rtx_ssrc == report_block.source_ssrc) {
+            report_block.extended_highest_sequence_number());
+      } else if (rtx_ssrc == report_block.source_ssrc()) {
         rtp_sender_->packet_generator.OnReceivedAckOnRtxSsrc(
-            report_block.extended_highest_sequence_number);
+            report_block.extended_highest_sequence_number());
       }
     }
   }

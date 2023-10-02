@@ -143,6 +143,10 @@ class RtpHelper : public Base {
         CreateRtpParametersWithEncodings(sp);
     return true;
   }
+  virtual bool AddDefaultRecvStreamForTesting(const StreamParams& sp) {
+    RTC_CHECK_NOTREACHED();
+    return false;
+  }
   virtual bool RemoveRecvStream(uint32_t ssrc) {
     auto parameters_iterator = rtp_receive_parameters_.find(ssrc);
     if (parameters_iterator != rtp_receive_parameters_.end()) {
@@ -416,6 +420,9 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
   bool SenderNonSenderRttEnabled() const override { return false; }
   void SetReceiveNackEnabled(bool enabled) {}
   void SetReceiveNonSenderRttEnabled(bool enabled) {}
+  bool SendCodecHasNack() const override { return false; }
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {}
 
  private:
   class VoiceChannelAudioSink : public AudioSource::Sink {
@@ -482,7 +489,7 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool AddSendStream(const StreamParams& sp) override;
   bool RemoveSendStream(uint32_t ssrc) override;
 
-  bool GetSendCodec(VideoCodec* send_codec) override;
+  absl::optional<VideoCodec> GetSendCodec() override;
   bool SetSink(uint32_t ssrc,
                rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void SetDefaultSink(

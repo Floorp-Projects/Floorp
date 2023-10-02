@@ -127,8 +127,6 @@ struct RTCPReceiver::PacketInformation {
 
   uint32_t remote_ssrc = 0;
   std::vector<uint16_t> nack_sequence_numbers;
-  // TODO(hbos): Remove `report_blocks` in favor of `report_block_datas`.
-  ReportBlockList report_blocks;
   std::vector<ReportBlockData> report_block_datas;
   absl::optional<TimeDelta> rtt;
   uint32_t receiver_estimated_max_bitrate_bps = 0;
@@ -157,7 +155,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       // TODO(bugs.webrtc.org/10774): Remove fallback.
       remote_ssrc_(0),
       xr_rrtr_status_(config.non_sender_rtt_measurement),
-      xr_rr_rtt_ms_(0),
       oldest_tmmbr_info_ms_(0),
       cname_callback_(config.rtcp_cname_callback),
       report_block_data_observer_(config.report_block_data_observer),
@@ -186,7 +183,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       // TODO(bugs.webrtc.org/10774): Remove fallback.
       remote_ssrc_(0),
       xr_rrtr_status_(config.non_sender_rtt_measurement),
-      xr_rr_rtt_ms_(0),
       oldest_tmmbr_info_ms_(0),
       cname_callback_(config.rtcp_cname_callback),
       report_block_data_observer_(config.report_block_data_observer),
@@ -288,15 +284,11 @@ void RTCPReceiver::SetNonSenderRttMeasurement(bool enabled) {
   xr_rrtr_status_ = enabled;
 }
 
-bool RTCPReceiver::GetAndResetXrRrRtt(int64_t* rtt_ms) {
-  RTC_DCHECK(rtt_ms);
+absl::optional<TimeDelta> RTCPReceiver::GetAndResetXrRrRtt() {
   MutexLock lock(&rtcp_receiver_lock_);
-  if (xr_rr_rtt_ms_ == 0) {
-    return false;
-  }
-  *rtt_ms = xr_rr_rtt_ms_;
-  xr_rr_rtt_ms_ = 0;
-  return true;
+  absl::optional<TimeDelta> rtt = xr_rr_rtt_;
+  xr_rr_rtt_ = absl::nullopt;
+  return rtt;
 }
 
 // Called regularly (1/sec) on the worker thread to do rtt  calculations.
@@ -332,10 +324,7 @@ absl::optional<TimeDelta> RTCPReceiver::OnPeriodicRttUpdate(
     }
   } else {
     // Report rtt from receiver.
-    int64_t rtt_ms;
-    if (GetAndResetXrRrRtt(&rtt_ms)) {
-      rtt.emplace(TimeDelta::Millis(rtt_ms));
-    }
+    rtt = GetAndResetXrRrRtt();
   }
 
   return rtt;
@@ -638,15 +627,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
     packet_information->rtt = rtt;
   }
 
-  packet_information->report_blocks.push_back(
-      {.sender_ssrc = remote_ssrc,
-       .source_ssrc = report_block.source_ssrc(),
-       .fraction_lost = report_block.fraction_lost(),
-       .packets_lost = report_block.cumulative_lost(),
-       .extended_highest_sequence_number = report_block.extended_high_seq_num(),
-       .jitter = report_block.jitter(),
-       .last_sender_report_timestamp = report_block.last_sr(),
-       .delay_since_last_sender_report = report_block.delay_since_last_sr()});
   packet_information->report_block_datas.push_back(*report_block_data);
 }
 
@@ -822,7 +802,7 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
     received_rrtrs_.erase(it->second);
     received_rrtrs_ssrc_it_.erase(it);
   }
-  xr_rr_rtt_ms_ = 0;
+  xr_rr_rtt_ = absl::nullopt;
   return true;
 }
 
@@ -897,7 +877,7 @@ void RTCPReceiver::HandleXrDlrrReportBlock(uint32_t sender_ssrc,
 
   uint32_t rtt_ntp = now_ntp - delay_ntp - send_time_ntp;
   TimeDelta rtt = CompactNtpRttToTimeDelta(rtt_ntp);
-  xr_rr_rtt_ms_ = rtt.ms();
+  xr_rr_rtt_ = rtt;
 
   non_sender_rtts_[sender_ssrc].Update(rtt);
 }
@@ -1179,7 +1159,8 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
 
   if ((packet_information.packet_type_flags & kRtcpSr) ||
       (packet_information.packet_type_flags & kRtcpRr)) {
-    rtp_rtcp_->OnReceivedRtcpReportBlocks(packet_information.report_blocks);
+    rtp_rtcp_->OnReceivedRtcpReportBlocks(
+        packet_information.report_block_datas);
   }
 
   if (network_state_estimate_observer_ &&

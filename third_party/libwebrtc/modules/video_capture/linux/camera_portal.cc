@@ -13,6 +13,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 
+#include "modules/portal/pipewire_utils.h"
 #include "modules/portal/xdg_desktop_portal_utils.h"
 
 namespace webrtc {
@@ -31,7 +32,8 @@ class CameraPortalPrivate {
   void Start();
 
  private:
-  void OnPortalDone(xdg_portal::RequestResponse result, int fd = -1);
+  void OnPortalDone(xdg_portal::RequestResponse result,
+                    int fd = kInvalidPipeWireFd);
 
   static void OnProxyRequested(GObject* object,
                                GAsyncResult* result,
@@ -216,7 +218,7 @@ void CameraPortalPrivate::OnOpenResponse(GDBusProxy* proxy,
 
   int fd = g_unix_fd_list_get(outlist.get(), index, error.receive());
 
-  if (fd == -1) {
+  if (fd == kInvalidPipeWireFd) {
     RTC_LOG(LS_ERROR) << "Failed to get file descriptor from the list: "
                       << error->message;
     that->OnPortalDone(RequestResponse::kError);

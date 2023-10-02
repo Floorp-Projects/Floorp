@@ -135,13 +135,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
     bool need_rtp_packet_infos = false;
 
-    // If true, the RTP packet history will select RTX packets based on
-    // heuristics such as send time, retransmission count etc, in order to
-    // make padding potentially more useful.
-    // If false, the last packet will always be picked. This may reduce CPU
-    // overhead.
-    bool enable_rtx_padding_prioritization = true;
-
     // Estimate RTT as non-sender as described in
     // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
     bool non_sender_rtt_measurement = false;

@@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
   if (frame_transformer) {
     frame_transformer_delegate_ =
         rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
-            this, std::move(frame_transformer), TaskQueueBase::Current(),
+            this, clock_, std::move(frame_transformer), TaskQueueBase::Current(),
             config_.rtp.remote_ssrc);
     frame_transformer_delegate_->Init();
   }
@@ -961,7 +961,7 @@ void RtpVideoStreamReceiver2::SetDepacketizerToDecoderFrameTransformer(
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   frame_transformer_delegate_ =
       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
-          this, std::move(frame_transformer), rtc::Thread::Current(),
+          this, clock_, std::move(frame_transformer), rtc::Thread::Current(),
           config_.rtp.remote_ssrc);
   frame_transformer_delegate_->Init();
 }

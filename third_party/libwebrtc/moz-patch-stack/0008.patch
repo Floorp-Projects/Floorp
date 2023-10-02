@@ -64,5 +64,5 @@ index 3db4332cd1..512103ab5e 100644
  
    DesktopSize size(round(nssize.width * scale),
 -- 
-2.34.1
+2.37.3
 

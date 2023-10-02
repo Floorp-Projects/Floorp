@@ -8772,8 +8772,7 @@ class VideoStreamEncoderWithRealEncoderTest
         encoder = CreateLibaomAv1Encoder();
         break;
       case kVideoCodecH264:
-        encoder =
-            H264Encoder::Create(cricket::VideoCodec(cricket::kH264CodecName));
+        encoder = H264Encoder::Create();
         break;
       case kVideoCodecMultiplex:
         mock_encoder_factory_for_multiplex_ =
