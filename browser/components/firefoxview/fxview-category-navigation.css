@@ -5,7 +5,6 @@
 :host {
   --fxviewcategorynav-button-padding: 8px;
   margin-inline-start: 42px;
-  border-inline-end: 1px solid transparent;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -38,9 +37,9 @@ nav {
 }
 
 @media (prefers-reduced-motion) {
-  /* Setting border-inline-end to add clear differentiation between side navigation and main content area */
+  /* (See Bug 1610081) Setting border-inline-end to add clear differentiation between side navigation and main content area */
   :host {
-    border-inline-end-color: var(--in-content-border-color);
+    border-inline-end: 1px solid var(--in-content-border-color);
   }
 }
 
