@@ -782,6 +782,123 @@ add_task(async function test_registerContentScripts_with_wrong_matches() {
   await AppTestDelegate.removeTab(window, tab);
 });
 
+add_task(async function test_registerContentScripts_on_about_blank_frames() {
+  let extension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "a-script",
+          js: ["script.js"],
+          allFrames: true,
+          // TODO bug 1853411: implement matchOriginAsFallback: true,
+          // For now, we run in about:blank if its origin matches, comparable
+          // to match_about_blank:true in content_scripts in manifest.json.
+          matches: ["*://test1.example.com/*/file_with_about_blank.html"],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.assertEq(
+          "https://test1.example.com",
+           origin,
+           `Got expected origin at ${location.href}`
+        );
+        browser.test.sendMessage("got_url:" + location.href.split("/").pop());
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_with_about_blank.html",
+    true
+  );
+  await extension.awaitMessage("got_url:file_with_about_blank.html");
+  await extension.awaitMessage("got_url:about:blank");
+  await extension.awaitMessage("got_url:about:srcdoc");
+
+  await extension.unload();
+
+  // We remove the tab after having unloaded the extensions to avoid failures
+  // on Windows, see: Bug 1761550.
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_registerContentScripts_on_top_level_about_blank() {
+  // This is the default behavior, but fix pref value in case that is not the
+  // case. The flipped-pref case is tested later in this test.
+  // TODO bug 1856071: Remove this pref setter when the pref is removed.
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.script_about_blank_without_permission", false]],
+  });
+  let extension = makeExtension({
+    async background() {
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script-that-should-not-run",
+          js: ["script_should_not_run.js"],
+          // "matches" does not match all URLs, so the script should not run on
+          // top-level about:blank. Otherwise extensions may unexpectedly see
+          // their scripts running in more contexts than expected, as seen in
+          // bug 1853412.
+          matches: ["*://test1.example.com/does_not_match_any/*"],
+          persistAcrossSessions: false,
+        },
+        {
+          id: "script-that-should-run",
+          js: ["script_all_urls.js"],
+          matches: ["*://*/*"],
+          // Undocumented feature: to only match on "about:blank", specify
+          // excludeMatches that excludes the URLs of interest.
+          excludeMatches: ["*://*/*"],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script_should_not_run.js": () => {
+        browser.test.fail("this script should not be executed.");
+      },
+      "script_all_urls.js": () => {
+        browser.test.assertEq("about:blank", document.URL, "Expected URL");
+        browser.test.assertEq("null", origin, "Expected null origin");
+        browser.test.sendMessage("script-ran");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "about:blank",
+    // Set waitForLoad to false because the Android implementation of
+    // openNewForegroundTab ignores "about:blank" loads.
+    // We don't need to wait for a full load, because the "script-ran"
+    // message will be sent by the content script when it is ready.
+    false
+  );
+  await extension.awaitMessage("script-ran");
+
+  await extension.unload();
+
+  // We remove the tab after having unloaded the extensions to avoid failures
+  // on Windows, see: Bug 1761550.
+  await AppTestDelegate.removeTab(window, tab);
+  await SpecialPowers.popPrefEnv(); // Balances pushPrefEnv at start of task.
+  // TODO bug bug 1856071: Remove the above popPrefEnv call.
+});
+
 add_task(async function test_registerContentScripts_twice_with_same_id() {
   let extension = makeExtension({
     async background() {
