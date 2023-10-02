@@ -269,9 +269,15 @@ static constexpr std::array<uint32_t, 256> BuildEscapeChars() {
 
   // Extra characters which aren't escaped in particular escape modes.
   AddUnescapedChars(".", esc_Scheme, table);
-  // esc_Username has no additional unescaped characters.
-  AddUnescapedChars("|", esc_Password, table);
-  AddUnescapedChars(".", esc_Host, table);
+  // Note that behavior of esc_Username and esc_Password is the same, so these
+  // could be merged (in the URL spec, both reference the "userinfo encode set"
+  // https://url.spec.whatwg.org/#userinfo-percent-encode-set, so the same
+  // behavior is expected.)
+  // Leaving separate for now to minimize risk, as these are also IDL-exposed
+  // as separate constants.
+  AddUnescapedChars("'.", esc_Username, table);
+  AddUnescapedChars("'.", esc_Password, table);
+  AddUnescapedChars(".", esc_Host, table);  // Same as esc_Scheme
   AddUnescapedChars("'./:;=@[]|", esc_Directory, table);
   AddUnescapedChars("'.:;=@[]|", esc_FileBaseName, table);
   AddUnescapedChars("':;=@[]|", esc_FileExtension, table);
