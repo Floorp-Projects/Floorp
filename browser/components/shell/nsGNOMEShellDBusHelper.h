@@ -8,7 +8,7 @@
 #ifndef __nsGNOMEShellDBusHelper_h__
 #define __nsGNOMEShellDBusHelper_h__
 
-#include "mozilla/DBusHelpers.h"
+#include <gio/gio.h>
 #include "nsINavHistoryService.h"
 
 #define MAX_SEARCH_RESULTS_NUM 9
@@ -17,18 +17,16 @@
 
 class nsGNOMEShellHistorySearchResult;
 
-DBusHandlerResult DBusIntrospect(DBusConnection* aConnection,
-                                 DBusMessage* aMsg);
-DBusHandlerResult DBusHandleInitialResultSet(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
-DBusHandlerResult DBusHandleSubsearchResultSet(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
-DBusHandlerResult DBusHandleResultMetas(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
-DBusHandlerResult DBusActivateResult(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
-DBusHandlerResult DBusLaunchSearch(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
+void DBusHandleResultSet(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                         GVariant* aParameters, bool aInitialSearch,
+                         GDBusMethodInvocation* aReply);
+void DBusHandleResultMetas(
+    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+    GVariant* aParameters, GDBusMethodInvocation* aReply);
+void DBusActivateResult(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                        GVariant* aParameters, GDBusMethodInvocation* aReply);
+void DBusLaunchSearch(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                      GVariant* aParameters, GDBusMethodInvocation* aReply);
 bool IsHistoryResultNodeURI(nsINavHistoryResultNode* aHistoryNode);
 
 const char* GetDBusBusName();

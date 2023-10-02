@@ -64,60 +64,6 @@ static bool GetGnomeSearchTitle(const char* aSearchedTerm,
   return true;
 }
 
-static const char* introspect_template =
-    "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
-    "1.0//EN\"\n"
-    "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
-    "<node>\n"
-    " <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-    "   <method name=\"Introspect\">\n"
-    "     <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-    "   </method>\n"
-    " </interface>\n"
-    " <interface name=\"org.gnome.Shell.SearchProvider2\">\n"
-    "   <method name=\"GetInitialResultSet\">\n"
-    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
-    "     <arg type=\"as\" name=\"results\" direction=\"out\" />\n"
-    "   </method>\n"
-    "   <method name=\"GetSubsearchResultSet\">\n"
-    "     <arg type=\"as\" name=\"previous_results\" direction=\"in\" />\n"
-    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
-    "     <arg type=\"as\" name=\"results\" direction=\"out\" />\n"
-    "   </method>\n"
-    "   <method name=\"GetResultMetas\">\n"
-    "     <arg type=\"as\" name=\"identifiers\" direction=\"in\" />\n"
-    "     <arg type=\"aa{sv}\" name=\"metas\" direction=\"out\" />\n"
-    "   </method>\n"
-    "   <method name=\"ActivateResult\">\n"
-    "     <arg type=\"s\" name=\"identifier\" direction=\"in\" />\n"
-    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
-    "     <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
-    "   </method>\n"
-    "   <method name=\"LaunchSearch\">\n"
-    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
-    "     <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
-    "   </method>\n"
-    "</interface>\n"
-    "</node>\n";
-
-DBusHandlerResult DBusIntrospect(DBusConnection* aConnection,
-                                 DBusMessage* aMsg) {
-  DBusMessage* reply;
-
-  reply = dbus_message_new_method_return(aMsg);
-  if (!reply) {
-    return DBUS_HANDLER_RESULT_NEED_MEMORY;
-  }
-
-  dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspect_template,
-                           DBUS_TYPE_INVALID);
-
-  dbus_connection_send(aConnection, reply, nullptr);
-  dbus_message_unref(reply);
-
-  return DBUS_HANDLER_RESULT_HANDLED;
-}
-
 int DBusGetIndexFromIDKey(const char* aIDKey) {
   // ID is NN:URL where NN is index to our current history
   // result container.
@@ -134,82 +80,33 @@ static void ConcatArray(nsACString& aOutputStr, const char** aStringArray) {
   }
 }
 
-DBusHandlerResult DBusHandleInitialResultSet(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
-  DBusMessage* reply;
-  char** stringArray = nullptr;
-  int elements;
-
-  if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
-                             &stringArray, &elements, DBUS_TYPE_INVALID) ||
-      elements == 0) {
-    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
-    dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
-    dbus_message_unref(reply);
-  } else {
-    aSearchResult->SetReply(dbus_message_new_method_return(aMsg));
-    nsAutoCString searchTerm;
-    ConcatArray(searchTerm, const_cast<const char**>(stringArray));
-    aSearchResult->SetSearchTerm(searchTerm.get());
-    GetGNOMEShellHistoryService()->QueryHistory(aSearchResult);
-    // DBus reply will be send asynchronously by
-    // nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply()
-    // when GetGNOMEShellHistoryService() has the results.
+// GetInitialResultSet :: (as) → (as)
+// GetSubsearchResultSet :: (as,as) → (as)
+void DBusHandleResultSet(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                         GVariant* aParameters, bool aInitialSearch,
+                         GDBusMethodInvocation* aReply) {
+  // Inital search has params (as), any following one has (as,as) and we want
+  // the second string array.
+  fprintf(stderr, "%s\n", g_variant_get_type_string(aParameters));
+  RefPtr<GVariant> variant = dont_AddRef(
+      g_variant_get_child_value(aParameters, aInitialSearch ? 0 : 1));
+  const char** stringArray = g_variant_get_strv(variant, nullptr);
+  if (!stringArray) {
+    g_dbus_method_invocation_return_error(
+        aReply, G_DBUS_ERROR, G_DBUS_ERROR_INVALID_ARGS, "Wrong params!");
+    return;
   }
 
-  if (stringArray) {
-    dbus_free_string_array(stringArray);
-  }
+  aSearchResult->SetReply(aReply);
+  nsAutoCString searchTerm;
+  ConcatArray(searchTerm, stringArray);
+  aSearchResult->SetSearchTerm(searchTerm.get());
+  GetGNOMEShellHistoryService()->QueryHistory(aSearchResult);
+  // DBus reply will be send asynchronously by
+  // nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply()
+  // when GetGNOMEShellHistoryService() has the results.
 
-  return DBUS_HANDLER_RESULT_HANDLED;
-}
-
-DBusHandlerResult DBusHandleSubsearchResultSet(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
-  DBusMessage* reply;
-
-  char **unusedArray = nullptr, **stringArray = nullptr;
-  int unusedNum, elements;
-
-  if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
-                             &unusedArray, &unusedNum, DBUS_TYPE_ARRAY,
-                             DBUS_TYPE_STRING, &stringArray, &elements,
-                             DBUS_TYPE_INVALID) ||
-      elements == 0) {
-    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
-    dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
-    dbus_message_unref(reply);
-  } else {
-    aSearchResult->SetReply(dbus_message_new_method_return(aMsg));
-    nsAutoCString searchTerm;
-    ConcatArray(searchTerm, const_cast<const char**>(stringArray));
-    aSearchResult->SetSearchTerm(searchTerm.get());
-    GetGNOMEShellHistoryService()->QueryHistory(aSearchResult);
-    // DBus reply will be send asynchronously by
-    // nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply()
-    // when GetGNOMEShellHistoryService() has the results.
-  }
-
-  if (unusedArray) {
-    dbus_free_string_array(unusedArray);
-  }
-  if (stringArray) {
-    dbus_free_string_array(stringArray);
-  }
-
-  return DBUS_HANDLER_RESULT_HANDLED;
-}
-
-static void appendStringDictionary(DBusMessageIter* aIter, const char* aKey,
-                                   const char* aValue) {
-  DBusMessageIter iterDict, iterVar;
-  dbus_message_iter_open_container(aIter, DBUS_TYPE_DICT_ENTRY, nullptr,
-                                   &iterDict);
-  dbus_message_iter_append_basic(&iterDict, DBUS_TYPE_STRING, &aKey);
-  dbus_message_iter_open_container(&iterDict, DBUS_TYPE_VARIANT, "s", &iterVar);
-  dbus_message_iter_append_basic(&iterVar, DBUS_TYPE_STRING, &aValue);
-  dbus_message_iter_close_container(&iterDict, &iterVar);
-  dbus_message_iter_close_container(aIter, &iterDict);
+  g_free(stringArray);
 }
 
 /*
@@ -218,41 +115,21 @@ static void appendStringDictionary(DBusMessageIter* aIter, const char* aKey,
               bits-per-sample, channels,
               image data
 */
-static void DBusAppendIcon(GnomeHistoryIcon* aIcon, DBusMessageIter* aIter) {
-  DBusMessageIter iterDict, iterVar, iterStruct;
-  dbus_message_iter_open_container(aIter, DBUS_TYPE_DICT_ENTRY, nullptr,
-                                   &iterDict);
-  const char* key = "icon-data";
-  dbus_message_iter_append_basic(&iterDict, DBUS_TYPE_STRING, &key);
-  dbus_message_iter_open_container(&iterDict, DBUS_TYPE_VARIANT, "(iiibiiay)",
-                                   &iterVar);
-  dbus_message_iter_open_container(&iterVar, DBUS_TYPE_STRUCT, nullptr,
-                                   &iterStruct);
-
-  int width = aIcon->GetWidth();
-  int height = aIcon->GetHeight();
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &width);
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &height);
-  int rowstride = width * 4;
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &rowstride);
-  int hasAlpha = true;
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_BOOLEAN, &hasAlpha);
-  int bitsPerSample = 8;
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &bitsPerSample);
-  int channels = 4;
-  dbus_message_iter_append_basic(&iterStruct, DBUS_TYPE_INT32, &channels);
-
-  DBusMessageIter iterArray;
-  dbus_message_iter_open_container(&iterStruct, DBUS_TYPE_ARRAY, "y",
-                                   &iterArray);
-  unsigned char* array = aIcon->GetData();
-  dbus_message_iter_append_fixed_array(&iterArray, DBUS_TYPE_BYTE, &array,
-                                       width * height * 4);
-  dbus_message_iter_close_container(&iterStruct, &iterArray);
-
-  dbus_message_iter_close_container(&iterVar, &iterStruct);
-  dbus_message_iter_close_container(&iterDict, &iterVar);
-  dbus_message_iter_close_container(aIter, &iterDict);
+static void DBusAppendIcon(GVariantBuilder* aBuilder, GnomeHistoryIcon* aIcon) {
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("(iiibiiay)"));
+  g_variant_builder_add_value(&b, g_variant_new_int32(aIcon->GetWidth()));
+  g_variant_builder_add_value(&b, g_variant_new_int32(aIcon->GetHeight()));
+  g_variant_builder_add_value(&b, g_variant_new_int32(aIcon->GetWidth() * 4));
+  g_variant_builder_add_value(&b, g_variant_new_boolean(true));
+  g_variant_builder_add_value(&b, g_variant_new_int32(8));
+  g_variant_builder_add_value(&b, g_variant_new_int32(4));
+  g_variant_builder_add_value(
+      &b, g_variant_new_fixed_array(G_VARIANT_TYPE("y"), aIcon->GetData(),
+                                    aIcon->GetWidth() * aIcon->GetHeight() * 4,
+                                    sizeof(char)));
+  g_variant_builder_add(aBuilder, "{sv}", "icon-data",
+                        g_variant_builder_end(&b));
 }
 
 /* Appends history search results to the DBUS reply.
@@ -268,9 +145,8 @@ static void DBusAppendIcon(GnomeHistoryIcon* aIcon, DBusMessageIter* aIter) {
               height, rowstride, has-alpha, bits-per-sample, and image data
   "description": an optional short description (1-2 lines)
 */
-static void DBusAppendResultID(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
-    DBusMessageIter* aIter, const char* aID) {
+static already_AddRefed<GVariant> DBusAppendResultID(
+    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, const char* aID) {
   nsCOMPtr<nsINavHistoryContainerResultNode> container =
       aSearchResult->GetSearchResultContainer();
 
@@ -278,31 +154,36 @@ static void DBusAppendResultID(
   nsCOMPtr<nsINavHistoryResultNode> child;
   container->GetChild(index, getter_AddRefs(child));
   nsAutoCString title;
-  if (NS_FAILED(child->GetTitle(title))) {
-    return;
+  if (!child || NS_FAILED(child->GetTitle(title))) {
+    return nullptr;
   }
 
   if (title.IsEmpty()) {
     if (NS_FAILED(child->GetUri(title)) || title.IsEmpty()) {
-      return;
+      return nullptr;
     }
   }
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
   const char* titleStr = title.get();
-  appendStringDictionary(aIter, "id", aID);
-  appendStringDictionary(aIter, "name", titleStr);
+  g_variant_builder_add(&b, "{sv}", "id", g_variant_new_string(aID));
+  g_variant_builder_add(&b, "{sv}", "name", g_variant_new_string(titleStr));
 
   GnomeHistoryIcon* icon = aSearchResult->GetHistoryIcon(index);
   if (icon) {
-    DBusAppendIcon(icon, aIter);
+    DBusAppendIcon(&b, icon);
   } else {
-    appendStringDictionary(aIter, "gicon", "text-html");
+    g_variant_builder_add(&b, "{sv}", "gicon",
+                          g_variant_new_string("text-html"));
   }
+  return dont_AddRef(g_variant_builder_end(&b));
 }
 
 /* Search the web for: "searchTerm" to the DBUS reply.
  */
-static void DBusAppendSearchID(DBusMessageIter* aIter, const char* aID) {
+static already_AddRefed<GVariant> DBusAppendSearchID(const char* aID) {
   /* aID contains:
 
      KEYWORD_SEARCH_STRING:ssssss
@@ -314,62 +195,61 @@ static void DBusAppendSearchID(DBusMessageIter* aIter, const char* aID) {
   // aID contains only 'KEYWORD_SEARCH_STRING:' so we're missing searched
   // string.
   if (strlen(aID) <= KEYWORD_SEARCH_STRING_LEN + 1) {
-    return;
+    return nullptr;
   }
 
-  appendStringDictionary(aIter, "id", KEYWORD_SEARCH_STRING);
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&b, "{sv}", "id",
+                        g_variant_new_string(KEYWORD_SEARCH_STRING));
 
   // Extract ssssss part from aID
   auto searchTerm = nsAutoCStringN<32>(aID + KEYWORD_SEARCH_STRING_LEN + 1);
   nsAutoCString gnomeSearchTitle;
   if (GetGnomeSearchTitle(searchTerm.get(), gnomeSearchTitle)) {
-    appendStringDictionary(aIter, "name", gnomeSearchTitle.get());
+    g_variant_builder_add(&b, "{sv}", "name",
+                          g_variant_new_string(gnomeSearchTitle.get()));
     // TODO: When running on flatpak/snap we may need to use
     // icon like org.mozilla.Firefox or so.
-    appendStringDictionary(aIter, "gicon", "firefox");
+    g_variant_builder_add(&b, "{sv}", "gicon", g_variant_new_string("firefox"));
   }
+
+  return dont_AddRef(g_variant_builder_end(&b));
 }
 
-DBusHandlerResult DBusHandleResultMetas(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
-  DBusMessage* reply;
-  char** stringArray;
-  int elements;
-
-  if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
-                             &stringArray, &elements, DBUS_TYPE_INVALID) ||
-      elements == 0) {
-    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
-  } else {
-    reply = dbus_message_new_method_return(aMsg);
-
-    DBusMessageIter iter;
-    dbus_message_iter_init_append(reply, &iter);
-    DBusMessageIter iterArray;
-    dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "a{sv}",
-                                     &iterArray);
-
-    DBusMessageIter iterArray2;
-    for (int i = 0; i < elements; i++) {
-      dbus_message_iter_open_container(&iterArray, DBUS_TYPE_ARRAY, "{sv}",
-                                       &iterArray2);
-      if (strncmp(stringArray[i], KEYWORD_SEARCH_STRING,
-                  KEYWORD_SEARCH_STRING_LEN) == 0) {
-        DBusAppendSearchID(&iterArray2, stringArray[i]);
-      } else {
-        DBusAppendResultID(aSearchResult, &iterArray2, stringArray[i]);
-      }
-      dbus_message_iter_close_container(&iterArray, &iterArray2);
-    }
-
-    dbus_message_iter_close_container(&iter, &iterArray);
-    dbus_free_string_array(stringArray);
+// GetResultMetas :: (as) → (aa{sv})
+void DBusHandleResultMetas(
+    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+    GVariant* aParameters, GDBusMethodInvocation* aReply) {
+  RefPtr<GVariant> variant =
+      dont_AddRef(g_variant_get_child_value(aParameters, 0));
+  gsize elements;
+  const char** stringArray = g_variant_get_strv(variant, &elements);
+  if (!stringArray) {
+    g_dbus_method_invocation_return_error(
+        aReply, G_DBUS_ERROR, G_DBUS_ERROR_INVALID_ARGS, "Wrong params!");
+    return;
   }
 
-  dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
-  dbus_message_unref(reply);
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("aa{sv}"));
+  for (gsize i = 0; i < elements; i++) {
+    RefPtr<GVariant> value;
+    if (strncmp(stringArray[i], KEYWORD_SEARCH_STRING,
+                KEYWORD_SEARCH_STRING_LEN) == 0) {
+      value = DBusAppendSearchID(stringArray[i]);
+    } else {
+      value = DBusAppendResultID(aSearchResult, stringArray[i]);
+    }
+    if (value) {
+      g_variant_builder_add_value(&b, value);
+    }
+  }
 
-  return DBUS_HANDLER_RESULT_HANDLED;
+  GVariant* v = g_variant_builder_end(&b);
+  g_dbus_method_invocation_return_value(aReply, g_variant_new_tuple(&v, 1));
+
+  g_free(stringArray);
 }  // namespace mozilla
 
 static void ActivateResultID(
@@ -468,54 +348,37 @@ static void DBusLaunchWithAllResults(
   free(urlList);
 }
 
-DBusHandlerResult DBusActivateResult(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
-  DBusMessage* reply;
-  char* resultID;
-  char** stringArray;
-  int elements;
-  uint32_t timestamp;
+// ActivateResult :: (s,as,u) → ()
+void DBusActivateResult(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                        GVariant* aParameters, GDBusMethodInvocation* aReply) {
+  const char* resultID;
 
-  if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_STRING, &resultID,
-                             DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, &stringArray,
-                             &elements, DBUS_TYPE_UINT32, &timestamp,
-                             DBUS_TYPE_INVALID) ||
-      resultID == nullptr) {
-    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
-  } else {
-    reply = dbus_message_new_method_return(aMsg);
-    ActivateResultID(aSearchResult, resultID, timestamp);
-    dbus_free_string_array(stringArray);
+  // aParameters is "(s,as,u)" type
+  RefPtr<GVariant> r = dont_AddRef(g_variant_get_child_value(aParameters, 0));
+  if (!(resultID = g_variant_get_string(r, nullptr))) {
+    g_dbus_method_invocation_return_error(
+        aReply, G_DBUS_ERROR, G_DBUS_ERROR_INVALID_ARGS, "Wrong params!");
+    return;
   }
+  RefPtr<GVariant> t = dont_AddRef(g_variant_get_child_value(aParameters, 2));
+  uint32_t timestamp = g_variant_get_uint32(t);
 
-  dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
-  dbus_message_unref(reply);
-
-  return DBUS_HANDLER_RESULT_HANDLED;
+  ActivateResultID(aSearchResult, resultID, timestamp);
+  g_dbus_method_invocation_return_value(aReply, nullptr);
 }
 
-DBusHandlerResult DBusLaunchSearch(
-    RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
-  DBusMessage* reply;
-  char** stringArray;
-  int elements;
-  uint32_t timestamp;
-
-  if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
-                             &stringArray, &elements, DBUS_TYPE_UINT32,
-                             &timestamp, DBUS_TYPE_INVALID) ||
-      elements == 0) {
-    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
-  } else {
-    reply = dbus_message_new_method_return(aMsg);
-    DBusLaunchWithAllResults(aSearchResult, timestamp);
-    dbus_free_string_array(stringArray);
+// LaunchSearch :: (as,u) → ()
+void DBusLaunchSearch(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
+                      GVariant* aParameters, GDBusMethodInvocation* aReply) {
+  RefPtr<GVariant> variant =
+      dont_AddRef(g_variant_get_child_value(aParameters, 1));
+  if (!variant) {
+    g_dbus_method_invocation_return_error(
+        aReply, G_DBUS_ERROR, G_DBUS_ERROR_INVALID_ARGS, "Wrong params!");
+    return;
   }
-
-  dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
-  dbus_message_unref(reply);
-
-  return DBUS_HANDLER_RESULT_HANDLED;
+  DBusLaunchWithAllResults(aSearchResult, g_variant_get_uint32(variant));
+  g_dbus_method_invocation_return_value(aReply, nullptr);
 }
 
 bool IsHistoryResultNodeURI(nsINavHistoryResultNode* aHistoryNode) {
