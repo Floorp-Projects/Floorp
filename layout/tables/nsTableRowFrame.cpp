@@ -366,7 +366,6 @@ void nsTableRowFrame::DidResize() {
         cellSize.BSize(wm) = cellBSize;
         cellFrame->SetSize(wm, cellSize);
 
-        nsTableFrame* tableFrame = GetTableFrame();
         if (tableFrame->IsBorderCollapse()) {
           nsTableFrame::InvalidateTableFrame(cellFrame, cellOldRect,
                                              cellInkOverflow, false);
