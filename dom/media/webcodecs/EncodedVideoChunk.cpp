@@ -61,7 +61,7 @@ EncodedVideoChunkData::EncodedVideoChunkData(
              static_cast<size_t>(std::numeric_limits<uint32_t>::max()));
 }
 
-UniquePtr<EncodedVideoChunkData> EncodedVideoChunkData::Clone() {
+UniquePtr<EncodedVideoChunkData> EncodedVideoChunkData::Clone() const {
   if (!mBuffer) {
     LOGE("No buffer in EncodedVideoChunkData %p to clone!", this);
     return nullptr;

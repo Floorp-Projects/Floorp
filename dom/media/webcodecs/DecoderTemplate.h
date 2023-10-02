@@ -51,6 +51,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   using Self = DecoderTemplate<DecoderType>;
   using ConfigType = typename DecoderType::ConfigType;
   using ConfigTypeInternal = typename DecoderType::ConfigTypeInternal;
+  using InputType = typename DecoderType::InputType;
   using InputTypeInternal = typename DecoderType::InputTypeInternal;
   using OutputType = typename DecoderType::OutputType;
   using OutputCallbackType = typename DecoderType::OutputCallbackType;
@@ -154,6 +155,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
   // TODO: Replace virtual with MOZ_EXPORT (visibility("default"))
   virtual void Configure(const ConfigType& aConfig, ErrorResult& aRv);
 
+  virtual void Decode(InputType& aInput, ErrorResult& aRv);
+
   virtual void Reset(ErrorResult& aRv);
 
   virtual void Close(ErrorResult& aRv);
@@ -178,14 +181,14 @@ class DecoderTemplate : public DOMEventTargetHelper {
   Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
-  MOZ_CAN_RUN_SCRIPT void OutputVideoFrames(
+  MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
       nsTArray<RefPtr<MediaData>>&& aData);
 
   class ErrorRunnable;
   void ScheduleReportError(const nsresult& aResult);
 
   class OutputRunnable;
-  void ScheduleOutputVideoFrames(nsTArray<RefPtr<MediaData>>&& aData,
+  void ScheduleOutputDecodedData(nsTArray<RefPtr<MediaData>>&& aData,
                                  const nsACString& aLabel);
 
   void ScheduleClose(const nsresult& aResult);
