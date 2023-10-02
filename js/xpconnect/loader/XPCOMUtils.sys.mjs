@@ -168,68 +168,6 @@ export var XPCOMUtils = {
   },
 
   /**
-   * Defines a getter on a specified object for a module.  The module will not
-   * be imported until first use. The getter allows to execute setup and
-   * teardown code (e.g.  to register/unregister to services) and accepts
-   * a proxy object which acts on behalf of the module until it is imported.
-   *
-   * @param aObject
-   *        The object to define the lazy getter on.
-   * @param aName
-   *        The name of the getter to define on aObject for the module.
-   * @param aResource
-   *        The URL used to obtain the module.
-   * @param aSymbol
-   *        The name of the symbol exported by the module.
-   *        This parameter is optional and defaults to aName.
-   * @param aPreLambda
-   *        A function that is executed when the proxy is set up.
-   *        This will only ever be called once.
-   * @param aPostLambda
-   *        A function that is executed when the module has been imported to
-   *        run optional teardown procedures on the proxy object.
-   *        This will only ever be called once.
-   * @param aProxy
-   *        An object which acts on behalf of the module to be imported until
-   *        the module has been imported.
-   */
-  defineLazyModuleGetter(
-    aObject,
-    aName,
-    aResource,
-    aSymbol,
-    aPreLambda,
-    aPostLambda,
-    aProxy
-  ) {
-    if (arguments.length == 3) {
-      ChromeUtils.defineModuleGetter(aObject, aName, aResource);
-      return;
-    }
-
-    let proxy = aProxy || {};
-
-    if (typeof aPreLambda === "function") {
-      aPreLambda.apply(proxy);
-    }
-
-    this.defineLazyGetter(aObject, aName, () => {
-      var temp = {};
-      try {
-        temp = ChromeUtils.import(aResource);
-
-        if (typeof aPostLambda === "function") {
-          aPostLambda.apply(proxy);
-        }
-      } catch (ex) {
-        console.error("Failed to load module " + aResource + ".");
-        throw ex;
-      }
-      return temp[aSymbol || aName];
-    });
-  },
-
-  /**
    * Defines a lazy module getter on a specified object for each
    * property in the given object.
    *

@@ -241,7 +241,7 @@ describe("ASRouter", () => {
       return features;
     }, {});
     globals.set({
-      // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
+      // Testing framework doesn't know how to `defineLazyModuleGetters` so we're
       // importing these modules into the global scope ourselves.
       GroupsConfigurationProvider: { getMessages: () => Promise.resolve([]) },
       ASRouterPreferences,
