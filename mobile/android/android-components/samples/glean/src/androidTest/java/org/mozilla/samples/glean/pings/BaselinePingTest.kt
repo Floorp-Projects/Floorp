@@ -69,13 +69,13 @@ class BaselinePingTest {
      */
     private fun createMockWebServer(): MockWebServer {
         val server = MockWebServer()
-        server.setDispatcher(
+        server.dispatcher =
             object : Dispatcher() {
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     return MockResponse().setBody("OK")
                 }
-            },
-        )
+            }
+
         return server
     }
 

@@ -20,7 +20,7 @@ import java.io.IOException
  */
 class WebserverRule : TestWatcher() {
     private val webserver: MockWebServer = MockWebServer().apply {
-        setDispatcher(AndroidAssetDispatcher())
+        dispatcher = AndroidAssetDispatcher()
     }
 
     fun url(path: String = ""): String {
