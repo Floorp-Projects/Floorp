@@ -3990,8 +3990,20 @@ pref("cookiebanners.listService.logLevel", "Error");
 // Controls the log level for Cookie Banner Auto Clicking.
 pref("cookiebanners.bannerClicking.logLevel", "Error");
 
-// Controls the log level for Fingerprinting Remote Overrides.
-pref("privacy.fingerprintingProtection.WebCompatService.logLevel", "Error");
+// Enables the cookie banner auto clicking. The cookie banner auto clicking
+// depends on the `cookiebanners.service.mode` pref.
+pref("cookiebanners.bannerClicking.enabled", true);
+
+// Whether or not banner auto clicking test mode is enabled.
+pref("cookiebanners.bannerClicking.testing", false);
+
+// The maximum time in ms for detecting banner and button elements for cookie
+// banner auto clicking.
+pref("cookiebanners.bannerClicking.timeout", 3000);
+
+// How often (milliseconds) to run the banner detection query selectors to detect
+// the banner element and/or buttons.
+pref("cookiebanners.bannerClicking.pollingInterval", 500);
 
 // Array of test rules for cookie banner handling as a JSON string. They will be
 // inserted in addition to regular rules and may override them when setting the
@@ -4013,3 +4025,6 @@ pref("privacy.query_stripping.listService.logLevel", "Error");
 // scripting.registerContentScripts API instead of the older MV2
 // contentScripts.register API.
 pref("extensions.webcompat.useScriptingAPI", true);
+
+// Controls the log level for Fingerprinting Remote Overrides.
+pref("privacy.fingerprintingProtection.WebCompatService.logLevel", "Error");

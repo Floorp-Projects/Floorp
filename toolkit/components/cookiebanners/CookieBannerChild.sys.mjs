@@ -10,6 +10,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -42,6 +44,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "observeTimeout",
   "cookiebanners.bannerClicking.timeout",
   3000
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "pollingInterval",
+  "cookiebanners.bannerClicking.pollingInterval",
+  500
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -325,6 +333,7 @@ export class CookieBannerChild extends JSWindowActorChild {
       lazy.logConsole.debug(
         `MutationObserver timeout after ${lazy.observeTimeout}ms.`
       );
+      this.#observerCleanUpTimer = null;
       this.#observerCleanUp();
     }, lazy.observeTimeout);
   }
@@ -474,37 +483,63 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     return new Promise(resolve => {
       let win = this.contentWindow;
+      // Marks whether a mutation on the site has been observed since we last
+      // ran checkFn.
+      let sawMutation = false;
 
-      let observer = new win.MutationObserver(mutationList => {
-        lazy.logConsole.debug(
-          "#promiseObserve: Mutation observed",
-          mutationList
-        );
+      // IDs for interval for checkFn polling.
+      let pollIntervalId = null;
 
-        let result = checkFn?.();
-        if (result) {
-          cleanup(result, observer);
-        }
+      // Keep track of DOM changes via MutationObserver. We only run query
+      // selectors again if the DOM updated since our last check.
+      let observer = new win.MutationObserver(() => {
+        sawMutation = true;
       });
-
       observer.observe(win.document.body, {
         attributes: true,
         subtree: true,
         childList: true,
       });
 
-      let cleanup = (result, observer) => {
-        lazy.logConsole.debug(
-          "#promiseObserve cleanup",
+      // Start polling checkFn.
+      let intervalFn = () => {
+        // Nothing changed since last run, skip running checkFn.
+        if (!sawMutation) {
+          return;
+        }
+        // Reset mutation flag.
+        sawMutation = false;
+
+        // A truthy result means we have a hit so we can stop observing.
+        let result = checkFn?.();
+        if (result) {
+          cleanup(result);
+        }
+      };
+      pollIntervalId = lazy.setInterval(intervalFn, lazy.pollingInterval);
+
+      let cleanup = result => {
+        lazy.logConsole.debug("#promiseObserve cleanup", {
           result,
           observer,
-          this.#observerCleanUpTimer
-        );
+          cleanupTimeoutId: this.#observerCleanUpTimer,
+          pollIntervalId,
+        });
+
+        // Unregister the observer.
         if (observer) {
           observer.disconnect();
           observer = null;
         }
 
+        // Stop the polling checks.
+        if (pollIntervalId) {
+          lazy.clearInterval(pollIntervalId);
+          pollIntervalId = null;
+        }
+
+        // Clear the cleanup timeout. This can happen when the actor gets
+        // destroyed before the cleanup timeout itself fires.
         if (this.#observerCleanUpTimer) {
           lazy.clearTimeout(this.#observerCleanUpTimer);
         }
@@ -516,7 +551,7 @@ export class CookieBannerChild extends JSWindowActorChild {
       // The clean up function to clean unfinished observer and timer when the
       // actor destroys.
       this.#observerCleanUp = () => {
-        cleanup(null, observer);
+        cleanup(null);
       };
 
       // If we already observed a load event we can start the cleanup timer
@@ -584,7 +619,7 @@ export class CookieBannerChild extends JSWindowActorChild {
         rules
       );
       this.#telemetryStatus.currentStage = "mutation_pre_load";
-      rules = await this.#promiseObserve(presenceDetector, lazy.observeTimeout);
+      rules = await this.#promiseObserve(presenceDetector);
     }
 
     if (!rules?.length) {
@@ -633,7 +668,7 @@ export class CookieBannerChild extends JSWindowActorChild {
           }
         }
         return null;
-      }, lazy.observeTimeout);
+      });
 
       if (!targetEl) {
         lazy.logConsole.debug("Cannot find the target button.");
