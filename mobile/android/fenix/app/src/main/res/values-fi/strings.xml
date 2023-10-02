@@ -2224,17 +2224,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Käytämme Mozillan %s-tekoälytekniikkaa tuotearvioiden luotettavuuden tarkistamiseen. Tämä auttaa arvioimaan vain arvostelun laatua, ei tuotteen laatua. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Annamme kunkin tuotteen arvosteluille <b>kirjainarvosanan</b> A:sta F:ään.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Annamme kunkin tuotteen arvosteluille <b>kirjainarvosanan</b> A:sta F:ään.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Luotettavat arvostelut. Uskomme, että arvostelut ovat todennäköisesti todellisilta asiakkailta, jotka ovat jättäneet rehellisiä, puolueettomia arvosteluja.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Luotettavat arvostelut. Uskomme, että arvostelut ovat todennäköisesti todellisilta asiakkailta, jotka ovat jättäneet rehellisiä, puolueettomia arvosteluja.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Uskomme, että arvostelut ovat luotettavia.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Uskomme, että kyseessä on sekä luotettavia että epäluotettavia arvosteluja.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Epäluotettavat arvostelut. Uskomme, että arvostelut ovat todennäköisesti vääriä tai puolueellisia.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Epäluotettavat arvostelut. Uskomme, että arvostelut ovat todennäköisesti vääriä tai puolueellisia.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Uskomme, etteivät arvostelut ole luotettavia.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Oikaistu arvosana</b> perustuu vain niihin arvosteluihin, jotka koemme luotettaviksi.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Kohokohdat</b> ovat %s arvostelusta viimeisten 80 päivän ajalta, joiden uskomme olevan luotettavia.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Kohokohdat</b> ovat %s arvostelusta viimeisten 80 päivän ajalta, joiden uskomme olevan luotettavia.]]></string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Asetukset</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->

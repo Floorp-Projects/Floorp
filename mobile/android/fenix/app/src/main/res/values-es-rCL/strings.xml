@@ -322,16 +322,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ahora no</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Haz de %s tu navegador para todo</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Haz de Firefox tu navegador para todo</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s pone a las personas por encima de las ganancias y defiende tu privacidad al bloquear los rastreadores entre sitios.\n\nObtén más información en nuestro %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox pone a las personas por encima de las ganancias y defiende tu privacidad al bloquear los rastreadores entre sitios.\n\nObtén más información en nuestra política de privacidad.</string>
@@ -350,15 +343,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Conectarse</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ahora no</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Las notificaciones te ayudan a hacer más con %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Las notificaciones te ayudan a hacer más con Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Envía pestañas entre dispositivos, administra las descargas y obtén sugerencias para aprovechar %s al máximo.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Envía pestañas entre dispositivos, administra las descargas y obtén sugerencias para aprovechar Firefox al máximo.</string>
@@ -564,6 +551,16 @@
     <string name="preferences_account_settings">Ajustes de la cuenta</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Autocompletar URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Sugerencias de patrocinadores</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Apoya a %1$s con sugerencias patrocinadas ocasionales</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Sugerencias de %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Recibe sugerencias de la web relacionadas con tu búsqueda</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir enlaces en aplicaciones</string>
 
@@ -2202,17 +2199,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Usamos tecnología de IA de %s de Mozilla para verificar la confiabilidad de las reseñas de productos. Esto solo te ayudará a evaluar la calidad de las reseñas, no la calidad del producto. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Asignamos a las reseñas de cada producto una <b>calificación con letras</b> de la A a la F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Asignamos a las reseñas de cada producto una <b>calificación con letras</b> de la A a la F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Revisiones confiables. Creemos que las reseñas probablemente provienen de clientes reales que dejaron reseñas honestas e imparciales.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Revisiones confiables. Creemos que las reseñas probablemente provienen de clientes reales que dejaron reseñas honestas e imparciales.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Creemos que las reseñas son confiables.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Creemos que hay una combinación de reseñas confiables y no confiables.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Reseñas poco fiables. Creemos que las reseñas probablemente son falsas o provienen de revisores sesgados.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Reseñas poco fiables. Creemos que las reseñas probablemente son falsas o provienen de revisores sesgados.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Creemos que las reseñas no son confiables.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>calificación ajustada</b> se basa únicamente en reseñas que consideramos confiables.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[Los <b>puntos destacados</b> provienen de reseñas de %s de los últimos 80 días que creemos que son confiables.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Los <b>puntos destacados</b> provienen de reseñas de %s de los últimos 80 días que creemos que son confiables.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Aprender más sobre %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2315,7 +2316,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Abrir verificador de reseñas</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">Abrir verificador de reseñas</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

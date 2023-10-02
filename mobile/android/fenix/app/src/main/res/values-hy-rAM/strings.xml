@@ -2198,18 +2198,22 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Մենք օգտագործում ենք AI տեխնոլոգիա %s-ից Mozilla-ի կողմից՝ արտադրանքի կարծիքների հավաստիությունը ստուգելու համար: Սա միայն կօգնի ձեզ գնահատել կարծիքների որակը, այլ ոչ թե արտադրանքի որակը:</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Մենք յուրաքանչյուր ապրանքի կարծիքներին տալիս ենք <b>տառային գնահատական</b>՝ A-ից մինչև F:]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Մենք յուրաքանչյուր ապրանքի կարծիքներին տալիս ենք <b>տառային գնահատական</b>՝ A-ից մինչև F:]]></string>
 
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Հուսալի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, իրական հաճախորդներից են, ովքեր թողել են ազնիվ, անաչառ կարծիքներ:</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Հուսալի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, իրական հաճախորդներից են, ովքեր թողել են ազնիվ, անաչառ կարծիքներ:</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Մենք կարծում ենք, որ կարծիքներն վստահելի են:</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Մենք հավատում ենք, որ կա հուսալի և անվստահելի կարծիքների խառնուրդ:</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Անվստահելի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, կեղծ են կամ կողմնակալ գրախոսների կողմից:</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Անվստահելի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, կեղծ են կամ կողմնակալ գրախոսների կողմից:</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Մենք կարծում ենք, որ կարծիքներն անվստահելի են:</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Ճշգրտված վարկանիշը</b> հիմնված է միայն այն կարծիքների վրա, որոնք մենք վստահելի ենք համարում:]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Գունանշումները</b> վերջին 80 օրվա ընթացքում %s կարծիքներից են, որոնք, մեր կարծիքով, հուսալի են:]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Գունանշումները</b> վերջին 80 օրվա ընթացքում %s կարծիքներից են, որոնք, մեր կարծիքով, հուսալի են:]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Իմացեք ավելին %s-ի մասին:</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
