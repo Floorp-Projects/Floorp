@@ -23,36 +23,6 @@ struct NSSLOWHASHContextStr {
     void *hashCtxt;
 };
 
-#ifndef NSS_FIPS_DISABLED
-static int
-nsslow_GetFIPSEnabled(void)
-{
-#ifdef LINUX
-    FILE *f;
-    char d;
-    size_t size;
-    const char *env;
-
-    env = PR_GetEnvSecure("NSS_FIPS");
-    if (env && (*env == 'y' || *env == 'f' || *env == '1' || *env == 't')) {
-        return 1;
-    }
-
-    f = fopen("/proc/sys/crypto/fips_enabled", "r");
-    if (!f)
-        return 0;
-
-    size = fread(&d, 1, 1, f);
-    fclose(f);
-    if (size != 1)
-        return 0;
-    if (d != '1')
-        return 0;
-#endif /* LINUX */
-    return 1;
-}
-#endif /* NSS_FIPS_DISABLED */
-
 static NSSLOWInitContext dummyContext = { 0 };
 static PRBool post_failed = PR_TRUE;
 
@@ -66,7 +36,7 @@ NSSLOW_Init(void)
 #ifndef NSS_FIPS_DISABLED
     /* make sure the FIPS product is installed if we are trying to
      * go into FIPS mode */
-    if (nsslow_GetFIPSEnabled()) {
+    if (NSS_GetSystemFIPSEnabled()) {
         if (BL_FIPSEntryOK(PR_TRUE, PR_FALSE) != SECSuccess) {
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             post_failed = PR_TRUE;

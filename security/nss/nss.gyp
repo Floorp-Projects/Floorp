@@ -127,6 +127,7 @@
             [ 'mozilla_client==0', {
               'dependencies': [
                 'cmd/crlutil/crlutil.gyp:crlutil',
+                'cmd/dbtool/dbtool.gyp:dbtool',
                 'cmd/modutil/modutil.gyp:modutil',
                 'cmd/pwdecrypt/pwdecrypt.gyp:pwdecrypt',
                 'cmd/shlibsign/shlibsign.gyp:shlibsign',

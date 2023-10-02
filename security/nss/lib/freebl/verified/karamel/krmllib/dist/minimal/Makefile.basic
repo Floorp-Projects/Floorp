@@ -46,7 +46,7 @@ AR ?= ar
 
 %.d: %.c
 	@set -e; rm -f $@; \
-	  $(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+	  $(CC) -MM -MG $(CFLAGS) $< > $@.$$$$; \
 	  sed 's,\($(notdir $*)\)\.o[ :]*,$(dir $@)\1.o $@ : ,g' < $@.$$$$ > $@; \
 	  rm -f $@.$$$$
 
