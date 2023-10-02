@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/glean/bindings/Ping.h"
+#include "nsGlobalWindowInner.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
