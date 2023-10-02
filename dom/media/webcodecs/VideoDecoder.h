@@ -88,10 +88,6 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
 
   already_AddRefed<Promise> Flush(ErrorResult& aRv);
 
-  void Reset(ErrorResult& aRv);
-
-  void Close(ErrorResult& aRv);
-
   static already_AddRefed<Promise> IsConfigSupported(
       const GlobalObject& aGlobal, const VideoDecoderConfig& aConfig,
       ErrorResult& aRv);
