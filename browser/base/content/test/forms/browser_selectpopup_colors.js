@@ -793,7 +793,7 @@ add_task(async function test_scrollbar_props() {
   BrowserTestUtils.removeTab(tab);
 });
 
-if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+if (AppConstants.platform == "win") {
   add_task(async function test_darkmode() {
     let lightSelectColor = rgbaToString(
       InspectorUtils.colorToRGBA("MenuText", document)

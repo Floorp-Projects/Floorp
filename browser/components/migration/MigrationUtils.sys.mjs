@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
-  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   MigrationWizardConstants:
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
@@ -23,7 +22,6 @@ var gMigrators = null;
 var gFileMigrators = null;
 var gProfileStartup = null;
 var gL10n = null;
-var gPreviousDefaultBrowserKey = "";
 var gHasOpenedLegacyWizard = false;
 
 let gForceExitSpinResolve = false;
@@ -500,51 +498,6 @@ class MigrationUtils {
       console.error("Could not detect default browser: ", ex);
     }
 
-    // "firefox" is the least useful entry here, and might just be because we've set
-    // ourselves as the default (on Windows 7 and below). In that case, check if we
-    // have a registry key that tells us where to go:
-    if (
-      key == "firefox" &&
-      AppConstants.isPlatformAndVersionAtMost("win", "6.2")
-    ) {
-      // Because we remove the registry key, reading the registry key only works once.
-      // We save the value for subsequent calls to avoid hard-to-trace bugs when multiple
-      // consumers ask for this key.
-      if (gPreviousDefaultBrowserKey) {
-        key = gPreviousDefaultBrowserKey;
-      } else {
-        // We didn't have a saved value, so check the registry.
-        const kRegPath = "Software\\Mozilla\\Firefox";
-        let oldDefault = lazy.WindowsRegistry.readRegKey(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          kRegPath,
-          "OldDefaultBrowserCommand"
-        );
-        if (oldDefault) {
-          // Remove the key:
-          lazy.WindowsRegistry.removeRegKey(
-            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-            kRegPath,
-            "OldDefaultBrowserCommand"
-          );
-          try {
-            let file = Cc["@mozilla.org/file/local;1"].createInstance(
-              Ci.nsILocalFileWin
-            );
-            file.initWithCommandLine(oldDefault);
-            key =
-              APP_DESC_TO_KEY[file.getVersionInfoField("FileDescription")] ||
-              key;
-            // Save the value for future callers.
-            gPreviousDefaultBrowserKey = key;
-          } catch (ex) {
-            console.error(
-              "Could not convert old default browser value to description."
-            );
-          }
-        }
-      }
-    }
     return key;
   }
 

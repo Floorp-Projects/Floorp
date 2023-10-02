@@ -362,7 +362,7 @@ add_task(async function testEmeSupport() {
     let item = getAddonCard(win, addon.id);
     if (addon.id == WIDEVINE_ID) {
       if (
-        AppConstants.isPlatformAndVersionAtLeast("win", "6") ||
+        AppConstants.platform == "win" ||
         AppConstants.platform == "macosx" ||
         AppConstants.platform == "linux"
       ) {

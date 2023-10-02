@@ -696,8 +696,8 @@ export var TelemetryEnvironmentTesting = {
       lazy.Assert.ok(this.checkNullOrString(data.system.appleModelId));
     }
 
-    // This feature is only available on Windows 8+
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
+    // This feature is only available on Windows
+    if (AppConstants.platform == "win") {
       lazy.Assert.ok(
         "sec" in data.system,
         "sec must be available under data.system"
