@@ -487,11 +487,10 @@ var gMainPane = {
       document.getElementById("dataMigrationGroup").remove();
     }
 
-    // For media control toggle button, we support it on Windows 8.1+ (NT6.3),
-    // MacOs 10.4+ (darwin8.0, but we already don't support that) and
+    // For media control toggle button, we support it on Windows, macOS and
     // gtk-based Linux.
     if (
-      AppConstants.isPlatformAndVersionAtLeast("win", "6.3") ||
+      AppConstants.platform == "win" ||
       AppConstants.platform == "macosx" ||
       AppConstants.MOZ_WIDGET_GTK
     ) {

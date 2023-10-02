@@ -580,20 +580,13 @@ add_task(async function sessionTimeExcludingAndIncludingSuspend() {
     "In test condition, the two uptimes should be close to each other"
   );
 
-  // This however should always hold, except on Windows < 10, where the two
-  // clocks are from different system calls, and it can fail in test condition
-  // because the machine has not been suspended.
-  if (
-    AppConstants.platform != "win" ||
-    AppConstants.isPlatformAndVersionAtLeast("win", "10.0")
-  ) {
-    Assert.greaterOrEqual(
-      withSuspend,
-      withoutSuspend,
-      `The uptime with suspend must always been greater or equal to the uptime
-       without suspend`
-    );
-  }
+  // This however should always hold.
+  Assert.greaterOrEqual(
+    withSuspend,
+    withoutSuspend,
+    `The uptime with suspend must always been greater or equal to the uptime
+     without suspend`
+  );
 
   Services.prefs.setBoolPref(
     "toolkit.telemetry.testing.overrideProductsCheck",

@@ -2081,13 +2081,9 @@ EnvironmentCache.prototype = {
         data = { winPackageFamilyName, ...data };
       }
       data = { ...this._getProcessData(), ...data };
+      data.sec = this._getSecurityAppData();
     } else if (AppConstants.platform == "android") {
       data.device = this._getDeviceData();
-    }
-
-    // Windows 8+
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-      data.sec = this._getSecurityAppData();
     }
 
     return data;

@@ -257,51 +257,49 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     sandbox.restore();
   });
 
-  // Test first (theme) screen for non-win7.
-  if (!win7Content) {
-    await test_screen_content(
-      browser,
-      "multistage step 1",
-      // Expected selectors:
-      [
-        "div.onboardingContainer",
-        "main.AW_STEP1",
-        "div.secondary-cta",
-        "div.secondary-cta.top",
-        "button[value='secondary_button']",
-        "button[value='secondary_button_top']",
-        "label.theme",
-        "input[type='radio']",
-      ],
-      // Unexpected selectors:
-      ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
-    );
+  // Test first (theme) screen.
+  await test_screen_content(
+    browser,
+    "multistage step 1",
+    // Expected selectors:
+    [
+      "div.onboardingContainer",
+      "main.AW_STEP1",
+      "div.secondary-cta",
+      "div.secondary-cta.top",
+      "button[value='secondary_button']",
+      "button[value='secondary_button_top']",
+      "label.theme",
+      "input[type='radio']",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
+  );
 
-    await onButtonClick(browser, "button.primary");
+  await onButtonClick(browser, "button.primary");
 
-    const { callCount } = aboutWelcomeActor.onContentMessage;
-    ok(callCount >= 1, `${callCount} Stub was called`);
-    let clickCall;
-    for (let i = 0; i < callCount; i++) {
-      const call = aboutWelcomeActor.onContentMessage.getCall(i);
-      info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
-      if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
-        clickCall = call;
-      }
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+  let clickCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      clickCall = call;
     }
-
-    Assert.equal(
-      clickCall.args[0],
-      "AWPage:TELEMETRY_EVENT",
-      "send telemetry event"
-    );
-
-    Assert.equal(
-      clickCall.args[1].message_id,
-      "MY-MOCHITEST-EXPERIMENT_0_AW_STEP1",
-      "Telemetry should join id defined in feature value with screen"
-    );
   }
+
+  Assert.equal(
+    clickCall.args[0],
+    "AWPage:TELEMETRY_EVENT",
+    "send telemetry event"
+  );
+
+  Assert.equal(
+    clickCall.args[1].message_id,
+    "MY-MOCHITEST-EXPERIMENT_0_AW_STEP1",
+    "Telemetry should join id defined in feature value with screen"
+  );
 
   await test_screen_content(
     browser,
