@@ -1,0 +1,11 @@
+[DEFAULT]
+support-files = [
+  "script_entries.js",
+  "!/dom/html/test/form_submit_server.sjs",
+]
+
+["test_basic.html"]
+
+["test_formSubmission.html"]
+
+["test_no_dnd.html"]

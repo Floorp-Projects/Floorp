@@ -1,0 +1,14 @@
+[DEFAULT]
+skip-if = ["os == 'android'"] # bug 1730213
+support-files = [
+  "../../../../../toolkit/components/extensions/test/mochitest/test_ext_all_apis.js",
+  "../../../../../toolkit/components/extensions/test/mochitest/file_sample.html",
+]
+tags = "webextensions"
+prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
+
+["test_ext_all_apis.html"]
+skip-if = [
+  "http3",
+  "http2",
+]

@@ -1,0 +1,35 @@
+[DEFAULT]
+prefs = [
+  "extensions.formautofill.creditCards.supported=on",
+  "extensions.formautofill.creditCards.enabled=true",
+  "extensions.formautofill.reauth.enabled=true",
+]
+support-files = [
+  "!/toolkit/components/satchel/test/satchel_common.js",
+  "../../../../../../toolkit/components/satchel/test/parent_utils.js",
+  "!/toolkit/components/satchel/test/parent_utils.js",
+  "!/browser/extensions/formautofill/test/mochitest/formautofill_common.js",
+  "!/browser/extensions/formautofill/test/mochitest/formautofill_parent_utils.js",
+]
+skip-if = [
+  "xorigin",
+  "os == 'android'", # bug 1730213
+]
+
+["test_basic_creditcard_autocomplete_form.html"]
+scheme = "https"
+
+["test_clear_form.html"]
+scheme = "https"
+
+["test_clear_form_expiry_select_elements.html"]
+scheme = "https"
+
+["test_creditcard_autocomplete_off.html"]
+scheme = "https"
+
+["test_preview_highlight_with_multiple_cc_number_fields.html"]
+scheme = "https"
+
+["test_preview_highlight_with_site_prefill.html"]
+scheme = "https"

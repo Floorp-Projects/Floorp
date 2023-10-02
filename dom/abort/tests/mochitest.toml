@@ -1,0 +1,12 @@
+[DEFAULT]
+support-files = [
+  "worker_abort_controller_fetch.js",
+  "slow.sjs",
+  "!/dom/events/test/event_leak_utils.js",
+]
+
+["test_abort_controller.html"]
+
+["test_abort_controller_fetch.html"]
+
+["test_event_listener_leaks.html"]

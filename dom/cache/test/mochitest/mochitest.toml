@@ -1,0 +1,100 @@
+[DEFAULT]
+tags = "condprof"
+support-files = [
+  "test_cache.js",
+  "test_cache_add.js",
+  "worker_driver.js",
+  "worker_wrapper.js",
+  "frame.html",
+  "message_receiver.html",
+  "driver.js",
+  "serviceworker_driver.js",
+  "test_cache_match_request.js",
+  "test_cache_matchAll_request.js",
+  "test_cache_overwrite.js",
+  "mirror.sjs",
+  "test_cache_match_vary.js",
+  "vary.sjs",
+  "test_caches.js",
+  "test_cache_keys.js",
+  "test_cache_put.js",
+  "test_cache_requestCache.js",
+  "test_cache_delete.js",
+  "test_cache_put_reorder.js",
+  "test_cache_redirect.js",
+  "test_cache_https.js",
+  "large_url_list.js",
+  "empty.html",
+  "idle_worker.js",
+]
+
+# Disabled on xorigin because xorigin mode causes the tests to run in what
+# amounts to third-party iframes. We have separate tests for our behaviors
+# in that case (usually as "browser" tests) and do not want to complicate
+# these normal functionality tests.
+skip-if = ["xorigin"]
+
+["test_cache.html"]
+
+["test_cache_add.html"]
+
+["test_cache_delete.html"]
+
+["test_cache_https.html"]
+
+["test_cache_keys.html"]
+
+["test_cache_matchAll_request.html"]
+
+["test_cache_match_request.html"]
+
+["test_cache_match_vary.html"]
+
+["test_cache_orphaned_body.html"]
+scheme = "https"
+skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1749068
+
+["test_cache_orphaned_cache.html"]
+
+["test_cache_overwrite.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_cache_padding.html"]
+skip-if = [
+  "verify",
+  "os == 'android'", # bug 1468434 for android
+  "condprof",  #: "The opaque response should be removed by caches.delete() and cache.delete()"
+]
+
+["test_cache_put.html"]
+
+["test_cache_put_reorder.html"]
+
+["test_cache_redirect.html"]
+
+["test_cache_requestCache.html"]
+
+["test_cache_restart.html"]
+
+["test_cache_shrink.html"]
+
+["test_cache_tons_of_fd.html"]
+
+["test_cache_untrusted.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_cache_updateUsage.html"]
+
+["test_cache_worker_gc.html"]
+scheme = "https"
+skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1749068
+
+["test_caches.html"]
+
+["test_chrome_constructor.html"]

@@ -8,7 +8,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Security")

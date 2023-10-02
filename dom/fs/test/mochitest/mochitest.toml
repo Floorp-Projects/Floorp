@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[DEFAULT]
+skip-if = ["xorigin"]
+support-files = ["head.js"]
+
+# Skip all tests if xorigin since we'll fail GetStorage() with ePartitionForeignOrDeny
+
+["test_basics.html"]
+scheme = "https"
+skip-if = [
+  "os == 'win'", # Bug 1841281
+  "os == 'linux' && debug",  # Bug 1841281
+  "os == 'mac' && debug", # Bug 1841281
+]
+
+["test_basics_worker.html"]
+scheme = "https"
+
+["test_fileSystemDirectoryHandle.html"]
+scheme = "https"
+
+["test_fileSystemDirectoryHandle_worker.html"]
+scheme = "https"
+
+["test_syncAccessHandle_worker.html"]
+scheme = "https"
+
+["test_writableFileStream.html"]
+scheme = "https"
+
+["test_writableFileStream_worker.html"]
+scheme = "https"

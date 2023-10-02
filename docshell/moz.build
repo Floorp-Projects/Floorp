@@ -22,9 +22,9 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/iframesandbox/mochitest.ini",
-    "test/mochitest/mochitest.ini",
-    "test/navigation/mochitest.ini",
+    "test/iframesandbox/mochitest.toml",
+    "test/mochitest/mochitest.toml",
+    "test/navigation/mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

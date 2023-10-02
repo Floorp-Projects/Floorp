@@ -1,0 +1,16 @@
+[DEFAULT]
+support-files = [
+  "filesystem_commons.js",
+  "script_fileList.js",
+  "worker_basic.js",
+]
+
+["test_basic.html"]
+
+["test_bug1319088.html"]
+
+["test_webkitdirectory.html"]
+skip-if = ["os == 'android'"] # Bug 1674428
+support-files = ["script_promptHandler.js"]
+
+["test_worker_basic.html"]
