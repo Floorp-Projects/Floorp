@@ -18,6 +18,21 @@
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_ENGINE_NAME_KEY = "search-engine-name"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_QUERY_KEY = "search-query"</ID>
     <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SUPER_STATE_KEY = "super-state"</ID>
+    <ID>OutdatedDocumentation:AppAdapter.kt$AppAdapter : Adapter</ID>
+    <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils.Companion$fun addAppOpenings(context: Context)</ID>
+    <ID>OutdatedDocumentation:AppReviewUtils.kt$AppReviewUtils.Companion$fun showAppReview(activity: Activity)</ID>
+    <ID>OutdatedDocumentation:AppState.kt$AppState : State</ID>
+    <ID>OutdatedDocumentation:AppState.kt$Screen</ID>
+    <ID>OutdatedDocumentation:AppState.kt$Screen$Locked : Screen</ID>
+    <ID>OutdatedDocumentation:BlockedTrackersMiddleware.kt$BlockedTrackersMiddleware : Middleware</ID>
+    <ID>OutdatedDocumentation:DefaultTopSitesStorage.kt$DefaultTopSitesStorage : TopSitesStorageObservable</ID>
+    <ID>OutdatedDocumentation:FocusDialog.kt$@Suppress("LongParameterList") @Composable fun FocusDialog( dialogTitle: String, dialogTextComposable: @Composable (() -&gt; Unit)? = null, dialogText: String = "", onConfirmRequest: () -&gt; Unit, onDismissRequest: () -&gt; Unit, confirmButtonText: String = "null", dismissButtonText: String = "null", isConfirmButtonEnabled: Boolean = true, isDismissButtonEnabled: Boolean = true, isConfirmButtonVisible: Boolean = true, isDismissButtonVisible: Boolean = true, )</ID>
+    <ID>OutdatedDocumentation:HtmlLoader.kt$HtmlLoader$fun loadResourceFile( context: Context, @RawRes resourceID: Int, substitutionTable: Map&lt;String, String&gt;, ): String</ID>
+    <ID>OutdatedDocumentation:Language.kt$Language</ID>
+    <ID>OutdatedDocumentation:LanguageListItem.kt$LanguageListItem</ID>
+    <ID>OutdatedDocumentation:LanguageStorage.kt$LanguageStorage$fun saveCurrentLanguageInSharePref(languageTag: String)</ID>
+    <ID>OutdatedDocumentation:PrivateNotificationFeature.kt$PrivateNotificationFeature : LifecycleAwareFeature</ID>
+    <ID>OutdatedDocumentation:SitePermissionOptionsFragmentCompose.kt$@Composable fun OptionsPermissionList( optionsListItems: List&lt;SitePermissionOptionListItem&gt;, state: MutableState&lt;Int&gt;, permissionLabel: String?, goToPhoneSettings: () -&gt; Unit, componentPermissionBlockedByAndroidVisibility: Boolean, )</ID>
     <ID>UndocumentedPublicClass:AboutFragment.kt$AboutFragment : BaseSettingsLikeFragment</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
