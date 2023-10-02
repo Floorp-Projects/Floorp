@@ -34,6 +34,7 @@ use std::str;
 use std::time::Duration;
 use std::time::Instant;
 use thin_vec::ThinVec;
+use uuid::Uuid;
 #[cfg(windows)]
 use winapi::shared::ws2def::{AF_INET, AF_INET6};
 use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
@@ -176,7 +177,7 @@ impl NeqoHttp3Conn {
         if !qlog_dir.is_empty() {
             let qlog_dir_conv = str::from_utf8(qlog_dir).map_err(|_| NS_ERROR_INVALID_ARG)?;
             let mut qlog_path = PathBuf::from(qlog_dir_conv);
-            qlog_path.push(format!("{}.qlog", origin));
+            qlog_path.push(format!("{}_{}.qlog", origin, Uuid::new_v4()));
 
             // Emit warnings but to not return an error if qlog initialization
             // fails.
