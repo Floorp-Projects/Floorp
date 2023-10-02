@@ -73,7 +73,6 @@ crashtest:
             default:
                 by-test-platform:
                     android.*: []
-                    .*wayland.*: []
                     default: built-projects
     max-run-time: 3600
     tier:
