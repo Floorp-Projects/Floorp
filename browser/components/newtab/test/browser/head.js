@@ -22,8 +22,6 @@ const { sinon } = ChromeUtils.importESModule(
 );
 // Set the content pref to make it available across tests
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
-// Test differently for windows 7 as theme screens are removed.
-const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
 // Feature callout constants
 const calloutId = "feature-callout";
 const calloutSelector = `#${calloutId}.featureCallout`;

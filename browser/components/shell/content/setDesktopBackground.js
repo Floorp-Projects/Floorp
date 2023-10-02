@@ -46,11 +46,8 @@ var gSetBackground = {
         multiMonitors = monitors.length > 1;
       }
 
-      if (
-        !multiMonitors ||
-        AppConstants.isPlatformAndVersionAtMost("win", 6.1)
-      ) {
-        // Hide span option if < Win8 since that's when it was introduced.
+      if (!multiMonitors) {
+        // Hide span option on single monitor systems.
         document.getElementById("spanPosition").hidden = true;
       }
     }

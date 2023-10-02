@@ -1821,7 +1821,7 @@ export var UITour = {
 
       let canSetDefaultBrowserInBackground = true;
       if (
-        AppConstants.isPlatformAndVersionAtLeast("win", "6.2") ||
+        AppConstants.platform == "win" ||
         AppConstants.isPlatformAndVersionAtLeast("macosx", "10.10")
       ) {
         canSetDefaultBrowserInBackground = false;
