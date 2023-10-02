@@ -1,0 +1,43 @@
+[DEFAULT]
+support-files = [
+  "file_child_navigation_by_location.html",
+  "file_marquee_event_handlers.html",
+  "file_other_auxiliary_navigation_by_location.html",
+  "file_our_auxiliary_navigation_by_location.html",
+  "file_parent_navigation_by_location.html",
+  "file_sibling_navigation_by_location.html",
+  "file_top_navigation_by_location.html",
+  "file_top_navigation_by_location_exotic.html",
+]
+
+["test_child_navigation_by_location.html"]
+
+["test_marquee_event_handlers.html"]
+skip-if = ["true"] # Bug 1455996
+
+["test_other_auxiliary_navigation_by_location.html"]
+tags = "openwindow"
+
+["test_our_auxiliary_navigation_by_location.html"]
+tags = "openwindow"
+
+["test_parent_navigation_by_location.html"]
+tags = "openwindow"
+
+["test_sibling_navigation_by_location.html"]
+tags = "openwindow"
+
+["test_top_navigation_by_location.html"]
+
+["test_top_navigation_by_location_exotic.html"]
+
+["test_top_navigation_by_user_activation.html"]
+support-files = [
+  "file_top_navigation_by_user_activation.html",
+  "file_top_navigation_by_user_activation_iframe.html",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+

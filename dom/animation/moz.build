@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 EXPORTS.mozilla.dom += [

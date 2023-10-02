@@ -1,0 +1,23 @@
+[DEFAULT]
+support-files = [
+  "file_empty.html",
+  "head.js",
+]
+
+["test_bug659625.html"]
+
+["test_bug978522.html"]
+
+["test_bug979109.html"]
+
+["test_bug989665.html"]
+
+["test_consoleEmptyStack.html"]
+
+["test_console_binding.html"]
+
+["test_console_proto.html"]
+
+["test_count.html"]
+
+["test_timer.html"]

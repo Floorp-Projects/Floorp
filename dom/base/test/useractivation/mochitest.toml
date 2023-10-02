@@ -1,0 +1,33 @@
+[DEFAULT]
+support-files = [
+  "file_empty.html",
+  "file_iframe_user_activated.html",
+  "file_iframe_check_user_activation.html",
+  "file_iframe_consume_user_activation.html",
+  "file_clipboard_common.js",
+]
+prefs = ["formhelper.autozoom.force-disable.test-only=true"]
+
+["test_clipboard_editor.html"]
+
+["test_clipboard_noeditor.html"]
+
+["test_popup_blocker_async_callback.html"]
+
+["test_popup_blocker_mouse_event.html"]
+
+["test_popup_blocker_pointer_event.html"]
+
+["test_useractivation_has_been_activated.html"]
+
+["test_useractivation_key_events.html"]
+
+["test_useractivation_sandbox_transient.html"]
+support-files = ["file_useractivation_sandbox_transient_popup.html"]
+
+["test_useractivation_scrollbar.html"]
+skip-if = ["os == 'android'"]  # scrollbar not showed on mobile
+
+["test_useractivation_transient.html"]
+
+["test_useractivation_transient_consuming.html"]

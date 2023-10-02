@@ -31,7 +31,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser_legacy_recent_tabs.ini",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/xpcshell.ini",
 ]

@@ -46,8 +46,8 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest/creditCard/mochitest.ini",
-    "test/mochitest/mochitest.ini",
+    "test/mochitest/creditCard/mochitest.toml",
+    "test/mochitest/mochitest.toml",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

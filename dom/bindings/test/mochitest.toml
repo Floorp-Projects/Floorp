@@ -1,0 +1,195 @@
+[DEFAULT]
+support-files = [
+  "file_InstanceOf.html",
+  "file_bug775543.html",
+  "file_document_location_set_via_xray.html",
+  "file_dom_xrays.html",
+  "file_proxies_via_xray.html",
+  "forOf_iframe.html",
+  "!/js/xpconnect/tests/mochitest/file_empty.html",
+]
+prefs = ["javascript.options.large_arraybuffers=true"]
+
+["test_ByteString.html"]
+
+["test_InstanceOf.html"]
+
+["test_Object.prototype_props.html"]
+
+["test_async_iterable.html"]
+skip-if = ["!debug"]
+
+["test_async_stacks.html"]
+
+["test_attributes_on_types.html"]
+skip-if = ["!debug"]
+
+["test_barewordGetsWindow.html"]
+support-files = [
+  "file_barewordGetsWindow_frame1.html",
+  "file_barewordGetsWindow_frame2.html",
+]
+
+["test_bug560072.html"]
+
+["test_bug742191.html"]
+
+["test_bug759621.html"]
+
+["test_bug773326.html"]
+
+["test_bug788369.html"]
+
+["test_bug852846.html"]
+
+["test_bug862092.html"]
+
+["test_bug1036214.html"]
+skip-if = [
+  "!debug",
+  "http3",
+  "http2",
+]
+
+["test_bug1041646.html"]
+
+["test_bug1123516_maplikesetlike.html"]
+skip-if = ["!debug"]
+
+["test_bug1123875.html"]
+
+["test_bug1808352.html"]
+skip-if = [
+  "http3", # Bug 1827526
+  "http2",
+]
+support-files = ["file_bug1808352_frame.html"]
+
+["test_bug1808352b.html"]
+support-files = ["file_bug1808352b_frame.html"]
+
+["test_callback_across_document_open.html"]
+
+["test_callback_default_thisval.html"]
+
+["test_callback_exceptions.html"]
+
+["test_cloneAndImportNode.html"]
+
+["test_crossOriginWindowSymbolAccess.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_defineProperty.html"]
+
+["test_domProxyArrayLengthGetter.html"]
+
+["test_enums.html"]
+
+["test_exceptionSanitization.html"]
+skip-if = ["!debug"]
+
+["test_exceptionThrowing.html"]
+
+["test_exception_messages.html"]
+
+["test_exception_options_from_jsimplemented.html"]
+skip-if = ["!debug"]
+
+["test_exceptions_from_jsimplemented.html"]
+tags = "webrtc"
+
+["test_forOf.html"]
+
+["test_integers.html"]
+
+["test_interfaceLength.html"]
+skip-if = ["!debug"]
+
+["test_interfaceName.html"]
+
+["test_interfaceToString.html"]
+
+["test_iterable.html"]
+skip-if = ["!debug"]
+
+["test_jsimplemented_cross_realm_this.html"]
+skip-if = ["!debug"]
+
+["test_jsimplemented_eventhandler.html"]
+skip-if = ["!debug"]
+
+["test_jsimplemented_subclassing.html"]
+
+["test_large_arraybuffers.html"]
+skip-if = [
+  "!debug",
+  "bits == 32", # Large ArrayBuffers are only supported on 64-bit platforms.
+]
+
+["test_large_imageData.html"]
+
+["test_lenientThis.html"]
+
+["test_lookupGetter.html"]
+
+["test_namedNoIndexed.html"]
+
+["test_named_getter_enumerability.html"]
+
+["test_observablearray.html"]
+skip-if = ["!debug"]
+
+["test_observablearray_helper.html"]
+skip-if = ["!debug"]
+
+["test_observablearray_proxyhandler.html"]
+skip-if = ["!debug"]
+
+["test_oom_reporting.html"]
+
+["test_prefOnConstructor.html"]
+skip-if = ["!debug"]
+
+["test_primitive_this.html"]
+
+["test_promise_rejections_from_jsimplemented.html"]
+skip-if = ["!debug"]
+
+["test_proxy_accessors.html"]
+
+["test_proxy_expandos.html"]
+
+["test_remoteProxyAsPrototype.html"]
+
+["test_returnUnion.html"]
+skip-if = ["!debug"]
+
+["test_sequence_detection.html"]
+skip-if = ["!debug"]
+
+["test_sequence_wrapping.html"]
+subsuite = "gpu"
+
+["test_setWithNamedGetterNoNamedSetter.html"]
+
+["test_stringBindings.html"]
+skip-if = ["!debug"]
+
+["test_throwing_method_noDCE.html"]
+
+["test_toJSON.html"]
+skip-if = ["!debug"]
+
+["test_traceProtos.html"]
+
+["test_treat_non_object_as_null.html"]
+
+["test_unforgeablesonexpando.html"]
+
+["test_usvstring.html"]
+skip-if = ["!debug"]
+
+["test_worker_UnwrapArg.html"]

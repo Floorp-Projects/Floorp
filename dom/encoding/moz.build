@@ -27,7 +27,7 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
+    "test/mochitest.toml",
 ]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]

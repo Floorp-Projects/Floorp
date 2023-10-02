@@ -53,7 +53,7 @@ LOCAL_INCLUDES += [
     "/dom/file/ipc",
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 

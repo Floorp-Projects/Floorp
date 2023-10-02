@@ -1,0 +1,39 @@
+[DEFAULT]
+skip-if = ["os == 'android'"] # bug 1730213
+tags = "resistfingerprinting"
+
+support-files = [
+  "file_animation_api.html",
+  "worker_child.js",
+  "worker_grandchild.js",
+  "!/dom/tests/mochitest/geolocation/network_geolocation.sjs",
+]
+
+["test_animation_api.html"]
+
+["test_bug863246_resource_uri.html"]
+
+["test_bug1354633_media_error.html"]
+support-files = ["decode_error.mp4"]
+
+["test_bug1382499_touch_api.html"]
+
+["test_device_sensor_event.html"]
+
+["test_geolocation.html"]
+scheme = "https"
+fail-if = ["xorigin"]
+
+["test_hide_gamepad_info.html"]
+scheme = "https"
+support-files = ["test_hide_gamepad_info_iframe.html"]
+
+["test_iframe.html"]
+
+["test_keyboard_event.html"]
+
+["test_pointer_event.html"]
+support-files = ["../../../../../dom/events/test/pointerevents/mochitest_support_external.js"]
+
+["test_speech_synthesis.html"]
+skip-if = ["verify"]

@@ -1,0 +1,6 @@
+[DEFAULT]
+skip-if = ["os == 'android'"] # bug 1730213
+support-files = ["file_empty.html"]
+
+["test_permissions_api.html"]
+skip-if = ["xorigin"] # Hangs

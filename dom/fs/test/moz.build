@@ -11,6 +11,6 @@ TEST_DIRS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "mochitest/mochitest.ini",
-    "mochitest/worker/mochitest.ini",
+    "mochitest/mochitest.toml",
+    "mochitest/worker/mochitest.toml",
 ]

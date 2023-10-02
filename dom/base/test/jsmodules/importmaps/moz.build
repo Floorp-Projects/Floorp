@@ -6,4 +6,4 @@
 
 MOCHITEST_CHROME_MANIFESTS += ["chrome.toml"]
 
-MOCHITEST_MANIFESTS += ["mochitest.ini"]
+MOCHITEST_MANIFESTS += ["mochitest.toml"]
