@@ -495,6 +495,7 @@ menupopup::part(drop-indicator) {
   margin: 4px;
   padding: 3px 12px;
   flex: 1;
+  min-height: 22px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:after {
@@ -528,7 +529,7 @@ menupopup::part(drop-indicator) {
   background-size: 10px;
   -moz-context-properties: fill;
   fill: white;
-  height: 22px;
+  min-height: 22px;
   width: 22px;
   padding: 0;
   align-self: center;

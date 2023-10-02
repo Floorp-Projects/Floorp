@@ -129,6 +129,11 @@ add_task(async function test_timeShownMultipleNotifications() {
   let notificationHiddenPromise = waitForNotificationPanelHidden();
 
   info("Trigger main action via button click during security delay");
+
+  // Wait for a tick of the event loop to ensure the button we're clicking
+  // has been slotted into moz-button-group
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   triggerMainCommand(PopupNotifications.panel);
 
   await new Promise(resolve => setTimeout(resolve, 0));
