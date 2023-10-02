@@ -146,11 +146,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) final;
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) final;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) final;
 
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) final;
 
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
+  void Destroy(DestroyContext&) override;
 
   nsIScrollableFrame* GetScrollTargetFrame() const final {
     return const_cast<nsHTMLScrollFrame*>(this);

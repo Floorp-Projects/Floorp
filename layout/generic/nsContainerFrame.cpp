@@ -153,7 +153,8 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   }
 }
 
-void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                   ChildListID aListID, nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal ||
                  aListID == FrameChildListID::NoReflowPrincipal,
              "unexpected child list");
@@ -175,7 +176,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   // Request a reflow on the parent frames involved unless we were explicitly
   // told not to (FrameChildListID::NoReflowPrincipal).
   const bool generateReflowCommand =
-      (FrameChildListID::NoReflowPrincipal != aListID);
+      aListID != FrameChildListID::NoReflowPrincipal;
   for (nsIFrame* continuation : Reversed(continuations)) {
     nsContainerFrame* parent = continuation->GetParent();
 
@@ -183,7 +184,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     // We really MUST use StealFrame() and nothing else here.
     // @see nsInlineFrame::StealFrame for details.
     parent->StealFrame(continuation);
-    continuation->Destroy();
+    continuation->Destroy(aContext);
     if (generateReflowCommand && parent != lastParent) {
       presShell->FrameNeedsReflow(parent, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -192,25 +193,23 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 }
 
-void nsContainerFrame::DestroyAbsoluteFrames(
-    nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) {
+void nsContainerFrame::DestroyAbsoluteFrames(DestroyContext& aContext) {
   if (IsAbsoluteContainer()) {
-    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot,
-                                                aPostDestroyData);
+    GetAbsoluteContainingBlock()->DestroyFrames(aContext);
     MarkAsNotAbsoluteContainingBlock();
   }
 }
 
 void nsContainerFrame::SafelyDestroyFrameListProp(
-    nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData,
-    mozilla::PresShell* aPresShell, FrameListPropertyDescriptor aProp) {
+    DestroyContext& aContext, mozilla::PresShell* aPresShell,
+    FrameListPropertyDescriptor aProp) {
   // Note that the last frame can be removed through another route and thus
   // delete the property -- that's why we fetch the property again before
   // removing each frame rather than fetching it once and iterating the list.
   while (nsFrameList* frameList = GetProperty(aProp)) {
     nsIFrame* frame = frameList->RemoveFirstChild();
     if (MOZ_LIKELY(frame)) {
-      frame->DestroyFrom(aDestructRoot, aPostDestroyData);
+      frame->Destroy(aContext);
     } else {
       Unused << TakeProperty(aProp);
       frameList->Delete(aPresShell);
@@ -219,17 +218,16 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
   }
 }
 
-void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                   PostDestroyData& aPostDestroyData) {
+void nsContainerFrame::Destroy(DestroyContext& aContext) {
   // Prevent event dispatch during destruction.
   if (HasView()) {
     GetView()->SetFrame(nullptr);
   }
 
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
+  DestroyAbsoluteFrames(aContext);
 
   // Destroy frames on the principal child list.
-  mFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  mFrames.DestroyFrames(aContext);
 
   // If we have any IB split siblings, clear their references to us.
   if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
@@ -275,19 +273,18 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
     nsPresContext* pc = PresContext();
     mozilla::PresShell* presShell = pc->PresShell();
     if (hasO) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
-                                 OverflowProperty());
+      SafelyDestroyFrameListProp(aContext, presShell, OverflowProperty());
     }
 
     MOZ_ASSERT(
         IsFrameOfType(eCanContainOverflowContainers) || !(hasOC || hasEOC),
         "this type of frame shouldn't have overflow containers");
     if (hasOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
+      SafelyDestroyFrameListProp(aContext, presShell,
                                  OverflowContainersProperty());
     }
     if (hasEOC) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
+      SafelyDestroyFrameListProp(aContext, presShell,
                                  ExcessOverflowContainersProperty());
     }
 
@@ -295,12 +292,11 @@ void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
                    StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "only top layer frame may have backdrop");
     if (hasBackdrop) {
-      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
-                                 BackdropProperty());
+      SafelyDestroyFrameListProp(aContext, presShell, BackdropProperty());
     }
   }
 
-  nsSplittableFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsSplittableFrame::Destroy(aContext);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -896,13 +892,14 @@ void nsContainerFrame::ReflowChild(
   // but only if the NoDeleteNextInFlowChild flag isn't set.
   if (!aStatus.IsInlineBreakBefore() && aStatus.IsFullyComplete() &&
       !(aFlags & ReflowChildFlags::NoDeleteNextInFlowChild)) {
-    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
-    if (kidNextInFlow) {
+    if (nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow()) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsOverflowContinuationTracker::AutoFinish fini(aTracker, aKidFrame);
-      kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
+      DestroyContext context(PresShell());
+      kidNextInFlow->GetParent()->DeleteNextInFlowChild(context, kidNextInFlow,
+                                                        true);
     }
   }
 }
@@ -936,13 +933,14 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
   // but only if the NoDeleteNextInFlowChild flag isn't set.
   if (aStatus.IsFullyComplete() &&
       !(aFlags & ReflowChildFlags::NoDeleteNextInFlowChild)) {
-    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
-    if (kidNextInFlow) {
+    if (nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow()) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsOverflowContinuationTracker::AutoFinish fini(aTracker, aKidFrame);
-      kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
+      DestroyContext context(PresShell());
+      kidNextInFlow->GetParent()->DeleteNextInFlowChild(context, kidNextInFlow,
+                                                        true);
     }
   }
 }
@@ -1363,7 +1361,8 @@ nsIFrame* nsContainerFrame::CreateNextInFlow(nsIFrame* aFrame) {
  * Remove and delete aNextInFlow and its next-in-flows. Updates the sibling and
  * flow pointers
  */
-void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+void nsContainerFrame::DeleteNextInFlowChild(DestroyContext& aContext,
+                                             nsIFrame* aNextInFlow,
                                              bool aDeletingEmptyFrames) {
 #ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
@@ -1381,8 +1380,8 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
       frames.AppendElement(f);
     }
     for (nsIFrame* delFrame : Reversed(frames)) {
-      delFrame->GetParent()->DeleteNextInFlowChild(delFrame,
-                                                   aDeletingEmptyFrames);
+      nsContainerFrame* parent = delFrame->GetParent();
+      parent->DeleteNextInFlowChild(aContext, delFrame, aDeletingEmptyFrames);
     }
   }
 
@@ -1397,7 +1396,7 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
 
   // Delete the next-in-flow frame and its descendants. This will also
   // remove it from its next-in-flow/prev-in-flow chain.
-  aNextInFlow->Destroy();
+  aNextInFlow->Destroy(aContext);
 
   MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }

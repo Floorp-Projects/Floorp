@@ -29,8 +29,7 @@ class nsSplitterFrame final : public mozilla::SimpleXULLeafFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
   explicit nsSplitterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {

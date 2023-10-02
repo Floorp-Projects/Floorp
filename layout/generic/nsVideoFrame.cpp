@@ -147,14 +147,13 @@ nsIContent* nsVideoFrame::GetVideoControls() const {
   return mContent->GetShadowRoot()->GetFirstChild();
 }
 
-void nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                               PostDestroyData& aPostDestroyData) {
+void nsVideoFrame::Destroy(DestroyContext& aContext) {
   if (mReflowCallbackPosted) {
     PresShell()->CancelReflowCallback(this);
   }
-  aPostDestroyData.AddAnonymousContent(mCaptionDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mPosterImage.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  aContext.AddAnonymousContent(mCaptionDiv.forget());
+  aContext.AddAnonymousContent(mPosterImage.forget());
+  nsContainerFrame::Destroy(aContext);
 }
 
 class DispatchResizeEvent : public Runnable {

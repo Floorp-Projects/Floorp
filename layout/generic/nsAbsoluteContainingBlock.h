@@ -63,8 +63,8 @@ class nsAbsoluteContainingBlock {
   void InsertFrames(nsIFrame* aDelegatingFrame,
                     mozilla::FrameChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList&& aFrameList);
-  void RemoveFrame(nsIFrame* aDelegatingFrame,
-                   mozilla::FrameChildListID aListID, nsIFrame* aOldFrame);
+  void RemoveFrame(mozilla::FrameDestroyContext&, mozilla::FrameChildListID,
+                   nsIFrame*);
 
   enum class AbsPosReflowFlags {
     ConstrainHeight = 0x1,
@@ -95,9 +95,8 @@ class nsAbsoluteContainingBlock {
               const nsRect& aContainingBlock, AbsPosReflowFlags aFlags,
               mozilla::OverflowAreas* aOverflowAreas);
 
-  using PostDestroyData = nsIFrame::PostDestroyData;
-  void DestroyFrames(nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
-                     PostDestroyData& aPostDestroyData);
+  using DestroyContext = nsIFrame::DestroyContext;
+  void DestroyFrames(DestroyContext&);
 
   bool HasAbsoluteFrames() const { return mAbsoluteFrames.NotEmpty(); }
 

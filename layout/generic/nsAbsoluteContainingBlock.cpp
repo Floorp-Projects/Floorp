@@ -93,16 +93,14 @@ void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
       aDelegatingFrame, IntrinsicDirty::None, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsAbsoluteContainingBlock::RemoveFrame(nsIFrame* aDelegatingFrame,
+void nsAbsoluteContainingBlock::RemoveFrame(FrameDestroyContext& aContext,
                                             FrameChildListID aListID,
                                             nsIFrame* aOldFrame) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
-  nsIFrame* nif = aOldFrame->GetNextInFlow();
-  if (nif) {
-    nif->GetParent()->DeleteNextInFlowChild(nif, false);
+  if (nsIFrame* nif = aOldFrame->GetNextInFlow()) {
+    nif->GetParent()->DeleteNextInFlowChild(aContext, nif, false);
   }
-
-  mAbsoluteFrames.DestroyFrame(aOldFrame);
+  mAbsoluteFrames.DestroyFrame(aContext, aOldFrame);
 }
 
 static void MaybeMarkAncestorsAsHavingDescendantDependentOnItsStaticPos(
@@ -238,12 +236,11 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
         // to keep continuations within an nsAbsoluteContainingBlock eventually.
         tracker.Insert(nextFrame, kidStatus);
         reflowStatus.MergeCompletionStatusFrom(kidStatus);
-      } else {
+      } else if (nextFrame) {
         // Delete any continuations
-        if (nextFrame) {
-          nsOverflowContinuationTracker::AutoFinish fini(&tracker, kidFrame);
-          nextFrame->GetParent()->DeleteNextInFlowChild(nextFrame, true);
-        }
+        nsOverflowContinuationTracker::AutoFinish fini(&tracker, kidFrame);
+        FrameDestroyContext context(aPresContext->PresShell());
+        nextFrame->GetParent()->DeleteNextInFlowChild(context, nextFrame, true);
       }
     } else {
       tracker.Skip(kidFrame, reflowStatus);
@@ -396,10 +393,8 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   return false;
 }
 
-void nsAbsoluteContainingBlock::DestroyFrames(
-    nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
-    PostDestroyData& aPostDestroyData) {
-  mAbsoluteFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+void nsAbsoluteContainingBlock::DestroyFrames(DestroyContext& aContext) {
+  mAbsoluteFrames.DestroyFrames(aContext);
 }
 
 void nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty() {

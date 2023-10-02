@@ -65,7 +65,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   // --------------------------------------------------------------------------
   // Overloaded nsContainerFrame methods -- see documentation in nsIFrame.h
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eLineParticipant | eSupportsContainLayoutAndPaint)) {
       return false;
     }
@@ -78,14 +78,15 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
 
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID aListID,
+                   nsIFrame* aOldFrame) override;
 
   /**
    * Both GetMinISize and GetPrefISize use the intrinsic width metrics
    * returned by GetIntrinsicMetrics, including ink overflow.
    */
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * Return the intrinsic horizontal metrics of the frame's content area.
@@ -93,24 +94,24 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   virtual void GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
                                         ReflowOutput& aDesiredSize);
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual void DidReflow(nsPresContext* aPresContext,
-                         const ReflowInput* aReflowInput) override
+  void DidReflow(nsPresContext* aPresContext,
+                 const ReflowInput* aReflowInput) override
 
   {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_DONE;
     return nsContainerFrame::DidReflow(aPresContext, aReflowInput);
   }
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
-  virtual void MarkIntrinsicISizesDirty() override;
+  void MarkIntrinsicISizesDirty() override;
 
   // Notification when an attribute is changed. The MathML module uses the
   // following paradigm:
@@ -130,8 +131,8 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   //        Therefore, there is an overhead here in that our siblings are
   //        re-laid too (e.g., this happens with <munder>, <mover>,
   //        <munderover>).
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
   // helper function to apply mirroring to a horizontal coordinate, if needed.
   nscoord MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth,
@@ -401,8 +402,9 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
                      aListID == mozilla::FrameChildListID::NoReflowPrincipal,
                  "unexpected frame list");
     nsBlockFrame::AppendFrames(aListID, std::move(aFrameList));
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -413,17 +415,20 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
                  "unexpected frame list");
     nsBlockFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
                                std::move(aFrameList));
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override {
+  void RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                   nsIFrame* aOldFrame) override {
     NS_ASSERTION(aListID == mozilla::FrameChildListID::Principal ||
                      aListID == mozilla::FrameChildListID::NoReflowPrincipal,
                  "unexpected frame list");
-    nsBlockFrame::RemoveFrame(aListID, aOldFrame);
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    nsBlockFrame::RemoveFrame(aContext, aListID, aOldFrame);
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
@@ -472,8 +477,9 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
                      aListID == mozilla::FrameChildListID::NoReflowPrincipal,
                  "unexpected frame list");
     nsInlineFrame::AppendFrames(aListID, std::move(aFrameList));
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -484,20 +490,23 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
                  "unexpected frame list");
     nsInlineFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
                                 std::move(aFrameList));
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override {
+  void RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                   nsIFrame* aOldFrame) override {
     NS_ASSERTION(aListID == mozilla::FrameChildListID::Principal ||
                      aListID == mozilla::FrameChildListID::NoReflowPrincipal,
                  "unexpected frame list");
-    nsInlineFrame::RemoveFrame(aListID, aOldFrame);
-    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal))
+    nsInlineFrame::RemoveFrame(aContext, aListID, aOldFrame);
+    if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
+    }
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsInlineFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
   }
 

@@ -264,10 +264,9 @@ nsresult nsScrollbarButtonFrame::GetParentWithTag(nsAtom* toFind,
   return NS_OK;
 }
 
-void nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                         PostDestroyData& aPostDestroyData) {
+void nsScrollbarButtonFrame::Destroy(DestroyContext& aContext) {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can
   // disappear out from under you while you're in the process of scrolling.
   StopRepeat();
-  SimpleXULLeafFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  SimpleXULLeafFrame::Destroy(aContext);
 }

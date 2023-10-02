@@ -181,7 +181,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
   mozilla::StyleAlignFlags CSSAlignmentForAbsPosChild(
       const ReflowInput& aChildRI,
       mozilla::LogicalAxis aLogicalAxis) const override;

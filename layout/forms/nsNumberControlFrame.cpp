@@ -41,10 +41,9 @@ nsNumberControlFrame::nsNumberControlFrame(ComputedStyle* aStyle,
                                            nsPresContext* aPresContext)
     : nsTextControlFrame(aStyle, aPresContext, kClassID) {}
 
-void nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                       PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mSpinBox.forget());
-  nsTextControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsNumberControlFrame::Destroy(DestroyContext& aContext) {
+  aContext.AddAnonymousContent(mSpinBox.forget());
+  nsTextControlFrame::Destroy(aContext);
 }
 
 nsresult nsNumberControlFrame::CreateAnonymousContent(

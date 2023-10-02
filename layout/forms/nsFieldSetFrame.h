@@ -23,18 +23,18 @@ class nsFieldSetFrame final : public nsContainerFrame {
 
   nscoord GetIntrinsicISize(gfxContext* aRenderingContext,
                             mozilla::IntrinsicISizeType);
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * The area to paint box-shadows around.  It's the border rect except
    * when there's a <legend> we offset the y-position to the center of it.
    */
-  virtual nsRect VisualBorderRectRelativeToSelf() const override;
+  nsRect VisualBorderRectRelativeToSelf() const override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
   nscoord SynthesizeFallbackBaseline(
       mozilla::WritingMode aWM,
@@ -44,8 +44,8 @@ class nsFieldSetFrame final : public nsContainerFrame {
       mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   ImgDrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                             gfxContext& aRenderingContext, nsPoint aPt,
@@ -58,10 +58,11 @@ class nsFieldSetFrame final : public nsContainerFrame {
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
 #ifdef DEBUG
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID aListID,
+                   nsIFrame* aOldFrame) override;
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~nsIFrame::eCanContainOverflowContainers);
   }

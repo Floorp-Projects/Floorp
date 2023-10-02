@@ -49,16 +49,14 @@ class nsTextControlFrame : public nsContainerFrame,
   virtual ~nsTextControlFrame();
 
   /**
-   * DestroyFrom() causes preparing to destroy editor and that may cause
-   * running selection listeners of specllchecker selection and document
-   * state listeners.  Not sure whether the former does something or not,
-   * but nobody should run content script.  The latter is currently only
-   * FinderHighlighter to clean up its fields at destruction.  Thus, the
-   * latter won't run content script too.  Therefore, this won't run
-   * unsafe script.
+   * Destroy() causes preparing to destroy editor and that may cause running
+   * selection listeners of spellchecker selection and document state listeners.
+   * Not sure whether the former does something or not, but nobody should run
+   * content script.  The latter is currently only FinderHighlighter to clean up
+   * its fields at destruction.  Thus, the latter won't run content script too.
+   * Therefore, this won't run unsafe script.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DestroyFrom(nsIFrame* aDestructRoot,
-                                               PostDestroyData&) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Destroy(DestroyContext&) override;
 
   nsIScrollableFrame* GetScrollTargetFrame() const override;
 

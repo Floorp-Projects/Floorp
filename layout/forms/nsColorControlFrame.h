@@ -27,8 +27,7 @@ class nsColorControlFrame final : public nsHTMLButtonControlFrame,
   friend nsIFrame* NS_NewColorControlFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsColorControlFrame)

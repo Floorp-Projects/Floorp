@@ -167,7 +167,8 @@ void nsTableColGroupFrame::AppendFrames(ChildListID aListID,
     // since the HTML spec says to ignore the span of a colgroup if it
     // has content columns in it.
     nextCol = col->GetNextCol();
-    RemoveFrame(FrameChildListID::Principal, col);
+    DestroyContext context(PresShell());
+    RemoveFrame(context, FrameChildListID::Principal, col);
     col = nextCol;
   }
 
@@ -205,7 +206,8 @@ void nsTableColGroupFrame::InsertFrames(
       // We'll want to insert at the beginning
       aPrevFrame = nullptr;
     }
-    RemoveFrame(FrameChildListID::Principal, col);
+    DestroyContext context(PresShell());
+    RemoveFrame(context, FrameChildListID::Principal, col);
     col = nextCol;
   }
 
@@ -241,7 +243,8 @@ void nsTableColGroupFrame::InsertColsReflow(int32_t aColIndex,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
+void nsTableColGroupFrame::RemoveChild(DestroyContext& aContext,
+                                       nsTableColFrame& aChild,
                                        bool aResetSubsequentColIndices) {
   int32_t colIndex = 0;
   nsIFrame* nextChild = nullptr;
@@ -249,7 +252,7 @@ void nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
     colIndex = aChild.GetColIndex();
     nextChild = aChild.GetNextSibling();
   }
-  mFrames.DestroyFrame(&aChild);
+  mFrames.DestroyFrame(aContext, &aChild);
   mColCount--;
   if (aResetSubsequentColIndices) {
     if (nextChild) {  // reset inside this and all following colgroups
@@ -265,7 +268,8 @@ void nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void nsTableColGroupFrame::RemoveFrame(ChildListID aListID,
+void nsTableColGroupFrame::RemoveFrame(DestroyContext& aContext,
+                                       ChildListID aListID,
                                        nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
 
@@ -282,17 +286,15 @@ void nsTableColGroupFrame::RemoveFrame(ChildListID aListID,
       nsTableColFrame* col = colFrame->GetNextCol();
       nsTableColFrame* nextCol;
       while (col && col->GetColType() == eColAnonymousCol) {
-#ifdef DEBUG
-#endif
         nextCol = col->GetNextCol();
-        RemoveFrame(FrameChildListID::Principal, col);
+        RemoveFrame(aContext, FrameChildListID::Principal, col);
         col = nextCol;
       }
     }
 
     int32_t colIndex = colFrame->GetColIndex();
     // The RemoveChild call handles calling FrameNeedsReflow on us.
-    RemoveChild(*colFrame, true);
+    RemoveChild(aContext, *colFrame, true);
 
     nsTableFrame* tableFrame = GetTableFrame();
     tableFrame->RemoveCol(this, colIndex, true, true);
@@ -301,7 +303,7 @@ void nsTableColGroupFrame::RemoveFrame(ChildListID aListID,
                                            eColAnonymousColGroup, true);
     }
   } else {
-    mFrames.DestroyFrame(aOldFrame);
+    mFrames.DestroyFrame(aContext, aOldFrame);
   }
 }
 

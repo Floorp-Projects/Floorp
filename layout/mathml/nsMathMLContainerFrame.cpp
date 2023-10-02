@@ -716,10 +716,11 @@ void nsMathMLContainerFrame::InsertFrames(
   ChildListChanged(dom::MutationEvent_Binding::ADDITION);
 }
 
-void nsMathMLContainerFrame::RemoveFrame(ChildListID aListID,
+void nsMathMLContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                         ChildListID aListID,
                                          nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal);
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
   ChildListChanged(dom::MutationEvent_Binding::REMOVAL);
 }
 

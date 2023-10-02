@@ -62,10 +62,9 @@ nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle,
 
 nsTableRowGroupFrame::~nsTableRowGroupFrame() = default;
 
-void nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                       PostDestroyData& aPostDestroyData) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this, aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableRowGroupFrame::Destroy(DestroyContext& aContext) {
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this);
+  nsContainerFrame::Destroy(aContext);
 }
 
 NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)
@@ -1057,9 +1056,10 @@ void nsTableRowGroupFrame::UndoContinuedRow(nsPresContext* aPresContext,
     return;
   }
 
+  DestroyContext context(aPresContext->PresShell());
   // Destroy aRow, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
-  overflows->DestroyFrame(aRow);
+  overflows->DestroyFrame(context, aRow);
 
   // Put the overflow rows into our child list
   if (!overflows->IsEmpty()) {
@@ -1534,7 +1534,8 @@ void nsTableRowGroupFrame::InsertFrames(
   }
 }
 
-void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
+void nsTableRowGroupFrame::RemoveFrame(DestroyContext& aContext,
+                                       ChildListID aListID,
                                        nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
 
@@ -1551,7 +1552,7 @@ void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
 }
 
 /* virtual */

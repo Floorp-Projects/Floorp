@@ -391,8 +391,8 @@ void nsHTMLButtonControlFrame::InsertFrames(
   MOZ_CRASH("unsupported operation");
 }
 
-void nsHTMLButtonControlFrame::RemoveFrame(ChildListID aListID,
-                                           nsIFrame* aOldFrame) {
+void nsHTMLButtonControlFrame::RemoveFrame(DestroyContext&, ChildListID,
+                                           nsIFrame*) {
   MOZ_CRASH("unsupported operation");
 }
 #endif

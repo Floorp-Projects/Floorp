@@ -61,10 +61,10 @@ void SVGContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
 }
 
-void SVGContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void SVGContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                    ChildListID aListID, nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
-
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
 }
 
 bool SVGContainerFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
@@ -183,7 +183,8 @@ void SVGDisplayContainerFrame::InsertFrames(
   }
 }
 
-void SVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
+void SVGDisplayContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                           ChildListID aListID,
                                            nsIFrame* aOldFrame) {
   SVGObserverUtils::InvalidateRenderingObservers(aOldFrame);
 
@@ -194,7 +195,7 @@ void SVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
   PresContext()->RestyleManager()->PostRestyleEvent(
       mContent->AsElement(), RestyleHint{0}, nsChangeHint_UpdateOverflow);
 
-  SVGContainerFrame::RemoveFrame(aListID, aOldFrame);
+  SVGContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 
 bool SVGDisplayContainerFrame::IsSVGTransformed(

@@ -20,6 +20,7 @@ class nsPlaceholderFrame;
 class nsWindowSizes;
 
 namespace mozilla {
+struct FrameDestroyContext;
 class PresShell;
 }  // namespace mozilla
 
@@ -31,6 +32,8 @@ class PresShell;
  */
 class nsFrameManager {
  public:
+  using DestroyContext = mozilla::FrameDestroyContext;
+
   explicit nsFrameManager(mozilla::PresShell* aPresShell)
       : mPresShell(aPresShell), mRootFrame(nullptr) {
     MOZ_ASSERT(mPresShell, "need a pres shell");
@@ -64,7 +67,7 @@ class nsFrameManager {
                     mozilla::FrameChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList&& aFrameList);
 
-  void RemoveFrame(mozilla::FrameChildListID aListID, nsIFrame* aOldFrame);
+  void RemoveFrame(DestroyContext&, mozilla::FrameChildListID, nsIFrame*);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.

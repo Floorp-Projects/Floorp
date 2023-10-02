@@ -254,15 +254,15 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
       PushChildrenToOverflow(lastChild->GetNextSibling(), lastChild);
       aReflowInput.mLineLayout->SetDirtyNextLine();
     }
-  } else {
+  } else if (rtcCount) {
+    DestroyContext context(PresShell());
     // If the ruby base container is reflowed completely, the line
     // layout will remove the next-in-flows of that frame. But the
     // line layout is not aware of the ruby text containers, hence
     // it is necessary to remove them here.
     for (uint32_t i = 0; i < rtcCount; i++) {
-      nsIFrame* nextRTC = textContainers[i]->GetNextInFlow();
-      if (nextRTC) {
-        nextRTC->GetParent()->DeleteNextInFlowChild(nextRTC, true);
+      if (nsIFrame* nextRTC = textContainers[i]->GetNextInFlow()) {
+        nextRTC->GetParent()->DeleteNextInFlowChild(context, nextRTC, true);
       }
     }
   }

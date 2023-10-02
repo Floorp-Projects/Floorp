@@ -121,8 +121,7 @@ void SVGImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 /* virtual */
-void SVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                PostDestroyData& aPostDestroyData) {
+void SVGImageFrame::Destroy(DestroyContext& aContext) {
   if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     DecApproximateVisibleCount();
   }
@@ -139,7 +138,7 @@ void SVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
     imageLoader->FrameDestroyed(this);
   }
 
-  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::Destroy(aContext);
 }
 
 /* virtual */

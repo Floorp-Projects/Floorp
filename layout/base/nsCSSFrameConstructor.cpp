@@ -3714,6 +3714,11 @@ nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
   return &sCanvasData;
 }
 
+static MOZ_NEVER_INLINE void DestroyFramesInList(PresShell* aPs, nsFrameList& aList) {
+  nsIFrame::DestroyContext context(aPs);
+  aList.DestroyFrames(context);
+}
+
 void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     FrameConstructionItem& aItem, nsFrameConstructorState& aState,
     nsContainerFrame* aParentFrame, nsFrameList& aFrameList) {
@@ -3923,7 +3928,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
         if (childList.NotEmpty()) {
           // an error must have occurred, delete unprocessed frames
-          childList.DestroyFrames();
+          DestroyFramesInList(mPresShell, childList);
         }
 
         childList = std::move(newList);
@@ -7079,7 +7084,9 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     nsIContent* const nextSibling = aStartChild->GetNextSibling();
     MOZ_ASSERT(nextSibling && nextSibling->IsText(),
                "expected a text node after the list-style-image image");
-    RemoveFrame(FrameChildListID::Principal, nextSibling->GetPrimaryFrame());
+    DestroyContext context(mPresShell);
+    RemoveFrame(context, FrameChildListID::Principal,
+                nextSibling->GetPrimaryFrame());
     auto* const container = aStartChild->GetParent()->AsElement();
     nsIContent* firstNewChild = nullptr;
     auto InsertChild = [this, container, nextSibling,
@@ -7557,7 +7564,9 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
       parentFrame = childFrame->GetParent();
     }
 
-    RemoveFrame(nsLayoutUtils::GetChildListNameFor(childFrame), childFrame);
+    DestroyContext context(mPresShell);
+    RemoveFrame(context, nsLayoutUtils::GetChildListNameFor(childFrame),
+                childFrame);
 
     // NOTE(emilio): aChild could be dead here already if it is a ::before or
     // ::after pseudo-element (since in that case it was owned by childFrame,
@@ -10195,20 +10204,22 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   WrapFramesInFirstLetterFrame(
       aBlockFrame, aBlockFrame, aBlockFrame, aBlockFrames.FirstChild(),
       &parentFrame, &textFrame, &prevFrame, letterFrames, &stopLooking);
-  if (parentFrame) {
-    if (parentFrame == aBlockFrame) {
-      // Take textFrame out of the block's frame list and substitute the
-      // letter frame(s) instead.
-      aBlockFrames.DestroyFrame(textFrame);
-      aBlockFrames.InsertFrames(nullptr, prevFrame, std::move(letterFrames));
-    } else {
-      // Take the old textFrame out of the inline parent's child list
-      RemoveFrame(FrameChildListID::Principal, textFrame);
+  if (!parentFrame) {
+    return;
+  }
+  DestroyContext context(mPresShell);
+  if (parentFrame == aBlockFrame) {
+    // Take textFrame out of the block's frame list and substitute the
+    // letter frame(s) instead.
+    aBlockFrames.DestroyFrame(context, textFrame);
+    aBlockFrames.InsertFrames(nullptr, prevFrame, std::move(letterFrames));
+  } else {
+    // Take the old textFrame out of the inline parent's child list
+    RemoveFrame(context, FrameChildListID::Principal, textFrame);
 
-      // Insert in the letter frame(s)
-      parentFrame->InsertFrames(FrameChildListID::Principal, prevFrame, nullptr,
-                                std::move(letterFrames));
-    }
+    // Insert in the letter frame(s)
+    parentFrame->InsertFrames(FrameChildListID::Principal, prevFrame, nullptr,
+                              std::move(letterFrames));
   }
 }
 
@@ -10348,9 +10359,10 @@ void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   // Destroy the old text frame's continuations (the old text frame
   // will be destroyed when its letter frame is destroyed).
   nsIFrame* frameToDelete = textFrame->LastContinuation();
+  DestroyContext context(mPresShell);
   while (frameToDelete != textFrame) {
     nsIFrame* nextFrameToDelete = frameToDelete->GetPrevContinuation();
-    RemoveFrame(FrameChildListID::Principal, frameToDelete);
+    RemoveFrame(context, FrameChildListID::Principal, frameToDelete);
     frameToDelete = nextFrameToDelete;
   }
 
@@ -10365,7 +10377,7 @@ void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 #endif
 
   // Remove placeholder frame and the float
-  RemoveFrame(FrameChildListID::Principal, placeholderFrame);
+  RemoveFrame(context, FrameChildListID::Principal, placeholderFrame);
 
   // Now that the old frames are gone, we can start pointing to our
   // new primary frame.
@@ -10414,8 +10426,10 @@ void nsCSSFrameConstructor::RemoveFirstLetterFrames(
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nullptr);
 
+      DestroyContext context(mPresShell);
+
       // Next rip out the kid and replace it with the text frame
-      RemoveFrame(FrameChildListID::Principal, kid);
+      RemoveFrame(context, FrameChildListID::Principal, kid);
 
       // Now that the old frames are gone, we can start pointing to our
       // new primary frame.
@@ -10440,7 +10454,8 @@ void nsCSSFrameConstructor::RemoveFirstLetterFrames(
                    "should have the first continuation here");
       aBlockFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
-    } else if (IsInlineFrame(kid)) {
+    }
+    if (IsInlineFrame(kid)) {
       nsContainerFrame* kidAsContainerFrame = do_QueryFrame(kid);
       if (kidAsContainerFrame) {
         // Look inside child inline frame for the letter frame.
@@ -10501,14 +10516,16 @@ void nsCSSFrameConstructor::RecoverLetterFrames(nsContainerFrame* aBlockFrame) {
         static_cast<nsContainerFrame*>(continuation->GetNextContinuation());
   } while (continuation);
 
-  if (parentFrame) {
-    // Take the old textFrame out of the parent's child list
-    RemoveFrame(FrameChildListID::Principal, textFrame);
-
-    // Insert in the letter frame(s)
-    parentFrame->InsertFrames(FrameChildListID::Principal, prevFrame, nullptr,
-                              std::move(letterFrames));
+  if (!parentFrame) {
+    return;
   }
+  // Take the old textFrame out of the parent's child list
+  DestroyContext context(mPresShell);
+  RemoveFrame(context, FrameChildListID::Principal, textFrame);
+
+  // Insert in the letter frame(s)
+  parentFrame->InsertFrames(FrameChildListID::Principal, prevFrame, nullptr,
+                            std::move(letterFrames));
 }
 
 //----------------------------------------------------------------------
@@ -10931,7 +10948,8 @@ bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     // associated out-of-flow frames properly, we need to manually flush all the
     // out-of-flow frames in aState to their container frames.
     aState.ProcessFrameInsertionsForAllLists();
-    aFrameList.DestroyFrames();
+    DestroyContext context(mPresShell);
+    aFrameList.DestroyFrames(context);
     RecreateFramesForContent(
         GetMultiColumnContainingBlockFor(aParentFrame)->GetContent(),
         InsertionKind::Async);

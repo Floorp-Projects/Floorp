@@ -49,7 +49,7 @@ class nsNumberControlFrame final : public nsTextControlFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
+  void Destroy(DestroyContext&) override;
 
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
