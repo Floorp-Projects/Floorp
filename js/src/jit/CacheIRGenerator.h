@@ -488,6 +488,22 @@ class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
   void trackAttached(const char* name /* must be a C string literal */);
 };
 
+class MOZ_RAII OptimizeGetIteratorIRGenerator : public IRGenerator {
+  HandleValue val_;
+
+  AttachDecision tryAttachArray();
+  AttachDecision tryAttachNotOptimizable();
+
+ public:
+  OptimizeGetIteratorIRGenerator(JSContext* cx, HandleScript script,
+                                 jsbytecode* pc, ICState state,
+                                 HandleValue value);
+
+  AttachDecision tryAttachStub();
+
+  void trackAttached(const char* name /* must be a C string literal */);
+};
+
 enum class StringChar { CodeAt, At };
 enum class ScriptedThisResult { NoAction, UninitializedThis, PlainObjectShape };
 

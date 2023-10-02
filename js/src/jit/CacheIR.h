@@ -186,6 +186,7 @@ class TypedOperandId : public OperandId {
   _(InstanceOf)           \
   _(GetIterator)          \
   _(CloseIter)            \
+  _(OptimizeGetIterator)  \
   _(OptimizeSpreadCall)   \
   _(Compare)              \
   _(ToBool)               \

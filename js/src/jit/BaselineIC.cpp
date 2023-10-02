@@ -367,6 +367,8 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
     setKind(JSOp::Rest, BaselineICFallbackKind::Rest);
 
     setKind(JSOp::CloseIter, BaselineICFallbackKind::CloseIter);
+    setKind(JSOp::OptimizeGetIterator,
+            BaselineICFallbackKind::OptimizeGetIterator);
   }
 };
 
@@ -2508,6 +2510,40 @@ bool FallbackICCodeCompiler::emit_CloseIter() {
   using Fn =
       bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleObject);
   return tailCallVM<Fn, DoCloseIterFallback>(masm);
+}
+
+//
+// OptimizeGetIterator_Fallback
+//
+
+bool DoOptimizeGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
+                                   ICFallbackStub* stub, HandleValue value,
+                                   MutableHandleValue res) {
+  stub->incrementEnteredCount();
+  MaybeNotifyWarp(frame->outerScript(), stub);
+  FallbackICSpew(cx, stub, "OptimizeGetIterator");
+
+  TryAttachStub<OptimizeGetIteratorIRGenerator>("OptimizeGetIterator", cx,
+                                                frame, stub, value);
+
+  bool result;
+  if (!OptimizeGetIterator(cx, value, &result)) {
+    return false;
+  }
+  res.setBoolean(result);
+  return true;
+}
+
+bool FallbackICCodeCompiler::emit_OptimizeGetIterator() {
+  EmitRestoreTailCallReg(masm);
+
+  masm.pushValue(R0);
+  masm.push(ICStubReg);
+  pushStubPayload(masm, R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleValue,
+                      MutableHandleValue);
+  return tailCallVM<Fn, DoOptimizeGetIteratorFallback>(masm);
 }
 
 bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {

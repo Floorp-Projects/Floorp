@@ -948,6 +948,26 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       masm.jump(ool->rejoin());
       return;
     }
+    case CacheKind::OptimizeGetIterator: {
+      auto* optimizeGetIteratorIC = ic->asOptimizeGetIteratorIC();
+
+      saveLive(lir);
+
+      pushArg(optimizeGetIteratorIC->value());
+      icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+      pushArg(ImmGCPtr(gen->outerInfo().script()));
+
+      using Fn = bool (*)(JSContext*, HandleScript, IonOptimizeGetIteratorIC*,
+                          HandleValue, bool* res);
+      callVM<Fn, IonOptimizeGetIteratorIC::update>(lir);
+
+      StoreRegisterTo(optimizeGetIteratorIC->output()).generate(this);
+      restoreLiveIgnore(
+          lir, StoreRegisterTo(optimizeGetIteratorIC->output()).clobbered());
+
+      masm.jump(ool->rejoin());
+      return;
+    }
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
@@ -13743,6 +13763,17 @@ void CodeGenerator::visitCloseIterCache(LCloseIterCache* lir) {
   CompletionKind kind = CompletionKind(lir->mir()->completionKind());
 
   IonCloseIterIC ic(liveRegs, iter, temp, kind);
+  addIC(lir, allocateIC(ic));
+}
+
+void CodeGenerator::visitOptimizeGetIteratorCache(
+    LOptimizeGetIteratorCache* lir) {
+  LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+  ValueOperand val = ToValue(lir, LOptimizeGetIteratorCache::ValueIndex);
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  IonOptimizeGetIteratorIC ic(liveRegs, val, output, temp);
   addIC(lir, allocateIC(ic));
 }
 

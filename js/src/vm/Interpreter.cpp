@@ -2572,6 +2572,17 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
     }
     END_CASE(CloseIter)
 
+    CASE(OptimizeGetIterator) {
+      ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+      MutableHandleValue rval = REGS.stackHandleAt(-1);
+      bool result;
+      if (!OptimizeGetIterator(cx, val, &result)) {
+        goto error;
+      }
+      rval.setBoolean(result);
+    }
+    END_CASE(OptimizeGetIterator)
+
     CASE(IsGenClosing) {
       bool b = REGS.sp[-1].isMagic(JS_GENERATOR_CLOSING);
       PUSH_BOOLEAN(b);
@@ -5213,9 +5224,9 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
   return true;
 }
 
-static bool OptimizeArraySpreadCall(JSContext* cx, HandleObject obj,
-                                    MutableHandleValue result) {
-  MOZ_ASSERT(result.isUndefined());
+static bool OptimizeArrayIteration(JSContext* cx, HandleObject obj,
+                                   bool* optimized) {
+  *optimized = false;
 
   // Optimize spread call by skipping spread operation when following
   // conditions are met:
@@ -5225,6 +5236,8 @@ static bool OptimizeArraySpreadCall(JSContext* cx, HandleObject obj,
   //   * the array's prototype is Array.prototype
   //   * Array.prototype[@@iterator] is not modified
   //   * %ArrayIteratorPrototype%.next is not modified
+  //   * %ArrayIteratorPrototype%.return is not defined
+  //   * return is nowhere on the proto chain
   if (!IsPackedArray(obj)) {
     return true;
   }
@@ -5234,15 +5247,10 @@ static bool OptimizeArraySpreadCall(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  bool optimized;
-  if (!stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), &optimized)) {
+  if (!stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), optimized)) {
     return false;
   }
-  if (!optimized) {
-    return true;
-  }
 
-  result.setObject(*obj);
   return true;
 }
 
@@ -5301,12 +5309,15 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
   }
 
   RootedObject obj(cx, &arg.toObject());
-  if (!OptimizeArraySpreadCall(cx, obj, result)) {
+  bool optimized;
+  if (!OptimizeArrayIteration(cx, obj, &optimized)) {
     return false;
   }
-  if (result.isObject()) {
+  if (optimized) {
+    result.setObject(*obj);
     return true;
   }
+
   if (!OptimizeArgumentsSpreadCall(cx, obj, result)) {
     return false;
   }
@@ -5315,6 +5326,30 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
   }
 
   MOZ_ASSERT(result.isUndefined());
+  return true;
+}
+
+bool js::OptimizeGetIterator(JSContext* cx, HandleValue arg, bool* result) {
+  // This function returns |false| if the iteration can't be optimized.
+  *result = false;
+
+  if (!arg.isObject()) {
+    return true;
+  }
+
+  RootedObject obj(cx, &arg.toObject());
+
+  bool optimized;
+  if (!OptimizeArrayIteration(cx, obj, &optimized)) {
+    return false;
+  }
+
+  if (optimized) {
+    *result = true;
+    return true;
+  }
+
+  MOZ_ASSERT(!*result);
   return true;
 }
 

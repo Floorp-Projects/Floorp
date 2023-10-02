@@ -5185,6 +5185,16 @@ void LIRGenerator::visitCloseIterCache(MCloseIterCache* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitOptimizeGetIteratorCache(
+    MOptimizeGetIteratorCache* ins) {
+  MDefinition* value = ins->value();
+  MOZ_ASSERT(value->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LOptimizeGetIteratorCache(useBox(value), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStringLength(MStringLength* ins) {
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
   define(new (alloc()) LStringLength(useRegisterAtStart(ins->string())), ins);

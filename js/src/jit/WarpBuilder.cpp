@@ -1716,6 +1716,11 @@ bool WarpBuilder::build_IsNoIter(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::build_OptimizeGetIterator(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  return buildIC(loc, CacheKind::OptimizeGetIterator, {value});
+}
+
 bool WarpBuilder::transpileCall(BytecodeLocation loc,
                                 const WarpCacheIR* cacheIRSnapshot,
                                 CallInfo* callInfo) {
@@ -3394,6 +3399,13 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       current->add(ins);
       return resumeAfter(ins, loc);
     }
+    case CacheKind::OptimizeGetIterator: {
+      MOZ_ASSERT(numInputs == 1);
+      auto* ins = MOptimizeGetIteratorCache::New(alloc(), getInput(0));
+      current->add(ins);
+      current->push(ins);
+      return resumeAfter(ins, loc);
+    }
     case CacheKind::GetIntrinsic:
     case CacheKind::ToBool:
     case CacheKind::Call:
@@ -3441,6 +3453,7 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
     case CacheKind::HasOwn:
     case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
+    case CacheKind::OptimizeGetIterator:
       resultType = MIRType::Boolean;
       break;
     case CacheKind::SetProp:
