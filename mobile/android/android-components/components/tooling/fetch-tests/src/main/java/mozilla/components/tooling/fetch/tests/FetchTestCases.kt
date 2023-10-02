@@ -13,6 +13,7 @@ import mozilla.components.concept.fetch.isSuccess
 import okhttp3.Headers
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
 import okio.Buffer
 import okio.GzipSink
 import okio.buffer
@@ -205,7 +206,7 @@ abstract class FetchTestCases {
         withServerResponding(
             MockResponse()
                 .setBody("Yep!")
-                .setBodyDelay(10, TimeUnit.SECONDS),
+                .setSocketPolicy(SocketPolicy.NO_RESPONSE),
         ) { client ->
             try {
                 val response = client.fetch(
