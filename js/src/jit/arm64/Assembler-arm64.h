@@ -767,7 +767,8 @@ inline Imm32 Imm64::firstHalf() const { return low(); }
 
 inline Imm32 Imm64::secondHalf() const { return hi(); }
 
-// Forbids nop filling for testing purposes. Not nestable.
+// Forbids nop filling for testing purposes.  Nestable, but nested calls have
+// no effect on the no-nops status; it is only the top level one that counts.
 class AutoForbidNops {
  protected:
   Assembler* asm_;
@@ -777,7 +778,9 @@ class AutoForbidNops {
   ~AutoForbidNops() { asm_->leaveNoNops(); }
 };
 
-// Forbids pool generation during a specified interval. Not nestable.
+// Forbids pool generation during a specified interval.  Nestable, but nested
+// calls must imply a no-pool area of the assembler buffer that is completely
+// contained within the area implied by the outermost level call.
 class AutoForbidPoolsAndNops : public AutoForbidNops {
  public:
   AutoForbidPoolsAndNops(Assembler* asm_, size_t maxInst)
