@@ -16,7 +16,7 @@ object ProductAnalysisTestData {
         productId: String? = "1",
         analysisURL: String = "https://test.com",
         grade: String? = "A",
-        adjustedRating: Double = 4.5,
+        adjustedRating: Double? = 4.5,
         needsAnalysis: Boolean = false,
         lastAnalysisTime: Long = 0L,
         deletedProductReported: Boolean = false,

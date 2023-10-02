@@ -23,7 +23,7 @@ data class GeckoProductAnalysis(
     override val productId: String?,
     val analysisURL: String?,
     val grade: String?,
-    val adjustedRating: Double,
+    val adjustedRating: Double?,
     val needsAnalysis: Boolean,
     val lastAnalysisTime: Long,
     val deletedProductReported: Boolean,

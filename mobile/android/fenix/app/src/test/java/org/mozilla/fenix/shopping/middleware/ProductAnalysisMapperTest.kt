@@ -141,7 +141,7 @@ class ProductAnalysisMapperTest {
         val actual =
             ProductAnalysisTestData.productAnalysis(
                 grade = null,
-                adjustedRating = 0.0,
+                adjustedRating = null,
                 highlights = null,
             ).toProductReviewState()
         val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()

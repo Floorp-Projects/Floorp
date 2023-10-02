@@ -33,7 +33,7 @@ private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
             ProductReviewState.Error.GenericError
         }
     } else {
-        val mappedRating = adjustedRating.toFloatOrNull()
+        val mappedRating = adjustedRating?.toFloatOrNull()
         val mappedGrade = grade?.toGrade()
         val mappedHighlights = highlights?.toHighlights()?.toSortedMap()
 
