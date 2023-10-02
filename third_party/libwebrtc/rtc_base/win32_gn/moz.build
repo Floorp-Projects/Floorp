@@ -63,8 +63,7 @@ OS_LIBS += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/rtc_base/win32.cc",
-    "/third_party/libwebrtc/rtc_base/win32_window.cc"
+    "/third_party/libwebrtc/rtc_base/win32.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
