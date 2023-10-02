@@ -1208,6 +1208,174 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
     });
+    describe("test SOV behaviour", () => {
+      beforeEach(() => {
+        globals.set("NimbusFeatures", {
+          pocketNewtab: {
+            getVariable: sandbox.stub(),
+          },
+        });
+        global.NimbusFeatures.pocketNewtab.getVariable
+          .withArgs("topSitesContileSovEnabled")
+          .returns(true);
+        // We don't need this for just this test, we are setting placements manually.
+        feed.getPlacements.restore();
+        Object.defineProperty(feed, "showSponsoredStories", {
+          get: () => true,
+        });
+        const fakeComponents = {
+          components: [
+            { placement: { name: "sponsored-topsites" }, spocs: {} },
+            { placement: { name: "spocs" }, spocs: {} },
+          ],
+        };
+        feed.updatePlacements(feed.store.dispatch, [fakeComponents]);
+        sandbox.stub(feed.cache, "get").returns(Promise.resolve());
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({
+          spocs: [{ id: "spoc1" }],
+          "sponsored-topsites": [{ id: "topsite1" }],
+        });
+      });
+      it("should use topsites placement by default if there is no SOV", async () => {
+        await feed.loadSpocs(feed.store.dispatch);
+
+        assert.equal(
+          feed.fetchFromEndpoint.firstCall.args[1].body,
+          JSON.stringify({
+            pocket_id: "{foo-123-foo}",
+            version: 2,
+            placements: [
+              {
+                name: "sponsored-topsites",
+              },
+              {
+                name: "spocs",
+              },
+            ],
+          })
+        );
+      });
+      it("should use cache if cache is available and SOV is not ready", async () => {
+        const cache = {
+          sov: [{ assignedPartner: "amp" }],
+        };
+        feed.cache.get.resolves(cache);
+        await feed.loadSpocs(feed.store.dispatch);
+
+        assert.equal(
+          feed.fetchFromEndpoint.firstCall.args[1].body,
+          JSON.stringify({
+            pocket_id: "{foo-123-foo}",
+            version: 2,
+            placements: [
+              {
+                name: "spocs",
+              },
+            ],
+          })
+        );
+      });
+      it("should properly set placements", async () => {
+        sandbox.spy(feed.cache, "set");
+
+        // Testing only 1 placement type.
+        feed.store.dispatch(
+          ac.OnlyToMain({
+            type: at.SOV_UPDATED,
+            data: {
+              ready: true,
+              positions: [
+                {
+                  position: 1,
+                  assignedPartner: "amp",
+                },
+                {
+                  position: 2,
+                  assignedPartner: "amp",
+                },
+              ],
+            },
+          })
+        );
+
+        await feed.loadSpocs(feed.store.dispatch);
+
+        const firstCall = feed.cache.set.getCall(0);
+        assert.deepEqual(firstCall.args[0], "sov");
+        assert.deepEqual(firstCall.args[1], [
+          {
+            position: 1,
+            assignedPartner: "amp",
+          },
+          {
+            position: 2,
+            assignedPartner: "amp",
+          },
+        ]);
+        assert.equal(
+          feed.fetchFromEndpoint.firstCall.args[1].body,
+          JSON.stringify({
+            pocket_id: "{foo-123-foo}",
+            version: 2,
+            placements: [
+              {
+                name: "spocs",
+              },
+            ],
+          })
+        );
+
+        // Testing 2 placement types.
+        feed.store.dispatch(
+          ac.OnlyToMain({
+            type: at.SOV_UPDATED,
+            data: {
+              ready: true,
+              positions: [
+                {
+                  position: 1,
+                  assignedPartner: "amp",
+                },
+                {
+                  position: 2,
+                  assignedPartner: "moz-sales",
+                },
+              ],
+            },
+          })
+        );
+
+        await feed.loadSpocs(feed.store.dispatch);
+
+        const secondCall = feed.cache.set.getCall(2);
+        assert.deepEqual(secondCall.args[0], "sov");
+        assert.deepEqual(secondCall.args[1], [
+          {
+            position: 1,
+            assignedPartner: "amp",
+          },
+          {
+            position: 2,
+            assignedPartner: "moz-sales",
+          },
+        ]);
+        assert.equal(
+          feed.fetchFromEndpoint.secondCall.args[1].body,
+          JSON.stringify({
+            pocket_id: "{foo-123-foo}",
+            version: 2,
+            placements: [
+              {
+                name: "sponsored-topsites",
+              },
+              {
+                name: "spocs",
+              },
+            ],
+          })
+        );
+      });
+    });
   });
 
   describe("#normalizeSpocsItems", () => {
@@ -1587,15 +1755,17 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.resetCache();
 
-      assert.callCount(feed.cache.set, 4);
+      assert.callCount(feed.cache.set, 5);
       const firstCall = feed.cache.set.getCall(0);
       const secondCall = feed.cache.set.getCall(1);
       const thirdCall = feed.cache.set.getCall(2);
       const fourthCall = feed.cache.set.getCall(3);
+      const fifthCall = feed.cache.set.getCall(4);
       assert.deepEqual(firstCall.args, ["layout", {}]);
       assert.deepEqual(secondCall.args, ["feeds", {}]);
       assert.deepEqual(thirdCall.args, ["spocs", {}]);
-      assert.deepEqual(fourthCall.args, ["personalization", {}]);
+      assert.deepEqual(fourthCall.args, ["sov", {}]);
+      assert.deepEqual(fifthCall.args, ["personalization", {}]);
     });
   });
 

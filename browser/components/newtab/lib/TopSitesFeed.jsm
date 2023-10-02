@@ -178,6 +178,7 @@ class ContileIntegration {
 
   async refresh() {
     let updateDefaultSites = await this._fetchSites();
+    await this._topSitesFeed.allocatePositions();
     if (updateDefaultSites) {
       this._topSitesFeed._readDefaults();
     }
@@ -960,7 +961,7 @@ class TopSitesFeed {
 
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
 
-    const sponsored = await this._mergeSponsoredLinks({
+    const sponsored = this._mergeSponsoredLinks({
       [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
       [SPONSORED_TILE_PARTNER_MOZ_SALES]: discoverySponsored,
     });
@@ -1111,9 +1112,12 @@ class TopSitesFeed {
    * @param {Object} sponsoredLinks An object with sponsored links from all the partners.
    * @returns {Array} An array of merged sponsored links.
    */
-  async _mergeSponsoredLinks(sponsoredLinks) {
+  _mergeSponsoredLinks(sponsoredLinks) {
+    const { positions: allocatedPositions, ready: sovReady } =
+      this.store.getState().TopSites.sov || {};
     if (
       !this._contile.sov ||
+      !sovReady ||
       !lazy.NimbusFeatures.pocketNewtab.getVariable(
         NIMBUS_VARIABLE_CONTILE_SOV_ENABLED
       )
@@ -1125,16 +1129,13 @@ class TopSitesFeed {
     sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
       sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
 
-    const sampleInput = `${lazy.contextId}-${this._contile.sov.name}`;
     let sponsored = [];
     let chosenPartners = [];
-    for (const allocation of this._contile.sov.allocations) {
+
+    for (const allocation of allocatedPositions) {
       let link = null;
-      let assignedPartner = null;
-      const ratios = allocation.allocation.map(alloc => alloc.percentage);
-      if (ratios.length) {
-        const index = await lazy.Sampling.ratioSample(sampleInput, ratios);
-        assignedPartner = allocation.allocation[index].partner;
+      const { assignedPartner } = allocation;
+      if (assignedPartner) {
         // Unknown partners are allowed so that new parters can be added to Shepherd
         // sooner without waiting for client changes.
         link = sponsoredLinks[assignedPartner]?.shift();
@@ -1265,6 +1266,41 @@ class TopSitesFeed {
       // Don't broadcast only update the state and update the preloaded tab.
       this.store.dispatch(ac.AlsoToPreloaded(newAction));
     }
+  }
+
+  // Allocate ad positions to partners based on SOV via stable randomization.
+  async allocatePositions() {
+    // If the fetch to get sov fails for whatever reason, we can just return here.
+    // Code that uses this falls back to flattening allocations instead if this has failed.
+    if (!this._contile.sov) {
+      return;
+    }
+    // This sample input should ensure we return the same result for this allocation,
+    // even if called from other parts of the code.
+    const sampleInput = `${lazy.contextId}-${this._contile.sov.name}`;
+    const allocatedPositions = [];
+    for (const allocation of this._contile.sov.allocations) {
+      const allocatedPosition = {
+        position: allocation.position,
+      };
+      allocatedPositions.push(allocatedPosition);
+      const ratios = allocation.allocation.map(alloc => alloc.percentage);
+      if (ratios.length) {
+        const index = await lazy.Sampling.ratioSample(sampleInput, ratios);
+        allocatedPosition.assignedPartner =
+          allocation.allocation[index].partner;
+      }
+    }
+
+    this.store.dispatch(
+      ac.OnlyToMain({
+        type: at.SOV_UPDATED,
+        data: {
+          ready: !!allocatedPositions.length,
+          positions: allocatedPositions,
+        },
+      })
+    );
   }
 
   async updateCustomSearchShortcuts(isStartup = false) {
