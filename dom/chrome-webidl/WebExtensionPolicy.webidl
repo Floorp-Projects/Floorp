@@ -143,7 +143,7 @@ interface WebExtensionPolicy {
    *
    * NOTE: **do not use Services.prefs to retrieve the value of the undelying pref**
    *
-   * It is defined in StaticPrefs.yaml as `mirror: once` and so checking
+   * It is defined in StaticPrefList.yaml as `mirror: once` and so checking
    * its current value using Services.prefs doesn't guarantee that it does
    * match the value as accessible from the C++ layers, and unexpected issue
    * may be possible if different code has a different idea of its value.
