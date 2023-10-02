@@ -132,7 +132,11 @@ class InstalledAddonDetailsFragment : Fragment() {
         switch.setState(addon.isEnabled())
         // When the ad-on is blocklisted or not correctly signed, we do not want to enable the toggle switch
         // because users shouldn't be able to re-enable an add-on in this state.
-        if (addon.isDisabledAsBlocklisted() || addon.isDisabledAsNotCorrectlySigned()) {
+        if (
+            addon.isDisabledAsBlocklisted() ||
+            addon.isDisabledAsNotCorrectlySigned() ||
+            addon.isDisabledAsIncompatible()
+        ) {
             switch.isEnabled = false
             return
         }
@@ -321,6 +325,7 @@ class InstalledAddonDetailsFragment : Fragment() {
             )
         }
     }
+
     private fun bindRemoveButton() {
         binding.removeAddOn.setOnClickListener {
             setAllInteractiveViewsClickable(binding, false)

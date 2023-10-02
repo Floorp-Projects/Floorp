@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.APP_SUPPORT
+import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.APP_VERSION
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.BLOCKLIST
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.SIGNATURE
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.USER
@@ -842,6 +843,9 @@ class AddonManagerTest {
 
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(SIGNATURE))
         assertEquals(Addon.DisabledReason.NOT_CORRECTLY_SIGNED, extension.getDisabledReason())
+
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(APP_VERSION))
+        assertEquals(Addon.DisabledReason.INCOMPATIBLE, extension.getDisabledReason())
 
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(0))
         assertNull(extension.getDisabledReason())

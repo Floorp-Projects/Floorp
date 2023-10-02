@@ -37,6 +37,8 @@ import mozilla.components.feature.addons.ui.CustomViewHolder.FooterViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.SectionViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionViewHolder
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.appName
+import mozilla.components.support.ktx.android.content.appVersionName
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import java.io.IOException
 import mozilla.components.ui.icons.R as iconsR
@@ -220,7 +222,12 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun bindAddon(holder: AddonViewHolder, addon: Addon) {
+    internal fun bindAddon(
+        holder: AddonViewHolder,
+        addon: Addon,
+        appName: String = holder.itemView.context.appName,
+        appVersion: String = holder.itemView.context.appVersionName,
+    ) {
         val context = holder.itemView.context
         addon.rating?.let {
             val userCount = context.getString(R.string.mozac_feature_addons_user_rating_count_2)
@@ -292,6 +299,16 @@ class AddonsManagerAdapter(
                 )
             }
             holder.statusErrorView.isVisible = true
+        } else if (addon.isDisabledAsIncompatible()) {
+            statusErrorMessage.text = context.getString(
+                R.string.mozac_feature_addons_status_incompatible,
+                addonName,
+                appName,
+                appVersion,
+            )
+            holder.statusErrorView.isVisible = true
+            // There is no link when the add-on is disabled because it isn't compatible with the application version.
+            statusErrorLearnMoreLink.isVisible = false
         }
     }
 

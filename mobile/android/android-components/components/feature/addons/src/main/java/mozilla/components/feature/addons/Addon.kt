@@ -145,6 +145,11 @@ data class Addon(
          * The [Addon] was disabled because it isn't correctly signed.
          */
         NOT_CORRECTLY_SIGNED,
+
+        /**
+         * The [Addon] was disabled because it isn't compatible with the application version.
+         */
+        INCOMPATIBLE,
     }
 
     /**
@@ -188,6 +193,12 @@ data class Addon(
      * Returns whether this [Addon] is currently disabled because it isn't correctly signed.
      */
     fun isDisabledAsNotCorrectlySigned() = installedState?.disabledReason == DisabledReason.NOT_CORRECTLY_SIGNED
+
+    /**
+     * Returns whether this [Addon] is currently disabled because it isn't compatible
+     * with the application version.
+     */
+    fun isDisabledAsIncompatible() = installedState?.disabledReason == DisabledReason.INCOMPATIBLE
 
     /**
      * Returns whether or not this [Addon] is allowed in private browsing mode.

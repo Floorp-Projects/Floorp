@@ -91,6 +91,7 @@ class InstalledAddonDetailsFragmentTest {
         every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
         every { addon.isDisabledAsBlocklisted() } returns false
         every { addon.isDisabledAsNotCorrectlySigned() } returns false
+        every { addon.isDisabledAsIncompatible() } returns false
         every { addon.isEnabled() } returns true
         every { fragment.addon } returns addon
 
@@ -110,6 +111,25 @@ class InstalledAddonDetailsFragmentTest {
         every { addon.isEnabled() } returns true
         every { addon.isDisabledAsBlocklisted() } returns false
         every { addon.isDisabledAsNotCorrectlySigned() } returns true
+        every { fragment.addon } returns addon
+
+        fragment.bindEnableSwitch()
+
+        verify { enableSwitch.isEnabled = false }
+    }
+
+    @Test
+    fun `GIVEN incompatible addon WHEN biding the enable switch THEN disable the switch`() {
+        val addon = mockk<Addon>()
+        val enableSwitch = mockk<SwitchMaterial>(relaxed = true)
+        val privateBrowsingSwitch = mockk<SwitchMaterial>(relaxed = true)
+
+        every { fragment.provideEnableSwitch() } returns enableSwitch
+        every { fragment.providePrivateBrowsingSwitch() } returns privateBrowsingSwitch
+        every { addon.isEnabled() } returns true
+        every { addon.isDisabledAsBlocklisted() } returns false
+        every { addon.isDisabledAsNotCorrectlySigned() } returns false
+        every { addon.isDisabledAsIncompatible() } returns true
         every { fragment.addon } returns addon
 
         fragment.bindEnableSwitch()

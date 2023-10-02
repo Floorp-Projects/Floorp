@@ -52,6 +52,11 @@ class AddonsManagerAdapterTest {
     val coroutinesTestRule = MainCoroutineRule()
     private val scope = coroutinesTestRule.scope
 
+    // We must pass these variables to `bindAddon()` because looking up the version name
+    // requires package info that we do not have in the test context.
+    private val appName = "Firefox"
+    private val appVersion = "1.2.3"
+
     @Before
     fun setUp() {
         Locale.setDefault(Locale.ENGLISH)
@@ -200,7 +205,6 @@ class AddonsManagerAdapterTest {
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
-        val statusErrorView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -211,7 +215,7 @@ class AddonsManagerAdapterTest {
             userCountView = userCountView,
             addButton = addButton,
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
-            statusErrorView = statusErrorView,
+            statusErrorView = mock(),
         )
         val addon = Addon(
             id = "id",
@@ -238,7 +242,7 @@ class AddonsManagerAdapterTest {
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList(), style)
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
         verify(ratingAccessibleView).setText("4.50/5")
         verify(titleView).setText("name")
@@ -375,7 +379,6 @@ class AddonsManagerAdapterTest {
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
-        val statusErrorView: View = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
             iconView = mock(),
@@ -386,7 +389,7 @@ class AddonsManagerAdapterTest {
             userCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
-            statusErrorView = statusErrorView,
+            statusErrorView = mock(),
         )
         val addon = Addon(
             id = "id",
@@ -400,7 +403,7 @@ class AddonsManagerAdapterTest {
         )
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
         verify(titleView).setText("id")
         verify(summaryView).setVisibility(View.GONE)
     }
@@ -609,7 +612,7 @@ class AddonsManagerAdapterTest {
         val addon = makeDisabledAddon(Addon.DisabledReason.BLOCKLISTED, addonName)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
         verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "$addonName has been disabled due to security or stability issues."
@@ -652,7 +655,7 @@ class AddonsManagerAdapterTest {
         val addon = makeDisabledAddon(Addon.DisabledReason.BLOCKLISTED)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
         verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "${addon.id} has been disabled due to security or stability issues."
@@ -690,7 +693,7 @@ class AddonsManagerAdapterTest {
         val addon = makeDisabledAddon(Addon.DisabledReason.NOT_CORRECTLY_SIGNED, addonName)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
         verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "$addonName could not be verified as secure and has been disabled."
@@ -733,10 +736,87 @@ class AddonsManagerAdapterTest {
         val addon = makeDisabledAddon(Addon.DisabledReason.NOT_CORRECTLY_SIGNED)
         val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
 
-        adapter.bindAddon(addonViewHolder, addon)
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
         verify(statusErrorView).isVisible = true
         verify(messageTextView).text = "${addon.id} could not be verified as secure and has been disabled."
+    }
+
+    @Test
+    fun `bind incompatible add-on`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusErrorView: View = mock()
+        val messageTextView: TextView = mock()
+        val learnMoreTextView: TextView = mock()
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
+            learnMoreTextView,
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusErrorView = statusErrorView,
+        )
+        val addonName = "some addon name"
+        val addon = makeDisabledAddon(Addon.DisabledReason.INCOMPATIBLE, addonName)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
+
+        verify(statusErrorView).isVisible = true
+        verify(messageTextView).text = "$addonName is not compatible with your version of $appName (version $appVersion)."
+        verify(learnMoreTextView).isVisible = false
+    }
+
+    @Test
+    fun `bind incompatible add-on and without a name`() {
+        val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
+        val titleView: TextView = mock()
+        whenever(titleView.context).thenReturn(testContext)
+        val summaryView: TextView = mock()
+        whenever(summaryView.context).thenReturn(testContext)
+        val statusErrorView: View = mock()
+        val messageTextView: TextView = mock()
+        val learnMoreTextView: TextView = mock()
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_message)).thenReturn(
+            messageTextView,
+        )
+        whenever(statusErrorView.findViewById<TextView>(R.id.add_on_status_error_learn_more_link)).thenReturn(
+            learnMoreTextView,
+        )
+        val addonViewHolder = CustomViewHolder.AddonViewHolder(
+            view = View(testContext),
+            iconView = mock(),
+            titleView = titleView,
+            summaryView = summaryView,
+            ratingView = mock(),
+            ratingAccessibleView = mock(),
+            userCountView = mock(),
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = mock(),
+            statusErrorView = statusErrorView,
+        )
+        val addon = makeDisabledAddon(Addon.DisabledReason.INCOMPATIBLE)
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
+
+        verify(statusErrorView).isVisible = true
+        verify(messageTextView).text = "${addon.id} is not compatible with your version of $appName (version $appVersion)."
+        verify(learnMoreTextView).isVisible = false
     }
 
     private fun makeDisabledAddon(disabledReason: Addon.DisabledReason, name: String? = null): Addon {

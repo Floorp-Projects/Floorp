@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webextension.isBlockListed
+import mozilla.components.concept.engine.webextension.isDisabledIncompatible
 import mozilla.components.concept.engine.webextension.isDisabledUnsigned
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.update.AddonUpdater
@@ -384,6 +385,8 @@ internal fun WebExtension.getDisabledReason(): Addon.DisabledReason? {
         Addon.DisabledReason.BLOCKLISTED
     } else if (isDisabledUnsigned()) {
         Addon.DisabledReason.NOT_CORRECTLY_SIGNED
+    } else if (isDisabledIncompatible()) {
+        Addon.DisabledReason.INCOMPATIBLE
     } else if (isUnsupported()) {
         Addon.DisabledReason.UNSUPPORTED
     } else if (getMetadata()?.disabledFlags?.contains(DisabledFlags.USER) == true) {
