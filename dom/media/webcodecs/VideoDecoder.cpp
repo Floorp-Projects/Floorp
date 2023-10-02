@@ -232,15 +232,12 @@ static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
   return Ok();
 }
 
-// MOZ_IMPLICIT as GuessMIMETypes, CanDecode, and GetTracksInfo are intended to
-// called by both VideoDecoderConfig and VideoDecoderConfigInternal via
-// MIMECreateParam.
 struct MIMECreateParam {
-  MOZ_IMPLICIT MIMECreateParam(const VideoDecoderConfigInternal& aConfig)
+  explicit MIMECreateParam(const VideoDecoderConfigInternal& aConfig)
       : mParsedCodec(ParseCodecString(aConfig.mCodec).valueOr(EmptyString())),
         mWidth(aConfig.mCodedWidth),
         mHeight(aConfig.mCodedHeight) {}
-  MOZ_IMPLICIT MIMECreateParam(const VideoDecoderConfig& aConfig)
+  explicit MIMECreateParam(const VideoDecoderConfig& aConfig)
       : mParsedCodec(ParseCodecString(aConfig.mCodec).valueOr(EmptyString())),
         mWidth(OptionalToMaybe(aConfig.mCodedWidth)),
         mHeight(OptionalToMaybe(aConfig.mCodedHeight)) {}
@@ -293,18 +290,20 @@ static bool IsSupportedCodec(const nsAString& aCodec) {
 }
 
 // https://w3c.github.io/webcodecs/#check-configuration-support
-static bool CanDecode(MIMECreateParam aParam) {
+template <typename Config>
+static bool CanDecode(const Config& aConfig) {
+  auto param = MIMECreateParam(aConfig);
   // TODO: Enable WebCodecs on Android (Bug 1840508)
   if (IsOnAndroid()) {
     return false;
   }
-  if (!IsSupportedCodec(aParam.mParsedCodec)) {
+  if (!IsSupportedCodec(param.mParsedCodec)) {
     return false;
   }
   // TODO: Instead of calling CanHandleContainerType with the guessed the
   // containers, DecoderTraits should provide an API to tell if a codec is
   // decodable or not.
-  for (const nsCString& mime : GuessMIMETypes(aParam)) {
+  for (const nsCString& mime : GuessMIMETypes(param)) {
     if (Maybe<MediaContainerType> containerType =
             MakeMediaExtendedMIMEType(mime)) {
       if (DecoderTraits::CanHandleContainerType(
@@ -317,10 +316,11 @@ static bool CanDecode(MIMECreateParam aParam) {
   return false;
 }
 
-static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(MIMECreateParam aParam) {
+static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
+    const VideoDecoderConfigInternal& aConfig) {
   // TODO: Instead of calling GetTracksInfo with the guessed containers,
   // DecoderTraits should provide an API to create the TrackInfo directly.
-  for (const nsCString& mime : GuessMIMETypes(aParam)) {
+  for (const nsCString& mime : GuessMIMETypes(MIMECreateParam(aConfig))) {
     if (Maybe<MediaContainerType> containerType =
             MakeMediaExtendedMIMEType(mime)) {
       if (nsTArray<UniquePtr<TrackInfo>> tracks =
