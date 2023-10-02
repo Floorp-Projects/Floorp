@@ -103,6 +103,10 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
       ErrorResult& aRv);
 
  protected:
+  virtual already_AddRefed<MediaRawData> InputDataToMediaRawData(
+      UniquePtr<EncodedVideoChunkData>&& aData, TrackInfo& aInfo,
+      const VideoDecoderConfigInternal& aConfig) override;
+
   virtual nsTArray<RefPtr<VideoFrame>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
       VideoDecoderConfigInternal& aConfig) override;
