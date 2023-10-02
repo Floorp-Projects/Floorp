@@ -31,10 +31,10 @@ var p = document.getElementById("display");
 
 for (var test in tests) {
   p.setAttribute("style", "transform: rotate(" + test + ")");
-  is(p.style.getPropertyValue("-moz-transform"), "rotate(" + test + ")",
+  is(p.style.getPropertyValue("transform"), "rotate(" + test + ")",
      test + " serializes to exactly itself");
   // We can't test any equivalence since we don't have any properties
-  // with angle values that we compute.  (-moz-transform doesn't help.)
+  // with angle values that we compute.  (transform doesn't help.)
 /*
   var equiv = tests[test];
   if (equiv) {

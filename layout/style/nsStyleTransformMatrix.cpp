@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * A class used for intermediate representations of the -moz-transform property.
+ * A class used for intermediate representations of the transform and
+ * transform-like properties.
  */
 
 #include "nsStyleTransformMatrix.h"

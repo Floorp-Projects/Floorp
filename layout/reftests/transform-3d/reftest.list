@@ -5,9 +5,9 @@ fuzzy(0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == scalezrotatex-1.html scalezrotatex-1-ref.html
 # Check that the perspectve() transform function results in some visual changes
 != rotatex-perspective-1a.html rotatex-1-ref.html
-# Check that -moz-perspective results in visual changes to child transformed elements
+# Check that perspective results in visual changes to child transformed elements
 != rotatex-perspective-1b.html rotatex-1-ref.html
-# -moz-perspective should only apply to child elements
+# perspective should only apply to child elements
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html

@@ -8,14 +8,9 @@ body {
   overflow: hidden;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
-
 div {
   margin: 0;
   padding: 0;
-  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   position: absolute;
 }
@@ -25,7 +20,6 @@ div {
   width: 350px;
   height: 70%;
   max-height: 500px;
-  -webkit-perspective: 5000px;
   perspective: 5000px;
   transform: translate(-50%, -50%) rotateY(20deg);
 }
@@ -39,7 +33,6 @@ div {
 }
 
 #content {
-  -ms-overflow-style: none;
   overflow: hidden scroll;
   height: 100%;
   background: #fefee0;

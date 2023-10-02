@@ -10,7 +10,6 @@
     height: 200px;
     width: 800px;
     transform: rotate(40deg);
-    transform: rotate(40deg);
 }
 #d2 {
     background: white;
@@ -19,7 +18,6 @@
     left: 6px;
     height: 204px;
     width: 804px;
-    transform: rotate(45deg);
     transform: rotate(45deg);
 }
 </style>
@@ -30,7 +28,7 @@ function doTest() {
   // The first rotation here makes the transform active. The second rotation
   // sets it back where it belongs.
   var d = document.getElementById("d");
-  d.style.transform = d.style.transform = 'rotate(45deg)';
+  d.style.transform = 'rotate(45deg)';
   document.documentElement.removeAttribute('class');
 }
 window.addEventListener("MozReftestInvalidate", doTest);

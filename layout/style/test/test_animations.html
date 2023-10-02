@@ -1491,15 +1491,15 @@ advance_clock(1000);
 is(cs.textIndent, "100px", "cascade2 test at 8s");
 done_div();
 
-new_div("-moz-animation: primitives1 2s linear forwards");
-is(cs.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 1, 0, 0)",
+new_div("animation: primitives1 2s linear forwards");
+is(cs.getPropertyValue("transform"), "matrix(1, 0, 0, 1, 0, 0)",
     "primitives1 at 0s");
 advance_clock(1000);
-is(cs.getPropertyValue("-moz-transform"),
+is(cs.getPropertyValue("transform"),
    "matrix(-0.707107, 0.707107, -0.707107, -0.707107, 0, 0)",
    "primitives1 at 1s");
 advance_clock(1000);
-is(cs.getPropertyValue("-moz-transform"), "matrix(0, -1, 1, 0, 0, 0)",
+is(cs.getPropertyValue("transform"), "matrix(0, -1, 1, 0, 0, 0)",
     "primitives1 at 0s");
 done_div();
 

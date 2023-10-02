@@ -371,7 +371,7 @@ include ../../toolkit/themes/osx/reftests/reftest.list
 
 include ../../toolkit/content/tests/reftests/reftest.list
 
-# -moz-transform/
+# transform/
 # skipping on non-e10s windows because of assertion in bug 1401228
 skip-if(winWidget&&!browserIsRemote) include transform/reftest.list
 
