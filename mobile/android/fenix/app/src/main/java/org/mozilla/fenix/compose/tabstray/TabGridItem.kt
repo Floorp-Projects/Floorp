@@ -119,10 +119,8 @@ fun TabGridItem(
         confirmStateChange = { dismissValue ->
             if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
                 onCloseClick(tab)
-                true
-            } else {
-                false
             }
+            false
         },
     )
 
