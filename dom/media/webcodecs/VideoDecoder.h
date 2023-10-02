@@ -51,6 +51,7 @@ class VideoDecoderConfigInternal;
 
 class VideoDecoderTraits {
  public:
+  using ConfigType = VideoDecoderConfig;
   using ConfigTypeInternal = VideoDecoderConfigInternal;
   using InputTypeInternal = EncodedVideoChunkData;
   using OutputType = VideoFrame;
@@ -59,6 +60,9 @@ class VideoDecoderTraits {
   static bool IsSupported(const ConfigTypeInternal& aConfig);
   static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
       const ConfigTypeInternal& aConfig);
+  static bool Validate(const ConfigType& aConfig);
+  static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
+      const ConfigType& aConfig);
 };
 
 class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
@@ -81,8 +85,6 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
   static already_AddRefed<VideoDecoder> Constructor(
       const GlobalObject& aGlobal, const VideoDecoderInit& aInit,
       ErrorResult& aRv);
-
-  void Configure(const VideoDecoderConfig& aConfig, ErrorResult& aRv);
 
   void Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv);
 
