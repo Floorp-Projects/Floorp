@@ -1418,11 +1418,13 @@ fn substitute_references_in_value_and_apply(
 
         if let Ok(kw) = input.try_parse(CSSWideKeyword::parse) {
             match (kw, inherits) {
-                (CSSWideKeyword::Initial, _) |
+                (CSSWideKeyword::Initial, false) |
                 (CSSWideKeyword::Revert, false) |
                 (CSSWideKeyword::RevertLayer, false) |
                 (CSSWideKeyword::Unset, false) => {
-                    // TODO(bug 1273706): Do we really need to insert the initial value if inherits==false?
+                    custom_properties.remove(custom_registration, name);
+                },
+                (CSSWideKeyword::Initial, true) => {
                     custom_properties.remove(custom_registration, name);
                     if let Some(registration) = custom_registration {
                         if let Some(ref initial_value) = registration.initial_value {
@@ -1438,7 +1440,7 @@ fn substitute_references_in_value_and_apply(
                 (CSSWideKeyword::RevertLayer, true) |
                 (CSSWideKeyword::Inherit, _) |
                 (CSSWideKeyword::Unset, true) => {
-                    // TODO(bug 1273706): Do we really need to insert the inherited value if inherits==true?
+                    // TODO(bug 1855887): When inherits==false, we may postpone inserting inherited value at the end of build().
                     // TODO: It's unclear what this should do for revert / revert-layer, see
                     // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
                     // seems fine?
