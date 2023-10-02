@@ -10,8 +10,8 @@ origin:
 
   url: https://speex.org/
 
-  release: 738e17905e1ca2a1fa932ddd9c2a85d089f4e845 (2023-02-28T16:25:59.000-05:00).
-  revision: 738e17905e1ca2a1fa932ddd9c2a85d089f4e845
+  release: 79822c8fb79d202cbe7e899f7406acf17beb247c (2017-01-22T14:16:02.000-05:00).
+  revision: 79822c8fb79d202cbe7e899f7406acf17beb247c
 
   license: BSD-3-Clause
   license-file: COPYING
@@ -35,6 +35,7 @@ vendoring:
     - libspeexdsp/resample_sse.h
     - libspeexdsp/resample_neon.h
     - libspeexdsp/arch.h
+    - libspeexdsp/stack_alloc.h
     - libspeexdsp/fixed_generic.h
     - include/speex/speex_resampler.h
     - AUTHORS
@@ -58,6 +59,9 @@ vendoring:
       from: '{vendor_dir}/libspeexdsp/arch.h'
       to: '{vendor_dir}/src/arch.h'
     - action: move-file
+      from: '{vendor_dir}/libspeexdsp/stack_alloc.h'
+      to: '{vendor_dir}/src/stack_alloc.h'
+    - action: move-file
       from: '{vendor_dir}/libspeexdsp/fixed_generic.h'
       to: '{vendor_dir}/src/fixed_generic.h'
     - action: move-file
@@ -69,4 +73,6 @@ vendoring:
     - 02_simd-detect-runtime.patch
     - 03_set-skip-frac.patch
     - 04_hugemem.patch
-    - 05_set-rate-overflow-no-return.patch
+    - 05_remove-empty-asm-clobber.patch
+    - 06_set-rate-overflow-no-return.patch
+    - 07_integer-halving.patch
