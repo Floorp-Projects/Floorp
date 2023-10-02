@@ -28,15 +28,15 @@ DEFINES['FLOATING_POINT'] = True
 
 # Only use SSE code when using floating point samples, and on x86
 if CONFIG['INTEL_ARCHITECTURE']:
-    DEFINES['_USE_SSE'] = True
-    DEFINES['_USE_SSE2'] = True
+    DEFINES['USE_SSE'] = True
+    DEFINES['USE_SSE2'] = True
     SOURCES += [
         'resample_sse.c'
     ]
     SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    DEFINES['_USE_NEON'] = True
+    DEFINES['USE_NEON'] = True
     SOURCES += [
         'resample_neon.c'
     ]
