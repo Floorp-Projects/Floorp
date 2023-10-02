@@ -262,6 +262,18 @@ describe("Reducers", () => {
       const nextState = TopSites(oldState, { type: at.SNIPPETS_PREVIEW_MODE });
       assert.lengthOf(nextState.rows, 0);
     });
+    it("should set sov positions and state", () => {
+      const positions = [
+        { position: 0, assignedPartner: "amp" },
+        { position: 1, assignedPartner: "moz-sales" },
+      ];
+      const nextState = TopSites(undefined, {
+        type: at.SOV_UPDATED,
+        data: { ready: true, positions },
+      });
+      assert.equal(nextState.sov.ready, true);
+      assert.equal(nextState.sov.positions, positions);
+    });
   });
   describe("Prefs", () => {
     function prevState(custom = {}) {
