@@ -259,7 +259,7 @@ class ComposeSearchTest {
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @SmokeTest
     @Test
-    fun searchGroupShowsInRecentlyVisitedTest() {
+    fun searchResultsOpenedInNewTabsGenerateSearchGroupsTest() {
         val searchEngineName = "TestSearchEngine"
         // setting our custom mockWebServer search URL
         setCustomSearchEngine(searchMockServer, searchEngineName)
@@ -286,7 +286,7 @@ class ComposeSearchTest {
 
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
-    fun verifySearchGroupHistoryWithNoDuplicatesTest() {
+    fun verifyAPageIsAddedToASearchGroupOnlyOnceTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2).url
         val originPageUrl =
@@ -331,7 +331,7 @@ class ComposeSearchTest {
 
     @Ignore("Failing due to known bug, see https://github.com/mozilla-mobile/fenix/issues/23818")
     @Test
-    fun searchGroupGeneratedInTheSameTabTest() {
+    fun searchGroupIsGeneratedWhenNavigatingInTheSameTabTest() {
         // setting our custom mockWebServer search URL
         val searchEngineName = "TestSearchEngine"
         setCustomSearchEngine(searchMockServer, searchEngineName)
@@ -354,7 +354,7 @@ class ComposeSearchTest {
 
     @SmokeTest
     @Test
-    fun noSearchGroupFromPrivateBrowsingTest() {
+    fun searchGroupIsNotGeneratedForLinksOpenedInPrivateTabsTest() {
         // setting our custom mockWebServer search URL
         val searchEngineName = "TestSearchEngine"
         setCustomSearchEngine(searchMockServer, searchEngineName)
@@ -386,7 +386,7 @@ class ComposeSearchTest {
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @SmokeTest
     @Test
-    fun deleteItemsFromSearchGroupHistoryTest() {
+    fun deleteIndividualHistoryItemsFromSearchGroupTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2).url
         // setting our custom mockWebServer search URL
@@ -427,7 +427,7 @@ class ComposeSearchTest {
 
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
-    fun deleteSearchGroupFromHistoryTest() {
+    fun deleteSearchGroupFromHomeScreenTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         // setting our custom mockWebServer search URL
         val searchEngineName = "TestSearchEngine"
@@ -467,7 +467,7 @@ class ComposeSearchTest {
 
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
-    fun reopenTabsFromSearchGroupTest() {
+    fun openAPageFromHomeScreenSearchGroupTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2).url
 
@@ -515,7 +515,7 @@ class ComposeSearchTest {
 
     @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
-    fun sharePageFromASearchGroupTest() {
+    fun shareAPageFromHomeScreenSearchGroupTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         // setting our custom mockWebServer search URL
         val searchEngineName = "TestSearchEngine"
