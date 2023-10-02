@@ -160,6 +160,10 @@ class MatchPatternCore final {
 
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
 
+  bool MatchesAllWebUrls() const;
+  // Helper for MatchPatternSetCore::MatchesAllWebUrls:
+  bool MatchesAllUrlsWithScheme(const nsAtom* aScheme) const;
+
   bool MatchesCookie(const CookieInfo& aCookie) const;
 
   bool MatchesDomain(const nsACString& aDomain) const;
@@ -211,6 +215,8 @@ class MatchPattern final : public nsISupports, public nsWrapperCache {
   bool Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const {
     return Core()->Matches(aURL, aExplicit, aRv);
   }
+
+  bool MatchesAllWebUrls() const { return Core()->MatchesAllWebUrls(); }
 
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const {
     return Core()->Matches(aURL, aExplicit);
@@ -292,6 +298,8 @@ class MatchPatternSetCore final {
 
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
 
+  bool MatchesAllWebUrls() const;
+
   bool MatchesCookie(const CookieInfo& aCookie) const;
 
   bool Subsumes(const MatchPatternCore& aPattern) const;
@@ -338,6 +346,8 @@ class MatchPatternSet final : public nsISupports, public nsWrapperCache {
   bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const {
     return Matches(aURL, aExplicit);
   }
+
+  bool MatchesAllWebUrls() const { return Core()->MatchesAllWebUrls(); }
 
   bool MatchesCookie(const CookieInfo& aCookie) const {
     return Core()->MatchesCookie(aCookie);
