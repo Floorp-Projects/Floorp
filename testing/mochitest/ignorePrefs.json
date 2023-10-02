@@ -12,6 +12,7 @@
   "browser.newtabpage.pinned",
   "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts.havePinned",
   "browser.pageActions.persistedActions",
+  "browser.uiCustomization.state",
   "doh-rollout.doneFirstRun",
   "extensions.databaseSchema",
   "extensions.dnr.lastStoreUpdateTag.*",
