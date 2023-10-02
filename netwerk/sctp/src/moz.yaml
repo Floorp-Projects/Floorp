@@ -53,3 +53,11 @@ vendoring:
   patches:
     - win32-rands.patch
     - win32-free.patch
+
+updatebot:
+  maintainer-phab: "#webrtc-reviewers"
+  maintainer-bz: rjesup@jesup.org
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
