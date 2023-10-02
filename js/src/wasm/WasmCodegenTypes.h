@@ -134,6 +134,78 @@ class BytecodeOffset {
 
 WASM_DECLARE_CACHEABLE_POD(BytecodeOffset);
 
+// A TrapMachineInsn describes roughly what kind of machine instruction has
+// caused a trap.  This is used only for validation of trap placement in debug
+// builds, in ModuleGenerator::finishMetadataTier, and is not necessary for
+// execution of wasm code.
+enum class TrapMachineInsn {
+  // The "official" undefined insn for the target, or something equivalent
+  // that we use for that purpose.  The key property is that it always raises
+  // SIGILL when executed.  For example, UD2 on Intel.
+  OfficialUD,
+  // Loads and stores that move 8, 16, 32, 64 or 128 bits of data, regardless
+  // of their type and how they are subsequently used (widened or duplicated).
+  Load8,
+  Load16,
+  Load32,
+  Load64,
+  Load128,
+  Store8,
+  Store16,
+  Store32,
+  Store64,
+  Store128,
+  // Any kind of atomic r-m-w or CAS memory transaction, but not including
+  // Load-Linked or Store-Checked style insns -- those count as plain LoadX
+  // and StoreX.
+  Atomic
+};
+
+static inline TrapMachineInsn TrapMachineInsnForLoad(int byteSize) {
+  switch (byteSize) {
+    case 1:
+      return TrapMachineInsn::Load8;
+    case 2:
+      return TrapMachineInsn::Load16;
+    case 4:
+      return TrapMachineInsn::Load32;
+    case 8:
+      return TrapMachineInsn::Load64;
+    case 16:
+      return TrapMachineInsn::Load128;
+    default:
+      MOZ_CRASH("TrapMachineInsnForLoad");
+  }
+}
+static inline TrapMachineInsn TrapMachineInsnForLoadWord() {
+  return TrapMachineInsnForLoad(sizeof(void*));
+}
+
+static inline TrapMachineInsn TrapMachineInsnForStore(int byteSize) {
+  switch (byteSize) {
+    case 1:
+      return TrapMachineInsn::Store8;
+    case 2:
+      return TrapMachineInsn::Store16;
+    case 4:
+      return TrapMachineInsn::Store32;
+    case 8:
+      return TrapMachineInsn::Store64;
+    case 16:
+      return TrapMachineInsn::Store128;
+    default:
+      MOZ_CRASH("TrapMachineInsnForStore");
+  }
+}
+static inline TrapMachineInsn TrapMachineInsnForStoreWord() {
+  return TrapMachineInsnForStore(sizeof(void*));
+}
+
+#ifdef DEBUG
+const char* NameOfTrap(Trap trap);
+const char* NameOfTrapMachineInsn(TrapMachineInsn tmi);
+#endif  // DEBUG
+
 // A TrapSite (in the TrapSiteVector for a given Trap code) represents a wasm
 // instruction at a given bytecode offset that can fault at the given pc offset.
 // When such a fault occurs, a signal/exception handler looks up the TrapSite to

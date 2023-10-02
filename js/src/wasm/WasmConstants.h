@@ -145,11 +145,26 @@ static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
 
 static constexpr TypeCode AbstractTypeRefCode = TypeCode::Ref;
 
-// A wasm::Trap represents a wasm-defined trap that can occur during execution
-// which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
-// symbolically, passing the bytecode offset to report as the trap offset. The
-// generated jump will be bound to a tiny stub which fills the offset and
+// wasm traps are machine instructions that can fail to execute for reasons
+// that have to do with some condition in the wasm that they were compiled
+// from.  The failure manifests as a (machine-level) exception of some sort,
+// which leads execution to a signal handler, and is eventually reported as a
+// WebAssembly.RuntimeError.  Generated code may also jump to a Trap
+// symbolically, passing the bytecode offset to report as the trap offset.
+// The generated jump will be bound to a tiny stub which fills the offset and
 // then jumps to a per-Trap shared stub at the end of the module.
+//
+// Traps are described by a value from Trap and, in debug builds only, a value
+// from TrapInsn.
+//
+// * A Trap indicates why the trap has happened and is used to construct the
+//   WebAssembly.Runtime message.
+//
+// * A TrapMachineInsn (not defined in this file) describes roughly what kind
+//   of machine instruction has caused the trap.  This is used only for
+//   validation of trap placement in debug builds, in
+//   ModuleGenerator::finishMetadataTier, and is not necessary for execution
+//   of wasm code.
 
 enum class Trap {
   // The Unreachable opcode has been executed.
