@@ -2138,8 +2138,9 @@ class nsLayoutUtils {
   /**
    * Some frames with 'position: fixed' (nsStyleDisplay::mPosition ==
    * StylePositionProperty::Fixed) are not really fixed positioned, since
-   * they're inside an element with -moz-transform.  This function says
-   * whether such an element is a real fixed-pos element.
+   * they're inside a transformed element or other element that establishes a
+   * fixed-pos containing block).  This function says whether such an element is
+   * a real fixed-pos element.
    */
   static bool IsReallyFixedPos(const nsIFrame* aFrame);
 
