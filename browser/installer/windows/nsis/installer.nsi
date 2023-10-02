@@ -768,60 +768,6 @@ Section "-InstallEndCleanup"
     ${EndIf}
   ${EndIf}
 
-  ${Unless} ${Silent}
-    ClearErrors
-    ${MUI_INSTALLOPTIONS_READ} $0 "summary.ini" "Field 4" "State"
-    ${If} "$0" == "1"
-      StrCpy $SetAsDefault true
-      ; For data migration in the app, we want to know what the default browser
-      ; value was before we changed it. To do so, we read it here and store it
-      ; in our own registry key.
-      StrCpy $0 ""
-      AppAssocReg::QueryCurrentDefault "http" "protocol" "effective"
-      Pop $1
-      ; If the method hasn't failed, $1 will contain the progid. Check:
-      ${If} "$1" != "method failed"
-      ${AndIf} "$1" != "method not available"
-        ; Read the actual command from the progid
-        ReadRegStr $0 HKCR "$1\shell\open\command" ""
-      ${EndIf}
-      ; If using the App Association Registry didn't happen or failed, fall back
-      ; to the effective http default:
-      ${If} "$0" == ""
-        ReadRegStr $0 HKCR "http\shell\open\command" ""
-      ${EndIf}
-      ; If we have something other than empty string now, write the value.
-      ${If} "$0" != ""
-        ClearErrors
-        WriteRegStr HKCU "Software\Mozilla\Firefox" "OldDefaultBrowserCommand" "$0"
-      ${EndIf}
-
-      ${LogHeader} "Setting as the default browser"
-      ; AddTaskbarSC is needed by MigrateTaskBarShortcut, which is called by
-      ; SetAsDefaultAppUserHKCU. If this is called via ExecCodeSegment,
-      ; MigrateTaskBarShortcut will not see the value of AddTaskbarSC, so we
-      ; send it via a register instead.
-      StrCpy $R0 $AddTaskbarSC
-      ClearErrors
-      ${GetParameters} $0
-      ${GetOptions} "$0" "/UAC:" $0
-      ${If} ${Errors}
-        Call SetAsDefaultAppUserHKCU
-      ${Else}
-        GetFunctionAddress $0 SetAsDefaultAppUserHKCU
-        UAC::ExecCodeSegment $0
-      ${EndIf}
-    ${ElseIfNot} ${Errors}
-      StrCpy $SetAsDefault false
-      ${LogHeader} "Writing default-browser opt-out"
-      ClearErrors
-      WriteRegStr HKCU "Software\Mozilla\Firefox" "DefaultBrowserOptOut" "True"
-      ${If} ${Errors}
-        ${LogMsg} "Error writing default-browser opt-out"
-      ${EndIf}
-    ${EndIf}
-  ${EndUnless}
-
   ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
   ${MigrateTaskBarShortcut} "$AddTaskbarSC"
 
