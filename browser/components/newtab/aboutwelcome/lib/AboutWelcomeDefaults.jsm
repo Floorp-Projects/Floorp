@@ -690,6 +690,13 @@ async function prepareContentForReact(content) {
     return content;
   }
 
+  // Change content for Windows 7 because non-light themes aren't quite right.
+  if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
+    await lazy.AWScreenUtils.removeScreens(screens, screen =>
+      ["theme"].includes(screen.content?.tiles?.type)
+    );
+  }
+
   // Set the primary import button source based on attribution.
   if (content?.ua) {
     // If available, add the browser source to action data

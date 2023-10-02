@@ -4671,8 +4671,12 @@ let gShareUtils = {
       return;
     }
 
-    // We only support "share URL" on macOS and on Windows:
-    if (AppConstants.platform != "macosx" && AppConstants.platform != "win") {
+    // We only support "share URL" on macOS and on Windows 10:
+    if (
+      AppConstants.platform != "macosx" &&
+      // Windows 10's internal NT version number was initially 6.4
+      !AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
+    ) {
       return;
     }
 
@@ -6620,7 +6624,7 @@ var TabletModeUpdater = {
 var gTabletModePageCounter = {
   enabled: false,
   inc() {
-    this.enabled = AppConstants.platform == "win";
+    this.enabled = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
     if (!this.enabled) {
       this.inc = () => {};
       return;
