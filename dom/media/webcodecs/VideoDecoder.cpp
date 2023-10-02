@@ -697,6 +697,17 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderTraits::CreateConfigInternal(
   return VideoDecoderConfigInternal::Create(aConfig);
 }
 
+/* static */
+bool VideoDecoderTraits::IsKeyChunk(const EncodedVideoChunk& aInput) {
+  return aInput.Type() == EncodedVideoChunkType::Key;
+}
+
+/* static */
+UniquePtr<EncodedVideoChunkData> VideoDecoderTraits::CreateInputInternal(
+    const EncodedVideoChunk& aInput) {
+  return aInput.Clone();
+}
+
 /*
  * Below are VideoDecoder implementation
  */
@@ -737,34 +748,6 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
   return MakeAndAddRef<VideoDecoder>(
       global.get(), RefPtr<WebCodecsErrorCallback>(aInit.mError),
       RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
-}
-
-// https://w3c.github.io/webcodecs/#dom-videodecoder-decode
-void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  LOG("VideoDecoder %p, Decode", this);
-
-  if (mState != CodecState::Configured) {
-    aRv.ThrowInvalidStateError("Decoder must be configured first");
-    return;
-  }
-
-  if (mKeyChunkRequired) {
-    // TODO: Verify aChunk's data is truly a key chunk
-    if (aChunk.Type() != EncodedVideoChunkType::Key) {
-      aRv.ThrowDataError("VideoDecoder needs a key chunk");
-      return;
-    }
-    mKeyChunkRequired = false;
-  }
-
-  mDecodeQueueSize += 1;
-  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
-      new DecodeMessage(++mDecodeCounter, mLatestConfigureId, aChunk.Clone())));
-  LOGV("VideoDecoder %p enqueues %s", this,
-       mControlMessageQueue.back()->ToString().get());
-  ProcessControlMessageQueue();
 }
 
 // https://w3c.github.io/webcodecs/#dom-videodecoder-flush
@@ -844,8 +827,8 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
 already_AddRefed<MediaRawData> VideoDecoder::InputDataToMediaRawData(
     UniquePtr<EncodedVideoChunkData>&& aData, TrackInfo& aInfo,
     const VideoDecoderConfigInternal& aConfig) {
-  MOZ_ASSERT(aInfo.GetAsVideoInfo());
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aInfo.GetAsVideoInfo());
 
   if (!aData) {
     LOGE("No data for conversion");
