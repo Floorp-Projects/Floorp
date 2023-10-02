@@ -103,7 +103,6 @@ struct VideoColorSpaceInternal {
   Maybe<VideoTransferCharacteristics> mTransfer;
 };
 
-static bool Validate(const VideoDecoderConfig& aConfig);
 static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
@@ -111,7 +110,7 @@ class VideoDecoderConfigInternal {
  public:
   static UniquePtr<VideoDecoderConfigInternal> Create(
       const VideoDecoderConfig& aConfig) {
-    if (!Validate(aConfig)) {
+    if (!VideoDecoderTraits::Validate(aConfig)) {
       LOGE("Failed to create VideoDecoderConfigInternal");
       return nullptr;
     }
@@ -179,41 +178,9 @@ class VideoDecoderConfigInternal {
  * The followings are helpers for VideoDecoder methods
  */
 
-// https://w3c.github.io/webcodecs/#valid-videodecoderconfig
-static bool Validate(const VideoDecoderConfig& aConfig) {
-  Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
-  if (!codec || codec->IsEmpty()) {
-    LOGE("Invalid codec string");
-    return false;
-  }
-
-  if (aConfig.mCodedWidth.WasPassed() != aConfig.mCodedHeight.WasPassed()) {
-    LOGE("Missing coded %s",
-         aConfig.mCodedWidth.WasPassed() ? "height" : "width");
-    return false;
-  }
-  if (aConfig.mCodedWidth.WasPassed() &&
-      (aConfig.mCodedWidth.Value() == 0 || aConfig.mCodedHeight.Value() == 0)) {
-    LOGE("codedWidth and/or codedHeight can't be zero");
-    return false;
-  }
-
-  if (aConfig.mDisplayAspectWidth.WasPassed() !=
-      aConfig.mDisplayAspectHeight.WasPassed()) {
-    LOGE("Missing display aspect %s",
-         aConfig.mDisplayAspectWidth.WasPassed() ? "height" : "width");
-    return false;
-  }
-  if (aConfig.mDisplayAspectWidth.WasPassed() &&
-      (aConfig.mDisplayAspectWidth.Value() == 0 ||
-       aConfig.mDisplayAspectHeight.Value() == 0)) {
-    LOGE("display aspect width and height cannot be zero");
-    return false;
-  }
-
-  return true;
-}
-
+// MOZ_IMPLICIT as GuessMIMETypes, CanDecode, and GetTracksInfo are intended to
+// called by both VideoDecoderConfig and VideoDecoderConfigInternal via
+// MIMECreateParam.
 struct MIMECreateParam {
   explicit MIMECreateParam(const VideoDecoderConfigInternal& aConfig)
       : mParsedCodec(ParseCodecString(aConfig.mCodec).valueOr(EmptyString())),
@@ -325,7 +292,7 @@ static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<VideoDecoderConfig>& aDest, JSContext* aCx,
     const VideoDecoderConfig& aConfig) {
-  MOZ_ASSERT(Validate(aConfig));
+  MOZ_ASSERT(VideoDecoderTraits::Validate(aConfig));
 
   aDest.mCodec = aConfig.mCodec;
   if (aConfig.mCodedHeight.WasPassed()) {
@@ -688,6 +655,48 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
   return track;
 }
 
+// https://w3c.github.io/webcodecs/#valid-videodecoderconfig
+/* static */
+bool VideoDecoderTraits::Validate(const VideoDecoderConfig& aConfig) {
+  Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
+  if (!codec || codec->IsEmpty()) {
+    LOGE("Invalid codec string");
+    return false;
+  }
+
+  if (aConfig.mCodedWidth.WasPassed() != aConfig.mCodedHeight.WasPassed()) {
+    LOGE("Missing coded %s",
+         aConfig.mCodedWidth.WasPassed() ? "height" : "width");
+    return false;
+  }
+  if (aConfig.mCodedWidth.WasPassed() &&
+      (aConfig.mCodedWidth.Value() == 0 || aConfig.mCodedHeight.Value() == 0)) {
+    LOGE("codedWidth and/or codedHeight can't be zero");
+    return false;
+  }
+
+  if (aConfig.mDisplayAspectWidth.WasPassed() !=
+      aConfig.mDisplayAspectHeight.WasPassed()) {
+    LOGE("Missing display aspect %s",
+         aConfig.mDisplayAspectWidth.WasPassed() ? "height" : "width");
+    return false;
+  }
+  if (aConfig.mDisplayAspectWidth.WasPassed() &&
+      (aConfig.mDisplayAspectWidth.Value() == 0 ||
+       aConfig.mDisplayAspectHeight.Value() == 0)) {
+    LOGE("display aspect width and height cannot be zero");
+    return false;
+  }
+
+  return true;
+}
+
+/* static */
+UniquePtr<VideoDecoderConfigInternal> VideoDecoderTraits::CreateConfigInternal(
+    const VideoDecoderConfig& aConfig) {
+  return VideoDecoderConfigInternal::Create(aConfig);
+}
+
 /*
  * Below are VideoDecoder implementation
  */
@@ -728,45 +737,6 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
   return MakeAndAddRef<VideoDecoder>(
       global.get(), RefPtr<WebCodecsErrorCallback>(aInit.mError),
       RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
-}
-
-// https://w3c.github.io/webcodecs/#dom-videodecoder-configure
-void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
-                             ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  LOG("VideoDecoder %p, Configure: codec %s", this,
-      NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
-
-  if (!Validate(aConfig)) {
-    aRv.ThrowTypeError("config is invalid");
-    return;
-  }
-
-  if (mState == CodecState::Closed) {
-    aRv.ThrowInvalidStateError("The codec is no longer usable");
-    return;
-  }
-
-  // Clone a VideoDecoderConfig as the active decoder config.
-  UniquePtr<VideoDecoderConfigInternal> config =
-      VideoDecoderConfigInternal::Create(aConfig);
-  if (!config) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);  // Invalid description data.
-    return;
-  }
-
-  mState = CodecState::Configured;
-  mKeyChunkRequired = true;
-  mDecodeCounter = 0;
-  mFlushCounter = 0;
-
-  mControlMessageQueue.emplace(
-      UniquePtr<ControlMessage>(ConfigureMessage::Create(std::move(config))));
-  mLatestConfigureId = mControlMessageQueue.back()->AsConfigureMessage()->mId;
-  LOG("VideoDecoder %p enqueues %s", this,
-      mControlMessageQueue.back()->ToString().get());
-  ProcessControlMessageQueue();
 }
 
 // https://w3c.github.io/webcodecs/#dom-videodecoder-decode
@@ -843,7 +813,7 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  if (!Validate(aConfig)) {
+  if (!VideoDecoderTraits::Validate(aConfig)) {
     p->MaybeRejectWithTypeError("config is invalid");
     return p.forget();
   }
