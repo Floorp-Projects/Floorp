@@ -5,11 +5,7 @@
 let backgroundPort = null;
 let nativePort = null;
 
-function connectNativePort() {
-  if (nativePort) {
-    return;
-  }
-
+window.addEventListener("pageshow", () => {
   backgroundPort = browser.runtime.connect();
   nativePort = browser.runtime.connectNative("browser");
 
@@ -44,17 +40,9 @@ function connectNativePort() {
       exception: exception && exception.toString(),
     });
   }
-}
+});
 
-function disconnectNativePort() {
-  backgroundPort?.disconnect();
-  nativePort?.disconnect();
-  backgroundPort = null;
-  nativePort = null;
-}
-
-window.addEventListener("pageshow", connectNativePort);
-window.addEventListener("pagehide", disconnectNativePort);
-
-// If loading error page, pageshow mightn't fired.
-connectNativePort();
+window.addEventListener("pagehide", () => {
+  backgroundPort.disconnect();
+  nativePort.disconnect();
+});
