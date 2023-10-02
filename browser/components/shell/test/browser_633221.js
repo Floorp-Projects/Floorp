@@ -1,5 +1,5 @@
 function test() {
-  ShellService.setDefaultBrowser(true, false);
+  ShellService.setDefaultBrowser(false);
   ok(
     ShellService.isDefaultBrowser(true, false),
     "we got here and are the default browser"
