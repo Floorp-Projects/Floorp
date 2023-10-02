@@ -17,18 +17,21 @@ add_task(async function test_contentscript_about_blank() {
     content_scripts: [
       {
         match_about_blank: true,
-        matches: ["http://mochi.test/*/file_with_about_blank.html", "https://example.com/*"],
+        matches: [
+          "*://mochi.test/*/file_with_about_blank.html",
+          "https://example.com/*/file_with_about_blank.html",
+        ],
         all_frames: true,
         css: ["all.css"],
         js: ["all.js"],
       }, {
-        matches: ["http://mochi.test/*/file_with_about_blank.html"],
+        matches: ["*://mochi.test/*/file_with_about_blank.html"],
         css: ["mochi_without.css"],
         js: ["mochi_without.js"],
         all_frames: true,
       }, {
         match_about_blank: true,
-        matches: ["http://mochi.test/*/file_with_about_blank.html"],
+        matches: ["*://mochi.test/*/file_with_about_blank.html"],
         css: ["mochi_with.css"],
         js: ["mochi_with.js"],
         all_frames: true,
