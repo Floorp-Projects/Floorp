@@ -2786,7 +2786,7 @@ void HTMLMediaElement::LoadFromSourceChildren() {
   RemoveMediaTracks();
 
   while (true) {
-    Element* child = GetNextSource();
+    HTMLSourceElement* child = GetNextSource();
     if (!child) {
       // Exhausted candidates, wait for more candidates to be appended to
       // the media element.
@@ -2836,7 +2836,6 @@ void HTMLMediaElement::LoadFromSourceChildren() {
         return;
       }
     }
-    HTMLSourceElement* childSrc = HTMLSourceElement::FromNode(child);
     LOG(LogLevel::Debug,
         ("%p Trying load from <source>=%s type=%s", this,
          NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
@@ -2852,11 +2851,11 @@ void HTMLMediaElement::LoadFromSourceChildren() {
 
     RemoveMediaElementFromURITable();
     mLoadingSrc = uri;
-    mLoadingSrcTriggeringPrincipal = childSrc->GetSrcTriggeringPrincipal();
+    mLoadingSrcTriggeringPrincipal = child->GetSrcTriggeringPrincipal();
     DDLOG(DDLogCategory::Property, "loading_src",
           nsCString(NS_ConvertUTF16toUTF8(src)));
     bool hadMediaSource = !!mMediaSource;
-    mMediaSource = childSrc->GetSrcMediaSource();
+    mMediaSource = child->GetSrcMediaSource();
     if (mMediaSource && !hadMediaSource) {
       OwnerDoc()->AddMediaElementWithMSE();
     }
@@ -6554,7 +6553,7 @@ void HTMLMediaElement::NotifyAddedSource() {
   }
 }
 
-Element* HTMLMediaElement::GetNextSource() {
+HTMLSourceElement* HTMLMediaElement::GetNextSource() {
   mSourceLoadCandidate = nullptr;
 
   while (true) {
@@ -6570,9 +6569,9 @@ Element* HTMLMediaElement::GetNextSource() {
     nsIContent* child = mSourcePointer;
 
     // If child is a <source> element, it is the next candidate.
-    if (child && child->IsHTMLElement(nsGkAtoms::source)) {
-      mSourceLoadCandidate = child;
-      return child->AsElement();
+    if (auto* source = HTMLSourceElement::FromNodeOrNull(child)) {
+      mSourceLoadCandidate = source;
+      return source;
     }
   }
   MOZ_ASSERT_UNREACHABLE("Execution should not reach here!");
