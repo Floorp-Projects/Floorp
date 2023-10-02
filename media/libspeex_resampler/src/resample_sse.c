@@ -73,7 +73,7 @@ float interpolate_product_single(const float *a, const float *b, unsigned int le
    return ret;
 }
 
-#ifdef _USE_SSE2
+#ifdef USE_SSE2
 #include <emmintrin.h>
 #define OVERRIDE_INNER_PRODUCT_DOUBLE
 
