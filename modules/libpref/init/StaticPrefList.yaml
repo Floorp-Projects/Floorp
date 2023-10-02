@@ -4909,6 +4909,15 @@
   value: false
   mirror: always
 
+# Temporary pref to allow reverting the fix to bug 1853409.
+# TODO bug 1856071: Remove this pref.
+# When true, extensions can run content scripts in about:blank documents that
+# have a null principal. When false, extensions require permissions to all URLs.
+- name: extensions.script_about_blank_without_permission
+  type: bool
+  value: false
+  mirror: always
+
 # Legacy behavior on filterResponse calls on intercepted sw script requests.
 - name: extensions.filterResponseServiceWorkerScript.disabled
   type: bool

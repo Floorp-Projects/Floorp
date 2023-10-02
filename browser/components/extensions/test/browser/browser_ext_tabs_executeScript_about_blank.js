@@ -4,6 +4,9 @@
 
 add_task(async function testExecuteScript_at_about_blank() {
   let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      host_permissions: ["*://*/*"], // allows script in top-level about:blank.
+    },
     async background() {
       try {
         const tab = await browser.tabs.create({ url: "about:blank" });
