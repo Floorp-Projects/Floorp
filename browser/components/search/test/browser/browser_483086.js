@@ -38,7 +38,7 @@ function test2() {
       case "engine-added":
         let engine = gSS.getEngineByName("483086b");
         ok(engine, "Test engine 2 installed");
-        is(engine.searchForm, "http://example.com", "SearchForm is correct");
+        is(engine.searchForm, "https://example.com", "SearchForm is correct");
         gSS.removeEngine(engine);
         break;
       case "engine-removed":
