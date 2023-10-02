@@ -721,12 +721,10 @@ Action.prototype = {
       let props = this._iconProperties.get(urls);
       if (!props) {
         props = Object.freeze({
-          "--pageAction-image-16px": escapeCSSURL(
-            this._iconURLForSize(urls, 16)
-          ),
-          "--pageAction-image-32px": escapeCSSURL(
-            this._iconURLForSize(urls, 32)
-          ),
+          "--pageAction-image": `image-set(
+            ${escapeCSSURL(this._iconURLForSize(urls, 16))},
+            ${escapeCSSURL(this._iconURLForSize(urls, 32))} 2x
+          )`,
         });
         this._iconProperties.set(urls, props);
       }
@@ -735,8 +733,7 @@ Action.prototype = {
 
     let cssURL = urls ? escapeCSSURL(urls) : null;
     return Object.freeze({
-      "--pageAction-image-16px": cssURL,
-      "--pageAction-image-32px": cssURL,
+      "--pageAction-image": cssURL,
     });
   },
 

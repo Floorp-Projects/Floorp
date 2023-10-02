@@ -2,6 +2,19 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+function testHiDpiImage(button, images1x, images2x, prop) {
+  let image = getRawListStyleImage(button);
+  info(image);
+  info(button.outerHTML);
+  let image1x = images1x[prop];
+  let image2x = images2x[prop];
+  is(
+    image,
+    `image-set(url("${image1x}") 1dppx, url("${image2x}") 2dppx)`,
+    prop
+  );
+}
+
 // Test that various combinations of icon details specs, for both paths
 // and ImageData objects, result in the correct image being displayed in
 // all display resolutions.
@@ -505,8 +518,6 @@ add_task(async function testDetailsObjects() {
     },
   });
 
-  const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
-
   await extension.startup();
 
   let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
@@ -539,31 +550,18 @@ add_task(async function testDetailsObjects() {
 
     await promiseAnimationFrame();
 
-    // Test icon sizes in the toolbar/urlbar.
-    for (let resolution of Object.keys(test.resolutions)) {
-      await SpecialPowers.pushPrefEnv({ set: [[RESOLUTION_PREF, resolution]] });
-
-      is(
-        window.devicePixelRatio,
-        +resolution,
-        "window has the required resolution"
-      );
-
-      let { browserActionImageURL, pageActionImageURL } =
-        test.resolutions[resolution];
-      is(
-        getListStyleImage(browserActionButton),
-        browserActionImageURL,
-        `browser action has the correct image at ${resolution}x resolution`
-      );
-      is(
-        getListStyleImage(pageActionImage),
-        pageActionImageURL,
-        `page action has the correct image at ${resolution}x resolution`
-      );
-
-      await SpecialPowers.popPrefEnv();
-    }
+    testHiDpiImage(
+      browserActionButton,
+      test.resolutions[1],
+      test.resolutions[2],
+      "browserActionImageURL"
+    );
+    testHiDpiImage(
+      pageActionImage,
+      test.resolutions[1],
+      test.resolutions[2],
+      "pageActionImageURL"
+    );
 
     if (!test.menuResolutions) {
       continue;
