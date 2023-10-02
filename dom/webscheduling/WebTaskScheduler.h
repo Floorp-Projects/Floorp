@@ -13,12 +13,14 @@
 #include "nsWrapperCache.h"
 #include "nsClassHashtable.h"
 
+#include "mozilla/Variant.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/AbortFollower.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WebTaskSchedulingBinding.h"
 
 namespace mozilla::dom {
+class WebTaskQueue;
 class WebTask : public LinkedListElement<RefPtr<WebTask>>,
                 public AbortFollower,
                 public SupportsWeakPtr {
@@ -35,13 +37,18 @@ class WebTask : public LinkedListElement<RefPtr<WebTask>>,
       : mEnqueueOrder(aEnqueueOrder),
         mCallback(&aCallback),
         mPromise(aPromise),
-        mHasScheduled(false) {}
+        mHasScheduled(false),
+        mOwnerQueue(nullptr) {}
 
   void RunAbortAlgorithm() override;
 
   bool HasScheduled() const { return mHasScheduled; }
 
   uint32_t EnqueueOrder() const { return mEnqueueOrder; }
+
+  void SetWebTaskQueue(WebTaskQueue* aWebTaskQueue) {
+    mOwnerQueue = aWebTaskQueue;
+  }
 
  private:
   void SetHasScheduled(bool aHasScheduled) { mHasScheduled = aHasScheduled; }
@@ -53,20 +60,30 @@ class WebTask : public LinkedListElement<RefPtr<WebTask>>,
 
   bool mHasScheduled;
 
+  // WebTaskQueue owns WebTask, so it's okay to use a raw pointer
+  WebTaskQueue* mOwnerQueue;
+
   ~WebTask() = default;
 };
 
 class WebTaskQueue {
  public:
-  WebTaskQueue() = default;
+  WebTaskQueue(uint32_t aKey, WebTaskScheduler* aScheduler)
+      : mOwnerKey(AsVariant(aKey)), mScheduler(aScheduler) {}
+  WebTaskQueue(TaskSignal* aKey, WebTaskScheduler* aScheduler)
+      : mOwnerKey(AsVariant(aKey)), mScheduler(aScheduler) {}
 
   TaskPriority Priority() const { return mPriority; }
   void SetPriority(TaskPriority aNewPriority) { mPriority = aNewPriority; }
 
   LinkedList<RefPtr<WebTask>>& Tasks() { return mTasks; }
 
-  void AddTask(WebTask* aTask) { mTasks.insertBack(aTask); }
+  void AddTask(WebTask* aTask) {
+    mTasks.insertBack(aTask);
+    aTask->SetWebTaskQueue(this);
+  }
 
+  void RemoveEntryFromTaskQueueMapIfNeeded();
   // TODO: To optimize it, we could have the scheduled and unscheduled
   // tasks stored separately.
   WebTask* GetFirstScheduledTask() {
@@ -78,11 +95,26 @@ class WebTaskQueue {
     return nullptr;
   }
 
-  ~WebTaskQueue() { mTasks.clear(); }
+  ~WebTaskQueue() {
+    mOwnerKey = AsVariant(Nothing());
+    for (const auto& task : mTasks) {
+      task->SetWebTaskQueue(nullptr);
+    }
+    mTasks.clear();
+  }
 
  private:
   TaskPriority mPriority = TaskPriority::User_visible;
   LinkedList<RefPtr<WebTask>> mTasks;
+
+  // When mOwnerKey is TaskSignal*, it means as long as
+  // WebTaskQueue is alive, the corresponding TaskSignal
+  // is alive, so using a raw pointer is ok.
+  Variant<Nothing, uint32_t, TaskSignal*> mOwnerKey;
+
+  // WebTaskScheduler owns WebTaskQueue as a hashtable value, so using a raw
+  // pointer points to WebTaskScheduler is ok.
+  WebTaskScheduler* mScheduler;
 };
 
 class WebTaskSchedulerMainThread;
@@ -116,6 +148,9 @@ class WebTaskScheduler : public nsWrapperCache, public SupportsWeakPtr {
   void Disconnect();
 
   void RunTaskSignalPriorityChange(TaskSignal* aTaskSignal);
+
+  void DeleteEntryFromStaticQueueMap(uint32_t aKey);
+  void DeleteEntryFromDynamicQueueMap(TaskSignal* aKey);
 
  protected:
   virtual ~WebTaskScheduler() = default;
