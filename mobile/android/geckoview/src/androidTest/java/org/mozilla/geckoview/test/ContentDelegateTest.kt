@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.annotation.AnyThread
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONObject
@@ -24,6 +25,8 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate
+import org.mozilla.geckoview.GeckoSession.Recommendation
+import org.mozilla.geckoview.GeckoSession.ReviewAnalysis
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -685,6 +688,33 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test
     fun requestAnalysis() {
+        // Test for the builder constructor
+        val productId = "banana"
+        val grade = "A"
+        val adjustedRating = 4.5
+        val lastAnalysisTime = 12345.toLong()
+        val analysisURL = "https://analysis.com"
+
+        val analysisObject = ReviewAnalysis.Builder(productId)
+            .grade(grade)
+            .adjustedRating(adjustedRating)
+            .analysisUrl(analysisURL)
+            .needsAnalysis(true)
+            .highlights(null)
+            .lastAnalysisTime(lastAnalysisTime)
+            .deletedProductReported(true)
+            .deletedProduct(true)
+            .build()
+        assertThat("Product grade should match", analysisObject.grade, equalTo(grade))
+        assertThat("Product id should match", analysisObject.productId, equalTo(productId))
+        assertThat("Product adjusted rating should match", analysisObject.adjustedRating, equalTo(adjustedRating))
+        assertTrue("Product should not be reported that it was deleted", analysisObject.deletedProductReported)
+        assertTrue("Not a deleted product", analysisObject.deletedProduct)
+        assertThat("Analysis URL should match", analysisObject.analysisURL, equalTo(analysisURL))
+        assertTrue("NeedsAnalysis URL should match", analysisObject.needsAnalysis)
+        assertNull("Highlights should match", analysisObject.highlights)
+        assertThat("Last analysis time should match", analysisObject.lastAnalysisTime, equalTo(lastAnalysisTime))
+
         // TODO: bug1845760 replace with static example.com product page and enable in automation
         if (!sessionRule.env.isAutomation) {
             // verify a non product page
@@ -700,17 +730,17 @@ class ContentDelegateTest : BaseSessionTest() {
             // verify product with no analysis data
             val noAnalysisResult = mainSession.requestAnalysis("https://www.amazon.com/Travel-Self-Inflatable-Sleeping-Airplane-Adjustable/dp/B0B8NVW9YX")
             sessionRule.waitForResult(noAnalysisResult).let {
-                assertThat("Product grade should match", it.grade, equalTo(null))
-                assertThat("Product id should match", it.productId, equalTo(null))
-                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(0.0))
-                assertThat("Product highlights should match", it.highlights, equalTo(null))
+                assertThat("Product grade should match", it.grade, equalTo("F"))
+                assertThat("Product id should match", it.productId, equalTo("B0B8NVW9YX"))
+                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(0.5))
+                assertThat("Product highlights should match", it.highlights, notNullValue())
             }
 
             val result = mainSession.requestAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result).let {
-                assertThat("Product grade should match", it.grade, equalTo("A"))
+                assertThat("Product grade should match", it.grade, equalTo("B"))
                 assertThat("Product id should match", it.productId, equalTo("B09TJGHL5F"))
-                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(4.4))
+                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(4.5))
                 assertThat("Product should not be reported that it was deleted", it.deletedProductReported, equalTo(false))
                 assertThat("Not a deleted product", it.deletedProduct, equalTo(false))
             }
@@ -719,6 +749,36 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test
     fun requestRecommendations() {
+        // Test the Builder constructor
+        val recommendationUrl = "https://recommendation.com"
+        val adjustedRating = 3.5
+        val imageUrl = "http://image.com"
+        val aid = "banana"
+        val name = "apple"
+        val grade = "C"
+        val price = "450"
+        val currency = "USD"
+
+        val recommendationObject = Recommendation.Builder(recommendationUrl)
+            .adjustedRating(adjustedRating)
+            .sponsored(true)
+            .imageUrl(imageUrl)
+            .aid(aid)
+            .name(name)
+            .grade(grade)
+            .price(price)
+            .currency(currency)
+            .build()
+        assertThat("Recommendation URL should match", recommendationObject.url, equalTo(recommendationUrl))
+        assertThat("Adjusted rating should match", recommendationObject.adjustedRating, equalTo(adjustedRating))
+        assertThat("Recommendation sponsored field should match", recommendationObject.sponsored, equalTo(true))
+        assertThat("Image URL should match", recommendationObject.imageUrl, equalTo(imageUrl))
+        assertThat("Aid should match", recommendationObject.aid, equalTo(aid))
+        assertThat("Name should match", recommendationObject.name, equalTo(name))
+        assertThat("Grade should match", recommendationObject.grade, equalTo(grade))
+        assertThat("Price should match", recommendationObject.price, equalTo(price))
+        assertThat("Currency should match", recommendationObject.currency, equalTo(currency))
+
         // TODO: bug1845760 replace with static example.com product page
         if (!sessionRule.env.isAutomation) {
             // verify a non product page
@@ -738,7 +798,7 @@ class ContentDelegateTest : BaseSessionTest() {
             val result = mainSession.requestRecommendations("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result)
                 .let {
-                    assertThat("First recommendation adjusted rating should match", it[0].adjustedRating, equalTo(4.6))
+                    assertThat("First recommendation adjusted rating should match", it[0].adjustedRating, equalTo(4.5))
                     assertThat("Another recommendation adjusted rating should match", it[2].adjustedRating, equalTo(4.5))
                     assertThat("First recommendation sponsored field should match", it[0].sponsored, equalTo(true))
                 }
