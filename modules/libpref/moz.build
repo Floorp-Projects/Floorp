@@ -172,6 +172,3 @@ else:
     FINAL_TARGET_PP_FILES += [
         "greprefs.js",
     ]
-
-if CONFIG["MOZ_PHC"]:
-    DEFINES["MOZ_PHC"] = True
