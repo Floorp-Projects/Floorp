@@ -335,7 +335,7 @@ option:checked {
   color: -moz-cellhighlighttext;
 }
 
-select:focus option:checked {
+select:-moz-select-list-box:focus option:checked {
   background-color: SelectedItem !important;
   color: SelectedItemText !important;
 }
