@@ -283,7 +283,7 @@ bool wasm::IsPlausibleStackMapKey(const uint8_t* nextPC) {
   return ((uintptr_t(insn) & 3) == 0) &&            // must be ARM, not Thumb
          (insn[-1] == 0xe7f000f0 ||                 // udf
           (insn[-1] & 0xfffffff0) == 0xe12fff30 ||  // blx reg (ARM, enc A1)
-          (insn[-1] & 0x0f000000) == 0x0b000000);   // bl.cc simm24 (ARM, enc A1)
+          (insn[-1] & 0x0f000000) == 0x0b000000);  // bl.cc simm24 (ARM, enc A1)
 
 #  elif defined(JS_CODEGEN_ARM64)
   const uint32_t hltInsn = 0xd4a00000;
