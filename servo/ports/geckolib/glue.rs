@@ -4120,19 +4120,14 @@ fn get_pseudo_style(
                 inherited_styles.is_none() ||
                     ptr::eq(inherited_styles.unwrap(), &**styles.primary())
             );
-            let base = if pseudo.inherits_from_default_values() {
-                stylist.device().default_computed_values_arc()
-            } else {
-                styles.primary()
-            };
+            let originating_element_style = styles.primary();
             let guards = StylesheetGuards::same(guard);
             stylist.lazily_compute_pseudo_element_style(
                 &guards,
                 element,
                 &pseudo,
                 rule_inclusion,
-                styles.primary(),
-                base,
+                originating_element_style,
                 is_probe,
                 matching_func,
             )

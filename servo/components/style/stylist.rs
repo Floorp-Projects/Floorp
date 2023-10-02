@@ -1050,7 +1050,6 @@ impl Stylist {
         pseudo: &PseudoElement,
         rule_inclusion: RuleInclusion,
         originating_element_style: &ComputedValues,
-        parent_style: &Arc<ComputedValues>,
         is_probe: bool,
         matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
     ) -> Option<Arc<ComputedValues>>
@@ -1061,7 +1060,6 @@ impl Stylist {
             guards,
             element,
             originating_element_style,
-            parent_style,
             pseudo,
             is_probe,
             rule_inclusion,
@@ -1073,7 +1071,7 @@ impl Stylist {
             pseudo,
             guards,
             Some(originating_element_style),
-            Some(parent_style),
+            Some(originating_element_style),
             Some(element),
         ))
     }
@@ -1195,7 +1193,6 @@ impl Stylist {
         guards: &StylesheetGuards,
         element: E,
         originating_element_style: &ComputedValues,
-        parent_style: &Arc<ComputedValues>,
         pseudo: &PseudoElement,
         is_probe: bool,
         rule_inclusion: RuleInclusion,
@@ -1246,7 +1243,7 @@ impl Stylist {
         let rules = self.rule_tree.compute_rule_node(&mut declarations, guards);
 
         let mut visited_rules = None;
-        if parent_style.visited_style().is_some() {
+        if originating_element_style.visited_style().is_some() {
             let mut declarations = ApplicableDeclarationList::new();
             let mut selector_caches = SelectorCaches::default();
 

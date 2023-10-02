@@ -1078,7 +1078,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
   RefPtr<ComputedStyle> style =
       mPresShell->StyleSet()->ResolvePseudoElementStyle(
           *aContent->AsElement(), PseudoStyleType::backdrop, nullptr,
-          /* aParentStyle */ nullptr);
+          aFrame->Style());
   MOZ_ASSERT(style->StyleDisplay()->mTopLayer == StyleTopLayer::Top);
   nsContainerFrame* parentFrame =
       GetGeometricParent(*style->StyleDisplay(), nullptr);
