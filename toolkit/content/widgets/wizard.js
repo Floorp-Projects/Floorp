@@ -619,9 +619,9 @@
           this.getAttribute("lastpage") == "true"
         );
       } else if (this.getAttribute("lastpage") == "true") {
-        this._wizardButtonDeck.setAttribute("selectedIndex", 0);
+        this._wizardButtonDeck.selectedIndex = 0;
       } else {
-        this._wizardButtonDeck.setAttribute("selectedIndex", 1);
+        this._wizardButtonDeck.selectedIndex = 1;
       }
     }
 
