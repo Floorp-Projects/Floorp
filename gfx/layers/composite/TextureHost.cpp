@@ -364,6 +364,8 @@ TextureHost::TextureHost(TextureHostType aType, TextureFlags aFlags)
       mReadLocked(false) {}
 
 TextureHost::~TextureHost() {
+  MOZ_ASSERT(mExternalImageId.isNothing());
+
   if (mReadLocked) {
     // If we still have a ReadLock, unlock it. At this point we don't care about
     // the texture client being written into on the other side since it should
@@ -506,6 +508,8 @@ void BufferTextureHost::DeallocateDeviceData() {}
 
 void BufferTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
+  MOZ_ASSERT(mExternalImageId.isSome());
+
   RefPtr<wr::RenderTextureHost> texture;
 
   if (UseExternalTextures()) {
