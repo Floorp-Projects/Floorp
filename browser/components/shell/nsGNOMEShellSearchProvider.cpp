@@ -18,15 +18,48 @@
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
-
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
+#include "mozilla/GUniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "imgIContainer.h"
 #include "imgITools.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+
+// Mozilla has old GIO version in build roots
+#define G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE GBusNameOwnerFlags(1 << 2)
+
+static const char* introspect_template =
+    "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
+    "1.0//EN\"\n"
+    "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n"
+    "<node>\n"
+    " <interface name=\"org.gnome.Shell.SearchProvider2\">\n"
+    "   <method name=\"GetInitialResultSet\">\n"
+    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
+    "     <arg type=\"as\" name=\"results\" direction=\"out\" />\n"
+    "   </method>\n"
+    "   <method name=\"GetSubsearchResultSet\">\n"
+    "     <arg type=\"as\" name=\"previous_results\" direction=\"in\" />\n"
+    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
+    "     <arg type=\"as\" name=\"results\" direction=\"out\" />\n"
+    "   </method>\n"
+    "   <method name=\"GetResultMetas\">\n"
+    "     <arg type=\"as\" name=\"identifiers\" direction=\"in\" />\n"
+    "     <arg type=\"aa{sv}\" name=\"metas\" direction=\"out\" />\n"
+    "   </method>\n"
+    "   <method name=\"ActivateResult\">\n"
+    "     <arg type=\"s\" name=\"identifier\" direction=\"in\" />\n"
+    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
+    "     <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
+    "   </method>\n"
+    "   <method name=\"LaunchSearch\">\n"
+    "     <arg type=\"as\" name=\"terms\" direction=\"in\" />\n"
+    "     <arg type=\"u\" name=\"timestamp\" direction=\"in\" />\n"
+    "   </method>\n"
+    "</interface>\n"
+    "</node>\n";
 
 class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
  public:
@@ -121,8 +154,9 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
   return NS_OK;
 }
 
-DBusHandlerResult nsGNOMEShellSearchProvider::HandleSearchResultSet(
-    DBusMessage* aMsg, bool aInitialSearch) {
+void nsGNOMEShellSearchProvider::HandleSearchResultSet(
+    GVariant* aParameters, GDBusMethodInvocation* aInvocation,
+    bool aInitialSearch) {
   // Discard any existing search results.
   mSearchResult = nullptr;
 
@@ -134,121 +168,162 @@ DBusHandlerResult nsGNOMEShellSearchProvider::HandleSearchResultSet(
 
   // Send the search request over DBus. We'll get reply over DBus it will be
   // set to mSearchResult by nsGNOMEShellSearchProvider::SetSearchResult().
-  return aInitialSearch
-             ? DBusHandleInitialResultSet(newSearch.forget(), aMsg)
-             : DBusHandleSubsearchResultSet(newSearch.forget(), aMsg);
+  DBusHandleResultSet(newSearch.forget(), aParameters, aInitialSearch,
+                      aInvocation);
 }
 
-DBusHandlerResult nsGNOMEShellSearchProvider::HandleResultMetas(
-    DBusMessage* aMsg) {
-  if (!mSearchResult) {
-    NS_WARNING("Missing nsGNOMEShellHistorySearchResult.");
-    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+void nsGNOMEShellSearchProvider::HandleResultMetas(
+    GVariant* aParameters, GDBusMethodInvocation* aInvocation) {
+  if (mSearchResult) {
+    DBusHandleResultMetas(mSearchResult, aParameters, aInvocation);
   }
-  return DBusHandleResultMetas(mSearchResult, aMsg);
 }
 
-DBusHandlerResult nsGNOMEShellSearchProvider::ActivateResult(
-    DBusMessage* aMsg) {
-  if (!mSearchResult) {
-    NS_WARNING("Missing nsGNOMEShellHistorySearchResult.");
-    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+void nsGNOMEShellSearchProvider::ActivateResult(
+    GVariant* aParameters, GDBusMethodInvocation* aInvocation) {
+  if (mSearchResult) {
+    DBusActivateResult(mSearchResult, aParameters, aInvocation);
   }
-  return DBusActivateResult(mSearchResult, aMsg);
 }
 
-DBusHandlerResult nsGNOMEShellSearchProvider::LaunchSearch(DBusMessage* aMsg) {
-  if (!mSearchResult) {
-    NS_WARNING("Missing nsGNOMEShellHistorySearchResult.");
-    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+void nsGNOMEShellSearchProvider::LaunchSearch(
+    GVariant* aParameters, GDBusMethodInvocation* aInvocation) {
+  if (mSearchResult) {
+    DBusLaunchSearch(mSearchResult, aParameters, aInvocation);
   }
-  return DBusLaunchSearch(mSearchResult, aMsg);
 }
 
-DBusHandlerResult nsGNOMEShellSearchProvider::HandleDBusMessage(
-    DBusConnection* aConnection, DBusMessage* aMsg) {
-  NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
+static void HandleMethodCall(GDBusConnection* aConnection, const gchar* aSender,
+                             const gchar* aObjectPath,
+                             const gchar* aInterfaceName,
+                             const gchar* aMethodName, GVariant* aParameters,
+                             GDBusMethodInvocation* aInvocation,
+                             gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  const char* method = dbus_message_get_member(aMsg);
-  const char* iface = dbus_message_get_interface(aMsg);
-
-  if ((strcmp("Introspect", method) == 0) &&
-      (strcmp("org.freedesktop.DBus.Introspectable", iface) == 0)) {
-    return DBusIntrospect(mConnection, aMsg);
-  }
-
-  if (strcmp("org.gnome.Shell.SearchProvider2", iface) == 0) {
-    if (strcmp("GetInitialResultSet", method) == 0) {
-      return HandleSearchResultSet(aMsg, /* aInitialSearch */ true);
-    }
-    if (strcmp("GetSubsearchResultSet", method) == 0) {
-      return HandleSearchResultSet(aMsg, /* aInitialSearch */ false);
-    }
-    if (strcmp("GetResultMetas", method) == 0) {
-      return HandleResultMetas(aMsg);
-    }
-    if (strcmp("ActivateResult", method) == 0) {
-      return ActivateResult(aMsg);
-    }
-    if (strcmp("LaunchSearch", method) == 0) {
-      return LaunchSearch(aMsg);
+  if (strcmp("org.gnome.Shell.SearchProvider2", aInterfaceName) == 0) {
+    if (strcmp("GetInitialResultSet", aMethodName) == 0) {
+      static_cast<nsGNOMEShellSearchProvider*>(aUserData)
+          ->HandleSearchResultSet(aParameters, aInvocation,
+                                  /* aInitialSearch */ true);
+    } else if (strcmp("GetSubsearchResultSet", aMethodName) == 0) {
+      static_cast<nsGNOMEShellSearchProvider*>(aUserData)
+          ->HandleSearchResultSet(aParameters, aInvocation,
+                                  /* aInitialSearch */ false);
+    } else if (strcmp("GetResultMetas", aMethodName) == 0) {
+      static_cast<nsGNOMEShellSearchProvider*>(aUserData)->HandleResultMetas(
+          aParameters, aInvocation);
+    } else if (strcmp("ActivateResult", aMethodName) == 0) {
+      static_cast<nsGNOMEShellSearchProvider*>(aUserData)->ActivateResult(
+          aParameters, aInvocation);
+    } else if (strcmp("LaunchSearch", aMethodName) == 0) {
+      static_cast<nsGNOMEShellSearchProvider*>(aUserData)->LaunchSearch(
+          aParameters, aInvocation);
+    } else {
+      g_warning(
+          "nsGNOMEShellSearchProvider: HandleMethodCall() wrong method %s",
+          aMethodName);
     }
   }
-
-  return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-void nsGNOMEShellSearchProvider::UnregisterDBusInterface(
-    DBusConnection* aConnection) {
-  NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
-  // Not implemented
+static GVariant* HandleGetProperty(GDBusConnection* aConnection,
+                                   const gchar* aSender,
+                                   const gchar* aObjectPath,
+                                   const gchar* aInterfaceName,
+                                   const gchar* aPropertyName, GError** aError,
+                                   gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
+  g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
+              "%s:%s setting is not supported", aInterfaceName, aPropertyName);
+  return nullptr;
 }
 
-static DBusHandlerResult message_handler(DBusConnection* conn,
-                                         DBusMessage* aMsg, void* user_data) {
-  auto interface = static_cast<nsGNOMEShellSearchProvider*>(user_data);
-  return interface->HandleDBusMessage(conn, aMsg);
+static gboolean HandleSetProperty(GDBusConnection* aConnection,
+                                  const gchar* aSender,
+                                  const gchar* aObjectPath,
+                                  const gchar* aInterfaceName,
+                                  const gchar* aPropertyName, GVariant* aValue,
+                                  GError** aError, gpointer aUserData) {
+  MOZ_ASSERT(aUserData);
+  MOZ_ASSERT(NS_IsMainThread());
+  g_set_error(aError, G_IO_ERROR, G_IO_ERROR_FAILED,
+              "%s:%s setting is not supported", aInterfaceName, aPropertyName);
+  return false;
 }
 
-static void unregister(DBusConnection* conn, void* user_data) {
-  auto interface = static_cast<nsGNOMEShellSearchProvider*>(user_data);
-  interface->UnregisterDBusInterface(conn);
+static const GDBusInterfaceVTable gInterfaceVTable = {
+    HandleMethodCall, HandleGetProperty, HandleSetProperty};
+
+void nsGNOMEShellSearchProvider::OnBusAcquired(GDBusConnection* aConnection) {
+  GUniquePtr<GError> error;
+  mIntrospectionData = dont_AddRef(g_dbus_node_info_new_for_xml(
+      introspect_template, getter_Transfers(error)));
+  if (!mIntrospectionData) {
+    g_warning(
+        "nsGNOMEShellSearchProvider: g_dbus_node_info_new_for_xml() failed! %s",
+        error->message);
+    return;
+  }
+
+  mRegistrationId = g_dbus_connection_register_object(
+      aConnection, GetDBusObjectPath(), mIntrospectionData->interfaces[0],
+      &gInterfaceVTable, this,  /* user_data */
+      nullptr,                  /* user_data_free_func */
+      getter_Transfers(error)); /* GError** */
+
+  if (mRegistrationId == 0) {
+    g_warning(
+        "nsGNOMEShellSearchProvider: g_dbus_connection_register_object() "
+        "failed! %s",
+        error->message);
+    return;
+  }
 }
 
-static DBusObjectPathVTable remoteHandlersTable = {
-    .unregister_function = unregister,
-    .message_function = message_handler,
-};
+void nsGNOMEShellSearchProvider::OnNameAcquired(GDBusConnection* aConnection) {
+  mConnection = aConnection;
+}
+
+void nsGNOMEShellSearchProvider::OnNameLost(GDBusConnection* aConnection) {
+  mConnection = nullptr;
+  if (!mRegistrationId) {
+    return;
+  }
+  if (g_dbus_connection_unregister_object(aConnection, mRegistrationId)) {
+    mRegistrationId = 0;
+  }
+}
 
 nsresult nsGNOMEShellSearchProvider::Startup() {
-  if (mConnection && dbus_connection_get_is_connected(mConnection)) {
+  if (mDBusID) {
     // We're already connected so we don't need to reconnect
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  mConnection =
-      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
-  if (!mConnection) {
-    return NS_ERROR_FAILURE;
-  }
-  dbus_connection_set_exit_on_disconnect(mConnection, false);
-  dbus_connection_setup_with_g_main(mConnection, nullptr);
+  mDBusID = g_bus_own_name(
+      G_BUS_TYPE_SESSION, GetDBusBusName(), G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE,
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsGNOMEShellSearchProvider*>(aUserData)->OnBusAcquired(
+            aConnection);
+      },
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsGNOMEShellSearchProvider*>(aUserData)->OnNameAcquired(
+            aConnection);
+      },
+      [](GDBusConnection* aConnection, const gchar*,
+         gpointer aUserData) -> void {
+        static_cast<nsGNOMEShellSearchProvider*>(aUserData)->OnNameLost(
+            aConnection);
+      },
+      this, nullptr);
 
-  DBusError err;
-  dbus_error_init(&err);
-  dbus_bus_request_name(mConnection, GetDBusBusName(),
-                        DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
-  // The interface is already owned - there is another application/profile
-  // instance already running.
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
-    mConnection = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!dbus_connection_register_object_path(mConnection, GetDBusObjectPath(),
-                                            &remoteHandlersTable, this)) {
-    mConnection = nullptr;
+  if (!mDBusID) {
+    g_warning("nsGNOMEShellSearchProvider: g_bus_own_name() failed!");
     return NS_ERROR_FAILURE;
   }
 
@@ -257,14 +332,12 @@ nsresult nsGNOMEShellSearchProvider::Startup() {
 }
 
 void nsGNOMEShellSearchProvider::Shutdown() {
-  if (!mConnection) {
-    return;
+  OnNameLost(mConnection);
+  if (mDBusID) {
+    g_bus_unown_name(mDBusID);
+    mDBusID = 0;
   }
-
-  dbus_connection_unregister_object_path(mConnection, GetDBusObjectPath());
-
-  // dbus_connection_unref() will be called by RefPtr here.
-  mConnection = nullptr;
+  mIntrospectionData = nullptr;
 }
 
 bool nsGNOMEShellSearchProvider::SetSearchResult(
@@ -345,17 +418,15 @@ static void DBusGetIDKeyForURI(int aIndex, nsAutoCString& aUri,
   aIDKey = nsPrintfCString("%.2d:%s", aIndex, aUri.get());
 }
 
+// Send (as) rearch result reply
 void nsGNOMEShellHistorySearchResult::HandleSearchResultReply() {
   MOZ_ASSERT(mReply);
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("as"));
+
   uint32_t childCount = 0;
   nsresult rv = mHistResultContainer->GetChildCount(&childCount);
-
-  DBusMessageIter iter;
-  dbus_message_iter_init_append(mReply, &iter);
-  DBusMessageIter iterArray;
-  dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "s", &iterArray);
-
   if (NS_SUCCEEDED(rv) && childCount > 0) {
     // Obtain the favicon service and get the favicon for the specified page
     nsCOMPtr<nsIFaviconService> favIconSvc(
@@ -368,7 +439,7 @@ void nsGNOMEShellHistorySearchResult::HandleSearchResultReply() {
 
     for (uint32_t i = 0; i < childCount; i++) {
       nsCOMPtr<nsINavHistoryResultNode> child;
-      mHistResultContainer->GetChild(i, getter_AddRefs(child));
+      rv = mHistResultContainer->GetChild(i, getter_AddRefs(child));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }
@@ -388,21 +459,16 @@ void nsGNOMEShellHistorySearchResult::HandleSearchResultReply() {
       nsAutoCString idKey;
       DBusGetIDKeyForURI(i, uri, idKey);
 
-      const char* id = idKey.get();
-      dbus_message_iter_append_basic(&iterArray, DBUS_TYPE_STRING, &id);
+      g_variant_builder_add(&b, "s", idKey.get());
     }
   }
 
   nsPrintfCString searchString("%s:%s", KEYWORD_SEARCH_STRING,
                                mSearchTerm.get());
-  const char* search = searchString.get();
-  dbus_message_iter_append_basic(&iterArray, DBUS_TYPE_STRING, &search);
+  g_variant_builder_add(&b, "s", searchString.get());
 
-  dbus_message_iter_close_container(&iter, &iterArray);
-
-  dbus_connection_send(mConnection, mReply, nullptr);
-  dbus_message_unref(mReply);
-
+  GVariant* v = g_variant_builder_end(&b);
+  g_dbus_method_invocation_return_value(mReply, g_variant_new_tuple(&v, 1));
   mReply = nullptr;
 }
 
