@@ -1463,8 +1463,9 @@ CustomizeMode.prototype = {
       }
     }
 
-    // Add menu items for automatically switching to Touch mode in Windows Tablet Mode.
-    if (AppConstants.platform == "win") {
+    // Add menu items for automatically switching to Touch mode in Windows Tablet Mode,
+    // which is only available in Windows 10.
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
       let spacer = doc.getElementById("customization-uidensity-touch-spacer");
       let checkbox = doc.getElementById(
         "customization-uidensity-autotouchmode-checkbox"

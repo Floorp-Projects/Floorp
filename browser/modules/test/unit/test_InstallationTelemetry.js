@@ -255,8 +255,8 @@ add_task(condition, async function testInstallationTelemetry() {
   // New timestamp and a check to make sure we can find installed MSIX packages
   // by overriding the prefixes a bit further down.
   fullData.install_timestamp = "2";
-  // This check only works on Windows
-  if (AppConstants.platform == "win") {
+  // This check only works on Windows 10 and above
+  if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     fullExtra.other_msix_inst = "true";
   }
   await writeJsonUtf16(dataFilePath, fullData);
