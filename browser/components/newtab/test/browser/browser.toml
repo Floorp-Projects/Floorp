@@ -11,7 +11,6 @@ support-files = [
   "snippet_below_search_test.json",
   "snippet_simple_test.json",
   "topstories.json",
-  "ds_layout.json",
   "file_pdf.PDF",
 ]
 prefs = [
@@ -123,8 +122,6 @@ https_first_disabled = true
 ["browser_discovery_card.js"]
 
 ["browser_discovery_render.js"]
-
-["browser_discovery_styles.js"]
 
 ["browser_enabled_newtabpage.js"]
 

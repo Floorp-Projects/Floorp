@@ -6,6 +6,12 @@
 let { AboutHomeStartupCache } = ChromeUtils.importESModule(
   "resource:///modules/BrowserGlue.sys.mjs"
 );
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+const { DiscoveryStreamFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
+);
 
 // Some Activity Stream preferences are JSON encoded, and quite complex.
 // Hard-coding them here or in browser.ini makes them brittle to change.
@@ -26,9 +32,6 @@ let { AboutHomeStartupCache } = ChromeUtils.importESModule(
 
   let newConfig = Object.assign(defaultDSConfig, {
     show_spocs: false,
-    hardcoded_layout: false,
-    layout_endpoint:
-      "https://example.com/browser/browser/components/newtab/test/browser/ds_layout.json",
   });
 
   // Configure Activity Stream to query for the layout JSON file that points
@@ -51,6 +54,13 @@ let { AboutHomeStartupCache } = ChromeUtils.importESModule(
  * @resolves {undefined}
  */
 function withFullyLoadedAboutHome(taskFn) {
+  const sandbox = sinon.createSandbox();
+  sandbox
+    .stub(DiscoveryStreamFeed.prototype, "generateFeedUrl")
+    .returns(
+      "https://example.com/browser/browser/components/newtab/test/browser/topstories.json"
+    );
+
   return BrowserTestUtils.withNewTab("about:home", async browser => {
     await SpecialPowers.spawn(browser, [], async () => {
       await ContentTaskUtils.waitForCondition(
@@ -63,6 +73,7 @@ function withFullyLoadedAboutHome(taskFn) {
     });
 
     await taskFn(browser);
+    sandbox.restore();
   });
 }
 

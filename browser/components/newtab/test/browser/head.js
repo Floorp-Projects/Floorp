@@ -20,6 +20,9 @@ const { FxAccounts } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
+const { DiscoveryStreamFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
+);
 // Set the content pref to make it available across tests
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 // Feature callout constants

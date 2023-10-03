@@ -58,9 +58,8 @@ export const INITIAL_STATE = {
   // This is the new pocket configurable layout state.
   DiscoveryStream: {
     // This is a JSON-parsed copy of the discoverystream.config pref value.
-    config: { enabled: false, layout_endpoint: "" },
+    config: { enabled: false },
     layout: [],
-    lastUpdated: null,
     isPrivacyInfoModalVisible: false,
     isCollectionDismissible: false,
     feeds: {
@@ -659,7 +658,6 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case at.DISCOVERY_STREAM_LAYOUT_UPDATE:
       return {
         ...prevState,
-        lastUpdated: action.data.lastUpdated || null,
         layout: action.data.layout || [],
       };
     case at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:

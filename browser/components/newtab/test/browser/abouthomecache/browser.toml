@@ -1,7 +1,6 @@
 [DEFAULT]
 support-files = [
   "head.js",
-  "../ds_layout.json",
   "../topstories.json",
 ]
 prefs = [

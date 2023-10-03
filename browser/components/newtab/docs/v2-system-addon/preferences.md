@@ -111,18 +111,14 @@ Not intended for user configuration, but is programmatically updated. Used for t
     "collapsible": true,
     "enabled": true,
     "show_spocs": true,
-    "hardcoded_layout": true,
     "personalized": true,
-    "layout_endpoint": "https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic"
   }
   ```
   - `api_key_pref` (string): The name of a variable containing the key for the Pocket API.
   - `collapsible` (boolean): Controls whether the sections in new tab can be collapsed.
   - `enabled` (boolean): Controls whether DS is turned on and is programmatically set based on a user's locale. DS enablement is a logical `AND` of this and the value of `browser.newtabpage.activity-stream.discoverystream.enabled`.
   - `show_spocs` (boolean): Show sponsored content in new tab.
-  - `hardcoded_layout` (boolean): When this is true, a hardcoded layout shipped with Firefox will be used instead of a remotely fetched layout definition.
   - `personalized` (boolean): When this is `true` personalized content based on browsing history will be displayed.
-  - `layout_endpoint` (string): The URL for a remote layout definition that will be used if `hardcoded_layout` is `false`.
   - `unused_key` (string): This is not set by default and is unused by this codebase. It's a standardized way to differentiate configurations to prevent experiment participants from being unenrolled.
 
 ### `browser.newtabpage.activity-stream.discoverystream.enabled`
