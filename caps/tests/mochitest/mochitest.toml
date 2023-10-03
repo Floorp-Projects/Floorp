@@ -24,4 +24,3 @@ skip-if = [
 ]
 
 ["test_disallowInheritPrincipal.html"]
-
