@@ -38,13 +38,13 @@ case "$1" in
     macosx64)
         export MACOSX_DEPLOYMENT_TARGET=10.12
         TARGET=x86_64-apple-darwin
-        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX13.3.sdk"
+        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX14.0.sdk"
         EXE=
 	;;
     macosx64-aarch64)
         export MACOSX_DEPLOYMENT_TARGET=11.0
         TARGET=aarch64-apple-darwin
-        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX13.3.sdk"
+        CC="clang -fuse-ld=lld --target=$TARGET -isysroot $MOZ_FETCHES_DIR/MacOSX14.0.sdk"
         EXE=
 	;;
     *)
