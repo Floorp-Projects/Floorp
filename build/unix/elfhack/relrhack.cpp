@@ -21,6 +21,8 @@
 #include <sstream>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -56,6 +58,38 @@ struct RelR : public Elf<bits> {
   using Elf_Off = typename Elf<bits>::Off;
   using Elf_Verneed = typename Elf<bits>::Verneed;
   using Elf_Vernaux = typename Elf<bits>::Vernaux;
+
+#define TAG_NAME(t) \
+  { t, #t }
+  class DynInfo {
+   public:
+    using Tag = decltype(Elf_Dyn::d_tag);
+    using Value = decltype(Elf_Dyn::d_un.d_val);
+    bool is_wanted(Tag tag) const { return tag_names.count(tag); }
+    void insert(off_t offset, Tag tag, Value val) {
+      data[tag] = std::make_pair(offset, val);
+    }
+    off_t offset(Tag tag) const { return data.at(tag).first; }
+    bool contains(Tag tag) const { return data.count(tag); }
+    Value& operator[](Tag tag) {
+      if (!is_wanted(tag)) {
+        std::stringstream msg;
+        msg << "Tag 0x" << std::hex << tag << " is not in DynInfo::tag_names";
+        throw std::runtime_error(msg.str());
+      }
+      return data[tag].second;
+    }
+    const char* name(Tag tag) const { return tag_names.at(tag); }
+
+   private:
+    std::unordered_map<Tag, std::pair<off_t, Value>> data;
+
+    const std::unordered_map<Tag, const char*> tag_names = {
+        TAG_NAME(DT_RELR),    TAG_NAME(DT_RELRENT), TAG_NAME(DT_RELRSZ),
+        TAG_NAME(DT_RELAENT), TAG_NAME(DT_RELENT),  TAG_NAME(DT_STRTAB),
+        TAG_NAME(DT_STRSZ),   TAG_NAME(DT_VERNEED), TAG_NAME(DT_VERNEEDNUM),
+    };
+  };
 
   // Translate a virtual address into an offset in the file based on the program
   // headers' PT_LOAD.
@@ -114,59 +148,38 @@ bool RelR<bits>::hack(std::fstream& f) {
   if (dyn_phdr->p_filesz % sizeof(Elf_Dyn)) {
     throw std::runtime_error("Invalid ELF?");
   }
-  // Find the location and size of several sections from the .dynamic section
-  // contents:
-  // - SHT_RELR section, which contains the packed-relative-relocs.
-  // - SHT_VERNEED section, which contains the symbol versions needed.
-  // - SHT_STRTAB section, which contains the string table for, among other
-  // things, those symbol versions.
-  // At the same time, we also change DT_RELR* tags to add DT_RELRHACK_BIT.
   auto dyn = read_vector_at<Elf_Dyn>(f, dyn_phdr->p_offset,
                                      dyn_phdr->p_filesz / sizeof(Elf_Dyn));
   off_t dyn_offset = dyn_phdr->p_offset;
-  Elf_Addr strtab_off = 0, verneed_off = 0, relr_off = 0;
-  Elf_Off strsz = 0, verneednum = 0, relrsz = 0, relent = 0;
-  std::vector<std::pair<off_t, Elf_Off>> relr_tags;
+  DynInfo dyn_info;
   for (const auto& d : dyn) {
     if (d.d_tag == DT_NULL) {
       break;
     }
-    switch (d.d_tag) {
-      case DT_RELR:
-      case DT_RELRENT:
-      case DT_RELRSZ:
-        if (d.d_tag == DT_RELR) {
-          if (relr_off) {
-            throw std::runtime_error("DT_RELR appears twice?");
-          }
-          relr_off = get_offset(phdr, d.d_un.d_ptr);
-        } else if (d.d_tag == DT_RELRSZ) {
-          if (relrsz) {
-            throw std::runtime_error("DT_RELRSZ appears twice?");
-          }
-          relrsz = d.d_un.d_val;
-        }
-        relr_tags.push_back({dyn_offset, d.d_tag | DT_RELRHACK_BIT});
-        break;
-      case DT_RELAENT:
-      case DT_RELENT:
-        relent = d.d_un.d_val;
-        break;
-      case DT_STRTAB:
-        strtab_off = get_offset(phdr, d.d_un.d_ptr);
-        break;
-      case DT_STRSZ:
-        strsz = d.d_un.d_val;
-        break;
-      case DT_VERNEED:
-        verneed_off = get_offset(phdr, d.d_un.d_ptr);
-        break;
-      case DT_VERNEEDNUM:
-        verneednum = d.d_un.d_val;
-        break;
+
+    if (dyn_info.is_wanted(d.d_tag)) {
+      if (dyn_info.contains(d.d_tag)) {
+        std::stringstream msg;
+        msg << dyn_info.name(d.d_tag) << " appears twice?";
+        throw std::runtime_error(msg.str());
+      }
+      dyn_info.insert(dyn_offset, d.d_tag, d.d_un.d_val);
     }
     dyn_offset += sizeof(Elf_Dyn);
   }
+
+  // Find the location and size of the SHT_RELR section, which contains the
+  // packed-relative-relocs.
+  Elf_Addr relr_off =
+      dyn_info.contains(DT_RELR) ? get_offset(phdr, dyn_info[DT_RELR]) : 0;
+  Elf_Off relrsz = dyn_info[DT_RELRSZ];
+  if (dyn_info.contains(DT_RELENT) && dyn_info.contains(DT_RELAENT)) {
+    std::stringstream msg;
+    msg << "Both DT_RELENT and DT_RELAENT appear?";
+    throw std::runtime_error(msg.str());
+  }
+  Elf_Off relent =
+      dyn_info.contains(DT_RELENT) ? dyn_info[DT_RELENT] : dyn_info[DT_RELAENT];
 
   // Estimate the size of the unpacked relative relocations corresponding
   // to the SHT_RELR section.
@@ -190,15 +203,21 @@ bool RelR<bits>::hack(std::fstream& f) {
     return false;
   }
 
-  // Apply the PT_DYNAMIC tag changes we've recorded.
-  for (const auto& [offset, tag] : relr_tags) {
-    write_one_at(f, offset, tag);
+  // Change DT_RELR* tags to add DT_RELRHACK_BIT.
+  for (const auto tag : {DT_RELR, DT_RELRSZ, DT_RELRENT}) {
+    write_one_at(f, dyn_info.offset(tag), tag | DT_RELRHACK_BIT);
   }
 
-  if (verneednum && verneed_off && strsz && strtab_off) {
+  if (dyn_info.contains(DT_VERNEEDNUM) && dyn_info.contains(DT_VERNEED) &&
+      dyn_info.contains(DT_STRSZ) && dyn_info.contains(DT_STRTAB)) {
     // Scan SHT_VERNEED for the GLIBC_ABI_DT_RELR version on the libc
     // library.
-    auto strtab = read_vector_at<char>(f, strtab_off, strsz);
+    Elf_Addr verneed_off = get_offset(phdr, dyn_info[DT_VERNEED]);
+    Elf_Off verneednum = dyn_info[DT_VERNEEDNUM];
+    // SHT_STRTAB section, which contains the string table for, among other
+    // things, the symbol versions in the SHT_VERNEED section.
+    auto strtab = read_vector_at<char>(f, get_offset(phdr, dyn_info[DT_STRTAB]),
+                                       dyn_info[DT_STRSZ]);
     // Guarantee a nul character at the end of the string table.
     strtab.push_back(0);
     while (verneednum--) {
