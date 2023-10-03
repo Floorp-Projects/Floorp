@@ -889,7 +889,7 @@ class WebExtensionSupportTest {
         val store = BrowserStore()
         val engine: Engine = mock()
 
-        assertFalse(store.state.showExtensionProcessDisabledPopup)
+        assertFalse(store.state.showExtensionsProcessDisabledPrompt)
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
         WebExtensionSupport.initialize(engine, store)
 
@@ -898,7 +898,7 @@ class WebExtensionSupportTest {
         delegateCaptor.value.onDisabledExtensionProcessSpawning()
         store.waitUntilIdle()
 
-        assertTrue(store.state.showExtensionProcessDisabledPopup)
+        assertTrue(store.state.showExtensionsProcessDisabledPrompt)
     }
 
     @Test

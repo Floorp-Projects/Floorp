@@ -96,6 +96,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                             addonsManagerDelegate = this@AddonsFragment,
                             addons = addons,
                             style = style,
+                            store = context.components.store,
                         )
                         recyclerView.adapter = adapter
                     } else {

@@ -9,6 +9,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -23,6 +24,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.internal.TimerId
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.Event
@@ -135,6 +137,12 @@ class TelemetryMiddleware(
                 } else {
                     Metrics.hasOpenTabs.set(false)
                 }
+            }
+            is ExtensionsProcessAction.EnabledAction -> {
+                Addons.extensionsProcessUiRetry.add()
+            }
+            is ExtensionsProcessAction.DisabledAction -> {
+                Addons.extensionsProcessUiDisable.add()
             }
             else -> {
                 // no-op

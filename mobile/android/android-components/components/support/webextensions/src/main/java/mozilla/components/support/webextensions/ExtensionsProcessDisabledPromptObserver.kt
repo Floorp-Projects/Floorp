@@ -12,34 +12,34 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
- * Feature implementation that shows a popup when the extensions process spawning has been
+ * Feature implementation that shows a prompt when the extensions process spawning has been
  * disabled due to the restart threshold being met.
  *
  * @property store the application's [BrowserStore].
- * @property onShowExtensionProcessDisabledPopup a callback invoked when the application should open a
- * popup.
+ * @property onShowExtensionsProcessDisabledPrompt a callback invoked when the application should open a
+ * prompt.
  */
-open class ExtensionProcessDisabledPopupObserver(
+open class ExtensionsProcessDisabledPromptObserver(
     private val store: BrowserStore,
-    private val onShowExtensionProcessDisabledPopup: () -> Unit = { },
+    private val onShowExtensionsProcessDisabledPrompt: () -> Unit = { },
 ) : LifecycleAwareFeature {
-    private var popupScope: CoroutineScope? = null
+    private var promptScope: CoroutineScope? = null
 
     override fun start() {
-        popupScope = store.flowScoped { flow ->
-            flow.distinctUntilChangedBy { it.showExtensionProcessDisabledPopup }
+        promptScope = store.flowScoped { flow ->
+            flow.distinctUntilChangedBy { it.showExtensionsProcessDisabledPrompt }
                 .collect { state ->
-                    if (state.showExtensionProcessDisabledPopup) {
+                    if (state.showExtensionsProcessDisabledPrompt) {
                         // There should only be one active dialog to the user when the extensions
                         // process spawning is disabled.
-                        onShowExtensionProcessDisabledPopup()
+                        onShowExtensionsProcessDisabledPrompt()
                     }
                 }
         }
     }
 
     override fun stop() {
-        popupScope?.cancel()
-        popupScope = null
+        promptScope?.cancel()
+        promptScope = null
     }
 }

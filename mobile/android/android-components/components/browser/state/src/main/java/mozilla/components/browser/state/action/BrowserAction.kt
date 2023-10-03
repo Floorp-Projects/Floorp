@@ -73,10 +73,24 @@ object InitAction : BrowserAction()
 object RestoreCompleteAction : BrowserAction()
 
 /**
- * [BrowserAction] implementation for updating state related to whether the extensions process
- * spawning has been disabled and a popup is necessary.
+ * [BrowserAction] implementations to react to extensions process events.
  */
-data class ExtensionProcessDisabledPopupAction(val showPopup: Boolean) : BrowserAction()
+sealed class ExtensionsProcessAction : BrowserAction() {
+    /**
+     * [BrowserAction] to indicate when the crash prompt should be displayed to the user.
+     */
+    data class ShowPromptAction(val show: Boolean) : ExtensionsProcessAction()
+
+    /**
+     * [BrowserAction] to indicate that the process has been re-enabled by the user.
+     */
+    object EnabledAction : ExtensionsProcessAction()
+
+    /**
+     * [BrowserAction] to indicate that the process has been left disabled by the user.
+     */
+    object DisabledAction : ExtensionsProcessAction()
+}
 
 /**
  * [BrowserAction] implementations to react to system events.

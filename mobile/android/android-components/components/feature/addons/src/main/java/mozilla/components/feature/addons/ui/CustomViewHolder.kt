@@ -50,6 +50,14 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     ) : CustomViewHolder(view)
 
     /**
+     * A view holder for displaying a section above the list of add-ons.
+     */
+    class HeaderViewHolder(
+        view: View,
+        val restartButton: TextView,
+    ) : CustomViewHolder(view)
+
+    /**
      * A view holder for displaying a section below the list of add-ons.
      */
     class FooterViewHolder(view: View) : CustomViewHolder(view)

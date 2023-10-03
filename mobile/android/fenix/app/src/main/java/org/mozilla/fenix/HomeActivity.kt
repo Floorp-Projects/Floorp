@@ -91,7 +91,7 @@ import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonsManagementFragmentDirections
-import org.mozilla.fenix.addons.ExtensionProcessDisabledController
+import org.mozilla.fenix.addons.ExtensionsProcessDisabledController
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
@@ -194,8 +194,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         WebExtensionPopupObserver(components.core.store, ::openPopup)
     }
 
-    private val extensionProcessDisabledPopupObserver by lazy {
-        ExtensionProcessDisabledController(this@HomeActivity, components.core.store)
+    private val extensionsProcessDisabledPromptObserver by lazy {
+        ExtensionsProcessDisabledController(this@HomeActivity, components.core.store)
     }
 
     private val serviceWorkerSupport by lazy {
@@ -347,7 +347,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
         supportActionBar?.hide()
 
-        lifecycle.addObservers(webExtensionPopupObserver, extensionProcessDisabledPopupObserver, serviceWorkerSupport)
+        lifecycle.addObservers(webExtensionPopupObserver, extensionsProcessDisabledPromptObserver, serviceWorkerSupport)
 
         if (shouldAddToRecentsScreen(intent)) {
             intent.removeExtra(START_IN_RECENTS_SCREEN)

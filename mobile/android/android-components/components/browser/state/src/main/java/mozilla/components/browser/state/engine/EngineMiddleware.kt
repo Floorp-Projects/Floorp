@@ -11,6 +11,7 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.engine.middleware.CrashMiddleware
 import mozilla.components.browser.state.engine.middleware.CreateEngineSessionMiddleware
 import mozilla.components.browser.state.engine.middleware.EngineDelegateMiddleware
+import mozilla.components.browser.state.engine.middleware.ExtensionsProcessMiddleware
 import mozilla.components.browser.state.engine.middleware.LinkingMiddleware
 import mozilla.components.browser.state.engine.middleware.SuspendMiddleware
 import mozilla.components.browser.state.engine.middleware.TabsRemovedMiddleware
@@ -48,6 +49,7 @@ object EngineMiddleware {
             SuspendMiddleware(scope),
             WebExtensionMiddleware(),
             CrashMiddleware(),
+            ExtensionsProcessMiddleware(engine),
         ) + if (trimMemoryAutomatically) {
             listOf(TrimMemoryMiddleware())
         } else {

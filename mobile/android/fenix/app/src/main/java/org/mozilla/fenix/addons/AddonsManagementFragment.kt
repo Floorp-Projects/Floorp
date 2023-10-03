@@ -114,11 +114,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     runIfFragmentIsAttached {
                         if (!shouldRefresh) {
                             adapter = AddonsManagerAdapter(
-                                requireContext().components.addonsProvider,
-                                managementView,
-                                addons,
+                                addonsProvider = requireContext().components.addonsProvider,
+                                addonsManagerDelegate = managementView,
+                                addons = addons,
                                 style = createAddonStyle(requireContext()),
-                                excludedAddonIDs,
+                                excludedAddonIDs = excludedAddonIDs,
+                                store = requireComponents.core.store,
                             )
                         }
                         binding?.addOnsProgressBar?.isVisible = false

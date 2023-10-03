@@ -6,10 +6,13 @@ package org.mozilla.fenix.telemetry
 
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
@@ -17,6 +20,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.test.ext.joinBlocking
@@ -33,6 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.AppStore
@@ -78,8 +83,11 @@ class TelemetryMiddlewareTest {
             searchState = searchState,
             timerId = timerId,
         )
+        val engine: Engine = mockk()
+        every { engine.enableExtensionProcessSpawning() } just runs
+        every { engine.disableExtensionProcessSpawning() } just runs
         store = BrowserStore(
-            middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk()),
+            middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine),
             initialState = BrowserState(),
         )
         appStore = AppStore()
@@ -416,6 +424,28 @@ class TelemetryMiddlewareTest {
         store.dispatch(EngineAction.LoadUrlAction("", "")).joinBlocking()
 
         verify { metrics.track(Event.GrowthData.FirstUriLoadForDay) }
+    }
+
+    @Test
+    fun `WHEN EnabledAction is dispatched THEN enable the process spawning`() {
+        assertNull(Addons.extensionsProcessUiRetry.testGetValue())
+        assertNull(Addons.extensionsProcessUiDisable.testGetValue())
+
+        store.dispatch(ExtensionsProcessAction.EnabledAction).joinBlocking()
+
+        assertEquals(1, Addons.extensionsProcessUiRetry.testGetValue())
+        assertNull(Addons.extensionsProcessUiDisable.testGetValue())
+    }
+
+    @Test
+    fun `WHEN DisabledAction is dispatched THEN disable the process spawning`() {
+        assertNull(Addons.extensionsProcessUiRetry.testGetValue())
+        assertNull(Addons.extensionsProcessUiDisable.testGetValue())
+
+        store.dispatch(ExtensionsProcessAction.DisabledAction).joinBlocking()
+
+        assertEquals(1, Addons.extensionsProcessUiDisable.testGetValue())
+        assertNull(Addons.extensionsProcessUiRetry.testGetValue())
     }
 }
 
