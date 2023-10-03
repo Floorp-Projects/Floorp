@@ -8,7 +8,7 @@
 
 // For sorting small arrays.
 function InsertionSort(array, from, to, comparefn) {
-  let item, swap, i, j;
+  var item, swap, i, j;
   for (i = from + 1; i <= to; i++) {
     item = array[i];
     for (j = i - 1; j >= from; j--) {

@@ -9,7 +9,7 @@ function IteratorIdentity() {
 /* ECMA262 7.2.7 */
 function IteratorNext(iteratorRecord, value) {
   // Steps 1-2.
-  const result =
+  var result =
     ArgumentsLength() < 2
       ? callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator)
       : callContentFunction(
@@ -242,7 +242,7 @@ function IteratorHelperNext() {
  */
 function IteratorHelperReturn() {
   // Step 1.
-  let O = this;
+  var O = this;
 
   // Step 2.
   if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
@@ -256,7 +256,7 @@ function IteratorHelperReturn() {
   // Step 3. (Implicit)
 
   // Steps 4-6.
-  const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
+  var generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callFunction(GeneratorReturn, generator, undefined);
 }
 

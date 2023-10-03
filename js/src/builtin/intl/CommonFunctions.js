@@ -7,10 +7,10 @@
 #ifdef DEBUG
 #define assertIsValidAndCanonicalLanguageTag(locale, desc) \
   do { \
-    let canonical = intl_TryValidateAndCanonicalizeLanguageTag(locale); \
-    assert(canonical !== null, \
+    var _canonical = intl_TryValidateAndCanonicalizeLanguageTag(locale); \
+    assert(_canonical !== null, \
            `${desc} is a structurally valid language tag`); \
-    assert(canonical === locale, \
+    assert(_canonical === locale, \
            `${desc} is a canonicalized language tag`); \
   } while (false)
 #else
@@ -821,7 +821,7 @@ var intlFallbackSymbolHolder = { value: undefined };
 function intlFallbackSymbol() {
   var fallbackSymbol = intlFallbackSymbolHolder.value;
   if (!fallbackSymbol) {
-    let Symbol = GetBuiltinConstructor("Symbol");
+    var Symbol = GetBuiltinConstructor("Symbol");
     fallbackSymbol = Symbol("IntlLegacyConstructedSymbol");
     intlFallbackSymbolHolder.value = fallbackSymbol;
   }
