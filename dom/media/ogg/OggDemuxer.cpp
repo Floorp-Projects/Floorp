@@ -597,10 +597,16 @@ nsresult OggDemuxer::ReadMetadata() {
 
       if (endTime.IsValid() && endTime.IsPositive()) {
         mInfo.mUnadjustedMetadataEndTime.emplace(endTime);
-        mInfo.mMetadataDuration.emplace(endTime -
-                                        mStartTime.refOr(TimeUnit::Zero()));
-        OGG_DEBUG("Got Ogg duration from seeking to end %s",
-                  endTime.ToString().get());
+        TimeUnit computedDuration =
+            endTime - mStartTime.refOr(TimeUnit::Zero());
+        if (computedDuration.IsPositive()) {
+          mInfo.mMetadataDuration.emplace(computedDuration);
+          OGG_DEBUG("Got Ogg duration from seeking to end %s",
+                    computedDuration.ToString().get());
+        } else {
+          OGG_DEBUG("Ignoring incorect start time in metadata");
+          mStartTime.reset();
+        }
       }
     }
     if (mInfo.mMetadataDuration.isNothing()) {
