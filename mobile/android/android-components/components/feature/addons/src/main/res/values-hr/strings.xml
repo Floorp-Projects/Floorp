@@ -174,6 +174,16 @@
     <string name="mozac_feature_addons_failed_to_install">Neuspjelo instaliranje dodatka %1$s</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">Neuspjela instalacija ovog dodatka.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Dodatak nije bilo moguće preuzeti zbog greške s povezivanjem.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Dodatak nije bilo moguće instalirati jer je neispravan.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Dodatak nije bilo moguće instalirati jer nije provjeren.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s nije moguće instalirati jer nije kompatibilan s %2$s %3$s.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s nije bilo moguće instalirati jer postoji visok rizik od uzrokovanja problema sa stabilnošću i sigurnošću.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s nije bilo moguće instalirati jer postoji visok rizik od uzrokovanja problema sa stabilnošću i sigurnošću</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
@@ -218,4 +228,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">Otvori u izborniku</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">U redu, shvaćam</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Saznajte više</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">Dodatak %1$s je blokiran zbog problema sa sigurnosti ili stabilnosti.</string>
 </resources>

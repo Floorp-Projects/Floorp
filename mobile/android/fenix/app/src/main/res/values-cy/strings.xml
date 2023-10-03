@@ -2211,6 +2211,8 @@
     <string name="review_quality_check_info_grade_info_C">Rydym yn credu fod yna gymysgedd o adolygiadau dibynadwy ac annibynadwy.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Adolygiadau annibynadwy. Rydym yn credu fod yr adolygiadau yn debygol o fod yn rhai ffug neu gan adolygwyr rhagfarnllyd.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Credwn fod yr adolygiadau’n annibynadwy.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Mae’r <b>gradd wedi’i addasu</b> yn seiliedig ar adolygiadau y credwn eu bod yn ddibynadwy yn unig.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

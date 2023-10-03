@@ -228,4 +228,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">Otvorte ho v ponuke</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Ok, rozumiem</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Ďalšie informácie</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">Doplnok %1$s bol zablokovaný kvôli problémom so stabilitou alebo bezpečnosťou.</string>
 </resources>

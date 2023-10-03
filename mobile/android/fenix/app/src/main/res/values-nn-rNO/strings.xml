@@ -2262,6 +2262,8 @@
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Kontroller no</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title">Ikkje nok vurderingar enno</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">Når dette produktet har fleire vurderingar, kan vi sjekke kvaliteten.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Produktet er ikkje tilgjengeleg</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
