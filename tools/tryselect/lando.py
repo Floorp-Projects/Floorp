@@ -90,7 +90,7 @@ def get_stack_info(vcs: SupportedVcsRepository) -> Tuple[str, List[str]]:
     nodes = vcs.get_branch_nodes(**branch_nodes_kwargs)
     if not nodes:
         raise ValueError("Could not find any commit hashes for submission.")
-    print("Submitting stack of", len(nodes), "nodes.")
+    print("Submitting stack of", len(nodes) - 1, "nodes and the try commit.")
 
     patches = vcs.get_commit_patches(nodes)
     base64_patches = [
