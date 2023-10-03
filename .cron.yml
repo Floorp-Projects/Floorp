@@ -394,7 +394,7 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: snap-upstream
-          target-tasks-method: snap_upstream_build
+          target-tasks-method: snap_upstream_tests
       run-on-projects:
           - mozilla-central
       when:

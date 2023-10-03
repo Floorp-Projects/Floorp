@@ -1476,12 +1476,12 @@ def target_tasks_holly(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
-@_target_task("snap_upstream_build")
-def target_tasks_snap_upstream_build(full_task_graph, parameters, graph_config):
+@_target_task("snap_upstream_tests")
+def target_tasks_snap_upstream_tests(full_task_graph, parameters, graph_config):
     """
-    Select tasks for building snap as upstream. Omit -try because it does not
-    really make sense on m-c
+    Select tasks for testing Snap package built as upstream. Omit -try because
+    it does not really make sense on a m-c cron
     """
     for name, task in full_task_graph.tasks.items():
-        if "snap-upstream-build" in name and not "-try" in name:
+        if "snap-upstream-test" in name and not "-try" in name:
             yield name
