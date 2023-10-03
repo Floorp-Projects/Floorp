@@ -16,7 +16,6 @@ kind-dependencies:
     - release-mark-as-shipped
     - push-bundle
     - post-beetmover-components-dummy
-    - version-bump
 
 job-defaults:
     name: notify-release-drivers-ship
