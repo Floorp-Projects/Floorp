@@ -6,8 +6,10 @@
 
 :host {
   display: block;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  --shopping-card-border-color: light-dark(#f0f0f4, #52525e);
+  border: 1px solid var(--shopping-card-border-color);
+  --shopping-card-border-radius: 8px;
+  border-radius: var(--shopping-card-border-radius);
   background-color: var(--in-content-page-background);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
@@ -63,14 +65,6 @@ slot[name="rating"] {
   align-self: stretch;
 }
 
-#footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
-  border-top: 1px solid var(--in-content-border-color);
-}
-
 details > summary {
   list-style: none;
 }
@@ -110,11 +104,12 @@ details[open] .chevron-icon {
   width: 100%;
   background-color: var(--in-content-page-background);
   box-shadow: 2px -10px 11px var(--in-content-page-background);
-  border-top: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--shopping-card-border-color);
+  border-radius: 0 0 var(--shopping-card-border-radius) var(--shopping-card-border-radius);
   position: absolute;
   bottom: 0;
   text-align: center;
-  padding-block: 12px 8px;
+  padding-block: 8px;
   left: 0;
   right: 0;
 }
