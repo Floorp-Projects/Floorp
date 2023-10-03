@@ -562,7 +562,8 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
             self->AllowResponse();
             break;
           case OpaqueResponse::Block:
-            self->BlockResponse(channel, NS_ERROR_FAILURE);
+            // We'll filter the data out later
+            self->AllowResponse();
             break;
           default:
             MOZ_ASSERT_UNREACHABLE(
@@ -622,10 +623,19 @@ void OpaqueResponseBlocker::FilterResponse() {
 
 void OpaqueResponseBlocker::ResolveAndProcessData(
     HttpBaseChannel* aChannel, bool aAllowed, Maybe<ipc::Shmem>& aSharedData) {
+  if (!aAllowed) {
+    // OpaqueResponseFilter allows us to filter the headers
+    mNext = new OpaqueResponseFilter(mNext);
+  }
+
   nsresult rv = OnStartRequest(aChannel);
 
   if (!aAllowed || NS_FAILED(rv)) {
-    MOZ_ASSERT_IF(!aAllowed, mState == State::Blocked);
+    MOZ_ASSERT_IF(!aAllowed, mState == State::Allowed);
+    // No need to call OnDataAvailable because
+    //   1. The input stream is consumed by
+    //     OpaqueResponseBlocker::OnDataAvailable already
+    //   2. We don't want to pass any data over
     MaybeRunOnStopRequest(aChannel);
     return;
   }
