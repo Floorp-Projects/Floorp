@@ -340,6 +340,9 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   if (lazy.AddonSettings.REQUIRE_SIGNING && isCorrectlySigned === false) {
     disabledFlags.push("signatureDisabled");
   }
+  if (lazy.AddonManager.checkCompatibility && !aAddon.isCompatible) {
+    disabledFlags.push("appVersionDisabled");
+  }
   const baseURL = policy ? policy.getURL() : "";
   const privateBrowsingAllowed = policy ? policy.privateBrowsingAllowed : false;
   const promptPermissions = aPermissions

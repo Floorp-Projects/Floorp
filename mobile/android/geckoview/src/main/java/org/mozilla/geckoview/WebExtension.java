@@ -1779,6 +1779,11 @@ public class WebExtension {
 
     /** The extension has been disabled because it is not correctly signed. */
     public static final int SIGNATURE = 1 << 4;
+
+    /**
+     * The extension has been disabled because it is not compatible with the application version.
+     */
+    public static final int APP_VERSION = 1 << 5;
   }
 
   @Retention(RetentionPolicy.SOURCE)
@@ -1789,6 +1794,7 @@ public class WebExtension {
         DisabledFlags.BLOCKLIST,
         DisabledFlags.APP,
         DisabledFlags.SIGNATURE,
+        DisabledFlags.APP_VERSION,
       })
   public @interface EnabledFlags {}
 
@@ -2014,6 +2020,8 @@ public class WebExtension {
           disabledFlags |= DisabledFlags.APP;
         } else if (flag.equals("signatureDisabled")) {
           disabledFlags |= DisabledFlags.SIGNATURE;
+        } else if (flag.equals("appVersionDisabled")) {
+          disabledFlags |= DisabledFlags.APP_VERSION;
         } else {
           Log.e(LOGTAG, "Unrecognized disabledFlag state: " + flag);
         }
