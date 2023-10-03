@@ -18688,20 +18688,6 @@ void Document::GetConnectedShadowRoots(
   AppendToArray(aOut, mComposedShadowRoots);
 }
 
-bool Document::HasPictureInPictureChildElement() const {
-  return mPictureInPictureChildElementCount > 0;
-}
-
-void Document::EnableChildElementInPictureInPictureMode() {
-  mPictureInPictureChildElementCount++;
-  MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
-}
-
-void Document::DisableChildElementInPictureInPictureMode() {
-  mPictureInPictureChildElementCount--;
-  MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
-}
-
 void Document::AddMediaElementWithMSE() {
   if (mMediaElementWithMSECount++ == 0) {
     if (WindowGlobalChild* wgc = GetWindowGlobalChild()) {
