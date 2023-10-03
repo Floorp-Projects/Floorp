@@ -114,8 +114,7 @@ void WebRenderTextureHost::NotifyNotUsed() {
     wr::RenderThread::Get()->NotifyNotUsed(GetExternalImageKey());
   }
 #endif
-  if (mWrappedTextureHost->AsRemoteTextureHostWrapper() ||
-      mWrappedTextureHost->AsTextureHostWrapperD3D11()) {
+  if (mWrappedTextureHost->AsRemoteTextureHostWrapper()) {
     mWrappedTextureHost->NotifyNotUsed();
   }
   TextureHost::NotifyNotUsed();

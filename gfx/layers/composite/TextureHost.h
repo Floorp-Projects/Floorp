@@ -76,7 +76,6 @@ class RemoteTextureHostWrapper;
 class TextureParent;
 class WebRenderTextureHost;
 class WrappingTextureSourceYCbCrBasic;
-class TextureHostWrapperD3D11;
 
 /**
  * A view on a TextureHost where the texture is internally represented as tiles
@@ -611,10 +610,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     return nullptr;
   }
 
-  virtual TextureHostWrapperD3D11* AsTextureHostWrapperD3D11() {
-    return nullptr;
-  }
-
   virtual bool IsWrappingSurfaceTextureHost() { return false; }
 
   // Create the corresponding RenderTextureHost type of this texture, and
@@ -760,7 +755,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   friend class TextureSourceProvider;
   friend class GPUVideoTextureHost;
   friend class WebRenderTextureHost;
-  friend class TextureHostWrapperD3D11;
 };
 
 /**
@@ -805,8 +799,6 @@ class BufferTextureHost : public TextureHost {
 
   gfx::ColorRange GetColorRange() const override;
 
-  gfx::ChromaSubsampling GetChromaSubsampling() const;
-
   gfx::IntSize GetSize() const override { return mSize; }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
@@ -834,12 +826,6 @@ class BufferTextureHost : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
-
-  uint8_t* GetYChannel();
-  uint8_t* GetCbChannel();
-  uint8_t* GetCrChannel();
-  int32_t GetYStride() const;
-  int32_t GetCbCrStride() const;
 
  protected:
   bool UseExternalTextures() const { return mUseExternalTextures; }

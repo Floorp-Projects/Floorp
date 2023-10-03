@@ -133,15 +133,6 @@ class AsyncImagePipelineManager final {
 
   static wr::ExternalImageId GetNextExternalImageId();
 
-  void SetTextureFactoryIdentifier(
-      const TextureFactoryIdentifier& aTextureFactoryIdentifier) {
-    mTextureFactoryIdentifier = aTextureFactoryIdentifier;
-  }
-
-  TextureFactoryIdentifier GetTextureFactoryIdentifier() const {
-    return mTextureFactoryIdentifier;
-  }
-
  private:
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId,
                                const wr::Epoch& aEpoch,
@@ -236,7 +227,6 @@ class AsyncImagePipelineManager final {
 
   RefPtr<wr::WebRenderAPI> mApi;
   bool mUseCompositorWnd;
-  TextureFactoryIdentifier mTextureFactoryIdentifier;
 
   const wr::IdNamespace mIdNamespace;
   const bool mUseTripleBuffering;

@@ -6475,10 +6475,6 @@
     type: bool
     value: false
     mirror: once
--   name: gfx.video.convert-yuv-to-nv12.image-host-win
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.
