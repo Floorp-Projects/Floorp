@@ -69,6 +69,4 @@ vendoring:
     - 02_simd-detect-runtime.patch
     - 03_set-skip-frac.patch
     - 04_hugemem.patch
-    - 05_remove-empty-asm-clobber.patch
-    - 06_set-rate-overflow-no-return.patch
-    - 07_integer-halving.patch
+    - 05_set-rate-overflow-no-return.patch
