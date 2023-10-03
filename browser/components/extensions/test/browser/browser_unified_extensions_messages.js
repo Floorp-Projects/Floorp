@@ -23,14 +23,9 @@ const verifyMessageBar = message => {
     "expected the correct support page ID"
   );
   Assert.equal(
-    supportLink.getAttribute("aria-labelledby"),
-    "unified-extensions-mb-quarantined-domain-title",
+    supportLink.getAttribute("aria-label"),
+    "Learn more: Some extensions are not allowed",
     "expected the correct aria-labelledby value"
-  );
-  Assert.equal(
-    supportLink.getAttribute("aria-describedby"),
-    "unified-extensions-mb-quarantined-domain-message-2",
-    "expected the correct aria-describedby value"
   );
 };
 

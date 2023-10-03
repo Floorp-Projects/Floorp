@@ -169,12 +169,6 @@ unified-extensions-item > .subviewbutton {
   margin-bottom: 2px;
 }
 
-/* Stack each child in the message bar. */
-.unified-extensions-message-bar > * {
-  display: inline-block;
-  padding-block: 1px;
-}
-
 /* Hide the menu button and the unified extensions content when the extension
  * item is placed on the toolbar. */
 .unified-extensions-item-menu-button.toolbarbutton-1,

@@ -194,6 +194,6 @@ const promiseSetToolbarVisibility = (toolbar, visible) => {
 const getMessageBars = (win = window) => {
   const { panel } = win.gUnifiedExtensions;
   return panel.querySelectorAll(
-    "#unified-extensions-messages-container > message-bar"
+    "#unified-extensions-messages-container > moz-message-bar"
   );
 };
