@@ -29,6 +29,9 @@ const {
   waitForText,
   evalInFrame,
   waitUntil,
+  addBreakpoint,
+  waitForPaused,
+  waitForState,
 } = require("./debugger-helpers");
 
 const IFRAME_BASE_URL =
@@ -261,12 +264,41 @@ async function testPrettyPrint(dbg, toolbox) {
   await waitForText(dbg, filePrettyChars);
   test.done();
 
+  await addBreakpoint(dbg, 776, formattedFileUrl);
+
+  const onPaused = waitForPaused(dbg);
+  const reloadAndPauseInPrettyPrintedFileTest = runTest(
+    "custom.jsdebugger.pretty-print.reload-and-pause.DAMP"
+  );
   await reloadDebuggerAndLog("custom.pretty-print", toolbox, {
     sources: 1105,
     sourceURL: formattedFileUrl,
     text: filePrettyChars,
     threadsCount: EXPECTED.threadsCount,
   });
+  await onPaused;
+
+  // When reloading, the `togglePrettyPrint` action is called to pretty print the minified source.
+  // This action is quite slow and finishes by ensuring that breakpoints are updated according to
+  // the new pretty printed source.
+  // We have to wait for this, otherwise breakpoints may be added after we remove all breakpoints just after.
+  await waitForState(
+    dbg,
+    function (state) {
+      const breakpoints = dbg.selectors.getBreakpointsAtLine(state, 776);
+      const source = findSource(dbg, formattedFileUrl);
+      // We have to ensure that the breakpoint is specific to the very last source object,
+      // and not the one from the previous page load.
+      return (
+        breakpoints?.length > 0 && breakpoints[0].location.source == source
+      );
+    },
+    "wait for pretty print breakpoint"
+  );
+
+  reloadAndPauseInPrettyPrintedFileTest.done();
+
+  await removeBreakpoints(dbg);
 
   // Clear the selection to avoid the source to be re-pretty printed on next load
   // Clear the selection before closing the tabs, otherwise closeTabs will reselect a random source.
