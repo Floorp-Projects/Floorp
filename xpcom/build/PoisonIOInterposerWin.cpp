@@ -440,7 +440,9 @@ void InitPoisonIOInterposer() {
 
   // Bug 1679741: Kingsoft Internet Security calls NtReadFile in their thread
   // simultaneously when we're applying a hook on NtReadFile.
-  if (::GetModuleHandleW(L"kwsui64.dll")) {
+  // Bug 1705042: Symantec applies its own hook on NtReadFile, and ends up
+  // overwriting part of ours in an incompatible way.
+  if (::GetModuleHandleW(L"kwsui64.dll") || ::GetModuleHandleW(L"ffm64.dll")) {
     return;
   }
 
