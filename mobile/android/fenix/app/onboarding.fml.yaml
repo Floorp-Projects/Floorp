@@ -11,9 +11,9 @@ features:
         default:
             default-browser:
               card-type: default-browser
-              title: juno_onboarding_default_browser_title_nimbus
+              title: juno_onboarding_default_browser_title_nimbus_2
               ordering: 10
-              body: juno_onboarding_default_browser_description_nimbus
+              body: juno_onboarding_default_browser_description_nimbus_2
               link-text: juno_onboarding_default_browser_description_link_text
               image-res: ic_onboarding_welcome
               primary-button-label: juno_onboarding_default_browser_positive_button
@@ -31,8 +31,8 @@ features:
 
             sync-sign-in:
               card-type: sync-sign-in
-              title: juno_onboarding_sign_in_title
-              body: juno_onboarding_sign_in_description
+              title: juno_onboarding_sign_in_title_2
+              body: juno_onboarding_sign_in_description_2
               image-res: ic_onboarding_sync
               ordering: 20
               primary-button-label: juno_onboarding_sign_in_positive_button
@@ -40,8 +40,8 @@ features:
 
             notification-permission:
               card-type: notification-permission
-              title: juno_onboarding_enable_notifications_title_nimbus
-              body: juno_onboarding_enable_notifications_description_nimbus
+              title: juno_onboarding_enable_notifications_title_nimbus_2
+              body: juno_onboarding_enable_notifications_description_nimbus_2
               image-res: ic_notification_permission
               ordering: 30
               primary-button-label: juno_onboarding_enable_notifications_positive_button
