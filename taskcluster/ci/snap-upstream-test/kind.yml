@@ -17,6 +17,8 @@ kind-dependencies:
     - snap-upstream-build
 
 job-defaults:
+    attributes:
+        cron: true
     treeherder:
         kind: test
         tier: 2
