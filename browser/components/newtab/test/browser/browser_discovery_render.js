@@ -6,7 +6,6 @@ async function before({ pushPrefs }) {
     JSON.stringify({
       collapsible: true,
       enabled: true,
-      hardcoded_layout: true,
     }),
   ]);
 }

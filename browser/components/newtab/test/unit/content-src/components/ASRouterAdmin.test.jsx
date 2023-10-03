@@ -295,7 +295,6 @@ describe("ASRouterAdmin", () => {
       state = {
         config: {
           enabled: true,
-          layout_endpoint: "",
         },
         layout: [],
         spocs: {
@@ -316,7 +315,7 @@ describe("ASRouterAdmin", () => {
       );
     });
     it("should render a DiscoveryStreamAdmin component", () => {
-      assert.equal(wrapper.find("h3").at(0).text(), "Endpoint variant");
+      assert.equal(wrapper.find("h3").at(0).text(), "Layout");
     });
     it("should render a spoc in DiscoveryStreamAdmin component", () => {
       state.spocs = {
@@ -358,7 +357,7 @@ describe("ASRouterAdmin", () => {
         dispatch,
         ac.OnlyToMain({
           type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
-          data: { enabled: true, layout_endpoint: "" },
+          data: { enabled: true },
         })
       );
     });

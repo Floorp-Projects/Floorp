@@ -36,14 +36,6 @@ function relativeTime(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
-const LAYOUT_VARIANTS = {
-  basic: "Basic default layout (on by default in nightly)",
-  staging_spocs: "A layout with all spocs shown",
-  "dev-test-all":
-    "A little bit of everything. Good layout for testing all components",
-  "dev-test-feeds": "Stress testing for slow feeds",
-};
-
 export class ToggleStoryButton extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -160,7 +152,6 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     this.idleDaily = this.idleDaily.bind(this);
     this.systemTick = this.systemTick.bind(this);
     this.syncRemoteSettings = this.syncRemoteSettings.bind(this);
-    this.changeEndpointVariant = this.changeEndpointVariant.bind(this);
     this.onStoryToggle = this.onStoryToggle.bind(this);
     this.state = {
       toggledStories: {},
@@ -218,19 +209,6 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_SYNC_RS);
   }
 
-  changeEndpointVariant(event) {
-    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
-    if (endpoint) {
-      this.setConfigValue(
-        "layout_endpoint",
-        endpoint.replace(
-          /layout_variant=.+/,
-          `layout_variant=${event.target.value}`
-        )
-      );
-    }
-  }
-
   renderComponent(width, component) {
     return (
       <table>
@@ -247,12 +225,6 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
         </tbody>
       </table>
     );
-  }
-
-  isCurrentVariant(id) {
-    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
-    const isMatch = endpoint && !!endpoint.match(`layout_variant=${id}`);
-    return isMatch;
   }
 
   renderFeedData(url) {
@@ -368,10 +340,8 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   render() {
-    const prefToggles = "enabled hardcoded_layout show_spocs collapsible".split(
-      " "
-    );
-    const { config, lastUpdated, layout } = this.props.state.DiscoveryStream;
+    const prefToggles = "enabled show_spocs collapsible".split(" ");
+    const { config, layout } = this.props.state.DiscoveryStream;
     const personalized =
       this.props.otherPrefs["discoverystream.personalization.enabled"];
     return (
@@ -409,42 +379,6 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
                 </td>
               </Row>
             ))}
-          </tbody>
-        </table>
-        <h3>Endpoint variant</h3>
-        <p>
-          You can also change this manually by changing this pref:{" "}
-          <code>browser.newtabpage.activity-stream.discoverystream.config</code>
-        </p>
-        <table
-          style={
-            config.enabled && !config.hardcoded_layout ? null : { opacity: 0.5 }
-          }
-        >
-          <tbody>
-            {Object.keys(LAYOUT_VARIANTS).map(id => (
-              <Row key={id}>
-                <td className="min">
-                  <input
-                    type="radio"
-                    value={id}
-                    checked={this.isCurrentVariant(id)}
-                    onChange={this.changeEndpointVariant}
-                  />
-                </td>
-                <td className="min">{id}</td>
-                <td>{LAYOUT_VARIANTS[id]}</td>
-              </Row>
-            ))}
-          </tbody>
-        </table>
-        <h3>Caching info</h3>
-        <table style={config.enabled ? null : { opacity: 0.5 }}>
-          <tbody>
-            <Row>
-              <td className="min">Data last fetched</td>
-              <td>{relativeTime(lastUpdated) || "(no data)"}</td>
-            </Row>
           </tbody>
         </table>
         <h3>Layout</h3>
@@ -1446,27 +1380,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
 
     return "n/a";
-  }
-
-  renderDiscoveryStream() {
-    const { config } = this.props.DiscoveryStream;
-
-    return (
-      <div>
-        <table>
-          <tbody>
-            <tr className="message-item">
-              <td className="min">Enabled</td>
-              <td>{config.enabled ? "yes" : "no"}</td>
-            </tr>
-            <tr className="message-item">
-              <td className="min">Endpoint</td>
-              <td>{config.endpoint || "(empty)"}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
   }
 
   renderAttributionParamers() {
