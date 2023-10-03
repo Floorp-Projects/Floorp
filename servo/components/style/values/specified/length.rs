@@ -1645,6 +1645,32 @@ impl LengthPercentage {
             allow_quirks,
         )
     }
+
+    /// Returns self as specified::calc::CalcNode.
+    /// Note that this expect the clamping_mode is AllowedNumericType::All for Calc. The caller
+    /// should take care about it when using this function.
+    fn to_calc_node(self) -> CalcNode {
+        match self {
+            LengthPercentage::Length(l) => CalcNode::Leaf(calc::Leaf::Length(l)),
+            LengthPercentage::Percentage(p) => CalcNode::Leaf(calc::Leaf::Percentage(p.0)),
+            LengthPercentage::Calc(p) => p.node,
+        }
+    }
+
+    /// Construct the value representing `calc(100% - self)`.
+    pub fn hundred_percent_minus(self, clamping_mode: AllowedNumericType) -> Self {
+        let mut sum = smallvec::SmallVec::<[CalcNode; 2]>::new();
+        sum.push(CalcNode::Leaf(calc::Leaf::Percentage(1.0)));
+
+        let mut node = self.to_calc_node();
+        node.negate();
+        sum.push(node);
+
+        let calc = CalcNode::Sum(sum.into_boxed_slice().into());
+        LengthPercentage::Calc(Box::new(
+            calc.into_length_or_percentage(clamping_mode).unwrap(),
+        ))
+    }
 }
 
 impl Zero for LengthPercentage {
