@@ -167,6 +167,7 @@ fxview-category-navigation {
 fxview-category-navigation h1 {
   font-size: 1.6em;
   font-weight: 700;
+  margin-block: 0;
 }
 
 fxview-empty-state:not([isSelectedTab]) button[slot="primary-action"] {
