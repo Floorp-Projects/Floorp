@@ -51,3 +51,11 @@ vendoring:
 
   patches:
     - "*.patch"
+
+updatebot:
+  maintainer-phab: ahal
+  maintainer-bz: ahal@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
