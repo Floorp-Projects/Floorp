@@ -342,6 +342,8 @@ MSG_DEF(JSMSG_RESERVED_ID,             1, JSEXN_SYNTAXERR, "{0} is a reserved id
 MSG_DEF(JSMSG_REST_WITH_COMMA,         0, JSEXN_SYNTAXERR, "rest element may not have a trailing comma")
 MSG_DEF(JSMSG_REST_WITH_DEFAULT,       0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
 MSG_DEF(JSMSG_SELFHOSTED_METHOD_CALL,  0, JSEXN_SYNTAXERR, "self-hosted code may not contain direct method calls. Use callFunction() or callContentFunction()")
+MSG_DEF(JSMSG_SELFHOSTED_LEXICAL,      0, JSEXN_SYNTAXERR, "self-hosted code may not contain 'let' or 'const', use 'var'")
+MSG_DEF(JSMSG_SELFHOSTED_CLASS,      0, JSEXN_SYNTAXERR, "self-hosted code may not contain a class")
 MSG_DEF(JSMSG_SEMI_AFTER_FOR_COND,     0, JSEXN_SYNTAXERR, "missing ; after for-loop condition")
 MSG_DEF(JSMSG_SEMI_AFTER_FOR_INIT,     0, JSEXN_SYNTAXERR, "missing ; after for-loop initializer")
 MSG_DEF(JSMSG_SOURCE_TOO_LONG,         0, JSEXN_RANGEERR, "source is too long")

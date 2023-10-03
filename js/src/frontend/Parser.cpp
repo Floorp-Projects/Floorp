@@ -4942,6 +4942,11 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
     YieldHandling yieldHandling, DeclarationKind kind) {
   MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
 
+  if (options().selfHostingMode) {
+    error(JSMSG_SELFHOSTED_LEXICAL);
+    return null();
+  }
+
   /*
    * Parse body-level lets without a new block object. ES6 specs
    * that an execution environment's initial lexical environment
@@ -6617,6 +6622,11 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   }
 
   if (parsingLexicalDeclaration) {
+    if (options().selfHostingMode) {
+      error(JSMSG_SELFHOSTED_LEXICAL);
+      return false;
+    }
+
     forLoopLexicalScope.emplace(this);
     if (!forLoopLexicalScope->init(pc_)) {
       return false;
@@ -8215,6 +8225,12 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 
   uint32_t classStartOffset = pos().begin;
   bool savedStrictness = setLocalStrictMode(true);
+
+  // Classes are quite broken in self-hosted code.
+  if (options().selfHostingMode) {
+    error(JSMSG_SELFHOSTED_CLASS);
+    return null();
+  }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
