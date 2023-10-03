@@ -18,229 +18,197 @@ job-defaults:
     treeherder:
         kind: build
         tier: 2
+        symbol: B
     worker-type: b-linux-gcp
+    run:
+        checkout: true
     worker:
+        artifacts:
+            - name: public/build
+              type: directory
+              path: /builds/worker/artifacts/
+        docker-image: {in-tree: snap-build-core22}
+        max-run-time: 900
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
 
 jobs:
-    nightly:
+    nightly/opt:
         description: Build Firefox Nightly as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-nightly
+            build_type: opt
         index:
             product: firefox
             job-name: nightly
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 9000
         run:
             using: run-task
             command: >-
               ./run.sh nightly
         treeherder:
-            platform: linux64/opt
-            symbol: snap-nightly
-    nightly-debug:
+            platform: linux64-snap-nightly/opt
+
+    nightly/debug:
         description: Build Firefox Nightly (debug) as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-nightly
+            build_type: debug
         index:
             product: firefox
             job-name: nightly-debug
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 7200
         run:
             using: run-task
             command: >-
               ./run.sh nightly 1
         treeherder:
-            platform: linux64/debug
-            symbol: snap-nightly
-    beta:
+            platform: linux64-snap-nightly/debug
+
+    beta/opt:
         description: Build Firefox Beta as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-beta
+            build_type: opt
         index:
             product: firefox
             job-name: beta
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 9000
         run:
             using: run-task
             command: >-
               ./run.sh beta
         treeherder:
-            platform: linux64/opt
-            symbol: snap-beta
-    beta-debug:
+            platform: linux64-snap-beta/opt
+
+    beta/debug:
         description: Build Firefox Beta (debug) as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-beta
+            build_type: debug
         index:
             product: firefox
             job-name: beta-debug
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 7200
         run:
             using: run-task
             command: >-
               ./run.sh beta 1
         treeherder:
-            platform: linux64/debug
-            symbol: snap-beta
-    stable:
+            platform: linux64-snap-beta/debug
+
+    stable/opt:
         description: Build Firefox Stable as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-stable
+            build_type: opt
         index:
             product: firefox
             job-name: stable
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 9000
         run:
             using: run-task
             command: >-
               ./run.sh stable
         treeherder:
-            platform: linux64/opt
-            symbol: snap-stable
-    stable-debug:
+            platform: linux64-snap-stable/opt
+
+    stable/debug:
         description: Build Firefox Stable (debug) as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-stable
+            build_type: debug
         index:
             product: firefox
             job-name: stable-debug
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 7200
         run:
             using: run-task
             command: >-
               ./run.sh stable 1
         treeherder:
-            platform: linux64/debug
-            symbol: snap-stable
-    esr:
+            platform: linux64-snap-stable/debug
+
+    esr/opt:
         description: Build Firefox ESR as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-esr
+            build_type: opt
         index:
             product: firefox
             job-name: esr
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 9000
         run:
             using: run-task
             command: >-
               ./run.sh esr
         treeherder:
-            platform: linux64/opt
-            symbol: snap-esr
-    esr-debug:
+            platform: linux64-snap-esr/opt
+
+    esr/debug:
         description: Build Firefox ESR (debug) as a Snap using upstream definition
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-esr
+            build_type: debug
         index:
             product: firefox
             job-name: esr-debug
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 7200
         run:
             using: run-task
             command: >-
               ./run.sh esr 1
         treeherder:
-            platform: linux64/debug
-            symbol: snap-esr
-    try:
+            platform: linux64-snap-esr/debug
+
+    try/opt:
         description: Build Firefox Nightly as a Snap using upstream definition and try repo
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-try
+            build_type: opt
         index:
             product: firefox
             job-name: try
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 9000
         run:
             using: run-task
             command: >-
               ./run.sh try
         treeherder:
-            platform: linux64/opt
-            symbol: snap-try
-    try-debug:
+            platform: linux64-snap-try/opt
+
+    try/debug:
         description: Build Firefox Nightly (debug) as a Snap using upstream definition and try repo
         attributes:
-            build_platform: firefox-snap
+            build_platform: linux64-snap-upstream-try
+            build_type: debug
         index:
             product: firefox
             job-name: try-debug
             type: generic
         worker:
-            artifacts:
-                - name: public/build
-                  type: directory
-                  path: /builds/worker/artifacts/
-            docker-image: {in-tree: snap-build-core22}
             max-run-time: 7200
         run:
             using: run-task
             command: >-
               ./run.sh try 1
         treeherder:
-            platform: linux64/debug
-            symbol: snap-try
+            platform: linux64-snap-try/debug

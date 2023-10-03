@@ -48,7 +48,7 @@ fi
 sudo apt-get update
 
 # shellcheck disable=SC2046
-sudo apt-get install -y $(python3 /builds/worker/parse.py snapcraft.yaml)
+sudo apt-get install -y $(/usr/bin/python3 /builds/worker/parse.py snapcraft.yaml)
 
 # CRAFT_PARTS_PACKAGE_REFRESH required to avoid snapcraft running apt-get update
 # especially for stage-packages
