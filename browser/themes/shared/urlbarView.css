@@ -290,11 +290,7 @@
 
   .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
     background-image: url(chrome://browser/skin/pin-12.svg);
-    fill: rgb(91,91,102);
-
-    :root[lwt-toolbar-field-focus-brighttext] & {
-      fill: rgb(251,251,254);
-    }
+    fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
   }
 }
 
