@@ -35,7 +35,6 @@ vendoring:
     - libspeexdsp/resample_sse.h
     - libspeexdsp/resample_neon.h
     - libspeexdsp/arch.h
-    - libspeexdsp/stack_alloc.h
     - libspeexdsp/fixed_generic.h
     - include/speex/speex_resampler.h
     - AUTHORS
@@ -58,9 +57,6 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/libspeexdsp/arch.h'
       to: '{vendor_dir}/src/arch.h'
-    - action: move-file
-      from: '{vendor_dir}/libspeexdsp/stack_alloc.h'
-      to: '{vendor_dir}/src/stack_alloc.h'
     - action: move-file
       from: '{vendor_dir}/libspeexdsp/fixed_generic.h'
       to: '{vendor_dir}/src/fixed_generic.h'
