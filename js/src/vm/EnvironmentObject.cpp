@@ -90,12 +90,7 @@ static T* CreateEnvironmentObject(JSContext* cx, Handle<SharedShape*> shape,
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &T::class_));
   allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
 
-  JSObject* obj = NativeObject::create(cx, allocKind, heap, shape);
-  if (!obj) {
-    return nullptr;
-  }
-
-  return &obj->as<T>();
+  return NativeObject::create<T>(cx, allocKind, heap, shape);
 }
 
 // Helper function for simple environment objects that don't need the overloads

@@ -242,13 +242,12 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
   }
 
   AutoSetNewObjectMetadata metadata(cx);
-  JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Tenured, shape);
-  if (!base) {
+  auto* obj = NativeObject::create<ArgumentsObject>(cx, FINALIZE_KIND,
+                                                    gc::Heap::Tenured, shape);
+  if (!obj) {
     return nullptr;
   }
 
-  ArgumentsObject* obj = &base->as<js::ArgumentsObject>();
   obj->initFixedSlot(ArgumentsObject::DATA_SLOT, PrivateValue(nullptr));
   return obj;
 }
@@ -301,12 +300,11 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
   AutoSetNewObjectMetadata metadata(cx);
-  JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Default, shape);
-  if (!base) {
+  auto* obj = NativeObject::create<ArgumentsObject>(cx, FINALIZE_KIND,
+                                                    gc::Heap::Default, shape);
+  if (!obj) {
     return nullptr;
   }
-  ArgumentsObject* obj = &base->as<ArgumentsObject>();
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
       AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
