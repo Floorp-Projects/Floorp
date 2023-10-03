@@ -30,6 +30,7 @@
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
@@ -67,8 +68,6 @@ RegExpObject* js::RegExpAlloc(JSContext* cx, NewObjectKind newKind,
   if (!regexp) {
     return nullptr;
   }
-
-  regexp->clearShared();
 
   if (!SharedShape::ensureInitialCustomShape<RegExpObject>(cx, regexp)) {
     return nullptr;
@@ -972,17 +971,16 @@ RegExpZone::RegExpZone(Zone* zone) : set_(zone, zone) {}
 /* Functions */
 
 JSObject* js::CloneRegExpObject(JSContext* cx, Handle<RegExpObject*> regex) {
-  // Unlike RegExpAlloc, all clones must use |regex|'s group.
-  Rooted<TaggedProto> proto(cx, regex->staticPrototype());
-  Rooted<RegExpObject*> clone(
-      cx, NewObjectWithGivenTaggedProto<RegExpObject>(cx, proto));
+  constexpr gc::AllocKind allocKind = RegExpObject::AllocKind;
+  static_assert(gc::GetGCKindSlots(allocKind) == RegExpObject::RESERVED_SLOTS);
+  MOZ_ASSERT(regex->asTenured().getAllocKind() == allocKind);
+
+  Rooted<SharedShape*> shape(cx, regex->sharedShape());
+  Rooted<RegExpObject*> clone(cx, NativeObject::create<RegExpObject>(
+                                      cx, allocKind, gc::Heap::Default, shape));
   if (!clone) {
     return nullptr;
   }
-
-  clone->clearShared();
-
-  clone->setShape(regex->shape());
 
   RegExpShared* shared = RegExpObject::getShared(cx, regex);
   if (!shared) {
