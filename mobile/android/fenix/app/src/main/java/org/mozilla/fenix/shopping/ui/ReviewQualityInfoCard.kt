@@ -96,7 +96,7 @@ private fun ReviewQualityInfo(
                 ReviewQualityCheckState.Grade.A,
                 ReviewQualityCheckState.Grade.B,
             ),
-            info = stringResource(id = R.string.review_quality_check_info_grade_info_AB_2),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_AB),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -111,7 +111,7 @@ private fun ReviewQualityInfo(
                 ReviewQualityCheckState.Grade.D,
                 ReviewQualityCheckState.Grade.F,
             ),
-            info = stringResource(id = R.string.review_quality_check_info_grade_info_DF_2),
+            info = stringResource(id = R.string.review_quality_check_info_grade_info_DF),
             modifier = Modifier.fillMaxWidth(),
         )
 

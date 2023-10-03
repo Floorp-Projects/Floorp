@@ -2128,15 +2128,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[We assign each product’s reviews a <b>letter grade</b> from A to F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Reliable reviews. We believe the reviews are likely from real customers who left honest, unbiased reviews.</string>
+    <string name="review_quality_check_info_grade_info_AB">Reliable reviews. We believe the reviews are likely from real customers who left honest, unbiased reviews.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">We believe the reviews to be reliable.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">We believe the reviews to be reliable.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">We believe there’s a mix of reliable and unreliable reviews.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Unreliable reviews. We believe the reviews are likely fake or from biased reviewers.</string>
+    <string name="review_quality_check_info_grade_info_DF">Unreliable reviews. We believe the reviews are likely fake or from biased reviewers.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">We believe the reviews are unreliable.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">We believe the reviews are unreliable.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[The <b>adjusted rating</b> is based only on reviews we believe to be reliable.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
