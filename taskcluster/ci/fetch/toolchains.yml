@@ -355,11 +355,11 @@ clang-14:
         revision: 4bc1d0b51c8e488d78ab69c8b19cfbcd1f7db6a4
 
 clang-17:
-    description: clang 17.0.1 source code
+    description: clang 17.0.2 source code
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: e19b7dc36bc047b9eb72078d034596be766da350
+        revision: b2417f51dbbd7435eb3aaf203de24de6754da50e
 
 clang-trunk:
     description: clang main branch source code
