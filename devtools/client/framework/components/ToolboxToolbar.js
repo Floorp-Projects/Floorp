@@ -227,6 +227,7 @@ class ToolboxToolbar extends Component {
         disabled,
         onClick,
         isChecked,
+        isToggle,
         className: buttonClass,
         onKeyDown,
       } = command;
@@ -245,6 +246,7 @@ class ToolboxToolbar extends Component {
         id,
         title: description,
         disabled,
+        "aria-pressed": !isToggle ? null : isChecked,
         className: `devtools-tabbar-button command-button ${
           buttonClass || ""
         } ${isChecked ? "checked" : ""}`,
