@@ -20,6 +20,13 @@ registerCleanupFunction(() => {
   }
 });
 
+const TOGGLE_BUTTONS = [
+  "command-button-measure",
+  "command-button-rulers",
+  "command-button-responsive",
+  "command-button-pick",
+];
+
 add_task(async function test() {
   const tab = await addTab(TEST_URL);
   let toolbox = await gDevTools.showToolboxForTab(tab);
@@ -102,6 +109,20 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
           "The tooltip for button matches the tool definition."
         );
       }
+
+      if (TOGGLE_BUTTONS.includes(id)) {
+        is(
+          matchedButtons[0].getAttribute("aria-pressed"),
+          "false",
+          `The aria-pressed attribute is set to false for ${id} button`
+        );
+      } else {
+        is(
+          matchedButtons[0].getAttribute("aria-pressed"),
+          null,
+          `The ${id} button does not have the aria-pressed attribute`
+        );
+      }
     } else {
       is(
         matchedButtons.length,
@@ -136,6 +157,23 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
       "Clicking on the node should have toggled visibility preference for " +
         tool.visibilityswitch
     );
+
+    if (isVisibleAfterClick) {
+      const matchedButton = toolbox.doc.getElementById(tool.id);
+      if (TOGGLE_BUTTONS.includes(tool.id)) {
+        is(
+          matchedButton.getAttribute("aria-pressed"),
+          "false",
+          `The aria-pressed attribute is set to false for ${tool.id} button`
+        );
+      } else {
+        is(
+          matchedButton.getAttribute("aria-pressed"),
+          null,
+          `The ${tool.id} button does not have the aria-pressed attribute`
+        );
+      }
+    }
   }
 }
 
@@ -184,26 +222,42 @@ async function testButtonStateOnClick(toolbox) {
   const toolboxButtons = ["#command-button-rulers", "#command-button-measure"];
   for (const toolboxButton of toolboxButtons) {
     const button = toolbox.doc.querySelector(toolboxButton);
-    if (button) {
-      const isChecked = waitUntil(() => button.classList.contains("checked"));
-
-      button.click();
-      await isChecked;
-      ok(
-        button.classList.contains("checked"),
-        `Button for ${toolboxButton} can be toggled on`
-      );
-
-      const isUnchecked = waitUntil(
-        () => !button.classList.contains("checked")
-      );
-      button.click();
-      await isUnchecked;
-      ok(
-        !button.classList.contains("checked"),
-        `Button for ${toolboxButton} can be toggled off`
-      );
+    if (!button) {
+      ok(false, `Couldn't find ${toolboxButton}`);
+      continue;
     }
+
+    const isChecked = waitUntil(() => button.classList.contains("checked"));
+    is(
+      button.getAttribute("aria-pressed"),
+      "false",
+      `${toolboxButton} has aria-pressed set to false when it's off`
+    );
+
+    button.click();
+    await isChecked;
+    ok(
+      button.classList.contains("checked"),
+      `Button for ${toolboxButton} can be toggled on`
+    );
+    is(
+      button.getAttribute("aria-pressed"),
+      "true",
+      `${toolboxButton} has aria-pressed set to true when it's on`
+    );
+
+    const isUnchecked = waitUntil(() => !button.classList.contains("checked"));
+    button.click();
+    await isUnchecked;
+    ok(
+      !button.classList.contains("checked"),
+      `Button for ${toolboxButton} can be toggled off`
+    );
+    is(
+      button.getAttribute("aria-pressed"),
+      "false",
+      `aria-pressed is set back to false on ${toolboxButton} after it has been toggled off`
+    );
   }
 }
 

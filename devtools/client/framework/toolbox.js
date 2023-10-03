@@ -1529,6 +1529,7 @@ Toolbox.prototype = {
       isToolSupported,
       isCurrentlyVisible,
       isChecked,
+      isToggle,
       onKeyDown,
       experimentalURL,
     } = options;
@@ -1562,6 +1563,7 @@ Toolbox.prototype = {
         isCheckedValue = value;
         this.emit("updatechecked");
       },
+      isToggle,
       // The preference for having this button visible.
       visibilityswitch: `devtools.${id}.enabled`,
       // The toolbar has a container at the start and end of the toolbar for
@@ -2103,6 +2105,7 @@ Toolbox.prototype = {
       isToolSupported: toolbox => {
         return toolbox.target.getTrait("frames");
       },
+      isToggle: true,
     });
 
     return this.pickerButton;
