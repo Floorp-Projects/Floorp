@@ -34,7 +34,7 @@ case `uname -s` in
                 macosx_version_min=10.12
                 ;;
         esac
-        macosx_sdk=13.3
+        macosx_sdk=14.0
         # NOTE: both CFLAGS and CPPFLAGS need to be set here, otherwise
         # configure step fails.
         sysroot_flags="-isysroot ${MOZ_FETCHES_DIR}/MacOSX${macosx_sdk}.sdk -mmacosx-version-min=${macosx_version_min}"
