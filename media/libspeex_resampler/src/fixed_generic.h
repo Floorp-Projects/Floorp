@@ -77,6 +77,7 @@
 #define MULT16_16(a,b)     (((spx_word32_t)(spx_word16_t)(a))*((spx_word32_t)(spx_word16_t)(b)))
 
 #define MAC16_16(c,a,b) (ADD32((c),MULT16_16((a),(b))))
+
 #define MULT16_32_P15(a,b) ADD32(MULT16_32_32(a,SHR((b),15)), PSHR(MULT16_16((a),((b)&0x00007fff)),15))
 #define MULT16_32_Q15(a,b) ADD32(MULT16_32_32(a,SHR((b),15)), SHR(MULT16_16((a),((b)&0x00007fff)),15))
 #define MAC16_32_Q15(c,a,b) ADD32(c,MULT16_32_Q15(a,b))
