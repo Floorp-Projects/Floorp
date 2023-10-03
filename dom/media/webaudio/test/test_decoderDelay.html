@@ -82,6 +82,15 @@
         "fuzz": {
           "android": 2
         }
+      },
+      {
+        // Bug 1856145 - Invalid OGG file with busted granulepos in the
+        // bytestrem, but we should be able to recover and play it properly.
+        // This triggers a bug in the decoder delay trimming logic.
+        "path": "1856145.ogg",
+        "samplerate": 8000,
+        "frameCount": 8192,
+        "fuzz" : {}
       }
     ];
 
