@@ -10,11 +10,11 @@ with Files("*"):
 DIRS += ["blink"]
 
 MOCHITEST_MANIFESTS += [
-    "test/blink/mochitest.ini",
-    "test/mochitest.ini",
-    "test/mochitest_audio.ini",
-    "test/mochitest_bugs.ini",
-    "test/mochitest_media.ini",
+    "test/blink/mochitest.toml",
+    "test/mochitest.toml",
+    "test/mochitest_audio.toml",
+    "test/mochitest_bugs.toml",
+    "test/mochitest_media.toml",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.media.webaudio.test.blink += [

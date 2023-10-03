@@ -1,0 +1,14 @@
+[DEFAULT]
+subsuite = "media"
+tags = "mediasession mediacontrol"
+
+support-files = [
+  "../../test/gizmo.mp4",
+  "file_trigger_actionhanlder_frame.html",
+  "file_trigger_actionhanlder_window.html",
+  "MediaSessionTestUtils.js",
+]
+
+["test_setactionhandler.html"]
+
+["test_trigger_actionhanlder.html"]

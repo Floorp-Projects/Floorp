@@ -16,15 +16,15 @@ TEST_DIRS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "cors/mochitest.ini",
-    "csp/mochitest.ini",
-    "general/mochitest.ini",
-    "https-first/mochitest.ini",
-    "https-only/mochitest.ini",
-    "mixedcontentblocker/mochitest.ini",
-    "referrer-policy/mochitest.ini",
-    "sec-fetch/mochitest.ini",
-    "sri/mochitest.ini",
+    "cors/mochitest.toml",
+    "csp/mochitest.toml",
+    "general/mochitest.toml",
+    "https-first/mochitest.toml",
+    "https-only/mochitest.toml",
+    "mixedcontentblocker/mochitest.toml",
+    "referrer-policy/mochitest.toml",
+    "sec-fetch/mochitest.toml",
+    "sri/mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

@@ -32,7 +32,7 @@ XPCOM_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
+    "test/mochitest.toml",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [

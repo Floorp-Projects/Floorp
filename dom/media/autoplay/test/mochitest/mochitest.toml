@@ -1,0 +1,69 @@
+[DEFAULT]
+subsuite = "media"
+tags = "autoplay"
+support-files = [
+  "../../../test/manifest.js",
+  "../../../test/320x240.ogv",
+  "../../../test/bogus.duh",
+  "../../../test/detodos-short.opus",
+  "../../../test/flac-s24.flac",
+  "../../../test/gizmo.mp4",
+  "../../../test/gizmo.webm",
+  "../../../test/gizmo-noaudio.mp4",
+  "../../../test/gizmo-noaudio.webm",
+  "../../../test/gizmo-short.mp4",
+  "../../../test/r11025_s16_c1-short.wav",
+  "../../../test/sample.3g2",
+  "../../../test/sample.3gp",
+  "../../../test/short.mp4",
+  "../../../test/seek-short.webm",
+  "../../../test/small-shot.flac",
+  "../../../test/small-shot.m4a",
+  "../../../test/small-shot.mp3",
+  "../../../test/small-shot-mp3.mp4",
+  "../../../test/small-shot.ogg",
+  "../../../test/vp9-short.webm",
+  "AutoplayTestUtils.js",
+  "file_autoplay_gv_play_request_frame.html",
+  "file_autoplay_gv_play_request_window.html",
+  "file_autoplay_policy_activation_frame.html",
+  "file_autoplay_policy_activation_window.html",
+  "file_autoplay_policy_eventdown_activation.html",
+  "file_autoplay_policy_play_before_loadedmetadata.html",
+  "file_autoplay_policy_unmute_pauses.html",
+  "file_autoplay_policy_key_blacklist.html",
+]
+
+["test_autoplay.html"]
+
+["test_autoplay_contentEditable.html"]
+
+["test_autoplay_gv_play_request.html"]
+skip-if = ["os != 'android'"]
+
+["test_autoplay_policy.html"]
+
+["test_autoplay_policy_activation.html"]
+
+["test_autoplay_policy_eventdown_activation.html"]
+
+["test_autoplay_policy_key_blacklist.html"]
+skip-if = ["verify && debug && os == 'win'"] # bug 1424903
+
+["test_autoplay_policy_permission.html"]
+
+["test_autoplay_policy_play_before_loadedmetadata.html"]
+skip-if = ["os == 'android'"] # bug 1591121
+
+["test_autoplay_policy_unmute_pauses.html"]
+
+["test_autoplay_policy_web_audio_AudioParamStream.html"]
+
+["test_autoplay_policy_web_audio_createMediaStreamSource.html"]
+
+["test_autoplay_policy_web_audio_mediaElementAudioSourceNode.html"]
+
+["test_autoplay_policy_web_audio_notResumePageInvokedSuspendedAudioContext.html"]
+
+["test_streams_autoplay.html"]
+tags = "mtg capturestream"

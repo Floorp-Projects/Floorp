@@ -23,7 +23,7 @@ XPIDL_SOURCES += [
     "nsIAutoplay.idl",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 

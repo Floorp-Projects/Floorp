@@ -1,0 +1,279 @@
+[DEFAULT]
+subsuite = "media"
+tags = "media-gpu"
+support-files = [
+  "mediasource.js",
+  "seek.webm",
+  "seek.webm^headers^",
+  "seek_lowres.webm",
+  "seek_lowres.webm^headers^",
+  "bipbop/bipbop_300-3s.webm",
+  "bipbop/bipbop_300-3s.webm^headers^",
+  "bipbop/bipbop2s.mp4",
+  "bipbop/bipbop2s.mp4^headers^",
+  "bipbop/bipbop_trailing_skip_box_video1.m4s",
+  "bipbop/bipbop_trailing_skip_box_video1.m4s^headers^",
+  "bipbop/bipbopinit.mp4",
+  "bipbop/bipbop_audioinit.mp4",
+  "bipbop/bipbop_videoinit.mp4",
+  "bipbop/bipbop1.m4s",
+  "bipbop/bipbop_audio1.m4s",
+  "bipbop/bipbop_video1.m4s",
+  "bipbop/bipbop2.m4s",
+  "bipbop/bipbop_audio2.m4s",
+  "bipbop/bipbop_video2.m4s",
+  "bipbop/bipbop3.m4s",
+  "bipbop/bipbop_audio3.m4s",
+  "bipbop/bipbop_video3.m4s",
+  "bipbop/bipbop4.m4s",
+  "bipbop/bipbop_audio4.m4s",
+  "bipbop/bipbop_video4.m4s",
+  "bipbop/bipbop5.m4s",
+  "bipbop/bipbop_audio5.m4s",
+  "bipbop/bipbop_video5.m4s",
+  "bipbop/bipbop6.m4s",
+  "bipbop/bipbop_audio6.m4s",
+  "bipbop/bipbop_video6.m4s",
+  "bipbop/bipbop7.m4s",
+  "bipbop/bipbop_audio7.m4s",
+  "bipbop/bipbop_video7.m4s",
+  "bipbop/bipbop8.m4s",
+  "bipbop/bipbop_audio8.m4s",
+  "bipbop/bipbop_video8.m4s",
+  "bipbop/bipbop9.m4s",
+  "bipbop/bipbop_audio9.m4s",
+  "bipbop/bipbop_video9.m4s",
+  "bipbop/bipbop10.m4s",
+  "bipbop/bipbop_audio10.m4s",
+  "bipbop/bipbop_video10.m4s",
+  "bipbop/bipbop11.m4s",
+  "bipbop/bipbop_audio11.m4s",
+  "bipbop/bipbop_video11.m4s",
+  "bipbop/bipbop12.m4s",
+  "bipbop/bipbop_video12.m4s",
+  "bipbop/bipbop13.m4s",
+  "bipbop/bipbop_video13.m4s",
+  "bipbop/bipbopinit.mp4^headers^",
+  "bipbop/bipbop_audioinit.mp4^headers^",
+  "bipbop/bipbop_videoinit.mp4^headers^",
+  "bipbop/bipbop1.m4s^headers^",
+  "bipbop/bipbop_audio1.m4s^headers^",
+  "bipbop/bipbop_video1.m4s^headers^",
+  "bipbop/bipbop2.m4s^headers^",
+  "bipbop/bipbop_audio2.m4s^headers^",
+  "bipbop/bipbop_video2.m4s^headers^",
+  "bipbop/bipbop3.m4s^headers^",
+  "bipbop/bipbop_audio3.m4s^headers^",
+  "bipbop/bipbop_video3.m4s^headers^",
+  "bipbop/bipbop4.m4s^headers^",
+  "bipbop/bipbop_audio4.m4s^headers^",
+  "bipbop/bipbop_video4.m4s^headers^",
+  "bipbop/bipbop5.m4s^headers^",
+  "bipbop/bipbop_audio5.m4s^headers^",
+  "bipbop/bipbop_video5.m4s^headers^",
+  "bipbop/bipbop6.m4s^headers^",
+  "bipbop/bipbop_audio6.m4s^headers^",
+  "bipbop/bipbop_video6.m4s^headers^",
+  "bipbop/bipbop7.m4s^headers^",
+  "bipbop/bipbop_audio7.m4s^headers^",
+  "bipbop/bipbop_video7.m4s^headers^",
+  "bipbop/bipbop8.m4s^headers^",
+  "bipbop/bipbop_audio8.m4s^headers^",
+  "bipbop/bipbop_video8.m4s^headers^",
+  "bipbop/bipbop9.m4s^headers^",
+  "bipbop/bipbop_audio9.m4s^headers^",
+  "bipbop/bipbop_video9.m4s^headers^",
+  "bipbop/bipbop10.m4s^headers^",
+  "bipbop/bipbop_audio10.m4s^headers^",
+  "bipbop/bipbop_video10.m4s^headers^",
+  "bipbop/bipbop11.m4s^headers^",
+  "bipbop/bipbop_audio11.m4s^headers^",
+  "bipbop/bipbop_video11.m4s^headers^",
+  "bipbop/bipbop12.m4s^headers^",
+  "bipbop/bipbop_video12.m4s^headers^",
+  "bipbop/bipbop13.m4s^headers^",
+  "bipbop/bipbop_video13.m4s^headers^",
+  "bipbop/bipbop_offset_0.0-1.m4s",
+  "bipbop/bipbop_offset_0.0-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.0-2.m4s",
+  "bipbop/bipbop_offset_0.0-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.0-init.mp4",
+  "bipbop/bipbop_offset_0.0-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.1-1.m4s",
+  "bipbop/bipbop_offset_0.1-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.1-2.m4s",
+  "bipbop/bipbop_offset_0.1-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.1-init.mp4",
+  "bipbop/bipbop_offset_0.1-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.2-1.m4s",
+  "bipbop/bipbop_offset_0.2-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.2-2.m4s",
+  "bipbop/bipbop_offset_0.2-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.2-init.mp4",
+  "bipbop/bipbop_offset_0.2-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.3-1.m4s",
+  "bipbop/bipbop_offset_0.3-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.3-2.m4s",
+  "bipbop/bipbop_offset_0.3-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.3-init.mp4",
+  "bipbop/bipbop_offset_0.3-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.4-1.m4s",
+  "bipbop/bipbop_offset_0.4-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.4-2.m4s",
+  "bipbop/bipbop_offset_0.4-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.4-init.mp4",
+  "bipbop/bipbop_offset_0.4-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.5-1.m4s",
+  "bipbop/bipbop_offset_0.5-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.5-2.m4s",
+  "bipbop/bipbop_offset_0.5-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.5-init.mp4",
+  "bipbop/bipbop_offset_0.5-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.6-1.m4s",
+  "bipbop/bipbop_offset_0.6-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.6-2.m4s",
+  "bipbop/bipbop_offset_0.6-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.6-init.mp4",
+  "bipbop/bipbop_offset_0.6-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.7-1.m4s",
+  "bipbop/bipbop_offset_0.7-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.7-2.m4s",
+  "bipbop/bipbop_offset_0.7-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.7-init.mp4",
+  "bipbop/bipbop_offset_0.7-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.8-1.m4s",
+  "bipbop/bipbop_offset_0.8-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.8-2.m4s",
+  "bipbop/bipbop_offset_0.8-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.8-init.mp4",
+  "bipbop/bipbop_offset_0.8-init.mp4^headers^",
+  "bipbop/bipbop_offset_0.9-1.m4s",
+  "bipbop/bipbop_offset_0.9-1.m4s^headers^",
+  "bipbop/bipbop_offset_0.9-2.m4s",
+  "bipbop/bipbop_offset_0.9-2.m4s^headers^",
+  "bipbop/bipbop_offset_0.9-init.mp4",
+  "bipbop/bipbop_offset_0.9-init.mp4^headers^",
+  "bipbop/bipbop_offset_1.0-1.m4s",
+  "bipbop/bipbop_offset_1.0-1.m4s^headers^",
+  "bipbop/bipbop_offset_1.0-2.m4s",
+  "bipbop/bipbop_offset_1.0-2.m4s^headers^",
+  "bipbop/bipbop_offset_1.0-init.mp4",
+  "bipbop/bipbop_offset_1.0-init.mp4^headers^",
+  "bipbop/bipbop_offset_1.1-1.m4s",
+  "bipbop/bipbop_offset_1.1-1.m4s^headers^",
+  "bipbop/bipbop_offset_1.1-2.m4s",
+  "bipbop/bipbop_offset_1.1-2.m4s^headers^",
+  "bipbop/bipbop_offset_1.1-init.mp4",
+  "bipbop/bipbop_offset_1.1-init.mp4^headers^",
+  "aac20-48000-64000-init.mp4",
+  "aac20-48000-64000-init.mp4^headers^",
+  "aac20-48000-64000-1.m4s",
+  "aac20-48000-64000-1.m4s^headers^",
+  "aac20-48000-64000-2.m4s",
+  "aac20-48000-64000-2.m4s^headers^",
+  "aac51-48000-128000-init.mp4",
+  "aac51-48000-128000-init.mp4^headers^",
+  "aac51-48000-128000-1.m4s",
+  "aac51-48000-128000-1.m4s^headers^",
+  "aac51-48000-128000-2.m4s",
+  "aac51-48000-128000-2.m4s^headers^",
+  "bipbop/bipbop_480_624kbps-videoinit.mp4",
+  "bipbop/bipbop_480_624kbps-videoinit.mp4^headers^",
+  "bipbop/bipbop_480_624kbps-video1.m4s",
+  "bipbop/bipbop_480_624kbps-video1.m4s^headers^",
+  "bipbop/bipbop_480_624kbps-video2.m4s",
+  "bipbop/bipbop_480_624kbps-video2.m4s^headers^",
+  "flac/IS.mp4",
+  "flac/IS.mp4^headers^",
+  "flac/00001.m4s",
+  "flac/00001.m4s^headers^",
+  "flac/00002.m4s",
+  "flac/00002.m4s^headers^",
+  "flac/00003.m4s",
+  "flac/00003.m4s^headers^",
+  "avc3/init.mp4",
+  "avc3/init.mp4^headers^",
+  "avc3/segment1.m4s",
+  "avc3/segment1.m4s^headers^",
+  "tags_before_cluster.webm",
+  "tags_before_cluster.webm^header^",
+  "1516754.webm 1516754.webm^headers^",
+  "init-trackid2.mp4",
+  "init-trackid3.mp4",
+  "segment-2.0001.m4s",
+  "segment-2.0002.m4s",
+  "segment-3.0001.m4s",
+  "segment-3.0002.m4s",
+  "init-trackid2.mp4^headers^",
+  "init-trackid3.mp4^headers^",
+  "segment-2.0001.m4s^headers^",
+  "segment-2.0002.m4s^headers^",
+  "segment-3.0001.m4s^headers^",
+  "segment-3.0002.m4s^headers^",
+  "wmf_mismatchedaudiotime.mp4",
+  "bug1718709_low_res.mp4",
+  "bug1718709_high_res.mp4",
+  "whitenoise-he-aac-5s.mp4",
+]
+
+["test_BufferedSeek.html"]
+
+["test_BufferedSeek_mp4.html"]
+
+["test_BufferingWait.html"]
+
+["test_BufferingWait_mp4.html"]
+
+["test_ChangeType.html"]
+
+["test_ChangeWhileWaitingOnMissingData_mp4.html"]
+
+["test_DrainOnMissingData_mp4.html"]
+
+["test_EndedEvent.html"]
+
+["test_Eviction_mp4.html"]
+
+["test_ExperimentalAsync.html"]
+
+["test_FrameSelection.html"]
+skip-if = ["os == 'android'"] # bug 1341519, bug 1401090
+
+["test_FrameSelection_mp4.html"]
+skip-if = [
+  "os == 'win'", # bug 1487973,
+  "os == 'mac'", # mac due to bug 1487973
+  "os == 'android' && processor == 'aarch64' && debug", # Bug 1776960 - android aarch64 debug
+]
+
+["test_HEAAC_extradata.html"]
+
+["test_NoAudioLoopBackData.html"]
+
+["test_NoAudioLoopBackData_Muted.html"]
+
+["test_NoVideoLoopBackData.html"]
+
+["test_PlayEvents.html"]
+
+["test_Resolution_change_should_not_cause_video_freeze.html"]
+
+["test_ResumeAfterClearing_mp4.html"]
+
+["test_SeekToLastFrame_mp4.html"]
+
+["test_SeekedEvent_mp4.html"]
+
+["test_Threshold_mp4.html"]
+
+["test_TimestampOffset_mp4.html"]
+
+["test_WMFUnmatchedAudioDataTime.html"]
+
+["test_WaitingOnMissingData.html"]
+
+["test_WaitingOnMissingDataEnded_mp4.html"]
+
+["test_WaitingOnMissingData_mp4.html"]
+
+["test_WaitingToEndedTransition_mp4.html"]

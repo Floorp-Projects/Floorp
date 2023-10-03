@@ -41,7 +41,7 @@ with Files("tests/*constants*"):
 with Files("tests/ioutils/**"):
     BUG_COMPONENT = ("Toolkit", "IOUtils and PathUtils")
 
-with Files("tests/mochitest.ini"):
+with Files("tests/mochitest.toml"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("test/*pathutils*"):
@@ -110,4 +110,4 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml", "tests/ioutils/chrome.toml"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]

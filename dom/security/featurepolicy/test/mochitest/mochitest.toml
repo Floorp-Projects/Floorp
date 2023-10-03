@@ -1,0 +1,14 @@
+[DEFAULT]
+prefs = [
+  "dom.security.featurePolicy.header.enabled=true",
+  "dom.security.featurePolicy.webidl.enabled=true",
+]
+support-files = [
+  "empty.html",
+  "test_parser.html^headers^",
+]
+
+["test_featureList.html"]
+
+["test_parser.html"]
+fail-if = ["xorigin"]

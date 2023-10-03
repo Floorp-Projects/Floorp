@@ -1,0 +1,10 @@
+[DEFAULT]
+skip-if = ["headless"] # crash on shutdown, no other failures
+support-files = [
+  "large-pic.jpg",
+  "mixed_case_mime.sjs",
+]
+
+["test_mixed_case_mime.html"]
+
+["test_plugin_fallback_focus.html"]

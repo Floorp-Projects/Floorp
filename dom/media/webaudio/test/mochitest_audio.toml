@@ -1,0 +1,100 @@
+[DEFAULT]
+tags = "mtg webaudio"
+subsuite = "media"
+support-files = [
+  "audio-expected.wav",
+  "audio-mono-expected-2.wav",
+  "audio-mono-expected.wav",
+  "audio-quad.wav",
+  "audio.ogv",
+  "audiovideo.mp4",
+  "audioBufferSourceNodeDetached_worker.js",
+  "corsServer.sjs",
+  "!/dom/events/test/event_leak_utils.js",
+  "file_nodeCreationDocumentGone.html",
+  "invalid.txt",
+  "invalidContent.flac",
+  "layouttest-glue.js",
+  "nil-packet.ogg",
+  "noaudio.webm",
+  "small-shot-expected.wav",
+  "small-shot-mono-expected.wav",
+  "small-shot.ogg",
+  "small-shot.mp3",
+  "sweep-300-330-1sec.opus",
+  "ting-44.1k-1ch.ogg",
+  "ting-44.1k-2ch.ogg",
+  "ting-48k-1ch.ogg",
+  "ting-48k-2ch.ogg",
+  "ting-44.1k-1ch.wav",
+  "ting-44.1k-2ch.wav",
+  "ting-48k-1ch.wav",
+  "ting-48k-2ch.wav",
+  "sine-440-10s.opus",
+  "1856145.ogg",
+  "webaudio.js",
+  "../../webrtc/tests/mochitests/mediaStreamPlayback.js",
+  "../../webrtc/tests/mochitests/head.js",
+]
+
+["test_AudioBuffer.html"]
+
+["test_AudioContext.html"]
+
+["test_AudioContext_disabled.html"]
+
+["test_AudioListener.html"]
+
+["test_AudioNodeDevtoolsAPI.html"]
+
+["test_AudioParamDevtoolsAPI.html"]
+
+["test_audioBufferSourceNode.html"]
+
+["test_audioBufferSourceNodeDetached.html"]
+
+["test_audioBufferSourceNodeEnded.html"]
+
+["test_audioBufferSourceNodeLazyLoopParam.html"]
+
+["test_audioBufferSourceNodeLoop.html"]
+
+["test_audioBufferSourceNodeLoopStartEnd.html"]
+
+["test_audioBufferSourceNodeLoopStartEndSame.html"]
+
+["test_audioBufferSourceNodeNoStart.html"]
+
+["test_audioBufferSourceNodeNullBuffer.html"]
+
+["test_audioBufferSourceNodeOffset.html"]
+
+["test_audioBufferSourceNodePassThrough.html"]
+
+["test_audioBufferSourceNodeRate.html"]
+
+["test_audioContextGC.html"]
+
+["test_audioContextSuspendResumeClose.html"]
+tags = "capturestream"
+
+["test_audioDestinationNode.html"]
+
+["test_audioParamChaining.html"]
+
+["test_audioParamExponentialRamp.html"]
+
+["test_audioParamGain.html"]
+
+["test_audioParamLinearRamp.html"]
+
+["test_audioParamSetCurveAtTime.html"]
+
+["test_audioParamSetTargetAtTime.html"]
+
+["test_audioParamSetTargetAtTimeZeroTimeConstant.html"]
+
+["test_audioParamSetValueAtTime.html"]
+
+["test_audioParamTimelineDestinationOffset.html"]
+

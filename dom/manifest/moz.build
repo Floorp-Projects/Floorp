@@ -17,5 +17,5 @@ EXTRA_JS_MODULES += [
     "ValueExtractor.sys.mjs",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]

@@ -1,0 +1,10 @@
+[DEFAULT]
+support-files = ["worker_network_basics.js"]
+
+["test_network_basics.html"]
+skip-if = ["os == 'android'"]
+
+["test_network_basics_worker.html"]
+skip-if = ["os == 'android'"]
+
+["test_tcpsocket_not_exposed_to_content.html"]

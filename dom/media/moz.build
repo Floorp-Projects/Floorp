@@ -79,16 +79,16 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
         TEST_DIRS += ["webrtc/tests/fuzztests"]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
-    "test/mochitest_background_video.ini",
-    "test/mochitest_bugs.ini",
-    "test/mochitest_compat.ini",
-    "test/mochitest_eme.ini",
-    "test/mochitest_media_engine.ini",
-    "test/mochitest_media_recorder.ini",
-    "test/mochitest_seek.ini",
-    "test/mochitest_stream.ini",
-    "webrtc/tests/mochitests/identity/mochitest.ini",
+    "test/mochitest.toml",
+    "test/mochitest_background_video.toml",
+    "test/mochitest_bugs.toml",
+    "test/mochitest_compat.toml",
+    "test/mochitest_eme.toml",
+    "test/mochitest_media_engine.toml",
+    "test/mochitest_media_recorder.toml",
+    "test/mochitest_seek.toml",
+    "test/mochitest_stream.toml",
+    "webrtc/tests/mochitests/identity/mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]
@@ -102,10 +102,10 @@ BROWSER_CHROME_MANIFESTS += [
 
 if CONFIG["MOZ_WEBRTC"]:
     MOCHITEST_MANIFESTS += [
-        "webrtc/tests/mochitests/mochitest.ini",
-        "webrtc/tests/mochitests/mochitest_datachannel.ini",
-        "webrtc/tests/mochitests/mochitest_getusermedia.ini",
-        "webrtc/tests/mochitests/mochitest_peerconnection.ini",
+        "webrtc/tests/mochitests/mochitest.toml",
+        "webrtc/tests/mochitests/mochitest_datachannel.toml",
+        "webrtc/tests/mochitests/mochitest_getusermedia.toml",
+        "webrtc/tests/mochitests/mochitest_peerconnection.toml",
     ]
 
     CRASHTEST_MANIFESTS += ["webrtc/tests/crashtests/crashtests.list"]

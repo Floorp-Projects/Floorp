@@ -1,0 +1,29 @@
+[DEFAULT]
+prefs = [
+  "dom.reporting.enabled=true",
+  "dom.reporting.header.enabled=true",
+  "dom.reporting.testing.enabled=true",
+]
+
+["test_delivering.html"]
+support-files = [
+  "delivering.sjs",
+  "iframe_delivering.html",
+  "worker_delivering.js",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_deprecated.html"]
+support-files = [
+  "common_deprecated.js",
+  "worker_deprecated.js",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_memoryPressure.html"]

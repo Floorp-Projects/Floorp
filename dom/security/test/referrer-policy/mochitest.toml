@@ -1,0 +1,28 @@
+[DEFAULT]
+support-files = [
+  "img_referrer_testserver.sjs",
+  "referrer_header.sjs",
+  "referrer_header_current_document_iframe.html",
+  "referrer_helper.js",
+  "referrer_testserver.sjs",
+]
+
+["test_img_referrer.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_referrer_header_current_document.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_referrer_redirect.html"]
+# Please keep alphabetical order.
+skip-if = [
+  "http3",
+  "http2",
+]
+

@@ -58,7 +58,7 @@ IPDL_SOURCES += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
