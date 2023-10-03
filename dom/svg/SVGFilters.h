@@ -31,13 +31,6 @@ struct SVGStringInfo {
 
 using SVGFilterPrimitiveElementBase = SVGElement;
 
-#define NS_SVG_FE_CID                                \
-  {                                                  \
-    0x60483958, 0xd229, 0x4a77, {                    \
-      0x96, 0xb2, 0x62, 0x3e, 0x69, 0x95, 0x1e, 0x0e \
-    }                                                \
-  }
-
 /**
  * Base class for filter primitive elements
  * Children of those elements e.g. feMergeNode
@@ -61,6 +54,9 @@ class SVGFilterPrimitiveElement : public SVGFilterPrimitiveElementBase {
  public:
   using PrimitiveAttributes = mozilla::gfx::PrimitiveAttributes;
 
+  NS_IMPL_FROMNODE_HELPER(SVGFilterPrimitiveElement,
+                          IsSVGFilterPrimitiveElement())
+
   ColorSpace GetInputColorSpace(int32_t aInputIndex,
                                 ColorSpace aUnchangedInputColorSpace) {
     return OperatesOnSRGB(aInputIndex,
@@ -78,10 +74,7 @@ class SVGFilterPrimitiveElement : public SVGFilterPrimitiveElementBase {
   // See http://www.w3.org/TR/SVG/filters.html#FilterPrimitiveSubRegion
   virtual bool SubregionIsUnionOfRegions() { return true; }
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_CID)
-
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
+  bool IsSVGFilterPrimitiveElement() const final { return true; }
 
   // SVGElement interface
   nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override = 0;
@@ -145,8 +138,6 @@ class SVGFilterPrimitiveElement : public SVGFilterPrimitiveElementBase {
   SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(SVGFilterPrimitiveElement, NS_SVG_FE_CID)
 
 using SVGFilterPrimitiveChildElementBase = SVGElement;
 

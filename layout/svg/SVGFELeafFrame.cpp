@@ -79,9 +79,7 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFELeafFrame)
 #ifdef DEBUG
 void SVGFELeafFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                           nsIFrame* aPrevInFlow) {
-  nsCOMPtr<SVGFilterPrimitiveElement> filterPrimitive =
-      do_QueryInterface(aContent);
-  NS_ASSERTION(filterPrimitive,
+  NS_ASSERTION(aContent->IsSVGFilterPrimitiveElement(),
                "Trying to construct an SVGFELeafFrame for a "
                "content element that doesn't support the right interfaces");
 

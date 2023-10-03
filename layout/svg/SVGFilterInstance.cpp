@@ -378,10 +378,7 @@ nsresult SVGFilterInstance::BuildPrimitives(
   AutoTArray<RefPtr<SVGFilterPrimitiveElement>, 8> primitives;
   for (nsIContent* child = mFilterElement->nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    RefPtr<SVGFilterPrimitiveElement> primitive;
-    CallQueryInterface(child,
-                       (SVGFilterPrimitiveElement**)getter_AddRefs(primitive));
-    if (primitive) {
+    if (auto* primitive = SVGFilterPrimitiveElement::FromNode(child)) {
       primitives.AppendElement(primitive);
     }
   }
