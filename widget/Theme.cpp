@@ -1427,7 +1427,10 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
     }
   };
 
-  DrawRect(accentColor.Get());
+  auto primaryColor = aColors.HighContrast()
+                          ? aColors.System(StyleSystemColor::Selecteditem)
+                          : accentColor.Get();
+  DrawRect(primaryColor);
 
   if (solid) {
     return;
@@ -1439,7 +1442,10 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
       LayoutDeviceCoord(ThemeDrawing::SnapBorderWidth(1.0f, aDpiRatio));
   rect.Inflate(strokeWidth);
 
-  DrawRect(accentColor.GetForeground());
+  auto secondaryColor = aColors.HighContrast()
+                            ? aColors.System(StyleSystemColor::Canvastext)
+                            : accentColor.GetForeground();
+  DrawRect(secondaryColor);
 }
 
 LayoutDeviceIntMargin Theme::GetWidgetBorder(nsDeviceContext* aContext,
