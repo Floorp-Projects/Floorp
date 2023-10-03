@@ -23,11 +23,6 @@
 #include "nsPrintfCString.h"  // for nsPrintfCString
 #include "nsString.h"         // for nsAutoCString
 
-#if XP_WIN
-#  include "mozilla/layers/GpuProcessD3D11TextureMap.h"
-#  include "mozilla/layers/TextureHostWrapperD3D11.h"
-#endif
-
 namespace mozilla {
 
 using namespace gfx;
@@ -319,8 +314,6 @@ void WebRenderImageHost::AppendImageCompositeNotification(
 
 TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
     AsyncImagePipelineManager* aAsyncImageManager) {
-  MOZ_ASSERT(aAsyncImageManager);
-
   if (mCurrentTextureHost &&
       mCurrentTextureHost->AsRemoteTextureHostWrapper()) {
     return mCurrentTextureHost;
@@ -343,30 +336,7 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
   }
 
   const TimedImage* img = GetImage(imageIndex);
-
-  RefPtr<TextureHost> texture = img->mTextureHost.get();
-#if XP_WIN
-  // Convert YUV BufferTextureHost to TextureHostWrapperD3D11 if possible
-  if (texture->AsBufferTextureHost()) {
-    auto identifier = aAsyncImageManager->GetTextureFactoryIdentifier();
-    const bool convertToNV12 =
-        StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() &&
-        identifier.mCompositorUseDComp &&
-        texture->GetFormat() == gfx::SurfaceFormat::YUV;
-    if (convertToNV12) {
-      if (!mTextureAllocator) {
-        mTextureAllocator = new TextureWrapperD3D11Allocator();
-      }
-      RefPtr<TextureHost> textureWrapper =
-          TextureHostWrapperD3D11::CreateFromBufferTexture(mTextureAllocator,
-                                                           texture);
-      if (textureWrapper) {
-        texture = textureWrapper;
-      }
-    }
-  }
-#endif
-  SetCurrentTextureHost(texture);
+  SetCurrentTextureHost(img->mTextureHost);
 
   if (mCurrentAsyncImageManager->GetCompositionTime()) {
     // We are in a composition. Send ImageCompositeNotifications.

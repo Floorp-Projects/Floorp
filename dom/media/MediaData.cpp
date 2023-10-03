@@ -310,44 +310,11 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
   return aVideoImage->AdoptData(data);
 }
 
-#if XP_WIN
-bool ConvertToNV12AtImageHost(const VideoData::YCbCrBuffer& aBuffer,
-                              const IntRect& aPicture,
-                              layers::KnowsCompositor* aAllocator) {
-  if (!aAllocator) {
-    return false;
-  }
-
-  auto ident = aAllocator->GetTextureFactoryIdentifier();
-
-  if (!StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() ||
-      ident.mParentProcessType != GeckoProcessType_GPU ||
-      !aAllocator->GetCompositorUseDComp() ||
-      !gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-    return false;
-  }
-
-  // XXX support gfx::ColorRange::FULL
-  if (aPicture.Size().width % 2 != 0 || aPicture.Size().height % 2 != 0 ||
-      aBuffer.mColorDepth != gfx::ColorDepth::COLOR_8 ||
-      aBuffer.mColorRange != gfx::ColorRange::LIMITED ||
-      aBuffer.mChromaSubsampling !=
-          gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {
-    return false;
-  }
-  return true;
-}
-#endif
-
 /* static */
 bool VideoData::UseUseNV12ForSoftwareDecodedVideoIfPossible(
     layers::KnowsCompositor* aAllocator) {
 #if XP_WIN
   if (!aAllocator) {
-    return false;
-  }
-
-  if (StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win()) {
     return false;
   }
 
@@ -404,7 +371,6 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   // D3D11YCbCrImage can only handle YCbCr images using 3 non-interleaved planes
   // non-zero mSkip value indicates that one of the plane would be interleaved.
   if (!XRE_IsParentProcess() && aAllocator && aAllocator->SupportsD3D11() &&
-      !ConvertToNV12AtImageHost(aBuffer, aPicture, aAllocator) &&
       aBuffer.mPlanes[0].mSkip == 0 && aBuffer.mPlanes[1].mSkip == 0 &&
       aBuffer.mPlanes[2].mSkip == 0) {
     RefPtr<layers::D3D11YCbCrImage> d3d11Image = new layers::D3D11YCbCrImage();
