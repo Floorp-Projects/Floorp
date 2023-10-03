@@ -40,6 +40,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.base.profiler.Profiler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Dialogue to start the Gecko profiler in Fenix without the use of ADB.
@@ -114,6 +115,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                 Text(
                     text = stringResource(R.string.preferences_start_profiler),
                     fontWeight = FontWeight.ExtraBold,
+                    color = FirefoxTheme.colors.textPrimary,
                     fontSize = 20.sp,
                     modifier = Modifier.padding(8.dp),
                 )
@@ -121,6 +123,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                     text = stringResource(R.string.profiler_settings_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
+                    color = FirefoxTheme.colors.textPrimary,
                     modifier = Modifier.padding(8.dp),
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -169,7 +172,10 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                             this@ProfilerStartDialogFragment.dismiss()
                         },
                     ) {
-                        Text(text = stringResource(R.string.profiler_start_cancel))
+                        Text(
+                            color = FirefoxTheme.colors.textAccent,
+                            text = stringResource(R.string.profiler_start_cancel),
+                        )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     TextButton(
@@ -181,7 +187,10 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                             )
                         },
                     ) {
-                        Text(text = stringResource(R.string.preferences_start_profiler))
+                        Text(
+                            color = FirefoxTheme.colors.textAccent,
+                            text = stringResource(R.string.preferences_start_profiler),
+                        )
                     }
                 }
             }

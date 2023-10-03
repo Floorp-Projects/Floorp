@@ -38,6 +38,7 @@ fun ProfilerDialogueCard(content: @Composable () -> Unit) {
     FirefoxTheme {
         Card(
             elevation = 8.dp,
+            backgroundColor = FirefoxTheme.colors.layer2,
             shape = RoundedCornerShape(12.dp),
         ) {
             content()
@@ -71,9 +72,13 @@ fun ProfilerLabeledRadioButton(
         Column(
             modifier = Modifier.padding(horizontal = 8.dp),
         ) {
-            Text(text = text)
+            Text(
+                text = text,
+                color = FirefoxTheme.colors.textPrimary,
+            )
             Text(
                 text = subText,
+                color = FirefoxTheme.colors.textPrimary,
                 fontWeight = FontWeight.ExtraLight,
             )
         }
