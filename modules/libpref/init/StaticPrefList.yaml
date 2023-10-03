@@ -12813,6 +12813,12 @@
   value: true
   mirror: always
 
+# Disabling this will no-op window.print()
+- name: print.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------

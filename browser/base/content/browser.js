@@ -588,6 +588,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "gPrintEnabled",
+  "print.enabled",
+  false,
+  (aPref, aOldVal, aNewVal) => {
+    updatePrintCommands(aNewVal);
+  }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "gScreenshotsComponentEnabled",
   "screenshots.browser.component.enabled",
   false,
@@ -844,6 +854,19 @@ function UpdateBackForwardCommands(aWebNavigation) {
     } else {
       forwardCommand.setAttribute("disabled", true);
     }
+  }
+}
+
+function updatePrintCommands(enabled) {
+  var printCommand = document.getElementById("cmd_print");
+  var printPreviewCommand = document.getElementById("cmd_printPreviewToggle");
+
+  if (enabled) {
+    printCommand.removeAttribute("disabled");
+    printPreviewCommand.removeAttribute("disabled");
+  } else {
+    printCommand.setAttribute("disabled", "true");
+    printPreviewCommand.setAttribute("disabled", "true");
   }
 }
 
@@ -1642,6 +1665,8 @@ var gBrowserInit = {
     });
 
     updateFxaToolbarMenu(gFxaToolbarEnabled, true);
+
+    updatePrintCommands(gPrintEnabled);
 
     gUnifiedExtensions.init();
 

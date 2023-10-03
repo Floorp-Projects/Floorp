@@ -155,6 +155,8 @@ policy-ManualAppUpdateOnly = Allow manual updates only and do not notify the use
 
 policy-PrimaryPassword = Require or prevent using a Primary Password.
 
+policy-PrintingEnabled = Enable or disable printing.
+
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
 
 policy-NewTabPage = Enable or disable the New Tab page.

@@ -4960,6 +4960,11 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
+  // Printing is disabled, silently return.
+  if (!StaticPrefs::print_enabled()) {
+    return;
+  }
+
   // If we're loading, queue the print for later. This is a special-case that
   // only applies to the window.print() call, for compat with other engines and
   // pre-existing behavior.
