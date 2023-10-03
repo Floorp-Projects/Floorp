@@ -8,7 +8,6 @@
 export const AttributionIOUtils = {
   write: async (path, bytes) => IOUtils.write(path, bytes),
   read: async path => IOUtils.read(path),
-  readUTF8: async path => IOUtils.readUTF8(path),
   exists: async path => IOUtils.exists(path),
 };
 

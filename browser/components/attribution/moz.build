@@ -13,7 +13,6 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 EXTRA_JS_MODULES += [
     "AttributionCode.sys.mjs",
-    "ProvenanceData.sys.mjs",
 ]
 
 SPHINX_TREES["docs"] = "docs"
