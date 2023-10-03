@@ -547,9 +547,9 @@ force-cargo-program-build: $(call resfile,module)
 #
 define RUST_PROGRAM_DEPENDENCIES
 $(1)_deps := $(wordlist 2, 10000000, $(if $(wildcard $(1).d),$(shell cat $(1).d)))
-$(1): $(CARGO_FILE) $(call resfile,module) $(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
-	$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
-$(foreach dep,$(filter %.h,$$($(1)_deps)),$(eval $(call make_default_rule,$(dep))))
+$(1): $(CARGO_FILE) $(call resfile,module) $$(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
+	$$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
+$$(foreach dep,$$(filter %.h,$$($(1)_deps)),$$(eval $$(call make_default_rule,$$(dep))))
 endef
 
 $(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call RUST_PROGRAM_DEPENDENCIES,$(RUST_PROGRAM))))
