@@ -18,7 +18,7 @@ nsresult NS_NewSVGFETurbulenceElement(
 
 namespace mozilla::dom {
 
-using SVGFETurbulenceElementBase = SVGFE;
+using SVGFETurbulenceElementBase = SVGFilterPrimitiveElement;
 
 class SVGFETurbulenceElement final : public SVGFETurbulenceElementBase {
   friend nsresult(::NS_NewSVGFETurbulenceElement(

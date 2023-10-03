@@ -14,7 +14,7 @@ nsresult NS_NewSVGFEBlendElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 namespace mozilla::dom {
 
-using SVGFEBlendElementBase = SVGFE;
+using SVGFEBlendElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEBlendElement final : public SVGFEBlendElementBase {
   friend nsresult(::NS_NewSVGFEBlendElement(

@@ -15,7 +15,7 @@ nsresult NS_NewSVGFEDisplacementMapElement(
 
 namespace mozilla::dom {
 
-using SVGFEDisplacementMapElementBase = SVGFE;
+using SVGFEDisplacementMapElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEDisplacementMapElement final
     : public SVGFEDisplacementMapElementBase {

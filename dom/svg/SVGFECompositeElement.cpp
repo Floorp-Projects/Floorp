@@ -124,7 +124,7 @@ nsresult SVGFECompositeElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feComposite);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFECompositeElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

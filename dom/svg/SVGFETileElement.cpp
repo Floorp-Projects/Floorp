@@ -68,7 +68,7 @@ nsresult SVGFETileElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feTile);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFETileElementBase::BindToTree(aCtx, aParent);
 }
 
 }  // namespace mozilla::dom

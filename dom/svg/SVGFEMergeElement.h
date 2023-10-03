@@ -14,7 +14,7 @@ nsresult NS_NewSVGFEMergeElement(
 
 namespace mozilla::dom {
 
-using SVGFEMergeElementBase = SVGFE;
+using SVGFEMergeElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEMergeElement final : public SVGFEMergeElementBase {
   friend nsresult(::NS_NewSVGFEMergeElement(

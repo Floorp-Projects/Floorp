@@ -4956,7 +4956,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // primitives.  If aParentFrame is null, we know that the frame that will
   // be created will be an nsInlineFrame, so it can never be a filter.
   bool parentIsFilter = aParentFrame && aParentFrame->IsSVGFilterFrame();
-  nsCOMPtr<SVGFE> filterPrimitive =
+  nsCOMPtr<SVGFilterPrimitiveElement> filterPrimitive =
       do_QueryInterface(const_cast<Element*>(&aElement));
   if ((parentIsFilter && !filterPrimitive) ||
       (!parentIsFilter && filterPrimitive)) {

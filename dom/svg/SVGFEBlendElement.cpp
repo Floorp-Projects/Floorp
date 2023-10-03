@@ -96,7 +96,7 @@ nsresult SVGFEBlendElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feBlend);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEBlendElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

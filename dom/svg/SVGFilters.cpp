@@ -44,7 +44,7 @@ namespace mozilla::dom {
 
 //--------------------Filter Element Base Class-----------------------
 
-SVGElement::LengthInfo SVGFE::sLengthInfo[4] = {
+SVGElement::LengthInfo SVGFilterPrimitiveElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
      SVGContentUtils::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
@@ -57,20 +57,24 @@ SVGElement::LengthInfo SVGFE::sLengthInfo[4] = {
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGFE, SVGFEBase)
-NS_IMPL_RELEASE_INHERITED(SVGFE, SVGFEBase)
+NS_IMPL_ADDREF_INHERITED(SVGFilterPrimitiveElement,
+                         SVGFilterPrimitiveElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFilterPrimitiveElement,
+                          SVGFilterPrimitiveElementBase)
 
-NS_INTERFACE_MAP_BEGIN(SVGFE)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGFE)
-NS_INTERFACE_MAP_END_INHERITING(SVGFEBase)
+NS_INTERFACE_MAP_BEGIN(SVGFilterPrimitiveElement)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGFilterPrimitiveElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFilterPrimitiveElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-void SVGFE::GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) {}
+void SVGFilterPrimitiveElement::GetSourceImageNames(
+    nsTArray<SVGStringInfo>& aSources) {}
 
-bool SVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
-                            nsIPrincipal* aReferencePrincipal) {
+bool SVGFilterPrimitiveElement::OutputIsTainted(
+    const nsTArray<bool>& aInputsAreTainted,
+    nsIPrincipal* aReferencePrincipal) {
   // This is the default implementation for OutputIsTainted.
   // Our output is tainted if we have at least one tainted input.
   for (uint32_t i = 0; i < aInputsAreTainted.Length(); i++) {
@@ -81,38 +85,38 @@ bool SVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
   return false;
 }
 
-bool SVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                      nsAtom* aAttribute) const {
+bool SVGFilterPrimitiveElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y ||
           aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
           aAttribute == nsGkAtoms::result);
 }
 
-already_AddRefed<DOMSVGAnimatedLength> SVGFE::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterPrimitiveElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<DOMSVGAnimatedLength> SVGFE::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterPrimitiveElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<DOMSVGAnimatedLength> SVGFE::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterPrimitiveElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<DOMSVGAnimatedLength> SVGFE::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterPrimitiveElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<DOMSVGAnimatedString> SVGFE::Result() {
+already_AddRefed<DOMSVGAnimatedString> SVGFilterPrimitiveElement::Result() {
   return GetResultImageName().ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
 // SVGElement methods
 
-bool SVGFE::StyleIsSetToSRGB() {
+bool SVGFilterPrimitiveElement::StyleIsSetToSRGB() {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return false;
 
@@ -122,15 +126,15 @@ bool SVGFE::StyleIsSetToSRGB() {
 }
 
 /* virtual */
-bool SVGFE::HasValidDimensions() const {
+bool SVGFilterPrimitiveElement::HasValidDimensions() const {
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
-Size SVGFE::GetKernelUnitLength(SVGFilterInstance* aInstance,
-                                SVGAnimatedNumberPair* aKernelUnitLength) {
+Size SVGFilterPrimitiveElement::GetKernelUnitLength(
+    SVGFilterInstance* aInstance, SVGAnimatedNumberPair* aKernelUnitLength) {
   if (!aKernelUnitLength->IsExplicitlySet()) {
     return Size(1, 1);
   }
@@ -142,7 +146,7 @@ Size SVGFE::GetKernelUnitLength(SVGFilterInstance* aInstance,
   return Size(kernelX, kernelY);
 }
 
-SVGElement::LengthAttributesInfo SVGFE::GetLengthInfo() {
+SVGElement::LengthAttributesInfo SVGFilterPrimitiveElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }

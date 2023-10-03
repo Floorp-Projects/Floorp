@@ -160,7 +160,7 @@ nsresult SVGFETurbulenceElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feTurbulence);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFETurbulenceElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

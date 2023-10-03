@@ -58,7 +58,7 @@ nsresult SVGFEFloodElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feFlood);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEFloodElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

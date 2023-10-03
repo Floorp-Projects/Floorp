@@ -18,7 +18,7 @@ namespace mozilla::dom {
 
 class DOMSVGAnimatedNumberList;
 
-using SVGFEColorMatrixElementBase = SVGFE;
+using SVGFEColorMatrixElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEColorMatrixElement final : public SVGFEColorMatrixElementBase {
   friend nsresult(::NS_NewSVGFEColorMatrixElement(

@@ -73,7 +73,7 @@ nsresult SVGFEUnstyledLeafFrame::AttributeChanged(int32_t aNameSpaceID,
                                                   nsAtom* aAttribute,
                                                   int32_t aModType) {
   auto* element =
-      static_cast<mozilla::dom::SVGFEUnstyledElement*>(GetContent());
+      static_cast<mozilla::dom::SVGFilterPrimitiveChildElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(
         GetParent()->GetParent()->IsSVGFilterFrame(),

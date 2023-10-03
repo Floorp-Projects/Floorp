@@ -95,7 +95,7 @@ nsresult SVGFEComponentTransferElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feComponentTransfer);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEComponentTransferElementBase::BindToTree(aCtx, aParent);
 }
 
 }  // namespace mozilla::dom

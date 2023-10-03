@@ -88,8 +88,9 @@ const SVGAnimatedLength* SVGFilterFrame::GetLengthValue(uint32_t aIndex,
 const SVGFilterElement* SVGFilterFrame::GetFilterContent(nsIContent* aDefault) {
   for (nsIContent* child = mContent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    RefPtr<SVGFE> primitive;
-    CallQueryInterface(child, (SVGFE**)getter_AddRefs(primitive));
+    RefPtr<SVGFilterPrimitiveElement> primitive;
+    CallQueryInterface(child,
+                       (SVGFilterPrimitiveElement**)getter_AddRefs(primitive));
     if (primitive) {
       return static_cast<SVGFilterElement*>(GetContent());
     }

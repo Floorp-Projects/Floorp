@@ -227,7 +227,7 @@ nsresult SVGFEConvolveMatrixElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feConvolveMatrix);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEConvolveMatrixElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

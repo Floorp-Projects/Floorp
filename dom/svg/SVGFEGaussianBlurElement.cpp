@@ -96,7 +96,7 @@ nsresult SVGFEGaussianBlurElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feGaussianBlur);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEGaussianBlurElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

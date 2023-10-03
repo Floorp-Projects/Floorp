@@ -79,7 +79,7 @@ nsresult SVGFEOffsetElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feOffset);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEOffsetElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------
