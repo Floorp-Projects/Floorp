@@ -117,7 +117,6 @@
 #undef NOISY_FIRST_LETTER
 
 #include "nsMathMLParts.h"
-#include "mozilla/dom/SVGFilters.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/SVGGradientFrame.h"
 
@@ -4956,10 +4955,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // primitives.  If aParentFrame is null, we know that the frame that will
   // be created will be an nsInlineFrame, so it can never be a filter.
   bool parentIsFilter = aParentFrame && aParentFrame->IsSVGFilterFrame();
-  nsCOMPtr<SVGFilterPrimitiveElement> filterPrimitive =
-      do_QueryInterface(const_cast<Element*>(&aElement));
-  if ((parentIsFilter && !filterPrimitive) ||
-      (!parentIsFilter && filterPrimitive)) {
+  if ((parentIsFilter && !aElement.IsSVGFilterPrimitiveElement()) ||
+      (!parentIsFilter && aElement.IsSVGFilterPrimitiveElement())) {
     return &sSuppressData;
   }
 
