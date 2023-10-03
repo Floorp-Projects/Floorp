@@ -2436,19 +2436,6 @@ nsresult nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   if (IsQueryURI(url)) {
     // Special case "place:" URIs: turn them into containers.
-    if (itemId != -1) {
-      // We should never expose the history title for query nodes if the
-      // bookmark-item's title is set to null (the history title may be the
-      // query string without the place: prefix). Thus we call getItemTitle
-      // explicitly. Doing this in the SQL query would be less performant since
-      // it should be done for all results rather than only for queries.
-      nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
-      rv = bookmarks->GetItemTitle(itemId, title);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     nsAutoCString guid;
     if (itemId != -1) {
       rv = aRow->GetUTF8String(nsNavBookmarks::kGetChildrenIndex_Guid, guid);
