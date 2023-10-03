@@ -46,4 +46,3 @@ skip-if = ["os == 'win' && verify && debug"]
 
 ["browser_shutdown_start_restart.js"]
 skip-if = ["verify && debug"]
-

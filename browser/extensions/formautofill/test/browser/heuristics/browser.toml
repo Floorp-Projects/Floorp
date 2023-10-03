@@ -35,4 +35,3 @@ skip-if = ["apple_silicon && !debug"]
 ["browser_section_validation_address.js"]
 
 ["browser_sections_by_name.js"]
-

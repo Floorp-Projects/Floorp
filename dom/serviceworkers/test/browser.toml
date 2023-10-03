@@ -2,4 +2,3 @@
 dupe-manifest = true
 
 ["include:browser-common.ini"]
-

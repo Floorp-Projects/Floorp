@@ -7,4 +7,3 @@
 skip-if = ["debug"]
 
 ["browser_permmgr_viewsrc.js"]
-

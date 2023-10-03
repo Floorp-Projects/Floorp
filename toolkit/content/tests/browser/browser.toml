@@ -115,7 +115,7 @@ tags = "audiochannel"
 skip-if = [
   "os == 'mac'", # Bug 1524746
   "os == 'linux' && !debug", # Bug 1524746
-] 
+]
 
 ["browser_delay_autoplay_webAudio.js"]
 tags = "audiochannel"
@@ -192,4 +192,3 @@ support-files = [
   "file_outside_viewport_videos.html",
   "gizmo.mp4",
 ]
-

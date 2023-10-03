@@ -7,4 +7,3 @@ support-files = ["../../head.js"]
 ["browser_screenshots.js"]
 
 ["browser_screenshots_cropping.js"]
-

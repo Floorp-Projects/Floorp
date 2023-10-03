@@ -28,4 +28,3 @@ https_first_disabled = true
 
 ["browser_viewsourceprefs.js"]
 skip-if = ["socketprocess_networking && os == 'linux' && !debug"]
-

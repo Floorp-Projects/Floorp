@@ -11,4 +11,3 @@ support-files = ["!/dom/animation/test/testcommon.js"]
 skip-if = ["os == 'mac'"] # on Mac popup windows use basic layers so animation can't be run on the compositor
 
 ["browser_windowless_troubleshoot_crash.js"]
-

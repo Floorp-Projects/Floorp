@@ -171,4 +171,3 @@ https_first_disabled = true # Bug 1737265
 ["browser_unsigned_url.js"]
 https_first_disabled = true # Bug 1737265
 skip-if = ["require_signing"]
-

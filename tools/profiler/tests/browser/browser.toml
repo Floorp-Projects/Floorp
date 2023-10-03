@@ -102,4 +102,3 @@ support-files = ["single_frame.html"]
 https_first_disabled = true
 support-files = ["single_frame.html"]
 skip-if = ["!debug"]
-

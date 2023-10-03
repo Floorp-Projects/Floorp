@@ -78,4 +78,3 @@ skip-if = ["verify"]
 
 ["browser_pdfjs_zoom.js"]
 skip-if = ["verify && debug && os == 'win'"]
-

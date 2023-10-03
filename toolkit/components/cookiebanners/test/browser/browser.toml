@@ -44,4 +44,3 @@ support-files = ["file_iframe_banner.html"]
 support-files = ["testCookieHeader.sjs"]
 
 ["browser_cookieinjector_events.js"]
-

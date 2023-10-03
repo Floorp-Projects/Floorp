@@ -14,4 +14,3 @@ support-files = ["browser_fxa_web_channel.html"]
 ["browser_sync.js"]
 
 ["browser_synced_tabs_view.js"]
-

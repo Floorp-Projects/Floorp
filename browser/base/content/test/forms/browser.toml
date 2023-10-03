@@ -27,4 +27,3 @@ skip-if = ["os == 'linux'"] # Bug 1329991 - test fails intermittently on Linux b
 ["browser_selectpopup_width.js"]
 
 ["browser_selectpopup_xhtml.js"]
-

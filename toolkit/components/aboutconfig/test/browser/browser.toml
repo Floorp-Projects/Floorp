@@ -23,4 +23,3 @@ skip-if = ["os == 'linux' && ccov"]  # Bug 1614978, the test consistently times 
 ["browser_search.js"]
 
 ["browser_warning.js"]
-

@@ -9,4 +9,3 @@ support-files = [
 prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 
 ["browser_computedARIARole.js"]
-

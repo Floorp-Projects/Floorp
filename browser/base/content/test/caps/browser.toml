@@ -6,4 +6,3 @@
 skip-if = ["debug"] # deliberately bypass assertions when deserializing. Bug 965637 removed the CSP from Principals, but the remaining bits in such Principals should deserialize correctly.
 
 ["browser_principalSerialization_version1.js"]
-

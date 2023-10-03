@@ -41,4 +41,3 @@ run-if = ["os == 'mac'"]
 
 ["browser_safari_permissions.js"]
 run-if = ["os == 'mac'"]
-

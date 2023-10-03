@@ -6,4 +6,3 @@ support-files = ["head.js"]
 ["browser_PageActions_overflow.js"]
 
 ["browser_PageActions_removeExtension.js"]
-

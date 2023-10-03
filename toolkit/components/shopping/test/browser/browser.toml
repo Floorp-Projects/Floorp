@@ -20,4 +20,3 @@ support-files = [
   "analyze.sjs",
   "analysis_status.sjs",
 ]
-

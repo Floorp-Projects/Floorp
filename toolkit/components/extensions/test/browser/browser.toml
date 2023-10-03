@@ -101,4 +101,3 @@ support-files = ["!/toolkit/components/thumbnails/test/head.js"]
 ["browser_ext_webRequest_redirect_mozextension.js"]
 
 ["browser_ext_windows_popup_title.js"]
-

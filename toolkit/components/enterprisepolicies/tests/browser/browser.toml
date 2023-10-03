@@ -12,4 +12,3 @@ support-files = ["config_broken_json.json"]
 skip-if = ["os != 'win'"]
 
 ["browser_policies_mistyped_json.js"]
-

@@ -6,5 +6,3 @@ skip-if = ["toolkit != 'cocoa'"] # macOS only telemetry.
 
 ["browser_AttributionCode_telemetry.js"]
 skip-if = ["(os != 'win' && toolkit != 'cocoa')"] # Windows and macOS only telemetry.
-
-

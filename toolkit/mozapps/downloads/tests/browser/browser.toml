@@ -31,4 +31,3 @@ support-files = [
   "example.jnlp",
   "example.jnlp^headers^",
 ]
-

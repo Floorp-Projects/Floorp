@@ -22,4 +22,3 @@ prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 skip-if = ["true"] # Bug 1800400
 
 ["browser_textleafpoint.js"]
-

@@ -11,4 +11,3 @@ skip-if = ["verify"]
 ["browser_UpdatePingSuccess.js"]
 
 ["browser_media_element_in_page_scalar.js"]
-

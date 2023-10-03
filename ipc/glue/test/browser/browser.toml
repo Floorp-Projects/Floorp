@@ -85,4 +85,3 @@ support-files = ["../../../../tools/profiler/tests/shared-head.js"]
 skip-if = ["tsan"] # from tools/profiler/tests/browser/browser.ini, timing out on profiler tests?
 
 ["browser_utility_start_clean_shutdown.js"]
-

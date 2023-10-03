@@ -20,4 +20,3 @@ prefs = ["remote.messagehandler.modulecache.useBrowserTestRoot=true"]
 ["browser_two_windows.js"]
 
 ["browser_with_frames.js"]
-

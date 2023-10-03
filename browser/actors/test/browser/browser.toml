@@ -4,4 +4,3 @@
 
 ["browser_untrusted_click_event.js"]
 support-files = ["click.html"]
-

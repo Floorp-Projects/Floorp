@@ -3,4 +3,3 @@ prefs = ["browser.policies.alternatePath='<test-root>/browser/components/enterpr
 support-files = ["config_disable_developer_tools.json"]
 
 ["browser_policy_disable_developer_tools.js"]
-

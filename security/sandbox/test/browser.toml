@@ -22,4 +22,3 @@ skip-if = ["debug && os == 'win'"] # bug 1379635
 
 ["browser_sandbox_test.js"]
 skip-if = ["!debug"]
-

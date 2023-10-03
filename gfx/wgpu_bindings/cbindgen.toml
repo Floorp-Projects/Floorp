@@ -7,7 +7,7 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
  * `gfx/wgpu_bindings/moz.build`, which directs the build system module
  * `build/RunCbindgen.py` to run the following command at the top of
  * the object file directory:
- * 
+ *
  *     $CBINDGEN $TOPSRCDIR --lockfile $TOPSRCDIR/Cargo.lock --crate wgpu_bindings --metadata config/cbindgen-metadata.json --cpp-compat > gfx/wgpu_bindings/wgpu_ffi_generated.h
  *
  * where:

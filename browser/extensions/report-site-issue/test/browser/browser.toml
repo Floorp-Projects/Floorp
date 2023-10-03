@@ -15,4 +15,3 @@ skip-if = ["true"] # Disabled until we figure out why it is failing in bug 17755
 
 ["browser_report_site_issue.js"]
 skip-if = ["true"] # Disabled until we figure out why it is failing in bug 1775526
-

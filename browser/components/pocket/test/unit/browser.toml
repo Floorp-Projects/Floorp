@@ -6,4 +6,3 @@ support-files = ["head.js"]
 ["browser_pocket_pktTelemetry.js"]
 
 ["browser_pocket_pktUI.js"]
-
