@@ -421,6 +421,11 @@ $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_LINKER)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD_CXX:=$(HOST_LINKER)
 endif
 
+define make_default_rule
+$(1):
+
+endef
+
 ifdef RUST_LIBRARY_FILE
 
 rust_features_flag := --features '$(if $(RUST_LIBRARY_FEATURES),$(RUST_LIBRARY_FEATURES) )mozilla-central-workspace-hack'
@@ -462,10 +467,6 @@ endif
 endif
 endif
 
-define make_default_rule
-$(1):
-
-endef
 $(foreach dep, $(filter %.h,$(RUST_LIBRARY_DEPS)),$(eval $(call make_default_rule,$(dep))))
 
 
