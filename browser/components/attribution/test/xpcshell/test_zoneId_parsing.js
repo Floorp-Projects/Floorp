@@ -27,20 +27,6 @@ add_setup(function setup() {
 // If `iniFileContents` is passed as `null`, we will simulate an error reading
 // the INI.
 async function testProvenance(iniFileContents, testFn, telemetryTestFn) {
-  // The extra data returned by `ProvenanceData.submitProvenanceTelemetry` uses
-  // names that don't actually match the scalar names due to name length
-  // restrictions.
-  let scalarToExtraKeyMap = {
-    "attribution.provenance.data_exists": "data_exists",
-    "attribution.provenance.file_system": "file_system",
-    "attribution.provenance.ads_exists": "ads_exists",
-    "attribution.provenance.security_zone": "security_zone",
-    "attribution.provenance.referrer_url_exists": "refer_url_exist",
-    "attribution.provenance.referrer_url_is_mozilla": "refer_url_moz",
-    "attribution.provenance.host_url_exists": "host_url_exist",
-    "attribution.provenance.host_url_is_mozilla": "host_url_moz",
-  };
-
   if (iniFileContents == null) {
     AttributionIOUtils.readUTF8 = async path => {
       throw new Error("test error: simulating provenance file read error");
@@ -54,15 +40,13 @@ async function testProvenance(iniFileContents, testFn, telemetryTestFn) {
   }
   if (telemetryTestFn) {
     Services.telemetry.clearScalars();
-    let extras = await ProvenanceData.submitProvenanceTelemetry();
+    await ProvenanceData.submitProvenanceTelemetry();
     let scalars = Services.telemetry.getSnapshotForScalars(
       "new-profile",
       false /* aClear */
     ).parent;
     let checkScalar = (scalarName, expectedValue) => {
       TelemetryTestUtils.assertScalar(scalars, scalarName, expectedValue);
-      let extraKey = scalarToExtraKeyMap[scalarName];
-      Assert.equal(extras[extraKey], expectedValue.toString());
     };
     telemetryTestFn(checkScalar);
   }

@@ -1283,9 +1283,8 @@ export let BrowserUsageTelemetry = {
       return;
     }
 
-    let provenanceExtra = {};
     try {
-      provenanceExtra = await lazy.ProvenanceData.submitProvenanceTelemetry();
+      await lazy.ProvenanceData.submitProvenanceTelemetry();
     } catch (ex) {
       console.warn(
         "reportInstallationTelemetry - submitProvenanceTelemetry failed",
@@ -1421,13 +1420,6 @@ export let BrowserUsageTelemetry = {
       installer_type,
       null,
       extra
-    );
-    Services.telemetry.recordEvent(
-      "installation",
-      "first_seen_prov_ext",
-      installer_type,
-      null,
-      provenanceExtra
     );
   },
 };
