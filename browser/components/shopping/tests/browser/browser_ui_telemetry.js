@@ -72,6 +72,30 @@ add_task(async function test_shopping_UI_chevron_clicks() {
   Assert.equal(events[0].name, "surface_settings_expand_clicked");
 });
 
+add_task(async function test_reactivated_product_button_click() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await clickProductAvailableLink(browser, MOCK_STALE_PRODUCT_RESPONSE);
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+
+  var reanalysisEvents =
+    Glean.shopping.surfaceReactivatedButtonClicked.testGetValue();
+  assertEventMatches(reanalysisEvents[0], {
+    category: "shopping",
+    name: "surface_reactivated_button_clicked",
+  });
+});
+
 add_task(async function test_shopping_sidebar_displayed() {
   Services.fog.testResetFOG();
 
@@ -272,6 +296,23 @@ function clickCloseButton(browser, data) {
     await closeButton.updateComplete;
 
     closeButton.click();
+  });
+}
+
+function clickProductAvailableLink(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    await shoppingContainer.updateComplete;
+
+    let shoppingMessageBar = shoppingContainer.shoppingMessageBarEl;
+    await shoppingMessageBar.updateComplete;
+
+    // calling onClickProductAvailable will fail quietly in cases where this is
+    // not possible to call, so assure it exists first.
+    Assert.notEqual(shoppingMessageBar, null);
+    await shoppingMessageBar.onClickProductAvailable();
   });
 }
 
