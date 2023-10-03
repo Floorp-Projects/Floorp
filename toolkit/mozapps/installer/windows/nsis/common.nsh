@@ -7808,7 +7808,7 @@
 
 /**
  * Copy the post-signing data, which was left alongside the installer
- * by the self-extractor stub, into the installation directory.
+ * by the self-extractor stub, into the global location for this data.
  *
  * If the post-signing data file doesn't exist, or is empty, "0" is
  * pushed on the stack, and nothing is copied.
@@ -7835,26 +7835,6 @@
 
       Pop $1    ; Stack: old $0
       Exch $0   ; Stack: postSigningData
-    FunctionEnd
-
-    !verbose pop
-  !endif
-!macroend
-
-/**
- * Copy the zone id provenance data, which was left alongside the installer by
- * the self-extractor stub, into the installation directory.
- */
-!macro CopyProvenanceData
-  !ifndef CopyProvenanceData
-    !verbose push
-    !verbose ${_MOZFUNC_VERBOSE}
-    !define CopyProvenanceData "Call CopyProvenanceData"
-
-    Function CopyProvenanceData
-
-      CopyFiles /SILENT "$EXEDIR\zoneIdProvenanceData" "$INSTDIR"
-
     FunctionEnd
 
     !verbose pop
