@@ -351,8 +351,7 @@ where
             Component::ExplicitNoNamespace |
             Component::DefaultNamespace(..) |
             Component::Namespace(..) |
-            Component::RelativeSelectorAnchor |
-            Component::Invalid(..) => {
+            Component::RelativeSelectorAnchor => {
                 // Does not affect specificity
             },
         }
