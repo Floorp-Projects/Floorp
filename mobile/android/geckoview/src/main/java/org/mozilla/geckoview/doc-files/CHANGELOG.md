@@ -17,6 +17,7 @@ exclude: true
 - Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
 - Added `DisabledFlags.SIGNATURE` for extensions disabled because they aren't correctly signed. ([bug 1847266]({{bugzilla}}1847266))
 - Added `Builder` pattern constructors for [`ReviewAnalysis`][120.2] and [`Recommendation`][120.3] (part of [bug 1846341]({{bugzilla}}1846341))
+- Added `DisabledFlags.APP_VERSION` for extensions disabled because they aren't compatible with the application version. ([bug 1847266]({{bugzilla}}1847266))
 
 [120.1]: {{javadoc_uri}}/WebExtensionController.html#disableExtensionProcessSpawning
 [120.2]: {{javadoc_uri}}/GeckoSession.html#ReviewAnalysis.Builder.html
@@ -1441,4 +1442,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 746a03374aee9264ddd5e3a70d513c45a52a41cc
+[api-version]: f2f94eaa9a47040bfa08b1a12f7cc7a31baf358e
