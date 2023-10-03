@@ -12,11 +12,11 @@ use crate::values::computed::basic_shape::InsetRect as ComputedInsetRect;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::basic_shape as generic;
 use crate::values::generics::basic_shape::{Path, PolygonCoord};
+use crate::values::generics::position::{GenericPosition, GenericPositionOrAuto};
 use crate::values::generics::rect::Rect;
 use crate::values::specified::border::BorderRadius;
 use crate::values::specified::image::Image;
 use crate::values::specified::length::LengthPercentageOrAuto;
-use crate::values::specified::position::{Position, PositionOrAuto};
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{LengthPercentage, NonNegativeLengthPercentage, SVGPathData};
 use crate::Zero;
@@ -33,9 +33,14 @@ pub type ClipPath = generic::GenericClipPath<BasicShape, SpecifiedUrl>;
 /// A specified `shape-outside` value.
 pub type ShapeOutside = generic::GenericShapeOutside<BasicShape, Image>;
 
+/// A specified value for `at <position>` in circle() and ellipse().
+// Note: its computed value is the same as computed::position::Position. We just want to always use
+// LengthPercentage as the type of its components, for basic shapes.
+pub type ShapePosition = GenericPosition<LengthPercentage, LengthPercentage>;
+
 /// A specified basic shape.
 pub type BasicShape = generic::GenericBasicShape<
-    Position,
+    ShapePosition,
     LengthPercentage,
     NonNegativeLengthPercentage,
     BasicShapeRect,
@@ -45,10 +50,10 @@ pub type BasicShape = generic::GenericBasicShape<
 pub type InsetRect = generic::GenericInsetRect<LengthPercentage, NonNegativeLengthPercentage>;
 
 /// A specified circle.
-pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
+pub type Circle = generic::Circle<ShapePosition, NonNegativeLengthPercentage>;
 
 /// A specified ellipse.
-pub type Ellipse = generic::Ellipse<Position, NonNegativeLengthPercentage>;
+pub type Ellipse = generic::Ellipse<ShapePosition, NonNegativeLengthPercentage>;
 
 /// The specified value of `ShapeRadius`.
 pub type ShapeRadius = generic::ShapeRadius<NonNegativeLengthPercentage>;
@@ -369,15 +374,63 @@ impl InsetRect {
     }
 }
 
+impl ToCss for ShapePosition {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        self.horizontal.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.vertical.to_css(dest)
+    }
+}
+
 fn parse_at_position<'i, 't>(
     context: &ParserContext,
     input: &mut Parser<'i, 't>,
-) -> Result<PositionOrAuto, ParseError<'i>> {
-    if input.try_parse(|i| i.expect_ident_matching("at")).is_ok() {
-        return Position::parse(context, input).map(PositionOrAuto::Position);
+) -> Result<GenericPositionOrAuto<ShapePosition>, ParseError<'i>> {
+    use crate::values::specified::position::{Position, Side};
+    use crate::values::specified::{AllowedNumericType, Percentage, PositionComponent};
+
+    fn convert_to_length_percentage<S: Side>(c: PositionComponent<S>) -> LengthPercentage {
+        // Convert the value when parsing, to make sure we serialize it properly for both
+        // specified and computed values.
+        // https://drafts.csswg.org/css-shapes-1/#basic-shape-serialization
+        match c {
+            // Since <position> keywords stand in for percentages, keywords without an offset
+            // turn into percentages.
+            PositionComponent::Center => LengthPercentage::from(Percentage::new(0.5)),
+            PositionComponent::Side(keyword, None) => {
+                Percentage::new(if keyword.is_start() { 0. } else { 1. }).into()
+            },
+            // Per spec issue, https://github.com/w3c/csswg-drafts/issues/8695, the part of
+            // "avoiding calc() expressions where possible" and "avoiding calc()
+            // transformations" will be removed from the spec, and we should follow the
+            // css-values-4 for position, i.e. we make it as length-percentage always.
+            // https://drafts.csswg.org/css-shapes-1/#basic-shape-serialization.
+            // https://drafts.csswg.org/css-values-4/#typedef-position
+            PositionComponent::Side(keyword, Some(length)) => {
+                if keyword.is_start() {
+                    length
+                } else {
+                    length.hundred_percent_minus(AllowedNumericType::All)
+                }
+            },
+            PositionComponent::Length(length) => length,
+        }
     }
 
-    Ok(PositionOrAuto::Auto)
+    if input.try_parse(|i| i.expect_ident_matching("at")).is_ok() {
+        Position::parse(context, input).map(|pos| {
+            GenericPositionOrAuto::Position(ShapePosition::new(
+                convert_to_length_percentage(pos.horizontal),
+                convert_to_length_percentage(pos.vertical),
+            ))
+        })
+    } else {
+        // `at <position>` is omitted.
+        Ok(GenericPositionOrAuto::Auto)
+    }
 }
 
 impl Parse for Circle {

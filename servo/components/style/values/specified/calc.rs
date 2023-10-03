@@ -861,7 +861,7 @@ impl CalcNode {
 
     /// Tries to simplify this expression into a `<length>` or `<percentage>`
     /// value.
-    fn into_length_or_percentage(
+    pub fn into_length_or_percentage(
         mut self,
         clamping_mode: AllowedNumericType,
     ) -> Result<CalcLengthPercentage, ()> {
