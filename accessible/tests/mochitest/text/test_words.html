@@ -19,8 +19,11 @@
 
     async function doTest() {
       test_common();
-      await test_per_segmenter(false);
-      await test_per_segmenter(true);
+      for (let newSegmenter of [true, false]) {
+        for (let stopAtPunctuation of [true, false]) {
+          await test_per_segmenter(newSegmenter, stopAtPunctuation);
+	}
+      }
       SimpleTest.finish();
     }
 
@@ -83,14 +86,15 @@
       testWords("input_1", ["foo", "bar"]);
     }
 
-    async function test_per_segmenter(aNewSegmenter) {
+    async function test_per_segmenter(aNewSegmenter, aStopAtPunctuation) {
       // If aNewSegmenter is true, use UAX#14/#29 compatible segmenter.
       await SpecialPowers.pushPrefEnv({"set": [
         ["intl.icu4x.segmenter.enabled", aNewSegmenter],
+        ["layout.word_select.stop_at_punctuation", aStopAtPunctuation],
       ]});
 
       // "one.two"
-      if (aNewSegmenter) {
+      if (!aStopAtPunctuation) {
         testWordCount("div8", 1, kOk);
         testWordAt("div8", 0, "one.two", kOk);
       } else {
@@ -100,16 +104,16 @@
       }
 
       // "3.1416"
-      testWords("div11", ["3.1416"], aNewSegmenter ? kOk : kTodo);
+      testWords("div11", ["3.1416"], !aStopAtPunctuation ? kOk : kTodo);
 
       // "4,261.01"
-      testWords("div12", ["4,261.01"], aNewSegmenter ? kOk: kTodo);
+      testWords("div12", ["4,261.01"], !aStopAtPunctuation ? kOk: kTodo);
 
       // "Peter's car"
-      testWords("div14", ["Peter's", "car"], aNewSegmenter ? kOk : kTodo);
+      testWords("div14", ["Peter's", "car"], !aStopAtPunctuation ? kOk : kTodo);
 
       // "N.A.T.O."
-      testWords("div15", ["N.A.T.O."], aNewSegmenter ? kOk : kTodo);
+      testWords("div15", ["N.A.T.O."], !aStopAtPunctuation ? kOk : kTodo);
 
       await SpecialPowers.popPrefEnv();
     }
