@@ -99,7 +99,7 @@ nsresult SVGFESpecularLightingElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feSpecularLighting);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFESpecularLightingElementBase::BindToTree(aCtx, aParent);
 }
 
 }  // namespace mozilla::dom

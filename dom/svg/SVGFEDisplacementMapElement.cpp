@@ -116,7 +116,7 @@ nsresult SVGFEDisplacementMapElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feDisplacementMap);
   }
 
-  return SVGFE::BindToTree(aCtx, aParent);
+  return SVGFEDisplacementMapElementBase::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

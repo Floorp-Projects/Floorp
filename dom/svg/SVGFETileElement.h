@@ -14,7 +14,7 @@ nsresult NS_NewSVGFETileElement(
 
 namespace mozilla::dom {
 
-using SVGFETileElementBase = SVGFE;
+using SVGFETileElementBase = SVGFilterPrimitiveElement;
 
 class SVGFETileElement final : public SVGFETileElementBase {
   friend nsresult(::NS_NewSVGFETileElement(

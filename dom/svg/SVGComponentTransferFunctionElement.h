@@ -23,7 +23,7 @@ namespace mozilla::dom {
 
 class DOMSVGAnimatedNumberList;
 
-using SVGComponentTransferFunctionElementBase = SVGFEUnstyledElement;
+using SVGComponentTransferFunctionElementBase = SVGFilterPrimitiveChildElement;
 
 class SVGComponentTransferFunctionElement
     : public SVGComponentTransferFunctionElementBase {

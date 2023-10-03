@@ -14,7 +14,7 @@ nsresult NS_NewSVGFEComponentTransferElement(
 
 namespace mozilla::dom {
 
-using SVGFEComponentTransferElementBase = SVGFE;
+using SVGFEComponentTransferElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEComponentTransferElement final
     : public SVGFEComponentTransferElementBase {

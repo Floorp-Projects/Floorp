@@ -81,7 +81,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 #ifdef DEBUG
 void SVGFEContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                                nsIFrame* aPrevInFlow) {
-  nsCOMPtr<SVGFE> filterPrimitive = do_QueryInterface(aContent);
+  nsCOMPtr<SVGFilterPrimitiveElement> filterPrimitive =
+      do_QueryInterface(aContent);
   NS_ASSERTION(filterPrimitive,
                "Trying to construct an SVGFEContainerFrame for a "
                "content element that doesn't support the right interfaces");
@@ -93,7 +94,8 @@ void SVGFEContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 nsresult SVGFEContainerFrame::AttributeChanged(int32_t aNameSpaceID,
                                                nsAtom* aAttribute,
                                                int32_t aModType) {
-  dom::SVGFE* element = static_cast<dom::SVGFE*>(GetContent());
+  dom::SVGFilterPrimitiveElement* element =
+      static_cast<dom::SVGFilterPrimitiveElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(
         GetParent()->IsSVGFilterFrame(),

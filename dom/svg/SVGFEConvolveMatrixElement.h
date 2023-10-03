@@ -23,7 +23,7 @@ namespace mozilla::dom {
 class DOMSVGAnimatedNumberList;
 class DOMSVGAnimatedBoolean;
 
-using SVGFEConvolveMatrixElementBase = SVGFE;
+using SVGFEConvolveMatrixElementBase = SVGFilterPrimitiveElement;
 
 class SVGFEConvolveMatrixElement final : public SVGFEConvolveMatrixElementBase {
   friend nsresult(::NS_NewSVGFEConvolveMatrixElement(

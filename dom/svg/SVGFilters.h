@@ -29,7 +29,7 @@ struct SVGStringInfo {
   SVGElement* mElement;
 };
 
-using SVGFEBase = SVGElement;
+using SVGFilterPrimitiveElementBase = SVGElement;
 
 #define NS_SVG_FE_CID                                \
   {                                                  \
@@ -41,9 +41,9 @@ using SVGFEBase = SVGElement;
 /**
  * Base class for filter primitive elements
  * Children of those elements e.g. feMergeNode
- * derive from SVGFEUnstyledElement instead
+ * derive from SVGFilterPrimitiveChildElement instead
  */
-class SVGFE : public SVGFEBase {
+class SVGFilterPrimitiveElement : public SVGFilterPrimitiveElementBase {
   friend class mozilla::SVGFilterInstance;
 
  protected:
@@ -53,9 +53,10 @@ class SVGFE : public SVGFEBase {
   using ColorSpace = mozilla::gfx::ColorSpace;
   using FilterPrimitiveDescription = mozilla::gfx::FilterPrimitiveDescription;
 
-  explicit SVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : SVGFEBase(std::move(aNodeInfo)) {}
-  virtual ~SVGFE() = default;
+  explicit SVGFilterPrimitiveElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFilterPrimitiveElementBase(std::move(aNodeInfo)) {}
+  virtual ~SVGFilterPrimitiveElement() = default;
 
  public:
   using PrimitiveAttributes = mozilla::gfx::PrimitiveAttributes;
@@ -145,15 +146,16 @@ class SVGFE : public SVGFEBase {
   static LengthInfo sLengthInfo[4];
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(SVGFE, NS_SVG_FE_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGFilterPrimitiveElement, NS_SVG_FE_CID)
 
-using SVGFEUnstyledElementBase = SVGElement;
+using SVGFilterPrimitiveChildElementBase = SVGElement;
 
-class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
+class SVGFilterPrimitiveChildElement
+    : public SVGFilterPrimitiveChildElementBase {
  protected:
-  explicit SVGFEUnstyledElement(
+  explicit SVGFilterPrimitiveChildElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : SVGFEUnstyledElementBase(std::move(aNodeInfo)) {}
+      : SVGFilterPrimitiveChildElementBase(std::move(aNodeInfo)) {}
 
  public:
   nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override = 0;
@@ -166,7 +168,7 @@ class SVGFEUnstyledElement : public SVGFEUnstyledElementBase {
 
 //------------------------------------------------------------
 
-using SVGFELightingElementBase = SVGFE;
+using SVGFELightingElementBase = SVGFilterPrimitiveElement;
 
 class SVGFELightingElement : public SVGFELightingElementBase {
  protected:
@@ -222,7 +224,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   static StringInfo sStringInfo[2];
 };
 
-using SVGFELightElementBase = SVGFEUnstyledElement;
+using SVGFELightElementBase = SVGFilterPrimitiveChildElement;
 
 class SVGFELightElement : public SVGFELightElementBase {
  protected:
