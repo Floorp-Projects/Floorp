@@ -50,6 +50,7 @@
     --fxview-text-color-hover: ButtonFace;
     --fxview-border: var(--fc-border-hcm, -moz-dialogtext);
     --newtab-primary-action-background: LinkText;
+    --newtab-background-color: Canvas;
     --newtab-background-color-secondary: Canvas;
   }
 }
