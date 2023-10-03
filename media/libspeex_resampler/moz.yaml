@@ -10,8 +10,8 @@ origin:
 
   url: https://speex.org/
 
-  release: 79822c8fb79d202cbe7e899f7406acf17beb247c (2017-01-22T14:16:02.000-05:00).
-  revision: 79822c8fb79d202cbe7e899f7406acf17beb247c
+  release: 738e17905e1ca2a1fa932ddd9c2a85d089f4e845 (2023-02-28T16:25:59.000-05:00).
+  revision: 738e17905e1ca2a1fa932ddd9c2a85d089f4e845
 
   license: BSD-3-Clause
   license-file: COPYING
