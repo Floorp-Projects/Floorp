@@ -142,6 +142,8 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
       HasMatchingFlavorsCallback&& aCallback);
 
+  void ClearClipboardCache(int32_t aClipboardType);
+
  private:
   class ClipboardCache final {
    public:
