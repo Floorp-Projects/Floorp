@@ -77,6 +77,9 @@ class BackgroundParent final {
 
   static uint64_t GetChildID(PBackgroundParent* aBackgroundActor);
 
+  static void KillHardAsync(PBackgroundParent* aBackgroundActor,
+                            const char* aReason);
+
  private:
   // Only called by ContentParent for cross-process actors.
   static bool AllocStarter(ContentParent* aContent,

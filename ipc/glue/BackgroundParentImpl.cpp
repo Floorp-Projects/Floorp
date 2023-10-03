@@ -816,6 +816,11 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBroadcastChannelConstructor(
     return IPC_OK();
   }
 
+  // XXX It's now possible to call KillHardAsync on the PBackground thread, so
+  // the checks can be done directly here.
+
+  // XXX Once BackgroundParent::ProcessingError calls KillHardAsync, we can
+  // just return IPC_FAIL() if a check fails.
   RefPtr<CheckPrincipalRunnable> runnable =
       new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
