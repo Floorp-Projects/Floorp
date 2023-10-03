@@ -478,7 +478,14 @@
       this.setAttribute("showing", "true");
 
       // Wait for a layout flush, then find the bounds.
-      let { anchorWidth, anchorTop, panelTop } = await new Promise(resolve => {
+      let {
+        anchorLeft,
+        anchorWidth,
+        anchorTop,
+        parentPanelTop,
+        panelWidth,
+        winWidth,
+      } = await new Promise(resolve => {
         requestAnimationFrame(() => {
           // It's possible this is being used in a context where windowUtils is
           // not available. In that case, fallback to using the element.
@@ -486,29 +493,35 @@
             window.windowUtils
               ? window.windowUtils.getBoundsWithoutFlushing(el)
               : el.getBoundingClientRect();
+          // submenu item in the parent panel list
           let anchorBounds = getBounds(this.lastAnchorNode);
-          let panelBounds = getBounds(hostElement);
+          let parentPanelBounds = getBounds(hostElement);
+          let panelBounds = getBounds(this);
+
           resolve({
+            anchorLeft: anchorBounds.left,
             anchorWidth: anchorBounds.width,
             anchorTop: anchorBounds.top,
-            panelTop: panelBounds.top,
+            parentPanelTop: parentPanelBounds.top,
+            panelWidth: panelBounds.width,
+            winWidth: innerWidth,
           });
         });
       });
 
       let align = hostElement.getAttribute("align");
 
-      if (align == "right") {
-        this.style.right = `${anchorWidth}px`;
-        this.style.left = "";
-      } else {
+      if (align == "left" && anchorLeft + anchorWidth + panelWidth < winWidth) {
         this.style.left = `${anchorWidth}px`;
         this.style.right = "";
+      } else {
+        this.style.right = `${anchorWidth}px`;
+        this.style.left = "";
       }
 
       let topOffset =
         anchorTop -
-        panelTop -
+        parentPanelTop -
         (parseFloat(window.getComputedStyle(this)?.paddingTop) || 0);
       this.style.top = `${topOffset}px`;
 
