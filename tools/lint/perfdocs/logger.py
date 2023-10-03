@@ -48,6 +48,20 @@ class PerfDocLogger(object):
         if type(files) != list:
             files = [files]
 
+        if len(files) == 0:
+            self.logger.info("No file was provided for the warning")
+            self.logger.lint_error(
+                message=msg,
+                lineno=0,
+                column=None,
+                path=None,
+                linter="perfdocs",
+                rule="Flawless performance docs (unknown file)",
+            )
+
+            PerfDocLogger.FAILED = True
+            return
+
         # Add a reviewbot error for each file that is given
         for file in files:
             # Get a relative path (reviewbot can't handle absolute paths)
