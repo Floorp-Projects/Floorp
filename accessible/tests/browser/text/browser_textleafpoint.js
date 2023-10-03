@@ -483,3 +483,42 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
+
+/*
+ * Test the word boundary with punctuation character
+ */
+addAccessibleTask(
+  `
+<p>ab'cd</p>
+  `,
+  async function (browser, docAcc) {
+    const firstPoint = createTextLeafPoint(docAcc, 0);
+    const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
+
+    const expectedWordStartSequence = [
+      ["ab'cd", 0],
+      ["ab'cd", 3],
+      ["ab'cd", 5],
+    ];
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_WORD_START,
+      DIRECTION_NEXT,
+      expectedWordStartSequence,
+      "Forward BOUNDARY_WORD_START sequence is correct"
+    );
+    const expectedWordEndSequence = [
+      ["ab'cd", 5],
+      ["ab'cd", 3],
+      ["ab'cd", 0],
+    ];
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_WORD_END,
+      DIRECTION_PREVIOUS,
+      expectedWordEndSequence,
+      "Backward BOUNDARY_WORD_END sequence is correct"
+    );
+  },
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
+);
