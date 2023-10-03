@@ -34,18 +34,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/
 diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
 --- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
-@@ -27,6 +27,10 @@
- 
- #include "resource.h"
- 
-+/* BEGIN Mozilla customizations */
-+#include "../../../Common/IntToString.h"
-+/* END Mozilla customizations */
-+
- using namespace NWindows;
- using namespace NFile;
- using namespace NDir;
-@@ -125,6 +129,398 @@ static void ShowErrorMessageSpec(const U
+@@ -125,6 +125,179 @@ static void ShowErrorMessageSpec(const U
    ShowErrorMessage(NULL, message);
  }
  
@@ -141,225 +130,6 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
 +  return retval;
 +}
 +
-+// Simple class for allocating a character buffer and automatically freeing it
-+// when it goes out of scope.
-+class AutoCharBuffer {
-+private:
-+  char *buffer;
-+
-+  void Alloc(UInt32 size) {
-+    buffer = new char[size];
-+    length = 0;
-+  }
-+public:
-+  // Other than being reset when the buffer is deallocated/reallocated, this
-+  // isn't updated by this class.
-+  UInt32 length;
-+
-+  AutoCharBuffer()
-+  : length(0)
-+  , buffer(NULL) {}
-+
-+  AutoCharBuffer(UInt32 size) {
-+    Alloc(size);
-+  }
-+
-+  void Realloc(UInt32 size) {
-+    delete [] buffer;
-+    Alloc(size);
-+  }
-+
-+  void Dealloc() {
-+    delete [] buffer;
-+    buffer = NULL;
-+    length = 0;
-+  }
-+
-+  virtual ~AutoCharBuffer() {
-+    Dealloc();
-+  }
-+
-+  char *Buffer() {
-+    return buffer;
-+  }
-+};
-+
-+static void
-+AppendStringValueToIni(AString& iniData, const char* key, const char* value) {
-+  iniData += key;
-+  iniData += '=';
-+  iniData += value;
-+  iniData += '\n';
-+}
-+
-+static void
-+AppendDwordValueToIni(AString& iniData, const char* key, DWORD intValue) {
-+  AString stringValue;
-+  stringValue.Add_UInt32(intValue);
-+  AppendStringValueToIni(iniData, key, stringValue.Ptr());
-+}
-+
-+static void
-+AppendQwordValueToIni(AString& iniData, const char* key, LONGLONG intValue) {
-+  // The implementations for `Convert<int_type>ToString` are a little wonky and
-+  // expect the output buffer to just be the correct size. To make sure we are
-+  // using it right here, this int conversion implementation was copied from
-+  // `CStdOutStream::operator<<(Int64 number)` in `StdOutStream.cpp`.
-+  char stringValue[32];
-+  ConvertInt64ToString(intValue, stringValue);
-+  AppendStringValueToIni(iniData, key, stringValue);
-+}
-+
-+static void
-+ReadExeFileSystemIntoIniData(const UString &exePath, AString& iniData) {
-+  const char* fsKey = "fileSystem";
-+  const char* readFsErrorTypeKey = "readFsError";
-+  const char* readFsErrorCodeKey = "readFsErrorCode";
-+
-+  HANDLE exeFile = CreateFileW(exePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-+  if (exeFile == INVALID_HANDLE_VALUE) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(iniData, readFsErrorTypeKey, "openFile");
-+    AppendDwordValueToIni(iniData, readFsErrorCodeKey, errorCode);
-+    return;
-+  }
-+
-+  const size_t bufferSize = MAX_PATH + 1;
-+  wchar_t buffer[bufferSize];
-+  BOOL success = GetVolumeInformationByHandleW(exeFile, NULL, 0, NULL, NULL,
-+                                               NULL, buffer, bufferSize);
-+  if (!success) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(iniData, readFsErrorTypeKey, "getVolInfo");
-+    AppendDwordValueToIni(iniData, readFsErrorCodeKey, errorCode);
-+    CloseHandle(exeFile);
-+    return;
-+  }
-+  CloseHandle(exeFile);
-+
-+  size_t fsLen = wcsnlen(buffer, bufferSize);
-+  if (fsLen == bufferSize) {
-+    AppendStringValueToIni(iniData, readFsErrorTypeKey, "fsUnterminated");
-+    return;
-+  }
-+
-+  const int narrowBufferSize = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, NULL,
-+                                                   0, NULL, NULL);
-+  if (narrowBufferSize <= 0) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(iniData, readFsErrorTypeKey, "getBufferSize");
-+    AppendDwordValueToIni(iniData, readFsErrorCodeKey, errorCode);
-+    return;
-+  }
-+  AutoCharBuffer fs(narrowBufferSize);
-+  int written = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, fs.Buffer(),
-+                                    narrowBufferSize, NULL, NULL);
-+  if (written <= 0) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(iniData, readFsErrorTypeKey, "convertString");
-+    AppendDwordValueToIni(iniData, readFsErrorCodeKey, errorCode);
-+    return;
-+  }
-+
-+  // Like "fileSystem=FAT32" or "fileSystem=NTFS".
-+  AppendStringValueToIni(iniData, fsKey, fs.Buffer());
-+}
-+
-+// Read Zone Identifier information from alternate data stream.
-+// Always either returns the data that was read, or data indicating what sort of
-+// error was encountered when obtaining the data.
-+// When this function returns, `metadata` is guaranteed to contain relevant
-+// metadata that should be written out. But `data.Buffer()` may be null
-+// depending on whether we successfully read data.
-+static void
-+ReadZoneIdentifierData(const UString &exePath, AString& metadata,
-+                       AutoCharBuffer& data)
-+{
-+  metadata.Empty();
-+  data.Dealloc();
-+
-+  // We don't want to allow this function to just read an unlimited amount into
-+  // `data`, so this value will control at what point we consider the file too
-+  // big to be valid.
-+  // 1 MB should be way more than enough. The Zone Identifier file generally
-+  // consists of no more than 4 short lines of text.
-+  const size_t maxReadSize = 1 * 1000 * 1000;
-+  const char* readZoneIdErrorTypeKey = "readZoneIdError";
-+  const char* readZoneIdErrorCodeKey = "readZoneIdErrorCode";
-+  // It looks like the Zone Identifier will be INI data. But since there is no
-+  // real guarantee of this, we are going to put an INI-compatible sentinel
-+  // before we start appending the Zone Identifier file. This should help us
-+  // better parse the file contents if we discover, say, that there is another
-+  // possible format for Zone Identifier data.
-+  const char* zoneIdStartSentinel = "\n[MozillaZoneIdentifierStartSentinel]\n";
-+
-+  metadata += "[Mozilla]\n";
-+  ReadExeFileSystemIntoIniData(exePath, metadata);
-+
-+  UString adsPath(exePath);
-+  // A colon (`:`) is not a valid path constituent (see
-+  // https://learn.microsoft.com/en-ca/windows/win32/fileio/naming-a-file), so
-+  // file systems that don't support ADS will fail to open rather than open an
-+  // unrelated file.
-+  adsPath += L":Zone.Identifier";
-+  HANDLE adsFile = CreateFileW(adsPath, GENERIC_READ, FILE_SHARE_READ, NULL,
-+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-+  if (adsFile == INVALID_HANDLE_VALUE) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(metadata, readZoneIdErrorTypeKey, "openFile");
-+    AppendDwordValueToIni(metadata, readZoneIdErrorCodeKey, errorCode);
-+    return;
-+  }
-+
-+  LARGE_INTEGER fileSize;
-+  BOOL success = GetFileSizeEx(adsFile, &fileSize);
-+  UInt32 bufferSize = maxReadSize;
-+  if (!success) {
-+    AppendStringValueToIni(metadata, "zoneIdFileSize", "unknown");
-+    AppendStringValueToIni(metadata, "zoneIdBufferLargeEnough", "unknown");
-+  } else {
-+    AppendQwordValueToIni(metadata, "zoneIdFileSize", fileSize.QuadPart);
-+    if (fileSize.QuadPart < (LONGLONG)bufferSize) {
-+      AppendStringValueToIni(metadata, "zoneIdBufferLargeEnough", "true");
-+      bufferSize = (UInt32)fileSize.QuadPart;
-+    } else {
-+      AppendStringValueToIni(metadata, "zoneIdBufferLargeEnough", "false");
-+    }
-+  }
-+  data.Realloc(bufferSize);
-+
-+  DWORD readCount;
-+  success = ReadFile(adsFile, data.Buffer(), bufferSize, &readCount, NULL);
-+  if (!success) {
-+    DWORD errorCode = GetLastError();
-+    AppendStringValueToIni(metadata, readZoneIdErrorTypeKey, "readFile");
-+    AppendDwordValueToIni(metadata, readZoneIdErrorCodeKey, errorCode);
-+
-+    data.Dealloc();
-+    CloseHandle(adsFile);
-+    return;
-+  }
-+  data.length = readCount;
-+
-+  char dummyBuffer;
-+
-+  success = ReadFile(adsFile, &dummyBuffer, 1, &readCount, NULL);
-+  CloseHandle(adsFile);
-+  if (success) {
-+    if (readCount == 0) {
-+      // We are at the end of the file
-+      AppendStringValueToIni(metadata, "zoneIdTruncated", "false");
-+    } else {
-+      AppendStringValueToIni(metadata, "zoneIdTruncated", "true");
-+    }
-+  } else {
-+    AppendStringValueToIni(metadata, "zoneIdTruncated", "unknown");
-+  }
-+
-+  metadata += zoneIdStartSentinel;
-+}
-+
 +// Delayed load libraries are loaded when the first symbol is used.
 +// The following ensures that we load the delayed loaded libraries from the
 +// system directory.
@@ -444,7 +214,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
  int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      #ifdef UNDER_CE
      LPWSTR
-@@ -133,13 +529,35 @@ int APIENTRY WinMain(HINSTANCE hInstance
+@@ -133,13 +306,35 @@ int APIENTRY WinMain(HINSTANCE hInstance
      #endif
      /* lpCmdLine */,int /* nCmdShow */)
  {
@@ -483,7 +253,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
  
    // InitCommonControls();
  
-@@ -172,6 +590,18 @@ int APIENTRY WinMain(HINSTANCE hInstance
+@@ -172,6 +367,18 @@ int APIENTRY WinMain(HINSTANCE hInstance
    UString dirPrefix ("." STRING_PATH_SEPARATOR);
    UString appLaunched;
    bool showProgress = true;
@@ -502,7 +272,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    if (!config.IsEmpty())
    {
      CObjectVector<CTextConfigPair> pairs;
-@@ -204,7 +634,8 @@ int APIENTRY WinMain(HINSTANCE hInstance
+@@ -204,7 +411,8 @@ int APIENTRY WinMain(HINSTANCE hInstance
    }
  
    CTempDir tempDir;
@@ -512,7 +282,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    {
      if (!assumeYes)
        ShowErrorMessage(L"Can not create temp folder archive");
-@@ -222,7 +653,9 @@ int APIENTRY WinMain(HINSTANCE hInstance
+@@ -222,7 +430,9 @@ int APIENTRY WinMain(HINSTANCE hInstance
      }
    }
  
@@ -523,7 +293,7 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
    // tempDirPath = L"M:\\1\\"; // to test low disk space
    {
      bool isCorrupt = false;
-@@ -250,6 +683,84 @@ int APIENTRY WinMain(HINSTANCE hInstance
+@@ -250,6 +460,28 @@ int APIENTRY WinMain(HINSTANCE hInstance
      }
    }
  
@@ -541,62 +311,6 @@ diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/
 +
 +      UInt32 written = 0;
 +      postSigningDataFile.Write(postSigningData, postSigningData.Len(), written);
-+    }
-+  }
-+
-+  // Read Zone Identifier information
-+  // This will consist of two types of data that we will write to the same file.
-+  // First we have the metadata, which will be INI data with these possible
-+  // keys:
-+  //  - `fileSystem`: What file system the executable is on
-+  //  - `readFsError`: A string describing why we couldn't get the file system.
-+  //                   Either this key will be present or the `fileSystem` key
-+  //                   will be.
-+  //  - `readFsErrorCode`: An integer returned by `GetLastError()` indicating,
-+  //                       in more detail, why we failed to obtain the file
-+  //                       system. This key may exist if `readFsError` exists.
-+  //  - `readZoneIdError`: A string describing why we couldn't get the
-+  //                       provenance data.
-+  //  - `readZoneIdErrorCode`: An integer returned by `GetLastError()`
-+  //                       indicating, in more detail, why we failed to get the
-+  //                       provenance data. This key may exist if
-+  //                       `readZoneIdError` exists.
-+  //  - `zoneIdFileSize`: Either `"unknown"`, or an integer indicating the
-+  //                      number of bytes in the zone identifier ADS.
-+  //  - `zoneIdBufferLargeEnough`: Either `"unknown"`, `"true"`, or `"false"`,
-+  //                               indicating whether the file size was bigger
-+  //                               than the maximum size that we will read from
-+  //                               that file.
-+  //  - `zoneIdTruncated`: Either `"unknown"`, `"true"`, or `"false"`. Indicates
-+  //                       whether or not we saw the end of the ADS file when we
-+  //                       read from it.
-+  // The above keys will be in the `"[Mozilla]"` section of the metadata.
-+  // The other type of data that will go into the file is the directly copied
-+  // data from the Zone Identifier ADS. This _should_ also be INI data, making
-+  // the entirety of the file valid INI data.
-+  // In the "good" case, this makes things very easy for us since INI reading
-+  // functionality is already available. If we see an unexpected amount of
-+  // telemetry data reporting that the INI is invalid, we will probably need to
-+  // determine what other data formats are possible in that ADS.
-+  // To make it easier to separate out the Zone Identifier data from the
-+  // metadata, in that case, the metadata will always end with this sentinel,
-+  // as long as `zoneIdData` contains valid data:
-+  // `"\n[MozillaZoneIdentifierStartSentinel]\n"`
-+  {
-+    AString metadata;
-+    AutoCharBuffer zoneIdData;
-+    ReadZoneIdentifierData(fullPath, metadata, zoneIdData);
-+    FString zoneIdDataFilePath(tempDirPath);
-+    NFile::NName::NormalizeDirPathPrefix(zoneIdDataFilePath);
-+    zoneIdDataFilePath += L"zoneIdProvenanceData";
-+
-+    NFile::NIO::COutFile zoneIdDataFile;
-+    zoneIdDataFile.Create(zoneIdDataFilePath, true);
-+
-+    UInt32 written = 0;
-+    zoneIdDataFile.Write(metadata, metadata.Len(), written);
-+    if (zoneIdData.length > 0 && zoneIdData.Buffer()) {
-+      zoneIdDataFile.Write(zoneIdData.Buffer(), zoneIdData.length, written);
 +    }
 +  }
 +
