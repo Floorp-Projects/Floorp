@@ -1161,6 +1161,9 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
                                         mVsyncRate);
   mWrBridge.get()->AddRef();  // IPDL reference
 
+  mAsyncImageManager->SetTextureFactoryIdentifier(
+      mWrBridge->GetTextureFactoryIdentifier());
+
   mCompositorScheduler = mWrBridge->CompositorScheduler();
   MOZ_ASSERT(mCompositorScheduler);
   {  // scope lock

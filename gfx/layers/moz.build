@@ -44,10 +44,12 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
             "d3d11/HelpersD3D11.h",
             "d3d11/ShaderDefinitionsD3D11.h",
             "d3d11/TextureD3D11.h",
+            "d3d11/TextureHostWrapperD3D11.h",
         ]
         UNIFIED_SOURCES += [
             "d3d11/GpuProcessD3D11TextureMap.cpp",
             "d3d11/TextureD3D11.cpp",
+            "d3d11/TextureHostWrapperD3D11.cpp",
         ]
         SOURCES += [
             "d3d11/CompositorD3D11.cpp",
