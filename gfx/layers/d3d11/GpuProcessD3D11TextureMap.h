@@ -9,10 +9,11 @@
 
 #include <d3d11.h>
 #include <unordered_map>
+#include <unordered_set>
 
-#include "mozilla/DataMutex.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 
@@ -20,6 +21,7 @@ namespace mozilla {
 namespace layers {
 
 class IMFSampleUsageInfo;
+class TextureWrapperD3D11Allocator;
 
 /**
  * A class to manage ID3D11Texture2Ds that is shared without using shared handle
@@ -27,6 +29,8 @@ class IMFSampleUsageInfo;
  * frames with zero video frame copy could not use shared handle.
  */
 class GpuProcessD3D11TextureMap {
+  struct UpdatingTextureHolder;
+
  public:
   static void Init();
   static void Shutdown();
@@ -39,10 +43,24 @@ class GpuProcessD3D11TextureMap {
   void Register(GpuProcessTextureId aTextureId, ID3D11Texture2D* aTexture,
                 uint32_t aArrayIndex, const gfx::IntSize& aSize,
                 RefPtr<IMFSampleUsageInfo> aUsageInfo);
+  void Register(const MonitorAutoLock& aProofOfLock,
+                GpuProcessTextureId aTextureId, ID3D11Texture2D* aTexture,
+                uint32_t aArrayIndex, const gfx::IntSize& aSize,
+                RefPtr<IMFSampleUsageInfo> aUsageInfo);
   void Unregister(GpuProcessTextureId aTextureId);
 
   RefPtr<ID3D11Texture2D> GetTexture(GpuProcessTextureId aTextureId);
   Maybe<HANDLE> GetSharedHandleOfCopiedTexture(GpuProcessTextureId aTextureId);
+
+  size_t GetWaitingTextureCount() const;
+
+  bool WaitTextureReady(const GpuProcessTextureId aTextureId);
+
+  void PostUpdateTextureDataTask(const GpuProcessTextureId aTextureId,
+                                 TextureHost* aWrappedTextureHost,
+                                 TextureWrapperD3D11Allocator* aAllocator);
+
+  void HandleInTextureUpdateThread();
 
  private:
   struct TextureHolder {
@@ -59,9 +77,32 @@ class GpuProcessD3D11TextureMap {
     Maybe<HANDLE> mCopiedTextureSharedHandle;
   };
 
-  DataMutex<std::unordered_map<GpuProcessTextureId, TextureHolder,
-                               GpuProcessTextureId::HashFn>>
+  struct UpdatingTextureHolder {
+    UpdatingTextureHolder(const GpuProcessTextureId aTextureId,
+                          TextureHost* aWrappedTextureHost,
+                          TextureWrapperD3D11Allocator* aAllocator);
+
+    ~UpdatingTextureHolder();
+
+    const GpuProcessTextureId mTextureId;
+    CompositableTextureHostRef mWrappedTextureHost;
+    RefPtr<TextureWrapperD3D11Allocator> mAllocator;
+  };
+
+  enum class UpdatingStatus { Waiting, Updating, Error };
+
+  RefPtr<ID3D11Texture2D> UpdateTextureData(UpdatingTextureHolder* aHolder);
+
+  mutable Monitor mMonitor MOZ_UNANNOTATED;
+
+  std::unordered_map<GpuProcessTextureId, TextureHolder,
+                     GpuProcessTextureId::HashFn>
       mD3D11TexturesById;
+
+  std::deque<UniquePtr<UpdatingTextureHolder>> mWaitingTextureQueue;
+
+  std::unordered_set<GpuProcessTextureId, GpuProcessTextureId::HashFn>
+      mWaitingTextures;
 
   static StaticAutoPtr<GpuProcessD3D11TextureMap> sInstance;
 };
