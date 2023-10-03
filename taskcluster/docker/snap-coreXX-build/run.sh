@@ -64,7 +64,10 @@ if [ "${TRY}" = "1" ]; then
 fi
 
 if [ "${DEBUG}" = "1" ]; then
-  echo "ac_add_options --enable-debug" >> ${MOZCONFIG}
+  {
+    echo "ac_add_options --enable-debug"
+    echo "ac_add_options --disable-install-strip"
+  } >> ${MOZCONFIG}
   echo "MOZ_DEBUG=1" >> ${MOZCONFIG}
 
   # No PGO on debug builds
