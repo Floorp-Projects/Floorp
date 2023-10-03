@@ -8201,12 +8201,6 @@
   value: true
   mirror: always
 
-# Whether we should avoid exposing styles of elements outside the flat tree in getComputedStyle().
-- name: layout.css.computed-style.styles-outside-flat-tree
-  type: bool
-  value: false
-  mirror: always
-
 # Are implicit tracks in computed grid templates serialized?
 - name: layout.css.serialize-grid-implicit-tracks
   type: RelaxedAtomicBool
