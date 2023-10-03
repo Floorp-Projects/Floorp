@@ -5,43 +5,40 @@
 const TEST_URL = "about:robots";
 let bookmarkPanel;
 let folders;
-let win;
 
 add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");
 
-  win = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.openNewForegroundTab({
-    gBrowser: win.gBrowser,
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
     opening: TEST_URL,
     waitForStateStop: true,
   });
 
-  let oldTimeout = win.StarUI._autoCloseTimeout;
+  let oldTimeout = StarUI._autoCloseTimeout;
   // Make the timeout something big, so it doesn't iteract badly with tests.
-  win.StarUI._autoCloseTimeout = 6000000;
+  StarUI._autoCloseTimeout = 6000000;
 
-  win.StarUI._createPanelIfNeeded();
-  bookmarkPanel = win.document.getElementById("editBookmarkPanel");
+  StarUI._createPanelIfNeeded();
+  bookmarkPanel = document.getElementById("editBookmarkPanel");
   bookmarkPanel.setAttribute("animate", false);
 
   registerCleanupFunction(async () => {
     bookmarkPanel = null;
-    win.StarUI._autoCloseTimeout = oldTimeout;
-    await BrowserTestUtils.closeWindow(win);
-    win = null;
+    StarUI._autoCloseTimeout = oldTimeout;
+    BrowserTestUtils.removeTab(tab);
     await PlacesUtils.bookmarks.eraseEverything();
   });
 });
 
 add_task(async function test_selectChoose() {
-  await clickBookmarkStar(win);
+  await clickBookmarkStar();
 
   // Open folder selector.
-  let menuList = win.document.getElementById("editBMPanel_folderMenuList");
-  let folderTreeRow = win.document.getElementById("editBMPanel_folderTreeRow");
+  let menuList = document.getElementById("editBMPanel_folderMenuList");
+  let folderTreeRow = document.getElementById("editBMPanel_folderTreeRow");
 
   let expectedFolder = "BookmarksToolbarFolderTitle";
   let expectedGuid = PlacesUtils.bookmarks.toolbarGuid;
@@ -66,21 +63,20 @@ add_task(async function test_selectChoose() {
     menuList.menupopup,
     "popupshown"
   );
-  EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
+  EventUtils.synthesizeMouseAtCenter(menuList, {});
   await promisePopup;
 
   // Click the choose item.
   EventUtils.synthesizeMouseAtCenter(
-    win.document.getElementById("editBMPanel_chooseFolderMenuItem"),
-    {},
-    win
+    document.getElementById("editBMPanel_chooseFolderMenuItem"),
+    {}
   );
 
   await TestUtils.waitForCondition(
     () => !folderTreeRow.hidden,
     "Should show the folder tree"
   );
-  let folderTree = win.document.getElementById("editBMPanel_folderTree");
+  let folderTree = document.getElementById("editBMPanel_folderTree");
   Assert.ok(folderTree.view, "The view should have been connected");
 
   Assert.equal(
@@ -96,9 +92,7 @@ add_task(async function test_selectChoose() {
 
   let input = folderTree.shadowRoot.querySelector("input");
 
-  let newFolderButton = win.document.getElementById(
-    "editBMPanel_newFolderButton"
-  );
+  let newFolderButton = document.getElementById("editBMPanel_newFolderButton");
   newFolderButton.click(); // This will start editing.
 
   // Wait for editing:
@@ -106,9 +100,8 @@ add_task(async function test_selectChoose() {
 
   // Click the arrow to collapse the list.
   EventUtils.synthesizeMouseAtCenter(
-    win.document.getElementById("editBMPanel_foldersExpander"),
-    {},
-    win
+    document.getElementById("editBMPanel_foldersExpander"),
+    {}
   );
 
   await TestUtils.waitForCondition(
@@ -119,9 +112,8 @@ add_task(async function test_selectChoose() {
 
   // Click the arrow to re-show the list.
   EventUtils.synthesizeMouseAtCenter(
-    win.document.getElementById("editBMPanel_foldersExpander"),
-    {},
-    win
+    document.getElementById("editBMPanel_foldersExpander"),
+    {}
   );
 
   await TestUtils.waitForCondition(
@@ -130,41 +122,70 @@ add_task(async function test_selectChoose() {
   );
   ok(input.hidden, "Folder tree should still not be broken.");
 
-  await hideBookmarksPanel(win);
+  await hideBookmarksPanel();
   Assert.ok(!folderTree.view, "The view should have been disconnected");
 });
 
 add_task(async function test_selectBookmarksMenu() {
-  await clickBookmarkStar(win);
+  await clickBookmarkStar();
 
   // Open folder selector.
-  let menuList = win.document.getElementById("editBMPanel_folderMenuList");
+  let menuList = document.getElementById("editBMPanel_folderMenuList");
+
+  const expectedFolder = "BookmarksMenuFolderTitle";
+  const expectedGuid = PlacesUtils.bookmarks.menuGuid;
 
   let promisePopup = BrowserTestUtils.waitForEvent(
     menuList.menupopup,
     "popupshown"
   );
-  EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
+  EventUtils.synthesizeMouseAtCenter(menuList, {});
   await promisePopup;
 
   // Click the bookmarks menu item.
   EventUtils.synthesizeMouseAtCenter(
-    win.document.getElementById("editBMPanel_bmRootItem"),
-    {},
-    win
+    document.getElementById("editBMPanel_bmRootItem"),
+    {}
   );
 
   await TestUtils.waitForCondition(
-    () =>
-      menuList.getAttribute("selectedGuid") == PlacesUtils.bookmarks.menuGuid,
+    () => menuList.getAttribute("selectedGuid") == expectedGuid,
     "Should select the menu folder item"
   );
 
   Assert.equal(
     menuList.label,
-    PlacesUtils.getString("BookmarksMenuFolderTitle"),
+    PlacesUtils.getString(expectedFolder),
     "Should have updated the menu label"
   );
 
-  await hideBookmarksPanel(win);
+  // Click the arrow to show the folder tree.
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("editBMPanel_foldersExpander"),
+    {}
+  );
+  const folderTreeRow = document.getElementById("editBMPanel_folderTreeRow");
+  await BrowserTestUtils.waitForMutationCondition(
+    folderTreeRow,
+    { attributeFilter: ["hidden"] },
+    () => !folderTreeRow.hidden
+  );
+  const folderTree = document.getElementById("editBMPanel_folderTree");
+  Assert.equal(
+    folderTree.selectedNode.bookmarkGuid,
+    PlacesUtils.bookmarks.virtualMenuGuid,
+    "Folder tree should have the correct selected guid"
+  );
+  Assert.equal(
+    menuList.getAttribute("selectedGuid"),
+    expectedGuid,
+    "Menu list should have the correct selected guid"
+  );
+  Assert.equal(
+    menuList.label,
+    PlacesUtils.getString(expectedFolder),
+    "Should have kept the same menu label"
+  );
+
+  await hideBookmarksPanel();
 });

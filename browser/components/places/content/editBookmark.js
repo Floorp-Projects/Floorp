@@ -850,7 +850,7 @@ var gEditItemOverlay = {
       this._element("chooseFolderSeparator").hidden = this._element(
         "chooseFolderMenuItem"
       ).hidden = true;
-      this._folderTree.selectItems([this._paneInfo.parentGuid]);
+      this._folderTree.selectItems([this._bookmarkState.parentGuid]);
       this._folderTree.focus();
     }
   },
