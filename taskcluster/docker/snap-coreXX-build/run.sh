@@ -81,3 +81,10 @@ SNAPCRAFT_BUILD_ENVIRONMENT_CPU=$(nproc) \
 CRAFT_PARTS_PACKAGE_REFRESH=0 \
   snapcraft --destructive-mode --verbose
 cp ./*.snap ./*.debug /builds/worker/artifacts/
+
+# Those are for fetches usage by the test task
+cp ./*.snap /builds/worker/artifacts/firefox.snap
+cp ./*.debug /builds/worker/artifacts/firefox.debug
+
+# Those are for running snap-upstream-test
+cd /builds/worker/checkouts/gecko/taskcluster/docker/snap-coreXX-build/snap-tests/ && zip -r9 /builds/worker/artifacts/snap-tests.zip ./*

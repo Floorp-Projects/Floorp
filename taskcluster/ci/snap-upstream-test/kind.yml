@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+only-for-attributes:
+    - build_platform
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.job
+    - gecko_taskgraph.transforms.task
+    - gecko_taskgraph.transforms.snap_test
+
+kind-dependencies:
+    - snap-upstream-build
+
+job-defaults:
+    treeherder:
+        kind: test
+        tier: 2
+    worker:
+        max-run-time: 900
+
+jobs:
+    basic:
+        from-deps:
+            group-by: single-with-filters
+        description: Runs basic tests on a Firefox Snap package
+        worker-type: t-linux-wayland
+        run:
+            using: run-task
+            checkout: false
+            command: >-
+              cd $MOZ_FETCHES_DIR/ && ./tests.sh
+        fetches:
+            snap-upstream-build:
+                - firefox.snap
+                - snap-tests.zip
+        treeherder:
+            platform: linux64/opt
+            symbol: Sel
