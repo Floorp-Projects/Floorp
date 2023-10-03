@@ -1,0 +1,43 @@
+[DEFAULT]
+support-files = [
+  "common.js",
+  "resource.sjs",
+  "manifestLoader.html",
+  "file_testserver.sjs",
+]
+
+["test_ImageObjectProcessor_purpose.html"]
+
+["test_ImageObjectProcessor_sizes.html"]
+
+["test_ImageObjectProcessor_src.html"]
+
+["test_ImageObjectProcessor_type.html"]
+
+["test_ManifestProcessor_JSON.html"]
+
+["test_ManifestProcessor_background_color.html"]
+
+["test_ManifestProcessor_dir.html"]
+
+["test_ManifestProcessor_display.html"]
+
+["test_ManifestProcessor_icons.html"]
+
+["test_ManifestProcessor_id.html"]
+
+["test_ManifestProcessor_lang.html"]
+
+["test_ManifestProcessor_name_and_short_name.html"]
+
+["test_ManifestProcessor_orientation.html"]
+
+["test_ManifestProcessor_scope.html"]
+
+["test_ManifestProcessor_start_url.html"]
+
+["test_ManifestProcessor_theme_color.html"]
+
+["test_ManifestProcessor_warnings.html"]
+
+["test_link_relList_supports_manifest.html"]

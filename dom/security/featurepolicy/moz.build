@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 TEST_DIRS += ["test/gtest"]
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 EXPORTS.mozilla.dom += [
     "Feature.h",

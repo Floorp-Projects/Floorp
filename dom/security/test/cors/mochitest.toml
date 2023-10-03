@@ -1,0 +1,26 @@
+[DEFAULT]
+support-files = [
+  "file_CrossSiteXHR_cache_server.sjs",
+  "file_CrossSiteXHR_inner.html",
+  "file_CrossSiteXHR_inner_data.sjs",
+  "file_CrossSiteXHR_server.sjs",
+]
+
+["test_CrossSiteXHR.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_CrossSiteXHR_cache.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_CrossSiteXHR_origin.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+

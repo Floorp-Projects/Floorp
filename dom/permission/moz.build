@@ -23,7 +23,7 @@ UNIFIED_SOURCES += [
     "StorageAccessPermissionStatus.cpp",
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 FINAL_LIBRARY = "xul"
 

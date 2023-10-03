@@ -1,0 +1,56 @@
+[DEFAULT]
+support-files = [
+  "file_bug_1271796.css",
+  "iframe_script_crossdomain.html",
+  "iframe_script_sameorigin.html",
+  "iframe_style_crossdomain.html",
+  "iframe_style_sameorigin.html",
+  "script_crossdomain1.js",
+  "script_crossdomain1.js^headers^",
+  "script_crossdomain2.js",
+  "script_crossdomain3.js",
+  "script_crossdomain3.js^headers^",
+  "script_crossdomain4.js",
+  "script_crossdomain4.js^headers^",
+  "script_crossdomain5.js",
+  "script_crossdomain5.js^headers^",
+  "script.js",
+  "script.js^headers^",
+  "script_301.js",
+  "script_301.js^headers^",
+  "script_302.js",
+  "script_302.js^headers^",
+  "script_401.js",
+  "script_401.js^headers^",
+  "style1.css",
+  "style1.css^headers^",
+  "style2.css",
+  "style3.css",
+  "style4.css",
+  "style4.css^headers^",
+  "style5.css",
+  "style6.css",
+  "style6.css^headers^",
+  "style_301.css",
+  "style_301.css^headers^",
+]
+
+["test_bug_1271796.html"]
+
+["test_bug_1364262.html"]
+
+["test_script_crossdomain.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_script_sameorigin.html"]
+
+["test_style_crossdomain.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_style_sameorigin.html"]

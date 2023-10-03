@@ -113,7 +113,7 @@ FINAL_LIBRARY = "xul"
 
 MOCHITEST_MANIFESTS += [
     "test/mochitest-dFPI.ini",
-    "test/mochitest.ini",
+    "test/mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

@@ -1,0 +1,50 @@
+[DEFAULT]
+support-files = [
+  "iframe_messageChannel_cloning.html",
+  "iframe_messageChannel_pingpong.html",
+  "iframe_messageChannel_post.html",
+  "iframe_messageChannel_transferable.html",
+  "worker_messageChannel.js",
+  "worker_messageChannel_any.js",
+  "sharedWorker_messageChannel.js",
+  "sharedWorker2_messageChannel.js",
+  "iframe_messageChannel_sharedWorker2.html",
+  "!/dom/events/test/event_leak_utils.js",
+]
+
+["test_event_listener_leaks.html"]
+skip-if = ["os == 'linux' && bits == 64"] # Bug 1777087
+
+["test_messageChannel.html"]
+
+["test_messageChannel_any.html"]
+
+["test_messageChannel_bug1178076.html"]
+
+["test_messageChannel_bug1224825.html"]
+
+["test_messageChannel_cloning.html"]
+
+["test_messageChannel_forceClose.html"]
+
+["test_messageChannel_pingpong.html"]
+
+["test_messageChannel_post.html"]
+
+["test_messageChannel_selfTransferring.html"]
+
+["test_messageChannel_sharedWorker.html"]
+
+["test_messageChannel_sharedWorker2.html"]
+
+["test_messageChannel_start.html"]
+
+["test_messageChannel_transferable.html"]
+
+["test_messageChannel_unshipped.html"]
+
+["test_messageChannel_worker.html"]
+
+["test_messageChannel_worker_forceClose.html"]
+
+["test_removedWindow.html"]

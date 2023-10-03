@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
-    "test/mochitest_compat.ini",
+    "test/mochitest.toml",
+    "test/mochitest_compat.toml",
 ]
 
 EXPORTS += [

@@ -43,7 +43,7 @@ EXTRA_JS_MODULES += [
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 REFTEST_MANIFESTS += ["test/reftest/reftest.list"]
 

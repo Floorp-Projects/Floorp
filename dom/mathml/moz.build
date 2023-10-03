@@ -23,4 +23,4 @@ LOCAL_INCLUDES += [
     "/dom/base",
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.toml"]

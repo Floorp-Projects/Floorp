@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "SVG")
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 
 EXPORTS.mozilla += [
     "SMILAnimationController.h",

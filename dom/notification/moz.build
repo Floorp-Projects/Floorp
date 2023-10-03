@@ -35,7 +35,7 @@ LOCAL_INCLUDES += [
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]
 
 if CONFIG["MOZ_NEW_NOTIFICATION_STORE"]:

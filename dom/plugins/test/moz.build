@@ -5,5 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("gtk", "cocoa", "windows"):
-    MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
+    MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
     BROWSER_CHROME_MANIFESTS += ["mochitest/browser.toml"]

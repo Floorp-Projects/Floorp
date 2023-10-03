@@ -1,0 +1,39 @@
+[DEFAULT]
+prefs = [
+  "dom.origin-trials.enabled=true",
+  "dom.origin-trials.test-key.enabled=true",
+  "browser.tabs.remote.coep.credentialless=false",
+]
+support-files = [
+  "test_header_simple.html^headers^",
+  "common.js",
+]
+#  * Test interfaces only exposed on DEBUG builds.
+#  * xorigin tests run in example.org rather than example.com, so token
+#    verification fails, expectedly.
+skip-if = [
+  "!debug",
+  "xorigin", # AudioWorklet requires secure context
+]
+
+scheme = "https"
+
+["test_expired_token.html"]
+
+["test_header_simple.html"]
+
+["test_meta_simple.html"]
+
+["test_subdomain.html"]
+support-files = [
+  "file_subdomain_good_frame.html",
+  "file_subdomain_bad_frame.html",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_trial_hidden.html"]
+
+["test_wrong_origin.html"]

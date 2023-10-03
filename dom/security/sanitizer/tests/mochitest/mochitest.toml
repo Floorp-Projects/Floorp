@@ -1,0 +1,8 @@
+[DEFAULT]
+prefs = [
+  "dom.security.sanitizer.enabled=true",
+  "dom.security.setHTML.enabled=true",
+]
+scheme = "https"
+
+["test_sanitizer_api.html"]

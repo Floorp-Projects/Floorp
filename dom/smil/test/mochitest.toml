@@ -1,0 +1,109 @@
+[DEFAULT]
+support-files = [
+  "db_smilAnimateMotion.js",
+  "db_smilCSSFromBy.js",
+  "db_smilCSSFromTo.js",
+  "db_smilCSSPaced.js",
+  "db_smilCSSPropertyList.js",
+  "db_smilMappedAttrList.js",
+  "file_smilWithTransition.html",
+  "smilAnimateMotionValueLists.js",
+  "smilExtDoc_helper.svg",
+  "smilTestUtils.js",
+  "smilXHR_helper.svg",
+]
+
+["test_smilAccessKey.xhtml"]
+
+["test_smilAdditionFallback.html"]
+
+["test_smilAnimateMotion.xhtml"]
+
+["test_smilAnimateMotionInvalidValues.xhtml"]
+
+["test_smilAnimateMotionOverrideRules.xhtml"]
+
+["test_smilBackwardsSeeking.xhtml"]
+
+["test_smilCSSFontStretchRelative.xhtml"]
+
+["test_smilCSSFromBy.xhtml"]
+
+["test_smilCSSFromTo.xhtml"]
+
+["test_smilCSSInherit.xhtml"]
+disabled = "until bug 501183 is fixed"
+
+["test_smilCSSInvalidValues.xhtml"]
+
+["test_smilCSSPaced.xhtml"]
+
+["test_smilChangeAfterFrozen.xhtml"]
+skip-if = ["true"] # bug 1358955.
+
+["test_smilConditionalProcessing.html"]
+
+["test_smilContainerBinding.xhtml"]
+
+["test_smilCrossContainer.xhtml"]
+
+["test_smilDynamicDelayedBeginElement.xhtml"]
+
+["test_smilExtDoc.xhtml"]
+
+["test_smilFillMode.xhtml"]
+
+["test_smilGetSimpleDuration.xhtml"]
+
+["test_smilGetStartTime.xhtml"]
+
+["test_smilHyperlinking.xhtml"]
+
+["test_smilInvalidValues.html"]
+
+["test_smilKeySplines.xhtml"]
+
+["test_smilKeyTimes.xhtml"]
+
+["test_smilKeyTimesPacedMode.xhtml"]
+
+["test_smilMappedAttrFromBy.xhtml"]
+
+["test_smilMappedAttrFromTo.xhtml"]
+
+["test_smilMappedAttrPaced.xhtml"]
+
+["test_smilMinTiming.html"]
+
+["test_smilRepeatDuration.html"]
+
+["test_smilRepeatTiming.xhtml"]
+
+["test_smilReset.xhtml"]
+
+["test_smilRestart.xhtml"]
+
+["test_smilSetCurrentTime.xhtml"]
+
+["test_smilSync.xhtml"]
+
+["test_smilSyncTransform.xhtml"]
+
+["test_smilSyncbaseTarget.xhtml"]
+
+["test_smilTextZoom.xhtml"]
+
+["test_smilTiming.xhtml"]
+
+["test_smilTimingZeroIntervals.xhtml"]
+
+["test_smilUpdatedInterval.xhtml"]
+
+["test_smilValues.xhtml"]
+
+["test_smilWithTransition.html"]
+skip-if = ["os == 'android'"]
+
+["test_smilWithXlink.xhtml"]
+
+["test_smilXHR.xhtml"]
