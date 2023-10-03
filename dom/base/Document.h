@@ -3773,6 +3773,8 @@ class Document : public nsINode,
   void AddResizeObserver(ResizeObserver&);
   void RemoveResizeObserver(ResizeObserver&);
   void ScheduleResizeObserversNotification() const;
+  bool HasResizeObservers() const;
+  MOZ_CAN_RUN_SCRIPT void NotifyResizeObservers();
 
   // Getter for PermissionDelegateHandler. Performs lazy initialization.
   PermissionDelegateHandler* GetPermissionDelegateHandler();

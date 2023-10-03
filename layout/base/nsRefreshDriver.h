@@ -419,6 +419,16 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     mNeedToUpdateIntersectionObservations = true;
   }
 
+  void ResizeObserverControllerAdded() {
+    EnsureTimerStarted();
+    mResizeObservationCount++;
+  }
+
+  void ResizeObserverControllerRemoved() {
+    MOZ_ASSERT(mResizeObservationCount);
+    mResizeObservationCount--;
+  }
+
   void ScheduleMediaQueryListenerUpdate() {
     EnsureTimerStarted();
     mMightNeedMediaQueryListenerUpdate = true;
@@ -446,6 +456,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasScrollEvents = 1 << 5,
     eHasVisualViewportScrollEvents = 1 << 6,
     eHasPendingMediaQueryListeners = 1 << 7,
+    eNeedsToNotifyResizeObservers = 1 << 8,
   };
 
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
@@ -492,6 +503,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
   void UpdateRelevancyOfContentVisibilityAutoFrames();
+  MOZ_CAN_RUN_SCRIPT void NotifyResizeObservers();
   void MaybeIncreaseMeasuredTicksSinceLoading();
   void EvaluateMediaQueriesAndReportChanges();
 
@@ -646,6 +658,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   bool mHasExceededAfterLoadTickPeriod : 1;
 
   bool mHasStartedTimerAtLeastOnce : 1;
+
+  int32_t mResizeObservationCount;
 
   mozilla::TimeStamp mMostRecentRefresh;
   mozilla::TimeStamp mTickStart;
