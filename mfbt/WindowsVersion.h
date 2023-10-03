@@ -71,9 +71,7 @@ MOZ_ALWAYS_INLINE bool IsWin11OrLater() {
   return IsWindows10BuildOrLater(22000);
 }
 
-// Whether we're a Windows 11 build with "Suggested actions" feature which
-// causes hangs. See bug 1774285.
-MOZ_ALWAYS_INLINE bool NeedsWindows11SuggestedActionsWorkaround() {
+MOZ_ALWAYS_INLINE bool IsWin1122H2OrLater() {
   return IsWindows10BuildOrLater(22621);
 }
 

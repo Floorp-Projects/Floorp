@@ -119,6 +119,7 @@
 #  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
 #  include "mozilla/WindowsBCryptInitialization.h"
 #  include "mozilla/WindowsDllBlocklist.h"
+#  include "mozilla/WindowsMsctfInitialization.h"
 #  include "mozilla/WindowsProcessMitigations.h"
 #  include "mozilla/WindowsVersion.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
@@ -5832,6 +5833,14 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     DebugOnly<bool> result = WindowsBCryptInitialization();
     MOZ_ASSERT(result);
   }
+
+#  if defined(_M_IX86) || defined(_M_X64)
+  {
+    DebugOnly<bool> result = WindowsMsctfInitialization();
+    MOZ_ASSERT(result);
+  }
+#  endif  // _M_IX86 || _M_X64
+
 #endif  // defined(XP_WIN)
 
   // Once we unset the exception handler, we lose the ability to properly

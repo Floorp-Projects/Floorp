@@ -545,9 +545,9 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(
           // uses delayed rendering.) This a11y tree walk causes an unacceptable
           // hang, particularly when the a11y cache is disabled. We choose the
           // lesser of the two performance/memory evils here and force immediate
-          // rendering.
+          // rendering as part of our workaround.
           return mightNeedToFlush == MightNeedToFlush::Yes &&
-                 mozilla::NeedsWindows11SuggestedActionsWorkaround();
+                 mozilla::IsWin1122H2OrLater();
       }
     }();
     if (doFlush) {
