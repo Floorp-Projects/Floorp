@@ -155,6 +155,13 @@ uint32_t HashUTF8AsUTF16(const char* aUTF8, size_t aLength, bool* aErr);
 
 bool IsSegmentBreakSkipChar(uint32_t u);
 
+/**
+ * Return true for all Punctuation categories (Unicode general category P?),
+ * and also for Symbol categories (S?) except for Modifier Symbol, which is
+ * kept together with any adjacent letter/number. (Bug 1066756)
+ */
+bool IsPunctuationForWordSelect(char16_t aCh);
+
 }  // namespace mozilla
 
 #endif /* nsUnicharUtils_h__ */
