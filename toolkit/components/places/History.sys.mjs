@@ -841,6 +841,10 @@ function convertForUpdatePlaces(pageInfo) {
 // Inner implementation of History.clear().
 var clear = async function (db) {
   await db.executeTransaction(async function () {
+    // Since all metadata must be removed, remove it before pages, to save on
+    // foreign key delete cascading.
+    await db.execute("DELETE FROM moz_places_metadata");
+
     // Remove all non-bookmarked places entries first, this will speed up the
     // triggers work.
     await db.execute(`DELETE FROM moz_places WHERE foreign_count = 0`);
