@@ -1145,6 +1145,10 @@
       "type": "boolean"
     },
 
+    "PrintingEnabled": {
+      "type": "boolean"
+    },
+
     "PromptForDownloadLocation": {
       "type": "boolean"
     },

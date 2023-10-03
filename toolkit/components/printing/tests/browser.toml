@@ -46,6 +46,8 @@ support-files = ["file_link_modulepreload.html"]
 
 ["browser_print_context_menu.js"]
 
+["browser_print_disabled.js"]
+
 ["browser_print_copies.js"]
 
 ["browser_print_duplex.js"]
