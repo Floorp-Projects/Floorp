@@ -17105,6 +17105,16 @@ void Document::ScheduleResizeObserversNotification() const {
   mResizeObserverController->ScheduleNotification();
 }
 
+void Document::NotifyResizeObservers() {
+  if (mResizeObserverController) {
+    mResizeObserverController->Notify();
+  }
+}
+
+bool Document::HasResizeObservers() const {
+  return mResizeObserverController && mResizeObserverController->IsScheduled();
+}
+
 void Document::ClearStaleServoData() {
   DocumentStyleRootIterator iter(this);
   while (Element* root = iter.GetNextStyleRoot()) {

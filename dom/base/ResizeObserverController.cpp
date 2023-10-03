@@ -18,68 +18,6 @@
 
 namespace mozilla::dom {
 
-void ResizeObserverNotificationHelper::WillRefresh(TimeStamp aTime) {
-  MOZ_DIAGNOSTIC_ASSERT(mOwner, "Should've de-registered on-time!");
-  mOwner->Notify();
-  // Note that mOwner may be null / dead here.
-}
-
-nsRefreshDriver* ResizeObserverNotificationHelper::GetRefreshDriver() const {
-  PresShell* presShell = mOwner->GetPresShell();
-  if (MOZ_UNLIKELY(!presShell)) {
-    return nullptr;
-  }
-
-  nsPresContext* presContext = presShell->GetPresContext();
-  if (MOZ_UNLIKELY(!presContext)) {
-    return nullptr;
-  }
-
-  return presContext->RefreshDriver();
-}
-
-void ResizeObserverNotificationHelper::Register() {
-  if (mRegistered) {
-    return;
-  }
-
-  nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  if (!refreshDriver) {
-    // We maybe navigating away from this page or currently in an iframe with
-    // display: none. Just abort the Register(), no need to do notification.
-    return;
-  }
-
-  refreshDriver->AddRefreshObserver(this, FlushType::Display, "ResizeObserver");
-  mRegistered = true;
-}
-
-void ResizeObserverNotificationHelper::Unregister() {
-  if (!mRegistered) {
-    return;
-  }
-
-  nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  MOZ_RELEASE_ASSERT(
-      refreshDriver,
-      "We should not leave a dangling reference to the observer around");
-
-  bool rv = refreshDriver->RemoveRefreshObserver(this, FlushType::Display);
-  MOZ_DIAGNOSTIC_ASSERT(rv, "Should remove the observer successfully");
-  Unused << rv;
-
-  mRegistered = false;
-}
-
-ResizeObserverNotificationHelper::~ResizeObserverNotificationHelper() {
-  MOZ_RELEASE_ASSERT(!mRegistered, "How can we die when registered?");
-  MOZ_RELEASE_ASSERT(!mOwner, "Forgot to clear weak pointer?");
-}
-
-void ResizeObserverController::ShellDetachedFromDocument() {
-  mResizeObserverNotificationHelper->Unregister();
-}
-
 static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
   if (BrowsingContext* bc = aDoc.GetBrowsingContext()) {
     RefPtr<BrowsingContext> top = bc->Top();
@@ -95,7 +33,7 @@ static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
 }
 
 void ResizeObserverController::Notify() {
-  mResizeObserverNotificationHelper->Unregister();
+  UnscheduleNotification();
   if (mResizeObservers.IsEmpty()) {
     return;
   }
@@ -215,14 +153,38 @@ bool ResizeObserverController::HasAnySkippedObservations() const {
 }
 
 void ResizeObserverController::ScheduleNotification() {
-  mResizeObserverNotificationHelper->Register();
+  if (mScheduled) {
+    return;
+  }
+
+  nsRefreshDriver* refreshDriver = GetRefreshDriver();
+  if (!refreshDriver) {
+    // We maybe navigating away from this page or currently in an iframe with
+    // display: none. Just abort the Register(), no need to do notification.
+    return;
+  }
+
+  refreshDriver->ResizeObserverControllerAdded();
+  mScheduled = true;
+}
+
+void ResizeObserverController::UnscheduleNotification() {
+  if (!mScheduled) {
+    return;
+  }
+
+  nsRefreshDriver* refreshDriver = GetRefreshDriver();
+  MOZ_RELEASE_ASSERT(
+      refreshDriver,
+      "We should not leave a dangling reference to the observer around");
+
+  refreshDriver->ResizeObserverControllerRemoved();
+  mScheduled = false;
 }
 
 ResizeObserverController::~ResizeObserverController() {
-  MOZ_RELEASE_ASSERT(
-      !mResizeObserverNotificationHelper->IsRegistered(),
-      "Nothing else should keep a reference to our helper when we go away");
-  mResizeObserverNotificationHelper->DetachFromOwner();
+  MOZ_RELEASE_ASSERT(!mScheduled,
+                     "Nothing else should be scheduled when we go away");
 }
 
 void ResizeObserverController::AddSizeOfIncludingThis(
@@ -233,6 +195,20 @@ void ResizeObserverController::AddSizeOfIncludingThis(
   // TODO(emilio): Measure the observers individually or something? They aren't
   // really owned by us.
   aSizes.mDOMSizes.mDOMResizeObserverControllerSize += size;
+}
+
+nsRefreshDriver* ResizeObserverController::GetRefreshDriver() const {
+  PresShell* presShell = mDocument->GetPresShell();
+  if (MOZ_UNLIKELY(!presShell)) {
+    return nullptr;
+  }
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (MOZ_UNLIKELY(!presContext)) {
+    return nullptr;
+  }
+
+  return presContext->RefreshDriver();
 }
 
 }  // namespace mozilla::dom

@@ -21,40 +21,6 @@ class PresShell;
 
 namespace dom {
 
-class ResizeObserverController;
-
-/**
- * ResizeObserverNotificationHelper will trigger ResizeObserver notifications
- * by registering with the Refresh Driver.
- */
-class ResizeObserverNotificationHelper final : public nsARefreshObserver {
- public:
-  NS_INLINE_DECL_REFCOUNTING(ResizeObserverNotificationHelper, override)
-
-  explicit ResizeObserverNotificationHelper(ResizeObserverController* aOwner)
-      : mOwner(aOwner), mRegistered(false) {
-    MOZ_ASSERT(mOwner, "Need a non-null owner");
-  }
-
-  MOZ_CAN_RUN_SCRIPT void WillRefresh(TimeStamp aTime) override;
-
-  nsRefreshDriver* GetRefreshDriver() const;
-
-  void Register();
-
-  void Unregister();
-
-  bool IsRegistered() const { return mRegistered; }
-
-  void DetachFromOwner() { mOwner = nullptr; }
-
- private:
-  virtual ~ResizeObserverNotificationHelper();
-
-  ResizeObserverController* mOwner;
-  bool mRegistered;
-};
-
 /**
  * ResizeObserverController contains the list of ResizeObservers and controls
  * the flow of notification.
@@ -62,15 +28,13 @@ class ResizeObserverNotificationHelper final : public nsARefreshObserver {
 class ResizeObserverController final {
  public:
   explicit ResizeObserverController(Document* aDocument)
-      : mDocument(aDocument),
-        mResizeObserverNotificationHelper(
-            new ResizeObserverNotificationHelper(this)) {
+      : mDocument(aDocument) {
     MOZ_ASSERT(mDocument, "Need a non-null document");
   }
 
   void AddSizeOfIncludingThis(nsWindowSizes&) const;
 
-  void ShellDetachedFromDocument();
+  void ShellDetachedFromDocument() { UnscheduleNotification(); }
   void AddResizeObserver(ResizeObserver& aObserver) {
     MOZ_ASSERT(!mResizeObservers.Contains(&aObserver));
     // Insert internal ResizeObservers before scripted ones, since they may have
@@ -88,10 +52,10 @@ class ResizeObserverController final {
   }
 
   /**
-   * Schedule the notification via ResizeObserverNotificationHelper refresh
-   * observer.
+   * Schedule/unschedule notification on refresh driver tick.
    */
   void ScheduleNotification();
+  void UnscheduleNotification();
 
   /**
    * Notify all ResizeObservers by gathering and broadcasting all active
@@ -99,11 +63,13 @@ class ResizeObserverController final {
    */
   MOZ_CAN_RUN_SCRIPT void Notify();
 
-  PresShell* GetPresShell() const { return mDocument->GetPresShell(); }
+  bool IsScheduled() const { return mScheduled; }
 
   ~ResizeObserverController();
 
  private:
+  nsRefreshDriver* GetRefreshDriver() const;
+
   /**
    * Calls GatherActiveObservations(aDepth) for all ResizeObservers in this
    * controller. All observations in each ResizeObserver with element's depth
@@ -134,8 +100,11 @@ class ResizeObserverController final {
   // us.
   Document* const mDocument;
 
-  RefPtr<ResizeObserverNotificationHelper> mResizeObserverNotificationHelper;
   nsTArray<ResizeObserver*> mResizeObservers;
+
+  // Indicates whether the controller awaits for notification from the refresh
+  // driver.
+  bool mScheduled = false;
 };
 
 }  // namespace dom
