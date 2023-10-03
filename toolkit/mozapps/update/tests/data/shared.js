@@ -72,12 +72,15 @@ const FILE_ACTIVE_UPDATE_XML_TMP = "active-update.xml.tmp";
 const FILE_APPLICATION_INI = "application.ini";
 const FILE_BACKUP_UPDATE_CONFIG_JSON = "backup-update-config.json";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
+const FILE_BACKUP_UPDATE_ELEVATED_LOG = "backup-update-elevated.log";
 const FILE_BT_RESULT = "bt.result";
 const FILE_LAST_UPDATE_LOG = "last-update.log";
+const FILE_LAST_UPDATE_ELEVATED_LOG = "last-update-elevated.log";
 const FILE_PRECOMPLETE = "precomplete";
 const FILE_PRECOMPLETE_BAK = "precomplete.bak";
 const FILE_UPDATE_CONFIG_JSON = "update-config.json";
 const FILE_UPDATE_LOG = "update.log";
+const FILE_UPDATE_ELEVATED_LOG = "update-elevated.log";
 const FILE_UPDATE_MAR = "update.mar";
 const FILE_UPDATE_SETTINGS_INI = "update-settings.ini";
 const FILE_UPDATE_SETTINGS_INI_BAK = "update-settings.ini.bak";
@@ -452,12 +455,15 @@ function getUpdateDirFile(aLeafName, aWhichDir = null) {
     case DIR_PATCH:
     case DIR_DOWNLOADING:
     case FILE_BACKUP_UPDATE_LOG:
+    case FILE_BACKUP_UPDATE_ELEVATED_LOG:
     case FILE_LAST_UPDATE_LOG:
+    case FILE_LAST_UPDATE_ELEVATED_LOG:
       file.append(DIR_UPDATES);
       file.append(aLeafName);
       return file;
     case FILE_BT_RESULT:
     case FILE_UPDATE_LOG:
+    case FILE_UPDATE_ELEVATED_LOG:
     case FILE_UPDATE_MAR:
     case FILE_UPDATE_STATUS:
     case FILE_UPDATE_VERSION:
@@ -540,6 +546,9 @@ function removeUpdateFiles(aRemoveLogFiles) {
       [FILE_BACKUP_UPDATE_LOG],
       [FILE_LAST_UPDATE_LOG],
       [FILE_UPDATE_LOG],
+      [FILE_BACKUP_UPDATE_ELEVATED_LOG],
+      [FILE_LAST_UPDATE_ELEVATED_LOG],
+      [FILE_UPDATE_ELEVATED_LOG],
     ]);
   }
 
