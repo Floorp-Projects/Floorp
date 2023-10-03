@@ -9215,7 +9215,7 @@
   mirror: always
 
 - name: layout.word_select.stop_at_punctuation
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
