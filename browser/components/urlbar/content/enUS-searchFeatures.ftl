@@ -36,10 +36,6 @@ urlbar-group-mdn =
 urlbar-group-pocket =
   .label = Recommended reads
 
-# A label shown above sponsored suggestions in the urlbar results if priority.
-urlbar-group-sponsored =
-  .label = Sponsored
-
 # Tooltip text for the block button shown in top pick rows.
 firefox-suggest-urlbar-block =
   .title = Dismiss this suggestion
