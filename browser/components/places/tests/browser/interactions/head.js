@@ -6,9 +6,10 @@ const { Interactions } = ChromeUtils.importESModule(
   "resource:///modules/Interactions.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.importESModule(
-  "resource://testing-common/Sinon.sys.mjs"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
