@@ -13,10 +13,11 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(async function test_browserAction_onClicked_and_inputHandling() {
-  const extension = ExtensionTestUtils.loadExtension({
+function createExtension(background = {}) {
+  return ExtensionTestUtils.loadExtension({
     manifest: {
       browser_action: {},
+      background,
     },
     async background() {
       async function checkIsHandlingUserInput() {
@@ -52,12 +53,42 @@ add_task(async function test_browserAction_onClicked_and_inputHandling() {
       browser.test.sendMessage("background-ready");
     },
   });
+}
+
+add_task(async function test_browserAction_onClicked_and_inputHandling() {
+  const extension = createExtension();
 
   await extension.startup();
   await extension.awaitMessage("background-ready");
 
   await AppTestDelegate.clickBrowserAction(window, extension);
   await extension.awaitFinish("action-clicked");
+  await AppTestDelegate.closeBrowserAction(window, extension);
+
+  await extension.unload();
+});
+
+add_task(async function test_browserAction_onClicked_persistent_event() {
+  const extension = createExtension({ persistent: false });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  assertPersistentListeners(extension, "browserAction", ["onClicked"], {
+    primed: false,
+  });
+
+  await extension.terminateBackground();
+  assertPersistentListeners(extension, "browserAction", ["onClicked"], {
+    primed: true,
+  });
+
+  await AppTestDelegate.clickBrowserAction(window, extension);
+
+  // Background script will run again.
+  await extension.awaitMessage("background-ready");
+  await extension.awaitFinish("action-clicked");
+
   await AppTestDelegate.closeBrowserAction(window, extension);
 
   await extension.unload();

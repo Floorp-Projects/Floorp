@@ -115,3 +115,41 @@ function waitForState(sw, state) {
     });
   });
 }
+
+/* exported assertPersistentListeners */
+async function assertPersistentListeners(
+  extWrapper,
+  apiNs,
+  apiEvents,
+  expected
+) {
+  const stringErr = await SpecialPowers.spawnChrome(
+    [extWrapper.id, apiNs, apiEvents, expected],
+    async (id, apiNs, apiEvents, expected) => {
+      try {
+        const { ExtensionTestCommon } = ChromeUtils.importESModule(
+          "resource://testing-common/ExtensionTestCommon.sys.mjs"
+        );
+        const ext = { id };
+        for (const event of apiEvents) {
+          ExtensionTestCommon.testAssertions.assertPersistentListeners(
+            ext,
+            apiNs,
+            event,
+            {
+              primed: expected.primed,
+              persisted: expected.persisted,
+              primedListenersCount: expected.primedListenersCount,
+            }
+          );
+        }
+      } catch (err) {
+        return String(err);
+      }
+    }
+  );
+  ok(
+    stringErr == undefined,
+    stringErr ? stringErr : `Found expected primed and persistent listeners`
+  );
+}
