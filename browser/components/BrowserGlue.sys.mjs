@@ -61,7 +61,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.sys.mjs",
-  ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   PublicSuffixList:
     "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
@@ -2993,14 +2992,6 @@ BrowserGlue.prototype = {
         name: "start-orb-javascript-oracle",
         task: () => {
           ChromeUtils.ensureJSOracleStarted();
-        },
-      },
-
-      {
-        name: "report-attribution-provenance-telemetry",
-        condition: lazy.TelemetryUtils.isTelemetryEnabled,
-        task: async () => {
-          await lazy.ProvenanceData.submitProvenanceTelemetry();
         },
       },
 

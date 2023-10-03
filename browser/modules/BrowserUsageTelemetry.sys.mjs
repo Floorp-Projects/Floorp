@@ -14,7 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
 
@@ -1281,15 +1280,6 @@ export let BrowserUsageTelemetry = {
     if (AppConstants.platform != "win") {
       // This is a windows-only feature.
       return;
-    }
-
-    try {
-      await lazy.ProvenanceData.submitProvenanceTelemetry();
-    } catch (ex) {
-      console.warn(
-        "reportInstallationTelemetry - submitProvenanceTelemetry failed",
-        ex
-      );
     }
 
     const TIMESTAMP_PREF = "app.installation.timestamp";
