@@ -3,4 +3,3 @@ scheme = "https"
 
 ["test_strongworker.html"]
 support-files = ["file_strongworker.js"]
-
