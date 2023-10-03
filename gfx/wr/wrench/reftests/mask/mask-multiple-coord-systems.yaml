@@ -1,0 +1,26 @@
+# Verify that a stacking context with a complex transform, which has an image-mask in the
+# picture local space, and a rectangular clip in the parent space, draws correctly without
+# edge artifacts.
+---
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [50, 100, 250, 150]
+    - type: stacking-context
+      bounds: [200, 0, 100, 100]
+      transform-origin: [250, 250]
+      transform: rotate(45)
+      items:
+        - type: clip
+          id: 3
+          image-mask:
+            image: "circle.png"
+            rect: [0, 0, 100, 100]
+        - type: stacking-context
+          bounds: [0, 0, 100, 100]
+          clip-chain: [2, 3]
+          items:
+          - type: rect
+            bounds: [0, 0, 100, 100]
+            color: blue

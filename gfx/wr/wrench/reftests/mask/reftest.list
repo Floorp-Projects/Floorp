@@ -15,3 +15,4 @@ platform(linux,mac) == checkerboard.yaml checkerboard.png
 skip_on(android,device) fuzzy(2,1900) == checkerboard.yaml checkerboard-tiling.yaml  # Fails on a Pixel2
 == missing-mask.yaml missing-mask-ref.yaml
 platform(linux) == scaled-filter-raster-root.yaml scaled-filter-raster-root.png
+platform(linux,mac) == mask-multiple-coord-systems.yaml mask-multiple-coord-systems.png
