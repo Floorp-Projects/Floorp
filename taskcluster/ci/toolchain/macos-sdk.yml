@@ -30,6 +30,7 @@ macosx64-sdk-13.3:
         toolchain-artifact: project/gecko/mac-sdk/MacOSX13.3.sdk.tar.zst
         toolchain-alias:
             - macosx64-sdk
+            - macosx64-sdk-toolchain
             - MacOSX13.3.sdk
 
 macosx64-sdk-14.0:
@@ -43,5 +44,4 @@ macosx64-sdk-14.0:
             - Library/Developer/CommandLineTools/SDKs/MacOSX14.0.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX14.0.sdk.tar.zst
         toolchain-alias:
-            - macosx64-sdk-toolchain
             - MacOSX14.0.sdk
