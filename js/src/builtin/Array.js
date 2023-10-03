@@ -703,7 +703,7 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
 
   // Step 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   // Step 3. Let fromAsyncClosure be a new Abstract Closure with no parameters that captures C, mapfn, and thisArg and performs the following steps when called:
-  let fromAsyncClosure = async () => {
+  var fromAsyncClosure = async () => {
     // Step 3.a. If mapfn is undefined, let mapping be false.
     // Step 3.b. Else,
     //     Step 3.b.i. If IsCallable(mapfn) is false, throw a TypeError exception.
@@ -714,12 +714,12 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     }
 
     // Step 3.c. Let usingAsyncIterator be ? GetMethod(asyncItems, @@asyncIterator).
-    let usingAsyncIterator = asyncItems[GetBuiltinSymbol("asyncIterator")];
+    var usingAsyncIterator = asyncItems[GetBuiltinSymbol("asyncIterator")];
     if (usingAsyncIterator === null) {
       usingAsyncIterator = undefined;
     }
 
-    let usingSyncIterator = undefined;
+    var usingSyncIterator = undefined;
     if (usingAsyncIterator !== undefined) {
       if (!IsCallable(usingAsyncIterator)) {
         ThrowTypeError(JSMSG_NOT_ITERABLE, ToSource(asyncItems));
@@ -760,14 +760,14 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       //     Step 3.e.i. Let A be ? Construct(C).
       // Step 3.f. Else,
       //     Step 3.f.i. Let A be ! ArrayCreate(0).
-      let A = IsConstructor(C) ? constructContentFunction(C, C) : [];
+      var A = IsConstructor(C) ? constructContentFunction(C, C) : [];
 
 
       // Step 3.j.i. Let k be 0.
-      let k = 0;
+      var k = 0;
 
       // Step 3.j.ii. Repeat,
-      for await (let nextValue of allowContentIterWith(
+      for await (var nextValue of allowContentIterWith(
         asyncItems,
         usingAsyncIterator,
         usingSyncIterator
@@ -785,7 +785,7 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
         // Step 3.j.ii.5. Let nextValue be ? IteratorValue(next). (Implicit through the for-await loop).
 
         // Step 3.j.ii.7. Else, let mappedValue be nextValue. (Reordered)
-        let mappedValue = nextValue;
+        var mappedValue = nextValue;
 
         // Step 3.j.ii.6. If mapping is true, then
         if (mapping) {
@@ -820,32 +820,32 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
 
     // Step 3.k.i. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
     // Step 3.k.ii. Let arrayLike be ! ToObject(asyncItems).
-    let arrayLike = ToObject(asyncItems);
+    var arrayLike = ToObject(asyncItems);
 
     // Step 3.k.iii. Let len be ? LengthOfArrayLike(arrayLike).
-    let len = ToLength(arrayLike.length);
+    var len = ToLength(arrayLike.length);
 
     // Step 3.k.iv. If IsConstructor(C) is true, then
     //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
     // Step 3.k.v. Else,
     //     Step 3.k.v.1. Let A be ? ArrayCreate(len).
-    let A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
+    var A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
 
     // Step 3.k.vi. Let k be 0.
-    let k = 0;
+    var k = 0;
 
     // Step 3.k.vii. Repeat, while k < len,
     while (k < len) {
       // Step 3.k.vii.1. Let Pk be ! ToString(𝔽(k)).
       // Step 3.k.vii.2. Let kValue be ? Get(arrayLike, Pk).
       // Step 3.k.vii.3. Let kValue be ? Await(kValue).
-      let kValue = await arrayLike[k];
+      var kValue = await arrayLike[k];
 
       // Step 3.k.vii.4. If mapping is true, then
       //     Step 3.k.vii.4.a. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
       //     Step 3.k.vii.4.b. Let mappedValue be ? Await(mappedValue).
       // Step 3.k.vii.5. Else, let mappedValue be kValue.
-      let mappedValue = mapping
+      var mappedValue = mapping
         ? await callContentFunction(mapfn, thisArg, kValue, k)
         : kValue;
 
