@@ -5,4 +5,8 @@
 
 <resources>
     <color name="mozac_ui_icons_fill">#FFFFFF</color>
+
+    <!-- Star icon fill colors for mozac_ic_star_one_half_fill_20 -->
+    <color name="mozac_ic_star_filled">#000000</color>
+    <color name="mozac_ic_star_unfilled">#FFFFFF</color>
 </resources>

@@ -168,4 +168,8 @@
 
     <!-- Add-ons colors -->
     <color name="mozac_feature_addons_error_text_color">@color/photonRed20</color>
+
+    <!-- Star icon fill colors -->
+    <color name="mozac_ic_star_filled">@color/photonLightGrey40</color>
+    <color name="mozac_ic_star_unfilled">@color/photonDarkGrey05</color>
 </resources>

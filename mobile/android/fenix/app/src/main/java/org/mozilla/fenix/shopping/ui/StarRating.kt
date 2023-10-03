@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -55,17 +56,22 @@ fun StarRating(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         repeat(NUM_STARS) {
-            val starId = if (it < rating && it + 1 > rating) {
-                R.drawable.ic_star_half
+            val starId: Int
+            val colorFilter: ColorFilter?
+            if (it < rating && it + 1 > rating) {
+                starId = R.drawable.mozac_ic_star_one_half_fill_20
+                colorFilter = null // use the colors values in the vector
             } else if (it < rating) {
-                R.drawable.ic_bookmark_filled
+                starId = R.drawable.mozac_ic_star_fill_20
+                colorFilter = ColorFilter.tint(colorResource(id = R.color.mozac_ic_star_filled))
             } else {
-                R.drawable.ic_bookmark_outline
+                starId = R.drawable.mozac_ic_star_fill_20
+                colorFilter = ColorFilter.tint(colorResource(id = R.color.mozac_ic_star_unfilled))
             }
 
             Image(
                 painter = painterResource(id = starId),
-                colorFilter = ColorFilter.tint(FirefoxTheme.colors.iconPrimary),
+                colorFilter = colorFilter,
                 contentDescription = null,
             )
         }

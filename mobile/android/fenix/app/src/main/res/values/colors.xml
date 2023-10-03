@@ -356,4 +356,8 @@
 
     <!-- Add-ons colors -->
     <color name="mozac_feature_addons_error_text_color" tools:ignore="UnusedResources">@color/photonRed70</color>
+
+    <!-- Star icon fill colors -->
+    <color name="mozac_ic_star_filled">@color/photonBlack</color>
+    <color name="mozac_ic_star_unfilled">#D9D9D9</color>
 </resources>
