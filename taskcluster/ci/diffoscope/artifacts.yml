@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
+    # Artifact builds always build with nightly branding, so these checks don't
+    # work on non-trunk branches.
+    run-on-projects: ['trunk']
     unpack: true
     fail-on-diff: true
     pre-diff-commands:
