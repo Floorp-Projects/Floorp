@@ -33,7 +33,14 @@ class WordBreaker final {
   //
   // If aPos is already at the end of aText or beyond, both mBegin and mEnd
   // equals to aText.Length().
-  static WordRange FindWord(const nsAString& aText, uint32_t aPos);
+  //
+  // If setting StopAtPunctuation, even if using UAX#29 word segmenter rule,
+  // there will be break opportunities on characters with punctuation class.
+  enum class FindWordOptions { None, StopAtPunctuation };
+
+  static WordRange FindWord(
+      const nsAString& aText, uint32_t aPos,
+      const FindWordOptions aOptions = FindWordOptions::None);
 
   // Find the next word break opportunity starting from aPos + 1. It can return
   // aLen if there's no break opportunity between [aPos + 1, aLen - 1].
