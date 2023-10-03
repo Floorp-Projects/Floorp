@@ -345,12 +345,11 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
         cx->global()->maybeBoundFunctionShapeWithDefaultProto()) {
       Rooted<SharedShape*> shape(
           cx, cx->global()->maybeBoundFunctionShapeWithDefaultProto());
-      JSObject* obj =
-          NativeObject::create(cx, allocKind, gc::Heap::Default, shape);
-      if (!obj) {
+      bound = NativeObject::create<BoundFunctionObject>(
+          cx, allocKind, gc::Heap::Default, shape);
+      if (!bound) {
         return nullptr;
       }
-      bound = &obj->as<BoundFunctionObject>();
     } else {
       bound = NewObjectWithGivenProto<BoundFunctionObject>(cx, proto);
       if (!bound) {
@@ -418,11 +417,11 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
 BoundFunctionObject* BoundFunctionObject::createWithTemplate(
     JSContext* cx, Handle<BoundFunctionObject*> templateObj) {
   Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
-  JSObject* obj = NativeObject::create(cx, allocKind, gc::Heap::Default, shape);
-  if (!obj) {
+  auto* bound = NativeObject::create<BoundFunctionObject>(
+      cx, allocKind, gc::Heap::Default, shape);
+  if (!bound) {
     return nullptr;
   }
-  BoundFunctionObject* bound = &obj->as<BoundFunctionObject>();
   bound->initFlags(templateObj->numBoundArgs(), templateObj->isConstructor());
   bound->initLength(templateObj->getLengthForInitialShape().toInt32());
   bound->initName(&templateObj->getNameForInitialShape().toString()->asAtom());

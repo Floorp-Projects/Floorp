@@ -743,6 +743,14 @@ class NativeObject : public JSObject {
                                      gc::Heap heap, Handle<SharedShape*> shape,
                                      gc::AllocSite* site = nullptr);
 
+  template <typename T>
+  static inline T* create(JSContext* cx, gc::AllocKind kind, gc::Heap heap,
+                          Handle<SharedShape*> shape,
+                          gc::AllocSite* site = nullptr) {
+    NativeObject* nobj = create(cx, kind, heap, shape, site);
+    return nobj ? &nobj->as<T>() : nullptr;
+  }
+
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();
 #endif

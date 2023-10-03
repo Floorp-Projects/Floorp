@@ -5397,7 +5397,8 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx,
   }
 
   gc::Heap initialHeap = site->initialHeap();
-  return NativeObject::create(cx, allocKind, initialHeap, shape, site);
+  return NativeObject::create<PlainObject>(cx, allocKind, initialHeap, shape,
+                                           site);
 }
 
 JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx,
@@ -5413,7 +5414,8 @@ JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx,
   }
 
   gc::AllocSite* site = cx->zone()->optimizedAllocSite();
-  return NativeObject::create(cx, allocKind, initialHeap, shape, site);
+  return NativeObject::create<PlainObject>(cx, allocKind, initialHeap, shape,
+                                           site);
 }
 
 ArrayObject* js::NewArrayOperation(
