@@ -771,7 +771,8 @@ where
             Component::ParentSelector |
             Component::Nth(..) |
             Component::Host(None) |
-            Component::RelativeSelectorAnchor => 0,
+            Component::RelativeSelectorAnchor |
+            Component::Invalid(..) => 0,
         }
     }
 }

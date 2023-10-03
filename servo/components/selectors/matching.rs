@@ -1100,6 +1100,7 @@ where
             );
             anchor.map_or(false, |a| a == element.opaque())
         },
+        Component::Invalid(..) => false,
     }
 }
 
