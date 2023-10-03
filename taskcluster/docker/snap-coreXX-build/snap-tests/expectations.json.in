@@ -1,0 +1,10 @@
+{
+    "test_about_support": {
+        "version_box": "#RUNTIME_VERSION#",
+        "distribution_id": "canonical-002"
+    },
+    "test_youtube": {
+        "duration": 1,
+        "playback": 2
+    }
+}
