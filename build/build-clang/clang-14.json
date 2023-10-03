@@ -7,6 +7,8 @@
         "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
         "fuzzing_ccov_build_clang_12.patch",
         "llvmorg-15-init-16512-g4b1e3d193706.patch",
+        "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
+        "revert-llvmorg-14-init-11890-gf86deb18cab6.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
