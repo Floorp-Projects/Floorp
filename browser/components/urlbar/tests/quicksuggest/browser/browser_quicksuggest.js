@@ -102,7 +102,6 @@ add_task(async function sponsoredPriority() {
     index: 1,
     isSponsored: true,
     isBestMatch: true,
-    isEmptyDescription: true,
     url: `${TEST_URL}?q=frabbits`,
   });
 
@@ -123,8 +122,8 @@ add_task(async function sponsoredPriority() {
   Assert.equal(before.content, "attr(label)", "::before.content is enabled");
   Assert.equal(
     row.getAttribute("label"),
-    "Sponsored",
-    "Row has 'Sponsored' group label"
+    "Top pick",
+    "Row has 'Top pick' group label"
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
