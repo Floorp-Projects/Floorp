@@ -3,4 +3,3 @@ prefs = ["browser.policies.alternatePath='<test-root>/browser/components/enterpr
 support-files = ["forget_button.json"]
 
 ["browser_policy_disable_forgetbutton.js"]
-

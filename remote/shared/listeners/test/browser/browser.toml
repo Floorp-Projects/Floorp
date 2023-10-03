@@ -17,4 +17,3 @@ prefs = ["remote.messagehandler.modulecache.useBrowserTestRoot=true"]
 ["browser_NetworkListener.js"]
 
 ["browser_PromptListener.js"]
-

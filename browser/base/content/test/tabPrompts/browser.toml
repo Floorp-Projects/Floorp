@@ -48,4 +48,3 @@ support-files = ["openPromptOffTimeout.html"]
 ["browser_switchTabPermissionPrompt.js"]
 
 ["browser_windowPrompt.js"]
-

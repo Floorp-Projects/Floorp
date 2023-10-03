@@ -79,4 +79,3 @@ skip-if = ["true"] # Bug 1592079
 
 ["browser_thumbnails_update.js"]
 skip-if = ["os == 'win'"] #Bug 1539947
-

@@ -3,4 +3,3 @@
 ["browser_devtools.js"]
 subsuite = "devtools"
 tags = "devtools"
-

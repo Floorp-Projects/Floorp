@@ -113,4 +113,3 @@ support-files = [
   "file_coop_header2.html",
   "file_coop_header2.html^headers^",
 ]
-

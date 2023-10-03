@@ -11,4 +11,3 @@ prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 ["browser_test_doc_creation.js"]
 
 ["browser_test_urlbar.js"]
-

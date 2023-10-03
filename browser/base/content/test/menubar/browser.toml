@@ -13,11 +13,10 @@ https_first_disabled = true
 run-if = ["os == 'mac'"] # Mac only feature
 
 ["browser_history_recently_closed_tabs.js"]
-skip-if = ["os == 'mac'"] # No menubar on macOS. 
+skip-if = ["os == 'mac'"] # No menubar on macOS.
 
 support-files = ["file_shareurl.html"]
 
 ["browser_search_bookmarks.js"]
 
 ["browser_search_history.js"]
-

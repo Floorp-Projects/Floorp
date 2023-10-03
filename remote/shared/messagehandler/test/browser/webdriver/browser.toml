@@ -5,4 +5,3 @@ support-files = ["!/remote/shared/messagehandler/test/browser/resources/*"]
 prefs = ["remote.messagehandler.modulecache.useBrowserTestRoot=true"]
 
 ["browser_session_execute_command_errors.js"]
-

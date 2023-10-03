@@ -4,4 +4,3 @@ support-files = ["../head.js"]
 
 ["browser_devtools.js"]
 skip-if = ["os == 'mac'"] # times out on macosx1014, see 1570100
-

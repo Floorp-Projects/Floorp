@@ -11,4 +11,3 @@ support-files = [
 
 ["browser_iframe_typecontent_input_focus.js"]
 skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
-

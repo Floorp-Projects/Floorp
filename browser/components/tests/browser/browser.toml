@@ -38,4 +38,3 @@ run-if = ["os == 'win'"]
 
 ["browser_to_handle_telemetry.js"]
 run-if = ["os == 'win'"]
-

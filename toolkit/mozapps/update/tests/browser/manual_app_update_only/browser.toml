@@ -22,4 +22,3 @@ skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
 ["browser_aboutPrefs_fc_autoUpdateTrue.js"]
 
 ["browser_noBackgroundUpdate.js"]
-

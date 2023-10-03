@@ -19,4 +19,3 @@ skip-if = [
   "os != 'linux'", # Linux-specific crash type
   "release_or_beta", # release/beta builds do not crash on sandbox violations
 ]
-

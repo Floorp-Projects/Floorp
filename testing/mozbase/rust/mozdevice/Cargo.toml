@@ -23,4 +23,3 @@ thiserror = "1.0.25"
 walkdir = "2"
 unix_path = "1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
-

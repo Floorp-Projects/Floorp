@@ -3,4 +3,3 @@ prefs = ["browser.policies.alternatePath='<test-root>/browser/components/enterpr
 support-files = ["homepage_policies.json"]
 
 ["browser_show_home_button_with_homepage_policy.js"]
-

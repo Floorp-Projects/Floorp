@@ -4,4 +4,3 @@ head = "head.js"
 ["browser_aboutthirdparty.js"]
 support-files = ["hello.zzz"]
 skip-if = ["os == 'win'"] # Bug 1776048
-

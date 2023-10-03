@@ -11,4 +11,3 @@ skip-if = [
   "ccov && os == 'linux'", # Bug 1608080
   "win11_2009 && !debug", # Bug 1778932
 ]
-

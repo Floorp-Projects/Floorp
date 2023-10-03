@@ -241,4 +241,3 @@ skip-if = ["os == 'android'"]
 
 ["browser_username_select_dialog.js"]
 support-files = ["subtst_notifications_change_p.html"]
-

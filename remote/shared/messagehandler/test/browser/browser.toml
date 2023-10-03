@@ -44,4 +44,3 @@ prefs = ["remote.messagehandler.modulecache.useBrowserTestRoot=true"]
 ["browser_session_data_update_contexts.js"]
 
 ["browser_windowglobal_to_root.js"]
-

@@ -5,4 +5,3 @@ support-files = ["../head.js"]
 ["browser_controlCenter.js"]
 https_first_disabled = true
 skip-if = ["os == 'mac'"] # macosx1014 times out, see bug 1554821
-

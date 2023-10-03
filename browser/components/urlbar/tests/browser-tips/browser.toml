@@ -29,4 +29,3 @@ skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
 
 ["browser_updateWeb.js"]
 skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
-

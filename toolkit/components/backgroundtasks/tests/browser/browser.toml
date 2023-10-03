@@ -6,4 +6,3 @@ head = "head.js"
 
 ["browser_xpcom_graph_wait.js"]
 skip-if = ["tsan"] # TSan times out on pretty much all profiler-consuming tests.
-

@@ -2,4 +2,3 @@
 support-files = ["../head.js"]
 
 ["browser_policy_show_home_button.js"]
-

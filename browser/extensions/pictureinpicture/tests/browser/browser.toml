@@ -19,4 +19,3 @@ prefs = [
 
 ["browser_mock_wrapper.js"]
 skip-if = ["!nightly_build"] # Bug 1751793
-

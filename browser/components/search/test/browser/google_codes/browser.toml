@@ -2,4 +2,3 @@
 prefs = ["browser.search.region='DE'"]
 
 ["../browser_google_behavior.js"]
-

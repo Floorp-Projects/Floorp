@@ -6,4 +6,3 @@ prefs = [
 support-files = ["config_disable_fxscreenshots.json"]
 
 ["browser_policy_disable_fxscreenshots.js"]
-

@@ -201,4 +201,3 @@ run-if = ["os == 'win'"] # "test must be able to prevent file deletion."
 ["browser_telemetry_updatePing_downloaded_ready.js"]
 
 ["browser_telemetry_updatePing_staged_ready.js"]
-

@@ -3,4 +3,3 @@ prefs = ["browser.policies.alternatePath='<test-root>/browser/components/enterpr
 support-files = ["bookmarks_policies.json"]
 
 ["browser_policy_no_default_bookmarks.js"]
-

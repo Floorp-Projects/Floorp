@@ -10,6 +10,6 @@ simd-accel = ["encoding_rs/simd-accel"]
 
 [dependencies]
 encoding_rs = "0.8.0"
-nsstring = { path = "../../xpcom/rust/nsstring" } 
+nsstring = { path = "../../xpcom/rust/nsstring" }
 nserror = { path = "../../xpcom/rust/nserror" }
 xmldecl = "0.2.0"
