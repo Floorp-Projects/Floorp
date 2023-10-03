@@ -141,6 +141,20 @@ interface WebExtensionDelegate {
     ) = Unit
 
     /**
+     * Invoked when a web extension requests optional permissions. This requires user interaction since the
+     * user needs to grant or revoke these optional permissions.
+     *
+     * @param extension The [WebExtension].
+     * @param permissions The list of all the optional permissions.
+     * @param onPermissionsGranted A callback to indicate if the optional permissions have been granted or not.
+     */
+    fun onOptionalPermissionsRequest(
+        extension: WebExtension,
+        permissions: List<String>,
+        onPermissionsGranted: ((Boolean) -> Unit),
+    ) = Unit
+
+    /**
      * Invoked when the list of installed extensions has been updated in the engine
      * (the web extension runtime). This happens as a result of debugging tools (e.g
      * web-ext) installing temporary extensions. It does not happen in the regular flow

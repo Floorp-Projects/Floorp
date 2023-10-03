@@ -1157,6 +1157,72 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate handles optional permissions prompt - allow`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val extension = mockNativeWebExtension("test", "uri")
+        val permissions = arrayOf("p1", "p2")
+        val origins = arrayOf("p3", "p4")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
+        verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
+
+        val result = geckoDelegateCaptor.value.onOptionalPrompt(extension, permissions, origins)
+        assertNotNull(result)
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
+        verify(webExtensionsDelegate).onOptionalPermissionsRequest(
+            extensionCaptor.capture(),
+            eq(permissions.toList() + origins.toList()),
+            onPermissionsGrantedCaptor.capture(),
+        )
+        val current = extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, current.nativeExtension)
+
+        onPermissionsGrantedCaptor.value.invoke(true)
+        assertEquals(GeckoResult.allow(), result)
+    }
+
+    @Test
+    fun `web extension delegate handles optional permissions prompt - deny`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val extension = mockNativeWebExtension("test", "uri")
+        val permissions = arrayOf("p1", "p2")
+        val origins = emptyArray<String>()
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
+        verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
+
+        val result = geckoDelegateCaptor.value.onOptionalPrompt(extension, permissions, origins)
+        assertNotNull(result)
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        val onPermissionsGrantedCaptor = argumentCaptor<((Boolean) -> Unit)>()
+        verify(webExtensionsDelegate).onOptionalPermissionsRequest(
+            extensionCaptor.capture(),
+            eq(permissions.toList() + origins.toList()),
+            onPermissionsGrantedCaptor.capture(),
+        )
+        val current = extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, current.nativeExtension)
+
+        onPermissionsGrantedCaptor.value.invoke(false)
+        assertEquals(GeckoResult.deny(), result)
+    }
+
+    @Test
     fun `web extension delegate notified of browser actions from built-in extensions`() {
         val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"

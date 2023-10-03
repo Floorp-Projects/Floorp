@@ -345,8 +345,22 @@ class GeckoEngine(
                     GeckoWebExtension(current, runtime),
                     GeckoWebExtension(updated, runtime),
                     newPermissions.toList() + newOrigins.toList(),
-                ) {
-                        allow ->
+                ) { allow ->
+                    if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
+                }
+                return result
+            }
+
+            override fun onOptionalPrompt(
+                extension: org.mozilla.geckoview.WebExtension,
+                permissions: Array<out String>,
+                origins: Array<out String>,
+            ): GeckoResult<AllowOrDeny>? {
+                val result = GeckoResult<AllowOrDeny>()
+                webExtensionDelegate.onOptionalPermissionsRequest(
+                    GeckoWebExtension(extension, runtime),
+                    permissions.toList() + origins.toList(),
+                ) { allow ->
                     if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
                 }
                 return result

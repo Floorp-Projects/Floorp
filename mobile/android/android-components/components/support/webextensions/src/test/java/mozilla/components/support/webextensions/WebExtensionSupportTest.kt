@@ -985,4 +985,23 @@ class WebExtensionSupportTest {
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
     }
+
+    @Test
+    fun `reacts to optional permissions request`() {
+        val store = spy(BrowserStore())
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val permissions = listOf("perm1", "perm2")
+        val onPermissionsGranted: ((Boolean) -> Unit) = mock()
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onOptionalPermissionsRequest(ext, permissions, onPermissionsGranted)
+        verify(store).dispatch(
+            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(ext, permissions, onPermissionsGranted),
+            ),
+        )
+    }
 }

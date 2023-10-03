@@ -16,6 +16,7 @@ import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment.PromptsStyling
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -150,12 +151,70 @@ class PermissionsDialogFragmentTest {
         assertFalse(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
     }
 
+    @Test
+    fun `build dialog for optional permissions`() {
+        val addon = Addon(
+            "id",
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
+            permissions = listOf("privacy", "https://example.org/", "tabs"),
+        )
+        val fragment = createPermissionsDialogFragment(addon, forOptionalPermissions = true)
+
+        doReturn(testContext).`when`(fragment).requireContext()
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val addonName = addon.translateName(testContext)
+        val titleTextView = dialog.findViewById<TextView>(R.id.title)
+        val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
+        val allowButton = dialog.findViewById<Button>(R.id.allow_button)
+        val denyButton = dialog.findViewById<Button>(R.id.deny_button)
+        val permissionText = fragment.buildPermissionsText()
+
+        assertEquals(
+            titleTextView.text,
+            testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_title, addonName),
+        )
+
+        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
+        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(
+            permissionText.contains(
+                testContext.getString(
+                    R.string.mozac_feature_addons_permissions_one_site_description,
+                    "example.org",
+                ),
+            ),
+        )
+        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
+
+        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
+        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(
+            permissionTextView.text.contains(
+                testContext.getString(
+                    R.string.mozac_feature_addons_permissions_one_site_description,
+                    "example.org",
+                ),
+            ),
+        )
+        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
+
+        assertEquals(allowButton.text, testContext.getString(R.string.mozac_feature_addons_permissions_dialog_allow))
+        assertEquals(denyButton.text, testContext.getString(R.string.mozac_feature_addons_permissions_dialog_deny))
+    }
+
     private fun createPermissionsDialogFragment(
         addon: Addon,
         promptsStyling: PromptsStyling? = null,
+        forOptionalPermissions: Boolean = false,
     ): PermissionsDialogFragment {
         return spy(
-            PermissionsDialogFragment.newInstance(addon, promptsStyling = promptsStyling),
+            PermissionsDialogFragment.newInstance(
+                addon = addon,
+                promptsStyling = promptsStyling,
+                forOptionalPermissions = forOptionalPermissions,
+            ),
         ).apply {
             doNothing().`when`(this).dismiss()
         }

@@ -81,6 +81,10 @@ class WebExtensionPromptFeature(
                 addon,
                 promptRequest,
             )
+            is WebExtensionPromptRequest.AfterInstallation.OptionalPermissions -> handleOptionalPermissionsRequest(
+                addon,
+                promptRequest,
+            )
             is WebExtensionPromptRequest.AfterInstallation.PostInstallation -> handlePostInstallationRequest(
                 addon.copy(installedState = promptRequest.extension.toInstalledState()),
             )
@@ -108,10 +112,32 @@ class WebExtensionPromptFeature(
         addon: Addon,
         promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions,
     ) {
-        if (hasExistingPermissionDialogFragment()) return
         showPermissionDialog(
-            addon,
-            promptRequest,
+            addon = addon,
+            onConfirm = promptRequest.onConfirm,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun handleOptionalPermissionsRequest(
+        addon: Addon,
+        promptRequest: WebExtensionPromptRequest.AfterInstallation.OptionalPermissions,
+    ) {
+        val shouldGrantWithoutPrompt = Addon.localizePermissions(promptRequest.permissions, context).isEmpty()
+
+        // If we don't have any promptable permissions, just proceed.
+        if (shouldGrantWithoutPrompt) {
+            promptRequest.onConfirm(true)
+            consumePromptRequest()
+            return
+        }
+
+        showPermissionDialog(
+            // This is a bit of a hack so that the permission prompt only lists
+            // the optional permissions that are requested.
+            addon = addon.copy(permissions = promptRequest.permissions),
+            onConfirm = promptRequest.onConfirm,
+            forOptionalPermissions = true,
         )
     }
 
@@ -185,37 +211,43 @@ class WebExtensionPromptFeature(
     @VisibleForTesting
     internal fun showPermissionDialog(
         addon: Addon,
-        promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions,
+        onConfirm: (Boolean) -> Unit,
+        forOptionalPermissions: Boolean = false,
     ) {
-        if (!isInstallationInProgress && !hasExistingPermissionDialogFragment()) {
-            val dialog = PermissionsDialogFragment.newInstance(
-                addon = addon,
-                promptsStyling = PermissionsDialogFragment.PromptsStyling(
-                    gravity = Gravity.BOTTOM,
-                    shouldWidthMatchParent = true,
-                    positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
-                        R.attr.accent,
-                        context,
-                    ),
-                    positiveButtonTextColor = ThemeManager.resolveAttribute(
-                        R.attr.textOnColorPrimary,
-                        context,
-                    ),
-                    positiveButtonRadius =
-                    (context.resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
-                ),
-                onPositiveButtonClicked = {
-                    handleApprovedPermissions(promptRequest)
-                },
-                onNegativeButtonClicked = {
-                    handleDeniedPermissions(promptRequest)
-                },
-            )
-            dialog.show(
-                fragmentManager,
-                PERMISSIONS_DIALOG_FRAGMENT_TAG,
-            )
+        if (isInstallationInProgress || hasExistingPermissionDialogFragment()) {
+            return
         }
+
+        val dialog = PermissionsDialogFragment.newInstance(
+            addon = addon,
+            forOptionalPermissions = forOptionalPermissions,
+            promptsStyling = PermissionsDialogFragment.PromptsStyling(
+                gravity = Gravity.BOTTOM,
+                shouldWidthMatchParent = true,
+                positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
+                    R.attr.accent,
+                    context,
+                ),
+                positiveButtonTextColor = ThemeManager.resolveAttribute(
+                    R.attr.textOnColorPrimary,
+                    context,
+                ),
+                positiveButtonRadius =
+                (context.resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
+            ),
+            onPositiveButtonClicked = {
+                onConfirm(true)
+                consumePromptRequest()
+            },
+            onNegativeButtonClicked = {
+                onConfirm(false)
+                consumePromptRequest()
+            },
+        )
+        dialog.show(
+            fragmentManager,
+            PERMISSIONS_DIALOG_FRAGMENT_TAG,
+        )
     }
 
     private fun tryToReAttachButtonHandlersToPreviousDialog() {

@@ -307,6 +307,22 @@ object WebExtensionSupport {
                     )
                 }
 
+                override fun onOptionalPermissionsRequest(
+                    extension: WebExtension,
+                    permissions: List<String>,
+                    onPermissionsGranted: ((Boolean) -> Unit),
+                ) {
+                    store.dispatch(
+                        WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                            WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+                                extension,
+                                permissions,
+                                onPermissionsGranted,
+                            ),
+                        ),
+                    )
+                }
+
                 override fun onExtensionListUpdated() {
                     installedExtensions.clear()
                     store.dispatch(WebExtensionAction.UninstallAllWebExtensionsAction)
