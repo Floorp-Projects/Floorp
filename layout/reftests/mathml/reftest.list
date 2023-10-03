@@ -4,16 +4,11 @@ random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,20
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
-== mphantom-1.html mphantom-1-ref.html
-== mphantom-2.html mphantom-2-ref.html
-!= non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-!= stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
 == stretchy-largeop-2.html stretchy-largeop-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
-== mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == semantics-1.xhtml semantics-1-ref.xhtml
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
@@ -42,8 +37,6 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == munderover-align-accent-true.html munderover-align-accent-true-ref.html
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
-== negative-mspace-1.html negative-mspace-1-ref.html
-!= link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
@@ -68,6 +61,7 @@ fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-itali
 == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
+# FIXME(bug 1850661): Export the following tests to WPT.
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
 != radicalbar-1b.html about:blank
