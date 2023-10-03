@@ -81,7 +81,9 @@ skip-if = ["toolkit != 'cocoa'"]
 ["test_autocomplete_placehold_last_complete.xhtml"]
 
 ["test_autocomplete_with_composition_on_input.html"]
-
+skip-if = [
+  "apple_catalina" # Bug 1784825
+]
 ["test_browser_drop.xhtml"]
 
 ["test_bug1048178.xhtml"]
