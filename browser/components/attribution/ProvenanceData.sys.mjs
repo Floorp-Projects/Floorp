@@ -441,15 +441,6 @@ export var ProvenanceData = {
   /**
    * Only submits telemetry once, no matter how many times it is called.
    * Has no effect on OSs where provenance data is not supported.
-   *
-   * @returns An object indicating the values submitted. Keys may not match the
-   *          Scalar names since the returned object is intended to be suitable
-   *          for use as a Telemetry Event's `extra` object, which has shorter
-   *          limits for extra key names than the limits for Scalar names.
-   *          Values will be converted to strings since Telemetry Event's
-   *          `extra` objects must have string values.
-   *          On platforms that do not support provenance data, this will always
-   *          return an empty object.
    */
   async submitProvenanceTelemetry() {
     if (gTelemetryPromise) {
@@ -457,31 +448,21 @@ export var ProvenanceData = {
     }
     gTelemetryPromise = (async () => {
       const errorValue = "error";
-
-      let extra = {};
-
       let provenance = await this.readZoneIdProvenanceFile();
       if (!provenance) {
-        return extra;
+        return;
       }
 
-      let setTelemetry = (scalarName, extraKey, value) => {
-        Services.telemetry.scalarSet(scalarName, value);
-        extra[extraKey] = value.toString();
-      };
-
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.data_exists",
-        "data_exists",
         !provenance.readProvenanceError
       );
       if (provenance.readProvenanceError) {
-        return extra;
+        return;
       }
 
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.file_system",
-        "file_system",
         provenance.fileSystem ?? errorValue
       );
 
@@ -494,50 +475,42 @@ export var ProvenanceData = {
           provenance.readZoneIdError == "openFile" &&
           provenance.readZoneIdErrorCode == ERROR_FILE_NOT_FOUND
         );
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.ads_exists",
-        "ads_exists",
         ads_exists
       );
       if (!ads_exists) {
-        return extra;
+        return;
       }
 
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.security_zone",
-        "security_zone",
         "zoneId" in provenance ? provenance.zoneId.toString() : errorValue
       );
 
       let haveReferrerUrl = URL.isInstance(provenance.referrerUrl);
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.referrer_url_exists",
-        "refer_url_exist",
         haveReferrerUrl
       );
       if (haveReferrerUrl) {
-        setTelemetry(
+        Services.telemetry.scalarSet(
           "attribution.provenance.referrer_url_is_mozilla",
-          "refer_url_moz",
           provenance.referrerUrlIsMozilla
         );
       }
 
       let haveHostUrl = URL.isInstance(provenance.hostUrl);
-      setTelemetry(
+      Services.telemetry.scalarSet(
         "attribution.provenance.host_url_exists",
-        "host_url_exist",
         haveHostUrl
       );
       if (haveHostUrl) {
-        setTelemetry(
+        Services.telemetry.scalarSet(
           "attribution.provenance.host_url_is_mozilla",
-          "host_url_moz",
           provenance.hostUrlIsMozilla
         );
       }
-
-      return extra;
     })();
     return gTelemetryPromise;
   },

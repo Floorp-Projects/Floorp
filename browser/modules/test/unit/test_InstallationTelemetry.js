@@ -6,9 +6,6 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { AttributionIOUtils } = ChromeUtils.importESModule(
-  "resource:///modules/AttributionCode.sys.mjs"
-);
 const { BrowserUsageTelemetry } = ChromeUtils.importESModule(
   "resource:///modules/BrowserUsageTelemetry.sys.mjs"
 );
@@ -72,61 +69,14 @@ async function runReport(
     expectExtra
       ? [{ object: installType, value: null, extra: expectExtra }]
       : [],
-    { category: "installation", method: "first_seen" },
-    { clear: false }
+    { category: "installation", method: "first_seen" }
   );
-  // Provenance Data is currently only supported on Windows.
-  if (AppConstants.platform == "win") {
-    let provenanceExtra = {
-      data_exists: "true",
-      file_system: "NTFS",
-      ads_exists: "true",
-      security_zone: "3",
-      refer_url_exist: "true",
-      refer_url_moz: "true",
-      host_url_exist: "true",
-      host_url_moz: "true",
-    };
-    TelemetryTestUtils.assertEvents(
-      expectExtra
-        ? [{ object: installType, value: null, extra: provenanceExtra }]
-        : [],
-      { category: "installation", method: "first_seen_prov_ext" }
-    );
-  } else {
-    TelemetryTestUtils.assertEvents(
-      expectExtra ? [{ object: installType, value: null, extra: {} }] : [],
-      { category: "installation", method: "first_seen_prov_ext" }
-    );
-  }
 
   // Check timestamp
   if (typeof expectTS == "string") {
     Assert.equal(expectTS, Services.prefs.getStringPref(TIMESTAMP_PREF));
   }
 }
-
-add_setup(function setup() {
-  let origReadUTF8 = AttributionIOUtils.readUTF8;
-  registerCleanupFunction(() => {
-    AttributionIOUtils.readUTF8 = origReadUTF8;
-  });
-  AttributionIOUtils.readUTF8 = async path => {
-    return `
-[Mozilla]
-fileSystem=NTFS
-zoneIdFileSize=194
-zoneIdBufferLargeEnough=true
-zoneIdTruncated=false
-
-[MozillaZoneIdentifierStartSentinel]
-[ZoneTransfer]
-ZoneId=3
-ReferrerUrl=https://mozilla.org/
-HostUrl=https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mozilla-central-l10n/Firefox%20Installer.en-US.exe
-`;
-  };
-});
 
 let condition = {
   skip_if: () =>
