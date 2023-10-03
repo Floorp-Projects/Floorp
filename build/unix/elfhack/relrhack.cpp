@@ -88,6 +88,16 @@ std::vector<T> read_vector_at(std::istream& in, off_t pos, size_t num) {
   return result;
 }
 
+void write_at(std::ostream& out, off_t pos, const char* buf, size_t len) {
+  out.seekp(pos, std::ios::beg);
+  out.write(buf, len);
+}
+
+template <typename T>
+void write_one_at(std::ostream& out, off_t pos, const T& data) {
+  write_at(out, pos, reinterpret_cast<const char*>(&data), sizeof(T));
+}
+
 template <int bits>
 bool RelR<bits>::hack(std::fstream& f) {
   auto ehdr = read_one_at<Elf_Ehdr>(f, 0);
@@ -182,8 +192,7 @@ bool RelR<bits>::hack(std::fstream& f) {
 
   // Apply the PT_DYNAMIC tag changes we've recorded.
   for (const auto& [offset, tag] : relr_tags) {
-    f.seekg(offset, std::ios::beg);
-    f.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+    write_one_at(f, offset, tag);
   }
 
   if (verneednum && verneed_off && strsz && strtab_off) {
@@ -222,10 +231,9 @@ bool RelR<bits>::hack(std::fstream& f) {
         // packed relocations don't want to load a binary that has DT_RELR*
         // tags but *not* a dependency on the GLIBC_ABI_DT_RELR version.
         if (relr) {
-          f.seekg(relr, std::ios::beg);
           // Don't overwrite vn_aux.
-          f.write(reinterpret_cast<char*>(&reuse),
-                  sizeof(reuse) - sizeof(Elf_Word));
+          write_at(f, relr, reinterpret_cast<char*>(&reuse),
+                   sizeof(reuse) - sizeof(Elf_Word));
         }
       }
       verneed_off += verneed.vn_next;
@@ -237,9 +245,7 @@ bool RelR<bits>::hack(std::fstream& f) {
     // Some tools don't like sections of types they don't know, so change
     // SHT_RELR, which might be unknown on older systems, to SHT_PROGBITS.
     if (s.sh_type == SHT_RELR) {
-      Elf_Word progbits = SHT_PROGBITS;
-      f.seekg(shdr_offset, std::ios::beg);
-      f.write(reinterpret_cast<const char*>(&progbits), sizeof(progbits));
+      write_one_at(f, shdr_offset, Elf_Word(SHT_PROGBITS));
     }
     shdr_offset += sizeof(Elf_Shdr);
   }
