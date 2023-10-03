@@ -14,13 +14,13 @@ diff --git a/src/resample.c b/src/resample.c
 +
  #ifdef OUTSIDE_SPEEX
  #include <stdlib.h>
- static void *speex_alloc (int size) {return calloc(size,1);}
- static void *speex_realloc (void *ptr, int size) {return realloc(ptr, size);}
- static void speex_free (void *ptr) {free(ptr);}
- #include "speex_resampler.h"
- #include "arch.h"
- #else /* OUTSIDE_SPEEX */
-@@ -643,25 +645,26 @@ static int update_filter(SpeexResamplerS
+ static void *speex_alloc(int size) {return calloc(size,1);}
+ static void *speex_realloc(void *ptr, int size) {return realloc(ptr, size);}
+ static void speex_free(void *ptr) {free(ptr);}
+ #ifndef EXPORT
+ #define EXPORT
+ #endif
+@@ -633,25 +645,26 @@ static int update_filter(SpeexResamplerS
           st->oversample >>= 1;
        if (st->oversample < 1)
           st->oversample = 1;
@@ -29,23 +29,24 @@ diff --git a/src/resample.c b/src/resample.c
        st->cutoff = quality_map[st->quality].upsample_bandwidth;
     }
  
--   /* Choose the resampling type that requires the least amount of memory */
 -#ifdef RESAMPLE_FULL_SINC_TABLE
 -   use_direct = 1;
 -   if (INT_MAX/sizeof(spx_word16_t)/st->den_rate < st->filt_len)
 -      goto fail;
+-#else
+-   /* Choose the resampling type that requires the least amount of memory */
+-   use_direct = st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
+-                && INT_MAX/sizeof(spx_word16_t)/st->den_rate >= st->filt_len;
 +   use_direct =
 +#ifdef RESAMPLE_HUGEMEM
 +      /* Choose the direct resampler, even with higher initialization costs,
 +         when resampling any multiple of 100 to 44100. */
 +      st->den_rate <= 441
- #else
--   use_direct = st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
++#else
 +      /* Choose the resampling type that requires the least amount of memory */
 +      st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
-+#endif
-                 && INT_MAX/sizeof(spx_word16_t)/st->den_rate >= st->filt_len;
--#endif
+ #endif
++                && INT_MAX/sizeof(spx_word16_t)/st->den_rate >= st->filt_len;
     if (use_direct)
     {
        min_sinc_table_length = st->filt_len*st->den_rate;
@@ -54,4 +55,3 @@ diff --git a/src/resample.c b/src/resample.c
           goto fail;
  
        min_sinc_table_length = st->filt_len*st->oversample+8;
-

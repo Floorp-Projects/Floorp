@@ -1,7 +1,9 @@
+This is a fix for https://bugzilla.mozilla.org/show_bug.cgi?id=1274083
+
 diff --git a/src/resample.c b/src/resample.c
 --- a/src/resample.c
 +++ b/src/resample.c
-@@ -1141,18 +1141,19 @@ EXPORT int speex_resampler_set_rate_frac
+@@ -1129,18 +1129,19 @@ EXPORT int speex_resampler_set_rate_frac
  
     st->num_rate /= fact;
     st->den_rate /= fact;
@@ -10,10 +12,10 @@ diff --git a/src/resample.c b/src/resample.c
     {
        for (i=0;i<st->nb_channels;i++)
        {
--         if (_muldiv(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS)
+-         if (multiply_frac(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS)
 -            return RESAMPLER_ERR_OVERFLOW;
-+         if (_muldiv(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS) {
-+           st->samp_frac_num[i] = st->den_rate-1;
++         if (multiply_frac(&st->samp_frac_num[i],st->samp_frac_num[i],st->den_rate,old_den) != RESAMPLER_ERR_SUCCESS) {
++            st->samp_frac_num[i] = st->den_rate-1;
 +         }
           /* Safety net */
           if (st->samp_frac_num[i] >= st->den_rate)
