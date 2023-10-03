@@ -1376,8 +1376,8 @@ var gUnifiedExtensions = {
     if (shouldShowQuarantinedNotification) {
       if (!this._messageBarQuarantinedDomain) {
         this._messageBarQuarantinedDomain = this._makeMessageBar({
-          titleFluentId: "unified-extensions-mb-quarantined-domain-title",
-          messageFluentId: "unified-extensions-mb-quarantined-domain-message-2",
+          messageBarFluentId:
+            "unified-extensions-mb-quarantined-domain-message-3",
           supportPage: "quarantined-domains",
           dismissable: false,
         });
@@ -1895,26 +1895,17 @@ var gUnifiedExtensions = {
   },
 
   _makeMessageBar({
-    messageFluentId,
-    titleFluentId = null,
+    messageBarFluentId,
     supportPage = null,
     type = "warning",
   }) {
-    const messageBar = document.createElement("message-bar");
+    window.ensureCustomElements("moz-message-bar");
+
+    const messageBar = document.createElement("moz-message-bar");
     messageBar.setAttribute("type", type);
     messageBar.classList.add("unified-extensions-message-bar");
-
-    if (titleFluentId) {
-      const titleEl = document.createElement("strong");
-      titleEl.setAttribute("id", titleFluentId);
-      document.l10n.setAttributes(titleEl, titleFluentId);
-      messageBar.append(titleEl);
-    }
-
-    const messageEl = document.createElement("span");
-    messageEl.setAttribute("id", messageFluentId);
-    document.l10n.setAttributes(messageEl, messageFluentId);
-    messageBar.append(messageEl);
+    document.l10n.setAttributes(messageBar, messageBarFluentId);
+    messageBar.setAttribute("data-l10n-attrs", "heading, message");
 
     if (supportPage) {
       window.ensureCustomElements("moz-support-link");
@@ -1923,12 +1914,12 @@ var gUnifiedExtensions = {
         is: "moz-support-link",
       });
       supportUrl.setAttribute("support-page", supportPage);
-      if (titleFluentId) {
-        supportUrl.setAttribute("aria-labelledby", titleFluentId);
-        supportUrl.setAttribute("aria-describedby", messageFluentId);
-      } else {
-        supportUrl.setAttribute("aria-labelledby", messageFluentId);
-      }
+      document.l10n.setAttributes(
+        supportUrl,
+        "unified-extensions-mb-quarantined-domain-learn-more"
+      );
+      supportUrl.setAttribute("data-l10n-attrs", "aria-label");
+      supportUrl.setAttribute("slot", "support-link");
 
       messageBar.append(supportUrl);
     }
