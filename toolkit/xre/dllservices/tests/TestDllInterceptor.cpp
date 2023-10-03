@@ -61,6 +61,8 @@ BOOL WINAPI ApiSetQueryApiSetPresence(PCUNICODE_STRING, PBOOLEAN);
 extern "C" BOOLEAN NTAPI RtlGenRandom(PVOID aRandomBuffer,
                                       ULONG aRandomBufferLength);
 
+extern "C" uintptr_t WINAPI TF_Notify(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 using namespace mozilla;
 
 struct payload {
@@ -1517,6 +1519,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("imm32.dll", ImmGetCompositionStringW, Ignore, 0) &&
       TEST_HOOK_SKIP_EXEC("imm32.dll", ImmSetCandidateWindow) &&
       TEST_HOOK("imm32.dll", ImmNotifyIME, Equals, 0) &&
+      TEST_HOOK("msctf.dll", TF_Notify, Equals, 0) &&
       TEST_HOOK("comdlg32.dll", GetSaveFileNameW, Ignore, FALSE) &&
       TEST_HOOK("comdlg32.dll", GetOpenFileNameW, Ignore, FALSE) &&
 #if defined(_M_X64)
