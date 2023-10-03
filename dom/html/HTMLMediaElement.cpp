@@ -2836,9 +2836,24 @@ void HTMLMediaElement::LoadFromSourceChildren() {
         return;
       }
     }
+    nsAutoString media;
+    child->GetAttr(nsGkAtoms::media, media);
+    HTMLSourceElement* childSrc = HTMLSourceElement::FromNode(child);
+    MOZ_ASSERT(childSrc, "Expect child to be HTMLSourceElement");
+    if (childSrc && !childSrc->MatchesCurrentMedia()) {
+      AutoTArray<nsString, 2> params = {media, src};
+      ReportLoadError("MediaLoadSourceMediaNotMatched", params);
+      DealWithFailedElement(child);
+      LOG(LogLevel::Debug,
+          ("%p Media did not match from <source>=%s type=%s media=%s", this,
+           NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
+           NS_ConvertUTF16toUTF8(media).get()));
+      return;
+    }
     LOG(LogLevel::Debug,
-        ("%p Trying load from <source>=%s type=%s", this,
-         NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
+        ("%p Trying load from <source>=%s type=%s media=%s", this,
+         NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
+         NS_ConvertUTF16toUTF8(media).get()));
 
     nsCOMPtr<nsIURI> uri;
     NewURIFromString(src, getter_AddRefs(uri));
