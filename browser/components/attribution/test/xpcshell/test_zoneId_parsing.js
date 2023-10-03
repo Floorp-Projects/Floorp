@@ -13,9 +13,6 @@ const { AttributionIOUtils } = ChromeUtils.importESModule(
 const { ProvenanceData } = ChromeUtils.importESModule(
   "resource:///modules/ProvenanceData.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 
 add_setup(function setup() {
   let origReadUTF8 = AttributionIOUtils.readUTF8;
@@ -26,7 +23,7 @@ add_setup(function setup() {
 
 // If `iniFileContents` is passed as `null`, we will simulate an error reading
 // the INI.
-async function testProvenance(iniFileContents, testFn, telemetryTestFn) {
+async function testProvenance(iniFileContents, testFn) {
   if (iniFileContents == null) {
     AttributionIOUtils.readUTF8 = async path => {
       throw new Error("test error: simulating provenance file read error");
@@ -38,31 +35,13 @@ async function testProvenance(iniFileContents, testFn, telemetryTestFn) {
   if (testFn) {
     await testFn(provenance);
   }
-  if (telemetryTestFn) {
-    Services.telemetry.clearScalars();
-    await ProvenanceData.submitProvenanceTelemetry();
-    let scalars = Services.telemetry.getSnapshotForScalars(
-      "new-profile",
-      false /* aClear */
-    ).parent;
-    let checkScalar = (scalarName, expectedValue) => {
-      TelemetryTestUtils.assertScalar(scalars, scalarName, expectedValue);
-    };
-    telemetryTestFn(checkScalar);
-  }
   ProvenanceData._clearCache();
 }
 
 add_task(async function unableToReadFile() {
-  await testProvenance(
-    null,
-    provenance => {
-      Assert.ok("readProvenanceError" in provenance);
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.data_exists", false);
-    }
-  );
+  await testProvenance(null, provenance => {
+    Assert.ok("readProvenanceError" in provenance);
+  });
 });
 
 add_task(async function expectedMozilla() {
@@ -93,16 +72,6 @@ HostUrl=https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mo
         referrerUrlIsMozilla: true,
         hostUrlIsMozilla: true,
       });
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.data_exists", true);
-      checkScalar("attribution.provenance.file_system", "NTFS");
-      checkScalar("attribution.provenance.ads_exists", true);
-      checkScalar("attribution.provenance.security_zone", "3");
-      checkScalar("attribution.provenance.referrer_url_exists", true);
-      checkScalar("attribution.provenance.referrer_url_is_mozilla", true);
-      checkScalar("attribution.provenance.host_url_exists", true);
-      checkScalar("attribution.provenance.host_url_is_mozilla", true);
     }
   );
 });
@@ -117,12 +86,6 @@ HostUrl=https://download-installer.cdn.mozilla.foobar.net/pub/firefox/nightly/la
     provenance => {
       Assert.equal(provenance.referrerUrlIsMozilla, false);
       Assert.equal(provenance.hostUrlIsMozilla, false);
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.referrer_url_exists", true);
-      checkScalar("attribution.provenance.referrer_url_is_mozilla", false);
-      checkScalar("attribution.provenance.host_url_exists", true);
-      checkScalar("attribution.provenance.host_url_is_mozilla", false);
     }
   );
 });
@@ -137,9 +100,6 @@ readFsErrorCode=1234
     provenance => {
       Assert.equal(provenance.readFsError, "openFile");
       Assert.equal(provenance.readFsErrorCode, 1234);
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "error");
     }
   );
 });
@@ -154,9 +114,6 @@ readFsErrorCode=bazqux
     provenance => {
       Assert.equal(provenance.readFsError, "openFile");
       Assert.ok(!("readFsErrorCode" in provenance));
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "error");
     }
   );
 });
@@ -169,23 +126,14 @@ readFsError=foobar
 `,
     provenance => {
       Assert.equal(provenance.readFsError, "unexpected");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "error");
     }
   );
 });
 
 add_task(async function missingFileSystem() {
-  await testProvenance(
-    ``,
-    provenance => {
-      Assert.equal(provenance.fileSystem, "missing");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "missing");
-    }
-  );
+  await testProvenance(``, provenance => {
+    Assert.equal(provenance.fileSystem, "missing");
+  });
 });
 
 add_task(async function fileSystem() {
@@ -196,9 +144,6 @@ fileSystem=ntfs
 `,
     provenance => {
       Assert.equal(provenance.fileSystem, "NTFS");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "NTFS");
     }
   );
 });
@@ -211,9 +156,6 @@ fileSystem=foobar
 `,
     provenance => {
       Assert.equal(provenance.fileSystem, "other");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.file_system", "other");
     }
   );
 });
@@ -226,8 +168,7 @@ zoneIdFileSize=1234
 `,
     provenance => {
       Assert.equal(provenance.zoneIdFileSize, 1234);
-    },
-    null
+    }
   );
 });
 
@@ -239,8 +180,7 @@ zoneIdFileSize=unknown
 `,
     provenance => {
       Assert.equal(provenance.zoneIdFileSize, "unknown");
-    },
-    null
+    }
   );
 });
 
@@ -252,19 +192,14 @@ zoneIdFileSize=foobar
 `,
     provenance => {
       Assert.equal(provenance.zoneIdFileSize, "unexpected");
-    },
-    null
+    }
   );
 });
 
 add_task(async function missingZoneIdFileSize() {
-  await testProvenance(
-    ``,
-    provenance => {
-      Assert.ok(!("zoneIdFileSize" in provenance));
-    },
-    null
-  );
+  await testProvenance(``, provenance => {
+    Assert.ok(!("zoneIdFileSize" in provenance));
+  });
 });
 
 add_task(async function zoneIdBufferLargeEnoughTrue() {
@@ -275,8 +210,7 @@ zoneIdBufferLargeEnough=TrUe
 `,
     provenance => {
       Assert.equal(provenance.zoneIdBufferLargeEnough, true);
-    },
-    null
+    }
   );
 });
 
@@ -288,8 +222,7 @@ zoneIdBufferLargeEnough=FaLsE
 `,
     provenance => {
       Assert.equal(provenance.zoneIdBufferLargeEnough, false);
-    },
-    null
+    }
   );
 });
 
@@ -301,8 +234,7 @@ zoneIdBufferLargeEnough=unknown
 `,
     provenance => {
       Assert.equal(provenance.zoneIdBufferLargeEnough, "unknown");
-    },
-    null
+    }
   );
 });
 
@@ -314,8 +246,7 @@ zoneIdBufferLargeEnough=foobar
 `,
     provenance => {
       Assert.equal(provenance.zoneIdBufferLargeEnough, "unexpected");
-    },
-    null
+    }
   );
 });
 
@@ -333,8 +264,7 @@ zoneIdTruncated=TrUe
 `,
     provenance => {
       Assert.equal(provenance.zoneIdTruncated, true);
-    },
-    null
+    }
   );
 });
 
@@ -346,8 +276,7 @@ zoneIdTruncated=FaLsE
 `,
     provenance => {
       Assert.equal(provenance.zoneIdTruncated, false);
-    },
-    null
+    }
   );
 });
 
@@ -359,8 +288,7 @@ zoneIdTruncated=unknown
 `,
     provenance => {
       Assert.equal(provenance.zoneIdTruncated, "unknown");
-    },
-    null
+    }
   );
 });
 
@@ -372,8 +300,7 @@ zoneIdTruncated=foobar
 `,
     provenance => {
       Assert.equal(provenance.zoneIdTruncated, "unexpected");
-    },
-    null
+    }
   );
 });
 
@@ -393,8 +320,7 @@ readZoneIdErrorCode=1234
     provenance => {
       Assert.equal(provenance.readZoneIdError, "openFile");
       Assert.equal(provenance.readZoneIdErrorCode, 1234);
-    },
-    null
+    }
   );
 });
 
@@ -408,24 +334,6 @@ readZoneIdErrorCode=bazqux
     provenance => {
       Assert.equal(provenance.readZoneIdError, "openFile");
       Assert.ok(!("readZoneIdErrorCode" in provenance));
-    },
-    null
-  );
-});
-
-add_task(async function noAdsOnInstaller() {
-  await testProvenance(
-    `
-[Mozilla]
-readZoneIdError=openFile
-readZoneIdErrorCode=2
-`,
-    provenance => {
-      Assert.equal(provenance.readZoneIdError, "openFile");
-      Assert.equal(provenance.readZoneIdErrorCode, 2);
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.ads_exists", false);
     }
   );
 });
@@ -438,19 +346,14 @@ readZoneIdError=foobar
 `,
     provenance => {
       Assert.equal(provenance.readZoneIdError, "unexpected");
-    },
-    null
+    }
   );
 });
 
 add_task(async function missingZoneId() {
-  await testProvenance(
-    ``,
-    provenance => {
-      Assert.equal(provenance.zoneId, "missing");
-    },
-    null
-  );
+  await testProvenance(``, provenance => {
+    Assert.equal(provenance.zoneId, "missing");
+  });
 });
 
 add_task(async function unexpectedZoneId() {
@@ -461,25 +364,14 @@ ZoneId=9999999999
 `,
     provenance => {
       Assert.equal(provenance.zoneId, "unexpected");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.ads_exists", true);
-      checkScalar("attribution.provenance.security_zone", "unexpected");
     }
   );
 });
 
 add_task(async function missingReferrerUrl() {
-  await testProvenance(
-    ``,
-    provenance => {
-      Assert.equal(provenance.referrerUrl, "missing");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.ads_exists", true);
-      checkScalar("attribution.provenance.referrer_url_exists", false);
-    }
-  );
+  await testProvenance(``, provenance => {
+    Assert.equal(provenance.referrerUrl, "missing");
+  });
 });
 
 add_task(async function unexpectedReferrerUrl() {
@@ -490,22 +382,14 @@ ReferrerUrl=foobar
 `,
     provenance => {
       Assert.equal(provenance.referrerUrl, "unexpected");
-    },
-    null
+    }
   );
 });
 
 add_task(async function missingHostUrl() {
-  await testProvenance(
-    ``,
-    provenance => {
-      Assert.equal(provenance.hostUrl, "missing");
-    },
-    checkScalar => {
-      checkScalar("attribution.provenance.ads_exists", true);
-      checkScalar("attribution.provenance.referrer_url_exists", false);
-    }
-  );
+  await testProvenance(``, provenance => {
+    Assert.equal(provenance.hostUrl, "missing");
+  });
 });
 
 add_task(async function unexpectedHostUrl() {
@@ -516,7 +400,6 @@ HostUrl=foobar
 `,
     provenance => {
       Assert.equal(provenance.hostUrl, "unexpected");
-    },
-    null
+    }
   );
 });

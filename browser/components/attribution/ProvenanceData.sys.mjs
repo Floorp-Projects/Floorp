@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 let gReadZoneIdPromise = null;
-let gTelemetryPromise = null;
 
 export var ProvenanceData = {
   /**
@@ -19,7 +18,6 @@ export var ProvenanceData = {
   _clearCache() {
     if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
       gReadZoneIdPromise = null;
-      gTelemetryPromise = null;
     }
   },
 
@@ -436,82 +434,5 @@ export var ProvenanceData = {
       return returnObject;
     })();
     return gReadZoneIdPromise;
-  },
-
-  /**
-   * Only submits telemetry once, no matter how many times it is called.
-   * Has no effect on OSs where provenance data is not supported.
-   */
-  async submitProvenanceTelemetry() {
-    if (gTelemetryPromise) {
-      return gTelemetryPromise;
-    }
-    gTelemetryPromise = (async () => {
-      const errorValue = "error";
-      let provenance = await this.readZoneIdProvenanceFile();
-      if (!provenance) {
-        return;
-      }
-
-      Services.telemetry.scalarSet(
-        "attribution.provenance.data_exists",
-        !provenance.readProvenanceError
-      );
-      if (provenance.readProvenanceError) {
-        return;
-      }
-
-      Services.telemetry.scalarSet(
-        "attribution.provenance.file_system",
-        provenance.fileSystem ?? errorValue
-      );
-
-      // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-#ERROR_FILE_NOT_FOUND
-      const ERROR_FILE_NOT_FOUND = 2;
-
-      let ads_exists =
-        !provenance.readProvenanceError &&
-        !(
-          provenance.readZoneIdError == "openFile" &&
-          provenance.readZoneIdErrorCode == ERROR_FILE_NOT_FOUND
-        );
-      Services.telemetry.scalarSet(
-        "attribution.provenance.ads_exists",
-        ads_exists
-      );
-      if (!ads_exists) {
-        return;
-      }
-
-      Services.telemetry.scalarSet(
-        "attribution.provenance.security_zone",
-        "zoneId" in provenance ? provenance.zoneId.toString() : errorValue
-      );
-
-      let haveReferrerUrl = URL.isInstance(provenance.referrerUrl);
-      Services.telemetry.scalarSet(
-        "attribution.provenance.referrer_url_exists",
-        haveReferrerUrl
-      );
-      if (haveReferrerUrl) {
-        Services.telemetry.scalarSet(
-          "attribution.provenance.referrer_url_is_mozilla",
-          provenance.referrerUrlIsMozilla
-        );
-      }
-
-      let haveHostUrl = URL.isInstance(provenance.hostUrl);
-      Services.telemetry.scalarSet(
-        "attribution.provenance.host_url_exists",
-        haveHostUrl
-      );
-      if (haveHostUrl) {
-        Services.telemetry.scalarSet(
-          "attribution.provenance.host_url_is_mozilla",
-          provenance.hostUrlIsMozilla
-        );
-      }
-    })();
-    return gTelemetryPromise;
   },
 };
