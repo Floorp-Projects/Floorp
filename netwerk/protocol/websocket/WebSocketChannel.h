@@ -281,7 +281,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
   // following members are accessed only on the main thread
   uint32_t mGotUpgradeOK : 1;
   uint32_t mRecvdHttpUpgradeTransport : 1;
-  uint32_t mAutoFollowRedirects : 1;
   uint32_t mAllowPMCE : 1;
   uint32_t : 0;  // ensure these aren't mixed with the next set
 

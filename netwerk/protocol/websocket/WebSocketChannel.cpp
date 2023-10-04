@@ -1149,7 +1149,6 @@ WebSocketChannel::WebSocketChannel()
       mInnerWindowID(0),
       mGotUpgradeOK(0),
       mRecvdHttpUpgradeTransport(0),
-      mAutoFollowRedirects(0),
       mAllowPMCE(1),
       mPingOutstanding(0),
       mReleaseOnTransmit(0),
@@ -3168,20 +3167,17 @@ WebSocketChannel::AsyncOnChannelRedirect(
   // newuri is expected to be http or https
   bool newuriIsHttps = newuri->SchemeIs("https");
 
-  if (!mAutoFollowRedirects) {
-    // Even if redirects configured off, still allow them for HTTP Strict
-    // Transport Security (from ws://FOO to https://FOO (mapped to wss://FOO)
+  // allow insecure->secure redirects for HTTP Strict Transport Security (from
+  // ws://FOO to https://FOO (mapped to wss://FOO)
+  if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                 nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
+    nsAutoCString newSpec;
+    rv = newuri->GetSpec(newSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
-                   nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
-      nsAutoCString newSpec;
-      rv = newuri->GetSpec(newSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      LOG(("WebSocketChannel: Redirect to %s denied by configuration\n",
-           newSpec.get()));
-      return NS_ERROR_FAILURE;
-    }
+    LOG(("WebSocketChannel: Redirect to %s denied by configuration\n",
+         newSpec.get()));
+    return NS_ERROR_FAILURE;
   }
 
   if (mEncrypted && !newuriIsHttps) {
@@ -3454,11 +3450,6 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
         "network.websocket.extensions.permessage-deflate", &boolpref);
     if (NS_SUCCEEDED(rv)) {
       mAllowPMCE = boolpref ? 1 : 0;
-    }
-    rv = prefService->GetBoolPref(
-        "network.websocket.auto-follow-http-redirects", &boolpref);
-    if (NS_SUCCEEDED(rv)) {
-      mAutoFollowRedirects = boolpref ? 1 : 0;
     }
     rv = prefService->GetIntPref("network.websocket.max-connections", &intpref);
     if (NS_SUCCEEDED(rv)) {
