@@ -31,8 +31,8 @@ DESKTOP_VISUALFX_THEME = {
     "Custom": 3,
 }.get("Best appearance")
 TASKBAR_AUTOHIDE_REG_PATH = {
-    "Windows 7": "HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects2",
-    "Windows 10": "HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3",
+    "Windows 7": r"HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects2",
+    "Windows 10": r"HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3",
 }.get("{} {}".format(platform.system(), platform.release()))
 #####
 config = {
@@ -258,7 +258,7 @@ config = {
             "cmd": [
                 "powershell",
                 "-command",
-                "\"&{$p='HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\\Notifications\Settings\Windows.SystemToast.SecurityAndMaintenance';if(!(Test-Path -Path $p)){&New-Item -Path $p -Force}&Set-ItemProperty -Path $p -Name Enabled -Value 0}\"",  # noqa
+                "\"&{$p='HKCU:SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.SecurityAndMaintenance';if(!(Test-Path -Path $p)){&New-Item -Path $p -Force}&Set-ItemProperty -Path $p -Name Enabled -Value 0}\"",  # noqa
             ],
             "architectures": ["32bit", "64bit"],
             "halt_on_failure": True,
@@ -269,7 +269,7 @@ config = {
             "cmd": [
                 "powershell",
                 "-command",
-                "\"&{{&Set-ItemProperty -Path 'HKCU:Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' -Name VisualFXSetting -Value {}}}\"".format(
+                "\"&{{&Set-ItemProperty -Path 'HKCU:Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects' -Name VisualFXSetting -Value {}}}\"".format(
                     DESKTOP_VISUALFX_THEME
                 ),
             ],
@@ -282,7 +282,7 @@ config = {
             "cmd": [
                 "powershell",
                 "-command",
-                "New-ItemProperty -Path 'HKCU:\Control Panel\Accessibility' -Name 'DynamicScrollbars' -Value 0",
+                "New-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility' -Name 'DynamicScrollbars' -Value 0",
             ],
             "architectures": ["32bit", "64bit"],
             "halt_on_failure": False,
@@ -317,7 +317,7 @@ config = {
             "cmd": [
                 "powershell",
                 "-command",
-                "if (test-path ${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe) {start chrome; Start-Sleep -s 30; taskkill /F /IM chrome.exe /T}",
+                "if (test-path ${env:ProgramFiles(x86)}\\Google\\Chrome\\Application\\chrome.exe) {start chrome; Start-Sleep -s 30; taskkill /F /IM chrome.exe /T}",
             ],
             "architectures": ["32bit", "64bit"],
             "halt_on_failure": True,

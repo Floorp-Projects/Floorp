@@ -13,7 +13,7 @@ def add_common_arguments(parser):
         type=str,
         dest="app_binary",
         default=None,
-        help="path to application binary (eg: c:\program files\mozilla firefox\firefox.exe)",
+        help="path to application binary (eg: c:\\program files\\mozilla firefox\\firefox.exe)",
     )
     parser.add_argument(
         "--app-path",

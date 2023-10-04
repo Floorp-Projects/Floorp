@@ -115,7 +115,7 @@ TinderBoxPrintRe = {
 
 TestPassed = [
     {
-        "regex": re.compile("""(TEST-INFO|TEST-KNOWN-FAIL|TEST-PASS|INFO \| )"""),
+        "regex": re.compile(r"""(TEST-INFO|TEST-KNOWN-FAIL|TEST-PASS|INFO \| )"""),
         "level": INFO,
     },
 ]
