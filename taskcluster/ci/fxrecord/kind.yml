@@ -23,7 +23,8 @@ jobs:
         description: "Desktop Startup Visual Metrics"
         from-deps:
             group-by: single-with-filters
-        run-on-projects: []
+        run-on-projects:
+            - "mozilla-central"
         worker-type: performance-hardware/gecko-t-fxrecorder
         worker:
             implementation: generic-worker
