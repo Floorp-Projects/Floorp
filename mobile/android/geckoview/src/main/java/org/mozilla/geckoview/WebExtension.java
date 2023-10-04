@@ -1843,6 +1843,27 @@ public class WebExtension {
      */
     public final @Nullable String description;
 
+    /** The full description of this extension. See: `AddonWrapper.fullDescription`. */
+    public final @Nullable String fullDescription;
+
+    /** The average rating of this extension. See: `AddonWrapper.averageRating`. */
+    public final double averageRating;
+
+    /** The review count for this extension. See: `AddonWrapper.reviewCount`. */
+    public final int reviewCount;
+
+    /** The link to the review page for this extension. See `AddonWrapper.reviewURL`. */
+    public final @Nullable String reviewUrl;
+
+    /**
+     * The string representation of the date that this extension was most recently updated
+     * (simplified ISO 8601 format). See `AddonWrapper.updateDate`.
+     */
+    public final @Nullable String updateDate;
+
+    /** The URL used to install this extension. See: `AddonInternal.sourceURI`. */
+    public final @Nullable String downloadUrl;
+
     /**
      * Version string for this extension.
      *
@@ -1979,6 +2000,12 @@ public class WebExtension {
       temporary = false;
       baseUrl = null;
       allowedInPrivateBrowsing = false;
+      fullDescription = null;
+      averageRating = 0;
+      reviewCount = 0;
+      reviewUrl = null;
+      updateDate = null;
+      downloadUrl = null;
     }
 
     /* package */ MetaData(final GeckoBundle bundle) {
@@ -1999,6 +2026,12 @@ public class WebExtension {
       temporary = bundle.getBoolean("temporary", false);
       baseUrl = bundle.getString("baseURL");
       allowedInPrivateBrowsing = bundle.getBoolean("privateBrowsingAllowed", false);
+      fullDescription = bundle.getString("fullDescription");
+      averageRating = bundle.getDouble("averageRating");
+      reviewCount = bundle.getInt("reviewCount");
+      reviewUrl = bundle.getString("reviewURL");
+      updateDate = bundle.getString("updateDate");
+      downloadUrl = bundle.getString("downloadUrl");
 
       final int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
       if (signedState <= SignedStateFlags.LAST) {
