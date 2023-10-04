@@ -2318,9 +2318,11 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
       NS_WARNING("WhiteSpaceVisibilityKeeper::InsertBRElement() failed");
       return invisibleAdditionalBRElementResult;
     }
+    // afterBRElement points after the first <br> with referring an old child.
+    // Therefore, we need to update it with new child which is the new invisible
+    // <br>.
     afterBRElement.Set(
         invisibleAdditionalBRElementResult.inspect().GetNewNode());
-    invisibleAdditionalBRElementResult.inspect().IgnoreCaretPointSuggestion();
     return invisibleAdditionalBRElementResult;
   };
 
@@ -2331,15 +2333,19 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     // XXX brElementIsAfterBlock and brElementIsBeforeBlock were set before
     //     modifying the DOM tree.  So, now, the <br> element may not be
     //     between blocks.
+    EditorDOMPoint pointToPutCaret;
     if (editingHostIsEmpty) {
-      auto invisibleAdditionalBRElementResult =
+      Result<CreateElementResult, nsresult> invisibleAdditionalBRElementResult =
           InsertAdditionalInvisibleLineBreak();
       if (invisibleAdditionalBRElementResult.isErr()) {
         return invisibleAdditionalBRElementResult;
       }
+      invisibleAdditionalBRElementResult.unwrap().IgnoreCaretPointSuggestion();
+      pointToPutCaret = std::move(afterBRElement);
+    } else {
+      pointToPutCaret =
+          EditorDOMPoint(brElement, InterlinePosition::StartOfNextLine);
     }
-    EditorDOMPoint pointToPutCaret(brElement,
-                                   InterlinePosition::StartOfNextLine);
     return CreateElementResult(std::move(brElement),
                                std::move(pointToPutCaret));
   }
@@ -2385,11 +2391,12 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     }
   } else if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary() &&
              !brElementIsAfterBlock) {
-    auto invisibleAdditionalBRElementResult =
+    Result<CreateElementResult, nsresult> invisibleAdditionalBRElementResult =
         InsertAdditionalInvisibleLineBreak();
     if (invisibleAdditionalBRElementResult.isErr()) {
       return invisibleAdditionalBRElementResult;
     }
+    invisibleAdditionalBRElementResult.unwrap().IgnoreCaretPointSuggestion();
   }
 
   // We want the caret to stick to whatever is past the break.  This is because

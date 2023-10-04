@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const iframe = document.querySelector("iframe");
+  const doc = iframe.contentDocument;
+  const win = iframe.contentWindow;
+  doc.designMode = "on";
+  // Ensure focus
+  await new Promise(resolve => {
+    doc.addEventListener("focus", resolve, {once: true});
+    iframe.focus();
+  });
+
+  function getHTMLEditor() {
+    const editingSession = SpecialPowers.wrap(win).docShell.editingSession;
+    if (!editingSession) {
+      return null;
+    }
+    const editor = editingSession.getEditorForWindow(win);
+    if (!editor) {
+      return null;
+    }
+    return editor.QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+  }
+
+  const nsIEditor = SpecialPowers.Ci.nsIEditor;
+  const htmlEditor = getHTMLEditor();
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mozilla/editor/composer/nsEditingSession.cpp#300-302
+  htmlEditor.flags |=
+    nsIEditor.eEditorPlaintextMask
+      | nsIEditor.eEditorMailMask
+      | nsIEditor.eEditorEnableWrapHackMask;
+
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mail/components/compose/content/MsgComposeCommands.js#10984,10986-10987,10989
+  doc.execCommand("defaultParagraphSeparator", false, "br");
+
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#700
+  win.getSelection().collapse(doc.body, doc.body.childNodes.length);
+  is(
+    doc.body.innerHTML,
+    "<br>",
+    "Initially, the <body> should have a <br>"
+  );
+
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#705
+  htmlEditor.insertLineBreak();
+  is(
+    doc.body.innerHTML,
+    "<br><br>",
+    "Insert line break in the <body> should insert 2 <br> elements"
+  );
+  is(
+    win.getSelection().focusNode,
+    doc.body,
+    "Selection container should be the <body> after the call of insertLineBreak()"
+  );
+  is(
+    win.getSelection().focusOffset,
+    1,
+    "Selection should be collapsed after the first <br> after the call of insertLineBreak()"
+  );
+
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#706
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#371-372
+  const wrapperDiv = htmlEditor.createElementWithDefaults("div");
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#390-391,394,401-402,404
+  wrapperDiv.appendChild(doc.createTextNode("-- "));
+  wrapperDiv.appendChild(htmlEditor.createElementWithDefaults("br"));
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#390-391,394,401-402,404
+  wrapperDiv.appendChild(doc.createTextNode("Plaintext signature"));
+  wrapperDiv.appendChild(htmlEditor.createElementWithDefaults("br"));
+  // https://searchfox.org/comm-central/rev/e5e6e24d4ff9d91a457f7252ec7146169fefc5a2/mailnews/compose/src/nsMsgCompose.cpp#414
+  htmlEditor.insertElementAtSelection(wrapperDiv, true);
+
+  is(
+    doc.body.innerHTML.trim(),
+    "<br><div>-- <br>Plaintext signature<br></div><br>",
+    "The signature block should follow a <br>"
+  );
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body><iframe srcdoc='<body style="font-family: -moz-fixed; white-space: pre-wrap; width: 72ch;"></body>'></iframe></body>
+</html>
