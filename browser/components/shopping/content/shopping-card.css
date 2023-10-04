@@ -57,10 +57,6 @@ button {
   margin: 0;
 }
 
-slot[name="rating"] {
-  color: var(--icon-color);
-}
-
 #content {
   align-self: stretch;
 }
