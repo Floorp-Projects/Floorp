@@ -57,8 +57,6 @@ MFBT_API size_t __dl_get_mappable_length(void* handle);
 MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length, off_t offset);
 
 MFBT_API void __dl_munmap(void* handle, void* addr, size_t length);
-
-MFBT_API bool IsSignalHandlingBroken();
 }
 
 /* Forward declarations for use in LibHandle */
@@ -316,8 +314,6 @@ class SEGVHandler {
     return registeredHandler;
   }
 
-  bool isSignalHandlingBroken() { return signalHandlingBroken; }
-
   static int __wrap_sigaction(int signum, const struct sigaction* act,
                               struct sigaction* oldact);
 
@@ -366,7 +362,6 @@ class SEGVHandler {
 
   bool initialized;
   bool registeredHandler;
-  bool signalHandlingBroken;
   bool signalHandlingSlow;
 };
 

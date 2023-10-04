@@ -344,10 +344,6 @@ nsString gProcessStartupShortcut;
 #endif
 #include "BinaryPath.h"
 
-#ifdef MOZ_LINKER
-extern "C" MFBT_API bool IsSignalHandlingBroken();
-#endif
-
 #ifdef FUZZING
 #  include "FuzzerRunner.h"
 
@@ -4148,11 +4144,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     nsDependentCString releaseChannel(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ReleaseChannel, releaseChannel);
-#ifdef MOZ_LINKER
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::CrashAddressLikelyWrong,
-        IsSignalHandlingBroken());
-#endif
 
 #ifdef XP_WIN
     nsAutoString appInitDLLs;

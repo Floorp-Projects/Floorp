@@ -203,12 +203,6 @@ CPUMicrocodeVersion:
     Version of the CPU microcode.
   type: string
 
-CrashAddressLikelyWrong:
-  description: >
-    Set to 1 if signal handling is broken, in which case the crash address is
-    likely to be wrong.
-  type: boolean
-
 CrashTime:
   description: >
     Crash time in seconds since the Epoch.
