@@ -87,6 +87,9 @@ const size_t Sprinter::DefaultSize = 64;
 
 bool Sprinter::realloc_(size_t newSize) {
   MOZ_ASSERT(newSize > (size_t)offset);
+  if (hadOOM_) {
+    return false;
+  }
   char* newBuf = (char*)js_realloc(base, newSize);
   if (!newBuf) {
     reportOutOfMemory();
@@ -123,6 +126,7 @@ bool Sprinter::init() {
   base = js_pod_malloc<char>(DefaultSize);
   if (!base) {
     reportOutOfMemory();
+    forwardOutOfMemory();
     return false;
   }
 #ifdef DEBUG
@@ -232,7 +236,7 @@ bool Sprinter::put(const char* s, size_t len) {
 
   char* bp = reserve(len);
   if (!bp) {
-    return false;
+    return true;
   }
 
   // s is within the buffer already
@@ -255,14 +259,14 @@ bool Sprinter::putString(JSString* s) {
 
   JSLinearString* linear = s->ensureLinear(maybeCx);
   if (!linear) {
-    return false;
+    return true;
   }
 
   size_t length = JS::GetDeflatedUTF8StringLength(linear);
 
   char* buffer = reserve(length);
   if (!buffer) {
-    return false;
+    return true;
   }
 
   mozilla::DebugOnly<size_t> written =
@@ -271,14 +275,6 @@ bool Sprinter::putString(JSString* s) {
 
   buffer[length] = '\0';
   return true;
-}
-
-void Sprinter::reportOutOfMemory() {
-  if (hadOOM_) {
-    return;
-  }
-  hadOOM_ = true;
-  forwardOutOfMemory();
 }
 
 size_t Sprinter::length() const { return size_t(offset); }

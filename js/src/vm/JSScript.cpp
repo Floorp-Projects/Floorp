@@ -3396,6 +3396,7 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
   }
 
   if (sp->hadOutOfMemory()) {
+    sp->forwardOutOfMemory();
     return false;
   }
 
