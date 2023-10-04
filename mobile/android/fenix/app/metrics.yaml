@@ -10818,3 +10818,107 @@ shopping.settings:
     metadata:
       tags:
         - Shopping
+fx_suggest:
+  ping_type:
+    type: string
+    description: >
+      The ping's type. Currently always "fxsuggest-click".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  block_id:
+    type: quantity
+    description: |
+      A unique identifier for the suggestion (a.k.a. a keywords block).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    unit: integer
+    send_in_pings:
+      - fx-suggest
+  advertiser:
+    type: string
+    description: |
+      The name of the advertiser providing the sponsored suggestion
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  reporting_url:
+    type: url
+    description: |
+      The url to report this interaction to.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  context_id:
+    type: uuid
+    description: |
+      An identifier to identify users for Contextual Services user interaction pings.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  iab_category:
+    type: string
+    description: |
+      The suggestion's category. Either "22 - Shopping" or "5 - Educational".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest

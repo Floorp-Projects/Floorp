@@ -14,6 +14,14 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:feature-fxsuggest:{latest-version}"
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action      | Item                       | Extras            | Description                     |
+|-------------|----------------------------|-------------------|---------------------------------|
+| Click | amp_suggestion_clicked |  | a Firefox Suggestion has been clicked |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

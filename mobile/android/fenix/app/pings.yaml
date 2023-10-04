@@ -77,3 +77,17 @@ cookie-banner-report-site:
     - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
   notification_emails:
     - android-probes@mozilla.com
+fx-suggest:
+  description: |
+    A ping representing a single event occurring with or to a Firefox Suggestion.
+    Distinguishable by its `ping_type`.
+    Does not contain a `client_id`, preferring a `context_id` instead.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+  data_reviews:
+    - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+  notification_emails:
+    - lina@mozilla.com
+    - ttran@mozilla.com
+    - najiang@mozilla.com

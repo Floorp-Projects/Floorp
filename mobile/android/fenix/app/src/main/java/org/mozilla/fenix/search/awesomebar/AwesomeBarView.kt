@@ -327,6 +327,7 @@ class AwesomeBarView(
                     includeSponsoredSuggestions = state.showSponsoredSuggestions,
                     includeNonSponsoredSuggestions = state.showNonSponsoredSuggestions,
                     suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+                    contextId = activity.settings().contileContextId,
                 ),
             )
         }
