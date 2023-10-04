@@ -176,7 +176,7 @@ class MediaController final : public DOMEventTargetHelper,
   void UpdateDeactivationTimerIfNeeded();
 
   void DispatchAsyncEvent(const nsAString& aName);
-  void DispatchAsyncEvent(Event* aEvent);
+  void DispatchAsyncEvent(already_AddRefed<Event> aEvent);
 
   bool IsMainController() const;
   void ForceToBecomeMainControllerIfNeeded();

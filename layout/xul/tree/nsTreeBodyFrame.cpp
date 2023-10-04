@@ -4261,7 +4261,7 @@ void nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount) {
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(tree, event);
+      new AsyncEventDispatcher(tree, event.forget());
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -4312,7 +4312,7 @@ void nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx,
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(tree, event);
+      new AsyncEventDispatcher(tree, event.forget());
   asyncDispatcher->PostDOMEvent();
 }
 #endif

@@ -142,7 +142,7 @@ void AsyncEventDispatcher::RunDOMEventWhenSafe(
                           Composed::eDefault);
     return;
   }
-  (new AsyncEventDispatcher(&aTarget, &aEvent, aOnlyChromeDispatch))
+  (new AsyncEventDispatcher(&aTarget, do_AddRef(&aEvent), aOnlyChromeDispatch))
       ->RunDOMEventWhenSafe();
 }
 

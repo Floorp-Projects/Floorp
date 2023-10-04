@@ -603,7 +603,7 @@ nsresult UDPSocket::DispatchReceivedData(const nsACString& aRemoteAddress,
   udpEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, udpEvent);
+      new AsyncEventDispatcher(this, udpEvent.forget());
 
   return asyncDispatcher->PostDOMEvent();
 }

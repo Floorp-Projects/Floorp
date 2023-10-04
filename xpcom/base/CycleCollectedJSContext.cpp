@@ -360,7 +360,7 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
                                                init);
 
         RefPtr<AsyncEventDispatcher> asyncDispatcher =
-            new AsyncEventDispatcher(owner, event);
+            new AsyncEventDispatcher(owner, event.forget());
         asyncDispatcher->PostDOMEvent();
       }
     }

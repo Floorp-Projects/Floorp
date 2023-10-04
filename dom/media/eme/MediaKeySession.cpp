@@ -549,7 +549,7 @@ void MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
   RefPtr<MediaKeyMessageEvent> event(
       MediaKeyMessageEvent::Constructor(this, aMessageType, aMessage));
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event);
+      new AsyncEventDispatcher(this, event.forget());
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -557,9 +557,9 @@ void MediaKeySession::DispatchKeyError(uint32_t aSystemCode) {
   EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyError() systemCode=%u.", this,
           NS_ConvertUTF16toUTF8(mSessionId).get(), aSystemCode);
 
-  RefPtr<MediaKeyError> event(new MediaKeyError(this, aSystemCode));
+  auto event = MakeRefPtr<MediaKeyError>(this, aSystemCode);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event);
+      new AsyncEventDispatcher(this, event.forget());
   asyncDispatcher->PostDOMEvent();
 }
 
