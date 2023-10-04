@@ -135,8 +135,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void MaybeUpdateEmbedderColorScheme();
 
   void MaybeUpdateRemoteStyle(ComputedStyle* aOldComputedStyle = nullptr);
-  void PropagateIsUnderHiddenEmbedderElementToSubView(
-      bool aIsUnderHiddenEmbedderElement);
+  void PropagateIsUnderHiddenEmbedderElement(bool aValue);
 
   void ClearDisplayItems();
 

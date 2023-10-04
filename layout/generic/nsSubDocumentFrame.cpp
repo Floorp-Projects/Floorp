@@ -66,6 +66,19 @@ static Document* GetDocumentFromView(nsView* aView) {
   return presShell ? presShell->GetDocument() : nullptr;
 }
 
+static void PropagateIsUnderHiddenEmbedderElement(nsFrameLoader* aFrameLoader,
+                                                  bool aValue) {
+  if (!aFrameLoader) {
+    return;
+  }
+
+  if (BrowsingContext* bc = aFrameLoader->GetExtantBrowsingContext()) {
+    if (bc->IsUnderHiddenEmbedderElement() != aValue) {
+      Unused << bc->SetIsUnderHiddenEmbedderElement(aValue);
+    }
+  }
+}
+
 nsSubDocumentFrame::nsSubDocumentFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
     : nsAtomicContainerFrame(aStyle, aPresContext, kClassID),
@@ -155,25 +168,15 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   MaybeUpdateRemoteStyle();
 
-  PropagateIsUnderHiddenEmbedderElementToSubView(
+  PropagateIsUnderHiddenEmbedderElement(
       PresShell()->IsUnderHiddenEmbedderElement() ||
       !StyleVisibility()->IsVisible());
 
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
 }
 
-void nsSubDocumentFrame::PropagateIsUnderHiddenEmbedderElementToSubView(
-    bool aIsUnderHiddenEmbedderElement) {
-  if (!mFrameLoader) {
-    return;
-  }
-
-  if (BrowsingContext* bc = mFrameLoader->GetExtantBrowsingContext()) {
-    if (bc->IsUnderHiddenEmbedderElement() != aIsUnderHiddenEmbedderElement) {
-      Unused << bc->SetIsUnderHiddenEmbedderElement(
-          aIsUnderHiddenEmbedderElement);
-    }
-  }
+void nsSubDocumentFrame::PropagateIsUnderHiddenEmbedderElement(bool aValue) {
+  ::PropagateIsUnderHiddenEmbedderElement(mFrameLoader, aValue);
 }
 
 void nsSubDocumentFrame::ShowViewer() {
@@ -873,7 +876,7 @@ void nsSubDocumentFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   const bool isVisible = StyleVisibility()->IsVisible();
   if (!aOldComputedStyle ||
       isVisible != aOldComputedStyle->StyleVisibility()->IsVisible()) {
-    PropagateIsUnderHiddenEmbedderElementToSubView(!isVisible);
+    PropagateIsUnderHiddenEmbedderElement(!isVisible);
   }
 }
 
@@ -884,7 +887,7 @@ nsIFrame* NS_NewSubDocumentFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
-class nsHideViewer : public Runnable {
+class nsHideViewer final : public Runnable {
  public:
   nsHideViewer(nsIContent* aFrameElement, nsFrameLoader* aFrameLoader,
                PresShell* aPresShell, bool aHideViewerIfFrameless)
@@ -920,10 +923,14 @@ class nsHideViewer : public Runnable {
     mFrameLoader->SetDetachedSubdocFrame(nullptr, nullptr);
 
     nsSubDocumentFrame* frame = do_QueryFrame(mFrameElement->GetPrimaryFrame());
-    if ((!frame && mHideViewerIfFrameless) || mPresShell->IsDestroying()) {
-      // Either the frame element has no nsIFrame or the presshell is being
-      // destroyed. Hide the nsFrameLoader, which destroys the presentation.
-      mFrameLoader->Hide();
+    const bool presShellDestroying = mPresShell->IsDestroying();
+    if (!frame || presShellDestroying) {
+      PropagateIsUnderHiddenEmbedderElement(mFrameLoader, true);
+      if (mHideViewerIfFrameless || presShellDestroying) {
+        // Either the frame element has no nsIFrame or the presshell is being
+        // destroyed. Hide the nsFrameLoader, which destroys the presentation.
+        mFrameLoader->Hide();
+      }
     }
     return NS_OK;
   }
@@ -938,7 +945,6 @@ class nsHideViewer : public Runnable {
 static nsView* BeginSwapDocShellsForViews(nsView* aSibling);
 
 void nsSubDocumentFrame::Destroy(DestroyContext& aContext) {
-  PropagateIsUnderHiddenEmbedderElementToSubView(true);
   if (mPostedReflowCallback) {
     PresShell()->CancelReflowCallback(this);
     mPostedReflowCallback = false;
@@ -947,8 +953,7 @@ void nsSubDocumentFrame::Destroy(DestroyContext& aContext) {
   // Detach the subdocument's views and stash them in the frame loader.
   // We can then reattach them if we're being reframed (for example if
   // the frame has been made position:fixed).
-  RefPtr<nsFrameLoader> frameloader = FrameLoader();
-  if (frameloader) {
+  if (RefPtr<nsFrameLoader> frameloader = FrameLoader()) {
     ClearDisplayItems();
 
     nsView* detachedViews =
@@ -957,17 +962,14 @@ void nsSubDocumentFrame::Destroy(DestroyContext& aContext) {
     if (detachedViews && detachedViews->GetFrame()) {
       frameloader->SetDetachedSubdocFrame(detachedViews->GetFrame(),
                                           mContent->OwnerDoc());
-
-      // We call nsFrameLoader::HideViewer() in a script runner so that we can
-      // safely determine whether the frame is being reframed or destroyed.
-      nsContentUtils::AddScriptRunner(new nsHideViewer(
-          mContent, frameloader, PresShell(), (mDidCreateDoc || mCallingShow)));
     } else {
       frameloader->SetDetachedSubdocFrame(nullptr, nullptr);
-      if (mDidCreateDoc || mCallingShow) {
-        frameloader->Hide();
-      }
     }
+
+    // We call nsFrameLoader::HideViewer() in a script runner so that we can
+    // safely determine whether the frame is being reframed or destroyed.
+    nsContentUtils::AddScriptRunner(new nsHideViewer(
+        mContent, frameloader, PresShell(), (mDidCreateDoc || mCallingShow)));
   }
 
   nsAtomicContainerFrame::Destroy(aContext);
@@ -1197,7 +1199,7 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
     InvalidateFrameSubtree();
-    PropagateIsUnderHiddenEmbedderElementToSubView(
+    PropagateIsUnderHiddenEmbedderElement(
         PresShell()->IsUnderHiddenEmbedderElement() ||
         !StyleVisibility()->IsVisible());
   }
@@ -1205,7 +1207,7 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
     other->PresShell()->FrameNeedsReflow(
         other, IntrinsicDirty::FrameAndAncestors, NS_FRAME_IS_DIRTY);
     other->InvalidateFrameSubtree();
-    other->PropagateIsUnderHiddenEmbedderElementToSubView(
+    other->PropagateIsUnderHiddenEmbedderElement(
         other->PresShell()->IsUnderHiddenEmbedderElement() ||
         !other->StyleVisibility()->IsVisible());
   }
