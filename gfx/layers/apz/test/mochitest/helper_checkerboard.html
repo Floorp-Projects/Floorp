@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<title>No checkerboarding on no longer async scrollable container</title>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+#outer {
+  position: absolute;
+  overflow: scroll;
+  width: 50vw;
+  height: 90vh;
+  border: 1px solid black;
+}
+#inner {
+  overflow-y: hidden;
+  width: 100%;
+}
+.spacer {
+  width: 60vw;
+  height: 5000px;
+  background-color: blue;
+}
+</style>
+<div id="outer">
+  <div id="inner">
+    <div class="spacer"></div>
+  </div>
+</div>
+<script>
+async function test() {
+  outer.style.width = "90vw";
+
+  await promiseApzFlushedRepaints();
+
+  const scrollEndPromise = promiseOneEvent(outer, "scrollend");
+
+  // Scroll the outer container to the bottom to see if checkerboarding happens
+  // or not.
+  outer.scrollBy({ top: 5000, behavior: "smooth" });
+  await scrollEndPromise;
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+  assertNotCheckerboarded(utils, utils.getViewId(inner), "the inner scroll container");
+  assertNotCheckerboarded(utils, utils.getViewId(outer), "the outer scroll container");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
