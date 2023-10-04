@@ -281,13 +281,6 @@ void Sprinter::forwardOutOfMemory() {
   }
 }
 
-void Sprinter::jsprintf(const char* format, ...) {
-  va_list ap;
-  va_start(ap, format);
-  vprintf(format, ap);
-  va_end(ap);
-}
-
 const char js_EscapeMap[] = {
     // clang-format off
     '\b', 'b',
@@ -367,14 +360,14 @@ JS_PUBLIC_API bool QuoteString(Sprinter* sp,
     const char* escape;
     if (!(c >> 8) && c != 0 &&
         (escape = strchr(escapeMap, int(c))) != nullptr) {
-      sp->jsprintf("\\%c", escape[1]);
+      sp->printf("\\%c", escape[1]);
     } else {
       /*
        * Use \x only if the high byte is 0 and we're in a quoted string,
        * because ECMA-262 allows only \u, not \x, in Unicode identifiers
        * (see bug 621814).
        */
-      sp->jsprintf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c);
+      sp->printf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c);
     }
   }
 
