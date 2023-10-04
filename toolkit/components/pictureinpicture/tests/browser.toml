@@ -112,7 +112,7 @@ support-files = ["test-page-with-nan-video-duration.html"]
 
 ["browser_keyboardToggle.js"]
 
-["browser_mediaStreamVideos.js"]  
+["browser_mediaStreamVideos.js"]
 
 ["browser_mouseButtonVariation.js"]
 skip-if = [
