@@ -493,7 +493,7 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/3709
@@ -518,14 +518,14 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
       reason:
         type: string
         description: |
           An error occurred while setting up for saving a PDF.
-          Default option is unknown, other options are no_settings_service, no_settings, 
-          no_canonical_context, no_activity_context_delegate, no_activity_context, 
+          Default option is unknown, other options are no_settings_service, no_settings,
+          no_canonical_context, no_activity_context_delegate, no_activity_context,
           no_print_delegate, and io_error.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/27635
@@ -549,7 +549,7 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213
@@ -572,14 +572,14 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
       reason:
         type: string
         description: |
           An error occurred while setting up for printing.
-          Default option is unknown, other options are no_settings_service, no_settings, 
-          no_canonical_context, no_activity_context_delegate, no_activity_context, 
+          Default option is unknown, other options are no_settings_service, no_settings,
+          no_canonical_context, no_activity_context_delegate, no_activity_context,
           no_print_delegate, and io_error.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
@@ -598,7 +598,7 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
@@ -617,7 +617,7 @@ events:
       source:
         type: string
         description: |
-          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          A string that indicates the type of document of pdf, non-pdf or unknown.
           The default is unknown.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
@@ -1746,9 +1746,9 @@ metrics:
     lifetime: application
     description: |
       A counter that indicates how many bookmarks a user has added.
-      
+
       The label for this counter is `<source>`.
-      
+
       `source` will be: `page_action_menu` as that is the only
       entry point right now to add bookmarks.
     send_in_pings:
@@ -1771,9 +1771,9 @@ metrics:
     lifetime: application
     description: |
       A counter that indicates how many bookmarks a user has edited.
-      
+
       The label for this counter is `<source>`.
-      
+
       `source` will be: `bookmark_edit_page` or `bookmark_panel`.
     send_in_pings:
       - metrics
@@ -1795,7 +1795,7 @@ metrics:
     lifetime: application
     description: |
       A counter that indicates how many bookmarks a user has deleted.
-      
+
       The label for this counter is `<source>`.
 
       `source` will be: `add_bookmark_toast` or `bookmark_panel`.
@@ -1819,7 +1819,7 @@ metrics:
     lifetime: application
     description: |
       A counter that indicates how many bookmarks a user has opened.
-      
+
       The label for this counter is `<source>`.
 
       `source` will be: `top_sites`, `awesomebar_results`, `bookmark_panel`.
@@ -2551,7 +2551,8 @@ metrics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1853967
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/2620
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1853967#c3
+      - https://github.com/mozilla-mobile/firefox-android/pull/3704
     data_sensitivity:
       - technical
     notification_emails:
