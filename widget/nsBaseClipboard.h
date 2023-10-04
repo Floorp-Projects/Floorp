@@ -25,87 +25,23 @@ class nsIClipboardOwner;
 class nsIWidget;
 
 /**
- * A helper base class to implement nsIClipboard::SetData/AsyncSetData, so that
- * all platform can share the same implementation.
- *
- * XXX this could be merged into nsBaseClipboard once all platform use
- * nsBaseClipboard as base clipboard class to share the common code, see bug
- * 1773707.
+ * A base clipboard class for all platform, so that they can share the same
+ * implementation.
  */
-class ClipboardSetDataHelper : public nsIClipboard {
- public:
-  NS_DECL_ISUPPORTS
-
-  ClipboardSetDataHelper() = default;
-
-  // nsIClipboard
-  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
-                     int32_t aWhichClipboard) override;
-  NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
-                          nsIAsyncSetClipboardDataCallback* aCallback,
-                          nsIAsyncSetClipboardData** _retval) override final;
-
- protected:
-  virtual ~ClipboardSetDataHelper();
-
-  // Implement the native clipboard behavior.
-  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
-                                    nsIClipboardOwner* aOwner,
-                                    int32_t aWhichClipboard) = 0;
-
-  class AsyncSetClipboardData final : public nsIAsyncSetClipboardData {
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIASYNCSETCLIPBOARDDATA
-
-    AsyncSetClipboardData(int32_t aClipboardType,
-                          ClipboardSetDataHelper* aClipboard,
-                          nsIAsyncSetClipboardDataCallback* aCallback);
-
-   private:
-    virtual ~AsyncSetClipboardData() = default;
-    bool IsValid() const {
-      // If this request is no longer valid, the callback should be notified.
-      MOZ_ASSERT_IF(!mClipboard, !mCallback);
-      return !!mClipboard;
-    }
-    void MaybeNotifyCallback(nsresult aResult);
-
-    // The clipboard type defined in nsIClipboard.
-    int32_t mClipboardType;
-    // It is safe to use a raw pointer as it will be nullified (by calling
-    // NotifyCallback()) once ClipboardSetDataHelper stops tracking us. This is
-    // also used to indicate whether this request is valid.
-    ClipboardSetDataHelper* mClipboard;
-    // mCallback will be nullified once the callback is notified to ensure the
-    // callback is only notified once.
-    nsCOMPtr<nsIAsyncSetClipboardDataCallback> mCallback;
-  };
-
- private:
-  void RejectPendingAsyncSetDataRequestIfAny(int32_t aClipboardType);
-
-  // Track the pending request for each clipboard type separately. And only need
-  // to track the latest request for each clipboard type as the prior pending
-  // request will be canceled when a new request is made.
-  RefPtr<AsyncSetClipboardData>
-      mPendingWriteRequests[nsIClipboard::kClipboardTypeCount];
-};
-
-/**
- * A base clipboard class for Windows and Cocoa widget.
- */
-class nsBaseClipboard : public ClipboardSetDataHelper {
+class nsBaseClipboard : public nsIClipboard {
  public:
   explicit nsBaseClipboard(
       const mozilla::dom::ClipboardCapabilities& aClipboardCaps);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   // nsIClipboard
-  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
+  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
                      int32_t aWhichClipboard) override final;
+  NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
+                          nsIAsyncSetClipboardDataCallback* aCallback,
+                          nsIAsyncSetClipboardData** _retval) override final;
   NS_IMETHOD GetData(nsITransferable* aTransferable,
                      int32_t aWhichClipboard) override final;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
@@ -125,9 +61,12 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       mozilla::Result<nsTArray<nsCString>, nsresult>)>;
 
  protected:
-  virtual ~nsBaseClipboard() = default;
+  virtual ~nsBaseClipboard();
 
   // Implement the native clipboard behavior.
+  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
+                                    nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) = 0;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) = 0;
   virtual void AsyncGetNativeClipboardData(nsITransferable* aTransferable,
@@ -145,6 +84,36 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   void ClearClipboardCache(int32_t aClipboardType);
 
  private:
+  void RejectPendingAsyncSetDataRequestIfAny(int32_t aClipboardType);
+
+  class AsyncSetClipboardData final : public nsIAsyncSetClipboardData {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIASYNCSETCLIPBOARDDATA
+
+    AsyncSetClipboardData(int32_t aClipboardType, nsBaseClipboard* aClipboard,
+                          nsIAsyncSetClipboardDataCallback* aCallback);
+
+   private:
+    virtual ~AsyncSetClipboardData() = default;
+    bool IsValid() const {
+      // If this request is no longer valid, the callback should be notified.
+      MOZ_ASSERT_IF(!mClipboard, !mCallback);
+      return !!mClipboard;
+    }
+    void MaybeNotifyCallback(nsresult aResult);
+
+    // The clipboard type defined in nsIClipboard.
+    int32_t mClipboardType;
+    // It is safe to use a raw pointer as it will be nullified (by calling
+    // NotifyCallback()) once nsBaseClipboard stops tracking us. This is
+    // also used to indicate whether this request is valid.
+    nsBaseClipboard* mClipboard;
+    // mCallback will be nullified once the callback is notified to ensure the
+    // callback is only notified once.
+    nsCOMPtr<nsIAsyncSetClipboardDataCallback> mCallback;
+  };
+
   class ClipboardCache final {
    public:
     ~ClipboardCache() {
@@ -183,6 +152,12 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       int32_t aClipboardType);
   nsresult GetDataFromClipboardCache(nsITransferable* aTransferable,
                                      int32_t aClipboardType);
+
+  // Track the pending request for each clipboard type separately. And only need
+  // to track the latest request for each clipboard type as the prior pending
+  // request will be canceled when a new request is made.
+  RefPtr<AsyncSetClipboardData>
+      mPendingWriteRequests[nsIClipboard::kClipboardTypeCount];
 
   mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;

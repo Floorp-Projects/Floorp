@@ -15,22 +15,23 @@ using mozilla::LogLevel;
 using mozilla::UniquePtr;
 using mozilla::dom::ClipboardCapabilities;
 
-NS_IMPL_ISUPPORTS(ClipboardSetDataHelper::AsyncSetClipboardData,
+NS_IMPL_ISUPPORTS(nsBaseClipboard::AsyncSetClipboardData,
                   nsIAsyncSetClipboardData)
 
-ClipboardSetDataHelper::AsyncSetClipboardData::AsyncSetClipboardData(
-    int32_t aClipboardType, ClipboardSetDataHelper* aClipboard,
+nsBaseClipboard::AsyncSetClipboardData::AsyncSetClipboardData(
+    int32_t aClipboardType, nsBaseClipboard* aClipboard,
     nsIAsyncSetClipboardDataCallback* aCallback)
     : mClipboardType(aClipboardType),
       mClipboard(aClipboard),
       mCallback(aCallback) {
   MOZ_ASSERT(mClipboard);
-  MOZ_ASSERT(mClipboard->IsClipboardTypeSupported(mClipboardType));
+  MOZ_ASSERT(
+      mClipboard->nsIClipboard::IsClipboardTypeSupported(mClipboardType));
 }
 
 NS_IMETHODIMP
-ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
-    nsITransferable* aTransferable, nsIClipboardOwner* aOwner) {
+nsBaseClipboard::AsyncSetClipboardData::SetData(nsITransferable* aTransferable,
+                                                nsIClipboardOwner* aOwner) {
   MOZ_CLIPBOARD_LOG("AsyncSetClipboardData::SetData (%p): clipboard=%d", this,
                     mClipboardType);
 
@@ -48,7 +49,8 @@ ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
   }
 
   MOZ_ASSERT(mClipboard);
-  MOZ_ASSERT(mClipboard->IsClipboardTypeSupported(mClipboardType));
+  MOZ_ASSERT(
+      mClipboard->nsIClipboard::IsClipboardTypeSupported(mClipboardType));
   MOZ_DIAGNOSTIC_ASSERT(mClipboard->mPendingWriteRequests[mClipboardType] ==
                         this);
 
@@ -61,7 +63,7 @@ ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
 }
 
 NS_IMETHODIMP
-ClipboardSetDataHelper::AsyncSetClipboardData::Abort(nsresult aReason) {
+nsBaseClipboard::AsyncSetClipboardData::Abort(nsresult aReason) {
   // Note: This may be called during destructor, so it should not attempt to
   // take a reference to mClipboard.
 
@@ -73,7 +75,7 @@ ClipboardSetDataHelper::AsyncSetClipboardData::Abort(nsresult aReason) {
   return NS_OK;
 }
 
-void ClipboardSetDataHelper::AsyncSetClipboardData::MaybeNotifyCallback(
+void nsBaseClipboard::AsyncSetClipboardData::MaybeNotifyCallback(
     nsresult aResult) {
   // Note: This may be called during destructor, so it should not attempt to
   // take a reference to mClipboard.
@@ -88,18 +90,7 @@ void ClipboardSetDataHelper::AsyncSetClipboardData::MaybeNotifyCallback(
   mClipboard = nullptr;
 }
 
-NS_IMPL_ISUPPORTS(ClipboardSetDataHelper, nsIClipboard)
-
-ClipboardSetDataHelper::~ClipboardSetDataHelper() {
-  for (auto& request : mPendingWriteRequests) {
-    if (request) {
-      request->Abort(NS_ERROR_ABORT);
-      request = nullptr;
-    }
-  }
-}
-
-void ClipboardSetDataHelper::RejectPendingAsyncSetDataRequestIfAny(
+void nsBaseClipboard::RejectPendingAsyncSetDataRequestIfAny(
     int32_t aClipboardType) {
   MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
   auto& request = mPendingWriteRequests[aClipboardType];
@@ -109,22 +100,7 @@ void ClipboardSetDataHelper::RejectPendingAsyncSetDataRequestIfAny(
   }
 }
 
-NS_IMETHODIMP
-ClipboardSetDataHelper::SetData(nsITransferable* aTransferable,
-                                nsIClipboardOwner* aOwner,
-                                int32_t aWhichClipboard) {
-  NS_ENSURE_ARG(aTransferable);
-  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  // Reject existing pending asyncSetData request if any.
-  RejectPendingAsyncSetDataRequestIfAny(aWhichClipboard);
-
-  return SetNativeClipboardData(aTransferable, aOwner, aWhichClipboard);
-}
-
-NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
+NS_IMETHODIMP nsBaseClipboard::AsyncSetData(
     int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
   MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
@@ -164,14 +140,23 @@ nsBaseClipboard::nsBaseClipboard(const ClipboardCapabilities& aClipboardCaps)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsBaseClipboard, ClipboardSetDataHelper)
+nsBaseClipboard::~nsBaseClipboard() {
+  for (auto& request : mPendingWriteRequests) {
+    if (request) {
+      request->Abort(NS_ERROR_ABORT);
+      request = nullptr;
+    }
+  }
+}
+
+NS_IMPL_ISUPPORTS(nsBaseClipboard, nsIClipboard)
 
 /**
  * Sets the transferable object
  *
  */
 NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
-                                       nsIClipboardOwner* anOwner,
+                                       nsIClipboardOwner* aOwner,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
@@ -195,7 +180,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   const auto& clipboardCache = mCaches[aWhichClipboard];
   MOZ_ASSERT(clipboardCache);
   if (aTransferable == clipboardCache->GetTransferable() &&
-      anOwner == clipboardCache->GetClipboardOwner()) {
+      aOwner == clipboardCache->GetClipboardOwner()) {
     MOZ_CLIPBOARD_LOG("%s: skipping update.", __FUNCTION__);
     return NS_OK;
   }
@@ -205,8 +190,9 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   nsresult rv = NS_ERROR_FAILURE;
   if (aTransferable) {
     mIgnoreEmptyNotification = true;
-    rv = ClipboardSetDataHelper::SetData(aTransferable, anOwner,
-                                         aWhichClipboard);
+    // Reject existing pending asyncSetData request if any.
+    RejectPendingAsyncSetDataRequestIfAny(aWhichClipboard);
+    rv = SetNativeClipboardData(aTransferable, aOwner, aWhichClipboard);
     mIgnoreEmptyNotification = false;
   }
   if (NS_FAILED(rv)) {
@@ -222,7 +208,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     return result.unwrapErr();
   }
 
-  clipboardCache->Update(aTransferable, anOwner, result.unwrap());
+  clipboardCache->Update(aTransferable, aOwner, result.unwrap());
   return NS_OK;
 }
 
