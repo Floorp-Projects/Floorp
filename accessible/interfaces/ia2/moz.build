@@ -76,3 +76,17 @@ for iface in midl_interfaces:
             SOURCES["!%s" % p].flags += [
                 "-DUserMarshalRoutines=UserMarshalRoutines__%s" % p[:-2]
             ]
+
+GeneratedFile(
+    "IA2Typelib.h",
+    "IA2Typelib_i.c",
+    "IA2Typelib.tlb",
+    inputs=["IA2Typelib.idl"],
+    script="/build/midl.py",
+    entry_point="midl",
+    flags=[
+        "-app_config",
+        "-I",
+        TOPSRCDIR + "/other-licenses/ia2",
+    ],
+)
