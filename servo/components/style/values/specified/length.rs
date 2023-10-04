@@ -66,6 +66,12 @@ pub enum FontRelativeLength {
     /// A "rem" value: https://drafts.csswg.org/css-values/#rem
     #[css(dimension)]
     Rem(CSSFloat),
+    /// A "lh" value: https://drafts.csswg.org/css-values/#lh
+    #[css(dimension)]
+    Lh(CSSFloat),
+    /// A "rlh" value: https://drafts.csswg.org/css-values/#lh
+    #[css(dimension)]
+    Rlh(CSSFloat),
 }
 
 /// A source to resolve font-relative units against
@@ -74,6 +80,15 @@ pub enum FontBaseSize {
     /// Use the font-size of the current element.
     CurrentStyle,
     /// Use the inherited font-size.
+    InheritedStyle,
+}
+
+/// A source to resolve font-relative line-height units against.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LineHeightBase {
+    /// Use the line-height of the current element.
+    CurrentStyle,
+    /// Use the inherited line-height.
     InheritedStyle,
 }
 
@@ -91,9 +106,14 @@ impl FontRelativeLength {
     /// Return the unitless, raw value.
     fn unitless_value(&self) -> CSSFloat {
         match *self {
-            Self::Em(v) | Self::Ex(v) | Self::Ch(v) | Self::Cap(v) | Self::Ic(v) | Self::Rem(v) => {
-                v
-            },
+            Self::Em(v) |
+            Self::Ex(v) |
+            Self::Ch(v) |
+            Self::Cap(v) |
+            Self::Ic(v) |
+            Self::Rem(v) |
+            Self::Lh(v) |
+            Self::Rlh(v) => v,
         }
     }
 
@@ -106,6 +126,8 @@ impl FontRelativeLength {
             Self::Cap(_) => "cap",
             Self::Ic(_) => "ic",
             Self::Rem(_) => "rem",
+            Self::Lh(_) => "lh",
+            Self::Rlh(_) => "rlh",
         }
     }
 
@@ -126,11 +148,13 @@ impl FontRelativeLength {
             (&Cap(one), &Cap(other)) => Cap(op(one, other)),
             (&Ic(one), &Ic(other)) => Ic(op(one, other)),
             (&Rem(one), &Rem(other)) => Rem(op(one, other)),
+            (&Lh(one), &Lh(other)) => Lh(op(one, other)),
+            (&Rlh(one), &Rlh(other)) => Rlh(op(one, other)),
             // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) => {},
+                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) | Lh(..) | Rlh(..) => {},
                 }
                 debug_unreachable!("Forgot to handle unit in try_op()")
             },
@@ -145,6 +169,8 @@ impl FontRelativeLength {
             Self::Cap(x) => Self::Cap(op(*x)),
             Self::Ic(x) => Self::Ic(op(*x)),
             Self::Rem(x) => Self::Rem(op(*x)),
+            Self::Lh(x) => Self::Lh(op(*x)),
+            Self::Rlh(x) => Self::Lh(op(*x)),
         }
     }
 
@@ -153,8 +179,10 @@ impl FontRelativeLength {
         &self,
         context: &Context,
         base_size: FontBaseSize,
+        line_height_base: LineHeightBase,
     ) -> computed::Length {
-        let (reference_size, length) = self.reference_font_size_and_length(context, base_size);
+        let (reference_size, length) =
+            self.reference_font_size_and_length(context, base_size, line_height_base);
         (reference_size * length).finite()
     }
 
@@ -170,8 +198,8 @@ impl FontRelativeLength {
             Self::Ch(v) => v * metrics.mChSize.px(),
             Self::Cap(v) => v * metrics.mCapHeight.px(),
             Self::Ic(v) => v * metrics.mIcWidth.px(),
-            // 'rem' unsupported as we have no context for it
-            Self::Rem(_) => return Err(()),
+            // `lh`, `rlh` & `rem` are unsupported as we have no context for it.
+            Self::Rem(_) | Self::Lh(_) | Self::Rlh(_) => return Err(()),
         })
     }
 
@@ -186,6 +214,7 @@ impl FontRelativeLength {
         &self,
         context: &Context,
         base_size: FontBaseSize,
+        line_height_base: LineHeightBase,
     ) -> (computed::Length, CSSFloat) {
         fn query_font_metrics(
             context: &Context,
@@ -305,6 +334,60 @@ impl FontRelativeLength {
                 } else {
                     context.device().root_font_size()
                 };
+                (reference_size, length)
+            },
+            Self::Lh(length) => {
+                // https://drafts.csswg.org/css-values-4/#lh
+                //
+                //     When specified in media-query, the lh units refer to the
+                //     initial values of font and line-height properties.
+                //
+                let reference_size = if context.in_media_query {
+                    context
+                        .device()
+                        .calc_line_height(
+                            &context.default_style().get_font(),
+                            context.style().writing_mode,
+                            None,
+                        )
+                        .0
+                } else {
+                    let line_height = context.builder.calc_line_height(
+                        context.device(),
+                        line_height_base,
+                        context.style().writing_mode,
+                    );
+                    if context.for_non_inherited_property &&
+                        line_height_base == LineHeightBase::CurrentStyle
+                    {
+                        context
+                            .rule_cache_conditions
+                            .borrow_mut()
+                            .set_line_height_dependency(line_height)
+                    }
+                    line_height.0
+                };
+                (reference_size, length)
+            },
+            Self::Rlh(length) => {
+                // https://drafts.csswg.org/css-values-4/#rlh
+                //
+                //     When specified on the root element, the rlh units refer
+                //     to the initial values of font and line-height properties.
+                //
+                let reference_size: CSSPixelLength =
+                    if context.builder.is_root_element || context.in_media_query {
+                        context
+                            .device()
+                            .calc_line_height(
+                                &context.default_style().get_font(),
+                                context.style().writing_mode,
+                                None,
+                            )
+                            .0
+                    } else {
+                        context.device().root_line_height()
+                    };
                 (reference_size, length)
             },
         }
@@ -950,6 +1033,8 @@ impl NoCalcLength {
             "cap" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Cap(value)),
             "ic" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Ic(value)),
             "rem" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Rem(value)),
+            "lh" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Lh(value)),
+            "rlh" if context.parsing_mode.allows_font_relative_lengths() => Self::FontRelative(FontRelativeLength::Rlh(value)),
             // viewport percentages
             "vw" if !context.in_page_rule() => {
                 Self::ViewportPercentage(ViewportPercentageLength::Vw(value))
@@ -1232,11 +1317,13 @@ impl PartialOrd for FontRelativeLength {
             (&Cap(ref one), &Cap(ref other)) => one.partial_cmp(other),
             (&Ic(ref one), &Ic(ref other)) => one.partial_cmp(other),
             (&Rem(ref one), &Rem(ref other)) => one.partial_cmp(other),
+            (&Lh(ref one), &Lh(ref other)) => one.partial_cmp(other),
+            (&Rlh(ref one), &Rlh(ref other)) => one.partial_cmp(other),
             // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) => {},
+                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) | Lh(..) | Rlh(..) => {},
                 }
                 debug_unreachable!("Forgot an arm in partial_cmp?")
             },

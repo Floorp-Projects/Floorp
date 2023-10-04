@@ -20,6 +20,7 @@ use smallvec::SmallVec;
 pub struct RuleCacheConditions {
     uncacheable: bool,
     font_size: Option<NonNegativeLength>,
+    line_height: Option<NonNegativeLength>,
     writing_mode: Option<WritingMode>,
 }
 
@@ -28,6 +29,12 @@ impl RuleCacheConditions {
     pub fn set_font_size_dependency(&mut self, font_size: NonNegativeLength) {
         debug_assert!(self.font_size.map_or(true, |f| f == font_size));
         self.font_size = Some(font_size);
+    }
+
+    /// Sets the style as depending in the line-height value.
+    pub fn set_line_height_dependency(&mut self, line_height: NonNegativeLength) {
+        debug_assert!(self.line_height.map_or(true, |l| l == line_height));
+        self.line_height = Some(line_height);
     }
 
     /// Sets the style as uncacheable.
@@ -50,6 +57,7 @@ impl RuleCacheConditions {
 #[derive(Debug)]
 struct CachedConditions {
     font_size: Option<NonNegativeLength>,
+    line_height: Option<NonNegativeLength>,
     writing_mode: Option<WritingMode>,
     zoom: Zoom,
 }
@@ -63,6 +71,16 @@ impl CachedConditions {
 
         if let Some(fs) = self.font_size {
             if style.get_font().clone_font_size().computed_size != fs {
+                return false;
+            }
+        }
+
+        if let Some(lh) = self.line_height {
+            let new_line_height =
+                style
+                    .device
+                    .calc_line_height(&style.get_font(), style.writing_mode, None);
+            if new_line_height != lh {
                 return false;
             }
         }
@@ -189,6 +207,7 @@ impl RuleCache {
         let cached_conditions = CachedConditions {
             writing_mode: conditions.writing_mode,
             font_size: conditions.font_size,
+            line_height: conditions.line_height,
             zoom: style.effective_zoom,
         };
         self.map

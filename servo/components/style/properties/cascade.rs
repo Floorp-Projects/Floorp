@@ -771,6 +771,9 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
 
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::ColorScheme);
         self.apply_one_prioritary_property(data, PrioritaryPropertyId::ForcedColorAdjust);
+
+        // Compute the line height.
+        self.apply_one_prioritary_property(data, PrioritaryPropertyId::LineHeight);
     }
 
     fn apply_non_prioritary_properties(

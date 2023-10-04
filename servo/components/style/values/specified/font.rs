@@ -14,7 +14,7 @@ use crate::values::generics::font::{
     self as generics, FeatureTagValue, FontSettings, FontTag, GenericLineHeight, VariationValue,
 };
 use crate::values::generics::NonNegative;
-use crate::values::specified::length::{FontBaseSize, PX_PER_PT};
+use crate::values::specified::length::{FontBaseSize, LineHeightBase, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
 use crate::values::specified::{FontRelativeLength, NoCalcLength, NonNegativeNumber, NonNegativePercentage, NonNegativeLengthPercentage, Number};
 use crate::values::{serialize_atom_identifier, CustomIdent, SelectorParseErrorKind};
@@ -753,6 +753,8 @@ const LARGER_FONT_SIZE_RATIO: f32 = 1.2;
 
 /// The default font size.
 pub const FONT_MEDIUM_PX: f32 = 16.0;
+/// The default line height.
+pub const FONT_MEDIUM_LINE_HEIGHT_PX: f32 = FONT_MEDIUM_PX * 1.2;
 
 impl FontSizeKeyword {
     #[inline]
@@ -877,6 +879,7 @@ impl FontSize {
         &self,
         context: &Context,
         base_size: FontBaseSize,
+        line_height_base: LineHeightBase,
     ) -> computed::FontSize {
         let compose_keyword = |factor| {
             context
@@ -896,7 +899,8 @@ impl FontSize {
                         info = compose_keyword(em);
                     }
                 }
-                let result = l.to_computed_value_with_base_size(context, base_size);
+                let result =
+                    l.to_computed_value_with_base_size(context, base_size, line_height_base);
                 if l.should_zoom_text() {
                     context.maybe_zoom_text(result)
                 } else {
@@ -910,7 +914,7 @@ impl FontSize {
                 (base_size.resolve(context).computed_size() * pc.0).normalized()
             },
             FontSize::Length(LengthPercentage::Calc(ref calc)) => {
-                let calc = calc.to_computed_value_zoomed(context, base_size);
+                let calc = calc.to_computed_value_zoomed(context, base_size, line_height_base);
                 calc.resolve(base_size.resolve(context).computed_size())
             },
             FontSize::Keyword(i) => {
@@ -918,7 +922,11 @@ impl FontSize {
                     // Scaling is done in recompute_math_font_size_if_needed().
                     info = compose_keyword(1.);
                     info.kw = FontSizeKeyword::Math;
-                    FontRelativeLength::Em(1.).to_computed_value(context, base_size)
+                    FontRelativeLength::Em(1.).to_computed_value(
+                        context,
+                        base_size,
+                        line_height_base,
+                    )
                 } else {
                     // As a specified keyword, this is keyword derived
                     info = i;
@@ -927,12 +935,19 @@ impl FontSize {
             },
             FontSize::Smaller => {
                 info = compose_keyword(1. / LARGER_FONT_SIZE_RATIO);
-                FontRelativeLength::Em(1. / LARGER_FONT_SIZE_RATIO)
-                    .to_computed_value(context, base_size)
+                FontRelativeLength::Em(1. / LARGER_FONT_SIZE_RATIO).to_computed_value(
+                    context,
+                    base_size,
+                    line_height_base,
+                )
             },
             FontSize::Larger => {
                 info = compose_keyword(LARGER_FONT_SIZE_RATIO);
-                FontRelativeLength::Em(LARGER_FONT_SIZE_RATIO).to_computed_value(context, base_size)
+                FontRelativeLength::Em(LARGER_FONT_SIZE_RATIO).to_computed_value(
+                    context,
+                    base_size,
+                    line_height_base,
+                )
             },
 
             FontSize::System(_) => {
@@ -964,7 +979,11 @@ impl ToComputedValue for FontSize {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> computed::FontSize {
-        self.to_computed_value_against(context, FontBaseSize::InheritedStyle)
+        self.to_computed_value_against(
+            context,
+            FontBaseSize::InheritedStyle,
+            LineHeightBase::InheritedStyle,
+        )
     }
 
     #[inline]
@@ -2151,12 +2170,29 @@ impl ToComputedValue for LineHeight {
                     LengthPercentage::Length(NoCalcLength::Absolute(ref abs)) => {
                         context.maybe_zoom_text(abs.to_computed_value(context))
                     },
-                    LengthPercentage::Length(ref length) => length.to_computed_value(context),
+                    LengthPercentage::Length(ref length) => {
+                        // line-height units specifically resolve against parent's
+                        // font and line-height properties, while the rest of font
+                        // relative units still resolve against the element's own
+                        // properties.
+                        length.to_computed_value_with_base_size(
+                            context,
+                            FontBaseSize::CurrentStyle,
+                            LineHeightBase::InheritedStyle,
+                        )
+                    },
                     LengthPercentage::Percentage(ref p) => FontRelativeLength::Em(p.0)
-                        .to_computed_value(context, FontBaseSize::CurrentStyle),
+                        .to_computed_value(
+                            context,
+                            FontBaseSize::CurrentStyle,
+                            LineHeightBase::InheritedStyle,
+                        ),
                     LengthPercentage::Calc(ref calc) => {
-                        let computed_calc =
-                            calc.to_computed_value_zoomed(context, FontBaseSize::CurrentStyle);
+                        let computed_calc = calc.to_computed_value_zoomed(
+                            context,
+                            FontBaseSize::CurrentStyle,
+                            LineHeightBase::InheritedStyle,
+                        );
                         let base = context.style().get_font().clone_font_size().computed_size();
                         computed_calc.resolve(base)
                     },
