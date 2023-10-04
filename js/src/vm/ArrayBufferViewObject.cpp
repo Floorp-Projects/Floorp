@@ -377,7 +377,7 @@ JS_PUBLIC_API bool JS::EnsureNonInlineArrayBufferOrView(JSContext* cx,
     return ArrayBufferObject::ensureNonInline(cx, rootedBuffer);
   }
 
-  auto* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  auto* view = obj->maybeUnwrapIf<ArrayBufferViewObject>();
   if (view) {
     if (view->isSharedMemory()) {
       // Always locked and out of line.
