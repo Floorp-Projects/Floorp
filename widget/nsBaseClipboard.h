@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/PContent.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MoveOnlyFunction.h"
 #include "mozilla/Result.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
@@ -119,6 +120,9 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       const nsTArray<nsCString>& aFlavorList,
       int32_t aWhichClipboard) override final;
 
+  using HasMatchingFlavorsCallback = mozilla::MoveOnlyFunction<void(
+      mozilla::Result<nsTArray<nsCString>, nsresult>)>;
+
  protected:
   virtual ~nsBaseClipboard() = default;
 
@@ -130,6 +134,9 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       int32_t aWhichClipboard) = 0;
   virtual mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) = 0;
+  virtual void AsyncHasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+      HasMatchingFlavorsCallback&& aCallback);
 
  private:
   class ClipboardCache final {
@@ -165,6 +172,9 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   // Return clipboard cache if the cached data is valid, otherwise clear the
   // cached data and returns null.
   ClipboardCache* GetClipboardCacheIfValid(int32_t aClipboardType);
+
+  mozilla::Result<nsTArray<nsCString>, nsresult> GetFlavorsFromClipboardCache(
+      int32_t aClipboardType);
 
   mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;
