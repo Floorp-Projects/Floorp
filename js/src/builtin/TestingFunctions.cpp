@@ -1700,7 +1700,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Sprinter sprinter(cx);
+  JSSprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -1800,7 +1800,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     fclose(f);
   }
 
-  JSString* str = sprinter.releaseJS(cx);
+  JSString* str = sprinter.release(cx);
   if (!str) {
     return false;
   }
@@ -6958,13 +6958,13 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Sprinter out(cx, true);
+  JSSprinter out(cx);
   if (!out.init()) {
     return false;
   }
   str->dumpRepresentation(out, 0);
 
-  JSString* rep = out.releaseJS(cx);
+  JSString* rep = out.release(cx);
   if (!rep) {
     return false;
   }

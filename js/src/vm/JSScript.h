@@ -2176,15 +2176,15 @@ class JSScript : public js::BaseScript {
   void dumpRecursive(JSContext* cx);
 
   static bool dump(JSContext* cx, JS::Handle<JSScript*> script,
-                   DumpOptions& options, js::Sprinter* sp);
+                   DumpOptions& options, js::StringPrinter* sp);
   static bool dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                           js::Sprinter* sp);
+                           js::GenericPrinter* sp);
   static bool dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                           js::Sprinter* sp);
+                           js::GenericPrinter* sp);
   static bool dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
-                             js::Sprinter* sp);
+                             js::GenericPrinter* sp);
   static bool dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
-                           js::Sprinter* sp);
+                           js::GenericPrinter* sp);
 #endif
 };
 
