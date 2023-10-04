@@ -228,7 +228,10 @@ public final class GeckoBundle implements Parcelable {
    */
   public Double getDoubleObject(final String key, final Double defaultValue) {
     final Object value = mMap.get(key);
-    return value == null ? defaultValue : (Double) value;
+    if (value == null) {
+      return defaultValue;
+    }
+    return ((Number) value).doubleValue();
   }
 
   /**
