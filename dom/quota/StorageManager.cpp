@@ -427,13 +427,19 @@ void RequestResolver::ResolveOrReject() {
   } else {
     MOZ_ASSERT(mProxy);
 
-    promise = mProxy->WorkerPromise();
+    // The worker ref might have been notified already before we are run.
+    MutexAutoLock lock(mProxy->Lock());
+    if (!mProxy->CleanedUp()) {
+      promise = mProxy->WorkerPromise();
 
-    // Only clean up for worker case.
-    autoCleanup.emplace(mProxy);
+      // Only clean up for worker case.
+      autoCleanup.emplace(mProxy);
+    }
   }
 
-  MOZ_ASSERT(promise);
+  if (!promise) {
+    return;
+  }
 
   if (mType == Type::Estimate) {
     if (NS_SUCCEEDED(mResultCode)) {
