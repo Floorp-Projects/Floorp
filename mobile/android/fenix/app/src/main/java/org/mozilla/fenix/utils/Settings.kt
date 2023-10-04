@@ -1728,6 +1728,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Time in milliseconds when the user was first presented the review quality check feature CFR.
+     */
+    var reviewQualityCheckCfrDisplayTimeInMillis by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_review_quality_cfr_displayed_time),
+        default = 0L,
+    )
+
+    /**
      * Time in milliseconds since the user first opted in the review quality check feature.
      */
     var reviewQualityCheckOptInTimeInMillis by longPreference(

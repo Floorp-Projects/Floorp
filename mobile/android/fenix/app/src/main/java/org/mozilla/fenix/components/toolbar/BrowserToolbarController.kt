@@ -58,6 +58,11 @@ interface BrowserToolbarController {
      * @see [BrowserToolbarInteractor.onShoppingCfrActionClicked]
      */
     fun handleShoppingCfrActionClick()
+
+    /**
+     * @see [BrowserToolbarInteractor.onShoppingCfrDismiss]
+     */
+    fun handleShoppingCfrDismiss()
 }
 
 @Suppress("LongParameterList")
@@ -198,14 +203,27 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleShoppingCfrActionClick() {
-        activity.settings().shouldShowReviewQualityCheckCFR = false
+        updateShoppingCfrSettings()
         navController.navigate(
             BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment(),
         )
     }
 
+    override fun handleShoppingCfrDismiss() {
+        updateShoppingCfrSettings()
+    }
+
     companion object {
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
+    }
+
+    private fun updateShoppingCfrSettings() = with(activity.settings()) {
+        if (reviewQualityCheckCfrDisplayTimeInMillis != 0L) {
+            // We want to show the first CFR a second time if the user doesn't opt in the feature
+            shouldShowReviewQualityCheckCFR = false
+        } else {
+            reviewQualityCheckCfrDisplayTimeInMillis = System.currentTimeMillis()
+        }
     }
 }
 

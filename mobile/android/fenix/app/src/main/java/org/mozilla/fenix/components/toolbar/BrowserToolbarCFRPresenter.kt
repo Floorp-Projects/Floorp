@@ -68,8 +68,10 @@ private const val CFR_MINIMUM_NUMBER_OPENED_TABS = 5
  * @property isPrivate Whether or not the session is private.
  * @property sessionId optional custom tab id used to identify the custom tab in which to show a CFR.
  * @property onShoppingCfrActionClicked Triggered when the user taps on the shopping CFR action.
+ * @property onShoppingCfrDismiss Triggered when the user closes the shopping CFR using the "X" button.
  * @property shoppingExperienceFeature Used to determine if [ShoppingExperienceFeature] is enabled.
  */
+@Suppress("LongParameterList")
 class BrowserToolbarCFRPresenter(
     private val context: Context,
     private val browserStore: BrowserStore,
@@ -78,6 +80,7 @@ class BrowserToolbarCFRPresenter(
     private val isPrivate: Boolean,
     private val sessionId: String? = null,
     private val onShoppingCfrActionClicked: () -> Unit,
+    private val onShoppingCfrDismiss: () -> Unit,
     private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(
         context.settings(),
     ),
@@ -150,6 +153,30 @@ class BrowserToolbarCFRPresenter(
         }
     }
 
+    private fun whichShoppingCFR(): ToolbarCFR {
+        fun Long.isInitialized(): Boolean = this != 0L
+        fun Long.afterOneDay(): Boolean = this.isInitialized() &&
+            System.currentTimeMillis() - this > Settings.ONE_DAY_MS
+
+        val optInTime = settings.reviewQualityCheckOptInTimeInMillis
+        val firstCfrShownTime = settings.reviewQualityCheckCfrDisplayTimeInMillis
+
+        return when {
+            // First CFR should be displayed on first product page visit
+            !firstCfrShownTime.isInitialized() ->
+                ToolbarCFR.SHOPPING
+            // First CFR should be displayed again 24 hours later only for not opted in users
+            !optInTime.isInitialized() && firstCfrShownTime.afterOneDay() ->
+                ToolbarCFR.SHOPPING
+            // Second CFR should be shown 24 hours after opt in
+            optInTime.afterOneDay() ->
+                ToolbarCFR.SHOPPING_OPTED_IN
+            else -> {
+                ToolbarCFR.NONE
+            }
+        }
+    }
+
     private fun getCFRToShow(): ToolbarCFR = when {
         settings.shouldShowEraseActionCFR && isPrivate -> {
             ToolbarCFR.ERASE
@@ -161,14 +188,7 @@ class BrowserToolbarCFRPresenter(
             ) -> ToolbarCFR.TCP
 
         shoppingExperienceFeature.isEnabled &&
-            settings.shouldShowReviewQualityCheckCFR -> {
-            val optInTime = settings.reviewQualityCheckOptInTimeInMillis
-            if (optInTime != 0L && System.currentTimeMillis() - optInTime > Settings.ONE_DAY_MS) {
-                ToolbarCFR.SHOPPING_OPTED_IN
-            } else {
-                ToolbarCFR.SHOPPING
-            }
-        }
+            settings.shouldShowReviewQualityCheckCFR -> whichShoppingCFR()
 
         else -> ToolbarCFR.NONE
     }
@@ -328,7 +348,7 @@ class BrowserToolbarCFRPresenter(
             onDismiss = {
                 when (it) {
                     true -> {
-                        settings.shouldShowReviewQualityCheckCFR = false
+                        onShoppingCfrDismiss()
                     }
                     false -> {}
                 }

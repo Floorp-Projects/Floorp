@@ -376,4 +376,5 @@
     <string name="pref_key_is_review_quality_check_product_recommendations_enabled">pref_key_is_review_quality_check_product_recommendations_enabled</string>
     <string name="pref_key_should_show_review_quality_cfr">pref_key_should_show_review_quality_cfr</string>
     <string name="pref_key_should_show_review_quality_opt_in_time">pref_key_should_show_review_quality_opt_in_time</string>
+    <string name="pref_key_should_show_review_quality_cfr_displayed_time">pref_key_should_show_review_quality_cfr_displayed_time</string>
 </resources>

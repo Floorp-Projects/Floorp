@@ -381,12 +381,24 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleShoppingCfrActionClick() {
         val controller = createController()
+        every { activity.settings().reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+
         controller.handleShoppingCfrActionClick()
 
         verify {
             activity.settings().shouldShowReviewQualityCheckCFR = false
             navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment())
         }
+    }
+
+    @Test
+    fun handleShoppingCfrDismiss() {
+        val controller = createController()
+        every { activity.settings().reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+
+        controller.handleShoppingCfrDismiss()
+
+        assertFalse(activity.settings().shouldShowReviewQualityCheckCFR)
     }
 
     private fun createController(
