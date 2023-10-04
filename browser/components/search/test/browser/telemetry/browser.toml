@@ -107,9 +107,6 @@ support-files = [
 ["browser_search_telemetry_searchbar.js"]
 https_first_disabled = true
 support-files = [
-  "slow_loading_page_with_ads_on_load_event.html",
-  "slow_loading_page_with_ads.html",
-  "slow_loading_page_with_ads.sjs",
   "telemetrySearchSuggestions.sjs",
   "telemetrySearchSuggestions.xml",
 ]
@@ -127,9 +124,25 @@ support-files = [
 support-files = [
   "searchTelemetry.html",
   "searchTelemetryAd.html",
+]
+
+["browser_search_telemetry_sources_ads_clicks.js"]
+support-files = [
+  "searchTelemetryAd.html",
+]
+
+["browser_search_telemetry_sources_ads_data_attributes.js"]
+support-files = [
   "searchTelemetryAd_dataAttributes.html",
   "searchTelemetryAd_dataAttributes_href.html",
   "searchTelemetryAd_dataAttributes_none.html",
+]
+
+["browser_search_telemetry_sources_ads_load_events.js"]
+support-files = [
+  "slow_loading_page_with_ads_on_load_event.html",
+  "slow_loading_page_with_ads.html",
+  "slow_loading_page_with_ads.sjs",
 ]
 
 ["browser_search_telemetry_sources_in_content.js"]
