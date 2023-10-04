@@ -2882,7 +2882,11 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
 #endif
 
 // Reset Private Browsing Session feature
-pref("browser.privatebrowsing.resetPBM.enabled", false);
+#if defined(NIGHTLY_BUILD)
+  pref("browser.privatebrowsing.resetPBM.enabled", true);
+#else
+  pref("browser.privatebrowsing.resetPBM.enabled", false);
+#endif
 // Whether the reset private browsing panel should ask for confirmation before
 // performing the clear action.
 pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
