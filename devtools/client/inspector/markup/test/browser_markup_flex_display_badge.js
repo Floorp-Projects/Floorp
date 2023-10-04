@@ -44,6 +44,11 @@ add_task(async function () {
     !flexDisplayBadge.classList.contains("active"),
     "flex display badge is not active."
   );
+  is(
+    flexDisplayBadge.getAttribute("aria-pressed"),
+    "false",
+    "flex display badge is not pressed."
+  );
   ok(
     flexDisplayBadge.classList.contains("interactive"),
     "flex display badge is interactive."
@@ -60,7 +65,7 @@ add_task(async function () {
   );
 
   info("Toggling ON the flexbox highlighter from the flex display badge.");
-  const onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
+  let onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
   let onCheckboxChange = waitUntilState(
     store,
     state => state.flexbox.highlighted
@@ -84,13 +89,18 @@ add_task(async function () {
     flexDisplayBadge.classList.contains("active"),
     "flex display badge is active."
   );
+  is(
+    flexDisplayBadge.getAttribute("aria-pressed"),
+    "true",
+    "flex display badge is pressed."
+  );
   ok(
     flexDisplayBadge.classList.contains("interactive"),
     "flex display badge is interactive."
   );
 
   info("Toggling OFF the flexbox highlighter from the flex display badge.");
-  const onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
+  let onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
   onCheckboxChange = waitUntilState(store, state => !state.flexbox.highlighted);
   flexDisplayBadge.click();
   await onHighlighterHidden;
@@ -100,8 +110,54 @@ add_task(async function () {
     !flexDisplayBadge.classList.contains("active"),
     "flex display badge is not active."
   );
+  is(
+    flexDisplayBadge.getAttribute("aria-pressed"),
+    "false",
+    "flex display badge is no longer pressed."
+  );
   ok(
     flexDisplayBadge.classList.contains("interactive"),
     "flex display badge is interactive."
+  );
+
+  info("Toggling ON the flexbox highlighter from the keyboard.");
+  onHighlighterShown = waitForHighlighterTypeShown(HIGHLIGHTER_TYPE);
+  onCheckboxChange = waitUntilState(store, state => state.flexbox.highlighted);
+
+  flexDisplayBadge.focus();
+  EventUtils.synthesizeKey("VK_RETURN", {}, flexDisplayBadge.ownerGlobal);
+  await onHighlighterShown;
+  await onCheckboxChange;
+
+  ok(
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE),
+    "Flexbox highlighter was displayed from the keyboard."
+  );
+  ok(
+    flexDisplayBadge.classList.contains("active"),
+    "flex display badge is active."
+  );
+  is(
+    flexDisplayBadge.getAttribute("aria-pressed"),
+    "true",
+    "flex display badge is pressed."
+  );
+
+  info("Toggling OFF the flexbox highlighter from the keyboard.");
+  onHighlighterHidden = waitForHighlighterTypeHidden(HIGHLIGHTER_TYPE);
+  onCheckboxChange = waitUntilState(store, state => !state.flexbox.highlighted);
+  EventUtils.synthesizeKey("VK_RETURN", {}, flexDisplayBadge.ownerGlobal);
+  await onHighlighterHidden;
+  await onCheckboxChange;
+
+  ok(true, "Highlighter was hidden from the keyboard");
+  ok(
+    !flexDisplayBadge.classList.contains("active"),
+    "flex display badge was deactivated from the keyboard"
+  );
+  is(
+    flexDisplayBadge.getAttribute("aria-pressed"),
+    "false",
+    "flex display badge is no longer pressed."
   );
 });
