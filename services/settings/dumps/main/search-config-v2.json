@@ -1,0 +1,2827 @@
+{
+  "data": [
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "pc",
+            "value": "MOZI"
+          },
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1695600005178,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "an",
+                "ar",
+                "ast",
+                "az",
+                "bs",
+                "ca",
+                "ca-valencia",
+                "cak",
+                "cs",
+                "cy",
+                "da",
+                "de",
+                "dsb",
+                "el",
+                "eo",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "eu",
+                "fa",
+                "ff",
+                "fi",
+                "fr",
+                "fur",
+                "fy-NL",
+                "gd",
+                "gl",
+                "gn",
+                "gu-IN",
+                "he",
+                "hi-IN",
+                "hr",
+                "hsb",
+                "hy-AM",
+                "ia",
+                "id",
+                "is",
+                "it",
+                "ja-JP-macos",
+                "ja",
+                "ka",
+                "kab",
+                "km",
+                "kn",
+                "lij",
+                "lo",
+                "lt",
+                "meh",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "ne-NP",
+                "nl",
+                "nn-NO",
+                "oc",
+                "pa-IN",
+                "pt-BR",
+                "rm",
+                "ro",
+                "sc",
+                "sco",
+                "son",
+                "sq",
+                "sr",
+                "sv-SE",
+                "te",
+                "th",
+                "tl",
+                "tr",
+                "trs",
+                "uk",
+                "ur",
+                "uz",
+                "wo",
+                "xh",
+                "zh-CN"
+              ],
+              "startsWith": [
+                "bn",
+                "en"
+              ]
+            }
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "pc",
+                "value": "MOZR"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "an",
+                "ar",
+                "ast",
+                "az",
+                "bs",
+                "ca",
+                "ca-valencia",
+                "cak",
+                "cs",
+                "cy",
+                "da",
+                "de",
+                "dsb",
+                "el",
+                "eo",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "eu",
+                "fa",
+                "ff",
+                "fi",
+                "fr",
+                "fur",
+                "fy-NL",
+                "gd",
+                "gl",
+                "gn",
+                "gu-IN",
+                "he",
+                "hi-IN",
+                "hr",
+                "hsb",
+                "hy-AM",
+                "ia",
+                "id",
+                "is",
+                "it",
+                "ja-JP-macos",
+                "ja",
+                "ka",
+                "kab",
+                "km",
+                "kn",
+                "lij",
+                "lo",
+                "lt",
+                "meh",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "ne-NP",
+                "nl",
+                "nn-NO",
+                "oc",
+                "pa-IN",
+                "pt-BR",
+                "rm",
+                "ro",
+                "sc",
+                "sco",
+                "son",
+                "sq",
+                "sr",
+                "sv-SE",
+                "te",
+                "th",
+                "tl",
+                "tr",
+                "trs",
+                "uk",
+                "ur",
+                "uz",
+                "wo",
+                "xh",
+                "zh-CN"
+              ],
+              "startsWith": [
+                "bn",
+                "en"
+              ]
+            }
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "telemetryId": "bing-esr"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
+                "name": "pc",
+                "value": "MZSL01"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "sweetlabs-b-oem1",
+              "sweetlabs-b-r-oem1"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
+                "name": "pc",
+                "value": "MZSL02"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "sweetlabs-b-oem2",
+              "sweetlabs-b-r-oem2"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
+                "name": "pc",
+                "value": "MZSL03"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "sweetlabs-b-oem3",
+              "sweetlabs-b-r-oem3"
+            ]
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "pc",
+                "value": "MOZX"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
+            ]
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 2500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "bing@search.mozilla.org"
+      },
+      "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
+      "last_modified": 1695659360044
+    },
+    {
+      "urls": {
+        "trending": {
+          "query": "client=firefox&channel=ftr&q={searchTerms}",
+          "fullPath": "https://www.google.com/complete/search"
+        }
+      },
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "client",
+            "value": "firefox-b-d"
+          },
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1687361570970,
+      "appliesTo": [
+        {
+          "default": "yes-if-no-other",
+          "excluded": {
+            "regions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
+            ]
+          },
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 2000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "telemetryId": "google-b-e"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "included": {
+            "regions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
+            ]
+          },
+          "telemetryId": "google-com-nocodes"
+        },
+        {
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "no",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-d"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "pref": "google_channel_us",
+              "condition": "pref"
+            }
+          ],
+          "telemetryId": "google-b-1-d",
+          "suggestExtraParams": [
+            {
+              "name": "channel",
+              "pref": "search_rich_suggestions",
+              "condition": "pref"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-e"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "pref": "google_channel_us",
+              "condition": "pref"
+            }
+          ],
+          "telemetryId": "google-b-1-e"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "ubuntu"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "canonical",
+              "canonical-001"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "value": "fs"
+            }
+          ],
+          "telemetryId": "google-canonical"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "ubuntu-sn"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "canonical-002"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "channel",
+              "value": "fs"
+            }
+          ],
+          "telemetryId": "google-ubuntu-sn"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-lm"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "telemetryId": "google-b-lm"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-lm"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "telemetryId": "google-b-1-lm"
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "channel",
+          "pref": "google_channel_row",
+          "condition": "pref"
+        }
+      ],
+      "telemetryId": "google-b-d",
+      "webExtension": {
+        "id": "google@search.mozilla.org"
+      },
+      "suggestExtraParams": [
+        {
+          "name": "channel",
+          "pref": "search_rich_suggestions",
+          "condition": "pref"
+        }
+      ],
+      "id": "cb8e7210-9f0b-48fa-8708-b9a03df79eea",
+      "last_modified": 1687526306160
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1685563823313,
+      "appliesTo": [
+        {
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "ftsa",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
+          "telemetryId": "ddg-esr"
+        },
+        {
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "lm",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "t",
+          "value": "ffab",
+          "purpose": "searchbar",
+          "condition": "purpose"
+        }
+      ],
+      "telemetryId": "ddg",
+      "webExtension": {
+        "id": "ddg@search.mozilla.org"
+      },
+      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
+      "last_modified": 1685625615515
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggestUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "action",
+            "value": "opensearch"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1685384563001,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ],
+            "suggestUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 3000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "default": "no",
+          "override": true,
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "baidu",
+      "webExtension": {
+        "id": "baidu@search.mozilla.org"
+      },
+      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
+      "last_modified": 1685453218069
+    },
+    {
+      "schema": 1674842123977,
+      "appliesTo": [
+        {
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "af",
+                "an",
+                "ar",
+                "ast",
+                "az",
+                "bg",
+                "br",
+                "bs",
+                "cy",
+                "da",
+                "de",
+                "dsb",
+                "el",
+                "eo",
+                "et",
+                "eu",
+                "fa",
+                "fi",
+                "fy-NL",
+                "ga-IE",
+                "gd",
+                "gl",
+                "gn",
+                "he",
+                "hr",
+                "hsb",
+                "hu",
+                "ia",
+                "id",
+                "is",
+                "it",
+                "ka",
+                "kab",
+                "kk",
+                "km",
+                "kn",
+                "lij",
+                "lo",
+                "lt",
+                "ltg",
+                "lv",
+                "mk",
+                "mr",
+                "ms",
+                "my",
+                "nl",
+                "oc",
+                "pl",
+                "rm",
+                "ro",
+                "ru",
+                "si",
+                "sk",
+                "sl",
+                "sq",
+                "sr",
+                "sv-SE",
+                "ta",
+                "te",
+                "th",
+                "tl",
+                "tr",
+                "uk",
+                "ur",
+                "uz",
+                "vi",
+                "wo",
+                "zh-CN",
+                "zh-TW"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "$USER_LOCALE"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "be"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "be",
+              "be-tarask"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "bn",
+                "bn-BD",
+                "bn-IN"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "bn"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ca",
+                "ca-valencia"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cak",
+                "es-AR",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "trs"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "es"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cs"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "cz"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ff",
+                "fr",
+                "son"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "fr"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "gu-IN"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "gu"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "hi-IN"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "hi"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "hy-AM"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "hy"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fur",
+                "sc"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "it"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ja-JP-macos",
+                "ja"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "ja"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ko"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "kr"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "nb-NO"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "NO"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ne-NP"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "ne"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "nn-NO"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "NN"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pa-IN"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "pa"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pt-BR",
+                "pt-PT"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "pt"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "szl"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "pl"
+            ]
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 1000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "wikipedia@search.mozilla.org"
+      },
+      "id": "3f3beb1d-e32e-40a4-b6ed-56741803e1d8",
+      "last_modified": 1675353179510
+    },
+    {
+      "schema": 1674842117992,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "en-US"
+              ]
+            },
+            "regions": [
+              "us"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "an",
+                "ast",
+                "ca",
+                "ca-valencia",
+                "es-ES",
+                "eu",
+                "gl"
+              ]
+            }
+          },
+          "telemetryId": "ebay-es",
+          "webExtension": {
+            "locales": [
+              "es"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "br",
+                "fr",
+                "wo"
+              ]
+            }
+          },
+          "telemetryId": "ebay-fr",
+          "webExtension": {
+            "locales": [
+              "fr"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "br",
+                "en-US",
+                "fr",
+                "wo"
+              ]
+            },
+            "regions": [
+              "be"
+            ]
+          },
+          "telemetryId": "ebay-be",
+          "webExtension": {
+            "locales": [
+              "be"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "br",
+                "en-US",
+                "fr",
+                "wo"
+              ]
+            },
+            "regions": [
+              "ca"
+            ]
+          },
+          "telemetryId": "ebay-ca",
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "br",
+                "en-US",
+                "fr",
+                "wo"
+              ]
+            },
+            "regions": [
+              "ch"
+            ]
+          },
+          "telemetryId": "ebay-ch",
+          "webExtension": {
+            "locales": [
+              "ch"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cy",
+                "en-GB",
+                "gd"
+              ]
+            }
+          },
+          "telemetryId": "ebay-uk",
+          "webExtension": {
+            "locales": [
+              "uk"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "sco"
+              ]
+            },
+            "regions": [
+              "gb"
+            ]
+          },
+          "telemetryId": "ebay-uk",
+          "webExtension": {
+            "locales": [
+              "uk"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "en-US"
+              ]
+            },
+            "regions": [
+              "gb"
+            ]
+          },
+          "telemetryId": "ebay-uk",
+          "webExtension": {
+            "locales": [
+              "uk"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cy",
+                "en-GB",
+                "en-US",
+                "gd"
+              ]
+            },
+            "regions": [
+              "au"
+            ]
+          },
+          "telemetryId": "ebay-au",
+          "webExtension": {
+            "locales": [
+              "au"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cy",
+                "en-GB",
+                "en-US",
+                "gd"
+              ]
+            },
+            "regions": [
+              "ie"
+            ]
+          },
+          "telemetryId": "ebay-ie",
+          "webExtension": {
+            "locales": [
+              "ie"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb"
+              ]
+            }
+          },
+          "telemetryId": "ebay-de",
+          "webExtension": {
+            "locales": [
+              "de"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb"
+              ]
+            },
+            "regions": [
+              "at"
+            ]
+          },
+          "telemetryId": "ebay-at",
+          "webExtension": {
+            "locales": [
+              "at"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb"
+              ]
+            },
+            "regions": [
+              "ch"
+            ]
+          },
+          "telemetryId": "ebay-ch",
+          "webExtension": {
+            "locales": [
+              "ch"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "en-CA"
+              ]
+            }
+          },
+          "telemetryId": "ebay-ca",
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fy-NL",
+                "nl"
+              ]
+            }
+          },
+          "telemetryId": "ebay-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "en-US"
+              ]
+            },
+            "regions": [
+              "nl"
+            ]
+          },
+          "telemetryId": "ebay-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fy-NL",
+                "nl"
+              ]
+            },
+            "regions": [
+              "be"
+            ]
+          },
+          "telemetryId": "ebay-be",
+          "webExtension": {
+            "locales": [
+              "be"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ga-IE"
+              ]
+            }
+          },
+          "telemetryId": "ebay-ie",
+          "webExtension": {
+            "locales": [
+              "ie"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fur",
+                "it",
+                "lij",
+                "sc"
+              ]
+            }
+          },
+          "telemetryId": "ebay-it",
+          "webExtension": {
+            "locales": [
+              "it"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "rm"
+              ]
+            }
+          },
+          "telemetryId": "ebay-ch",
+          "webExtension": {
+            "locales": [
+              "ch"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "ebay@search.mozilla.org"
+      },
+      "id": "cbe309e0-f638-4996-9dfc-ea5c19ef16e9",
+      "last_modified": 1675353179507
+    },
+    {
+      "schema": 1673982699337,
+      "appliesTo": [
+        {
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazondotcom-us",
+          "webExtension": {
+            "locales": [
+              "us"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "application": {
+            "maxVersion": "89.0a1"
+          }
+        },
+        {
+          "excluded": {
+            "regions": [
+              "at",
+              "au",
+              "be",
+              "ca",
+              "ch",
+              "cn",
+              "de",
+              "es",
+              "fr",
+              "gb",
+              "ie",
+              "in",
+              "it",
+              "jp",
+              "mc",
+              "nl",
+              "pt",
+              "se",
+              "sm",
+              "us",
+              "va"
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "cy",
+                "da",
+                "el",
+                "en-GB",
+                "en-US",
+                "eo",
+                "es-AR",
+                "eu",
+                "fa",
+                "ga-IE",
+                "gd",
+                "gl",
+                "gn",
+                "hr",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "nn-NO",
+                "pt-PT",
+                "ro",
+                "si",
+                "sq",
+                "sr",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            }
+          }
+        }
+      ],
+      "telemetryId": "amazondotcom",
+      "webExtension": {
+        "id": "amazondotcom@search.mozilla.org"
+      },
+      "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
+      "last_modified": 1674147734519
+    },
+    {
+      "schema": 1673982696406,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "bn",
+                "bn-IN",
+                "kn",
+                "gu-IN",
+                "mr",
+                "pa-IN",
+                "ta",
+                "te",
+                "ur"
+              ]
+            },
+            "regions": [
+              "in"
+            ]
+          },
+          "telemetryId": "amazon-in",
+          "webExtension": {
+            "locales": [
+              "in"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "fr",
+              "mc"
+            ]
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            },
+            "regions": [
+              "be"
+            ]
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "jp"
+            ]
+          },
+          "telemetryId": "amazon-jp",
+          "webExtension": {
+            "locales": [
+              "jp"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "it",
+              "sm",
+              "va"
+            ]
+          },
+          "telemetryId": "amazon-it",
+          "webExtension": {
+            "locales": [
+              "it"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "at",
+              "ch",
+              "de"
+            ]
+          },
+          "telemetryId": "amazon-de",
+          "webExtension": {
+            "locales": [
+              "de"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "gb",
+              "ie"
+            ]
+          },
+          "telemetryId": "amazon-en-GB",
+          "webExtension": {
+            "locales": [
+              "en-GB"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "au"
+            ]
+          },
+          "telemetryId": "amazon-au",
+          "webExtension": {
+            "locales": [
+              "au"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "ca"
+            ]
+          },
+          "telemetryId": "amazon-ca",
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "nl"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazon-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "excluded": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            }
+          },
+          "included": {
+            "regions": [
+              "be"
+            ]
+          },
+          "application": {
+            "minVersion": "89.0a1"
+          },
+          "telemetryId": "amazon-nl",
+          "webExtension": {
+            "locales": [
+              "nl"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "es",
+              "pt"
+            ]
+          },
+          "telemetryId": "amazon-es",
+          "webExtension": {
+            "locales": [
+              "spain"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "se"
+            ]
+          },
+          "telemetryId": "amazon-se",
+          "webExtension": {
+            "locales": [
+              "sweden"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "amazon@search.mozilla.org"
+      },
+      "id": "a620b506-c3ae-4332-97bb-190a73868580",
+      "last_modified": 1674147734517
+    },
+    {
+      "schema": 1623235246279,
+      "appliesTo": [
+        {
+          "included": {
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 1500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "mozillaonline"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "amazondotcn",
+      "webExtension": {
+        "id": "amazondotcn@search.mozilla.org"
+      },
+      "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
+      "last_modified": 1623330482152
+    },
+    {
+      "schema": 1613395976252,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pl",
+                "szl"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "wolnelektury-pl@search.mozilla.org"
+      },
+      "id": "1960ccff-4aab-48cd-9bf5-0eb2adde76f9",
+      "last_modified": 1613587855073
+    },
+    {
+      "schema": 1613395970632,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pl",
+                "szl"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "allegro-pl@search.mozilla.org"
+      },
+      "id": "d915b6bc-bbae-47a6-8323-1b2990ad0e57",
+      "last_modified": 1613587855067
+    },
+    {
+      "schema": 1596483697391,
+      "appliesTo": [
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "gmx"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "de",
+              "shopping"
+            ]
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "gmxcouk"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "en-GB"
+            ]
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "gmxes"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "es"
+            ]
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "gmxfr"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "fr"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "gmx@search.mozilla.org"
+      },
+      "id": "1571e5fc-17e4-492b-b6d2-106d8669b6c8",
+      "last_modified": 1597327602800
+    },
+    {
+      "schema": 1588177655532,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            }
+          },
+          "orderHint": 1500,
+          "application": {
+            "distributions": [
+              "qwant-001",
+              "qwant-002"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "qwantjr@search.mozilla.org"
+      },
+      "id": "f59fddbc-580b-4672-9cda-32941ceec730",
+      "last_modified": 1589299342073
+    },
+    {
+      "schema": 1588177653636,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            }
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefoxqwant"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 2000,
+          "application": {
+            "distributions": [
+              "qwant-001",
+              "qwant-002"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "qwant@search.mozilla.org"
+      },
+      "id": "f59fddbc-580b-4672-9cda-32941ceec729",
+      "last_modified": 1589299342030
+    },
+    {
+      "schema": 1588177651820,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cs"
+              ]
+            }
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "sourceid",
+                "value": "FF_3"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "cs"
+              ]
+            }
+          },
+          "application": {
+            "distributions": [
+              "seznam"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "seznam-cz@search.mozilla.org"
+      },
+      "id": "c50dcc87-0192-4461-bb88-17a55ba181c7",
+      "last_modified": 1589299342027
+    },
+    {
+      "schema": 1588177648193,
+      "appliesTo": [
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "1und1"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "1und1@search.mozilla.org"
+      },
+      "id": "e98c663d-408d-4901-9666-66e67a3084b4",
+      "last_modified": 1589299342018
+    },
+    {
+      "schema": 1588177646165,
+      "appliesTo": [
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "webde"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "webde@search.mozilla.org"
+      },
+      "id": "613d1391-4be5-4296-80e2-cfb740de6607",
+      "last_modified": 1589299342015
+    },
+    {
+      "schema": 1588016493937,
+      "appliesTo": [
+        {
+          "default": "yes",
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "mail.com"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "mailcom@search.mozilla.org"
+      },
+      "id": "62d232d5-304e-4c35-a4da-46626a9b54c2",
+      "last_modified": 1589299342012
+    },
+    {
+      "schema": 1586273556552,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ja-JP-macos",
+                "ja"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "rakuten@search.mozilla.org"
+      },
+      "id": "8551c432-c68d-4934-836e-98513ae4b4a5",
+      "last_modified": 1586375636481
+    },
+    {
+      "schema": 1582890773480,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "az"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "azerdict@search.mozilla.org"
+      },
+      "id": "c1a6845f-015e-4e67-bc64-6e39a843643f",
+      "last_modified": 1583937832363
+    },
+    {
+      "schema": 1582890776067,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "nb-NO",
+                "nn-NO"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "bok-NO@search.mozilla.org"
+      },
+      "id": "64ce88a6-fd55-48d1-85a9-724c753f5721",
+      "last_modified": 1583937832356
+    },
+    {
+      "schema": 1582890777775,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "sl"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "ceneji@search.mozilla.org"
+      },
+      "id": "d908d622-0387-4d36-8098-1a9e32c0c697",
+      "last_modified": 1583937832352
+    },
+    {
+      "schema": 1582890779439,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "vi"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "coccoc@search.mozilla.org"
+      },
+      "id": "4e447f5a-9eb1-436e-8de1-9e4b4b709efb",
+      "last_modified": 1583937832348
+    },
+    {
+      "schema": 1582890780276,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ko"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "daum-kr@search.mozilla.org"
+      },
+      "id": "0cdc44be-173a-4ca8-96e3-43e3000da75d",
+      "last_modified": 1583937832346
+    },
+    {
+      "schema": 1582890782823,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "ecosia@search.mozilla.org"
+      },
+      "id": "1fc1b257-3e6b-4cfb-a323-64c1429bcf51",
+      "last_modified": 1583937832339
+    },
+    {
+      "schema": 1582890784534,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "hr"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "eudict@search.mozilla.org"
+      },
+      "id": "5cd4781c-2906-4fe7-9d4b-ea9ddbdc2c3b",
+      "last_modified": 1583937832334
+    },
+    {
+      "schema": 1582890785390,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "gd"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "faclair-beag@search.mozilla.org"
+      },
+      "id": "6491a2b8-c487-4798-a817-a0fd08b40ee2",
+      "last_modified": 1583937832332
+    },
+    {
+      "schema": 1582890787961,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "nn-NO",
+                "nb-NO"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "gulesider-NO@search.mozilla.org"
+      },
+      "id": "f458e78b-9128-4027-b344-538f5661c148",
+      "last_modified": 1583937832325
+    },
+    {
+      "schema": 1582890791315,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb",
+                "rm"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "leo_ende_de@search.mozilla.org"
+      },
+      "id": "03d60939-2c92-45b0-874f-11c8e6d0c2b9",
+      "last_modified": 1583937832316
+    },
+    {
+      "schema": 1582890793008,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "th"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "longdo@search.mozilla.org"
+      },
+      "id": "8b4f2887-0c24-49ce-b467-2ba8cc9a4945",
+      "last_modified": 1583937832311
+    },
+    {
+      "schema": 1582890794722,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cs"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "mapy-cz@search.mozilla.org"
+      },
+      "id": "9a404348-0998-42c4-9d87-45ef47672c95",
+      "last_modified": 1583937832306
+    },
+    {
+      "schema": 1582890796393,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "es-AR"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "ar"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "es-CL"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "cl"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "es-MX"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "mx"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "mercadolibre@search.mozilla.org"
+      },
+      "id": "df070348-e771-4bd5-964e-d19d82c1384e",
+      "last_modified": 1583937832302
+    },
+    {
+      "schema": 1582890797236,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pt-BR"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "mercadolivre@search.mozilla.org"
+      },
+      "id": "53bf6974-0e60-4551-994f-2d5176a5d1c6",
+      "last_modified": 1583937832300
+    },
+    {
+      "schema": 1582890799757,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ko"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "naver-kr@search.mozilla.org"
+      },
+      "id": "4135dc8f-f0bf-475b-b39f-74c4256572af",
+      "last_modified": 1583937832292
+    },
+    {
+      "schema": 1582890801444,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "sl"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "odpiralni@search.mozilla.org"
+      },
+      "id": "fa42b23a-30c5-46f3-8997-4a84029b5349",
+      "last_modified": 1583937832287
+    },
+    {
+      "schema": 1582890806533,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "bg"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "pazaruvaj@search.mozilla.org"
+      },
+      "id": "acc27094-9f0a-49af-868b-8b6ecbbda976",
+      "last_modified": 1583937832267
+    },
+    {
+      "schema": 1582890808245,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "pt-PT"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "priberam@search.mozilla.org"
+      },
+      "id": "a3f1a5b6-cd8d-41b3-bb2b-de6bb1943a3d",
+      "last_modified": 1583937832261
+    },
+    {
+      "schema": 1582890809928,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "sv-SE"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "prisjakt-sv-SE@search.mozilla.org"
+      },
+      "id": "8a7de784-efa5-428f-9193-a0d3368b80d4",
+      "last_modified": 1583937832257
+    },
+    {
+      "schema": 1582890814195,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-TW"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "readmoo@search.mozilla.org"
+      },
+      "id": "2d24515e-3e35-42ed-bf17-1388acfe80fa",
+      "last_modified": 1583937832245
+    },
+    {
+      "schema": 1582890815048,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ltg",
+                "lv"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "salidzinilv@search.mozilla.org"
+      },
+      "id": "e7dcde21-5b5e-4406-b602-0611130fd3a6",
+      "last_modified": 1583937832242
+    },
+    {
+      "schema": 1582890819290,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "sv-SE"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "tyda-sv-SE@search.mozilla.org"
+      },
+      "id": "32eec495-ce07-4ce5-8d07-4cb32050459d",
+      "last_modified": 1583937832229
+    },
+    {
+      "schema": 1582890820131,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "hu"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "vatera@search.mozilla.org"
+      },
+      "id": "d0eab7e7-9084-4a43-b845-568dbe9f07dc",
+      "last_modified": 1583937832225
+    },
+    {
+      "schema": 1582890820983,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "te"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "te"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "oc"
+              ]
+            }
+          },
+          "webExtension": {
+            "locales": [
+              "oc"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "wiktionary@search.mozilla.org"
+      },
+      "id": "781f42f0-3a5c-4d14-8be2-665eefa65653",
+      "last_modified": 1583937832222
+    },
+    {
+      "schema": 1582890822671,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ja-JP-macos",
+                "ja"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "yahoo-jp@search.mozilla.org"
+      },
+      "id": "9e73a342-4e27-4e9f-8a29-be193d59236a",
+      "last_modified": 1583937832213
+    },
+    {
+      "schema": 1582890823520,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ja-JP-macos",
+                "ja"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "yahoo-jp-auctions@search.mozilla.org"
+      },
+      "id": "43559b11-05dc-4750-b131-afdbd9d25905",
+      "last_modified": 1583937832210
+    }
+  ],
+  "timestamp": 1695659360045
+}

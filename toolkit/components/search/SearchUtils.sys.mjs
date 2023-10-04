@@ -113,8 +113,6 @@ class LoadListener {
 export var SearchUtils = {
   BROWSER_SEARCH_PREF,
 
-  SETTINGS_KEY: "search-config",
-
   /**
    * This is the Remote Settings key that we use to get the ignore lists for
    * engines.
@@ -384,6 +382,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "loggingEnabled",
   BROWSER_SEARCH_PREF + "log",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SearchUtils,
+  "newSearchConfigEnabled",
+  "browser.search.newSearchConfig.enabled",
+  false
+);
+
+ChromeUtils.defineLazyGetter(SearchUtils, "SETTINGS_KEY", () =>
+  SearchUtils.newSearchConfigEnabled ? "search-config-v2" : "search-config"
 );
 
 // Can't use defineLazyPreferenceGetter because we want the value
