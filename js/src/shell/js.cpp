@@ -3655,15 +3655,11 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       if (line2 < line1) {
         if (bupline != line2) {
           bupline = line2;
-          if (!sprinter.jsprintf("%s %3u: BACKUP\n", sep, line2)) {
-            return false;
-          }
+          sprinter.jsprintf("%s %3u: BACKUP\n", sep, line2);
         }
       } else {
         if (bupline && line1 == line2) {
-          if (!sprinter.jsprintf("%s %3u: RESTORE\n", sep, line2)) {
-            return false;
-          }
+          sprinter.jsprintf("%s %3u: RESTORE\n", sep, line2);
         }
         bupline = 0;
         while (line1 < line2) {
@@ -3673,9 +3669,7 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
           line1++;
-          if (!sprinter.jsprintf("%s %3u: %s", sep, line1, linebuf)) {
-            return false;
-          }
+          sprinter.jsprintf("%s %3u: %s", sep, line1, linebuf);
         }
       }
 
