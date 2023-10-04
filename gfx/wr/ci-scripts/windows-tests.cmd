@@ -8,6 +8,8 @@
 
 if NOT DEFINED CARGOFLAGS SET CARGOFLAGS=--verbose
 
+python3 -m pip install -r %0\\..\\requirements.txt
+
 pushd webrender_api
 cargo test %CARGOFLAGS%
 if %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

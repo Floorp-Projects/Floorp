@@ -28,10 +28,6 @@ apt-get install -y \
     llvm-dev \
     ninja-build \
     pkg-config \
-    python3-pip \
-    python3-six \
-    python3-setuptools \
-    python3-mako \
     software-properties-common \
     clang
 
@@ -43,14 +39,3 @@ curl -LO http://snapshot.debian.org/archive/debian/20220718T031307Z/pool/main/f/
 
 dpkg -i libfreetype6*.deb
 rm libfreetype6*.deb
-
-# Other stuff we need
-
-# Normally, we'd
-#    pip3 install servo-tidy==0.3.0
-# but the last version of servo-tidy published on pypi doesn't have the
-# python3 fixes that are in the servo repo.
-git clone -n https://github.com/servo/servo/
-git -C servo checkout 65a4d1646da46c37fe748add6dcf24b62ebb602a
-pip3 install servo/python/tidy
-rm -rf servo

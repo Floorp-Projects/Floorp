@@ -18,6 +18,8 @@ set -o xtrace
 CARGOFLAGS=${CARGOFLAGS:-""}  # default to empty if not set
 WRENCH_BINARY=${WRENCH_BINARY:-""}
 
+python3 -m pip install -r $(dirname ${0})/requirements.txt
+
 pushd wrench
 
 # Test that all shaders compile successfully and pass tests.

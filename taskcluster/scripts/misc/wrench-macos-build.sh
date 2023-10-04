@@ -23,6 +23,7 @@ mkdir -p "${UPLOAD_DIR}"
 
 # Do a cross-build without the `headless` feature
 pushd "${GECKO_PATH}/gfx/wr/wrench"
+python3 -m pip install -r ../ci-scripts/requirements.txt
 cargo build --release -vv --frozen --target=${TARGET_TRIPLE}
 # Package up the resulting wrench binary
 cd "../target/${TARGET_TRIPLE}"
