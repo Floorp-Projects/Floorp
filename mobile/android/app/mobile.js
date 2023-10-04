@@ -120,7 +120,6 @@ pref("extensions.abuseReport.amWebAPI.enabled", false);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
-pref("privacy.popups.showBrowserMessage", true);
 
 /* disable opening windows with the dialog feature */
 pref("dom.disable_window_open_dialog_feature", true);
@@ -247,10 +246,6 @@ pref("media.gmp-gmpopenh264.autoupdate", false);
 // The download protection UI is not implemented yet (bug 1239094).
 pref("browser.safebrowsing.downloads.enabled", false);
 
-// The application reputation lists are not available on Android.
-pref("urlclassifier.downloadAllowTable", "");
-pref("urlclassifier.downloadBlockTable", "");
-
 // The Potentially Harmful Apps list replaces the malware one on Android.
 pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");
 
@@ -268,14 +263,6 @@ pref("devtools.console.stdout.chrome", true);
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", true);
-
-// The mode of home provider syncing.
-// 0: Sync always
-// 1: Sync only when on wifi
-pref("home.sync.updateMode", 0);
-
-// How frequently to check if we should sync home provider data.
-pref("home.sync.checkIntervalSecs", 3600);
 
 // Enable meta-viewport support for font inflation code
 pref("dom.meta-viewport.enabled", true);
