@@ -49,6 +49,7 @@ categories:
         - tools/moztreedocs
     testing_doc:
         - testing/automated-testing
+        - testing/sheriffed-intermittents
         - testing/tests-for-new-config
         - testing/intermittent
         - testing/testing-policy
