@@ -1317,7 +1317,7 @@ static SVGFilterObserverListForCSSProp* GetOrCreateFilterObserverListForCSS(
 }
 
 static SVGObserverUtils::ReferenceState GetAndObserveFilters(
-    SVGFilterObserverListForCSSProp* aObserverList,
+    SVGFilterObserverList* aObserverList,
     nsTArray<SVGFilterFrame*>* aFilterFrames) {
   if (!aObserverList) {
     return SVGObserverUtils::eHasNoRefs;
@@ -1350,6 +1350,13 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
   SVGFilterObserverListForCSSProp* observerList =
       GetOrCreateFilterObserverListForCSS(aFilteredFrame);
   return mozilla::GetAndObserveFilters(observerList, aFilterFrames);
+}
+
+SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
+    nsISupports* aObserverList, nsTArray<SVGFilterFrame*>* aFilterFrames) {
+  return mozilla::GetAndObserveFilters(
+      static_cast<SVGFilterObserverListForCanvasContext*>(aObserverList),
+      aFilterFrames);
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetFiltersIfObserving(

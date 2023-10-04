@@ -115,18 +115,16 @@ nsRect SVGUtils::GetPostFilterInkOverflowRect(nsIFrame* aFrame,
 
   // Note: we do not return here for eHasNoRefs since we must still handle any
   // CSS filter functions.
-  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
-  // actually should get the filter frames and then pass them into
-  // GetPostFilterBounds below!  See bug 1494263.
-  // TODO: we should really return an empty rect for eHasRefsSomeInvalid since
   // in that case we disable painting of the element.
+  nsTArray<SVGFilterFrame*> filterFrames;
   if (!aFrame->StyleEffects()->HasFilters() ||
-      SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+      SVGObserverUtils::GetAndObserveFilters(aFrame, &filterFrames) ==
           SVGObserverUtils::eHasRefsSomeInvalid) {
     return aPreFilterRect;
   }
 
-  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect)
+  return FilterInstance::GetPostFilterBounds(aFrame, filterFrames, nullptr,
+                                             &aPreFilterRect)
       .valueOr(aPreFilterRect);
 }
 
@@ -600,11 +598,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
      so make sure all applicable ones are set again. */
   SVGClipPathFrame* clipPathFrame;
   nsTArray<SVGMaskFrame*> maskFrames;
-  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
-  // actually should get the filter frames and then pass them into
-  // PaintFilteredFrame below!  See bug 1494263.
+  nsTArray<SVGFilterFrame*> filterFrames;
   const bool hasInvalidFilter =
-      SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+      SVGObserverUtils::GetAndObserveFilters(aFrame, &filterFrames) ==
       SVGObserverUtils::eHasRefsSomeInvalid;
   if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
           SVGObserverUtils::eHasRefsSomeInvalid ||
@@ -731,8 +727,8 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                                        SVGUtils::eBBoxIncludeFillGeometry |
                                        SVGUtils::eBBoxIncludeStroke);
     FilterInstance::PaintFilteredFrame(
-        aFrame, aFrame->StyleEffects()->mFilters.AsSpan(), target, callback,
-        nullptr, aImgParams, 1.0f, &bbox);
+        aFrame, aFrame->StyleEffects()->mFilters.AsSpan(), filterFrames, target,
+        callback, nullptr, aImgParams, 1.0f, &bbox);
   } else {
     svgFrame->PaintSVG(*target, aTransform, aImgParams);
   }

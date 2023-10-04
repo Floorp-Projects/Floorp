@@ -2913,7 +2913,8 @@ void CanvasRenderingContext2D::UpdateFilter() {
   MOZ_RELEASE_ASSERT(!mStyleStack.IsEmpty());
 
   CurrentState().filter = FilterInstance::GetFilterDescription(
-      mCanvasElement, CurrentState().filterChain.AsSpan(), writeOnly,
+      mCanvasElement, CurrentState().filterChain.AsSpan(),
+      CurrentState().autoSVGFiltersObserver, writeOnly,
       CanvasUserSpaceMetrics(GetSize(), CurrentState().fontFont, canvasStyle,
                              presContext),
       gfxRect(0, 0, mWidth, mHeight), CurrentState().filterAdditionalImages);
