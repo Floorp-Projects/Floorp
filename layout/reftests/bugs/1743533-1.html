@@ -13,18 +13,8 @@ of a background color because background colors don't show up by default in
 print preview. We're using page mode here and not print preview, so that is
 not technically required here.
 
-The most obvious way to test this would be to compare an oop iframe and an
-in process iframe with the same content to make sure they are the same.
-However, for some reason, in reftest-paged mode a simple in process iframe
-seems to refuse to load the document, I think because of this code
-https://searchfox.org/mozilla-central/rev/3c9369510cb883b9f08d5f9641e1233d2142f025/dom/base/nsFrameLoader.cpp#439
-If the same iframe is oop then the document does load, this behaviour difference
-seems like it might be a bug. If that bug is ever fixed (so that the oop iframe here fails to
-load it's document) then writing a test to exercise the original bug here seems
-like it would be impossible.
-
-So we compare an oop iframe with content in it, to a blank iframe, and then
-we use a high minimum accepted number of pixels differing in the fuzz. This
+We compare an oop iframe with content in it, to a blank iframe, and then we use
+a high minimum accepted number of pixels differing in the fuzz. This
 then makes sure the two documents differ by enough pixels.
 
 And we skip running this test if fission is disabled, as that would just

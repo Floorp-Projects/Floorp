@@ -915,7 +915,7 @@ class nsHideViewer final : public Runnable {
     //
     // We should find some way to avoid that!
     if (!mPresShell->IsDestroying() && mFrameElement->IsInComposedDoc()) {
-      MOZ_KnownLive(mPresShell)->FlushPendingNotifications(FlushType::Frames);
+      mPresShell->FlushPendingNotifications(FlushType::Frames);
     }
 
     // Either the frame has been constructed by now, or it never will be,
@@ -923,12 +923,11 @@ class nsHideViewer final : public Runnable {
     mFrameLoader->SetDetachedSubdocFrame(nullptr, nullptr);
 
     nsSubDocumentFrame* frame = do_QueryFrame(mFrameElement->GetPrimaryFrame());
-    const bool presShellDestroying = mPresShell->IsDestroying();
-    if (!frame || presShellDestroying) {
+    if (!frame) {
       PropagateIsUnderHiddenEmbedderElement(mFrameLoader, true);
-      if (mHideViewerIfFrameless || presShellDestroying) {
-        // Either the frame element has no nsIFrame or the presshell is being
-        // destroyed. Hide the nsFrameLoader, which destroys the presentation.
+      if (mHideViewerIfFrameless) {
+        // The frame element has no nsIFrame. Hide the nsFrameLoader, which
+        // destroys the presentation.
         mFrameLoader->Hide();
       }
     }
@@ -936,10 +935,10 @@ class nsHideViewer final : public Runnable {
   }
 
  private:
-  nsCOMPtr<nsIContent> mFrameElement;
-  RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<PresShell> mPresShell;
-  bool mHideViewerIfFrameless;
+  const nsCOMPtr<nsIContent> mFrameElement;
+  const RefPtr<nsFrameLoader> mFrameLoader;
+  const RefPtr<PresShell> mPresShell;
+  const bool mHideViewerIfFrameless;
 };
 
 static nsView* BeginSwapDocShellsForViews(nsView* aSibling);
