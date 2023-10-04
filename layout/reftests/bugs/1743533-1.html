@@ -1,8 +1,7 @@
 <!DOCTYPE html><html class="reftest-paged">
 <style>html{font-size:12pt}</style>
 <!-- http example.org uri makes this an oop if with fission -->
-<iframe style="height: 1000vh" src="http://example.org/1743533-1-helper.html">
-</iframe>
+<iframe style="height: 1000vh" src="http://example.org/1743533-1-helper.html"></iframe>
 </html>
 
 <!--
@@ -13,14 +12,18 @@ of a background color because background colors don't show up by default in
 print preview. We're using page mode here and not print preview, so that is
 not technically required here.
 
-We compare an oop iframe with content in it, to a blank iframe, and then we use
-a high minimum accepted number of pixels differing in the fuzz. This
-then makes sure the two documents differ by enough pixels.
+We'd like to compare an oop iframe and an in process iframe with the same
+content to make sure they are the same. But some idiosyncracies with scrollbars
+in paged mode cause the rendering not to be exactly the same. Since paged mode
+is just for testing, and printing doesn't have scrollbars, it doesn't seem
+worth digging too much into it.
 
-And we skip running this test if fission is disabled, as that would just
-compare two blank iframes, which is not useful.
+We compare an iframe with content in it, to a blank iframe, and then we use a
+high minimum accepted number of pixels differing in the fuzz. This then makes
+sure the two documents differ by enough pixels.
 
-note why we couldn't use other test types
+Note why we couldn't use other test types:
+
 I tried to write this as a wpt print reftest, it did not reproduce the bug.
 I'm not sure what wpt reftests use to simulate printing, but I suspect it
 is not similar enough to our print preview to trigger the bug.
