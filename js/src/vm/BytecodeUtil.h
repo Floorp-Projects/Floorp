@@ -32,7 +32,7 @@
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
 
 namespace js {
-class JS_PUBLIC_API Sprinter;
+class JS_PUBLIC_API StringPrinter;
 }  // namespace js
 
 /* Shorthand for type from format. */
@@ -650,11 +650,12 @@ enum class DisassembleSkeptically { No, Yes };
  * Disassemblers, for debugging only.
  */
 [[nodiscard]] extern bool Disassemble(
-    JSContext* cx, JS::Handle<JSScript*> script, bool lines, Sprinter* sp,
+    JSContext* cx, JS::Handle<JSScript*> script, bool lines, StringPrinter* sp,
     DisassembleSkeptically skeptically = DisassembleSkeptically::No);
 
 unsigned Disassemble1(JSContext* cx, JS::Handle<JSScript*> script,
-                      jsbytecode* pc, unsigned loc, bool lines, Sprinter* sp);
+                      jsbytecode* pc, unsigned loc, bool lines,
+                      StringPrinter* sp);
 
 #endif
 
