@@ -1299,14 +1299,15 @@ function runTests() {
     test_balanced_unparseable("::-moz-color-swatch:hover#foo");
     test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
 
-    for (let [selector, expected_serialization_when_parseable] of [
-      ["::-moz-color-swatch:where(.foo)", "::-moz-color-swatch:where()"],
-      ["::-moz-color-swatch:is(.foo)", "::-moz-color-swatch:is()"],
-      ["::-moz-color-swatch:where(p, :hover)", "::-moz-color-swatch:where(:hover)"],
-      ["::-moz-color-swatch:is(p, :hover)", "::-moz-color-swatch:is(:hover)"],
+    for (let selector of [
+      "::-moz-color-swatch:where(.foo)",
+      "::-moz-color-swatch:is(.foo)",
+      "::-moz-color-swatch:where(p, :hover)",
+      "::-moz-color-swatch:is(p, :hover)",
     ]) {
       test_parseable(selector);
-      should_serialize_to(selector, expected_serialization_when_parseable);
+      should_serialize_to(selector, selector);
+      ok(!CSS.supports(`selector(${selector})`), "supports should report false for forging selector parse failure");
     }
 
     run_deferred_tests();
