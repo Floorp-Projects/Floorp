@@ -45,6 +45,17 @@ globals().update((k, getattr(ia2Mod, k)) for k in ia2Mod.__all__)
 IAccessible2 = ia2Mod.IAccessible2
 del ia2Mod
 
+uiaMod = comtypes.client.GetModule("UIAutomationCore.dll")
+globals().update((k, getattr(uiaMod, k)) for k in uiaMod.__all__)
+uiaClient = comtypes.CoCreateInstance(
+    uiaMod.CUIAutomation._reg_clsid_,
+    interface=uiaMod.IUIAutomation,
+    clsctx=comtypes.CLSCTX_INPROC_SERVER,
+)
+TreeScope_Descendants = uiaMod.TreeScope_Descendants
+UIA_AutomationIdPropertyId = uiaMod.UIA_AutomationIdPropertyId
+del uiaMod
+
 
 def AccessibleObjectFromWindow(hwnd, objectID=OBJID_CLIENT):
     p = POINTER(IAccessible)()
@@ -114,3 +125,21 @@ def findIa2ByDomId(root, id):
         descendant = findIa2ByDomId(child, id)
         if descendant:
             return descendant
+
+
+def getDocUia():
+    """Get the IUIAutomationElement for the document being tested."""
+    # We start with IAccessible2 because there's no efficient way to
+    # find the document we want with UIA.
+    ia2 = getDocIa2()
+    return uiaClient.ElementFromIAccessible(ia2, CHILDID_SELF)
+
+
+def findUiaByDomId(root, id):
+    cond = uiaClient.CreatePropertyCondition(UIA_AutomationIdPropertyId, id)
+    # FindFirst ignores elements in the raw tree, so we have to use
+    # FindFirstBuildCache to override that, even though we don't want to cache
+    # anything.
+    request = uiaClient.CreateCacheRequest()
+    request.TreeFilter = uiaClient.RawViewCondition
+    return root.FindFirstBuildCache(TreeScope_Descendants, cond, request)
