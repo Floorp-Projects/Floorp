@@ -53,7 +53,6 @@ fun StarRating(
         modifier = modifier.semantics {
             this.contentDescription = contentDescription
         },
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         repeat(NUM_STARS) {
             val starId: Int
