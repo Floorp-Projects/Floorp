@@ -37,11 +37,6 @@
         ["apz.y_stationary_size_multiplier", "0.0"],
       ];
 
-      var smooth_scroll_prefs = [
-        ...prefs,
-        ["general.smoothScroll", true],
-      ];
-
       var subtests = [
         { file: "helper_checkerboard_apzforcedisabled.html", prefs },
         { file: "helper_checkerboard_scrollinfo.html", prefs },
@@ -50,7 +45,6 @@
         { file: "helper_checkerboard_zoom_during_load.html", "prefs": no_multiplier_prefs },
         { file: "helper_wide_crossorigin_iframe.html", prefs },
         { file: "helper_reset_zoom_bug1818967.html", prefs },
-        { file: "helper_checkerboard.html", "prefs": smooth_scroll_prefs },
       ];
 
       let platform = getPlatform();
