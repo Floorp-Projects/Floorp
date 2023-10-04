@@ -800,7 +800,7 @@ export class LoginManagerPrompter {
     if (notifySaved) {
       showConfirmation(
         browser,
-        "confirmation-hint-password-saved",
+        "confirmation-hint-password-created",
         "password-notification-icon"
       );
     }
