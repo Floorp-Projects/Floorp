@@ -14,6 +14,12 @@ absl_source_set("string_view") {
     "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/base:throw_delegate",
   ]
+  if (moz_webrtc_build) {
+    deps -= [
+      "//third_party/abseil-cpp/absl/base",
+      "//third_party/abseil-cpp/absl/base:throw_delegate",
+    ]
+  }
 }
 
 absl_source_set("strings") {
@@ -93,6 +99,7 @@ absl_source_set("strings") {
       "substitute.cc",
     ]
     deps -= [
+      ":charset",
       ":internal", # Removed for unreachable sources.  See Bug 1820869.
       "//third_party/abseil-cpp/absl/base",
       "//third_party/abseil-cpp/absl/base:endian",
