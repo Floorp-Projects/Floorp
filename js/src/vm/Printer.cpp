@@ -349,7 +349,7 @@ static const char JSONEscapeMap[] = {
 };
 
 template <QuoteTarget target, typename CharT>
-JS_PUBLIC_API bool QuoteString(Sprinter* sp,
+JS_PUBLIC_API void QuoteString(Sprinter* sp,
                                const mozilla::Range<const CharT> chars,
                                char quote) {
   MOZ_ASSERT_IF(target == QuoteTarget::JSON, quote == '\0');
@@ -370,23 +370,21 @@ JS_PUBLIC_API bool QuoteString(Sprinter* sp,
   if (quote) {
     sp->putChar(quote);
   }
-
-  return true;
 }
 
-template JS_PUBLIC_API bool QuoteString<QuoteTarget::String, Latin1Char>(
+template JS_PUBLIC_API void QuoteString<QuoteTarget::String, Latin1Char>(
     Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
 
-template JS_PUBLIC_API bool QuoteString<QuoteTarget::String, char16_t>(
+template JS_PUBLIC_API void QuoteString<QuoteTarget::String, char16_t>(
     Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
 
-template JS_PUBLIC_API bool QuoteString<QuoteTarget::JSON, Latin1Char>(
+template JS_PUBLIC_API void QuoteString<QuoteTarget::JSON, Latin1Char>(
     Sprinter* sp, const mozilla::Range<const Latin1Char> chars, char quote);
 
-template JS_PUBLIC_API bool QuoteString<QuoteTarget::JSON, char16_t>(
+template JS_PUBLIC_API void QuoteString<QuoteTarget::JSON, char16_t>(
     Sprinter* sp, const mozilla::Range<const char16_t> chars, char quote);
 
-JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str,
+JS_PUBLIC_API void QuoteString(Sprinter* sp, JSString* str,
                                char quote /*= '\0' */) {
   MOZ_ASSERT(sp->maybeCx);
   if (quote) {
@@ -398,8 +396,6 @@ JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str,
   if (quote) {
     sp->putChar(quote);
   }
-
-  return true;
 }
 
 JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
@@ -408,18 +404,15 @@ JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
   if (!sprinter.init()) {
     return nullptr;
   }
-  if (!QuoteString(&sprinter, str, quote)) {
-    return nullptr;
-  }
+  QuoteString(&sprinter, str, quote);
   return sprinter.release();
 }
 
-JS_PUBLIC_API bool JSONQuoteString(Sprinter* sp, JSString* str) {
+JS_PUBLIC_API void JSONQuoteString(Sprinter* sp, JSString* str) {
   MOZ_ASSERT(sp->maybeCx);
   JSONEscape esc;
   EscapePrinter ep(*sp, esc);
   ep.putString(sp->maybeCx, str);
-  return true;
 }
 
 Fprinter::Fprinter(FILE* fp) : file_(nullptr), init_(false) { init(fp); }

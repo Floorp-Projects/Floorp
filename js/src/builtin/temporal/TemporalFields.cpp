@@ -137,9 +137,7 @@ static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
   }
   mozilla::Range range(reinterpret_cast<const Latin1Char*>(str),
                        std::strlen(str));
-  if (!QuoteString<QuoteTarget::String>(&sprinter, range)) {
-    return nullptr;
-  }
+  QuoteString<QuoteTarget::String>(&sprinter, range);
   return sprinter.release();
 }
 
