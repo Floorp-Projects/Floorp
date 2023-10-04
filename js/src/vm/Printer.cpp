@@ -62,11 +62,7 @@ bool GenericPrinter::vprintf(const char* fmt, va_list ap) {
   }
 
   GenericPrinterPrintfTarget printer(*this);
-  if (!printer.vprint(fmt, ap)) {
-    reportOutOfMemory();
-    return false;
-  }
-  return true;
+  return printer.vprint(fmt, ap);
 }
 
 const size_t Sprinter::DefaultSize = 64;
