@@ -170,8 +170,8 @@ typedef struct _drmDevice {
 
 #ifdef MOZ_X11
 static int x_error_handler(Display*, XErrorEvent* ev) {
-  record_value(
-      "ERROR\nX error, error_code=%d, "
+  record_error(
+      "X error, error_code=%d, "
       "request_code=%d, minor_code=%d\n",
       ev->error_code, ev->request_code, ev->minor_code);
   record_flush();
@@ -924,7 +924,8 @@ void wayland_egltest() {
   // exist but fails with record_error if something actually went wrong
   struct wl_display* dpy = sWlDisplayConnect(nullptr);
   if (!dpy) {
-    record_error("Could not connect to wayland socket");
+    record_error("Could not connect to wayland display, WAYLAND_DISPLAY=%s",
+                 getenv("WAYLAND_DISPLAY"));
     return;
   }
 

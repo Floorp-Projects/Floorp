@@ -101,7 +101,13 @@ static bool IsX11EGLEnvvarEnabled() {
 
 gfxPlatformGtk::gfxPlatformGtk() {
   if (!gfxPlatform::IsHeadless()) {
-    gtk_init(nullptr, nullptr);
+    if (!gtk_init_check(nullptr, nullptr)) {
+      gfxCriticalNote << "Failed to init Gtk, missing display? DISPLAY="
+                      << getenv("DISPLAY")
+                      << " WAYLAND_DISPLAY=" << getenv("WAYLAND_DISPLAY")
+                      << "\n";
+      abort();
+    }
   }
 
   mIsX11Display = gfxPlatform::IsHeadless() ? false : GdkIsX11Display();
