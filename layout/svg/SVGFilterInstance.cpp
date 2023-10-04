@@ -15,7 +15,6 @@
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/IDTracker.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
@@ -30,23 +29,18 @@ using namespace mozilla::gfx;
 namespace mozilla {
 
 SVGFilterInstance::SVGFilterInstance(
-    const StyleFilter& aFilter, nsIFrame* aTargetFrame,
+    const StyleFilter& aFilter, SVGFilterFrame* aFilterFrame,
     nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
     const gfxRect& aTargetBBox,
     const MatrixScalesDouble& aUserSpaceToFilterSpaceScale)
     : mFilter(aFilter),
       mTargetContent(aTargetContent),
       mMetrics(aMetrics),
+      mFilterFrame(aFilterFrame),
       mTargetBBox(aTargetBBox),
       mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
       mSourceAlphaAvailable(false),
       mInitialized(false) {
-  // Get the filter frame.
-  mFilterFrame = GetFilterFrame(aTargetFrame);
-  if (!mFilterFrame) {
-    return;
-  }
-
   // Get the filter element.
   mFilterElement = mFilterFrame->GetFilterContent();
   if (!mFilterElement) {
@@ -108,61 +102,6 @@ bool SVGFilterInstance::ComputeBounds() {
   }
 
   return true;
-}
-
-SVGFilterFrame* SVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
-  if (!mFilter.IsUrl()) {
-    // The filter is not an SVG reference filter.
-    return nullptr;
-  }
-
-  // Get the target element to use as a point of reference for looking up the
-  // filter element.
-  if (!mTargetContent) {
-    return nullptr;
-  }
-
-  // aTargetFrame can be null if this filter belongs to a
-  // CanvasRenderingContext2D.
-  nsCOMPtr<nsIURI> url;
-  if (aTargetFrame) {
-    RefPtr<URLAndReferrerInfo> urlExtraReferrer =
-        SVGObserverUtils::GetFilterURI(aTargetFrame, mFilter);
-
-    // urlExtraReferrer might be null when mFilter has an invalid url
-    if (!urlExtraReferrer) {
-      return nullptr;
-    }
-
-    url = urlExtraReferrer->GetURI();
-  } else {
-    url = mFilter.AsUrl().ResolveLocalRef(mTargetContent);
-  }
-
-  if (!url) {
-    return nullptr;
-  }
-
-  // Look up the filter element by URL.
-  IDTracker idTracker;
-  bool watch = false;
-  idTracker.ResetToURIFragmentID(
-      mTargetContent, url, mFilter.AsUrl().ExtraData().ReferrerInfo(), watch);
-  Element* element = idTracker.get();
-  if (!element) {
-    // The URL points to no element.
-    return nullptr;
-  }
-
-  // Get the frame of the filter element.
-  nsIFrame* frame = element->GetPrimaryFrame();
-  if (!frame || !frame->IsSVGFilterFrame()) {
-    // The URL points to an element that's not an SVG filter element, or to an
-    // element that hasn't had its frame constructed yet.
-    return nullptr;
-  }
-
-  return static_cast<SVGFilterFrame*>(frame);
 }
 
 float SVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,

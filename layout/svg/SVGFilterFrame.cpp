@@ -127,15 +127,12 @@ SVGFilterFrame* SVGFilterFrame::GetReferencedFilter() {
   };
 
   nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
-  if (tframe) {
-    LayoutFrameType frameType = tframe->Type();
-    if (frameType == LayoutFrameType::SVGFilter) {
-      return static_cast<SVGFilterFrame*>(tframe);
-    }
-    // We don't call SVGObserverUtils::RemoveTemplateObserver and set
-    // `mNoHRefURI = false` here since we want to be invalidated if the ID
-    // specified by our href starts resolving to a different/valid element.
+  if (tframe && tframe->IsSVGFilterFrame()) {
+    return static_cast<SVGFilterFrame*>(tframe);
   }
+  // We don't call SVGObserverUtils::RemoveTemplateObserver and set
+  // `mNoHRefURI = false` here since we want to be invalidated if the ID
+  // specified by our href starts resolving to a different/valid element.
 
   return nullptr;
 }

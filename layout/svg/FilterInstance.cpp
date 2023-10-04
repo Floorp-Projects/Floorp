@@ -27,6 +27,7 @@
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGFilterInstance.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsLayoutUtils.h"
@@ -41,13 +42,21 @@ namespace mozilla {
 
 FilterDescription FilterInstance::GetFilterDescription(
     nsIContent* aFilteredElement, Span<const StyleFilter> aFilterChain,
-    bool aFilterInputIsTainted, const UserSpaceMetrics& aMetrics,
-    const gfxRect& aBBox,
+    nsISupports* aFiltersObserverList, bool aFilterInputIsTainted,
+    const UserSpaceMetrics& aMetrics, const gfxRect& aBBox,
     nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages) {
   gfxMatrix identity;
+
+  nsTArray<SVGFilterFrame*> filterFrames;
+  if (SVGObserverUtils::GetAndObserveFilters(aFiltersObserverList,
+                                             &filterFrames) ==
+      SVGObserverUtils::eHasRefsSomeInvalid) {
+    return FilterDescription();
+  }
+
   FilterInstance instance(nullptr, aFilteredElement, aMetrics, aFilterChain,
-                          aFilterInputIsTainted, nullptr, identity, nullptr,
-                          nullptr, nullptr, &aBBox);
+                          filterFrames, aFilterInputIsTainted, nullptr,
+                          identity, nullptr, nullptr, nullptr, &aBBox);
   if (!instance.IsInitialized()) {
     return FilterDescription();
   }
@@ -63,8 +72,9 @@ static UniquePtr<UserSpaceMetrics> UserSpaceMetricsForFrame(nsIFrame* aFrame) {
 
 void FilterInstance::PaintFilteredFrame(
     nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilterChain,
-    gfxContext* aCtx, const SVGFilterPaintCallback& aPaintCallback,
-    const nsRegion* aDirtyArea, imgDrawingParams& aImgParams, float aOpacity,
+    const nsTArray<SVGFilterFrame*>& aFilterFrames, gfxContext* aCtx,
+    const SVGFilterPaintCallback& aPaintCallback, const nsRegion* aDirtyArea,
+    imgDrawingParams& aImgParams, float aOpacity,
     const gfxRect* aOverrideBBox) {
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
@@ -88,9 +98,10 @@ void FilterInstance::PaintFilteredFrame(
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
   FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
-                          *metrics, aFilterChain, /* InputIsTainted */ true,
-                          aPaintCallback, scaleMatrixInDevUnits, aDirtyArea,
-                          nullptr, nullptr, aOverrideBBox);
+                          *metrics, aFilterChain, aFilterFrames,
+                          /* InputIsTainted */ true, aPaintCallback,
+                          scaleMatrixInDevUnits, aDirtyArea, nullptr, nullptr,
+                          aOverrideBBox);
   if (instance.IsInitialized()) {
     // Pull scale vector out of aCtx's transform, put all scale factors, which
     // includes css and css-to-dev-px scale, into scaleMatrixInDevUnits.
@@ -144,6 +155,17 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
 
+  if (aFilteredFrame->GetPrevContinuation()) {
+    aInitialized = false;
+    return true;
+  }
+  nsTArray<SVGFilterFrame*> filterFrames;
+  if (SVGObserverUtils::GetAndObserveFilters(aFilteredFrame, &filterFrames) ==
+      SVGObserverUtils::eHasRefsSomeInvalid) {
+    aInitialized = false;
+    return true;
+  }
+
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
 
@@ -155,11 +177,10 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
 
   // Hardcode inputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  bool inputIsTainted = true;
-  FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
-                          *metrics, aFilters, inputIsTainted, nullptr,
-                          scaleMatrixInDevUnits, nullptr, nullptr, nullptr,
-                          nullptr);
+  FilterInstance instance(
+      aFilteredFrame, aFilteredFrame->GetContent(), *metrics, aFilters,
+      filterFrames, /* inputIsTainted */ true, nullptr, scaleMatrixInDevUnits,
+      nullptr, nullptr, nullptr, nullptr);
 
   if (!instance.IsInitialized()) {
     aInitialized = false;
@@ -378,7 +399,8 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
 }
 
 nsRegion FilterInstance::GetPreFilterNeededArea(
-    nsIFrame* aFilteredFrame, const nsRegion& aPostFilterDirtyRegion) {
+    nsIFrame* aFilteredFrame, const nsTArray<SVGFilterFrame*>& aFilterFrames,
+    const nsRegion& aPostFilterDirtyRegion) {
   gfxMatrix tm = SVGUtils::GetCanvasTM(aFilteredFrame);
   auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
@@ -386,8 +408,9 @@ nsRegion FilterInstance::GetPreFilterNeededArea(
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
   FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
-                          *metrics, filterChain, /* InputIsTainted */ true,
-                          nullptr, tm, &aPostFilterDirtyRegion);
+                          *metrics, filterChain, aFilterFrames,
+                          /* InputIsTainted */ true, nullptr, tm,
+                          &aPostFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRect();
   }
@@ -398,8 +421,8 @@ nsRegion FilterInstance::GetPreFilterNeededArea(
 }
 
 Maybe<nsRect> FilterInstance::GetPostFilterBounds(
-    nsIFrame* aFilteredFrame, const gfxRect* aOverrideBBox,
-    const nsRect* aPreFilterBounds) {
+    nsIFrame* aFilteredFrame, const nsTArray<SVGFilterFrame*>& aFilterFrames,
+    const gfxRect* aOverrideBBox, const nsRect* aPreFilterBounds) {
   MOZ_ASSERT(!aFilteredFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
                  !aFilteredFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "Non-display SVG do not maintain ink overflow rects");
@@ -418,9 +441,9 @@ Maybe<nsRect> FilterInstance::GetPostFilterBounds(
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
   FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
-                          *metrics, filterChain, /* InputIsTainted */ true,
-                          nullptr, tm, nullptr, preFilterRegionPtr,
-                          aPreFilterBounds, aOverrideBBox);
+                          *metrics, filterChain, aFilterFrames,
+                          /* InputIsTainted */ true, nullptr, tm, nullptr,
+                          preFilterRegionPtr, aPreFilterBounds, aOverrideBBox);
   if (!instance.IsInitialized()) {
     return Nothing();
   }
@@ -431,7 +454,8 @@ Maybe<nsRect> FilterInstance::GetPostFilterBounds(
 FilterInstance::FilterInstance(
     nsIFrame* aTargetFrame, nsIContent* aTargetContent,
     const UserSpaceMetrics& aMetrics, Span<const StyleFilter> aFilterChain,
-    bool aFilterInputIsTainted, const SVGFilterPaintCallback& aPaintCallback,
+    const nsTArray<SVGFilterFrame*>& aFilterFrames, bool aFilterInputIsTainted,
+    const SVGFilterPaintCallback& aPaintCallback,
     const gfxMatrix& aPaintTransform, const nsRegion* aPostFilterDirtyRegion,
     const nsRegion* aPreFilterDirtyRegion,
     const nsRect* aPreFilterInkOverflowRectOverride,
@@ -482,8 +506,8 @@ FilterInstance::FilterInstance(
   mTargetBounds.UnionRect(mTargetBBoxInFilterSpace, targetBounds);
 
   // Build the filter graph.
-  if (NS_FAILED(
-          BuildPrimitives(aFilterChain, aTargetFrame, aFilterInputIsTainted))) {
+  if (NS_FAILED(BuildPrimitives(aFilterChain, aFilterFrames,
+                                aFilterInputIsTainted))) {
     return;
   }
 
@@ -535,17 +559,25 @@ gfxRect FilterInstance::FilterSpaceToUserSpace(
   return userSpaceRect;
 }
 
-nsresult FilterInstance::BuildPrimitives(Span<const StyleFilter> aFilterChain,
-                                         nsIFrame* aTargetFrame,
-                                         bool aFilterInputIsTainted) {
+nsresult FilterInstance::BuildPrimitives(
+    Span<const StyleFilter> aFilterChain,
+    const nsTArray<SVGFilterFrame*>& aFilterFrames,
+    bool aFilterInputIsTainted) {
   AutoTArray<FilterPrimitiveDescription, 8> primitiveDescriptions;
 
+  uint32_t filterIndex = 0;
+
   for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
+    if (aFilterChain[i].IsUrl() && aFilterFrames.IsEmpty()) {
+      return NS_ERROR_FAILURE;
+    }
+    auto* filterFrame =
+        aFilterChain[i].IsUrl() ? aFilterFrames[filterIndex++] : nullptr;
     bool inputIsTainted = primitiveDescriptions.IsEmpty()
                               ? aFilterInputIsTainted
                               : primitiveDescriptions.LastElement().IsTainted();
     nsresult rv = BuildPrimitivesForFilter(
-        aFilterChain[i], aTargetFrame, inputIsTainted, primitiveDescriptions);
+        aFilterChain[i], filterFrame, inputIsTainted, primitiveDescriptions);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -557,7 +589,8 @@ nsresult FilterInstance::BuildPrimitives(Span<const StyleFilter> aFilterChain,
 }
 
 nsresult FilterInstance::BuildPrimitivesForFilter(
-    const StyleFilter& aFilter, nsIFrame* aTargetFrame, bool aInputIsTainted,
+    const StyleFilter& aFilter, SVGFilterFrame* aFilterFrame,
+    bool aInputIsTainted,
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescriptions) {
   NS_ASSERTION(mUserSpaceToFilterSpaceScale.xScale > 0.0f &&
                    mFilterSpaceToUserSpaceScale.yScale > 0.0f,
@@ -565,7 +598,7 @@ nsresult FilterInstance::BuildPrimitivesForFilter(
 
   if (aFilter.IsUrl()) {
     // Build primitives for an SVG filter.
-    SVGFilterInstance svgFilterInstance(aFilter, aTargetFrame, mTargetContent,
+    SVGFilterInstance svgFilterInstance(aFilter, aFilterFrame, mTargetContent,
                                         mMetrics, mTargetBBox,
                                         mUserSpaceToFilterSpaceScale);
     if (!svgFilterInstance.IsInitialized()) {
