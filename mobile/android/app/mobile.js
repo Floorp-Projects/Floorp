@@ -12,7 +12,7 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
-pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml");
+pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml", locked);
 
 pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
