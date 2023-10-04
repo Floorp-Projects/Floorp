@@ -179,6 +179,8 @@ skip-if = ["true"] # Bug 1177550
 
 ["browser_markup_events_jquery_2.1.1.js"]
 
+["browser_markup_events_keyboard_navigation.js"]
+
 ["browser_markup_events_object_listener.js"]
 
 ["browser_markup_events_react_development_15.4.1.js"]
