@@ -385,6 +385,7 @@ jobs:
           type: decision-task
           treeherder-symbol: sp-perftests
           target-tasks-method: sp-perftests
+          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when:
