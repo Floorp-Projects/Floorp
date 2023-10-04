@@ -20,6 +20,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchEngine: "resource://gre/modules/SearchEngine.sys.mjs",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
   SearchSettings: "resource://gre/modules/SearchSettings.sys.mjs",
   SearchStaticData: "resource://gre/modules/SearchStaticData.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
@@ -485,9 +487,15 @@ export class SearchService {
   // Test-only function to reset just the engine selector so that it can
   // load a different configuration.
   resetEngineSelector() {
-    this.#engineSelector = new lazy.SearchEngineSelector(
-      this.#handleConfigurationUpdated.bind(this)
-    );
+    if (lazy.SearchUtils.newSearchConfigEnabled) {
+      this.#engineSelector = new lazy.SearchEngineSelector(
+        this.#handleConfigurationUpdated.bind(this)
+      );
+    } else {
+      this.#engineSelector = new lazy.SearchEngineSelectorOld(
+        this.#handleConfigurationUpdated.bind(this)
+      );
+    }
   }
 
   resetToAppDefaultEngine() {
@@ -1358,9 +1366,15 @@ export class SearchService {
       }
 
       // Create the search engine selector.
-      this.#engineSelector = new lazy.SearchEngineSelector(
-        this.#handleConfigurationUpdated.bind(this)
-      );
+      if (lazy.SearchUtils.newSearchConfigEnabled) {
+        this.#engineSelector = new lazy.SearchEngineSelector(
+          this.#handleConfigurationUpdated.bind(this)
+        );
+      } else {
+        this.#engineSelector = new lazy.SearchEngineSelectorOld(
+          this.#handleConfigurationUpdated.bind(this)
+        );
+      }
 
       // See if we have a settings file so we don't have to parse a bunch of XML.
       let settings = await this._settings.get();
