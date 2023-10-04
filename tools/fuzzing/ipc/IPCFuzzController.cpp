@@ -170,7 +170,7 @@ void IPCFuzzController::OnActorDestroyed(IProtocol* protocol) {
       }
     }
   } else {
-    MOZ_FUZZING_NYX_PRINT("WARNING: No port name on destroyed actor?!\n");
+    MOZ_FUZZING_NYX_DEBUG("WARNING: No port name on destroyed actor?!\n");
   }
 }
 
