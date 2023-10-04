@@ -5,10 +5,8 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -18,10 +16,6 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
 @RunWith(FenixRobolectricTestRunner::class)
 class ReviewQualityCheckNavigationMiddlewareTest {
 
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
-    private val scope = coroutinesTestRule.scope
     private lateinit var store: ReviewQualityCheckStore
     private lateinit var browserStore: BrowserStore
     private lateinit var addTabUseCase: TabsUseCases.SelectOrAddUseCase
@@ -34,7 +28,6 @@ class ReviewQualityCheckNavigationMiddlewareTest {
         middleware = ReviewQualityCheckNavigationMiddleware(
             selectOrAddUseCase = addTabUseCase,
             context = testContext,
-            scope = scope,
         )
         store = ReviewQualityCheckStore(
             middleware = listOf(middleware),
@@ -45,7 +38,6 @@ class ReviewQualityCheckNavigationMiddlewareTest {
     fun `WHEN opening an external link THEN the link should be opened in a new tab`() {
         val action = ReviewQualityCheckAction.OpenPoweredByLink
         store.waitUntilIdle()
-        dispatcher.scheduler.advanceUntilIdle()
         assertEquals(0, browserStore.state.tabs.size)
 
         store.dispatch(action).joinBlocking()

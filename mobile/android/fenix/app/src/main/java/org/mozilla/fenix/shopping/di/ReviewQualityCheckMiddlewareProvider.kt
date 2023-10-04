@@ -40,11 +40,7 @@ object ReviewQualityCheckMiddlewareProvider {
         listOf(
             providePreferencesMiddleware(settings, browserStore, scope),
             provideNetworkMiddleware(browserStore, context, scope),
-            provideNavigationMiddleware(
-                TabsUseCases.SelectOrAddUseCase(browserStore),
-                context,
-                scope,
-            ),
+            provideNavigationMiddleware(TabsUseCases.SelectOrAddUseCase(browserStore), context),
         )
 
     private fun providePreferencesMiddleware(
@@ -70,10 +66,8 @@ object ReviewQualityCheckMiddlewareProvider {
     private fun provideNavigationMiddleware(
         selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
         context: Context,
-        scope: CoroutineScope,
     ) = ReviewQualityCheckNavigationMiddleware(
         selectOrAddUseCase = selectOrAddUseCase,
         context = context,
-        scope = scope,
     )
 }
