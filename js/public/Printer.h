@@ -118,9 +118,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   }
   JS::UniqueChars release();
 
-  // Returns the char at offset |off|.
-  char& operator[](size_t off);
-
   // Attempt to reserve len + 1 space (for a trailing nullptr byte). If the
   // attempt succeeds, return a pointer to the start of that space and adjust
   // the internal content. The caller *must* completely fill this space on
