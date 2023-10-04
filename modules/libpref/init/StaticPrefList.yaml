@@ -2877,7 +2877,7 @@
 
 - name: dom.ipc.processPriorityManager.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.ipc.processPriorityManager.testMode

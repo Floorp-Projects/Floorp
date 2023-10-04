@@ -62,9 +62,6 @@ pref("media.geckoview.autoplay.request", true);
 // Enable EME permission prompts
 pref("media.eme.require-app-approval", true);
 
-// Enable the Process Priority Manager
-pref("dom.ipc.processPriorityManager.enabled", true);
-
 pref("signon.debug", false);
 pref("signon.showAutoCompleteFooter", true);
 pref("toolkit.autocomplete.delegate", true);
