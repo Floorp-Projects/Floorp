@@ -99,7 +99,6 @@ static string Unescape(const string& str) {
 }
 
 bool ReadStrings(istream& in, StringTable& strings, bool unescape) {
-  string currentSection;
   while (!in.eof()) {
     string line;
     std::getline(in, line);
