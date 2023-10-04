@@ -61,25 +61,6 @@ void GenericPrinter::put(mozilla::Span<const char16_t> str) {
   }
 }
 
-void GenericPrinter::putAsciiPrintable(
-    mozilla::Span<const JS::Latin1Char> str) {
-  if (!str.Length()) {
-    return;
-  }
-#ifdef DEBUG
-  for (char c: str) {
-    MOZ_ASSERT(IsAsciiPrintable(c));
-  }
-#endif
-  put(reinterpret_cast<const char*>(&str[0]), str.Length());
-}
-
-void GenericPrinter::putAsciiPrintable(mozilla::Span<const char16_t> str) {
-  for (char16_t c: str) {
-    putAsciiPrintable(c);
-  }
-}
-
 void GenericPrinter::putString(JSContext* cx, JSString* str) {
   StringSegmentRange iter(cx);
   if (!iter.init(str)) {
