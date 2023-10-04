@@ -656,29 +656,46 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(
         continue;
       }
 
-      // Convert the CGImageRef to TIFF data.
+      // Convert the CGImageRef to TIFF and PNG data.
       CFMutableDataRef tiffData = CFDataCreateMutable(kCFAllocatorDefault, 0);
-      CGImageDestinationRef destRef = CGImageDestinationCreateWithData(
+      CFMutableDataRef pngData = CFDataCreateMutable(kCFAllocatorDefault, 0);
+      CGImageDestinationRef destRefTIFF = CGImageDestinationCreateWithData(
           tiffData, CFSTR("public.tiff"), 1, NULL);
-      CGImageDestinationAddImage(destRef, imageRef, NULL);
-      bool successfullyConverted = CGImageDestinationFinalize(destRef);
+      CGImageDestinationRef destRefPNG = CGImageDestinationCreateWithData(
+          pngData, CFSTR("public.png"), 1, NULL);
+      CGImageDestinationAddImage(destRefTIFF, imageRef, NULL);
+      CGImageDestinationAddImage(destRefPNG, imageRef, NULL);
+      const bool successfullyConvertedTIFF =
+          CGImageDestinationFinalize(destRefTIFF);
+      const bool successfullyConvertedPNG =
+          CGImageDestinationFinalize(destRefPNG);
 
       CGImageRelease(imageRef);
-      if (destRef) {
-        CFRelease(destRef);
+      if (destRefTIFF) {
+        CFRelease(destRefTIFF);
+      }
+      if (destRefPNG) {
+        CFRelease(destRefPNG);
       }
 
-      if (!successfullyConverted || !tiffData) {
-        if (tiffData) {
-          CFRelease(tiffData);
-        }
-        continue;
+      if (successfullyConvertedTIFF && tiffData) {
+        NSString* tiffType =
+            [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF];
+        [pasteboardOutputDict setObject:(NSMutableData*)tiffData
+                                 forKey:tiffType];
       }
+      if (successfullyConvertedPNG && pngData) {
+        NSString* pngType =
+            [UTIHelper stringFromPboardType:NSPasteboardTypePNG];
 
-      NSString* tiffType =
-          [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF];
-      [pasteboardOutputDict setObject:(NSMutableData*)tiffData forKey:tiffType];
-      CFRelease(tiffData);
+        [pasteboardOutputDict setObject:(NSMutableData*)pngData forKey:pngType];
+      }
+      if (tiffData) {
+        CFRelease(tiffData);
+      }
+      if (pngData) {
+        CFRelease(pngData);
+      }
     } else if (flavorStr.EqualsLiteral(kFileMime)) {
       nsCOMPtr<nsISupports> genericFile;
       rv = aTransferable->GetTransferData(flavorStr.get(),
