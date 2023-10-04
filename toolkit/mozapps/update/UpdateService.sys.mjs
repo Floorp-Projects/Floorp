@@ -124,10 +124,13 @@ const DIR_UPDATE_DOWNLOADING = "downloading";
 
 const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
+const FILE_BACKUP_UPDATE_ELEVATED_LOG = "backup-update-elevated.log";
 const FILE_BT_RESULT = "bt.result";
 const FILE_LAST_UPDATE_LOG = "last-update.log";
+const FILE_LAST_UPDATE_ELEVATED_LOG = "last-update-elevated.log";
 const FILE_UPDATES_XML = "updates.xml";
 const FILE_UPDATE_LOG = "update.log";
+const FILE_UPDATE_ELEVATED_LOG = "update-elevated.log";
 const FILE_UPDATE_MAR = "update.mar";
 const FILE_UPDATE_STATUS = "update.status";
 const FILE_UPDATE_TEST = "update.test";
@@ -1332,36 +1335,70 @@ function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
     return;
   }
 
-  // Preserve the last update log file for debugging purposes.
+  // Preserve the last update log files for debugging purposes.
+  // Make sure to keep the pairs of logs (ex "last-update.log" and
+  // "last-update-elevated.log") together. We don't want to skip moving
+  // "last-update-elevated.log" just because there isn't an
+  // "update-elevated.log" to take its place.
   let updateLogFile = updateDir.clone();
   updateLogFile.append(FILE_UPDATE_LOG);
-  if (updateLogFile.exists()) {
+  let updateElevatedLogFile = updateDir.clone();
+  updateElevatedLogFile.append(FILE_UPDATE_ELEVATED_LOG);
+  if (updateLogFile.exists() || updateElevatedLogFile.exists()) {
+    const overwriteOrRemoveBackupLog = (log, shouldOverwrite, backupName) => {
+      if (shouldOverwrite) {
+        try {
+          log.moveTo(dir, backupName);
+        } catch (e) {
+          LOG(
+            `cleanUpReadyUpdateDir - failed to rename file '${log.path}' to ` +
+              `'${backupName}': ${e.result}`
+          );
+        }
+      } else {
+        // If we don't have a file to overwrite this one, make sure we remove
+        // it anyways to prevent log pairs from getting mismatched.
+        let backupLogFile = dir.clone();
+        backupLogFile.append(backupName);
+        try {
+          backupLogFile.remove(false);
+        } catch (e) {
+          if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
+            LOG(
+              `cleanUpReadyUpdateDir - failed to remove file ` +
+                `'${backupLogFile.path}': ${e.result}`
+            );
+          }
+        }
+      }
+    };
+
     let dir = updateDir.parent;
     let logFile = dir.clone();
     logFile.append(FILE_LAST_UPDATE_LOG);
-    if (logFile.exists()) {
-      try {
-        logFile.moveTo(dir, FILE_BACKUP_UPDATE_LOG);
-      } catch (e) {
-        LOG(
-          "cleanUpReadyUpdateDir - failed to rename file " +
-            logFile.path +
-            " to " +
-            FILE_BACKUP_UPDATE_LOG
-        );
-      }
-    }
-
-    try {
-      updateLogFile.moveTo(dir, FILE_LAST_UPDATE_LOG);
-    } catch (e) {
-      LOG(
-        "cleanUpReadyUpdateDir - failed to rename file " +
-          updateLogFile.path +
-          " to " +
-          FILE_LAST_UPDATE_LOG
+    const logFileExists = logFile.exists();
+    let elevatedLogFile = dir.clone();
+    elevatedLogFile.append(FILE_LAST_UPDATE_ELEVATED_LOG);
+    const elevatedLogFileExists = elevatedLogFile.exists();
+    if (logFileExists || elevatedLogFileExists) {
+      overwriteOrRemoveBackupLog(
+        logFile,
+        logFileExists,
+        FILE_BACKUP_UPDATE_LOG
+      );
+      overwriteOrRemoveBackupLog(
+        elevatedLogFile,
+        elevatedLogFileExists,
+        FILE_BACKUP_UPDATE_ELEVATED_LOG
       );
     }
+
+    overwriteOrRemoveBackupLog(updateLogFile, true, FILE_LAST_UPDATE_LOG);
+    overwriteOrRemoveBackupLog(
+      updateElevatedLogFile,
+      true,
+      FILE_LAST_UPDATE_ELEVATED_LOG
+    );
   }
 
   if (aRemovePatchFiles) {

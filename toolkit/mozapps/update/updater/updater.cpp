@@ -287,6 +287,10 @@ static bool gSucceeded = false;
 static bool sStagedUpdate = false;
 static bool sReplaceRequest = false;
 static bool sUsingService = false;
+// The updater binary can potentially run twice. It will always initially run
+// with `gIsElevated == false`. If it is run an additional time with elevation,
+// that iteration will run with `gIsElevated == true`.
+static bool gIsElevated = false;
 
 // Normally, we run updates as a result of user action (the user started Firefox
 // or clicked a "Restart to Update" button). But there are some cases when
@@ -310,10 +314,11 @@ static NS_tchar gCallbackRelPath[MAXPATHLEN];
 static NS_tchar gCallbackBackupPath[MAXPATHLEN];
 static NS_tchar gDeleteDirPath[MAXPATHLEN];
 
-// Whether to copy the update.log and update.status file to the update patch
-// directory from a secure directory.
+// Whether to copy the update-elevated.log and update.status file to the update
+// patch directory from a secure directory.
 static bool gCopyOutputFiles = false;
-// Whether to write the update.log and update.status file to a secure directory.
+// Whether to write the update-elevated.log and update.status file to a secure
+// directory.
 static bool gUseSecureOutputPath = false;
 #endif
 
@@ -368,6 +373,13 @@ static bool EnvHasValue(const char* name) {
   return (val && *val);
 }
 #endif
+
+static const NS_tchar* UpdateLogFilename() {
+  if (gIsElevated) {
+    return NS_T("update-elevated.log");
+  }
+  return NS_T("update.log");
+}
 
 #ifdef XP_WIN
 /**
@@ -426,8 +438,13 @@ static void output_finish() {
     NS_tchar srcLogPath[MAXPATHLEN + 1] = {NS_T('\0')};
     if (GetSecureOutputFilePath(gPatchDirPath, L".log", srcLogPath)) {
       NS_tchar dstLogPath[MAXPATHLEN + 1] = {NS_T('\0')};
+      // Unconditionally use "update-elevated.log" here rather than
+      // `UpdateLogFilename` since (a) secure output files are only created by
+      // elevated instances and (b) the copying of the secure output file is
+      // done by the unelevated instance, so `UpdateLogFilename` will return
+      // the wrong thing for this.
       NS_tsnprintf(dstLogPath, sizeof(dstLogPath) / sizeof(dstLogPath[0]),
-                   NS_T("%s\\update.log"), gPatchDirPath);
+                   NS_T("%s\\update-elevated.log"), gPatchDirPath);
       CopyFileW(srcLogPath, dstLogPath, false);
     }
   }
@@ -2068,7 +2085,7 @@ bool LaunchWinPostProcess(const WCHAR* installationDir,
     }
   } else {
     wcsncpy(slogFile, updateInfoDir, MAX_PATH);
-    if (!PathAppendSafe(slogFile, L"update.log")) {
+    if (!PathAppendSafe(slogFile, UpdateLogFilename())) {
       LOG(("LaunchWinPostProcess failed because slogFile path is unavailable"));
       return false;
     }
@@ -2825,7 +2842,6 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
                                      HANDLE updateLockFileHandle
 #elif XP_MACOSX
                                      ,
-                                     bool isElevated,
                                      mozilla::UniquePtr<UmaskContext>
                                          umaskContext
 #endif
@@ -2881,7 +2897,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
 
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 0);
 #elif XP_MACOSX
-    if (!isElevated) {
+    if (!gIsElevated) {
       if (gSucceeded) {
         LOG(("Launching macOS post update process"));
         LaunchMacPostProcess(gInstallDirPath);
@@ -2955,6 +2971,8 @@ int NS_main(int argc, NS_tchar** argv) {
   // 1337007
   mozilla::UniquePtr<UmaskContext> umaskContext(new UmaskContext(0));
 
+  // This will be used to set `gIsElevated`, but we are going to do it later
+  // when we are ready to set it for every OS to avoid inconsistency.
   bool isElevated =
       strstr(argv[0], "/Library/PrivilegedHelperTools/org.mozilla.updater") !=
       0;
@@ -3042,6 +3060,16 @@ int NS_main(int argc, NS_tchar** argv) {
                NS_T("%s\\update_elevated.lock"), gPatchDirPath);
   gUseSecureOutputPath =
       sUsingService || (NS_tremove(elevatedLockFilePath) && errno != ENOENT);
+
+  // Even if a file has no sharing access, you can still get its attributes
+  // If we are running elevated, this file will exist, having been opened by
+  // the unelevated updater that started this one.
+  gIsElevated =
+      GetFileAttributesW(elevatedLockFilePath) != INVALID_FILE_ATTRIBUTES;
+#elif defined(XP_MACOSX)
+    // This is only ever true on macOS and Windows. We don't currently have a
+    // way of elevating on other platforms.
+    gIsElevated = isElevated;
 #endif
 
   if (!isDMGInstall) {
@@ -3272,7 +3300,7 @@ int NS_main(int argc, NS_tchar** argv) {
       t1.Join();
     }
 
-    LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex, false,
+    LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex,
                                      std::move(umaskContext));
     return gSucceeded ? 0 : 1;
   }
@@ -3293,11 +3321,11 @@ int NS_main(int argc, NS_tchar** argv) {
       (void)GetSecureOutputFilePath(gPatchDirPath, L".log", logFilePath);
     } else {
       NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
-                   NS_T("%s\\update.log"), gPatchDirPath);
+                   NS_T("%s\\%s"), gPatchDirPath, UpdateLogFilename());
     }
 #else
       NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
-                   NS_T("%s/update.log"), gPatchDirPath);
+                   NS_T("%s/%s"), gPatchDirPath, UpdateLogFilename());
 #endif
     LogInit(logFilePath);
 
@@ -3308,9 +3336,7 @@ int NS_main(int argc, NS_tchar** argv) {
     // Note that this is not the final value of useService
     LOG(("useService=%s", useService ? "true" : "false"));
 #endif
-#ifdef XP_MACOSX
-    LOG(("isElevated=%s", isElevated ? "true" : "false"));
-#endif
+    LOG(("gIsElevated=%s", gIsElevated ? "true" : "false"));
 
     if (!WriteStatusFile("applying")) {
       LOG(("failed setting status to 'applying'"));
@@ -3474,20 +3500,13 @@ int NS_main(int argc, NS_tchar** argv) {
         LOG(("Successfully opened lock file"));
       }
 
-      // Even if a file has no sharing access, you can still get its attributes
-      bool startedFromUnelevatedUpdater =
-          GetFileAttributesW(elevatedLockFilePath) != INVALID_FILE_ATTRIBUTES;
-
-      LOG(("startedFromUnelevatedUpdater=%s",
-           startedFromUnelevatedUpdater ? "true" : "false"));
-
       // If we're running from the service, then we were started with the same
       // token as the service so the permissions are already dropped.  If we're
       // running from an elevated updater that was started from an unelevated
       // updater, then we drop the permissions here. We do not drop the
       // permissions on the originally called updater because we use its token
       // to start the callback application.
-      if (startedFromUnelevatedUpdater) {
+      if (gIsElevated) {
         // Disable every privilege we don't need. Processes started using
         // CreateProcess will use the same token as this process.
         UACHelper::DisablePrivileges(nullptr);
@@ -4237,7 +4256,6 @@ int NS_main(int argc, NS_tchar** argv) {
                                                 updateLockFileHandle
 #elif XP_MACOSX
                                                   ,
-                                                  isElevated,
                                                   std::move(umaskContext)
 #endif
   );
