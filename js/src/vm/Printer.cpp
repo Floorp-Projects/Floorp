@@ -48,7 +48,24 @@ void GenericPrinter::reportOutOfMemory() {
   hadOOM_ = true;
 }
 
-void GenericPrinter::putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str) {
+void GenericPrinter::put(mozilla::Span<const JS::Latin1Char> str) {
+  if (!str.Length()) {
+    return;
+  }
+  put(reinterpret_cast<const char*>(&str[0]), str.Length());
+}
+
+void GenericPrinter::put(mozilla::Span<const char16_t> str) {
+  for (char16_t c : str) {
+    putChar(c);
+  }
+}
+
+void GenericPrinter::putAsciiPrintable(
+    mozilla::Span<const JS::Latin1Char> str) {
+  if (!str.Length()) {
+    return;
+  }
 #ifdef DEBUG
   for (char c: str) {
     MOZ_ASSERT(IsAsciiPrintable(c));
@@ -60,6 +77,24 @@ void GenericPrinter::putAsciiPrintable(mozilla::Span<const JS::Latin1Char> str) 
 void GenericPrinter::putAsciiPrintable(mozilla::Span<const char16_t> str) {
   for (char16_t c: str) {
     putAsciiPrintable(c);
+  }
+}
+
+void GenericPrinter::putString(JSContext* cx, JSString* str) {
+  StringSegmentRange iter(cx);
+  if (!iter.init(str)) {
+    reportOutOfMemory();
+  }
+  JS::AutoCheckCannotGC nogc;
+  while (!iter.empty()) {
+    JSLinearString* linear = iter.front();
+    if (linear->hasLatin1Chars()) {
+      put(linear->latin1Range(nogc));
+    }
+    else {
+      put(linear->twoByteRange(nogc));
+    }
+    iter.popFront();
   }
 }
 
@@ -315,63 +350,19 @@ JS_PUBLIC_API bool QuoteString(Sprinter* sp,
                                char quote) {
   MOZ_ASSERT_IF(target == QuoteTarget::JSON, quote == '\0');
 
-  using CharPtr = mozilla::RangedPtr<const CharT>;
-
-  const char* escapeMap =
-      (target == QuoteTarget::String) ? js::js_EscapeMap : JSONEscapeMap;
-
   if (quote) {
     sp->putChar(quote);
   }
-
-  const CharPtr end = chars.end();
-
-  /* Loop control variables: end points at end of string sentinel. */
-  for (CharPtr t = chars.begin(); t < end; ++t) {
-    /* Move t forward from s past un-quote-worthy characters. */
-    const CharPtr s = t;
-    char16_t c = *t;
-    while (c < 127 && c != '\\') {
-      if (target == QuoteTarget::String) {
-        if (!IsAsciiPrintable(c) || c == quote || c == '\t') {
-          break;
-        }
-      } else {
-        if (c < ' ' || c == '"') {
-          break;
-        }
-      }
-
-      ++t;
-      if (t == end) {
-        break;
-      }
-      c = *t;
-    }
-
-    mozilla::Span<const CharT> span(s.get(), t - s);
-    sp->putAsciiPrintable(span);
-
-    if (t == end) {
-      break;
-    }
-
-    /* Use escapeMap, \u, or \x only if necessary. */
-    const char* escape;
-    if (!(c >> 8) && c != 0 &&
-        (escape = strchr(escapeMap, int(c))) != nullptr) {
-      sp->printf("\\%c", escape[1]);
-    } else {
-      /*
-       * Use \x only if the high byte is 0 and we're in a quoted string,
-       * because ECMA-262 allows only \u, not \x, in Unicode identifiers
-       * (see bug 621814).
-       */
-      sp->printf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c);
-    }
+  if (target == QuoteTarget::String) {
+    StringEscape esc(quote);
+    EscapePrinter ep(*sp, esc);
+    ep.put(chars);
+  } else {
+    MOZ_ASSERT(target == QuoteTarget::JSON);
+    JSONEscape esc;
+    EscapePrinter ep(*sp, esc);
+    ep.put(chars);
   }
-
-  /* Sprint the closing quote and return the quoted string. */
   if (quote) {
     sp->putChar(quote);
   }
@@ -394,16 +385,17 @@ template JS_PUBLIC_API bool QuoteString<QuoteTarget::JSON, char16_t>(
 JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str,
                                char quote /*= '\0' */) {
   MOZ_ASSERT(sp->maybeCx);
-  JSLinearString* linear = str->ensureLinear(sp->maybeCx);
-  if (!linear) {
-    return false;
+  if (quote) {
+    sp->putChar(quote);
+  }
+  StringEscape esc(quote);
+  EscapePrinter ep(*sp, esc);
+  ep.putString(sp->maybeCx, str);
+  if (quote) {
+    sp->putChar(quote);
   }
 
-  JS::AutoCheckCannotGC nogc;
-  return linear->hasLatin1Chars() ? QuoteString<QuoteTarget::String>(
-                                        sp, linear->latin1Range(nogc), quote)
-                                  : QuoteString<QuoteTarget::String>(
-                                        sp, linear->twoByteRange(nogc), quote);
+  return true;
 }
 
 JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
@@ -420,16 +412,10 @@ JS_PUBLIC_API UniqueChars QuoteString(JSContext* cx, JSString* str,
 
 JS_PUBLIC_API bool JSONQuoteString(Sprinter* sp, JSString* str) {
   MOZ_ASSERT(sp->maybeCx);
-  JSLinearString* linear = str->ensureLinear(sp->maybeCx);
-  if (!linear) {
-    return false;
-  }
-
-  JS::AutoCheckCannotGC nogc;
-  return linear->hasLatin1Chars() ? QuoteString<QuoteTarget::JSON>(
-                                        sp, linear->latin1Range(nogc), '\0')
-                                  : QuoteString<QuoteTarget::JSON>(
-                                        sp, linear->twoByteRange(nogc), '\0');
+  JSONEscape esc;
+  EscapePrinter ep(*sp, esc);
+  ep.putString(sp->maybeCx, str);
+  return true;
 }
 
 Fprinter::Fprinter(FILE* fp) : file_(nullptr), init_(false) { init(fp); }
@@ -584,6 +570,36 @@ void LSprinter::put(const char* s, size_t len) {
   }
 
   MOZ_ASSERT(len <= INT_MAX);
+}
+
+bool JSONEscape::isSafeChar(char16_t c) {
+  return js::IsAsciiPrintable(c) && c != '"' && c != '\\';
+}
+
+void JSONEscape::convertInto(GenericPrinter& out, char16_t c) {
+  const char* escape = nullptr;
+  if (!(c >> 8) && c != 0 &&
+      (escape = strchr(JSONEscapeMap, int(c))) != nullptr) {
+    out.printf("\\%c", escape[1]);
+  } else {
+    out.printf("\\u%04X", c);
+  }
+}
+
+bool StringEscape::isSafeChar(char16_t c) {
+  return js::IsAsciiPrintable(c) && c != quote && c != '\\';
+}
+
+void StringEscape::convertInto(GenericPrinter& out, char16_t c) {
+  const char* escape = nullptr;
+  if (!(c >> 8) && c != 0 &&
+      (escape = strchr(js_EscapeMap, int(c))) != nullptr) {
+    out.printf("\\%c", escape[1]);
+  } else {
+    // Use \x only if the high byte is 0 and we're in a quoted string, because
+    // ECMA-262 allows only \u, not \x, in Unicode identifiers (see bug 621814).
+    out.printf(!(c >> 8) ? "\\x%02X" : "\\u%04X", c);
+  }
 }
 
 }  // namespace js
