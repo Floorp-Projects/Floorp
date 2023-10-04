@@ -18,6 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class AsyncImagePipelineManager;
+class TextureWrapperD3D11Allocator;
 class WebRenderBridgeParent;
 class WebRenderBridgeParentRef;
 
@@ -92,6 +93,10 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
   base::ProcessId mForPidOfPushCallback;
   gfx::IntSize mSizeOfPushCallback;
   TextureFlags mFlagsOfPushCallback = TextureFlags::NO_FLAGS;
+
+#if XP_WIN
+  RefPtr<TextureWrapperD3D11Allocator> mTextureAllocator;
+#endif
 };
 
 }  // namespace layers
