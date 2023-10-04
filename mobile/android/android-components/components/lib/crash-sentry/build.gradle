@@ -31,8 +31,8 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':lib-crash')
 
-    implementation ComponentsDependencies.thirdparty_sentry_latest
-    testImplementation ComponentsDependencies.thirdparty_sentry_latest
+    implementation ComponentsDependencies.thirdparty_sentry
+    testImplementation ComponentsDependencies.thirdparty_sentry
 
     testImplementation project(':support-test')
     testImplementation ComponentsDependencies.androidx_test_core

@@ -233,7 +233,7 @@ dependencies {
 
     implementation ComponentsDependencies.google_material
 
-    implementation ComponentsDependencies.thirdparty_sentry_latest
+    implementation ComponentsDependencies.thirdparty_sentry
 
     implementation project(':browser-engine-gecko')
     implementation project(':browser-domains')

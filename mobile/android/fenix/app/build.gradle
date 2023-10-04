@@ -511,7 +511,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_coordinatorlayout
     implementation FenixDependencies.google_accompanist_drawablepainter
 
-    implementation ComponentsDependencies.thirdparty_sentry_latest
+    implementation ComponentsDependencies.thirdparty_sentry
 
     implementation project(':compose-awesomebar')
     implementation project(':compose-cfr')
