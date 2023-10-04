@@ -21,6 +21,8 @@ task-defaults:
         path: '/builds/worker/checkouts/vcs/{source_project_name}/app/build/outputs/bundle/{variant_name}/app-{gradle_build}-{gradle_build_type}.aab'
     run:
         gradle-package-command: bundle
+        gradle-extra-options:
+            - -Paab
 
 
 tasks:

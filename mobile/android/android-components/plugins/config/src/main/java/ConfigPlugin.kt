@@ -81,7 +81,7 @@ object Config {
      * the documented epoch date (20150901) and the effective epoch date (20150801).
      */
     @JvmStatic
-    fun generateFennecVersionCode(abi: String): Int {
+    fun generateFennecVersionCode(abi: String, aab: Boolean): Int {
         // The important consideration is that version codes be monotonically
         // increasing (per Android package name) for all published builds.  The input
         // build IDs are based on timestamps and hence are always monotonically
@@ -113,8 +113,8 @@ object Config {
         // architecture (x86 or ARM). 64-bit builds have higher version codes so
         // they take precedence over 32-bit builds on devices that support 64-bit.
         //
-        //         The bit labelled 'g' is 1 was used for APK splits and is
-        //         nowadays always set to 1 until it serves a new purpose.
+        // The bit labelled 'g' was once used for APK splits. Today, it is 0 for
+        // APK builds, or 1 for AAB builds.
         //
         // We throw an explanatory exception when we are within one calendar year of
         // running out of build events.  This gives lots of time to update the version
@@ -144,17 +144,19 @@ object Config {
         version = version or (base shl 3)
 
         // 'x' bit is 1 for x86/x86-64 architectures
-        if (abi == "x86_64" || abi == "x86") {
+        if (aab || abi == "x86_64" || abi == "x86") {
             version = version or (1 shl 2)
         }
 
         // 'p' bit is 1 for 64-bit architectures.
-        if (abi == "arm64-v8a" || abi == "x86_64") {
+        if (aab || abi == "arm64-v8a" || abi == "x86_64") {
             version = version or (1 shl 1)
         }
 
-        // 'g' bit is currently always 1 (see comment above)
-        version = version or (1 shl 0)
+        // 'g' bit is 0 for APK, 1 for AAB
+        if (aab) {
+            version = version or (1 shl 0)
+        }
 
         return version
     }
