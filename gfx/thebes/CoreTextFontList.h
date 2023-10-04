@@ -157,11 +157,6 @@ class CoreTextFontList : public gfxPlatformFontList {
       nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
       MOZ_REQUIRES(mLock) override;
 
-  // lookup the system font for a particular system font type and set
-  // the name and style characteristics
-  void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
-                        nsACString& aSystemFontName, gfxFontStyle& aFontStyle);
-
   // Values for the entryType field in FontFamilyListEntry records passed
   // from chrome to content process.
   enum FontFamilyEntryType {
