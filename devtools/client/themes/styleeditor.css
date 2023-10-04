@@ -33,6 +33,31 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
   min-height: 0;
 }
 
+.stylesheet-editor-status {
+  display: flex;
+  align-items: center;
+  border-block-start: 1px solid var(--theme-splitter-color) !important;
+  border-block-end: none !important;
+
+  /* Only show the editor toolbar if there's a stylesheet editor */
+  .devtools-main-content:empty + & {
+    display: none;
+  }
+
+  .style-editor-prettyPrintButton.devtools-button {
+    margin: 0;
+    /*
+     * common.css sets a pointer-events:none on disabled button,
+     * but here we want the title to be displayed since it gives extra information.
+     */
+    pointer-events: all;
+
+    &::before {
+      background-image: url(chrome://devtools/content/debugger/images/prettyPrint.svg);
+    }
+  }
+}
+
 .stylesheet-at-rules-container {
   overflow-y: auto;
   min-width: 0;

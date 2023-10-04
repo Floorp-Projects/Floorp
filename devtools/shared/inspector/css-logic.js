@@ -232,6 +232,7 @@ function getLineCountInComments(text) {
  *         The CSS source to prettify.
  * @param  {Number} ruleCount
  *         The number of CSS rules expected in the CSS source.
+ *         Set to null to force the text to be pretty-printed.
  *
  * @return {Object}
  *         Object with the prettified source and source mappings.
@@ -489,6 +490,7 @@ function prettifyCSS(text, ruleCount) {
     // Here we ignore the case where whitespace appears at the end of
     // the text.
     if (
+      ruleCount !== null &&
       pushbackToken &&
       token &&
       token.tokenType === "whitespace" &&

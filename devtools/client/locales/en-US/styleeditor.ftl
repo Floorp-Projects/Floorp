@@ -47,3 +47,11 @@ styleeditor-stylesheet-rule-count =
         [one] { $ruleCount } rule.
        *[other] { $ruleCount } rules.
     }
+
+# Title for the pretty print button in the editor footer.
+styleeditor-pretty-print-button =
+    .title = Pretty print style sheet
+
+# Title for the pretty print button in the editor footer, when it's disabled
+styleeditor-pretty-print-button-disabled =
+    .title = Can only pretty print CSS files
