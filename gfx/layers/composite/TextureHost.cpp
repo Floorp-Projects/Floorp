@@ -667,6 +667,54 @@ gfx::ColorRange BufferTextureHost::GetColorRange() const {
   return TextureHost::GetColorRange();
 }
 
+gfx::ChromaSubsampling BufferTextureHost::GetChromaSubsampling() const {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return desc.chromaSubsampling();
+  }
+  return gfx::ChromaSubsampling::FULL;
+}
+
+uint8_t* BufferTextureHost::GetYChannel() {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return ImageDataSerializer::GetYChannel(GetBuffer(), desc);
+  }
+  return nullptr;
+}
+
+uint8_t* BufferTextureHost::GetCbChannel() {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return ImageDataSerializer::GetCbChannel(GetBuffer(), desc);
+  }
+  return nullptr;
+}
+
+uint8_t* BufferTextureHost::GetCrChannel() {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return ImageDataSerializer::GetCrChannel(GetBuffer(), desc);
+  }
+  return nullptr;
+}
+
+int32_t BufferTextureHost::GetYStride() const {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return desc.yStride();
+  }
+  return 0;
+}
+
+int32_t BufferTextureHost::GetCbCrStride() const {
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    return desc.cbCrStride();
+  }
+  return 0;
+}
+
 already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface() {
   RefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
