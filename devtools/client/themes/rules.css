@@ -792,6 +792,7 @@
 
 .ruleview-selectorhighlighter {
   display: inline-block;
+  border: none;
   vertical-align: top;
   width: 15px;
   height: 15px;
