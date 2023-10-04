@@ -5,4 +5,4 @@ fuzzy(2,1000) == mix-blend.yaml mix-blend-ref.yaml
 != coord-systems.yaml blank.yaml
 fuzzy(2,2500) == filter-overlay.yaml filter-overlay-ref.yaml
 platform(linux,mac) == mask.yaml mask.png
-fuzzy(7,86000) == underlay.yaml underlay.png
+platform(linux) fuzzy(7,86000) == underlay.yaml underlay.png

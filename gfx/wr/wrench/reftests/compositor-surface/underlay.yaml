@@ -5,6 +5,9 @@
 ---
 root:
   items:
+    - type: rect
+      bounds: [0, 0, 500, 550]
+      color: white
     - image: solid-color(255,0,0,128,299,299)
       bounds: [100, 100, 299, 299]
       prefer-compositor-surface: true
@@ -15,3 +18,13 @@ root:
       src-v: barn-v.png
       bounds: [100, 100, 299, 299]
       prefer-compositor-surface: true
+    - text: "Prohibited subpixel AA"
+      origin: 110 380
+      size: 20
+      color: white
+      font: "FreeSans.ttf"
+    - text: "Allowed subpixel AA"
+      origin: 110 480
+      size: 20
+      color: black
+      font: "FreeSans.ttf"
