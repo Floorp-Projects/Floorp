@@ -202,6 +202,11 @@ The table below lists the numbers associated with each network type, but please 
     - 15 Mb/s
     - 2
 
+  * - Offline
+    - 0 Mb/s
+    - 0 Mb/s
+    - 5
+
 To select a network, click the list box that's initially labeled "No throttling":
 
 .. image:: rdm_throttling.png

@@ -32,6 +32,7 @@ The table below lists the numbers associated with each network type, but please 
   Regular 4G/LTE, 4 Mbps, 3 Mbps, 20
   DSL, 2 Mbps, 1 Mbps, 5
   Wi-Fi, 30 Mbps, 15 Mbps, 2
+  Offline, 0 Mbps, 0 Mbps, 5
 
 Network Monitor Features
 ************************
