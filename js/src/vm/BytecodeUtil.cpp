@@ -2183,7 +2183,8 @@ bool ExpressionDecompiler::write(JSString* str) {
 }
 
 bool ExpressionDecompiler::quote(JSString* s, char quote) {
-  return QuoteString(&sprinter, s, quote);
+  QuoteString(&sprinter, s, quote);
+  return true;
 }
 
 JSAtom* ExpressionDecompiler::loadAtom(jsbytecode* pc) {
@@ -2605,9 +2606,7 @@ size_t JS::GetPCCountScriptCount(JSContext* cx) {
 [[nodiscard]] static bool JSONStringProperty(Sprinter& sp, JSONPrinter& json,
                                              const char* name, JSString* str) {
   json.beginStringProperty(name);
-  if (!JSONQuoteString(&sp, str)) {
-    return false;
-  }
+  JSONQuoteString(&sp, str);
   json.endStringProperty();
   return true;
 }
