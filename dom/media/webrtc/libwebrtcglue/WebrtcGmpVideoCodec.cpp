@@ -507,10 +507,16 @@ int32_t WebrtcGmpVideoEncoder::SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
 void WebrtcGmpVideoEncoder::Terminated() {
   GMP_LOG_DEBUG("GMP Encoder Terminated: %p", (void*)this);
 
-  mGMP->Close();
+  GMPVideoEncoderProxy* gmp(mGMP);
   mGMP = nullptr;
   mHost = nullptr;
   mInitting = false;
+
+  if (gmp) {
+    // Do this last, since this could cause us to be destroyed
+    gmp->Close();
+  }
+
   // Could now notify that it's dead
 }
 
@@ -947,10 +953,16 @@ int32_t WebrtcGmpVideoDecoder::ReleaseGmp() {
 void WebrtcGmpVideoDecoder::Terminated() {
   GMP_LOG_DEBUG("GMP Decoder Terminated: %p", (void*)this);
 
-  mGMP->Close();
+  GMPVideoDecoderProxy* gmp(mGMP);
   mGMP = nullptr;
   mHost = nullptr;
   mInitting = false;
+
+  if (gmp) {
+    // Do this last, since this could cause us to be destroyed
+    gmp->Close();
+  }
+
   // Could now notify that it's dead
 }
 
