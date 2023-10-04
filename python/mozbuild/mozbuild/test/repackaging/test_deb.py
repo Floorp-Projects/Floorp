@@ -300,14 +300,13 @@ Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
 
 def test_generate_deb_desktop_entry_file_text(monkeypatch):
     def responsive(url):
-        if "zh-TW" in url:
-            return Mock(
-                **{
-                    "status_code": 200,
-                    "text": ZH_TW_FTL,
-                }
-            )
-        return Mock(**{"status_code": 404})
+        assert "zh-TW" in url
+        return Mock(
+            **{
+                "status_code": 200,
+                "text": ZH_TW_FTL,
+            }
+        )
 
     monkeypatch.setattr(deb.requests, "get", responsive)
 
@@ -337,6 +336,12 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
         return Mock(**{"format_value": format_value})
 
     fluent_resource_loader = Mock()
+
+    monkeypatch.setattr(
+        deb.json,
+        "load",
+        lambda f: {"zh-TW": {"platforms": ["linux"], "revision": "default"}},
+    )
 
     desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
         log,
