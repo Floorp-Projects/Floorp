@@ -72,8 +72,7 @@ void GenericPrinter::putString(JSContext* cx, JSString* str) {
     JSLinearString* linear = iter.front();
     if (linear->hasLatin1Chars()) {
       put(linear->latin1Range(nogc));
-    }
-    else {
+    } else {
       put(linear->twoByteRange(nogc));
     }
     if (!iter.popFront()) {
@@ -97,7 +96,7 @@ void GenericPrinter::vprintf(const char* fmt, va_list ap) {
   }
 
   GenericPrinterPrintfTarget printer(*this);
-  (void) printer.vprint(fmt, ap);
+  (void)printer.vprint(fmt, ap);
 }
 
 const size_t StringPrinter::DefaultSize = 64;
@@ -118,7 +117,8 @@ bool StringPrinter::realloc_(size_t newSize) {
   return true;
 }
 
-StringPrinter::StringPrinter(arena_id_t arena, JSContext* maybeCx, bool shouldReportOOM)
+StringPrinter::StringPrinter(arena_id_t arena, JSContext* maybeCx,
+                             bool shouldReportOOM)
     : maybeCx(maybeCx),
 #ifdef DEBUG
       initialized(false),

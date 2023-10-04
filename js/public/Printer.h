@@ -303,9 +303,7 @@ class JS_PUBLIC_API Sprinter : public StringPrinter {
       : StringPrinter(js::MallocArena, maybeCx, shouldReportOOM) {}
   ~Sprinter() {}
 
-  JS::UniqueChars release() {
-    return releaseChars();
-  }
+  JS::UniqueChars release() { return releaseChars(); }
 };
 
 class JS_PUBLIC_API JSSprinter : public StringPrinter {
@@ -450,8 +448,8 @@ class JS_PUBLIC_API EscapePrinter final : public GenericPrinter {
   void putFromIndex(size_t index, size_t length) final {
     out.putFromIndex(index, length);
   }
-  size_t index() const final {return out.index(); }
-  void flush()final { out.flush(); }
+  size_t index() const final { return out.index(); }
+  void flush() final { out.flush(); }
   void reportOutOfMemory() final { out.reportOutOfMemory(); }
   bool hadOutOfMemory() const final { return out.hadOutOfMemory(); }
 };
@@ -465,6 +463,7 @@ class JS_PUBLIC_API JSONEscape {
 class JS_PUBLIC_API StringEscape {
  private:
   const char quote = '\0';
+
  public:
   explicit StringEscape(const char quote = '\0') : quote(quote) {}
 

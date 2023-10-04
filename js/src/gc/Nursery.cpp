@@ -945,14 +945,13 @@ void js::Nursery::printProfileHeader() {
   }
   sprinter.put(gcstats::MinorGCProfilePrefix);
 
-#define PRINT_FIELD_NAME(name, width, _1, _2)   \
+#define PRINT_FIELD_NAME(name, width, _1, _2) \
   sprinter.printf(" %-*s", width, name);
 
   FOR_EACH_NURSERY_PROFILE_METADATA(PRINT_FIELD_NAME)
 #undef PRINT_FIELD_NAME
 
-#define PRINT_PROFILE_NAME(_1, text)            \
-  sprinter.printf(" %-6.6s", text);
+#define PRINT_PROFILE_NAME(_1, text) sprinter.printf(" %-6.6s", text);
 
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_PROFILE_NAME)
 #undef PRINT_PROFILE_NAME

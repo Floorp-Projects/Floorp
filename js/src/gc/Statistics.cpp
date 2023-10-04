@@ -1645,14 +1645,13 @@ void Statistics::printProfileHeader() {
   }
   sprinter.put(MajorGCProfilePrefix);
 
-#define PRINT_METADATA_NAME(name, width, _1, _2)  \
+#define PRINT_METADATA_NAME(name, width, _1, _2) \
   sprinter.printf(" %-*s", width, name);
 
   FOR_EACH_GC_PROFILE_METADATA(PRINT_METADATA_NAME)
 #undef PRINT_METADATA_NAME
 
-#define PRINT_PROFILE_NAME(_1, text, _2)     \
-  sprinter.printf(" %-6.6s", text);
+#define PRINT_PROFILE_NAME(_1, text, _2) sprinter.printf(" %-6.6s", text);
 
   FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_NAME)
 #undef PRINT_PROFILE_NAME
