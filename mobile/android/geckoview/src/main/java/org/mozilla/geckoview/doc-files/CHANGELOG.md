@@ -18,10 +18,12 @@ exclude: true
 - Added `DisabledFlags.SIGNATURE` for extensions disabled because they aren't correctly signed. ([bug 1847266]({{bugzilla}}1847266))
 - Added `Builder` pattern constructors for [`ReviewAnalysis`][120.2] and [`Recommendation`][120.3] (part of [bug 1846341]({{bugzilla}}1846341))
 - Added `DisabledFlags.APP_VERSION` for extensions disabled because they aren't compatible with the application version. ([bug 1847266]({{bugzilla}}1847266))
+- Added more metadata to the [WebExtension][120.4] class. ([bug 1850674]({{bugzilla}}1850674))
 
 [120.1]: {{javadoc_uri}}/WebExtensionController.html#disableExtensionProcessSpawning
 [120.2]: {{javadoc_uri}}/GeckoSession.html#ReviewAnalysis.Builder.html
 [120.3]: {{javadoc_uri}}/GeckoSession.html#Recommendation.Builder.html
+[120.4]: {{javadoc_uri}}/WebExtension.html)
 
 ## v119
 - Added `remoteType` to GeckoView child crash intent. ([bug 1851518]({{bugzilla}}1851518))
@@ -1442,4 +1444,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f2f94eaa9a47040bfa08b1a12f7cc7a31baf358e
+[api-version]: 834b35e061b37da5e862ad47dd45f9b26a80ed1f
