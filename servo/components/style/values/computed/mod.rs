@@ -344,9 +344,7 @@ impl<'a> Context<'a> {
             FontMetricsOrientation::MatchContextPreferHorizontal => {
                 wm.is_vertical() && wm.is_upright()
             },
-            FontMetricsOrientation::MatchContextPreferVertical => {
-                wm.is_vertical() && !wm.is_sideways()
-            },
+            FontMetricsOrientation::MatchContextPreferVertical => wm.is_text_vertical(),
             FontMetricsOrientation::Horizontal => false,
         };
         self.device().query_font_metrics(

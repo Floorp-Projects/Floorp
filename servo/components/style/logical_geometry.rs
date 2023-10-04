@@ -345,6 +345,12 @@ impl WritingMode {
             bidi::Level::rtl()
         }
     }
+
+    #[inline]
+    /// Is the text layout vertical?
+    pub fn is_text_vertical(&self) -> bool {
+        self.is_vertical() && !self.is_sideways()
+    }
 }
 
 impl fmt::Display for WritingMode {
