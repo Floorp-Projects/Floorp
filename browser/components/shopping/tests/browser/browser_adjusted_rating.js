@@ -55,6 +55,23 @@ add_task(async function test_adjusted_rating() {
             rating,
             `The adjusted rating "rating" is now ${rating}`
           );
+
+          rating = 0;
+          adjustedRating.rating = rating;
+
+          await adjustedRating.updateComplete;
+
+          is(
+            adjustedRating.rating,
+            rating,
+            `The adjusted rating "rating" is now ${rating}`
+          );
+
+          is(
+            mozFiveStar.rating,
+            0.5,
+            `When the rating is 0, the star rating displays 0.5 stars.`
+          );
         }
       );
     }

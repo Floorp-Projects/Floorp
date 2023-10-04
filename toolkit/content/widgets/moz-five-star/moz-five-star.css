@@ -30,7 +30,7 @@
   background-repeat: no-repeat;
   background-size: 100%;
 
-  fill: currentColor;
+  fill: var(--icon-color);
   -moz-context-properties: fill;
 }
 
