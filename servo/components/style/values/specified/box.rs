@@ -1065,7 +1065,9 @@ fn change_bits_for_longhand(longhand: LonghandId) -> WillChangeBits {
         LonghandId::Rotate |
         LonghandId::Scale |
         LonghandId::OffsetPath => WillChangeBits::TRANSFORM,
-        LonghandId::BackdropFilter | LonghandId::Filter => {
+        LonghandId::MozTopLayer | LonghandId::BackdropFilter | LonghandId::Filter => {
+            // -moz-top-layer forces position to be abs-pos or fixed-pos, so it's also ok to make
+            // it use the STACKING_CONTEXT_UNCONDITIONAL flag.
             WillChangeBits::STACKING_CONTEXT_UNCONDITIONAL | WillChangeBits::FIXPOS_CB_NON_SVG
         },
         LonghandId::MixBlendMode |

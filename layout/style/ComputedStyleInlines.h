@@ -90,6 +90,10 @@ bool ComputedStyle::IsFixedPosContainingBlockForNonSVGTextFrames() const {
     return true;
   }
 
+  if (disp.mTopLayer == StyleTopLayer::Top) {
+    return true;
+  }
+
   const auto& effects = *StyleEffects();
   return effects.HasFilters() || effects.HasBackdropFilters();
 }

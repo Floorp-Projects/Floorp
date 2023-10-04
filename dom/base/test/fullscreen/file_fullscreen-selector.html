@@ -69,8 +69,12 @@ function checkFullscreenState(elem, hasState, viewportRect) {
   } else {
     ok(!elem.matches(":fullscreen"),
        `${id} should not match selector ":fullscreen"`);
-    ok(rectEquals(rect, elem.initialRect),
-       `The bounding rect of ${id} should match its initial state`);
+    // Position might vary because if one of our ancestors is fullscreen it
+    // contains us.
+    is(rect.width, elem.initialRect.width,
+       `The width of ${id} should match its initial state`);
+    is(rect.height, elem.initialRect.height,
+       `The height of ${id} should match its initial state`);
   }
 }
 
