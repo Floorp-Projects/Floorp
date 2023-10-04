@@ -2942,7 +2942,12 @@ static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
 
   json.endObject();
 
-  return !sp.hadOutOfMemory();
+  if (sp.hadOutOfMemory()) {
+    sp.reportOutOfMemory();
+    return false;
+  }
+
+  return true;
 }
 
 JSString* JS::GetPCCountScriptContents(JSContext* cx, size_t index) {
@@ -3085,10 +3090,6 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
   bool isEmpty = true;
   lcovRealm->exportInto(out, &isEmpty);
-  if (out.hadOutOfMemory()) {
-    return false;
-  }
-
   return true;
 }
 
