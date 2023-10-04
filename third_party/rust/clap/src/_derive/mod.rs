@@ -141,7 +141,7 @@
 //!
 //! **Magic attributes:**
 //! - `name  = <expr>`: [`Command::name`][crate::Command::name]
-//!   - When not present: [crate `name`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field) (if on [`Parser`][crate::Parser] container), variant name (if on [`Subcommand`][crate::Subcommand] variant)
+//!   - When not present: [package `name`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field) (if on [`Parser`][crate::Parser] container), variant name (if on [`Subcommand`][crate::Subcommand] variant)
 //! - `version [= <expr>]`: [`Command::version`][crate::Command::version]
 //!   - When not present: no version set
 //!   - Without `<expr>`: defaults to [crate `version`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-version-field)
@@ -291,6 +291,9 @@
 //!
 //! Notes:
 //! - For custom type behavior, you can override the implied attributes/settings and/or set additional ones
+//!   - To force any inferred type (like `Vec<T>`) to be treated as `T`, you can refer to the type
+//!     by another means, like using `std::vec::Vec` instead of `Vec`.  For improving this, see
+//!     [#4626](https://github.com/clap-rs/clap/issues/4626).
 //! - `Option<Vec<T>>` will be `None` instead of `vec![]` if no arguments are provided.
 //!   - This gives the user some flexibility in designing their argument, like with `num_args(0..)`
 //!
@@ -479,8 +482,22 @@
 //!   [`Parser`][crate::Parser])
 //! - Proactively check for bad [`Command`][crate::Command] configurations by calling
 //!   [`Command::debug_assert`][crate::Command::debug_assert] in a test
-//!   ([example](../tutorial_derive/05_01_assert.rs))
+//!   ([example][_tutorial#testing])
 //! - Always remember to [document](#doc-comments) args and commands with `#![deny(missing_docs)]`
+
+// Point people here that search for attributes that don't exist in the derive (a subset of magic
+// attributes)
+#![doc(alias = "skip")]
+#![doc(alias = "verbatim_doc_comment")]
+#![doc(alias = "flatten")]
+#![doc(alias = "external_subcommand")]
+#![doc(alias = "subcommand")]
+#![doc(alias = "rename_all")]
+#![doc(alias = "rename_all_env")]
+#![doc(alias = "default_value_t")]
+#![doc(alias = "default_values_t")]
+#![doc(alias = "default_value_os_t")]
+#![doc(alias = "default_values_os_t")]
 
 pub mod _tutorial;
 #[doc(inline)]

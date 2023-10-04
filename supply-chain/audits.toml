@@ -4417,6 +4417,12 @@ user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-03-28"
 end = "2024-05-03"
 
+[[trusted.anstyle]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-05-18"
+end = "2024-09-28"
+
 [[trusted.async-trait]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)

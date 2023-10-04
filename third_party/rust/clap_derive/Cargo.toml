@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.64.0"
+rust-version = "1.70.0"
 name = "clap_derive"
-version = "4.1.14"
+version = "4.4.2"
 include = [
     "build.rs",
     "src/**/*",
@@ -43,8 +43,8 @@ repository = "https://github.com/clap-rs/clap/tree/master/clap_derive"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [package.metadata.release]
-shared-version = true
 dependent-version = "upgrade"
+shared-version = true
 tag-name = "v{{version}}"
 
 [lib]

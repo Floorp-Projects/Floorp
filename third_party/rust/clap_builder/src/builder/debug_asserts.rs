@@ -1,8 +1,5 @@
 use std::cmp::Ordering;
 
-use clap_lex::OsStrExt as _;
-
-use crate::builder::OsStr;
 use crate::builder::ValueRange;
 use crate::mkeymap::KeyType;
 use crate::util::FlatSet;
@@ -300,6 +297,28 @@ pub(crate) fn assert_app(cmd: &Command) {
                 arg
             );
         }
+
+        for arg in &group.requires {
+            // Args listed inside groups should exist
+            assert!(
+                cmd.id_exists(arg),
+                "Command {}: Argument group '{}' requires non-existent '{}' id",
+                cmd.get_name(),
+                group.get_id(),
+                arg
+            );
+        }
+
+        for arg in &group.conflicts {
+            // Args listed inside groups should exist
+            assert!(
+                cmd.id_exists(arg),
+                "Command {}: Argument group '{}' conflicts with non-existent '{}' id",
+                cmd.get_name(),
+                group.get_id(),
+                arg
+            );
+        }
     }
 
     // Conflicts between flags and subcommands
@@ -460,7 +479,7 @@ fn assert_app_flags(cmd: &Command) {
                 )+
 
                 if !s.is_empty() {
-                    panic!("{}", s)
+                    panic!("{s}")
                 }
             }
         };
@@ -564,9 +583,8 @@ fn _verify_positionals(cmd: &Command) -> bool {
             || last.is_last_set();
         assert!(
             ok,
-            "When using a positional argument with `.num_args(1..)` that is *not the \
-                 last* positional argument, the last positional argument (i.e. the one \
-                 with the highest index) *must* have .required(true) or .last(true) set."
+            "Positional argument `{last}` *must* have `required(true)` or `last(true)` set \
+            because a prior positional argument (`{second_to_last}`) has `num_args(1..)`"
         );
 
         // We make sure if the second to last is Multiple the last is ArgSettings::Last
@@ -582,6 +600,7 @@ fn _verify_positionals(cmd: &Command) -> bool {
             .get_positionals()
             .filter(|p| {
                 p.is_multiple_values_set()
+                    && p.get_value_terminator().is_none()
                     && !p.get_num_args().expect(INTERNAL_ERROR_MSG).is_fixed()
             })
             .count();
@@ -727,8 +746,9 @@ fn assert_arg(arg: &Arg) {
         );
         assert!(
             arg.is_takes_value_set(),
-            "Argument '{}` is positional, it must take a value{}",
+            "Argument '{}` is positional and it must take a value but action is {:?}{}",
             arg.get_id(),
+            arg.get_action(),
             if arg.get_id() == Id::HELP {
                 " (`mut_arg` no longer works with implicit `--help`)"
             } else if arg.get_id() == Id::VERSION {
@@ -787,20 +807,6 @@ fn assert_arg(arg: &Arg) {
     }
 
     assert_arg_flags(arg);
-
-    assert_defaults(arg, "default_value", arg.default_vals.iter());
-    assert_defaults(
-        arg,
-        "default_missing_value",
-        arg.default_missing_vals.iter(),
-    );
-    assert_defaults(
-        arg,
-        "default_value_if",
-        arg.default_vals_ifs
-            .iter()
-            .filter_map(|(_, _, default)| default.as_ref()),
-    );
 }
 
 fn assert_arg_flags(arg: &Arg) {
@@ -831,38 +837,4 @@ fn assert_arg_flags(arg: &Arg) {
     checker!(is_hide_default_value_set requires is_takes_value_set);
     checker!(is_multiple_values_set requires is_takes_value_set);
     checker!(is_ignore_case_set requires is_takes_value_set);
-}
-
-fn assert_defaults<'d>(
-    arg: &Arg,
-    field: &'static str,
-    defaults: impl IntoIterator<Item = &'d OsStr>,
-) {
-    for default_os in defaults {
-        let value_parser = arg.get_value_parser();
-        let assert_cmd = Command::new("assert");
-        if let Some(val_delim) = arg.get_value_delimiter() {
-            let mut val_delim_buffer = [0; 4];
-            let val_delim = val_delim.encode_utf8(&mut val_delim_buffer);
-            for part in default_os.split(val_delim) {
-                if let Err(err) = value_parser.parse_ref(&assert_cmd, Some(arg), part) {
-                    panic!(
-                        "Argument `{}`'s {}={:?} failed validation: {}",
-                        arg.get_id(),
-                        field,
-                        part.to_string_lossy(),
-                        err
-                    );
-                }
-            }
-        } else if let Err(err) = value_parser.parse_ref(&assert_cmd, Some(arg), default_os) {
-            panic!(
-                "Argument `{}`'s {}={:?} failed validation: {}",
-                arg.get_id(),
-                field,
-                default_os,
-                err
-            );
-        }
-    }
 }

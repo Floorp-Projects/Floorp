@@ -21,6 +21,7 @@ use syn::{
     Generics,
 };
 
+use crate::derives::args::collect_args_fields;
 use crate::derives::{args, into_app, subcommand};
 use crate::item::Item;
 use crate::item::Name;
@@ -36,14 +37,7 @@ pub fn derive_parser(input: &DeriveInput) -> Result<TokenStream, syn::Error> {
         }) => {
             let name = Name::Assigned(quote!(#pkg_name));
             let item = Item::from_args_struct(input, name)?;
-            let fields = fields
-                .named
-                .iter()
-                .map(|field| {
-                    let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
-                    Ok((field, item))
-                })
-                .collect::<Result<Vec<_>, syn::Error>>()?;
+            let fields = collect_args_fields(&item, fields)?;
             gen_for_struct(&item, ident, &input.generics, &fields)
         }
         Data::Struct(DataStruct {
@@ -92,6 +86,10 @@ fn gen_for_struct(
     let args = args::gen_for_struct(item, item_name, generics, fields)?;
 
     Ok(quote! {
+        #[automatically_derived]
+        #[allow(
+            unused_qualifications,
+        )]
         impl #impl_generics clap::Parser for #item_name #ty_generics #where_clause {}
 
         #into_app
@@ -111,6 +109,7 @@ fn gen_for_enum(
     let subcommand = subcommand::gen_for_enum(item, item_name, generics, variants)?;
 
     Ok(quote! {
+        #[automatically_derived]
         impl #impl_generics clap::Parser for #item_name #ty_generics #where_clause {}
 
         #into_app

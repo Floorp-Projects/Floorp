@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.64.0"
+rust-version = "1.70.0"
 name = "clap"
-version = "4.1.14"
+version = "4.4.5"
 include = [
     "build.rs",
     "src/**/*",
@@ -37,14 +37,15 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/clap-rs/clap"
 
 [package.metadata.docs.rs]
+cargo-args = [
+    "-Zunstable-options",
+    "-Zrustdoc-scrape-examples",
+]
 features = ["unstable-doc"]
 rustdoc-args = [
     "--cfg",
     "docsrs",
-]
-cargo-args = [
-    "-Zunstable-options",
-    "-Zrustdoc-scrape-examples",
+    "--generate-link-to-definition",
 ]
 
 [package.metadata.playground]
@@ -56,48 +57,48 @@ tag-name = "v{{version}}"
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
-search = "Unreleased"
+min = 1
 replace = "{{version}}"
-min = 1
+search = "Unreleased"
 
 [[package.metadata.release.pre-release-replacements]]
-file = "CHANGELOG.md"
-search = '\.\.\.HEAD'
-replace = "...{{tag_name}}"
 exactly = 1
+file = "CHANGELOG.md"
+replace = "...{{tag_name}}"
+search = '\.\.\.HEAD'
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
-search = "ReleaseDate"
-replace = "{{date}}"
 min = 1
+replace = "{{date}}"
+search = "ReleaseDate"
 
 [[package.metadata.release.pre-release-replacements]]
+exactly = 1
 file = "CHANGELOG.md"
-search = "<!-- next-header -->"
 replace = """
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 """
-exactly = 1
+search = "<!-- next-header -->"
 
 [[package.metadata.release.pre-release-replacements]]
+exactly = 1
 file = "CHANGELOG.md"
-search = "<!-- next-url -->"
 replace = """
 <!-- next-url -->
 [Unreleased]: https://github.com/clap-rs/clap/compare/{{tag_name}}...HEAD"""
-exactly = 1
+search = "<!-- next-url -->"
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CITATION.cff"
-search = "^date-released: ....-..-.."
 replace = "date-released: {{date}}"
+search = "^date-released: ....-..-.."
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CITATION.cff"
-search = '^version: .+\..+\..+'
 replace = "version: {{version}}"
+search = '^version: .+\..+\..+'
 
 [profile.bench]
 lto = true
@@ -366,37 +367,33 @@ path = "examples/derive_ref/flatten_hand_args.rs"
 required-features = ["derive"]
 
 [dependencies.clap_builder]
-version = "=4.1.14"
+version = "=4.4.5"
 default-features = false
 
 [dependencies.clap_derive]
-version = "=4.1.14"
-optional = true
-
-[dependencies.once_cell]
-version = "1.12.0"
+version = "=4.4.2"
 optional = true
 
 [dev-dependencies.humantime]
 version = "2.1.0"
 
 [dev-dependencies.rustversion]
-version = "1.0.12"
+version = "1.0.14"
 
 [dev-dependencies.shlex]
 version = "1.1.0"
 
 [dev-dependencies.snapbox]
-version = "0.4.10"
+version = "0.4.12"
 
 [dev-dependencies.static_assertions]
 version = "1.1.0"
 
 [dev-dependencies.trybuild]
-version = "1.0.77"
+version = "1.0.83"
 
 [dev-dependencies.trycmd]
-version = "0.14.15"
+version = "0.14.17"
 features = [
     "color-auto",
     "diff",
@@ -426,10 +423,7 @@ deprecated = [
     "clap_builder/deprecated",
     "clap_derive?/deprecated",
 ]
-derive = [
-    "dep:clap_derive",
-    "dep:once_cell",
-]
+derive = ["dep:clap_derive"]
 env = ["clap_builder/env"]
 error-context = ["clap_builder/error-context"]
 help = ["clap_builder/help"]
@@ -441,8 +435,7 @@ unstable-doc = [
     "clap_builder/unstable-doc",
     "derive",
 ]
-unstable-grouped = ["clap_builder/unstable-grouped"]
-unstable-replace = ["clap_builder/unstable-replace"]
+unstable-styles = ["clap_builder/unstable-styles"]
 unstable-v5 = [
     "clap_builder/unstable-v5",
     "clap_derive?/unstable-v5",

@@ -11,11 +11,13 @@ use std::path::Path;
 // Internal
 use crate::builder::app_settings::{AppFlags, AppSettings};
 use crate::builder::arg_settings::ArgSettings;
+use crate::builder::ext::Extensions;
 use crate::builder::ArgAction;
 use crate::builder::IntoResettable;
 use crate::builder::PossibleValue;
 use crate::builder::Str;
 use crate::builder::StyledStr;
+use crate::builder::Styles;
 use crate::builder::{Arg, ArgGroup, ArgPredicate};
 use crate::error::ErrorKind;
 use crate::error::Result as ClapResult;
@@ -24,7 +26,6 @@ use crate::output::fmt::Stream;
 use crate::output::{fmt::Colorizer, write_help, Usage};
 use crate::parser::{ArgMatcher, ArgMatches, Parser};
 use crate::util::ChildGraph;
-use crate::util::FlatMap;
 use crate::util::{color::ColorChoice, Id};
 use crate::{Error, INTERNAL_ERROR_MSG};
 
@@ -91,15 +92,12 @@ pub struct Command {
     usage_name: Option<String>,
     help_str: Option<StyledStr>,
     disp_ord: Option<usize>,
-    term_w: Option<usize>,
-    max_w: Option<usize>,
     #[cfg(feature = "help")]
     template: Option<StyledStr>,
     settings: AppFlags,
     g_settings: AppFlags,
     args: MKeyMap,
     subcommands: Vec<Command>,
-    replacers: FlatMap<Str, Vec<Str>>,
     groups: Vec<ArgGroup>,
     current_help_heading: Option<Str>,
     current_disp_ord: Option<usize>,
@@ -107,6 +105,8 @@ pub struct Command {
     subcommand_heading: Option<Str>,
     external_value_parser: Option<super::ValueParser>,
     long_help_exists: bool,
+    deferred: Option<fn(Command) -> Command>,
+    app_ext: Extensions,
 }
 
 /// # Basic API
@@ -210,8 +210,6 @@ impl Command {
 
     /// Allows one to mutate an [`Arg`] after it's been added to a [`Command`].
     ///
-    /// This can be useful for modifying the auto-generated help or version arguments.
-    ///
     /// # Panics
     ///
     /// If the argument is undefined
@@ -251,6 +249,52 @@ impl Command {
             .unwrap_or_else(|| panic!("Argument `{id}` is undefined"));
 
         self.args.push(f(a));
+        self
+    }
+
+    /// Allows one to mutate all [`Arg`]s after they've been added to a [`Command`].
+    ///
+    /// This does not affect the built-in `--help` or `--version` arguments.
+    ///
+    /// # Examples
+    ///
+    #[cfg_attr(feature = "string", doc = "```")]
+    #[cfg_attr(not(feature = "string"), doc = "```ignore")]
+    /// # use clap_builder as clap;
+    /// # use clap::{Command, Arg, ArgAction};
+    ///
+    /// let mut cmd = Command::new("foo")
+    ///     .arg(Arg::new("bar")
+    ///         .long("bar")
+    ///         .action(ArgAction::SetTrue))
+    ///     .arg(Arg::new("baz")
+    ///         .long("baz")
+    ///         .action(ArgAction::SetTrue))
+    ///     .mut_args(|a| {
+    ///         if let Some(l) = a.get_long().map(|l| format!("prefix-{l}")) {
+    ///             a.long(l)
+    ///         } else {
+    ///             a
+    ///         }
+    ///     });
+    ///
+    /// let res = cmd.try_get_matches_from_mut(vec!["foo", "--bar"]);
+    ///
+    /// // Since we changed `bar`'s long to "prefix-bar" this should err as there
+    /// // is no `--bar` anymore, only `--prefix-bar`.
+    ///
+    /// assert!(res.is_err());
+    ///
+    /// let res = cmd.try_get_matches_from_mut(vec!["foo", "--prefix-bar"]);
+    /// assert!(res.is_ok());
+    /// ```
+    #[must_use]
+    #[cfg_attr(debug_assertions, track_caller)]
+    pub fn mut_args<F>(mut self, f: F) -> Self
+    where
+        F: FnMut(Arg) -> Arg,
+    {
+        self.args.mut_args(f);
         self
     }
 
@@ -431,6 +475,30 @@ impl Command {
         self
     }
 
+    /// Delay initialization for parts of the `Command`
+    ///
+    /// This is useful for large applications to delay definitions of subcommands until they are
+    /// being invoked.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use clap_builder as clap;
+    /// # use clap::{Command, arg};
+    /// Command::new("myprog")
+    ///     .subcommand(Command::new("config")
+    ///         .about("Controls configuration features")
+    ///         .defer(|cmd| {
+    ///             cmd.arg(arg!(<config> "Required configuration file to use"))
+    ///         })
+    ///     )
+    /// # ;
+    /// ```
+    pub fn defer(mut self, deferred: fn(Command) -> Command) -> Self {
+        self.deferred = Some(deferred);
+        self
+    }
+
     /// Catch problems earlier in the development cycle.
     ///
     /// Most error states are handled as asserts under the assumption they are programming mistake
@@ -485,7 +553,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -509,7 +577,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -537,7 +605,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -570,7 +638,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -609,7 +677,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -655,7 +723,7 @@ impl Command {
     ///
     /// # Panics
     ///
-    /// If contradictory arguments or settings exist.
+    /// If contradictory arguments or settings exist (debug builds).
     ///
     /// # Examples
     ///
@@ -687,10 +755,7 @@ impl Command {
                 if let Some(command) = argv0.file_stem().and_then(|f| f.to_str()) {
                     // Stop borrowing command so we can get another mut ref to it.
                     let command = command.to_owned();
-                    debug!(
-                        "Command::try_get_matches_from_mut: Parsed command {} from argv",
-                        command
-                    );
+                    debug!("Command::try_get_matches_from_mut: Parsed command {command} from argv");
 
                     debug!("Command::try_get_matches_from_mut: Reinserting command into arguments so subcommand parser matches it");
                     raw_args.insert(&cursor, [&command]);
@@ -792,7 +857,7 @@ impl Command {
     /// let mut cmd = Command::new("myprog");
     /// let mut out = io::stdout();
     /// let help = cmd.render_help();
-    /// println!("{}", help);
+    /// println!("{help}");
     /// ```
     /// [`io::Write`]: std::io::Write
     /// [`-h` (short)]: Arg::help()
@@ -819,7 +884,7 @@ impl Command {
     /// let mut cmd = Command::new("myprog");
     /// let mut out = io::stdout();
     /// let help = cmd.render_long_help();
-    /// println!("{}", help);
+    /// println!("{help}");
     /// ```
     /// [`io::Write`]: std::io::Write
     /// [`-h` (short)]: Arg::help()
@@ -987,7 +1052,7 @@ impl Command {
     ///
     /// let r = cmd.try_get_matches_from(vec!["cmd", "-c", "file", "-f", "-x"]);
     ///
-    /// assert!(r.is_ok(), "unexpected error: {:?}", r);
+    /// assert!(r.is_ok(), "unexpected error: {r:?}");
     /// let m = r.unwrap();
     /// assert_eq!(m.get_one::<String>("config").unwrap(), "file");
     /// assert!(m.get_flag("f"));
@@ -1082,12 +1147,43 @@ impl Command {
         }
     }
 
+    /// Sets the [`Styles`] for terminal output
+    ///
+    /// **NOTE:** This choice is propagated to all child subcommands.
+    ///
+    /// **NOTE:** Default behaviour is [`Styles::default`].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use clap_builder as clap;
+    /// # use clap::{Command, ColorChoice, builder::styling};
+    /// let styles = styling::Styles::styled()
+    ///     .header(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
+    ///     .usage(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
+    ///     .literal(styling::AnsiColor::Blue.on_default() | styling::Effects::BOLD)
+    ///     .placeholder(styling::AnsiColor::Cyan.on_default());
+    /// Command::new("myprog")
+    ///     .styles(styles)
+    ///     .get_matches();
+    /// ```
+    #[cfg(feature = "color")]
+    #[inline]
+    #[must_use]
+    pub fn styles(mut self, styles: Styles) -> Self {
+        self.app_ext.set(styles);
+        self
+    }
+
     /// Sets the terminal width at which to wrap help messages.
     ///
     /// Using `0` will ignore terminal widths and use source formatting.
     ///
     /// Defaults to current terminal width when `wrap_help` feature flag is enabled.  If current
     /// width cannot be determined, the default is 100.
+    ///
+    /// **`unstable-v5` feature**: Defaults to unbound, being subject to
+    /// [`Command::max_term_width`].
     ///
     /// **NOTE:** This setting applies globally and *not* on a per-command basis.
     ///
@@ -1106,7 +1202,7 @@ impl Command {
     #[must_use]
     #[cfg(any(not(feature = "unstable-v5"), feature = "wrap_help"))]
     pub fn term_width(mut self, width: usize) -> Self {
-        self.term_w = Some(width);
+        self.app_ext.set(TermWidth(width));
         self
     }
 
@@ -1115,7 +1211,9 @@ impl Command {
     /// This only applies when [`term_width`][Command::term_width] is unset so that the current
     /// terminal's width will be used.  See [`Command::term_width`] for more details.
     ///
-    /// Using `0` will ignore terminal widths and use source formatting (default).
+    /// Using `0` will ignore this, always respecting [`Command::term_width`] (default).
+    ///
+    /// **`unstable-v5` feature**: Defaults to 100.
     ///
     /// **NOTE:** This setting applies globally and *not* on a per-command basis.
     ///
@@ -1133,8 +1231,8 @@ impl Command {
     #[inline]
     #[must_use]
     #[cfg(any(not(feature = "unstable-v5"), feature = "wrap_help"))]
-    pub fn max_term_width(mut self, w: usize) -> Self {
-        self.max_w = Some(w);
+    pub fn max_term_width(mut self, width: usize) -> Self {
+        self.app_ext.set(MaxTermWidth(width));
         self
     }
 
@@ -1242,6 +1340,8 @@ impl Command {
 
     /// Disables the `help` [`subcommand`].
     ///
+    /// **NOTE:** This choice is propagated to all child subcommands.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -1314,6 +1414,7 @@ impl Command {
     ///
     /// # Panics
     ///
+    /// On debug builds:
     /// ```rust,no_run
     /// # use clap_builder as clap;
     /// # use clap::{Command, Arg};
@@ -1862,21 +1963,15 @@ impl Command {
 
     #[inline]
     #[must_use]
-    pub(crate) fn setting<F>(mut self, setting: F) -> Self
-    where
-        F: Into<AppFlags>,
-    {
-        self.settings.insert(setting.into());
+    pub(crate) fn setting(mut self, setting: AppSettings) -> Self {
+        self.settings.set(setting);
         self
     }
 
     #[inline]
     #[must_use]
-    pub(crate) fn unset_setting<F>(mut self, setting: F) -> Self
-    where
-        F: Into<AppFlags>,
-    {
-        self.settings.remove(setting.into());
+    pub(crate) fn unset_setting(mut self, setting: AppSettings) -> Self {
+        self.settings.unset(setting);
         self
     }
 
@@ -1914,136 +2009,13 @@ impl Command {
         self
     }
 
-    /// Change the starting value for assigning future display orders for ags.
+    /// Change the starting value for assigning future display orders for args.
     ///
     /// This will be used for any arg that hasn't had [`Arg::display_order`] called.
     #[inline]
     #[must_use]
     pub fn next_display_order(mut self, disp_ord: impl IntoResettable<usize>) -> Self {
         self.current_disp_ord = disp_ord.into_resettable().into_option();
-        self
-    }
-
-    /// Replaces an argument or subcommand used on the CLI at runtime with other arguments or subcommands.
-    ///
-    /// **Note:** This is gated behind [`unstable-replace`](https://github.com/clap-rs/clap/issues/2836)
-    ///
-    /// When this method is used, `name` is removed from the CLI, and `target`
-    /// is inserted in its place. Parsing continues as if the user typed
-    /// `target` instead of `name`.
-    ///
-    /// This can be used to create "shortcuts" for subcommands, or if a
-    /// particular argument has the semantic meaning of several other specific
-    /// arguments and values.
-    ///
-    /// # Examples
-    ///
-    /// We'll start with the "subcommand short" example. In this example, let's
-    /// assume we have a program with a subcommand `module` which can be invoked
-    /// via `cmd module`. Now let's also assume `module` also has a subcommand
-    /// called `install` which can be invoked `cmd module install`. If for some
-    /// reason users needed to be able to reach `cmd module install` via the
-    /// short-hand `cmd install`, we'd have several options.
-    ///
-    /// We *could* create another sibling subcommand to `module` called
-    /// `install`, but then we would need to manage another subcommand and manually
-    /// dispatch to `cmd module install` handling code. This is error prone and
-    /// tedious.
-    ///
-    /// We could instead use [`Command::replace`] so that, when the user types `cmd
-    /// install`, `clap` will replace `install` with `module install` which will
-    /// end up getting parsed as if the user typed the entire incantation.
-    ///
-    /// ```rust
-    /// # use clap_builder as clap;
-    /// # use clap::Command;
-    /// let m = Command::new("cmd")
-    ///     .subcommand(Command::new("module")
-    ///         .subcommand(Command::new("install")))
-    ///     .replace("install", &["module", "install"])
-    ///     .get_matches_from(vec!["cmd", "install"]);
-    ///
-    /// assert!(m.subcommand_matches("module").is_some());
-    /// assert!(m.subcommand_matches("module").unwrap().subcommand_matches("install").is_some());
-    /// ```
-    ///
-    /// Now let's show an argument example!
-    ///
-    /// Let's assume we have an application with two flags `--save-context` and
-    /// `--save-runtime`. But often users end up needing to do *both* at the
-    /// same time. We can add a third flag `--save-all` which semantically means
-    /// the same thing as `cmd --save-context --save-runtime`. To implement that,
-    /// we have several options.
-    ///
-    /// We could create this third argument and manually check if that argument
-    /// and in our own consumer code handle the fact that both `--save-context`
-    /// and `--save-runtime` *should* have been used. But again this is error
-    /// prone and tedious. If we had code relying on checking `--save-context`
-    /// and we forgot to update that code to *also* check `--save-all` it'd mean
-    /// an error!
-    ///
-    /// Luckily we can use [`Command::replace`] so that when the user types
-    /// `--save-all`, `clap` will replace that argument with `--save-context
-    /// --save-runtime`, and parsing will continue like normal. Now all our code
-    /// that was originally checking for things like `--save-context` doesn't
-    /// need to change!
-    ///
-    /// ```rust
-    /// # use clap_builder as clap;
-    /// # use clap::{Command, Arg, ArgAction};
-    /// let m = Command::new("cmd")
-    ///     .arg(Arg::new("save-context")
-    ///         .long("save-context")
-    ///         .action(ArgAction::SetTrue))
-    ///     .arg(Arg::new("save-runtime")
-    ///         .long("save-runtime")
-    ///         .action(ArgAction::SetTrue))
-    ///     .replace("--save-all", &["--save-context", "--save-runtime"])
-    ///     .get_matches_from(vec!["cmd", "--save-all"]);
-    ///
-    /// assert!(m.get_flag("save-context"));
-    /// assert!(m.get_flag("save-runtime"));
-    /// ```
-    ///
-    /// This can also be used with options, for example if our application with
-    /// `--save-*` above also had a `--format=TYPE` option. Let's say it
-    /// accepted `txt` or `json` values. However, when `--save-all` is used,
-    /// only `--format=json` is allowed, or valid. We could change the example
-    /// above to enforce this:
-    ///
-    /// ```rust
-    /// # use clap_builder as clap;
-    /// # use clap::{Command, Arg, ArgAction};
-    /// let m = Command::new("cmd")
-    ///     .arg(Arg::new("save-context")
-    ///         .long("save-context")
-    ///         .action(ArgAction::SetTrue))
-    ///     .arg(Arg::new("save-runtime")
-    ///         .long("save-runtime")
-    ///         .action(ArgAction::SetTrue))
-    ///     .arg(Arg::new("format")
-    ///         .long("format")
-    ///         .action(ArgAction::Set)
-    ///         .value_parser(["txt", "json"]))
-    ///     .replace("--save-all", &["--save-context", "--save-runtime", "--format=json"])
-    ///     .get_matches_from(vec!["cmd", "--save-all"]);
-    ///
-    /// assert!(m.get_flag("save-context"));
-    /// assert!(m.get_flag("save-runtime"));
-    /// assert_eq!(m.get_one::<String>("format").unwrap(), "json");
-    /// ```
-    ///
-    /// [`Command::replace`]: Command::replace()
-    #[inline]
-    #[cfg(feature = "unstable-replace")]
-    #[must_use]
-    pub fn replace(
-        mut self,
-        name: impl Into<Str>,
-        target: impl IntoIterator<Item = impl Into<Str>>,
-    ) -> Self {
-        self.replacers
-            .insert(name.into(), target.into_iter().map(Into::into).collect());
         self
     }
 
@@ -2676,13 +2648,13 @@ impl Command {
 
     /// Set the placement of this subcommand within the help.
     ///
-    /// Subcommands with a lower value will be displayed first in the help message.  Subcommands
-    /// with duplicate display orders will be displayed in order they are defined.
+    /// Subcommands with a lower value will be displayed first in the help message.
+    /// Those with the same display order will be sorted.
     ///
-    /// This is helpful when one would like to emphasize frequently used subcommands, or prioritize
-    /// those towards the top of the list.
-    ///
-    /// **NOTE:** The default is 999 for all subcommands.
+    /// `Command`s are automatically assigned a display order based on the order they are added to
+    /// their parent [`Command`].
+    /// Overriding this is helpful when the order commands are added in isn't the same as the
+    /// display order, whether in one-off cases or to automatically sort commands.
     ///
     /// # Examples
     ///
@@ -2691,17 +2663,11 @@ impl Command {
     /// # use clap_builder as clap;
     /// # use clap::{Command, };
     /// let m = Command::new("cust-ord")
-    ///     .subcommand(Command::new("alpha") // typically subcommands are grouped
-    ///                                                // alphabetically by name. Subcommands
-    ///                                                // without a display_order have a value of
-    ///                                                // 999 and are displayed alphabetically with
-    ///                                                // all other 999 subcommands
-    ///         .about("Some help and text"))
     ///     .subcommand(Command::new("beta")
-    ///         .display_order(1)   // In order to force this subcommand to appear *first*
-    ///                             // all we have to do is give it a value lower than 999.
-    ///                             // Any other subcommands with a value of 1 will be displayed
-    ///                             // alphabetically with this one...then 2 values, then 3, etc.
+    ///         .display_order(0)  // Sort
+    ///         .about("Some help and text"))
+    ///     .subcommand(Command::new("alpha")
+    ///         .display_order(0)  // Sort
     ///         .about("I should be first!"))
     ///     .get_matches_from(vec![
     ///         "cust-ord", "--help"
@@ -2717,8 +2683,9 @@ impl Command {
     /// Usage: cust-ord [OPTIONS]
     ///
     /// Commands:
-    ///     beta    I should be first!
-    ///     alpha   Some help and text
+    ///     alpha    I should be first!
+    ///     beta     Some help and text
+    ///     help     Print help for the subcommand(s)
     ///
     /// Options:
     ///     -h, --help       Print help
@@ -3463,6 +3430,12 @@ impl Command {
         }
     }
 
+    /// Return the current `Styles` for the `Command`
+    #[inline]
+    pub fn get_styles(&self) -> &Styles {
+        self.app_ext.get().unwrap_or_default()
+    }
+
     /// Iterate through the set of subcommands, getting a reference to each.
     #[inline]
     pub fn get_subcommands(&self) -> impl Iterator<Item = &Command> {
@@ -3791,7 +3764,7 @@ impl Command {
     /// let cmd = clap::Command::new("raw")
     ///     .external_subcommand_value_parser(clap::value_parser!(String));
     /// let value_parser = cmd.get_external_subcommand_value_parser();
-    /// println!("{:?}", value_parser);
+    /// println!("{value_parser:?}");
     /// ```
     pub fn get_external_subcommand_value_parser(&self) -> Option<&super::ValueParser> {
         if !self.is_allow_external_subcommands_set() {
@@ -3845,16 +3818,12 @@ impl Command {
 
     #[cfg(feature = "help")]
     pub(crate) fn get_term_width(&self) -> Option<usize> {
-        self.term_w
+        self.app_ext.get::<TermWidth>().map(|e| e.0)
     }
 
     #[cfg(feature = "help")]
     pub(crate) fn get_max_term_width(&self) -> Option<usize> {
-        self.max_w
-    }
-
-    pub(crate) fn get_replacement(&self, key: &str) -> Option<&[Str]> {
-        self.replacers.get(key).map(|v| v.as_slice())
+        self.app_ext.get::<MaxTermWidth>().map(|e| e.0)
     }
 
     pub(crate) fn get_keymap(&self) -> &MKeyMap {
@@ -3891,8 +3860,8 @@ impl Command {
         // do the real parsing
         let mut parser = Parser::new(self);
         if let Err(error) = parser.get_matches_with(&mut matcher, raw_args, args_cursor) {
-            if self.is_set(AppSettings::IgnoreErrors) {
-                debug!("Command::_do_parse: ignoring error: {}", error);
+            if self.is_set(AppSettings::IgnoreErrors) && error.use_stderr() {
+                debug!("Command::_do_parse: ignoring error: {error}");
             } else {
                 return Err(error);
             }
@@ -3925,30 +3894,30 @@ impl Command {
     pub(crate) fn _build_self(&mut self, expand_help_tree: bool) {
         debug!("Command::_build: name={:?}", self.get_name());
         if !self.settings.is_set(AppSettings::Built) {
+            if let Some(deferred) = self.deferred.take() {
+                *self = (deferred)(std::mem::take(self));
+            }
+
             // Make sure all the globally set flags apply to us as well
             self.settings = self.settings | self.g_settings;
 
             if self.is_multicall_set() {
-                self.settings.insert(AppSettings::SubcommandRequired.into());
-                self.settings.insert(AppSettings::DisableHelpFlag.into());
-                self.settings.insert(AppSettings::DisableVersionFlag.into());
+                self.settings.set(AppSettings::SubcommandRequired);
+                self.settings.set(AppSettings::DisableHelpFlag);
+                self.settings.set(AppSettings::DisableVersionFlag);
             }
             if !cfg!(feature = "help") && self.get_override_help().is_none() {
-                self.settings.insert(AppSettings::DisableHelpFlag.into());
-                self.settings
-                    .insert(AppSettings::DisableHelpSubcommand.into());
+                self.settings.set(AppSettings::DisableHelpFlag);
+                self.settings.set(AppSettings::DisableHelpSubcommand);
             }
             if self.is_set(AppSettings::ArgsNegateSubcommands) {
-                self.settings
-                    .insert(AppSettings::SubcommandsNegateReqs.into());
+                self.settings.set(AppSettings::SubcommandsNegateReqs);
             }
             if self.external_value_parser.is_some() {
-                self.settings
-                    .insert(AppSettings::AllowExternalSubcommands.into());
+                self.settings.set(AppSettings::AllowExternalSubcommands);
             }
             if !self.has_subcommands() {
-                self.settings
-                    .insert(AppSettings::DisableHelpSubcommand.into());
+                self.settings.set(AppSettings::DisableHelpSubcommand);
             }
 
             self._propagate();
@@ -4001,14 +3970,13 @@ impl Command {
                 let is_allow_negative_numbers_set = self.is_allow_negative_numbers_set();
                 for arg in self.args.args_mut() {
                     if is_allow_hyphen_values_set && arg.is_takes_value_set() {
-                        arg.settings.insert(ArgSettings::AllowHyphenValues.into());
+                        arg.settings.set(ArgSettings::AllowHyphenValues);
                     }
                     if is_allow_negative_numbers_set && arg.is_takes_value_set() {
-                        arg.settings
-                            .insert(ArgSettings::AllowNegativeNumbers.into());
+                        arg.settings.set(ArgSettings::AllowNegativeNumbers);
                     }
                     if is_trailing_var_arg_set && arg.get_index() == Some(highest_idx) {
-                        arg.settings.insert(ArgSettings::TrailingVarArg.into());
+                        arg.settings.set(ArgSettings::TrailingVarArg);
                     }
                 }
             }
@@ -4131,7 +4099,7 @@ impl Command {
             }
             .to_owned();
 
-            for mut sc in &mut self.subcommands {
+            for sc in &mut self.subcommands {
                 debug!("Command::_build_bin_names:iter: bin_name set...");
 
                 if sc.usage_name.is_none() {
@@ -4319,8 +4287,7 @@ impl Command {
 
             sc.settings = sc.settings | self.g_settings;
             sc.g_settings = sc.g_settings | self.g_settings;
-            sc.term_w = self.term_w;
-            sc.max_w = self.max_w;
+            sc.app_ext.update(&self.app_ext);
         }
     }
 
@@ -4451,9 +4418,9 @@ impl Command {
             .collect::<Vec<_>>()
             .join("|");
         let mut styled = StyledStr::new();
-        styled.none("<");
-        styled.none(g_string);
-        styled.none(">");
+        styled.push_str("<");
+        styled.push_string(g_string);
+        styled.push_str(">");
         styled
     }
 }
@@ -4537,7 +4504,7 @@ impl Command {
 
     /// Iterate through the groups this arg is member of.
     pub(crate) fn groups_for_arg<'a>(&'a self, arg: &Id) -> impl Iterator<Item = Id> + 'a {
-        debug!("Command::groups_for_arg: id={:?}", arg);
+        debug!("Command::groups_for_arg: id={arg:?}");
         let arg = arg.clone();
         self.groups
             .iter()
@@ -4577,7 +4544,7 @@ impl Command {
     }
 
     pub(crate) fn unroll_args_in_group(&self, group: &Id) -> Vec<Id> {
-        debug!("Command::unroll_args_in_group: group={:?}", group);
+        debug!("Command::unroll_args_in_group: group={group:?}");
         let mut g_vec = vec![group];
         let mut args = vec![];
 
@@ -4590,7 +4557,7 @@ impl Command {
                 .args
                 .iter()
             {
-                debug!("Command::unroll_args_in_group:iter: entity={:?}", n);
+                debug!("Command::unroll_args_in_group:iter: entity={n:?}");
                 if !args.contains(n) {
                     if self.find(n).is_some() {
                         debug!("Command::unroll_args_in_group:iter: this is an arg");
@@ -4673,9 +4640,7 @@ impl Command {
 
     pub(crate) fn write_version_err(&self, use_long: bool) -> StyledStr {
         let msg = self._render_version(use_long);
-        let mut styled = StyledStr::new();
-        styled.none(msg);
-        styled
+        StyledStr::from(msg)
     }
 
     pub(crate) fn long_help_exists(&self) -> bool {
@@ -4743,15 +4708,12 @@ impl Default for Command {
             usage_name: Default::default(),
             help_str: Default::default(),
             disp_ord: Default::default(),
-            term_w: Default::default(),
-            max_w: Default::default(),
             #[cfg(feature = "help")]
             template: Default::default(),
             settings: Default::default(),
             g_settings: Default::default(),
             args: Default::default(),
             subcommands: Default::default(),
-            replacers: Default::default(),
             groups: Default::default(),
             current_help_heading: Default::default(),
             current_disp_ord: Some(0),
@@ -4759,6 +4721,8 @@ impl Default for Command {
             subcommand_heading: Default::default(),
             external_value_parser: Default::default(),
             long_help_exists: false,
+            deferred: None,
+            app_ext: Default::default(),
         }
     }
 }
@@ -4782,6 +4746,18 @@ impl fmt::Display for Command {
         write!(f, "{}", self.name)
     }
 }
+
+pub(crate) trait AppTag: crate::builder::ext::Extension {}
+
+#[derive(Default, Copy, Clone, Debug)]
+struct TermWidth(usize);
+
+impl AppTag for TermWidth {}
+
+#[derive(Default, Copy, Clone, Debug)]
+struct MaxTermWidth(usize);
+
+impl AppTag for MaxTermWidth {}
 
 fn two_elements_of<I, T>(mut iter: I) -> Option<(T, T)>
 where
