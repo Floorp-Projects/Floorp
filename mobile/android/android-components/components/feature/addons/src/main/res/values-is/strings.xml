@@ -228,4 +228,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">Opnaðu það í valmyndinni</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Allt í lagi, ég skil</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Frekari upplýsingar</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s hefur verið gerð óvirk vegna vandamála með öryggi eða stöðugleika.</string>
 </resources>

@@ -500,11 +500,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Bjezbarjernosć</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Swójski kontowy serwer Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Swójski kontowy serwer Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Swójski kontowy serwer Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Swójski synchronizowanski serwer</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Kontowy resp. synchronizowanski serwer Firefox je so změnił. Nałoženje so kónči, zo bychu so změny nałožili…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Kontowy resp. synchronizowanski serwer Firefox je so změnił. Nałoženje so kónči, zo bychu so změny nałožili…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Kontowy resp. synchronizowanski serwer Mozilla je so změnił. Nałoženje so kónči, zo bychu so změny nałožili…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -520,7 +524,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Zregistrujće so, zo byšće rajtarki, zapołožki, hesła a dalše synchronizował.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Konto Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Konto Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Konto Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Zaso zwjazać, zo by ze synchronizaciju pokročowało</string>
     <!-- Preference for language -->
@@ -555,7 +561,7 @@
     <string name="preferences_show_sponsored_suggestions">Namjety wot sponsorow</string>
     <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
          The first parameter is the name of the application. -->
-    <string name="preferences_show_sponsored_suggestions_summary">Podpěrajće %1$s ze składnostnymi sponsorowanymi namjetami</string>
+    <string name="preferences_show_sponsored_suggestions_summary">Podpěrajće %1$s ze składnostnymi sponserowanymi namjetami</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Namjety wot %1$s</string>
@@ -616,11 +622,11 @@
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
     <string name="customize_toggle_pocket_summary">Nastawki spěchowane wot %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
-    <string name="customize_toggle_pocket_sponsored">Sponsorowane stawizny</string>
+    <string name="customize_toggle_pocket_sponsored">Sponserowane stawizny</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Pozadkowe wobrazy</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
-    <string name="customize_toggle_contile">Sponsorowane zwjazanja</string>
+    <string name="customize_toggle_contile">Sponserowane zwjazanja</string>
 
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
@@ -2118,7 +2124,7 @@
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
     <string name="top_sites_menu_sponsor_privacy">Naši sponsorojo a waša priwatnosć</string>
     <!-- Label text displayed for a sponsored top site. -->
-    <string name="top_sites_sponsored_label">Sponsorowany</string>
+    <string name="top_sites_sponsored_label">Sponserowany</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -2181,7 +2187,7 @@
     <string name="pocket_stories_feature_learn_more">Dalše informacije</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
-    <string name="pocket_stories_sponsor_indication">Sponsorowany</string>
+    <string name="pocket_stories_sponsor_indication">Sponserowany</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Zmóžńće telemetriju, zo byšće daty słał.</string>

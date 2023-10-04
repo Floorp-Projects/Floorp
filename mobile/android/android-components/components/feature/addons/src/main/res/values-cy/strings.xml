@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">Darllen rhagor</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">Mae %1$s wedi ei analluogi oherwydd problemau diogelwch neu sefydlogrwydd.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Nid oedd modd gwirio %1$s yn ddiogel ac mae wedi ei analluogi.</string>
 </resources>

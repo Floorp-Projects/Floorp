@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">Dalšne informacije</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s jo se dla problemow wěstoty abo stabilnosći znjemóžnił.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s njedajo se ako wěsty wobkšuśiś a jo se znjemóžnił.</string>
 </resources>

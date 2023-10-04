@@ -498,11 +498,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ხელმისაწვდომობა</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Firefox-ანგარიშის მითითებული სერვერი</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-ანგარიშის მითითებული სერვერი</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Mozilla-ანგარიშის მითითებული სერვერი</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">დასინქრონების მითითებული სერვერი</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">შეცვალა Firefox-ანგარიშის/სინქრონიზაციის სერვერი. პროგრამა დაიხურება ცვლილებების ასახვისთვის…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">შეცვალა Firefox-ანგარიშის/სინქრონიზაციის სერვერი. პროგრამა დაიხურება ცვლილებების ასახვისთვის…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla-ანგარიშის/სინქრონიზაციის სერვერი შეიცვალა. პროგრამა დაიხურება ცვლილებების ასახვისთვის…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ანგარიში</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -518,7 +522,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">შედით ანგარიშზე, რომ დაასინქრონოთ თქვენი ჩანართები, სანიშნები, პაროლები და სხვ.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox-ანგარიში</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-ანგარიში</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla-ანგარიში</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ხელახლა დაკავშირება სინქრონიზაციის აღსადგენად</string>
     <!-- Preference for language -->

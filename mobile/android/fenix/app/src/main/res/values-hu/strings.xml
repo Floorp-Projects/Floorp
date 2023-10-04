@@ -502,11 +502,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Akadálymentesítés</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Egyéni Firefox-fiókkiszolgáló</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Egyéni Firefox-fiókkiszolgáló</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Egyéni Mozilla-fiókkiszolgáló</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Egyéni Sync kiszolgáló</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">A Firefox-fiók/Sync-kiszolgáló módosítva. Kilépés az alkalmazásból a változások érvényesítéséhez…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">A Firefox-fiók/Sync-kiszolgáló módosítva. Kilépés az alkalmazásból a változások érvényesítéséhez…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">A Mozilla-fiók/Sync-kiszolgáló módosítva. Kilépés az alkalmazásból a változások érvényesítéséhez…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Fiók</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -522,7 +526,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Jelentkezzen be a lapok, könyvjelzők, jelszavak és sok más szinkronizálásához.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox-fiók</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-fiók</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla-fiók</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Újracsatlakozás a szinkronizálás folytatásához</string>
     <!-- Preference for language -->

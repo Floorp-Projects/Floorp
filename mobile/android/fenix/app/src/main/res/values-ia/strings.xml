@@ -509,11 +509,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilitate</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Servitores de Firefox Account personalisate</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Servitores de Firefox Account personalisate</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Servitores de conto Mozilla personalisate</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Servitor del Sync personalisate</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Servitor de Firefox Account/Sync modificate. Quitante le application pro applicar cambiamentos…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Servitor de Firefox Account/Sync modificate. Quitante le application pro applicar cambiamentos…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Servitor de conto/sync Mozillac modificate. Quitante le application pro applicar cambiamentos…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -529,9 +533,11 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Authentica te pro synchronisar tu schedas, marca-paginas, contrasignos e plus.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox Account</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Account</string>
 
 
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Conto Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Reconnecte te pro resumer le synchronisation</string>
     <!-- Preference for language -->

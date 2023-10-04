@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">מידע נוסף</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">התוספת %1$s נחסמה עקב בעיות אבטחה או יציבות.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">לא ניתן לאמת את %1$s כמאובטחת ולכן תוספת זו הושבתה.</string>
 </resources>

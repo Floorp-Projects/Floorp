@@ -228,4 +228,8 @@
     <string name="mozac_feature_addons_installed_dialog_description">Mở nó trong menu</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">OK, đã hiểu</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Tìm hiểu thêm</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s đã bị vô hiệu hóa do vấn đề bảo mật hoặc độ ổn định.</string>
 </resources>

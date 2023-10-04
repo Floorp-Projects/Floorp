@@ -499,11 +499,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Khả năng truy cập</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Tùy chỉnh máy chủ tài khoản Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Tùy chỉnh máy chủ tài khoản Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Máy chủ tài khoản Mozilla tùy chỉnh</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Tùy chỉnh máy chủ đồng bộ hóa</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Tài khoản máy chủ Firefox/đồng bộ hóa đã thay đổi. Thoát ứng dụng để áp dụng thay đổi…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Tài khoản máy chủ Firefox/đồng bộ hóa đã thay đổi. Thoát ứng dụng để áp dụng thay đổi…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Đã sửa đổi máy chủ/tài khoản đồng bộ hóa Mozilla. Đang thoát khỏi ứng dụng để áp dụng các thay đổi…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Tài khoản</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -519,7 +523,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Đăng nhập để đồng bộ các thẻ, dấu trang, mật khẩu, v.v.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Tài khoản Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Tài khoản Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Tài khoản Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Kết nối lại để tiếp tục đồng bộ hóa</string>
     <!-- Preference for language -->
@@ -2191,17 +2197,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Chúng tôi sử dụng công nghệ AI từ %s bởi Mozilla để kiểm tra độ tin cậy của các đánh giá sản phẩm. Điều này chỉ giúp bạn đánh giá được chất lượng đánh giá chứ không phải chất lượng sản phẩm. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Chúng tôi đưa ra đánh giá cho từng sản phẩm một <b>điểm bằng chữ cái</b> từ A đến F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Chúng tôi đưa ra đánh giá cho từng sản phẩm một <b>điểm bằng chữ cái</b> từ A đến F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">Đánh giá đáng tin cậy. Chúng tôi tin rằng các đánh giá có thể đến từ những khách hàng thực sự đã để lại những đánh giá trung thực, không thiên vị.</string>
+    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Đánh giá đáng tin cậy. Chúng tôi tin rằng các đánh giá có thể đến từ những khách hàng thực sự đã để lại những đánh giá trung thực, không thiên vị.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Chúng tôi tin rằng các đánh giá là đáng tin cậy.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Chúng tôi tin rằng có sự kết hợp giữa các đánh giá đáng tin cậy và không đáng tin cậy.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">Đánh giá không đáng tin cậy. Chúng tôi tin rằng các đánh giá có thể là giả mạo hoặc từ những người đánh giá thiên vị.</string>
+    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Đánh giá không đáng tin cậy. Chúng tôi tin rằng các đánh giá có thể là giả mạo hoặc từ những người đánh giá thiên vị.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Chúng tôi tin rằng các đánh giá là không đáng tin cậy.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Đánh giá đã được điều chỉnh</b> chỉ dựa trên những đánh giá mà chúng tôi tin là đáng tin cậy.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>Điểm nổi bật</b> từ %s đánh giá trong vòng 80 ngày qua mà chúng tôi tin là đáng tin cậy.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Điểm nổi bật</b> từ %s đánh giá trong vòng 80 ngày qua mà chúng tôi tin là đáng tin cậy.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Tìm hiểu thêm về %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

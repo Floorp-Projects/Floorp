@@ -511,11 +511,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Специальные возможности</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Пользовательский сервер аккаунта Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Пользовательский сервер аккаунта Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Пользовательский сервер аккаунтов Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Пользовательский сервер Синхронизации</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Сервер аккаунтов/синхронизации Firefox был изменён. Закрываем приложение, чтобы применить изменения…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Сервер аккаунтов/синхронизации Firefox был изменён. Закрываем приложение, чтобы применить изменения…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Изменён аккаунт Mozilla/сервер синхронизации. Выход из приложения для применения изменений…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Аккаунт</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -531,7 +535,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Входить для синхронизации вкладок, закладок, паролей и многого другого.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Аккаунт Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Аккаунт Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Аккаунт Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Подключитесь снова, чтобы возобновить синхронизацию</string>
     <!-- Preference for language -->
@@ -2234,10 +2240,14 @@
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Мы присваиваем отзывам каждого продукта <b>буквенную оценку</b> от A до F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Достоверные отзывы. Мы считаем, что эти отзывы, скорее всего, написаны реальными клиентами, которые оставили честные и объективные отзывы.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2">Мы считаем, что эти отзывы заслуживают доверия.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Мы считаем, что здесь находится смесь достоверных и недостоверных отзывов.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Недостоверные отзывы. Мы считаем, что эти отзывы, скорее всего, фейковые или написаны предвзятыми рецензентами.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2">Мы считаем, что эти отзывы недостоверны.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Скорректированная оценка</b> основана только на отзывах, которые мы считаем достоверными.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
