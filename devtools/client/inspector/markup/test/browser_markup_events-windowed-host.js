@@ -49,32 +49,22 @@ async function runTests(inspector) {
   const tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
-
-  let onInspectorUpdated = inspector.once("inspector-updated");
   const onTooltipShown = tooltip.once("shown");
   EventUtils.synthesizeMouseAtCenter(
     evHolder,
     {},
     inspector.markup.doc.defaultView
   );
-
   await onTooltipShown;
-  // New node is selected when clicking on the events bubble, wait for inspector-updated.
-  await onInspectorUpdated;
-
   ok(tooltip.isVisible(), "EventTooltip visible.");
 
-  onInspectorUpdated = inspector.once("inspector-updated");
-  const onTooltipHidden = tooltip.once("hidden");
-
   info("Click on another tag to hide the event tooltip");
+  const onTooltipHidden = tooltip.once("hidden");
   const script = await getContainerForSelector("script", inspector);
   const tag = script.elt.querySelector(".tag");
   EventUtils.synthesizeMouseAtCenter(tag, {}, inspector.markup.doc.defaultView);
 
   await onTooltipHidden;
-  // New node is selected, wait for inspector-updated.
-  await onInspectorUpdated;
 
   ok(!tooltip.isVisible(), "EventTooltip hidden.");
 }
