@@ -90,3 +90,21 @@ add_task(async function test_set_default_pdf_handler_data_true() {
     "setAsDefaultPDFHandler called with onlyIfKnownBrowser = true"
   );
 });
+
+add_task(async function test_decline_default_pdf_handler() {
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "browser.shell.checkDefaultPDF.silencedByUser"
+    );
+  });
+
+  await SMATestUtils.executeAndValidateAction({
+    type: "DECLINE_DEFAULT_PDF_HANDLER",
+  });
+
+  Assert.equal(
+    Services.prefs.getBoolPref("browser.shell.checkDefaultPDF.silencedByUser"),
+    true,
+    "DECLINE_DEFAULT_PDF_HANDLER ought to set pref properly."
+  );
+});

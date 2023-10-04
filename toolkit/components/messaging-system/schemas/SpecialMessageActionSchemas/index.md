@@ -286,6 +286,15 @@ Windows only.
 }
 ```
 
+### `DECLINE_DEFAULT_PDF_HANDLER`
+
+Action for declining to set the default PDF handler to Firefox on the user's
+system. Prevents the user from being asked again about this.
+
+Windows only.
+
+- args: (none)
+
 ### `SHOW_SPOTLIGHT`
 
 Action for opening a spotlight tab or window modal using the content passed to the dialog.
