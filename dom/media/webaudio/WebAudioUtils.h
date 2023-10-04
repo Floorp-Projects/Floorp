@@ -53,13 +53,6 @@ inline float ConvertDecibelsToLinear(float aDecibels) {
   return fdlibm_powf(10.0f, 0.05f * aDecibels);
 }
 
-/**
- * Converts a decibel to a linear value.
- */
-inline float ConvertDecibelToLinear(float aDecibel) {
-  return fdlibm_powf(10.0f, 0.05f * aDecibel);
-}
-
 inline void FixNaN(double& aDouble) {
   if (std::isnan(aDouble) || std::isinf(aDouble)) {
     aDouble = 0.0;
