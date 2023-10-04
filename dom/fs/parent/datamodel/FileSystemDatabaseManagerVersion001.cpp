@@ -806,10 +806,9 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
   QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
                 mFileManager->RemoveFiles(descendants, failedRemovals));
 
-  // We only check the most common case. This can fail spuriously if an external
-  // application writes to the file, or OS reports zero size due to corruption.
+  // Usage is for the current main file but we remove temporary files too.
   MOZ_ASSERT_IF(failedRemovals.IsEmpty() && (0 == mFilesOfUnknownUsage),
-                usage == removedUsage);
+                usage <= removedUsage);
 
   TryRemoveDuringIdleMaintenance(failedRemovals);
 
