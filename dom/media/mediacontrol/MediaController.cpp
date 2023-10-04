@@ -526,7 +526,7 @@ void MediaController::DispatchAsyncEvent(const nsAString& aName) {
 }
 
 void MediaController::DispatchAsyncEvent(already_AddRefed<Event> aEvent) {
-  RefPtr event = aEvent;
+  RefPtr<Event> event = aEvent;
   MOZ_ASSERT(event);
   nsAutoString eventType;
   event->GetType(eventType);
