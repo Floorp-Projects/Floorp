@@ -14,6 +14,7 @@
 
 #include "absl/time/civil_time.h"
 
+#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <type_traits>
@@ -1228,7 +1229,7 @@ TEST(CivilTime, DocumentationExample) {
   EXPECT_EQ(0, day_floor.hour());  // 09:09:09 is floored
   EXPECT_EQ(absl::CivilDay(2015, 1, 2), day_floor);
 
-  // Unspecified fields default to their minium value
+  // Unspecified fields default to their minimum value
   absl::CivilDay day_default(2015);  // Defaults to Jan 1
   EXPECT_EQ(absl::CivilDay(2015, 1, 1), day_default);
 

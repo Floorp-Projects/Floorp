@@ -1,3 +1,0 @@
-# "empty" file in place of importing new third_party/google_benchmark
-# to allow BUILD.gn imports to succeed.
-

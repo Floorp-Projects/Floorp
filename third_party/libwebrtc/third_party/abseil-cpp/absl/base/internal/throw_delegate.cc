@@ -26,23 +26,17 @@ namespace absl {
 ABSL_NAMESPACE_BEGIN
 namespace base_internal {
 
-// NOTE: The various STL exception throwing functions are placed within the
-// #ifdef blocks so the symbols aren't exposed on platforms that don't support
-// them, such as the Android NDK. For example, ANGLE fails to link when building
-// within AOSP without them, since the STL functions don't exist.
-namespace {
 #ifdef ABSL_HAVE_EXCEPTIONS
 static_assert(false, "Mozilla - ABSL_HAVE_EXCEPTIONS has been turned on");
-template <typename T>
-[[noreturn]] void Throw(const T& error) {
-  throw error;
-}
 #endif
-}  // namespace
+
+// NOTE: The exception types, like `std::logic_error`, do not exist on all
+// platforms. (For example, the Android NDK does not have them.)
+// Therefore, their use must be guarded by `#ifdef` or equivalent.
 
 void ThrowStdLogicError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::logic_error(what_arg));
+  throw std::logic_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -50,7 +44,7 @@ void ThrowStdLogicError(const std::string& what_arg) {
 }
 void ThrowStdLogicError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::logic_error(what_arg));
+  throw std::logic_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -58,7 +52,7 @@ void ThrowStdLogicError(const char* what_arg) {
 }
 void ThrowStdInvalidArgument(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::invalid_argument(what_arg));
+  throw std::invalid_argument(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -66,7 +60,7 @@ void ThrowStdInvalidArgument(const std::string& what_arg) {
 }
 void ThrowStdInvalidArgument(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::invalid_argument(what_arg));
+  throw std::invalid_argument(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -75,7 +69,7 @@ void ThrowStdInvalidArgument(const char* what_arg) {
 
 void ThrowStdDomainError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::domain_error(what_arg));
+  throw std::domain_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -83,7 +77,7 @@ void ThrowStdDomainError(const std::string& what_arg) {
 }
 void ThrowStdDomainError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::domain_error(what_arg));
+  throw std::domain_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -92,7 +86,7 @@ void ThrowStdDomainError(const char* what_arg) {
 
 void ThrowStdLengthError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::length_error(what_arg));
+  throw std::length_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -100,7 +94,7 @@ void ThrowStdLengthError(const std::string& what_arg) {
 }
 void ThrowStdLengthError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::length_error(what_arg));
+  throw std::length_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -109,7 +103,7 @@ void ThrowStdLengthError(const char* what_arg) {
 
 void ThrowStdOutOfRange(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::out_of_range(what_arg));
+  throw std::out_of_range(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -117,7 +111,7 @@ void ThrowStdOutOfRange(const std::string& what_arg) {
 }
 void ThrowStdOutOfRange(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::out_of_range(what_arg));
+  throw std::out_of_range(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -126,7 +120,7 @@ void ThrowStdOutOfRange(const char* what_arg) {
 
 void ThrowStdRuntimeError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::runtime_error(what_arg));
+  throw std::runtime_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -134,7 +128,7 @@ void ThrowStdRuntimeError(const std::string& what_arg) {
 }
 void ThrowStdRuntimeError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::runtime_error(what_arg));
+  throw std::runtime_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -143,7 +137,7 @@ void ThrowStdRuntimeError(const char* what_arg) {
 
 void ThrowStdRangeError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::range_error(what_arg));
+  throw std::range_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -151,7 +145,7 @@ void ThrowStdRangeError(const std::string& what_arg) {
 }
 void ThrowStdRangeError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::range_error(what_arg));
+  throw std::range_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -160,7 +154,7 @@ void ThrowStdRangeError(const char* what_arg) {
 
 void ThrowStdOverflowError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::overflow_error(what_arg));
+  throw std::overflow_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -168,7 +162,7 @@ void ThrowStdOverflowError(const std::string& what_arg) {
 }
 void ThrowStdOverflowError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::overflow_error(what_arg));
+  throw std::overflow_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -177,7 +171,7 @@ void ThrowStdOverflowError(const char* what_arg) {
 
 void ThrowStdUnderflowError(const std::string& what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::underflow_error(what_arg));
+  throw std::underflow_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg.c_str());
   std::abort();
@@ -185,7 +179,7 @@ void ThrowStdUnderflowError(const std::string& what_arg) {
 }
 void ThrowStdUnderflowError(const char* what_arg) {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::underflow_error(what_arg));
+  throw std::underflow_error(what_arg);
 #else
   ABSL_RAW_LOG(FATAL, "%s", what_arg);
   std::abort();
@@ -194,7 +188,7 @@ void ThrowStdUnderflowError(const char* what_arg) {
 
 void ThrowStdBadFunctionCall() {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::bad_function_call());
+  throw std::bad_function_call();
 #else
   std::abort();
 #endif
@@ -202,7 +196,7 @@ void ThrowStdBadFunctionCall() {
 
 void ThrowStdBadAlloc() {
 #ifdef ABSL_HAVE_EXCEPTIONS
-  Throw(std::bad_alloc());
+  throw std::bad_alloc();
 #else
   std::abort();
 #endif

@@ -95,9 +95,9 @@ cc_test(
     deps = [
         ":int128",
         "//absl/base",
-        "//absl/base:core_headers",
         "//absl/hash:hash_testing",
         "//absl/meta:type_traits",
+        "//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

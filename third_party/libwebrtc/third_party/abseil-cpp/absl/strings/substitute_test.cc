@@ -15,12 +15,25 @@
 #include "absl/strings/substitute.h"
 
 #include <cstdint>
+#include <cstring>
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 
 namespace {
+
+struct MyStruct {
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const MyStruct& s) {
+    sink.Append("MyStruct{.value = ");
+    sink.Append(absl::StrCat(s.value));
+    sink.Append("}");
+  }
+  int value;
+};
 
 TEST(SubstituteTest, Substitute) {
   // Basic.
@@ -70,7 +83,7 @@ TEST(SubstituteTest, Substitute) {
   // Volatile Pointer.
   // Like C++ streamed I/O, such pointers implicitly become bool
   volatile int vol = 237;
-  volatile int *volatile volptr = &vol;
+  volatile int* volatile volptr = &vol;
   str = absl::Substitute("$0", volptr);
   EXPECT_EQ("true", str);
 
@@ -128,6 +141,11 @@ TEST(SubstituteTest, Substitute) {
 
   const char* null_cstring = nullptr;
   EXPECT_EQ("Text: ''", absl::Substitute("Text: '$0'", null_cstring));
+
+  MyStruct s1 = MyStruct{17};
+  MyStruct s2 = MyStruct{1043};
+  EXPECT_EQ("MyStruct{.value = 17}, MyStruct{.value = 1043}",
+            absl::Substitute("$0, $1", s1, s2));
 }
 
 TEST(SubstituteTest, SubstituteAndAppend) {
@@ -171,6 +189,12 @@ TEST(SubstituteTest, SubstituteAndAppend) {
   absl::SubstituteAndAppend(&str, "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9", "a", "b",
                             "c", "d", "e", "f", "g", "h", "i", "j");
   EXPECT_EQ("a b c d e f g h i j", str);
+
+  str.clear();
+  MyStruct s1 = MyStruct{17};
+  MyStruct s2 = MyStruct{1043};
+  absl::SubstituteAndAppend(&str, "$0, $1", s1, s2);
+  EXPECT_EQ("MyStruct{.value = 17}, MyStruct{.value = 1043}", str);
 }
 
 TEST(SubstituteTest, VectorBoolRef) {
@@ -232,7 +256,19 @@ TEST(SubstituteTest, Enums) {
                                         ScopedEnumUInt16::kEnum1));
 }
 
-#ifdef GTEST_HAS_DEATH_TEST
+enum class EnumWithStringify { Many = 0, Choices = 1 };
+
+template <typename Sink>
+void AbslStringify(Sink& sink, EnumWithStringify e) {
+  sink.Append(e == EnumWithStringify::Many ? "Many" : "Choices");
+}
+
+TEST(SubstituteTest, AbslStringifyWithEnum) {
+  const auto e = EnumWithStringify::Choices;
+  EXPECT_EQ(absl::Substitute("$0", e), "Choices");
+}
+
+#if GTEST_HAS_DEATH_TEST
 
 TEST(SubstituteDeathTest, SubstituteDeath) {
   EXPECT_DEBUG_DEATH(
