@@ -149,6 +149,11 @@ class SVGFilterPrimitiveChildElement
       : SVGFilterPrimitiveChildElementBase(std::move(aNodeInfo)) {}
 
  public:
+  NS_IMPL_FROMNODE_HELPER(SVGFilterPrimitiveChildElement,
+                          IsSVGFilterPrimitiveChildElement())
+
+  bool IsSVGFilterPrimitiveChildElement() const final { return true; }
+
   nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // returns true if changes to the attribute should cause us to

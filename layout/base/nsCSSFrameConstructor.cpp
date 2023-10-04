@@ -117,7 +117,6 @@
 #undef NOISY_FIRST_LETTER
 
 #include "nsMathMLParts.h"
-#include "mozilla/dom/SVGTests.h"
 #include "mozilla/SVGGradientFrame.h"
 
 #include "nsRefreshDriver.h"
@@ -4844,13 +4843,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructMarker(
 #define SIMPLE_SVG_CREATE(_tag, _func) \
   { nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func) }
 
-static bool IsFilterPrimitiveChildTag(const nsAtom* aTag) {
-  return aTag == nsGkAtoms::feDistantLight || aTag == nsGkAtoms::fePointLight ||
-         aTag == nsGkAtoms::feSpotLight || aTag == nsGkAtoms::feFuncR ||
-         aTag == nsGkAtoms::feFuncG || aTag == nsGkAtoms::feFuncB ||
-         aTag == nsGkAtoms::feFuncA || aTag == nsGkAtoms::feMergeNode;
-}
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindSVGData(const Element& aElement,
@@ -4923,8 +4915,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
     return &sMarkerSVGData;
   }
 
-  nsCOMPtr<SVGTests> tests = do_QueryInterface(const_cast<Element*>(&aElement));
-  if (tests && !tests->PassesConditionalProcessingTests()) {
+  if (!aElement.PassesConditionalProcessingTests()) {
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a
     // <switch> to render!  That happens in SVGSwitchFrame::PaintSVG.
@@ -4966,8 +4957,10 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   // primitive.
   bool parentIsFEContainerFrame =
       aParentFrame && aParentFrame->IsSVGFEContainerFrame();
-  if ((parentIsFEContainerFrame && !IsFilterPrimitiveChildTag(tag)) ||
-      (!parentIsFEContainerFrame && IsFilterPrimitiveChildTag(tag))) {
+  if ((parentIsFEContainerFrame &&
+       !aElement.IsSVGFilterPrimitiveChildElement()) ||
+      (!parentIsFEContainerFrame &&
+       aElement.IsSVGFilterPrimitiveChildElement())) {
     return &sSuppressData;
   }
 

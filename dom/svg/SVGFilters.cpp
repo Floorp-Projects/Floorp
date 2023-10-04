@@ -162,19 +162,7 @@ SVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] = {
     {nsGkAtoms::type, sTypeMap, SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY}};
 
 //----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(SVGComponentTransferFunctionElement,
-                         SVGComponentTransferFunctionElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGComponentTransferFunctionElement,
-                          SVGComponentTransferFunctionElementBase)
-
-NS_INTERFACE_MAP_BEGIN(SVGComponentTransferFunctionElement)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGComponentTransferFunctionElement)
-NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElementBase)
-
-//----------------------------------------------------------------------
-// nsFEUnstyledElement methods
+// nsSVGFilterPrimitiveChildElement methods
 
 bool SVGComponentTransferFunctionElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

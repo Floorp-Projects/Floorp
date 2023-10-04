@@ -35,7 +35,7 @@ SVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] = {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpotLightElement)
 
 //----------------------------------------------------------------------
-// nsFEUnstyledElement methods
+// SVGFilterPrimitiveChildElement methods
 
 bool SVGFESpotLightElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

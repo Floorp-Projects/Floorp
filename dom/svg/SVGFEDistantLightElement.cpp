@@ -28,7 +28,7 @@ SVGElement::NumberInfo SVGFEDistantLightElement::sNumberInfo[2] = {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDistantLightElement)
 
-// nsFEUnstyledElement methods
+// SVGFilterPrimitiveChildElement methods
 
 bool SVGFEDistantLightElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

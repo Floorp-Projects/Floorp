@@ -34,6 +34,9 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
                                            SVGAnimationElementBase)
 
   bool IsSVGAnimationElement() const final { return true; }
+  bool PassesConditionalProcessingTests() const final {
+    return SVGTests::PassesConditionalProcessingTests();
+  }
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // nsIContent specializations
