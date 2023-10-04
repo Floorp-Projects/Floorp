@@ -4178,7 +4178,11 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
       buf.putString(r.front());
     }
 
-    printf("%s\n", buf.string());
+    JS::UniqueChars str = buf.release();
+    if (!str) {
+      return false;
+    }
+    printf("%s\n", str.get());
   }
 
   RootedFunction fun(cx);
