@@ -69,12 +69,17 @@ ClipboardTargets nsRetrievalContext::sClipboardTargets;
 ClipboardTargets nsRetrievalContext::sPrimaryTargets;
 
 // Callback when someone asks us for the data
-void clipboard_get_cb(GtkClipboard* aGtkClipboard,
-                      GtkSelectionData* aSelectionData, guint info,
-                      gpointer user_data);
+static void clipboard_get_cb(GtkClipboard* aGtkClipboard,
+                             GtkSelectionData* aSelectionData, guint info,
+                             gpointer user_data);
 
 // Callback when someone asks us to clear a clipboard
-void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
+static void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
+
+// Callback when owner of clipboard data is changed
+static void clipboard_owner_change_cb(GtkClipboard* aGtkClipboard,
+                                      GdkEventOwnerChange* aEvent,
+                                      gpointer aUserData);
 
 static bool GetHTMLCharset(Span<const char> aData, nsCString& str);
 
@@ -182,25 +187,26 @@ ClipboardTargets nsRetrievalContext::GetTargets(int32_t aWhichClipboard) {
   return storedTargets.Clone();
 }
 
-nsRetrievalContext::nsRetrievalContext() {
-  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), "owner-change",
-                   G_CALLBACK(ClearCachedTargetsClipboard), this);
-  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_PRIMARY), "owner-change",
-                   G_CALLBACK(ClearCachedTargetsPrimary), this);
-}
-
 nsRetrievalContext::~nsRetrievalContext() {
-  g_signal_handlers_disconnect_by_func(
-      gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
-      FuncToGpointer(ClearCachedTargetsClipboard), this);
-  g_signal_handlers_disconnect_by_func(
-      gtk_clipboard_get(GDK_SELECTION_PRIMARY),
-      FuncToGpointer(ClearCachedTargetsPrimary), this);
   sClipboardTargets.Clear();
   sPrimaryTargets.Clear();
 }
 
-nsClipboard::nsClipboard() = default;
+nsClipboard::nsClipboard() {
+  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), "owner-change",
+                   G_CALLBACK(clipboard_owner_change_cb), this);
+  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_PRIMARY), "owner-change",
+                   G_CALLBACK(clipboard_owner_change_cb), this);
+}
+
+nsClipboard::~nsClipboard() {
+  g_signal_handlers_disconnect_by_func(
+      gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
+      FuncToGpointer(clipboard_owner_change_cb), this);
+  g_signal_handlers_disconnect_by_func(
+      gtk_clipboard_get(GDK_SELECTION_PRIMARY),
+      FuncToGpointer(clipboard_owner_change_cb), this);
+}
 
 NS_IMPL_ISUPPORTS_INHERITED(nsClipboard, ClipboardSetDataHelper, nsIObserver)
 
@@ -329,9 +335,11 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
     // We have to set it now because gtk_clipboard_set_with_data() calls
     // clipboard_clear_cb() which reset our internal state
     if (aWhichClipboard == kSelectionClipboard) {
+      mSelectionSequenceNumber++;
       mSelectionOwner = aOwner;
       mSelectionTransferable = aTransferable;
     } else {
+      mGlobalSequenceNumber++;
       mGlobalOwner = aOwner;
       mGlobalTransferable = aTransferable;
       gtk_clipboard_set_can_store(gtkClipboard, gtkTargets, numTargets);
@@ -895,12 +903,14 @@ void nsClipboard::ClearTransferable(int32_t aWhichClipboard) {
       mSelectionOwner->LosingOwnership(mSelectionTransferable);
       mSelectionOwner = nullptr;
     }
+    mSelectionSequenceNumber++;
     mSelectionTransferable = nullptr;
   } else {
     if (mGlobalOwner) {
       mGlobalOwner->LosingOwnership(mGlobalTransferable);
       mGlobalOwner = nullptr;
     }
+    mGlobalSequenceNumber++;
     mGlobalTransferable = nullptr;
   }
 }
@@ -1301,18 +1311,56 @@ void nsClipboard::SelectionClearEvent(GtkClipboard* aGtkClipboard) {
   ClearTransferable(whichClipboard);
 }
 
+void nsClipboard::OwnerChangedEvent(GtkClipboard* aGtkClipboard,
+                                    GdkEventOwnerChange* aEvent) {
+  int32_t whichClipboard = GetGeckoClipboardType(aGtkClipboard);
+  if (whichClipboard < 0) {
+    return;
+  }
+  LOGCLIP("nsClipboard::OwnerChangedEvent (%s)\n",
+          whichClipboard == kSelectionClipboard ? "primary" : "clipboard");
+  GtkWidget* gtkWidget = [aEvent]() -> GtkWidget* {
+    if (!aEvent->owner) {
+      return nullptr;
+    }
+    gpointer user_data = nullptr;
+    gdk_window_get_user_data(aEvent->owner, &user_data);
+    return GTK_WIDGET(user_data);
+  }();
+  // If we can get GtkWidget from the current clipboard owner, this
+  // owner-changed event must be triggered by ourself via calling
+  // gtk_clipboard_set_with_data, the sequence number should already be handled.
+  if (!gtkWidget) {
+    if (whichClipboard == kSelectionClipboard) {
+      mSelectionSequenceNumber++;
+    } else {
+      mGlobalSequenceNumber++;
+    }
+  }
+
+  ClearCachedTargets(whichClipboard);
+}
+
 void clipboard_get_cb(GtkClipboard* aGtkClipboard,
                       GtkSelectionData* aSelectionData, guint info,
                       gpointer user_data) {
   LOGCLIP("clipboard_get_cb() callback\n");
-  nsClipboard* aClipboard = static_cast<nsClipboard*>(user_data);
-  aClipboard->SelectionGetEvent(aGtkClipboard, aSelectionData);
+  nsClipboard* clipboard = static_cast<nsClipboard*>(user_data);
+  clipboard->SelectionGetEvent(aGtkClipboard, aSelectionData);
 }
 
 void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data) {
   LOGCLIP("clipboard_clear_cb() callback\n");
-  nsClipboard* aClipboard = static_cast<nsClipboard*>(user_data);
-  aClipboard->SelectionClearEvent(aGtkClipboard);
+  nsClipboard* clipboard = static_cast<nsClipboard*>(user_data);
+  clipboard->SelectionClearEvent(aGtkClipboard);
+}
+
+void clipboard_owner_change_cb(GtkClipboard* aGtkClipboard,
+                               GdkEventOwnerChange* aEvent,
+                               gpointer aUserData) {
+  LOGCLIP("clipboard_owner_change_cb() callback\n");
+  nsClipboard* clipboard = static_cast<nsClipboard*>(aUserData);
+  clipboard->OwnerChangedEvent(aGtkClipboard, aEvent);
 }
 
 /*
