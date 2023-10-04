@@ -134,6 +134,13 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   // first call to this function calls JS_ReportOutOfMemory, and sets this
   // Sprinter's outOfMemory flag; subsequent calls do nothing.
   virtual void reportOutOfMemory() override;
+
+  // When an OOM has already been reported on the Sprinter, this function will
+  // forward this error to the JSContext given in the Sprinter initialization.
+  //
+  // If no JSContext had been provided or the Sprinter is configured to not
+  // report OOM, then nothing happens.
+  void forwardOutOfMemory();
 };
 
 // Fprinter, print a string directly into a file.
