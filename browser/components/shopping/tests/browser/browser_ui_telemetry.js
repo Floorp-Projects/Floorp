@@ -96,6 +96,33 @@ add_task(async function test_reactivated_product_button_click() {
   });
 });
 
+add_task(async function test_no_reliability_available_request_click() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await clickCheckReviewQualityButton(
+        browser,
+        MOCK_UNANALYZED_PRODUCT_RESPONSE
+      );
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+  var requestEvents =
+    Glean.shopping.surfaceAnalyzeReviewsNoneAvailableClicked.testGetValue();
+
+  assertEventMatches(requestEvents[0], {
+    category: "shopping",
+    name: "surface_analyze_reviews_none_available_clicked",
+  });
+});
+
 add_task(async function test_shopping_sidebar_displayed() {
   Services.fog.testResetFOG();
 
@@ -326,6 +353,21 @@ function clickShowMoreButton(browser, data) {
     let highlights = shoppingContainer.highlightsEl;
     let card = highlights.shadowRoot.querySelector("shopping-card");
     let button = card.shadowRoot.querySelector("article footer button");
+
+    button.click();
+  });
+}
+
+function clickCheckReviewQualityButton(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    await shoppingContainer.updateComplete;
+
+    let button = shoppingContainer.unanalyzedProductEl.shadowRoot
+      .querySelector("shopping-card")
+      .querySelector("button");
 
     button.click();
   });

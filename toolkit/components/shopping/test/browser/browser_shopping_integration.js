@@ -7,6 +7,7 @@ const PRODUCT_TEST_URL = "https://example.com/Some-Product/dp/ABCDEFG123";
 const OTHER_PRODUCT_TEST_URL =
   "https://example.com/Another-Product/dp/HIJKLMN456";
 const BAD_PRODUCT_TEST_URL = "https://example.com/Bad-Product/dp/0000000000";
+const NEEDS_ANALYSIS_TEST_URL = "https://example.com/Bad-Product/dp/OPQRSTU789";
 
 async function verifyProductInfo(sidebar, expectedProductInfo) {
   await SpecialPowers.spawn(
@@ -323,4 +324,40 @@ add_task(async function test_sidebar_error() {
       }
     );
   });
+});
+
+add_task(async function test_no_reliability_available() {
+  Services.fog.testResetFOG();
+  await Services.fog.testFlushAllChildren();
+  // Disable OHTTP for now to get this landed; we'll re-enable with proper
+  // mocking in the near future.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["toolkit.shopping.ohttpRelayURL", ""],
+      ["toolkit.shopping.ohttpConfigURL", ""],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(NEEDS_ANALYSIS_TEST_URL, async browser => {
+    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
+
+    Assert.ok(sidebar, "Sidebar should exist");
+
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(sidebar, NEEDS_ANALYSIS_TEST_URL);
+  });
+
+  await Services.fog.testFlushAllChildren();
+  var sawPageEvents =
+    Glean.shopping.surfaceNoReviewReliabilityAvailable.testGetValue();
+
+  Assert.equal(sawPageEvents.length, 1);
+  Assert.equal(sawPageEvents[0].category, "shopping");
+  Assert.equal(
+    sawPageEvents[0].name,
+    "surface_no_review_reliability_available"
+  );
 });
