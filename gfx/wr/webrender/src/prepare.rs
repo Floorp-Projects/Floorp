@@ -507,11 +507,10 @@ fn prepare_interned_prim_for_render(
                         match pic_context.subpixel_mode {
                             SubpixelMode::Allow => true,
                             SubpixelMode::Deny => false,
-                            SubpixelMode::Conditional { allowed_rect, prohibited_rect } => {
+                            SubpixelMode::Conditional { allowed_rect } => {
                                 // Conditional mode allows subpixel AA to be enabled for this
                                 // text run, so long as it's inside the allowed rect.
-                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_coverage_rect) &&
-                                !prohibited_rect.intersects(&prim_instance.vis.clip_chain.pic_coverage_rect)
+                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_coverage_rect)
                             }
                         }
                     } else {

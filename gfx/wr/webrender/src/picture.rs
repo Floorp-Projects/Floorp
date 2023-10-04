@@ -160,7 +160,6 @@ pub enum SubpixelMode {
     /// with the excluded regions, and inside the allowed rect.
     Conditional {
         allowed_rect: PictureRect,
-        prohibited_rect: PictureRect,
     },
 }
 
@@ -3511,21 +3510,11 @@ impl TileCacheInstance {
     }
 
     fn calculate_subpixel_mode(&self) -> SubpixelMode {
-        // We can only consider the full opaque cases if there's no underlays
-        if self.underlays.is_empty() {
-            let has_opaque_bg_color = self.background_color.map_or(false, |c| c.a >= 1.0);
+        let has_opaque_bg_color = self.background_color.map_or(false, |c| c.a >= 1.0);
 
-            // If the overall tile cache is known opaque, subpixel AA is allowed everywhere
-            if has_opaque_bg_color {
-                return SubpixelMode::Allow;
-            }
-
-            // If the opaque backdrop rect covers the entire tile cache surface,
-            // we can allow subpixel AA anywhere, skipping the per-text-run tests
-            // later on during primitive preparation.
-            if self.backdrop.opaque_rect.contains_box(&self.local_rect) {
-                return SubpixelMode::Allow;
-            }
+        // If the overall tile cache is known opaque, subpixel AA is allowed everywhere
+        if has_opaque_bg_color {
+            return SubpixelMode::Allow;
         }
 
         // If we didn't find any valid opaque backdrop, no subpixel AA allowed
@@ -3533,20 +3522,12 @@ impl TileCacheInstance {
             return SubpixelMode::Deny;
         }
 
-        // Calculate a prohibited rect where we won't allow subpixel AA.
-        // TODO(gw): This is conservative - it will disallow subpixel AA if there
-        // are two underlay surfaces with text placed in between them. That's
-        // probably unlikely to be an issue in practice, but maybe we should support
-        // an array of prohibted rects?
-        let prohibited_rect = self
-            .underlays
-            .iter()
-            .fold(
-                PictureRect::zero(),
-                |acc, underlay| {
-                    acc.union(&underlay.local_rect)
-                }
-            );
+        // If the opaque backdrop rect covers the entire tile cache surface,
+        // we can allow subpixel AA anywhere, skipping the per-text-run tests
+        // later on during primitive preparation.
+        if self.backdrop.opaque_rect.contains_box(&self.local_rect) {
+            return SubpixelMode::Allow;
+        }
 
         // If none of the simple cases above match, we need test where we can support subpixel AA.
         // TODO(gw): In future, it may make sense to have > 1 inclusion rect,
@@ -3557,7 +3538,6 @@ impl TileCacheInstance {
         //           something we should handle in future.
         SubpixelMode::Conditional {
             allowed_rect: self.backdrop.opaque_rect,
-            prohibited_rect,
         }
     }
 
@@ -5782,18 +5762,16 @@ impl PicturePrimitive {
                 // Both parent and this surface unconditionally allow subpixel AA
                 SubpixelMode::Allow
             }
-            (SubpixelMode::Allow, SubpixelMode::Conditional { allowed_rect, prohibited_rect }) => {
+            (SubpixelMode::Allow, SubpixelMode::Conditional { allowed_rect }) => {
                 // Parent allows, but we are conditional subpixel AA
                 SubpixelMode::Conditional {
                     allowed_rect,
-                    prohibited_rect,
                 }
             }
-            (SubpixelMode::Conditional { allowed_rect, prohibited_rect }, SubpixelMode::Allow) => {
+            (SubpixelMode::Conditional { allowed_rect }, SubpixelMode::Allow) => {
                 // Propagate conditional subpixel mode to child pictures that allow subpixel AA
                 SubpixelMode::Conditional {
                     allowed_rect,
-                    prohibited_rect,
                 }
             }
             (SubpixelMode::Conditional { .. }, SubpixelMode::Conditional { ..}) => {
