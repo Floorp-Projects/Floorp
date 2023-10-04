@@ -52,6 +52,25 @@ function moduleEnvVarPresent() {
  * [1]: The keys of the `presets` object defined in
  * https://searchfox.org/mozilla-central/source/devtools/client/performance-new/shared/background.jsm.js
  */
+
+const gOsSpecificLoggingPresets = (() => {
+  // Microsoft Windows
+  if (navigator.platform.startsWith("Win")) {
+    return {
+      windows: {
+        modules:
+          "timestamp,sync,Widget:5,BaseWidget:5,WindowsEvent:4,TaskbarConcealer:5",
+        l10nIds: {
+          label: "about-logging-preset-windows-label",
+          description: "about-logging-preset-windows-description",
+        },
+      },
+    };
+  }
+
+  return {};
+})();
+
 const gLoggingPresets = {
   networking: {
     modules:
@@ -122,6 +141,7 @@ const gLoggingPresets = {
     // We could add an extra preset for that if we miss it.
     profilerPreset: "graphics",
   },
+  ...gOsSpecificLoggingPresets,
   custom: {
     modules: "",
     l10nIds: {
