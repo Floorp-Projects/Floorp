@@ -70,7 +70,6 @@ on:
       mar_size:
         value: ${{jobs.win-build.outputs.mar_size}}
 
-
 jobs:
   win-build:
     runs-on: ${{fromJson('["ubuntu-latest","buildjet-16vcpu-ubuntu-2204"]')[inputs.buildjet]}}
