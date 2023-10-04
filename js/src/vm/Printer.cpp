@@ -84,6 +84,7 @@ void GenericPrinter::putString(JSContext* cx, JSString* str) {
   StringSegmentRange iter(cx);
   if (!iter.init(str)) {
     reportOutOfMemory();
+    return;
   }
   JS::AutoCheckCannotGC nogc;
   while (!iter.empty()) {
@@ -94,7 +95,10 @@ void GenericPrinter::putString(JSContext* cx, JSString* str) {
     else {
       put(linear->twoByteRange(nogc));
     }
-    iter.popFront();
+    if (!iter.popFront()) {
+      reportOutOfMemory();
+      return;
+    }
   }
 }
 
