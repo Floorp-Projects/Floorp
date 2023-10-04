@@ -97,7 +97,7 @@ class nsRetrievalContext {
   static void ClearCachedTargetsPrimary(GtkClipboard* aClipboard,
                                         GdkEvent* aEvent, gpointer data);
 
-  nsRetrievalContext();
+  nsRetrievalContext() = default;
 
  protected:
   virtual ClipboardTargets GetTargetsImpl(int32_t aWhichClipboard) = 0;
@@ -137,6 +137,10 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
                          GtkSelectionData* aSelectionData);
   void SelectionClearEvent(GtkClipboard* aGtkClipboard);
 
+  // Clipboard owner changed
+  void OwnerChangedEvent(GtkClipboard* aGtkClipboard,
+                         GdkEventOwnerChange* aEvent);
+
  protected:
   // Implement the native clipboard behavior.
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
@@ -144,7 +148,7 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
                                     int32_t aWhichClipboard) override;
 
  private:
-  virtual ~nsClipboard() = default;
+  virtual ~nsClipboard();
 
   // Get our hands on the correct transferable, given a specific
   // clipboard
@@ -163,6 +167,10 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
   nsCOMPtr<nsITransferable> mSelectionTransferable;
   nsCOMPtr<nsITransferable> mGlobalTransferable;
   RefPtr<nsRetrievalContext> mContext;
+
+  // Sequence number of the system clipboard data.
+  int32_t mSelectionSequenceNumber = 0;
+  int32_t mGlobalSequenceNumber = 0;
 };
 
 extern const int kClipboardTimeout;
