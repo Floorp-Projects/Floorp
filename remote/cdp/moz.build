@@ -8,21 +8,21 @@ with Files("**"):
     BUG_COMPONENT = ("Remote Protocol", "CDP")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.toml",
+    "test/browser/browser.ini",
     "test/browser/browser_cdp_only.ini",
-    "test/browser/dom/browser.toml",
-    "test/browser/emulation/browser.toml",
-    "test/browser/fetch/browser.toml",
-    "test/browser/input/browser.toml",
-    "test/browser/io/browser.toml",
-    "test/browser/log/browser.toml",
-    "test/browser/network/browser.toml",
-    "test/browser/page/browser.toml",
-    "test/browser/runtime/browser.toml",
+    "test/browser/dom/browser.ini",
+    "test/browser/emulation/browser.ini",
+    "test/browser/fetch/browser.ini",
+    "test/browser/input/browser.ini",
+    "test/browser/io/browser.ini",
+    "test/browser/log/browser.ini",
+    "test/browser/network/browser.ini",
+    "test/browser/page/browser.ini",
+    "test/browser/runtime/browser.ini",
     "test/browser/runtime/browser_with_default_prefs.ini",
-    "test/browser/security/browser.toml",
-    "test/browser/systemInfo/browser.toml",
-    "test/browser/target/browser.toml",
+    "test/browser/security/browser.ini",
+    "test/browser/systemInfo/browser.ini",
+    "test/browser/target/browser.ini",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

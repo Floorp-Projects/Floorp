@@ -8,7 +8,7 @@ MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["mochitest/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["mochitest/browser.ini"]
 
 TEST_DIRS += [
     "gtest",
