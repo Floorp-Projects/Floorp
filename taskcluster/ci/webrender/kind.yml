@@ -26,7 +26,6 @@ job-defaults:
             RUSTFLAGS: '--deny warnings'
     run:
         sparse-profile: webrender
-    use-system-python: false
 
 jobs:
     lint-tidy:
@@ -38,10 +37,6 @@ jobs:
             using: run-task
             cwd: '{checkout}/gfx/wr'
             command: >-
-                pushd /tmp &&
-                python3 -m pip install six &&
-                python3 -m pip install -e 'git+https://github.com/servo/servo.git@65a4d1646da46c37fe748add6dcf24b62ebb602a#egg=servo_tidy&subdirectory=python/tidy' &&
-                popd &&
                 servo-tidy
         treeherder:
             platform: linux64-qr/opt
