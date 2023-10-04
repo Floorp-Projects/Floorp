@@ -57,11 +57,8 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(
 
   for (nsIContent* childContent = nsINode::GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
-    RefPtr<SVGComponentTransferFunctionElement> child;
-    CallQueryInterface(
-        childContent,
-        (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
-    if (child) {
+    if (auto* child =
+            SVGComponentTransferFunctionElement::FromNode(childContent)) {
       childForChannel[child->GetChannel()] = child;
     }
   }

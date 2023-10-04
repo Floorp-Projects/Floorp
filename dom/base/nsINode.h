@@ -868,7 +868,9 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   virtual bool IsSVGAnimationElement() const { return false; }
+  virtual bool IsSVGComponentTransferFunctionElement() const { return false; }
   virtual bool IsSVGFilterPrimitiveElement() const { return false; }
+  virtual bool IsSVGFilterPrimitiveChildElement() const { return false; }
   virtual bool IsSVGGeometryElement() const { return false; }
   virtual bool IsSVGGraphicsElement() const { return false; }
 
@@ -908,6 +910,14 @@ class nsINode : public mozilla::dom::EventTarget {
     return IsAnyOfHTMLElements(nsGkAtoms::h1, nsGkAtoms::h2, nsGkAtoms::h3,
                                nsGkAtoms::h4, nsGkAtoms::h5, nsGkAtoms::h6);
   }
+
+  /**
+   * Check whether the conditional processing attributes other than
+   * systemLanguage "return true" if they apply to and are specified
+   * on the given SVG element. Returns true if this element should be
+   * rendered, false if it should not.
+   */
+  virtual bool PassesConditionalProcessingTests() const { return true; }
 
   /**
    * Insert a content node before another or at the end.

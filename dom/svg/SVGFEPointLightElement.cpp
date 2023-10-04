@@ -30,7 +30,7 @@ SVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] = {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEPointLightElement)
 
 //----------------------------------------------------------------------
-// nsFEUnstyledElement methods
+// SVGFilterPrimitiveChildElement methods
 
 bool SVGFEPointLightElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

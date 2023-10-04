@@ -32,8 +32,7 @@ nsChangeHint SVGTransformableElement::GetAttributeChangeHint(
       SVGElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::transform ||
       aAttribute == nsGkAtoms::mozAnimateMotionDummyAttr) {
-    nsIFrame* frame =
-        const_cast<SVGTransformableElement*>(this)->GetPrimaryFrame();
+    nsIFrame* frame = GetPrimaryFrame();
     retval |= nsChangeHint_InvalidateRenderingObservers;
     if (!frame || frame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       return retval;
