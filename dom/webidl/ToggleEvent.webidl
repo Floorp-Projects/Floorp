@@ -7,8 +7,7 @@
  * https://html.spec.whatwg.org/multipage/popover.html#the-toggleevent-interface
  */
 
-[Pref="dom.element.popover.enabled",
- Exposed=Window]
+[Exposed=Window]
 interface ToggleEvent : Event {
     constructor(DOMString type, optional ToggleEventInit eventInitDict = {});
     readonly attribute DOMString oldState;

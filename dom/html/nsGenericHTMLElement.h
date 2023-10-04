@@ -155,6 +155,9 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   bool PopoverOpen() const;
   bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
                             Document* aExpectedDocument, ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::ToggleEvent> CreateToggleEvent(
+      const nsAString& aEventType, const nsAString& aOldState,
+      const nsAString& aNewState, mozilla::Cancelable);
   /** Returns true if the event has been cancelled. */
   MOZ_CAN_RUN_SCRIPT bool FireToggleEvent(
       mozilla::dom::PopoverVisibilityState aOldState,

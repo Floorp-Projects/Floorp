@@ -46,13 +46,22 @@ void HTMLDetailsElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     bool wasOpen = !!aOldValue;
     bool isOpen = !!aValue;
     if (wasOpen != isOpen) {
+      auto stringForState = [](bool aOpen) {
+        return aOpen ? u"open"_ns : u"closed"_ns;
+      };
+      nsAutoString oldState;
       if (mToggleEventDispatcher) {
+        oldState.Truncate();
+        static_cast<ToggleEvent*>(mToggleEventDispatcher->mEvent.get())
+            ->GetOldState(oldState);
         mToggleEventDispatcher->Cancel();
+      } else {
+        oldState.Assign(stringForState(wasOpen));
       }
-      // According to the html spec, a 'toggle' event is a simple event which
-      // does not bubble.
+      RefPtr<ToggleEvent> toggleEvent = CreateToggleEvent(
+          u"toggle"_ns, oldState, stringForState(isOpen), Cancelable::eNo);
       mToggleEventDispatcher =
-          new AsyncEventDispatcher(this, u"toggle"_ns, CanBubble::eNo);
+          new AsyncEventDispatcher(this, toggleEvent.forget());
       mToggleEventDispatcher->PostDOMEvent();
     }
   }
