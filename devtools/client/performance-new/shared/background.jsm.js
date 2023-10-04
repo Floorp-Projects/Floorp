@@ -173,6 +173,7 @@ const presets = {
       "SceneBuilder",
       "WrWorker",
       "CanvasWorkers",
+      "TextureUpdate",
     ],
     duration: 0,
     l10nIds: {
@@ -220,6 +221,7 @@ const presets = {
       "Socket Thread",
       "SwComposite",
       "webrtc",
+      "TextureUpdate",
     ],
     duration: 0,
     l10nIds: {
