@@ -389,23 +389,14 @@ def _create_fluent_localizations(
         )
         if locale == "en-US":
             en_US_desktop_entry_fluent_filename = os.path.join(
-                "browser/locales/en-US/browser", desktop_entry_fluent_filename
+                "browser", "locales", "en-US", "browser", desktop_entry_fluent_filename
             )
             shutil.copyfile(
                 en_US_desktop_entry_fluent_filename,
                 localized_desktop_entry_filename,
             )
         else:
-            non_en_US_desktop_entry_fluent_filename = os.path.join(
-                "browser/browser", desktop_entry_fluent_filename
-            )
-            non_en_US_fluent_resource_file_url = os.path.join(
-                l10n_central_url,
-                locale,
-                "raw-file",
-                linux_l10n_changesets[locale]["revision"],
-                non_en_US_desktop_entry_fluent_filename,
-            )
+            non_en_US_fluent_resource_file_url = f"{l10n_central_url}/{locale}/raw-file/{linux_l10n_changesets[locale]['revision']}/browser/browser/{desktop_entry_fluent_filename}"
             response = requests.get(non_en_US_fluent_resource_file_url)
             response = retry(
                 requests.get,
