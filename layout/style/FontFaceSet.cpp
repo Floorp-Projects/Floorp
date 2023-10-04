@@ -464,7 +464,7 @@ void FontFaceSet::DispatchLoadingFinishedEvent(
   init.mFontfaces = std::move(aFontFaces);
   RefPtr<FontFaceSetLoadEvent> event =
       FontFaceSetLoadEvent::Constructor(this, aType, init);
-  (new AsyncEventDispatcher(this, event))->PostDOMEvent();
+  (new AsyncEventDispatcher(this, event.forget()))->PostDOMEvent();
 }
 
 void FontFaceSet::FlushUserFontSet() { mImpl->FlushUserFontSet(); }

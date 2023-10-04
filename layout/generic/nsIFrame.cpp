@@ -7039,7 +7039,7 @@ void nsIFrame::UpdateIsRelevantContent(
   // "This event is dispatched by posting a task at the time when the state
   // change occurs."
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(element, event.get());
+      new AsyncEventDispatcher(element, event.forget());
   DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
   NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
 }

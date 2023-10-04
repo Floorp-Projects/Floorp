@@ -894,9 +894,8 @@ void APZCCallbackHelper::NotifyScaleGestureComplete(
                                /* CanBubble */ true,
                                /* Cancelable */ false, detail);
         event->SetTrusted(true);
-        AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(doc, event);
-        dispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
-
+        auto* dispatcher = new AsyncEventDispatcher(doc, event.forget(),
+                                                    ChromeOnlyDispatch::eYes);
         dispatcher->PostDOMEvent();
       }
     }

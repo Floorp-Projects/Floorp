@@ -1131,7 +1131,8 @@ void CustomElementRegistry::Define(
                            /* Cancelable */ true, detail);
     event->SetTrusted(true);
 
-    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(doc, event);
+    AsyncEventDispatcher* dispatcher =
+        new AsyncEventDispatcher(doc, event.forget());
     dispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
 
     dispatcher->PostDOMEvent();
