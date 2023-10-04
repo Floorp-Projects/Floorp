@@ -337,7 +337,7 @@ class AndroidMixin(object):
         # low bogomips can be a good predictor of that condition.
         bogomips_minimum = int(self.config.get("bogomips_minimum") or 0)
         for line in cpuinfo.split("\n"):
-            m = re.match("BogoMIPS.*: (\d*)", line, re.IGNORECASE)
+            m = re.match(r"BogoMIPS.*: (\d*)", line, re.IGNORECASE)
             if m:
                 bogomips = int(m.group(1))
                 if bogomips_minimum > 0 and bogomips < bogomips_minimum:

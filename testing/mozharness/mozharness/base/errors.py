@@ -81,8 +81,8 @@ PythonErrorList = BaseErrorList + [
 
 VirtualenvErrorList = [
     {"substr": r"""not found or a compiler error:""", "level": WARNING},
-    {"regex": re.compile("""\d+: error: """), "level": ERROR},
-    {"regex": re.compile("""\d+: warning: """), "level": WARNING},
+    {"regex": re.compile(r"""\d+: error: """), "level": ERROR},
+    {"regex": re.compile(r"""\d+: warning: """), "level": WARNING},
     {
         "regex": re.compile(r"""Downloading .* \(.*\): *([0-9]+%)? *[0-9\.]+[kmKM]b"""),
         "level": DEBUG,

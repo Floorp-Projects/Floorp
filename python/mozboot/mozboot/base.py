@@ -494,7 +494,7 @@ class BaseBootstrapper(object):
             # path and move on.
             return None
 
-        match = re.search(name + " ([a-z0-9\.]+)", process.stdout)
+        match = re.search(name + r" ([a-z0-9\.]+)", process.stdout)
         if not match:
             print("ERROR! Unable to identify %s version." % name)
             return None
