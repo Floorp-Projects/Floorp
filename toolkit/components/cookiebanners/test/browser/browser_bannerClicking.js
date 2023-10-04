@@ -32,8 +32,6 @@ add_task(async function test_cookie_banner_service_disabled() {
       testURL: TEST_PAGE_A,
       visible: true,
       expected: "NoClick",
-      expectActorEnabled:
-        serviceMode != Ci.nsICookieBannerService.MODE_DISABLED,
     });
 
     await SpecialPowers.popPrefEnv();
