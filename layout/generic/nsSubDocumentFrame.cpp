@@ -138,27 +138,21 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // called from within EndSwapDocShellsForViews below can find it if needed.
   aContent->SetPrimaryFrame(this);
 
-  // If we have a detached subdoc's root view on our frame loader, re-insert
-  // it into the view tree. This happens when we've been reframed, and
-  // ensures the presentation persists across reframes. If the frame element
-  // has changed documents however, we blow away the presentation.
-  RefPtr<nsFrameLoader> frameloader = FrameLoader();
-  if (frameloader) {
-    nsCOMPtr<Document> oldContainerDoc;
-    nsIFrame* detachedFrame =
-        frameloader->GetDetachedSubdocFrame(getter_AddRefs(oldContainerDoc));
-    frameloader->SetDetachedSubdocFrame(nullptr, nullptr);
-    MOZ_ASSERT(oldContainerDoc || !detachedFrame);
-    if (oldContainerDoc) {
-      nsView* detachedView = detachedFrame ? detachedFrame->GetView() : nullptr;
-      if (detachedView && oldContainerDoc == aContent->OwnerDoc()) {
-        // Restore stashed presentation.
-        ::InsertViewsInReverseOrder(detachedView, mInnerView);
-        ::EndSwapDocShellsForViews(mInnerView->GetFirstChild());
-      } else {
-        // Presentation is for a different document, don't restore it.
-        frameloader->Hide();
-      }
+  // If we have a detached subdoc's root view on our frame loader, re-insert it
+  // into the view tree. This happens when we've been reframed, and ensures the
+  // presentation persists across reframes.
+  if (RefPtr<nsFrameLoader> frameloader = FrameLoader()) {
+    bool hadFrame = false;
+    nsIFrame* detachedFrame = frameloader->GetDetachedSubdocFrame(&hadFrame);
+    frameloader->SetDetachedSubdocFrame(nullptr);
+    nsView* detachedView = detachedFrame ? detachedFrame->GetView() : nullptr;
+    if (detachedView) {
+      // Restore stashed presentation.
+      ::InsertViewsInReverseOrder(detachedView, mInnerView);
+      ::EndSwapDocShellsForViews(mInnerView->GetFirstChild());
+    } else if (hadFrame) {
+      // Presentation is for a different document, don't restore it.
+      frameloader->Hide();
     }
 
     if (RefPtr<BrowsingContext> bc = frameloader->GetExtantBrowsingContext()) {
@@ -285,9 +279,7 @@ nsRect nsSubDocumentFrame::GetDestRect() {
 ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     if (RefPtr<nsFrameLoader> frameloader = FrameLoader()) {
-      nsCOMPtr<Document> oldContainerDoc;
-      nsIFrame* detachedFrame =
-          frameloader->GetDetachedSubdocFrame(getter_AddRefs(oldContainerDoc));
+      nsIFrame* detachedFrame = frameloader->GetDetachedSubdocFrame();
       if (nsView* view = detachedFrame ? detachedFrame->GetView() : nullptr) {
         nsSize size = view->GetBounds().Size();
         nsPresContext* presContext = detachedFrame->PresContext();
@@ -920,7 +912,7 @@ class nsHideViewer final : public Runnable {
 
     // Either the frame has been constructed by now, or it never will be,
     // either way we want to clear the stashed views.
-    mFrameLoader->SetDetachedSubdocFrame(nullptr, nullptr);
+    mFrameLoader->SetDetachedSubdocFrame(nullptr);
 
     nsSubDocumentFrame* frame = do_QueryFrame(mFrameElement->GetPrimaryFrame());
     if (!frame) {
@@ -958,12 +950,8 @@ void nsSubDocumentFrame::Destroy(DestroyContext& aContext) {
     nsView* detachedViews =
         ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
 
-    if (detachedViews && detachedViews->GetFrame()) {
-      frameloader->SetDetachedSubdocFrame(detachedViews->GetFrame(),
-                                          mContent->OwnerDoc());
-    } else {
-      frameloader->SetDetachedSubdocFrame(nullptr, nullptr);
-    }
+    frameloader->SetDetachedSubdocFrame(
+        detachedViews ? detachedViews->GetFrame() : nullptr);
 
     // We call nsFrameLoader::HideViewer() in a script runner so that we can
     // safely determine whether the frame is being reframed or destroyed.
