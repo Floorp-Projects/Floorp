@@ -200,6 +200,7 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override {
     nsresult rv = mWrappedRunnable->Run();
+    mWrappedRunnable = nullptr;
     if (NS_FAILED(rv)) {
       if (!JS_IsExceptionPending(aCx)) {
         Throw(aCx, rv);
@@ -218,6 +219,7 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
         do_QueryInterface(mWrappedRunnable);
     MOZ_ASSERT(doomed);  // We checked this earlier!
     doomed->OnDiscard();
+    mWrappedRunnable = nullptr;
     return NS_OK;
   }
 };
