@@ -364,12 +364,14 @@ impl MallocSizeOf for PropertyDeclaration {
 
 impl PropertyDeclaration {
     /// Dumps the property declaration before crashing.
-    /// TODO: Downgrade to debug_assertions-only when we figure out what might be going on in
-    /// bug 1856669.
     #[cold]
+    #[cfg(debug_assertions)]
     pub(crate) fn debug_crash(&self, reason: &str) {
         panic!("{}: {:?}", reason, self);
     }
+    #[cfg(not(debug_assertions))]
+    #[inline(always)]
+    pub(crate) fn debug_crash(&self, reason: &str) {}
 
     /// Returns whether this is a variant of the Longhand(Value) type, rather
     /// than one of the special variants in extra_variants.
