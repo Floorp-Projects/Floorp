@@ -719,73 +719,72 @@ var transformTests = [
     expected_uncomputed: 'skewX(-30deg) rotate(90deg) translate(0)' },
 ];
 
-// Even if the default reference-box of shape-outside is margin-box, which is
-// different from the default reference-box of clip-path, we still can reuse
-// these tests for both properties because we always explicitly assign a
-// reference-box (i.e. border-box or content-box) if needed.
+// We intentionally use a non-default reference-box so we always serialize it.
+// Therefore, we can reuse these tests for clip-path and shape-outside.
 // Bug 1313619: Add some tests for two basic shapes with an explicit
-// reference-box and a default one.
+// reference-box and a default one, for each property (because they use
+// different default reference-box).
 const basicShapesTests = [
   { start: "none", end: "none",
     expected: ["none"] },
   // none to shape
   { start: "none",
-    end: "circle(500px at 500px 500px) border-box",
-    expected: ["circle", ["500px at 500px 500px"], "border-box"]
+    end: "circle(500px at 500px 500px) content-box",
+    expected: ["circle", ["500px at 500px 500px"], "content-box"]
   },
   { start: "none",
-    end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["500px 500px at 500px 500px"], "border-box"]
+    end: "ellipse(500px 500px at 500px 500px) content-box",
+    expected: ["ellipse", ["500px 500px at 500px 500px"], "content-box"]
   },
   { start: "none",
-    end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
-    expected: ["polygon", ["evenodd, 500px 500px, 500px 500px"], "border-box"]
+    end: "polygon(evenodd, 500px 500px, 500px 500px) content-box",
+    expected: ["polygon", ["evenodd, 500px 500px, 500px 500px"], "content-box"]
   },
   { start: "none",
-    end: "inset(500px 500px 500px 500px round 500px 500px) border-box",
-    expected: ["inset", ["500px round 500px"], "border-box"]
+    end: "inset(500px 500px 500px 500px round 500px 500px) content-box",
+    expected: ["inset", ["500px round 500px"], "content-box"]
   },
   // matching functions
   { start: "circle(100px)", end: "circle(500px)",
     expected: ["circle", ["200px"]] },
   { start: "ellipse(100px 100px)", end: "ellipse(500px 500px)",
     expected: ["ellipse", ["200px 200px"]] },
-  { start: "circle(100px at 100px 100px) border-box",
-    end: "circle(500px at 500px 500px) border-box",
-    expected: ["circle", ["200px at 200px 200px"], "border-box"]
+  { start: "circle(100px at 100px 100px) content-box",
+    end: "circle(500px at 500px 500px) content-box",
+    expected: ["circle", ["200px at 200px 200px"], "content-box"]
   },
-  { start: "ellipse(100px 100px at 100px 100px) border-box",
-    end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["200px 200px at 200px 200px"], "border-box"]
+  { start: "ellipse(100px 100px at 100px 100px) content-box",
+    end: "ellipse(500px 500px at 500px 500px) content-box",
+    expected: ["ellipse", ["200px 200px at 200px 200px"], "content-box"]
   },
-  { start: "polygon(evenodd, 100px 100px, 100px 100px) border-box",
-    end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
-    expected: ["polygon", ["evenodd, 200px 200px, 200px 200px"], "border-box"]
+  { start: "polygon(evenodd, 100px 100px, 100px 100px) content-box",
+    end: "polygon(evenodd, 500px 500px, 500px 500px) content-box",
+    expected: ["polygon", ["evenodd, 200px 200px, 200px 200px"], "content-box"]
   },
-  { start: "inset(100px 100px 100px 100px round 100px 100px) border-box",
-    end: "inset(500px 500px 500px 500px round 500px 500px) border-box",
-    expected: ["inset", ["200px round 200px"], "border-box"]
+  { start: "inset(100px 100px 100px 100px round 100px 100px) content-box",
+    end: "inset(500px 500px 500px 500px round 500px 500px) content-box",
+    expected: ["inset", ["200px round 200px"], "content-box"]
   },
   // matching functions percentage
   { start: "circle(100%)", end: "circle(500%)",
     expected: ["circle", ["200%"]] },
   { start: "ellipse(100% 100%)", end: "ellipse(500% 500%)",
     expected: ["ellipse", ["200% 200%"]] },
-  { start: "circle(100% at 100% 100%) border-box",
-    end: "circle(500% at 500% 500%) border-box",
-    expected: ["circle", ["200% at 200% 200%"], "border-box"]
+  { start: "circle(100% at 100% 100%) content-box",
+    end: "circle(500% at 500% 500%) content-box",
+    expected: ["circle", ["200% at 200% 200%"], "content-box"]
   },
-  { start: "ellipse(100% 100% at 100% 100%) border-box",
-    end: "ellipse(500% 500% at 500% 500%) border-box",
-    expected: ["ellipse", ["200% 200% at 200% 200%"], "border-box"]
+  { start: "ellipse(100% 100% at 100% 100%) content-box",
+    end: "ellipse(500% 500% at 500% 500%) content-box",
+    expected: ["ellipse", ["200% 200% at 200% 200%"], "content-box"]
   },
-  { start: "polygon(evenodd, 100% 100%, 100% 100%) border-box",
-    end: "polygon(evenodd, 500% 500%, 500% 500%) border-box",
-    expected: ["polygon", ["evenodd, 200% 200%, 200% 200%"], "border-box"]
+  { start: "polygon(evenodd, 100% 100%, 100% 100%) content-box",
+    end: "polygon(evenodd, 500% 500%, 500% 500%) content-box",
+    expected: ["polygon", ["evenodd, 200% 200%, 200% 200%"], "content-box"]
   },
-  { start: "inset(100% 100% 100% 100% round 100% 100%) border-box",
-    end: "inset(500% 500% 500% 500% round 500% 500%) border-box",
-    expected: ["inset", ["200% round 200%"], "border-box"] },
+  { start: "inset(100% 100% 100% 100% round 100% 100%) content-box",
+    end: "inset(500% 500% 500% 500% round 500% 500%) content-box",
+    expected: ["inset", ["200% round 200%"], "content-box"] },
   // matching functions with calc() values
   { start: "circle(calc(80px + 20px))", end: "circle(calc(200px + 300px))",
     expected: ["circle", ["200px"]] },
@@ -796,11 +795,11 @@ const basicShapesTests = [
   // matching functions with interpolation between percentage/pixel values
   { start: "circle(20px)", end: "circle(100%)",
     expected: ["circle", ["calc(25% + 15px)"]] },
-  { start: "ellipse(100% 100px at 8px 20%) border-box",
-    end:   "ellipse(40px 4%    at 80% 60px) border-box",
+  { start: "ellipse(100% 100px at 8px 20%) content-box",
+    end:   "ellipse(40px 4%    at 80% 60px) content-box",
     expected: ["ellipse", ["calc(75% + 10px) calc(1% + 75px) at " +
                            "calc(20% + 6px) calc(15% + 15px)"],
-               "border-box"] },
+               "content-box"] },
   // no interpolation for keywords
   { start: "circle()", end: "circle(50px)",
     expected: ["circle", ["50px"]] },
@@ -842,9 +841,9 @@ const basicShapesTests = [
     expected: ["inset", ["500px round 500px"], "content-box"]
   },
   // mismatching functions
-  { start: "circle(100px at 100px 100px) border-box",
-    end: "ellipse(500px 500px at 500px 500px) border-box",
-    expected: ["ellipse", ["500px 500px at 500px 500px"], "border-box"]
+  { start: "circle(100px at 100px 100px) content-box",
+    end: "ellipse(500px 500px at 500px 500px) content-box",
+    expected: ["ellipse", ["500px 500px at 500px 500px"], "content-box"]
   },
   { start: "inset(0px round 20px)", end: "ellipse(500px 500px)",
     expected: ["ellipse", ["500px 500px"]]

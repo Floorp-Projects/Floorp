@@ -55,6 +55,15 @@ impl Default for ShapeGeometryBox {
     }
 }
 
+/// Skip the serialization if the author omits the box or specifies border-box.
+#[inline]
+fn is_default_box_for_clip_path(b: &ShapeGeometryBox) -> bool {
+    // Note: for clip-path, ElementDependent is always border-box, so we have to check both of them
+    // for serialization.
+    matches!(b, ShapeGeometryBox::ElementDependent)
+        || matches!(b, ShapeGeometryBox::ShapeBox(ShapeBox::BorderBox))
+}
+
 /// https://drafts.csswg.org/css-shapes-1/#typedef-shape-box
 #[allow(missing_docs)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
@@ -114,7 +123,7 @@ pub enum GenericClipPath<BasicShape, U> {
     Url(U),
     Shape(
         Box<BasicShape>,
-        #[css(skip_if = "is_default")] ShapeGeometryBox,
+        #[css(skip_if = "is_default_box_for_clip_path")] ShapeGeometryBox,
     ),
     #[animation(error)]
     Box(ShapeGeometryBox),
