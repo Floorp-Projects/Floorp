@@ -1492,10 +1492,17 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     for (uint32_t i = 0; i < aClampCount; i++) {
       ++iter;
     }
-    nsIContent* content = iter->mFirstChild->GetContent();
+    nsIFrame* firstChild = iter->mFirstChild;
+    if (!firstChild) {
+      return BalanceTarget{};
+    }
+    nsIContent* content = firstChild->GetContent();
+    if (!content) {
+      return BalanceTarget{};
+    }
     int32_t offset = 0;
-    if (content && iter->mFirstChild->IsTextFrame()) {
-      auto* textFrame = static_cast<nsTextFrame*>(iter->mFirstChild);
+    if (firstChild->IsTextFrame()) {
+      auto* textFrame = static_cast<nsTextFrame*>(firstChild);
       offset = textFrame->GetContentOffset();
     }
     return BalanceTarget{content, offset};
