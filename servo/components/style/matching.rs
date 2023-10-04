@@ -926,15 +926,13 @@ pub trait MatchMethods: TElement {
             .clone_container_type()
             .is_normal();
         if is_root || is_container {
+            let device = context.shared.stylist.device();
+            let old_style = old_styles.primary.as_ref();
             let new_font_size = new_primary_style.get_font().clone_font_size();
-            let old_font_size = old_styles
-                .primary
-                .as_ref()
-                .map(|s| s.get_font().clone_font_size());
+            let old_font_size = old_style.map(|s| s.get_font().clone_font_size());
 
             if old_font_size != Some(new_font_size) {
                 if is_root {
-                    let device = context.shared.stylist.device();
                     debug_assert!(self.owner_doc_matches_for_testing(device));
                     device.set_root_font_size(new_font_size.computed_size().into());
                     if device.used_root_font_size() {
@@ -952,6 +950,36 @@ pub trait MatchMethods: TElement {
                     // etc changes (for ex/ch/ic units to work correctly)? We
                     // should probably do the optimization mentioned above if
                     // so.
+                    restyle_requirement = ChildRestyleRequirement::MustMatchDescendants;
+                }
+            }
+
+            // For line-height, we want the fully resolved value, as `normal` also depends on other font properties.
+            let new_line_height = device
+                .calc_line_height(
+                    &new_primary_style.get_font(),
+                    new_primary_style.writing_mode,
+                    None,
+                )
+                .0;
+            let old_line_height = old_style.map(|s| {
+                device
+                    .calc_line_height(&s.get_font(), s.writing_mode, None)
+                    .0
+            });
+
+            if restyle_requirement != ChildRestyleRequirement::MustMatchDescendants &&
+                old_line_height != Some(new_line_height)
+            {
+                if is_root {
+                    debug_assert!(self.owner_doc_matches_for_testing(device));
+                    device.set_root_line_height(new_line_height.into());
+                    if device.used_root_line_height() {
+                        restyle_requirement = ChildRestyleRequirement::MustCascadeDescendants;
+                    }
+                }
+
+                if is_container && old_line_height.is_some() {
                     restyle_requirement = ChildRestyleRequirement::MustMatchDescendants;
                 }
             }

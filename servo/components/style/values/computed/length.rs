@@ -12,7 +12,7 @@ use crate::values::generics::length::{
     GenericLengthOrNumber, GenericLengthPercentageOrNormal, GenericMaxSize, GenericSize,
 };
 use crate::values::generics::NonNegative;
-use crate::values::specified::length::{AbsoluteLength, FontBaseSize};
+use crate::values::specified::length::{AbsoluteLength, FontBaseSize, LineHeightBase};
 use crate::values::{specified, CSSFloat};
 use crate::Zero;
 use app_units::Au;
@@ -30,7 +30,11 @@ impl ToComputedValue for specified::NoCalcLength {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        self.to_computed_value_with_base_size(context, FontBaseSize::CurrentStyle)
+        self.to_computed_value_with_base_size(
+            context,
+            FontBaseSize::CurrentStyle,
+            LineHeightBase::CurrentStyle,
+        )
     }
 
     #[inline]
@@ -45,10 +49,13 @@ impl specified::NoCalcLength {
         &self,
         context: &Context,
         base_size: FontBaseSize,
+        line_height_base: LineHeightBase,
     ) -> Length {
         match *self {
             Self::Absolute(length) => length.to_computed_value(context),
-            Self::FontRelative(length) => length.to_computed_value(context, base_size),
+            Self::FontRelative(length) => {
+                length.to_computed_value(context, base_size, line_height_base)
+            },
             Self::ViewportPercentage(length) => length.to_computed_value(context),
             Self::ContainerRelative(length) => length.to_computed_value(context),
             Self::ServoCharacterWidth(length) => length

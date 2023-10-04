@@ -18,7 +18,7 @@ use crate::values::resolved::{Context as ResolvedContext, ToResolvedValue};
 use crate::values::specified::font::{
     self as specified, KeywordInfo, MAX_FONT_WEIGHT, MIN_FONT_WEIGHT,
 };
-use crate::values::specified::length::{FontBaseSize, NoCalcLength};
+use crate::values::specified::length::{FontBaseSize, LineHeightBase, NoCalcLength};
 use crate::Atom;
 use cssparser::{serialize_identifier, CssStringWriter, Parser};
 #[cfg(feature = "gecko")]
@@ -973,8 +973,11 @@ impl ToComputedValue for specified::MozScriptMinSize {
         // this value is used in the computation of font-size, so
         // we use the parent size
         let base_size = FontBaseSize::InheritedStyle;
+        let line_height_base = LineHeightBase::InheritedStyle;
         match self.0 {
-            NoCalcLength::FontRelative(value) => value.to_computed_value(cx, base_size),
+            NoCalcLength::FontRelative(value) => {
+                value.to_computed_value(cx, base_size, line_height_base)
+            },
             NoCalcLength::ServoCharacterWidth(value) => {
                 value.to_computed_value(base_size.resolve(cx).computed_size())
             },
@@ -1327,11 +1330,9 @@ impl ToResolvedValue for LineHeight {
             return self;
         }
         let wm = context.style.writing_mode;
-        let vertical = wm.is_text_vertical();
         Self::Length(context.device.calc_line_height(
-            &self,
-            vertical,
             context.style.get_font(),
+            wm,
             Some(context.element_info.element),
         ))
     }
