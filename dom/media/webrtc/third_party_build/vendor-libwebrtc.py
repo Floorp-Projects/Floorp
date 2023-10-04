@@ -14,7 +14,6 @@ import requests
 
 THIRDPARTY_USED_IN_FIREFOX = [
     "abseil-cpp",
-    "google_benchmark",
     "pffft",
     "rnnoise",
 ]
