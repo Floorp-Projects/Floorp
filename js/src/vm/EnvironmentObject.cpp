@@ -4158,7 +4158,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
     buf.printf("Script ");
 
     if (JSAtom* name = script->function()->displayAtom()) {
-      buf.putString(name);
+      buf.putString(cx, name);
       buf.printf(" ");
     }
 
@@ -4166,7 +4166,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
                script->lineno());
 
     if (JSAtom* name = innerScript->function()->displayAtom()) {
-      buf.putString(name);
+      buf.putString(cx, name);
       buf.printf(" ");
     }
 
@@ -4175,7 +4175,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
     for (PropertyNameSet::Range r = remainingNames.all(); !r.empty();
          r.popFront()) {
       buf.printf(" ");
-      buf.putString(r.front());
+      buf.putString(cx, r.front());
     }
 
     JS::UniqueChars str = buf.release();

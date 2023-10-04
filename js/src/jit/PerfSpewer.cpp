@@ -509,8 +509,8 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
 }
 
 #ifdef JS_JITSPEW
-static void PrintStackValue(StackValue* stackVal, CompilerFrameInfo& frame,
-                            Sprinter& buf) {
+static void PrintStackValue(JSContext* cx, StackValue* stackVal,
+                            CompilerFrameInfo& frame, Sprinter& buf) {
   switch (stackVal->kind()) {
     /****** Constant ******/
     case StackValue::Constant: {
@@ -521,7 +521,7 @@ static void PrintStackValue(StackValue* stackVal, CompilerFrameInfo& frame,
         buf.printf("obj:%p", constantVal.toObjectOrNull());
       } else if (constantVal.isString()) {
         buf.put("str:");
-        buf.putString(constantVal.toString());
+        buf.putString(cx, constantVal.toString());
       } else if (constantVal.isNumber()) {
         buf.printf("num:%f", constantVal.toNumber());
       } else if (constantVal.isSymbol()) {
@@ -594,7 +594,7 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
         // Emit the name used for these ops
         Rooted<PropertyName*> name(cx, script->getName(pc));
         buf.put(" ");
-        buf.putString(name);
+        buf.putString(cx, name);
       } break;
       default:
         break;
@@ -604,7 +604,7 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
     for (unsigned i = 1; i <= numOperands; i++) {
       buf.put(" (");
       StackValue* stackVal = frame.peek(-int(i));
-      PrintStackValue(stackVal, frame, buf);
+      PrintStackValue(cx, stackVal, frame, buf);
 
       if (i < numOperands) {
         buf.put("),");
