@@ -233,7 +233,48 @@ let JSWINDOWACTORS = {
     messageManagerGroups: ["browsers"],
     // Cookie banners can be shown in sub-frames so we need to include them.
     allFrames: true,
-    enablePreference: "cookiebanners.bannerClicking.enabled",
+    // Holds lazy pref getters.
+    _prefs: {},
+    // Remember current register state to avoid duplicate calls to register /
+    // unregister.
+    _isRegistered: false,
+    onAddActor(register, unregister) {
+      // Register / unregister on pref changes.
+      let onPrefChange = () => {
+        if (
+          this._prefs["cookiebanners.bannerClicking.enabled"] &&
+          (this._prefs["cookiebanners.service.mode"] != 0 ||
+            this._prefs["cookiebanners.service.mode.privateBrowsing"] != 0)
+        ) {
+          if (!this._isRegistered) {
+            register();
+            this._isRegistered = true;
+          }
+        } else if (this._isRegistered) {
+          unregister();
+          this._isRegistered = false;
+        }
+      };
+
+      // Add lazy pref getters with pref observers so we can dynamically enable
+      // or disable the actor.
+      [
+        "cookiebanners.bannerClicking.enabled",
+        "cookiebanners.service.mode",
+        "cookiebanners.service.mode.privateBrowsing",
+      ].forEach(prefName => {
+        XPCOMUtils.defineLazyPreferenceGetter(
+          this._prefs,
+          prefName,
+          prefName,
+          false,
+          onPrefChange
+        );
+      });
+
+      // Check initial state.
+      onPrefChange();
+    },
   },
 
   ExtFind: {
@@ -627,6 +668,15 @@ export var ActorManagerParent = {
         throw new Error("Invalid JSActor kind " + kind);
     }
     for (let [actorName, actor] of Object.entries(actors)) {
+      // The actor defines its own register/unregister logic.
+      if (actor.onAddActor) {
+        actor.onAddActor(
+          () => register(actorName, actor),
+          () => unregister(actorName, actor)
+        );
+        continue;
+      }
+
       // If enablePreference is set, only register the actor while the
       // preference is set to true.
       if (actor.enablePreference) {
