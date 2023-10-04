@@ -181,7 +181,18 @@
       resizebefore="sibling"
       resizeafter="none"
     />
-    <box class="splitview-side-details devtools-main-content" />
+    <box>
+      <box class="splitview-side-details devtools-main-content" />
+      <html:footer
+        class="devtools-toolbar stylesheet-editor-status"
+        hidden="true"
+      >
+        <html:button
+          class="devtools-button style-editor-prettyPrintButton"
+          data-l10n-id="styleeditor-pretty-print-button"
+        />
+      </html:footer>
+    </box>
 
     <html:div id="splitview-templates" hidden="">
       <html:li id="splitview-tpl-summary-stylesheet" tabindex="0">
