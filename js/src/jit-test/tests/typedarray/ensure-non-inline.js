@@ -75,4 +75,11 @@ function test() {
     }
 }
 
+try {
+    ensureNonInline(new Array(3));
+    assertEq(false, true);
+} catch (e) {
+    assertEq(e.message.includes("unhandled type"), true);
+}
+
 test();
