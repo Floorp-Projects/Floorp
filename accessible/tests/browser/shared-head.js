@@ -15,7 +15,9 @@
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
             DEFAULT_IFRAME_ID, DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
             matchContentDoc, currentContentDoc, getContentDPR,
-            waitForImageMap, getContentBoundsForDOMElm, untilCacheIs, untilCacheOk, testBoundsWithContent, waitForContentPaint */
+            waitForImageMap, getContentBoundsForDOMElm, untilCacheIs,
+            untilCacheOk, testBoundsWithContent, waitForContentPaint,
+            runPython */
 
 const CURRENT_FILE_DIR = "/browser/accessible/tests/browser/";
 
@@ -445,6 +447,10 @@ function accessibleTask(doc, task, options = {}) {
         "accessible-event"
       )) {
         Services.obs.removeObserver(observer, "accessible-event");
+      }
+      if (gPythonSocket) {
+        // Remove any globals set by Python code run in this test.
+        runPython(`__reset__`);
       }
     });
 
@@ -915,4 +921,51 @@ async function testBoundsWithContent(iframeDocAcc, id, browser) {
   assertBoundsFuzzyEqual(accBounds, expectedBounds);
 
   return accBounds;
+}
+
+let gPythonSocket = null;
+
+/**
+ * Run some Python code. This is useful for testing OS APIs.
+ * This function returns a Promise which is resolved or rejected when the Python
+ * code completes. The Python code can return a result with the return
+ * statement, as long as the result can be serialized to JSON. For convenience,
+ * if the code is a single line which does not begin with return, it will be
+ * treated as an expression and its result will be returned. The JS Promise will
+ * be resolved with the deserialized result. If the Python code raises an
+ * exception, the JS Promise will be rejected with the Python traceback.
+ * An info() function is provided in Python to log an info message.
+ */
+function runPython(code) {
+  if (!gPythonSocket) {
+    // Keep the socket open across calls to avoid repeated setup overhead.
+    gPythonSocket = new WebSocket(
+      "ws://mochi.test:8888/browser/accessible/tests/browser/python_runner"
+    );
+    if (gPythonSocket.readyState != WebSocket.OPEN) {
+      gPythonSocket.onopen = evt => {
+        gPythonSocket.send(code);
+        gPythonSocket.onopen = null;
+      };
+    }
+  }
+  return new Promise((resolve, reject) => {
+    gPythonSocket.onmessage = evt => {
+      const message = JSON.parse(evt.data);
+      if (message[0] == "return") {
+        gPythonSocket.onmessage = null;
+        resolve(message[1]);
+      } else if (message[0] == "exception") {
+        gPythonSocket.onmessage = null;
+        reject(new Error(message[1]));
+      } else if (message[0] == "info") {
+        info(message[1]);
+      }
+    };
+    // If gPythonSocket isn't open yet, we'll send the message when .onopen is
+    // called. If it's open, we can send it immediately.
+    if (gPythonSocket.readyState == WebSocket.OPEN) {
+      gPythonSocket.send(code);
+    }
+  });
 }
