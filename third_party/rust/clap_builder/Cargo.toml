@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.64.0"
+rust-version = "1.70.0"
 name = "clap_builder"
-version = "4.1.14"
+version = "4.4.5"
 include = [
     "build.rs",
     "src/**/*",
@@ -37,55 +37,47 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/clap-rs/clap"
 
 [package.metadata.docs.rs]
+cargo-args = [
+    "-Zunstable-options",
+    "-Zrustdoc-scrape-examples",
+]
 features = ["unstable-doc"]
 rustdoc-args = [
     "--cfg",
     "docsrs",
-]
-cargo-args = [
-    "-Zunstable-options",
-    "-Zrustdoc-scrape-examples",
 ]
 
 [package.metadata.playground]
 features = ["unstable-doc"]
 
 [package.metadata.release]
-shared-version = true
 dependent-version = "upgrade"
+shared-version = true
 tag-name = "v{{version}}"
 
 [lib]
 bench = false
 
+[dependencies.anstream]
+version = "0.5.0"
+optional = true
+
+[dependencies.anstyle]
+version = "1.0.0"
+
 [dependencies.backtrace]
 version = "0.3.67"
 optional = true
 
-[dependencies.bitflags]
-version = "1.2.0"
-
 [dependencies.clap_lex]
-version = "0.4.0"
-
-[dependencies.is-terminal]
-version = "0.4.1"
-optional = true
-
-[dependencies.once_cell]
-version = "1.12.0"
-optional = true
+version = "0.5.0"
 
 [dependencies.strsim]
 version = "0.10.0"
 optional = true
 
-[dependencies.termcolor]
-version = "1.1.1"
-optional = true
-
 [dependencies.terminal_size]
-version = "0.2.1"
+version = "0.3.0"
 optional = true
 
 [dependencies.unicase]
@@ -96,26 +88,29 @@ optional = true
 version = "0.1.9"
 optional = true
 
+[dev-dependencies.color-print]
+version = "0.3.4"
+
 [dev-dependencies.humantime]
 version = "2.1.0"
 
 [dev-dependencies.rustversion]
-version = "1.0.12"
+version = "1.0.14"
 
 [dev-dependencies.shlex]
 version = "1.1.0"
 
 [dev-dependencies.snapbox]
-version = "0.4.10"
+version = "0.4.12"
 
 [dev-dependencies.static_assertions]
 version = "1.1.0"
 
 [dev-dependencies.trybuild]
-version = "1.0.77"
+version = "1.0.83"
 
 [dev-dependencies.trycmd]
-version = "0.14.15"
+version = "0.14.17"
 features = [
     "color-auto",
     "diff",
@@ -127,11 +122,8 @@ default-features = false
 version = "0.9.0"
 
 [features]
-cargo = ["dep:once_cell"]
-color = [
-    "dep:is-terminal",
-    "dep:termcolor",
-]
+cargo = []
+color = ["dep:anstream"]
 debug = ["dep:backtrace"]
 default = [
     "std",
@@ -145,7 +137,7 @@ deprecated = []
 env = []
 error-context = []
 help = []
-std = []
+std = ["anstyle/std"]
 string = []
 suggestions = [
     "dep:strsim",
@@ -161,10 +153,8 @@ unstable-doc = [
     "env",
     "unicode",
     "string",
-    "unstable-replace",
 ]
-unstable-grouped = []
-unstable-replace = []
+unstable-styles = ["color"]
 unstable-v5 = ["deprecated"]
 usage = []
 wrap_help = [

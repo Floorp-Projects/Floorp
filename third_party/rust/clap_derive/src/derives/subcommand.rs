@@ -17,6 +17,7 @@ use quote::{format_ident, quote, quote_spanned};
 use syn::{spanned::Spanned, Data, DeriveInput, FieldsUnnamed, Generics, Variant};
 
 use crate::derives::args;
+use crate::derives::args::collect_args_fields;
 use crate::item::{Item, Kind, Name};
 use crate::utils::{is_simple_ty, subty_if_name};
 
@@ -65,7 +66,13 @@ pub fn gen_for_enum(
     let has_subcommand = gen_has_subcommand(variants)?;
 
     Ok(quote! {
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -78,6 +85,7 @@ pub fn gen_for_enum(
             clippy::suspicious_else_formatting,
             clippy::almost_swapped,
         )]
+        #[automatically_derived]
         impl #impl_generics clap::FromArgMatches for #item_name #ty_generics #where_clause {
             fn from_arg_matches(__clap_arg_matches: &clap::ArgMatches) -> ::std::result::Result<Self, clap::Error> {
                 Self::from_arg_matches_mut(&mut __clap_arg_matches.clone())
@@ -91,7 +99,13 @@ pub fn gen_for_enum(
             #update_from_arg_matches
         }
 
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -104,6 +118,7 @@ pub fn gen_for_enum(
             clippy::suspicious_else_formatting,
             clippy::almost_swapped,
         )]
+        #[automatically_derived]
         impl #impl_generics clap::Subcommand for #item_name #ty_generics #where_clause {
             fn augment_subcommands <'b>(__clap_app: clap::Command) -> clap::Command {
                 #augmentation
@@ -167,7 +182,7 @@ fn gen_augment(
 
             Kind::Flatten(_) => match variant.fields {
                 Unnamed(FieldsUnnamed { ref unnamed, .. }) if unnamed.len() == 1 => {
-                    let ty = &unnamed[0];
+                    let ty = &unnamed[0].ty;
                     let deprecations = if !override_required {
                         item.deprecations()
                     } else {
@@ -208,7 +223,7 @@ fn gen_augment(
                     }
                     Unit => quote!( #subcommand_var ),
                     Unnamed(FieldsUnnamed { ref unnamed, .. }) if unnamed.len() == 1 => {
-                        let ty = &unnamed[0];
+                        let ty = &unnamed[0].ty;
                         if override_required {
                             quote_spanned! { ty.span()=>
                                 {
@@ -264,15 +279,7 @@ fn gen_augment(
                 let sub_augment = match variant.fields {
                     Named(ref fields) => {
                         // Defer to `gen_augment` for adding cmd methods
-                        let fields = fields
-                            .named
-                            .iter()
-                            .map(|field| {
-                                let item =
-                                    Item::from_args_field(field, item.casing(), item.env_casing())?;
-                                Ok((field, item))
-                            })
-                            .collect::<Result<Vec<_>, syn::Error>>()?;
+                        let fields = collect_args_fields(item, fields)?;
                         args::gen_augment(&fields, &subcommand_var, item, override_required)?
                     }
                     Unit => {
@@ -286,7 +293,7 @@ fn gen_augment(
                         }
                     }
                     Unnamed(FieldsUnnamed { ref unnamed, .. }) if unnamed.len() == 1 => {
-                        let ty = &unnamed[0];
+                        let ty = &unnamed[0].ty;
                         let arg_block = if override_required {
                             quote_spanned! { ty.span()=>
                                 {
@@ -383,7 +390,7 @@ fn gen_has_subcommand(variants: &[(&Variant, Item)]) -> Result<TokenStream, syn:
         .iter()
         .map(|(variant, _attrs)| match variant.fields {
             Unnamed(ref fields) if fields.unnamed.len() == 1 => {
-                let ty = &fields.unnamed[0];
+                let ty = &fields.unnamed[0].ty;
                 Ok(quote! {
                     if <#ty as clap::Subcommand>::has_subcommand(__clap_name) {
                         return true;
@@ -484,19 +491,12 @@ fn gen_from_arg_matches(variants: &[(&Variant, Item)]) -> Result<TokenStream, sy
         let variant_name = &variant.ident;
         let constructor_block = match variant.fields {
             Named(ref fields) => {
-                let fields = fields
-                    .named
-                    .iter()
-                    .map(|field| {
-                        let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
-                        Ok((field, item))
-                    })
-                    .collect::<Result<Vec<_>, syn::Error>>()?;
+                let fields = collect_args_fields(item, fields)?;
                 args::gen_constructor(&fields)?
             },
             Unit => quote!(),
             Unnamed(ref fields) if fields.unnamed.len() == 1 => {
-                let ty = &fields.unnamed[0];
+                let ty = &fields.unnamed[0].ty;
                 quote!( ( <#ty as clap::FromArgMatches>::from_arg_matches_mut(__clap_arg_matches)? ) )
             }
             Unnamed(..) => abort_call_site!("{}: tuple enums are not supported", variant.ident),
@@ -512,7 +512,7 @@ fn gen_from_arg_matches(variants: &[(&Variant, Item)]) -> Result<TokenStream, sy
         let variant_name = &variant.ident;
         match variant.fields {
             Unnamed(ref fields) if fields.unnamed.len() == 1 => {
-                let ty = &fields.unnamed[0];
+                let ty = &fields.unnamed[0].ty;
                 Ok(quote! {
                     if __clap_arg_matches
                         .subcommand_name()
@@ -599,14 +599,7 @@ fn gen_update_from_arg_matches(variants: &[(&Variant, Item)]) -> Result<TokenStr
                 let field_names = fields.named.iter().map(|field| {
                     field.ident.as_ref().unwrap()
                 }).collect::<Vec<_>>();
-                let fields = fields
-                    .named
-                    .iter()
-                    .map(|field| {
-                        let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
-                        Ok((field, item))
-                    })
-                    .collect::<Result<Vec<_>, syn::Error>>()?;
+                let fields = collect_args_fields(item, fields)?;
                 let update = args::gen_updater(&fields, false)?;
                 (quote!( { #( #field_names, )* }), quote!( { #update } ))
             }
@@ -639,7 +632,7 @@ fn gen_update_from_arg_matches(variants: &[(&Variant, Item)]) -> Result<TokenStr
         let variant_name = &variant.ident;
         match variant.fields {
             Unnamed(ref fields) if fields.unnamed.len() == 1 => {
-                let ty = &fields.unnamed[0];
+                let ty = &fields.unnamed[0].ty;
                 Ok(quote! {
                     if <#ty as clap::Subcommand>::has_subcommand(__clap_name) {
                         if let Self :: #variant_name (child) = s {

@@ -44,9 +44,9 @@ macro_rules! crate_authors {
     ($sep:expr) => {{
         static authors: &str = env!("CARGO_PKG_AUTHORS");
         if authors.contains(':') {
-            static CACHED: clap::__macro_refs::once_cell::sync::Lazy<String> =
-                clap::__macro_refs::once_cell::sync::Lazy::new(|| authors.replace(':', $sep));
-            let s: &'static str = &*CACHED;
+            static CACHED: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+            let s = CACHED.get_or_init(|| authors.replace(':', $sep));
+            let s: &'static str = &*s;
             s
         } else {
             authors
@@ -175,8 +175,7 @@ macro_rules! arg_impl {
         debug_assert_eq!(
             ident_or_char_literal.len(),
             1,
-            "Single-letter identifier expected, got {}",
-            ident_or_char_literal
+            "Single-letter identifier expected, got {ident_or_char_literal}",
         );
         ident_or_char_literal.chars().next().unwrap()
     }};
@@ -404,7 +403,7 @@ macro_rules! arg_impl {
                 $arg.action($crate::ArgAction::Count)
             }
             action => {
-                panic!("Unexpected action {:?}", action)
+                panic!("Unexpected action {action:?}")
             }
         };
         let arg = $crate::arg_impl! {
@@ -532,108 +531,16 @@ macro_rules! arg {
     }};
 }
 
-macro_rules! impl_settings {
-    ($settings:ident, $flags:ident,
-        $(
-            $(#[$inner:ident $($args:tt)*])*
-            $setting:ident => $flag:path
-        ),+
-    ) => {
-        impl $flags {
-            #[allow(dead_code)]
-            pub(crate) fn empty() -> Self {
-                $flags(Flags::empty())
-            }
-
-            #[allow(dead_code)]
-            pub(crate) fn insert(&mut self, rhs: Self) {
-                self.0.insert(rhs.0);
-            }
-
-            #[allow(dead_code)]
-            pub(crate) fn remove(&mut self, rhs: Self) {
-                self.0.remove(rhs.0);
-            }
-
-            #[allow(dead_code)]
-            pub(crate) fn set(&mut self, s: $settings) {
-                match s {
-                    $(
-                        $(#[$inner $($args)*])*
-                        $settings::$setting => self.0.insert($flag),
-                    )*
-                }
-            }
-
-            #[allow(dead_code)]
-            pub(crate) fn unset(&mut self, s: $settings) {
-                match s {
-                    $(
-                        $(#[$inner $($args)*])*
-                        $settings::$setting => self.0.remove($flag),
-                    )*
-                }
-            }
-
-            #[allow(dead_code)]
-            pub(crate) fn is_set(&self, s: $settings) -> bool {
-                match s {
-                    $(
-                        $(#[$inner $($args)*])*
-                        $settings::$setting => self.0.contains($flag),
-                    )*
-                }
-            }
-        }
-
-        impl BitOr for $flags {
-            type Output = Self;
-
-            fn bitor(mut self, rhs: Self) -> Self::Output {
-                self.0.insert(rhs.0);
-                self
-            }
-        }
-
-        impl From<$settings> for $flags {
-            fn from(setting: $settings) -> Self {
-                let mut flags = $flags::empty();
-                flags.set(setting);
-                flags
-            }
-        }
-
-        impl BitOr<$settings> for $flags {
-            type Output = Self;
-
-            fn bitor(mut self, rhs: $settings) -> Self::Output {
-                self.set(rhs);
-                self
-            }
-        }
-
-        impl BitOr for $settings {
-            type Output = $flags;
-
-            fn bitor(self, rhs: Self) -> Self::Output {
-                let mut flags = $flags::empty();
-                flags.set(self);
-                flags.set(rhs);
-                flags
-            }
-        }
-    }
-}
-
 #[cfg(feature = "debug")]
 macro_rules! debug {
     ($($arg:tt)*) => ({
-        let prefix = format!("[{:>w$}] \t", module_path!(), w = 28);
+        use std::fmt::Write as _;
+        let hint = anstyle::Style::new().dimmed();
+
+        let module_path = module_path!();
         let body = format!($($arg)*);
         let mut styled = $crate::builder::StyledStr::new();
-        styled.hint(prefix);
-        styled.hint(body);
-        styled.none("\n");
+        let _ = write!(styled, "{}[{module_path:>28}]{body}{}\n", hint.render(), hint.render_reset());
         let color = $crate::output::fmt::Colorizer::new($crate::output::fmt::Stream::Stderr, $crate::ColorChoice::Auto).with_content(styled);
         let _ = color.print();
     })

@@ -575,20 +575,22 @@ impl Item {
                         .any(|a| a.magic == Some(MagicAttrName::ValueEnum))
                     {
                         quote_spanned!(attr.name.clone().span()=> {
-                            static DEFAULT_VALUE: clap::__derive_refs::once_cell::sync::Lazy<String> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
+                            static DEFAULT_VALUE: ::std::sync::OnceLock<String> = ::std::sync::OnceLock::new();
+                            let s = DEFAULT_VALUE.get_or_init(|| {
                                 let val: #ty = #val;
                                 clap::ValueEnum::to_possible_value(&val).unwrap().get_name().to_owned()
                             });
-                            let s: &'static str = &*DEFAULT_VALUE;
+                            let s: &'static str = &*s;
                             s
                         })
                     } else {
                         quote_spanned!(attr.name.clone().span()=> {
-                            static DEFAULT_VALUE: clap::__derive_refs::once_cell::sync::Lazy<String> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
+                            static DEFAULT_VALUE: ::std::sync::OnceLock<String> = ::std::sync::OnceLock::new();
+                            let s = DEFAULT_VALUE.get_or_init(|| {
                                 let val: #ty = #val;
                                 ::std::string::ToString::to_string(&val)
                             });
-                            let s: &'static str = &*DEFAULT_VALUE;
+                            let s: &'static str = &*s;
                             s
                         })
                     };
@@ -643,14 +645,11 @@ impl Item {
                                         })
                                 }
 
-                                static DEFAULT_STRINGS: clap::__derive_refs::once_cell::sync::Lazy<Vec<::std::string::String>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    iter_to_vals(#expr).collect()
-                                });
-
-                                static DEFAULT_VALUES: clap::__derive_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    DEFAULT_STRINGS.iter().map(::std::string::String::as_str).collect()
-                                });
-                                DEFAULT_VALUES.iter().copied()
+                                static DEFAULT_STRINGS: ::std::sync::OnceLock<Vec<String>> = ::std::sync::OnceLock::new();
+                                static DEFAULT_VALUES: ::std::sync::OnceLock<Vec<&str>> = ::std::sync::OnceLock::new();
+                                DEFAULT_VALUES.get_or_init(|| {
+                                    DEFAULT_STRINGS.get_or_init(|| iter_to_vals(#expr).collect()).iter().map(::std::string::String::as_str).collect()
+                                }).iter().copied()
                             }
                         })
                     } else {
@@ -663,14 +662,11 @@ impl Item {
                                     iterable.into_iter().map(|val| val.borrow().to_string())
                                 }
 
-                                static DEFAULT_STRINGS: clap::__derive_refs::once_cell::sync::Lazy<Vec<::std::string::String>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    iter_to_vals(#expr).collect()
-                                });
-
-                                static DEFAULT_VALUES: clap::__derive_refs::once_cell::sync::Lazy<Vec<&str>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    DEFAULT_STRINGS.iter().map(::std::string::String::as_str).collect()
-                                });
-                                DEFAULT_VALUES.iter().copied()
+                                static DEFAULT_STRINGS: ::std::sync::OnceLock<Vec<String>> = ::std::sync::OnceLock::new();
+                                static DEFAULT_VALUES: ::std::sync::OnceLock<Vec<&str>> = ::std::sync::OnceLock::new();
+                                DEFAULT_VALUES.get_or_init(|| {
+                                    DEFAULT_STRINGS.get_or_init(|| iter_to_vals(#expr).collect()).iter().map(::std::string::String::as_str).collect()
+                                }).iter().copied()
                             }
                         })
                     };
@@ -707,20 +703,22 @@ impl Item {
                         .any(|a| a.magic == Some(MagicAttrName::ValueEnum))
                     {
                         quote_spanned!(attr.name.clone().span()=> {
-                            static DEFAULT_VALUE: clap::__derive_refs::once_cell::sync::Lazy<::std::ffi::OsString> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
+                            static DEFAULT_VALUE: ::std::sync::OnceLock<String> = ::std::sync::OnceLock::new();
+                            let s = DEFAULT_VALUE.get_or_init(|| {
                                 let val: #ty = #val;
                                 clap::ValueEnum::to_possible_value(&val).unwrap().get_name().to_owned()
                             });
-                            let s: &'static ::std::ffi::OsStr = &*DEFAULT_VALUE;
+                            let s: &'static str = &*s;
                             s
                         })
                     } else {
                         quote_spanned!(attr.name.clone().span()=> {
-                            static DEFAULT_VALUE: clap::__derive_refs::once_cell::sync::Lazy<::std::ffi::OsString> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
+                            static DEFAULT_VALUE: ::std::sync::OnceLock<::std::ffi::OsString> = ::std::sync::OnceLock::new();
+                            let s = DEFAULT_VALUE.get_or_init(|| {
                                 let val: #ty = #val;
                                 ::std::ffi::OsString::from(val)
                             });
-                            let s: &'static ::std::ffi::OsStr = &*DEFAULT_VALUE;
+                            let s: &'static ::std::ffi::OsStr = &*s;
                             s
                         })
                     };
@@ -775,14 +773,11 @@ impl Item {
                                         })
                                 }
 
-                                static DEFAULT_OS_STRINGS: clap::__derive_refs::once_cell::sync::Lazy<Vec<::std::ffi::OsString>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    iter_to_vals(#expr).collect()
-                                });
-
-                                static DEFAULT_VALUES: clap::__derive_refs::once_cell::sync::Lazy<Vec<&::std::ffi::OsStr>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    DEFAULT_OS_STRINGS.iter().map(::std::ffi::OsString::as_os_str).collect()
-                                });
-                                DEFAULT_VALUES.iter().copied()
+                                static DEFAULT_STRINGS: ::std::sync::OnceLock<Vec<::std::ffi::OsString>> = ::std::sync::OnceLock::new();
+                                static DEFAULT_VALUES: ::std::sync::OnceLock<Vec<&::std::ffi::OsStr>> = ::std::sync::OnceLock::new();
+                                DEFAULT_VALUES.get_or_init(|| {
+                                    DEFAULT_STRINGS.get_or_init(|| iter_to_vals(#expr).collect()).iter().map(::std::ffi::OsString::as_os_str).collect()
+                                }).iter().copied()
                             }
                         })
                     } else {
@@ -795,14 +790,11 @@ impl Item {
                                     iterable.into_iter().map(|val| val.borrow().into())
                                 }
 
-                                static DEFAULT_OS_STRINGS: clap::__derive_refs::once_cell::sync::Lazy<Vec<::std::ffi::OsString>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    iter_to_vals(#expr).collect()
-                                });
-
-                                static DEFAULT_VALUES: clap::__derive_refs::once_cell::sync::Lazy<Vec<&::std::ffi::OsStr>> = clap::__derive_refs::once_cell::sync::Lazy::new(|| {
-                                    DEFAULT_OS_STRINGS.iter().map(::std::ffi::OsString::as_os_str).collect()
-                                });
-                                DEFAULT_VALUES.iter().copied()
+                                static DEFAULT_STRINGS: ::std::sync::OnceLock<Vec<::std::ffi::OsString>> = ::std::sync::OnceLock::new();
+                                static DEFAULT_VALUES: ::std::sync::OnceLock<Vec<&::std::ffi::OsStr>> = ::std::sync::OnceLock::new();
+                                DEFAULT_VALUES.get_or_init(|| {
+                                    DEFAULT_STRINGS.get_or_init(|| iter_to_vals(#expr).collect()).iter().map(::std::ffi::OsString::as_os_str).collect()
+                                }).iter().copied()
                             }
                         })
                     };
@@ -908,7 +900,7 @@ impl Item {
         if !lines.is_empty() {
             let (short_help, long_help) =
                 format_doc_comment(&lines, !self.verbatim_doc_comment, self.force_long_help);
-            let short_name = format_ident!("{}", short_name);
+            let short_name = format_ident!("{short_name}");
             let short = Method::new(
                 short_name,
                 short_help
@@ -917,7 +909,7 @@ impl Item {
             );
             self.doc_comment.push(short);
             if let Some(long_name) = long_name {
-                let long_name = format_ident!("{}", long_name);
+                let long_name = format_ident!("{long_name}");
                 let long = Method::new(
                     long_name,
                     long_help
@@ -946,7 +938,7 @@ impl Item {
             (_, _) => {
                 let old = self.kind.name();
                 let new = kind.name();
-                abort!(kind.span(), "`{}` cannot be used with `{}`", new, old);
+                abort!(kind.span(), "`{new}` cannot be used with `{old}`");
             }
         }
         Ok(())
@@ -1247,8 +1239,8 @@ impl Method {
                     ident,
                     "cannot derive `{}` from Cargo.toml\n\n= note: {note}\n\n= help: {help}\n\n",
                     ident,
-                    note = format_args!("`{}` environment variable is not set", env_var),
-                    help = format_args!("use `{} = \"...\"` to set {} manually", ident, ident)
+                    note = format_args!("`{env_var}` environment variable is not set"),
+                    help = format_args!("use `{ident} = \"...\"` to set {ident} manually")
                 );
             }
         };
@@ -1405,7 +1397,7 @@ impl CasingStyle {
             "lower" | "lowercase" => cs(Lower),
             "upper" | "uppercase" => cs(Upper),
             "verbatim" | "verbatimcase" => cs(Verbatim),
-            s => abort!(name, "unsupported casing: `{}`", s),
+            s => abort!(name, "unsupported casing: `{s}`"),
         };
         Ok(s)
     }

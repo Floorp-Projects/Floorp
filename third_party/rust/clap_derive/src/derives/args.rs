@@ -16,7 +16,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned};
 use syn::{
     punctuated::Punctuated, spanned::Spanned, token::Comma, Data, DataStruct, DeriveInput, Field,
-    Fields, Generics,
+    Fields, FieldsNamed, Generics,
 };
 
 use crate::item::{Item, Kind, Name};
@@ -32,14 +32,7 @@ pub fn derive_args(input: &DeriveInput) -> Result<TokenStream, syn::Error> {
         }) => {
             let name = Name::Derived(ident.clone());
             let item = Item::from_args_struct(input, name)?;
-            let fields = fields
-                .named
-                .iter()
-                .map(|field| {
-                    let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
-                    Ok((field, item))
-                })
-                .collect::<Result<Vec<_>, syn::Error>>()?;
+            let fields = collect_args_fields(&item, fields)?;
             gen_for_struct(&item, ident, &input.generics, &fields)
         }
         Data::Struct(DataStruct {
@@ -93,7 +86,13 @@ pub fn gen_for_struct(
     };
 
     Ok(quote! {
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -106,6 +105,7 @@ pub fn gen_for_struct(
             clippy::suspicious_else_formatting,
             clippy::almost_swapped,
         )]
+        #[automatically_derived]
         impl #impl_generics clap::FromArgMatches for #item_name #ty_generics #where_clause {
             fn from_arg_matches(__clap_arg_matches: &clap::ArgMatches) -> ::std::result::Result<Self, clap::Error> {
                 Self::from_arg_matches_mut(&mut __clap_arg_matches.clone())
@@ -128,7 +128,13 @@ pub fn gen_for_struct(
             }
         }
 
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -141,6 +147,7 @@ pub fn gen_for_struct(
             clippy::suspicious_else_formatting,
             clippy::almost_swapped,
         )]
+        #[automatically_derived]
         impl #impl_generics clap::Args for #item_name #ty_generics #where_clause {
             fn group_id() -> Option<clap::Id> {
                 #group_id
@@ -710,7 +717,7 @@ fn gen_parsers(
         Ty::Other => {
             quote_spanned! { ty.span()=>
                 #arg_matches.#get_one(#id)
-                    .ok_or_else(|| clap::Error::raw(clap::error::ErrorKind::MissingRequiredArgument, format!("The following required argument was not provided: {}", #id)))?
+                    .ok_or_else(|| clap::Error::raw(clap::error::ErrorKind::MissingRequiredArgument, concat!("The following required argument was not provided: ", #id)))?
             }
         }
     };
@@ -739,4 +746,18 @@ pub fn raw_deprecated() -> TokenStream {
         #![allow(deprecated)]  // Assuming any deprecation in here will be related to a deprecation in `Args`
 
     }
+}
+
+pub fn collect_args_fields<'a>(
+    item: &'a Item,
+    fields: &'a FieldsNamed,
+) -> Result<Vec<(&'a Field, Item)>, syn::Error> {
+    fields
+        .named
+        .iter()
+        .map(|field| {
+            let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
+            Ok((field, item))
+        })
+        .collect()
 }
