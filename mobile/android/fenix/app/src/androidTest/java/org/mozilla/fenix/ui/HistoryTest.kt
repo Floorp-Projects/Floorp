@@ -445,4 +445,25 @@ class HistoryTest {
             verifySuggestionsAreNotDisplayed(activityTestRule, thirdWebPage.url.toString())
         }
     }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903590
+    // Test running on beta/release builds in CI:
+    // caution when making changes to it, so they don't block the builds
+    @SmokeTest
+    @Test
+    fun noHistoryInPrivateBrowsingTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyEmptyHistoryView()
+        }
+    }
 }

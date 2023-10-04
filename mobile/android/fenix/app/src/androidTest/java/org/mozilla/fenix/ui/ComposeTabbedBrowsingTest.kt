@@ -269,7 +269,7 @@ class ComposeTabbedBrowsingTest {
 
     @SmokeTest
     @Test
-    fun closePrivateTabsNotificationTest() {
+    fun verifyCloseAllPrivateTabsNotificationTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {

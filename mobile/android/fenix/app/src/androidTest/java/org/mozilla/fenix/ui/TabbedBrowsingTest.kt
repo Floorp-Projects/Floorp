@@ -91,6 +91,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/233629
     @Test
     fun openNewPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -256,9 +257,10 @@ class TabbedBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903592
     @SmokeTest
     @Test
-    fun closePrivateTabsNotificationTest() {
+    fun verifyCloseAllPrivateTabsNotificationTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -397,6 +399,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/526244
     @Test
     fun privateModeStaysAsDefaultAfterRestartTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -415,6 +418,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2228470
     @SmokeTest
     @Test
     fun privateTabsDoNotPersistAfterClosingAppTest() {

@@ -56,21 +56,9 @@ class WebControlsTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316067
     @Test
-    fun cancelCalendarFormTest() {
-        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickPageObject(itemWithResId("calendar"))
-            clickPageObject(itemContainingText("CANCEL"))
-            clickPageObject(itemWithResId("submitDate"))
-            verifyNoDateIsSelected()
-        }
-    }
-
-    @Test
-    fun setAndClearCalendarFormTest() {
+    fun verifyCalendarFormInteractionsTest() {
         val currentDate = LocalDate.now()
         val currentDay = currentDate.dayOfMonth
         val currentMonth = currentDate.month
@@ -79,6 +67,10 @@ class WebControlsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
+            clickPageObject(itemWithResId("calendar"))
+            clickPageObject(itemContainingText("CANCEL"))
+            clickPageObject(itemWithResId("submitDate"))
+            verifyNoDateIsSelected()
             clickPageObject(itemWithResId("calendar"))
             clickPageObject(itemWithDescription("$currentDay $currentMonth $currentYear"))
             clickPageObject(itemContainingText("OK"))
@@ -91,8 +83,9 @@ class WebControlsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316069
     @Test
-    fun cancelClockFormTest() {
+    fun verifyClockFormInteractionsTest() {
         val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
@@ -101,15 +94,6 @@ class WebControlsTest {
             clickPageObject(itemContainingText("CANCEL"))
             clickPageObject(itemWithResId("submitTime"))
             verifyNoTimeIsSelected(hour, minute)
-        }
-    }
-
-    @Test
-    fun setAndClearClockFormTest() {
-        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
             clickPageObject(itemWithResId("clock"))
             selectTime(hour, minute)
             clickPageObject(itemContainingText("OK"))
@@ -122,8 +106,9 @@ class WebControlsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316068
     @Test
-    fun cancelColorFormTest() {
+    fun verifyColorPickerInteractionsTest() {
         val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
@@ -133,15 +118,6 @@ class WebControlsTest {
             clickPageObject(itemContainingText("CANCEL"))
             clickPageObject(itemWithResId("submitColor"))
             verifyColorIsNotSelected(colorHexValue)
-        }
-    }
-
-    @Test
-    fun setColorFormTest() {
-        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
             clickPageObject(itemWithResId("colorPicker"))
             clickPageObject(itemWithDescription(colorHexValue))
             clickPageObject(itemContainingText("SET"))
@@ -150,8 +126,9 @@ class WebControlsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316070
     @Test
-    fun verifyDropdownMenuTest() {
+    fun verifyDropdownMenuInteractionsTest() {
         val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
@@ -163,8 +140,9 @@ class WebControlsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316071
     @Test
-    fun emailLinkTest() {
+    fun verifyEmailLinkTest() {
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         navigationToolbar {
@@ -175,8 +153,9 @@ class WebControlsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/834205
     @Test
-    fun telephoneLinkTest() {
+    fun verifyTelephoneLinkTest() {
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         navigationToolbar {

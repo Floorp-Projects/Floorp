@@ -141,25 +141,6 @@ class ComposeSmokeTest {
         }
     }
 
-    // Test running on beta/release builds in CI:
-    // caution when making changes to it, so they don't block the builds
-    @Test
-    fun noHistoryInPrivateBrowsingTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.togglePrivateBrowsingMode()
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyEmptyHistoryView()
-        }
-    }
-
     @Test
     fun mainMenuInstallPWATest() {
         val pwaPage = "https://mozilla-mobile.github.io/testapp/"

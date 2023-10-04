@@ -28,7 +28,7 @@ gcloud:
     - class org.mozilla.fenix.ui.HistoryTest#verifyHistoryMenuWithHistoryItemsTest
     - class org.mozilla.fenix.ui.SettingsSearchTest#verifyShowSearchSuggestionsToggleTest
     - class org.mozilla.fenix.ui.CollectionTest#deleteCollectionTest
-    - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
+    - class org.mozilla.fenix.ui.HistoryTest#noHistoryInPrivateBrowsingTest
     - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewTabTest
     - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewPrivateTabTest
     - class org.mozilla.fenix.ui.TopSitesTest#verifyOpenTopSiteNormalTab

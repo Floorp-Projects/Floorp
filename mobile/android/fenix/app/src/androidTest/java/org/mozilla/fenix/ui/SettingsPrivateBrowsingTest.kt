@@ -14,6 +14,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.addToHomeScreen
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -54,8 +55,9 @@ class SettingsPrivateBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/420086
     @Test
-    fun openExternalLinksInPrivateTest() {
+    fun launchLinksInAPrivateTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
@@ -82,8 +84,9 @@ class SettingsPrivateBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/555776
     @Test
-    fun launchPageShortcutInPrivateModeTest() {
+    fun launchPageShortcutInPrivateBrowsingTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         setOpenLinksInPrivateOn()
@@ -100,9 +103,11 @@ class SettingsPrivateBrowsingTest {
 
         mDevice.waitForIdle()
         // We need to close the existing tab here, to open a different session
-        TestHelper.restartApp(activityTestRule)
+        restartApp(activityTestRule)
+
         browserScreen {
         }.openTabDrawer {
+            verifyNormalModeSelected()
             closeTab()
         }
 
@@ -110,39 +115,15 @@ class SettingsPrivateBrowsingTest {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
         }.openTabDrawer {
             verifyPrivateModeSelected()
+            closeTab()
         }
-    }
-
-    @Test
-    fun launchLinksInPrivateToggleOffStateDoesntChangeTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        setOpenLinksInPrivateOn()
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-            expandMenu()
-        }.openAddToHomeScreen {
-            addShortcutName(pageShortcutName)
-            clickAddShortcutButton()
-            clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut(pageShortcutName) {
-        }.goToHomescreen { }
 
         setOpenLinksInPrivateOff()
-        TestHelper.restartApp(activityTestRule)
-        mDevice.waitForIdle()
 
         addToHomeScreen {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
         }.openTabDrawer {
             verifyNormalModeSelected()
-        }.closeTabDrawer {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openPrivateBrowsingSubMenu {
-            verifyOpenLinksInPrivateTabOff()
         }
     }
 

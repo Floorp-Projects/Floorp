@@ -71,7 +71,7 @@ class ComposeMediaNotificationTest {
 
     @SmokeTest
     @Test
-    fun videoPlaybackSystemNotificationTest() {
+    fun verifyVideoPlaybackSystemNotificationTest() {
         val videoTestPage = TestAssetHelper.getVideoPageAsset(mockWebServer)
 
         navigationToolbar {
@@ -105,7 +105,7 @@ class ComposeMediaNotificationTest {
 
     @SmokeTest
     @Test
-    fun audioPlaybackSystemNotificationTest() {
+    fun verifyAudioPlaybackSystemNotificationTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
         navigationToolbar {
