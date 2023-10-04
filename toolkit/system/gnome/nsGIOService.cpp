@@ -712,6 +712,11 @@ nsresult nsGIOService::GetIsRunningUnderFlatpak(bool* aResult) {
   return NS_OK;
 }
 
+nsresult nsGIOService::GetIsRunningUnderSnap(bool* aResult) {
+  *aResult = mozilla::widget::IsRunningUnderSnap();
+  return NS_OK;
+}
+
 static nsresult RevealDirectory(nsIFile* aFile, bool aForce) {
   nsAutoCString path;
   if (bool isDir; NS_SUCCEEDED(aFile->IsDirectory(&isDir)) && isDir) {

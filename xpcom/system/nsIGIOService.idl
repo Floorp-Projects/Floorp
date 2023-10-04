@@ -76,6 +76,7 @@ interface nsIGIOService : nsISupports
 
   /*** Misc. methods ***/
   [infallible] readonly attribute boolean isRunningUnderFlatpak;
+  [infallible] readonly attribute boolean isRunningUnderSnap;
 
   /* Open the given URI in the default application */
   [noscript] void showURI(in nsIURI uri);
