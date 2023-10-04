@@ -7,8 +7,6 @@ package org.mozilla.fenix.shopping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.selectedTab
@@ -26,14 +24,14 @@ import org.mozilla.fenix.components.AppStore
  * @property shoppingExperienceFeature Reference to the [ShoppingExperienceFeature].
  * @property onAvailabilityChange Invoked when availability of this feature changes based on feature
  * flag and when the loaded page is a supported product page.
- * @property onBottomSheetCollapsed Invoked when the bottom sheet is collapsed.
+ * @property onBottomSheetStateChange Invoked when the bottom sheet is collapsed or expanded.
  */
 class ReviewQualityCheckFeature(
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val shoppingExperienceFeature: ShoppingExperienceFeature,
     private val onAvailabilityChange: (isAvailable: Boolean) -> Unit,
-    private val onBottomSheetCollapsed: () -> Unit,
+    private val onBottomSheetStateChange: (isExpanded: Boolean) -> Unit,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
     private var appStoreScope: CoroutineScope? = null
@@ -54,11 +52,7 @@ class ReviewQualityCheckFeature(
         appStoreScope = appStore.flowScoped { flow ->
             flow.mapNotNull { it.shoppingSheetExpanded }
                 .distinctUntilChanged()
-                .drop(1) // Needed to ignore the initial emission from the Store setup
-                .filterNot { it }
-                .collect {
-                    onBottomSheetCollapsed()
-                }
+                .collect(onBottomSheetStateChange)
         }
     }
 

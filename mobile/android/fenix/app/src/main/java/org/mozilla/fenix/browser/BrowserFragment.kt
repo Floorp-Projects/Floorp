@@ -256,8 +256,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     reviewQualityCheckAvailable = it
                     safeInvalidateBrowserToolbarView()
                 },
-                onBottomSheetCollapsed = {
-                    reviewQualityCheck.setSelected(selected = false, notifyListener = false)
+                onBottomSheetStateChange = {
+                    reviewQualityCheck.setSelected(selected = it, notifyListener = false)
                 },
             ),
             owner = this,

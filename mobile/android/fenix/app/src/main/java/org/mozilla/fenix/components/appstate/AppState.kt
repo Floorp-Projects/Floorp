@@ -77,5 +77,5 @@ data class AppState(
     val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
     val wallpaperState: WallpaperState = WallpaperState.default,
     val standardSnackbarError: StandardSnackbarError? = null,
-    val shoppingSheetExpanded: Boolean = false,
+    val shoppingSheetExpanded: Boolean? = null,
 ) : State
