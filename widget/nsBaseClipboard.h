@@ -120,6 +120,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       const nsTArray<nsCString>& aFlavorList,
       int32_t aWhichClipboard) override final;
 
+  using GetDataCallback = mozilla::MoveOnlyFunction<void(nsresult)>;
   using HasMatchingFlavorsCallback = mozilla::MoveOnlyFunction<void(
       mozilla::Result<nsTArray<nsCString>, nsresult>)>;
 
@@ -129,6 +130,9 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   // Implement the native clipboard behavior.
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) = 0;
+  virtual void AsyncGetNativeClipboardData(nsITransferable* aTransferable,
+                                           int32_t aWhichClipboard,
+                                           GetDataCallback&& aCallback);
   virtual nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) = 0;
   virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
       int32_t aWhichClipboard) = 0;
@@ -175,6 +179,8 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
 
   mozilla::Result<nsTArray<nsCString>, nsresult> GetFlavorsFromClipboardCache(
       int32_t aClipboardType);
+  nsresult GetDataFromClipboardCache(nsITransferable* aTransferable,
+                                     int32_t aClipboardType);
 
   mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;
