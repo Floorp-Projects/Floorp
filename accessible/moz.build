@@ -48,6 +48,7 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/telemetry/browser.toml",
     "tests/browser/text/browser.toml",
     "tests/browser/tree/browser.toml",
+    "tests/browser/windows/ia2/browser.toml",
 ]
 
 with Files("**"):
