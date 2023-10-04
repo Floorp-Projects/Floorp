@@ -16,12 +16,12 @@
 ## For further details, consult:
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
--brand-shorter-name = Floorp
+-brand-shorter-name = Floorp Lightning
 -brand-short-name = Floorp Lightning
 -brand-shortcut-name = Floorp Lightning
 -brand-full-name = Floorp Lightning
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
--brand-product-name = Floorp
--vendor-short-name = Ablaze
-trademarkInfo = Floorp and the Floorp logos are trademarks of the Ablaze.
+-brand-product-name = Floorp Lightning
+-vendor-short-name = Floorp Lightning
+trademarkInfo = { " " }
