@@ -1,0 +1,60 @@
+[DEFAULT]
+prefs = ["identity.fxaccounts.remote.root=https://example.com/"]
+support-files = [
+  "head.js",
+  "../../index.md",
+]
+
+["browser_sma.js"]
+
+["browser_sma_accept_doh.js"]
+
+["browser_sma_block_message.js"]
+
+["browser_sma_cfrmessageprovider.js"]
+
+["browser_sma_click_element.js"]
+
+["browser_sma_configure_homepage.js"]
+
+["browser_sma_default_browser.js"]
+
+["browser_sma_default_pdf_handler.js"]
+
+["browser_sma_disable_doh.js"]
+
+["browser_sma_docs.js"]
+
+["browser_sma_handle_multiaction.js"]
+
+["browser_sma_open_about_page.js"]
+
+["browser_sma_open_awesome_bar.js"]
+
+["browser_sma_open_firefox_view.js"]
+
+["browser_sma_open_firefoxview.js"]
+
+["browser_sma_open_private_browser_window.js"]
+
+["browser_sma_open_protection_panel.js"]
+
+["browser_sma_open_protection_report.js"]
+
+["browser_sma_open_spotlight_dialog.js"]
+
+["browser_sma_open_url.js"]
+
+["browser_sma_pin_current_tab.js"]
+
+["browser_sma_pin_firefox.js"]
+
+["browser_sma_pin_private_firefox.js"]
+skip-if = ["os != 'win'"]
+
+["browser_sma_set_prefs.js"]
+
+["browser_sma_show_firefox_accounts.js"]
+
+["browser_sma_show_migration_wizard.js"]
+skip-if = ["apple_catalina && debug"] # Bug 1837646

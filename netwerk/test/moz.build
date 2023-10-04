@@ -7,7 +7,7 @@
 TEST_DIRS += ["httpserver", "gtest", "http3server"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "browser/browser.ini",
+    "browser/browser.toml",
     "useragent/browser_nonsnap.ini",
     "useragent/browser_snap.ini",
 ]

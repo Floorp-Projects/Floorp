@@ -1,0 +1,113 @@
+[DEFAULT]
+support-files = ["head.js"]
+
+["browser_bug399606.js"]
+https_first_disabled = true
+support-files = [
+  "399606-history.go-0.html",
+  "399606-httprefresh.html",
+  "399606-location.reload.html",
+  "399606-location.replace.html",
+  "399606-window.location.html",
+  "399606-window.location.href.html",
+]
+
+["browser_bug461710.js"]
+https_first_disabled = true
+support-files = [
+  "461710_link_page-2.html",
+  "461710_link_page-3.html",
+  "461710_link_page.html",
+  "461710_visited_page.html",
+]
+
+["browser_bug646422.js"]
+https_first_disabled = true
+
+["browser_bug680727.js"]
+https_first_disabled = true
+skip-if = ["verify"]
+
+["browser_bug1601563.js"]
+https_first_disabled = true
+support-files = [
+  "1601563-1.html",
+  "1601563-2.html",
+]
+
+["browser_double_redirect.js"]
+https_first_disabled = true
+support-files = [
+  "begin.html",
+  "final.html",
+  "redirect_once.sjs",
+  "redirect_twice.sjs",
+]
+
+["browser_favicon_privatebrowsing_perwindowpb.js"]
+
+["browser_history_post.js"]
+https_first_disabled = true
+support-files = [
+  "history_post.html",
+  "history_post.sjs",
+]
+
+["browser_multi_redirect_frecency.js"]
+https_first_disabled = true
+support-files = [
+  "final.html",
+  "redirect_once.sjs",
+  "redirect_thrice.sjs",
+  "redirect_twice.sjs",
+  "redirect_twice_perma.sjs",
+]
+
+["browser_notfound.js"]
+
+["browser_onvisit_title_null_for_navigation.js"]
+https_first_disabled = true
+skip-if = ["verify"]
+support-files = ["empty_page.html"]
+
+["browser_redirect.js"]
+support-files = [
+  "redirect.sjs",
+  "redirect-target.html",
+]
+
+["browser_redirect_self.js"]
+support-files = ["redirect_self.sjs"]
+
+["browser_settitle.js"]
+https_first_disabled = true
+support-files = [
+  "title1.html",
+  "title2.html",
+]
+
+["browser_visited_notfound.js"]
+
+["browser_visituri.js"]
+https_first_disabled = true
+support-files = [
+  "begin.html",
+  "final.html",
+  "redirect_once.sjs",
+  "redirect_twice.sjs",
+]
+
+["browser_visituri_nohistory.js"]
+support-files = [
+  "begin.html",
+  "final.html",
+  "favicon-normal16.png",
+  "favicon-normal32.png",
+]
+
+["browser_visituri_privatebrowsing_perwindowpb.js"]
+support-files = [
+  "begin.html",
+  "favicon.html",
+  "final.html",
+]
