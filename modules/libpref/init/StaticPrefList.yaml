@@ -12377,13 +12377,13 @@
 # Whether to enable echconfig.
 - name: network.dns.echconfig.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to enable echconfig for http3.
 - name: network.dns.http3_echconfig.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # This pref needs to be worked together with network.dns.echconfig.enabled
@@ -12392,7 +12392,7 @@
 # this pref indicate whether we can fallback to the origin server.
 - name: network.dns.echconfig.fallback_to_origin_when_all_failed
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # When true, reset the exclusion list when all records are excluded.
@@ -12412,7 +12412,7 @@
 # Whether to force a transaction to wait https rr.
 - name: network.dns.force_waiting_https_rr
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # The TTL for negative responses of TXT and HTTPS records.
@@ -13953,23 +13953,19 @@
 # 0 means never GREASE, 100 means always GREASE
 - name: security.tls.ech.grease_probability
   type: RelaxedAtomicUint32
-#ifdef NIGHTLY_BUILD
   value: 100
-#else
-  value: 0
-#endif
   mirror: always
 
 # Whether to apply ECH GREASE settings to HTTP3/QUIC connections
 - name: security.tls.ech.grease_http3
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to retry connections without ECH Grease
 - name: security.tls.ech.disable_grease_on_fallback
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # ECH GREASE Padding target (1-255)
