@@ -119,6 +119,10 @@ if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["PFFFT_SIMD_DISABLE"] = True
 
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    DEFINES["PFFFT_SIMD_DISABLE"] = True
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
