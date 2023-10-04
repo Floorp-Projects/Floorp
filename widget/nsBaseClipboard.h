@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/PContent.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MoveOnlyFunction.h"
 #include "mozilla/Result.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
@@ -25,73 +24,41 @@ class nsIClipboardOwner;
 class nsIWidget;
 
 /**
- * A base clipboard class for all platform, so that they can share the same
- * implementation.
+ * A helper base class to implement nsIClipboard::SetData/AsyncSetData, so that
+ * all platform can share the same implementation.
+ *
+ * XXX this could be merged into nsBaseClipboard once all platform use
+ * nsBaseClipboard as base clipboard class to share the common code, see bug
+ * 1773707.
  */
-class nsBaseClipboard : public nsIClipboard {
+class ClipboardSetDataHelper : public nsIClipboard {
  public:
-  explicit nsBaseClipboard(
-      const mozilla::dom::ClipboardCapabilities& aClipboardCaps);
-
-  // nsISupports
   NS_DECL_ISUPPORTS
+
+  ClipboardSetDataHelper() = default;
 
   // nsIClipboard
   NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
-                     int32_t aWhichClipboard) override final;
+                     int32_t aWhichClipboard) override;
   NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
                           nsIAsyncSetClipboardDataCallback* aCallback,
                           nsIAsyncSetClipboardData** _retval) override final;
-  NS_IMETHOD GetData(nsITransferable* aTransferable,
-                     int32_t aWhichClipboard) override final;
-  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
-  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
-                                    int32_t aWhichClipboard,
-                                    bool* aOutResult) override final;
-  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
-                                      bool* aRetval) override final;
-  RefPtr<mozilla::GenericPromise> AsyncGetData(
-      nsITransferable* aTransferable, int32_t aWhichClipboard) override final;
-  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList,
-      int32_t aWhichClipboard) override final;
-
-  using GetDataCallback = mozilla::MoveOnlyFunction<void(nsresult)>;
-  using HasMatchingFlavorsCallback = mozilla::MoveOnlyFunction<void(
-      mozilla::Result<nsTArray<nsCString>, nsresult>)>;
 
  protected:
-  virtual ~nsBaseClipboard();
+  virtual ~ClipboardSetDataHelper();
 
   // Implement the native clipboard behavior.
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
                                     nsIClipboardOwner* aOwner,
                                     int32_t aWhichClipboard) = 0;
-  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
-                                    int32_t aWhichClipboard) = 0;
-  virtual void AsyncGetNativeClipboardData(nsITransferable* aTransferable,
-                                           int32_t aWhichClipboard,
-                                           GetDataCallback&& aCallback);
-  virtual nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) = 0;
-  virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
-      int32_t aWhichClipboard) = 0;
-  virtual mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) = 0;
-  virtual void AsyncHasNativeClipboardDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-      HasMatchingFlavorsCallback&& aCallback);
-
-  void ClearClipboardCache(int32_t aClipboardType);
-
- private:
-  void RejectPendingAsyncSetDataRequestIfAny(int32_t aClipboardType);
 
   class AsyncSetClipboardData final : public nsIAsyncSetClipboardData {
    public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIASYNCSETCLIPBOARDDATA
 
-    AsyncSetClipboardData(int32_t aClipboardType, nsBaseClipboard* aClipboard,
+    AsyncSetClipboardData(int32_t aClipboardType,
+                          ClipboardSetDataHelper* aClipboard,
                           nsIAsyncSetClipboardDataCallback* aCallback);
 
    private:
@@ -106,14 +73,65 @@ class nsBaseClipboard : public nsIClipboard {
     // The clipboard type defined in nsIClipboard.
     int32_t mClipboardType;
     // It is safe to use a raw pointer as it will be nullified (by calling
-    // NotifyCallback()) once nsBaseClipboard stops tracking us. This is
+    // NotifyCallback()) once ClipboardSetDataHelper stops tracking us. This is
     // also used to indicate whether this request is valid.
-    nsBaseClipboard* mClipboard;
+    ClipboardSetDataHelper* mClipboard;
     // mCallback will be nullified once the callback is notified to ensure the
     // callback is only notified once.
     nsCOMPtr<nsIAsyncSetClipboardDataCallback> mCallback;
   };
 
+ private:
+  void RejectPendingAsyncSetDataRequestIfAny(int32_t aClipboardType);
+
+  // Track the pending request for each clipboard type separately. And only need
+  // to track the latest request for each clipboard type as the prior pending
+  // request will be canceled when a new request is made.
+  RefPtr<AsyncSetClipboardData>
+      mPendingWriteRequests[nsIClipboard::kClipboardTypeCount];
+};
+
+/**
+ * A base clipboard class for Windows and Cocoa widget.
+ */
+class nsBaseClipboard : public ClipboardSetDataHelper {
+ public:
+  explicit nsBaseClipboard(
+      const mozilla::dom::ClipboardCapabilities& aClipboardCaps);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIClipboard
+  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
+                     int32_t aWhichClipboard) override final;
+  NS_IMETHOD GetData(nsITransferable* aTransferable,
+                     int32_t aWhichClipboard) override final;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
+                                    int32_t aWhichClipboard,
+                                    bool* aOutResult) override final;
+  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
+                                      bool* aRetval) override final;
+  RefPtr<mozilla::GenericPromise> AsyncGetData(
+      nsITransferable* aTransferable, int32_t aWhichClipboard) override final;
+  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList,
+      int32_t aWhichClipboard) override final;
+
+ protected:
+  virtual ~nsBaseClipboard() = default;
+
+  // Implement the native clipboard behavior.
+  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
+                                    int32_t aWhichClipboard) = 0;
+  virtual nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) = 0;
+  virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
+      int32_t aWhichClipboard) = 0;
+  virtual mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) = 0;
+
+ private:
   class ClipboardCache final {
    public:
     ~ClipboardCache() {
@@ -147,17 +165,6 @@ class nsBaseClipboard : public nsIClipboard {
   // Return clipboard cache if the cached data is valid, otherwise clear the
   // cached data and returns null.
   ClipboardCache* GetClipboardCacheIfValid(int32_t aClipboardType);
-
-  mozilla::Result<nsTArray<nsCString>, nsresult> GetFlavorsFromClipboardCache(
-      int32_t aClipboardType);
-  nsresult GetDataFromClipboardCache(nsITransferable* aTransferable,
-                                     int32_t aClipboardType);
-
-  // Track the pending request for each clipboard type separately. And only need
-  // to track the latest request for each clipboard type as the prior pending
-  // request will be canceled when a new request is made.
-  RefPtr<AsyncSetClipboardData>
-      mPendingWriteRequests[nsIClipboard::kClipboardTypeCount];
 
   mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;

@@ -69,17 +69,12 @@ ClipboardTargets nsRetrievalContext::sClipboardTargets;
 ClipboardTargets nsRetrievalContext::sPrimaryTargets;
 
 // Callback when someone asks us for the data
-static void clipboard_get_cb(GtkClipboard* aGtkClipboard,
-                             GtkSelectionData* aSelectionData, guint info,
-                             gpointer user_data);
+void clipboard_get_cb(GtkClipboard* aGtkClipboard,
+                      GtkSelectionData* aSelectionData, guint info,
+                      gpointer user_data);
 
 // Callback when someone asks us to clear a clipboard
-static void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
-
-// Callback when owner of clipboard data is changed
-static void clipboard_owner_change_cb(GtkClipboard* aGtkClipboard,
-                                      GdkEventOwnerChange* aEvent,
-                                      gpointer aUserData);
+void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
 
 static bool GetHTMLCharset(Span<const char> aData, nsCString& str);
 
@@ -187,32 +182,27 @@ ClipboardTargets nsRetrievalContext::GetTargets(int32_t aWhichClipboard) {
   return storedTargets.Clone();
 }
 
+nsRetrievalContext::nsRetrievalContext() {
+  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), "owner-change",
+                   G_CALLBACK(ClearCachedTargetsClipboard), this);
+  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_PRIMARY), "owner-change",
+                   G_CALLBACK(ClearCachedTargetsPrimary), this);
+}
+
 nsRetrievalContext::~nsRetrievalContext() {
+  g_signal_handlers_disconnect_by_func(
+      gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
+      FuncToGpointer(ClearCachedTargetsClipboard), this);
+  g_signal_handlers_disconnect_by_func(
+      gtk_clipboard_get(GDK_SELECTION_PRIMARY),
+      FuncToGpointer(ClearCachedTargetsPrimary), this);
   sClipboardTargets.Clear();
   sPrimaryTargets.Clear();
 }
 
-nsClipboard::nsClipboard()
-    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(
-          true /* supportsSelectionClipboard */,
-          false /* supportsFindClipboard */,
-          false /* supportsSelectionCache */)) {
-  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), "owner-change",
-                   G_CALLBACK(clipboard_owner_change_cb), this);
-  g_signal_connect(gtk_clipboard_get(GDK_SELECTION_PRIMARY), "owner-change",
-                   G_CALLBACK(clipboard_owner_change_cb), this);
-}
+nsClipboard::nsClipboard() = default;
 
-nsClipboard::~nsClipboard() {
-  g_signal_handlers_disconnect_by_func(
-      gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
-      FuncToGpointer(clipboard_owner_change_cb), this);
-  g_signal_handlers_disconnect_by_func(
-      gtk_clipboard_get(GDK_SELECTION_PRIMARY),
-      FuncToGpointer(clipboard_owner_change_cb), this);
-}
-
-NS_IMPL_ISUPPORTS_INHERITED(nsClipboard, nsBaseClipboard, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsClipboard, ClipboardSetDataHelper, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
 #if defined(MOZ_X11)
@@ -252,19 +242,17 @@ NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
                                     nsIClipboardOwner* aOwner,
                                     int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
   // See if we can short cut
   if ((aWhichClipboard == kGlobalClipboard &&
-       aTransferable == mGlobalTransferable.get()) ||
+       aTransferable == mGlobalTransferable.get() &&
+       aOwner == mGlobalOwner.get()) ||
       (aWhichClipboard == kSelectionClipboard &&
-       aTransferable == mSelectionTransferable.get())) {
+       aTransferable == mSelectionTransferable.get() &&
+       aOwner == mSelectionOwner.get())) {
     return NS_OK;
   }
 
-  LOGCLIP("nsClipboard::SetNativeClipboardData (%s)\n",
+  LOGCLIP("nsClipboard::SetData (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
   // List of suported targets
@@ -328,7 +316,7 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
         "targets!\n");
     // Clear references to the any old data and let GTK know that it is no
     // longer available.
-    EmptyNativeClipboardData(aWhichClipboard);
+    EmptyClipboard(aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
 
@@ -341,10 +329,10 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
     // We have to set it now because gtk_clipboard_set_with_data() calls
     // clipboard_clear_cb() which reset our internal state
     if (aWhichClipboard == kSelectionClipboard) {
-      mSelectionSequenceNumber++;
+      mSelectionOwner = aOwner;
       mSelectionTransferable = aTransferable;
     } else {
-      mGlobalSequenceNumber++;
+      mGlobalOwner = aOwner;
       mGlobalTransferable = aTransferable;
       gtk_clipboard_set_can_store(gtkClipboard, gtkTargets, numTargets);
     }
@@ -352,7 +340,7 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
     rv = NS_OK;
   } else {
     LOGCLIP("    gtk_clipboard_set_with_data() failed!\n");
-    EmptyNativeClipboardData(aWhichClipboard);
+    EmptyClipboard(aWhichClipboard);
     rv = NS_ERROR_FAILURE;
   }
 
@@ -360,14 +348,6 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
   gtk_target_list_unref(list);
 
   return rv;
-}
-
-mozilla::Result<int32_t, nsresult>
-nsClipboard::GetNativeClipboardSequenceNumber(int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-  return aWhichClipboard == kSelectionClipboard ? mSelectionSequenceNumber
-                                                : mGlobalSequenceNumber;
 }
 
 static bool IsMIMEAtFlavourList(const nsTArray<nsCString>& aFlavourList,
@@ -537,13 +517,8 @@ static bool TransferableSetHTML(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
-                                    int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
-  LOGCLIP("nsClipboard::GetNativeClipboardData (%s)\n",
+nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::GetData (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
   // TODO: Ensure we don't re-enter here.
@@ -672,48 +647,50 @@ enum DataType {
   DATATYPE_RAW,
 };
 
-struct DataCallbackHandler {
+struct DataPromiseHandler {
   RefPtr<nsITransferable> mTransferable;
-  nsBaseClipboard::GetDataCallback mDataCallback;
+  RefPtr<GenericPromise::Private> mDataPromise;
   nsCString mMimeType;
   DataType mDataType;
 
-  explicit DataCallbackHandler(RefPtr<nsITransferable> aTransferable,
-                               nsBaseClipboard::GetDataCallback&& aDataCallback,
-                               const char* aMimeType,
-                               DataType aDataType = DATATYPE_RAW)
+  explicit DataPromiseHandler(RefPtr<nsITransferable> aTransferable,
+                              RefPtr<GenericPromise::Private> aDataPromise,
+                              const char* aMimeType,
+                              DataType aDataType = DATATYPE_RAW)
       : mTransferable(std::move(aTransferable)),
-        mDataCallback(std::move(aDataCallback)),
+        mDataPromise(std::move(aDataPromise)),
         mMimeType(aMimeType),
         mDataType(aDataType) {
-    MOZ_COUNT_CTOR(DataCallbackHandler);
-    LOGCLIP("DataCallbackHandler created [%p] MIME %s type %d", this,
+    MOZ_COUNT_CTOR(DataPromiseHandler);
+    LOGCLIP("DataPromiseHandler created [%p] MIME %s type %d", this,
             mMimeType.get(), mDataType);
   }
-  ~DataCallbackHandler() {
-    LOGCLIP("DataCallbackHandler deleted [%p]", this);
-    MOZ_COUNT_DTOR(DataCallbackHandler);
+  ~DataPromiseHandler() {
+    LOGCLIP("DataPromiseHandler deleted [%p]", this);
+    MOZ_COUNT_DTOR(DataPromiseHandler);
   }
 };
 
-static void AsyncGetTextImpl(nsITransferable* aTransferable,
-                             int32_t aWhichClipboard,
-                             nsBaseClipboard::GetDataCallback&& aCallback) {
+static RefPtr<GenericPromise> AsyncGetTextImpl(nsITransferable* aTransferable,
+                                               int32_t aWhichClipboard) {
   LOGCLIP("AsyncGetText() type '%s'",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
 
+  RefPtr<GenericPromise::Private> dataPromise =
+      new GenericPromise::Private(__func__);
+
   gtk_clipboard_request_text(
       gtk_clipboard_get(GetSelectionAtom(aWhichClipboard)),
       [](GtkClipboard* aClipboard, const gchar* aText, gpointer aData) -> void {
-        UniquePtr<DataCallbackHandler> ref(
-            static_cast<DataCallbackHandler*>(aData));
+        UniquePtr<DataPromiseHandler> ref(
+            static_cast<DataPromiseHandler*>(aData));
         LOGCLIP("AsyncGetText async handler of [%p]", aData);
 
         size_t dataLength = aText ? strlen(aText) : 0;
         if (dataLength <= 0) {
+          ref->mDataPromise->Resolve(false, __func__);
           LOGCLIP("  quit, text is not available");
-          ref->mDataCallback(NS_OK);
           return;
         }
 
@@ -724,18 +701,23 @@ static void AsyncGetTextImpl(nsITransferable* aTransferable,
                             (const char*)utf16string.BeginReading(),
                             utf16string.Length() * 2);
         LOGCLIP("  text is set, length = %d", (int)dataLength);
-        ref->mDataCallback(NS_OK);
+        ref->mDataPromise->Resolve(true, __func__);
       },
-      new DataCallbackHandler(aTransferable, std::move(aCallback), kTextMime));
+      new DataPromiseHandler(aTransferable, dataPromise, kTextMime));
+
+  return dataPromise;
 }
 
-static void AsyncGetDataImpl(nsITransferable* aTransferable,
-                             int32_t aWhichClipboard, const char* aMimeType,
-                             DataType aDataType,
-                             nsBaseClipboard::GetDataCallback&& aCallback) {
-  LOGCLIP("AsyncGetData() type '%s'",
+static RefPtr<GenericPromise> AsyncGetDataImpl(nsITransferable* aTransferable,
+                                               int32_t aWhichClipboard,
+                                               const char* aMimeType,
+                                               DataType aDataType) {
+  LOGCLIP("AsyncGetText() type '%s'",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
+
+  RefPtr<GenericPromise::Private> dataPromise =
+      new GenericPromise::Private(__func__);
 
   const char* gtkMIMEType = nullptr;
   switch (aDataType) {
@@ -755,19 +737,19 @@ static void AsyncGetDataImpl(nsITransferable* aTransferable,
       gdk_atom_intern(gtkMIMEType, FALSE),
       [](GtkClipboard* aClipboard, GtkSelectionData* aSelection,
          gpointer aData) -> void {
-        UniquePtr<DataCallbackHandler> ref(
-            static_cast<DataCallbackHandler*>(aData));
+        UniquePtr<DataPromiseHandler> ref(
+            static_cast<DataPromiseHandler*>(aData));
         LOGCLIP("AsyncGetData async handler [%p] MIME %s type %d", aData,
                 ref->mMimeType.get(), ref->mDataType);
 
         int dataLength = gtk_selection_data_get_length(aSelection);
         if (dataLength <= 0) {
-          ref->mDataCallback(NS_OK);
+          ref->mDataPromise->Resolve(false, __func__);
           return;
         }
         const char* data = (const char*)gtk_selection_data_get_data(aSelection);
         if (!data) {
-          ref->mDataCallback(NS_OK);
+          ref->mDataPromise->Resolve(false, __func__);
           return;
         }
         switch (ref->mDataType) {
@@ -799,15 +781,15 @@ static void AsyncGetDataImpl(nsITransferable* aTransferable,
             break;
           }
         }
-        ref->mDataCallback(NS_OK);
+        ref->mDataPromise->Resolve(true, __func__);
       },
-      new DataCallbackHandler(aTransferable, std::move(aCallback), aMimeType,
-                              aDataType));
+      new DataPromiseHandler(aTransferable, dataPromise, aMimeType, aDataType));
+  return dataPromise;
 }
 
-static void AsyncGetDataFlavor(nsITransferable* aTransferable,
-                               int32_t aWhichClipboard, nsCString& aFlavorStr,
-                               nsBaseClipboard::GetDataCallback&& aCallback) {
+static RefPtr<GenericPromise> AsyncGetDataFlavor(nsITransferable* aTransferable,
+                                                 int32_t aWhichClipboard,
+                                                 nsCString& aFlavorStr) {
   if (aFlavorStr.EqualsLiteral(kJPEGImageMime) ||
       aFlavorStr.EqualsLiteral(kJPGImageMime) ||
       aFlavorStr.EqualsLiteral(kPNGImageMime) ||
@@ -817,55 +799,42 @@ static void AsyncGetDataFlavor(nsITransferable* aTransferable,
       aFlavorStr.Assign(kJPEGImageMime);
     }
     LOGCLIP("  Getting image %s MIME clipboard data", aFlavorStr.get());
-    AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
-                     DATATYPE_IMAGE, std::move(aCallback));
-    return;
+    return AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
+                            DATATYPE_IMAGE);
   }
   // Special case text/plain since we can convert any
   // string into text/plain
   if (aFlavorStr.EqualsLiteral(kTextMime)) {
     LOGCLIP("  Getting unicode clipboard data");
-    AsyncGetTextImpl(aTransferable, aWhichClipboard, std::move(aCallback));
-    return;
+    return AsyncGetTextImpl(aTransferable, aWhichClipboard);
   }
   if (aFlavorStr.EqualsLiteral(kFileMime)) {
     LOGCLIP("  Getting file clipboard data\n");
-    AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
-                     DATATYPE_FILE, std::move(aCallback));
-    return;
+    return AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
+                            DATATYPE_FILE);
   }
   if (aFlavorStr.EqualsLiteral(kHTMLMime)) {
     LOGCLIP("  Getting HTML clipboard data");
-    AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
-                     DATATYPE_HTML, std::move(aCallback));
-    return;
+    return AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
+                            DATATYPE_HTML);
   }
   LOGCLIP("  Getting raw %s MIME clipboard data\n", aFlavorStr.get());
-  AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
-                   DATATYPE_RAW, std::move(aCallback));
+  return AsyncGetDataImpl(aTransferable, aWhichClipboard, aFlavorStr.get(),
+                          DATATYPE_RAW);
 }
 
-void nsClipboard::AsyncGetNativeClipboardData(nsITransferable* aTransferable,
-                                              int32_t aWhichClipboard,
-                                              GetDataCallback&& aCallback) {
-  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
-  LOGCLIP("nsClipboard::AsyncGetNativeClipboardData (%s)",
+RefPtr<GenericPromise> nsClipboard::AsyncGetData(nsITransferable* aTransferable,
+                                                 int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::AsyncGetData (%s)",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
   nsTArray<nsCString> importedFlavors;
   nsresult rv = GetTransferableFlavors(aTransferable, importedFlavors);
-  if (NS_FAILED(rv)) {
-    aCallback(rv);
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv, GenericPromise::CreateAndReject(rv, __func__));
 
   auto flavorsNum = importedFlavors.Length();
   if (!flavorsNum) {
-    aCallback(NS_OK);
-    return;
+    return GenericPromise::CreateAndResolve(false, __func__);
   }
 #ifdef MOZ_LOGGING
   if (flavorsNum > 1) {
@@ -877,39 +846,33 @@ void nsClipboard::AsyncGetNativeClipboardData(nsITransferable* aTransferable,
   // Filter out MIME types on X11 to prevent unwanted conversions,
   // see Bug 1611407
   if (widget::GdkIsX11Display()) {
-    AsyncHasNativeClipboardDataMatchingFlavors(
-        importedFlavors, aWhichClipboard,
-        [aWhichClipboard, transferable = nsCOMPtr{aTransferable},
-         callback = std::move(aCallback)](auto aResultOrError) mutable {
-          if (aResultOrError.isErr()) {
-            callback(aResultOrError.unwrapErr());
-            return;
-          }
-
-          nsTArray<nsCString> clipboardFlavors =
-              std::move(aResultOrError.unwrap());
-          if (!clipboardFlavors.Length()) {
-            LOGCLIP("  no flavors in clipboard, quit.");
-            callback(NS_OK);
-            return;
-          }
-
-          AsyncGetDataFlavor(transferable, aWhichClipboard, clipboardFlavors[0],
-                             std::move(callback));
-        });
-    return;
+    return AsyncHasDataMatchingFlavors(importedFlavors, aWhichClipboard)
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            /* resolve */
+            [transferable = RefPtr{aTransferable},
+             aWhichClipboard](nsTArray<nsCString> clipboardFlavors) {
+              if (!clipboardFlavors.Length()) {
+                LOGCLIP("  no flavors in clipboard, quit.");
+                return GenericPromise::CreateAndResolve(false, __func__);
+              }
+              return AsyncGetDataFlavor(transferable, aWhichClipboard,
+                                        clipboardFlavors[0]);
+            },
+            /* reject */
+            [](nsresult rv) {
+              LOGCLIP("  failed to get flavors from clipboard, quit.");
+              return GenericPromise::CreateAndReject(rv, __func__);
+            });
   }
 
   // Read clipboard directly on Wayland
-  AsyncGetDataFlavor(aTransferable, aWhichClipboard, importedFlavors[0],
-                     std::move(aCallback));
+  return AsyncGetDataFlavor(aTransferable, aWhichClipboard, importedFlavors[0]);
 }
 
-nsresult nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
-  LOGCLIP("nsClipboard::EmptyNativeClipboardData (%s)\n",
+NS_IMETHODIMP
+nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::EmptyClipboard (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
   if (aWhichClipboard == kSelectionClipboard) {
     if (mSelectionTransferable) {
@@ -928,10 +891,16 @@ nsresult nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
 
 void nsClipboard::ClearTransferable(int32_t aWhichClipboard) {
   if (aWhichClipboard == kSelectionClipboard) {
-    mSelectionSequenceNumber++;
+    if (mSelectionOwner) {
+      mSelectionOwner->LosingOwnership(mSelectionTransferable);
+      mSelectionOwner = nullptr;
+    }
     mSelectionTransferable = nullptr;
   } else {
-    mGlobalSequenceNumber++;
+    if (mGlobalOwner) {
+      mGlobalOwner->LosingOwnership(mGlobalTransferable);
+      mGlobalOwner = nullptr;
+    }
     mGlobalTransferable = nullptr;
   }
 }
@@ -961,23 +930,26 @@ static bool FlavorMatchesTarget(const nsACString& aFlavor, GdkAtom aTarget) {
   return false;
 }
 
-mozilla::Result<bool, nsresult>
-nsClipboard::HasNativeClipboardDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+NS_IMETHODIMP
+nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
+                                    int32_t aWhichClipboard, bool* _retval) {
+  if (!_retval) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  LOGCLIP("nsClipboard::HasNativeClipboardDataMatchingFlavors (%s)\n",
+  LOGCLIP("nsClipboard::HasDataMatchingFlavors (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
+  *_retval = false;
+
   if (!mContext) {
-    return Err(NS_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
   }
 
   auto targets = mContext->GetTargets(aWhichClipboard);
   if (!targets) {
     LOGCLIP("    no targes at clipboard (null)\n");
-    return false;
+    return NS_OK;
   }
 
 #ifdef MOZ_LOGGING
@@ -1006,51 +978,49 @@ nsClipboard::HasNativeClipboardDataMatchingFlavors(
     if (flavor.EqualsLiteral(kTextMime) &&
         gtk_targets_include_text(targets.AsSpan().data(),
                                  targets.AsSpan().Length())) {
+      *_retval = true;
       LOGCLIP("    has kTextMime\n");
-      return true;
+      return NS_OK;
     }
     for (const auto& target : targets.AsSpan()) {
       if (FlavorMatchesTarget(flavor, target)) {
-        return true;
+        *_retval = true;
+        return NS_OK;
       }
     }
   }
 
   LOGCLIP("    no targes at clipboard (bad match)\n");
-  return false;
+  return NS_OK;
 }
 
-struct TragetCallbackHandler {
-  TragetCallbackHandler(const nsTArray<nsCString>& aAcceptedFlavorList,
-                        nsBaseClipboard::HasMatchingFlavorsCallback&& aCallback)
+struct TragetPromiseHandler {
+  TragetPromiseHandler(const nsTArray<nsCString>& aAcceptedFlavorList,
+                       RefPtr<DataFlavorsPromise::Private> aTargetsPromise)
       : mAcceptedFlavorList(aAcceptedFlavorList.Clone()),
-        mCallback(std::move(aCallback)) {
-    LOGCLIP("TragetCallbackHandler(%p) created", this);
+        mTargetsPromise(aTargetsPromise) {
+    LOGCLIP("TragetPromiseHandler(%p) created", this);
   }
-  ~TragetCallbackHandler() {
-    LOGCLIP("TragetCallbackHandler(%p) deleted", this);
-  }
+  ~TragetPromiseHandler() { LOGCLIP("TragetPromiseHandler(%p) deleted", this); }
   nsTArray<nsCString> mAcceptedFlavorList;
-  nsBaseClipboard::HasMatchingFlavorsCallback mCallback;
+  RefPtr<DataFlavorsPromise::Private> mTargetsPromise;
 };
 
-void nsClipboard::AsyncHasNativeClipboardDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-    nsBaseClipboard::HasMatchingFlavorsCallback&& aCallback) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
-  LOGCLIP("nsClipboard::AsyncHasNativeClipboardDataMatchingFlavors (%s)",
+RefPtr<DataFlavorsPromise> nsClipboard::AsyncHasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::AsyncHasDataMatchingFlavors() type %s",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
+  RefPtr<DataFlavorsPromise::Private> flavorPromise =
+      new DataFlavorsPromise::Private(__func__);
   gtk_clipboard_request_contents(
       gtk_clipboard_get(GetSelectionAtom(aWhichClipboard)),
       gdk_atom_intern("TARGETS", FALSE),
       [](GtkClipboard* aClipboard, GtkSelectionData* aSelection,
          gpointer aData) -> void {
         LOGCLIP("gtk_clipboard_request_contents async handler (%p)", aData);
-        UniquePtr<TragetCallbackHandler> handler(
-            static_cast<TragetCallbackHandler*>(aData));
+        UniquePtr<TragetPromiseHandler> handler(
+            static_cast<TragetPromiseHandler*>(aData));
 
         GdkAtom* targets = nullptr;
         gint targetsNum = 0;
@@ -1074,9 +1044,19 @@ void nsClipboard::AsyncHasNativeClipboardDataMatchingFlavors(
             }
           }
         }
-        handler->mCallback(std::move(results));
+        handler->mTargetsPromise->Resolve(std::move(results), __func__);
       },
-      new TragetCallbackHandler(aFlavorList, std::move(aCallback)));
+      new TragetPromiseHandler(aFlavorList, flavorPromise));
+
+  return flavorPromise.forget();
+}
+
+NS_IMETHODIMP
+nsClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard, bool* _retval) {
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = kGlobalClipboard == aWhichClipboard ||
+             kSelectionClipboard == aWhichClipboard;
+  return NS_OK;
 }
 
 nsITransferable* nsClipboard::GetTransferable(int32_t aWhichClipboard) {
@@ -1319,59 +1299,20 @@ void nsClipboard::SelectionClearEvent(GtkClipboard* aGtkClipboard) {
           whichClipboard == kSelectionClipboard ? "primary" : "clipboard");
   ClearCachedTargets(whichClipboard);
   ClearTransferable(whichClipboard);
-  ClearClipboardCache(whichClipboard);
-}
-
-void nsClipboard::OwnerChangedEvent(GtkClipboard* aGtkClipboard,
-                                    GdkEventOwnerChange* aEvent) {
-  int32_t whichClipboard = GetGeckoClipboardType(aGtkClipboard);
-  if (whichClipboard < 0) {
-    return;
-  }
-  LOGCLIP("nsClipboard::OwnerChangedEvent (%s)\n",
-          whichClipboard == kSelectionClipboard ? "primary" : "clipboard");
-  GtkWidget* gtkWidget = [aEvent]() -> GtkWidget* {
-    if (!aEvent->owner) {
-      return nullptr;
-    }
-    gpointer user_data = nullptr;
-    gdk_window_get_user_data(aEvent->owner, &user_data);
-    return GTK_WIDGET(user_data);
-  }();
-  // If we can get GtkWidget from the current clipboard owner, this
-  // owner-changed event must be triggered by ourself via calling
-  // gtk_clipboard_set_with_data, the sequence number should already be handled.
-  if (!gtkWidget) {
-    if (whichClipboard == kSelectionClipboard) {
-      mSelectionSequenceNumber++;
-    } else {
-      mGlobalSequenceNumber++;
-    }
-  }
-
-  ClearCachedTargets(whichClipboard);
 }
 
 void clipboard_get_cb(GtkClipboard* aGtkClipboard,
                       GtkSelectionData* aSelectionData, guint info,
                       gpointer user_data) {
   LOGCLIP("clipboard_get_cb() callback\n");
-  nsClipboard* clipboard = static_cast<nsClipboard*>(user_data);
-  clipboard->SelectionGetEvent(aGtkClipboard, aSelectionData);
+  nsClipboard* aClipboard = static_cast<nsClipboard*>(user_data);
+  aClipboard->SelectionGetEvent(aGtkClipboard, aSelectionData);
 }
 
 void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data) {
   LOGCLIP("clipboard_clear_cb() callback\n");
-  nsClipboard* clipboard = static_cast<nsClipboard*>(user_data);
-  clipboard->SelectionClearEvent(aGtkClipboard);
-}
-
-void clipboard_owner_change_cb(GtkClipboard* aGtkClipboard,
-                               GdkEventOwnerChange* aEvent,
-                               gpointer aUserData) {
-  LOGCLIP("clipboard_owner_change_cb() callback\n");
-  nsClipboard* clipboard = static_cast<nsClipboard*>(aUserData);
-  clipboard->OwnerChangedEvent(aGtkClipboard, aEvent);
+  nsClipboard* aClipboard = static_cast<nsClipboard*>(user_data);
+  aClipboard->SelectionClearEvent(aGtkClipboard);
 }
 
 /*
