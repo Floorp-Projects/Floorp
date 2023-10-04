@@ -527,6 +527,13 @@ void nsBaseClipboard::AsyncGetNativeClipboardData(
   aCallback(GetNativeClipboardData(aTransferable, aWhichClipboard));
 }
 
+void nsBaseClipboard::ClearClipboardCache(int32_t aClipboardType) {
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
+  const mozilla::UniquePtr<ClipboardCache>& cache = mCaches[aClipboardType];
+  MOZ_ASSERT(cache);
+  cache->Clear();
+}
+
 nsBaseClipboard::ClipboardCache* nsBaseClipboard::GetClipboardCacheIfValid(
     int32_t aClipboardType) {
   MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));

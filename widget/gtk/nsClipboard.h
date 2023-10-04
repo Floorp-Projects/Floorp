@@ -107,26 +107,12 @@ class nsRetrievalContext {
   static ClipboardTargets sPrimaryTargets;
 };
 
-class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
+class nsClipboard : public nsBaseClipboard, public nsIObserver {
  public:
   nsClipboard();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
-
-  // nsIClipboard
-  NS_IMETHOD GetData(nsITransferable* aTransferable,
-                     int32_t aWhichClipboard) override;
-  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
-  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
-                                    int32_t aWhichClipboard,
-                                    bool* _retval) override;
-  NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
-                                      bool* _retval) override;
-  RefPtr<mozilla::GenericPromise> AsyncGetData(
-      nsITransferable* aTransferable, int32_t aWhichClipboard) override;
-  RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
   // Make sure we are initialized, called from the factory
   // constructor
@@ -146,6 +132,19 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
                                     nsIClipboardOwner* aOwner,
                                     int32_t aWhichClipboard) override;
+  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
+                                    int32_t aWhichClipboard) override;
+  void AsyncGetNativeClipboardData(nsITransferable* aTransferable,
+                                   int32_t aWhichClipboard,
+                                   GetDataCallback&& aCallback) override;
+  nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) override;
+  mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
+      int32_t aWhichClipboard) override;
+  mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
+  void AsyncHasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+      HasMatchingFlavorsCallback&& aCallback) override;
 
  private:
   virtual ~nsClipboard();
@@ -160,10 +159,7 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
   bool FilterImportedFlavors(int32_t aWhichClipboard,
                              nsTArray<nsCString>& aFlavors);
 
-  // Hang on to our owners and transferables so we can transfer data
-  // when asked.
-  nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
-  nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
+  // Hang on to our transferables so we can transfer data when asked.
   nsCOMPtr<nsITransferable> mSelectionTransferable;
   nsCOMPtr<nsITransferable> mGlobalTransferable;
   RefPtr<nsRetrievalContext> mContext;
