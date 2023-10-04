@@ -15,6 +15,8 @@ set -o xtrace
 
 CARGOFLAGS=${CARGOFLAGS:-"--verbose"}  # default to --verbose if not set
 
+python3 -m pip install -r $(dirname ${0})/requirements.txt
+
 pushd webrender
 cargo build ${CARGOFLAGS} --no-default-features
 cargo build ${CARGOFLAGS} --no-default-features --features capture

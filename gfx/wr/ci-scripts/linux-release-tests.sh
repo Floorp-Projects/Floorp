@@ -15,6 +15,8 @@ set -o xtrace
 
 CARGOFLAGS=${CARGOFLAGS:-""}  # default to empty if not set
 
+python3 -m pip install -r $(dirname ${0})/requirements.txt
+
 pushd wrench
 # Test that all shaders compile successfully and pass tests.
 python3 script/headless.py --precache test_init
