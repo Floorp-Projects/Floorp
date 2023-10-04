@@ -7070,8 +7070,8 @@ struct ScriptCountBlockState {
   ~ScriptCountBlockState() {
     masm.setPrinter(nullptr);
 
-    if (!printer.hadOutOfMemory()) {
-      block.setCode(printer.string());
+    if (JS::UniqueChars str = printer.release()) {
+      block.setCode(str.get());
     }
   }
 };

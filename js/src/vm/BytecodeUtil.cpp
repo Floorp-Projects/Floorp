@@ -216,7 +216,11 @@ bool js::DumpRealmPCCounts(JSContext* cx) {
     if (!DumpPCCounts(cx, script, &sprinter)) {
       return false;
     }
-    fputs(sprinter.string(), stdout);
+    JS::UniqueChars out = sprinter.release();
+    if (!out) {
+      return false;
+    }
+    fputs(out.get(), stdout);
     fprintf(stdout, "--- END SCRIPT %s:%u ---\n", filename, script->lineno());
   }
 
@@ -1123,7 +1127,11 @@ JS_PUBLIC_API bool js::DumpPC(JSContext* cx, FILE* fp) {
   }
   RootedScript script(cx, iter.script());
   bool ok = DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
-  fprintf(fp, "%s", sprinter.string());
+  JS::UniqueChars out = sprinter.release();
+  if (!out) {
+    return false;
+  }
+  fprintf(fp, "%s", out.get());
   return ok;
 }
 
@@ -1136,7 +1144,11 @@ JS_PUBLIC_API bool js::DumpScript(JSContext* cx, JSScript* scriptArg,
   }
   RootedScript script(cx, scriptArg);
   bool ok = Disassemble(cx, script, true, &sprinter);
-  fprintf(fp, "%s", sprinter.string());
+  JS::UniqueChars out = sprinter.release();
+  if (!out) {
+    return false;
+  }
+  fprintf(fp, "%s", out.get());
   return ok;
 }
 
@@ -3093,8 +3105,8 @@ JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
     }
   }
 
-  *length = out.getOffset();
-  return js::DuplicateString(cx, out.string(), *length);
+  *length = out.length();
+  return out.release();
 }
 
 JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
@@ -3108,6 +3120,6 @@ JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
     return nullptr;
   }
 
-  *length = out.getOffset();
-  return js::DuplicateString(cx, out.string(), *length);
+  *length = out.length();
+  return out.release();
 }
