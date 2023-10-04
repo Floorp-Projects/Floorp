@@ -4,9 +4,16 @@
 ---
 loader: gecko_taskgraph.loader.transform:loader
 
+kind-dependencies:
+    # non-system python
+    - toolchain
+
 transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    use-system-python: false
 
 jobs:
     tps-xpi:
