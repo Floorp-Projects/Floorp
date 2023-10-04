@@ -444,6 +444,24 @@ jobs:
             }
           }'
 
+    - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
+              "os": "WINNT",
+              "arch": "x86",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
       run: |
         curl -X POST \
