@@ -371,7 +371,7 @@ impl PropertyDeclaration {
     }
     #[cfg(not(debug_assertions))]
     #[inline(always)]
-    pub(crate) fn debug_crash(&self, reason: &str) {}
+    pub(crate) fn debug_crash(&self, _reason: &str) {}
 
     /// Returns whether this is a variant of the Longhand(Value) type, rather
     /// than one of the special variants in extra_variants.
