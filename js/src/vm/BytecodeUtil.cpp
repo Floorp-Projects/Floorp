@@ -104,7 +104,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
 [[nodiscard]] static bool DumpIonScriptCounts(Sprinter* sp, HandleScript script,
                                               jit::IonScriptCounts* ionCounts) {
-  sp->jsprintf("IonScript [%zu blocks]:\n", ionCounts->numBlocks());
+  sp->printf("IonScript [%zu blocks]:\n", ionCounts->numBlocks());
 
   for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
     const jit::IonBlockCounts& block = ionCounts->block(i);
@@ -112,16 +112,16 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
     JS::LimitedColumnNumberZeroOrigin columnNumber;
     lineNumber = PCToLineNumber(script, script->offsetToPC(block.offset()),
                                 &columnNumber);
-    sp->jsprintf("BB #%" PRIu32 " [%05u,%u,%u]", block.id(), block.offset(),
-                 lineNumber, columnNumber.zeroOriginValue());
+    sp->printf("BB #%" PRIu32 " [%05u,%u,%u]", block.id(), block.offset(),
+               lineNumber, columnNumber.zeroOriginValue());
     if (block.description()) {
-      sp->jsprintf(" [inlined %s]", block.description());
+      sp->printf(" [inlined %s]", block.description());
     }
     for (size_t j = 0; j < block.numSuccessors(); j++) {
-      sp->jsprintf(" -> #%" PRIu32, block.successor(j));
+      sp->printf(" -> #%" PRIu32, block.successor(j));
     }
-    sp->jsprintf(" :: %" PRIu64 " hits\n", block.hitCount());
-    sp->jsprintf("%s\n", block.code());
+    sp->printf(" :: %" PRIu64 " hits\n", block.hitCount());
+    sp->printf("%s\n", block.code());
   }
 
   return true;
@@ -147,7 +147,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
     PCCounts* counts = script->maybeGetPCCounts(pc);
     if (double val = counts ? counts->numExec() : 0.0) {
-      sp->jsprintf("\"%s\": %.0f", PCCounts::numExecName, val);
+      sp->printf("\"%s\": %.0f", PCCounts::numExecName, val);
     }
     sp->put("}\n");
 
@@ -1004,8 +1004,8 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   }
 
   if (showAll) {
-    sp->jsprintf("%s:%u\n", script->filename(),
-                 unsigned(script->lineno()));
+    sp->printf("%s:%u\n", script->filename(),
+               unsigned(script->lineno()));
   }
 
   if (pc != nullptr) {
@@ -1043,7 +1043,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
     if (showAll) {
       if (parser && parser->isReachable(next)) {
-        sp->jsprintf("%05u ", parser->stackDepthAtPC(next));
+        sp->printf("%05u ", parser->stackDepthAtPC(next));
       } else {
         sp->put("      ");
       }
@@ -1248,7 +1248,7 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
         break;
     }
 
-    sp->jsprintf("from %s @ %05u", CodeName(JSOp(*pc)),
+    sp->printf("from %s @ %05u", CodeName(JSOp(*pc)),
                  unsigned(script->pcToOffset(pc)));
 
     return true;
@@ -1363,11 +1363,11 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   JSOp op = JSOp(*pc);
   const JSCodeSpec& cs = CodeSpec(op);
   const unsigned len = cs.length;
-  sp->jsprintf("%05u:", loc);
+  sp->printf("%05u:", loc);
   if (lines) {
-    sp->jsprintf("%4u", PCToLineNumber(script, pc));
+    sp->printf("%4u", PCToLineNumber(script, pc));
   }
-  sp->jsprintf("  %s", CodeName(op));
+  sp->printf("  %s", CodeName(op));
 
   int i;
   switch (JOF_TYPE(cs.format)) {
@@ -1376,7 +1376,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
     case JOF_JUMP: {
       ptrdiff_t off = GET_JUMP_OFFSET(pc);
-      sp->jsprintf(" %u (%+d)", unsigned(loc + int(off)), int(off));
+      sp->printf(" %u (%+d)", unsigned(loc + int(off)), int(off));
       break;
     }
 
@@ -1386,7 +1386,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!ToDisassemblySource(cx, scope, &bytes)) {
         return 0;
       }
-      sp->jsprintf(" %s", bytes.get());
+      sp->printf(" %s", bytes.get());
       break;
     }
 
@@ -1397,12 +1397,12 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         return 0;
       }
       EnvironmentCoordinate ec(pc);
-      sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot());
+      sp->printf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot());
       break;
     }
     case JOF_DEBUGCOORD: {
       EnvironmentCoordinate ec(pc);
-      sp->jsprintf("(hops = %u, slot = %u)", ec.hops(), ec.slot());
+      sp->printf("(hops = %u, slot = %u)", ec.hops(), ec.slot());
       break;
     }
     case JOF_ATOM: {
@@ -1411,7 +1411,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      sp->jsprintf(" %s", bytes.get());
+      sp->printf(" %s", bytes.get());
       break;
     }
     case JOF_STRING: {
@@ -1420,13 +1420,13 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      sp->jsprintf(" %s", bytes.get());
+      sp->printf(" %s", bytes.get());
       break;
     }
 
     case JOF_DOUBLE: {
       double d = GET_INLINE_VALUE(pc).toDouble();
-      sp->jsprintf(" %lf", d);
+      sp->printf(" %lf", d);
       break;
     }
 
@@ -1436,7 +1436,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      sp->jsprintf(" %s", bytes.get());
+      sp->printf(" %s", bytes.get());
       break;
     }
 
@@ -1448,7 +1448,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         if (!bytes) {
           return 0;
         }
-        sp->jsprintf(" %s", bytes.get());
+        sp->printf(" %s", bytes.get());
       }
       break;
     }
@@ -1469,7 +1469,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       if (!bytes) {
         return 0;
       }
-      sp->jsprintf(" %s", bytes.get());
+      sp->printf(" %s", bytes.get());
       break;
     }
 
@@ -1482,7 +1482,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       pc2 += JUMP_OFFSET_LEN;
       high = GET_JUMP_OFFSET(pc2);
       pc2 += JUMP_OFFSET_LEN;
-      sp->jsprintf(" defaultOffset %d low %d high %d", int(off), low, high);
+      sp->printf(" defaultOffset %d low %d high %d", int(off), low, high);
 
       // Display stack dump before diplaying the offsets for each case.
       if (!dumpStack()) {
@@ -1492,42 +1492,42 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       for (i = low; i <= high; i++) {
         off =
             script->tableSwitchCaseOffset(pc, i - low) - script->pcToOffset(pc);
-        sp->jsprintf("\n\t%d: %d", i, int(off));
+        sp->printf("\n\t%d: %d", i, int(off));
       }
       break;
     }
 
     case JOF_QARG:
-      sp->jsprintf(" %u", GET_ARGNO(pc));
+      sp->printf(" %u", GET_ARGNO(pc));
       break;
 
     case JOF_LOCAL:
-      sp->jsprintf(" %u", GET_LOCALNO(pc));
+      sp->printf(" %u", GET_LOCALNO(pc));
       break;
 
     case JOF_GCTHING:
-      sp->jsprintf(" %u", unsigned(GET_GCTHING_INDEX(pc)));
+      sp->printf(" %u", unsigned(GET_GCTHING_INDEX(pc)));
       break;
 
     case JOF_UINT32:
-      sp->jsprintf(" %u", GET_UINT32(pc));
+      sp->printf(" %u", GET_UINT32(pc));
       break;
 
     case JOF_ICINDEX:
-      sp->jsprintf(" (ic: %u)", GET_ICINDEX(pc));
+      sp->printf(" (ic: %u)", GET_ICINDEX(pc));
       break;
 
     case JOF_LOOPHEAD:
-      sp->jsprintf(" (ic: %u, depthHint: %u)", GET_ICINDEX(pc),
-                   LoopHeadDepthHint(pc));
+      sp->printf(" (ic: %u, depthHint: %u)", GET_ICINDEX(pc),
+                 LoopHeadDepthHint(pc));
       break;
 
     case JOF_TWO_UINT8: {
       int one = (int)GET_UINT8(pc);
       int two = (int)GET_UINT8(pc + 1);
 
-      sp->jsprintf(" %d", one);
-      sp->jsprintf(" %d", two);
+      sp->printf(" %d", one);
+      sp->printf(" %d", two);
       break;
     }
 
@@ -1554,7 +1554,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       MOZ_ASSERT(op == JSOp::Int32);
       i = GET_INT32(pc);
     print_int:
-      sp->jsprintf(" %d", i);
+      sp->printf(" %d", i);
       break;
 
     default: {

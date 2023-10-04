@@ -1646,13 +1646,13 @@ void Statistics::printProfileHeader() {
   sprinter.put(MajorGCProfilePrefix);
 
 #define PRINT_METADATA_NAME(name, width, _1, _2)  \
-  sprinter.jsprintf(" %-*s", width, name);
+  sprinter.printf(" %-*s", width, name);
 
   FOR_EACH_GC_PROFILE_METADATA(PRINT_METADATA_NAME)
 #undef PRINT_METADATA_NAME
 
 #define PRINT_PROFILE_NAME(_1, text, _2)     \
-  sprinter.jsprintf(" %-6.6s", text);
+  sprinter.printf(" %-6.6s", text);
 
   FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_NAME)
 #undef PRINT_PROFILE_NAME
@@ -1697,7 +1697,7 @@ void Statistics::printSliceProfile() {
   size_t realmCount = zoneStats.realmCount;
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
-  sprinter.jsprintf(" " format, value);
+  sprinter.printf(" " format, value);
 
   FOR_EACH_GC_PROFILE_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
@@ -1777,7 +1777,7 @@ void Statistics::printProfileTimes(const ProfileDurations& times,
                                    Sprinter& sprinter) {
   for (auto time : times) {
     int64_t millis = int64_t(time.ToMilliseconds());
-    sprinter.jsprintf(" %6" PRIi64, millis);
+    sprinter.printf(" %6" PRIi64, millis);
   }
 
   sprinter.put("\n");
@@ -1814,7 +1814,7 @@ void Statistics::printTotalProfileTimes() {
   JSRuntime* runtime = gc->rt;
 
 #define PRINT_FIELD_VALUE(_1, _2, format, value) \
-  sprinter.jsprintf(" " format, value);
+  sprinter.printf(" " format, value);
 
   FOR_EACH_GC_PROFILE_COMMON_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
@@ -1822,7 +1822,7 @@ void Statistics::printTotalProfileTimes() {
   // Use whole width of per-slice metadata to print total slices so the profile
   // totals that follow line up.
   size_t width = SliceMetadataFormatWidth();
-  sprinter.jsprintf(" %-*s", int(width), formatTotalSlices());
+  sprinter.printf(" %-*s", int(width), formatTotalSlices());
   printProfileTimes(totalTimes_, sprinter);
 
   JS::UniqueChars str = sprinter.release();

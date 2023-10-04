@@ -16849,7 +16849,6 @@ neqo_http3conn_is_zero_rtt
 ?ClassName@js@@YA?AV?$Handle@PEAVPropertyName@js@@@JS@@W4JSProtoKey@@PEAUJSContext@@@Z
 ?FormatStackDump@JS@@YA?AV?$UniquePtr@$$BY0A@DUFreePolicy@JS@@@mozilla@@PEAUJSContext@@_N11@Z
 ?callee@FrameIter@js@@QEBAPEAVJSFunction@@PEAUJSContext@@@Z
-?jsprintf@Sprinter@js@@QEAA_NPEBDZZ
 ?vprintf@GenericPrinter@js@@QEAA_NPEBDPEAD@Z
 ?release@Sprinter@js@@QEAA?AV?$UniquePtr@$$BY0A@DUFreePolicy@JS@@@mozilla@@XZ
 ??1Sprinter@js@@QEAA@XZ

@@ -143,11 +143,6 @@ class JS_PUBLIC_API Sprinter final : public GenericPrinter {
   }
   virtual size_t index() const override { return length(); }
 
-  // Format the given format/arguments as if by JS_vsmprintf, then put it.
-  // Return true on success, else return false and report an error (typically
-  // OOM).
-  void jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-
   void putString(JSString* str);
 
   size_t length() const;
