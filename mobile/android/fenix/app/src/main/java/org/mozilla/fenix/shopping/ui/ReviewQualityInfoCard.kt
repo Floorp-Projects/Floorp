@@ -27,8 +27,8 @@ import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.parseHtml
-import org.mozilla.fenix.shopping.ext.displayName
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.ui.ext.displayName
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**

@@ -25,11 +25,6 @@ interface ReviewQualityCheckVendorsService {
      * Returns the list of product vendors in order.
      */
     fun productVendors(): List<ProductVendor>
-
-    /**
-     * Returns the product's vendor.
-     */
-    fun productVendor(): ProductVendor
 }
 
 /**
@@ -59,8 +54,6 @@ class DefaultReviewQualityCheckVendorsService(
         }
     }
 
-    override fun productVendor(): ProductVendor = productVendors().first()
-
     /**
      * Creates list of product vendors using the firstVendor param as the first item in the list.
      */
@@ -83,3 +76,9 @@ class DefaultReviewQualityCheckVendorsService(
         }
     }
 }
+
+/**
+ * Returns the first matching product vendor for the selected tab.
+ */
+fun ReviewQualityCheckVendorsService.productVendor(): ProductVendor =
+    productVendors().first()
