@@ -18,7 +18,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 12px;
   position: relative;
 }
 
@@ -40,6 +40,13 @@ button {
 
 :host([type="accordion"]) #label-wrapper {
   cursor: pointer;
+  position: relative;
+
+  & > #header {
+    /* 24px for the ghost button, 12px gap between
+     * text and button. */
+    margin-inline-end: 36px;
+  }
 }
 
 #header {
@@ -81,10 +88,18 @@ details > summary:focus-visible {
   fill: currentColor;
   width: 24px;
   height: 24px;
+  /* override some default button sizing styles */
   min-width: 24px;
   min-height: 24px;
   padding: 0;
-  flex-shrink: 0;
+  /* Abspos rather than flexbox so we don't influence the padding
+   * around the title.
+   */
+  position: absolute;
+  top: calc(50% - 12px);
+  /* This approximates the top/bottom 'padding' gap created by the abspos
+   * above. It won't always be perfectly accurate, and that's OK. */
+  inset-inline-end: -2px;
 }
 
 details[open] .chevron-icon {
