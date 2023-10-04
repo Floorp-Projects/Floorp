@@ -736,6 +736,14 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Product highlights should match", it.highlights, equalTo(null))
             }
 
+            // verify product with integer adjusted rating
+            val resultIntAdjustedRating = mainSession.requestAnalysis("https://www.amazon.com/dp/B084BZZW9J")
+            sessionRule.waitForResult(resultIntAdjustedRating).let {
+                assertThat("Product grade should match", it.grade, equalTo("A"))
+                assertThat("Product id should match", it.productId, equalTo("B084BZZW9J"))
+                assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(4.0))
+            }
+
             val result = mainSession.requestAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result).let {
                 assertThat("Product grade should match", it.grade, equalTo("B"))
