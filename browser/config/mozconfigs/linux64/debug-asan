@@ -8,8 +8,6 @@ ac_add_options --enable-valgrind
 
 . $topsrcdir/build/unix/mozconfig.asan
 
-ac_add_options --enable-linker=lld
-
 # Build with fuzzing support, so this build can also be used
 # to analyze fuzzing bugs with rr.
 ac_add_options --enable-fuzzing

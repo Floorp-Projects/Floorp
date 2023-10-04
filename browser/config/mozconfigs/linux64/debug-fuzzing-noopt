@@ -8,7 +8,6 @@ export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/bin/llvm-symbolizer"
 export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --enable-fuzzing
-ac_add_options --enable-linker=lld
 unset MOZ_STDCXX_COMPAT
 
 # Even in fuzzing builds without sanitizers, the UBSan runtime is pulled
