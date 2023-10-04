@@ -2798,11 +2798,7 @@ JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
 
   json.endObject();
 
-  if (sp.hadOutOfMemory()) {
-    return nullptr;
-  }
-
-  return NewStringCopyZ<CanGC>(cx, sp.string());
+  return sp.releaseJS(cx);
 }
 
 static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
@@ -2962,11 +2958,7 @@ JSString* JS::GetPCCountScriptContents(JSContext* cx, size_t index) {
     }
   }
 
-  if (sp.hadOutOfMemory()) {
-    return nullptr;
-  }
-
-  return NewStringCopyZ<CanGC>(cx, sp.string());
+  return sp.releaseJS(cx);
 }
 
 struct CollectedScripts {

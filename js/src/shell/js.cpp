@@ -3407,7 +3407,7 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
+  JSString* str = sprinter.releaseJS(cx);
   if (!str) {
     return false;
   }
@@ -3502,16 +3502,7 @@ static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  const char* chars = sprinter.string();
-  size_t len;
-  JS::UniqueTwoByteChars buf(
-      JS::LossyUTF8CharsToNewTwoByteCharsZ(
-          cx, JS::UTF8Chars(chars, strlen(chars)), &len, js::MallocArena)
-          .get());
-  if (!buf) {
-    return false;
-  }
-  JSString* str = JS_NewUCStringCopyN(cx, buf.get(), len);
+  JSString* str = sprinter.releaseJS(cx);
   if (!str) {
     return false;
   }
