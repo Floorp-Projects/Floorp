@@ -7,7 +7,8 @@
 #shopping-settings-wrapper {
   display: grid;
   grid-template-rows: auto;
-  row-gap: 1em;
+  row-gap: 8px;
+  margin-top: 12px;
 }
 
 #shopping-settings-opt-out-button {
