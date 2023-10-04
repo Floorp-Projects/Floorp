@@ -20,6 +20,10 @@ on:
       beta:
         type: boolean
         default: false
+      lightning-build:
+        description: enable lightning build
+        type: boolean
+        default: false
       #? if set this, use profdata, jarlog in build
       build-with-profdata-and-jarlog:
         description: build with profdata and jarlog
@@ -165,8 +169,17 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+        if [[ $GHA_beta == 'true' ]];then
+          echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
+        elif [[ $GHA_lightning_build == 'true' ]];then
+          echo 'ac_add_options --with-branding=browser/branding/lightning' >> mozconfig
+        else
+          echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        fi
+
+        if [[ $GHA_lightning_build == 'true' ]];then
+          echo 'ac_add_options --enable-lightning-build' >> mozconfig
+        fi
 
         if [[ $GHA_profgen == 'true' ]]; then
           echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
@@ -191,6 +204,8 @@ jobs:
         GHA_profgen: ${{inputs.profgen}}
         GHA_profdata_jarlog_artifact_name : ${{inputs.build-with-profdata-and-jarlog}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+        GHA_beta: ${{inputs.beta}}
+        GHA_lightning_build: ${{inputs.lightning-build}}
 
     - name: setup Rust 🦀
       run: |
@@ -220,6 +235,16 @@ jobs:
             cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
             cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
             cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
+      
+    - name: Copy l10n files if lightning
+      if : inputs.lightning-build
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning
+            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.dtd
+            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.ftl
+            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.properties
           done
 
     - name: Change Release Note URL

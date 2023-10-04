@@ -37,6 +37,10 @@ on:
       buildjet:
         type: boolean
         default: false
+      lightning-build:
+        description: enable lightning build
+        type: boolean
+        default: false
       #? buildjet cache also is, but idk how to use on sccache
       MOZ_BUILD_DATE:
         type: string
@@ -118,6 +122,7 @@ jobs:
         disable_updater = os.environ["GHA_disable_updater"] == "true"
         aarch64 = os.environ["GHA_aarch64"] == "true"
         beta= os.environ["GHA_beta"] == "true"
+        lightning_build = os.environ["GHA_lightning_build"] == "true"
         MOZ_BUILD_DATE= os.environ["GHA_MOZ_BUILD_DATE"]
 
         os.system("sudo apt update")
@@ -132,8 +137,13 @@ jobs:
 
         if beta:
           mozconfig.append('ac_add_options --with-branding=browser/branding/beta')
+        elif lightning_build:
+          mozconfig.append('ac_add_options --with-branding=browser/branding/lightning')
         else:
           mozconfig.append('ac_add_options --with-branding=browser/branding/official')
+
+        if lightning_build:
+          mozconfig.append('ac_add_options --enable-lightning-build')
 
         if disable_updater:
           mozconfig.append('ac_add_options --disable-updater')
@@ -168,6 +178,7 @@ jobs:
         GHA_disable_updater: ${{inputs.disable-updater}}
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_beta: ${{inputs.beta}}
+        GHA_lightning_build: ${{inputs.lightning-build}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
       shell: python3 {0}
 
@@ -187,7 +198,17 @@ jobs:
             cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
             cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
           done
-    
+          
+    - name: Copy l10n files if lightning
+      if : inputs.lightning-build
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning
+            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.dtd
+            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.ftl
+            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.properties
+          done
+
     - name: Change Release Note URL
       if: inputs.release-note-url
       run: |
