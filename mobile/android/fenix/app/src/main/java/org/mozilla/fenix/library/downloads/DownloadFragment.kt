@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.MainScope
@@ -28,8 +29,10 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentDownloadsBinding
+import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.filterNotExistsOnDisk
 import org.mozilla.fenix.ext.getRootView
@@ -216,17 +219,33 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             } else {
                 0L
             }
-            AbstractFetchDownloadService.openFile(
-                applicationContext = it.applicationContext,
-                download = DownloadState(
-                    id = item.id,
-                    url = item.url,
-                    fileName = item.fileName,
-                    contentType = item.contentType,
-                    status = item.status,
-                    contentLength = contentLength,
-                ),
+            val downloadState = DownloadState(
+                id = item.id,
+                url = item.url,
+                fileName = item.fileName,
+                contentType = item.contentType,
+                status = item.status,
+                contentLength = contentLength,
             )
+
+            val canOpenFile = AbstractFetchDownloadService.openFile(
+                applicationContext = it.applicationContext,
+                download = downloadState,
+            )
+
+            if (!canOpenFile) {
+                FenixSnackbar.make(
+                    view = binding.root,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedWithBrowserToolbar = true,
+                ).setText(
+                    DynamicDownloadDialog.getCannotOpenFileErrorMessage(
+                        it,
+                        downloadState,
+                    ),
+                )
+                    .show()
+            }
         }
     }
 
