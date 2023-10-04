@@ -466,8 +466,10 @@ ElementEditor.prototype = {
     // than having it as a div and adding interactivity.
     if (isInteractive) {
       this._displayBadge.removeAttribute("role");
+      this._displayBadge.setAttribute("aria-pressed", "false");
     } else {
       this._displayBadge.setAttribute("role", "presentation");
+      this._displayBadge.removeAttribute("aria-pressed");
     }
   },
 
@@ -1116,6 +1118,10 @@ ElementEditor.prototype = {
   async onScrollableBadgeClick() {
     this.highlightingOverflowCausingElements =
       this._scrollableBadge.classList.toggle("active");
+    this._scrollableBadge.setAttribute(
+      "aria-pressed",
+      this.highlightingOverflowCausingElements
+    );
 
     const { nodes } = await this.node.walkerFront.getOverflowCausingElements(
       this.node
