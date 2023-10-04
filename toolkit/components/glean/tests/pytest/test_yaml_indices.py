@@ -26,7 +26,7 @@ def test_yamls_sorted():
     yaml_lists = [
         item
         for item in dir(metrics_index)
-        if isinstance(item, list) and not item.startswith("__")
+        if isinstance(getattr(metrics_index, item), list) and not item.startswith("__")
     ]
     for name in yaml_lists:
         if name in to_ignore:
