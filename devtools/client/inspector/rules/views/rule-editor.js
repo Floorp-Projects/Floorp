@@ -317,10 +317,11 @@ RuleEditor.prototype = {
 
       const isHighlighted = this.ruleView.isSelectorHighlighted(selector);
       // Handling of click events is delegated to CssRuleView.handleEvent()
-      createChild(header, "button", {
+      createChild(header, "span", {
         class:
           "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
           (isHighlighted ? " highlighted" : ""),
+        role: "button",
         "aria-pressed": isHighlighted,
         // This is used in rules.js for the selector highlighter
         "data-computed-selector": desugaredSelector,
