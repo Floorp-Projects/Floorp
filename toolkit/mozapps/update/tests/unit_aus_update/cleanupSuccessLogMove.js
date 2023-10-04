@@ -18,8 +18,6 @@ async function run_test() {
 
   let log = getUpdateDirFile(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");
-  log = getUpdateDirFile(FILE_UPDATE_ELEVATED_LOG);
-  writeFile(log, "Last Update Elevated Log");
 
   standardInit();
 
@@ -45,9 +43,6 @@ async function run_test() {
   log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  log = getUpdateDirFile(FILE_UPDATE_ELEVATED_LOG);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-
   log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
   Assert.equal(
@@ -56,18 +51,7 @@ async function run_test() {
     "the last update log contents" + MSG_SHOULD_EQUAL
   );
 
-  log = getUpdateDirFile(FILE_LAST_UPDATE_ELEVATED_LOG);
-  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  Assert.equal(
-    readFile(log),
-    "Last Update Elevated Log",
-    "the last update elevated log contents" + MSG_SHOULD_EQUAL
-  );
-
   log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-
-  log = getUpdateDirFile(FILE_BACKUP_UPDATE_ELEVATED_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   let dir = getUpdateDirFile(DIR_PATCH);
