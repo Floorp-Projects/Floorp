@@ -63,6 +63,18 @@ cc_library(
 )
 
 cc_library(
+    name = "nullability",
+    srcs = ["internal/nullability_impl.h"],
+    hdrs = ["nullability.h"],
+    copts = ABSL_DEFAULT_COPTS,
+    linkopts = ABSL_DEFAULT_LINKOPTS,
+    deps = [
+        ":core_headers",
+        "//absl/meta:type_traits",
+    ],
+)
+
+cc_library(
     name = "raw_logging_internal",
     srcs = ["internal/raw_logging.cc"],
     hdrs = ["internal/raw_logging.h"],
@@ -114,6 +126,23 @@ cc_library(
 )
 
 cc_library(
+    name = "cycleclock_internal",
+    hdrs = [
+        "internal/cycleclock_config.h",
+        "internal/unscaledcycleclock_config.h",
+    ],
+    copts = ABSL_DEFAULT_COPTS,
+    linkopts = ABSL_DEFAULT_LINKOPTS,
+    visibility = [
+        "//absl:__subpackages__",
+    ],
+    deps = [
+        ":base_internal",
+        ":config",
+    ],
+)
+
+cc_library(
     name = "dynamic_annotations",
     hdrs = [
         "dynamic_annotations.h",
@@ -128,6 +157,8 @@ cc_library(
 
 cc_library(
     name = "core_headers",
+    srcs = [
+    ],
     hdrs = [
         "attributes.h",
         "const_init.h",
@@ -223,6 +254,10 @@ cc_library(
         "//absl:clang-cl_compiler": [
             "-DEFAULTLIB:advapi32.lib",
         ],
+        "//absl:mingw_compiler": [
+            "-DEFAULTLIB:advapi32.lib",
+            "-ladvapi32",
+        ],
         "//absl:wasm": [],
         "//conditions:default": ["-pthread"],
     }) + ABSL_DEFAULT_LINKOPTS,
@@ -231,6 +266,7 @@ cc_library(
         ":base_internal",
         ":config",
         ":core_headers",
+        ":cycleclock_internal",
         ":dynamic_annotations",
         ":log_severity",
         ":raw_logging_internal",
@@ -525,6 +561,16 @@ cc_test(
 )
 
 cc_test(
+    name = "nullability_test",
+    srcs = ["nullability_test.cc"],
+    deps = [
+        ":core_headers",
+        ":nullability",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "raw_logging_test",
     srcs = ["raw_logging_test.cc"],
     copts = ABSL_TEST_COPTS,
@@ -708,21 +754,23 @@ cc_test(
 
 cc_library(
     name = "prefetch",
-    hdrs = ["internal/prefetch.h"],
+    hdrs = [
+        "prefetch.h",
+    ],
     copts = ABSL_DEFAULT_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
-    visibility = [
-        "//absl:__subpackages__",
-    ],
     deps = [
         ":config",
+        ":core_headers",
     ],
 )
 
 cc_test(
     name = "prefetch_test",
     size = "small",
-    srcs = ["internal/prefetch_test.cc"],
+    srcs = [
+        "prefetch_test.cc",
+    ],
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     deps = [

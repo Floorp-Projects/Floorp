@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <limits>
@@ -26,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/base/attributes.h"
 #include "absl/base/internal/raw_logging.h"
+#include "absl/log/log.h"
 #include "absl/strings/internal/str_format/bind.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
@@ -264,7 +266,7 @@ MATCHER_P(MatchesPointerString, ptr, "") {
   }
   void* parsed = nullptr;
   if (sscanf(arg.c_str(), "%p", &parsed) != 1) {
-    ABSL_RAW_LOG(FATAL, "Could not parse %s", arg.c_str());
+    LOG(FATAL) << "Could not parse " << arg;
   }
   return ptr == parsed;
 }
@@ -683,7 +685,11 @@ TEST_F(FormatConvertTest, Float) {
   }
 
   // Remove duplicates to speed up the logic below.
-  std::sort(floats.begin(), floats.end());
+  std::sort(floats.begin(), floats.end(), [](const float a, const float b) {
+    if (std::isnan(a)) return false;
+    if (std::isnan(b)) return true;
+    return a < b;
+  });
   floats.erase(std::unique(floats.begin(), floats.end()), floats.end());
 
   TestWithMultipleFormatsHelper(floats, {});
@@ -757,7 +763,11 @@ TEST_F(FormatConvertTest, Double) {
   }
 
   // Remove duplicates to speed up the logic below.
-  std::sort(doubles.begin(), doubles.end());
+  std::sort(doubles.begin(), doubles.end(), [](const double a, const double b) {
+    if (std::isnan(a)) return false;
+    if (std::isnan(b)) return true;
+    return a < b;
+  });
   doubles.erase(std::unique(doubles.begin(), doubles.end()), doubles.end());
 
   TestWithMultipleFormatsHelper(doubles, skip_verify);
@@ -1241,9 +1251,9 @@ TEST_F(FormatConvertTest, GlibcHasCorrectTraits) {
   const NativePrintfTraits &native_traits = VerifyNativeImplementation();
   // If one of the following tests break then it is either because the above PP
   // macro guards failed to exclude a new platform (likely) or because something
-  // has changed in the implemention of glibc sprintf float formatting behavior.
-  // If the latter, then the code that computes these flags needs to be
-  // revisited and/or possibly the StrFormat implementation.
+  // has changed in the implementation of glibc sprintf float formatting
+  // behavior.  If the latter, then the code that computes these flags needs to
+  // be revisited and/or possibly the StrFormat implementation.
   EXPECT_TRUE(native_traits.hex_float_has_glibc_rounding);
   EXPECT_TRUE(native_traits.hex_float_prefers_denormal_repr);
   EXPECT_TRUE(

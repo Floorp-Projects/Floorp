@@ -43,12 +43,12 @@
 
 #define ABSL_RAW_LOG(severity, ...)                                            \
   do {                                                                         \
-    constexpr const char* absl_raw_logging_internal_basename =                 \
-        ::absl::raw_logging_internal::Basename(__FILE__,                       \
-                                               sizeof(__FILE__) - 1);          \
-    ::absl::raw_logging_internal::RawLog(ABSL_RAW_LOGGING_INTERNAL_##severity, \
-                                         absl_raw_logging_internal_basename,   \
-                                         __LINE__, __VA_ARGS__);               \
+    constexpr const char* absl_raw_log_internal_basename =                     \
+        ::absl::raw_log_internal::Basename(__FILE__, sizeof(__FILE__) - 1);    \
+    ::absl::raw_log_internal::RawLog(ABSL_RAW_LOG_INTERNAL_##severity,         \
+                                     absl_raw_log_internal_basename, __LINE__, \
+                                     __VA_ARGS__);                             \
+    ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_##severity;                        \
   } while (0)
 
 // Similar to CHECK(condition) << message, but for low-level modules:
@@ -72,14 +72,13 @@
 //
 // The API is a subset of the above: each macro only takes two arguments.  Use
 // StrCat if you need to build a richer message.
-#define ABSL_INTERNAL_LOG(severity, message)                                 \
-  do {                                                                       \
-    constexpr const char* absl_raw_logging_internal_filename = __FILE__;     \
-    ::absl::raw_logging_internal::internal_log_function(                     \
-        ABSL_RAW_LOGGING_INTERNAL_##severity,                                \
-        absl_raw_logging_internal_filename, __LINE__, message);              \
-    if (ABSL_RAW_LOGGING_INTERNAL_##severity == ::absl::LogSeverity::kFatal) \
-      ABSL_INTERNAL_UNREACHABLE;                                             \
+#define ABSL_INTERNAL_LOG(severity, message)                              \
+  do {                                                                    \
+    constexpr const char* absl_raw_log_internal_filename = __FILE__;      \
+    ::absl::raw_log_internal::internal_log_function(                      \
+        ABSL_RAW_LOG_INTERNAL_##severity, absl_raw_log_internal_filename, \
+        __LINE__, message);                                               \
+    ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_##severity;                   \
   } while (0)
 
 #define ABSL_INTERNAL_CHECK(condition, message)                    \
@@ -91,16 +90,36 @@
     }                                                              \
   } while (0)
 
-#define ABSL_RAW_LOGGING_INTERNAL_INFO ::absl::LogSeverity::kInfo
-#define ABSL_RAW_LOGGING_INTERNAL_WARNING ::absl::LogSeverity::kWarning
-#define ABSL_RAW_LOGGING_INTERNAL_ERROR ::absl::LogSeverity::kError
-#define ABSL_RAW_LOGGING_INTERNAL_FATAL ::absl::LogSeverity::kFatal
-#define ABSL_RAW_LOGGING_INTERNAL_LEVEL(severity) \
+#ifndef NDEBUG
+
+#define ABSL_RAW_DLOG(severity, ...) ABSL_RAW_LOG(severity, __VA_ARGS__)
+#define ABSL_RAW_DCHECK(condition, message) ABSL_RAW_CHECK(condition, message)
+
+#else  // NDEBUG
+
+#define ABSL_RAW_DLOG(severity, ...)                   \
+  while (false) ABSL_RAW_LOG(severity, __VA_ARGS__)
+#define ABSL_RAW_DCHECK(condition, message) \
+  while (false) ABSL_RAW_CHECK(condition, message)
+
+#endif  // NDEBUG
+
+#define ABSL_RAW_LOG_INTERNAL_INFO ::absl::LogSeverity::kInfo
+#define ABSL_RAW_LOG_INTERNAL_WARNING ::absl::LogSeverity::kWarning
+#define ABSL_RAW_LOG_INTERNAL_ERROR ::absl::LogSeverity::kError
+#define ABSL_RAW_LOG_INTERNAL_FATAL ::absl::LogSeverity::kFatal
+#define ABSL_RAW_LOG_INTERNAL_LEVEL(severity) \
   ::absl::NormalizeLogSeverity(severity)
+
+#define ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_INFO
+#define ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_WARNING
+#define ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_ERROR
+#define ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_FATAL ABSL_UNREACHABLE()
+#define ABSL_RAW_LOG_INTERNAL_MAYBE_UNREACHABLE_LEVEL(severity)
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
-namespace raw_logging_internal {
+namespace raw_log_internal {
 
 // Helper function to implement ABSL_RAW_LOG
 // Logs format... at "severity" level, reporting it
@@ -110,8 +129,8 @@ void RawLog(absl::LogSeverity severity, const char* file, int line,
             const char* format, ...) ABSL_PRINTF_ATTRIBUTE(4, 5);
 
 // Writes the provided buffer directly to stderr, in a signal-safe, low-level
-// manner.
-void AsyncSignalSafeWriteToStderr(const char* s, size_t len);
+// manner.  Preserves errno.
+void AsyncSignalSafeWriteError(const char* s, size_t len);
 
 // compile-time function to get the "base" filename, that is, the part of
 // a filename after the last "/" or "\" path separator.  The search starts at
@@ -130,7 +149,7 @@ constexpr const char* Basename(const char* fname, int offset) {
 // TODO(gfalcon): Come up with a better name for this method.
 bool RawLoggingFullySupported();
 
-// Function type for a raw_logging customization hook for suppressing messages
+// Function type for a raw_log customization hook for suppressing messages
 // by severity, and for writing custom prefixes on non-suppressed messages.
 //
 // The installed hook is called for every raw log invocation.  The message will
@@ -139,7 +158,7 @@ bool RawLoggingFullySupported();
 // also provided with an output buffer, where it can write a custom log message
 // prefix.
 //
-// The raw_logging system does not allocate memory or grab locks.  User-provided
+// The raw_log system does not allocate memory or grab locks.  User-provided
 // hooks must avoid these operations, and must not throw exceptions.
 //
 // 'severity' is the severity level of the message being written.
@@ -152,7 +171,7 @@ using LogFilterAndPrefixHook = bool (*)(absl::LogSeverity severity,
                                         const char* file, int line, char** buf,
                                         int* buf_size);
 
-// Function type for a raw_logging customization hook called to abort a process
+// Function type for a raw_log customization hook called to abort a process
 // when a FATAL message is logged.  If the provided AbortHook() returns, the
 // logging system will call abort().
 //
@@ -189,7 +208,7 @@ void RegisterLogFilterAndPrefixHook(LogFilterAndPrefixHook func);
 void RegisterAbortHook(AbortHook func);
 void RegisterInternalLogFunction(InternalLogFunction func);
 
-}  // namespace raw_logging_internal
+}  // namespace raw_log_internal
 ABSL_NAMESPACE_END
 }  // namespace absl
 

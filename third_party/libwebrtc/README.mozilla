@@ -16462,3 +16462,5 @@ libwebrtc updated from /Users/mfroman/no_tm_backup/elm/.moz-fast-forward/moz-lib
 libwebrtc updated from /Users/mfroman/no_tm_backup/elm/.moz-fast-forward/moz-libwebrtc commit mozpatches on 2023-09-27T04:10:08.028101.
 # ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py --from-local /Users/mfroman/no_tm_backup/elm/.moz-fast-forward/moz-libwebrtc --commit mozpatches libwebrtc
 libwebrtc updated from /Users/mfroman/no_tm_backup/elm/.moz-fast-forward/moz-libwebrtc commit mozpatches on 2023-09-27T04:11:23.619074.
+# ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py --from-github https://github.com/mjfroman/moz-libwebrtc-third-party --commit build-31edcc46d68 third_party
+third_party updated from commit https://github.com/mjfroman/moz-libwebrtc-third-party/archive/build-31edcc46d68.tar.gz on 2023-10-04T17:59:33.430931.

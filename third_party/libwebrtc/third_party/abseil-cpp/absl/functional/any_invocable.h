@@ -26,6 +26,9 @@
 // NOTE: `absl::AnyInvocable` is similar to the C++23 `std::move_only_function`
 // abstraction, but has a slightly different API and is not designed to be a
 // drop-in replacement or C++11-compatible backfill of that type.
+//
+// Credits to Matt Calabrese (https://github.com/mattcalabrese) for the original
+// implementation.
 
 #ifndef ABSL_FUNCTIONAL_ANY_INVOCABLE_H_
 #define ABSL_FUNCTIONAL_ANY_INVOCABLE_H_
@@ -146,8 +149,8 @@ ABSL_NAMESPACE_BEGIN
 //     std::move(continuation)(result_of_foo);
 //   }
 //
-// Credits to Matt Calabrese (https://github.com/mattcalabrese) for the original
-// implementation.
+// Attempting to call `absl::AnyInvocable` multiple times in such a case
+// results in undefined behavior.
 template <class Sig>
 class AnyInvocable : private internal_any_invocable::Impl<Sig> {
  private:
@@ -263,9 +266,17 @@ class AnyInvocable : private internal_any_invocable::Impl<Sig> {
   // Exchanges the targets of `*this` and `other`.
   void swap(AnyInvocable& other) noexcept { std::swap(*this, other); }
 
-  // abl::AnyInvocable::operator bool()
+  // absl::AnyInvocable::operator bool()
   //
   // Returns `true` if `*this` is not empty.
+  //
+  // WARNING: An `AnyInvocable` that wraps an empty `std::function` is not
+  // itself empty. This behavior is consistent with the standard equivalent
+  // `std::move_only_function`.
+  //
+  // In other words:
+  //   std::function<void()> f;  // empty
+  //   absl::AnyInvocable<void()> a = std::move(f);  // not empty
   explicit operator bool() const noexcept { return this->HasValue(); }
 
   // Invokes the target object of `*this`. `*this` must not be empty.

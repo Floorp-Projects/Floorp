@@ -67,12 +67,6 @@
 #ifndef ABSL_BASE_OPTIONS_H_
 #define ABSL_BASE_OPTIONS_H_
 
-// Include a standard library header to allow configuration based on the
-// standard library in use.
-#ifdef __cplusplus
-#include <ciso646>
-#endif
-
 // -----------------------------------------------------------------------------
 // Type Compatibility Options
 // -----------------------------------------------------------------------------
@@ -100,7 +94,7 @@
 // User code should not inspect this macro.  To check in the preprocessor if
 // absl::any is a typedef of std::any, use the feature macro ABSL_USES_STD_ANY.
 
-#define ABSL_OPTION_USE_STD_ANY 0
+#define ABSL_OPTION_USE_STD_ANY 2
 
 
 // ABSL_OPTION_USE_STD_OPTIONAL
@@ -154,7 +148,7 @@
 // absl::string_view is a typedef of std::string_view, use the feature macro
 // ABSL_USES_STD_STRING_VIEW.
 
-#define ABSL_OPTION_USE_STD_STRING_VIEW 0
+#define ABSL_OPTION_USE_STD_STRING_VIEW 2
 
 // ABSL_OPTION_USE_STD_VARIANT
 //

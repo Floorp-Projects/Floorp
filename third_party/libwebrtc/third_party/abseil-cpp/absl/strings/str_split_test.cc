@@ -14,26 +14,28 @@
 
 #include "absl/strings/str_split.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <initializer_list>
 #include <list>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/dynamic_annotations.h"
 #include "absl/base/macros.h"
 #include "absl/container/btree_map.h"
 #include "absl/container/btree_set.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/node_hash_map.h"
-#include "absl/strings/numbers.h"
+#include "absl/strings/string_view.h"
 
 namespace {
 
@@ -369,7 +371,7 @@ TEST(SplitIterator, EqualityAsEndCondition) {
 TEST(Splitter, RangeIterators) {
   auto splitter = absl::StrSplit("a,b,c", ',');
   std::vector<absl::string_view> output;
-  for (const absl::string_view& p : splitter) {
+  for (absl::string_view p : splitter) {
     output.push_back(p);
   }
   EXPECT_THAT(output, ElementsAre("a", "b", "c"));
