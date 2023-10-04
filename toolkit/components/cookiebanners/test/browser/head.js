@@ -161,10 +161,14 @@ async function openPageAndVerify({
   expected,
   bannerId = "banner",
   keepTabOpen = false,
+  expectActorEnabled = true,
 }) {
   info(`Opening ${testURL}`);
 
-  let promise = promiseBannerClickingFinish(domain);
+  // If the actor isn't enabled there won't be a "finished" observer message.
+  let promise = expectActorEnabled
+    ? promiseBannerClickingFinish(domain)
+    : new Promise(resolve => setTimeout(resolve, 0));
 
   let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, testURL);
 
