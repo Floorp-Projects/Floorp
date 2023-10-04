@@ -451,6 +451,12 @@ export const SpecialMessageActions = {
           action.data?.onlyIfKnownBrowser ?? false
         );
         break;
+      case "DECLINE_DEFAULT_PDF_HANDLER":
+        Services.prefs.setBoolPref(
+          "browser.shell.checkDefaultPDF.silencedByUser",
+          true
+        );
+        break;
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;
         window.gBrowser.pinTab(tab);
