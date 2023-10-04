@@ -1,0 +1,9 @@
+[DEFAULT]
+subsuite = "a11y"
+skip-if = [
+  "os != 'win'",
+  "headless",
+]
+support-files = ["head.js"]
+
+["browser_role.js"]

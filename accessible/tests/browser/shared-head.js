@@ -935,6 +935,8 @@ let gPythonSocket = null;
  * be resolved with the deserialized result. If the Python code raises an
  * exception, the JS Promise will be rejected with the Python traceback.
  * An info() function is provided in Python to log an info message.
+ * See windows/a11y_setup.py for other things available in the Python
+ * environment.
  */
 function runPython(code) {
   if (!gPythonSocket) {

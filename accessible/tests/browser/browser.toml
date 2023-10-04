@@ -7,6 +7,8 @@ support-files = [
   "head.js",
   "python_runner_wsh.py",
   "shared-head.js",
+  "windows/a11y_setup.py",
+  "windows/a11y_setup_requirements.txt",
 ]
 prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 

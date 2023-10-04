@@ -403,6 +403,20 @@ def run_mochitest_general(
         # reason it doesn't get set when calling `activate_this.py` in the virtualenv.
         sys.executable = command_context.virtualenv_manager.python_path
 
+    if ("browser-chrome", "a11y") in suites and sys.platform == "win32":
+        # Only Windows a11y browser tests need this.
+        req = os.path.join(
+            "accessible",
+            "tests",
+            "browser",
+            "windows",
+            "a11y_setup_requirements.txt",
+        )
+        command_context.virtualenv_manager.activate()
+        command_context.virtualenv_manager.install_pip_requirements(
+            req, require_hashes=False
+        )
+
     # This is a hack to introduce an option in mach to not send
     # filtered tests to the mochitest harness. Mochitest harness will read
     # the master manifest in that case.

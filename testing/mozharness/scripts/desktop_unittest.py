@@ -527,6 +527,24 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 )
             )
 
+        if (
+            self._query_specified_suites("mochitest", "mochitest-browser-a11y")
+            is not None
+            and sys.platform == "win32"
+        ):
+            # Only Windows a11y browser tests need this.
+            requirements_files.append(
+                os.path.join(
+                    dirs["abs_mochitest_dir"],
+                    "browser",
+                    "accessible",
+                    "tests",
+                    "browser",
+                    "windows",
+                    "a11y_setup_requirements.txt",
+                )
+            )
+
         for requirements_file in requirements_files:
             self.register_virtualenv_module(
                 requirements=[requirements_file], two_pass=True

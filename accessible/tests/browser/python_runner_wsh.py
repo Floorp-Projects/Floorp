@@ -9,6 +9,8 @@ It is intended to be called from JS browser tests.
 """
 
 import json
+import os
+import sys
 import traceback
 
 from mod_pywebsocket import msgutil
@@ -23,9 +25,27 @@ def web_socket_transfer_data(request):
         """Send a response to the client as a JSON array."""
         msgutil.send_message(request, json.dumps(args))
 
-    # XXX Anything that should be accessible to code run
-    # via the WebSocket should be added to cleanNamespace.
     cleanNamespace = {}
+    testDir = None
+    if sys.platform == "win32":
+        testDir = "windows"
+    elif sys.platform == "linux":
+        # XXX ATK code goes here.
+        pass
+    if testDir:
+        sys.path.append(
+            os.path.join(
+                os.getcwd(), "browser", "accessible", "tests", "browser", testDir
+            )
+        )
+        try:
+            import a11y_setup
+
+            cleanNamespace = a11y_setup.__dict__
+            setupExc = None
+        except Exception:
+            setupExc = traceback.format_exc()
+        sys.path.pop()
 
     def info(message):
         """Log an info message."""
@@ -41,6 +61,11 @@ def web_socket_transfer_data(request):
             return
         if code == "__reset__":
             namespace = cleanNamespace.copy()
+            continue
+
+        if setupExc:
+            # a11y_setup failed. Report an exception immediately.
+            send("exception", setupExc)
             continue
 
         # Wrap the code in a function called run(). This allows the code to
