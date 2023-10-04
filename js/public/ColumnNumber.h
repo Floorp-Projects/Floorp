@@ -115,8 +115,9 @@ struct ColumnNumberWithOrigin {
 
  public:
   constexpr ColumnNumberWithOrigin() = default;
-  ColumnNumberWithOrigin(
-      const ColumnNumberWithOrigin<Origin, LimitValue>& other) = default;
+  ColumnNumberWithOrigin(const ColumnNumberWithOrigin& other) = default;
+  ColumnNumberWithOrigin& operator=(const ColumnNumberWithOrigin& other) =
+      default;
 
   explicit ColumnNumberWithOrigin(uint32_t value) : value_(value) {
     MOZ_ASSERT(valid());
@@ -337,9 +338,12 @@ struct ColumnNumberZeroOrigin : public detail::ColumnNumberWithOrigin<0> {
 
  public:
   using Base::Base;
+  using Base::operator=;
 
   ColumnNumberZeroOrigin() = default;
   ColumnNumberZeroOrigin(const ColumnNumberZeroOrigin& other) = default;
+  ColumnNumberZeroOrigin& operator=(ColumnNumberZeroOrigin&) = default;
+
   MOZ_IMPLICIT ColumnNumberZeroOrigin(const Base& other) : Base(other) {}
 
   explicit ColumnNumberZeroOrigin(
@@ -359,9 +363,12 @@ struct ColumnNumberOneOrigin : public detail::ColumnNumberWithOrigin<1> {
 
  public:
   using Base::Base;
+  using Base::operator=;
 
   ColumnNumberOneOrigin() = default;
   ColumnNumberOneOrigin(const ColumnNumberOneOrigin& other) = default;
+  ColumnNumberOneOrigin& operator=(ColumnNumberOneOrigin&) = default;
+
   MOZ_IMPLICIT ColumnNumberOneOrigin(const Base& other) : Base(other) {}
 
   explicit ColumnNumberOneOrigin(const detail::ColumnNumberWithOrigin<0>& other)
