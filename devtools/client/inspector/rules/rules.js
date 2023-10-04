@@ -483,9 +483,10 @@ CssRuleView.prototype = {
 
           const query = `.js-toggle-selector-highlighter[data-computed-selector='${selector}']`;
           for (const node of this.styleDocument.querySelectorAll(query)) {
-            const isHighlighterDisplayed = eventName == "highlighter-shown";
-            node.classList.toggle("highlighted", isHighlighterDisplayed);
-            node.setAttribute("aria-pressed", isHighlighterDisplayed);
+            node.classList.toggle(
+              "highlighted",
+              eventName == "highlighter-shown"
+            );
           }
         }
         break;
