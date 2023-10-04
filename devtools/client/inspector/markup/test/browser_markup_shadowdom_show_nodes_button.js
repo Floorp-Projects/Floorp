@@ -42,10 +42,11 @@ add_task(async function () {
   await expandContainer(inspector, slotContainer);
 
   info("Find the 'Show all nodes' button");
-  const button = slotContainer.elt.querySelector("button");
-  console.log(button);
+  const button = slotContainer.elt.querySelector(
+    "button:not(.inspector-badge)"
+  );
   ok(
     button.innerText.includes(NODE_COUNT),
-    "'Show all nodes' button contains correct node count"
+    `'Show all nodes' button contains correct node count (expected "${button.innerText}" to include "${NODE_COUNT}")`
   );
 });
