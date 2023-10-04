@@ -14,6 +14,3 @@ ac_add_options --enable-fuzzing
 # on libFuzzer to provide stacks both in the browser fuzzing case as
 # well as for libFuzzer targets. See also bug 1649062.
 ac_add_options --disable-crashreporter
-
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld

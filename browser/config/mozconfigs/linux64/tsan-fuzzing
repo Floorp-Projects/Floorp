@@ -1,7 +1,4 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/tsan"
 
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld
-
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT

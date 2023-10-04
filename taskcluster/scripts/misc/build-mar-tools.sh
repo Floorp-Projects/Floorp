@@ -10,7 +10,6 @@ cd $GECKO_PATH
 export MOZ_OBJDIR=obj-mar
 
 echo ac_add_options --enable-project=tools/update-packaging > .mozconfig
-echo ac_add_options --enable-linker=lld >> .mozconfig
 
 TOOLCHAINS="clang"
 
