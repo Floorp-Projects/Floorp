@@ -1702,9 +1702,7 @@ void Statistics::printSliceProfile() {
   FOR_EACH_GC_PROFILE_METADATA(PRINT_FIELD_VALUE)
 #undef PRINT_FIELD_VALUE
 
-  if (!printProfileTimes(times, sprinter)) {
-    return;
-  }
+  printProfileTimes(times, sprinter);
 
   JS::UniqueChars str = sprinter.release();
   if (!str) {
@@ -1775,7 +1773,7 @@ const char* Statistics::formatBudget(const SliceData& slice) {
 }
 
 /* static */
-bool Statistics::printProfileTimes(const ProfileDurations& times,
+void Statistics::printProfileTimes(const ProfileDurations& times,
                                    Sprinter& sprinter) {
   for (auto time : times) {
     int64_t millis = int64_t(time.ToMilliseconds());
@@ -1783,7 +1781,6 @@ bool Statistics::printProfileTimes(const ProfileDurations& times,
   }
 
   sprinter.put("\n");
-  return true;
 }
 
 constexpr size_t SliceMetadataFormatWidth() {
@@ -1826,10 +1823,7 @@ void Statistics::printTotalProfileTimes() {
   // totals that follow line up.
   size_t width = SliceMetadataFormatWidth();
   sprinter.jsprintf(" %-*s", int(width), formatTotalSlices());
-
-  if (!printProfileTimes(totalTimes_, sprinter)) {
-    return;
-  }
+  printProfileTimes(totalTimes_, sprinter);
 
   JS::UniqueChars str = sprinter.release();
   if (!str) {

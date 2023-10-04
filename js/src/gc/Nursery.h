@@ -699,7 +699,7 @@ class Nursery {
   void maybeClearProfileDurations();
   void startProfile(ProfileKey key);
   void endProfile(ProfileKey key);
-  static bool printProfileDurations(const ProfileDurations& times,
+  static void printProfileDurations(const ProfileDurations& times,
                                     Sprinter& sprinter);
 
   mozilla::TimeStamp collectionStartTime() const;
