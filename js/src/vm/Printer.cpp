@@ -241,6 +241,8 @@ void Sprinter::reportOutOfMemory() {
   forwardOutOfMemory();
 }
 
+size_t Sprinter::length() const { return size_t(offset); }
+
 void Sprinter::forwardOutOfMemory() {
   MOZ_ASSERT(hadOOM_);
   if (maybeCx && shouldReportOOM) {
