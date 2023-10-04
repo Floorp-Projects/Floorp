@@ -926,10 +926,10 @@ class TestEmitterBasic(unittest.TestCase):
                 "installs": {"a11y.toml": False, "test_a11y.js": True},
                 "pattern-installs": 1,
             },
-            "browser.ini": {
+            "browser.toml": {
                 "flavor": "browser-chrome",
                 "installs": {
-                    "browser.ini": False,
+                    "browser.toml": False,
                     "test_browser.js": True,
                     "support1": False,
                     "support2": False,

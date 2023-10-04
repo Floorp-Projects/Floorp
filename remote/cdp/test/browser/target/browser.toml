@@ -1,0 +1,41 @@
+[DEFAULT]
+tags = "cdp"
+subsuite = "remote"
+args = [
+  "--remote-debugging-port",
+  "--remote-allow-origins=null",
+]
+prefs = [ # Bug 1600054: Make CDP Fission compatible
+  "fission.bfcacheInParent=false",
+  "fission.webContentIsolationStrategy=0",
+]
+support-files = [
+  "!/remote/cdp/test/browser/chrome-remote-interface.js",
+  "!/remote/cdp/test/browser/head.js",
+  "head.js",
+  "doc_test.html",
+]
+
+["browser_activateTarget.js"]
+
+["browser_attachToTarget.js"]
+
+["browser_attachedToTarget.js"]
+https_first_disabled = true
+
+["browser_browserContext.js"]
+
+["browser_closeTarget.js"]
+
+["browser_createTarget.js"]
+
+["browser_getTargets.js"]
+https_first_disabled = true
+
+["browser_sendMessageToTarget.js"]
+
+["browser_setDiscoverTargets.js"]
+
+["browser_targetCreated.js"]
+
+["browser_targetDestroyed.js"]
