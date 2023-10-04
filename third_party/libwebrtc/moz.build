@@ -427,6 +427,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/meta/type_traits_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/numeric/bits_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/numeric/int128_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/string_view_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/strings_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/types/bad_optional_access_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/types/bad_variant_access_gn",

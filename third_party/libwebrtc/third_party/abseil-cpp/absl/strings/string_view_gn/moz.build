@@ -24,12 +24,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/ascii.cc",
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/internal/damerau_levenshtein_distance.cc",
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/internal/memutil.cc",
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/internal/stringify_sink.cc",
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/match.cc",
-    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/str_split.cc"
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/strings/string_view.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -175,4 +170,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("strings_gn")
+Library("string_view_gn")
