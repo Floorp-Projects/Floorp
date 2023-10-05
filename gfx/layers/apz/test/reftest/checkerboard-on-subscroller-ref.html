@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<style>
+#outer {
+  position: absolute;
+  overflow: scroll;
+  width: 90vw;
+  height: 90vh;
+  border: 1px solid black;
+  scrollbar-width: none;
+}
+#inner {
+  overflow-y: hidden;
+  width: 100%;
+}
+.spacer {
+  width: 60vw;
+  height: 5000px;
+  background-color: blue;
+}
+</style>
+<div id="outer">
+  <div id="inner">
+    <div class="spacer"></div>
+  </div>
+</div>
+</html>

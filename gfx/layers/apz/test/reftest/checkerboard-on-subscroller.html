@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+#outer {
+  position: absolute;
+  overflow: scroll;
+  width: 50vw;
+  height: 90vh;
+  border: 1px solid black;
+  scrollbar-width: none;
+}
+#inner {
+  overflow-y: hidden;
+  width: 100%;
+}
+.spacer {
+  width: 60vw;
+  height: 5000px;
+  background-color: blue;
+}
+</style>
+<div id="outer">
+  <div id="inner">
+    <div class="spacer"></div>
+  </div>
+</div>
+<script>
+document.addEventListener('MozReftestInvalidate', async () => {
+  outer.style.width = "90vw";
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  const scrollEndPromise = new Promise(resolve => outer.addEventListener("scrollend", resolve));
+  outer.scrollBy({ top: 5000, behavior: "smooth" });
+  await scrollEndPromise;
+
+  document.documentElement.classList.remove('reftest-wait');
+}, false);
+</script>
+</html>
