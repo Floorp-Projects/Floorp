@@ -53,6 +53,13 @@ module.exports = {
       },
     ],
 
+    "max-nesting-depth": [
+      8,
+      {
+        ignore: ["blockless-at-rules", "pseudo-classes"],
+      },
+    ],
+
     "no-descending-specificity": null,
     "no-duplicate-selectors": null,
 
@@ -280,12 +287,6 @@ module.exports = {
         "function-url-no-scheme-relative": true,
         indentation: 2,
         "keyframes-name-pattern": null,
-        "max-nesting-depth": [
-          8,
-          {
-            ignore: ["blockless-at-rules", "pseudo-classes"],
-          },
-        ],
         "media-feature-name-no-vendor-prefix": null,
         "no-descending-specificity": null,
         "no-eol-whitespace": true,
