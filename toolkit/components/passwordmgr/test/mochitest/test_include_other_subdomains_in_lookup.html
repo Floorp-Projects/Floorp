@@ -40,16 +40,12 @@
     [`https://new.${domainname}/`, `https://new.${domainname}/`, null, "example-user", "new-example-password", "uname", "pword"],
   ];
 
-  // TODO: explain why we need to run this in parent
-  const getDateString = (() => {
-    const setupScript = runInParent(function setup() {
-      addMessageListener("getDateString", () => {
-        const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-        return dateAndTimeFormatter.format(new Date());
-      });
-    });
-    return () => setupScript.sendQuery("getDateString");
-  })();
+  // calculates a date representation as used in the autocomplete menu to
+  // distinguish duplicate logins
+  function getDateString() {
+    const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+    return dateAndTimeFormatter.format(new Date());
+  }
 
   add_setup(async () => {
     listenForUnexpectedPopupShown();
@@ -94,7 +90,7 @@
 
     // The logins are added "today" and since they are duplicates, the date that they were last
     // changed will be appended.
-    const dateString = await getDateString();
+    const dateString = getDateString();
     const username = `example-user (${dateString})`;
 
     form.uname.focus();
