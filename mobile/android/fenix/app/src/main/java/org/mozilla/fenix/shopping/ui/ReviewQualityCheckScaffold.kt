@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.shopping.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -19,17 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.BetaLabel
 import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -85,16 +81,6 @@ fun ReviewQualityCheckScaffold(
 
 @Composable
 private fun Header() {
-    val betaBorderColor: Color
-    val betaTextColor: Color
-    if (isSystemInDarkTheme()) {
-        betaBorderColor = PhotonColors.LightGrey10
-        betaTextColor = FirefoxTheme.colors.textActionPrimary
-    } else {
-        betaBorderColor = FirefoxTheme.colors.actionTertiary
-        betaTextColor = FirefoxTheme.colors.textSecondary
-    }
-
     Row(
         modifier = Modifier.semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.CenterVertically,
@@ -107,19 +93,7 @@ private fun Header() {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Card(
-            elevation = 0.dp,
-            shape = RoundedCornerShape(8.dp),
-            backgroundColor = Color.Transparent,
-            border = BorderStroke(2.dp, betaBorderColor),
-        ) {
-            Text(
-                text = stringResource(R.string.review_quality_check_beta_flag).uppercase(),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                color = betaTextColor,
-                style = FirefoxTheme.typography.body2,
-            )
-        }
+        BetaLabel()
     }
 }
 
