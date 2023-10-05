@@ -262,6 +262,56 @@ add_task(async function test_edit_login() {
   ok(updateEventDispatched, "Clicking the .save-changes-button should dispatch the AboutLoginsUpdateLogin event");
 });
 
+add_task(async function test_edit_login_keyboard_shortcut() {
+  gLoginItem.setLogin(TEST_LOGIN_1);
+  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
+  usernameInput.placeholder = "dummy placeholder";
+  const ev = new KeyboardEvent("keydown", { altKey:true, key:"Enter" });
+  window.dispatchEvent(ev);
+  await asyncElementRendered();
+
+  ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
+  ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(!deleteButton.shadowRoot.querySelector("button").disabled, "Delete button should be enabled when editing a login");
+  ok(isHidden(gLoginItem._originInput), "Origin input should be hidden in edit mode");
+  ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible in edit mode");
+  is(gLoginItem.shadowRoot.querySelector("a[name='origin']").getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
+  is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
+  is(usernameInput, document.activeElement?.shadowRoot?.activeElement, "username is focused");
+  is(usernameInput.selectionStart, 0, "username value is selected from start");
+  is(usernameInput.selectionEnd, usernameInput.value.length, "username value is selected to the end");
+  is(
+    document.l10n.getAttributes(usernameInput).id,
+    null,
+    "there should be no placeholder id on the username input in edit mode"
+  );
+  is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
+  is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
+  is(gLoginItem._passwordDisplayInput.value, CONCEALED_PASSWORD_TEXT, "password display should be populated");
+
+  let timeline = getLoginTimeline(gLoginItem);
+  ok(!isHidden(timeline), "Timeline should be visible");
+
+  let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
+  ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when editing a login");
+
+  usernameInput.value = "newUsername";
+  gLoginItem._passwordInput.value = "newPassword";
+
+  let updateEventDispatched = false;
+  document.addEventListener("AboutLoginsUpdateLogin", event => {
+    is(event.detail.guid, TEST_LOGIN_1.guid, "event should include guid");
+    is(event.detail.origin, TEST_LOGIN_1.origin, "event should include origin");
+    is(event.detail.username, "newUsername", "event should include new username");
+    is(event.detail.password, "newPassword", "event should include new password");
+    updateEventDispatched = true;
+  }, {once: true});
+  gLoginItem.shadowRoot.querySelector(".save-changes-button").click();
+  ok(updateEventDispatched, "Clicking the .save-changes-button should dispatch the AboutLoginsUpdateLogin event");
+})
+
 add_task(async function test_edit_login_cancel() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
@@ -292,8 +342,8 @@ add_task(async function test_edit_login_cancel_keyboard_shortcut() {
   is(!!gLoginItem.dataset.isNewLogin, false,
      "loginItem should not be in 'isNewLogin' mode");
 
-  const event = new KeyboardEvent("keydown", { key: "Escape" });
-  window.dispatchEvent(event);
+  const ev = new KeyboardEvent("keydown", { key: "Escape" });
+  window.dispatchEvent(ev);
 
   gConfirmationDialog.shadowRoot.querySelector(".confirm-button").click();
 
