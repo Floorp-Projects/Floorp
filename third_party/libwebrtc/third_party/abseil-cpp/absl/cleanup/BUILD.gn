@@ -23,7 +23,6 @@ absl_source_set("cleanup") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_test("cleanup_test") {
   sources = [ "cleanup_test.cc" ]
   deps = [
@@ -31,5 +30,4 @@ absl_test("cleanup_test") {
     "//third_party/abseil-cpp/absl/base:config",
     "//third_party/abseil-cpp/absl/utility",
   ]
-}
 }

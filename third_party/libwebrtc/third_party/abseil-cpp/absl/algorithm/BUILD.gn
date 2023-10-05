@@ -18,7 +18,6 @@ absl_source_set("container") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_test("algorithm_test") {
   sources = [ "algorithm_test.cc" ]
   deps = [
@@ -36,5 +35,4 @@ absl_test("container_test") {
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/types:span",
   ]
-}
 }
