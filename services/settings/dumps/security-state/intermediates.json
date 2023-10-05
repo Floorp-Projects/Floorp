@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1696474076344,
+      "derHash": "G6Av9KJWK75reZVjmQyIzFDhGCOVcZpOqoA5duL1CGA=",
+      "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UEAxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8ce67e5f0d98f4646648910cb7b465ec1bdd5157780a818fd142636047aa30c6",
+        "size": 1938,
+        "filename": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=.pem",
+        "location": "security-state-staging/intermediates/f7f528a3-e05c-4589-ada4-084ba7358310.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=",
+      "crlite_enrolled": false,
+      "id": "58ddd3a7-2cac-4974-bfee-675697c8069a",
+      "last_modified": 1696474622972
+    },
+    {
+      "schema": 1696474075886,
+      "derHash": "HIxwsmPLE6nm7j8JepZzGUzJ1oa8FKcsjNxwXywOaKc=",
+      "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UEAxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4eef7af9ec7616d0317629f5311712e74185b6a82ce44bb12511150c686ec626",
+        "size": 1938,
+        "filename": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=.pem",
+        "location": "security-state-staging/intermediates/789e7a06-11ab-4679-914b-702c4b17c653.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=",
+      "crlite_enrolled": false,
+      "id": "38901efd-9f46-42ce-8fd0-a44c1268ccc0",
+      "last_modified": 1696474622969
+    },
+    {
       "schema": 1695307683026,
       "derHash": "tyRQq/UEeor2PsnYfjMUhIULGEmiVQqCqG22tB7Th2A=",
       "subject": "CN=Certum EC-384 CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
@@ -28981,5 +29017,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1695308223101
+  "timestamp": 1696474622972
 }
