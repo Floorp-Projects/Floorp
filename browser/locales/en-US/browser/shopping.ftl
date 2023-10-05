@@ -54,7 +54,7 @@ shopping-message-bar-warning-not-enough-reviews =
 shopping-message-bar-warning-product-not-available =
   .heading = Product is not available
   .message = If you see this product is back in stock, report it and we’ll work on checking the reviews.
-shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
+shopping-message-bar-warning-product-not-available-button2 = Report product is in stock
 
 shopping-message-bar-thanks-for-reporting =
   .heading = Thanks for reporting!
