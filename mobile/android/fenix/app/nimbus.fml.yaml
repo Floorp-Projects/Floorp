@@ -414,6 +414,9 @@ features:
       - channel: developer
         value:
           enabled: true
+      - channel: nightly
+        value:
+          enabled: true
 types:
   objects: {}
 
