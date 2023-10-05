@@ -2444,13 +2444,16 @@ package org.mozilla.geckoview {
   public class WebExtension.MetaData {
     ctor protected MetaData();
     field public final boolean allowedInPrivateBrowsing;
+    field public final double averageRating;
     field @NonNull public final String baseUrl;
     field public final int blocklistState;
     field @Nullable public final String creatorName;
     field @Nullable public final String creatorUrl;
     field @Nullable public final String description;
     field public final int disabledFlags;
+    field @Nullable public final String downloadUrl;
     field public final boolean enabled;
+    field @Nullable public final String fullDescription;
     field @Nullable public final String homepageUrl;
     field @NonNull public final Image icon;
     field public final boolean isRecommended;
@@ -2459,8 +2462,11 @@ package org.mozilla.geckoview {
     field @Nullable public final String optionsPageUrl;
     field @NonNull public final String[] origins;
     field @NonNull public final String[] permissions;
+    field public final int reviewCount;
+    field @Nullable public final String reviewUrl;
     field public final int signedState;
     field public final boolean temporary;
+    field @Nullable public final String updateDate;
     field @NonNull public final String version;
   }
 
