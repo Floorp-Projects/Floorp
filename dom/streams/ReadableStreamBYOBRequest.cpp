@@ -111,7 +111,7 @@ void ReadableStreamBYOBRequest::RespondWithNewView(JSContext* aCx,
   }
 
   if (JS::IsDetachedArrayBufferObject(viewedArrayBuffer)) {
-    aRv.ThrowTypeError("View of Detatched Array Buffer");
+    aRv.ThrowTypeError("View of Detached Array Buffer");
     return;
   }
 
