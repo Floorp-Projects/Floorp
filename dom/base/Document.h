@@ -3764,7 +3764,30 @@ class Document : public nsINode,
   void AddResizeObserver(ResizeObserver&);
   void RemoveResizeObserver(ResizeObserver&);
   void ScheduleResizeObserversNotification() const;
-  bool HasResizeObservers() const;
+  bool HasResizeObservers() const { return !mResizeObservers.IsEmpty(); }
+  /**
+   * Calls GatherActiveObservations(aDepth) for all ResizeObservers.
+   * All observations in each ResizeObserver with element's depth more than
+   * aDepth will be gathered.
+   */
+  void GatherAllActiveResizeObservations(uint32_t aDepth);
+  /**
+   * Calls BroadcastActiveObservations() for all ResizeObservers.
+   * It also returns the shallowest depth of observed target elements with
+   * active observations from all ResizeObservers or
+   * numeric_limits<uint32_t>::max() if there aren't any active observations
+   * at all.
+   */
+  MOZ_CAN_RUN_SCRIPT uint32_t BroadcastAllActiveResizeObservations();
+  /**
+   * Returns whether there is any ResizeObserver that has active
+   * observations.
+   */
+  bool HasAnyActiveResizeObservations() const;
+  /**
+   * Returns whether there is any ResizeObserver that has skipped observations.
+   */
+  bool HasAnySkippedResizeObservations() const;
   MOZ_CAN_RUN_SCRIPT void NotifyResizeObservers();
 
   // Getter for PermissionDelegateHandler. Performs lazy initialization.
@@ -4515,8 +4538,6 @@ class Document : public nsINode,
 
   RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
-  UniquePtr<ResizeObserverController> mResizeObserverController;
-
   // Permission Delegate Handler, lazily-initialized in
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
@@ -5106,6 +5127,9 @@ class Document : public nsINode,
 
   // Array of intersection observers
   nsTHashSet<DOMIntersectionObserver*> mIntersectionObservers;
+
+  // Array of resize observers
+  nsTArray<ResizeObserver*> mResizeObservers;
 
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
   // Used to measure how effective the lazyload thresholds are.
