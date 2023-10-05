@@ -20,7 +20,7 @@ support-files = [
 ["test_autofocus_form.html"]
 
 ["test_basic_autocomplete_form.html"]
-skip-if = ["os == 'mac' && !debug"] # bug 1789194
+skip-if = [ "apple_catalina && !debug" ] # Bug 1789194
 
 ["test_form_changes.html"]
 
