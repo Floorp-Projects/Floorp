@@ -29,6 +29,30 @@ add_task(async function testHEVCPlayback() {
   ok(await video.play().then(_=>true, _=>false), "video started playing");
 });
 
+
+// This test video contains an inband SPS that is different from the SPS in the
+// extradata, so we would recreate a new decoder.
+add_task(async function testHEVCInbandConfigChange() {
+  let video = document.createElement('video');
+  const isHEVCSupported = video.canPlayType('video/mp4; codecs="hev1.1.6.L93.B0"');
+  const os = SpecialPowers.Services.appinfo.OS;
+  info(`check if HEVC is supported on ${os}, rv=${isHEVCSupported}`);
+  if (os != "WINNT") {
+    ok(isHEVCSupported == "", "HEVC is not supported on current platform");
+    return;
+  }
+  ok(isHEVCSupported != "", `HEVC is supported`);
+
+  info(`try to play HEVC video`);
+  video.src = "hevc_white_red_frames.mp4";
+  video.playbackRate = 2.0; // speed up the test.
+  video.controls = true;
+  document.body.appendChild(video);
+  ok(await video.play().then(_=>true, _=>false), "video started playing");
+  ok(await new Promise(r => video.onended = r).then(_=>true, _=>false),
+     "video played to end");
+});
+
 </script>
 </head>
 <body>
