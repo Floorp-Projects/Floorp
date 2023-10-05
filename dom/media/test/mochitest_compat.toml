@@ -540,6 +540,18 @@ support-files = [
   "gzipped_mp4.sjs",
   "hevc_white_frame.mp4",
   "hevc_white_frame.mp4^headers^",
+  # This HEVC file is created by following steps.
+  # 1. generate two videos
+  #   - a white frame video (0-2 seconds) at 1024x768 resolution
+  #   ffmpeg -t 2 -f lavfi -i color=size=1024x768:rate=30:color=white -c:v libx265 -pix_fmt yuv420p -strict experimental -metadata:s:v:0 rotate=0 -metadata:s:v:0 width=1024 -metadata:s:v:0 height=768 -y white_frames.mp4
+  #   - a red frame video (2-4 seconds) at 3480x2160 resolution with inband SPS
+  #   ffmpeg -t 2 -f lavfi -i color=size=3480x2160:rate=30:color=red -c:v libx265 -x265-params "sps-id=1" -strict experimental -metadata:s:v:0 rotate=0 -metadata:s:v:0 width=3480 -metadata:s:v:0 height=2160 -y red_frames.mp4
+  # 2. covert them to annexB
+  #   ffmpeg -i XXX.mp4 -codec copy -bsf:v h264_mp4toannexb XXX.ts
+  # 3. combine them together
+  #   ffmpeg -i "concat:white_annexb.ts|red_annexb.ts" -c copy -strict -2 -y hevc_white_red_frames.mp4
+  "hevc_white_red_frames.mp4",
+  "hevc_white_red_frames.mp4^headers^",
   "huge-id3.mp3",
   "huge-id3.mp3^headers^",
   "id3tags.mp3",
