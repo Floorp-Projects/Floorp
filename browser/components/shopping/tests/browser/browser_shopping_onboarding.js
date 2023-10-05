@@ -91,7 +91,11 @@ add_setup(async function setup() {
  */
 add_task(async function test_showOnboarding_notOptedIn() {
   // OptedIn pref Value is 0 when a user hasn't opted-in
-  setOnboardingPrefs({ active: false, optedIn: 0 });
+  setOnboardingPrefs({ active: false, optedIn: 0, telemetryEnabled: true });
+
+  Services.fog.testResetFOG();
+  await Services.fog.testFlushAllChildren();
+
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -131,6 +135,16 @@ add_task(async function test_showOnboarding_notOptedIn() {
       });
     }
   );
+
+  if (!AppConstants.TSAN) {
+    await Services.fog.testFlushAllChildren();
+
+    var events = Glean.shopping.surfaceOnboardingDisplayed.testGetValue();
+
+    Assert.greater(events.length, 0);
+    Assert.equal(events[0].category, "shopping");
+    Assert.equal(events[0].name, "surface_onboarding_displayed");
+  }
 });
 
 /**
