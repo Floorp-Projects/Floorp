@@ -55,7 +55,7 @@ export default class MozMessageBar extends MozLitElement {
 
   constructor() {
     super();
-    MozXULElement.insertFTLIfNeeded("toolkit/global/mozMessageBar.ftl");
+    window.MozXULElement?.insertFTLIfNeeded("toolkit/global/mozMessageBar.ftl");
     this.type = "info";
     this.dismissable = false;
   }
