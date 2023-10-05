@@ -6,9 +6,9 @@
 # Parent  6c779ec81530b6784a714063af66085681ab7318
 [libFuzzer] Make fuzzer_allocator explicit
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerDefs.h b/tools/fuzzing/libfuzzer/FuzzerDefs.h
---- a/tools/fuzzing/libfuzzer/FuzzerDefs.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerDefs.h
+diff --git a/FuzzerDefs.h b/FuzzerDefs.h
+--- a/FuzzerDefs.h
++++ b/FuzzerDefs.h
 @@ -41,17 +41,17 @@ extern ExternalFunctions *EF;
  // We are using a custom allocator to give a different symbol name to STL
  // containers in order to avoid ODR violations.

@@ -6,9 +6,9 @@
 # Parent  997c4109edd112695097fd8c55cbacd976cab24a
 [libFuzzer] Allow external functions to be defined at runtime
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
+diff --git a/FuzzerDriver.cpp b/FuzzerDriver.cpp
+--- a/FuzzerDriver.cpp
++++ b/FuzzerDriver.cpp
 @@ -608,17 +608,18 @@ static Vector<SizedFile> ReadCorpora(con
        SizedFiles.push_back({File, Size});
    return SizedFiles;
