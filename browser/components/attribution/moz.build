@@ -18,20 +18,6 @@ EXTRA_JS_MODULES += [
 SPHINX_TREES["docs"] = "docs"
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    XPIDL_SOURCES += [
-        "nsIMacAttribution.idl",
-    ]
-
-    XPIDL_MODULE = "attribution"
-
-    EXPORTS += [
-        "nsMacAttribution.h",
-    ]
-
-    SOURCES += [
-        "nsMacAttribution.cpp",
-    ]
-
     FINAL_LIBRARY = "browsercomps"
 
     EXTRA_JS_MODULES += [
