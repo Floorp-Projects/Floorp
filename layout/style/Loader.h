@@ -468,10 +468,18 @@ class Loader final {
 
   bool ShouldBypassCache() const;
 
+  enum class PendingLoad { No, Yes };
+
  private:
   friend class mozilla::SharedStyleSheetCache;
   friend class SheetLoadData;
   friend class StreamLoader;
+
+  // Only to be called by `LoadSheet`.
+  [[nodiscard]] bool MaybeDeferLoad(SheetLoadData& aLoadData,
+                                    SheetState aSheetState,
+                                    PendingLoad aPendingLoad,
+                                    const SheetLoadDataHashKey& aKey);
 
   // Only to be called by `LoadSheet`.
   [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
@@ -555,7 +563,6 @@ class Loader final {
 
   // Note: LoadSheet is responsible for setting the sheet to complete on
   // failure.
-  enum class PendingLoad { No, Yes };
   nsresult LoadSheet(SheetLoadData&, SheetState, uint64_t aEarlyHintPreloaderId,
                      PendingLoad = PendingLoad::No);
 
