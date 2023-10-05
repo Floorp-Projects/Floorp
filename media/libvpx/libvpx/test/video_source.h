@@ -64,7 +64,7 @@ inline FILE *OpenTestDataFile(const std::string &file_name) {
   return fopen(path_to_source.c_str(), "rb");
 }
 
-static FILE *GetTempOutFile(std::string *file_name, const char *io_mode) {
+static FILE *GetTempOutFile(std::string *file_name) {
   file_name->clear();
 #if defined(_WIN32)
   char fname[MAX_PATH];
@@ -73,7 +73,7 @@ static FILE *GetTempOutFile(std::string *file_name, const char *io_mode) {
     // Assume for now that the filename generated is unique per process
     if (GetTempFileNameA(tmppath, "lvx", 0, fname)) {
       file_name->assign(fname);
-      return fopen(fname, io_mode);
+      return fopen(fname, "wb+");
     }
   }
   return nullptr;
@@ -94,16 +94,13 @@ static FILE *GetTempOutFile(std::string *file_name, const char *io_mode) {
   const int fd = mkstemp(temp_file_name.get());
   if (fd == -1) return nullptr;
   *file_name = temp_file_name.get();
-  return fdopen(fd, io_mode);
+  return fdopen(fd, "wb+");
 #endif
 }
 
 class TempOutFile {
  public:
-  TempOutFile() { file_ = GetTempOutFile(&file_name_, "wb+"); }
-  TempOutFile(const char *io_mode) {
-    file_ = GetTempOutFile(&file_name_, io_mode);
-  }
+  TempOutFile() { file_ = GetTempOutFile(&file_name_); }
   ~TempOutFile() {
     CloseFile();
     if (!file_name_.empty()) {
@@ -163,35 +160,35 @@ class DummyVideoSource : public VideoSource {
     ReallocImage();
   }
 
-  ~DummyVideoSource() override { vpx_img_free(img_); }
+  virtual ~DummyVideoSource() { vpx_img_free(img_); }
 
-  void Begin() override {
+  virtual void Begin() {
     frame_ = 0;
     FillFrame();
   }
 
-  void Next() override {
+  virtual void Next() {
     ++frame_;
     FillFrame();
   }
 
-  vpx_image_t *img() const override {
+  virtual vpx_image_t *img() const {
     return (frame_ < limit_) ? img_ : nullptr;
   }
 
   // Models a stream where Timebase = 1/FPS, so pts == frame.
-  vpx_codec_pts_t pts() const override { return frame_; }
+  virtual vpx_codec_pts_t pts() const { return frame_; }
 
-  unsigned long duration() const override { return 1; }
+  virtual unsigned long duration() const { return 1; }
 
-  vpx_rational_t timebase() const override {
+  virtual vpx_rational_t timebase() const {
     const vpx_rational_t t = { 1, 30 };
     return t;
   }
 
-  unsigned int frame() const override { return frame_; }
+  virtual unsigned int frame() const { return frame_; }
 
-  unsigned int limit() const override { return limit_; }
+  virtual unsigned int limit() const { return limit_; }
 
   void set_limit(unsigned int limit) { limit_ = limit; }
 
@@ -238,7 +235,7 @@ class RandomVideoSource : public DummyVideoSource {
 
  protected:
   // Reset the RNG to get a matching stream for the second pass
-  void Begin() override {
+  virtual void Begin() {
     frame_ = 0;
     rnd_.Reset(seed_);
     FillFrame();
@@ -246,7 +243,7 @@ class RandomVideoSource : public DummyVideoSource {
 
   // 15 frames of noise, followed by 15 static frames. Reset to 0 rather
   // than holding previous frames to encourage keyframes to be thrown.
-  void FillFrame() override {
+  virtual void FillFrame() {
     if (img_) {
       if (frame_ % 30 < 15) {
         for (size_t i = 0; i < raw_sz_; ++i) img_->img_data[i] = rnd_.Rand8();

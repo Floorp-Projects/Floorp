@@ -65,7 +65,7 @@ class EncoderWithExpectedError : public ::libvpx_test::Encoder {
     ASSERT_EQ(expected_err, res) << EncoderError();
   }
 
-  vpx_codec_iface_t *CodecInterface() const override {
+  virtual vpx_codec_iface_t *CodecInterface() const {
 #if CONFIG_VP9_ENCODER
     return &vpx_codec_vp9_cx_algo;
 #else
@@ -79,22 +79,22 @@ class VP9FrameSizeTestsLarge : public ::libvpx_test::EncoderTest,
  protected:
   VP9FrameSizeTestsLarge()
       : EncoderTest(&::libvpx_test::kVP9), expected_res_(VPX_CODEC_OK) {}
-  ~VP9FrameSizeTestsLarge() override = default;
+  virtual ~VP9FrameSizeTestsLarge() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
   }
 
-  bool HandleDecodeResult(const vpx_codec_err_t res_dec,
-                          const libvpx_test::VideoSource & /*video*/,
-                          libvpx_test::Decoder *decoder) override {
+  virtual bool HandleDecodeResult(const vpx_codec_err_t res_dec,
+                                  const libvpx_test::VideoSource & /*video*/,
+                                  libvpx_test::Decoder *decoder) {
     EXPECT_EQ(expected_res_, res_dec) << decoder->DecodeError();
     return !::testing::Test::HasFailure();
   }
 
-  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                          ::libvpx_test::Encoder *encoder) override {
+  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                                  ::libvpx_test::Encoder *encoder) {
     if (video->frame() == 0) {
       encoder->Control(VP8E_SET_CPUUSED, 7);
       encoder->Control(VP8E_SET_ENABLEAUTOALTREF, 1);

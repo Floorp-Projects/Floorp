@@ -81,8 +81,6 @@
 #include "vp9/encoder/vp9_tpl_model.h"
 #include "vp9/vp9_cx_iface.h"
 
-#include "vpx/vpx_ext_ratectrl.h"
-
 #define AM_SEGMENT_ID_INACTIVE 7
 #define AM_SEGMENT_ID_ACTIVE 0
 
@@ -141,7 +139,7 @@ static int compute_context_model_thresh(const VP9_COMP *const cpi) {
   // frame context probability model is less than a certain threshold.
   // The first component is the most critical part to guarantee adaptivity.
   // Other parameters are estimated based on normal setting of hd resolution
-  // parameters. e.g. frame_size = 1920x1080, bitrate = 8000, qindex_factor < 50
+  // parameters. e.g frame_size = 1920x1080, bitrate = 8000, qindex_factor < 50
   const int thresh =
       ((FRAME_SIZE_FACTOR * frame_size - FRAME_RATE_FACTOR * bitrate) *
        qindex_factor) >>
@@ -881,11 +879,10 @@ static int vp9_enc_alloc_mi(VP9_COMMON *cm, int mi_size) {
   if (!cm->prev_mip) return 1;
   cm->mi_alloc_size = mi_size;
 
-  cm->mi_grid_base =
-      (MODE_INFO **)vpx_calloc(mi_size, sizeof(*cm->mi_grid_base));
+  cm->mi_grid_base = (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO *));
   if (!cm->mi_grid_base) return 1;
   cm->prev_mi_grid_base =
-      (MODE_INFO **)vpx_calloc(mi_size, sizeof(*cm->prev_mi_grid_base));
+      (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO *));
   if (!cm->prev_mi_grid_base) return 1;
 
   return 0;
@@ -2048,17 +2045,6 @@ static void alloc_copy_partition_data(VP9_COMP *cpi) {
   }
 }
 
-static void free_copy_partition_data(VP9_COMP *cpi) {
-  vpx_free(cpi->prev_partition);
-  cpi->prev_partition = NULL;
-  vpx_free(cpi->prev_segment_id);
-  cpi->prev_segment_id = NULL;
-  vpx_free(cpi->prev_variance_low);
-  cpi->prev_variance_low = NULL;
-  vpx_free(cpi->copied_frame_cnt);
-  cpi->copied_frame_cnt = NULL;
-}
-
 void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
   VP9_COMMON *const cm = &cpi->common;
   RATE_CONTROL *const rc = &cpi->rc;
@@ -2138,8 +2124,6 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     new_mi_size = cm->mi_stride * calc_mi_size(cm->mi_rows);
     if (cm->mi_alloc_size < new_mi_size) {
       vp9_free_context_buffers(cm);
-      vp9_free_pc_tree(&cpi->td);
-      vpx_free(cpi->mbmi_ext_base);
       alloc_compressor_data(cpi);
       realloc_segmentation_maps(cpi);
       cpi->initial_width = cpi->initial_height = 0;
@@ -2158,18 +2142,8 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     update_frame_size(cpi);
 
   if (last_w != cpi->oxcf.width || last_h != cpi->oxcf.height) {
-    vpx_free(cpi->consec_zero_mv);
-    CHECK_MEM_ERROR(
-        &cm->error, cpi->consec_zero_mv,
-        vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->consec_zero_mv)));
-
-    vpx_free(cpi->skin_map);
-    CHECK_MEM_ERROR(
-        &cm->error, cpi->skin_map,
-        vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->skin_map)));
-
-    free_copy_partition_data(cpi);
-    alloc_copy_partition_data(cpi);
+    memset(cpi->consec_zero_mv, 0,
+           cm->mi_rows * cm->mi_cols * sizeof(*cpi->consec_zero_mv));
     if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ)
       vp9_cyclic_refresh_reset_resize(cpi);
     rc->rc_1_frame = 0;
@@ -2213,7 +2187,7 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
  * The following 2 functions ('cal_nmvjointsadcost' and                *
  * 'cal_nmvsadcosts') are used to calculate cost lookup tables         *
  * used by 'vp9_diamond_search_sad'. The C implementation of the       *
- * function is generic, but the NEON intrinsics optimised version      *
+ * function is generic, but the AVX intrinsics optimised version       *
  * relies on the following properties of the computed tables:          *
  * For cal_nmvjointsadcost:                                            *
  *   - mvjointsadcost[1] == mvjointsadcost[2] == mvjointsadcost[3]     *
@@ -2222,7 +2196,7 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
  *         (Equal costs for both components)                           *
  *   - For all i: mvsadcost[0][i] == mvsadcost[0][-i]                  *
  *         (Cost function is even)                                     *
- * If these do not hold, then the NEON optimised version of the        *
+ * If these do not hold, then the AVX optimised version of the         *
  * 'vp9_diamond_search_sad' function cannot be used as it is, in which *
  * case you can revert to using the C function instead.                *
  ***********************************************************************/
@@ -2380,7 +2354,7 @@ void vp9_update_compressor_with_img_fmt(VP9_COMP *cpi, vpx_img_fmt_t img_fmt) {
 VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
                                 BufferPool *const pool) {
   unsigned int i;
-  VP9_COMP *volatile const cpi = vpx_memalign(32, sizeof(*cpi));
+  VP9_COMP *volatile const cpi = vpx_memalign(32, sizeof(VP9_COMP));
   VP9_COMMON *volatile const cm = cpi != NULL ? &cpi->common : NULL;
 
   if (!cm) return NULL;
@@ -2429,7 +2403,7 @@ VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
 
   CHECK_MEM_ERROR(
       &cm->error, cpi->skin_map,
-      vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->skin_map)));
+      vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(cpi->skin_map[0])));
 
 #if !CONFIG_REALTIME_ONLY
   CHECK_MEM_ERROR(&cm->error, cpi->alt_ref_aq, vp9_alt_ref_aq_create());
@@ -2862,7 +2836,7 @@ void vp9_remove_compressor(VP9_COMP *cpi) {
 #if 0
     {
       printf("\n_pick_loop_filter_level:%d\n", cpi->time_pick_lpf / 1000);
-      printf("\n_frames receive_data encod_mb_row compress_frame  Total\n");
+      printf("\n_frames recive_data encod_mb_row compress_frame  Total\n");
       printf("%6d %10ld %10ld %10ld %10ld\n", cpi->common.current_video_frame,
              cpi->time_receive_data / 1000, cpi->time_encode_sb_row / 1000,
              cpi->time_compress_data / 1000,
@@ -2975,7 +2949,7 @@ void vp9_update_reference(VP9_COMP *cpi, int ref_frame_flags) {
 
 static YV12_BUFFER_CONFIG *get_vp9_ref_frame_buffer(
     VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag) {
-  MV_REFERENCE_FRAME ref_frame = NO_REF_FRAME;
+  MV_REFERENCE_FRAME ref_frame = NONE;
   if (ref_frame_flag == VP9_LAST_FLAG)
     ref_frame = LAST_FRAME;
   else if (ref_frame_flag == VP9_GOLD_FLAG)
@@ -2983,8 +2957,7 @@ static YV12_BUFFER_CONFIG *get_vp9_ref_frame_buffer(
   else if (ref_frame_flag == VP9_ALT_FLAG)
     ref_frame = ALTREF_FRAME;
 
-  return ref_frame == NO_REF_FRAME ? NULL
-                                   : get_ref_frame_buffer(cpi, ref_frame);
+  return ref_frame == NONE ? NULL : get_ref_frame_buffer(cpi, ref_frame);
 }
 
 int vp9_copy_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
@@ -4589,8 +4562,7 @@ static void encode_with_recode_loop(VP9_COMP *cpi, size_t *size, uint8_t *dest
     }
 #endif  // CONFIG_RATE_CTRL
     if (cpi->ext_ratectrl.ready && !ext_rc_recode &&
-        (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_QP) != 0 &&
-        cpi->ext_ratectrl.funcs.get_encodeframe_decision != NULL) {
+        (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_QP) != 0) {
       vpx_codec_err_t codec_status;
       const GF_GROUP *gf_group = &cpi->twopass.gf_group;
       vpx_rc_encodeframe_decision_t encode_frame_decision;
@@ -5048,8 +5020,8 @@ static int setup_interp_filter_search_mask(VP9_COMP *cpi) {
 
 #ifdef ENABLE_KF_DENOISE
 // Baseline kernel weights for denoise
-static uint8_t dn_kernel_3[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
-static uint8_t dn_kernel_5[25] = { 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 4,
+static uint8_t dn_kernal_3[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+static uint8_t dn_kernal_5[25] = { 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 4,
                                    2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1 };
 
 static INLINE void add_denoise_point(int centre_val, int data_val, int thresh,
@@ -5066,17 +5038,17 @@ static void spatial_denoise_point(uint8_t *src_ptr, const int stride,
   int sum_weight = 0;
   int sum_val = 0;
   int thresh = strength;
-  int kernel_size = 5;
+  int kernal_size = 5;
   int half_k_size = 2;
   int i, j;
   int max_diff = 0;
   uint8_t *tmp_ptr;
-  uint8_t *kernel_ptr;
+  uint8_t *kernal_ptr;
 
   // Find the maximum deviation from the source point in the locale.
   tmp_ptr = src_ptr - (stride * (half_k_size + 1)) - (half_k_size + 1);
-  for (i = 0; i < kernel_size + 2; ++i) {
-    for (j = 0; j < kernel_size + 2; ++j) {
+  for (i = 0; i < kernal_size + 2; ++i) {
+    for (j = 0; j < kernal_size + 2; ++j) {
       max_diff = VPXMAX(max_diff, abs((int)*src_ptr - (int)tmp_ptr[j]));
     }
     tmp_ptr += stride;
@@ -5084,19 +5056,19 @@ static void spatial_denoise_point(uint8_t *src_ptr, const int stride,
 
   // Select the kernel size.
   if (max_diff > (strength + (strength >> 1))) {
-    kernel_size = 3;
+    kernal_size = 3;
     half_k_size = 1;
     thresh = thresh >> 1;
   }
-  kernel_ptr = (kernel_size == 3) ? dn_kernel_3 : dn_kernel_5;
+  kernal_ptr = (kernal_size == 3) ? dn_kernal_3 : dn_kernal_5;
 
   // Apply the kernel
   tmp_ptr = src_ptr - (stride * half_k_size) - half_k_size;
-  for (i = 0; i < kernel_size; ++i) {
-    for (j = 0; j < kernel_size; ++j) {
-      add_denoise_point((int)*src_ptr, (int)tmp_ptr[j], thresh, *kernel_ptr,
+  for (i = 0; i < kernal_size; ++i) {
+    for (j = 0; j < kernal_size; ++j) {
+      add_denoise_point((int)*src_ptr, (int)tmp_ptr[j], thresh, *kernal_ptr,
                         &sum_val, &sum_weight);
-      ++kernel_ptr;
+      ++kernal_ptr;
     }
     tmp_ptr += stride;
   }
@@ -5111,17 +5083,17 @@ static void highbd_spatial_denoise_point(uint16_t *src_ptr, const int stride,
   int sum_weight = 0;
   int sum_val = 0;
   int thresh = strength;
-  int kernel_size = 5;
+  int kernal_size = 5;
   int half_k_size = 2;
   int i, j;
   int max_diff = 0;
   uint16_t *tmp_ptr;
-  uint8_t *kernel_ptr;
+  uint8_t *kernal_ptr;
 
   // Find the maximum deviation from the source point in the locale.
   tmp_ptr = src_ptr - (stride * (half_k_size + 1)) - (half_k_size + 1);
-  for (i = 0; i < kernel_size + 2; ++i) {
-    for (j = 0; j < kernel_size + 2; ++j) {
+  for (i = 0; i < kernal_size + 2; ++i) {
+    for (j = 0; j < kernal_size + 2; ++j) {
       max_diff = VPXMAX(max_diff, abs((int)src_ptr - (int)tmp_ptr[j]));
     }
     tmp_ptr += stride;
@@ -5129,19 +5101,19 @@ static void highbd_spatial_denoise_point(uint16_t *src_ptr, const int stride,
 
   // Select the kernel size.
   if (max_diff > (strength + (strength >> 1))) {
-    kernel_size = 3;
+    kernal_size = 3;
     half_k_size = 1;
     thresh = thresh >> 1;
   }
-  kernel_ptr = (kernel_size == 3) ? dn_kernel_3 : dn_kernel_5;
+  kernal_ptr = (kernal_size == 3) ? dn_kernal_3 : dn_kernal_5;
 
   // Apply the kernel
   tmp_ptr = src_ptr - (stride * half_k_size) - half_k_size;
-  for (i = 0; i < kernel_size; ++i) {
-    for (j = 0; j < kernel_size; ++j) {
-      add_denoise_point((int)*src_ptr, (int)tmp_ptr[j], thresh, *kernel_ptr,
+  for (i = 0; i < kernal_size; ++i) {
+    for (j = 0; j < kernal_size; ++j) {
+      add_denoise_point((int)*src_ptr, (int)tmp_ptr[j], thresh, *kernal_ptr,
                         &sum_val, &sum_weight);
-      ++kernel_ptr;
+      ++kernal_ptr;
     }
     tmp_ptr += stride;
   }
@@ -5602,8 +5574,7 @@ static void encode_frame_to_data_rate(
   // Backup to ensure consistency between recodes
   save_encode_params(cpi);
   if (cpi->ext_ratectrl.ready &&
-      (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_RDMULT) != 0 &&
-      cpi->ext_ratectrl.funcs.get_frame_rdmult != NULL) {
+      (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_RDMULT) != 0) {
     vpx_codec_err_t codec_status;
     const GF_GROUP *gf_group = &cpi->twopass.gf_group;
     FRAME_UPDATE_TYPE update_type = gf_group->update_type[gf_group->index];
@@ -5721,8 +5692,7 @@ static void encode_frame_to_data_rate(
   end_timing(cpi, vp9_pack_bitstream_time);
 #endif
 
-  if (cpi->ext_ratectrl.ready &&
-      cpi->ext_ratectrl.funcs.update_encodeframe_result != NULL) {
+  if (cpi->ext_ratectrl.ready) {
     const RefCntBuffer *coded_frame_buf =
         get_ref_cnt_buffer(cm, cm->new_fb_idx);
     vpx_codec_err_t codec_status = vp9_extrc_update_encodeframe_result(

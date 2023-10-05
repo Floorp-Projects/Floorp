@@ -1301,8 +1301,8 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] = {
         0,  /* rc_resize_allowed */
         1,  /* rc_scaled_width */
         1,  /* rc_scaled_height */
-        60, /* rc_resize_down_thresh */
-        30, /* rc_resize_up_thresh */
+        60, /* rc_resize_down_thresold */
+        30, /* rc_resize_up_thresold */
 
         VPX_VBR,     /* rc_end_usage */
         { NULL, 0 }, /* rc_twopass_stats_in */

@@ -521,7 +521,6 @@ AS_SFX    = ${AS_SFX:-.asm}
 EXE_SFX   = ${EXE_SFX}
 VCPROJ_SFX = ${VCPROJ_SFX}
 RTCD_OPTIONS = ${RTCD_OPTIONS}
-LIBWEBM_CXXFLAGS = ${LIBWEBM_CXXFLAGS}
 LIBYUV_CXXFLAGS = ${LIBYUV_CXXFLAGS}
 EOF
 
@@ -970,26 +969,13 @@ process_common_toolchain() {
       ;;
   esac
 
-  # Process architecture variants
+  # Process ARM architecture variants
   case ${toolchain} in
     arm*)
-      soft_enable runtime_cpu_detect
-      # Arm ISA extensions are treated as supersets.
+      # on arm, isa versions are supersets
       case ${tgt_isa} in
         arm64|armv8)
-          for ext in ${ARCH_EXT_LIST_AARCH64}; do
-            # Disable higher order extensions to simplify dependencies.
-            if [ "$disable_exts" = "yes" ]; then
-              if ! disabled $ext; then
-                RTCD_OPTIONS="${RTCD_OPTIONS}--disable-${ext} "
-                disable_feature $ext
-              fi
-            elif disabled $ext; then
-              disable_exts="yes"
-            else
-              soft_enable $ext
-            fi
-          done
+          soft_enable neon
           ;;
         armv7|armv7s)
           soft_enable neon

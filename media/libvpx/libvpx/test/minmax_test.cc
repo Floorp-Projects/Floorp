@@ -29,7 +29,7 @@ typedef void (*MinMaxFunc)(const uint8_t *a, int a_stride, const uint8_t *b,
 
 class MinMaxTest : public ::testing::TestWithParam<MinMaxFunc> {
  public:
-  void SetUp() override {
+  virtual void SetUp() {
     mm_func_ = GetParam();
     rnd_.Reset(ACMRandom::DeterministicSeed());
   }

@@ -488,7 +488,7 @@ static void set_segmentation_map(VP8_COMP *cpi,
  */
 static void set_segment_data(VP8_COMP *cpi, signed char *feature_data,
                              unsigned char abs_delta) {
-  cpi->mb.e_mbd.mb_segment_abs_delta = abs_delta;
+  cpi->mb.e_mbd.mb_segement_abs_delta = abs_delta;
   memcpy(cpi->segment_feature_data, feature_data,
          sizeof(cpi->segment_feature_data));
 }
@@ -1452,6 +1452,7 @@ void vp8_change_config(VP8_COMP *cpi, VP8_CONFIG *oxcf) {
     // allocation is done once in vp8_create_compressor().
     oxcf->multi_threaded = cpi->oxcf.multi_threaded;
   }
+
   cpi->oxcf = *oxcf;
 
   switch (cpi->oxcf.Mode) {
@@ -2256,7 +2257,7 @@ void vp8_remove_compressor(VP8_COMP **comp) {
 #if 0
         {
             printf("\n_pick_loop_filter_level:%d\n", cpi->time_pick_lpf / 1000);
-            printf("\n_frames receive_data encod_mb_row compress_frame  Total\n");
+            printf("\n_frames recive_data encod_mb_row compress_frame  Total\n");
             printf("%6d %10ld %10ld %10ld %10ld\n", cpi->common.current_video_frame, cpi->time_receive_data / 1000, cpi->time_encode_mb_row / 1000, cpi->time_compress_data / 1000, (cpi->time_receive_data + cpi->time_compress_data) / 1000);
         }
 #endif
@@ -2756,7 +2757,7 @@ static int decide_key_frame(VP8_COMP *cpi) {
   }
   /* in addition if the following are true and this is not a golden frame
    * then code a key frame Note that on golden frames there often seems
-   * to be a pop in intra usage anyway hence this restriction is
+   * to be a pop in intra useage anyway hence this restriction is
    * designed to prevent spurious key frames. The Intra pop needs to be
    * investigated.
    */
@@ -3642,7 +3643,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
         Q = cpi->avg_frame_qindex;
       }
 
-      /* For constrained quality don't allow Q less than the cq level */
+      /* For constrained quality dont allow Q less than the cq level */
       if ((cpi->oxcf.end_usage == USAGE_CONSTRAINED_QUALITY) &&
           (Q < cpi->cq_target_quality)) {
         Q = cpi->cq_target_quality;
@@ -3669,7 +3670,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
     } else {
       cpi->active_best_quality = inter_minq[Q];
 
-      /* For the constant/constrained quality mode we don't want
+      /* For the constant/constrained quality mode we dont want
        * q to fall below the cq level.
        */
       if ((cpi->oxcf.end_usage == USAGE_CONSTRAINED_QUALITY) &&
@@ -3690,7 +3691,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
      * higher quality on the frames to prevent bits just going to waste.
      */
     if (cpi->oxcf.end_usage == USAGE_STREAM_FROM_SERVER) {
-      /* Note that the use of >= here elliminates the risk of a divide
+      /* Note that the use of >= here elliminates the risk of a devide
        * by 0 error in the else if clause
        */
       if (cpi->buffer_level >= cpi->oxcf.maximum_buffer_size) {
@@ -4327,12 +4328,12 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
   vp8_cal_dissimilarity(cpi);
 #endif
 
-  /* Update the GF usage maps.
+  /* Update the GF useage maps.
    * This is done after completing the compression of a frame when all
    * modes etc. are finalized but before loop filter
    */
   if (cpi->oxcf.number_of_layers == 1) {
-    vp8_update_gf_usage_maps(cpi, cm, &cpi->mb);
+    vp8_update_gf_useage_maps(cpi, cm, &cpi->mb);
   }
 
   if (cm->frame_type == KEY_FRAME) cm->refresh_last_frame = 1;
@@ -4489,7 +4490,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
        * size within range) then use the last frame value - 1. The -1
        * is designed to stop Q and hence the data rate, from
        * progressively falling away during difficult sections, but at
-       * the same time reduce the number of iterations around the
+       * the same time reduce the number of itterations around the
        * recode loop.
        */
       if (Q > cpi->ni_av_qi) cpi->ni_av_qi = Q - 1;
@@ -4736,7 +4737,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
   cpi->mb.e_mbd.update_mb_segmentation_data = 0;
   cpi->mb.e_mbd.mode_ref_lf_delta_update = 0;
 
-  /* Don't increment frame counters if this was an altref buffer update
+  /* Dont increment frame counters if this was an altref buffer update
    * not a real frame
    */
   if (cm->show_frame) {
@@ -5114,7 +5115,7 @@ int vp8_get_compressed_data(VP8_COMP *cpi, unsigned int *frame_flags,
 
   if (cm->refresh_last_frame) memcpy(&cpi->lfc_n, &cm->fc, sizeof(cm->fc));
 
-  /* if it's a dropped frame honor the requests on subsequent frames */
+  /* if its a dropped frame honor the requests on subsequent frames */
   if (*size > 0) {
     cpi->droppable = !frame_is_reference(cpi);
 
