@@ -491,6 +491,11 @@ class Loader final {
   [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
                                                SheetState aSheetState);
 
+  // Only to be called by `LoadSheet`.
+  [[nodiscard]] nsresult LoadSheetAsyncInternal(
+      SheetLoadData& aLoadData, uint64_t aEarlyHintPreloaderId,
+      const SheetLoadDataHashKey& aKey);
+
   // Helpers to conditionally block onload if mDocument is non-null.
   void IncrementOngoingLoadCountAndMaybeBlockOnload() {
     if (!mOngoingLoadCount++) {
