@@ -462,6 +462,10 @@ async function runEventTest({ mode, detectOnly, initFn, triggerFn, testURL }) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", mode],
+      [
+        "cookiebanners.service.mode.privateBrowsing",
+        Ci.nsICookieBannerService.MODE_DISABLED,
+      ],
       ["cookiebanners.service.detectOnly", detectOnly],
     ],
   });
