@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>
 #include "gtest/gtest.h"
 #include "BitReader.h"
 #include "BitWriter.h"
@@ -54,6 +55,25 @@ TEST(BitWriter, BitWriter)
   EXPECT_EQ(c.ReadULEB128(), 31895793ull);
   EXPECT_EQ(c.ReadULEB128(), 426894039235654ull);
   EXPECT_EQ(length, BitReader::GetBitLength(test));
+}
+
+TEST(BitWriter, AdvanceBytes)
+{
+  RefPtr<MediaByteBuffer> test = new MediaByteBuffer();
+  BitWriter b(test);
+  b.WriteBits(0xff, 8);
+  EXPECT_EQ(test->Length(), 1u);
+
+  uint8_t data[] = {0xfe, 0xfd};
+  test->AppendElements(data, sizeof(data));
+  EXPECT_EQ(test->Length(), 3u);
+  b.AdvanceBytes(2);
+
+  b.WriteBits(0xfc, 8);
+  EXPECT_EQ(test->Length(), 4u);
+
+  BitReader c(test);
+  EXPECT_EQ(c.ReadU32(), 0xfffefdfc);
 }
 
 TEST(BitWriter, SPS)
