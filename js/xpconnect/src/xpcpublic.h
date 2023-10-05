@@ -339,6 +339,8 @@ bool Base64Decode(JSContext* cx, JS::Handle<JS::Value> val,
  */
 bool NonVoidStringToJsval(JSContext* cx, nsAString& str,
                           JS::MutableHandle<JS::Value> rval);
+bool NonVoidStringToJsval(JSContext* cx, const nsAString& str,
+                          JS::MutableHandle<JS::Value> rval);
 inline bool StringToJsval(JSContext* cx, nsAString& str,
                           JS::MutableHandle<JS::Value> rval) {
   // From the T_ASTRING case in XPCConvert::NativeData2JS.
@@ -349,24 +351,14 @@ inline bool StringToJsval(JSContext* cx, nsAString& str,
   return NonVoidStringToJsval(cx, str, rval);
 }
 
-inline bool NonVoidStringToJsval(JSContext* cx, const nsAString& str,
-                                 JS::MutableHandle<JS::Value> rval) {
-  nsString mutableCopy;
-  if (!mutableCopy.Assign(str, mozilla::fallible)) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
-  return NonVoidStringToJsval(cx, mutableCopy, rval);
-}
-
 inline bool StringToJsval(JSContext* cx, const nsAString& str,
                           JS::MutableHandle<JS::Value> rval) {
-  nsString mutableCopy;
-  if (!mutableCopy.Assign(str, mozilla::fallible)) {
-    JS_ReportOutOfMemory(cx);
-    return false;
+  // From the T_ASTRING case in XPCConvert::NativeData2JS.
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
   }
-  return StringToJsval(cx, mutableCopy, rval);
+  return NonVoidStringToJsval(cx, str, rval);
 }
 
 /**
