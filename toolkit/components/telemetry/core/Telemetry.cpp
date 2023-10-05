@@ -1384,7 +1384,6 @@ static constexpr TrackedDBEntry kTrackedDBs[] = {
     TRACKEDDB_ENTRY("places.sqlite"),
     TRACKEDDB_ENTRY("reading-list.sqlite"),
     TRACKEDDB_ENTRY("search.sqlite"),
-    TRACKEDDB_ENTRY("signons.sqlite"),
     TRACKEDDB_ENTRY("urlclassifier3.sqlite"),
     TRACKEDDB_ENTRY("webappsstore.sqlite")};
 
