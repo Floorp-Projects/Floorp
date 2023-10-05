@@ -1,12 +1,7 @@
 // META: script=/resources/testdriver.js
 // META: script=/common/utils.js
 // META: script=resources/fledge-util.js
-// META: script=/common/subset-tests.js
 // META: timeout=long
-// META: variant=?1-5
-// META: variant=?6-10
-// META: variant=?11-15
-// META: variant=?16-last
 
 "use strict;"
 
@@ -35,7 +30,7 @@ async function runReportArgumentValidationTest(
 // reportResult() to reportWin() message passing tests
 /////////////////////////////////////////////////////////////////////
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -51,7 +46,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller passes number to bidder.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -67,7 +62,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller passes string to bidder.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -83,7 +78,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller passes array to bidder.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -103,7 +98,7 @@ subsetTest(promise_test, async test => {
 // reportResult() / reportWin() browserSignals tests.
 /////////////////////////////////////////////////////////////////////
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -113,7 +108,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.topWindowHostname test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -123,7 +118,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.seller test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -135,7 +130,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.topLevelSeller and browserSignals.componentSeller test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportArgumentValidationTest(
     test,
@@ -147,7 +142,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.renderURL test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -157,7 +152,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.bid test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -167,7 +162,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.desirability test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -177,7 +172,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.topLevelSellerSignals test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -187,7 +182,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.dataVersion test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -197,7 +192,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.modifiedBid test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportArgumentValidationTest(
     test,
@@ -209,7 +204,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.highestScoringOtherBid with no other interest groups test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await joinInterestGroup(test, uuid,
     {
@@ -229,7 +224,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.highestScoringOtherBid with other groups that do not bid.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await joinInterestGroup(test, uuid,
     {
@@ -253,7 +248,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.highestScoringOtherBid with other bids.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -263,7 +258,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.interestGroupName test.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   await runReportArgumentValidationTest(
     test,
     // reportResultSuccessCondition:
@@ -273,7 +268,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.madeHighestScoringOtherBid with no other bids.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await joinInterestGroup(test, uuid,
     {
@@ -288,7 +283,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'browserSignals.madeHighestScoringOtherBid with group that did not bid.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await joinInterestGroup(test, uuid,
     {

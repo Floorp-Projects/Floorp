@@ -418,7 +418,7 @@ promise_test(async t => {
 
   await promise_rejects_dom(t, "EncodingError",
     decoder.flush().catch((e) => {
-      assert_equals(errors, 1);
+      assert_equals(errors, 0);
       throw e;
     })
   );
@@ -453,7 +453,7 @@ promise_test(async t => {
 
   await promise_rejects_dom(t, "EncodingError",
     decoder.flush().catch((e) => {
-      assert_equals(errors, 1);
+      assert_equals(errors, 0);
       throw e;
     })
   );

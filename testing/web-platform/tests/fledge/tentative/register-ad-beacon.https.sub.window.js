@@ -1,15 +1,11 @@
 // META: script=/resources/testdriver.js
 // META: script=/common/utils.js
 // META: script=resources/fledge-util.js
-// META: script=/common/subset-tests.js
 // META: timeout=long
-// META: variant=?1-5
-// META: variant=?6-10
-// META: variant=?11-last
 
 "use strict;"
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -30,7 +26,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon().');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -52,7 +48,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon().');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -73,7 +69,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon(), beacon sent with body.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -94,7 +90,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon(), beacon sent with body.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -121,7 +117,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon(). reportEvent() called twice.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -148,7 +144,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon(). reportEvent() called twice.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -176,7 +172,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon() with multiple beacons.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -205,7 +201,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon() with multiple beacons.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -227,7 +223,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller and buyer call registerAdBeacon() with shared reportEvent() call.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -254,7 +250,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller and buyer call registerAdBeacon() with separate reportEvent() calls.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
@@ -281,7 +277,7 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon() multiple times.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
