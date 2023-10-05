@@ -23,8 +23,8 @@ gcloud:
     - model: dreamlte
       version: 28
       locale: en_US
-    - model: blueline
-      version: 28
+    - model: oriole
+      version: 31
       locale: en_US
     - model: x1q
       version: 29
