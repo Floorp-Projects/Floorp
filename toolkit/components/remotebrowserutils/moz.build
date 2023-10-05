@@ -11,4 +11,4 @@ EXTRA_JS_MODULES += [
     "RemoteWebNavigation.sys.mjs",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]

@@ -17,5 +17,5 @@ EXTRA_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser.ini",
+    "tests/browser.toml",
 ]

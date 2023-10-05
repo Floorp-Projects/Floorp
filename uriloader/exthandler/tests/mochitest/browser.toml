@@ -1,0 +1,158 @@
+[DEFAULT]
+head = "head.js"
+support-files = ["protocolHandler.html"]
+
+
+["browser_auto_close_window.js"]
+support-files = [
+  "download_page.html",
+  "download.bin",
+  "download.sjs",
+]
+
+["browser_auto_close_window_nodialog.js"]
+support-files = [
+  "download_page.html",
+  "download.bin",
+  "download.sjs",
+]
+
+["browser_bad_download_dir.js"]
+run-if = ["os == 'linux'"]
+support-files = ["download.bin"]
+
+["browser_download_always_ask_preferred_app.js"]
+
+["browser_download_idn_blocklist.js"]
+support-files = ["download.bin"]
+
+["browser_download_open_with_internal_handler.js"]
+support-files = [
+  "file_image_svgxml.svg",
+  "file_image_svgxml.svg^headers^",
+  "file_pdf_application_pdf.pdf",
+  "file_pdf_application_pdf.pdf^headers^",
+  "file_pdf_application_unknown.pdf",
+  "file_pdf_application_unknown.pdf^headers^",
+  "file_pdf_application_octet_stream.pdf",
+  "file_pdf_application_octet_stream.pdf^headers^",
+  "file_pdf_binary_octet_stream.pdf",
+  "file_pdf_binary_octet_stream.pdf^headers^",
+  "file_txt_attachment_test.txt",
+  "file_txt_attachment_test.txt^headers^",
+  "file_xml_attachment_binary_octet_stream.xml",
+  "file_xml_attachment_binary_octet_stream.xml^headers^",
+  "file_xml_attachment_test.xml",
+  "file_xml_attachment_test.xml^headers^",
+  "file_green.webp",
+  "file_green.webp^headers^",
+]
+
+["browser_download_preferred_action.js"]
+support-files = ["mime_type_download.sjs"]
+
+["browser_download_privatebrowsing.js"]
+
+["browser_download_skips_dialog.js"]
+support-files = [
+  "file_green.webp",
+  "file_green.webp^headers^",
+]
+
+["browser_download_spam_permissions.js"]
+support-files = ["test_spammy_page.html"]
+
+["browser_download_urlescape.js"]
+support-files = [
+  "file_with@@funny_name.png",
+  "file_with@@funny_name.png^headers^",
+  "file_with[funny_name.webm",
+  "file_with[funny_name.webm^headers^",
+]
+
+["browser_extension_correction.js"]
+support-files = [
+  "file_as.exe",
+  "file_as.exe^headers^",
+]
+
+["browser_filehandling_loop.js"]
+
+["browser_first_prompt_not_blocked_without_user_interaction.js"]
+support-files = ["file_external_protocol_iframe.html"]
+
+["browser_ftp_protocol_handlers.js"]
+support-files = [
+  "FTPprotocolHandler.html",
+  "blank.html",
+]
+
+["browser_launched_app_save_directory.js"]
+support-files = [
+  "file_pdf_application_pdf.pdf",
+  "file_pdf_application_pdf.pdf^headers^",
+  "file_green.webp",
+  "file_green.webp^headers^",
+]
+
+["browser_local_files_no_save_without_asking.js"]
+support-files = ["file_pdf_binary_octet_stream.pdf"]
+
+["browser_local_files_open_doesnt_duplicate.js"]
+support-files = ["file_pdf_binary_octet_stream.pdf"]
+
+["browser_open_internal_choice_persistence.js"]
+skip-if = ["apple_silicon"] # bug 1752482
+support-files = [
+  "file_pdf_application_pdf.pdf",
+  "file_pdf_application_pdf.pdf^headers^",
+]
+
+["browser_pdf_save_as.js"]
+
+["browser_protocol_ask_dialog.js"]
+support-files = ["file_nested_protocol_request.html"]
+
+["browser_protocol_ask_dialog_external.js"]
+support-files = ["redirect_helper.sjs"]
+
+["browser_protocol_ask_dialog_permission.js"]
+support-files = [
+  "redirect_helper.sjs",
+  "script_redirect.html",
+]
+
+["browser_protocol_custom_sandbox.js"]
+support-files = ["protocol_custom_sandbox_helper.sjs"]
+
+["browser_protocol_custom_sandbox_csp.js"]
+support-files = ["protocol_custom_sandbox_helper.sjs"]
+
+["browser_protocolhandler_loop.js"]
+
+["browser_remember_download_option.js"]
+
+["browser_save_filenames.js"]
+support-files = ["save_filenames.html"]
+
+["browser_shows_where_to_save_dialog.js"]
+support-files = [
+  "file_green.webp",
+  "file_green.webp^headers^",
+  "file_pdf_application_pdf.pdf",
+  "file_pdf_application_pdf.pdf^headers^",
+  "file_txt_attachment_test.txt",
+  "file_txt_attachment_test.txt^headers^",
+]
+
+["browser_txt_download_save_as.js"]
+support-files = [
+  "file_txt_attachment_test.txt",
+  "file_txt_attachment_test.txt^headers^",
+  "!/toolkit/content/tests/browser/common/mockTransfer.js",
+]
+
+["browser_web_handler_app_pinned_tab.js"]
+support-files = ["mailto.html"]
+
+["browser_web_protocol_handlers.js"]
