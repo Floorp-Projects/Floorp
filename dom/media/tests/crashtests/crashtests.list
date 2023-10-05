@@ -24,7 +24,7 @@ asserts-if(Android,0-1) pref(browser.link.open_newwindow,2) load 1429507_2.html 
 load 1443212.html
 asserts-if(Android,0-2) load 1453030.html
 load 1468451.html
-skip-if(Android) load 1490700.html # No screenshare on Android
+skip-if(wayland) skip-if(Android) load 1490700.html # wayland: bug 1856368, No screenshare on Android
 load 1505957.html
 load 1509442.html
 load 1511130.html

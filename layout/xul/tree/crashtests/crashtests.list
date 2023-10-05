@@ -13,5 +13,5 @@ load 399715-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/414170-1.xhtml
 load 479931-1.xhtml
 load 585815.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load 601427.html # Bug 1819154
+skip-if(wayland) pref(widget.windows.window_occlusion_tracking.enabled,false) load 601427.html # Bug 1819154, wayland: Bug 1857258
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/730441-3.xhtml

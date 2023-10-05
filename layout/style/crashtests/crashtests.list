@@ -169,7 +169,7 @@ load 1290994-4.html
 load 1314531.html
 load 1315889-1.html
 load 1315894-1.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load 1319072-1.html # Bug 1819154
+pref(widget.windows.window_occlusion_tracking.enabled,false) skip-if(wayland) load 1319072-1.html # Bug 1819154, wayland: bug 1856389
 HTTP load 1320423-1.html
 load 1321357-1.html
 load 1328535-1.html
@@ -177,8 +177,8 @@ load 1331272.html
 load 1332550.html
 HTTP load 1333001-1.html
 load 1340248.html
-load 1340344.html
-load 1342316-1.html
+skip-if(wayland) load 1340344.html  # wayland: bug 1856389
+skip-if(wayland) load 1342316-1.html # wayland: bug 1856389
 load 1344210.html
 load 1353312.html
 load 1356601-1.html
@@ -188,19 +188,19 @@ load 1374175-1.html
 load 1375812-1.html
 load 1377053-1.html
 load 1377256-1.html
-load 1378064-1.html
+skip-if(wayland) load 1378064-1.html  # wayland: bug 1856389
 load 1378814.html
 load 1380800.html
 load link-transition-before.html
-load 1381420-1.html
+skip-if(wayland) load 1381420-1.html  # wayland: bug 1856389
 load 1381682.html
 load 1382672.html
 load 1382710.html
 pref(dom.animations-api.compositing.enabled,true) load 1383493-1.html
-load 1383001.html
+skip-if(wayland) load 1383001.html  # wayland: bug 1856389
 load 1383001-2.html
 load 1383319.html
-load 1383589-1.html
+skip-if(wayland) load 1383589-1.html  # wayland: bug 1856389
 load 1383975.html
 load border-image-visited-link.html
 load content-only-on-link-before.html
@@ -209,7 +209,7 @@ load font-face-truncated-src.html
 load large_border_image_width.html
 load link-transition-before.html
 skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load long-url-list-stack-overflow.html #Bug 1525117
-load scale-on-block-continuation.html
+skip-if(wayland) load scale-on-block-continuation.html  # wayland: bug 1856389
 skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981.html # Very sensitive to stack size.
 skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-2.html
 skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-3.html
@@ -243,7 +243,7 @@ load 1400936-1.html
 load 1400936-2.html
 load 1401256.html
 load 1401706.html
-load 1401801.html
+skip-if(wayland) load 1401801.html  # wayland: bug 1856389
 load 1401825.html
 load 1402218-1.html
 load 1402366.html
@@ -275,8 +275,8 @@ load 1413288.html
 load 1413361.html
 load 1413670.html
 load 1415353.html
-load 1418059.html
-test-pref(dom.animations-api.getAnimations.enabled,true) load 1418867.html
+skip-if(wayland) load 1418059.html  # wayland: bug 1856389
+skip-if(wayland) test-pref(dom.animations-api.getAnimations.enabled,true) load 1418867.html  # wayland: bug 1856389
 load 1419554.html
 load 1426312.html
 load 1439793.html
