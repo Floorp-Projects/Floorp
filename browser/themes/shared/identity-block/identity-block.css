@@ -256,20 +256,16 @@
   max-width: 500px;
 }
 
-#urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box > #tracking-protection-icon {
+#urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
-}
 
-#urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box[hasException] > #tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
-}
+  &[active] {
+    list-style-image: url(chrome://browser/skin/tracking-protection-active.svg);
+  }
 
-#urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/tracking-protection-active.svg);
-}
-
-:root[lwt-toolbar-field-brighttext] #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/tracking-protection-active-brighttext.svg);
+  &[hasException] {
+    list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
+  }
 }
 
 #urlbar-input-container[pageproxystate="invalid"] > #tracking-protection-icon-container {
