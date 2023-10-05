@@ -1666,9 +1666,9 @@ async function assertLogBreakpoint(dbg, line) {
   ok(hasLogClass, `Log breakpoint on line ${line}`);
 }
 
-function assertBreakpointSnippet(dbg, index, snippet) {
+function assertBreakpointSnippet(dbg, index, expectedSnippet) {
   const actualSnippet = findElement(dbg, "breakpointLabel", 2).innerText;
-  is(snippet, actualSnippet, `Breakpoint ${index} snippet`);
+  is(actualSnippet, expectedSnippet, `Breakpoint ${index} snippet`);
 }
 
 const selectors = {

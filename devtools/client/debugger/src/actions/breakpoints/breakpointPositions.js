@@ -15,27 +15,67 @@ import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 import {
-  debuggerToSourceMapLocation,
   sourceMapToDebuggerLocation,
   createLocation,
 } from "../../utils/location";
 import { validateSource } from "../../utils/context";
 
-async function mapLocations(generatedLocations, { getState, sourceMapLoader }) {
-  if (!generatedLocations.length) {
-    return [];
+async function mapLocations(
+  breakpointPositions,
+  generatedSource,
+  isOriginal,
+  originalSourceId,
+  { getState, sourceMapLoader }
+) {
+  // Map breakable positions from generated to original locations.
+  let mappedBreakpointPositions = await sourceMapLoader.getOriginalLocations(
+    breakpointPositions,
+    generatedSource.id
+  );
+  // The Source Map Loader will return null when there is no source map for that generated source.
+  // Consider the map as unrelated to source map and process the source actor positions as-is.
+  if (!mappedBreakpointPositions) {
+    mappedBreakpointPositions = breakpointPositions;
   }
 
-  const originalLocations = await sourceMapLoader.getOriginalLocations(
-    generatedLocations.map(debuggerToSourceMapLocation)
-  );
-  return originalLocations.map((location, index) => ({
-    // If location is null, this particular location doesn't map to any original source.
-    location: location
-      ? sourceMapToDebuggerLocation(getState(), location)
-      : generatedLocations[index],
-    generatedLocation: generatedLocations[index],
-  }));
+  const locations = [];
+  for (let line in mappedBreakpointPositions) {
+    // createLocation expects a number and not a string.
+    line = parseInt(line, 10);
+    for (const columnOrSourceMapLocation of mappedBreakpointPositions[line]) {
+      // When processing a source unrelated to source map, `mappedBreakpointPositions` will be equal to `breakpointPositions`.
+      // and columnOrSourceMapLocation will always be a number.
+      // But it will also be a number if we process a source mapped file and SourceMapLoader didn't find any valid mapping
+      // for the current position (line and column).
+      // When this happen to be a number it means it isn't mapped and columnOrSourceMapLocation refers to the column index.
+      if (typeof columnOrSourceMapLocation == "number") {
+        const generatedLocation = createLocation({
+          line,
+          column: columnOrSourceMapLocation,
+          source: generatedSource,
+        });
+        locations.push({ location: generatedLocation, generatedLocation });
+      } else {
+        // Otherwise, for sources which are mapped. `columnOrSourceMapLocation` will be a SourceMapLoader location object.
+        // This location object will refer to the location where the current column (columnOrSourceMapLocation.generatedColumn)
+        // mapped in the original file.
+        const generatedLocation = createLocation({
+          line,
+          column: columnOrSourceMapLocation.generatedColumn,
+          source: generatedSource,
+        });
+
+        locations.push({
+          location: sourceMapToDebuggerLocation(
+            getState(),
+            columnOrSourceMapLocation
+          ),
+          generatedLocation,
+        });
+      }
+    }
+  }
+  return locations;
 }
 
 // Filter out positions, that are not in the original source Id
@@ -64,24 +104,6 @@ function filterByUniqLocation(positions) {
     handledBreakpointIds.add(breakpointId);
     return true;
   });
-}
-
-function convertToList(results, source) {
-  const positions = [];
-
-  for (const line in results) {
-    for (const column of results[line]) {
-      positions.push(
-        createLocation({
-          line: Number(line),
-          column,
-          source,
-        })
-      );
-    }
-  }
-
-  return positions;
 }
 
 function groupByLine(results, source, line) {
@@ -208,8 +230,13 @@ async function _setBreakpointPositions(location, thunkArgs) {
     }
   }
 
-  let positions = convertToList(results, generatedSource);
-  positions = await mapLocations(positions, thunkArgs);
+  let positions = await mapLocations(
+    results,
+    generatedSource,
+    location.source.isOriginal,
+    location.source.id,
+    thunkArgs
+  );
   // `mapLocations` may compute for a little while asynchronously,
   // ensure that the location is still valid before continuing.
   validateSource(getState(), location.source);

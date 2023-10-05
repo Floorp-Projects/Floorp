@@ -7,14 +7,9 @@ import {
   selectors,
   watchForState,
   createStore,
-  makeOriginalSource,
   makeSource,
 } from "../../../utils/test-head";
-import {
-  createSource,
-  mockCommandClient,
-} from "../../tests/helpers/mockCommandClient";
-import { getBreakpointsList } from "../../../selectors";
+import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 import { isFulfilled, isRejected } from "../../../utils/async-value";
 import { createLocation } from "../../../utils/location";
 
@@ -73,112 +68,6 @@ describe("loadGeneratedSourceText", () => {
         ? foo2Content.value.value.indexOf("return foo2")
         : -1
     ).not.toBe(-1);
-  });
-
-  it("should update breakpoint text when a source loads", async () => {
-    const fooOrigContent = createSource("fooOrig", "var fooOrig = 42;");
-    const fooGenContent = createSource("fooGen", "var fooGen = 42;");
-
-    const store = createStore(
-      {
-        ...mockCommandClient,
-        sourceContents: async () => fooGenContent,
-        getSourceActorBreakpointPositions: async () => ({ 1: [0] }),
-        getSourceActorBreakableLines: async () => [],
-      },
-      {},
-      {
-        getGeneratedRangesForOriginal: async () => [
-          { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } },
-        ],
-        getOriginalLocations: async items =>
-          items.map(item => ({
-            ...item,
-            sourceId:
-              item.sourceId === fooGenSource1.id
-                ? fooOrigSources1[0].id
-                : fooOrigSources2[0].id,
-          })),
-        getOriginalSourceText: async s => ({
-          text: fooOrigContent.source,
-          contentType: fooOrigContent.contentType,
-        }),
-      }
-    );
-    const { dispatch, getState } = store;
-
-    const fooGenSource1 = await dispatch(
-      actions.newGeneratedSource(makeSource("fooGen1"))
-    );
-
-    const fooOrigSources1 = await dispatch(
-      actions.newOriginalSources([makeOriginalSource(fooGenSource1)])
-    );
-    const fooGenSource2 = await dispatch(
-      actions.newGeneratedSource(makeSource("fooGen2"))
-    );
-
-    const fooOrigSources2 = await dispatch(
-      actions.newOriginalSources([makeOriginalSource(fooGenSource2)])
-    );
-
-    await dispatch(actions.loadOriginalSourceText(fooOrigSources1[0]));
-
-    await dispatch(
-      actions.addBreakpoint(
-        createLocation({
-          source: fooOrigSources1[0],
-          line: 1,
-          column: 0,
-        }),
-        {}
-      )
-    );
-
-    const breakpoint1 = getBreakpointsList(getState())[0];
-    expect(breakpoint1.text).toBe("");
-    expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
-
-    const fooGenSource1SourceActor =
-      selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        fooGenSource1.id
-      );
-
-    await dispatch(actions.loadGeneratedSourceText(fooGenSource1SourceActor));
-
-    const breakpoint2 = getBreakpointsList(getState())[0];
-    expect(breakpoint2.text).toBe("var fooGen = 42;");
-    expect(breakpoint2.originalText).toBe("var fooOrig = 42;");
-
-    const fooGenSource2SourceActor =
-      selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        fooGenSource2.id
-      );
-
-    await dispatch(actions.loadGeneratedSourceText(fooGenSource2SourceActor));
-
-    await dispatch(
-      actions.addBreakpoint(
-        createLocation({
-          source: fooGenSource2,
-          line: 1,
-          column: 0,
-        }),
-        {}
-      )
-    );
-
-    const breakpoint3 = getBreakpointsList(getState())[1];
-    expect(breakpoint3.text).toBe("var fooGen = 42;");
-    expect(breakpoint3.originalText).toBe("");
-
-    await dispatch(actions.loadOriginalSourceText(fooOrigSources2[0]));
-
-    const breakpoint4 = getBreakpointsList(getState())[1];
-    expect(breakpoint4.text).toBe("var fooGen = 42;");
-    expect(breakpoint4.originalText).toBe("var fooOrig = 42;");
   });
 
   it("loads two sources w/ one request", async () => {
