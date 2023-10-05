@@ -78,7 +78,7 @@ class Y4mVideoSourceTest : public ::testing::TestWithParam<Y4mTestParam>,
  protected:
   Y4mVideoSourceTest() : Y4mVideoSource("", 0, 0) {}
 
-  virtual ~Y4mVideoSourceTest() { CloseSource(); }
+  ~Y4mVideoSourceTest() override { CloseSource(); }
 
   virtual void Init(const std::string &file_name, int limit) {
     file_name_ = file_name;
@@ -140,7 +140,7 @@ class Y4mVideoWriteTest : public Y4mVideoSourceTest {
  protected:
   Y4mVideoWriteTest() : tmpfile_(nullptr) {}
 
-  virtual ~Y4mVideoWriteTest() {
+  ~Y4mVideoWriteTest() override {
     delete tmpfile_;
     input_file_ = nullptr;
   }
@@ -172,7 +172,7 @@ class Y4mVideoWriteTest : public Y4mVideoSourceTest {
     ReplaceInputFile(tmpfile_->file());
   }
 
-  virtual void Init(const std::string &file_name, int limit) {
+  void Init(const std::string &file_name, int limit) override {
     Y4mVideoSourceTest::Init(file_name, limit);
     WriteY4mAndReadBack();
   }

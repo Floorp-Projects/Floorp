@@ -40,7 +40,7 @@ static INLINE unsigned int sad(const uint8_t *src_ptr, int src_stride,
   unsigned int vpx_sad##m##x##n##_avg_c(                                      \
       const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,         \
       int ref_stride, const uint8_t *second_pred) {                           \
-    DECLARE_ALIGNED(16, uint8_t, comp_pred[m * n]);                           \
+    DECLARE_ALIGNED(32, uint8_t, comp_pred[m * n]);                           \
     vpx_comp_avg_pred_c(comp_pred, second_pred, m, n, ref_ptr, ref_stride);   \
     return sad(src_ptr, src_stride, comp_pred, m, m, n);                      \
   }                                                                           \

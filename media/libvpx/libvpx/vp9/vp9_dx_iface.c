@@ -256,6 +256,7 @@ static void set_ppflags(const vpx_codec_alg_priv_t *ctx, vp9_ppflags_t *flags) {
   } while (0)
 
 static vpx_codec_err_t init_decoder(vpx_codec_alg_priv_t *ctx) {
+  vpx_codec_err_t res;
   ctx->last_show_frame = -1;
   ctx->need_resync = 1;
   ctx->flushed = 0;
@@ -265,6 +266,8 @@ static vpx_codec_err_t init_decoder(vpx_codec_alg_priv_t *ctx) {
 
   ctx->pbi = vp9_decoder_create(ctx->buffer_pool);
   if (ctx->pbi == NULL) {
+    vpx_free(ctx->buffer_pool);
+    ctx->buffer_pool = NULL;
     set_error_detail(ctx, "Failed to allocate decoder");
     return VPX_CODEC_MEM_ERROR;
   }
@@ -282,7 +285,14 @@ static vpx_codec_err_t init_decoder(vpx_codec_alg_priv_t *ctx) {
   if (!ctx->postproc_cfg_set && (ctx->base.init_flags & VPX_CODEC_USE_POSTPROC))
     set_default_ppflags(&ctx->postproc_cfg);
 
-  return init_buffer_callbacks(ctx);
+  res = init_buffer_callbacks(ctx);
+  if (res != VPX_CODEC_OK) {
+    vpx_free(ctx->buffer_pool);
+    ctx->buffer_pool = NULL;
+    vp9_decoder_remove(ctx->pbi);
+    ctx->pbi = NULL;
+  }
+  return res;
 }
 
 static INLINE void check_resync(vpx_codec_alg_priv_t *const ctx,

@@ -57,6 +57,7 @@ LIBWEBM_PARSER_SRCS = third_party/libwebm/mkvparser/mkvparser.cc \
 # Add compile flags and include path for libwebm sources.
 ifeq ($(CONFIG_WEBM_IO),yes)
   CXXFLAGS     += -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS
+  $(BUILD_PFX)third_party/libwebm/%.cc.o: CXXFLAGS += $(LIBWEBM_CXXFLAGS)
   INC_PATH-yes += $(SRC_PATH_BARE)/third_party/libwebm
 endif
 
@@ -81,8 +82,6 @@ ifeq ($(CONFIG_LIBYUV),yes)
   $(BUILD_PFX)third_party/libyuv/%.cc.o: CXXFLAGS += ${LIBYUV_CXXFLAGS}
 endif
 ifeq ($(CONFIG_WEBM_IO),yes)
-  vpxdec.SRCS                 += $(LIBWEBM_COMMON_SRCS)
-  vpxdec.SRCS                 += $(LIBWEBM_MUXER_SRCS)
   vpxdec.SRCS                 += $(LIBWEBM_PARSER_SRCS)
   vpxdec.SRCS                 += webmdec.cc webmdec.h
 endif

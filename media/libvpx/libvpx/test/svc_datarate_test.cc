@@ -43,7 +43,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
   }
 
  protected:
-  virtual ~DatarateOnePassCbrSvc() {}
+  ~DatarateOnePassCbrSvc() override = default;
 
   virtual void ResetModel() {
     last_pts_ = 0;
@@ -86,7 +86,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
     }
     ksvc_flex_noupd_tlenh_ = false;
   }
-  virtual void BeginPassHook(unsigned int /*pass*/) {}
+  void BeginPassHook(unsigned int /*pass*/) override {}
 
   // Example pattern for spatial layers and 2 temporal layers used in the
   // bypass/flexible mode. The pattern corresponds to the pattern
@@ -179,8 +179,8 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
       }
   }
 
-  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
     PreEncodeFrameHookSetup(video, encoder);
 
     if (video->frame() == 0) {
@@ -468,7 +468,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
     return VPX_CODEC_OK;
   }
 
-  virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
+  void FramePktHook(const vpx_codec_cx_pkt_t *pkt) override {
     uint32_t sizes[8] = { 0 };
     uint32_t sizes_parsed[8] = { 0 };
     int count = 0;
@@ -571,7 +571,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
     }
   }
 
-  virtual void EndPassHook() {
+  void EndPassHook() override {
     if (change_bitrate_) last_pts_ = last_pts_ - last_pts_ref_;
     duration_ = (last_pts_ + 1) * timebase_;
     for (int sl = 0; sl < number_spatial_layers_; ++sl) {
@@ -583,7 +583,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
     }
   }
 
-  virtual void MismatchHook(const vpx_image_t *img1, const vpx_image_t *img2) {
+  void MismatchHook(const vpx_image_t *img1, const vpx_image_t *img2) override {
     // TODO(marpan): Look into why an assert is triggered in compute_psnr
     // for mismatch frames for the special test case: ksvc_flex_noupd_tlenh.
     // Has to do with dropped frames in bypass/flexible svc mode.
@@ -639,7 +639,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
   bool ksvc_flex_noupd_tlenh_;
 
  private:
-  virtual void SetConfig(const int num_temporal_layer) {
+  void SetConfig(const int num_temporal_layer) override {
     cfg_.rc_end_usage = VPX_CBR;
     cfg_.g_lag_in_frames = 0;
     cfg_.g_error_resilient = 1;
@@ -670,10 +670,10 @@ class DatarateOnePassCbrSvcSingleBR
   DatarateOnePassCbrSvcSingleBR() : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcSingleBR() {}
+  ~DatarateOnePassCbrSvcSingleBR() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1160,10 +1160,10 @@ class DatarateOnePassCbrSvcMultiBR
   DatarateOnePassCbrSvcMultiBR() : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcMultiBR() {}
+  ~DatarateOnePassCbrSvcMultiBR() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1243,10 +1243,10 @@ class DatarateOnePassCbrSvcFrameDropMultiBR
       : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcFrameDropMultiBR() {}
+  ~DatarateOnePassCbrSvcFrameDropMultiBR() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1355,10 +1355,10 @@ class DatarateOnePassCbrSvcInterLayerPredSingleBR
       : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcInterLayerPredSingleBR() {}
+  ~DatarateOnePassCbrSvcInterLayerPredSingleBR() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1441,10 +1441,10 @@ class DatarateOnePassCbrSvcDenoiser
   DatarateOnePassCbrSvcDenoiser() : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcDenoiser() {}
+  ~DatarateOnePassCbrSvcDenoiser() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1499,10 +1499,10 @@ class DatarateOnePassCbrSvcSmallKF
   DatarateOnePassCbrSvcSmallKF() : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcSmallKF() {}
+  ~DatarateOnePassCbrSvcSmallKF() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);
@@ -1702,10 +1702,10 @@ class DatarateOnePassCbrSvcPostencodeDrop
   DatarateOnePassCbrSvcPostencodeDrop() : DatarateOnePassCbrSvc(GET_PARAM(0)) {
     memset(&svc_params_, 0, sizeof(svc_params_));
   }
-  virtual ~DatarateOnePassCbrSvcPostencodeDrop() {}
+  ~DatarateOnePassCbrSvcPostencodeDrop() override = default;
 
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     speed_setting_ = GET_PARAM(1);

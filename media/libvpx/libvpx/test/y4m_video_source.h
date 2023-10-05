@@ -27,7 +27,7 @@ class Y4mVideoSource : public VideoSource {
         start_(start), limit_(limit), frame_(0), framerate_numerator_(0),
         framerate_denominator_(0), y4m_() {}
 
-  virtual ~Y4mVideoSource() {
+  ~Y4mVideoSource() override {
     vpx_img_free(img_.get());
     CloseSource();
   }
@@ -51,33 +51,33 @@ class Y4mVideoSource : public VideoSource {
     FillFrame();
   }
 
-  virtual void Begin() {
+  void Begin() override {
     OpenSource();
     ReadSourceToStart();
   }
 
-  virtual void Next() {
+  void Next() override {
     ++frame_;
     FillFrame();
   }
 
-  virtual vpx_image_t *img() const {
+  vpx_image_t *img() const override {
     return (frame_ < limit_) ? img_.get() : nullptr;
   }
 
   // Models a stream where Timebase = 1/FPS, so pts == frame.
-  virtual vpx_codec_pts_t pts() const { return frame_; }
+  vpx_codec_pts_t pts() const override { return frame_; }
 
-  virtual unsigned long duration() const { return 1; }
+  unsigned long duration() const override { return 1; }
 
-  virtual vpx_rational_t timebase() const {
+  vpx_rational_t timebase() const override {
     const vpx_rational_t t = { framerate_denominator_, framerate_numerator_ };
     return t;
   }
 
-  virtual unsigned int frame() const { return frame_; }
+  unsigned int frame() const override { return frame_; }
 
-  virtual unsigned int limit() const { return limit_; }
+  unsigned int limit() const override { return limit_; }
 
   virtual void FillFrame() {
     ASSERT_NE(input_file_, nullptr);

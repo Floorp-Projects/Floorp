@@ -20,14 +20,13 @@
 #include "vp9/encoder/vp9_block.h"
 
 void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                          const int16_t *zbin_ptr, const int16_t *round_ptr,
-                          const int16_t *quant_ptr,
-                          const int16_t *quant_shift_ptr,
+                          const struct macroblock_plane *const mb_plane,
                           tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                           const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                          const int16_t *scan, const int16_t *iscan) {
+                          const struct ScanOrder *const scan_order) {
   const __m128i zero = _mm_setzero_si128();
   int index = 16;
+  const int16_t *iscan = scan_order->iscan;
 
   __m128i zbin, round, quant, dequant, shift;
   __m128i coeff0, coeff1;
@@ -35,10 +34,7 @@ void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i cmp_mask0, cmp_mask1;
   __m128i eob, eob0;
 
-  (void)scan;
-
-  load_b_values(zbin_ptr, &zbin, round_ptr, &round, quant_ptr, &quant,
-                dequant_ptr, &dequant, quant_shift_ptr, &shift);
+  load_b_values(mb_plane, &zbin, &round, &quant, dequant_ptr, &dequant, &shift);
 
   // Do DC and first 15 AC.
   coeff0 = load_tran_low(coeff_ptr);
@@ -110,10 +106,10 @@ void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 }
 
 void vpx_quantize_b_32x32_ssse3(const tran_low_t *coeff_ptr,
-                                const struct macroblock_plane *mb_plane,
+                                const struct macroblock_plane *const mb_plane,
                                 tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                 const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                                const struct ScanOrder *scan_order) {
+                                const struct ScanOrder *const scan_order) {
   const __m128i zero = _mm_setzero_si128();
   int index;
   const int16_t *iscan = scan_order->iscan;

@@ -251,7 +251,7 @@ typedef struct macroblockd {
   unsigned char update_mb_segmentation_data;
 
   /* 0 (do not update) 1 (update) the macroblock segmentation feature data. */
-  unsigned char mb_segement_abs_delta;
+  unsigned char mb_segment_abs_delta;
 
   /* Per frame flags that define which MB level features (such as quantizer or
    * loop filter level) */

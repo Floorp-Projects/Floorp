@@ -309,7 +309,7 @@ struct EncodeFrameResult {
   // The tpl stats stored in the vector is according to the encoding order.
   // For example, suppose there are N show frames for the current GOP.
   // Then tpl_stats_info[0] stores the information of the first frame to be
-  // encoded for this GOP, i.e, the AltRef frame.
+  // encoded for this GOP, i.e., the AltRef frame.
   std::vector<TplStatsInfo> tpl_stats_info;
   ImageBuffer coded_frame;
 

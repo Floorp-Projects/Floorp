@@ -17,11 +17,11 @@
 #include "vp9/encoder/vp9_block.h"
 
 static VPX_FORCE_INLINE void load_b_values_avx2(
-    const int16_t *zbin_ptr, __m256i *zbin, const int16_t *round_ptr,
-    __m256i *round, const int16_t *quant_ptr, __m256i *quant,
-    const int16_t *dequant_ptr, __m256i *dequant, const int16_t *shift_ptr,
+    const struct macroblock_plane *mb_plane, __m256i *zbin, __m256i *round,
+    __m256i *quant, const int16_t *dequant_ptr, __m256i *dequant,
     __m256i *shift, int log_scale) {
-  *zbin = _mm256_castsi128_si256(_mm_load_si128((const __m128i *)zbin_ptr));
+  *zbin =
+      _mm256_castsi128_si256(_mm_load_si128((const __m128i *)mb_plane->zbin));
   *zbin = _mm256_permute4x64_epi64(*zbin, 0x54);
   if (log_scale > 0) {
     const __m256i rnd = _mm256_set1_epi16((int16_t)(1 << (log_scale - 1)));
@@ -32,7 +32,8 @@ static VPX_FORCE_INLINE void load_b_values_avx2(
   // calculating the zbin mask. (See quantize_b_logscale{0,1,2}_16)
   *zbin = _mm256_sub_epi16(*zbin, _mm256_set1_epi16(1));
 
-  *round = _mm256_castsi128_si256(_mm_load_si128((const __m128i *)round_ptr));
+  *round =
+      _mm256_castsi128_si256(_mm_load_si128((const __m128i *)mb_plane->round));
   *round = _mm256_permute4x64_epi64(*round, 0x54);
   if (log_scale > 0) {
     const __m256i rnd = _mm256_set1_epi16((int16_t)(1 << (log_scale - 1)));
@@ -40,12 +41,14 @@ static VPX_FORCE_INLINE void load_b_values_avx2(
     *round = _mm256_srai_epi16(*round, log_scale);
   }
 
-  *quant = _mm256_castsi128_si256(_mm_load_si128((const __m128i *)quant_ptr));
+  *quant =
+      _mm256_castsi128_si256(_mm_load_si128((const __m128i *)mb_plane->quant));
   *quant = _mm256_permute4x64_epi64(*quant, 0x54);
   *dequant =
       _mm256_castsi128_si256(_mm_load_si128((const __m128i *)dequant_ptr));
   *dequant = _mm256_permute4x64_epi64(*dequant, 0x54);
-  *shift = _mm256_castsi128_si256(_mm_load_si128((const __m128i *)shift_ptr));
+  *shift = _mm256_castsi128_si256(
+      _mm_load_si128((const __m128i *)mb_plane->quant_shift));
   *shift = _mm256_permute4x64_epi64(*shift, 0x54);
 }
 
@@ -153,20 +156,17 @@ static VPX_FORCE_INLINE int16_t accumulate_eob256(__m256i eob256) {
 }
 
 void vpx_quantize_b_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                         const int16_t *zbin_ptr, const int16_t *round_ptr,
-                         const int16_t *quant_ptr,
-                         const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
-                         tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                         uint16_t *eob_ptr, const int16_t *scan,
-                         const int16_t *iscan) {
+                         const struct macroblock_plane *const mb_plane,
+                         tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                         const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                         const struct ScanOrder *const scan_order) {
   __m256i v_zbin, v_round, v_quant, v_dequant, v_quant_shift, v_nz_mask;
   __m256i v_eobmax = _mm256_setzero_si256();
   intptr_t count;
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
-  load_b_values_avx2(zbin_ptr, &v_zbin, round_ptr, &v_round, quant_ptr,
-                     &v_quant, dequant_ptr, &v_dequant, quant_shift_ptr,
-                     &v_quant_shift, 0);
+  load_b_values_avx2(mb_plane, &v_zbin, &v_round, &v_quant, dequant_ptr,
+                     &v_dequant, &v_quant_shift, 0);
   // Do DC and first 15 AC.
   v_nz_mask = quantize_b_16(coeff_ptr, qcoeff_ptr, dqcoeff_ptr, &v_quant,
                             &v_dequant, &v_round, &v_zbin, &v_quant_shift);
@@ -253,18 +253,17 @@ static VPX_FORCE_INLINE __m256i quantize_b_32x32_16(
 }
 
 void vpx_quantize_b_32x32_avx2(const tran_low_t *coeff_ptr,
-                               const struct macroblock_plane *mb_plane,
+                               const struct macroblock_plane *const mb_plane,
                                tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                               const struct ScanOrder *scan_order) {
+                               const struct ScanOrder *const scan_order) {
   __m256i v_zbin, v_round, v_quant, v_dequant, v_quant_shift;
   __m256i v_eobmax = _mm256_setzero_si256();
   intptr_t count;
   const int16_t *iscan = scan_order->iscan;
 
-  load_b_values_avx2(mb_plane->zbin, &v_zbin, mb_plane->round, &v_round,
-                     mb_plane->quant, &v_quant, dequant_ptr, &v_dequant,
-                     mb_plane->quant_shift, &v_quant_shift, 1);
+  load_b_values_avx2(mb_plane, &v_zbin, &v_round, &v_quant, dequant_ptr,
+                     &v_dequant, &v_quant_shift, 1);
 
   // Do DC and first 15 AC.
   v_eobmax = quantize_b_32x32_16(coeff_ptr, qcoeff_ptr, dqcoeff_ptr, iscan,

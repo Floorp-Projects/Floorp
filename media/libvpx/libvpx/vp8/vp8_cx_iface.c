@@ -948,19 +948,10 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
     if (img != NULL) {
       res = image2yuvconfig(img, &sd);
 
-      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-        /* from vpx_encoder.h for g_w/g_h:
-           "Note that the frames passed as input to the encoder must have this
-           resolution"
-        */
-        ctx->base.err_detail = "Invalid input frame resolution";
-        res = VPX_CODEC_INVALID_PARAM;
-      } else {
-        if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
-                                  &sd, dst_time_stamp, dst_end_time_stamp)) {
-          VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
-          res = update_error_state(ctx, &cpi->common.error);
-        }
+      if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags, &sd,
+                                dst_time_stamp, dst_end_time_stamp)) {
+        VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
+        res = update_error_state(ctx, &cpi->common.error);
       }
 
       /* reset for next frame */
@@ -1301,8 +1292,8 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] = {
         0,  /* rc_resize_allowed */
         1,  /* rc_scaled_width */
         1,  /* rc_scaled_height */
-        60, /* rc_resize_down_thresold */
-        30, /* rc_resize_up_thresold */
+        60, /* rc_resize_down_thresh */
+        30, /* rc_resize_up_thresh */
 
         VPX_VBR,     /* rc_end_usage */
         { NULL, 0 }, /* rc_twopass_stats_in */

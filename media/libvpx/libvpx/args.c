@@ -135,7 +135,6 @@ unsigned int arg_parse_uint(const struct arg *arg) {
   }
 
   die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
-  return 0;
 }
 
 int arg_parse_int(const struct arg *arg) {
@@ -152,7 +151,6 @@ int arg_parse_int(const struct arg *arg) {
   }
 
   die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
-  return 0;
 }
 
 struct vpx_rational {
@@ -209,7 +207,6 @@ int arg_parse_enum(const struct arg *arg) {
     if (!strcmp(arg->val, listptr->name)) return listptr->val;
 
   die("Option %s: Invalid value '%s'\n", arg->name, arg->val);
-  return 0;
 }
 
 int arg_parse_enum_or_int(const struct arg *arg) {

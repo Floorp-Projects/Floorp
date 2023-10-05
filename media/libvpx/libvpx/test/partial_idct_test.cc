@@ -59,8 +59,8 @@ const int kCountTestBlock = 1000;
 
 class PartialIDctTest : public ::testing::TestWithParam<PartialInvTxfmParam> {
  public:
-  virtual ~PartialIDctTest() {}
-  virtual void SetUp() {
+  ~PartialIDctTest() override = default;
+  void SetUp() override {
     rnd_.Reset(ACMRandom::DeterministicSeed());
     fwd_txfm_ = GET_PARAM(0);
     full_inv_txfm_ = GET_PARAM(1);
@@ -76,7 +76,7 @@ class PartialIDctTest : public ::testing::TestWithParam<PartialInvTxfmParam> {
       case TX_8X8: size_ = 8; break;
       case TX_16X16: size_ = 16; break;
       case TX_32X32: size_ = 32; break;
-      default: FAIL() << "Wrong Size!"; break;
+      default: FAIL() << "Wrong Size!";
     }
 
     // Randomize stride_ to a value less than or equal to 1024
@@ -100,7 +100,7 @@ class PartialIDctTest : public ::testing::TestWithParam<PartialInvTxfmParam> {
         vpx_memalign(16, pixel_size_ * output_block_size_));
   }
 
-  virtual void TearDown() {
+  void TearDown() override {
     vpx_free(input_block_);
     input_block_ = nullptr;
     vpx_free(output_block_);

@@ -18,18 +18,19 @@
 #include "vp9/common/vp9_scan.h"
 #include "vp9/encoder/vp9_block.h"
 
-#if CONFIG_VP9_HIGHBITDEPTH
 void vpx_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t count,
-                                const int16_t *zbin_ptr,
-                                const int16_t *round_ptr,
-                                const int16_t *quant_ptr,
-                                const int16_t *quant_shift_ptr,
+                                const struct macroblock_plane *mb_plane,
                                 tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                 const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                                const int16_t *scan, const int16_t *iscan) {
+                                const struct ScanOrder *const scan_order) {
   int i, j, non_zero_regs = (int)count / 4, eob_i = 0;
   __m128i zbins[2];
   __m128i nzbins[2];
+  const int16_t *iscan = scan_order->iscan;
+  const int16_t *zbin_ptr = mb_plane->zbin;
+  const int16_t *round_ptr = mb_plane->round;
+  const int16_t *quant_ptr = mb_plane->quant;
+  const int16_t *quant_shift_ptr = mb_plane->quant_shift;
 
   zbins[0] = _mm_set_epi32((int)zbin_ptr[1], (int)zbin_ptr[1], (int)zbin_ptr[1],
                            (int)zbin_ptr[0]);
@@ -39,8 +40,6 @@ void vpx_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t count,
   nzbins[1] = _mm_setzero_si128();
   nzbins[0] = _mm_sub_epi32(nzbins[0], zbins[0]);
   nzbins[1] = _mm_sub_epi32(nzbins[1], zbins[1]);
-
-  (void)scan;
 
   memset(qcoeff_ptr, 0, count * sizeof(*qcoeff_ptr));
   memset(dqcoeff_ptr, 0, count * sizeof(*dqcoeff_ptr));
@@ -152,4 +151,3 @@ void vpx_highbd_quantize_b_32x32_sse2(
   }
   *eob_ptr = eob;
 }
-#endif
