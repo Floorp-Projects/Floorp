@@ -6,11 +6,11 @@
 #define DOM_WEBAUTHN_AUTHRS_BRIDGE_H_
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "nsIWebAuthnController.h"
+#include "nsIWebAuthnService.h"
 
 namespace mozilla::dom {
 
-already_AddRefed<nsIWebAuthnTransport> NewAuthrsTransport();
+already_AddRefed<nsIWebAuthnService> NewAuthrsService();
 
 }  // namespace mozilla::dom
 

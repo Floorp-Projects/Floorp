@@ -8,9 +8,9 @@ const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
-  "webauthnTransport",
-  "@mozilla.org/webauthn/transport;1",
-  "nsIWebAuthnTransport"
+  "webauthnService",
+  "@mozilla.org/webauthn/service;1",
+  "nsIWebAuthnService"
 );
 
 /** @namespace */
@@ -36,7 +36,7 @@ webauthn.addVirtualAuthenticator = function (
   isUserConsenting,
   isUserVerified
 ) {
-  return lazy.webauthnTransport.addVirtualAuthenticator(
+  return lazy.webauthnService.addVirtualAuthenticator(
     protocol,
     transport,
     hasResidentKey,
@@ -52,7 +52,7 @@ webauthn.addVirtualAuthenticator = function (
  * @param {id} authenticatorId the id of the virtual authenticator
  */
 webauthn.removeVirtualAuthenticator = function (authenticatorId) {
-  lazy.webauthnTransport.removeVirtualAuthenticator(authenticatorId);
+  lazy.webauthnService.removeVirtualAuthenticator(authenticatorId);
 };
 
 /**
@@ -83,7 +83,7 @@ webauthn.addCredential = function (
   userHandle,
   signCount
 ) {
-  lazy.webauthnTransport.addCredential(
+  lazy.webauthnService.addCredential(
     authenticatorId,
     credentialId,
     isResidentCredential,
@@ -101,7 +101,7 @@ webauthn.addCredential = function (
  * @returns {object} the credentials on the authenticator
  */
 webauthn.getCredentials = function (authenticatorId) {
-  return lazy.webauthnTransport.getCredentials(authenticatorId);
+  return lazy.webauthnService.getCredentials(authenticatorId);
 };
 
 /**
@@ -111,7 +111,7 @@ webauthn.getCredentials = function (authenticatorId) {
  * @param {string} credentialId the id of the credential
  */
 webauthn.removeCredential = function (authenticatorId, credentialId) {
-  lazy.webauthnTransport.removeCredential(authenticatorId, credentialId);
+  lazy.webauthnService.removeCredential(authenticatorId, credentialId);
 };
 
 /**
@@ -120,7 +120,7 @@ webauthn.removeCredential = function (authenticatorId, credentialId) {
  * @param {id} authenticatorId the id of the virtual authenticator
  */
 webauthn.removeAllCredentials = function (authenticatorId) {
-  lazy.webauthnTransport.removeAllCredentials(authenticatorId);
+  lazy.webauthnService.removeAllCredentials(authenticatorId);
 };
 
 /**
@@ -130,5 +130,5 @@ webauthn.removeAllCredentials = function (authenticatorId) {
  * @param {bool} isUserVerified the value to set the "isUserVerified" bit to
  */
 webauthn.setUserVerified = function (authenticatorId, isUserVerified) {
-  lazy.webauthnTransport.setUserVerified(authenticatorId, isUserVerified);
+  lazy.webauthnService.setUserVerified(authenticatorId, isUserVerified);
 };

@@ -1,0 +1,21 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIWebAuthnResult.idl"
+
+[rust_sync, uuid(3c969aec-e0e0-4aa4-9422-394b321e6918)]
+interface nsIWebAuthnRegisterPromise : nsISupports
+{
+    [noscript] void resolve(in nsICtapRegisterResult aResult);
+    [noscript] void reject(in nsresult error);
+};
+
+[rust_sync, uuid(35e35bdc-5369-4bfe-8d5c-bdf7b782b735)]
+interface nsIWebAuthnSignPromise : nsISupports
+{
+    [noscript] void resolve(in nsICtapSignResult aResult);
+    [noscript] void reject(in nsresult error);
+};

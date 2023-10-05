@@ -10,11 +10,11 @@
 #include "nsTArray.h"
 
 class nsIWebAuthnAttObj;
-class nsIWebAuthnTransport;
+class nsIWebAuthnService;
 
 extern "C" {
 
-nsresult authrs_transport_constructor(nsIWebAuthnTransport** result);
+nsresult authrs_service_constructor(nsIWebAuthnService** result);
 
 nsresult authrs_webauthn_att_obj_constructor(
     const nsTArray<uint8_t>& attestation, bool anonymize,

@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[uuid(0567c384-a728-11ed-85f7-030324a370f0)]
+interface nsICtapRegisterResult : nsISupports {
+    // The serialied attestation object as defined in
+    // https://www.w3.org/TR/webauthn-2/#sctn-attestation
+    // Includes the format, the attestation statement, and
+    // the authenticator data.
+    readonly attribute Array<octet> attestationObject;
+
+    // The Credential ID field of the Attestation Object's Attested
+    // Credential Data. This is used to construct the rawID field of a
+    // WebAuthn PublicKeyCredential without having to parse the
+    // attestationObject.
+    readonly attribute Array<octet> credentialId;
+
+    readonly attribute Array<AString> transports;
+
+    // bug 1593571
+    // readonly attribute bool hmacCreateSecret;
+
+    readonly attribute bool credPropsRk;
+};
+
+// The nsICtapSignResult interface is used to construct IPDL-defined
+// WebAuthnGetAssertionResult from either Rust or C++.
+//
+[uuid(05fff816-a728-11ed-b9ac-ff38cc2c8c28)]
+interface nsICtapSignResult : nsISupports {
+    // The ID field of the PublicKeyCredentialDescriptor returned
+    // from authenticatorGetAssertion.
+    readonly attribute Array<octet> credentialId;
+
+    // The authData field of the authenticatorGetAssertion response
+    readonly attribute Array<octet> authenticatorData;
+
+    // The signature field of the authenticatorGetAssertion response
+    readonly attribute Array<octet> signature;
+
+    // The ID field of the PublicKeyCredentialUserEntity returned from
+    // authenticatorGetAssertion. (Optional)
+    [must_use] readonly attribute Array<octet> userHandle;
+
+    // The displayName field of the PublicKeyCredentialUserEntity
+    // returned from authenticatorGetAssertion. (Optional)
+    [must_use] readonly attribute ACString userName;
+
+    // appId field of AuthenticationExtensionsClientOutputs (Optional)
+    [must_use] readonly attribute bool usedAppId;
+};

@@ -46,10 +46,10 @@ var _done = new Promise((resolve) => {
 
 async function addVirtualAuthenticator() {
   let id = await SpecialPowers.spawnChrome([], () => {
-    let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-      Ci.nsIWebAuthnTransport
+    let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+      Ci.nsIWebAuthnService
     );
-    return webauthnTransport.addVirtualAuthenticator(
+    return webauthnService.addVirtualAuthenticator(
       "ctap2",
       "internal",
       true,
@@ -61,10 +61,10 @@ async function addVirtualAuthenticator() {
 
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.spawnChrome([id], (authenticatorId) => {
-      let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-        Ci.nsIWebAuthnTransport
+      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+        Ci.nsIWebAuthnService
       );
-      webauthnTransport.removeVirtualAuthenticator(authenticatorId);
+      webauthnService.removeVirtualAuthenticator(authenticatorId);
     });
   });
 }

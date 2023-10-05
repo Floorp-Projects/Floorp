@@ -22,10 +22,10 @@ var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
 
 async function addVirtualAuthenticator() {
   let id = await SpecialPowers.spawnChrome([], () => {
-    let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-      Ci.nsIWebAuthnTransport
+    let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+      Ci.nsIWebAuthnService
     );
-    let id = webauthnTransport.addVirtualAuthenticator(
+    let id = webauthnService.addVirtualAuthenticator(
       "ctap2",
       "internal",
       true,
@@ -38,10 +38,10 @@ async function addVirtualAuthenticator() {
 
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.spawnChrome([id], id => {
-      let webauthnTransport = Cc[
-        "@mozilla.org/webauthn/transport;1"
-      ].getService(Ci.nsIWebAuthnTransport);
-      webauthnTransport.removeVirtualAuthenticator(id);
+      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+        Ci.nsIWebAuthnService
+      );
+      webauthnService.removeVirtualAuthenticator(id);
     });
   });
 
@@ -454,11 +454,11 @@ async function addCredential(authenticatorId, rpId) {
   await SpecialPowers.spawnChrome(
     [authenticatorId, credId, rpId, privateKey],
     (authenticatorId, credId, rpId, privateKey) => {
-      let webauthnTransport = Cc[
-        "@mozilla.org/webauthn/transport;1"
-      ].getService(Ci.nsIWebAuthnTransport);
+      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+        Ci.nsIWebAuthnService
+      );
 
-      webauthnTransport.addCredential(
+      webauthnService.addCredential(
         authenticatorId,
         credId,
         true, // resident key
@@ -477,11 +477,11 @@ async function removeCredential(authenticatorId, credId) {
   await SpecialPowers.spawnChrome(
     [authenticatorId, credId],
     (authenticatorId, credId) => {
-      let webauthnTransport = Cc[
-        "@mozilla.org/webauthn/transport;1"
-      ].getService(Ci.nsIWebAuthnTransport);
+      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+        Ci.nsIWebAuthnService
+      );
 
-      webauthnTransport.removeCredential(authenticatorId, credId);
+      webauthnService.removeCredential(authenticatorId, credId);
     }
   );
 }
