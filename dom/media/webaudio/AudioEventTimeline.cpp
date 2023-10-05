@@ -26,8 +26,8 @@ static void FillLinearRamp(double aBufferStartTime, Span<float> aBuffer,
 static void FillExponentialRamp(double aBufferStartTime, Span<float> aBuffer,
                                 double t0, float v0, double t1, float v1) {
   MOZ_ASSERT(aBuffer.Length() >= 1);
-  float fullRatio = v1 / v0;
-  if (v0 == 0.f || fullRatio < 0.f) {
+  double fullRatio = static_cast<double>(v1) / v0;
+  if (v0 == 0.f || fullRatio < 0.0) {
     std::fill_n(aBuffer.Elements(), aBuffer.Length(), v0);
     return;
   }
@@ -36,7 +36,13 @@ static void FillExponentialRamp(double aBufferStartTime, Span<float> aBuffer,
   // Calculate the value for the first tick from the curve initial value.
   // v(t) = v0 * (v1/v0)^((t-t0)/(t1-t0))
   double exponent = (aBufferStartTime - t0) / tDelta;
-  aBuffer[0] = v0 * fdlibm_powf(fullRatio, static_cast<float>(exponent));
+  // The power function can amplify rounding error in the exponent by
+  // ((t−t0)/(t1−t0)) ln (v1/v0).  The single precision exponent argument for
+  // powf() would be sufficient when max(v1/v0,v0/v1) <= e, where e is Euler's
+  // number, but fdlibm's single precision powf() is not expected to provide
+  // speed advantages over double precision pow().
+  double v = v0 * fdlibm_pow(fullRatio, exponent);
+  aBuffer[0] = static_cast<float>(v);
   if (aBuffer.Length() == 1) {
     return;
   }
@@ -45,7 +51,6 @@ static void FillExponentialRamp(double aBufferStartTime, Span<float> aBuffer,
   // v(t+1) = (v1/v0)^(1/(t1-t0)) * v(t)
   // Double precision is used so that accumulation of rounding error is not
   // significant.
-  double v = aBuffer[0];
   double tickRatio = fdlibm_pow(fullRatio, 1.0 / tDelta);
   for (size_t i = 1; i < aBuffer.Length(); ++i) {
     v *= tickRatio;
