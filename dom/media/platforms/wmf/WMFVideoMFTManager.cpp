@@ -226,8 +226,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   bool useDxva = true;
 
   if (mStreamType == WMFStreamType::H264 &&
-      (mVideoInfo.ImageRect().width <= MIN_H264_HW_WIDTH ||
-       mVideoInfo.ImageRect().height <= MIN_H264_HW_HEIGHT)) {
+      (mVideoInfo.ImageRect().width < MIN_H264_HW_WIDTH ||
+       mVideoInfo.ImageRect().height < MIN_H264_HW_HEIGHT)) {
     useDxva = false;
     mDXVAFailureReason = nsPrintfCString(
         "H264 video resolution too low: %" PRIu32 "x%" PRIu32,
