@@ -409,6 +409,8 @@ class Nursery {
     return mallocedBlockCache_.sizeOfExcludingThis(mallocSizeOf);
   }
 
+  mozilla::TimeStamp lastCollectionEndTime() const;
+
  private:
   // Fields used during allocation fast path are grouped first:
 
@@ -703,7 +705,6 @@ class Nursery {
                                     Sprinter& sprinter);
 
   mozilla::TimeStamp collectionStartTime() const;
-  mozilla::TimeStamp lastCollectionEndTime() const;
 
   friend class gc::GCRuntime;
   friend class gc::TenuringTracer;

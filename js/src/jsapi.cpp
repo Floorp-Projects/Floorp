@@ -1304,6 +1304,17 @@ JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
   }
 }
 
+JS_PUBLIC_API void JS::RunNurseryCollection(
+    JSRuntime* rt, JS::GCReason reason,
+    mozilla::TimeDuration aSinceLastMinorGC) {
+  gc::GCRuntime& gc = rt->gc;
+  if (!gc.nursery().lastCollectionEndTime() ||
+      (mozilla::TimeStamp::Now() - gc.nursery().lastCollectionEndTime() >
+       aSinceLastMinorGC)) {
+    gc.minorGC(reason);
+  }
+}
+
 JS_PUBLIC_API void JS_GC(JSContext* cx, JS::GCReason reason) {
   AssertHeapIsIdle();
   JS::PrepareForFullGC(cx);

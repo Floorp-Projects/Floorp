@@ -1050,7 +1050,7 @@ inline TimeStamp js::Nursery::collectionStartTime() const {
   return startTimes_[ProfileKey::Total];
 }
 
-inline TimeStamp js::Nursery::lastCollectionEndTime() const {
+TimeStamp js::Nursery::lastCollectionEndTime() const {
   return previousGC.endTime;
 }
 
@@ -1870,6 +1870,10 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   }
 
   TimeStamp now = TimeStamp::Now();
+
+  if (reason == JS::GCReason::PREPARE_FOR_PAGELOAD) {
+    return roundSize(tunables().gcMaxNurseryBytes());
+  }
 
   // If the nursery is completely unused then minimise it.
   if (hasRecentGrowthData && previousGC.nurseryUsedBytes == 0 &&
