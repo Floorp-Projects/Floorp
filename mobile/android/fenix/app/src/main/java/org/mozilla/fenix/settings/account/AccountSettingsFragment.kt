@@ -386,6 +386,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     }
                 }
             }
+            SyncAccount.manageAccount.record(NoExtras())
             true
         }
     }
