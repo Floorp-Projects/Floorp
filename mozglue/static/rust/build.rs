@@ -16,10 +16,10 @@ fn main() {
     println!("cargo:rerun-if-changed=wrappers.cpp");
 
     let ver = version().unwrap();
-    let max_oom_hook_version = Version::parse("1.73.0-alpha").unwrap();
+    let max_oom_hook_version = Version::parse("1.74.0-alpha").unwrap();
     // The new alloc error panic feature was temporarily reverted. We kept the
     // code in tree, but the version here is such that it's effectively never used.
-    let max_alloc_error_panic_version = Version::parse("1.73.0-alpha").unwrap();
+    let max_alloc_error_panic_version = Version::parse("1.74.0-alpha").unwrap();
 
     if ver < max_oom_hook_version {
         println!("cargo:rustc-cfg=feature=\"oom_with_hook\"");
