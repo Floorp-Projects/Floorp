@@ -6,10 +6,14 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
 const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
-const { assertFirefoxViewTabSelected, closeFirefoxViewTab } =
-  ChromeUtils.importESModule(
-    "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
-  );
+const {
+  assertFirefoxViewTabSelected,
+  closeFirefoxViewTab,
+  init: FirefoxViewTestUtilsInit,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+);
+FirefoxViewTestUtilsInit(this);
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
