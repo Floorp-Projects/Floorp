@@ -184,6 +184,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD DoApplyContentConversions(nsIStreamListener* aNextListener,
                                        nsIStreamListener** aNewNextListener,
                                        nsISupports* aCtxt) override;
+  NS_IMETHOD SetHasContentDecompressed(bool value) override;
+  NS_IMETHOD GetHasContentDecompressed(bool* value) override;
 
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD GetRequestMethod(nsACString& aMethod) override;
@@ -986,6 +988,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   bool mChannelBlockedByOpaqueResponse;
 
   bool mDummyChannelForImageCache;
+
+  bool mHasContentDecompressed;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields3, 8, (

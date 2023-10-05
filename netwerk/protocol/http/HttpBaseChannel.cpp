@@ -244,7 +244,8 @@ HttpBaseChannel::HttpBaseChannel()
       mCachedOpaqueResponseBlockingPref(
           StaticPrefs::browser_opaqueResponseBlocking()),
       mChannelBlockedByOpaqueResponse(false),
-      mDummyChannelForImageCache(false) {
+      mDummyChannelForImageCache(false),
+      mHasContentDecompressed(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
   StoreTracingEnabled(true);
@@ -6401,6 +6402,19 @@ NS_IMETHODIMP HttpBaseChannel::SetEarlyHintLinkType(
 NS_IMETHODIMP HttpBaseChannel::GetEarlyHintLinkType(
     uint32_t* aEarlyHintLinkType) {
   *aEarlyHintLinkType = mEarlyHintLinkType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetHasContentDecompressed(bool aValue) {
+  LOG(("HttpBaseChannel::SetHasContentDecompressed [this=%p value=%d]\n", this,
+       aValue));
+  mHasContentDecompressed = aValue;
+  return NS_OK;
+}
+NS_IMETHODIMP
+HttpBaseChannel::GetHasContentDecompressed(bool* value) {
+  *value = mHasContentDecompressed;
   return NS_OK;
 }
 

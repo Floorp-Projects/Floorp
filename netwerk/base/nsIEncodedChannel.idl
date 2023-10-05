@@ -46,6 +46,11 @@ interface nsIEncodedChannel : nsISupports
     attribute boolean applyConversion;
 
     /**
+     * This attribute indicates the content has been decompressed in
+     * the parent process.
+     */
+    attribute boolean hasContentDecompressed;
+    /**
      * This function will start converters if they are available.
      * aNewNextListener will be nullptr if no converter is available.
      */
