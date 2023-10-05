@@ -552,6 +552,14 @@ export class UrlbarView {
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
 
+    // Revoke icon blob URLs that were created while the view was open.
+    if (this.#blobUrlsByResultUrl) {
+      for (let blobUrl of this.#blobUrlsByResultUrl.values()) {
+        URL.revokeObjectURL(blobUrl);
+      }
+      this.#blobUrlsByResultUrl.clear();
+    }
+
     if (this.#isShowingZeroPrefix) {
       if (elementPicked) {
         Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_ENGAGEMENT, 1);
@@ -1031,6 +1039,7 @@ export class UrlbarView {
 
   // Private properties and methods below.
   #announceTabToSearchOnSelection;
+  #blobUrlsByResultUrl = null;
   #inputWidthOnLastClose = 0;
   #l10nCache;
   #mainContainer;
@@ -1662,14 +1671,7 @@ export class UrlbarView {
     }
 
     let favicon = item._elements.get("favicon");
-    if (
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD
-    ) {
-      favicon.src = this.#iconForResult(result);
-    } else {
-      favicon.src = result.payload.icon || lazy.UrlbarUtils.ICON.DEFAULT;
-    }
+    favicon.src = this.#iconForResult(result);
 
     let title = item._elements.get("title");
     this.#setResultTitle(result, title);
@@ -1878,21 +1880,54 @@ export class UrlbarView {
   }
 
   #iconForResult(result, iconUrlOverride = null) {
-    return (
-      (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
-        (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-          result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD) &&
-        lazy.UrlbarUtils.ICON.HISTORY) ||
-      iconUrlOverride ||
-      result.payload.icon ||
-      (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
-        result.payload.trending &&
-        lazy.UrlbarUtils.ICON.TRENDING) ||
-      ((result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD) &&
-        lazy.UrlbarUtils.ICON.SEARCH_GLASS) ||
-      lazy.UrlbarUtils.ICON.DEFAULT
-    );
+    if (
+      result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
+      (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD)
+    ) {
+      return lazy.UrlbarUtils.ICON.HISTORY;
+    }
+
+    if (iconUrlOverride) {
+      return iconUrlOverride;
+    }
+
+    if (result.payload.icon) {
+      return result.payload.icon;
+    }
+    if (result.payload.iconBlob) {
+      // Blob icons are currently limited to Suggest results, which will define
+      // a `payload.originalUrl` if the result URL contains timestamp templates
+      // that are replaced at query time.
+      let resultUrl = result.payload.originalUrl || result.payload.url;
+      if (resultUrl) {
+        let blobUrl = this.#blobUrlsByResultUrl?.get(resultUrl);
+        if (!blobUrl) {
+          blobUrl = URL.createObjectURL(result.payload.iconBlob);
+          // Since most users will not trigger results with blob icons, we
+          // create this map lazily.
+          this.#blobUrlsByResultUrl ||= new Map();
+          this.#blobUrlsByResultUrl.set(resultUrl, blobUrl);
+        }
+        return blobUrl;
+      }
+    }
+
+    if (
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.payload.trending
+    ) {
+      return lazy.UrlbarUtils.ICON.TRENDING;
+    }
+
+    if (
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD
+    ) {
+      return lazy.UrlbarUtils.ICON.SEARCH_GLASS;
+    }
+
+    return lazy.UrlbarUtils.ICON.DEFAULT;
   }
 
   async #updateRowForDynamicType(item, result) {

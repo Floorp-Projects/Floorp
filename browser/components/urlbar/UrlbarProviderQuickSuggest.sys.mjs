@@ -373,13 +373,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
     }
 
-    // `source` will be one of: "remote-settings", "merino", "rust"
-    result.payload.source = suggestion.source;
-
+    // `source` will be one of: "remote-settings", "merino", "rust".
     // `provider` depends on `source`. See `#getFeature()` for possible values.
+    result.payload.source = suggestion.source;
     result.payload.provider = suggestion.provider;
-
     result.payload.telemetryType = this.#getSuggestionTelemetryType(suggestion);
+
+    // Handle icons here so each feature doesn't have to do it, but use `||=` to
+    // let them do it if they need to.
+    result.payload.icon ||= suggestion.icon;
+    result.payload.iconBlob ||= suggestion.icon_blob;
 
     if (!result.hasSuggestedIndex) {
       // When `bestMatchEnabled` is true, a "Top pick" checkbox appears in
@@ -423,7 +426,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   #makeDefaultResult(queryContext, suggestion) {
     let payload = {
       url: suggestion.url,
-      icon: suggestion.icon,
       isSponsored: suggestion.is_sponsored,
       helpUrl: lazy.QuickSuggest.HELP_URL,
       helpL10n: {

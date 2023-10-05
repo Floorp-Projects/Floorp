@@ -128,9 +128,10 @@ export class SuggestBackendRust extends BaseFeature {
       suggestion.source = "rust";
       suggestion.provider = type;
       suggestion.is_sponsored = type == "Amp";
-
-      // TODO: Handle icons.
-      suggestion.icon = null;
+      if (Array.isArray(suggestion.icon)) {
+        suggestion.icon_blob = new Blob([new Uint8Array(suggestion.icon)]);
+        delete suggestion.icon;
+      }
     }
 
     this.logger.debug(

@@ -129,7 +129,6 @@ export class AdmWikipedia extends BaseFeature {
       suggestion = {
         title: suggestion.title,
         url: suggestion.url,
-        icon: suggestion.icon,
         is_sponsored: suggestion.is_sponsored,
         full_keyword: suggestion.fullKeyword,
         impression_url: suggestion.impressionUrl,
@@ -148,7 +147,6 @@ export class AdmWikipedia extends BaseFeature {
     let payload = {
       originalUrl,
       url: suggestion.url,
-      icon: suggestion.icon,
       isSponsored: suggestion.is_sponsored,
       requestId: suggestion.request_id,
       urlTimestampIndex: suggestion.urlTimestampIndex,

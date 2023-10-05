@@ -238,7 +238,6 @@ export class AddonSuggestions extends BaseFeature {
     }
 
     const payload = {
-      icon: suggestion.icon,
       url: url.href,
       originalUrl: suggestion.url,
       title: suggestion.title,
