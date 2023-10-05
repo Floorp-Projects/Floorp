@@ -9249,6 +9249,12 @@
   value: true
   mirror: always
 
+# Whether <details> is forced to be a block, see bug 1856374
+- name: layout.details.force-block-layout
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
