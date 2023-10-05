@@ -1,0 +1,2 @@
+# "empty" file in place of importing new testing/test.gni
+# to allow BUILD.gn imports to succeed.
