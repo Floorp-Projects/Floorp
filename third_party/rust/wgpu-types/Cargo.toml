@@ -11,6 +11,7 @@
 
 [package]
 edition = "2021"
+rust-version = "1.65"
 name = "wgpu-types"
 version = "0.17.0"
 authors = ["wgpu developers"]

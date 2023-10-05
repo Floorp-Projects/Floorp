@@ -1514,8 +1514,20 @@ impl Writer {
                     // vertex
                     Bi::BaseInstance => BuiltIn::BaseInstance,
                     Bi::BaseVertex => BuiltIn::BaseVertex,
-                    Bi::ClipDistance => BuiltIn::ClipDistance,
-                    Bi::CullDistance => BuiltIn::CullDistance,
+                    Bi::ClipDistance => {
+                        self.require_any(
+                            "`clip_distance` built-in",
+                            &[spirv::Capability::ClipDistance],
+                        )?;
+                        BuiltIn::ClipDistance
+                    }
+                    Bi::CullDistance => {
+                        self.require_any(
+                            "`cull_distance` built-in",
+                            &[spirv::Capability::CullDistance],
+                        )?;
+                        BuiltIn::CullDistance
+                    }
                     Bi::InstanceIndex => BuiltIn::InstanceIndex,
                     Bi::PointSize => BuiltIn::PointSize,
                     Bi::VertexIndex => BuiltIn::VertexIndex,
@@ -1840,8 +1852,10 @@ impl Writer {
         if self.flags.contains(WriterFlags::DEBUG) {
             if let Some(debug_info) = debug_info.as_ref() {
                 let source_file_id = self.id_gen.next();
-                self.debugs
-                    .push(Instruction::string(debug_info.file_name, source_file_id));
+                self.debugs.push(Instruction::string(
+                    &debug_info.file_name.display().to_string(),
+                    source_file_id,
+                ));
 
                 debug_info_inner = Some(DebugInfoInner {
                     source_code: debug_info.source_code,

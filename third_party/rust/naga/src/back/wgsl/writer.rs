@@ -247,14 +247,7 @@ impl<W: Write> Writer<W> {
                 self.write_attributes(&map_binding_to_attribute(binding))?;
             }
             // Write argument name
-            let argument_name = match func_ctx.ty {
-                back::FunctionType::Function(handle) => {
-                    &self.names[&NameKey::FunctionArgument(handle, index as u32)]
-                }
-                back::FunctionType::EntryPoint(ep_index) => {
-                    &self.names[&NameKey::EntryPointArgument(ep_index, index as u32)]
-                }
-            };
+            let argument_name = &self.names[&func_ctx.argument_key(index as u32)];
 
             write!(self.out, "{argument_name}: ")?;
             // Write argument type
@@ -1837,6 +1830,7 @@ const fn storage_format_str(format: crate::StorageFormat) -> &'static str {
         Sf::Rgba8Snorm => "rgba8snorm",
         Sf::Rgba8Uint => "rgba8uint",
         Sf::Rgba8Sint => "rgba8sint",
+        Sf::Rgb10a2Uint => "rgb10a2uint",
         Sf::Rgb10a2Unorm => "rgb10a2unorm",
         Sf::Rg11b10Float => "rg11b10float",
         Sf::Rg32Uint => "rg32uint",

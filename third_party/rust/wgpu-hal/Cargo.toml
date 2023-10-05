@@ -11,7 +11,7 @@
 
 [package]
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.65"
 name = "wgpu-hal"
 version = "0.17.0"
 authors = ["wgpu developers"]
@@ -64,7 +64,7 @@ optional = true
 [dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "df8107b7"
+rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -83,7 +83,7 @@ env_logger = "0.10"
 [dev-dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "df8107b7"
+rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
@@ -186,7 +186,7 @@ features = ["dynamic"]
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.libloading]
-version = ">=0.7,<0.9"
+version = ">=0.7, <0.9"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.renderdoc-sys]
@@ -212,7 +212,7 @@ features = [
 ]
 
 [target."cfg(target_os = \"emscripten\")".dependencies.libloading]
-version = ">=0.7,<0.9"
+version = ">=0.7, <0.9"
 optional = true
 
 [target."cfg(unix)".dependencies]
@@ -228,10 +228,9 @@ features = ["libloading"]
 optional = true
 
 [target."cfg(windows)".dependencies.gpu-allocator]
-version = "0.22"
+version = "0.23"
 features = [
     "d3d12",
-    "windows",
     "public-winapi",
 ]
 optional = true

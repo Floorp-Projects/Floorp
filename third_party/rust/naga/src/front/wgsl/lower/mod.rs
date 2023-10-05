@@ -6,8 +6,7 @@ use crate::front::wgsl::parse::number::Number;
 use crate::front::wgsl::parse::{ast, conv};
 use crate::front::{Emitter, Typifier};
 use crate::proc::{ensure_block_returns, Alignment, Layouter, ResolveContext, TypeResolution};
-use crate::{Arena, FastHashMap, Handle, Span};
-use indexmap::IndexMap;
+use crate::{Arena, FastHashMap, FastIndexMap, Handle, Span};
 
 mod construction;
 
@@ -79,10 +78,17 @@ pub struct StatementContext<'source, 'temp, 'out> {
     /// `Handle`s we have built for them, owned by `Lowerer::lower`.
     globals: &'temp mut FastHashMap<&'source str, LoweredGlobalDecl>,
 
-    /// A map from `ast::Local` handles to the Naga expressions we've built for them.
+    /// A map from each `ast::Local` handle to the Naga expression
+    /// we've built for it:
     ///
-    /// The Naga expressions are either [`LocalVariable`] or
-    /// [`FunctionArgument`] expressions.
+    /// - WGSL function arguments become Naga [`FunctionArgument`] expressions.
+    ///
+    /// - WGSL `var` declarations become Naga [`LocalVariable`] expressions.
+    ///
+    /// - WGSL `let` declararations become arbitrary Naga expressions.
+    ///
+    /// This always borrows the `local_table` local variable in
+    /// [`Lowerer::function`].
     ///
     /// [`LocalVariable`]: crate::Expression::LocalVariable
     /// [`FunctionArgument`]: crate::Expression::FunctionArgument
@@ -94,7 +100,7 @@ pub struct StatementContext<'source, 'temp, 'out> {
     naga_expressions: &'out mut Arena<crate::Expression>,
     /// Stores the names of expressions that are assigned in `let` statement
     /// Also stores the spans of the names, for use in errors.
-    named_expressions: &'out mut IndexMap<Handle<crate::Expression>, (String, Span)>,
+    named_expressions: &'out mut FastIndexMap<Handle<crate::Expression>, (String, Span)>,
     arguments: &'out [crate::FunctionArgument],
     module: &'out mut crate::Module,
 }
@@ -167,7 +173,11 @@ impl<'a, 'temp> StatementContext<'a, 'temp, '_> {
 }
 
 pub struct RuntimeExpressionContext<'temp, 'out> {
-    local_table: &'temp mut FastHashMap<Handle<ast::Local>, TypedExpression>,
+    /// A map from [`ast::Local`] handles to the Naga expressions we've built for them.
+    ///
+    /// This is always [`StatementContext::local_table`] for the
+    /// enclosing statement; see that documentation for details.
+    local_table: &'temp FastHashMap<Handle<ast::Local>, TypedExpression>,
 
     naga_expressions: &'out mut Arena<crate::Expression>,
     local_vars: &'out Arena<crate::LocalVariable>,
@@ -904,7 +914,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
         let mut local_table = FastHashMap::default();
         let mut local_variables = Arena::new();
         let mut expressions = Arena::new();
-        let mut named_expressions = IndexMap::default();
+        let mut named_expressions = FastIndexMap::default();
 
         let arguments = f
             .arguments

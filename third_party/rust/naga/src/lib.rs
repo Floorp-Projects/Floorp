@@ -279,6 +279,8 @@ An override expression can be evaluated at pipeline creation time.
 mod arena;
 pub mod back;
 mod block;
+#[cfg(feature = "compact")]
+pub mod compact;
 pub mod front;
 pub mod keywords;
 pub mod proc;
@@ -308,12 +310,13 @@ pub type FastHashSet<K> = rustc_hash::FxHashSet<K>;
 pub type FastIndexSet<K> =
     indexmap::IndexSet<K, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
 
+/// Insertion-order-preserving hash map (`IndexMap<K, V>`), but with the same
+/// hasher as `FastHashMap<K, V>` (faster but not resilient to DoS attacks).
+pub type FastIndexMap<K, V> =
+    indexmap::IndexMap<K, V, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
+
 /// Map of expressions that have associated variable names
-pub(crate) type NamedExpressions = indexmap::IndexMap<
-    Handle<Expression>,
-    String,
-    std::hash::BuildHasherDefault<rustc_hash::FxHasher>,
->;
+pub(crate) type NamedExpressions = FastIndexMap<Handle<Expression>, String>;
 
 /// Early fragment tests.
 ///
@@ -598,6 +601,7 @@ pub enum StorageFormat {
     Rgba8Sint,
 
     // Packed 32-bit formats
+    Rgb10a2Uint,
     Rgb10a2Unorm,
     Rg11b10Float,
 
@@ -1993,7 +1997,7 @@ pub struct SpecialTypes {
     ///
     /// Call [`Module::generate_predeclared_type`] to populate this if
     /// needed and return the handle.
-    pub predeclared_types: indexmap::IndexMap<PredeclaredType, Handle<Type>>,
+    pub predeclared_types: FastIndexMap<PredeclaredType, Handle<Type>>,
 }
 
 /// Shader module.
