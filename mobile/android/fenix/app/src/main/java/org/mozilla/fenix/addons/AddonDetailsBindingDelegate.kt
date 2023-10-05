@@ -13,6 +13,7 @@ import android.view.View
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
+import androidx.core.view.isVisible
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translateDescription
 import mozilla.components.feature.addons.ui.updatedAtDate
@@ -68,12 +69,25 @@ class AddonDetailsBindingDelegate(
     }
 
     private fun bindWebsite(addon: Addon) {
+        if (addon.siteUrl.isBlank()) {
+            binding.homePageLabel.isVisible = false
+            binding.homePageDivider.isVisible = false
+            return
+        }
+
         binding.homePageLabel.setOnClickListener {
             interactor.openWebsite(addon.siteUrl.toUri())
         }
     }
 
     private fun bindLastUpdated(addon: Addon) {
+        if (addon.updatedAt.isBlank()) {
+            binding.lastUpdatedLabel.isVisible = false
+            binding.lastUpdatedText.isVisible = false
+            binding.lastUpdatedDivider.isVisible = false
+            return
+        }
+
         binding.lastUpdatedText.text = dateFormatter.format(addon.updatedAtDate)
     }
 
@@ -95,6 +109,13 @@ class AddonDetailsBindingDelegate(
     }
 
     private fun bindAuthors(addon: Addon) {
+        if (addon.authors.isEmpty()) {
+            binding.authorLabel.isVisible = false
+            binding.authorText.isVisible = false
+            binding.authorDivider.isVisible = false
+            return
+        }
+
         binding.authorText.text = addon.authors.joinToString { author -> author.name }.trim()
     }
 

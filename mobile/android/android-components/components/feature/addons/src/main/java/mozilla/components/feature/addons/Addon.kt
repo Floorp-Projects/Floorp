@@ -302,7 +302,7 @@ data class Addon(
                 // We don't have a summary when we create an add-on from a WebExtension instance so let's
                 // re-use description...
                 translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
-                updatedAt = "1970-01-01T00:00:00Z",
+                updatedAt = "",
                 installedState = installedState,
             )
         }

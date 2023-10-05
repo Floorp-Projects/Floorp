@@ -8,11 +8,13 @@ import android.net.Uri
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
+import androidx.core.view.isVisible
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.addons.Addon
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -136,5 +138,31 @@ class AddonDetailsBindingDelegateTest {
             binding.details.text.toString(),
         )
         assertTrue(binding.details.movementMethod is LinkMovementMethod)
+    }
+
+    @Test
+    fun `bind without last updated date`() {
+        detailsBindingDelegate.bind(baseAddon.copy(updatedAt = ""))
+
+        assertFalse(binding.lastUpdatedLabel.isVisible)
+        assertFalse(binding.lastUpdatedText.isVisible)
+        assertFalse(binding.lastUpdatedDivider.isVisible)
+    }
+
+    @Test
+    fun `bind without authors`() {
+        detailsBindingDelegate.bind(baseAddon.copy(authors = emptyList()))
+
+        assertFalse(binding.authorLabel.isVisible)
+        assertFalse(binding.authorText.isVisible)
+        assertFalse(binding.authorDivider.isVisible)
+    }
+
+    @Test
+    fun `bind without a home page`() {
+        detailsBindingDelegate.bind(baseAddon.copy(siteUrl = ""))
+
+        assertFalse(binding.homePageLabel.isVisible)
+        assertFalse(binding.homePageDivider.isVisible)
     }
 }

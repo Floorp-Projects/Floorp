@@ -381,7 +381,7 @@ class AddonTest {
         assertEquals("some-url", addon.siteUrl)
         assertEquals("some-url", addon.downloadUrl)
         assertEquals(permissions + hostPermissions, addon.permissions)
-        assertEquals("1970-01-01T00:00:00Z", addon.updatedAt)
+        assertEquals("", addon.updatedAt)
         assertEquals("some name", addon.translatableName[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableDescription[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableSummary[Addon.DEFAULT_LOCALE])
