@@ -10,9 +10,6 @@ export MOZILLA_OFFICIAL=1
 
 ac_add_options --with-branding=mobile/android/branding/nightly
 
-# Workaround gold bug (see bug 1807993)
-ac_add_options --enable-linker=lld
-
 ac_add_options --enable-mozsearch-plugin
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

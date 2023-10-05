@@ -19,9 +19,6 @@ export CFLAGS="$CFLAGS --coverage"
 export CXXFLAGS="$CXXFLAGS --coverage"
 export LDFLAGS="$LDFLAGS --coverage -Wl,--compress-debug-sections=zlib"
 
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld
-
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 

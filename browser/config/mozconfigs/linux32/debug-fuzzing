@@ -10,9 +10,6 @@ export MOZ_PACKAGE_JSSHELL=1
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld
-
 # Even in fuzzing builds without sanitizers, the UBSan runtime is pulled
 # in as a dependency to allow libFuzzer to have rudimentary stacks.
 # Hence we need to disable jemalloc until bug 1435148 is fully resolved.

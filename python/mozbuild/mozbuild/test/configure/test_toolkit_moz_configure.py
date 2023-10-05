@@ -11,6 +11,7 @@ from test_toolchain_helpers import CompilerResult
 
 from common import BaseConfigureTest
 from mozbuild.configure.options import InvalidOptionError
+from mozbuild.configure.util import Version
 
 
 class TestToolkitMozConfigure(BaseConfigureTest):
@@ -153,7 +154,11 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             # Trick the sandbox into not running too much
             dep = sandbox._depends[sandbox["c_compiler"]]
             value_for_depends[(dep,)] = CompilerResult(
-                compiler="/usr/bin/mockcc", language="C", type="clang", flags=[]
+                compiler="/usr/bin/mockcc",
+                language="C",
+                type="clang",
+                version=Version("16.0"),
+                flags=[],
             )
             dep = sandbox._depends[sandbox["readelf"]]
             value_for_depends[(dep,)] = "/usr/bin/readelf"
@@ -182,7 +187,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             self.assertEqual(get_values(mockcc, readelf), ("lld", None, None))
             self.assertEqual(
                 get_values(mockcc, readelf, ["--enable-release"]),
-                ("bfd", None, "legacy"),
+                ("lld", None, None),
             )
             # LLD is picked by default and enabling elfhack fails because of that.
             with self.assertRaises(SystemExit):
@@ -219,7 +224,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         readelf = ReadElf(True)
         self.assertEqual(get_values(mockcc, readelf), ("lld", PACK, None))
         self.assertEqual(
-            get_values(mockcc, readelf, ["--enable-release"]), ("bfd", PACK, None)
+            get_values(mockcc, readelf, ["--enable-release"]), ("lld", PACK, None)
         )
         # LLD is picked by default and enabling elfhack fails because of that.
         with self.assertRaises(SystemExit):
