@@ -1857,6 +1857,12 @@
     type: bool
     value: false
     mirror: always
+
+  # Whether to put a file promise onto the clipboard when copying images on Windows
+-   name: clipboard.imageAsFile.enabled
+    type: bool
+    value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+    mirror: always
 #endif
 
 #---------------------------------------------------------------------------

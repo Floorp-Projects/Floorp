@@ -1,0 +1,7 @@
+[DEFAULT]
+
+["test_paste_image.html"]
+skip-if = [
+  "headless", # Bug 1405869
+  "os == 'android'", # Image type isn't supported
+]
