@@ -564,7 +564,7 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aIsContinue) {
             // We dispatch with a rather high priority, since somebody actually
             // cares about this font.
             NS_DispatchToCurrentThreadQueue(runnable.forget(),
-                                            EventQueuePriority::Vsync);
+                                            EventQueuePriority::MediumHigh);
           }
           return;
         } else {
