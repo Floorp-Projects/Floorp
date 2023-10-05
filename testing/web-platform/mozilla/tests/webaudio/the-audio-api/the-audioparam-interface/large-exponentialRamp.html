@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<title>Test exponentialRampToValueAtTime() with a large ratio of change</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+'use strict';
+
+promise_test(async function() {
+  const sampleRate = 16384;
+  // not a power of two, so that there is some rounding error in the exponent
+  const rampEndSample = 255;
+  const bufferSize = rampEndSample + 1;
+  const offset0 = 20.;
+  const offset1 = 20000.;
+  // Math.pow(2, -23) ~ 1 unit in the last place (ulp).
+  // Single-precision powf() amplifies rounding error of less than 0.5 ulp in
+  // to the exponent to more than 2 ulp when the curve spans this large ratio.
+  // This test is not in upstream wpt because this may be more precision than
+  // expected from an implementation.
+  const relativeTolerance = Math.pow(2, -23);
+
+  const context = new OfflineAudioContext(1, bufferSize, sampleRate);
+
+  const source = new ConstantSourceNode(context);
+  source.start();
+  // Explicit event to work around
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1265393
+  source.offset.setValueAtTime(offset0, 0.);
+  source.offset.exponentialRampToValueAtTime(offset1, rampEndSample/sampleRate);
+  source.connect(context.destination);
+
+  const buffer = await context.startRendering();
+  assert_equals(buffer.length, bufferSize, "output buffer length");
+  const output = buffer.getChannelData(0);
+  const ratio = offset1 / offset0;
+  for (let i = 0; i < bufferSize; ++i) {
+    // Math.pow() uses double precision, while `output` has single precision,
+    // but `tolerance` is enough to accommodate differences.
+    const expected = offset0 * Math.pow(offset1/offset0, i/rampEndSample);
+    assert_approx_equals(
+      output[i],
+      expected,
+      relativeTolerance * expected,
+      "scheduled value at " + i);
+  }
+});
+</script>
