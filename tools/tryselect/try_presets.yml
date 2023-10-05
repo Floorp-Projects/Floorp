@@ -112,6 +112,19 @@ geckodriver:
         - "'platform 'wdspec 'debug 'nofis"
         - "'browsertime 'amazon 'shippable 'firefox 'nofis"
 
+layout:
+    selector: fuzzy
+    description: >-
+        Runs the tests most relevant to layout.
+        This preset can be filtered down further to limit it to
+        a specific platform or build configuration. For example:
+        |mach try --preset layout -xq "linux64 'opt"|
+    query:
+        # Most mochitest + reftest + crashtest + wpt
+        - "!asan !tsan !jsreftest !shippable !webgl !condprof !media !webgpu 'mochitest | 'web-platform | 'crashtest | 'reftest"
+        # Style system unit tests
+        - "'rusttests"
+
 media-full:
     selector: fuzzy
     description: >-
