@@ -262,8 +262,10 @@ export class PlacesQuery {
     }
     this.#historyListener = null;
     this.#historyListenerCallback = null;
-    this.#historyObserverTask.disarm();
-    this.#historyObserverTask.finalize();
+    if (!this.#historyObserverTask.isFinalized) {
+      this.#historyObserverTask.disarm();
+      this.#historyObserverTask.finalize();
+    }
   }
 
   /**
