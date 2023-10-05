@@ -1,0 +1,68 @@
+{
+  "triagers": {
+    "Dão Gottwald": {
+      "bzmail": "dao+bmo@mozilla.com"
+    },
+    "Sam Foster": {
+      "bzmail": "sfoster@mozilla.com"
+    },
+    "Sarah Clements": {
+      "bzmail": "sclements@mozilla.com"
+    }
+  },
+  "duty-start-dates": {
+    "2023-10-05": "Dão Gottwald",
+    "2023-10-12": "Sarah Clements",
+    "2023-10-19": "Sam Foster",
+    "2023-10-26": "Dão Gottwald",
+    "2023-11-02": "Sarah Clements",
+    "2023-11-09": "Sam Foster",
+    "2023-11-16": "Dão Gottwald",
+    "2023-11-23": "Sarah Clements",
+    "2023-11-30": "Sam Foster",
+    "2023-12-07": "Sarah Clements",
+    "2023-12-14": "Sam Foster",
+    "2023-12-21": "Sarah Clements",
+    "2023-12-28": "Sam Foster",
+    "2024-01-04": "Sarah Clements",
+    "2024-01-11": "Sam Foster",
+    "2024-01-18": "Sarah Clements",
+    "2024-01-25": "Sam Foster",
+    "2024-02-03": "Sarah Clements",
+    "2024-02-10": "Sam Foster",
+    "2024-02-17": "Sarah Clements",
+    "2024-02-24": "Sam Foster",
+    "2024-03-01": "Sarah Clements",
+    "2024-03-08": "Sam Foster",
+    "2024-03-15": "Sarah Clements",
+    "2024-03-22": "Sam Foster",
+    "2024-03-29": "Sarah Clements",
+    "2024-04-06": "Sam Foster",
+    "2024-04-13": "Sarah Clements",
+    "2024-04-20": "Sam Foster",
+    "2024-04-27": "Sarah Clements",
+    "2024-05-04": "Sam Foster",
+    "2024-05-11": "Sarah Clements",
+    "2024-05-18": "Sam Foster",
+    "2024-05-25": "Sarah Clements",
+    "2024-06-02": "Sam Foster",
+    "2024-06-09": "Sarah Clements",
+    "2024-06-16": "Sam Foster",
+    "2024-06-23": "Sarah Clements",
+    "2024-06-30": "Sam Foster",
+    "2024-07-07": "Sarah Clements",
+    "2024-07-14": "Sam Foster",
+    "2024-07-21": "Sarah Clements",
+    "2024-07-28": "Sam Foster",
+    "2024-08-05": "Sarah Clements",
+    "2024-08-12": "Sam Foster",
+    "2024-08-19": "Sarah Clements",
+    "2024-08-26": "Sam Foster",
+    "2024-09-03": "Sarah Clements",
+    "2024-09-10": "Sam Foster",
+    "2024-09-17": "Sarah Clements",
+    "2024-09-24": "Sam Foster",
+    "2024-10-01": "Sarah Clements",
+    "2024-10-08": "Sam Foster"
+  }
+}
