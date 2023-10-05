@@ -1,0 +1,7 @@
+[DEFAULT]
+support-files = [
+  "support1",
+  "support2",
+]
+
+["test_browser.js"]

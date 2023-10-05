@@ -1,145 +1,147 @@
 {
   "config_groups": {
-    "accessible/tests/browser/events/browser.ini": [
+    "accessible/tests/browser/events/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "accessible/tests/browser/fission/browser.ini": [
+    "accessible/tests/browser/fission/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "accessible/tests/browser/mac/browser.ini": [
+    "accessible/tests/browser/mac/browser.toml": [
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*"
     ],
-    "accessible/tests/browser/scroll/browser.ini": ["test-linux1804-64/opt-*"],
-    "accessible/tests/browser/states/browser.ini": [
+    "accessible/tests/browser/scroll/browser.toml": ["test-linux1804-64/opt-*"],
+    "accessible/tests/browser/states/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "accessible/tests/browser/telemetry/browser.ini": [
+    "accessible/tests/browser/telemetry/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "accessible/tests/mochitest/a11y.ini": ["test-linux1804-64-qr/opt-*-1proc"],
-    "accessible/tests/mochitest/actions/a11y.ini": [
+    "accessible/tests/mochitest/a11y.toml": [
+      "test-linux1804-64-qr/opt-*-1proc"
+    ],
+    "accessible/tests/mochitest/actions/a11y.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "accessible/tests/mochitest/tree/a11y.ini": [
+    "accessible/tests/mochitest/tree/a11y.toml": [
       "test-linux1804-64/opt-*-1proc"
     ],
-    "browser/base/content/test/about/browser.ini": [
+    "browser/base/content/test/about/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/alerts/browser.ini": [
+    "browser/base/content/test/alerts/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/captivePortal/browser.ini": [
+    "browser/base/content/test/captivePortal/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/base/content/test/contextMenu/browser.ini": [
+    "browser/base/content/test/contextMenu/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/base/content/test/favicons/browser.ini": [
+    "browser/base/content/test/favicons/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/forms/browser.ini": [
+    "browser/base/content/test/forms/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/fullscreen/browser.ini": [
+    "browser/base/content/test/fullscreen/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "browser/base/content/test/general/browser.ini": [
+    "browser/base/content/test/general/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/keyboard/browser.ini": [
+    "browser/base/content/test/keyboard/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/base/content/test/pageActions/browser.ini": [
+    "browser/base/content/test/pageActions/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/base/content/test/pageinfo/browser.ini": [
+    "browser/base/content/test/pageinfo/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/base/content/test/performance/browser.ini": [
+    "browser/base/content/test/performance/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/performance/hidpi/browser.ini": [
+    "browser/base/content/test/performance/hidpi/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "browser/base/content/test/performance/io/browser.ini": [
+    "browser/base/content/test/performance/io/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/performance/lowdpi/browser.ini": [
+    "browser/base/content/test/performance/lowdpi/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/base/content/test/popupNotifications/browser.ini": [
+    "browser/base/content/test/popupNotifications/browser.toml": [
       "test-macosx1014-64/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/base/content/test/popups/browser.ini": [
+    "browser/base/content/test/popups/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/protectionsUI/browser.ini": [
+    "browser/base/content/test/protectionsUI/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/referrer/browser.ini": [
+    "browser/base/content/test/referrer/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/sanitize/browser.ini": [
+    "browser/base/content/test/sanitize/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/base/content/test/siteIdentity/browser.ini": [
+    "browser/base/content/test/siteIdentity/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/static/browser.ini": [
+    "browser/base/content/test/static/browser.toml": [
       "test-windows7-32/opt-*",
       "test-macosx1014-64/opt-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/tabPrompts/browser.ini": [
+    "browser/base/content/test/tabPrompts/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/tabcrashed/browser.ini": [
+    "browser/base/content/test/tabcrashed/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/tabs/browser.ini": [
+    "browser/base/content/test/tabs/browser.toml": [
       "test-windows11-64-2009-asan/opt-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/base/content/test/webextensions/browser.ini": [
+    "browser/base/content/test/webextensions/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/base/content/test/zoom/browser.ini": [
+    "browser/base/content/test/zoom/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/aboutlogins/tests/browser/browser.ini": [
+    "browser/components/aboutlogins/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/aboutlogins/tests/chrome/chrome.ini": [
+    "browser/components/aboutlogins/tests/chrome/chrome.toml": [
       "test-linux1804-64/debug-*-1proc",
       "test-windows11-64-2009/debug-*-1proc"
     ],
-    "browser/components/aboutlogins/tests/unit/xpcshell.ini": [
+    "browser/components/aboutlogins/tests/unit/xpcshell.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/contextualidentity/test/browser/browser.ini": [
+    "browser/components/contextualidentity/test/browser/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/customizableui/test/browser.ini": [
+    "browser/components/customizableui/test/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows7-32/opt-*",
       "test-macosx1014-64/debug-*",
@@ -151,32 +153,32 @@
       "test-windows11-64-2009/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "browser/components/doh/test/browser/browser.ini": [
+    "browser/components/doh/test/browser/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/downloads/test/browser/browser.ini": [
+    "browser/components/downloads/test/browser/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/downloads/test/unit/xpcshell.ini": [
+    "browser/components/downloads/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/enterprisepolicies/tests/browser/browser.ini": [
+    "browser/components/enterprisepolicies/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/enterprisepolicies/tests/browser/disable_app_update/browser.ini": [
+    "browser/components/enterprisepolicies/tests/browser/disable_app_update/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/enterprisepolicies/tests/xpcshell/xpcshell.ini": [
+    "browser/components/enterprisepolicies/tests/xpcshell/xpcshell.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/extensions/test/browser/browser-private.ini": [
+    "browser/components/extensions/test/browser/browser-private.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/extensions/test/browser/browser.ini": [
+    "browser/components/extensions/test/browser/browser.toml": [
       "test-windows7-32/opt-*",
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*",
@@ -186,28 +188,28 @@
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "browser/components/extensions/test/mochitest/mochitest.ini": [
+    "browser/components/extensions/test/mochitest/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-qr/debug-*"
     ],
-    "browser/components/migration/tests/unit/xpcshell.ini": [
+    "browser/components/migration/tests/unit/xpcshell.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/newtab/test/browser/abouthomecache/browser.ini": [
+    "browser/components/newtab/test/browser/abouthomecache/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/newtab/test/browser/browser.ini": [
+    "browser/components/newtab/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/newtab/test/xpcshell/xpcshell.ini": [
+    "browser/components/newtab/test/xpcshell/xpcshell.toml": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/originattributes/test/browser/browser.ini": [
+    "browser/components/originattributes/test/browser/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*",
@@ -215,286 +217,286 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-asan/opt-*"
     ],
-    "browser/components/pioneer/test/browser/browser.ini": [
+    "browser/components/pioneer/test/browser/browser.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/places/tests/browser/browser.ini": [
+    "browser/components/places/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/places/tests/unit/xpcshell.ini": [
+    "browser/components/places/tests/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/preferences/tests/browser.ini": [
+    "browser/components/preferences/tests/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009-asan/opt-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/preferences/tests/siteData/browser.ini": [
+    "browser/components/preferences/tests/siteData/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/protections/test/browser/browser.ini": [
+    "browser/components/protections/test/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/resistfingerprinting/test/browser/browser.ini": [
+    "browser/components/resistfingerprinting/test/browser/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/components/resistfingerprinting/test/mochitest/mochitest.ini": [
+    "browser/components/resistfingerprinting/test/mochitest/mochitest.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/safebrowsing/content/test/browser.ini": [
+    "browser/components/safebrowsing/content/test/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/search/test/browser/browser.ini": [
+    "browser/components/search/test/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/search/test/browser/google_codes/browser.ini": [
+    "browser/components/search/test/browser/google_codes/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "browser/components/search/test/unit/xpcshell.ini": [
+    "browser/components/search/test/unit/xpcshell.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/sessionstore/test/browser.ini": [
+    "browser/components/sessionstore/test/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/components/sessionstore/test/unit/xpcshell.ini": [
+    "browser/components/sessionstore/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/shell/test/browser.ini": [
+    "browser/components/shell/test/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/components/shell/test/chrome.ini": [
+    "browser/components/shell/test/chrome.toml": [
       "test-linux1804-64/opt-*-1proc"
     ],
-    "browser/components/ssb/tests/browser/browser.ini": [
+    "browser/components/ssb/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/components/tests/browser/browser.ini": [
+    "browser/components/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/tests/browser/whats_new_page/browser.ini": [
+    "browser/components/tests/browser/whats_new_page/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "browser/components/tests/unit/xpcshell.ini": [
+    "browser/components/tests/unit/xpcshell.toml": [
       "test-windows11-64-2009/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "browser/components/touchbar/tests/browser/browser.ini": [
+    "browser/components/touchbar/tests/browser/browser.toml": [
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*"
     ],
-    "browser/components/translation/test/browser.ini": [
+    "browser/components/translation/test/browser.toml": [
       "test-windows7-32/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/uitour/test/browser.ini": [
+    "browser/components/uitour/test/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/urlbar/tests/browser-tips/browser.ini": [
+    "browser/components/urlbar/tests/browser-tips/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/components/urlbar/tests/browser/browser.ini": [
+    "browser/components/urlbar/tests/browser/browser.toml": [
       "test-macosx1014-64/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/components/urlbar/tests/unit/xpcshell.ini": [
+    "browser/components/urlbar/tests/unit/xpcshell.toml": [
       "test-linux1804-64-tsan/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/extensions/formautofill/test/browser/browser.ini": [
+    "browser/extensions/formautofill/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "browser/extensions/formautofill/test/browser/creditCard/browser.ini": [
+    "browser/extensions/formautofill/test/browser/creditCard/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "browser/extensions/formautofill/test/mochitest/creditCard/mochitest.ini": [
+    "browser/extensions/formautofill/test/mochitest/creditCard/mochitest.toml": [
       "test-macosx1014-64/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "browser/extensions/formautofill/test/mochitest/mochitest.ini": [
+    "browser/extensions/formautofill/test/mochitest/mochitest.toml": [
       "test-macosx1014-64/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/extensions/formautofill/test/unit/xpcshell.ini": [
+    "browser/extensions/formautofill/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-tsan/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "browser/extensions/report-site-issue/test/browser/browser.ini": [
+    "browser/extensions/report-site-issue/test/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/modules/test/browser/browser.ini": [
+    "browser/modules/test/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "browser/modules/test/unit/xpcshell.ini": [
+    "browser/modules/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/opt-*"
     ],
-    "browser/tools/mozscreenshots/controlCenter/browser.ini": [
+    "browser/tools/mozscreenshots/controlCenter/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "browser/tools/mozscreenshots/permissionPrompts/browser.ini": [
+    "browser/tools/mozscreenshots/permissionPrompts/browser.toml": [
       "test-linux1804-64/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "caps/tests/mochitest/chrome.ini": ["test-linux1804-64/opt-*-1proc"],
-    "devtools/client/aboutdebugging/test/browser/browser.ini": [
+    "caps/tests/mochitest/chrome.toml": ["test-linux1804-64/opt-*-1proc"],
+    "devtools/client/aboutdebugging/test/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/application/test/browser/browser.ini": [
+    "devtools/client/application/test/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/debugger/test/mochitest/browser.ini": [
+    "devtools/client/debugger/test/mochitest/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/client/framework/test/browser-enable-popup-devtools-user.ini": [
+    "devtools/client/framework/test/browser-enable-popup-devtools-user.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/framework/test/browser-enable-popup-new-user.ini": [
+    "devtools/client/framework/test/browser-enable-popup-new-user.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/framework/test/browser.ini": [
+    "devtools/client/framework/test/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/client/framework/test/metrics/browser_metrics_debugger.ini": [
+    "devtools/client/framework/test/metrics/browser_metrics_debugger.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/inspector/computed/test/browser.ini": [
+    "devtools/client/inspector/computed/test/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "devtools/client/inspector/grids/test/browser.ini": [
+    "devtools/client/inspector/grids/test/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/inspector/markup/test/browser.ini": [
+    "devtools/client/inspector/markup/test/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/inspector/rules/test/browser_part1.ini": [
+    "devtools/client/inspector/rules/test/browser_part1.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/inspector/rules/test/browser_part2.ini": [
+    "devtools/client/inspector/rules/test/browser_part2.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/inspector/shared/test/browser.ini": [
+    "devtools/client/inspector/shared/test/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/inspector/test/browser.ini": [
+    "devtools/client/inspector/test/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/client/jsonview/test/browser.ini": [
+    "devtools/client/jsonview/test/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/netmonitor/src/har/test/browser.ini": [
+    "devtools/client/netmonitor/src/har/test/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/netmonitor/test/browser.ini": [
+    "devtools/client/netmonitor/test/browser.toml": [
       "test-macosx1014-64/opt-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/responsive/test/browser/browser.ini": [
+    "devtools/client/responsive/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/client/responsive/test/xpcshell/xpcshell.ini": [
+    "devtools/client/responsive/test/xpcshell/xpcshell.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/shared/sourceeditor/test/browser.ini": [
+    "devtools/client/shared/sourceeditor/test/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/shared/test/browser.ini": [
+    "devtools/client/shared/test/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/storage/test/browser.ini": [
+    "devtools/client/storage/test/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/client/styleeditor/test/browser.ini": [
+    "devtools/client/styleeditor/test/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/client/webconsole/test/browser/_browser_console.ini": [
+    "devtools/client/webconsole/test/browser/_browser_console.toml": [
       "test-windows11-64-2009-asan/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/webconsole/test/browser/_jsterm.ini": [
+    "devtools/client/webconsole/test/browser/_jsterm.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "devtools/client/webconsole/test/browser/_webconsole.ini": [
+    "devtools/client/webconsole/test/browser/_webconsole.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "devtools/server/tests/chrome/chrome.ini": [
+    "devtools/server/tests/chrome/chrome.toml": [
       "test-linux1804-64/debug-*-spi-nw-1proc",
       "test-windows7-32/opt-*-1proc"
     ],
-    "devtools/server/tests/xpcshell/xpcshell.ini": [
+    "devtools/server/tests/xpcshell/xpcshell.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "devtools/shared/resources/tests/browser.ini": [
+    "devtools/shared/resources/tests/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "devtools/shared/test-helpers/browser.ini": [
+    "devtools/shared/test-helpers/browser.toml": [
       "test-macosx1014-64/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "devtools/shared/tests/xpcshell/xpcshell.ini": [
+    "devtools/shared/tests/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "devtools/shared/webconsole/test/chrome/chrome.ini": [
+    "devtools/shared/webconsole/test/chrome/chrome.toml": [
       "test-windows7-32/opt-*-1proc"
     ],
-    "docshell/test/browser/browser.ini": [
+    "docshell/test/browser/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "docshell/test/mochitest/mochitest.ini": [
+    "docshell/test/mochitest/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "docshell/test/navigation/browser.ini": [
+    "docshell/test/navigation/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "docshell/test/navigation/mochitest.ini": [
+    "docshell/test/navigation/mochitest.toml": [
       "test-linux1804-64-qr/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "docshell/test/unit/xpcshell.ini": [
+    "docshell/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "dom/abort/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "dom/animation/test/mochitest.ini": [
+    "dom/abort/tests/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "dom/animation/test/mochitest.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "dom/base/test/chrome.ini": ["test-linux1804-64/debug-*-spi-nw-1proc"],
-    "dom/base/test/chrome/chrome.ini": ["test-windows11-64-2009/opt-*-1proc"],
-    "dom/base/test/mochitest.ini": [
+    "dom/base/test/chrome.toml": ["test-linux1804-64/debug-*-spi-nw-1proc"],
+    "dom/base/test/chrome/chrome.toml": ["test-windows11-64-2009/opt-*-1proc"],
+    "dom/base/test/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
       "test-windows11-64-2009/debug-*",
@@ -504,80 +506,80 @@
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-windows7-32/debug-*"
     ],
-    "dom/broadcastchannel/tests/browser.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/canvas/test/webgl-conf/generated-mochitest.ini": [
+    "dom/broadcastchannel/tests/browser.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/canvas/test/webgl-conf/generated-mochitest.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/canvas/test/webgl-mochitest/mochitest.ini": [
+    "dom/canvas/test/webgl-mochitest/mochitest.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "dom/console/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/credentialmanagement/tests/browser/browser.ini": [
+    "dom/console/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/credentialmanagement/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/file/ipc/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/file/tests/xpcshell.ini": [
+    "dom/file/ipc/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/file/tests/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
-    "dom/filesystem/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "dom/filesystem/tests/mochitest.toml": ["test-windows11-64-2009-qr/opt-*"],
     "dom/html/reftests/autofocus/reftest.list": ["test-linux1804-64/opt-*"],
-    "dom/html/test/browser.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/html/test/forms/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "dom/html/test/mochitest.ini": [
+    "dom/html/test/browser.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/html/test/forms/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "dom/html/test/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-asan/opt-*",
       "test-linux1804-64-tsan/opt-*",
       "test-macosx1014-64/debug-*"
     ],
-    "dom/indexedDB/test/mochitest.ini": [
+    "dom/indexedDB/test/mochitest.toml": [
       "test-macosx1014-64/opt-*",
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/ipc/tests/JSProcessActor/browser.ini": [
+    "dom/ipc/tests/JSProcessActor/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/ipc/tests/JSWindowActor/browser.ini": [
+    "dom/ipc/tests/JSWindowActor/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/ipc/tests/browser.ini": ["test-windows7-32/opt-*"],
-    "dom/ipc/tests/chrome.ini": ["test-linux1804-64/debug-*-spi-nw-1proc"],
-    "dom/ipc/tests/xpcshell.ini": [
+    "dom/ipc/tests/browser.toml": ["test-windows7-32/opt-*"],
+    "dom/ipc/tests/chrome.toml": ["test-linux1804-64/debug-*-spi-nw-1proc"],
+    "dom/ipc/tests/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/l10n/tests/mochitest/browser.ini": [
+    "dom/l10n/tests/mochitest/browser.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "dom/l10n/tests/mochitest/chrome.ini": [
+    "dom/l10n/tests/mochitest/chrome.toml": [
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "dom/localstorage/test/unit/xpcshell.ini": ["test-linux1804-64-qr/opt-*"],
-    "dom/media/mediacontrol/tests/browser.ini": [
+    "dom/localstorage/test/unit/xpcshell.toml": ["test-linux1804-64-qr/opt-*"],
+    "dom/media/mediacontrol/tests/browser.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/media/mediasource/test/mochitest.ini": [
+    "dom/media/mediasource/test/mochitest.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/debug-*-spi",
       "test-windows11-64-2009-qr/opt-*"
     ],
     "dom/media/test/crashtests/crashtests.list": ["test-linux1804-64/opt-*"],
-    "dom/media/test/mochitest.ini": [
+    "dom/media/test/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009/opt-*-spi",
       "test-linux1804-64/opt-*-spi"
     ],
-    "dom/media/webaudio/test/mochitest.ini": [
+    "dom/media/webaudio/test/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/debug-*-spi",
       "test-windows11-64-2009-qr/opt-*-spi"
     ],
-    "dom/media/webrtc/tests/mochitests/mochitest.ini": [
+    "dom/media/webrtc/tests/mochitests/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
       "test-windows11-64-2009/debug-*",
@@ -588,62 +590,66 @@
       "test-macosx1014-64/opt-*-spi",
       "test-windows7-32/debug-*"
     ],
-    "dom/media/webvtt/tests/xpcshell.ini": ["test-linux1804-64-qr/opt-*"],
-    "dom/network/tests/chrome.ini": ["test-linux1804-64-qr/opt-*-1proc"],
-    "dom/performance/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "dom/permission/tests/mochitest.ini": [
+    "dom/media/webvtt/tests/xpcshell.toml": ["test-linux1804-64-qr/opt-*"],
+    "dom/network/tests/chrome.toml": ["test-linux1804-64-qr/opt-*-1proc"],
+    "dom/performance/tests/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "dom/permission/tests/mochitest.toml": [
       "test-linux1804-64/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/presentation/tests/mochitest/chrome.ini": [
+    "dom/presentation/tests/mochitest/chrome.toml": [
       "test-linux1804-64-qr/opt-*-1proc"
     ],
-    "dom/presentation/tests/mochitest/mochitest.ini": [
+    "dom/presentation/tests/mochitest/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-qr/opt-*",
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-android-em-7.0-x86_64/debug-geckoview-*",
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
-    "dom/presentation/tests/xpcshell/xpcshell.ini": [
+    "dom/presentation/tests/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/promise/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/push/test/mochitest.ini": [
+    "dom/promise/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/push/test/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-qr/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "dom/push/test/xpcshell/xpcshell.ini": [
+    "dom/push/test/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/reporting/tests/browser.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/security/test/csp/mochitest.ini": [
+    "dom/reporting/tests/browser.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/security/test/csp/mochitest.toml": [
       "test-linux1804-64-qr/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/security/test/general/browser.ini": ["test-linux1804-64/debug-*"],
-    "dom/security/test/general/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/security/test/https-only/browser.ini": [
+    "dom/security/test/general/browser.toml": ["test-linux1804-64/debug-*"],
+    "dom/security/test/general/mochitest.toml": [
+      "test-windows11-64-2009/opt-*"
+    ],
+    "dom/security/test/https-only/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "dom/security/test/mixedcontentblocker/browser.ini": [
+    "dom/security/test/mixedcontentblocker/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "dom/security/test/unit/xpcshell.ini": ["test-linux1804-64/debug-*-spi-nw"],
-    "dom/serviceworkers/test/browser.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/serviceworkers/test/mochitest.ini": [
+    "dom/security/test/unit/xpcshell.toml": [
+      "test-linux1804-64/debug-*-spi-nw"
+    ],
+    "dom/serviceworkers/test/browser.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/serviceworkers/test/mochitest.toml": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/system/tests/mochitest.ini": [
+    "dom/system/tests/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/tests/browser/browser.ini": [
+    "dom/tests/browser/browser.toml": [
       "test-macosx1014-64/opt-*",
       "test-windows11-64-2009-qr/debug-*",
       "test-windows11-64-2009-asan/opt-*",
@@ -652,95 +658,97 @@
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "dom/tests/mochitest/ajax/scriptaculous/mochitest.ini": [
+    "dom/tests/mochitest/ajax/scriptaculous/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/tests/mochitest/beacon/mochitest.ini": [
+    "dom/tests/mochitest/beacon/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/tests/mochitest/bugs/mochitest.ini": [
+    "dom/tests/mochitest/bugs/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/tests/mochitest/chrome/chrome.ini": [
+    "dom/tests/mochitest/chrome/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "dom/tests/mochitest/dom-level0/mochitest.ini": [
+    "dom/tests/mochitest/dom-level0/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/tests/mochitest/dom-level1-core/mochitest.ini": [
+    "dom/tests/mochitest/dom-level1-core/mochitest.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/tests/mochitest/fetch/mochitest.ini": [
+    "dom/tests/mochitest/fetch/mochitest.toml": [
       "test-windows11-64-2009-qr/debug-*"
     ],
-    "dom/tests/mochitest/gamepad/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "dom/tests/mochitest/general/mochitest.ini": [
+    "dom/tests/mochitest/gamepad/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "dom/tests/mochitest/general/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/tests/mochitest/geolocation/chrome.ini": [
+    "dom/tests/mochitest/geolocation/chrome.toml": [
       "test-linux1804-64-qr/opt-*-1proc"
     ],
-    "dom/tests/mochitest/pointerlock/mochitest.ini": [
+    "dom/tests/mochitest/pointerlock/mochitest.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/tests/mochitest/sessionstorage/chrome.ini": [
+    "dom/tests/mochitest/sessionstorage/chrome.toml": [
       "test-linux1804-64-qr/opt-*-1proc"
     ],
-    "dom/tests/mochitest/webcomponents/mochitest.ini": [
+    "dom/tests/mochitest/webcomponents/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/tests/mochitest/whatwg/mochitest.ini": [
+    "dom/tests/mochitest/whatwg/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/url/tests/browser.ini": ["test-windows7-32/opt-*"],
-    "dom/webauthn/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/webgpu/mochitest/mochitest.ini": [
+    "dom/url/tests/browser.toml": ["test-windows7-32/opt-*"],
+    "dom/webauthn/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/webgpu/mochitest/mochitest.toml": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/websocket/tests/chrome.ini": ["test-linux1804-64-qr/opt-*-1proc"],
-    "dom/websocket/tests/mochitest.ini": [
+    "dom/websocket/tests/chrome.toml": ["test-linux1804-64-qr/opt-*-1proc"],
+    "dom/websocket/tests/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-qr/debug-*",
       "test-linux1804-64-asan/opt-*"
     ],
-    "dom/websocket/tests/websocket_hybi/mochitest.ini": [
+    "dom/websocket/tests/websocket_hybi/mochitest.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/workers/test/browser.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/workers/test/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "dom/worklet/tests/mochitest.ini": [
+    "dom/workers/test/browser.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/workers/test/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "dom/worklet/tests/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/xhr/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
-    "dom/xslt/tests/mochitest/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "editor/libeditor/tests/chrome.ini": [
+    "dom/xhr/tests/mochitest.toml": ["test-windows11-64-2009-qr/opt-*"],
+    "dom/xslt/tests/mochitest/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "editor/libeditor/tests/chrome.toml": [
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "editor/libeditor/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "editor/libeditor/tests/mochitest.toml": [
+      "test-windows11-64-2009-qr/opt-*"
+    ],
     "editor/reftests/xul/reftest.list": ["test-linux1804-64-qr/opt-*"],
-    "editor/spellchecker/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "extensions/permissions/test/unit/xpcshell.ini": [
+    "editor/spellchecker/tests/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "extensions/permissions/test/unit/xpcshell.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "extensions/spellcheck/tests/chrome/chrome.ini": [
+    "extensions/spellcheck/tests/chrome/chrome.toml": [
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "extensions/spellcheck/tests/mochitest/mochitest.ini": [
+    "extensions/spellcheck/tests/mochitest/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "extensions/universalchardet/tests/chrome.ini": [
+    "extensions/universalchardet/tests/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "gfx/layers/apz/test/mochitest/mochitest.ini": [
+    "gfx/layers/apz/test/mochitest/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-android-em-7.0-x86_64-qr/debug-geckoview-*",
@@ -753,41 +761,41 @@
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
     "gfx/tests/crashtests/crashtests.list": ["test-linux1804-64/opt-*"],
-    "image/test/mochitest/mochitest.ini": [
+    "image/test/mochitest/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
-    "image/test/unit/xpcshell.ini": ["test-linux1804-64/opt-*"],
-    "intl/uconv/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "js/xpconnect/tests/chrome/chrome.ini": [
+    "image/test/unit/xpcshell.toml": ["test-linux1804-64/opt-*"],
+    "intl/uconv/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "js/xpconnect/tests/chrome/chrome.toml": [
       "test-windows11-64-2009/debug-*-1proc"
     ],
-    "js/xpconnect/tests/unit/xpcshell.ini": [
+    "js/xpconnect/tests/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "layout/base/tests/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
-    "layout/base/tests/mochitest.ini": [
+    "layout/base/tests/browser.toml": ["test-windows11-64-2009-qr/opt-*"],
+    "layout/base/tests/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "layout/forms/test/mochitest.ini": [
+    "layout/forms/test/mochitest.toml": [
       "test-linux1804-64-qr/debug-*",
       "test-android-em-7.0-x86_64-qr/debug-geckoview-*",
       "test-linux1804-64/opt-*"
     ],
-    "layout/generic/test/mochitest.ini": [
+    "layout/generic/test/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "layout/inspector/tests/chrome/chrome.ini": [
+    "layout/inspector/tests/chrome/chrome.toml": [
       "test-linux1804-64/debug-*-1proc"
     ],
-    "layout/inspector/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
-    "layout/mathml/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
+    "layout/inspector/tests/mochitest.toml": ["test-linux1804-64/opt-*"],
+    "layout/mathml/tests/mochitest.toml": ["test-linux1804-64/opt-*"],
     "layout/reftests/async-scrolling/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/border-image/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/box-shadow/reftest.list": [
@@ -932,31 +940,31 @@
     ],
     "layout/reftests/writing-mode/reftest.list": ["test-linux1804-64-qr/opt-*"],
     "layout/style/crashtests/crashtests.list": ["test-linux1804-64-qr/opt-*"],
-    "layout/style/test/mochitest.ini": [
+    "layout/style/test/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64/opt-*",
       "test-linux1804-64-tsan/opt-*",
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-android-em-7.0-x86_64/debug-geckoview-*"
     ],
-    "layout/svg/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
-    "layout/xul/test/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
-    "layout/xul/test/chrome.ini": ["test-windows11-64-2009/opt-*-1proc"],
-    "mobile/android/components/extensions/test/mochitest/mochitest.ini": [
+    "layout/svg/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
+    "layout/xul/test/browser.toml": ["test-windows11-64-2009-qr/opt-*"],
+    "layout/xul/test/chrome.toml": ["test-windows11-64-2009/opt-*-1proc"],
+    "mobile/android/components/extensions/test/mochitest/mochitest.toml": [
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
-    "modules/libpref/test/unit/xpcshell.ini": ["test-windows11-64-2009/opt-*"],
-    "netwerk/test/browser/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
-    "netwerk/test/httpserver/test/xpcshell.ini": [
+    "modules/libpref/test/unit/xpcshell.toml": ["test-windows11-64-2009/opt-*"],
+    "netwerk/test/browser/browser.toml": ["test-windows11-64-2009-qr/opt-*"],
+    "netwerk/test/httpserver/test/xpcshell.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "netwerk/test/mochitests/mochitest.ini": [
+    "netwerk/test/mochitests/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "netwerk/test/unit/xpcshell.ini": [
+    "netwerk/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*",
@@ -969,64 +977,64 @@
       "test-windows7-32/debug-*",
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
-    "netwerk/test/unit_ipc/xpcshell.ini": [
+    "netwerk/test/unit_ipc/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-tsan/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "parser/htmlparser/tests/mochitest/browser.ini": [
+    "parser/htmlparser/tests/mochitest/browser.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "parser/htmlparser/tests/mochitest/mochitest.ini": [
+    "parser/htmlparser/tests/mochitest/mochitest.toml": [
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "remote/test/browser/page/browser.ini": [
+    "remote/test/browser/page/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "remote/test/browser/runtime/browser.ini": [
+    "remote/test/browser/runtime/browser.toml": [
       "test-windows11-64-2009-asan/opt-*"
     ],
-    "security/manager/ssl/tests/mochitest/browser/browser.ini": [
+    "security/manager/ssl/tests/mochitest/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "security/manager/ssl/tests/unit/xpcshell-smartcards.ini": [
+    "security/manager/ssl/tests/unit/xpcshell-smartcards.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "security/manager/ssl/tests/unit/xpcshell.ini": [
+    "security/manager/ssl/tests/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64-tsan/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "services/common/tests/unit/xpcshell.ini": [
+    "services/common/tests/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "services/fxaccounts/tests/xpcshell/xpcshell.ini": [
+    "services/fxaccounts/tests/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "services/settings/test/unit/xpcshell.ini": [
+    "services/settings/test/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-android-em-7.0-x86_64/debug-geckoview-*",
       "test-windows7-32/debug-*"
     ],
-    "startupcache/test/browser/browser.ini": [
+    "startupcache/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
     "testing/crashtest/sanity/crashtests.list": ["test-linux1804-64/opt-*"],
-    "testing/mochitest/chrome/chrome.ini": [
+    "testing/mochitest/chrome/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "testing/mochitest/tests/Harness_sanity/mochitest.ini": [
+    "testing/mochitest/tests/Harness_sanity/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "testing/mochitest/tests/browser/browser.ini": [
+    "testing/mochitest/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
@@ -1455,34 +1463,34 @@
     "testing/web-platform/tests/websockets": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/worklets": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/xhr": ["test-linux1804-64-qr/opt-*"],
-    "toolkit/components/aboutprocesses/tests/browser/browser.ini": [
+    "toolkit/components/aboutprocesses/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/antitracking/test/browser/browser.ini": [
+    "toolkit/components/antitracking/test/browser/browser.toml": [
       "test-macosx1014-64/opt-*",
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*"
     ],
-    "toolkit/components/antitracking/test/xpcshell/xpcshell.ini": [
+    "toolkit/components/antitracking/test/xpcshell/xpcshell.toml": [
       "test-linux1804-64/debug-*",
       "test-android-em-7.0-x86_64/debug-geckoview-*",
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/components/crashmonitor/test/unit/xpcshell.ini": [
+    "toolkit/components/crashmonitor/test/unit/xpcshell.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/downloads/test/unit/xpcshell.ini": [
+    "toolkit/components/downloads/test/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "toolkit/components/enterprisepolicies/tests/xpcshell/xpcshell.ini": [
+    "toolkit/components/enterprisepolicies/tests/xpcshell/xpcshell.toml": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "toolkit/components/extensions/test/browser/browser-serviceworker.ini": [
+    "toolkit/components/extensions/test/browser/browser-serviceworker.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/extensions/test/browser/browser.ini": [
+    "toolkit/components/extensions/test/browser/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-windows7-32/opt-*",
       "test-windows11-64-2009-qr/debug-*",
@@ -1490,12 +1498,12 @@
       "test-windows11-64-2009-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/extensions/test/mochitest/chrome.ini": [
+    "toolkit/components/extensions/test/mochitest/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc",
       "test-windows11-64-2009/debug-*-1proc",
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "toolkit/components/extensions/test/mochitest/mochitest-remote.ini": [
+    "toolkit/components/extensions/test/mochitest/mochitest-remote.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
       "test-macosx1014-64/debug-*",
@@ -1510,7 +1518,7 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-asan/opt-*"
     ],
-    "toolkit/components/extensions/test/mochitest/mochitest.ini": [
+    "toolkit/components/extensions/test/mochitest/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
       "test-android-em-7.0-x86_64-qr/debug-geckoview-*",
@@ -1521,20 +1529,20 @@
       "test-macosx1014-64/debug-*",
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
-    "toolkit/components/extensions/test/xpcshell/native_messaging.ini": [
+    "toolkit/components/extensions/test/xpcshell/native_messaging.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/components/extensions/test/xpcshell/xpcshell.ini": [
+    "toolkit/components/extensions/test/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/components/extensions/test/xpcshell/xpcshell-legacy-ep.ini": [
+    "toolkit/components/extensions/test/xpcshell/xpcshell-legacy-ep.toml": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "toolkit/components/extensions/test/xpcshell/xpcshell-remote.ini": [
+    "toolkit/components/extensions/test/xpcshell/xpcshell-remote.toml": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
       "test-macosx1014-64/debug-*",
@@ -1542,36 +1550,36 @@
       "test-linux1804-64-tsan/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/components/httpsonlyerror/tests/browser/browser.ini": [
+    "toolkit/components/httpsonlyerror/tests/browser/browser.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/browser.ini": [
+    "toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/browser.ini": [
+    "toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "toolkit/components/messaging-system/test/unit/xpcshell.ini": [
+    "toolkit/components/messaging-system/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*"
     ],
-    "toolkit/components/normandy/test/browser/browser.ini": [
+    "toolkit/components/normandy/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/normandy/test/unit/xpcshell.ini": [
+    "toolkit/components/normandy/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "toolkit/components/osfile/tests/xpcshell/xpcshell.ini": [
+    "toolkit/components/osfile/tests/xpcshell/xpcshell.toml": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "toolkit/components/passwordmgr/test/browser/browser.ini": [
+    "toolkit/components/passwordmgr/test/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/passwordmgr/test/mochitest/mochitest.ini": [
+    "toolkit/components/passwordmgr/test/mochitest/mochitest.toml": [
       "test-windows11-64-2009/debug-*",
       "test-macosx1014-64/opt-*",
       "test-linux1804-64-qr/opt-*",
@@ -1580,99 +1588,99 @@
       "test-linux1804-64-qr/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/passwordmgr/test/unit/xpcshell.ini": [
+    "toolkit/components/passwordmgr/test/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/pictureinpicture/tests/browser.ini": [
+    "toolkit/components/pictureinpicture/tests/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/places/tests/browser/browser.ini": [
+    "toolkit/components/places/tests/browser/browser.toml": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/places/tests/unifiedcomplete/xpcshell.ini": [
+    "toolkit/components/places/tests/unifiedcomplete/xpcshell.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/printing/tests/browser.ini": [
+    "toolkit/components/printing/tests/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "toolkit/components/prompts/test/chrome.ini": [
+    "toolkit/components/prompts/test/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "toolkit/components/prompts/test/mochitest.ini": [
+    "toolkit/components/prompts/test/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "toolkit/components/remotebrowserutils/tests/browser/browser.ini": [
+    "toolkit/components/remotebrowserutils/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/satchel/test/mochitest.ini": [
+    "toolkit/components/satchel/test/mochitest.toml": [
       "test-macosx1014-64/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/search/tests/xpcshell/xpcshell.ini": [
+    "toolkit/components/search/tests/xpcshell/xpcshell.toml": [
       "test-windows7-32/opt-*",
       "test-linux1804-64-qr/opt-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/components/telemetry/tests/browser/browser.ini": [
+    "toolkit/components/telemetry/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/telemetry/tests/unit/xpcshell.ini": [
+    "toolkit/components/telemetry/tests/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/thumbnails/test/browser.ini": [
+    "toolkit/components/thumbnails/test/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/url-classifier/tests/mochitest/mochitest.ini": [
+    "toolkit/components/url-classifier/tests/mochitest/mochitest.toml": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
       "test-android-em-7.0-x86_64-qr/debug-geckoview-*",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/components/url-classifier/tests/unit/xpcshell.ini": [
+    "toolkit/components/url-classifier/tests/unit/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/components/viewsource/test/browser/browser.ini": [
+    "toolkit/components/viewsource/test/browser/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "toolkit/components/windowwatcher/test/browser.ini": [
+    "toolkit/components/windowwatcher/test/browser.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "toolkit/content/tests/browser/browser.ini": [
+    "toolkit/content/tests/browser/browser.toml": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/content/tests/chrome/chrome.ini": [
+    "toolkit/content/tests/chrome/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc",
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "toolkit/content/tests/mochitest/mochitest.ini": [
+    "toolkit/content/tests/mochitest/mochitest.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
     "toolkit/content/tests/reftests/reftest.list": ["test-linux1804-64/opt-*"],
-    "toolkit/content/tests/widgets/chrome.ini": [
+    "toolkit/content/tests/widgets/chrome.toml": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
-    "toolkit/content/tests/widgets/mochitest.ini": [
+    "toolkit/content/tests/widgets/mochitest.toml": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "toolkit/crashreporter/test/unit/xpcshell.ini": [
+    "toolkit/crashreporter/test/unit/xpcshell.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/modules/tests/xpcshell/xpcshell.ini": [
+    "toolkit/modules/tests/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/debug-*",
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*",
@@ -1683,65 +1691,65 @@
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/mozapps/extensions/test/browser/browser.ini": [
+    "toolkit/mozapps/extensions/test/browser/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/xpcshell.ini": [
+    "toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/mozapps/extensions/test/xpcshell/xpcshell-unpack.ini": [
+    "toolkit/mozapps/extensions/test/xpcshell/xpcshell-unpack.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/mozapps/extensions/test/xpcshell/xpcshell.ini": [
+    "toolkit/mozapps/extensions/test/xpcshell/xpcshell.toml": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*",
       "test-windows7-32/debug-*"
     ],
-    "toolkit/mozapps/extensions/test/xpinstall/browser.ini": [
+    "toolkit/mozapps/extensions/test/xpinstall/browser.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64/debug-*"
     ],
-    "toolkit/mozapps/update/tests/browser/browser.ini": [
+    "toolkit/mozapps/update/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "toolkit/mozapps/update/tests/browser/browser.legacy.ini": [
+    "toolkit/mozapps/update/tests/browser/browser.legacy.toml": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "toolkit/xre/test/xpcshell.ini": [
+    "toolkit/xre/test/xpcshell.toml": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "tools/profiler/tests/browser/browser.ini": [
+    "tools/profiler/tests/browser/browser.toml": [
       "test-windows11-64-2009/opt-*"
     ],
-    "tools/profiler/tests/xpcshell/xpcshell.ini": [
+    "tools/profiler/tests/xpcshell/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
     ],
-    "uriloader/exthandler/tests/mochitest/browser.ini": [
+    "uriloader/exthandler/tests/mochitest/browser.toml": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "uriloader/exthandler/tests/mochitest/mochitest.ini": [
+    "uriloader/exthandler/tests/mochitest/mochitest.toml": [
       "test-linux1804-64/opt-*"
     ],
-    "uriloader/exthandler/tests/unit/xpcshell.ini": [
+    "uriloader/exthandler/tests/unit/xpcshell.toml": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
     "widget/reftests/reftest.list": ["test-linux1804-64-qr/opt-*"],
-    "widget/tests/chrome.ini": [
+    "widget/tests/chrome.toml": [
       "test-windows7-32/opt-*-1proc",
       "test-linux1804-64-qr/opt-*-1proc"
     ],
-    "widget/tests/mochitest.ini": [
+    "widget/tests/mochitest.toml": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "xpcom/tests/unit/xpcshell.ini": ["test-windows11-64-2009/opt-*"]
+    "xpcom/tests/unit/xpcshell.toml": ["test-windows11-64-2009/opt-*"]
   },
   "groups": {
     "/IndexedDB/key-generators": 0.61,
@@ -1888,235 +1896,235 @@
     "/websockets": 0.68,
     "/worklets": 0.65,
     "/xhr": 0.78,
-    "accessible/tests/browser/events/browser.ini": 0.77,
-    "accessible/tests/browser/fission/browser.ini": 0.76,
-    "accessible/tests/browser/mac/browser.ini": 0.74,
-    "accessible/tests/browser/scroll/browser.ini": 0.52,
-    "accessible/tests/browser/states/browser.ini": 0.78,
-    "accessible/tests/browser/telemetry/browser.ini": 0.77,
-    "accessible/tests/mochitest/a11y.ini": 0.59,
-    "accessible/tests/mochitest/actions/a11y.ini": 0.51,
-    "accessible/tests/mochitest/tree/a11y.ini": 0.86,
-    "browser/base/content/test/about/browser.ini": 0.85,
-    "browser/base/content/test/alerts/browser.ini": 0.63,
-    "browser/base/content/test/captivePortal/browser.ini": 0.53,
-    "browser/base/content/test/contextMenu/browser.ini": 0.52,
-    "browser/base/content/test/favicons/browser.ini": 0.66,
-    "browser/base/content/test/forms/browser.ini": 0.64,
-    "browser/base/content/test/fullscreen/browser.ini": 0.82,
-    "browser/base/content/test/general/browser.ini": 0.99,
-    "browser/base/content/test/keyboard/browser.ini": 0.74,
-    "browser/base/content/test/pageActions/browser.ini": 0.79,
-    "browser/base/content/test/pageinfo/browser.ini": 0.72,
-    "browser/base/content/test/performance/browser.ini": 0.98,
-    "browser/base/content/test/performance/hidpi/browser.ini": 0.68,
-    "browser/base/content/test/performance/io/browser.ini": 0.67,
-    "browser/base/content/test/performance/lowdpi/browser.ini": 0.68,
-    "browser/base/content/test/popupNotifications/browser.ini": 0.85,
-    "browser/base/content/test/popups/browser.ini": 0.66,
-    "browser/base/content/test/protectionsUI/browser.ini": 0.76,
-    "browser/base/content/test/referrer/browser.ini": 0.77,
-    "browser/base/content/test/sanitize/browser.ini": 0.7,
-    "browser/base/content/test/siteIdentity/browser.ini": 0.95,
-    "browser/base/content/test/static/browser.ini": 0.8,
-    "browser/base/content/test/tabPrompts/browser.ini": 0.73,
-    "browser/base/content/test/tabcrashed/browser.ini": 0.6,
-    "browser/base/content/test/tabs/browser.ini": 0.81,
-    "browser/base/content/test/webextensions/browser.ini": 0.88,
-    "browser/base/content/test/zoom/browser.ini": 0.7,
-    "browser/components/aboutlogins/tests/browser/browser.ini": 0.75,
-    "browser/components/aboutlogins/tests/chrome/chrome.ini": 0.78,
-    "browser/components/aboutlogins/tests/unit/xpcshell.ini": 0.86,
-    "browser/components/contextualidentity/test/browser/browser.ini": 0.52,
-    "browser/components/customizableui/test/browser.ini": 0.97,
-    "browser/components/doh/test/browser/browser.ini": 0.65,
-    "browser/components/downloads/test/browser/browser.ini": 0.68,
-    "browser/components/downloads/test/unit/xpcshell.ini": 0.7,
-    "browser/components/enterprisepolicies/tests/browser/browser.ini": 0.85,
-    "browser/components/enterprisepolicies/tests/browser/disable_app_update/browser.ini": 0.65,
-    "browser/components/enterprisepolicies/tests/xpcshell/xpcshell.ini": 0.51,
-    "browser/components/extensions/test/browser/browser-private.ini": 0.88,
-    "browser/components/extensions/test/browser/browser.ini": 0.99,
-    "browser/components/extensions/test/mochitest/mochitest.ini": 0.72,
-    "browser/components/migration/tests/unit/xpcshell.ini": 0.93,
-    "browser/components/newtab/test/browser/abouthomecache/browser.ini": 0.96,
-    "browser/components/newtab/test/browser/browser.ini": 0.77,
-    "browser/components/newtab/test/xpcshell/xpcshell.ini": 0.69,
-    "browser/components/originattributes/test/browser/browser.ini": 0.76,
-    "browser/components/pioneer/test/browser/browser.ini": 0.63,
-    "browser/components/places/tests/browser/browser.ini": 0.93,
-    "browser/components/places/tests/unit/xpcshell.ini": 0.67,
-    "browser/components/preferences/tests/browser.ini": 0.97,
-    "browser/components/preferences/tests/siteData/browser.ini": 0.96,
-    "browser/components/protections/test/browser/browser.ini": 0.94,
-    "browser/components/resistfingerprinting/test/browser/browser.ini": 0.92,
-    "browser/components/resistfingerprinting/test/mochitest/mochitest.ini": 0.64,
-    "browser/components/safebrowsing/content/test/browser.ini": 0.65,
-    "browser/components/search/test/browser/browser.ini": 0.96,
-    "browser/components/search/test/browser/google_codes/browser.ini": 0.67,
-    "browser/components/search/test/unit/xpcshell.ini": 0.59,
-    "browser/components/sessionstore/test/browser.ini": 0.92,
-    "browser/components/sessionstore/test/unit/xpcshell.ini": 0.86,
-    "browser/components/shell/test/browser.ini": 0.95,
-    "browser/components/shell/test/chrome.ini": 0.79,
-    "browser/components/ssb/tests/browser/browser.ini": 0.81,
-    "browser/components/tests/browser/browser.ini": 0.67,
-    "browser/components/tests/browser/whats_new_page/browser.ini": 0.56,
-    "browser/components/tests/unit/xpcshell.ini": 0.82,
-    "browser/components/touchbar/tests/browser/browser.ini": 0.66,
-    "browser/components/translation/test/browser.ini": 0.89,
-    "browser/components/uitour/test/browser.ini": 0.91,
-    "browser/components/urlbar/tests/browser-tips/browser.ini": 0.82,
-    "browser/components/urlbar/tests/browser/browser.ini": 0.99,
-    "browser/components/urlbar/tests/unit/xpcshell.ini": 0.51,
-    "browser/extensions/formautofill/test/browser/browser.ini": 0.59,
-    "browser/extensions/formautofill/test/browser/creditCard/browser.ini": 0.97,
-    "browser/extensions/formautofill/test/mochitest/creditCard/mochitest.ini": 0.62,
-    "browser/extensions/formautofill/test/mochitest/mochitest.ini": 0.77,
-    "browser/extensions/formautofill/test/unit/xpcshell.ini": 0.78,
-    "browser/extensions/report-site-issue/test/browser/browser.ini": 0.53,
-    "browser/modules/test/browser/browser.ini": 0.99,
-    "browser/modules/test/unit/xpcshell.ini": 0.75,
-    "browser/tools/mozscreenshots/controlCenter/browser.ini": 0.69,
-    "browser/tools/mozscreenshots/permissionPrompts/browser.ini": 0.98,
-    "caps/tests/mochitest/chrome.ini": 0.57,
-    "devtools/client/aboutdebugging/test/browser/browser.ini": 0.69,
-    "devtools/client/application/test/browser/browser.ini": 0.94,
-    "devtools/client/debugger/test/mochitest/browser.ini": 0.65,
-    "devtools/client/framework/test/browser-enable-popup-devtools-user.ini": 0.56,
-    "devtools/client/framework/test/browser-enable-popup-new-user.ini": 0.56,
-    "devtools/client/framework/test/browser.ini": 0.91,
-    "devtools/client/framework/test/metrics/browser_metrics_debugger.ini": 0.63,
-    "devtools/client/inspector/computed/test/browser.ini": 0.8,
-    "devtools/client/inspector/grids/test/browser.ini": 0.57,
-    "devtools/client/inspector/markup/test/browser.ini": 0.91,
-    "devtools/client/inspector/rules/test/browser_part1.ini": 0.86,
-    "devtools/client/inspector/rules/test/browser_part2.ini": 0.59,
-    "devtools/client/inspector/shared/test/browser.ini": 0.63,
-    "devtools/client/inspector/test/browser.ini": 0.68,
-    "devtools/client/jsonview/test/browser.ini": 0.62,
-    "devtools/client/netmonitor/src/har/test/browser.ini": 0.76,
-    "devtools/client/netmonitor/test/browser.ini": 0.91,
-    "devtools/client/responsive/test/browser/browser.ini": 0.71,
-    "devtools/client/responsive/test/xpcshell/xpcshell.ini": 0.55,
-    "devtools/client/shared/sourceeditor/test/browser.ini": 0.71,
-    "devtools/client/shared/test/browser.ini": 0.94,
-    "devtools/client/storage/test/browser.ini": 0.66,
-    "devtools/client/styleeditor/test/browser.ini": 0.91,
-    "devtools/client/webconsole/test/browser/_browser_console.ini": 0.88,
-    "devtools/client/webconsole/test/browser/_jsterm.ini": 0.71,
-    "devtools/client/webconsole/test/browser/_webconsole.ini": 0.89,
-    "devtools/server/tests/chrome/chrome.ini": 0.77,
-    "devtools/server/tests/xpcshell/xpcshell.ini": 0.85,
-    "devtools/shared/resources/tests/browser.ini": 0.9,
-    "devtools/shared/test-helpers/browser.ini": 0.55,
-    "devtools/shared/tests/xpcshell/xpcshell.ini": 0.7,
-    "devtools/shared/webconsole/test/chrome/chrome.ini": 0.65,
-    "docshell/test/browser/browser.ini": 0.96,
-    "docshell/test/mochitest/mochitest.ini": 0.85,
-    "docshell/test/navigation/browser.ini": 0.68,
-    "docshell/test/navigation/mochitest.ini": 0.8,
-    "docshell/test/unit/xpcshell.ini": 0.52,
-    "dom/abort/tests/mochitest.ini": 0.69,
-    "dom/animation/test/mochitest.ini": 0.69,
-    "dom/base/test/chrome.ini": 0.57,
-    "dom/base/test/chrome/chrome.ini": 0.88,
-    "dom/base/test/mochitest.ini": 0.91,
-    "dom/broadcastchannel/tests/browser.ini": 0.69,
-    "dom/canvas/test/webgl-conf/generated-mochitest.ini": 0.6,
-    "dom/canvas/test/webgl-mochitest/mochitest.ini": 0.67,
-    "dom/console/tests/mochitest.ini": 0.62,
-    "dom/credentialmanagement/tests/browser/browser.ini": 0.6,
-    "dom/file/ipc/tests/mochitest.ini": 0.67,
-    "dom/file/tests/xpcshell.ini": 0.67,
-    "dom/filesystem/tests/mochitest.ini": 0.8,
+    "accessible/tests/browser/events/browser.toml": 0.77,
+    "accessible/tests/browser/fission/browser.toml": 0.76,
+    "accessible/tests/browser/mac/browser.toml": 0.74,
+    "accessible/tests/browser/scroll/browser.toml": 0.52,
+    "accessible/tests/browser/states/browser.toml": 0.78,
+    "accessible/tests/browser/telemetry/browser.toml": 0.77,
+    "accessible/tests/mochitest/a11y.toml": 0.59,
+    "accessible/tests/mochitest/actions/a11y.toml": 0.51,
+    "accessible/tests/mochitest/tree/a11y.toml": 0.86,
+    "browser/base/content/test/about/browser.toml": 0.85,
+    "browser/base/content/test/alerts/browser.toml": 0.63,
+    "browser/base/content/test/captivePortal/browser.toml": 0.53,
+    "browser/base/content/test/contextMenu/browser.toml": 0.52,
+    "browser/base/content/test/favicons/browser.toml": 0.66,
+    "browser/base/content/test/forms/browser.toml": 0.64,
+    "browser/base/content/test/fullscreen/browser.toml": 0.82,
+    "browser/base/content/test/general/browser.toml": 0.99,
+    "browser/base/content/test/keyboard/browser.toml": 0.74,
+    "browser/base/content/test/pageActions/browser.toml": 0.79,
+    "browser/base/content/test/pageinfo/browser.toml": 0.72,
+    "browser/base/content/test/performance/browser.toml": 0.98,
+    "browser/base/content/test/performance/hidpi/browser.toml": 0.68,
+    "browser/base/content/test/performance/io/browser.toml": 0.67,
+    "browser/base/content/test/performance/lowdpi/browser.toml": 0.68,
+    "browser/base/content/test/popupNotifications/browser.toml": 0.85,
+    "browser/base/content/test/popups/browser.toml": 0.66,
+    "browser/base/content/test/protectionsUI/browser.toml": 0.76,
+    "browser/base/content/test/referrer/browser.toml": 0.77,
+    "browser/base/content/test/sanitize/browser.toml": 0.7,
+    "browser/base/content/test/siteIdentity/browser.toml": 0.95,
+    "browser/base/content/test/static/browser.toml": 0.8,
+    "browser/base/content/test/tabPrompts/browser.toml": 0.73,
+    "browser/base/content/test/tabcrashed/browser.toml": 0.6,
+    "browser/base/content/test/tabs/browser.toml": 0.81,
+    "browser/base/content/test/webextensions/browser.toml": 0.88,
+    "browser/base/content/test/zoom/browser.toml": 0.7,
+    "browser/components/aboutlogins/tests/browser/browser.toml": 0.75,
+    "browser/components/aboutlogins/tests/chrome/chrome.toml": 0.78,
+    "browser/components/aboutlogins/tests/unit/xpcshell.toml": 0.86,
+    "browser/components/contextualidentity/test/browser/browser.toml": 0.52,
+    "browser/components/customizableui/test/browser.toml": 0.97,
+    "browser/components/doh/test/browser/browser.toml": 0.65,
+    "browser/components/downloads/test/browser/browser.toml": 0.68,
+    "browser/components/downloads/test/unit/xpcshell.toml": 0.7,
+    "browser/components/enterprisepolicies/tests/browser/browser.toml": 0.85,
+    "browser/components/enterprisepolicies/tests/browser/disable_app_update/browser.toml": 0.65,
+    "browser/components/enterprisepolicies/tests/xpcshell/xpcshell.toml": 0.51,
+    "browser/components/extensions/test/browser/browser-private.toml": 0.88,
+    "browser/components/extensions/test/browser/browser.toml": 0.99,
+    "browser/components/extensions/test/mochitest/mochitest.toml": 0.72,
+    "browser/components/migration/tests/unit/xpcshell.toml": 0.93,
+    "browser/components/newtab/test/browser/abouthomecache/browser.toml": 0.96,
+    "browser/components/newtab/test/browser/browser.toml": 0.77,
+    "browser/components/newtab/test/xpcshell/xpcshell.toml": 0.69,
+    "browser/components/originattributes/test/browser/browser.toml": 0.76,
+    "browser/components/pioneer/test/browser/browser.toml": 0.63,
+    "browser/components/places/tests/browser/browser.toml": 0.93,
+    "browser/components/places/tests/unit/xpcshell.toml": 0.67,
+    "browser/components/preferences/tests/browser.toml": 0.97,
+    "browser/components/preferences/tests/siteData/browser.toml": 0.96,
+    "browser/components/protections/test/browser/browser.toml": 0.94,
+    "browser/components/resistfingerprinting/test/browser/browser.toml": 0.92,
+    "browser/components/resistfingerprinting/test/mochitest/mochitest.toml": 0.64,
+    "browser/components/safebrowsing/content/test/browser.toml": 0.65,
+    "browser/components/search/test/browser/browser.toml": 0.96,
+    "browser/components/search/test/browser/google_codes/browser.toml": 0.67,
+    "browser/components/search/test/unit/xpcshell.toml": 0.59,
+    "browser/components/sessionstore/test/browser.toml": 0.92,
+    "browser/components/sessionstore/test/unit/xpcshell.toml": 0.86,
+    "browser/components/shell/test/browser.toml": 0.95,
+    "browser/components/shell/test/chrome.toml": 0.79,
+    "browser/components/ssb/tests/browser/browser.toml": 0.81,
+    "browser/components/tests/browser/browser.toml": 0.67,
+    "browser/components/tests/browser/whats_new_page/browser.toml": 0.56,
+    "browser/components/tests/unit/xpcshell.toml": 0.82,
+    "browser/components/touchbar/tests/browser/browser.toml": 0.66,
+    "browser/components/translation/test/browser.toml": 0.89,
+    "browser/components/uitour/test/browser.toml": 0.91,
+    "browser/components/urlbar/tests/browser-tips/browser.toml": 0.82,
+    "browser/components/urlbar/tests/browser/browser.toml": 0.99,
+    "browser/components/urlbar/tests/unit/xpcshell.toml": 0.51,
+    "browser/extensions/formautofill/test/browser/browser.toml": 0.59,
+    "browser/extensions/formautofill/test/browser/creditCard/browser.toml": 0.97,
+    "browser/extensions/formautofill/test/mochitest/creditCard/mochitest.toml": 0.62,
+    "browser/extensions/formautofill/test/mochitest/mochitest.toml": 0.77,
+    "browser/extensions/formautofill/test/unit/xpcshell.toml": 0.78,
+    "browser/extensions/report-site-issue/test/browser/browser.toml": 0.53,
+    "browser/modules/test/browser/browser.toml": 0.99,
+    "browser/modules/test/unit/xpcshell.toml": 0.75,
+    "browser/tools/mozscreenshots/controlCenter/browser.toml": 0.69,
+    "browser/tools/mozscreenshots/permissionPrompts/browser.toml": 0.98,
+    "caps/tests/mochitest/chrome.toml": 0.57,
+    "devtools/client/aboutdebugging/test/browser/browser.toml": 0.69,
+    "devtools/client/application/test/browser/browser.toml": 0.94,
+    "devtools/client/debugger/test/mochitest/browser.toml": 0.65,
+    "devtools/client/framework/test/browser-enable-popup-devtools-user.toml": 0.56,
+    "devtools/client/framework/test/browser-enable-popup-new-user.toml": 0.56,
+    "devtools/client/framework/test/browser.toml": 0.91,
+    "devtools/client/framework/test/metrics/browser_metrics_debugger.toml": 0.63,
+    "devtools/client/inspector/computed/test/browser.toml": 0.8,
+    "devtools/client/inspector/grids/test/browser.toml": 0.57,
+    "devtools/client/inspector/markup/test/browser.toml": 0.91,
+    "devtools/client/inspector/rules/test/browser_part1.toml": 0.86,
+    "devtools/client/inspector/rules/test/browser_part2.toml": 0.59,
+    "devtools/client/inspector/shared/test/browser.toml": 0.63,
+    "devtools/client/inspector/test/browser.toml": 0.68,
+    "devtools/client/jsonview/test/browser.toml": 0.62,
+    "devtools/client/netmonitor/src/har/test/browser.toml": 0.76,
+    "devtools/client/netmonitor/test/browser.toml": 0.91,
+    "devtools/client/responsive/test/browser/browser.toml": 0.71,
+    "devtools/client/responsive/test/xpcshell/xpcshell.toml": 0.55,
+    "devtools/client/shared/sourceeditor/test/browser.toml": 0.71,
+    "devtools/client/shared/test/browser.toml": 0.94,
+    "devtools/client/storage/test/browser.toml": 0.66,
+    "devtools/client/styleeditor/test/browser.toml": 0.91,
+    "devtools/client/webconsole/test/browser/_browser_console.toml": 0.88,
+    "devtools/client/webconsole/test/browser/_jsterm.toml": 0.71,
+    "devtools/client/webconsole/test/browser/_webconsole.toml": 0.89,
+    "devtools/server/tests/chrome/chrome.toml": 0.77,
+    "devtools/server/tests/xpcshell/xpcshell.toml": 0.85,
+    "devtools/shared/resources/tests/browser.toml": 0.9,
+    "devtools/shared/test-helpers/browser.toml": 0.55,
+    "devtools/shared/tests/xpcshell/xpcshell.toml": 0.7,
+    "devtools/shared/webconsole/test/chrome/chrome.toml": 0.65,
+    "docshell/test/browser/browser.toml": 0.96,
+    "docshell/test/mochitest/mochitest.toml": 0.85,
+    "docshell/test/navigation/browser.toml": 0.68,
+    "docshell/test/navigation/mochitest.toml": 0.8,
+    "docshell/test/unit/xpcshell.toml": 0.52,
+    "dom/abort/tests/mochitest.toml": 0.69,
+    "dom/animation/test/mochitest.toml": 0.69,
+    "dom/base/test/chrome.toml": 0.57,
+    "dom/base/test/chrome/chrome.toml": 0.88,
+    "dom/base/test/mochitest.toml": 0.91,
+    "dom/broadcastchannel/tests/browser.toml": 0.69,
+    "dom/canvas/test/webgl-conf/generated-mochitest.toml": 0.6,
+    "dom/canvas/test/webgl-mochitest/mochitest.toml": 0.67,
+    "dom/console/tests/mochitest.toml": 0.62,
+    "dom/credentialmanagement/tests/browser/browser.toml": 0.6,
+    "dom/file/ipc/tests/mochitest.toml": 0.67,
+    "dom/file/tests/xpcshell.toml": 0.67,
+    "dom/filesystem/tests/mochitest.toml": 0.8,
     "dom/html/reftests/autofocus/reftest.list": 0.68,
-    "dom/html/test/browser.ini": 0.77,
-    "dom/html/test/forms/mochitest.ini": 0.75,
-    "dom/html/test/mochitest.ini": 0.56,
-    "dom/indexedDB/test/mochitest.ini": 0.53,
-    "dom/ipc/tests/JSProcessActor/browser.ini": 0.71,
-    "dom/ipc/tests/JSWindowActor/browser.ini": 0.75,
-    "dom/ipc/tests/browser.ini": 0.58,
-    "dom/ipc/tests/chrome.ini": 0.63,
-    "dom/ipc/tests/xpcshell.ini": 0.89,
-    "dom/l10n/tests/mochitest/browser.ini": 0.64,
-    "dom/l10n/tests/mochitest/chrome.ini": 0.55,
-    "dom/localstorage/test/unit/xpcshell.ini": 0.54,
-    "dom/media/mediacontrol/tests/browser.ini": 0.79,
-    "dom/media/mediasource/test/mochitest.ini": 0.82,
+    "dom/html/test/browser.toml": 0.77,
+    "dom/html/test/forms/mochitest.toml": 0.75,
+    "dom/html/test/mochitest.toml": 0.56,
+    "dom/indexedDB/test/mochitest.toml": 0.53,
+    "dom/ipc/tests/JSProcessActor/browser.toml": 0.71,
+    "dom/ipc/tests/JSWindowActor/browser.toml": 0.75,
+    "dom/ipc/tests/browser.toml": 0.58,
+    "dom/ipc/tests/chrome.toml": 0.63,
+    "dom/ipc/tests/xpcshell.toml": 0.89,
+    "dom/l10n/tests/mochitest/browser.toml": 0.64,
+    "dom/l10n/tests/mochitest/chrome.toml": 0.55,
+    "dom/localstorage/test/unit/xpcshell.toml": 0.54,
+    "dom/media/mediacontrol/tests/browser.toml": 0.79,
+    "dom/media/mediasource/test/mochitest.toml": 0.82,
     "dom/media/test/crashtests/crashtests.list": 0.57,
-    "dom/media/test/mochitest.ini": 0.95,
-    "dom/media/webaudio/test/mochitest.ini": 0.61,
-    "dom/media/webrtc/tests/mochitests/mochitest.ini": 0.98,
-    "dom/media/webvtt/tests/xpcshell.ini": 0.8,
-    "dom/network/tests/chrome.ini": 0.57,
-    "dom/performance/tests/mochitest.ini": 0.67,
-    "dom/permission/tests/mochitest.ini": 0.75,
-    "dom/presentation/tests/mochitest/chrome.ini": 0.55,
-    "dom/presentation/tests/mochitest/mochitest.ini": 0.69,
-    "dom/presentation/tests/xpcshell/xpcshell.ini": 0.8,
-    "dom/promise/tests/mochitest.ini": 0.55,
-    "dom/push/test/mochitest.ini": 0.63,
-    "dom/push/test/xpcshell/xpcshell.ini": 0.53,
-    "dom/reporting/tests/browser.ini": 0.68,
-    "dom/security/test/csp/mochitest.ini": 0.67,
-    "dom/security/test/general/browser.ini": 0.59,
-    "dom/security/test/general/mochitest.ini": 0.6,
-    "dom/security/test/https-only/browser.ini": 0.94,
-    "dom/security/test/mixedcontentblocker/browser.ini": 0.52,
-    "dom/security/test/unit/xpcshell.ini": 0.69,
-    "dom/serviceworkers/test/browser.ini": 0.86,
-    "dom/serviceworkers/test/mochitest.ini": 0.51,
-    "dom/system/tests/mochitest.ini": 0.56,
-    "dom/tests/browser/browser.ini": 0.89,
-    "dom/tests/mochitest/ajax/scriptaculous/mochitest.ini": 0.55,
-    "dom/tests/mochitest/beacon/mochitest.ini": 0.67,
-    "dom/tests/mochitest/bugs/mochitest.ini": 0.96,
-    "dom/tests/mochitest/chrome/chrome.ini": 0.58,
-    "dom/tests/mochitest/dom-level0/mochitest.ini": 0.66,
-    "dom/tests/mochitest/dom-level1-core/mochitest.ini": 0.56,
-    "dom/tests/mochitest/fetch/mochitest.ini": 0.81,
-    "dom/tests/mochitest/gamepad/mochitest.ini": 0.56,
-    "dom/tests/mochitest/general/mochitest.ini": 0.9,
-    "dom/tests/mochitest/geolocation/chrome.ini": 0.57,
-    "dom/tests/mochitest/pointerlock/mochitest.ini": 0.72,
-    "dom/tests/mochitest/sessionstorage/chrome.ini": 0.69,
-    "dom/tests/mochitest/webcomponents/mochitest.ini": 0.63,
-    "dom/tests/mochitest/whatwg/mochitest.ini": 0.7,
-    "dom/url/tests/browser.ini": 0.75,
-    "dom/webauthn/tests/mochitest.ini": 0.6,
-    "dom/webgpu/mochitest/mochitest.ini": 0.5,
-    "dom/websocket/tests/chrome.ini": 0.55,
-    "dom/websocket/tests/mochitest.ini": 0.65,
-    "dom/websocket/tests/websocket_hybi/mochitest.ini": 0.57,
-    "dom/workers/test/browser.ini": 0.51,
-    "dom/workers/test/mochitest.ini": 0.72,
-    "dom/worklet/tests/mochitest.ini": 0.53,
-    "dom/xhr/tests/mochitest.ini": 0.63,
-    "dom/xslt/tests/mochitest/mochitest.ini": 0.57,
-    "editor/libeditor/tests/chrome.ini": 0.57,
-    "editor/libeditor/tests/mochitest.ini": 0.76,
+    "dom/media/test/mochitest.toml": 0.95,
+    "dom/media/webaudio/test/mochitest.toml": 0.61,
+    "dom/media/webrtc/tests/mochitests/mochitest.toml": 0.98,
+    "dom/media/webvtt/tests/xpcshell.toml": 0.8,
+    "dom/network/tests/chrome.toml": 0.57,
+    "dom/performance/tests/mochitest.toml": 0.67,
+    "dom/permission/tests/mochitest.toml": 0.75,
+    "dom/presentation/tests/mochitest/chrome.toml": 0.55,
+    "dom/presentation/tests/mochitest/mochitest.toml": 0.69,
+    "dom/presentation/tests/xpcshell/xpcshell.toml": 0.8,
+    "dom/promise/tests/mochitest.toml": 0.55,
+    "dom/push/test/mochitest.toml": 0.63,
+    "dom/push/test/xpcshell/xpcshell.toml": 0.53,
+    "dom/reporting/tests/browser.toml": 0.68,
+    "dom/security/test/csp/mochitest.toml": 0.67,
+    "dom/security/test/general/browser.toml": 0.59,
+    "dom/security/test/general/mochitest.toml": 0.6,
+    "dom/security/test/https-only/browser.toml": 0.94,
+    "dom/security/test/mixedcontentblocker/browser.toml": 0.52,
+    "dom/security/test/unit/xpcshell.toml": 0.69,
+    "dom/serviceworkers/test/browser.toml": 0.86,
+    "dom/serviceworkers/test/mochitest.toml": 0.51,
+    "dom/system/tests/mochitest.toml": 0.56,
+    "dom/tests/browser/browser.toml": 0.89,
+    "dom/tests/mochitest/ajax/scriptaculous/mochitest.toml": 0.55,
+    "dom/tests/mochitest/beacon/mochitest.toml": 0.67,
+    "dom/tests/mochitest/bugs/mochitest.toml": 0.96,
+    "dom/tests/mochitest/chrome/chrome.toml": 0.58,
+    "dom/tests/mochitest/dom-level0/mochitest.toml": 0.66,
+    "dom/tests/mochitest/dom-level1-core/mochitest.toml": 0.56,
+    "dom/tests/mochitest/fetch/mochitest.toml": 0.81,
+    "dom/tests/mochitest/gamepad/mochitest.toml": 0.56,
+    "dom/tests/mochitest/general/mochitest.toml": 0.9,
+    "dom/tests/mochitest/geolocation/chrome.toml": 0.57,
+    "dom/tests/mochitest/pointerlock/mochitest.toml": 0.72,
+    "dom/tests/mochitest/sessionstorage/chrome.toml": 0.69,
+    "dom/tests/mochitest/webcomponents/mochitest.toml": 0.63,
+    "dom/tests/mochitest/whatwg/mochitest.toml": 0.7,
+    "dom/url/tests/browser.toml": 0.75,
+    "dom/webauthn/tests/mochitest.toml": 0.6,
+    "dom/webgpu/mochitest/mochitest.toml": 0.5,
+    "dom/websocket/tests/chrome.toml": 0.55,
+    "dom/websocket/tests/mochitest.toml": 0.65,
+    "dom/websocket/tests/websocket_hybi/mochitest.toml": 0.57,
+    "dom/workers/test/browser.toml": 0.51,
+    "dom/workers/test/mochitest.toml": 0.72,
+    "dom/worklet/tests/mochitest.toml": 0.53,
+    "dom/xhr/tests/mochitest.toml": 0.63,
+    "dom/xslt/tests/mochitest/mochitest.toml": 0.57,
+    "editor/libeditor/tests/chrome.toml": 0.57,
+    "editor/libeditor/tests/mochitest.toml": 0.76,
     "editor/reftests/xul/reftest.list": 0.55,
-    "editor/spellchecker/tests/mochitest.ini": 0.62,
-    "extensions/permissions/test/unit/xpcshell.ini": 0.71,
-    "extensions/spellcheck/tests/chrome/chrome.ini": 0.57,
-    "extensions/spellcheck/tests/mochitest/mochitest.ini": 0.57,
-    "extensions/universalchardet/tests/chrome.ini": 0.57,
-    "gfx/layers/apz/test/mochitest/mochitest.ini": 0.65,
+    "editor/spellchecker/tests/mochitest.toml": 0.62,
+    "extensions/permissions/test/unit/xpcshell.toml": 0.71,
+    "extensions/spellcheck/tests/chrome/chrome.toml": 0.57,
+    "extensions/spellcheck/tests/mochitest/mochitest.toml": 0.57,
+    "extensions/universalchardet/tests/chrome.toml": 0.57,
+    "gfx/layers/apz/test/mochitest/mochitest.toml": 0.65,
     "gfx/tests/crashtests/crashtests.list": 0.65,
-    "image/test/mochitest/mochitest.ini": 0.89,
-    "image/test/unit/xpcshell.ini": 0.68,
-    "intl/uconv/tests/mochitest.ini": 0.51,
-    "js/xpconnect/tests/chrome/chrome.ini": 0.62,
-    "js/xpconnect/tests/unit/xpcshell.ini": 0.95,
-    "layout/base/tests/browser.ini": 0.54,
-    "layout/base/tests/mochitest.ini": 0.91,
-    "layout/forms/test/mochitest.ini": 0.81,
-    "layout/generic/test/mochitest.ini": 0.83,
-    "layout/inspector/tests/chrome/chrome.ini": 0.52,
-    "layout/inspector/tests/mochitest.ini": 0.63,
-    "layout/mathml/tests/mochitest.ini": 0.51,
+    "image/test/mochitest/mochitest.toml": 0.89,
+    "image/test/unit/xpcshell.toml": 0.68,
+    "intl/uconv/tests/mochitest.toml": 0.51,
+    "js/xpconnect/tests/chrome/chrome.toml": 0.62,
+    "js/xpconnect/tests/unit/xpcshell.toml": 0.95,
+    "layout/base/tests/browser.toml": 0.54,
+    "layout/base/tests/mochitest.toml": 0.91,
+    "layout/forms/test/mochitest.toml": 0.81,
+    "layout/generic/test/mochitest.toml": 0.83,
+    "layout/inspector/tests/chrome/chrome.toml": 0.52,
+    "layout/inspector/tests/mochitest.toml": 0.63,
+    "layout/mathml/tests/mochitest.toml": 0.51,
     "layout/reftests/async-scrolling/reftest.list": 0.62,
     "layout/reftests/border-image/reftest.list": 0.71,
     "layout/reftests/box-shadow/reftest.list": 0.59,
@@ -2180,98 +2188,98 @@
     "layout/reftests/web-animations/reftest.list": 0.63,
     "layout/reftests/writing-mode/reftest.list": 0.55,
     "layout/style/crashtests/crashtests.list": 0.62,
-    "layout/style/test/mochitest.ini": 0.87,
-    "layout/svg/tests/mochitest.ini": 0.62,
-    "layout/xul/test/browser.ini": 0.51,
-    "layout/xul/test/chrome.ini": 0.5,
-    "mobile/android/components/extensions/test/mochitest/mochitest.ini": 0.57,
-    "modules/libpref/test/unit/xpcshell.ini": 0.52,
-    "netwerk/test/browser/browser.ini": 0.71,
-    "netwerk/test/httpserver/test/xpcshell.ini": 0.72,
-    "netwerk/test/mochitests/mochitest.ini": 0.52,
-    "netwerk/test/unit/xpcshell.ini": 0.92,
-    "netwerk/test/unit_ipc/xpcshell.ini": 0.65,
-    "parser/htmlparser/tests/mochitest/browser.ini": 0.57,
-    "parser/htmlparser/tests/mochitest/mochitest.ini": 0.71,
-    "remote/test/browser/page/browser.ini": 0.59,
-    "remote/test/browser/runtime/browser.ini": 0.53,
-    "security/manager/ssl/tests/mochitest/browser/browser.ini": 0.72,
-    "security/manager/ssl/tests/unit/xpcshell-smartcards.ini": 0.51,
-    "security/manager/ssl/tests/unit/xpcshell.ini": 0.64,
-    "services/common/tests/unit/xpcshell.ini": 0.9,
-    "services/fxaccounts/tests/xpcshell/xpcshell.ini": 0.6,
-    "services/settings/test/unit/xpcshell.ini": 0.86,
-    "startupcache/test/browser/browser.ini": 0.58,
+    "layout/style/test/mochitest.toml": 0.87,
+    "layout/svg/tests/mochitest.toml": 0.62,
+    "layout/xul/test/browser.toml": 0.51,
+    "layout/xul/test/chrome.toml": 0.5,
+    "mobile/android/components/extensions/test/mochitest/mochitest.toml": 0.57,
+    "modules/libpref/test/unit/xpcshell.toml": 0.52,
+    "netwerk/test/browser/browser.toml": 0.71,
+    "netwerk/test/httpserver/test/xpcshell.toml": 0.72,
+    "netwerk/test/mochitests/mochitest.toml": 0.52,
+    "netwerk/test/unit/xpcshell.toml": 0.92,
+    "netwerk/test/unit_ipc/xpcshell.toml": 0.65,
+    "parser/htmlparser/tests/mochitest/browser.toml": 0.57,
+    "parser/htmlparser/tests/mochitest/mochitest.toml": 0.71,
+    "remote/test/browser/page/browser.toml": 0.59,
+    "remote/test/browser/runtime/browser.toml": 0.53,
+    "security/manager/ssl/tests/mochitest/browser/browser.toml": 0.72,
+    "security/manager/ssl/tests/unit/xpcshell-smartcards.toml": 0.51,
+    "security/manager/ssl/tests/unit/xpcshell.toml": 0.64,
+    "services/common/tests/unit/xpcshell.toml": 0.9,
+    "services/fxaccounts/tests/xpcshell/xpcshell.toml": 0.6,
+    "services/settings/test/unit/xpcshell.toml": 0.86,
+    "startupcache/test/browser/browser.toml": 0.58,
     "testing/crashtest/sanity/crashtests.list": 0.69,
-    "testing/mochitest/chrome/chrome.ini": 0.57,
-    "testing/mochitest/tests/Harness_sanity/mochitest.ini": 0.77,
-    "testing/mochitest/tests/browser/browser.ini": 0.67,
-    "toolkit/components/aboutprocesses/tests/browser/browser.ini": 0.93,
-    "toolkit/components/antitracking/test/browser/browser.ini": 0.99,
-    "toolkit/components/antitracking/test/xpcshell/xpcshell.ini": 0.51,
-    "toolkit/components/crashmonitor/test/unit/xpcshell.ini": 0.72,
-    "toolkit/components/downloads/test/unit/xpcshell.ini": 0.92,
-    "toolkit/components/enterprisepolicies/tests/xpcshell/xpcshell.ini": 0.56,
-    "toolkit/components/extensions/test/browser/browser-serviceworker.ini": 0.73,
-    "toolkit/components/extensions/test/browser/browser.ini": 0.98,
-    "toolkit/components/extensions/test/mochitest/chrome.ini": 0.59,
-    "toolkit/components/extensions/test/mochitest/mochitest-remote.ini": 0.79,
-    "toolkit/components/extensions/test/mochitest/mochitest.ini": 0.52,
-    "toolkit/components/extensions/test/xpcshell/native_messaging.ini": 0.74,
-    "toolkit/components/extensions/test/xpcshell/xpcshell.ini": 0.79,
-    "toolkit/components/extensions/test/xpcshell/xpcshell-legacy-ep.ini": 0.77,
-    "toolkit/components/extensions/test/xpcshell/xpcshell-remote.ini": 0.68,
-    "toolkit/components/httpsonlyerror/tests/browser/browser.ini": 0.78,
-    "toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/browser.ini": 0.92,
-    "toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/browser.ini": 0.77,
-    "toolkit/components/messaging-system/test/unit/xpcshell.ini": 0.51,
-    "toolkit/components/normandy/test/browser/browser.ini": 0.75,
-    "toolkit/components/normandy/test/unit/xpcshell.ini": 0.5,
-    "toolkit/components/osfile/tests/xpcshell/xpcshell.ini": 0.66,
-    "toolkit/components/passwordmgr/test/browser/browser.ini": 0.99,
-    "toolkit/components/passwordmgr/test/mochitest/mochitest.ini": 0.99,
-    "toolkit/components/passwordmgr/test/unit/xpcshell.ini": 0.99,
-    "toolkit/components/pictureinpicture/tests/browser.ini": 0.92,
-    "toolkit/components/places/tests/browser/browser.ini": 0.92,
-    "toolkit/components/places/tests/unifiedcomplete/xpcshell.ini": 0.85,
-    "toolkit/components/printing/tests/browser.ini": 0.9,
-    "toolkit/components/prompts/test/chrome.ini": 0.97,
-    "toolkit/components/prompts/test/mochitest.ini": 0.5,
-    "toolkit/components/remotebrowserutils/tests/browser/browser.ini": 0.83,
-    "toolkit/components/satchel/test/mochitest.ini": 0.78,
-    "toolkit/components/search/tests/xpcshell/xpcshell.ini": 0.52,
-    "toolkit/components/telemetry/tests/browser/browser.ini": 0.65,
-    "toolkit/components/telemetry/tests/unit/xpcshell.ini": 0.6,
-    "toolkit/components/thumbnails/test/browser.ini": 0.78,
-    "toolkit/components/url-classifier/tests/mochitest/mochitest.ini": 0.74,
-    "toolkit/components/url-classifier/tests/unit/xpcshell.ini": 0.76,
-    "toolkit/components/viewsource/test/browser/browser.ini": 0.55,
-    "toolkit/components/windowwatcher/test/browser.ini": 0.6,
-    "toolkit/content/tests/browser/browser.ini": 0.93,
-    "toolkit/content/tests/chrome/chrome.ini": 0.96,
-    "toolkit/content/tests/mochitest/mochitest.ini": 0.51,
+    "testing/mochitest/chrome/chrome.toml": 0.57,
+    "testing/mochitest/tests/Harness_sanity/mochitest.toml": 0.77,
+    "testing/mochitest/tests/browser/browser.toml": 0.67,
+    "toolkit/components/aboutprocesses/tests/browser/browser.toml": 0.93,
+    "toolkit/components/antitracking/test/browser/browser.toml": 0.99,
+    "toolkit/components/antitracking/test/xpcshell/xpcshell.toml": 0.51,
+    "toolkit/components/crashmonitor/test/unit/xpcshell.toml": 0.72,
+    "toolkit/components/downloads/test/unit/xpcshell.toml": 0.92,
+    "toolkit/components/enterprisepolicies/tests/xpcshell/xpcshell.toml": 0.56,
+    "toolkit/components/extensions/test/browser/browser-serviceworker.toml": 0.73,
+    "toolkit/components/extensions/test/browser/browser.toml": 0.98,
+    "toolkit/components/extensions/test/mochitest/chrome.toml": 0.59,
+    "toolkit/components/extensions/test/mochitest/mochitest-remote.toml": 0.79,
+    "toolkit/components/extensions/test/mochitest/mochitest.toml": 0.52,
+    "toolkit/components/extensions/test/xpcshell/native_messaging.toml": 0.74,
+    "toolkit/components/extensions/test/xpcshell/xpcshell.toml": 0.79,
+    "toolkit/components/extensions/test/xpcshell/xpcshell-legacy-ep.toml": 0.77,
+    "toolkit/components/extensions/test/xpcshell/xpcshell-remote.toml": 0.68,
+    "toolkit/components/httpsonlyerror/tests/browser/browser.toml": 0.78,
+    "toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/browser.toml": 0.92,
+    "toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/browser.toml": 0.77,
+    "toolkit/components/messaging-system/test/unit/xpcshell.toml": 0.51,
+    "toolkit/components/normandy/test/browser/browser.toml": 0.75,
+    "toolkit/components/normandy/test/unit/xpcshell.toml": 0.5,
+    "toolkit/components/osfile/tests/xpcshell/xpcshell.toml": 0.66,
+    "toolkit/components/passwordmgr/test/browser/browser.toml": 0.99,
+    "toolkit/components/passwordmgr/test/mochitest/mochitest.toml": 0.99,
+    "toolkit/components/passwordmgr/test/unit/xpcshell.toml": 0.99,
+    "toolkit/components/pictureinpicture/tests/browser.toml": 0.92,
+    "toolkit/components/places/tests/browser/browser.toml": 0.92,
+    "toolkit/components/places/tests/unifiedcomplete/xpcshell.toml": 0.85,
+    "toolkit/components/printing/tests/browser.toml": 0.9,
+    "toolkit/components/prompts/test/chrome.toml": 0.97,
+    "toolkit/components/prompts/test/mochitest.toml": 0.5,
+    "toolkit/components/remotebrowserutils/tests/browser/browser.toml": 0.83,
+    "toolkit/components/satchel/test/mochitest.toml": 0.78,
+    "toolkit/components/search/tests/xpcshell/xpcshell.toml": 0.52,
+    "toolkit/components/telemetry/tests/browser/browser.toml": 0.65,
+    "toolkit/components/telemetry/tests/unit/xpcshell.toml": 0.6,
+    "toolkit/components/thumbnails/test/browser.toml": 0.78,
+    "toolkit/components/url-classifier/tests/mochitest/mochitest.toml": 0.74,
+    "toolkit/components/url-classifier/tests/unit/xpcshell.toml": 0.76,
+    "toolkit/components/viewsource/test/browser/browser.toml": 0.55,
+    "toolkit/components/windowwatcher/test/browser.toml": 0.6,
+    "toolkit/content/tests/browser/browser.toml": 0.93,
+    "toolkit/content/tests/chrome/chrome.toml": 0.96,
+    "toolkit/content/tests/mochitest/mochitest.toml": 0.51,
     "toolkit/content/tests/reftests/reftest.list": 0.5,
-    "toolkit/content/tests/widgets/chrome.ini": 0.96,
-    "toolkit/content/tests/widgets/mochitest.ini": 0.98,
-    "toolkit/crashreporter/test/unit/xpcshell.ini": 0.5,
-    "toolkit/modules/tests/xpcshell/xpcshell.ini": 0.66,
-    "toolkit/mozapps/extensions/test/browser/browser.ini": 0.95,
-    "toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/xpcshell.ini": 0.52,
-    "toolkit/mozapps/extensions/test/xpcshell/xpcshell-unpack.ini": 0.73,
-    "toolkit/mozapps/extensions/test/xpcshell/xpcshell.ini": 0.89,
-    "toolkit/mozapps/extensions/test/xpinstall/browser.ini": 0.71,
-    "toolkit/mozapps/update/tests/browser/browser.ini": 0.59,
-    "toolkit/mozapps/update/tests/browser/browser.legacy.ini": 0.64,
-    "toolkit/xre/test/xpcshell.ini": 0.55,
-    "tools/profiler/tests/browser/browser.ini": 0.74,
-    "tools/profiler/tests/xpcshell/xpcshell.ini": 0.94,
-    "uriloader/exthandler/tests/mochitest/browser.ini": 0.8,
-    "uriloader/exthandler/tests/mochitest/mochitest.ini": 0.65,
-    "uriloader/exthandler/tests/unit/xpcshell.ini": 0.91,
+    "toolkit/content/tests/widgets/chrome.toml": 0.96,
+    "toolkit/content/tests/widgets/mochitest.toml": 0.98,
+    "toolkit/crashreporter/test/unit/xpcshell.toml": 0.5,
+    "toolkit/modules/tests/xpcshell/xpcshell.toml": 0.66,
+    "toolkit/mozapps/extensions/test/browser/browser.toml": 0.95,
+    "toolkit/mozapps/extensions/test/xpcshell/rs-blocklist/xpcshell.toml": 0.52,
+    "toolkit/mozapps/extensions/test/xpcshell/xpcshell-unpack.toml": 0.73,
+    "toolkit/mozapps/extensions/test/xpcshell/xpcshell.toml": 0.89,
+    "toolkit/mozapps/extensions/test/xpinstall/browser.toml": 0.71,
+    "toolkit/mozapps/update/tests/browser/browser.toml": 0.59,
+    "toolkit/mozapps/update/tests/browser/browser.legacy.toml": 0.64,
+    "toolkit/xre/test/xpcshell.toml": 0.55,
+    "tools/profiler/tests/browser/browser.toml": 0.74,
+    "tools/profiler/tests/xpcshell/xpcshell.toml": 0.94,
+    "uriloader/exthandler/tests/mochitest/browser.toml": 0.8,
+    "uriloader/exthandler/tests/mochitest/mochitest.toml": 0.65,
+    "uriloader/exthandler/tests/unit/xpcshell.toml": 0.91,
     "widget/reftests/reftest.list": 0.56,
-    "widget/tests/chrome.ini": 0.93,
-    "widget/tests/mochitest.ini": 0.82,
-    "xpcom/tests/unit/xpcshell.ini": 0.63
+    "widget/tests/chrome.toml": 0.93,
+    "widget/tests/mochitest.toml": 0.82,
+    "xpcom/tests/unit/xpcshell.toml": 0.63
   },
   "known_tasks": [
     "test-linux1804-64/debug-mochitest-devtools-chrome-spi-nw-11",

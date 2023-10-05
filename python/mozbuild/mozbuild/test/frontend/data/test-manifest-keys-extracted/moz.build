@@ -2,7 +2,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 A11Y_MANIFESTS += ["a11y.toml"]
-BROWSER_CHROME_MANIFESTS += ["browser.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser.toml"]
 METRO_CHROME_MANIFESTS += ["metro.ini"]
 MOCHITEST_MANIFESTS += ["mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["chrome.toml"]

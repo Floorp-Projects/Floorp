@@ -1,0 +1,38 @@
+[DEFAULT]
+support-files = [
+  "head.js",
+  "adjustedCerts.js",
+]
+
+["browser_aboutcertificateviewer.js"]
+
+["browser_certificateTabLink.js"]
+
+["browser_checkAuthorityKeyID.js"]
+
+["browser_checkLongHex.js"]
+
+["browser_checkMissingCommonName.js"]
+
+["browser_checkNonEmptyFields.js"]
+
+["browser_checkNonRepeatedCertTabs.js"]
+
+["browser_checkNonUndefinedStrings.js"]
+
+["browser_checkOCSP.js"]
+skip-if = ["true"] # Bug 1596313
+
+["browser_checkStandAlonePage.js"]
+
+["browser_checkValiditySection.js"]
+
+["browser_downloadLink.js"]
+
+["browser_handleMultipleCertsURL.js"]
+skip-if = ["true"] # Bug 1626853
+
+["browser_openTabAndSendCertInfo.js"]
+support-files = ["dummy_page.html"]
+
+["browser_renderCertToUI.js"]

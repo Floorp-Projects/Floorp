@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Messaging System")
 
 BROWSER_CHROME_MANIFESTS += [
-    "schemas/SpecialMessageActionSchemas/test/browser/browser.ini",
+    "schemas/SpecialMessageActionSchemas/test/browser/browser.toml",
     "schemas/TriggerActionSchemas/test/browser/browser.toml",
 ]
 
