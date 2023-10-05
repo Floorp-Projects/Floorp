@@ -8,6 +8,7 @@ const {
   openFirefoxViewTab,
   closeFirefoxViewTab,
   isFirefoxViewTabSelectedInWindow,
+  init: FirefoxViewTestUtilsInit,
 } = ChromeUtils.importESModule(
   "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
 );
@@ -35,6 +36,7 @@ const { SessionStoreTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SessionStoreTestUtils.sys.mjs"
 );
 SessionStoreTestUtils.init(this, window);
+FirefoxViewTestUtilsInit(this, window);
 
 ChromeUtils.defineESModuleGetters(this, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",

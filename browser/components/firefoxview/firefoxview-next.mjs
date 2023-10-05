@@ -61,6 +61,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (document.location.hash) {
     changePage(document.location.hash.substring(1));
   }
+  if (Cu.isInAutomation) {
+    Services.obs.notifyObservers(null, "firefoxview-entered");
+  }
 });
 
 document
@@ -78,6 +81,9 @@ document
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     recordEnteredTelemetry();
+    if (Cu.isInAutomation) {
+      Services.obs.notifyObservers(null, "firefoxview-entered");
+    }
   }
 });
 
