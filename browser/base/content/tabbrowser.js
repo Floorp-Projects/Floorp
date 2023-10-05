@@ -111,6 +111,8 @@
       Services.els.addSystemEventListener(document, "keypress", this, false);
       document.addEventListener("visibilitychange", this);
       window.addEventListener("framefocusrequested", this);
+      window.addEventListener("activate", this);
+      window.addEventListener("deactivate", this);
 
       this.tabContainer.init();
       this._setupInitialBrowserAndTab();
@@ -1201,6 +1203,11 @@
         newTab.recordTimeFromUnloadToReload();
         newTab.updateLastAccessed();
         oldTab.updateLastAccessed();
+        // if this is the foreground window, update the last-seen timestamps.
+        if (this.ownerGlobal == BrowserWindowTracker.getTopWindow()) {
+          newTab.updateLastSeenActive();
+          oldTab.updateLastSeenActive();
+        }
 
         let oldFindBar = oldTab._findBar;
         if (
@@ -5762,6 +5769,11 @@
             this.selectedBrowser.docShellIsActive = !inactive;
           }
           break;
+        case "activate":
+        // Intentional fallthrough
+        case "deactivate":
+          this.selectedTab.updateLastSeenActive();
+          break;
       }
     },
 
@@ -5875,6 +5887,8 @@
       }
       document.removeEventListener("visibilitychange", this);
       window.removeEventListener("framefocusrequested", this);
+      window.removeEventListener("activate", this);
+      window.removeEventListener("deactivate", this);
 
       if (gMultiProcessBrowser) {
         if (this._switcher) {

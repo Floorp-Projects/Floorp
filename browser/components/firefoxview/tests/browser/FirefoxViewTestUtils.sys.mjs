@@ -56,7 +56,11 @@ async function openFirefoxViewTab(win) {
   const alreadyLoaded =
     fxViewTab?.linkedBrowser?.currentURI.spec.split("#")[0] ==
     getFirefoxViewURL();
-  const enteredPromise = TestUtils.topicObserved("firefoxview-entered");
+  const enteredPromise =
+    alreadyLoaded &&
+    fxViewTab.linkedBrowser.contentDocument.visibilityState == "visible"
+      ? Promise.resolve()
+      : TestUtils.topicObserved("firefoxview-entered");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#firefox-view-button",
     { type: "mousedown" },

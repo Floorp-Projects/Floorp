@@ -27,6 +27,7 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
 });
 
 const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
+const TOPIC_CURRENT_BROWSER_CHANGED = "net:current-browser-id";
 
 /**
  * A collection of open tabs grouped by window.
@@ -65,6 +66,9 @@ class OpenTabsInView extends ViewPage {
           tabContainer.addEventListener("TabOpen", this);
           tabContainer.addEventListener("TabPinned", this);
           tabContainer.addEventListener("TabUnpinned", this);
+          // BrowserWindowWatcher doesnt always notify "net:current-browser-id" when
+          // restoring a window, so we need to listen for "activate" events here as well.
+          win.addEventListener("activate", this);
           this._updateOpenTabsList();
         }
       },
@@ -77,6 +81,7 @@ class OpenTabsInView extends ViewPage {
           tabContainer.removeEventListener("TabOpen", this);
           tabContainer.removeEventListener("TabPinned", this);
           tabContainer.removeEventListener("TabUnpinned", this);
+          win.removeEventListener("activate", this);
           this._updateOpenTabsList();
         }
       }
@@ -98,6 +103,10 @@ class OpenTabsInView extends ViewPage {
     if (!this.observerAdded) {
       Services.obs.addObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
       Services.obs.addObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+      Services.obs.addObserver(
+        this.boundObserve,
+        TOPIC_CURRENT_BROWSER_CHANGED
+      );
       this.observerAdded = true;
     }
   }
@@ -106,6 +115,10 @@ class OpenTabsInView extends ViewPage {
     if (this.observerAdded) {
       Services.obs.removeObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
       Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+      Services.obs.removeObserver(
+        this.boundObserve,
+        TOPIC_CURRENT_BROWSER_CHANGED
+      );
       this.observerAdded = false;
     }
   }
@@ -123,6 +136,10 @@ class OpenTabsInView extends ViewPage {
         if (deviceListUpdated) {
           this.devices = this.currentWindow.gSync.getSendTabTargets();
         }
+        break;
+      case TOPIC_CURRENT_BROWSER_CHANGED:
+        this.requestUpdate();
+        break;
     }
   }
 
@@ -220,7 +237,17 @@ class OpenTabsInView extends ViewPage {
   getRecentBrowsingTemplate() {
     const tabs = Array.from(this.windows.values())
       .flat()
-      .sort((a, b) => b.lastAccessed - a.lastAccessed);
+      .sort((a, b) => {
+        let dt = b.lastSeenActive - a.lastSeenActive;
+        if (dt) {
+          return dt;
+        }
+        // try to break a deadlock by sorting the selected tab higher
+        if (!(a.selected || b.selected)) {
+          return 0;
+        }
+        return a.selected ? -1 : 1;
+      });
     return html`<view-opentabs-card
       .tabs=${tabs}
       .recentBrowsing=${true}

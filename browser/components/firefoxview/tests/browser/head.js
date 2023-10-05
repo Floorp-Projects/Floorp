@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const {
+  getFirefoxViewURL,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
