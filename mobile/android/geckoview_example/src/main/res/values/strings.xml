@@ -52,6 +52,11 @@
     <string name="addon_uri">WebExtension xpi URL</string>
     <string name="save_pdf">Save as PDF</string>
     <string name="print_page">Print Page</string>
+    <string name="translate">Translate</string>
+    <string name="translate_restore">Restore to Original</string>
+    <string name="translate_language_from_hint">From Language</string>
+    <string name="translate_language_to_hint">To Language</string>
+    <string name="translate_action">Translate</string>
 
     # Preferences
     <string name="key_tracking_protection">tracking_protection</string>

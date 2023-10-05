@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
   isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
+  TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
@@ -651,7 +652,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
       isTopLevel: aWebProgress.isTopLevel,
       permissions,
     };
-
+    lazy.TranslationsParent.onLocationChange(this.browser);
     this.eventDispatcher.sendRequest(message);
 
     this.isProductURL(aLocationURI);

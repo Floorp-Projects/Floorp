@@ -108,6 +108,7 @@ import org.mozilla.geckoview.SessionPdfFileSaver;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.StorageController;
+import org.mozilla.geckoview.TranslationsController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebMessage;
@@ -966,9 +967,11 @@ package org.mozilla.geckoview {
     method @AnyThread @Nullable public GeckoSession.PromptDelegate getPromptDelegate();
     method @Nullable @UiThread public GeckoSession.ScrollDelegate getScrollDelegate();
     method @AnyThread @Nullable public GeckoSession.SelectionActionDelegate getSelectionActionDelegate();
+    method @AnyThread @Nullable public TranslationsController.SessionTranslation getSessionTranslation();
     method @AnyThread @NonNull public GeckoSessionSettings getSettings();
     method @UiThread public void getSurfaceBounds(@NonNull Rect);
     method @AnyThread @NonNull public SessionTextInput getTextInput();
+    method @AnyThread @Nullable public TranslationsController.SessionTranslation.Delegate getTranslationsSessionDelegate();
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
     method @NonNull @UiThread public WebExtension.SessionController getWebExtensionController();
     method @AnyThread public void goBack();
@@ -1011,6 +1014,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void setPromptDelegate(@Nullable GeckoSession.PromptDelegate);
     method @UiThread public void setScrollDelegate(@Nullable GeckoSession.ScrollDelegate);
     method @UiThread public void setSelectionActionDelegate(@Nullable GeckoSession.SelectionActionDelegate);
+    method @AnyThread public void setTranslationsSessionDelegate(@Nullable TranslationsController.SessionTranslation.Delegate);
     method @AnyThread public void stop();
     method @UiThread protected void setShouldPinOnScreen(boolean);
     field public static final int FINDER_DISPLAY_DIM_PAGE = 2;
@@ -2199,6 +2203,56 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface StorageController.StorageControllerClearFlags {
+  }
+
+  public class TranslationsController {
+    ctor public TranslationsController();
+  }
+
+  public static class TranslationsController.SessionTranslation {
+    ctor public SessionTranslation(GeckoSession);
+    method @AnyThread @NonNull public TranslationsController.SessionTranslation.Handler getHandler();
+    method @AnyThread @NonNull public GeckoResult<Void> restoreOriginalPage();
+    method @AnyThread @NonNull public GeckoResult<Void> translate(@NonNull String, @NonNull String, @Nullable TranslationsController.SessionTranslation.TranslationOptions);
+    method @AnyThread @NonNull public GeckoResult<Void> translate(@NonNull TranslationsController.SessionTranslation.TranslationPair, @Nullable TranslationsController.SessionTranslation.TranslationOptions);
+  }
+
+  @AnyThread public static interface TranslationsController.SessionTranslation.Delegate {
+    method default public void onExpectedTranslate(@NonNull GeckoSession);
+    method default public void onOfferTranslate(@NonNull GeckoSession);
+    method default public void onTranslationStateChange(@NonNull GeckoSession, @Nullable TranslationsController.SessionTranslation.TranslationState);
+  }
+
+  public static class TranslationsController.SessionTranslation.DetectedLanguages {
+    ctor public DetectedLanguages(@Nullable String, @NonNull Boolean, @Nullable String);
+    field @Nullable public final String docLangTag;
+    field @NonNull public final Boolean isDocLangTagSupported;
+    field @Nullable public final String userLangTag;
+  }
+
+  @AnyThread public static class TranslationsController.SessionTranslation.TranslationOptions {
+    ctor protected TranslationOptions(@NonNull TranslationsController.SessionTranslation.TranslationOptions.Builder);
+    field @NonNull public final boolean downloadModel;
+  }
+
+  @AnyThread public static class TranslationsController.SessionTranslation.TranslationOptions.Builder {
+    ctor public Builder();
+    method @AnyThread @NonNull public TranslationsController.SessionTranslation.TranslationOptions build();
+    method @NonNull public TranslationsController.SessionTranslation.TranslationOptions.Builder downloadModel(@NonNull boolean);
+  }
+
+  public static class TranslationsController.SessionTranslation.TranslationPair {
+    ctor public TranslationPair(@Nullable String, @Nullable String);
+    field @Nullable public final String fromLanguage;
+    field @Nullable public final String toLanguage;
+  }
+
+  public static class TranslationsController.SessionTranslation.TranslationState {
+    ctor public TranslationState(@Nullable TranslationsController.SessionTranslation.TranslationPair, @Nullable String, @Nullable TranslationsController.SessionTranslation.DetectedLanguages, @NonNull Boolean);
+    field @Nullable public final TranslationsController.SessionTranslation.DetectedLanguages detectedLanguages;
+    field @Nullable public final String error;
+    field @NonNull public final Boolean isEngineReady;
+    field @Nullable public final TranslationsController.SessionTranslation.TranslationPair requestedTranslationPair;
   }
 
   public class WebExtension {

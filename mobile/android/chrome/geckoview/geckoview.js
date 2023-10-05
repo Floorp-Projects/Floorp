@@ -856,6 +856,12 @@ function startup() {
         },
       },
     },
+    {
+      name: "GeckoViewTranslations",
+      onInit: {
+        resource: "resource://gre/modules/GeckoViewTranslations.sys.mjs",
+      },
+    },
   ]);
 
   if (!Services.appinfo.sessionHistoryInParent) {

@@ -135,6 +135,8 @@ open class BaseSessionTest(
         const val HELLO_PDF_WORLD_PDF_PATH = "/assets/www/helloPDFWorld.pdf"
         const val ORANGE_PDF_PATH = "/assets/www/orange.pdf"
         const val NO_META_VIEWPORT_HTML_PATH = "/assets/www/no-meta-viewport.html"
+        const val TRANSLATIONS_EN = "/assets/www/translations-tester-en.html"
+        const val TRANSLATIONS_ES = "/assets/www/translations-tester-es.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST
