@@ -40,6 +40,14 @@
       color-mix(in srgb, currentColor 14%, transparent)
     );
 
+    --panel-item-hover-bgcolor: light-dark(
+      rgba(207, 207, 216, .66),
+      color-mix(in srgb, currentColor 9%, transparent)
+    );
+    --panel-item-active-bgcolor: light-dark(
+      rgb(207, 207, 216),
+      color-mix(in srgb, currentColor 25%, transparent)
+    );
     --panel-shortcut-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
 
     --input-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
