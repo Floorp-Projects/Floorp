@@ -288,7 +288,10 @@ object WebExtensionSupport {
                 ) {
                     store.dispatch(
                         WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                            WebExtensionPromptRequest.AfterInstallation.Permissions(extension, onPermissionsGranted),
+                            WebExtensionPromptRequest.AfterInstallation.Permissions.Required(
+                                extension,
+                                onPermissionsGranted,
+                            ),
                         ),
                     )
                 }
@@ -314,7 +317,7 @@ object WebExtensionSupport {
                 ) {
                     store.dispatch(
                         WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                            WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+                            WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(
                                 extension,
                                 permissions,
                                 onPermissionsGranted,

@@ -158,7 +158,7 @@ class PermissionsDialogFragmentTest {
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "https://example.org/", "tabs"),
         )
-        val fragment = createPermissionsDialogFragment(addon, forOptionalPermissions = true)
+        val fragment = createPermissionsDialogFragment(addon, forOptionalPermissions = true, optionalPermissions = addon.permissions)
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -208,12 +208,14 @@ class PermissionsDialogFragmentTest {
         addon: Addon,
         promptsStyling: PromptsStyling? = null,
         forOptionalPermissions: Boolean = false,
+        optionalPermissions: List<String> = emptyList(),
     ): PermissionsDialogFragment {
         return spy(
             PermissionsDialogFragment.newInstance(
                 addon = addon,
                 promptsStyling = promptsStyling,
                 forOptionalPermissions = forOptionalPermissions,
+                optionalPermissions = optionalPermissions,
             ),
         ).apply {
             doNothing().`when`(this).dismiss()

@@ -220,14 +220,14 @@ class WebExtensionPromptFeatureTest {
     }
 
     @Test
-    fun `WHEN OptionalPermissions is dispatched THEN handleOptionalPermissionsRequest is called`() {
+    fun `WHEN PermissionsOptional is dispatched THEN handleOptionalPermissionsRequest is called`() {
         webExtensionPromptFeature.start()
 
         every { webExtensionPromptFeature.handleOptionalPermissionsRequest(any(), any()) } just runs
 
         store.dispatch(
             UpdatePromptRequestWebExtensionAction(
-                WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+                WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(
                     mockk(relaxed = true),
                     mockk(),
                     mockk(),
@@ -241,54 +241,60 @@ class WebExtensionPromptFeatureTest {
     @Test
     fun `WHEN calling handleOptionalPermissionsRequest with permissions THEN call showPermissionDialog`() {
         val addon: Addon = mockk(relaxed = true)
-        val onConfirm: ((Boolean) -> Unit) = mockk()
-        val promptRequest = WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+        val promptRequest = WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(
             extension = mockk(),
             permissions = listOf("tabs"),
-            onConfirm = onConfirm,
+            onConfirm = mockk(),
         )
 
-        webExtensionPromptFeature.handleOptionalPermissionsRequest(
-            addon = addon,
-            promptRequest = promptRequest,
-        )
+        webExtensionPromptFeature.handleOptionalPermissionsRequest(addon = addon, promptRequest = promptRequest)
 
-        verify { webExtensionPromptFeature.showPermissionDialog(any(), eq(onConfirm), eq(true)) }
-        // We should verify that only the requested optional permissions are assigned to the add-on because
-        // those are the permissions that are going to be listed in the dialog.
-        verify { addon.copy(permissions = promptRequest.permissions) }
+        verify {
+            webExtensionPromptFeature.showPermissionDialog(
+                eq(addon),
+                eq(promptRequest),
+                eq(true),
+                eq(promptRequest.permissions),
+            )
+        }
     }
 
     @Test
     fun `WHEN calling handleOptionalPermissionsRequest with a permission that doesn't have a description THEN do not call showPermissionDialog`() {
+        val addon: Addon = mockk(relaxed = true)
         val onConfirm: ((Boolean) -> Unit) = mockk()
         every { onConfirm(any()) } just runs
-        val promptRequest = WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+        val promptRequest = WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(
             extension = mockk(),
             // The "scripting" API permission doesn't have a description so we should not show a dialog for it.
             permissions = listOf("scripting"),
             onConfirm = onConfirm,
         )
 
-        webExtensionPromptFeature.handleOptionalPermissionsRequest(addon = mockk(relaxed = true), promptRequest = promptRequest)
+        webExtensionPromptFeature.handleOptionalPermissionsRequest(addon = addon, promptRequest = promptRequest)
 
-        verify(exactly = 0) { webExtensionPromptFeature.showPermissionDialog(any(), any(), any()) }
+        verify(exactly = 0) {
+            webExtensionPromptFeature.showPermissionDialog(any(), any(), any(), any())
+        }
         verify(exactly = 1) { onConfirm(true) }
     }
 
     @Test
     fun `WHEN calling handleOptionalPermissionsRequest with no permissions THEN do not call showPermissionDialog`() {
+        val addon: Addon = mockk(relaxed = true)
         val onConfirm: ((Boolean) -> Unit) = mockk()
         every { onConfirm(any()) } just runs
-        val promptRequest = WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(
+        val promptRequest = WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(
             extension = mockk(),
             permissions = emptyList(),
             onConfirm = onConfirm,
         )
 
-        webExtensionPromptFeature.handleOptionalPermissionsRequest(addon = mockk(relaxed = true), promptRequest = promptRequest)
+        webExtensionPromptFeature.handleOptionalPermissionsRequest(addon = addon, promptRequest = promptRequest)
 
-        verify(exactly = 0) { webExtensionPromptFeature.showPermissionDialog(any(), any(), any()) }
+        verify(exactly = 0) {
+            webExtensionPromptFeature.showPermissionDialog(any(), any(), any(), any())
+        }
         verify(exactly = 1) { onConfirm(true) }
     }
 }

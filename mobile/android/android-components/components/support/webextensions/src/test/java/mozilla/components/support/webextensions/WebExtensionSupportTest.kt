@@ -453,7 +453,7 @@ class WebExtensionSupportTest {
 
         verify(store).dispatch(
             WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                WebExtensionPromptRequest.AfterInstallation.Permissions(ext, onPermissionsGranted),
+                WebExtensionPromptRequest.AfterInstallation.Permissions.Required(ext, onPermissionsGranted),
             ),
         )
     }
@@ -1000,7 +1000,7 @@ class WebExtensionSupportTest {
         delegateCaptor.value.onOptionalPermissionsRequest(ext, permissions, onPermissionsGranted)
         verify(store).dispatch(
             WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                WebExtensionPromptRequest.AfterInstallation.OptionalPermissions(ext, permissions, onPermissionsGranted),
+                WebExtensionPromptRequest.AfterInstallation.Permissions.Optional(ext, permissions, onPermissionsGranted),
             ),
         )
     }
