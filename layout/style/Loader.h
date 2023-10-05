@@ -474,7 +474,7 @@ class Loader final {
   friend class StreamLoader;
 
   // Helpers to conditionally block onload if mDocument is non-null.
-  void IncrementOngoingLoadCount() {
+  void IncrementOngoingLoadCountAndMaybeBlockOnload() {
     if (!mOngoingLoadCount++) {
       BlockOnload();
     }
