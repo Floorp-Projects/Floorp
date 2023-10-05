@@ -5,7 +5,6 @@
 import("//build_overrides/build.gni")
 import("//third_party/abseil-cpp/absl.gni")
 
-if (!moz_webrtc_build) {
 absl_source_set("any") {
   public = [ "any.h" ]
   public_deps = [
@@ -30,7 +29,6 @@ absl_source_set("bad_any_cast_impl") {
   public_deps = [ "//third_party/abseil-cpp/absl/base:config" ]
   deps = [ "//third_party/abseil-cpp/absl/base:raw_logging_internal" ]
   visibility = [ ":*" ]
-}
 }
 
 absl_source_set("span") {
@@ -85,7 +83,6 @@ absl_source_set("variant") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_source_set("compare") {
   public = [ "compare.h" ]
   public_deps = [
@@ -115,5 +112,4 @@ absl_test("variant_test") {
     "//third_party/abseil-cpp/absl/meta:type_traits",
     "//third_party/abseil-cpp/absl/strings:string_view",
   ]
-}
 }

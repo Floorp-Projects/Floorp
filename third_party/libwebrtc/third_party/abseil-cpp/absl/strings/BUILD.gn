@@ -15,10 +15,7 @@ absl_source_set("string_view") {
     "//third_party/abseil-cpp/absl/base:throw_delegate",
   ]
   if (moz_webrtc_build) {
-    deps -= [
-      "//third_party/abseil-cpp/absl/base",
-      "//third_party/abseil-cpp/absl/base:throw_delegate",
-    ]
+    deps -= [ "//third_party/abseil-cpp/absl/base" ]
   }
 }
 
@@ -103,7 +100,6 @@ absl_source_set("strings") {
       ":internal", # Removed for unreachable sources.  See Bug 1820869.
       "//third_party/abseil-cpp/absl/base",
       "//third_party/abseil-cpp/absl/base:endian",
-      "//third_party/abseil-cpp/absl/base:throw_delegate",
     ]
   }
 }
@@ -120,7 +116,6 @@ absl_source_set("internal") {
     "internal/resize_uninitialized.h",
     "internal/utf8.h",
   ]
-  if (!moz_webrtc_build) {
   deps = [
     "//third_party/abseil-cpp/absl/base:config",
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -128,14 +123,8 @@ absl_source_set("internal") {
     "//third_party/abseil-cpp/absl/base:raw_logging_internal",
     "//third_party/abseil-cpp/absl/meta:type_traits",
   ]
-  } else {
-  deps = [
-    "//third_party/abseil-cpp/absl/base:raw_logging_internal",
-  ]
-  }
 }
 
-if (!moz_webrtc_build) {
 absl_source_set("str_format") {
   public = [ "str_format.h" ]
   deps = [ ":str_format_internal" ]
@@ -661,5 +650,4 @@ absl_test("char_formatting_test") {
     ":str_format",
     ":strings",
   ]
-}
 }

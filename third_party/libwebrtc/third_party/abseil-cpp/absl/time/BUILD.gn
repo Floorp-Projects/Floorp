@@ -4,7 +4,6 @@
 
 import("//third_party/abseil-cpp/absl.gni")
 
-if (!moz_webrtc_build) {
 absl_source_set("time") {
   sources = [
     "civil_time.cc",
@@ -64,5 +63,4 @@ absl_test("time_test") {
     "//third_party/abseil-cpp/absl/strings:str_format",
     "//third_party/abseil-cpp/absl/time/internal/cctz:time_zone",
   ]
-}
 }

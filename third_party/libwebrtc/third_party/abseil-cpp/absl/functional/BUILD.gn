@@ -16,7 +16,6 @@ absl_source_set("any_invocable") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_test("any_invocable_test") {
   sources = [
     "any_invocable_test.cc",
@@ -31,7 +30,6 @@ absl_test("any_invocable_test") {
     "//third_party/abseil-cpp/absl/utility",
   ]
 }
-}
 
 absl_source_set("bind_front") {
   sources = [ "internal/front_binder.h" ]
@@ -44,7 +42,6 @@ absl_source_set("bind_front") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_source_set("function_ref") {
   sources = [ "internal/function_ref.h" ]
   public = [ "function_ref.h" ]
@@ -83,5 +80,4 @@ absl_test("overload_test") {
     "//third_party/abseil-cpp/absl/strings:string_view",
     "//third_party/abseil-cpp/absl/types:variant",
   ]
-}
 }

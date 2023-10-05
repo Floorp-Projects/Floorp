@@ -56,11 +56,6 @@ component("absl") {
 }
 
 group("absl_component_deps") {
-if (moz_webrtc_build) {
-  public_deps = [
-    "//third_party/abseil-cpp/absl/numeric:bits",
-  ]
-} else {
   public_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base",
@@ -106,16 +101,13 @@ if (moz_webrtc_build) {
     "//third_party/abseil-cpp/absl/types:variant",
     "//third_party/abseil-cpp/absl/utility",
   ]
-}
 
-if (!moz_webrtc_build) {
   # The following dependencies currently don't build with NaCl.
   # TODO(https://crbug.com/1114625): Fix build errors and remove this section.
   if (is_nacl) {
     public_deps -=
         [ "//third_party/abseil-cpp/absl/debugging:failure_signal_handler" ]
   }
-}
 
   visibility = [ ":absl" ]
 }

@@ -12,12 +12,10 @@ absl_source_set("memory") {
   ]
 }
 
-if (!moz_webrtc_build) {
 absl_test("memory_test") {
   sources = [ "memory_test.cc" ]
   deps = [
     ":memory",
     "//third_party/abseil-cpp/absl/base:core_headers",
   ]
-}
 }
