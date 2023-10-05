@@ -1839,6 +1839,15 @@ class _ASRouter {
     return Promise.resolve();
   }
 
+  /** Simple wrapper to make test mocking easier
+   *
+   * @returns {Promise} resolves when the attribution string has been set
+   * succesfully.
+   */
+  setAttributionString(attrStr) {
+    return lazy.MacAttribution.setAttributionString(attrStr);
+  }
+
   /**
    * forceAttribution - this function should only be called from within about:newtab#asrouter.
    * It forces the browser attribution to be set to something specified in asrouter admin
@@ -1857,16 +1866,9 @@ class _ASRouter {
         encodeURIComponent(attributionData)
       );
     } else if (AppConstants.platform === "macosx") {
-      let appPath = lazy.MacAttribution.applicationPath;
-      let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
-        Ci.nsIMacAttributionService
+      await this.setAttributionString(
+        `__MOZCUSTOM__${encodeURIComponent(attributionData)}`
       );
-
-      // The attribution data is treated as a url query for mac
-      let referrer = `https://www.mozilla.org/anything/?${attributionData}`;
-
-      // This sets the Attribution to be the referrer
-      attributionSvc.setReferrerUrl(appPath, referrer, true);
 
       // Delete attribution data file
       await AttributionCode.deleteFileAsync();
