@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "Firefox for Android",
+      "schema": 1696377903863,
+      "status": "nightly",
+      "version": "120",
+      "browserid": "firefox_android",
+      "id": "34ccbda4-8e0a-46a0-b6c1-5d877aa0a1a9",
+      "last_modified": 1696403012472
+    },
+    {
+      "name": "Firefox",
+      "schema": 1696377903589,
+      "status": "nightly",
+      "version": "120",
+      "browserid": "firefox",
+      "id": "8abd289c-120a-47ed-a194-d3a7b6bad31b",
+      "last_modified": 1696403012469
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1696377903732,
+      "status": "current",
+      "version": "118",
+      "browserid": "firefox_android",
+      "id": "3e23675d-e6be-45c3-b412-ccde0b34d390",
+      "last_modified": 1696403012466
+    },
+    {
+      "name": "Firefox",
+      "schema": 1696377903260,
+      "status": "current",
+      "version": "118",
+      "browserid": "firefox",
+      "id": "e99e2604-f5e8-4509-ae9e-a6335540a0b5",
+      "last_modified": 1696403012462
+    },
+    {
+      "name": "Firefox",
+      "schema": 1696377903367,
+      "status": "beta",
+      "version": "119",
+      "browserid": "firefox",
+      "id": "d475c40b-3ba8-4a2b-b750-7977cad2e95d",
+      "last_modified": 1696403012454
+    },
+    {
+      "name": "Firefox for Android",
+      "schema": 1696377903795,
+      "status": "beta",
+      "version": "119",
+      "browserid": "firefox_android",
+      "id": "53acec8b-f665-4eee-8ff2-620b46a46445",
+      "last_modified": 1696403012451
+    },
+    {
       "name": "Deno",
       "schema": 1695859507975,
       "status": "current",
@@ -89,60 +143,6 @@
       "browserid": "nodejs",
       "id": "92a501a5-a84d-48d8-a1d0-749febc58d5f",
       "last_modified": 1695282430511
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1695216243451,
-      "status": "nightly",
-      "version": "119",
-      "browserid": "firefox_android",
-      "id": "53acec8b-f665-4eee-8ff2-620b46a46445",
-      "last_modified": 1695282430507
-    },
-    {
-      "name": "Firefox",
-      "schema": 1695216243081,
-      "status": "nightly",
-      "version": "119",
-      "browserid": "firefox",
-      "id": "d475c40b-3ba8-4a2b-b750-7977cad2e95d",
-      "last_modified": 1695282430504
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1695216243267,
-      "status": "current",
-      "version": "117",
-      "browserid": "firefox_android",
-      "id": "4a14a019-c00f-4fb0-ba03-f78098859593",
-      "last_modified": 1695282430496
-    },
-    {
-      "name": "Firefox",
-      "schema": 1695216242892,
-      "status": "current",
-      "version": "117",
-      "browserid": "firefox",
-      "id": "52767e7f-9d5f-4c85-a37f-a384bd816f07",
-      "last_modified": 1695282430493
-    },
-    {
-      "name": "Firefox",
-      "schema": 1695216242988,
-      "status": "beta",
-      "version": "118",
-      "browserid": "firefox",
-      "id": "e99e2604-f5e8-4509-ae9e-a6335540a0b5",
-      "last_modified": 1695282430486
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1695216243363,
-      "status": "beta",
-      "version": "118",
-      "browserid": "firefox_android",
-      "id": "3e23675d-e6be-45c3-b412-ccde0b34d390",
-      "last_modified": 1695282430483
     },
     {
       "name": "Chrome",
@@ -290,30 +290,12 @@
     },
     {
       "name": "Firefox",
-      "schema": 1662643476548,
-      "status": "planned",
-      "version": "120",
-      "browserid": "firefox",
-      "id": "8abd289c-120a-47ed-a194-d3a7b6bad31b",
-      "last_modified": 1662648201669
-    },
-    {
-      "name": "Firefox",
       "schema": 1662643476587,
       "status": "planned",
       "version": "121",
       "browserid": "firefox",
       "id": "6fa4f808-5e0b-4f2a-a108-600e52ea90f9",
       "last_modified": 1662648201666
-    },
-    {
-      "name": "Firefox for Android",
-      "schema": 1662643477220,
-      "status": "planned",
-      "version": "120",
-      "browserid": "firefox_android",
-      "id": "34ccbda4-8e0a-46a0-b6c1-5d877aa0a1a9",
-      "last_modified": 1662648201635
     },
     {
       "name": "Firefox for Android",
@@ -343,5 +325,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1695880503557
+  "timestamp": 1696403012472
 }
