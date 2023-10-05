@@ -337,26 +337,30 @@ nsresult nsHttpHandler::Init() {
     Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTPS_RR_PREFS_USAGE,
                          static_cast<uint32_t>(usageOfHTTPSRRPrefs.to_ulong()));
     mActivityDistributor = components::HttpActivityDistributor::Service();
+
+    auto initQLogDir = [&]() {
+      if (!StaticPrefs::network_http_http3_enable_qlog()) {
+        return EmptyCString();
+      }
+
+      nsCOMPtr<nsIFile> qlogDir;
+      nsresult rv =
+          NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(qlogDir));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EmptyCString();
+      }
+
+      nsAutoCString dirName("qlog_");
+      dirName.AppendInt(mProcessId);
+      rv = qlogDir->AppendNative(dirName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EmptyCString();
+      }
+
+      return qlogDir->HumanReadablePath();
+    };
+    mHttp3QlogDir = initQLogDir();
   }
-
-  auto initQLogDir = [&]() {
-    nsCOMPtr<nsIFile> qlogDir;
-    nsresult rv =
-        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(qlogDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EmptyCString();
-    }
-
-    nsAutoCString dirName("qlog_");
-    dirName.AppendInt(mProcessId);
-    rv = qlogDir->AppendNative(dirName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EmptyCString();
-    }
-
-    return qlogDir->HumanReadablePath();
-  };
-  mHttp3QlogDir = initQLogDir();
 
   // monitor some preference changes
   Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
