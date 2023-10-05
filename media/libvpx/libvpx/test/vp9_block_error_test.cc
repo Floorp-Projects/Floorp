@@ -53,14 +53,14 @@ int64_t BlockError8BitWrapper(const tran_low_t *coeff,
 
 class BlockErrorTest : public ::testing::TestWithParam<BlockErrorParam> {
  public:
-  virtual ~BlockErrorTest() {}
-  virtual void SetUp() {
+  ~BlockErrorTest() override = default;
+  void SetUp() override {
     error_block_op_ = GET_PARAM(0);
     ref_error_block_op_ = GET_PARAM(1);
     bit_depth_ = GET_PARAM(2);
   }
 
-  virtual void TearDown() { libvpx_test::ClearSystemState(); }
+  void TearDown() override { libvpx_test::ClearSystemState(); }
 
  protected:
   vpx_bit_depth_t bit_depth_;

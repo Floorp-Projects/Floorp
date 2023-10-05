@@ -17,12 +17,14 @@
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_dsp/x86/bitdepth_conversion_sse2.h"
 #include "vpx_dsp/x86/quantize_sse2.h"
+#include "vp9/common/vp9_scan.h"
+#include "vp9/encoder/vp9_block.h"
 
 void vp9_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                          const int16_t *round_ptr, const int16_t *quant_ptr,
+                          const struct macroblock_plane *const mb_plane,
                           tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                           const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                          const int16_t *scan, const int16_t *iscan) {
+                          const struct ScanOrder *const scan_order) {
   const __m128i zero = _mm_setzero_si128();
   __m128i thr;
   int nzflag;
@@ -31,11 +33,10 @@ void vp9_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i coeff0, coeff1, coeff0_sign, coeff1_sign;
   __m128i qcoeff0, qcoeff1;
   __m128i eob;
-
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
   // Setup global values.
-  load_fp_values(round_ptr, &round, quant_ptr, &quant, dequant_ptr, &dequant);
+  load_fp_values(mb_plane, &round, &quant, dequant_ptr, &dequant);
 
   // Do DC and first 15 AC.
   coeff0 = load_tran_low(coeff_ptr);

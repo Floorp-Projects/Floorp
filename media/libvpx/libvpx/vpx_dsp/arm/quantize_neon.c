@@ -71,20 +71,19 @@ quantize_b_neon(const tran_low_t *coeff_ptr, tran_low_t *qcoeff_ptr,
 }
 
 void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                         const int16_t *zbin_ptr, const int16_t *round_ptr,
-                         const int16_t *quant_ptr,
-                         const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
-                         tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                         uint16_t *eob_ptr, const int16_t *scan,
-                         const int16_t *iscan) {
+                         const struct macroblock_plane *const mb_plane,
+                         tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                         const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                         const struct ScanOrder *const scan_order) {
   const int16x8_t neg_one = vdupq_n_s16(-1);
   uint16x8_t eob_max;
+  int16_t const *iscan = scan_order->iscan;
 
   // Only the first element of each vector is DC.
-  int16x8_t zbin = vld1q_s16(zbin_ptr);
-  int16x8_t round = vld1q_s16(round_ptr);
-  int16x8_t quant = vld1q_s16(quant_ptr);
-  int16x8_t quant_shift = vld1q_s16(quant_shift_ptr);
+  int16x8_t zbin = vld1q_s16(mb_plane->zbin);
+  int16x8_t round = vld1q_s16(mb_plane->round);
+  int16x8_t quant = vld1q_s16(mb_plane->quant);
+  int16x8_t quant_shift = vld1q_s16(mb_plane->quant_shift);
   int16x8_t dequant = vld1q_s16(dequant_ptr);
 
   // Process first 8 values which include a dc component.
@@ -145,9 +144,6 @@ void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     vst1_lane_u16(eob_ptr, eob_max_2, 0);
   }
 #endif  // VPX_ARCH_AARCH64
-  // Need these here, else the compiler complains about mixing declarations and
-  // code in C90
-  (void)scan;
 }
 
 static INLINE int32x4_t extract_sign_bit(int32x4_t a) {
@@ -219,7 +215,7 @@ void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr,
                                const struct macroblock_plane *mb_plane,
                                tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                               const struct ScanOrder *scan_order) {
+                               const struct ScanOrder *const scan_order) {
   const int16x8_t neg_one = vdupq_n_s16(-1);
   uint16x8_t eob_max;
   int i;

@@ -73,7 +73,7 @@ class SADTestBase : public ::testing::TestWithParam<ParamType> {
  public:
   explicit SADTestBase(const ParamType &params) : params_(params) {}
 
-  virtual void SetUp() {
+  void SetUp() override {
     source_data8_ = reinterpret_cast<uint8_t *>(
         vpx_memalign(kDataAlignment, kDataBlockSize));
     reference_data8_ = reinterpret_cast<uint8_t *>(
@@ -108,7 +108,7 @@ class SADTestBase : public ::testing::TestWithParam<ParamType> {
     rnd_.Reset(ACMRandom::DeterministicSeed());
   }
 
-  virtual void TearDown() {
+  void TearDown() override {
     vpx_free(source_data8_);
     source_data8_ = nullptr;
     vpx_free(reference_data8_);
@@ -1129,6 +1129,21 @@ const SadMxNParam neon_tests[] = {
 };
 INSTANTIATE_TEST_SUITE_P(NEON, SADTest, ::testing::ValuesIn(neon_tests));
 
+#if HAVE_NEON_DOTPROD
+const SadMxNParam neon_dotprod_tests[] = {
+  SadMxNParam(64, 64, &vpx_sad64x64_neon_dotprod),
+  SadMxNParam(64, 32, &vpx_sad64x32_neon_dotprod),
+  SadMxNParam(32, 64, &vpx_sad32x64_neon_dotprod),
+  SadMxNParam(32, 32, &vpx_sad32x32_neon_dotprod),
+  SadMxNParam(32, 16, &vpx_sad32x16_neon_dotprod),
+  SadMxNParam(16, 32, &vpx_sad16x32_neon_dotprod),
+  SadMxNParam(16, 16, &vpx_sad16x16_neon_dotprod),
+  SadMxNParam(16, 8, &vpx_sad16x8_neon_dotprod),
+};
+INSTANTIATE_TEST_SUITE_P(NEON_DOTPROD, SADTest,
+                         ::testing::ValuesIn(neon_dotprod_tests));
+#endif  // HAVE_NEON_DOTPROD
+
 const SadSkipMxNParam skip_neon_tests[] = {
   SadSkipMxNParam(64, 64, &vpx_sad_skip_64x64_neon),
   SadSkipMxNParam(64, 32, &vpx_sad_skip_64x32_neon),
@@ -1188,6 +1203,21 @@ const SadSkipMxNParam skip_neon_tests[] = {
 INSTANTIATE_TEST_SUITE_P(NEON, SADSkipTest,
                          ::testing::ValuesIn(skip_neon_tests));
 
+#if HAVE_NEON_DOTPROD
+const SadSkipMxNParam skip_neon_dotprod_tests[] = {
+  SadSkipMxNParam(64, 64, &vpx_sad_skip_64x64_neon_dotprod),
+  SadSkipMxNParam(64, 32, &vpx_sad_skip_64x32_neon_dotprod),
+  SadSkipMxNParam(32, 64, &vpx_sad_skip_32x64_neon_dotprod),
+  SadSkipMxNParam(32, 32, &vpx_sad_skip_32x32_neon_dotprod),
+  SadSkipMxNParam(32, 16, &vpx_sad_skip_32x16_neon_dotprod),
+  SadSkipMxNParam(16, 32, &vpx_sad_skip_16x32_neon_dotprod),
+  SadSkipMxNParam(16, 16, &vpx_sad_skip_16x16_neon_dotprod),
+  SadSkipMxNParam(16, 8, &vpx_sad_skip_16x8_neon_dotprod),
+};
+INSTANTIATE_TEST_SUITE_P(NEON_DOTPROD, SADSkipTest,
+                         ::testing::ValuesIn(skip_neon_dotprod_tests));
+#endif  // HAVE_NEON_DOTPROD
+
 const SadMxNAvgParam avg_neon_tests[] = {
   SadMxNAvgParam(64, 64, &vpx_sad64x64_avg_neon),
   SadMxNAvgParam(64, 32, &vpx_sad64x32_avg_neon),
@@ -1246,6 +1276,21 @@ const SadMxNAvgParam avg_neon_tests[] = {
 };
 INSTANTIATE_TEST_SUITE_P(NEON, SADavgTest, ::testing::ValuesIn(avg_neon_tests));
 
+#if HAVE_NEON_DOTPROD
+const SadMxNAvgParam avg_neon_dotprod_tests[] = {
+  SadMxNAvgParam(64, 64, &vpx_sad64x64_avg_neon_dotprod),
+  SadMxNAvgParam(64, 32, &vpx_sad64x32_avg_neon_dotprod),
+  SadMxNAvgParam(32, 64, &vpx_sad32x64_avg_neon_dotprod),
+  SadMxNAvgParam(32, 32, &vpx_sad32x32_avg_neon_dotprod),
+  SadMxNAvgParam(32, 16, &vpx_sad32x16_avg_neon_dotprod),
+  SadMxNAvgParam(16, 32, &vpx_sad16x32_avg_neon_dotprod),
+  SadMxNAvgParam(16, 16, &vpx_sad16x16_avg_neon_dotprod),
+  SadMxNAvgParam(16, 8, &vpx_sad16x8_avg_neon_dotprod),
+};
+INSTANTIATE_TEST_SUITE_P(NEON_DOTPROD, SADavgTest,
+                         ::testing::ValuesIn(avg_neon_dotprod_tests));
+#endif  // HAVE_NEON_DOTPROD
+
 const SadMxNx4Param x4d_neon_tests[] = {
   SadMxNx4Param(64, 64, &vpx_sad64x64x4d_neon),
   SadMxNx4Param(64, 32, &vpx_sad64x32x4d_neon),
@@ -1300,6 +1345,21 @@ const SadMxNx4Param x4d_neon_tests[] = {
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_SUITE_P(NEON, SADx4Test, ::testing::ValuesIn(x4d_neon_tests));
+
+#if HAVE_NEON_DOTPROD
+const SadMxNx4Param x4d_neon_dotprod_tests[] = {
+  SadMxNx4Param(64, 64, &vpx_sad64x64x4d_neon_dotprod),
+  SadMxNx4Param(64, 32, &vpx_sad64x32x4d_neon_dotprod),
+  SadMxNx4Param(32, 64, &vpx_sad32x64x4d_neon_dotprod),
+  SadMxNx4Param(32, 32, &vpx_sad32x32x4d_neon_dotprod),
+  SadMxNx4Param(32, 16, &vpx_sad32x16x4d_neon_dotprod),
+  SadMxNx4Param(16, 32, &vpx_sad16x32x4d_neon_dotprod),
+  SadMxNx4Param(16, 16, &vpx_sad16x16x4d_neon_dotprod),
+  SadMxNx4Param(16, 8, &vpx_sad16x8x4d_neon_dotprod),
+};
+INSTANTIATE_TEST_SUITE_P(NEON_DOTPROD, SADx4Test,
+                         ::testing::ValuesIn(x4d_neon_dotprod_tests));
+#endif  // HAVE_NEON_DOTPROD
 
 const SadSkipMxNx4Param skip_x4d_neon_tests[] = {
   SadSkipMxNx4Param(64, 64, &vpx_sad_skip_64x64x4d_neon),
@@ -1356,6 +1416,21 @@ const SadSkipMxNx4Param skip_x4d_neon_tests[] = {
 };
 INSTANTIATE_TEST_SUITE_P(NEON, SADSkipx4Test,
                          ::testing::ValuesIn(skip_x4d_neon_tests));
+
+#if HAVE_NEONE_DOTPROD
+const SadSkipMxNx4Param skip_x4d_neon_dotprod_tests[] = {
+  SadSkipMxNx4Param(64, 64, &vpx_sad_skip_64x64x4d_neon_dotprod),
+  SadSkipMxNx4Param(64, 32, &vpx_sad_skip_64x32x4d_neon_dotprod),
+  SadSkipMxNx4Param(32, 64, &vpx_sad_skip_32x64x4d_neon_dotprod),
+  SadSkipMxNx4Param(32, 32, &vpx_sad_skip_32x32x4d_neon_dotprod),
+  SadSkipMxNx4Param(32, 16, &vpx_sad_skip_32x16x4d_neon_dotprod),
+  SadSkipMxNx4Param(16, 32, &vpx_sad_skip_16x32x4d_neon_dotprod),
+  SadSkipMxNx4Param(16, 16, &vpx_sad_skip_16x16x4d_neon_dotprod),
+  SadSkipMxNx4Param(16, 8, &vpx_sad_skip_16x8x4d_neon_dotprod),
+};
+INSTANTIATE_TEST_SUITE_P(NEON_DOTPROD, SADSkipx4Test,
+                         ::testing::ValuesIn(skip_x4d_neon_dotprod_tests));
+#endif  // HAVE_NEON_DOTPROD
 #endif  // HAVE_NEON
 
 //------------------------------------------------------------------------------

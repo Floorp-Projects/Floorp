@@ -56,7 +56,7 @@ static void setup_decoding_thread_data(VP8D_COMP *pbi, MACROBLOCKD *xd,
     mbd->dst = xd->dst;
 
     mbd->segmentation_enabled = xd->segmentation_enabled;
-    mbd->mb_segement_abs_delta = xd->mb_segement_abs_delta;
+    mbd->mb_segment_abs_delta = xd->mb_segment_abs_delta;
     memcpy(mbd->segment_feature_data, xd->segment_feature_data,
            sizeof(xd->segment_feature_data));
 

@@ -138,15 +138,15 @@ void vpx_hadamard_32x32_neon(const int16_t *src_diff, ptrdiff_t src_stride,
     const int16x8_t a2 = load_tran_low_to_s16q(coeff + 512);
     const int16x8_t a3 = load_tran_low_to_s16q(coeff + 768);
 
-    const int16x8_t b0 = vhaddq_s16(a0, a1);
-    const int16x8_t b1 = vhsubq_s16(a0, a1);
-    const int16x8_t b2 = vhaddq_s16(a2, a3);
-    const int16x8_t b3 = vhsubq_s16(a2, a3);
+    const int16x8_t b0 = vshrq_n_s16(vhaddq_s16(a0, a1), 1);
+    const int16x8_t b1 = vshrq_n_s16(vhsubq_s16(a0, a1), 1);
+    const int16x8_t b2 = vshrq_n_s16(vhaddq_s16(a2, a3), 1);
+    const int16x8_t b3 = vshrq_n_s16(vhsubq_s16(a2, a3), 1);
 
-    const int16x8_t c0 = vhaddq_s16(b0, b2);
-    const int16x8_t c1 = vhaddq_s16(b1, b3);
-    const int16x8_t c2 = vhsubq_s16(b0, b2);
-    const int16x8_t c3 = vhsubq_s16(b1, b3);
+    const int16x8_t c0 = vaddq_s16(b0, b2);
+    const int16x8_t c1 = vaddq_s16(b1, b3);
+    const int16x8_t c2 = vsubq_s16(b0, b2);
+    const int16x8_t c3 = vsubq_s16(b1, b3);
 
     store_s16q_to_tran_low(coeff + 0, c0);
     store_s16q_to_tran_low(coeff + 256, c1);

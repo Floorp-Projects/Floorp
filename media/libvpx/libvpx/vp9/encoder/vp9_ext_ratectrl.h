@@ -12,6 +12,7 @@
 #define VPX_VP9_ENCODER_VP9_EXT_RATECTRL_H_
 
 #include "vpx/vpx_ext_ratectrl.h"
+#include "vpx/vpx_tpl.h"
 #include "vp9/encoder/vp9_firstpass.h"
 
 typedef struct EXT_RATECTRL {
@@ -33,6 +34,9 @@ vpx_codec_err_t vp9_extrc_delete(EXT_RATECTRL *ext_ratectrl);
 
 vpx_codec_err_t vp9_extrc_send_firstpass_stats(
     EXT_RATECTRL *ext_ratectrl, const FIRST_PASS_INFO *first_pass_info);
+
+vpx_codec_err_t vp9_extrc_send_tpl_stats(EXT_RATECTRL *ext_ratectrl,
+                                         const VpxTplGopStats *tpl_gop_stats);
 
 vpx_codec_err_t vp9_extrc_get_encodeframe_decision(
     EXT_RATECTRL *ext_ratectrl, int show_index, int coding_index, int gop_index,

@@ -17,12 +17,14 @@
 #include "vpx_dsp/x86/bitdepth_conversion_sse2.h"
 #include "vpx_dsp/x86/quantize_sse2.h"
 #include "vpx_dsp/x86/quantize_ssse3.h"
+#include "vp9/common/vp9_scan.h"
+#include "vp9/encoder/vp9_block.h"
 
 void vp9_quantize_fp_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                           const int16_t *round_ptr, const int16_t *quant_ptr,
+                           const struct macroblock_plane *const mb_plane,
                            tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                            const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                           const int16_t *scan, const int16_t *iscan) {
+                           const struct ScanOrder *const scan_order) {
   const __m128i zero = _mm_setzero_si128();
   __m128i thr;
   int nzflag;
@@ -31,11 +33,10 @@ void vp9_quantize_fp_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i coeff0, coeff1;
   __m128i qcoeff0, qcoeff1;
   __m128i eob;
-
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
   // Setup global values.
-  load_fp_values(round_ptr, &round, quant_ptr, &quant, dequant_ptr, &dequant);
+  load_fp_values(mb_plane, &round, &quant, dequant_ptr, &dequant);
 
   // Do DC and first 15 AC.
   coeff0 = load_tran_low(coeff_ptr);
@@ -119,12 +120,11 @@ void vp9_quantize_fp_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 }
 
 void vp9_quantize_fp_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                                 const int16_t *round_ptr,
-                                 const int16_t *quant_ptr,
+                                 const struct macroblock_plane *const mb_plane,
                                  tran_low_t *qcoeff_ptr,
                                  tran_low_t *dqcoeff_ptr,
                                  const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                                 const int16_t *scan, const int16_t *iscan) {
+                                 const struct ScanOrder *const scan_order) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i one_s16 = _mm_set1_epi16(1);
   __m128i thr;
@@ -134,11 +134,10 @@ void vp9_quantize_fp_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i coeff0, coeff1;
   __m128i qcoeff0, qcoeff1;
   __m128i eob;
-
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
   // Setup global values.
-  load_fp_values(round_ptr, &round, quant_ptr, &quant, dequant_ptr, &dequant);
+  load_fp_values(mb_plane, &round, &quant, dequant_ptr, &dequant);
   // The 32x32 halves round.
   round = _mm_add_epi16(round, one_s16);
   round = _mm_srli_epi16(round, 1);

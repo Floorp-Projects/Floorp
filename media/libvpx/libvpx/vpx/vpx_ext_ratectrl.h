@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 #include "./vpx_integer.h"
+#include "./vpx_tpl.h"
 
 /*!\brief Current ABI version number
  *
@@ -25,7 +26,7 @@ extern "C" {
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures.
  */
-#define VPX_EXT_RATECTRL_ABI_VERSION (6)
+#define VPX_EXT_RATECTRL_ABI_VERSION (7)
 
 /*!\brief The control type of the inference API.
  * In VPX_RC_QP mode, the external rate control model determines the
@@ -46,6 +47,14 @@ typedef enum vpx_rc_type {
   VPX_RC_GOP_QP = VPX_RC_QP | VPX_RC_GOP,
   VPX_RC_GOP_QP_RDMULT = VPX_RC_QP | VPX_RC_GOP | VPX_RC_RDMULT
 } vpx_rc_type_t;
+
+/*!\brief The rate control mode for the external rate control model.
+ */
+typedef enum vpx_ext_rc_mode {
+  VPX_RC_QMODE = 0,
+  VPX_RC_VBR = 1,
+  VPX_RC_CQ = 2,
+} vpx_ext_rc_mode_t;
 
 /*!\brief Abstract rate control model handler
  *
@@ -271,6 +280,10 @@ typedef struct vpx_rc_frame_stats {
    * number of frames whose stats are accumulated.
    */
   double count;
+  /*!
+   * Number of new mv in a frame.
+   */
+  double new_mv_count;
 } vpx_rc_frame_stats_t;
 
 /*!\brief Collection of first pass frame stats
@@ -294,12 +307,21 @@ typedef struct vpx_rc_config {
   int frame_width;      /**< frame width */
   int frame_height;     /**< frame height */
   int show_frame_count; /**< number of visible frames in the video */
+  int max_gf_interval;  /**< max GOP size in number of show frames */
+  int min_gf_interval;  /**< min GOP size in number of show frames */
   /*!
    * Target bitrate in kilobytes per second
    */
   int target_bitrate_kbps;
   int frame_rate_num; /**< numerator of frame rate */
   int frame_rate_den; /**< denominator of frame rate */
+  /*!
+   * The following fields are only for external rate control models that support
+   * different rate control modes.
+   */
+  vpx_ext_rc_mode_t rc_mode; /**< Q mode or VBR mode */
+  int overshoot_percent;     /**< for VBR mode only */
+  int undershoot_percent;    /**< for VBR mode only */
 } vpx_rc_config_t;
 
 /*!\brief Information passed to the external rate control model to
@@ -385,13 +407,13 @@ typedef struct vpx_rc_gop_decision {
  * This callback is invoked by the encoder to create an external rate control
  * model.
  *
- * \param[in]  priv               Callback's private data
- * \param[in]  ratectrl_config    Pointer to vpx_rc_config_t
- * \param[out] rate_ctrl_model_pt Pointer to vpx_rc_model_t
+ * \param[in]  priv                Callback's private data
+ * \param[in]  ratectrl_config     Pointer to vpx_rc_config_t
+ * \param[out] rate_ctrl_model_ptr Pointer to vpx_rc_model_t
  */
 typedef vpx_rc_status_t (*vpx_rc_create_model_cb_fn_t)(
     void *priv, const vpx_rc_config_t *ratectrl_config,
-    vpx_rc_model_t *rate_ctrl_model_pt);
+    vpx_rc_model_t *rate_ctrl_model_ptr);
 
 /*!\brief Send first pass stats to the external rate control model callback
  * prototype
@@ -405,6 +427,18 @@ typedef vpx_rc_status_t (*vpx_rc_create_model_cb_fn_t)(
 typedef vpx_rc_status_t (*vpx_rc_send_firstpass_stats_cb_fn_t)(
     vpx_rc_model_t rate_ctrl_model,
     const vpx_rc_firstpass_stats_t *first_pass_stats);
+
+/*!\brief Send TPL stats for the current GOP to the external rate control model
+ * callback prototype
+ *
+ * This callback is invoked by the encoder to send TPL stats for the GOP to the
+ * external rate control model.
+ *
+ * \param[in]  rate_ctrl_model  rate control model
+ * \param[in]  tpl_gop_stats    TPL stats for current GOP
+ */
+typedef vpx_rc_status_t (*vpx_rc_send_tpl_gop_stats_cb_fn_t)(
+    vpx_rc_model_t rate_ctrl_model, const VpxTplGopStats *tpl_gop_stats);
 
 /*!\brief Receive encode frame decision callback prototype
  *
@@ -487,6 +521,10 @@ typedef struct vpx_rc_funcs {
    * Send first pass stats to the external rate control model.
    */
   vpx_rc_send_firstpass_stats_cb_fn_t send_firstpass_stats;
+  /*!
+   * Send TPL stats for current GOP to the external rate control model.
+   */
+  vpx_rc_send_tpl_gop_stats_cb_fn_t send_tpl_gop_stats;
   /*!
    * Get encodeframe decision from the external rate control model.
    */

@@ -14,6 +14,7 @@
 #include <assert.h>
 
 #include "vp9/common/vp9_onyxc_int.h"
+#include "vp9/encoder/vp9_firstpass_stats.h"
 #include "vp9/encoder/vp9_lookahead.h"
 #include "vp9/encoder/vp9_ratectrl.h"
 
@@ -55,36 +56,8 @@ typedef struct {
   int64_t sum_mvcs;
   int sum_in_vectors;
   int intra_smooth_count;
+  int new_mv_count;
 } FIRSTPASS_DATA;
-
-typedef struct {
-  double frame;
-  double weight;
-  double intra_error;
-  double coded_error;
-  double sr_coded_error;
-  double frame_noise_energy;
-  double pcnt_inter;
-  double pcnt_motion;
-  double pcnt_second_ref;
-  double pcnt_neutral;
-  double pcnt_intra_low;   // Coded intra but low variance
-  double pcnt_intra_high;  // Coded intra high variance
-  double intra_skip_pct;
-  double intra_smooth_pct;    // % of blocks that are smooth
-  double inactive_zone_rows;  // Image mask rows top and bottom.
-  double inactive_zone_cols;  // Image mask columns at left and right edges.
-  double MVr;
-  double mvr_abs;
-  double MVc;
-  double mvc_abs;
-  double MVrv;
-  double MVcv;
-  double mv_in_out_count;
-  double duration;
-  double count;
-  int64_t spatial_layer_id;
-} FIRSTPASS_STATS;
 
 typedef enum {
   KF_UPDATE = 0,

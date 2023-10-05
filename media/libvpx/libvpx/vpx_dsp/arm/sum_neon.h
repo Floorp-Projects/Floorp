@@ -154,7 +154,8 @@ static INLINE uint32_t horizontal_add_uint32x2(const uint32x2_t a) {
 #if VPX_ARCH_AARCH64
   return vaddv_u32(a);
 #else
-  return vget_lane_u32(a, 0) + vget_lane_u32(a, 1);
+  const uint64x1_t b = vpaddl_u32(a);
+  return vget_lane_u32(vreinterpret_u32_u64(b), 0);
 #endif
 }
 

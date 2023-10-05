@@ -52,7 +52,6 @@ void vpx_fdct4x4_neon(const int16_t *input, tran_low_t *final_output,
 
 void vpx_highbd_fdct4x4_neon(const int16_t *input, tran_low_t *final_output,
                              int stride) {
-  static const int32x4_t const_1000 = { 1, 0, 0, 0 };
   const int32x4_t const_one = vdupq_n_s32(1);
 
   // input[M * stride] * 16
@@ -64,7 +63,8 @@ void vpx_highbd_fdct4x4_neon(const int16_t *input, tran_low_t *final_output,
 
   // If the very first value != 0, then add 1.
   if (input[0] != 0) {
-    in[0] = vaddq_s32(in[0], const_1000);
+    static const int32_t k1000[4] = { 1, 0, 0, 0 };
+    in[0] = vaddq_s32(in[0], vld1q_s32(k1000));
   }
 
   vpx_highbd_fdct4x4_pass1_neon(in);
