@@ -20,9 +20,6 @@ ac_add_options --enable-valgrind
 # globally in mozconfig.asan because it requires an unstable -Z flag.
 export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
 
-# gold or lld is required for libFuzzer to work properly
-ac_add_options --enable-linker=lld
-
 ac_add_options --enable-snapshot-fuzzing
 unset MOZ_STDCXX_COMPAT
 
