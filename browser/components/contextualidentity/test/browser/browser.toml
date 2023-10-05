@@ -38,6 +38,8 @@ skip-if = ["true"] # Bug 1541885
 ["browser_imageCache.js"]
 skip-if = ["verify && debug && os == 'win'"]
 
+["browser_guessusercontext.js"]
+
 ["browser_middleClick.js"]
 skip-if = [
   "verify && debug && os == 'linux'",

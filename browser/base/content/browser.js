@@ -86,6 +86,7 @@ ChromeUtils.defineESModuleGetters(this, {
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   UITour: "resource:///modules/UITour.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
   UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderSearchTips:
@@ -6066,6 +6067,9 @@ nsBrowserAccess.prototype = {
   ) {
     var browsingContext = null;
     var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var openingUserContextId =
+      (isExternal && URILoadingHelper.guessUserContextId(aURI)) ||
+      Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 
     if (aOpenWindowInfo && isExternal) {
       console.error(
@@ -6171,7 +6175,7 @@ nsBrowserAccess.prototype = {
         let forceNotRemote = aOpenWindowInfo && !aOpenWindowInfo.isRemote;
         let userContextId = aOpenWindowInfo
           ? aOpenWindowInfo.originAttributes.userContextId
-          : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+          : openingUserContextId;
         let browser = this._openURIInNewTab(
           aURI,
           referrerInfo,

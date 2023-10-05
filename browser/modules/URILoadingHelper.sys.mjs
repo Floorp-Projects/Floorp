@@ -735,4 +735,50 @@ export const URILoadingHelper = {
     params.forceForeground ??= true;
     this.openLinkIn(window, url, where, params);
   },
+
+  /**
+   * Given a URI, guess which container to use to open it. This is used for external
+   * openers as a quality of life improvement (e.g. to open a document into the container
+   * where you are logged in to the service that hosts it).
+   * matches will be returned.
+   * For now this can only use currently-open tabs, until history is tagged with the
+   * container id (https://bugzilla.mozilla.org/show_bug.cgi?id=1283320).
+   *
+   * @param {nsIURI} aURI - The URI being opened.
+   * @returns {number | null} The guessed userContextId, or null if none.
+   */
+  guessUserContextId(aURI) {
+    let host;
+    try {
+      host = aURI.host;
+    } catch (e) {}
+    if (!host) {
+      return null;
+    }
+    const containerScores = new Map();
+    let guessedUserContextId = null;
+    let maxCount = 0;
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
+      for (let tab of win.gBrowser.visibleTabs) {
+        let { userContextId } = tab;
+        if (userContextId) {
+          let currentURIHost = null;
+          try {
+            currentURIHost = tab.linkedBrowser.currentURI.host;
+          } catch (e) {}
+
+          if (currentURIHost == host) {
+            let count = (containerScores.get(userContextId) ?? 0) + 1;
+            containerScores.set(userContextId, count);
+            if (count > maxCount) {
+              guessedUserContextId = userContextId;
+              maxCount = count;
+            }
+          }
+        }
+      }
+    }
+
+    return guessedUserContextId;
+  },
 };
