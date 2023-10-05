@@ -1186,6 +1186,7 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
   bool needsToPresent = mPrevTexture != mRenderTextureHost;
   gfx::IntSize swapChainSize = mVideoSize;
   gfx::Matrix transform = aTransform;
+  const bool isDRM = mRenderTextureHost->IsFromDRMSource();
 
   // When video is rendered to axis aligned integer rectangle, video scaling
   // could be done by VideoProcessor
@@ -1214,11 +1215,12 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
     transform = gfx::Matrix::Translation(aTransform.GetTranslation());
   }
 
-  if (!mVideoSwapChain || mSwapChainSize != swapChainSize) {
+  if (!mVideoSwapChain || mSwapChainSize != swapChainSize || mIsDRM != isDRM) {
     needsToPresent = true;
     ReleaseDecodeSwapChainResources();
     // Update mSwapChainSize before creating SwapChain
     mSwapChainSize = swapChainSize;
+    mIsDRM = isDRM;
 
     auto swapChainFormat = GetSwapChainFormat();
     bool useYUVSwapChain = IsYUVSwapChainFormat(swapChainFormat);
@@ -1366,6 +1368,9 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   desc.Flags = DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;
   if (IsYUVSwapChainFormat(swapChainFormat)) {
     desc.Flags |= DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO;
+  }
+  if (mIsDRM) {
+    desc.Flags |= DXGI_SWAP_CHAIN_FLAG_DISPLAY_ONLY;
   }
   desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 

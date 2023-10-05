@@ -41,6 +41,7 @@ class SharedPlanarYCbCrImage : public PlanarYCbCrImage {
   bool CreateEmptyBuffer(const Data& aData, const gfx::IntSize& aYSize,
                          const gfx::IntSize& aCbCrSize) override;
 
+  void SetIsDRM(bool aIsDRM) override;
   bool IsValid() const override;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {

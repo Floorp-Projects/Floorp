@@ -947,6 +947,9 @@ void DXGITextureHostD3D11::CreateRenderTexture(
   if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
     texture->SetIsSoftwareDecodedVideo();
   }
+  if (mFlags & TextureFlags::DRM_SOURCE) {
+    texture->SetIsFromDRMSource(/* aIsFromDRMSource */ true);
+  }
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
