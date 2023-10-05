@@ -179,9 +179,6 @@ pref("app.support.baseURL", "https://support.mozilla.org/1/mobile/%VERSION%/%OS%
   pref("app.releaseNotesURL", "https://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 #endif
 
-// Enable pinning
-pref("security.cert_pinning.enforcement_level", 1);
-
 /* prefs used by the update timer system (including blocklist pings) */
 pref("app.update.timerFirstInterval", 30000); // milliseconds
 pref("app.update.timerMinimumDelay", 30); // seconds
