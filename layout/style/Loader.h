@@ -482,6 +482,12 @@ class Loader final {
                                     const SheetLoadDataHashKey& aKey);
 
   // Only to be called by `LoadSheet`.
+  bool MaybeCoalesceLoadAndNotifyOpen(SheetLoadData& aLoadData,
+                                      SheetState aSheetState,
+                                      const SheetLoadDataHashKey& aKey,
+                                      const PreloadHashKey& aPreloadKey);
+
+  // Only to be called by `LoadSheet`.
   [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
                                                SheetState aSheetState);
 
