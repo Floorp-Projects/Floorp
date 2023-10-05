@@ -21,6 +21,7 @@
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
 #include "nsAtom.h"
+#include "nsBlockFrame.h"
 #include "nsPresContext.h"
 #include "nsRange.h"
 #include "mozilla/PresShell.h"
@@ -718,6 +719,41 @@ Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
     return nullptr;
   }
   return Element::FromNodeOrNull(cb->GetContent());
+}
+
+void InspectorUtils::GetBlockLineCounts(GlobalObject& aGlobal,
+                                        Element& aElement,
+                                        Nullable<nsTArray<uint32_t>>& aResult) {
+  nsBlockFrame* block =
+      do_QueryFrame(aElement.GetPrimaryFrame(FlushType::Layout));
+  if (!block) {
+    aResult.SetNull();
+    return;
+  }
+
+  // If CSS columns were specified on the actual block element (rather than an
+  // ancestor block, GetPrimaryFrame will return its ColumnSetWrapperFrame, and
+  // we need to drill down to the actual block that contains the lines.
+  if (block->IsColumnSetWrapperFrame()) {
+    nsIFrame* firstChild = block->PrincipalChildList().FirstChild();
+    if (!firstChild->IsColumnSetFrame()) {
+      aResult.SetNull();
+      return;
+    }
+    block = do_QueryFrame(firstChild->PrincipalChildList().FirstChild());
+    if (!block || block->GetContent() != &aElement) {
+      aResult.SetNull();
+      return;
+    }
+  }
+
+  nsTArray<uint32_t> result;
+  do {
+    result.AppendElement(block->Lines().size());
+    block = static_cast<nsBlockFrame*>(block->GetNextInFlow());
+  } while (block);
+
+  aResult.SetValue(std::move(result));
 }
 
 static bool FrameHasSpecifiedSize(const nsIFrame* aFrame) {

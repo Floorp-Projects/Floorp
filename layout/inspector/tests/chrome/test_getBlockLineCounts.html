@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style>
+.test {
+  margin: 1em;
+  font: 13px monospace;
+  width: 16ch;
+}
+.cols {
+  columns: 3;
+}
+</style>
+</head>
+
+<body>
+  <div class="test"><span id="test1">one two three four five six seven</span></div>
+  <div class="test"><div id="test2">one two three four five six seven</div></div>
+  <div class="test cols"><div id="test3">one two three four five six seven</div></div>
+  <div class="test"><div id="test4" class="cols">one two three four five six seven</div></div>
+
+  <script>
+  const TEST_DATA = [
+    {
+      description: "Test line counts of a non-block element returns null",
+      testElem: "test1",
+      lineCounts: null,
+    },
+    {
+      description: "Test line count of a non-fragmented block",
+      testElem: "test2",
+      lineCounts: [3],
+    },
+    {
+      description: "Test line counts of a block that is fragmented across columns",
+      testElem: "test3",
+      lineCounts: [3, 3, 1],
+    },
+    {
+      description: "Test line counts when columns are specified directly on the block",
+      testElem: "test4",
+      lineCounts: [3, 3, 1],
+    },
+  ];
+
+  function check(a, b) {
+    if (a === null) {
+      return b === null;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  for (const { description, testElem, lineCounts } of TEST_DATA) {
+    info(description);
+
+    let target = document.getElementById(testElem);
+    let counts = InspectorUtils.getBlockLineCounts(target);
+
+    ok(check(counts, lineCounts), "got expected line counts");
+  }
+  </script>
+</body>
