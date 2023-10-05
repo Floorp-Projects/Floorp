@@ -173,7 +173,6 @@ static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
   return aEvent.mMessage == eMouseMove || aEvent.mMessage == eMouseDown ||
          aEvent.mMessage == eMouseUp || aEvent.mMessage == eDragEnd ||
          (StaticPrefs::test_events_async_enabled() &&
-          StaticPrefs::test_events_async_mouse_enabled() &&
           aEvent.mMessage == eMouseHitTest);
 }
 
