@@ -259,6 +259,21 @@
       return this._lastAccessed == Infinity ? Date.now() : this._lastAccessed;
     }
 
+    get lastSeenActive() {
+      const isForegroundWindow =
+        this.ownerGlobal ==
+        BrowserWindowTracker.getTopWindow({ allowPopups: true });
+      // the timestamp for the selected tab in the active window is always now
+      if (isForegroundWindow && this.selected) {
+        return Date.now();
+      }
+      if (this._lastSeenActive) {
+        return this._lastSeenActive;
+      }
+      // Use the application start time as the fallback value
+      return Services.startup.getStartupInfo().start.getTime();
+    }
+
     get _overPlayingIcon() {
       return this.overlayIcon?.matches(":hover");
     }
@@ -289,6 +304,10 @@
 
     updateLastAccessed(aDate) {
       this._lastAccessed = this.selected ? Infinity : aDate || Date.now();
+    }
+
+    updateLastSeenActive() {
+      this._lastSeenActive = Date.now();
     }
 
     updateLastUnloadedByTabUnloader() {
