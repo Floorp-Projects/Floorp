@@ -8314,7 +8314,7 @@
 # Is support for light-dark() on content enabled?
 - name: layout.css.light-dark.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
