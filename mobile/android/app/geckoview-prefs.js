@@ -83,3 +83,8 @@ pref("pdfjs.handleOctetStream", true);
 pref("browser.download.open_pdf_attachments_inline", true);
 pref("pdfjs.annotationEditorMode", -1);
 pref("pdfjs.enableFloatingToolbar", true);
+
+// Bug 1809922 to enable translations
+#ifdef NIGHTLY_BUILD
+  pref("browser.translations.enable", true);
+#endif

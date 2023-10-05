@@ -91,6 +91,7 @@ import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.TranslationsController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebNotificationDelegate;
@@ -776,6 +777,7 @@ public class GeckoSessionTestRule implements TestRule {
     DEFAULT_DELEGATES.add(ScrollDelegate.class);
     DEFAULT_DELEGATES.add(SelectionActionDelegate.class);
     DEFAULT_DELEGATES.add(TextInputDelegate.class);
+    DEFAULT_DELEGATES.add(TranslationsController.SessionTranslation.Delegate.class);
   }
 
   private static final Set<Class<?>> DEFAULT_RUNTIME_DELEGATES = new HashSet<>();
@@ -808,6 +810,7 @@ public class GeckoSessionTestRule implements TestRule {
           ScrollDelegate,
           SelectionActionDelegate,
           TextInputDelegate,
+          TranslationsController.SessionTranslation.Delegate,
           // Runtime delegates
           ActivityDelegate,
           Autocomplete.StorageDelegate,
@@ -1010,6 +1013,9 @@ public class GeckoSessionTestRule implements TestRule {
       session.setAutofillDelegate((Autofill.Delegate) delegate);
     } else if (cls == MediaSession.Delegate.class) {
       session.setMediaSessionDelegate((MediaSession.Delegate) delegate);
+    } else if (cls == TranslationsController.SessionTranslation.Delegate.class) {
+      session.setTranslationsSessionDelegate(
+          (TranslationsController.SessionTranslation.Delegate) delegate);
     } else {
       GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls).invoke(session, delegate);
     }
@@ -1081,6 +1087,9 @@ public class GeckoSessionTestRule implements TestRule {
     }
     if (cls == MediaSession.Delegate.class) {
       return GeckoSession.class.getMethod("getMediaSessionDelegate").invoke(session);
+    }
+    if (cls == TranslationsController.SessionTranslation.Delegate.class) {
+      return GeckoSession.class.getMethod("getTranslationsSessionDelegate").invoke(session);
     }
     return GeckoSession.class.getMethod("get" + cls.getSimpleName()).invoke(session);
   }

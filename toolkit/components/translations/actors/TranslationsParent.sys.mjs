@@ -433,11 +433,17 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     // Only offer the translation if it's still the current page.
-    if (
-      documentURI.spec ===
-      this.browsingContext.topChromeWindow.gBrowser.selectedBrowser.documentURI
-        .spec
-    ) {
+    var isCurrentPage = false;
+    if (AppConstants.platform !== "android") {
+      isCurrentPage =
+        documentURI.spec ===
+        this.browsingContext.topChromeWindow.gBrowser.selectedBrowser
+          .documentURI.spec;
+    } else {
+      // In Android, the active window is the active tab.
+      isCurrentPage = documentURI.spec === browser.documentURI.spec;
+    }
+    if (isCurrentPage) {
       lazy.console.log(
         "maybeOfferTranslations - Offering a translation",
         documentURI.spec,

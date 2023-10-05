@@ -144,6 +144,8 @@ public class GeckoSession {
   private SessionAccessibility mAccessibility;
   private SessionFinder mFinder;
   private SessionPdfFileSaver mPdfFileSaver;
+  private TranslationsController.SessionTranslation mTranslations =
+      new TranslationsController.SessionTranslation(this);
 
   /** {@code SessionMagnifier} handles magnifying glass. */
   /* package */ interface SessionMagnifier {
@@ -1219,6 +1221,8 @@ public class GeckoSession {
       };
 
   private final MediaSession.Handler mMediaSessionHandler = new MediaSession.Handler(this);
+  private final TranslationsController.SessionTranslation.Handler mTranslationsHandler =
+      mTranslations.getHandler();
 
   /* package */ int handlersCount;
 
@@ -1234,6 +1238,7 @@ public class GeckoSession {
         mProgressHandler,
         mScrollHandler,
         mSelectionActionDelegate,
+        mTranslationsHandler,
         mContentBlockingHandler,
         mMediaSessionHandler,
         mExperimentHandler
@@ -3353,6 +3358,40 @@ public class GeckoSession {
   @AnyThread
   public @Nullable MediaSession.Delegate getMediaSessionDelegate() {
     return mMediaSessionHandler.getDelegate();
+  }
+
+  /**
+   * The session translation object coordinates receiving and sending session messages with the
+   * translations toolkit. Notably, it can be used to request translations.
+   *
+   * @return The current translation session coordinator.
+   */
+  @AnyThread
+  public @Nullable TranslationsController.SessionTranslation getSessionTranslation() {
+    return mTranslations;
+  }
+
+  /**
+   * Set the translation delegate, which receives translations events.
+   *
+   * @param delegate An implementation of @link{TranslationsController.SessionTranslation.Delegate}.
+   */
+  @AnyThread
+  public void setTranslationsSessionDelegate(
+      final @Nullable TranslationsController.SessionTranslation.Delegate delegate) {
+    mTranslationsHandler.setDelegate(delegate, this);
+  }
+
+  /**
+   * Get the translations delegate. The application embedder must initially set the translations
+   * delegate for use.
+   *
+   * @return The current translations delegate.
+   */
+  @AnyThread
+  public @Nullable TranslationsController.SessionTranslation.Delegate
+      getTranslationsSessionDelegate() {
+    return mTranslationsHandler.getDelegate();
   }
 
   /**
