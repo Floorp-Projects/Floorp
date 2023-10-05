@@ -11,7 +11,7 @@ Tests in synthetic/ relate to incomplete parts of the HTML5 specification,
 which allows synthetic events to be created. For compatibility with others,
 the dataTransfer parameter allows null, undefined and other objects. Objects
 will create a synthetic dataTransfer. To provide maximum functionality,
-synthetic dataTransfer will have its own synthetic data store, detatched from
+synthetic dataTransfer will have its own synthetic data store, detached from
 the real data store used by real drag events (actual user interaction). For
 security, real dataTransfer objects will remember the real event's protection
 status inside synthetic events (the spec bases their protection only on the
