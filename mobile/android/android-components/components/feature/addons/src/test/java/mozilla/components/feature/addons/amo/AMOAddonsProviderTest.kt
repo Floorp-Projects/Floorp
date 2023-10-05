@@ -101,7 +101,7 @@ class AMOAddonsProviderTest {
         // Add-on
         assertEquals("uBlock0@raymondhill.net", addon.id)
         assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
-        assertEquals("2021-02-04T12:05:14Z", addon.updatedAt)
+        assertEquals("2021-02-01T14:04:16Z", addon.updatedAt)
         assertEquals(
             "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
             addon.iconUrl,
@@ -665,7 +665,7 @@ class AMOAddonsProviderTest {
         val addon = addons.first()
         assertEquals("uBlock0@raymondhill.net", addon.id)
         assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
-        assertEquals("2023-08-07T17:15:41Z", addon.updatedAt)
+        assertEquals("2023-07-19T23:09:25Z", addon.updatedAt)
         assertEquals(
             "https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
             addon.iconUrl,
@@ -744,7 +744,7 @@ class AMOAddonsProviderTest {
         addon = addons.last()
         assertEquals("{58c32ac4-0d6c-4d6f-ae2c-96aaf8ffcb66}", addon.id)
         assertEquals("2017-10-31T15:35:56Z", addon.createdAt)
-        assertEquals("2020-10-06T08:39:18Z", addon.updatedAt)
+        assertEquals("2020-10-05T16:52:49Z", addon.updatedAt)
         assertEquals(
             "https://addons.mozilla.org/user-media/addon_icons/869/869140-64.png?modified=mcrushed",
             addon.iconUrl,
@@ -932,7 +932,7 @@ class AMOAddonsProviderTest {
         // Add-on details
         assertEquals("uBlock0@raymondhill.net", addon.id)
         assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
-        assertEquals("2023-08-07T17:15:41Z", addon.updatedAt)
+        assertEquals("2023-07-19T23:09:25Z", addon.updatedAt)
         assertEquals(
             "https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
             addon.iconUrl,

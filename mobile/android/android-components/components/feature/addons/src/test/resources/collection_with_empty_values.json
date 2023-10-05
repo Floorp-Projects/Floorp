@@ -26,20 +26,7 @@
             }
           },
           "edit_url": "https://addons.mozilla.org/en-US/developers/addon/ublock-origin/versions/4884220",
-          "files": [
-            {
-              "created": "2019-10-21T16:37:32Z",
-              "hash": "sha256:b72c8bf1038d18e2d8badd0accd20f9d6938efe2f45303e99aaab189a66dbbc1",
-              "is_restart_required": false,
-              "is_webextension": true,
-              "is_mozilla_signed_extension": false,
-              "platform": "all",
-              "size": 2646112,
-              "status": "public",
-              "url": null,
-              "permissions": null
-            }
-          ],
+          "files": [],
           "is_strict_compatibility_enabled": false,
           "license": {
             "id": 6,
