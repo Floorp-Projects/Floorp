@@ -781,7 +781,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   JSRope* parent = nullptr;
   uint32_t parentFlag = 0;
 
-first_visit_node : {
+first_visit_node: {
   MOZ_ASSERT_IF(str != root, parent && parentFlag);
   MOZ_ASSERT(!str->asRope().isBeingFlattened());
 
@@ -806,7 +806,7 @@ first_visit_node : {
   pos += left.length();
 }
 
-visit_right_child : {
+visit_right_child: {
   JSString& right = *str->d.s.u3.right;
   if (right.isRope()) {
     /* Return to this node when 'right' done, then goto finish_node. */
@@ -819,7 +819,7 @@ visit_right_child : {
   pos += right.length();
 }
 
-finish_node : {
+finish_node: {
   if (str == root) {
     goto finish_root;
   }
@@ -1038,7 +1038,11 @@ void JSDependentString::dumpRepresentation(js::GenericPrinter& out,
 #endif
 
 bool js::EqualChars(const JSLinearString* str1, const JSLinearString* str2) {
+  // Assert this isn't called for strings the caller should handle with a fast
+  // path.
   MOZ_ASSERT(str1->length() == str2->length());
+  MOZ_ASSERT(str1 != str2);
+  MOZ_ASSERT(!str1->isAtom() || !str2->isAtom());
 
   size_t len = str1->length();
 
@@ -1089,9 +1093,11 @@ bool js::EqualStrings(JSContext* cx, JSString* str1, JSString* str2,
     *result = true;
     return true;
   }
-
-  size_t length1 = str1->length();
-  if (length1 != str2->length()) {
+  if (str1->length() != str2->length()) {
+    *result = false;
+    return true;
+  }
+  if (str1->isAtom() && str2->isAtom()) {
     *result = false;
     return true;
   }
@@ -1113,12 +1119,12 @@ bool js::EqualStrings(const JSLinearString* str1, const JSLinearString* str2) {
   if (str1 == str2) {
     return true;
   }
-
-  size_t length1 = str1->length();
-  if (length1 != str2->length()) {
+  if (str1->length() != str2->length()) {
     return false;
   }
-
+  if (str1->isAtom() && str2->isAtom()) {
+    return false;
+  }
   return EqualChars(str1, str2);
 }
 
