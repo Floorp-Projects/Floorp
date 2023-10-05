@@ -132,21 +132,39 @@ async function _setBreakpointPositions(location, thunkArgs) {
         };
       }
 
-      const actorBps = await Promise.all(
+      // Retrieve the positions for all the source actors for the related generated source.
+      // There might be many if it is loaded many times.
+      // We limit the retrieval of positions within the given range, so that we don't
+      // retrieve the whole bundle positions.
+      const allActorsPositions = await Promise.all(
         getSourceActorsForSource(getState(), generatedSourceId).map(actor =>
           client.getSourceActorBreakpointPositions(actor, range)
         )
       );
 
-      for (const actorPositions of actorBps) {
-        for (const rangeLine of Object.keys(actorPositions)) {
-          let columns = actorPositions[parseInt(rangeLine, 10)];
+      // `allActorsPositions` looks like this:
+      // [
+      //   { // Positions for the first source actor
+      //     1: [ 2, 6 ], // Line 1 is breakable on column 2 and 6
+      //     2: [ 2 ], // Line 2 is only breakable on column 2
+      //   },
+      //   {...} // Positions for another source actor
+      // ]
+      for (const actorPositions of allActorsPositions) {
+        for (const rangeLine in actorPositions) {
+          const columns = actorPositions[rangeLine];
+
+          // Merge all actors's breakable columns and avoid duplication of columns reported as breakable
           const existing = results[rangeLine];
           if (existing) {
-            columns = [...new Set([...existing, ...columns])];
+            for (const column of columns) {
+              if (!existing.includes(column)) {
+                existing.push(column);
+              }
+            }
+          } else {
+            results[rangeLine] = columns;
           }
-
-          results[rangeLine] = columns;
         }
       }
     }
@@ -156,13 +174,17 @@ async function _setBreakpointPositions(location, thunkArgs) {
       throw new Error("Line is required for generated sources");
     }
 
-    const actorColumns = await Promise.all(
+    // We only retrieve the positions for the given requested line, that, for each source actor.
+    // There might be many source actor, if it is loaded many times.
+    // Or if this is an html page, with many inline scripts.
+    const allActorsBreakableColumns = await Promise.all(
       getSourceActorsForSource(getState(), location.source.id).map(
         async actor => {
           const positions = await client.getSourceActorBreakpointPositions(
             actor,
             {
-              start: { line: line, column: 0 },
+              // Only retrieve positions for the given line
+              start: { line, column: 0 },
               end: { line: line + 1, column: 0 },
             }
           );
@@ -171,8 +193,18 @@ async function _setBreakpointPositions(location, thunkArgs) {
       )
     );
 
-    for (const columns of actorColumns) {
-      results[line] = (results[line] || []).concat(columns);
+    for (const columns of allActorsBreakableColumns) {
+      // Merge all actors's breakable columns and avoid duplication of columns reported as breakable
+      const existing = results[line];
+      if (existing) {
+        for (const column of columns) {
+          if (!existing.includes(column)) {
+            existing.push(column);
+          }
+        }
+      } else {
+        results[line] = columns;
+      }
     }
   }
 
