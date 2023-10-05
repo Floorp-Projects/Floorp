@@ -216,7 +216,7 @@ async function getGeneratedLocation(location) {
   };
 }
 
-async function getOriginalLocations(locations, options = {}) {
+async function getOriginalLocations(locations) {
   const maps = {};
 
   const results = [];
@@ -227,37 +227,22 @@ async function getOriginalLocations(locations, options = {}) {
       maps[location.sourceId] = map || null;
     }
 
-    results.push(map ? getOriginalLocationSync(map, location, options) : null);
+    results.push(map ? getOriginalLocationSync(map, location) : null);
   }
   return results;
 }
 
-function getOriginalLocationSync(map, location, { search } = {}) {
+function getOriginalLocationSync(map, location) {
   // First check for an exact match
-  let match = map.originalPositionFor({
+  const {
+    source: sourceUrl,
+    line,
+    column,
+  } = map.originalPositionFor({
     line: location.line,
     column: location.column == null ? 0 : location.column,
   });
 
-  // If there is not an exact match, look for a match with a bias at the
-  // current location and then on subsequent lines
-  if (search) {
-    let line = location.line;
-    let column = location.column == null ? 0 : location.column;
-
-    while (match.source === null) {
-      match = map.originalPositionFor({
-        line,
-        column,
-        bias: SourceMapConsumer[search],
-      });
-
-      line += search == "LEAST_UPPER_BOUND" ? 1 : -1;
-      column = search == "LEAST_UPPER_BOUND" ? 0 : Infinity;
-    }
-  }
-
-  const { source: sourceUrl, line, column } = match;
   if (sourceUrl == null) {
     // No url means the location didn't map.
     return null;
@@ -271,7 +256,7 @@ function getOriginalLocationSync(map, location, { search } = {}) {
   };
 }
 
-async function getOriginalLocation(location, options = {}) {
+async function getOriginalLocation(location) {
   if (!isGeneratedId(location.sourceId)) {
     return null;
   }
@@ -281,7 +266,7 @@ async function getOriginalLocation(location, options = {}) {
     return null;
   }
 
-  return getOriginalLocationSync(map, location, options);
+  return getOriginalLocationSync(map, location);
 }
 
 async function getOriginalSourceText(originalSourceId) {
