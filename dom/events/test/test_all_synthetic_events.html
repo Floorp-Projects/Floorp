@@ -379,6 +379,10 @@ const kEventConstructors = {
   TimeEvent:                                 { create: null
                                                // Cannot create untrusted event from JS
                                              },
+  ToggleEvent:                               { create(aName, aProps) {
+                                                         return new ToggleEvent(aName, aProps);
+                                                       },
+                                             },
   TouchEvent:                                { create (aName, aProps) {
                                                          var e = document.createEvent("touchevent");
                                                          e.initTouchEvent(aName, aProps.bubbles, aProps.cancelable,

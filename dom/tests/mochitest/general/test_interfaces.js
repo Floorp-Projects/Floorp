@@ -1378,6 +1378,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TimeRanges", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ToggleEvent", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Touch", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TouchEvent", insecureContext: true },
