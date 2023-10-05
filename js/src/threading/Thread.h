@@ -91,7 +91,7 @@ class Thread {
   // The thread must be joined or detached before destruction.
   ~Thread();
 
-  // Move the thread into the detached state without blocking. In the detatched
+  // Move the thread into the detached state without blocking. In the detached
   // state, the thread continues to run until it exits, but cannot be joined.
   // After this method returns, this Thread no longer represents a thread of
   // execution. When the thread exits, its resources will be cleaned up by the
