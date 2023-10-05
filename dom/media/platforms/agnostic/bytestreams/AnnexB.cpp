@@ -457,36 +457,6 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
 }
 
 /* static */
-bool AnnexB::ConvertSampleToHVCC(mozilla::MediaRawData* aSample) {
-  if (IsHVCC(aSample)) {
-    return ConvertHVCCTo4BytesHVCC(aSample).isOk();
-  }
-  if (!IsAnnexB(aSample)) {
-    // Not AnnexB, nothing to convert.
-    return true;
-  }
-
-  nsTArray<uint8_t> nalu;
-  ByteWriter<BigEndian> writer(nalu);
-  BufferReader reader(aSample->Data(), aSample->Size());
-  if (ParseNALUnits(writer, reader).isErr()) {
-    LOG("Failed fo parse AnnexB NALU for HVCC");
-    return false;
-  }
-  UniquePtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
-  if (!samplewriter->Replace(nalu.Elements(), nalu.Length())) {
-    LOG("Failed fo replace NALU");
-    return false;
-  }
-  MOZ_DIAGNOSTIC_ASSERT_IF(aSample->mExtraData,
-                           HVCCConfig::Parse(aSample).isOk());
-  // TODO : currently we don't set the fake header because we expect the sample
-  // already has a valid extradata. (set by the media change monitor) We can
-  // support setting a specific/fake header if we want to support HEVC encoding.
-  return true;
-}
-
-/* static */
 Result<mozilla::Ok, nsresult> AnnexB::ConvertAVCCTo4BytesAVCC(
     mozilla::MediaRawData* aSample) {
   auto avcc = AVCCConfig::Parse(aSample);
