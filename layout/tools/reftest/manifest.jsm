@@ -669,6 +669,13 @@ function BuildConditionSandbox(aURL) {
     contentBackend == canvasBackend ||
     (contentBackend == "none" && canvasBackend == "cairo");
 
+  try {
+    var windowProtocol = readGfxInfo(gfxInfo, "windowProtocol");
+    sandbox.wayland = windowProtocol == "wayland";
+  } catch (e) {
+    sandbox.wayland = false;
+  }
+
   sandbox.remoteCanvas =
     Services.prefs.getBoolPref("gfx.canvas.remote") &&
     sandbox.d2d &&
