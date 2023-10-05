@@ -149,6 +149,8 @@ export class ShoppingSidebarChild extends RemotePageChild {
     this.sendToContent("adsEnabledByUserChanged", {
       adsEnabledByUser: this.userHasAdsEnabled,
     });
+
+    this.requestRecommendations(this.#productURI);
   }
 
   getProductURI() {
@@ -269,6 +271,8 @@ export class ShoppingSidebarChild extends RemotePageChild {
       }
 
       this.sendToContent("Update", {
+        adsEnabled: this.canFetchAndShowAd,
+        adsEnabledByUser: this.userHasAdsEnabled,
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
@@ -289,31 +293,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         );
       }
 
-      if (!this.canFetchAndShowAd || !this.userHasAdsEnabled) {
-        return;
-      }
-
-      this.#product.requestRecommendations().then(recommendationData => {
-        // Check if the product URI or opt in changed while we waited.
-        if (
-          uri != this.#productURI ||
-          !this.canFetchAndShowData ||
-          !this.canFetchAndShowAd ||
-          !this.userHasAdsEnabled
-        ) {
-          return;
-        }
-
-        this.sendToContent("Update", {
-          adsEnabled: this.canFetchAndShowAd,
-          adsEnabledByUser: this.userHasAdsEnabled,
-          showOnboarding: false,
-          data,
-          productUrl: this.#productURI.spec,
-          recommendationData,
-          isAnalysisInProgress,
-        });
-      });
+      this.requestRecommendations(uri);
     } else {
       // Don't bother continuing if the user has opted out.
       if (lazy.optedIn == 2) {
@@ -336,6 +316,38 @@ export class ShoppingSidebarChild extends RemotePageChild {
         productUrl: this.#productURI.spec,
       });
     }
+  }
+
+  /**
+   * Request recommended products for a given uri and send the recommendations
+   * to the content if recommendations are enabled.
+   *
+   * @param {nsIURI} uri The uri of the current product page
+   */
+  async requestRecommendations(uri) {
+    if (
+      !uri.equalsExceptRef(this.#productURI) ||
+      !this.canFetchAndShowData ||
+      !this.canFetchAndShowAd ||
+      !this.userHasAdsEnabled
+    ) {
+      return;
+    }
+
+    let recommendationData = await this.#product.requestRecommendations();
+    // Check if the product URI or opt in changed while we waited.
+    if (
+      !uri.equalsExceptRef(this.#productURI) ||
+      !this.canFetchAndShowData ||
+      !this.canFetchAndShowAd ||
+      !this.userHasAdsEnabled
+    ) {
+      return;
+    }
+
+    this.sendToContent("UpdateRecommendations", {
+      recommendationData,
+    });
   }
 
   sendToContent(eventName, detail) {
