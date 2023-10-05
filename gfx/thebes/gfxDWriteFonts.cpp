@@ -135,6 +135,10 @@ bool gfxDWriteFont::InitDWriteSupport() {
 void gfxDWriteFont::UpdateSystemTextVars() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  if (!gfxVars::IsInitialized()) {
+    return;
+  }
+
   BYTE newQuality = GetSystemTextQuality();
   if (gfxVars::SystemTextQuality() != newQuality) {
     gfxVars::SetSystemTextQuality(newQuality);
