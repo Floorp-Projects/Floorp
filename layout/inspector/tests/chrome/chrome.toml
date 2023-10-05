@@ -38,3 +38,5 @@ support-files = ["test_fontVariationsAPI.css"]
 ["test_ua_sheet_disable.html"]
 
 ["test_visited_style.html"]
+
+["test_getBlockLineCounts.html"]

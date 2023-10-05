@@ -225,6 +225,9 @@ class InspectorUtils {
 
   static Element* ContainingBlockOf(GlobalObject&, Element&);
 
+  static void GetBlockLineCounts(GlobalObject& aGlobal, Element& aElement,
+                                 Nullable<nsTArray<uint32_t>>& aResult);
+
   MOZ_CAN_RUN_SCRIPT
   static already_AddRefed<nsINodeList> GetOverflowingChildrenOfElement(
       GlobalObject& aGlobal, Element& element);
