@@ -290,6 +290,7 @@ where
     E: TElement + 'a,
 {
     /// Gather relative selector dependencies for the given element, and invalidate as necessary.
+    #[inline(never)]
     pub fn invalidate_relative_selectors_for_this<F>(
         self,
         stylist: &'a Stylist,
@@ -324,6 +325,7 @@ where
     }
 
     /// Gather relative selector dependencies for the given element (And its subtree) that mutated, and invalidate as necessary.
+    #[inline(never)]
     pub fn invalidate_relative_selectors_for_dom_mutation(
         self,
         subtree: bool,
