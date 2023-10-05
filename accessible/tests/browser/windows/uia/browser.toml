@@ -7,3 +7,5 @@ skip-if = [
 support-files = ["head.js"]
 
 ["browser_controlType.js"]
+
+["browser_elementFromPoint.js"]

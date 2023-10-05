@@ -8,7 +8,7 @@
 import ctypes
 import os
 from ctypes import POINTER, byref
-from ctypes.wintypes import BOOL, HWND, LPARAM
+from ctypes.wintypes import BOOL, HWND, LPARAM, POINT  # noqa: F401
 
 import comtypes.client
 import psutil

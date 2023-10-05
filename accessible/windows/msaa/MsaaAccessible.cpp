@@ -1241,6 +1241,19 @@ MsaaAccessible::accHitTest(
 
   // if we got a child
   if (accessible) {
+    if (accessible != mAcc && accessible->IsTextLeaf()) {
+      Accessible* parent = accessible->Parent();
+      if (parent != mAcc && parent->Role() == roles::LINK) {
+        // Bug 1843832: The UI Automation -> IAccessible2 proxy barfs if we
+        // return the text leaf child of a link when hit testing an ancestor of
+        // the link. Therefore, we return the link instead. MSAA clients which
+        // call AccessibleObjectFromPoint will still get to the text leaf, since
+        // AccessibleObjectFromPoint keeps calling accHitTest until it can't
+        // descend any further. We should remove this tragic hack once we have
+        // a native UIA implementation.
+        accessible = parent;
+      }
+    }
     if (accessible == mAcc) {
       pvarChild->vt = VT_I4;
       pvarChild->lVal = CHILDID_SELF;
