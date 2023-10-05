@@ -6,9 +6,9 @@
 # Parent  64e7d096fa77a62b71a306b2c5383b8f75ac4945
 [libFuzzer] Suppress warnings about unused return values
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIO.cpp b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerIO.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
+diff --git a/FuzzerIO.cpp b/FuzzerIO.cpp
+--- a/FuzzerIO.cpp
++++ b/FuzzerIO.cpp
 @@ -3,16 +3,17 @@
  // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
  // See https://llvm.org/LICENSE.txt for license information.
@@ -46,9 +46,9 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerIO.cpp b/tools/fuzzing/libfuzzer/Fuzz
    long E = Epoch ? *Epoch : 0;
    Vector<std::string> Files;
    ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/true);
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
+diff --git a/FuzzerIOPosix.cpp b/FuzzerIOPosix.cpp
+--- a/FuzzerIOPosix.cpp
++++ b/FuzzerIOPosix.cpp
 @@ -2,16 +2,17 @@
  //
  // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

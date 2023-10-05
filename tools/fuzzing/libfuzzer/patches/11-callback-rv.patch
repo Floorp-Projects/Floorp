@@ -6,9 +6,9 @@
 # Parent  8a2a26b33d516c43c366b2f24d731d27d9843349
 [libFuzzer] Change libFuzzer callback contract to allow positive return values
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/FuzzerInternal.h
---- a/tools/fuzzing/libfuzzer/FuzzerInternal.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerInternal.h
+diff --git a/FuzzerInternal.h b/FuzzerInternal.h
+--- a/FuzzerInternal.h
++++ b/FuzzerInternal.h
 @@ -60,17 +60,17 @@ public:
  
    static void StaticAlarmCallback();
@@ -28,9 +28,9 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/
    void CrashResistantMergeInternalStep(const std::string &ControlFilePath);
    MutationDispatcher &GetMD() { return MD; }
    void PrintFinalStats();
-diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+diff --git a/FuzzerLoop.cpp b/FuzzerLoop.cpp
+--- a/FuzzerLoop.cpp
++++ b/FuzzerLoop.cpp
 @@ -463,17 +463,19 @@ static void RenameFeatureSetFile(const s
               DirPlusFile(FeaturesDir, NewFile));
  }
@@ -106,9 +106,9 @@ diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/Fu
    if (Options.OutputCorpus.empty())
      return "";
    std::string Path = DirPlusFile(Options.OutputCorpus, Hash(U));
-diff --git a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
+diff --git a/FuzzerMerge.cpp b/FuzzerMerge.cpp
+--- a/FuzzerMerge.cpp
++++ b/FuzzerMerge.cpp
 @@ -223,17 +223,19 @@ void Fuzzer::CrashResistantMergeInternal
        U.shrink_to_fit();
      }
