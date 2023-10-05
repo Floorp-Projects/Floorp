@@ -345,8 +345,12 @@ class FindExpirationTimeState final {
     } while (true);
 
     mBefore = TimeStamp::Now();
-    mMiddle = mBefore + TimeDuration::FromMilliseconds(
-                            kTimerOffset + kTimerInterval * kNumTimers / 2);
+    // To avoid getting exactly the same time for a timer and mMiddle, subtract
+    // 50 ms.
+    mMiddle = mBefore +
+              TimeDuration::FromMilliseconds(kTimerOffset +
+                                             kTimerInterval * kNumTimers / 2) -
+              TimeDuration::FromMilliseconds(50);
     for (uint32_t i = 0; i < kNumTimers; ++i) {
       nsCOMPtr<nsITimer> timer = NS_NewTimer();
       ASSERT_TRUE(timer);

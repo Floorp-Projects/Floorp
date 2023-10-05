@@ -223,21 +223,15 @@ class RefreshDriverTimer {
   TimeStamp GetIdleDeadlineHint(TimeStamp aDefault) {
     MOZ_ASSERT(NS_IsMainThread());
 
+    bool inHighRateMode = nsRefreshDriver::IsInHighRateMode();
+
+    if (!IsTicking() && !inHighRateMode) {
+      return aDefault;
+    }
+
     TimeStamp mostRecentRefresh = MostRecentRefresh();
     TimeDuration refreshPeriod = GetTimerRate();
     TimeStamp idleEnd = mostRecentRefresh + refreshPeriod;
-    bool inHighRateMode = nsRefreshDriver::IsInHighRateMode();
-
-    // If we haven't painted for some time, then guess that we won't paint
-    // again for a while, so the refresh driver is not a good way to predict
-    // idle time.
-    if (!inHighRateMode &&
-        (idleEnd +
-             refreshPeriod *
-                 StaticPrefs::layout_idle_period_required_quiescent_frames() <
-         TimeStamp::Now())) {
-      return aDefault;
-    }
 
     // End the predicted idle time a little early, the amount controlled by a
     // pref, to prevent overrunning the idle time and delaying a frame.
