@@ -101,7 +101,7 @@ class ShoppingMessageBar extends MozLitElement {
         slot="actions"
         id="message-bar-report-product-available-btn"
         class="small-button"
-        data-l10n-id="shopping-message-bar-warning-product-not-available-button"
+        data-l10n-id="shopping-message-bar-warning-product-not-available-button2"
         @click=${this.onClickProductAvailable}
       ></button>
     </moz-message-bar>`;
