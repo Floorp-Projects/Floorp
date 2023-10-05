@@ -1564,7 +1564,11 @@ extern bool EqualStrings(const JSLinearString* str1,
  * Compare two strings that are known to be the same length.
  * Exposed for the JITs; for ordinary uses, EqualStrings() is more sensible.
  *
- * Precondition: str1->length() == str2->length().
+ * The caller must have checked for the following cases that can be handled
+ * efficiently without requiring a character comparison:
+ *   - str1 == str2
+ *   - str1->length() != str2->length()
+ *   - str1->isAtom() && str2->isAtom()
  */
 extern bool EqualChars(const JSLinearString* str1, const JSLinearString* str2);
 
