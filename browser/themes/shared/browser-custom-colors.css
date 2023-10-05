@@ -59,8 +59,11 @@
     --toolbarbutton-icon-fill-attention: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
 
     --urlbar-popup-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
-    --urlbar-icon-fill-opacity: 0.72;
     --urlbar-box-bgcolor: light-dark(white, rgb(66, 65, 77));
+    --urlbar-icon-fill-opacity: 0.72;
+    @media (prefers-color-scheme: dark) {
+      --urlbar-icon-fill-opacity: 1;
+    }
 
     --autocomplete-popup-separator-color: light-dark(rgb(240, 240, 244), rgb(82, 82, 94));
     --toolbar-field-border-color: transparent;
