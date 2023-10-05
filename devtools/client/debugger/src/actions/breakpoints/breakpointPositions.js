@@ -20,11 +20,32 @@ import {
 } from "../../utils/location";
 import { validateSource } from "../../utils/context";
 
-async function mapLocations(
+/**
+ * Helper function which consumes breakpoints positions sent by the server
+ * and map them to location objects.
+ * During this process, the SourceMapLoader will be queried to map the positions from generated to original locations.
+ *
+ * @param {Object} breakpointPositions
+ *        The positions to map related to the generated source:
+ *          {
+ *            1: [ 2, 6 ], // Line 1 is breakable on column 2 and 6
+ *            2: [ 2 ], // Line 2 is only breakable on column 2
+ *          }
+ * @param {Object} generatedSource
+ * @param {Object} location
+ *        The current location we are computing breakable positions.
+ * @param {Object} thunk arguments
+ * @return {Object}
+ *         The mapped breakable locations in the original source:
+ *          {
+ *            1: [ { source, line: 1, column: 2} , { source, line: 1, column 6 } ], // Line 1 is not mapped as location are same as breakpointPositions.
+ *            10: [ { source, line: 10, column: 28 } ], // Line 2 is mapped and locations and line key refers to the original source positions.
+ *          }
+ */
+async function mapToLocations(
   breakpointPositions,
   generatedSource,
-  isOriginal,
-  originalSourceId,
+  mappedLocation,
   { getState, sourceMapLoader }
 ) {
   // Map breakable positions from generated to original locations.
@@ -38,91 +59,83 @@ async function mapLocations(
     mappedBreakpointPositions = breakpointPositions;
   }
 
-  const locations = [];
+  const positions = {};
+
+  // Ensure that we have an entry for the line fetched
+  if (typeof mappedLocation.line === "number") {
+    positions[mappedLocation.line] = [];
+  }
+
+  const handledBreakpointIds = new Set();
+  const isOriginal = mappedLocation.source.isOriginal;
+  const originalSourceId = mappedLocation.source.id;
+
   for (let line in mappedBreakpointPositions) {
     // createLocation expects a number and not a string.
     line = parseInt(line, 10);
     for (const columnOrSourceMapLocation of mappedBreakpointPositions[line]) {
+      let location, generatedLocation;
+
       // When processing a source unrelated to source map, `mappedBreakpointPositions` will be equal to `breakpointPositions`.
       // and columnOrSourceMapLocation will always be a number.
       // But it will also be a number if we process a source mapped file and SourceMapLoader didn't find any valid mapping
       // for the current position (line and column).
       // When this happen to be a number it means it isn't mapped and columnOrSourceMapLocation refers to the column index.
       if (typeof columnOrSourceMapLocation == "number") {
-        const generatedLocation = createLocation({
+        // If columnOrSourceMapLocation is a number, it means that this location doesn't mapped to an original source.
+        // So if we are currently computation positions for an original source, we can skip this breakable positions.
+        if (isOriginal) {
+          continue;
+        }
+        location = generatedLocation = createLocation({
           line,
           column: columnOrSourceMapLocation,
           source: generatedSource,
         });
-        locations.push({ location: generatedLocation, generatedLocation });
       } else {
         // Otherwise, for sources which are mapped. `columnOrSourceMapLocation` will be a SourceMapLoader location object.
         // This location object will refer to the location where the current column (columnOrSourceMapLocation.generatedColumn)
         // mapped in the original file.
-        const generatedLocation = createLocation({
+
+        // When computing positions for an original source, ignore the location if that mapped to another original source.
+        if (
+          isOriginal &&
+          columnOrSourceMapLocation.sourceId != originalSourceId
+        ) {
+          continue;
+        }
+
+        location = sourceMapToDebuggerLocation(
+          getState(),
+          columnOrSourceMapLocation
+        );
+
+        // Merge positions that refer to duplicated positions.
+        // Some sourcemaped positions might refer to the exact same source/line/column triple.
+        const breakpointId = makeBreakpointId(location);
+        if (handledBreakpointIds.has(breakpointId)) {
+          continue;
+        }
+        handledBreakpointIds.add(breakpointId);
+
+        generatedLocation = createLocation({
           line,
           column: columnOrSourceMapLocation.generatedColumn,
           source: generatedSource,
         });
-
-        locations.push({
-          location: sourceMapToDebuggerLocation(
-            getState(),
-            columnOrSourceMapLocation
-          ),
-          generatedLocation,
-        });
       }
+
+      // The positions stored in redux will be keyed by original source's line (if we are
+      // computing the original source positions), or the generated source line.
+      // Note that when we compute the bundle positions, location may refer to the original source,
+      // but we still want to use the generated location as key.
+      const keyLocation = isOriginal ? location : generatedLocation;
+      const keyLine = keyLocation.line;
+      if (!positions[keyLine]) {
+        positions[keyLine] = [];
+      }
+      positions[keyLine].push({ location, generatedLocation });
     }
-  }
-  return locations;
-}
-
-// Filter out positions, that are not in the original source Id
-function filterBySource(positions, source) {
-  if (!source.isOriginal) {
-    return positions;
-  }
-  return positions.filter(position => position.location.source == source);
-}
-
-/**
- * Merge positions that refer to duplicated positions.
- * Some sourcemaped positions might refer to the exact same source/line/column triple.
- *
- * @param {Array<{location, generatedLocation}>} positions: List of possible breakable positions
- * @returns {Array<{location, generatedLocation}>} A new, filtered array.
- */
-function filterByUniqLocation(positions) {
-  const handledBreakpointIds = new Set();
-  return positions.filter(({ location }) => {
-    const breakpointId = makeBreakpointId(location);
-    if (handledBreakpointIds.has(breakpointId)) {
-      return false;
-    }
-
-    handledBreakpointIds.add(breakpointId);
-    return true;
-  });
-}
-
-function groupByLine(results, source, line) {
-  const isOriginal = source.isOriginal;
-  const positions = {};
-
-  // Ensure that we have an entry for the line fetched
-  if (typeof line === "number") {
-    positions[line] = [];
-  }
-
-  for (const result of results) {
-    const location = isOriginal ? result.location : result.generatedLocation;
-
-    if (!positions[location.line]) {
-      positions[location.line] = [];
-    }
-
-    positions[location.line].push(result);
   }
 
   return positions;
@@ -230,20 +243,15 @@ async function _setBreakpointPositions(location, thunkArgs) {
     }
   }
 
-  let positions = await mapLocations(
+  const positions = await mapToLocations(
     results,
     generatedSource,
-    location.source.isOriginal,
-    location.source.id,
+    location,
     thunkArgs
   );
-  // `mapLocations` may compute for a little while asynchronously,
+  // `mapToLocations` may compute for a little while asynchronously,
   // ensure that the location is still valid before continuing.
   validateSource(getState(), location.source);
-
-  positions = filterBySource(positions, location.source);
-  positions = filterByUniqLocation(positions);
-  positions = groupByLine(positions, location.source, location.line);
 
   dispatch({
     type: "ADD_BREAKPOINT_POSITIONS",
