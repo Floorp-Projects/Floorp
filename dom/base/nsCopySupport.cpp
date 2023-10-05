@@ -40,6 +40,7 @@
 #include "nsContentCID.h"
 
 #ifdef XP_WIN
+#  include "mozilla/StaticPrefs_clipboard.h"
 #  include "nsCExternalHandlerService.h"
 #  include "nsEscape.h"
 #  include "nsIMIMEInfo.h"
@@ -502,8 +503,10 @@ nsresult nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
     }
 
 #ifdef XP_WIN
-    rv = AppendImagePromise(trans, imgRequest, aImageElement);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (StaticPrefs::clipboard_imageAsFile_enabled()) {
+      rv = AppendImagePromise(trans, imgRequest, aImageElement);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 #endif
 
     // copy the image data onto the transferable
