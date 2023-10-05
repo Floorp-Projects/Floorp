@@ -28,13 +28,7 @@ class UnanalyzedProductCard extends MozLitElement {
         composed: true,
       })
     );
-    this.dispatchEvent(
-      new CustomEvent("ShoppingTelemetryEvent", {
-        bubbles: true,
-        composed: true,
-        detail: "analyzeReviewsNoneAvailableClicked",
-      })
-    );
+    Glean.shopping.surfaceAnalyzeReviewsNoneAvailableClicked.record();
   }
 
   render() {

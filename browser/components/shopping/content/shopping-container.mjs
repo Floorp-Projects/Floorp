@@ -137,13 +137,7 @@ export class ShoppingContainer extends MozLitElement {
             composed: true,
           })
         );
-        window.dispatchEvent(
-          new CustomEvent("ShoppingTelemetryEvent", {
-            bubbles: true,
-            composed: true,
-            detail: "surfaceReactivatedButtonClicked",
-          })
-        );
+        Glean.shopping.surfaceReactivatedButtonClicked.record();
         break;
       case "adsEnabledByUserChanged":
         this.adsEnabledByUser = event.detail?.adsEnabledByUser;
@@ -357,13 +351,7 @@ export class ShoppingContainer extends MozLitElement {
 
   handleClick() {
     RPMSetPref("browser.shopping.experience2023.active", false);
-    this.dispatchEvent(
-      new CustomEvent("ShoppingTelemetryEvent", {
-        composed: true,
-        bubbles: true,
-        detail: ["surfaceClosed", "closeButton"],
-      })
-    );
+    Glean.shopping.surfaceClosed.record({ source: "closeButton" });
   }
 }
 
