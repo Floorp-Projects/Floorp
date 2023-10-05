@@ -849,6 +849,7 @@ skip-if = ["(android_version == '25' && debug)"] # android(bug 1232305)
 
 ["test_hevc_playback.html"]
 skip-if = ["!mda_gpu"]
+scheme = "https"
 
 ["test_info_leak.html"]
 
