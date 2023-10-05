@@ -70,6 +70,7 @@ export class ShoppingContainer extends MozLitElement {
     window.document.addEventListener("ReportedProductAvailable", this);
     window.document.addEventListener("adsEnabledByUserChanged", this);
     window.document.addEventListener("scroll", this);
+    window.document.addEventListener("UpdateRecommendations", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -102,6 +103,10 @@ export class ShoppingContainer extends MozLitElement {
     this.isAnalysisInProgress = isAnalysisInProgress;
     this.adsEnabled = adsEnabled;
     this.adsEnabledByUser = adsEnabledByUser;
+  }
+
+  _updateRecommendations({ recommendationData }) {
+    this.recommendationData = recommendationData;
   }
 
   handleEvent(event) {
@@ -146,6 +151,9 @@ export class ShoppingContainer extends MozLitElement {
       case "scroll":
         let scrollYPosition = window.scrollY;
         this.isOverflow = scrollYPosition > HEADER_SCROLL_PIXEL_OFFSET;
+        break;
+      case "UpdateRecommendations":
+        this._updateRecommendations(event.detail);
         break;
     }
   }
