@@ -503,7 +503,7 @@ class Loader final {
     }
   }
 
-  void DecrementOngoingLoadCount() {
+  void DecrementOngoingLoadCountAndMaybeUnblockOnload() {
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount > mPendingLoadCount);
     if (!--mOngoingLoadCount) {
