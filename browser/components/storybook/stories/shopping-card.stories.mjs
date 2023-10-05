@@ -61,3 +61,12 @@ CardTypeAccordion.args = {
   In a eros ac dolor hendrerit varius et at mauris.`,
   type: "accordion",
 };
+
+export const CardTypeShowMore = Template.bind({});
+CardTypeShowMore.args = {
+  ...DefaultCard.args,
+  content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  Nunc velit turpis, mollis a ultricies vitae, accumsan ut augue.
+  In a eros ac dolor hendrerit varius et at mauris.`,
+  type: "show-more",
+};

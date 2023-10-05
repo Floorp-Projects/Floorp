@@ -58,11 +58,6 @@ const MOCK_POPULATED_DATA = {
   },
 };
 
-const MOCK_ERROR_OBJ = {
-  status: 422,
-  error: "Unprocessable entity",
-};
-
 const MOCK_INVALID_KEY_OBJ = {
   invalidHighlight: {
     negative: ["This is an invalid highlight and should not be visible"],

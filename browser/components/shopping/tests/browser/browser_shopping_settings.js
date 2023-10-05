@@ -18,17 +18,32 @@ add_task(async function test_shopping_settings_ads_enabled() {
       gBrowser,
     },
     async browser => {
-      let shoppingSettings = await getSettingsDetails(
+      await SpecialPowers.spawn(
         browser,
-        MOCK_POPULATED_DATA
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+          // TODO: Until we have proper mocks of data passed from ShoppingSidebarChild,
+          // hardcode `adsEnabled` to be passed to settings.mjs so that we can test
+          // toggle for ad visibility.
+          shoppingContainer.adsEnabled = true;
+          await shoppingContainer.updateComplete;
+
+          let shoppingSettings = shoppingContainer.settingsEl;
+          ok(shoppingSettings, "Got the shopping-settings element");
+
+          let toggle = shoppingSettings.recommendationsToggleEl;
+          ok(toggle, "There should be a toggle");
+
+          let optOutButton = shoppingSettings.optOutButtonEl;
+          ok(optOutButton, "There should be an opt-out button");
+        }
       );
-      ok(shoppingSettings.settingsEl, "Got the shopping-settings element");
-
-      let toggle = shoppingSettings.recommendationsToggleEl;
-      ok(toggle, "There should be a toggle");
-
-      let optOutButton = shoppingSettings.optOutButtonEl;
-      ok(optOutButton, "There should be an opt-out button");
     }
   );
 

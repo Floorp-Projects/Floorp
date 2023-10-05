@@ -320,6 +320,7 @@ export class ShoppingContainer extends MozLitElement {
       ></analysis-explainer>
       ${this.recommendationTemplate()}
       <shopping-settings
+        ?adsEnabled=${this.adsEnabled}
         ?adsEnabledByUser=${this.adsEnabledByUser}
       ></shopping-settings>
     `;
