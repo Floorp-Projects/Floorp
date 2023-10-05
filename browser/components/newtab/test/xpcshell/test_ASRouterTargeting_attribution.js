@@ -19,14 +19,10 @@ const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
 
 add_task(async function check_attribution_data() {
   // Some setup to fake the correct attribution data
-  const appPath = MacAttribution.applicationPath;
-  const attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
-    Ci.nsIMacAttributionService
-  );
   const campaign = "non-fx-button";
   const source = "addons.mozilla.org";
-  const referrer = `https://allizom.org/anything/?utm_campaign=${campaign}&utm_source=${source}`;
-  attributionSvc.setReferrerUrl(appPath, referrer, true);
+  const attrStr = `__MOZCUSTOM__campaign%3D${campaign}%26source%3D${source}`;
+  await MacAttribution.setAttributionString(attrStr);
   AttributionCode._clearCache();
   await AttributionCode.getAttrDataAsync();
 

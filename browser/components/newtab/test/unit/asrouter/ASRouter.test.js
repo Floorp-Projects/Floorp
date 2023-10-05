@@ -2035,33 +2035,35 @@ describe("ASRouter", () => {
   });
 
   describe("forceAttribution", () => {
-    let setReferrerUrl;
+    let setAttributionString;
     beforeEach(() => {
-      setReferrerUrl = sinon.spy();
-      global.Cc["@mozilla.org/mac-attribution;1"] = {
-        getService: () => ({ setReferrerUrl }),
-      };
-
+      setAttributionString = sandbox.spy(Router, "setAttributionString");
       sandbox.stub(global.Services.env, "set");
+    });
+    afterEach(() => {
+      sandbox.reset();
     });
     it("should double encode on windows", async () => {
       sandbox.stub(fakeAttributionCode, "writeAttributionFile");
 
       Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-      assert.notCalled(setReferrerUrl);
+      assert.notCalled(setAttributionString);
       assert.calledWithMatch(
         fakeAttributionCode.writeAttributionFile,
         "foo%3DFOO!%26bar%3DBAR%253F"
       );
     });
-    it("should set referrer on mac", async () => {
+    it("should set attribution string on mac", async () => {
       sandbox.stub(global.AppConstants, "platform").value("macosx");
 
       Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-      assert.calledOnce(setReferrerUrl);
-      assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
+      assert.calledOnce(setAttributionString);
+      assert.calledWithMatch(
+        setAttributionString,
+        "foo%3DFOO!%26bar%3DBAR%253F"
+      );
     });
   });
 
