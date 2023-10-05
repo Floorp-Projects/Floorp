@@ -50,3 +50,4 @@ pref(apz.allow_zooming,true) == scaled-iframe-zoomed.html scaled-iframe-zoomed-r
 == root-scrollbars-1.html root-scrollbars-1-ref.html
 skip-if(Android) pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,true) pref(formhelper.autozoom,true) needs-focus HTTP == zoom-to-focus-input-oopif.html zoom-to-focus-input-oopif-ref.html
 
+== checkerboard-on-subscroller.html checkerboard-on-subscroller-ref.html
