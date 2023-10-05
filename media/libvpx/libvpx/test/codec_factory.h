@@ -84,7 +84,7 @@ class VP8Decoder : public Decoder {
       : Decoder(cfg, flag) {}
 
  protected:
-  vpx_codec_iface_t *CodecInterface() const override {
+  virtual vpx_codec_iface_t *CodecInterface() const {
 #if CONFIG_VP8_DECODER
     return &vpx_codec_vp8_dx_algo;
 #else
@@ -100,7 +100,7 @@ class VP8Encoder : public Encoder {
       : Encoder(cfg, deadline, init_flags, stats) {}
 
  protected:
-  vpx_codec_iface_t *CodecInterface() const override {
+  virtual vpx_codec_iface_t *CodecInterface() const {
 #if CONFIG_VP8_ENCODER
     return &vpx_codec_vp8_cx_algo;
 #else
@@ -113,12 +113,12 @@ class VP8CodecFactory : public CodecFactory {
  public:
   VP8CodecFactory() : CodecFactory() {}
 
-  Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg) const override {
+  virtual Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg) const {
     return CreateDecoder(cfg, 0);
   }
 
-  Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg,
-                         const vpx_codec_flags_t flags) const override {
+  virtual Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg,
+                                 const vpx_codec_flags_t flags) const {
 #if CONFIG_VP8_DECODER
     return new VP8Decoder(cfg, flags);
 #else
@@ -128,9 +128,10 @@ class VP8CodecFactory : public CodecFactory {
 #endif
   }
 
-  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
-                         const unsigned long init_flags,
-                         TwopassStatsStore *stats) const override {
+  virtual Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg,
+                                 unsigned long deadline,
+                                 const unsigned long init_flags,
+                                 TwopassStatsStore *stats) const {
 #if CONFIG_VP8_ENCODER
     return new VP8Encoder(cfg, deadline, init_flags, stats);
 #else
@@ -142,8 +143,8 @@ class VP8CodecFactory : public CodecFactory {
 #endif
   }
 
-  vpx_codec_err_t DefaultEncoderConfig(vpx_codec_enc_cfg_t *cfg,
-                                       int usage) const override {
+  virtual vpx_codec_err_t DefaultEncoderConfig(vpx_codec_enc_cfg_t *cfg,
+                                               int usage) const {
 #if CONFIG_VP8_ENCODER
     return vpx_codec_enc_config_default(&vpx_codec_vp8_cx_algo, cfg, usage);
 #else
@@ -179,7 +180,7 @@ class VP9Decoder : public Decoder {
       : Decoder(cfg, flag) {}
 
  protected:
-  vpx_codec_iface_t *CodecInterface() const override {
+  virtual vpx_codec_iface_t *CodecInterface() const {
 #if CONFIG_VP9_DECODER
     return &vpx_codec_vp9_dx_algo;
 #else
@@ -195,7 +196,7 @@ class VP9Encoder : public Encoder {
       : Encoder(cfg, deadline, init_flags, stats) {}
 
  protected:
-  vpx_codec_iface_t *CodecInterface() const override {
+  virtual vpx_codec_iface_t *CodecInterface() const {
 #if CONFIG_VP9_ENCODER
     return &vpx_codec_vp9_cx_algo;
 #else
@@ -208,12 +209,12 @@ class VP9CodecFactory : public CodecFactory {
  public:
   VP9CodecFactory() : CodecFactory() {}
 
-  Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg) const override {
+  virtual Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg) const {
     return CreateDecoder(cfg, 0);
   }
 
-  Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg,
-                         const vpx_codec_flags_t flags) const override {
+  virtual Decoder *CreateDecoder(vpx_codec_dec_cfg_t cfg,
+                                 const vpx_codec_flags_t flags) const {
 #if CONFIG_VP9_DECODER
     return new VP9Decoder(cfg, flags);
 #else
@@ -223,9 +224,10 @@ class VP9CodecFactory : public CodecFactory {
 #endif
   }
 
-  Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg, unsigned long deadline,
-                         const unsigned long init_flags,
-                         TwopassStatsStore *stats) const override {
+  virtual Encoder *CreateEncoder(vpx_codec_enc_cfg_t cfg,
+                                 unsigned long deadline,
+                                 const unsigned long init_flags,
+                                 TwopassStatsStore *stats) const {
 #if CONFIG_VP9_ENCODER
     return new VP9Encoder(cfg, deadline, init_flags, stats);
 #else
@@ -237,8 +239,8 @@ class VP9CodecFactory : public CodecFactory {
 #endif
   }
 
-  vpx_codec_err_t DefaultEncoderConfig(vpx_codec_enc_cfg_t *cfg,
-                                       int usage) const override {
+  virtual vpx_codec_err_t DefaultEncoderConfig(vpx_codec_enc_cfg_t *cfg,
+                                               int usage) const {
 #if CONFIG_VP9_ENCODER
     return vpx_codec_enc_config_default(&vpx_codec_vp9_cx_algo, cfg, usage);
 #else

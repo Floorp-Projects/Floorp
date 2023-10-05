@@ -33,19 +33,19 @@ class IVFVideoSource : public CompressedVideoSource {
         compressed_frame_buf_(nullptr), frame_sz_(0), frame_(0),
         end_of_file_(false) {}
 
-  ~IVFVideoSource() override {
+  virtual ~IVFVideoSource() {
     delete[] compressed_frame_buf_;
 
     if (input_file_) fclose(input_file_);
   }
 
-  void Init() override {
+  virtual void Init() {
     // Allocate a buffer for read in the compressed video frame.
     compressed_frame_buf_ = new uint8_t[libvpx_test::kCodeBufferSize];
     ASSERT_NE(compressed_frame_buf_, nullptr) << "Allocate frame buffer failed";
   }
 
-  void Begin() override {
+  virtual void Begin() {
     input_file_ = OpenTestDataFile(file_name_);
     ASSERT_NE(input_file_, nullptr)
         << "Input file open failed. Filename: " << file_name_;
@@ -62,7 +62,7 @@ class IVFVideoSource : public CompressedVideoSource {
     FillFrame();
   }
 
-  void Next() override {
+  virtual void Next() {
     ++frame_;
     FillFrame();
   }
@@ -86,11 +86,11 @@ class IVFVideoSource : public CompressedVideoSource {
     }
   }
 
-  const uint8_t *cxdata() const override {
+  virtual const uint8_t *cxdata() const {
     return end_of_file_ ? nullptr : compressed_frame_buf_;
   }
-  size_t frame_size() const override { return frame_sz_; }
-  unsigned int frame_number() const override { return frame_; }
+  virtual size_t frame_size() const { return frame_sz_; }
+  virtual unsigned int frame_number() const { return frame_; }
 
  protected:
   std::string file_name_;

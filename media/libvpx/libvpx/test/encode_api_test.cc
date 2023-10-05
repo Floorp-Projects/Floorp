@@ -11,7 +11,6 @@
 #include <climits>
 #include <cstring>
 #include <initializer_list>
-#include <new>
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 #include "test/codec_factory.h"
@@ -21,7 +20,7 @@
 
 #include "./vpx_config.h"
 #include "vpx/vp8cx.h"
-#include "vpx/vpx_tpl.h"
+#include "vpx/vpx_encoder.h"
 
 namespace {
 
@@ -396,7 +395,7 @@ TEST(EncodeAPI, ConfigResizeChangeThreadCount) {
       EXPECT_EQ(vpx_codec_enc_config_set(&enc.ctx, &cfg), VPX_CODEC_OK)
           << vpx_codec_error_detail(&enc.ctx);
 
-      cfg.g_w = 1000;
+      cfg.g_w = 16;
       cfg.g_h = 720;
 
       for (const auto threads : { 1, 4, 8, 6, 2, 1 }) {
@@ -413,8 +412,8 @@ class EncodeApiGetTplStatsTest
     : public ::libvpx_test::EncoderTest,
       public ::testing::TestWithParam<const libvpx_test::CodecFactory *> {
  public:
-  EncodeApiGetTplStatsTest() : EncoderTest(GetParam()), test_io_(false) {}
-  ~EncodeApiGetTplStatsTest() override = default;
+  EncodeApiGetTplStatsTest() : EncoderTest(GetParam()) {}
+  ~EncodeApiGetTplStatsTest() override {}
 
  protected:
   void SetUp() override {
@@ -441,34 +440,6 @@ class EncodeApiGetTplStatsTest
     return VPX_CODEC_OK;
   }
 
-  void CompareTplGopStats(const VpxTplGopStats &ref_gop_stats,
-                          const VpxTplGopStats &test_gop_stats) {
-    ASSERT_EQ(ref_gop_stats.size, test_gop_stats.size);
-    for (int frame = 0; frame < ref_gop_stats.size; frame++) {
-      const VpxTplFrameStats &ref_frame_stats =
-          ref_gop_stats.frame_stats_list[frame];
-      const VpxTplFrameStats &test_frame_stats =
-          test_gop_stats.frame_stats_list[frame];
-      ASSERT_EQ(ref_frame_stats.num_blocks, test_frame_stats.num_blocks);
-      ASSERT_EQ(ref_frame_stats.frame_width, test_frame_stats.frame_width);
-      ASSERT_EQ(ref_frame_stats.frame_height, test_frame_stats.frame_height);
-      for (int block = 0; block < ref_frame_stats.num_blocks; block++) {
-        const VpxTplBlockStats &ref_block_stats =
-            ref_frame_stats.block_stats_list[block];
-        const VpxTplBlockStats &test_block_stats =
-            test_frame_stats.block_stats_list[block];
-        ASSERT_EQ(ref_block_stats.inter_cost, test_block_stats.inter_cost);
-        ASSERT_EQ(ref_block_stats.intra_cost, test_block_stats.intra_cost);
-        ASSERT_EQ(ref_block_stats.mv_c, test_block_stats.mv_c);
-        ASSERT_EQ(ref_block_stats.mv_r, test_block_stats.mv_r);
-        ASSERT_EQ(ref_block_stats.recrf_dist, test_block_stats.recrf_dist);
-        ASSERT_EQ(ref_block_stats.recrf_rate, test_block_stats.recrf_rate);
-        ASSERT_EQ(ref_block_stats.ref_frame_index,
-                  test_block_stats.ref_frame_index);
-      }
-    }
-  }
-
   void PostEncodeFrameHook(::libvpx_test::Encoder *encoder) override {
     ::libvpx_test::CxDataIterator iter = encoder->GetCxData();
     while (const vpx_codec_cx_pkt_t *pkt = iter.Next()) {
@@ -489,21 +460,7 @@ class EncodeApiGetTplStatsTest
             }
           }
           ASSERT_TRUE(stats_not_all_zero);
-          if (test_io_ && tpl_stats.size > 0) {
-            libvpx_test::TempOutFile *temp_out_file =
-                new (std::nothrow) libvpx_test::TempOutFile("w+");
-            ASSERT_NE(temp_out_file, nullptr);
-            ASSERT_NE(temp_out_file->file(), nullptr);
-            vpx_write_tpl_gop_stats(temp_out_file->file(), &tpl_stats);
-            rewind(temp_out_file->file());
-            VpxTplGopStats gop_stats_io;
-            ASSERT_EQ(
-                vpx_read_tpl_gop_stats(temp_out_file->file(), &gop_stats_io),
-                VPX_CODEC_OK);
-            CompareTplGopStats(gop_stats_io, tpl_stats);
-            vpx_free_tpl_gop_stats(&gop_stats_io);
-            delete temp_out_file;
-          }
+          // Free the memory right away now as this is only a test.
           free(tpl_stats.frame_stats_list);
           break;
         }
@@ -514,23 +471,12 @@ class EncodeApiGetTplStatsTest
 
   int width_;
   int height_;
-  bool test_io_;
 };
 
 TEST_P(EncodeApiGetTplStatsTest, GetTplStats) {
   cfg_.g_lag_in_frames = 25;
   width_ = 352;
   height_ = 288;
-  ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", width_,
-                                       height_, 30, 1, 0, 50);
-  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-}
-
-TEST_P(EncodeApiGetTplStatsTest, GetTplStatsIO) {
-  cfg_.g_lag_in_frames = 25;
-  width_ = 352;
-  height_ = 288;
-  test_io_ = true;
   ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", width_,
                                        height_, 30, 1, 0, 50);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));

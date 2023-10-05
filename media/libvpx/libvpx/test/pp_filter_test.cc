@@ -51,10 +51,10 @@ class VpxPostProcDownAndAcrossMbRowTest
  public:
   VpxPostProcDownAndAcrossMbRowTest()
       : mb_post_proc_down_and_across_(GetParam()) {}
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void Run() override;
+  virtual void Run();
 
   const VpxPostProcDownAndAcrossMbRowFunc mb_post_proc_down_and_across_;
   // Size of the underlying data block that will be filtered.
@@ -227,10 +227,10 @@ class VpxMbPostProcAcrossIpTest
   VpxMbPostProcAcrossIpTest()
       : rows_(16), cols_(16), mb_post_proc_across_ip_(GetParam()),
         src_(Buffer<uint8_t>(rows_, cols_, 8, 8, 17, 8)) {}
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void Run() override;
+  virtual void Run();
 
   void SetCols(unsigned char *s, int rows, int cols, int src_width) {
     for (int r = 0; r < rows; r++) {
@@ -356,10 +356,10 @@ class VpxMbPostProcDownTest
       : rows_(16), cols_(16), mb_post_proc_down_(GetParam()),
         src_c_(Buffer<uint8_t>(rows_, cols_, 8, 8, 8, 17)) {}
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void Run() override;
+  virtual void Run();
 
   void SetRows(unsigned char *src_c, int rows, int cols, int src_width) {
     for (int r = 0; r < rows; r++) {

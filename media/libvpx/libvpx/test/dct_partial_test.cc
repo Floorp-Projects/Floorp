@@ -67,7 +67,7 @@ class PartialFdctTest : public ::testing::TestWithParam<PartialFdctParam> {
     bit_depth_ = GET_PARAM(2);
   }
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
   void RunTest() {

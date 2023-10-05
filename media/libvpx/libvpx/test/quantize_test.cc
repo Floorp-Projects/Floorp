@@ -121,13 +121,13 @@ class QuantizeTest : public QuantizeTestBase,
                      public ::testing::TestWithParam<VP8QuantizeParam>,
                      public AbstractBench {
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     SetupCompressor();
     asm_quant_ = GET_PARAM(0);
     c_quant_ = GET_PARAM(1);
   }
 
-  void Run() override {
+  virtual void Run() {
     asm_quant_(&vp8_comp_->mb.block[0], &macroblockd_dst_->block[0]);
   }
 

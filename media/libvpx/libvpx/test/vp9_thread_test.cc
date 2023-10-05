@@ -26,10 +26,10 @@ using std::string;
 
 class VPxWorkerThreadTest : public ::testing::TestWithParam<bool> {
  protected:
-  ~VPxWorkerThreadTest() override = default;
-  void SetUp() override { vpx_get_worker_interface()->init(&worker_); }
+  virtual ~VPxWorkerThreadTest() {}
+  virtual void SetUp() { vpx_get_worker_interface()->init(&worker_); }
 
-  void TearDown() override { vpx_get_worker_interface()->end(&worker_); }
+  virtual void TearDown() { vpx_get_worker_interface()->end(&worker_); }
 
   void Run(VPxWorker *worker) {
     const bool synchronous = GetParam();

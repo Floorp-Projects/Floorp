@@ -14,11 +14,9 @@
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
-#include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
-#include "test/init_vpx_test.h"
 #include "test/md5_helper.h"
 #include "vpx/vpx_integer.h"
 #include "vpx_ports/mem.h"
@@ -350,15 +348,6 @@ INTRA_PRED_TEST(VSX, TestIntraPred32, vpx_dc_predictor_32x32_vsx,
                 vpx_tm_predictor_32x32_vsx)
 #endif  // HAVE_VSX
 
-#if HAVE_LSX
-INTRA_PRED_TEST(LSX, TestIntraPred8, vpx_dc_predictor_8x8_lsx, nullptr, nullptr,
-                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                nullptr, nullptr, nullptr)
-INTRA_PRED_TEST(LSX, TestIntraPred16, vpx_dc_predictor_16x16_lsx, nullptr,
-                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                nullptr, nullptr, nullptr, nullptr)
-#endif  // HAVE_LSX
-
 // -----------------------------------------------------------------------------
 
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -609,8 +598,4 @@ HIGHBD_INTRA_PRED_TEST(
 
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  ::libvpx_test::init_vpx_test();
-  return RUN_ALL_TESTS();
-}
+#include "test/test_libvpx.cc"
