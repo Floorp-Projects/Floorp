@@ -142,6 +142,17 @@ class ProfileCreator(FirefoxProfileCreator):
                 "layout.testing.overlay-scrollbars.always-visible": True,
             })
 
+        if self.test_type == "testharness":
+            # Allow touch and wheel events to be routed via the parent process.
+            # This is a workaround for tests using testdriver.js until
+            # bug 1773393 is done.
+            #
+            # Note that we don't set it for wdspec tests since it isn't suitable
+            # to ship to WebDriver users.
+            profile.set_preferences({"test.events.async.enabled": True})
+            profile.set_preferences({"test.events.async.touch.enabled": True})
+            profile.set_preferences({"test.events.async.wheel.enabled": True})
+
         profile.set_preferences({"fission.autostart": True})
         if self.disable_fission:
             profile.set_preferences({"fission.autostart": False})
