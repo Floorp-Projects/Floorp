@@ -33,10 +33,11 @@
 <script class="testbody" type="text/javascript">
   const formTemplate = document.getElementById("form1-template");
 
+  const domainname = location.hostname;
   const loginInfos = [
-    ["https://example.com/", "https://example.com/", null, "example-user", "example-password", "uname", "pword"],
-    ["https://old.example.com/", "https://old.example.com/", null, "example-user", "example-password", "uname", "pword"],
-    ["https://new.example.com/", "https://new.example.com/", null, "example-user", "new-example-password", "uname", "pword"],
+    [`https://${domainname}/`, `https://${domainname}/`, null, "example-user", "example-password", "uname", "pword"],
+    [`https://old.${domainname}/`, `https://old.${domainname}/`, null, "example-user", "example-password", "uname", "pword"],
+    [`https://new.${domainname}/`, `https://new.${domainname}/`, null, "example-user", "new-example-password", "uname", "pword"],
   ];
 
   // TODO: explain why we need to run this in parent
@@ -70,11 +71,12 @@
     await setStoredLoginsDuringTask(
       ...[
         // These two logins should never be visible on https: versions of
-        // *.example.com since the login is for http: and an https: login exists for this username.
+        // *.example.com since the login is for http: and an https: login exists
+        // for this username.
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        ["http://example.com/", "https://example.com/", null, "example-user", "example-password", "uname", "pword"],
+        [`http://${domainname}/`, `https://${domainname}/`, null, "example-user", "example-password", "uname", "pword"],
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        ["http://old.example.com/", "https://old.example.com/", null, "example-user", "old-example-password", "uname", "pword"],
+        [`http://old.${domainname}/`, `https://old.${domainname}/`, null, "example-user", "old-example-password", "uname", "pword"],
         ...loginInfos,
       ]
     );
