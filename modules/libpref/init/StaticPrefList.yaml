@@ -7462,7 +7462,7 @@
 # Maximum amount of time that should elapse between incremental GC slices, in ms.
 - name: javascript.options.gc_delay.interslice
   type: uint32_t
-  value: 100
+  value: 250
   mirror: always
 
 # nsJSEnvironmentObserver observes the memory-pressure notifications and

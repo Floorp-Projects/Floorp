@@ -22,7 +22,7 @@ const TimeDuration kTimeBetweenForgetSkippableCycles =
     TimeDuration::FromSeconds(2);
 const TimeDuration kForgetSkippableSliceDuration =
     TimeDuration::FromMilliseconds(2);
-const TimeDuration kICCIntersliceDelay = TimeDuration::FromMilliseconds(64);
+const TimeDuration kICCIntersliceDelay = TimeDuration::FromMilliseconds(250);
 const TimeDuration kICCSliceBudget = TimeDuration::FromMilliseconds(3);
 const TimeDuration kIdleICCSliceBudget = TimeDuration::FromMilliseconds(2);
 const TimeDuration kMaxICCDuration = TimeDuration::FromSeconds(2);
