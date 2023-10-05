@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AboutWelcomeParent", "AboutWelcomeShoppingParent"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -124,7 +118,7 @@ class AboutWelcomeObserver {
   }
 }
 
-class AboutWelcomeParent extends JSWindowActorParent {
+export class AboutWelcomeParent extends JSWindowActorParent {
   constructor() {
     super();
     this.startAboutWelcomeObserver();
@@ -280,7 +274,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
   }
 }
 
-class AboutWelcomeShoppingParent extends AboutWelcomeParent {
+export class AboutWelcomeShoppingParent extends AboutWelcomeParent {
   /**
    * Handle messages from AboutWelcomeChild.jsm
    *

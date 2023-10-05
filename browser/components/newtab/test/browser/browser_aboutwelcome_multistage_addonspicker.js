@@ -1,7 +1,7 @@
 "use strict";
 
-const { AboutWelcomeParent } = ChromeUtils.import(
-  "resource:///actors/AboutWelcomeParent.jsm"
+const { AboutWelcomeParent } = ChromeUtils.importESModule(
+  "resource:///actors/AboutWelcomeParent.sys.mjs"
 );
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(

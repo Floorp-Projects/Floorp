@@ -7,12 +7,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PageEventManager: "resource://activity-stream/lib/PageEventManager.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
