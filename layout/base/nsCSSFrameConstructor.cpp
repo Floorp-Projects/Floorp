@@ -3239,18 +3239,17 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   return fieldsetFrame;
 }
 
-nsIFrame* nsCSSFrameConstructor::ConstructDetails(
-    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-    nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
-    nsFrameList& aFrameList) {
-  if (!aStyleDisplay->IsScrollableOverflow()) {
-    return ConstructNonScrollableBlock(aState, aItem, aParentFrame,
-                                       aStyleDisplay, aFrameList);
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindDetailsData(const Element& aElement,
+                                       ComputedStyle& aStyle) {
+  if (!StaticPrefs::layout_details_force_block_layout()) {
+    return nullptr;
   }
-
-  // Build a scroll frame if necessary.
-  return ConstructScrollableBlock(aState, aItem, aParentFrame, aStyleDisplay,
-                                  aFrameList);
+  static constexpr FrameConstructionData sBlockData[2] = {
+      {&nsCSSFrameConstructor::ConstructNonScrollableBlock},
+      {&nsCSSFrameConstructor::ConstructScrollableBlock},
+  };
+  return &sBlockData[aStyle.StyleDisplay()->IsScrollableOverflow()];
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
@@ -3496,7 +3495,8 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
       SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
       SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
-      COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetails)};
+      SIMPLE_TAG_CHAIN(details, nsCSSFrameConstructor::FindDetailsData),
+  };
 
   return FindDataByTag(aElement, aStyle, sHTMLData, ArrayLength(sHTMLData));
 }
