@@ -1265,8 +1265,6 @@ def compiler(
                 flags.extend(("-isysroot", sysroot.path))
             else:
                 flags.extend(("--sysroot", sysroot.path))
-        if host_or_target.os == "OSX" and macos_target:
-            flags.append("-mmacosx-version-min=%s" % macos_target)
         if provided_compiler:
             wrapper.extend(provided_compiler.wrapper)
             flags.extend(provided_compiler.flags)
@@ -1278,6 +1276,9 @@ def compiler(
             host_or_target,
             android_version,
         )
+
+        if host_or_target.os == "OSX" and macos_target:
+            flags.append("-mmacosx-version-min=%s" % macos_target)
 
         # When not given an explicit compatibility version, clang-cl tries
         # to get one from MSVC, which might not even be the one used by the
