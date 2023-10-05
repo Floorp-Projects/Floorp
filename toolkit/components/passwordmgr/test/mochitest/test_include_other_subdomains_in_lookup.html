@@ -51,15 +51,84 @@
     listenForUnexpectedPopupShown();
   });
 
-  // TODO: explain
-  add_named_task("when includeOtherSubdomainsInLookup is false and there are no http-logins, do not show autocomplete popup", async () => {
+  add_named_task("not including https login when includeOtherSubdomainsInLookup is false", async () => {
     await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", false]);
-    await setStoredLoginsDuringTask(...loginInfos);
+    await setStoredLoginsDuringTask(
+      [`https://${domainname}/`, `https://${domainname}/`, null, "example-user-https", "example-password", "uname", "pword"],
+    );
     const form = setContentForTask(formTemplate);
-
     form.uname.focus();
+
     await noPopupByArrowDown();
     ok(true, "no popup has been opened")
+  });
+
+  add_named_task("including https login when includeOtherSubdomainsInLookup is true", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", true]);
+    await setStoredLoginsDuringTask(
+      [`https://${domainname}/`, `https://${domainname}/`, null, "example-user-https", "example-password", "uname", "pword"],
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems, ["example-user-https"], window.location.host, "https login showed");
+  });
+
+  add_named_task("including http login when includeOtherSubdomainsInLookup is false", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", false]);
+    await setStoredLoginsDuringTask(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      [`http://${domainname}/`, `https://${domainname}/`, null, "example-user-http", "example-password", "uname", "pword"],
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems, ["example-user-http"], window.location.host, "http login showed");
+  });
+
+  add_named_task("including http login when includeOtherSubdomainsInLookup is true", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", true]);
+    await setStoredLoginsDuringTask(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      [`http://${domainname}/`, `https://${domainname}/`, null, "example-user-http", "example-password", "uname", "pword"],
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems, ["example-user-http"], window.location.host, "http login showed");
+  });
+
+  add_named_task("including https and http login when includeOtherSubdomainsInLookup is false", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", false]);
+    await setStoredLoginsDuringTask(
+      [`https://${domainname}/`, `https://${domainname}/`, null, "example-user-https", "example-password", "uname", "pword"],
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      [`http://${domainname}/`, `https://${domainname}/`, null, "example-user-http", "example-password", "uname", "pword"],
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+
+    const autocompleteItems = await popupByArrowDown();
+    // checkAutoCompleteResults(autocompleteItems, ["example-user-https"], window.location.host, "https login showed");
+    checkAutoCompleteResults(autocompleteItems, ["example-user-http"], window.location.host, "https login showed");
+  });
+
+  add_named_task("including https and http login when includeOtherSubdomainsInLookup is true", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", true]);
+    await setStoredLoginsDuringTask(
+      [`https://${domainname}/`, `https://${domainname}/`, null, "example-user-https", "example-password", "uname", "pword"],
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      [`http://${domainname}/`, `https://${domainname}/`, null, "example-user-http", "example-password", "uname", "pword"],
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+
+    const autocompleteItems = await popupByArrowDown();
+    // checkAutoCompleteResults(autocompleteItems, ["example-user-https"], window.location.host, "https login showed");
+    checkAutoCompleteResults(autocompleteItems, ["example-user-http", "example-user-https"], window.location.host, "http and https logins showed");
   });
 
   add_named_task("menu does not show login for different subdomain when includeOtherSubdomainsInLookup is false", async () => {
