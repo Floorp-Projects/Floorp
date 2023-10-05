@@ -303,7 +303,8 @@ export class NetworkResponseListener {
       !this.#fromServiceWorker &&
       channel instanceof Ci.nsIEncodedChannel &&
       channel.contentEncodings &&
-      !channel.applyConversion
+      !channel.applyConversion &&
+      !channel.hasContentDecompressed
     ) {
       const encodingHeader = channel.getResponseHeader("Content-Encoding");
       const scs = Cc["@mozilla.org/streamConverters;1"].getService(
