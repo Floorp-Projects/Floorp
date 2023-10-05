@@ -312,6 +312,15 @@ For example:
 
    ``./mach try fuzzy --env "MOZ_LOG=nsHttp:5,SSLTokensCache:5"``
 
+How to enable QUIC logging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The steps to enable QUIC logging (`QLOG <https://datatracker.ietf.org/doc/draft-ietf-quic-qlog-main-schema/>`__) are:
+
+#. Go to ``about:config``,  search for ``network.http.http3.enable_qlog`` and set it to true.
+#. Restart Firefox.
+#. QLOG files will be saved in the ``qlog_$PID`` directory located within your system's temporary directory.
+#. To visualize the QLOG data, visit https://qvis.quictools.info/. You can upload the QLOG files there to see the visual representation of the flows.
+
 See also
 --------
 
