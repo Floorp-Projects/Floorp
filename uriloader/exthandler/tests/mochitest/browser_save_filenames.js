@@ -372,10 +372,7 @@ if (AppConstants.platform != "macosx") {
 
 // This test checks that copying an image provides the right filename
 // for pasting to the local file system. This is only implemented on Windows.
-const imageAsFileEnabled = SpecialPowers.getBoolPref(
-  "clipboard.imageAsFile.enabled"
-);
-if (AppConstants.platform == "win" && imageAsFileEnabled) {
+if (AppConstants.platform == "win") {
   add_task(async function copy_image() {
     for (let idx = 0; idx < expectedItems.length; idx++) {
       if (!expectedItems[idx].draggable) {
