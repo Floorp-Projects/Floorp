@@ -419,14 +419,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     mNeedToUpdateIntersectionObservations = true;
   }
 
-  void ResizeObserverControllerAdded() {
+  void EnsureResizeObserverUpdateHappens() {
     EnsureTimerStarted();
-    mResizeObservationCount++;
-  }
-
-  void ResizeObserverControllerRemoved() {
-    MOZ_ASSERT(mResizeObservationCount);
-    mResizeObservationCount--;
+    mNeedToUpdateResizeObservers = true;
   }
 
   void ScheduleMediaQueryListenerUpdate() {
@@ -639,6 +634,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // all our documents.
   bool mNeedToUpdateIntersectionObservations : 1;
 
+  // True if we need to flush in order to update intersection observations in
+  // all our documents.
+  bool mNeedToUpdateResizeObservers : 1;
+
   // True if we might need to report media query changes in any of our
   // documents.
   bool mMightNeedMediaQueryListenerUpdate : 1;
@@ -658,8 +657,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   bool mHasExceededAfterLoadTickPeriod : 1;
 
   bool mHasStartedTimerAtLeastOnce : 1;
-
-  int32_t mResizeObservationCount;
 
   mozilla::TimeStamp mMostRecentRefresh;
   mozilla::TimeStamp mTickStart;
