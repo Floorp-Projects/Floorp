@@ -12,13 +12,16 @@ import androidx.core.view.isVisible
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.addons.Addon
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentAddOnDetailsBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -115,18 +118,27 @@ class AddonDetailsBindingDelegateTest {
     }
 
     @Test
-    fun `bind addons authors`() {
-        val baseAuthor = Addon.Author("", "", "", "")
+    fun `bind addons author`() {
         detailsBindingDelegate.bind(
-            baseAddon.copy(
-                authors = listOf(
-                    baseAuthor.copy(name = " Sarah Jane"),
-                    baseAuthor.copy(name = "John Smith "),
-                ),
-            ),
+            baseAddon.copy(author = Addon.Author(name = "Sarah Jane", url = "")),
         )
 
-        assertEquals("Sarah Jane, John Smith", binding.authorText.text)
+        assertEquals("Sarah Jane", binding.authorText.text)
+        assertNotEquals(testContext.getColorFromAttr(R.attr.textAccent), binding.authorText.currentTextColor)
+    }
+
+    @Test
+    fun `bind addons author with url`() {
+        detailsBindingDelegate.bind(
+            baseAddon.copy(author = Addon.Author(name = "Sarah Jane", url = "https://example.org/")),
+        )
+
+        assertEquals("Sarah Jane", binding.authorText.text)
+        assertEquals(testContext.getColorFromAttr(R.attr.textAccent), binding.authorText.currentTextColor)
+
+        binding.authorText.performClick()
+
+        verify { interactor.openWebsite(Uri.parse("https://example.org/")) }
     }
 
     @Test
@@ -150,8 +162,8 @@ class AddonDetailsBindingDelegateTest {
     }
 
     @Test
-    fun `bind without authors`() {
-        detailsBindingDelegate.bind(baseAddon.copy(authors = emptyList()))
+    fun `bind without author`() {
+        detailsBindingDelegate.bind(baseAddon.copy(author = null))
 
         assertFalse(binding.authorLabel.isVisible)
         assertFalse(binding.authorText.isVisible)

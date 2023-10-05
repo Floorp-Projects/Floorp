@@ -24,7 +24,6 @@ class AddonTest {
     fun `translatePermissions - must return the expected string ids per permission category`() {
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -94,7 +93,6 @@ class AddonTest {
     fun `isInstalled - true if installed state present and otherwise false`() {
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -112,7 +110,6 @@ class AddonTest {
     fun `isEnabled - true if installed state enabled and otherwise false`() {
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -133,7 +130,6 @@ class AddonTest {
     fun `filterTranslations - only keeps specified translations`() {
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -374,6 +370,8 @@ class AddonTest {
         whenever(metadata.description).thenReturn(description)
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(0))
         whenever(metadata.baseUrl).thenReturn("some-base-url")
+        whenever(metadata.developerName).thenReturn("developer-name")
+        whenever(metadata.developerUrl).thenReturn("developer-url")
 
         val addon = Addon.newFromWebExtension(extension)
 
@@ -385,6 +383,8 @@ class AddonTest {
         assertEquals("some name", addon.translatableName[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableDescription[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableSummary[Addon.DEFAULT_LOCALE])
+        assertEquals("developer-name", addon.author?.name)
+        assertEquals("developer-url", addon.author?.url)
     }
 
     @Test

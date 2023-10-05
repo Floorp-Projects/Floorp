@@ -17,7 +17,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
  * https://addons.mozilla.org/en-US/firefox/
  *
  * @property id The unique ID of this add-on.
- * @property authors List holding information about the add-on authors.
+ * @property author Information about the add-on author.
  * @property categories List of categories the add-on belongs to.
  * @property downloadId The unique ID of the latest version of the add-on (xpi) file.
  * @property downloadUrl The (absolute) URL to download the latest version of the add-on file.
@@ -42,7 +42,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 @Parcelize
 data class Addon(
     val id: String,
-    val authors: List<Author> = emptyList(),
+    val author: Author? = null,
     val categories: List<String> = emptyList(),
     val downloadId: String = "",
     val downloadUrl: String = "",
@@ -62,18 +62,14 @@ data class Addon(
     /**
      * Represents an add-on author.
      *
-     * @property id The id of the author (creator) of the add-on.
      * @property name The name of the author.
-     * @property url The link to the profile page for of the author.
-     * @property username The username of the author.
+     * @property url The link to the profile page of the author.
      */
     @SuppressLint("ParcelCreator")
     @Parcelize
     data class Author(
-        val id: String,
         val name: String,
         val url: String,
-        val username: String,
     ) : Parcelable
 
     /**
@@ -291,8 +287,16 @@ data class Addon(
             val permissions = extension.getMetadata()?.permissions.orEmpty() +
                 extension.getMetadata()?.hostPermissions.orEmpty()
 
+            val developerName = extension.getMetadata()?.developerName.orEmpty()
+            val author = if (developerName.isNotBlank()) {
+                Author(name = developerName, url = extension.getMetadata()?.developerUrl.orEmpty())
+            } else {
+                null
+            }
+
             return Addon(
                 id = extension.id,
+                author = author,
                 version = extension.getMetadata()?.version.orEmpty(),
                 permissions = permissions,
                 downloadUrl = extension.url,

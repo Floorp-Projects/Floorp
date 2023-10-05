@@ -418,7 +418,7 @@ internal fun JSONObject.toAddon(language: String? = null): Addon {
         val isLanguageInTranslations = summary.containsKey(safeLanguage)
         Addon(
             id = getSafeString("guid"),
-            authors = getAuthors(),
+            author = getAuthor(),
             categories = getCategories(),
             createdAt = getSafeString("created"),
             updatedAt = getCurrentVersionCreated(),
@@ -497,17 +497,18 @@ internal fun JSONObject.getDownloadUrl(): String {
     return getFile()?.getSafeString("url").orEmpty()
 }
 
-internal fun JSONObject.getAuthors(): List<Addon.Author> {
+internal fun JSONObject.getAuthor(): Addon.Author? {
     val authorsJson = getSafeJSONArray("authors")
-    return (0 until authorsJson.length()).map { index ->
-        val authorJson = authorsJson.getJSONObject(index)
+    // We only consider the first author in the AMO API response, mainly because Gecko does the same.
+    val authorJson = authorsJson.optJSONObject(0)
 
+    return if (authorJson != null) {
         Addon.Author(
-            id = authorJson.getSafeString("id"),
             name = authorJson.getSafeString("name"),
-            username = authorJson.getSafeString("username"),
             url = authorJson.getSafeString("url"),
         )
+    } else {
+        null
     }
 }
 

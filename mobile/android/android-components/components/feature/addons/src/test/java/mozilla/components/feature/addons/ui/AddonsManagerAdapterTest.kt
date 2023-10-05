@@ -219,7 +219,6 @@ class AddonsManagerAdapterTest {
         )
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -393,7 +392,6 @@ class AddonsManagerAdapterTest {
         )
         val addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -412,7 +410,6 @@ class AddonsManagerAdapterTest {
     fun updateAddon() {
         var addon = Addon(
             id = "id",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -435,7 +432,6 @@ class AddonsManagerAdapterTest {
     fun updateAddons() {
         var addon1 = Addon(
             id = "addon1",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -446,7 +442,6 @@ class AddonsManagerAdapterTest {
 
         val addon2 = Addon(
             id = "addon2",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -472,7 +467,6 @@ class AddonsManagerAdapterTest {
     fun differCallback() {
         var addon1 = Addon(
             id = "addon1",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
@@ -483,7 +477,6 @@ class AddonsManagerAdapterTest {
 
         var addon2 = Addon(
             id = "addon1",
-            authors = emptyList(),
             categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",

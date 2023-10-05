@@ -74,8 +74,8 @@ class AMOAddonsProviderTest {
         assertEquals("", addon.translatableDescription.getValue("ca"))
         assertEquals(Addon.DEFAULT_LOCALE, addon.defaultLocale)
 
-        // Authors
-        assertTrue(addon.authors.isEmpty())
+        // Author
+        assertNull(addon.author)
         verify(client).fetch(
             Request(
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
@@ -136,13 +136,11 @@ class AMOAddonsProviderTest {
         assertEquals("1.33.2", addon.version)
         assertEquals("en", addon.defaultLocale)
 
-        // Authors
-        assertEquals("11423598", addon.authors.first().id)
-        assertEquals("Raymond Hill", addon.authors.first().name)
-        assertEquals("gorhill", addon.authors.first().username)
+        // Author
+        assertEquals("Raymond Hill", addon.author?.name)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-            addon.authors.first().url,
+            addon.author?.url,
         )
 
         // Ratings
@@ -380,7 +378,6 @@ class AMOAddonsProviderTest {
         val provider = AMOAddonsProvider(testContext, client = mockedClient)
         val addon = Addon(
             id = "id",
-            authors = mock(),
             categories = mock(),
             downloadUrl = "https://example.com",
             version = "version",
@@ -399,7 +396,6 @@ class AMOAddonsProviderTest {
         val provider = AMOAddonsProvider(testContext, client = mockedClient)
         val addon = Addon(
             id = "id",
-            authors = mock(),
             categories = mock(),
             downloadUrl = "https://example.com",
             version = "version",
@@ -703,13 +699,11 @@ class AMOAddonsProviderTest {
         assertTrue(addon.translatableDescription.getValue(language).isNotBlank())
         assertEquals("1.51.0", addon.version)
         assertEquals("ca", addon.defaultLocale)
-        // Authors
-        assertEquals("11423598", addon.authors.first().id)
-        assertEquals("Raymond Hill", addon.authors.first().name)
-        assertEquals("gorhill", addon.authors.first().username)
+        // Author
+        assertEquals("Raymond Hill", addon.author?.name)
         assertEquals(
             "https://addons.mozilla.org/ca/firefox/user/11423598/",
-            addon.authors.first().url,
+            addon.author?.url,
         )
         // Ratings
         assertEquals(4.7825F, addon.rating!!.average, 0.7825F)
@@ -777,20 +771,11 @@ class AMOAddonsProviderTest {
         assertEquals("1.6", addon.version)
         assertEquals("en-us", addon.defaultLocale)
 
-        // Authors
-        assertEquals("13394925", addon.authors.first().id)
-        assertEquals("Thomas Wisniewski", addon.authors.first().name)
-        assertEquals("wisniewskit", addon.authors.first().username)
+        // Author
+        assertEquals("Thomas Wisniewski", addon.author?.name)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/user/13394925/",
-            addon.authors.first().url,
-        )
-        assertEquals("6084813", addon.authors.last().id)
-        assertEquals("Rob W", addon.authors.last().name)
-        assertEquals("RobW", addon.authors.last().username)
-        assertEquals(
-            "https://addons.mozilla.org/en-US/firefox/user/6084813/",
-            addon.authors.last().url,
+            addon.author?.url,
         )
         // Ratings
         assertEquals(4.4096F, addon.rating!!.average, 0.4096F)
@@ -964,13 +949,11 @@ class AMOAddonsProviderTest {
         assertTrue(addon.translatableDescription.getValue("ca").isNotBlank())
         assertEquals("1.51.0", addon.version)
         assertEquals("en-us", addon.defaultLocale)
-        // Authors
-        assertEquals("11423598", addon.authors.first().id)
-        assertEquals("Raymond Hill", addon.authors.first().name)
-        assertEquals("gorhill", addon.authors.first().username)
+        // Author
+        assertEquals("Raymond Hill", addon.author?.name)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/user/11423598/",
-            addon.authors.first().url,
+            addon.author?.url,
         )
         // Ratings
         assertEquals(4.7825F, addon.rating!!.average, 0.7825F)
