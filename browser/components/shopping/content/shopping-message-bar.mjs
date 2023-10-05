@@ -6,6 +6,9 @@
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-message-bar.mjs";
+
 class ShoppingMessageBar extends MozLitElement {
   #MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING = new Map([
     ["stale", () => this.getStaleWarningTemplate()],
@@ -61,7 +64,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getStaleWarningTemplate() {
-    return html` <message-bar>
+    return html`<message-bar>
       <article id="message-bar-container" aria-labelledby="header">
         <span
           data-l10n-id="shopping-message-bar-warning-stale-analysis-message-2"
@@ -77,81 +80,59 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getGenericErrorTemplate() {
-    return html`<message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-generic-error-title2"
-        ></strong>
-        <span data-l10n-id="shopping-message-bar-generic-error-message"></span>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="warning"
+      data-l10n-id="shopping-message-bar-generic-error"
+    >
+    </moz-message-bar>`;
   }
 
   getNotEnoughReviewsTemplate() {
-    return html`<message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-title"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-warning-not-enough-reviews-message2"
-        ></span>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="warning"
+      data-l10n-id="shopping-message-bar-warning-not-enough-reviews"
+    >
+    </moz-message-bar>`;
   }
 
   getProductNotAvailableTemplate() {
-    return html`<message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-warning-product-not-available-title"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-warning-product-not-available-message2"
-        ></span>
-        <button
-          id="message-bar-report-product-available-btn"
-          class="small-button"
-          data-l10n-id="shopping-message-bar-warning-product-not-available-button"
-          @click=${this.onClickProductAvailable}
-        ></button>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="warning"
+      data-l10n-id="shopping-message-bar-warning-product-not-available"
+    >
+      <button
+        slot="actions"
+        id="message-bar-report-product-available-btn"
+        class="small-button"
+        data-l10n-id="shopping-message-bar-warning-product-not-available-button"
+        @click=${this.onClickProductAvailable}
+      ></button>
+    </moz-message-bar>`;
   }
 
   getThanksForReportingTemplate() {
-    return html` <message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-thanks-for-reporting-title"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-thanks-for-reporting-message2"
-        ></span>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="info"
+      data-l10n-id="shopping-message-bar-thanks-for-reporting"
+    >
+    </moz-message-bar>`;
   }
 
   getProductNotAvailableReportedTemplate() {
-    return html`<message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-title2"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-message2"
-        ></span>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="warning"
+      data-l10n-id="shopping-message-bar-warning-product-not-available-reported"
+    >
+    </moz-message-bar>`;
   }
 
   analysisInProgressTemplate() {
-    return html` <message-bar>
+    return html`<message-bar>
       <article
         id="message-bar-container"
         aria-labelledby="header"
@@ -169,7 +150,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   reanalysisInProgressTemplate() {
-    return html` <message-bar>
+    return html`<message-bar>
       <article
         id="message-bar-container"
         aria-labelledby="header"
@@ -184,28 +165,22 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   pageNotSupportedTemplate() {
-    return html` <message-bar>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-message-bar-page-not-supported-title"
-        ></strong>
-        <span
-          data-l10n-id="shopping-message-bar-page-not-supported-message"
-        ></span>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading, message"
+      type="warning"
+      data-l10n-id="shopping-message-bar-page-not-supported"
+    >
+    </moz-message-bar>`;
   }
 
   thankYouForFeedbackTemplate() {
-    return html`<message-bar type="success" dismissable>
-      <article id="message-bar-container" aria-labelledby="header">
-        <strong
-          id="header"
-          data-l10n-id="shopping-survey-thanks-message"
-        ></strong>
-      </article>
-    </message-bar>`;
+    return html`<moz-message-bar
+      data-l10n-attrs="heading"
+      type="success"
+      dismissable
+      data-l10n-id="shopping-survey-thanks"
+    >
+    </moz-message-bar>`;
   }
 
   render() {
