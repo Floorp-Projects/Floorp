@@ -21360,15 +21360,7 @@ class CallbackMember(CGNativeMember):
             if arg.canHaveMissingValue():
                 argval += ".Value()"
 
-        if arg.type.isDOMString():
-            # XPConnect string-to-JS conversion wants to mutate the string.  So
-            # let's give it a string it can mutate
-            # XXXbz if we try to do a sequence of strings, this will kinda fail.
-            result = "mutableStr"
-            prepend = "nsString mutableStr(%s);\n" % argval
-        else:
-            result = argval
-            prepend = ""
+        prepend = ""
 
         wrapScope = self.wrapScope
         if arg.type.isUnion() and wrapScope is None:
@@ -21381,7 +21373,7 @@ class CallbackMember(CGNativeMember):
             arg.type,
             self.descriptorProvider,
             {
-                "result": result,
+                "result": argval,
                 "successCode": "continue;\n" if arg.variadic else "break;\n",
                 "jsvalRef": "argv[%s]" % jsvalIndex,
                 "jsvalHandle": "argv[%s]" % jsvalIndex,

@@ -112,4 +112,18 @@ bool NonVoidStringToJsval(JSContext* cx, nsAString& str,
   return true;
 }
 
+bool NonVoidStringToJsval(JSContext* cx, const nsAString& str,
+                          MutableHandleValue rval) {
+  nsStringBuffer* sharedBuffer;
+  if (!XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer, rval)) {
+    return false;
+  }
+
+  if (sharedBuffer) {
+    // The string was shared but ReadableToJSVal didn't addref it.
+    sharedBuffer->AddRef();
+  }
+  return true;
+}
+
 }  // namespace xpc
