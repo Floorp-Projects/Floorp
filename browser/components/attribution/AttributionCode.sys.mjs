@@ -191,43 +191,6 @@ export var AttributionCode = {
   },
 
   /**
-   * Returns an object containing a key-value pair for each piece of attribution
-   * data included in the passed-in URL containing a query string encoding an
-   * attribution code.
-   *
-   * We have less control of the attribution codes on macOS so we accept more
-   * URLs than we accept attribution codes on Windows.
-   *
-   * If the URL is empty, returns an empty object.
-   *
-   * If the URL doesn't parse, throws.
-   */
-  parseAttributionCodeFromUrl(url) {
-    if (!url) {
-      return {};
-    }
-
-    let parsed = {};
-
-    let params = new URL(url).searchParams;
-    for (let key of ATTR_CODE_KEYS) {
-      // We support the key prefixed with utm_ or not, but intentionally
-      // choose non-utm params over utm params.
-      for (let paramKey of [`utm_${key}`, `funnel_${key}`, key]) {
-        if (params.has(paramKey)) {
-          // We expect URI-encoded components in our attribution codes.
-          let value = encodeURIComponent(params.get(paramKey));
-          if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
-            parsed[key] = value;
-          }
-        }
-      }
-    }
-
-    return parsed;
-  },
-
-  /**
    * Returns a string serializing the given attribution data.
    *
    * It is expected that the given values are already URL-encoded.
@@ -285,14 +248,15 @@ export var AttributionCode = {
         `getAttrDataAsync: macOS && !exists("${attributionFile.path}")`
       );
 
-      // On macOS, we fish the attribution data from the system quarantine DB.
+      // On macOS, we fish the attribution data from an extended attribute on
+      // the .app bundle directory.
       try {
-        let referrer = await lazy.MacAttribution.getReferrerUrl();
+        let attrStr = await lazy.MacAttribution.getAttributionString();
         lazy.log.debug(
-          `getAttrDataAsync: macOS attribution getReferrerUrl: "${referrer}"`
+          `getAttrDataAsync: macOS attribution getAttributionString: "${attrStr}"`
         );
 
-        gCachedAttrData = this.parseAttributionCodeFromUrl(referrer);
+        gCachedAttrData = this.parseAttributionCode(attrStr);
       } catch (ex) {
         // Avoid partial attribution data.
         gCachedAttrData = {};
@@ -315,8 +279,7 @@ export var AttributionCode = {
         `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
       );
 
-      // We only want to try to fetch the referrer from the quarantine
-      // database once on macOS.
+      // We only want to try to fetch the attribution string once on macOS
       try {
         let code = this.serializeAttributionData(gCachedAttrData);
         lazy.log.debug(`macOS attribution data serializes as "${code}"`);
