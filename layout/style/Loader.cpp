@@ -1250,6 +1250,37 @@ bool Loader::MaybeDeferLoad(SheetLoadData& aLoadData, SheetState aSheetState,
   return false;
 }
 
+bool Loader::MaybeCoalesceLoadAndNotifyOpen(SheetLoadData& aLoadData,
+                                            SheetState aSheetState,
+                                            const SheetLoadDataHashKey& aKey,
+                                            const PreloadHashKey& aPreloadKey) {
+  bool coalescedLoad = false;
+  auto cacheState = [&aSheetState] {
+    switch (aSheetState) {
+      case SheetState::Complete:
+        return CachedSubResourceState::Complete;
+      case SheetState::Pending:
+        return CachedSubResourceState::Pending;
+      case SheetState::Loading:
+        return CachedSubResourceState::Loading;
+      case SheetState::NeedsParser:
+        return CachedSubResourceState::Miss;
+    }
+    MOZ_ASSERT_UNREACHABLE("wat");
+    return CachedSubResourceState::Miss;
+  }();
+
+  if ((coalescedLoad = mSheets->CoalesceLoad(aKey, aLoadData, cacheState))) {
+    if (aSheetState == SheetState::Pending) {
+      ++mPendingLoadCount;
+    } else {
+      aLoadData.NotifyOpen(aPreloadKey, mDocument,
+                           aLoadData.IsLinkRelPreload());
+    }
+  }
+  return coalescedLoad;
+}
+
 /**
  * LoadSheet handles the actual load of a sheet.  If the load is
  * supposed to be synchronous it just opens a channel synchronously
@@ -1298,41 +1329,20 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   SheetLoadDataHashKey key(aLoadData);
 
   auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
-  bool coalescedLoad = false;
   if (mSheets) {
     if (MaybeDeferLoad(aLoadData, aSheetState, aPendingLoad, key)) {
       return NS_OK;
     }
 
-    auto cacheState = [&aSheetState] {
-      switch (aSheetState) {
-        case SheetState::Complete:
-          return CachedSubResourceState::Complete;
-        case SheetState::Pending:
-          return CachedSubResourceState::Pending;
-        case SheetState::Loading:
-          return CachedSubResourceState::Loading;
-        case SheetState::NeedsParser:
-          return CachedSubResourceState::Miss;
-      }
-      MOZ_ASSERT_UNREACHABLE("wat");
-      return CachedSubResourceState::Miss;
-    }();
-
-    if ((coalescedLoad = mSheets->CoalesceLoad(key, aLoadData, cacheState))) {
-      if (aSheetState == SheetState::Pending) {
-        ++mPendingLoadCount;
-        return NS_OK;
-      }
+    if (MaybeCoalesceLoadAndNotifyOpen(aLoadData, aSheetState, key,
+                                       preloadKey)) {
+      // All done here; once the load completes we'll be marked complete
+      // automatically.
+      return NS_OK;
     }
   }
 
   aLoadData.NotifyOpen(preloadKey, mDocument, aLoadData.IsLinkRelPreload());
-  if (coalescedLoad) {
-    // All done here; once the load completes we'll be marked complete
-    // automatically.
-    return NS_OK;
-  }
 
   nsresult rv = NS_OK;
 
