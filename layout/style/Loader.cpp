@@ -1344,6 +1344,12 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
   aLoadData.NotifyOpen(preloadKey, mDocument, aLoadData.IsLinkRelPreload());
 
+  return LoadSheetAsyncInternal(aLoadData, aEarlyHintPreloaderId, key);
+}
+
+nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
+                                        uint64_t aEarlyHintPreloaderId,
+                                        const SheetLoadDataHashKey& aKey) {
   nsresult rv = NS_OK;
 
   SRIMetadata sriMetadata;
@@ -1518,7 +1524,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 #endif
 
   if (mSheets) {
-    mSheets->LoadStarted(key, aLoadData);
+    mSheets->LoadStarted(aKey, aLoadData);
   }
   return NS_OK;
 }
