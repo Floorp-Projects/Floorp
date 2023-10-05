@@ -25,32 +25,24 @@ mozilla::LazyLogModule gH265("H265");
 #define LOG(msg, ...) MOZ_LOG(gH265, LogLevel::Debug, (msg, ##__VA_ARGS__))
 #define LOGV(msg, ...) MOZ_LOG(gH265, LogLevel::Verbose, (msg, ##__VA_ARGS__))
 
-#define READ_IN_RANGE_OR_RETURN(dest, val, min, max)            \
-  do {                                                          \
-    if ((int64_t)(min) <= (int64_t)(val) && (val) <= (max)) {   \
-      (dest) = (val);                                           \
-    } else {                                                    \
-      LOG(#dest " is not in the range of [" #min "," #max "]"); \
-      return mozilla::Err(NS_ERROR_FAILURE);                    \
-    }                                                           \
-  } while (0)
-
 #define IN_RANGE_OR_RETURN(val, min, max)                      \
   do {                                                         \
-    if ((int64_t)(val) < (int64_t)(min) || (max) < (val)) {    \
+    int64_t temp = AssertedCast<int64_t>(val);                 \
+    if ((temp) < (min) || (max) < (temp)) {                    \
       LOG(#val " is not in the range of [" #min "," #max "]"); \
       return mozilla::Err(NS_ERROR_FAILURE);                   \
     }                                                          \
   } while (0)
 
-#define NON_ZERO_OR_RETURN(dest, val)        \
-  do {                                       \
-    if ((val) != 0) {                        \
-      (dest) = (val);                        \
-    } else {                                 \
-      LOG(#dest " should be non-zero");      \
-      return mozilla::Err(NS_ERROR_FAILURE); \
-    }                                        \
+#define NON_ZERO_OR_RETURN(dest, val)          \
+  do {                                         \
+    int64_t temp = AssertedCast<int64_t>(val); \
+    if ((temp) != 0) {                         \
+      (dest) = (temp);                         \
+    } else {                                   \
+      LOG(#dest " should be non-zero");        \
+      return mozilla::Err(NS_ERROR_FAILURE);   \
+    }                                          \
   } while (0)
 
 namespace mozilla {
@@ -174,15 +166,18 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
   // H265 spec, 7.3.2.2.1 seq_parameter_set_rbsp
   H265SPS sps;
   BitReader reader(rbsp);
-  READ_IN_RANGE_OR_RETURN(sps.sps_video_parameter_set_id, reader.ReadBits(4), 0,
-                          15);
-  READ_IN_RANGE_OR_RETURN(sps.sps_max_sub_layers_minus1, reader.ReadBits(3), 0,
-                          6);
+  sps.sps_video_parameter_set_id = reader.ReadBits(4);
+  IN_RANGE_OR_RETURN(sps.sps_video_parameter_set_id, 0, 15);
+  sps.sps_max_sub_layers_minus1 = reader.ReadBits(3);
+  IN_RANGE_OR_RETURN(sps.sps_max_sub_layers_minus1, 0, 6);
   sps.sps_temporal_id_nesting_flag = reader.ReadBit();
   ParseProfileTierLevel(reader, true /* aProfilePresentFlag, true per spec*/,
                         sps.sps_max_sub_layers_minus1, sps.profile_tier_level);
-  READ_IN_RANGE_OR_RETURN(sps.sps_seq_parameter_set_id, reader.ReadUE(), 0, 15);
-  READ_IN_RANGE_OR_RETURN(sps.chroma_format_idc, reader.ReadUE(), 0, 3);
+  sps.sps_seq_parameter_set_id = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.sps_seq_parameter_set_id, 0, 15);
+  sps.chroma_format_idc = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.chroma_format_idc, 0, 3);
+
   if (sps.chroma_format_idc == 3) {
     sps.separate_colour_plane_flag = reader.ReadBit();
   }
@@ -206,10 +201,12 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
     sps.conf_win_top_offset = reader.ReadUE();
     sps.conf_win_bottom_offset = reader.ReadUE();
   }
-  READ_IN_RANGE_OR_RETURN(sps.bit_depth_luma_minus8, reader.ReadUE(), 0, 8);
-  READ_IN_RANGE_OR_RETURN(sps.bit_depth_chroma_minus8, reader.ReadUE(), 0, 8);
-  READ_IN_RANGE_OR_RETURN(sps.log2_max_pic_order_cnt_lsb_minus4,
-                          reader.ReadUE(), 0, 12);
+  sps.bit_depth_luma_minus8 = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.bit_depth_luma_minus8, 0, 8);
+  sps.bit_depth_chroma_minus8 = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.bit_depth_chroma_minus8, 0, 8);
+  sps.log2_max_pic_order_cnt_lsb_minus4 = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.log2_max_pic_order_cnt_lsb_minus4, 0, 12);
   sps.sps_sub_layer_ordering_info_present_flag = reader.ReadBit();
   for (auto i = sps.sps_sub_layer_ordering_info_present_flag
                     ? 0
@@ -239,12 +236,14 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
 
   sps.pcm_enabled_flag = reader.ReadBit();
   if (sps.pcm_enabled_flag) {
-    READ_IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_luma_minus1,
-                            reader.ReadBits(3), 0, sps.BitDepthLuma());
-    READ_IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_chroma_minus1,
-                            reader.ReadBits(3), 0, sps.BitDepthChroma());
-    READ_IN_RANGE_OR_RETURN(sps.log2_min_pcm_luma_coding_block_size_minus3,
-                            reader.ReadUE(), 0, 2);
+    sps.pcm_sample_bit_depth_luma_minus1 = reader.ReadBits(3);
+    IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_luma_minus1, 0,
+                       sps.BitDepthLuma());
+    sps.pcm_sample_bit_depth_chroma_minus1 = reader.ReadBits(3);
+    IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_chroma_minus1, 0,
+                       sps.BitDepthChroma());
+    sps.log2_min_pcm_luma_coding_block_size_minus3 = reader.ReadUE();
+    IN_RANGE_OR_RETURN(sps.log2_min_pcm_luma_coding_block_size_minus3, 0, 2);
     uint32_t log2MinIpcmCbSizeY{sps.log2_min_pcm_luma_coding_block_size_minus3 +
                                 3};
     sps.log2_diff_max_min_pcm_luma_coding_block_size = reader.ReadUE();
@@ -263,8 +262,9 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
     sps.pcm_loop_filter_disabled_flag = reader.ReadBit();
   }
 
-  READ_IN_RANGE_OR_RETURN(sps.num_short_term_ref_pic_sets, reader.ReadUE(), 0,
-                          kMaxShortTermRefPicSets);
+  sps.num_short_term_ref_pic_sets = reader.ReadUE();
+  IN_RANGE_OR_RETURN(sps.num_short_term_ref_pic_sets, 0,
+                     kMaxShortTermRefPicSets);
   for (auto i = 0; i < sps.num_short_term_ref_pic_sets; i++) {
     if (auto rv = ParseStRefPicSet(reader, i, sps); rv.isErr()) {
       LOG("Failed to parse short-term reference picture set.");
@@ -274,8 +274,8 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
   const auto long_term_ref_pics_present_flag = reader.ReadBit();
   if (long_term_ref_pics_present_flag) {
     uint32_t num_long_term_ref_pics_sps;
-    READ_IN_RANGE_OR_RETURN(num_long_term_ref_pics_sps, reader.ReadUE(), 0,
-                            kMaxLongTermRefPicSets);
+    num_long_term_ref_pics_sps = reader.ReadUE();
+    IN_RANGE_OR_RETURN(num_long_term_ref_pics_sps, 0, kMaxLongTermRefPicSets);
     for (auto i = 0; i < num_long_term_ref_pics_sps; i++) {
       Unused << reader.ReadBits(sps.log2_max_pic_order_cnt_lsb_minus4 +
                                 4);  // lt_ref_pic_poc_lsb_sps[i]
@@ -412,8 +412,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
   if (inter_ref_pic_set_prediction_flag) {
     int delta_idx_minus1 = 0;
     if (aStRpsIdx == aSPS.num_short_term_ref_pic_sets) {
-      READ_IN_RANGE_OR_RETURN(delta_idx_minus1, aReader.ReadUE(), 0,
-                              aStRpsIdx - 1);
+      delta_idx_minus1 = aReader.ReadUE();
+      IN_RANGE_OR_RETURN(delta_idx_minus1, 0, aStRpsIdx - 1);
     }
     const uint32_t RefRpsIdx = aStRpsIdx - (delta_idx_minus1 + 1);  // (7-59)
     const bool delta_rps_sign = aReader.ReadBit();
@@ -484,8 +484,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
     curStRefPicSet.num_negative_pics = aReader.ReadUE();
     curStRefPicSet.num_positive_pics = aReader.ReadUE();
     for (auto i = 0; i < curStRefPicSet.num_negative_pics; i++) {
-      uint32_t delta_poc_s0_minus1;
-      READ_IN_RANGE_OR_RETURN(delta_poc_s0_minus1, aReader.ReadUE(), 0, 0x7FFF);
+      const uint32_t delta_poc_s0_minus1 = aReader.ReadUE();
+      IN_RANGE_OR_RETURN(delta_poc_s0_minus1, 0, 0x7FFF);
       if (i == 0) {
         // (7-67)
         curStRefPicSet.deltaPocS0[i] = -(delta_poc_s0_minus1 + 1);
@@ -497,8 +497,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
       curStRefPicSet.usedByCurrPicS0[i] = aReader.ReadBit();
     }
     for (auto i = 0; i < curStRefPicSet.num_positive_pics; i++) {
-      int delta_poc_s1_minus1;
-      READ_IN_RANGE_OR_RETURN(delta_poc_s1_minus1, aReader.ReadUE(), 0, 0x7FFF);
+      const int delta_poc_s1_minus1 = aReader.ReadUE();
+      IN_RANGE_OR_RETURN(delta_poc_s1_minus1, 0, 0x7FFF);
       if (i == 0) {
         // (7-68)
         curStRefPicSet.deltaPocS1[i] = delta_poc_s1_minus1 + 1;
@@ -690,7 +690,8 @@ Result<Ok, nsresult> H265::ParseAndIgnoreHrdParameters(
     }
     int cpb_cnt_minus1 = 0;
     if (!low_delay_hrd_flag) {
-      READ_IN_RANGE_OR_RETURN(cpb_cnt_minus1, aReader.ReadUE(), 0, 31);
+      cpb_cnt_minus1 = aReader.ReadUE();
+      IN_RANGE_OR_RETURN(cpb_cnt_minus1, 0, 31);
     }
     if (nal_hrd_parameters_present_flag) {
       if (auto rv = ParseAndIgnoreSubLayerHrdParameters(
