@@ -199,6 +199,7 @@ skip-if = [
 ["browser_dbg-features-wasm.js"]
 
 ["browser_dbg-fission-frame-breakpoint.js"]
+skip-if = ["!fission"] # threads panel only shows remote frame when fission is enabled.
 
 ["browser_dbg-fission-frame-pause-exceptions.js"]
 
