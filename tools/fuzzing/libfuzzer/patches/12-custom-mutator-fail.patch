@@ -6,9 +6,9 @@
 # Parent  ea198a0331a6db043cb5978512226977514104db
 [libFuzzer] Allow custom mutators to fail
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
---- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+diff --git a/FuzzerLoop.cpp b/FuzzerLoop.cpp
+--- a/FuzzerLoop.cpp
++++ b/FuzzerLoop.cpp
 @@ -690,16 +690,20 @@ void Fuzzer::MutateAndTestOne() {
      if (II.HasFocusFunction && !II.DataFlowTraceForFocusFunction.empty() &&
          Size <= CurrentMaxMutationLen)
