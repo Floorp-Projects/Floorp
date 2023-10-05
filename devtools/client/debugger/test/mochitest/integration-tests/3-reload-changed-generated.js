@@ -65,6 +65,16 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
       expectedGeneratedFileContentOnBreakpointLine
     );
   }
+  info(
+    "Check that the source code snipper shown in the breakpoint panel is correct"
+  );
+  assertBreakpointSnippet(
+    dbg,
+    1,
+    isCompressed
+      ? `baabar(),console.log("YO")},foobar()}]);`
+      : `await baabar();`
+  );
 
   await closeTab(dbg, "bundle-with-another-original.js");
 
@@ -169,6 +179,15 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
   } else {
     is(breakpoint.generatedLocation.line, 103);
   }
+
+  info("Check that the breakpoint snippet is still the same");
+  assertBreakpointSnippet(
+    dbg,
+    1,
+    isCompressed
+      ? `baabar(),console.log("YO")},foobar()}]);`
+      : `await baabar();`
+  );
 
   if (!isCompressed) {
     await resume(dbg);

@@ -56,6 +56,10 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   } else {
     is(breakpoint.generatedLocation.line, 80);
   }
+  info(
+    "Assert that the breakpoint snippet is originaly set to the to-be-removed original source content"
+  );
+  assertBreakpointSnippet(dbg, 1, `console.log("Removed original");`);
 
   await resume(dbg);
 
@@ -93,6 +97,10 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   } else {
     is(breakpoint.generatedLocation.line, 80);
   }
+  info(
+    "Assert that the breakpoint snippet changed to the new original source content"
+  );
+  assertBreakpointSnippet(dbg, 1, `console.log("New original");`);
 
   await resume(dbg);
   info("Wait for reload to complete after resume");

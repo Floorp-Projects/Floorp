@@ -39,7 +39,6 @@ import {
   selectors,
   actions,
   makeSource,
-  makeSourceURL,
   waitForState,
 } from "../../utils/test-head";
 
@@ -215,44 +214,6 @@ describe("adding sources", () => {
     );
 
     await dispatch(actions.loadGeneratedSourceText(sourceActor));
-
-    await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
-
-    expect(selectors.getBreakpointCount(getState())).toEqual(1);
-  });
-
-  it("corresponding breakpoints are added to the original source", async () => {
-    const sourceURL = makeSourceURL("bar.js");
-    const store = createStore(mockClient({ 5: [2] }), loadInitialState(), {
-      getOriginalURLs: async source => [
-        {
-          id: sourceMapLoader.generatedToOriginalId(source.id, sourceURL),
-          url: sourceURL,
-        },
-      ],
-      getOriginalSourceText: async () => ({ text: "" }),
-      getGeneratedLocation: async location => location,
-      getOriginalLocation: async location => location,
-      getGeneratedRangesForOriginal: async () => [
-        { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
-      ],
-      getOriginalLocations: async items =>
-        items.map(item => ({
-          ...item,
-          sourceId: sourceMapLoader.generatedToOriginalId(
-            item.sourceId,
-            sourceURL
-          ),
-        })),
-    });
-
-    const { getState, dispatch } = store;
-
-    expect(selectors.getBreakpointCount(getState())).toEqual(0);
-
-    await dispatch(
-      actions.newGeneratedSource(makeSource("bar.js", { sourceMapURL: "foo" }))
-    );
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
 

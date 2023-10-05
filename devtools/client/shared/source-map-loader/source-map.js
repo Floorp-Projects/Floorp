@@ -216,20 +216,43 @@ async function getGeneratedLocation(location) {
   };
 }
 
-async function getOriginalLocations(locations) {
-  const maps = {};
-
-  const results = [];
-  for (const location of locations) {
-    let map = maps[location.sourceId];
-    if (map === undefined) {
-      map = await getSourceMap(location.sourceId);
-      maps[location.sourceId] = map || null;
-    }
-
-    results.push(map ? getOriginalLocationSync(map, location) : null);
+/**
+ * Map the breakable positions (line and columns) from generated to original locations.
+ *
+ * @param {Object} breakpointPositions
+ *        List of columns per line refering to the breakable columns per line
+ *        for a given source:
+ *        {
+ *           1: [2, 6], // On line 1, column 2 and 6 are breakable.
+ *           ...
+ *        }
+ * @param {string} sourceId
+ *        The ID for the generated source.
+ */
+async function getOriginalLocations(breakpointPositions, sourceId) {
+  const map = await getSourceMap(sourceId);
+  if (!map) {
+    return null;
   }
-  return results;
+  for (const line in breakpointPositions) {
+    const breakableColumnsPerLine = breakpointPositions[line];
+    for (let i = 0; i < breakableColumnsPerLine.length; i++) {
+      const column = breakableColumnsPerLine[i];
+      const mappedLocation = getOriginalLocationSync(map, {
+        sourceId,
+        line: parseInt(line, 10),
+        column,
+      });
+      if (mappedLocation) {
+        // As we replace the `column` with the mappedLocation,
+        // also transfer the generated column so that we can compute both original and generated locations
+        // in the main thread.
+        mappedLocation.generatedColumn = column;
+        breakableColumnsPerLine[i] = mappedLocation;
+      }
+    }
+  }
+  return breakpointPositions;
 }
 
 function getOriginalLocationSync(map, location) {

@@ -60,6 +60,17 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
   assertTextContentOnLine(dbg, 8, expectedOriginalFileContentOnBreakpointLine);
 
   info(
+    "Check that the source text snippet displayed in breakpoints panel is correct"
+  );
+  assertBreakpointSnippet(
+    dbg,
+    1,
+    isCompressed
+      ? "nonSourceMappedFunction();"
+      : "await nonSourceMappedFunction();"
+  );
+
+  info(
     "Check that the breakpoint is displayed in correct location in bundle.js (generated source)"
   );
   await selectSource(dbg, "bundle.js");
@@ -73,6 +84,16 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
       expectedGeneratedFileContentOnBreakpointLine
     );
   }
+  info(
+    "The breakpoint snippet doesn't change when moving to generated content"
+  );
+  assertBreakpointSnippet(
+    dbg,
+    1,
+    isCompressed
+      ? `nonSourceMappedFunction(),console.log("YO")}}]);`
+      : "await nonSourceMappedFunction();"
+  );
 
   await closeTab(dbg, "bundle.js");
 
@@ -115,6 +136,11 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
   } else {
     is(breakpoint.generatedLocation.line, 89);
   }
+  assertBreakpointSnippet(
+    dbg,
+    1,
+    isCompressed ? `log("HEY")` : `console.log("HEY")`
+  );
 
   // This reload removes the content related to the lines in the original
   // file where the breakpoints where set.
