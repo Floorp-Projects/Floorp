@@ -11,9 +11,11 @@ const {
   assertFirefoxViewTab,
   openFirefoxViewTab,
   closeFirefoxViewTab,
+  init: FirefoxViewTestUtilsInit,
 } = ChromeUtils.importESModule(
   "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
 );
+FirefoxViewTestUtilsInit(this);
 
 const TEST_MESSAGE = {
   message: {

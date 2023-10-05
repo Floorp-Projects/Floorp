@@ -4,6 +4,15 @@
 
 window.addEventListener("DOMContentLoaded", async () => {
   Services.telemetry.recordEvent("firefoxview", "entered", "firefoxview", null);
+  if (Cu.isInAutomation) {
+    Services.obs.notifyObservers(null, "firefoxview-entered");
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        Services.obs.notifyObservers(null, "firefoxview-entered");
+      }
+    });
+  }
+
   document.getElementById("recently-closed-tabs-container").onLoad();
   // If Firefox View was reloaded by the user, force syncing of tabs
   // to get the most up to date synced tabs.
