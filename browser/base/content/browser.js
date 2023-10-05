@@ -10092,13 +10092,12 @@ var ShoppingSidebarManager = {
     if (window.closed) {
       return;
     }
-    let optedOut = this.optedInPref === 2;
     let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
 
     // We are forced to cache this value because otherwise we access the pref
     // too many times.
     this.inEnabledBranch = NimbusFeatures.shopping2023.getVariable("enabled");
-    this._enabled = this.inEnabledBranch && !isPBM && !optedOut;
+    this._enabled = this.inEnabledBranch && !isPBM;
 
     if (!this.isActive) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
