@@ -997,6 +997,7 @@
    match-leak-kinds: definite
    fun:malloc
    fun:moz_xmalloc
+   fun:operator new
    fun:_ZN13nsDynamicAtom6Create*
    fun:_ZN11nsAtomTable7Atomize*
    fun:_ZN21nsLanguageAtomService14LookupLanguage*
@@ -1029,6 +1030,7 @@
    match-leak-kinds: definite
    fun:malloc
    fun:moz_xmalloc
+   fun:operator new
    fun:_ZN13nsDynamicAtom6CreateERK12nsTSubstringIDsEj*
    fun:_ZN11nsAtomTable7AtomizeERK12nsTSubstringIDsE*
    fun:_ZN11nsAttrValue9ParseAtomERK12nsTSubstringIDsE*
