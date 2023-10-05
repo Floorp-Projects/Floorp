@@ -473,6 +473,10 @@ class Loader final {
   friend class SheetLoadData;
   friend class StreamLoader;
 
+  // Only to be called by `LoadSheet`.
+  [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
+                                               SheetState aSheetState);
+
   // Helpers to conditionally block onload if mDocument is non-null.
   void IncrementOngoingLoadCountAndMaybeBlockOnload() {
     if (!mOngoingLoadCount++) {
