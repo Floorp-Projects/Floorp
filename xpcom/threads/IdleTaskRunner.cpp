@@ -185,6 +185,17 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   mDeadline = TimeStamp();
 
   TimeStamp now = TimeStamp::Now();
+
+  if (aAllowIdleDispatch) {
+    SetTimerInternal(mMaxDelay);
+    if (!mTask) {
+      mTask = new IdleTaskRunnerTask(this);
+      RefPtr<Task> task(mTask);
+      TaskController::Get()->AddTask(task.forget());
+    }
+    return;
+  }
+
   bool useRefreshDriver = false;
   if (now >= mStartTime) {
     // Detect whether the refresh driver is ticking by checking if
@@ -193,9 +204,6 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
         (nsRefreshDriver::GetIdleDeadlineHint(
              now, nsRefreshDriver::IdleCheck::OnlyThisProcessRefreshDriver) !=
          now);
-  } else {
-    NS_WARNING_ASSERTION(!aAllowIdleDispatch,
-                         "early callback, or time went backwards");
   }
 
   if (useRefreshDriver) {
@@ -209,36 +217,25 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
     SetTimerInternal(mMaxDelay);
   } else {
     // RefreshDriver doesn't seem to be running.
-    if (aAllowIdleDispatch) {
-      SetTimerInternal(mMaxDelay);
-      if (!mTask) {
-        // If we have mTask we've already scheduled one, and the refresh driver
-        // shouldn't be running if we hit this code path.
-        mTask = new IdleTaskRunnerTask(this);
-        RefPtr<Task> task(mTask);
-        TaskController::Get()->AddTask(task.forget());
+    if (!mScheduleTimer) {
+      mScheduleTimer = NS_NewTimer();
+      if (!mScheduleTimer) {
+        return;
       }
     } else {
-      if (!mScheduleTimer) {
-        mScheduleTimer = NS_NewTimer();
-        if (!mScheduleTimer) {
-          return;
-        }
-      } else {
-        mScheduleTimer->Cancel();
-      }
-      // We weren't allowed to do idle dispatch immediately, do it after a
-      // short timeout. (Or wait for our start time if we haven't started yet.)
-      uint32_t waitToSchedule = 16; /* ms */
-      if (now < mStartTime) {
-        // + 1 to round milliseconds up to be sure to wait until after
-        // mStartTime.
-        waitToSchedule = (mStartTime - now).ToMilliseconds() + 1;
-      }
-      mScheduleTimer->InitWithNamedFuncCallback(
-          ScheduleTimedOut, this, waitToSchedule,
-          nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, mName);
+      mScheduleTimer->Cancel();
     }
+    // We weren't allowed to do idle dispatch immediately, do it after a
+    // short timeout. (Or wait for our start time if we haven't started yet.)
+    uint32_t waitToSchedule = 16; /* ms */
+    if (now < mStartTime) {
+      // + 1 to round milliseconds up to be sure to wait until after
+      // mStartTime.
+      waitToSchedule = (mStartTime - now).ToMilliseconds() + 1;
+    }
+    mScheduleTimer->InitWithNamedFuncCallback(
+        ScheduleTimedOut, this, waitToSchedule,
+        nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, mName);
   }
 }
 
