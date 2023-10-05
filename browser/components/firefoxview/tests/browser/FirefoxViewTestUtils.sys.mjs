@@ -5,6 +5,24 @@ import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys
 import { Assert } from "resource://testing-common/Assert.sys.mjs";
 import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
+var testScope;
+
+/**
+ * Module consumers can optionally initialize the module
+ *
+ * @param {Object} scope
+ *   object with SimpleTest and info properties.
+ */
+function init(scope) {
+  testScope = scope;
+}
+
+function getFirefoxViewURL() {
+  return Services.prefs.getBoolPref("browser.tabs.firefox-view-next", true)
+    ? "about:firefoxview-next"
+    : "about:firefoxview";
+}
+
 function assertFirefoxViewTab(win) {
   Assert.ok(win.FirefoxViewHandler.tab, "Firefox View tab exists");
   Assert.ok(win.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
@@ -27,6 +45,18 @@ async function assertFirefoxViewTabSelected(win) {
 }
 
 async function openFirefoxViewTab(win) {
+  if (!testScope?.SimpleTest) {
+    throw new Error(
+      "Must initialize FirefoxViewTestUtils with a test scope which has a SimpleTest property"
+    );
+  }
+  await testScope.SimpleTest.promiseFocus(win);
+
+  const fxViewTab = win.FirefoxViewHandler.tab;
+  const alreadyLoaded =
+    fxViewTab?.linkedBrowser?.currentURI.spec.split("#")[0] ==
+    getFirefoxViewURL();
+  const enteredPromise = TestUtils.topicObserved("firefoxview-entered");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#firefox-view-button",
     { type: "mousedown" },
@@ -37,9 +67,14 @@ async function openFirefoxViewTab(win) {
     win.FirefoxViewHandler.tab.selected,
     "Firefox View tab is selected"
   );
-  await BrowserTestUtils.browserLoaded(
-    win.FirefoxViewHandler.tab.linkedBrowser
-  );
+
+  if (!alreadyLoaded) {
+    testScope.info("Not already loaded, waiting for browserLoaded");
+    await BrowserTestUtils.browserLoaded(
+      win.FirefoxViewHandler.tab.linkedBrowser
+    );
+  }
+  await enteredPromise;
   return win.FirefoxViewHandler.tab;
 }
 
@@ -111,14 +146,16 @@ async function withFirefoxView(
 }
 
 function isFirefoxViewTabSelectedInWindow(win) {
-  return win.gBrowser.selectedBrowser.currentURI.spec == "about:firefoxview";
+  return win.gBrowser.selectedBrowser.currentURI.spec == getFirefoxViewURL();
 }
 
 export {
+  init,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
   openFirefoxViewTab,
   closeFirefoxViewTab,
   isFirefoxViewTabSelectedInWindow,
+  getFirefoxViewURL,
 };
