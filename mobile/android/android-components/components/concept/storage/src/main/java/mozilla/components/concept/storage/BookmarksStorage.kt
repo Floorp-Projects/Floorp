@@ -112,6 +112,16 @@ interface BookmarksStorage : Storage {
      */
     suspend fun deleteNode(guid: String): Boolean
 
+    /**
+     * Counts the number of bookmarks in the trees under the specified GUIDs.
+
+     * @param guids The guids of folders to query.
+     * @return Count of all bookmark items (ie, no folders or separators) in all specified folders
+     * recursively. Empty folders, non-existing GUIDs and non-existing items will return zero.
+     * The result is implementation dependant if the trees overlap.
+     */
+    suspend fun countBookmarksInTrees(guids: List<String>): UInt
+
     companion object {
         const val defaultBookmarkSearchLimit = 10
     }
@@ -140,22 +150,13 @@ data class BookmarkNode(
     val children: List<BookmarkNode>?,
 ) {
     /**
-     * Calculates the number of bookmark items in the node. Returns 0 if [children] is
-     * null or empty.
-     *
-     * @return number of bookmarks in the node and it's children.
-     */
-    fun count(): Int =
-        children?.fold(initial = 0) { accumulator, child ->
-            when (child.type) {
-                BookmarkNodeType.FOLDER -> accumulator + child.count()
-                BookmarkNodeType.ITEM -> accumulator.inc()
-                BookmarkNodeType.SEPARATOR -> accumulator
-            }
-        } ?: 0
-
-    /**
      * Removes [children] from [BookmarkNode.children] and returns the new modified [BookmarkNode].
+     *
+     * DOES NOT delete the bookmarks from storage, so this should only be used where you are
+     * batching deletes, or where the deletes are otherwise pending.
+     *
+     * In the general case you should try and avoid using this - just delete the items from
+     * storage then re-fetch the parent node.
      */
     operator fun minus(children: Set<BookmarkNode>): BookmarkNode {
         val removedChildrenGuids = children.map { it.guid }

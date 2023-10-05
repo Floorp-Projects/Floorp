@@ -27,6 +27,10 @@ permalink: /changelog/
 * **samples-browser**
   * Use `VerticalSwipeRefreshLayout` from AndroidComponents instead of AndroidX `SwipeRefreshLayout` to represent better Fenix behavior  
 
+* **places-bookmark-storage**:
+  * Added `countBookmarksInTrees` to more efficiently determine how many bookmarks exist under part or parts of a bookmarks tree, which
+    is taken advantage of by `DesktopFolders`.
+
 # 121.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v120..releases_v121)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v121/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

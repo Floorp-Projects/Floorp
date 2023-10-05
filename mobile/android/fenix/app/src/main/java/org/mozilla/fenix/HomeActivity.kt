@@ -603,17 +603,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.core.store.state.getNormalOrPrivateTabs(private = false).isNotEmpty()
 
         lifecycleScope.launch(IO) {
-            components.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)?.let {
-                val desktopRootNode = DesktopFolders(
-                    applicationContext,
-                    showMobileRoot = false,
-                ).withOptionalDesktopFolders(it)
-                settings().desktopBookmarksSize = desktopRootNode.count()
-            }
+            val desktopFolders = DesktopFolders(
+                applicationContext,
+                showMobileRoot = false,
+            )
+            settings().desktopBookmarksSize = desktopFolders.count()
 
-            components.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id, true)?.let {
-                settings().mobileBookmarksSize = it.count()
-            }
+            settings().mobileBookmarksSize = components.core.bookmarksStorage.countBookmarksInTrees(
+                listOf(BookmarkRoot.Mobile.id),
+            ).toInt()
         }
 
         super.onPause()

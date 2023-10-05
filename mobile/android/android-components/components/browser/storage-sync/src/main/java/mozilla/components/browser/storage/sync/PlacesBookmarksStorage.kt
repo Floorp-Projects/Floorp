@@ -242,6 +242,26 @@ open class PlacesBookmarksStorage(
     }
 
     /**
+     * Counts the number of items in the bookmark trees under the specified GUIDs.
+
+     * @param guids The guids of folders to query.
+     * @return Count of all bookmark items (ie, not folders or separators) in all specified folders
+     * recursively. Empty folders, non-existing GUIDs and non-existing items will return zero.
+     * The result is implementation dependant if the trees overlap.
+     */
+    override suspend fun countBookmarksInTrees(guids: List<String>): UInt {
+        return withContext(readScope.coroutineContext) {
+            try {
+                reader.countBookmarksInTrees(guids)
+            } catch (e: PlacesApiException) {
+                crashReporter?.submitCaughtException(e)
+                logger.warn("Ignoring PlacesApiException while running countBookmarksInTrees", e)
+                0U
+            }
+        }
+    }
+
+    /**
      * Runs syncBookmarks() method on the places Connection
      *
      * @param authInfo The authentication information to sync with.

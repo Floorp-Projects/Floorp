@@ -272,6 +272,11 @@ class BookmarksStorageSuggestionProviderTest {
                 }.take(limit).toList()
             }
 
+        override suspend fun countBookmarksInTrees(guids: List<String>): UInt {
+            // "Not needed for the test"
+            throw NotImplementedError()
+        }
+
         override suspend fun addItem(
             parentGuid: String,
             url: String,

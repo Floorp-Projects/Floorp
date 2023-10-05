@@ -49,6 +49,15 @@ class DesktopFolders(
         }
     }
 
+    /**
+     * Return the total number of desktop bookmarks in the storage database.
+     */
+    suspend fun count(): Int {
+        return bookmarksStorage.countBookmarksInTrees(
+            listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id),
+        ).toInt()
+    }
+
     private suspend fun virtualDesktopFolder(): BookmarkNode? {
         val rootNode = bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = false) ?: return null
         return rootNode.copy(title = rootTitles[rootNode.title])
