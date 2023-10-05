@@ -45,6 +45,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   10000
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isHistoryEnabled",
+  "places.history.enabled",
+  false
+);
+
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
 
 /**
@@ -238,8 +245,11 @@ class _Interactions {
    *   The document information of the page associated with the interaction.
    */
   registerNewInteraction(browser, docInfo) {
-    if (!browser) {
-      // The browser may have already gone away.
+    if (
+      !browser ||
+      !lazy.isHistoryEnabled ||
+      !browser.browsingContext.useGlobalHistory
+    ) {
       return;
     }
     let interaction = this.#interactions.get(browser);
@@ -291,7 +301,11 @@ class _Interactions {
     // tab. Since that will be a non-active tab, it is acceptable that we don't
     // update the interaction. When switching away from active tabs, a TabSelect
     // notification is generated which we handle elsewhere.
-    if (!browser) {
+    if (
+      !browser ||
+      !lazy.isHistoryEnabled ||
+      !browser.browsingContext.useGlobalHistory
+    ) {
       return;
     }
     lazy.logConsole.debug("Saw the end of an interaction");
