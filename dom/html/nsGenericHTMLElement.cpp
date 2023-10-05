@@ -3213,27 +3213,32 @@ void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
   SetStates(ElementState::POPOVER_OPEN, aOpen, aNotify);
 }
 
+already_AddRefed<ToggleEvent> nsGenericHTMLElement::CreateToggleEvent(
+    const nsAString& aEventType, const nsAString& aOldState,
+    const nsAString& aNewState, Cancelable aCancelable) {
+  ToggleEventInit init;
+  init.mBubbles = false;
+  init.mOldState = aOldState;
+  init.mNewState = aNewState;
+  init.mCancelable = aCancelable == Cancelable::eYes;
+  RefPtr<ToggleEvent> event = ToggleEvent::Constructor(this, aEventType, init);
+  event->SetTrusted(true);
+  event->SetTarget(this);
+  return event.forget();
+}
+
 bool nsGenericHTMLElement::FireToggleEvent(PopoverVisibilityState aOldState,
                                            PopoverVisibilityState aNewState,
                                            const nsAString& aType) {
   auto stringForState = [](PopoverVisibilityState state) {
     return state == PopoverVisibilityState::Hidden ? u"closed"_ns : u"open"_ns;
   };
-
-  ToggleEventInit init;
-  init.mBubbles = false;
-  init.mOldState = stringForState(aOldState);
-  init.mNewState = stringForState(aNewState);
-  if (aType == u"beforetoggle"_ns &&
-      aNewState == PopoverVisibilityState::Showing) {
-    init.mCancelable = true;
-  } else {
-    init.mCancelable = false;
-  }
-  RefPtr<ToggleEvent> event = ToggleEvent::Constructor(this, aType, init);
-  event->SetTrusted(true);
-  event->SetTarget(this);
-
+  const auto cancelable = aType == u"beforetoggle"_ns &&
+                                  aNewState == PopoverVisibilityState::Showing
+                              ? Cancelable::eYes
+                              : Cancelable::eNo;
+  RefPtr event = CreateToggleEvent(aType, stringForState(aOldState),
+                                   stringForState(aNewState), cancelable);
   EventDispatcher::DispatchDOMEvent(this, nullptr, event, nullptr, nullptr);
   return event->DefaultPrevented();
 }
