@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<video width="200"></video>
+<video></video>
 <script>
 function createSource(src, media) {
   var source = document.createElement('source');
@@ -14,18 +14,18 @@ const hash = str => str.substr(str.lastIndexOf('#'));
 (async () => {
   const v = document.querySelector('video');
   v.getBoundingClientRect(); // force layout flush. ensure viewport dimensions are up-to-date
-  v.append(createSource('/media-source/mp4/test.mp4#a', '(min-width: 200px)'));
-  v.append(createSource('/media-source/mp4/test.mp4#b'));
+  v.append(createSource('delayed-broken-video.py#a', '(min-width: 200px)'));
+  v.append(createSource('delayed-broken-video.py#b'));
   await rAF();
   await rAF();
-  window.resolveBeforeEnvChange(hash(v.currentSrc));
+  window.beforeEnvChange = hash(v.currentSrc);
   window.frameElement.width = '150';
   await rAF();
   await rAF();
-  window.resolveAfterEnvChange(hash(v.currentSrc));
+  window.afterEnvChange = hash(v.currentSrc);
   v.load()
   await rAF();
   await rAF();
-  window.resolveAfterLoadCalled(hash(v.currentSrc));
+  window.afterLoadCalled = hash(v.currentSrc);
 })();
 </script>
