@@ -45,13 +45,7 @@ class ShoppingMessageBar extends MozLitElement {
         composed: true,
       })
     );
-    this.dispatchEvent(
-      new CustomEvent("ShoppingTelemetryEvent", {
-        bubbles: true,
-        composed: true,
-        detail: "reanalyzeClicked",
-      })
-    );
+    Glean.shopping.surfaceReanalyzeClicked.record();
   }
 
   onClickProductAvailable() {
@@ -189,13 +183,7 @@ class ShoppingMessageBar extends MozLitElement {
     )();
     if (messageBarTemplate) {
       if (this.type == "stale") {
-        this.dispatchEvent(
-          new CustomEvent("ShoppingTelemetryEvent", {
-            bubbles: true,
-            composed: true,
-            detail: "staleAnalysisShown",
-          })
-        );
+        Glean.shopping.surfaceStaleAnalysisShown.record();
       }
       return html`
         <link

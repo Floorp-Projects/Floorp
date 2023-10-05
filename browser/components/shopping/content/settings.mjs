@@ -45,13 +45,7 @@ class ShoppingSettings extends MozLitElement {
 
   fakespotLinkClicked(e) {
     if (e.target.localName == "a" && e.button == 0) {
-      this.dispatchEvent(
-        new CustomEvent("ShoppingTelemetryEvent", {
-          composed: true,
-          bubbles: true,
-          detail: "surfacePoweredByFakespotLinkClicked",
-        })
-      );
+      Glean.shopping.surfacePoweredByFakespotLinkClicked.record();
     }
   }
 

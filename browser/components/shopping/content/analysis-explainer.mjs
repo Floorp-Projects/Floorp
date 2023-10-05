@@ -98,13 +98,7 @@ class AnalysisExplainer extends MozLitElement {
 
   handleReviewQualityUrlClicked(e) {
     if (e.target.localName == "a" && e.button == 0) {
-      this.dispatchEvent(
-        new CustomEvent("ShoppingTelemetryEvent", {
-          composed: true,
-          bubbles: true,
-          detail: "surfaceReviewQualityExplainerURLClicked",
-        })
-      );
+      Glean.shopping.surfaceShowQualityExplainerUrlClicked.record();
     }
   }
 
