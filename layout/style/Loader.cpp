@@ -1565,9 +1565,9 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 
   // This parse does not need to be synchronous. \o/
   //
-  // Note that load is already blocked from IncrementOngoingLoadCount(), and
-  // will be unblocked from SheetFinishedParsingAsync which will end up in
-  // NotifyObservers as needed.
+  // Note that load is already blocked from
+  // IncrementOngoingLoadCountAndMaybeBlockOnload(), and will be unblocked from
+  // SheetFinishedParsingAsync which will end up in NotifyObservers as needed.
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   sheet->ParseSheet(*this, aBytes, aLoadData)
       ->Then(
@@ -1590,7 +1590,7 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     // FontFaceSet for example checks for pending sheet loads from the
     // StyleSheetLoaded callback.
     if (aData.BlocksLoadEvent()) {
-      DecrementOngoingLoadCount();
+      DecrementOngoingLoadCountAndMaybeUnblockOnload();
       if (mPendingLoadCount && mPendingLoadCount == mOngoingLoadCount) {
         LOG(("  No more loading sheets; starting deferred loads"));
         StartDeferredLoads();
@@ -2161,7 +2161,8 @@ void Loader::NotifyOfCachedLoad(RefPtr<SheetLoadData> aLoadData) {
   MOZ_ASSERT(!aLoadData->mLoadFailed, "Why are we marked as failed?");
   aLoadData->mSheetAlreadyComplete = true;
 
-  // We need to check mURI to match DecrementOngoingLoadCount().
+  // We need to check mURI to match
+  // DecrementOngoingLoadCountAndMaybeUnblockOnload().
   if (aLoadData->mURI && aLoadData->BlocksLoadEvent()) {
     IncrementOngoingLoadCountAndMaybeBlockOnload();
   }
