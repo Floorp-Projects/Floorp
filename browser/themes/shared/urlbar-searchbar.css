@@ -5,17 +5,16 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  --toolbar-field-border-color: hsla(240,5%,5%,.25);
-  --toolbar-field-focus-border-color: var(--focus-outline-color);
+  --toolbar-field-border-color: transparent;
+  --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
   --urlbar-container-padding: 1px;
   --urlbar-margin-inline: 5px;
   --urlbar-search-button-width: calc(16px + 2 * var(--urlbar-icon-padding));
-}
 
-@media not (prefers-contrast) {
-  :root {
-    --toolbar-field-border-color: transparent;
-    --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
+  @media (prefers-contrast) {
+    /* TODO: Should probably be a system color instead (ThreeDShadow?) */
+    --toolbar-field-border-color: light-dark(hsla(240, 5%, 5%, .25), hsla(240, 95%, 95%, .35));
+    --toolbar-field-focus-border-color: var(--focus-outline-color);
   }
 }
 
