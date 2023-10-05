@@ -9,6 +9,9 @@ support-files = [ "../head.js"]
 
 ["browser_opentabs_firefoxview_next.js"]
 
+["browser_opentabs_recency_next.js"]
+skip-if = ["os == 'mac' && verify"] # macos times out, see bug 1857293
+
 ["browser_recentlyclosed_firefoxview_next.js"]
 
 ["browser_syncedtabs_errors_firefoxview_next.js"]
