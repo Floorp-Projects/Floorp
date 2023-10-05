@@ -290,7 +290,7 @@ class MockRustSuggest {
             ? new lazy.Suggestion.Amp(
                 suggestion.title,
                 suggestion.url,
-                null, // icon
+                [], // icon
                 query.keyword, // fullKeyword
                 suggestion.id, // blockId
                 suggestion.advertiser,
@@ -301,7 +301,7 @@ class MockRustSuggest {
             : new lazy.Suggestion.Wikipedia(
                 suggestion.title,
                 suggestion.url,
-                null, // icon
+                [], // icon
                 query.keyword // fullKeyword
               )
         );

@@ -1729,6 +1729,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       icon: {
         type: "string",
       },
+      iconBlob: {
+        type: "object",
+      },
       isBlockable: {
         type: "boolean",
       },

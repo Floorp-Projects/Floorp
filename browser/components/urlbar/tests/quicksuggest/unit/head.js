@@ -73,6 +73,7 @@ function makeWikipediaResult({
   url = "http://example.com/wikipedia",
   originalUrl = "http://example.com/wikipedia",
   icon = null,
+  iconBlob = new Blob([new Uint8Array([])]),
   impressionUrl = "http://example.com/wikipedia-impression",
   clickUrl = "http://example.com/wikipedia-click",
   blockId = 1,
@@ -87,7 +88,6 @@ function makeWikipediaResult({
       title,
       url,
       originalUrl,
-      icon,
       displayUrl: url.replace(/^https:\/\//, ""),
       isSponsored: false,
       qsSuggestion: keyword,
@@ -110,12 +110,11 @@ function makeWikipediaResult({
   if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
     result.payload.source = source || "rust";
     result.payload.provider = provider || "Wikipedia";
+    result.payload.iconBlob = iconBlob;
   } else {
     result.payload.source = source || "remote-settings";
     result.payload.provider = provider || "AdmWikipedia";
-  }
-
-  if (result.payload.source != "rust") {
+    result.payload.icon = icon;
     result.payload.sponsoredImpressionUrl = impressionUrl;
     result.payload.sponsoredClickUrl = clickUrl;
     result.payload.sponsoredBlockId = blockId;
@@ -141,6 +140,7 @@ function makeAmpResult({
   url = "http://example.com/amp",
   originalUrl = "http://example.com/amp",
   icon = null,
+  iconBlob = new Blob([new Uint8Array([])]),
   impressionUrl = "http://example.com/amp-impression",
   clickUrl = "http://example.com/amp-click",
   blockId = 1,
@@ -155,7 +155,6 @@ function makeAmpResult({
       title,
       url,
       originalUrl,
-      icon,
       displayUrl: url.replace(/^https:\/\//, ""),
       isSponsored: true,
       qsSuggestion: keyword,
@@ -184,9 +183,11 @@ function makeAmpResult({
   if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
     result.payload.source = source || "rust";
     result.payload.provider = provider || "Amp";
+    result.payload.iconBlob = iconBlob;
   } else {
     result.payload.source = source || "remote-settings";
     result.payload.provider = provider || "AdmWikipedia";
+    result.payload.icon = icon;
   }
 
   return result;

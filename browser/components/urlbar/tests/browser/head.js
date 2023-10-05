@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * These tests unit test the result/url loading functionality of UrlbarController.
- */
-
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {

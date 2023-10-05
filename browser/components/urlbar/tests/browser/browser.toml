@@ -140,6 +140,8 @@ skip-if = ["os != 'mac'"] # Mac only feature
 ["browser_blanking.js"]
 support-files = ["file_blank_but_not_blank.html"]
 
+["browser_blobIcons.js"]
+
 ["browser_bufferer_onQueryResults.js"]
 
 ["browser_calculator.js"]
