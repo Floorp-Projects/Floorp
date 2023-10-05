@@ -5,8 +5,8 @@
 const browser = window.docShell.chromeEventHandler;
 const { document: gDoc, XPCOMUtils } = browser.ownerGlobal;
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
 });
 
 const CONFIG = window.arguments[0];

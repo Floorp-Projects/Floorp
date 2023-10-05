@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AboutWelcomeChild", "AboutWelcomeShoppingChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -29,7 +23,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new Logger("AboutWelcomeChild");
 });
 
-class AboutWelcomeChild extends JSWindowActorChild {
+export class AboutWelcomeChild extends JSWindowActorChild {
   // Can be used to avoid accesses to the document/contentWindow after it's
   // destroyed, which may throw unhandled exceptions.
   _destroyed = false;
@@ -664,7 +658,7 @@ const MIN_VISITS_TO_SHOW_SURVEY = 5;
 // Wait 24 hours after opt in to show survey
 const MIN_TIME_AFTER_OPT_IN = 24 * 60 * 60;
 
-class AboutWelcomeShoppingChild extends AboutWelcomeChild {
+export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
   // Static state used to track session in which user opted-in
   static optedInSession = false;
 
