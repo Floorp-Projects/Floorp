@@ -13,7 +13,13 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-XPIDL_SOURCES += ["nsIWebAuthnController.idl"]
+XPIDL_SOURCES += [
+    "nsIWebAuthnArgs.idl",
+    "nsIWebAuthnAttObj.idl",
+    "nsIWebAuthnPromise.idl",
+    "nsIWebAuthnResult.idl",
+    "nsIWebAuthnService.idl",
+]
 
 XPIDL_MODULE = "dom_webauthn"
 
@@ -23,9 +29,9 @@ EXPORTS.mozilla.dom += [
     "AuthenticatorResponse.h",
     "PublicKeyCredential.h",
     "U2FTokenTransport.h",
-    "WebAuthnController.h",
     "WebAuthnManager.h",
     "WebAuthnManagerBase.h",
+    "WebAuthnPromiseHolder.h",
     "WebAuthnTransactionChild.h",
     "WebAuthnTransactionParent.h",
     "WebAuthnUtil.h",
@@ -36,12 +42,12 @@ UNIFIED_SOURCES += [
     "AuthenticatorAssertionResponse.cpp",
     "AuthenticatorAttestationResponse.cpp",
     "AuthenticatorResponse.cpp",
-    "AuthrsTransport.cpp",
+    "AuthrsService.cpp",
     "CtapArgs.cpp",
     "PublicKeyCredential.cpp",
-    "WebAuthnController.cpp",
     "WebAuthnManager.cpp",
     "WebAuthnManagerBase.cpp",
+    "WebAuthnPromiseHolder.cpp",
     "WebAuthnTransactionChild.cpp",
     "WebAuthnTransactionParent.cpp",
     "WebAuthnUtil.cpp",

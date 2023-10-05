@@ -1,0 +1,93 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIWebAuthnArgs.idl"
+#include "nsIWebAuthnPromise.idl"
+
+[scriptable, uuid(6c4ecd9f-57c0-4d7d-8080-bf6e4d499f8f)]
+interface nsICredentialParameters : nsISupports
+{
+    readonly attribute ACString credentialId;
+    readonly attribute bool isResidentCredential;
+    readonly attribute ACString rpId;
+    readonly attribute ACString privateKey;
+    readonly attribute ACString userHandle;
+    readonly attribute uint32_t signCount;
+};
+
+
+[scriptable, uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
+interface nsIWebAuthnService : nsISupports
+{
+    void makeCredential(
+        in uint64_t aTransactionId,
+        in uint64_t browsingContextId,
+        in nsICtapRegisterArgs args,
+        in nsIWebAuthnRegisterPromise promise);
+
+    void getAssertion(
+        in uint64_t aTransactionId,
+        in uint64_t browsingContextId,
+        in nsICtapSignArgs args,
+        in nsIWebAuthnSignPromise promise);
+
+    // Cancel the ongoing transaction and any prompts that are shown, but do not reject
+    // its promise. This is used by the IPC parent when it receives an abort signal.
+    // The IPC child has already rejected the promises at this point.
+    [noscript] void reset();
+
+    // Cancel the ongoing transaction. Reject its promise, but do not cancel
+    // prompts. This is used by WebAuthnPromptHelper when the user hits the
+    // "cancel" button.
+    void cancel(in uint64_t aTransactionId);
+
+    void pinCallback(in uint64_t aTransactionId, in ACString aPin);
+    void resumeMakeCredential(in uint64_t aTransactionId, in bool aForceNoneAttestation);
+    void selectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
+
+    // Adds a virtual (software) authenticator for use in tests (particularly
+    // tests run via WebDriver). See
+    // https://w3c.github.io/webauthn/#sctn-automation-add-virtual-authenticator.
+    uint64_t addVirtualAuthenticator(
+        in ACString protocol,
+        in ACString transport,
+        in bool hasResidentKey,
+        in bool hasUserVerification,
+        in bool isUserConsenting,
+        in bool isUserVerified);
+
+    // Removes a previously-added virtual authenticator, as identified by its
+    // id. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-virtual-authenticator
+    void removeVirtualAuthenticator(in uint64_t authenticatorId);
+
+    // Adds a credential to a previously-added authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-add-credential
+    void addCredential(
+        in uint64_t authenticatorId,
+        in ACString credentialId,
+        in bool isResidentCredential,
+        in ACString rpId,
+        in ACString privateKey,
+        in ACString userHandle,
+        in uint32_t signCount);
+
+    // Gets all credentials that have been added to a virtual authenticator.
+    // See https://w3c.github.io/webauthn/#sctn-automation-get-credentials
+    Array<nsICredentialParameters> getCredentials(in uint64_t authenticatorId);
+
+    // Removes a credential from a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-credential
+    void removeCredential(in uint64_t authenticatorId, in ACString credentialId);
+
+    // Removes all credentials from a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-remove-all-credentials
+    void removeAllCredentials(in uint64_t authenticatorId);
+
+    // Sets the "isUserVerified" bit on a virtual authenticator. See
+    // https://w3c.github.io/webauthn/#sctn-automation-set-user-verified
+    void setUserVerified(in uint64_t authenticatorId, in bool isUserVerified);
+};

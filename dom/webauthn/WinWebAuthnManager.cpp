@@ -10,7 +10,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
-#include "nsIWebAuthnController.h"
+#include "nsIWebAuthnAttObj.h"
 #include "nsTextFormatter.h"
 #include "nsWindowsHelpers.h"
 #include "AuthrsBridge_ffi.h"

@@ -2,20 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AuthrsTransport.h"
+#include "AuthrsService.h"
 #include "AuthrsBridge_ffi.h"
-#include "nsIWebAuthnController.h"
+#include "nsIWebAuthnService.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla::dom {
 
-already_AddRefed<nsIWebAuthnTransport> NewAuthrsTransport() {
-  nsCOMPtr<nsIWebAuthnTransport> transport;
-  nsresult rv = authrs_transport_constructor(getter_AddRefs(transport));
+already_AddRefed<nsIWebAuthnService> NewAuthrsService() {
+  nsCOMPtr<nsIWebAuthnService> webauthnService;
+  nsresult rv = authrs_service_constructor(getter_AddRefs(webauthnService));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
-  return transport.forget();
+  return webauthnService.forget();
 }
 
 }  // namespace mozilla::dom

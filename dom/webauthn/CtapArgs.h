@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "nsIWebAuthnController.h"
+#include "nsIWebAuthnArgs.h"
 
 namespace mozilla::dom {
 

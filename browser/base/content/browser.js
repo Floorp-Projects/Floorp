@@ -7561,8 +7561,8 @@ var WebAuthnPromptHelper = {
       return;
     }
 
-    let mgr = Cc["@mozilla.org/webauthn/transport;1"].getService(
-      Ci.nsIWebAuthnTransport
+    let mgr = Cc["@mozilla.org/webauthn/service;1"].getService(
+      Ci.nsIWebAuthnService
     );
 
     if (data.prompt.type == "presence") {

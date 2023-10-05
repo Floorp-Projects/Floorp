@@ -23,10 +23,10 @@ for (let script of scripts) {
 }
 
 function add_virtual_authenticator(autoremove = true) {
-  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-    Ci.nsIWebAuthnTransport
+  let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+    Ci.nsIWebAuthnService
   );
-  let id = webauthnTransport.addVirtualAuthenticator(
+  let id = webauthnService.addVirtualAuthenticator(
     "ctap2",
     "internal",
     true,
@@ -36,7 +36,7 @@ function add_virtual_authenticator(autoremove = true) {
   );
   if (autoremove) {
     registerCleanupFunction(() => {
-      webauthnTransport.removeVirtualAuthenticator(id);
+      webauthnService.removeVirtualAuthenticator(id);
     });
   }
   return id;
@@ -60,11 +60,11 @@ async function addCredential(authenticatorId, rpId) {
     .exportKey("pkcs8", keyPair.privateKey)
     .then(privateKey => bytesToBase64UrlSafe(privateKey));
 
-  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-    Ci.nsIWebAuthnTransport
+  let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+    Ci.nsIWebAuthnService
   );
 
-  webauthnTransport.addCredential(
+  webauthnService.addCredential(
     authenticatorId,
     credId,
     true, // resident key
@@ -78,11 +78,11 @@ async function addCredential(authenticatorId, rpId) {
 }
 
 async function removeCredential(authenticatorId, credId) {
-  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
-    Ci.nsIWebAuthnTransport
+  let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+    Ci.nsIWebAuthnService
   );
 
-  webauthnTransport.removeCredential(authenticatorId, credId);
+  webauthnService.removeCredential(authenticatorId, credId);
 }
 
 function memcmp(x, y) {
