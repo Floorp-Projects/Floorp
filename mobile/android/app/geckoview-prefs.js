@@ -62,7 +62,6 @@ pref("media.geckoview.autoplay.request", true);
 // Enable EME permission prompts
 pref("media.eme.require-app-approval", true);
 
-pref("signon.debug", false);
 pref("signon.showAutoCompleteFooter", true);
 pref("toolkit.autocomplete.delegate", true);
 
@@ -77,10 +76,6 @@ pref("dom.ipc.processCount.webCOOP+COEP", 38);
 
 // Form autofill prefs.
 pref("extensions.formautofill.addresses.capture.enabled", true);
-
-// Debug prefs.
-pref("browser.formfill.debug", false);
-pref("extensions.formautofill.loglevel", "Warn");
 
 // PDF.js (enabled in StaticPrefList.yaml)
 // Try to convert PDFs sent as octet-stream
