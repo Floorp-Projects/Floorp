@@ -195,7 +195,11 @@ function getNodeInfo(node, elementStyle) {
     classList.contains("ruleview-rule-source-label")
   ) {
     type = VIEW_NODE_LOCATION_TYPE;
-    value = rule.sheet?.href ? rule.sheet.href : rule.title;
+    const sourceLabelEl = classList.contains("ruleview-rule-source-label")
+      ? node
+      : node.querySelector(".ruleview-rule-source-label");
+    value =
+      sourceLabelEl.getAttribute("data-url") || rule.sheet?.href || rule.title;
   } else {
     return null;
   }
