@@ -1232,6 +1232,24 @@ nsresult Loader::LoadSheetSyncInternal(SheetLoadData& aLoadData,
                                                      streamLoader, channel);
 }
 
+bool Loader::MaybeDeferLoad(SheetLoadData& aLoadData, SheetState aSheetState,
+                            PendingLoad aPendingLoad,
+                            const SheetLoadDataHashKey& aKey) {
+  MOZ_ASSERT(mSheets);
+
+  // If we have at least one other load ongoing, then we can defer it until
+  // all non-pending loads are done.
+  if (aSheetState == SheetState::NeedsParser &&
+      aPendingLoad == PendingLoad::No && aLoadData.ShouldDefer() &&
+      mOngoingLoadCount > mPendingLoadCount + 1) {
+    LOG(("  Deferring sheet load"));
+    ++mPendingLoadCount;
+    mSheets->DeferLoad(aKey, aLoadData);
+    return true;
+  }
+  return false;
+}
+
 /**
  * LoadSheet handles the actual load of a sheet.  If the load is
  * supposed to be synchronous it just opens a channel synchronously
@@ -1266,19 +1284,12 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     }
   }
 
-  nsresult rv = NS_OK;
-
   if (!mDocument && !aLoadData.mIsNonDocumentSheet) {
     // No point starting the load; just release all the data and such.
     LOG_WARN(("  No document and not non-document sheet; pre-dropping load"));
     SheetComplete(aLoadData, NS_BINDING_ABORTED);
     return NS_BINDING_ABORTED;
   }
-
-  SRIMetadata sriMetadata;
-  aLoadData.mSheet->GetIntegrity(sriMetadata);
-
-  nsINode* requestingNode = aLoadData.GetRequestingNode();
 
   if (aLoadData.mSyncLoad) {
     return LoadSheetSyncInternal(aLoadData, aSheetState);
@@ -1289,14 +1300,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   auto preloadKey = PreloadHashKey::CreateAsStyle(aLoadData);
   bool coalescedLoad = false;
   if (mSheets) {
-    // If we have at least one other load ongoing, then we can defer it until
-    // all non-pending loads are done.
-    if (aSheetState == SheetState::NeedsParser &&
-        aPendingLoad == PendingLoad::No && aLoadData.ShouldDefer() &&
-        mOngoingLoadCount > mPendingLoadCount + 1) {
-      LOG(("  Deferring sheet load"));
-      ++mPendingLoadCount;
-      mSheets->DeferLoad(key, aLoadData);
+    if (MaybeDeferLoad(aLoadData, aSheetState, aPendingLoad, key)) {
       return NS_OK;
     }
 
@@ -1329,6 +1333,13 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     // automatically.
     return NS_OK;
   }
+
+  nsresult rv = NS_OK;
+
+  SRIMetadata sriMetadata;
+  aLoadData.mSheet->GetIntegrity(sriMetadata);
+
+  nsINode* requestingNode = aLoadData.GetRequestingNode();
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
