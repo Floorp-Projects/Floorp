@@ -10,107 +10,123 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Login Manager test: logins with non-exact match origin appear in autocomplete dropdown
 <p id="display"></p>
-
-<!-- we presumably can't hide the content for this test. -->
 <div id="content"></div>
 <pre id="test">
+  Test that logins with non-exact match origin appear in autocomplete dropdown.
+
+  The includeOtherSubdomainsInLookup feature offers autocomplete results for
+  subdomain related logins.
+
+  For this testcase, there exists two logins for this origin on different
+  subdomains (old.example.com and new.example.com) but with different
+  passwords, beneath one login for the parent domain (example.com). Both
+  logins should appear in the autocomplete popup.
+
+<template id="form1-template">
+  <form id="form1" action="https://otherexample.com/formtest.js">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>
+</template>
+
 <script class="testbody" type="text/javascript">
-const setupScript = runInParent(function setup() {
-  addMessageListener("getDateString", () => {
-    const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-    return dateAndTimeFormatter.format(new Date());
-  });
-});
+  const formTemplate = document.getElementById("form1-template");
 
-add_setup(async () => {
-  const origin = window.location.origin;
-  const lastDot = origin.lastIndexOf(".");
-  const suffix = origin.slice(lastDot);
+  const loginInfos = [
+    ["https://example.com/", "https://example.com/", null, "example-user", "example-password", "uname", "pword"],
+    ["https://old.example.com/", "https://old.example.com/", null, "example-user", "example-password", "uname", "pword"],
+    ["https://new.example.com/", "https://new.example.com/", null, "example-user", "new-example-password", "uname", "pword"],
+  ];
 
-  const baseHost = "http://example" + suffix;
-  const baseSecureHost = "https://example" + suffix;
-  const oldHost = "http://old.example" + suffix;
-  const oldSecureHost = "https://old.example" + suffix;
-  const newHost = "https://new.example" + suffix;
+  // TODO: explain why we need to run this in parent
+  const getDateString = (() => {
+    const setupScript = runInParent(function setup() {
+      addMessageListener("getDateString", () => {
+        const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+        return dateAndTimeFormatter.format(new Date());
+      });
+    });
+    return () => setupScript.sendQuery("getDateString");
+  })();
 
-  await setStoredLoginsAsync(
-    // The first two logins should never be visible on https: versions of
-    // *.example.com since the login is for http: and an https: login exists for this username.
-    [oldHost, oldSecureHost, null, "dsdu1", "dsdp1new", "uname", "pword"],
-    [baseHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [oldSecureHost, oldSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [baseSecureHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [newHost, newHost, null, "dsdu1", "dsdp1prime", "uname", "pword"]
-  );
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["signon.includeOtherSubdomainsInLookup", true],
-    ],
-  });
-  listenForUnexpectedPopupShown();
-});
-
-add_task(async function test_form1_initial_empty() {
-  const form = createLoginForm({
-    action: "https://otherexample.com/formtest.js"
+  add_setup(async () => {
+    listenForUnexpectedPopupShown();
   });
 
-  // Make sure initial form is empty.
-  checkLoginForm(form.uname, "", form.pword, "");
-  const popupState = await getPopupState();
-  is(popupState.open, false, "Check popup is initially closed");
-});
+  // TODO: explain
+  add_named_task("when includeOtherSubdomainsInLookup is false and there are no http-logins, do not show autocomplete popup", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", false]);
+    await setStoredLoginsDuringTask(...loginInfos);
+    const form = setContentForTask(formTemplate);
 
-/* For this testcase, there exists two logins for this origin
- * on different subdomains but with different passwords. Both logins
- * should appear in the autocomplete popup.
- */
-add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_different_subdomain() {
-  const form = createLoginForm({
-    action: "https://otherexample.com/formtest.js"
+    form.uname.focus();
+    await noPopupByArrowDown();
+    ok(true, "no popup has been opened")
   });
 
-  // Trigger autocomplete popup
-  form.uname.focus();
+  add_named_task("menu does not show login for different subdomain when includeOtherSubdomainsInLookup is false", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", false]);
+    await setStoredLoginsDuringTask(
+      ...[
+        // These two logins should never be visible on https: versions of
+        // *.example.com since the login is for http: and an https: login exists for this username.
+        ["http://example.com/", "https://example.com/", null, "example-user", "example-password", "uname", "pword"],
+        ["http://old.example.com/", "https://old.example.com/", null, "example-user", "old-example-password", "uname", "pword"],
+        ...loginInfos,
+      ]
+    );
+    const form = setContentForTask(formTemplate);
 
-  const autocompleteItems = await popupByArrowDown();
+    form.uname.focus();
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems, ["example-user"], window.location.host, "Only exact subdomain showed");
+  });
 
-  const popupState = await getPopupState();
-  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+  add_named_task("menu shows two logins with the same username for different subdomain", async () => {
+    await setStoredLoginsDuringTask(...loginInfos);
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", true]);
+    const form = setContentForTask(formTemplate);
 
-  // The logins are added "today" and since they are duplicates, the date that they were last
-  // changed will be appended.
-  const dateString = await setupScript.sendQuery("getDateString");
-  const username = `dsdu1 (${dateString})`;
+    // The logins are added "today" and since they are duplicates, the date that they were last
+    // changed will be appended.
+    const dateString = await getDateString();
+    const username = `example-user (${dateString})`;
 
-  checkAutoCompleteResults(autocompleteItems, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
+    form.uname.focus();
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
+  });
 
-  synthesizeKey("KEY_ArrowDown"); // first item
-  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
+  add_named_task("login with different subdomain is selectable", async () => {
+    await setPreferencesForTask(["signon.includeOtherSubdomainsInLookup", true]);
+    await setStoredLoginsDuringTask(...loginInfos);
+    const form = setContentForTask(formTemplate);
 
-  synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
-  is(form.pword.value, "dsdp1", "password should match the login that was selected");
-  checkLoginForm(form.uname, "dsdu1", form.pword, "dsdp1");
+    // consume initial autofill event
+    await formAutofillResult(form.id);
 
-  form.uname.value = "";
-  form.pword.value = "";
-  form.uname.focus();
+    form.uname.focus();
 
-  await popupByArrowDown();
+    // select first item
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
 
-  synthesizeKey("KEY_ArrowDown"); // first item
-  synthesizeKey("KEY_ArrowDown"); // second item
-  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
+    await formAutofillResult(form.id);
+    is(form.uname.value, "example-user", "correct username is set");
+    is(form.pword.value, "example-password", "password matches first login");
 
-  synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
-  is(form.pword.value, "dsdp1prime", "Password should match the login that was selected");
-  checkLoginForm(form.uname, "dsdu1", form.pword, "dsdp1prime");
-});
+    // select second item
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
+
+    await formAutofillResult(form.id);
+    is(form.uname.value, "example-user", "correct username is set");
+    is(form.pword.value, "new-example-password", "password matches second login");
+  });
 </script>
 </pre>
 </body>
