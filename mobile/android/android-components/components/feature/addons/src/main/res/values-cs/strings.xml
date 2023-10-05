@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">Zjistit více</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">Doplněk %1$s byl zakázán z bezpečnostních a výkonových důvodů.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Doplněk %1$s se nepodařilo ověřit jako bezpečný a byl zakázán.</string>
 </resources>

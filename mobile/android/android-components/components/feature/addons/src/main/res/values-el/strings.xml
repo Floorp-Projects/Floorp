@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">Μάθετε περισσότερα</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">Το %1$s έχει απενεργοποιηθεί λόγω ζητημάτων ασφαλείας ή σταθερότητας.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Το %1$s δεν ήταν δυνατό να επαληθευτεί ως ασφαλές και έχει απενεργοποιηθεί.</string>
 </resources>

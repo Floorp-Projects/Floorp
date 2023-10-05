@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s 부가 기능은 보안 또는 안정성의 문제로 사용할 수 없습니다.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s 부가 기능은 안전한 것으로 확인되지 않아 사용할 수 없습니다.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s 부가 기능은 %2$s %3$s 버전과 호환되지 않습니다.</string>
 </resources>

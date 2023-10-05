@@ -508,10 +508,14 @@
     <string name="preferences_accessibility">Hjälpmedel</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Anpassad server för Firefox-konto</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Anpassad Mozilla-kontoserver</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Anpassad synkroniseringsserver</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-konto/synkroniseringsserver ändrad. Avsluta applikationen för att tillämpa ändringar…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla-konto/synkroniseringsserver har ändrats. Avslutar programmet för att tillämpa ändringar…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->

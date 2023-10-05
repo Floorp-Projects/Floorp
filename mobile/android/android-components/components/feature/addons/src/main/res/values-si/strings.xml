@@ -230,4 +230,8 @@
     <string name="mozac_feature_addons_status_learn_more">තව දැනගන්න</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">ආරක්‍ෂණ හෝ ස්ථායිතා දෝෂ නිසා %1$s අබල කර ඇත.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s ආරක්‍ෂිත බව සත්‍යාපනයට නොහැකි වූ බැවින් අබල කර ඇත.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s ඔබගේ %2$s අනුවාදයට (%3$s) නොගැළපේ.</string>
 </resources>

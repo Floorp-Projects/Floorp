@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">Saiba mais</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s foi desativado devido a problemas de segurança ou estabilidade.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s não pôde ser verificado como seguro e foi desativado.</string>
 </resources>

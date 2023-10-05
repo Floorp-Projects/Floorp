@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s je so dla problemow wěstoty abo stabilnosće znjemóžnił.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s njeda so jako wěsty wobkrućić a je so znjemóžnił.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s z wašej wersiju %2$s (wersija %3$s) kompatibelny njeje.</string>
 </resources>

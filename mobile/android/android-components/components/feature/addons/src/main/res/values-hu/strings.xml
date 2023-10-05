@@ -232,4 +232,6 @@
     <string name="mozac_feature_addons_status_learn_more">További tudnivalók</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">A(z) %1$s biztonsági vagy stabilitási problémák miatt le lett tiltva.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">A(z) %1$s biztonságossága nem ellenőrizhető programban, és le lett tiltva.</string>
 </resources>
