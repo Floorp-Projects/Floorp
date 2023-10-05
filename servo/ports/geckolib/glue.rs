@@ -2855,7 +2855,7 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
 
 #[no_mangle]
 pub extern "C" fn Servo_PropertyRule_GetName(rule: &PropertyRule, result: &mut nsACString) {
-    rule.name.to_css(&mut CssWriter::new(result)).unwrap()
+    write!(result, "--{}", rule.name.0).unwrap();
 }
 
 #[no_mangle]
