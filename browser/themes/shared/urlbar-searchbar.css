@@ -740,6 +740,12 @@
   fill-opacity: 1;
 }
 
+@media (prefers-contrast) {
+  #shopping-sidebar-button[shoppingsidebaropen="true"]:hover > .urlbar-icon {
+    fill: currentColor;
+  }
+}
+
 /* Search bar */
 
 #search-container {
