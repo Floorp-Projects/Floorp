@@ -60,8 +60,12 @@ H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
 
 /* static */ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaRawData* aSample) {
-  if (!aSample || aSample->Size() < 3) {
-    LOG("No sample or incorrect sample size");
+  if (!aSample) {
+    LOG("No sample");
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  if (aSample->Size() < 3) {
+    LOG("Incorrect sample size %zu", aSample->Size());
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   // TODO : check video mime type to ensure the sample is for HEVC
@@ -72,8 +76,12 @@ H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
 Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaByteBuffer* aExtraData) {
   // From configurationVersion to numOfArrays, total 184 bits (23 bytes)
-  if (!aExtraData || aExtraData->Length() < 23) {
-    LOG("No extra-data or incorrect extra-data size");
+  if (!aExtraData) {
+    LOG("No extra-data");
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  if (aExtraData->Length() < 23) {
+    LOG("Incorrect extra-data size %zu", aExtraData->Length());
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   const auto& byteBuffer = *aExtraData;
