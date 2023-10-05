@@ -140,10 +140,17 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
   return hvcc;
 }
 
-bool HVCCConfig::HasSPS() const {
-  if (mNALUs.IsEmpty()) {
-    return false;
+uint32_t HVCCConfig::NumSPS() const {
+  uint32_t spsCounter = 0;
+  for (const auto& nalu : mNALUs) {
+    if (nalu.IsSPS()) {
+      spsCounter++;
+    }
   }
+  return spsCounter;
+}
+
+bool HVCCConfig::HasSPS() const {
   bool hasSPS = false;
   for (const auto& nalu : mNALUs) {
     if (nalu.IsSPS()) {
@@ -729,6 +736,14 @@ Result<Ok, nsresult> H265::ParseAndIgnoreSubLayerHrdParameters(
   return Ok();
 }
 
+bool H265SPS::operator==(const H265SPS& aOther) const {
+  return memcmp(this, &aOther, sizeof(H265SPS)) == 0;
+}
+
+bool H265SPS::operator!=(const H265SPS& aOther) const {
+  return !(operator==(aOther));
+}
+
 gfx::IntSize H265SPS::GetImageSize() const {
   return gfx::IntSize(pic_width_in_luma_samples, pic_height_in_luma_samples);
 }
@@ -930,6 +945,228 @@ already_AddRefed<mozilla::MediaByteBuffer> H265::DecodeNALUnit(
     lastbytes = (lastbytes << 8) | byte;
   }
   return rbsp.forget();
+}
+
+/* static */
+already_AddRefed<mozilla::MediaByteBuffer> H265::ExtractHVCCExtraData(
+    const mozilla::MediaRawData* aSample) {
+  size_t sampleSize = aSample->Size();
+  if (aSample->mCrypto.IsEncrypted()) {
+    // The content is encrypted, we can only parse the non-encrypted data.
+    MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
+    if (aSample->mCrypto.mPlainSizes.Length() == 0 ||
+        aSample->mCrypto.mPlainSizes[0] > sampleSize) {
+      LOG("Invalid crypto content");
+      return nullptr;
+    }
+    sampleSize = aSample->mCrypto.mPlainSizes[0];
+  }
+
+  auto hvcc = HVCCConfig::Parse(aSample);
+  if (hvcc.isErr()) {
+    LOG("Only support extracting extradata from HVCC");
+    return nullptr;
+  }
+  const auto nalLenSize = hvcc.unwrap().NALUSize();
+  BufferReader reader(aSample->Data(), sampleSize);
+
+  nsTArray<Maybe<H265SPS>> spsRefTable;
+  nsTArray<H265NALU> spsNALUs;
+  // If we encounter SPS with the same id but different content, we will stop
+  // attempting to detect duplicates.
+  bool checkDuplicate = true;
+  const H265SPS* firstSPS = nullptr;
+
+  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
+  while (reader.Remaining() > nalLenSize) {
+    // ISO/IEC 14496-15, 4.2.3.2 Syntax. (NALUSample) Reading the size of NALU.
+    uint32_t nalLen = 0;
+    switch (nalLenSize) {
+      case 1:
+        Unused << reader.ReadU8().map(
+            [&](uint8_t x) mutable { return nalLen = x; });
+        break;
+      case 2:
+        Unused << reader.ReadU16().map(
+            [&](uint16_t x) mutable { return nalLen = x; });
+        break;
+      case 3:
+        Unused << reader.ReadU24().map(
+            [&](uint32_t x) mutable { return nalLen = x; });
+        break;
+      default:
+        MOZ_DIAGNOSTIC_ASSERT(nalLenSize == 4);
+        Unused << reader.ReadU32().map(
+            [&](uint32_t x) mutable { return nalLen = x; });
+        break;
+    }
+    const uint8_t* p = reader.Read(nalLen);
+    if (!p) {
+      // The read failed, but we may already have some SPS data so break out of
+      // reading and process what we have, if any.
+      break;
+    }
+    const H265NALU nalu(p, nalLen);
+    LOGV("Found NALU, type=%u", nalu.mNalUnitType);
+    if (nalu.IsSPS()) {
+      auto rv = H265::DecodeSPSFromSPSNALU(nalu);
+      if (rv.isErr()) {
+        // Invalid SPS, ignore.
+        LOG("Ignore invalid SPS");
+        continue;
+      }
+      const H265SPS sps = rv.unwrap();
+      const uint8_t spsId = sps.sps_seq_parameter_set_id;  // 0~15
+      if (spsId >= spsRefTable.Length()) {
+        if (!spsRefTable.SetLength(spsId + 1, fallible)) {
+          NS_WARNING("OOM while expanding spsRefTable!");
+          return nullptr;
+        }
+      }
+      if (checkDuplicate && spsRefTable[spsId] &&
+          *(spsRefTable[spsId]) == sps) {
+        // Duplicate ignore.
+        continue;
+      }
+      if (spsRefTable[spsId]) {
+        // We already have detected a SPS with this Id. Just to be safe we
+        // disable SPS duplicate detection.
+        checkDuplicate = false;
+      } else {
+        spsRefTable[spsId] = Some(sps);
+        spsNALUs.AppendElement(nalu);
+        if (!firstSPS) {
+          firstSPS = spsRefTable[spsId].ptr();
+        }
+      }
+    }
+  }
+
+  LOGV("Found %zu SPS NALU", spsNALUs.Length());
+  if (!spsNALUs.IsEmpty()) {
+    MOZ_ASSERT(firstSPS);
+    BitWriter writer(extradata);
+
+    // ISO/IEC 14496-15, HEVCDecoderConfigurationRecord. But we only append SPS.
+    writer.WriteBits(1, 8);  // version
+    const auto& profile = firstSPS->profile_tier_level;
+    writer.WriteBits(profile.general_profile_space, 2);
+    writer.WriteBits(profile.general_tier_flag, 1);
+    writer.WriteBits(profile.general_profile_idc, 5);
+    writer.WriteU32(profile.general_profile_compatibility_flags);
+
+    // general_constraint_indicator_flags
+    writer.WriteBit(profile.general_progressive_source_flag);
+    writer.WriteBit(profile.general_interlaced_source_flag);
+    writer.WriteBit(profile.general_non_packed_constraint_flag);
+    writer.WriteBit(profile.general_frame_only_constraint_flag);
+    writer.WriteBits(0, 44); /* ignored 44 bits */
+
+    writer.WriteU8(profile.general_level_idc);
+    writer.WriteBits(0, 4);   // reserved
+    writer.WriteBits(0, 12);  // min_spatial_segmentation_idc
+    writer.WriteBits(0, 6);   // reserved
+    writer.WriteBits(0, 2);   // parallelismType
+    writer.WriteBits(0, 6);   // reserved
+    writer.WriteBits(firstSPS->chroma_format_idc, 2);
+    writer.WriteBits(0, 5);  // reserved
+    writer.WriteBits(firstSPS->bit_depth_luma_minus8, 3);
+    writer.WriteBits(0, 5);  // reserved
+    writer.WriteBits(firstSPS->bit_depth_chroma_minus8, 3);
+    // avgFrameRate + constantFrameRate + numTemporalLayers + temporalIdNested
+    writer.WriteBits(0, 22);
+    writer.WriteBits(nalLenSize - 1, 2);  // lengthSizeMinusOne
+    writer.WriteU8(1);                    // numOfArrays, only SPS
+    for (auto j = 0; j < 1; j++) {
+      writer.WriteBits(0, 2);                   // array_completeness + reserved
+      writer.WriteBits(H265NALU::SPS_NUT, 6);   // NAL_unit_type
+      writer.WriteBits(spsNALUs.Length(), 16);  // numNalus
+      for (auto i = 0; i < spsNALUs.Length(); i++) {
+        writer.WriteBits(spsNALUs[i].mNALU.Length(),
+                         16);  // nalUnitLength
+        MOZ_ASSERT(writer.BitCount() % 8 == 0);
+        extradata->AppendElements(spsNALUs[i].mNALU.Elements(),
+                                  spsNALUs[i].mNALU.Length());
+        writer.AdvanceBytes(spsNALUs[i].mNALU.Length());
+      }
+    }
+  }
+
+  return extradata.forget();
+}
+
+class SPSIterator final {
+ public:
+  explicit SPSIterator(const HVCCConfig& aConfig) : mConfig(aConfig) {}
+
+  SPSIterator& operator++() {
+    size_t idx = 0;
+    for (idx = mNextIdx; idx < mConfig.mNALUs.Length(); idx++) {
+      if (mConfig.mNALUs[idx].IsSPS()) {
+        mSPS = &mConfig.mNALUs[idx];
+        break;
+      }
+    }
+    mNextIdx = idx + 1;
+    return *this;
+  }
+
+  explicit operator bool() const { return mNextIdx < mConfig.mNALUs.Length(); }
+
+  const H265NALU* operator*() const { return mSPS ? mSPS : nullptr; }
+
+ private:
+  size_t mNextIdx = 0;
+  const H265NALU* mSPS = nullptr;
+  const HVCCConfig& mConfig;
+};
+
+/* static */
+bool AreTwoSPSIdentical(const H265NALU& aLhs, const H265NALU& aRhs) {
+  MOZ_ASSERT(aLhs.IsSPS() && aRhs.IsSPS());
+  auto rv1 = H265::DecodeSPSFromSPSNALU(aLhs);
+  auto rv2 = H265::DecodeSPSFromSPSNALU(aRhs);
+  if (rv1.isErr() || rv2.isErr()) {
+    return false;
+  }
+  return rv1.unwrap() == rv2.unwrap();
+}
+
+/* static */
+bool H265::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
+                            const mozilla::MediaByteBuffer* aExtraData2) {
+  if (aExtraData1 == aExtraData2) {
+    return true;
+  }
+
+  auto config1 = HVCCConfig::Parse(aExtraData1);
+  auto config2 = HVCCConfig::Parse(aExtraData2);
+  if (config1.isErr() || config2.isErr()) {
+    return false;
+  }
+
+  uint8_t numSPS = config1.unwrap().NumSPS();
+  if (numSPS == 0 || numSPS != config2.unwrap().NumSPS()) {
+    return false;
+  }
+
+  // We only compare if the SPS are the same as the various HEVC decoders can
+  // deal with in-band change of PPS.
+  SPSIterator it1(config1.unwrap());
+  SPSIterator it2(config2.unwrap());
+  while (it1 && it2) {
+    const H265NALU* nalu1 = *it1;
+    const H265NALU* nalu2 = *it2;
+    if (!nalu1 || !nalu2) {
+      return false;
+    }
+    if (!AreTwoSPSIdentical(*nalu1, *nalu2)) {
+      return false;
+    }
+    ++it1;
+    ++it2;
+  }
+  return true;
 }
 
 #undef LOG

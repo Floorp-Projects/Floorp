@@ -188,8 +188,56 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   }
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
-    // TODO : detect config change in bug 1852333.
-    return NS_OK;
+    // To be usable we need to convert the sample to 4 bytes NAL size HVCC.
+    if (!AnnexB::ConvertSampleToHVCC(aSample)) {
+      // We need HVCC content to be able to later parse the SPS.
+      // This is a no-op if the data is already HVCC.
+      nsPrintfCString msg("Failed to convert to HVCC");
+      LOG("%s", msg.get());
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY, msg);
+    }
+
+    if (!AnnexB::IsHVCC(aSample)) {
+      nsPrintfCString msg("Invalid HVCC content");
+      LOG("%s", msg.get());
+      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, msg);
+    }
+
+    RefPtr<MediaByteBuffer> extraData =
+        aSample->mKeyframe || !mGotSPS ? H265::ExtractHVCCExtraData(aSample)
+                                       : nullptr;
+    // Sample doesn't contain any SPS and we already have SPS, do nothing.
+    auto curConfig = HVCCConfig::Parse(mCurrentConfig.mExtraData);
+    if ((!extraData || extraData->IsEmpty()) && curConfig.unwrap().HasSPS()) {
+      return NS_OK;
+    }
+
+    auto newConfig = HVCCConfig::Parse(extraData);
+    // Ignore a corrupted extradata.
+    if (newConfig.isErr()) {
+      LOG("Ignore corrupted extradata");
+      return NS_OK;
+    }
+
+    if (!newConfig.unwrap().HasSPS() && !curConfig.unwrap().HasSPS()) {
+      // We don't have inband data and the original config didn't contain a SPS.
+      // We can't decode this content.
+      LOG("No sps found, waiting for initialization");
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    mGotSPS = true;
+    if (H265::CompareExtraData(extraData, mCurrentConfig.mExtraData)) {
+      return NS_OK;
+    }
+    UpdateConfigFromExtraData(extraData);
+
+    nsPrintfCString msg(
+        "HEVCChangeMonitor::CheckForChange has detected a change in the stream "
+        "and will request a new decoder");
+    LOG("%s", msg.get());
+    PROFILER_MARKER_TEXT("HEVC Stream Change", MEDIA_PLAYBACK, {}, msg);
+    return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
   const TrackInfo& Config() const override { return mCurrentConfig; }
@@ -233,12 +281,14 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
                                        ? gfx::ColorRange::FULL
                                        : gfx::ColorRange::LIMITED;
     }
+    MOZ_ASSERT(HVCCConfig::Parse(aExtraData).isOk());
     mCurrentConfig.mExtraData = aExtraData;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
   }
 
   VideoInfo mCurrentConfig;
   uint32_t mStreamID = 0;
+  bool mGotSPS = false;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
 };
 
