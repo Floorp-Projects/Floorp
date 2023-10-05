@@ -2209,6 +2209,10 @@ void nsRefreshDriver::RunFullscreenSteps() {
 void nsRefreshDriver::UpdateIntersectionObservations(TimeStamp aNowTime) {
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Compute intersections", LAYOUT);
 
+  if (MOZ_UNLIKELY(!mPresContext)) {
+    return;
+  }
+
   AutoTArray<RefPtr<Document>, 32> documents;
 
   if (mPresContext->Document()->HasIntersectionObservers()) {
@@ -2254,6 +2258,10 @@ void nsRefreshDriver::NotifyResizeObservers() {
   }
   // NotifyResizeObservers might re-schedule us for next tick.
   mNeedToUpdateResizeObservers = false;
+
+  if (MOZ_UNLIKELY(!mPresContext)) {
+    return;
+  }
 
   AutoTArray<RefPtr<Document>, 32> documents;
   if (mPresContext->Document()->HasResizeObservers()) {
