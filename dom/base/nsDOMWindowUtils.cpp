@@ -782,7 +782,8 @@ nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
   wheelEvent.mRefPoint =
       nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
-  if (StaticPrefs::test_events_async_enabled()) {
+  if (StaticPrefs::test_events_async_enabled() &&
+      StaticPrefs::test_events_async_wheel_enabled()) {
     widget->DispatchInputEvent(&wheelEvent);
   } else {
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -934,7 +935,8 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
     return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
 
-  if (StaticPrefs::test_events_async_enabled()) {
+  if (StaticPrefs::test_events_async_enabled() &&
+      StaticPrefs::test_events_async_touch_enabled()) {
     status = widget->DispatchInputEvent(&event).mContentStatus;
   } else {
     nsresult rv = widget->DispatchEvent(&event, status);
