@@ -25,24 +25,32 @@ mozilla::LazyLogModule gH265("H265");
 #define LOG(msg, ...) MOZ_LOG(gH265, LogLevel::Debug, (msg, ##__VA_ARGS__))
 #define LOGV(msg, ...) MOZ_LOG(gH265, LogLevel::Verbose, (msg, ##__VA_ARGS__))
 
+#define READ_IN_RANGE_OR_RETURN(dest, val, min, max)            \
+  do {                                                          \
+    if ((int64_t)(min) <= (int64_t)(val) && (val) <= (max)) {   \
+      (dest) = (val);                                           \
+    } else {                                                    \
+      LOG(#dest " is not in the range of [" #min "," #max "]"); \
+      return mozilla::Err(NS_ERROR_FAILURE);                    \
+    }                                                           \
+  } while (0)
+
 #define IN_RANGE_OR_RETURN(val, min, max)                      \
   do {                                                         \
-    int64_t temp = AssertedCast<int64_t>(val);                 \
-    if ((temp) < (min) || (max) < (temp)) {                    \
+    if ((int64_t)(val) < (int64_t)(min) || (max) < (val)) {    \
       LOG(#val " is not in the range of [" #min "," #max "]"); \
       return mozilla::Err(NS_ERROR_FAILURE);                   \
     }                                                          \
   } while (0)
 
-#define NON_ZERO_OR_RETURN(dest, val)          \
-  do {                                         \
-    int64_t temp = AssertedCast<int64_t>(val); \
-    if ((temp) != 0) {                         \
-      (dest) = (temp);                         \
-    } else {                                   \
-      LOG(#dest " should be non-zero");        \
-      return mozilla::Err(NS_ERROR_FAILURE);   \
-    }                                          \
+#define NON_ZERO_OR_RETURN(dest, val)        \
+  do {                                       \
+    if ((val) != 0) {                        \
+      (dest) = (val);                        \
+    } else {                                 \
+      LOG(#dest " should be non-zero");      \
+      return mozilla::Err(NS_ERROR_FAILURE); \
+    }                                        \
   } while (0)
 
 namespace mozilla {
@@ -60,20 +68,11 @@ H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
 
 /* static */ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaRawData* aSample) {
-  if (!aSample) {
-    LOG("No sample");
+  if (!aSample || aSample->Size() < 3) {
+    LOG("No sample or incorrect sample size");
     return mozilla::Err(NS_ERROR_FAILURE);
   }
-  if (aSample->Size() < 3) {
-    LOG("Incorrect sample size %zu", aSample->Size());
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
-  if (aSample->mTrackInfo &&
-      !aSample->mTrackInfo->mMimeType.EqualsLiteral("video/hevc")) {
-    LOG("Only allow 'video/hevc' (mimeType=%s)",
-        aSample->mTrackInfo->mMimeType.get());
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
+  // TODO : check video mime type to ensure the sample is for HEVC
   return HVCCConfig::Parse(aSample->mExtraData);
 }
 
@@ -81,12 +80,8 @@ H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
 Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaByteBuffer* aExtraData) {
   // From configurationVersion to numOfArrays, total 184 bits (23 bytes)
-  if (!aExtraData) {
-    LOG("No extra-data");
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
-  if (aExtraData->Length() < 23) {
-    LOG("Incorrect extra-data size %zu", aExtraData->Length());
+  if (!aExtraData || aExtraData->Length() < 23) {
+    LOG("No extra-data or incorrect extra-data size");
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   const auto& byteBuffer = *aExtraData;
@@ -153,17 +148,10 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
   return hvcc;
 }
 
-uint32_t HVCCConfig::NumSPS() const {
-  uint32_t spsCounter = 0;
-  for (const auto& nalu : mNALUs) {
-    if (nalu.IsSPS()) {
-      spsCounter++;
-    }
-  }
-  return spsCounter;
-}
-
 bool HVCCConfig::HasSPS() const {
+  if (mNALUs.IsEmpty()) {
+    return false;
+  }
   bool hasSPS = false;
   for (const auto& nalu : mNALUs) {
     if (nalu.IsSPS()) {
@@ -186,18 +174,15 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
   // H265 spec, 7.3.2.2.1 seq_parameter_set_rbsp
   H265SPS sps;
   BitReader reader(rbsp);
-  sps.sps_video_parameter_set_id = reader.ReadBits(4);
-  IN_RANGE_OR_RETURN(sps.sps_video_parameter_set_id, 0, 15);
-  sps.sps_max_sub_layers_minus1 = reader.ReadBits(3);
-  IN_RANGE_OR_RETURN(sps.sps_max_sub_layers_minus1, 0, 6);
+  READ_IN_RANGE_OR_RETURN(sps.sps_video_parameter_set_id, reader.ReadBits(4), 0,
+                          15);
+  READ_IN_RANGE_OR_RETURN(sps.sps_max_sub_layers_minus1, reader.ReadBits(3), 0,
+                          6);
   sps.sps_temporal_id_nesting_flag = reader.ReadBit();
   ParseProfileTierLevel(reader, true /* aProfilePresentFlag, true per spec*/,
                         sps.sps_max_sub_layers_minus1, sps.profile_tier_level);
-  sps.sps_seq_parameter_set_id = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.sps_seq_parameter_set_id, 0, 15);
-  sps.chroma_format_idc = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.chroma_format_idc, 0, 3);
-
+  READ_IN_RANGE_OR_RETURN(sps.sps_seq_parameter_set_id, reader.ReadUE(), 0, 15);
+  READ_IN_RANGE_OR_RETURN(sps.chroma_format_idc, reader.ReadUE(), 0, 3);
   if (sps.chroma_format_idc == 3) {
     sps.separate_colour_plane_flag = reader.ReadBit();
   }
@@ -221,12 +206,10 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
     sps.conf_win_top_offset = reader.ReadUE();
     sps.conf_win_bottom_offset = reader.ReadUE();
   }
-  sps.bit_depth_luma_minus8 = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.bit_depth_luma_minus8, 0, 8);
-  sps.bit_depth_chroma_minus8 = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.bit_depth_chroma_minus8, 0, 8);
-  sps.log2_max_pic_order_cnt_lsb_minus4 = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.log2_max_pic_order_cnt_lsb_minus4, 0, 12);
+  READ_IN_RANGE_OR_RETURN(sps.bit_depth_luma_minus8, reader.ReadUE(), 0, 8);
+  READ_IN_RANGE_OR_RETURN(sps.bit_depth_chroma_minus8, reader.ReadUE(), 0, 8);
+  READ_IN_RANGE_OR_RETURN(sps.log2_max_pic_order_cnt_lsb_minus4,
+                          reader.ReadUE(), 0, 12);
   sps.sps_sub_layer_ordering_info_present_flag = reader.ReadBit();
   for (auto i = sps.sps_sub_layer_ordering_info_present_flag
                     ? 0
@@ -256,14 +239,12 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
 
   sps.pcm_enabled_flag = reader.ReadBit();
   if (sps.pcm_enabled_flag) {
-    sps.pcm_sample_bit_depth_luma_minus1 = reader.ReadBits(3);
-    IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_luma_minus1, 0,
-                       sps.BitDepthLuma());
-    sps.pcm_sample_bit_depth_chroma_minus1 = reader.ReadBits(3);
-    IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_chroma_minus1, 0,
-                       sps.BitDepthChroma());
-    sps.log2_min_pcm_luma_coding_block_size_minus3 = reader.ReadUE();
-    IN_RANGE_OR_RETURN(sps.log2_min_pcm_luma_coding_block_size_minus3, 0, 2);
+    READ_IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_luma_minus1,
+                            reader.ReadBits(3), 0, sps.BitDepthLuma());
+    READ_IN_RANGE_OR_RETURN(sps.pcm_sample_bit_depth_chroma_minus1,
+                            reader.ReadBits(3), 0, sps.BitDepthChroma());
+    READ_IN_RANGE_OR_RETURN(sps.log2_min_pcm_luma_coding_block_size_minus3,
+                            reader.ReadUE(), 0, 2);
     uint32_t log2MinIpcmCbSizeY{sps.log2_min_pcm_luma_coding_block_size_minus3 +
                                 3};
     sps.log2_diff_max_min_pcm_luma_coding_block_size = reader.ReadUE();
@@ -282,9 +263,8 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
     sps.pcm_loop_filter_disabled_flag = reader.ReadBit();
   }
 
-  sps.num_short_term_ref_pic_sets = reader.ReadUE();
-  IN_RANGE_OR_RETURN(sps.num_short_term_ref_pic_sets, 0,
-                     kMaxShortTermRefPicSets);
+  READ_IN_RANGE_OR_RETURN(sps.num_short_term_ref_pic_sets, reader.ReadUE(), 0,
+                          kMaxShortTermRefPicSets);
   for (auto i = 0; i < sps.num_short_term_ref_pic_sets; i++) {
     if (auto rv = ParseStRefPicSet(reader, i, sps); rv.isErr()) {
       LOG("Failed to parse short-term reference picture set.");
@@ -294,8 +274,8 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
   const auto long_term_ref_pics_present_flag = reader.ReadBit();
   if (long_term_ref_pics_present_flag) {
     uint32_t num_long_term_ref_pics_sps;
-    num_long_term_ref_pics_sps = reader.ReadUE();
-    IN_RANGE_OR_RETURN(num_long_term_ref_pics_sps, 0, kMaxLongTermRefPicSets);
+    READ_IN_RANGE_OR_RETURN(num_long_term_ref_pics_sps, reader.ReadUE(), 0,
+                            kMaxLongTermRefPicSets);
     for (auto i = 0; i < num_long_term_ref_pics_sps; i++) {
       Unused << reader.ReadBits(sps.log2_max_pic_order_cnt_lsb_minus4 +
                                 4);  // lt_ref_pic_poc_lsb_sps[i]
@@ -432,8 +412,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
   if (inter_ref_pic_set_prediction_flag) {
     int delta_idx_minus1 = 0;
     if (aStRpsIdx == aSPS.num_short_term_ref_pic_sets) {
-      delta_idx_minus1 = aReader.ReadUE();
-      IN_RANGE_OR_RETURN(delta_idx_minus1, 0, aStRpsIdx - 1);
+      READ_IN_RANGE_OR_RETURN(delta_idx_minus1, aReader.ReadUE(), 0,
+                              aStRpsIdx - 1);
     }
     const uint32_t RefRpsIdx = aStRpsIdx - (delta_idx_minus1 + 1);  // (7-59)
     const bool delta_rps_sign = aReader.ReadBit();
@@ -504,8 +484,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
     curStRefPicSet.num_negative_pics = aReader.ReadUE();
     curStRefPicSet.num_positive_pics = aReader.ReadUE();
     for (auto i = 0; i < curStRefPicSet.num_negative_pics; i++) {
-      const uint32_t delta_poc_s0_minus1 = aReader.ReadUE();
-      IN_RANGE_OR_RETURN(delta_poc_s0_minus1, 0, 0x7FFF);
+      uint32_t delta_poc_s0_minus1;
+      READ_IN_RANGE_OR_RETURN(delta_poc_s0_minus1, aReader.ReadUE(), 0, 0x7FFF);
       if (i == 0) {
         // (7-67)
         curStRefPicSet.deltaPocS0[i] = -(delta_poc_s0_minus1 + 1);
@@ -517,8 +497,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
       curStRefPicSet.usedByCurrPicS0[i] = aReader.ReadBit();
     }
     for (auto i = 0; i < curStRefPicSet.num_positive_pics; i++) {
-      const int delta_poc_s1_minus1 = aReader.ReadUE();
-      IN_RANGE_OR_RETURN(delta_poc_s1_minus1, 0, 0x7FFF);
+      int delta_poc_s1_minus1;
+      READ_IN_RANGE_OR_RETURN(delta_poc_s1_minus1, aReader.ReadUE(), 0, 0x7FFF);
       if (i == 0) {
         // (7-68)
         curStRefPicSet.deltaPocS1[i] = delta_poc_s1_minus1 + 1;
@@ -710,8 +690,7 @@ Result<Ok, nsresult> H265::ParseAndIgnoreHrdParameters(
     }
     int cpb_cnt_minus1 = 0;
     if (!low_delay_hrd_flag) {
-      cpb_cnt_minus1 = aReader.ReadUE();
-      IN_RANGE_OR_RETURN(cpb_cnt_minus1, 0, 31);
+      READ_IN_RANGE_OR_RETURN(cpb_cnt_minus1, aReader.ReadUE(), 0, 31);
     }
     if (nal_hrd_parameters_present_flag) {
       if (auto rv = ParseAndIgnoreSubLayerHrdParameters(
@@ -747,14 +726,6 @@ Result<Ok, nsresult> H265::ParseAndIgnoreSubLayerHrdParameters(
     Unused << aReader.ReadBit();  // cbr_flag
   }
   return Ok();
-}
-
-bool H265SPS::operator==(const H265SPS& aOther) const {
-  return memcmp(this, &aOther, sizeof(H265SPS)) == 0;
-}
-
-bool H265SPS::operator!=(const H265SPS& aOther) const {
-  return !(operator==(aOther));
 }
 
 gfx::IntSize H265SPS::GetImageSize() const {
@@ -958,228 +929,6 @@ already_AddRefed<mozilla::MediaByteBuffer> H265::DecodeNALUnit(
     lastbytes = (lastbytes << 8) | byte;
   }
   return rbsp.forget();
-}
-
-/* static */
-already_AddRefed<mozilla::MediaByteBuffer> H265::ExtractHVCCExtraData(
-    const mozilla::MediaRawData* aSample) {
-  size_t sampleSize = aSample->Size();
-  if (aSample->mCrypto.IsEncrypted()) {
-    // The content is encrypted, we can only parse the non-encrypted data.
-    MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
-    if (aSample->mCrypto.mPlainSizes.Length() == 0 ||
-        aSample->mCrypto.mPlainSizes[0] > sampleSize) {
-      LOG("Invalid crypto content");
-      return nullptr;
-    }
-    sampleSize = aSample->mCrypto.mPlainSizes[0];
-  }
-
-  auto hvcc = HVCCConfig::Parse(aSample);
-  if (hvcc.isErr()) {
-    LOG("Only support extracting extradata from HVCC");
-    return nullptr;
-  }
-  const auto nalLenSize = hvcc.unwrap().NALUSize();
-  BufferReader reader(aSample->Data(), sampleSize);
-
-  nsTArray<Maybe<H265SPS>> spsRefTable;
-  nsTArray<H265NALU> spsNALUs;
-  // If we encounter SPS with the same id but different content, we will stop
-  // attempting to detect duplicates.
-  bool checkDuplicate = true;
-  const H265SPS* firstSPS = nullptr;
-
-  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
-  while (reader.Remaining() > nalLenSize) {
-    // ISO/IEC 14496-15, 4.2.3.2 Syntax. (NALUSample) Reading the size of NALU.
-    uint32_t nalLen = 0;
-    switch (nalLenSize) {
-      case 1:
-        Unused << reader.ReadU8().map(
-            [&](uint8_t x) mutable { return nalLen = x; });
-        break;
-      case 2:
-        Unused << reader.ReadU16().map(
-            [&](uint16_t x) mutable { return nalLen = x; });
-        break;
-      case 3:
-        Unused << reader.ReadU24().map(
-            [&](uint32_t x) mutable { return nalLen = x; });
-        break;
-      default:
-        MOZ_DIAGNOSTIC_ASSERT(nalLenSize == 4);
-        Unused << reader.ReadU32().map(
-            [&](uint32_t x) mutable { return nalLen = x; });
-        break;
-    }
-    const uint8_t* p = reader.Read(nalLen);
-    if (!p) {
-      // The read failed, but we may already have some SPS data so break out of
-      // reading and process what we have, if any.
-      break;
-    }
-    const H265NALU nalu(p, nalLen);
-    LOGV("Found NALU, type=%u", nalu.mNalUnitType);
-    if (nalu.IsSPS()) {
-      auto rv = H265::DecodeSPSFromSPSNALU(nalu);
-      if (rv.isErr()) {
-        // Invalid SPS, ignore.
-        LOG("Ignore invalid SPS");
-        continue;
-      }
-      const H265SPS sps = rv.unwrap();
-      const uint8_t spsId = sps.sps_seq_parameter_set_id;  // 0~15
-      if (spsId >= spsRefTable.Length()) {
-        if (!spsRefTable.SetLength(spsId + 1, fallible)) {
-          NS_WARNING("OOM while expanding spsRefTable!");
-          return nullptr;
-        }
-      }
-      if (checkDuplicate && spsRefTable[spsId] &&
-          *(spsRefTable[spsId]) == sps) {
-        // Duplicate ignore.
-        continue;
-      }
-      if (spsRefTable[spsId]) {
-        // We already have detected a SPS with this Id. Just to be safe we
-        // disable SPS duplicate detection.
-        checkDuplicate = false;
-      } else {
-        spsRefTable[spsId] = Some(sps);
-        spsNALUs.AppendElement(nalu);
-        if (!firstSPS) {
-          firstSPS = spsRefTable[spsId].ptr();
-        }
-      }
-    }
-  }
-
-  LOGV("Found %zu SPS NALU", spsNALUs.Length());
-  if (!spsNALUs.IsEmpty()) {
-    MOZ_ASSERT(firstSPS);
-    BitWriter writer(extradata);
-
-    // ISO/IEC 14496-15, HEVCDecoderConfigurationRecord. But we only append SPS.
-    writer.WriteBits(1, 8);  // version
-    const auto& profile = firstSPS->profile_tier_level;
-    writer.WriteBits(profile.general_profile_space, 2);
-    writer.WriteBits(profile.general_tier_flag, 1);
-    writer.WriteBits(profile.general_profile_idc, 5);
-    writer.WriteU32(profile.general_profile_compatibility_flags);
-
-    // general_constraint_indicator_flags
-    writer.WriteBit(profile.general_progressive_source_flag);
-    writer.WriteBit(profile.general_interlaced_source_flag);
-    writer.WriteBit(profile.general_non_packed_constraint_flag);
-    writer.WriteBit(profile.general_frame_only_constraint_flag);
-    writer.WriteBits(0, 44); /* ignored 44 bits */
-
-    writer.WriteU8(profile.general_level_idc);
-    writer.WriteBits(0, 4);   // reserved
-    writer.WriteBits(0, 12);  // min_spatial_segmentation_idc
-    writer.WriteBits(0, 6);   // reserved
-    writer.WriteBits(0, 2);   // parallelismType
-    writer.WriteBits(0, 6);   // reserved
-    writer.WriteBits(firstSPS->chroma_format_idc, 2);
-    writer.WriteBits(0, 5);  // reserved
-    writer.WriteBits(firstSPS->bit_depth_luma_minus8, 3);
-    writer.WriteBits(0, 5);  // reserved
-    writer.WriteBits(firstSPS->bit_depth_chroma_minus8, 3);
-    // avgFrameRate + constantFrameRate + numTemporalLayers + temporalIdNested
-    writer.WriteBits(0, 22);
-    writer.WriteBits(nalLenSize - 1, 2);  // lengthSizeMinusOne
-    writer.WriteU8(1);                    // numOfArrays, only SPS
-    for (auto j = 0; j < 1; j++) {
-      writer.WriteBits(0, 2);                   // array_completeness + reserved
-      writer.WriteBits(H265NALU::SPS_NUT, 6);   // NAL_unit_type
-      writer.WriteBits(spsNALUs.Length(), 16);  // numNalus
-      for (auto i = 0; i < spsNALUs.Length(); i++) {
-        writer.WriteBits(spsNALUs[i].mNALU.Length(),
-                         16);  // nalUnitLength
-        MOZ_ASSERT(writer.BitCount() % 8 == 0);
-        extradata->AppendElements(spsNALUs[i].mNALU.Elements(),
-                                  spsNALUs[i].mNALU.Length());
-        writer.AdvanceBytes(spsNALUs[i].mNALU.Length());
-      }
-    }
-  }
-
-  return extradata.forget();
-}
-
-class SPSIterator final {
- public:
-  explicit SPSIterator(const HVCCConfig& aConfig) : mConfig(aConfig) {}
-
-  SPSIterator& operator++() {
-    size_t idx = 0;
-    for (idx = mNextIdx; idx < mConfig.mNALUs.Length(); idx++) {
-      if (mConfig.mNALUs[idx].IsSPS()) {
-        mSPS = &mConfig.mNALUs[idx];
-        break;
-      }
-    }
-    mNextIdx = idx + 1;
-    return *this;
-  }
-
-  explicit operator bool() const { return mNextIdx < mConfig.mNALUs.Length(); }
-
-  const H265NALU* operator*() const { return mSPS ? mSPS : nullptr; }
-
- private:
-  size_t mNextIdx = 0;
-  const H265NALU* mSPS = nullptr;
-  const HVCCConfig& mConfig;
-};
-
-/* static */
-bool AreTwoSPSIdentical(const H265NALU& aLhs, const H265NALU& aRhs) {
-  MOZ_ASSERT(aLhs.IsSPS() && aRhs.IsSPS());
-  auto rv1 = H265::DecodeSPSFromSPSNALU(aLhs);
-  auto rv2 = H265::DecodeSPSFromSPSNALU(aRhs);
-  if (rv1.isErr() || rv2.isErr()) {
-    return false;
-  }
-  return rv1.unwrap() == rv2.unwrap();
-}
-
-/* static */
-bool H265::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
-                            const mozilla::MediaByteBuffer* aExtraData2) {
-  if (aExtraData1 == aExtraData2) {
-    return true;
-  }
-
-  auto config1 = HVCCConfig::Parse(aExtraData1);
-  auto config2 = HVCCConfig::Parse(aExtraData2);
-  if (config1.isErr() || config2.isErr()) {
-    return false;
-  }
-
-  uint8_t numSPS = config1.unwrap().NumSPS();
-  if (numSPS == 0 || numSPS != config2.unwrap().NumSPS()) {
-    return false;
-  }
-
-  // We only compare if the SPS are the same as the various HEVC decoders can
-  // deal with in-band change of PPS.
-  SPSIterator it1(config1.unwrap());
-  SPSIterator it2(config2.unwrap());
-  while (it1 && it2) {
-    const H265NALU* nalu1 = *it1;
-    const H265NALU* nalu2 = *it2;
-    if (!nalu1 || !nalu2) {
-      return false;
-    }
-    if (!AreTwoSPSIdentical(*nalu1, *nalu2)) {
-      return false;
-    }
-    ++it1;
-    ++it2;
-  }
-  return true;
 }
 
 #undef LOG
