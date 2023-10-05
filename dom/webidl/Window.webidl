@@ -157,6 +157,7 @@ interface nsIPrintSettings;
                     SyncManager,
                     TaskAttributionTiming,
                     TextEvent,
+                    ToggleEvent,
                     Touch,
                     TouchEvent,
                     TouchList,
