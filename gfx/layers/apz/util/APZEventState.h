@@ -57,6 +57,7 @@ class APZEventState final {
 
   NS_INLINE_DECL_REFCOUNTING(APZEventState);
 
+  MOZ_CAN_RUN_SCRIPT
   void ProcessSingleTap(const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
                         Modifiers aModifiers, int32_t aClickCount,

@@ -1341,8 +1341,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
   switch (aType) {
     case GeckoContentController::TapType::eSingleTap:
       if (mBrowserChildMessageManager) {
-        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1,
-                                         aInputBlockId);
+        RefPtr<APZEventState> eventState(mAPZEventState);
+        eventState->ProcessSingleTap(point, scale, aModifiers, 1,
+                                     aInputBlockId);
       }
       break;
     case GeckoContentController::TapType::eDoubleTap:
@@ -1350,8 +1351,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
       break;
     case GeckoContentController::TapType::eSecondTap:
       if (mBrowserChildMessageManager) {
-        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2,
-                                         aInputBlockId);
+        RefPtr<APZEventState> eventState(mAPZEventState);
+        eventState->ProcessSingleTap(point, scale, aModifiers, 2,
+                                     aInputBlockId);
       }
       break;
     case GeckoContentController::TapType::eLongTap:
