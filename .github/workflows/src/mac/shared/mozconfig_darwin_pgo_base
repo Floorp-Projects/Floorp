@@ -1,6 +1,5 @@
 ac_add_options --with-app-name=floorp
 ac_add_options --with-app-basename=Floorp
-ac_add_options --with-branding=browser/branding/official
 
 ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
 ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
