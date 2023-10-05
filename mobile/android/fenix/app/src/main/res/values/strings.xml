@@ -657,6 +657,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Manage account</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Change your password, manage data collection, or delete your account</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync now</string>
     <!-- Preference category for sync -->

@@ -7,6 +7,7 @@
 
     <Preference
         android:key="@string/pref_key_sync_manage_account"
+        android:summary="@string/preferences_manage_account_summary"
         android:title="@string/preferences_manage_account" />
 
     <Preference
