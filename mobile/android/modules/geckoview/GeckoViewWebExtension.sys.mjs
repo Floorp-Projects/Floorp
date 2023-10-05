@@ -297,24 +297,29 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     policy = await policy.readyPromise;
   }
   const {
+    averageRating,
+    blocklistState,
     creator,
     description,
-    homepageURL,
-    signedState,
-    name,
-    icons,
-    version,
-    optionsURL,
-    optionsType,
-    isRecommended,
-    blocklistState,
-    userDisabled,
     embedderDisabled,
-    temporarilyInstalled,
+    fullDescription,
+    homepageURL,
+    icons,
+    id,
     isActive,
     isBuiltin,
-    id,
     isCorrectlySigned,
+    isRecommended,
+    name,
+    optionsType,
+    optionsURL,
+    reviewCount,
+    reviewURL,
+    signedState,
+    sourceURI,
+    temporarilyInstalled,
+    userDisabled,
+    version,
   } = aAddon;
   let creatorName = null;
   let creatorURL = null;
@@ -348,31 +353,49 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   const promptPermissions = aPermissions
     ? await filterPromptPermissions(aPermissions.permissions)
     : [];
+
+  let updateDate;
+  try {
+    updateDate = aAddon.updateDate?.toISOString();
+  } catch {
+    // `installDate` is used as a fallback for `updateDate` but only when the
+    // add-on is installed. Before that, `installDate` might be undefined,
+    // which would cause `updateDate` (and `installDate`) to be an "invalid
+    // date".
+    updateDate = null;
+  }
+
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
     isBuiltIn: isBuiltin,
     webExtensionFlags: exportFlags(policy),
     metaData: {
-      origins: aPermissions ? aPermissions.origins : [],
-      promptPermissions,
-      description,
-      enabled: isActive,
-      temporary: temporarilyInstalled,
-      disabledFlags,
-      version,
+      averageRating,
+      baseURL,
+      blocklistState,
       creatorName,
       creatorURL,
+      description,
+      disabledFlags,
+      downloadUrl: sourceURI?.displaySpec,
+      enabled: isActive,
+      fullDescription,
       homepageURL,
-      name,
-      optionsPageURL: optionsURL,
-      openOptionsPageInTab,
-      isRecommended,
-      blocklistState,
-      signedState,
       icons,
-      baseURL,
+      isRecommended,
+      name,
+      openOptionsPageInTab,
+      optionsPageURL: optionsURL,
+      origins: aPermissions ? aPermissions.origins : [],
       privateBrowsingAllowed,
+      promptPermissions,
+      reviewCount,
+      reviewURL,
+      signedState,
+      temporary: temporarilyInstalled,
+      updateDate,
+      version,
     },
   };
 }
