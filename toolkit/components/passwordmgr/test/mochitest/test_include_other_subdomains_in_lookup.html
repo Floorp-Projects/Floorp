@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test that logins with non-exact match origin appear in autocomplete dropdown</title>
+  <title>Test includeOtherSubdomainsInLookup</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
@@ -71,7 +71,9 @@
       ...[
         // These two logins should never be visible on https: versions of
         // *.example.com since the login is for http: and an https: login exists for this username.
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         ["http://example.com/", "https://example.com/", null, "example-user", "example-password", "uname", "pword"],
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         ["http://old.example.com/", "https://old.example.com/", null, "example-user", "old-example-password", "uname", "pword"],
         ...loginInfos,
       ]
