@@ -15,6 +15,9 @@ if CONFIG["RELRHACK"]:
     HostProgram(CONFIG["RELRHACK_LINKER"])
 
     HOST_OS_LIBS += CONFIG["RELRHACK_LIBS"]
+
+    if CONFIG["MOZ_STDCXX_COMPAT"]:
+        HOST_DEFINES["MOZ_STDCXX_COMPAT"] = True
 else:
     HOST_SOURCES += [
         "elf.cpp",
