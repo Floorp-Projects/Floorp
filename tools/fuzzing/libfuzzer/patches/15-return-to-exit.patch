@@ -4,10 +4,10 @@ Date:   Mon Mar 1 15:47:38 2021 -0500
 
     [libfuzzer] In most cases, return instead of exit().
 
-diff --git a/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.cpp b/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.cpp
+diff --git a/FuzzerDataFlowTrace.cpp b/FuzzerDataFlowTrace.cpp
 index 0e9cdf7e66b1..06ea287a3cfe 100644
---- a/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.cpp
+--- a/FuzzerDataFlowTrace.cpp
++++ b/FuzzerDataFlowTrace.cpp
 @@ -102,9 +102,11 @@ Vector<double> BlockCoverage::FunctionWeights(size_t NumFunctions) const {
    return Res;
  }
@@ -98,10 +98,10 @@ index 0e9cdf7e66b1..06ea287a3cfe 100644
  }
  
  int CollectDataFlow(const std::string &DFTBinary, const std::string &DirPath,
-diff --git a/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.h b/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.h
+diff --git a/FuzzerDataFlowTrace.h b/FuzzerDataFlowTrace.h
 index d6e3de30a4ef..767bad24f1d0 100644
---- a/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerDataFlowTrace.h
+--- a/FuzzerDataFlowTrace.h
++++ b/FuzzerDataFlowTrace.h
 @@ -113,8 +113,8 @@ class BlockCoverage {
  
  class DataFlowTrace {
@@ -113,10 +113,10 @@ index d6e3de30a4ef..767bad24f1d0 100644
              Vector<SizedFile> &CorporaFiles, Random &Rand);
    void Clear() { Traces.clear(); }
    const Vector<uint8_t> *Get(const std::string &InputSha1) const {
-diff --git a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
+diff --git a/FuzzerDriver.cpp b/FuzzerDriver.cpp
 index cd720200848b..bedad16efa7b 100644
---- a/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerDriver.cpp
+--- a/FuzzerDriver.cpp
++++ b/FuzzerDriver.cpp
 @@ -326,7 +326,7 @@ int CleanseCrashInput(const Vector<std::string> &Args,
    if (Inputs->size() != 1 || !Flags.exact_artifact_path) {
      Printf("ERROR: -cleanse_crash should be given one input file and"
@@ -318,10 +318,10 @@ index cd720200848b..bedad16efa7b 100644
  }
  
  extern "C" ATTRIBUTE_INTERFACE int
-diff --git a/tools/fuzzing/libfuzzer/FuzzerFork.cpp b/tools/fuzzing/libfuzzer/FuzzerFork.cpp
+diff --git a/FuzzerFork.cpp b/FuzzerFork.cpp
 index d9e6b79443e0..ee2a99a250c1 100644
---- a/tools/fuzzing/libfuzzer/FuzzerFork.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerFork.cpp
+--- a/FuzzerFork.cpp
++++ b/FuzzerFork.cpp
 @@ -177,14 +177,16 @@ struct GlobalEnv {
      return Job;
    }
@@ -432,10 +432,10 @@ index d9e6b79443e0..ee2a99a250c1 100644
  }
  
  } // namespace fuzzer
-diff --git a/tools/fuzzing/libfuzzer/FuzzerFork.h b/tools/fuzzing/libfuzzer/FuzzerFork.h
+diff --git a/FuzzerFork.h b/FuzzerFork.h
 index b29a43e13fbc..1352171ad49d 100644
---- a/tools/fuzzing/libfuzzer/FuzzerFork.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerFork.h
+--- a/FuzzerFork.h
++++ b/FuzzerFork.h
 @@ -16,7 +16,7 @@
  #include <string>
  
@@ -445,10 +445,10 @@ index b29a43e13fbc..1352171ad49d 100644
                    const Vector<std::string> &Args,
                    const Vector<std::string> &CorpusDirs, int NumJobs);
  } // namespace fuzzer
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIO.cpp b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
+diff --git a/FuzzerIO.cpp b/FuzzerIO.cpp
 index 0053ef39f2b9..6be2be67c691 100644
---- a/tools/fuzzing/libfuzzer/FuzzerIO.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerIO.cpp
+--- a/FuzzerIO.cpp
++++ b/FuzzerIO.cpp
 @@ -82,7 +82,9 @@ void ReadDirToVectorOfUnits(const char *Path, Vector<Unit> *V,
                              long *Epoch, size_t MaxSize, bool ExitOnError) {
    long E = Epoch ? *Epoch : 0;
@@ -478,10 +478,10 @@ index 0053ef39f2b9..6be2be67c691 100644
  }
  
  std::string DirPlusFile(const std::string &DirPath,
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIO.h b/tools/fuzzing/libfuzzer/FuzzerIO.h
+diff --git a/FuzzerIO.h b/FuzzerIO.h
 index 6e4368b971fa..6c90ba637322 100644
---- a/tools/fuzzing/libfuzzer/FuzzerIO.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerIO.h
+--- a/FuzzerIO.h
++++ b/FuzzerIO.h
 @@ -60,7 +60,7 @@ void RawPrint(const char *Str);
  bool IsFile(const std::string &Path);
  size_t FileSize(const std::string &Path);
@@ -500,10 +500,10 @@ index 6e4368b971fa..6c90ba637322 100644
  
  char GetSeparator();
  // Similar to the basename utility: returns the file name w/o the dir prefix.
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
+diff --git a/FuzzerIOPosix.cpp b/FuzzerIOPosix.cpp
 index 4b453d286c80..1a50295c010f 100644
---- a/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerIOPosix.cpp
+--- a/FuzzerIOPosix.cpp
++++ b/FuzzerIOPosix.cpp
 @@ -53,16 +53,16 @@ std::string Basename(const std::string &Path) {
    return Path.substr(Pos + 1);
  }
@@ -543,10 +543,10 @@ index 4b453d286c80..1a50295c010f 100644
  }
  
  
-diff --git a/tools/fuzzing/libfuzzer/FuzzerIOWindows.cpp b/tools/fuzzing/libfuzzer/FuzzerIOWindows.cpp
+diff --git a/FuzzerIOWindows.cpp b/FuzzerIOWindows.cpp
 index 651283a551cf..0e977bd02557 100644
---- a/tools/fuzzing/libfuzzer/FuzzerIOWindows.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerIOWindows.cpp
+--- a/FuzzerIOWindows.cpp
++++ b/FuzzerIOWindows.cpp
 @@ -98,11 +98,12 @@ size_t FileSize(const std::string &Path) {
    return size.QuadPart;
  }
@@ -593,10 +593,10 @@ index 651283a551cf..0e977bd02557 100644
  }
  
  
-diff --git a/tools/fuzzing/libfuzzer/FuzzerInternal.h b/tools/fuzzing/libfuzzer/FuzzerInternal.h
+diff --git a/FuzzerInternal.h b/FuzzerInternal.h
 index 1f7d671ed848..cc2650b58ef1 100644
---- a/tools/fuzzing/libfuzzer/FuzzerInternal.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerInternal.h
+--- a/FuzzerInternal.h
++++ b/FuzzerInternal.h
 @@ -35,8 +35,8 @@ public:
    Fuzzer(UserCallback CB, InputCorpus &Corpus, MutationDispatcher &MD,
           FuzzingOptions Options);
@@ -644,10 +644,10 @@ index 1f7d671ed848..cc2650b58ef1 100644
    void PurgeAllocator();
    void ReportNewCoverage(InputInfo *II, const Unit &U);
    void PrintPulseAndReportSlowInput(const uint8_t *Data, size_t Size);
-diff --git a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+diff --git a/FuzzerLoop.cpp b/FuzzerLoop.cpp
 index 4c4e8c271b1f..e7dfc187dbfe 100644
---- a/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerLoop.cpp
+--- a/FuzzerLoop.cpp
++++ b/FuzzerLoop.cpp
 @@ -254,12 +254,20 @@ void Fuzzer::ExitCallback() {
    _Exit(Options.ErrorExitCode);
  }
@@ -753,10 +753,10 @@ index 4c4e8c271b1f..e7dfc187dbfe 100644
  }
  
  void Fuzzer::MinimizeCrashLoop(const Unit &U) {
-diff --git a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
+diff --git a/FuzzerMerge.cpp b/FuzzerMerge.cpp
 index 919eea848580..0a185c7325bb 100644
---- a/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerMerge.cpp
+--- a/FuzzerMerge.cpp
++++ b/FuzzerMerge.cpp
 @@ -28,11 +28,12 @@ bool Merger::Parse(const std::string &Str, bool ParseCoverage) {
    return Parse(SS, ParseCoverage);
  }
@@ -895,10 +895,10 @@ index 919eea848580..0a185c7325bb 100644
  }
  
  } // namespace fuzzer
-diff --git a/tools/fuzzing/libfuzzer/FuzzerMerge.h b/tools/fuzzing/libfuzzer/FuzzerMerge.h
+diff --git a/FuzzerMerge.h b/FuzzerMerge.h
 index e0c6bc539bdb..6dc1c4c45abf 100644
---- a/tools/fuzzing/libfuzzer/FuzzerMerge.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerMerge.h
+--- a/FuzzerMerge.h
++++ b/FuzzerMerge.h
 @@ -63,7 +63,7 @@ struct Merger {
  
    bool Parse(std::istream &IS, bool ParseCoverage);
@@ -917,10 +917,10 @@ index e0c6bc539bdb..6dc1c4c45abf 100644
                           const Vector<SizedFile> &OldCorpus,
                           const Vector<SizedFile> &NewCorpus,
                           Vector<std::string> *NewFiles,
-diff --git a/tools/fuzzing/libfuzzer/FuzzerTracePC.cpp b/tools/fuzzing/libfuzzer/FuzzerTracePC.cpp
+diff --git a/FuzzerTracePC.cpp b/FuzzerTracePC.cpp
 index b2ca7693e540..fbceda39bc22 100644
---- a/tools/fuzzing/libfuzzer/FuzzerTracePC.cpp
-+++ b/tools/fuzzing/libfuzzer/FuzzerTracePC.cpp
+--- a/FuzzerTracePC.cpp
++++ b/FuzzerTracePC.cpp
 @@ -238,13 +238,13 @@ void TracePC::IterateCoveredFunctions(CallBack CB) {
    }
  }
@@ -953,10 +953,10 @@ index b2ca7693e540..fbceda39bc22 100644
  }
  
  bool TracePC::ObservedFocusFunction() {
-diff --git a/tools/fuzzing/libfuzzer/FuzzerTracePC.h b/tools/fuzzing/libfuzzer/FuzzerTracePC.h
+diff --git a/FuzzerTracePC.h b/FuzzerTracePC.h
 index 501f3b544971..b46ebb909dbf 100644
---- a/tools/fuzzing/libfuzzer/FuzzerTracePC.h
-+++ b/tools/fuzzing/libfuzzer/FuzzerTracePC.h
+--- a/FuzzerTracePC.h
++++ b/FuzzerTracePC.h
 @@ -116,7 +116,7 @@ class TracePC {
        CB(PC);
    }
