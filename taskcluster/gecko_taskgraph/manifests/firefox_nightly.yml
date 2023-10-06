@@ -358,7 +358,7 @@ mapping:
         description: "Main package disk image for Mac OS X platforms"
         all_locales: true
         from:
-            - repackage
+            - attribution
         only_for_platforms:
             - macosx64-shippable
         pretty_name: firefox-${version}.${locale}.${filename_platform}.dmg

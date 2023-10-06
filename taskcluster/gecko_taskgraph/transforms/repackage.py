@@ -321,6 +321,7 @@ def copy_in_useful_magic(config, jobs):
 
         job["build-platform"] = dep.attributes.get("build_platform")
         job["shipping-product"] = dep.attributes.get("shipping_product")
+        job["build-type"] = dep.attributes.get("build_type")
         yield job
 
 
