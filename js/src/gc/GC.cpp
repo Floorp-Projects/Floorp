@@ -2221,11 +2221,8 @@ void ArenaLists::checkEmptyArenaList(AllocKind kind) {
 }
 
 void GCRuntime::purgeRuntimeForMinorGC() {
-  // If external strings become nursery allocable, remember to call
-  // zone->externalStringCache().purge() (and delete this assert.)
-  MOZ_ASSERT(!IsNurseryAllocable(AllocKind::EXTERNAL_STRING));
-
   for (ZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
+    zone->externalStringCache().purge();
     zone->functionToStringCache().purge();
   }
 }
