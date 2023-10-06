@@ -202,6 +202,7 @@ export const SpecialMessageActions = {
       "browser.shopping.experience2023.survey.hasSeen",
       "browser.shopping.experience2023.survey.pdpVisits",
       "browser.startup.homepage",
+      "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
       "browser.privateWindowSeparation.enabled",
       "browser.firefox-view.feature-tour",
       "browser.pdfjs.feature-tour",
@@ -369,6 +370,7 @@ export const SpecialMessageActions = {
    * @param browser {Browser} The browser most relevant to the message.
    * @returns {Promise<unknown>} Type depends on action type. See cases below.
    */
+  /* eslint-disable-next-line complexity */
   async handleAction(action, browser) {
     const window = browser.ownerGlobal;
     switch (action.type) {
@@ -456,6 +458,12 @@ export const SpecialMessageActions = {
           "browser.shell.checkDefaultPDF.silencedByUser",
           true
         );
+        break;
+      case "CONFIRM_LAUNCH_ON_LOGIN":
+        const { WindowsLaunchOnLogin } = ChromeUtils.importESModule(
+          "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs"
+        );
+        await WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
         break;
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;

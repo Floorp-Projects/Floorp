@@ -1669,7 +1669,12 @@ var gMainPane = {
       return;
     }
     if (event.target.checked) {
+      // windowsLaunchOnLogin has been checked: create registry key
       WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
+      Services.prefs.setBoolPref(
+        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+        true
+      );
     } else {
       // windowsLaunchOnLogin has been unchecked: delete registry key
       WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();

@@ -325,6 +325,8 @@ pref("browser.startup.preXulSkeletonUI", true);
 
 // Whether the checkbox to enable Windows launch on login is shown
 pref("browser.startup.windowsLaunchOnLogin.enabled", false);
+// Whether to show the launch on login infobar notification
+pref("browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt", false);
 #endif
 
 // Show an upgrade dialog on major upgrades.
