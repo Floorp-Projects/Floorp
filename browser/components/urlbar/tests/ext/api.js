@@ -10,12 +10,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { ExtensionPreferenceManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
-);
-
-var { getSettingsAPI } = ExtensionPreferenceManager;
-
 ChromeUtils.defineESModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
@@ -56,12 +50,9 @@ this.experiments_urlbar = class extends ExtensionAPI {
             window.gURLBar.setPageProxyState("invalid");
           },
 
-          engagementTelemetry: getSettingsAPI({
-            context,
-            name: "engagementTelemetry",
-            readOnly: true,
-            callback: () => false,
-          }),
+          engagementTelemetry: this._getDefaultSettingsAPI(
+            "browser.urlbar.eventTelemetry.enabled"
+          ),
 
           extensionTimeout: this._getDefaultSettingsAPI(
             "browser.urlbar.extension.timeout"

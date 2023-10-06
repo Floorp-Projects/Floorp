@@ -5,6 +5,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderExtension:
     "resource:///modules/UrlbarProviderExtension.sys.mjs",
 });
@@ -144,8 +145,7 @@ this.urlbar = class extends ExtensionAPI {
         engagementTelemetry: getSettingsAPI({
           context,
           name: "engagementTelemetry",
-          readOnly: true,
-          callback: () => false,
+          callback: () => UrlbarPrefs.get("eventTelemetry.enabled"),
         }),
       },
     };

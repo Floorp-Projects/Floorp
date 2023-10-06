@@ -756,6 +756,56 @@ aboutpreferences:
       - "gijs@mozilla.com"
     expiry_version: never
 
+urlbar:
+  engagement:
+    objects: ["click", "enter", "paste_go", "drop_go"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar engagement, that is when the user picks a
+      search result.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136, 1671404, 1466103]
+    notification_emails:
+      - "fx-search-telemetry@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: engagement time in milliseconds.
+      numChars: number of input characters.
+      numWords: number of words in the input.
+      selIndex: index of the selected result in the urlbar panel, or -1.
+      selType: >
+        type of the selected result in the urlbar panel. One of:
+          "autofill", "visit", "bookmark", "bookmark_adaptive", "history",
+          "history_adaptive", "keyword", "search", "searchsuggestion",
+          "searchsuggestion_rich", "switchtab", "remotetab", "extension",
+          "oneoff", "keywordoffer", "canonized", "tip", "tiphelp",
+          "formhistory", "tabtosearch", "quicksuggest", "weather",
+          "clipboard", "dynamic-wikipedia", "navigational", "none"
+      provider: The name of the provider that presented the result.
+  abandonment:
+    objects: ["blur"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar search abandon, that is when the user starts
+      an interaction but then blurs the urlbar.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136]
+    notification_emails:
+      - "fx-search-telemetry@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: abandonement time in milliseconds.
+      numChars: number of input characters.
+      numWords: number of words in the input.
+
 normandy:
   enroll:
     objects: ["preference_study", "addon_study", "preference_rollout", "addon_rollout", "nimbus_experiment"]
