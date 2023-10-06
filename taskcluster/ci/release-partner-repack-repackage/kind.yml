@@ -56,6 +56,10 @@ jobs:
                         - repackage/win64_partner.py
         package-formats:
             by-build-platform:
-                macosx64\b.*: [dmg]
+                macosx64\b.*:
+                    by-build-type:
+                        # Debug builds can't be attributable
+                        debug: [dmg]
+                        default: [dmg-attrib]
                 win32\b.*: [installer]
                 win64\b.*: [installer]
