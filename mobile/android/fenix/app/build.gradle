@@ -750,14 +750,14 @@ if (project.hasProperty("coverage")) {
 
             def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
                               '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
-            def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
-            def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/${variant.flavorName}/${variant.buildType.name}",
+            def kotlinDebugTree = fileTree(dir: "$project.layout.buildDirectory/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
+            def javaDebugTree = fileTree(dir: "$project.layout.buildDirectory/intermediates/classes/${variant.flavorName}/${variant.buildType.name}",
                     excludes: fileFilter)
             def mainSrc = "$project.projectDir/src/main/java"
 
             sourceDirectories.setFrom(files([mainSrc]))
             classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
-            executionData.setFrom(fileTree(dir: project.buildDir, includes: [
+            executionData.setFrom(fileTree(dir: project.layout.buildDirectory, includes: [
                 "jacoco/test${variant.name.capitalize()}UnitTest.exec",
                 'outputs/code-coverage/connected/*coverage.ec'
             ]))
