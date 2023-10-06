@@ -11,7 +11,7 @@ import certifi
 from mach.site import PythonVirtualenv
 from mach.util import get_state_dir
 
-MINIMUM_RUST_VERSION = "1.66.0"
+MINIMUM_RUST_VERSION = "1.70.0"
 
 
 def get_tools_dir(srcdir=False):
