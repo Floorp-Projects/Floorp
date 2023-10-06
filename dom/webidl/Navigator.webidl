@@ -373,8 +373,3 @@ partial interface Navigator {
   [Pref="dom.media.autoplay-policy-detection.enabled"]
   AutoplayPolicy getAutoplayPolicy(AudioContext context);
 };
-
-// https://html.spec.whatwg.org/multipage/interaction.html#the-useractivation-interface
-partial interface Navigator {
-  [SameObject] readonly attribute UserActivation userActivation;
-};
