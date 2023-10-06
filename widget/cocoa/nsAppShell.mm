@@ -169,11 +169,6 @@ void OnUncaughtException(NSException* aException) {
 #endif
 }
 
-- (void)run {
-  _didLaunch = YES;
-  [super run];
-}
-
 - (void)sendEvent:(NSEvent*)anEvent {
   mozilla::BackgroundHangMonitor().NotifyActivity();
 
@@ -189,7 +184,6 @@ void OnUncaughtException(NSException* aException) {
                         untilDate:(NSDate*)expiration
                            inMode:(NSString*)mode
                           dequeue:(BOOL)flag {
-  MOZ_ASSERT([NSApp didLaunch]);
   if (expiration) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
@@ -715,7 +709,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
     NS_ASSERTION(mAutoreleasePools && ::CFArrayGetCount(mAutoreleasePools),
                  "No autorelease pool for native event");
 
-    if (aMayWait && [(GeckoNSApplication*)NSApp didLaunch]) {
+    if (aMayWait) {
       currentMode = [currentRunLoop currentMode];
       if (!currentMode) currentMode = NSDefaultRunLoopMode;
       NSEvent* nextEvent = [NSApp nextEventMatchingMask:NSEventMaskAny
