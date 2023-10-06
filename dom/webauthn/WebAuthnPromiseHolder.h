@@ -24,11 +24,11 @@ namespace mozilla::dom {
  * at least one of Resolve(), Reject(), or Disconnect().
  */
 
-typedef MozPromise<RefPtr<nsICtapRegisterResult>, nsresult, true>
-    WebAuthnRegisterPromise;
+using WebAuthnRegisterPromise =
+    MozPromise<RefPtr<nsIWebAuthnRegisterResult>, nsresult, true>;
 
-typedef MozPromise<RefPtr<nsICtapSignResult>, nsresult, true>
-    WebAuthnSignPromise;
+using WebAuthnSignPromise =
+    MozPromise<RefPtr<nsIWebAuthnSignResult>, nsresult, true>;
 
 class WebAuthnRegisterPromiseHolder final : public nsIWebAuthnRegisterPromise {
  public:

@@ -4,26 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CtapArgs.h"
+#include "WebAuthnArgs.h"
 #include "WebAuthnEnumStrings.h"
 #include "WebAuthnUtil.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_ISUPPORTS(CtapRegisterArgs, nsICtapRegisterArgs)
+NS_IMPL_ISUPPORTS(WebAuthnRegisterArgs, nsIWebAuthnRegisterArgs)
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetOrigin(nsAString& aOrigin) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetOrigin(nsAString& aOrigin) {
   aOrigin = mInfo.Origin();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   nsresult rv = HashCString(mInfo.ClientDataJSON(), aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
@@ -33,44 +30,37 @@ CtapRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetRpId(nsAString& aRpId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetRpId(nsAString& aRpId) {
   aRpId = mInfo.RpId();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetRpName(nsAString& aRpName) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetRpName(nsAString& aRpName) {
   aRpName = mInfo.Rp().Name();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetUserId(nsTArray<uint8_t>& aUserId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-  aUserId.Clear();
-  aUserId.AppendElements(mInfo.User().Id());
+WebAuthnRegisterArgs::GetUserId(nsTArray<uint8_t>& aUserId) {
+  aUserId.Assign(mInfo.User().Id());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetUserName(nsAString& aUserName) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetUserName(nsAString& aUserName) {
   aUserName = mInfo.User().Name();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetUserDisplayName(nsAString& aUserDisplayName) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetUserDisplayName(nsAString& aUserDisplayName) {
   aUserDisplayName = mInfo.User().DisplayName();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetCoseAlgs(nsTArray<int32_t>& aCoseAlgs) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetCoseAlgs(nsTArray<int32_t>& aCoseAlgs) {
   aCoseAlgs.Clear();
   for (const CoseAlg& coseAlg : mInfo.coseAlgs()) {
     aCoseAlgs.AppendElement(coseAlg.alg());
@@ -79,8 +69,8 @@ CtapRegisterArgs::GetCoseAlgs(nsTArray<int32_t>& aCoseAlgs) {
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetExcludeList(nsTArray<nsTArray<uint8_t> >& aExcludeList) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetExcludeList(
+    nsTArray<nsTArray<uint8_t> >& aExcludeList) {
   aExcludeList.Clear();
   for (const WebAuthnScopedCredential& cred : mInfo.ExcludeList()) {
     aExcludeList.AppendElement(cred.id().Clone());
@@ -89,51 +79,43 @@ CtapRegisterArgs::GetExcludeList(nsTArray<nsTArray<uint8_t> >& aExcludeList) {
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetCredProps(bool* aCredProps) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnRegisterArgs::GetCredProps(bool* aCredProps) {
   *aCredProps = mCredProps;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   *aHmacCreateSecret = mHmacCreateSecret;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetMinPinLength(bool* aMinPinLength) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnRegisterArgs::GetMinPinLength(bool* aMinPinLength) {
   *aMinPinLength = mMinPinLength;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetResidentKey(nsAString& aResidentKey) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetResidentKey(nsAString& aResidentKey) {
   aResidentKey = mInfo.AuthenticatorSelection().residentKey();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetUserVerification(nsAString& aUserVerificationRequirement) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetUserVerification(
+    nsAString& aUserVerificationRequirement) {
   aUserVerificationRequirement =
       mInfo.AuthenticatorSelection().userVerificationRequirement();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetAuthenticatorAttachment(
+WebAuthnRegisterArgs::GetAuthenticatorAttachment(
     nsAString& aAuthenticatorAttachment) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
   if (mInfo.AuthenticatorSelection().authenticatorAttachment().isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -143,40 +125,34 @@ CtapRegisterArgs::GetAuthenticatorAttachment(
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnRegisterArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
   *aTimeoutMS = mInfo.TimeoutMS();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetAttestationConveyancePreference(
+WebAuthnRegisterArgs::GetAttestationConveyancePreference(
     nsAString& aAttestationConveyancePreference) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
   aAttestationConveyancePreference = mInfo.attestationConveyancePreference();
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(CtapSignArgs, nsICtapSignArgs)
+NS_IMPL_ISUPPORTS(WebAuthnSignArgs, nsIWebAuthnSignArgs)
 
 NS_IMETHODIMP
-CtapSignArgs::GetOrigin(nsAString& aOrigin) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnSignArgs::GetOrigin(nsAString& aOrigin) {
   aOrigin = mInfo.Origin();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetRpId(nsAString& aRpId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnSignArgs::GetRpId(nsAString& aRpId) {
   aRpId = mInfo.RpId();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnSignArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   nsresult rv = HashCString(mInfo.ClientDataJSON(), aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
@@ -186,8 +162,7 @@ CtapSignArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetAllowList(nsTArray<nsTArray<uint8_t> >& aAllowList) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnSignArgs::GetAllowList(nsTArray<nsTArray<uint8_t> >& aAllowList) {
   aAllowList.Clear();
   for (const WebAuthnScopedCredential& cred : mInfo.AllowList()) {
     aAllowList.AppendElement(cred.id().Clone());
@@ -196,9 +171,7 @@ CtapSignArgs::GetAllowList(nsTArray<nsTArray<uint8_t> >& aAllowList) {
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
   for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
       *aHmacCreateSecret =
@@ -211,9 +184,7 @@ CtapSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetAppId(nsAString& aAppId) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-
+WebAuthnSignArgs::GetAppId(nsAString& aAppId) {
   for (const WebAuthnExtension& ext : mInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
       aAppId = ext.get_WebAuthnExtensionAppId().appIdentifier();
@@ -225,15 +196,13 @@ CtapSignArgs::GetAppId(nsAString& aAppId) {
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetUserVerification(nsAString& aUserVerificationRequirement) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnSignArgs::GetUserVerification(nsAString& aUserVerificationRequirement) {
   aUserVerificationRequirement = mInfo.userVerificationRequirement();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
+WebAuthnSignArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
   *aTimeoutMS = mInfo.TimeoutMS();
   return NS_OK;
 }

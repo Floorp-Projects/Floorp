@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 [uuid(0567c384-a728-11ed-85f7-030324a370f0)]
-interface nsICtapRegisterResult : nsISupports {
+interface nsIWebAuthnRegisterResult : nsISupports {
     // The serialied attestation object as defined in
     // https://www.w3.org/TR/webauthn-2/#sctn-attestation
     // Includes the format, the attestation statement, and
@@ -24,14 +24,14 @@ interface nsICtapRegisterResult : nsISupports {
     // bug 1593571
     // readonly attribute bool hmacCreateSecret;
 
-    readonly attribute bool credPropsRk;
+    [must_use] attribute bool credPropsRk;
 };
 
-// The nsICtapSignResult interface is used to construct IPDL-defined
+// The nsIWebAuthnSignResult interface is used to construct IPDL-defined
 // WebAuthnGetAssertionResult from either Rust or C++.
 //
 [uuid(05fff816-a728-11ed-b9ac-ff38cc2c8c28)]
-interface nsICtapSignResult : nsISupports {
+interface nsIWebAuthnSignResult : nsISupports {
     // The ID field of the PublicKeyCredentialDescriptor returned
     // from authenticatorGetAssertion.
     readonly attribute Array<octet> credentialId;

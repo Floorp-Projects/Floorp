@@ -13714,19 +13714,13 @@
   mirror: always
   rust: true
 
-# Dispatch WebAuthn requests to virtual authenticators. (mutually exclusive
-# with webauthn_enable_android_fido2, and webauthn_enable_usbtoken)
+# Dispatch WebAuthn requests to virtual authenticators (mutually exclusive
+# with and webauthn_enable_usbtoken)
 - name: security.webauth.webauthn_enable_softtoken
   type: RelaxedAtomicBool
   value: false
   mirror: always
   rust: true
-
-# Dispatch WebAuthn requests to the Android platform API
-- name: security.webauth.webauthn_enable_android_fido2
-  type: RelaxedAtomicBool
-  value: @IS_ANDROID@
-  mirror: always
 
 # residentKey support when using Android platform API
 - name: security.webauthn.webauthn_enable_android_fido2.residentkey
