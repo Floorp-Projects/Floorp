@@ -640,5 +640,4 @@ ${helpers.predefined_type(
     spec="Non-standard (https://github.com/atanassov/css-zoom/ is the closest)",
     gecko_pref="layout.css.zoom.enabled",
     affects="layout",
-    enabled_in="ua",
 )}

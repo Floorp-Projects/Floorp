@@ -1891,10 +1891,6 @@ impl ScrollbarGutter {
 #[allow(missing_docs)]
 pub enum Zoom {
     Normal,
-    /// An internal value that resets the effective zoom to 1. Used for scrollbar parts, which
-    /// disregard zoom. We use this name because WebKit has this value exposed to the web.
-    #[parse(condition = "ParserContext::in_ua_sheet")]
-    Document,
     Value(NonNegativeNumberOrPercentage),
 }
 
