@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-09-14T11:58:24.742161'
+updated_at: '2023-10-06T16:16:50.037777'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -556,6 +556,10 @@ people:
     bmo_id: 701257
     name: James Teow
     nick: jteow
+  - &jules
+    bmo_id: 699161
+    name: Jules Simplicio
+    nick: jules
   - &jwatt
     bmo_id: 32767
     name: Jonathan Watt
@@ -3265,6 +3269,7 @@ modules:
           - *sfoster
           - *amy
           - *emilio
+          - *jules
         machine_name: desktop_theme
 
       - name: Desktop UI
@@ -4178,5 +4183,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e4da3d7c66a8363251a20f6cc684a59269e31e91
-  export: 947138f76a52089e6c48e4f689dfe612158f3a88
+  config: 749810c66b0d1062b7c9d1d1344b2ad0e6178be2
+  export: b782b601a12b6497eb519c7c1e08335ccdba3e72
