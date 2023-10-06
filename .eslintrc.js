@@ -443,7 +443,6 @@ module.exports = {
         "no-caller": "off",
         "no-cond-assign": "off",
         "no-control-regex": "off",
-        "no-debugger": "off",
         "no-else-return": "off",
         "no-empty": "off",
         "no-func-assign": "off",
