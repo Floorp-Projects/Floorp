@@ -555,8 +555,7 @@ struct CharTraits<wchar_t> {
 
 static void LowerPriority() {
 #if defined(XP_WIN)
-  Unused << SetPriorityClass(GetCurrentProcess(),
-                             PROCESS_MODE_BACKGROUND_BEGIN);
+  Unused << SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 #else  // Linux, MacOS X, etc...
   Unused << nice(20);
 #endif
