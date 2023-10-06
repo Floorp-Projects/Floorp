@@ -350,7 +350,7 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
     return false;
   }
 
-  setCurrentChunk(0);
+  moveToStartOfChunk(0);
   setStartToCurrentPosition();
   poisonAndInitCurrentChunk();
 
@@ -514,7 +514,7 @@ void js::Nursery::leaveZealMode() {
 
   MOZ_ASSERT(isEmpty());
 
-  setCurrentChunk(0);
+  moveToStartOfChunk(0);
   setStartToCurrentPosition();
   poisonAndInitCurrentChunk();
 }
@@ -589,7 +589,7 @@ bool Nursery::moveToNextChunk() {
     MOZ_ASSERT(chunkno < allocatedChunkCount());
   }
 
-  setCurrentChunk(chunkno);
+  moveToStartOfChunk(chunkno);
   poisonAndInitCurrentChunk();
   return true;
 }
@@ -1707,14 +1707,14 @@ void js::Nursery::clear() {
   if (!gc->hasZealMode(ZealMode::GenerationalGC) ||
       (gc->hasZealMode(ZealMode::GenerationalGC) &&
        currentChunk_ + 1 == maxChunkCount())) {
-    setCurrentChunk(0);
+    moveToStartOfChunk(0);
   }
 
   // Set current start position for isEmpty checks.
   setStartToCurrentPosition();
 }
 
-MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
+MOZ_ALWAYS_INLINE void js::Nursery::moveToStartOfChunk(unsigned chunkno) {
   MOZ_ASSERT(chunkno < allocatedChunkCount());
 
   currentChunk_ = chunkno;

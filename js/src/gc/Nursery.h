@@ -568,11 +568,9 @@ class Nursery {
 
   NurseryChunk& chunk(unsigned index) const { return *chunks_[index]; }
 
-  // Set the current chunk. This updates the currentChunk_, position_ and
-  // currentEnd_ values as appropriate. It'll also poison the chunk, either a
-  // portion of the chunk if it is already the current chunk, or the whole chunk
-  // if fullPoison is true or it is not the current chunk.
-  void setCurrentChunk(unsigned chunkno);
+  // Set the allocation position to the start of a chunk. This sets
+  // currentChunk_, position_ and currentEnd_ values as appropriate.
+  void moveToStartOfChunk(unsigned chunkno);
 
   bool initFirstChunk(AutoLockGCBgAlloc& lock);
 
@@ -584,7 +582,7 @@ class Nursery {
   void setStartToCurrentPosition();
 
   // Allocate the next chunk, or the first chunk for initialization.
-  // Callers will probably want to call setCurrentChunk(0) next.
+  // Callers will probably want to call moveToStartOfChunk(0) next.
   [[nodiscard]] bool allocateNextChunk(unsigned chunkno,
                                        AutoLockGCBgAlloc& lock);
 
