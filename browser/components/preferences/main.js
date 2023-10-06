@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
+  WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -411,6 +412,13 @@ var gMainPane = {
       "command",
       gMainPane.onBrowserRestoreSessionChange
     );
+    if (AppConstants.platform == "win") {
+      setEventListener(
+        "windowsLaunchOnLogin",
+        "command",
+        gMainPane.onWindowsLaunchOnLoginChange
+      );
+    }
     gMainPane.updateBrowserStartupUI =
       gMainPane.updateBrowserStartupUI.bind(gMainPane);
     Preferences.get("browser.privatebrowsing.autostart").on(
@@ -634,6 +642,31 @@ var gMainPane = {
       }
 
       if (AppConstants.platform == "win") {
+        // Check for a launch on login registry key
+        // This accounts for if a user manually changes it in the registry
+        // Disabling in Task Manager works outside of just deleting the registry key
+        // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+        // but it is not possible to change it back to enabled as the disabled value is just a random
+        // hexadecimal number
+        let launchOnLoginCheckbox = document.getElementById(
+          "windowsLaunchOnLogin"
+        );
+        let registryName = WindowsLaunchOnLogin.getLaunchOnLoginRegistryName();
+        WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
+          try {
+            // Reflect registry key value in about:preferences
+            launchOnLoginCheckbox.checked = wrk.hasValue(registryName);
+          } catch (e) {
+            // We should only end up here if we fail to open the registry
+            console.error("Failed to open Windows registry", e);
+          }
+        });
+
+        let approvedByWindows = WindowsLaunchOnLogin.getLaunchOnLoginApproved();
+        launchOnLoginCheckbox.disabled = !approvedByWindows;
+        document.getElementById("windowsLaunchOnLoginDisabledBox").hidden =
+          approvedByWindows;
+
         // On Windows, the Application Update setting is an installation-
         // specific preference, not a profile-specific one. Show a warning to
         // inform users of this.
@@ -1622,6 +1655,18 @@ var gMainPane = {
       newValue = this.STARTUP_PREF_HOMEPAGE;
     }
     startupPref.value = newValue;
+  },
+
+  onWindowsLaunchOnLoginChange(event) {
+    if (AppConstants.platform !== "win") {
+      return;
+    }
+    if (event.target.checked) {
+      WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
+    } else {
+      // windowsLaunchOnLogin has been unchecked: delete registry key
+      WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
+    }
   },
 
   // TABS

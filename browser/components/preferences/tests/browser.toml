@@ -273,3 +273,6 @@ support-files = [
 ["browser_trendingsuggestions.js"]
 
 ["browser_warning_permanent_private_browsing.js"]
+
+["browser_windows_launch_on_login.js"]
+run-if = ["os == 'win'"]

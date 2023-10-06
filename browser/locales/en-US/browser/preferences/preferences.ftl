@@ -155,6 +155,11 @@ startup-restore-windows-and-tabs =
     .label = Open previous windows and tabs
     .accesskey = s
 
+windows-launch-on-login =
+    .label = Open { -brand-short-name } automatically when your computer starts up
+    .accesskey = O
+windows-launch-on-login-disabled = This preference has been disabled in Windows. To change, visit <a data-l10n-name="startup-link">Startup Apps</a> in System settings.
+
 startup-restore-warn-on-quit =
     .label = Warn you when quitting the browser
 
