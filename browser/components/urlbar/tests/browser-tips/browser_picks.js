@@ -14,10 +14,6 @@ add_setup(async function () {
     window.windowUtils.disableNonTestMouseEvents(false);
   });
   Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.eventTelemetry.enabled", true]],
-  });
 });
 
 add_task(async function enter_mainButton_url() {

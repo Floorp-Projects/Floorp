@@ -30,7 +30,6 @@ add_setup(async () => {
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.trending.featureGate", true],
       ["browser.urlbar.trending.requireSearchMode", false],
-      ["browser.urlbar.eventTelemetry.enabled", true],
       // Bug 1775917: Disable the persisted-search-terms search tip because if
       // not dismissed, it can cause issues with other search tests.
       ["browser.urlbar.tipShownCount.searchTip_persist", 999],
