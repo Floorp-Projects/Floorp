@@ -1873,17 +1873,17 @@ JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
   return NewString<js::CanGC>(cx, std::move(utf16), length, heap);
 }
 
-MOZ_ALWAYS_INLINE JSString* ExternalStringCache::lookup(const char16_t* chars,
-                                                        size_t len) const {
+MOZ_ALWAYS_INLINE JSExternalString* ExternalStringCache::lookupExternal(
+    const char16_t* chars, size_t len) const {
   AutoCheckCannotGC nogc;
 
   for (size_t i = 0; i < NumEntries; i++) {
-    JSString* str = entries_[i];
+    JSExternalString* str = externalEntries_[i];
     if (!str || str->length() != len) {
       continue;
     }
 
-    const char16_t* strChars = str->asLinear().nonInlineTwoByteChars(nogc);
+    const char16_t* strChars = str->nonInlineTwoByteChars(nogc);
     if (chars == strChars) {
       // Note that we don't need an incremental barrier here or below.
       // The cache is purged on GC so any string we get from the cache
@@ -1902,14 +1902,43 @@ MOZ_ALWAYS_INLINE JSString* ExternalStringCache::lookup(const char16_t* chars,
   return nullptr;
 }
 
-MOZ_ALWAYS_INLINE void ExternalStringCache::put(JSString* str) {
-  MOZ_ASSERT(str->isExternal());
-
+MOZ_ALWAYS_INLINE void ExternalStringCache::putExternal(JSExternalString* str) {
+  MOZ_ASSERT(str->hasTwoByteChars());
   for (size_t i = NumEntries - 1; i > 0; i--) {
-    entries_[i] = entries_[i - 1];
+    externalEntries_[i] = externalEntries_[i - 1];
+  }
+  externalEntries_[0] = str;
+}
+
+MOZ_ALWAYS_INLINE JSInlineString* ExternalStringCache::lookupInline(
+    const char16_t* chars, size_t len) const {
+  MOZ_ASSERT(CanStoreCharsAsLatin1(chars, len));
+  MOZ_ASSERT(JSThinInlineString::lengthFits<Latin1Char>(len));
+
+  AutoCheckCannotGC nogc;
+
+  for (size_t i = 0; i < NumEntries; i++) {
+    JSInlineString* str = inlineEntries_[i];
+    if (!str || str->length() != len) {
+      continue;
+    }
+
+    const JS::Latin1Char* strChars = str->latin1Chars(nogc);
+    if (EqualChars(chars, strChars, len)) {
+      return str;
+    }
   }
 
-  entries_[0] = str;
+  return nullptr;
+}
+
+MOZ_ALWAYS_INLINE void ExternalStringCache::putInline(JSInlineString* str) {
+  MOZ_ASSERT(str->hasLatin1Chars());
+
+  for (size_t i = NumEntries - 1; i > 0; i--) {
+    inlineEntries_[i] = inlineEntries_[i - 1];
+  }
+  inlineEntries_[0] = str;
 }
 
 JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
@@ -1920,26 +1949,35 @@ JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
     return str;
   }
 
+  ExternalStringCache& cache = cx->zone()->externalStringCache();
+
   if (JSThinInlineString::lengthFits<Latin1Char>(n) &&
       CanStoreCharsAsLatin1(s, n)) {
     *allocatedExternal = false;
-    return NewInlineStringDeflated<AllowGC::CanGC>(
+    if (JSInlineString* str = cache.lookupInline(s, n)) {
+      return str;
+    }
+    JSInlineString* str = NewInlineStringDeflated<AllowGC::CanGC>(
         cx, mozilla::Range<const char16_t>(s, n), heap);
+    if (!str) {
+      return nullptr;
+    }
+    cache.putInline(str);
+    return str;
   }
 
-  ExternalStringCache& cache = cx->zone()->externalStringCache();
-  if (JSString* str = cache.lookup(s, n)) {
+  if (JSExternalString* str = cache.lookupExternal(s, n)) {
     *allocatedExternal = false;
     return str;
   }
 
-  JSString* str = JSExternalString::new_(cx, s, n, callbacks);
+  JSExternalString* str = JSExternalString::new_(cx, s, n, callbacks);
   if (!str) {
     return nullptr;
   }
 
   *allocatedExternal = true;
-  cache.put(str);
+  cache.putExternal(str);
   return str;
 }
 
