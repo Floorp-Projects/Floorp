@@ -18,6 +18,7 @@ support-files = ["../head-common.js"]
 ["browser_disabled_migrator.js"]
 
 ["browser_do_migration.js"]
+fail-if = ["a11y_checks"] # Bug 1855491 clicked panel-item may not be focusable
 
 ["browser_entrypoint_telemetry.js"]
 
