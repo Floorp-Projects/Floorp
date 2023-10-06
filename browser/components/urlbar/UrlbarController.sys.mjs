@@ -995,48 +995,6 @@ class TelemetryEvent {
       return;
     }
 
-    if (action == "go_button") {
-      // Fall back since the conventional telemetry dones't support "go_button" action.
-      action = "click";
-    }
-
-    let endTime = (event && event.timeStamp) || Cu.now();
-    let startTime = startEventInfo.timeStamp || endTime;
-    // Synthesized events in tests may have a bogus timeStamp, causing a
-    // subtraction between monotonic and non-monotonic timestamps; that's why
-    // abs is necessary here. It should only happen in tests, anyway.
-    let elapsed = Math.abs(Math.round(endTime - startTime));
-
-    // Rather than listening to the pref, just update status when we record an
-    // event, if the pref changed from the last time.
-    let recordingEnabled = lazy.UrlbarPrefs.get("eventTelemetry.enabled");
-    if (this._eventRecordingEnabled != recordingEnabled) {
-      this._eventRecordingEnabled = recordingEnabled;
-      Services.telemetry.setEventRecordingEnabled("urlbar", recordingEnabled);
-    }
-
-    let extra = {
-      elapsed: elapsed.toString(),
-      numChars,
-      numWords,
-    };
-
-    if (method == "engagement") {
-      extra.selIndex = details.selIndex.toString();
-      extra.selType = details.selType;
-      extra.provider = details.provider || "";
-    }
-
-    // We invoke recordEvent regardless, if recording is disabled this won't
-    // report the events remotely, but will count it in the event_counts scalar.
-    Services.telemetry.recordEvent(
-      this._category,
-      method,
-      action,
-      startEventInfo.interactionType,
-      extra
-    );
-
     Services.telemetry.scalarAdd(
       method == "engagement"
         ? TELEMETRY_SCALAR_ENGAGEMENT
