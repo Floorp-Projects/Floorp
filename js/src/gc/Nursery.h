@@ -581,7 +581,7 @@ class Nursery {
   void poisonAndInitCurrentChunk(size_t extent = gc::ChunkSize);
 
   void setCurrentEnd();
-  void setStartPosition();
+  void setStartToCurrentPosition();
 
   // Allocate the next chunk, or the first chunk for initialization.
   // Callers will probably want to call setCurrentChunk(0) next.
