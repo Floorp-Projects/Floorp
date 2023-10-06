@@ -320,6 +320,7 @@ class SitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2121537
     @SmokeTest
     @Test
     fun fileUploadPermissionTest() {
