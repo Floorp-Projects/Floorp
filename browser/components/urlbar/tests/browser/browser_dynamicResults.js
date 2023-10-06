@@ -201,6 +201,10 @@ add_task(async function viewCreated() {
       DYNAMIC_TYPE_NAME,
       "row[dynamicType]"
     );
+    Assert.ok(
+      !row.hasAttribute("has-url"),
+      "Row should not have has-url since view template does not contain .urlbarView-url"
+    );
     let inner = row.querySelector(".urlbarView-row-inner");
     Assert.ok(inner, ".urlbarView-row-inner should exist");
 
@@ -645,6 +649,68 @@ add_task(async function highlighting() {
     Assert.ok(!highlightedTextNode, "The <strong> child node was deleted.");
   }, new TestHighlightProviderOveridden());
 });
+
+// View templates that contain a top-level `.urlbarView-url` element should
+// cause `has-url` to be set on `.urlbarView-row`.
+add_task(async function hasUrlTopLevel() {
+  await doHasUrlTest({
+    name: "url",
+    tag: "span",
+    classList: ["urlbarView-url"],
+  });
+});
+
+// View templates that contain a descendant `.urlbarView-url` element should
+// cause `has-url` to be set on `.urlbarView-row`.
+add_task(async function hasUrlDescendant() {
+  await doHasUrlTest({
+    children: [
+      {
+        children: [
+          {
+            children: [
+              {
+                name: "url",
+                tag: "span",
+                classList: ["urlbarView-url"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+});
+
+async function doHasUrlTest(viewTemplate) {
+  let provider = new TestProvider();
+  provider.getViewTemplate = () => viewTemplate;
+  provider.getViewUpdate = (result, idsByName) => {
+    return {
+      url: {
+        textContent: "https://example.com/",
+      },
+    };
+  };
+
+  await withDynamicTypeProvider(async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+
+    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+    Assert.equal(
+      row.result.type,
+      UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      "Sanity check: The expected row is present"
+    );
+    Assert.ok(row.hasAttribute("has-url"), "Row should have has-url");
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  }, provider);
+}
 
 /**
  * Provides a dynamic result.

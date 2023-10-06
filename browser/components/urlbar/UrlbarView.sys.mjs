@@ -1412,22 +1412,45 @@ export class UrlbarView {
       UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
     if (!viewTemplate) {
       console.error(`No viewTemplate found for ${result.providerName}`);
+      return;
     }
-    this.#buildViewForDynamicType(
+    let hasUrl = this.#buildViewForDynamicType(
       dynamicType,
       item._content,
       item._elements,
       viewTemplate
     );
+    item.toggleAttribute("has-url", hasUrl);
     this.#setRowSelectable(item, item._content.hasAttribute("selectable"));
   }
 
+  /**
+   * Recursively builds a row's DOM for a dynamic result type.
+   *
+   * @param {string} type
+   *   The name of the dynamic type.
+   * @param {Element} parentNode
+   *   The element being recursed into. Pass `row._content`
+   *   (i.e., the row's `.urlbarView-row-inner`) to start with.
+   * @param {Map} elementsByName
+   *   The `row._elements` map.
+   * @param {object} template
+   *   The template object being recursed into. Pass the top-level template
+   *   object to start with.
+   * @returns {boolean}
+   *   Whether the given template or any of its descendants contains a
+   *   `.urlbarView-url` element.
+   */
   #buildViewForDynamicType(type, parentNode, elementsByName, template) {
+    let hasUrl = false;
+
     // Set attributes on parentNode.
     this.#setDynamicAttributes(parentNode, template.attributes);
+
     // Add classes to parentNode's classList.
     if (template.classList) {
       parentNode.classList.add(...template.classList);
+      hasUrl ||= template.classList.includes("urlbarView-url");
     }
     if (template.overflowable) {
       parentNode.classList.add("urlbarView-overflowable");
@@ -1436,13 +1459,22 @@ export class UrlbarView {
       parentNode.setAttribute("name", template.name);
       elementsByName.set(template.name, parentNode);
     }
+
     // Recurse into children.
     for (let childTemplate of template.children || []) {
       let child = this.#createElement(childTemplate.tag);
       child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
-      this.#buildViewForDynamicType(type, child, elementsByName, childTemplate);
+      let descendantHasUrl = this.#buildViewForDynamicType(
+        type,
+        child,
+        elementsByName,
+        childTemplate
+      );
+      hasUrl ||= descendantHasUrl;
     }
+
+    return hasUrl;
   }
 
   #createRowContentForRichSuggestion(item, result) {
