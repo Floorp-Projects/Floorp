@@ -573,6 +573,9 @@ DOMHighResTimeStamp Performance::ResolveStartTimeForMeasure(
 
 static std::string GetMarkerFilename() {
   std::stringstream s;
+  if (char* markerDir = getenv("MOZ_PERFORMANCE_MARKER_DIR")) {
+    s << markerDir << "/";
+  }
 #ifdef XP_WIN
   s << "marker-" << GetCurrentProcessId() << ".txt";
 #else
