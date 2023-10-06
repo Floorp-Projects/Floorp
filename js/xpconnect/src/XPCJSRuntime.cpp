@@ -174,7 +174,7 @@ class AsyncFreeSnowWhite : public Runnable {
 
   nsresult Dispatch() {
     nsCOMPtr<nsIRunnable> self(this);
-    return NS_DispatchToCurrentThreadQueue(self.forget(), 500,
+    return NS_DispatchToCurrentThreadQueue(self.forget(), 1000,
                                            EventQueuePriority::Idle);
   }
 
