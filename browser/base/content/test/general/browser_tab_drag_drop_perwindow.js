@@ -4,12 +4,6 @@
 
 requestLongerTimeout(2);
 
-const EVENTUTILS_URL =
-  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js";
-var EventUtils = {};
-
-Services.scriptloader.loadSubScript(EVENTUTILS_URL, EventUtils);
-
 /**
  * Tests that tabs from Private Browsing windows cannot be dragged
  * into non-private windows, and vice-versa.

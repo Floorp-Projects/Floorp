@@ -2979,7 +2979,14 @@ function synthesizeDropAfterDragOver(
     );
     sendDragEvent(event, aDestElement, aDestWindow);
   }
+  // Don't run accessibility checks for this click, since we're not actually
+  // clicking. It's just generated as part of the drop.
+  // this.AccessibilityUtils might not be set if this isn't a browser test or
+  // if a browser test has loaded its own copy of EventUtils for some reason.
+  // In the latter case, the test probably shouldn't do that.
+  this.AccessibilityUtils?.suppressClickHandling(true);
   synthesizeMouse(aDestElement, 2, 2, { type: "mouseup" }, aDestWindow);
+  this.AccessibilityUtils?.suppressClickHandling(false);
 
   return effect;
 }
