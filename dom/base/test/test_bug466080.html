@@ -128,6 +128,7 @@ async function onWindowLoad() {
             }
 
             xhr.onloadend = function() {
+                // eslint-disable-next-line no-eval
                 var success = eval(xhr.status + test.status_check);
                 ok(success, test.error);
 

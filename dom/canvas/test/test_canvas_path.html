@@ -169,6 +169,7 @@ function test_large_canvas() {
 function shouldThrow(ctx, s) {
   var _ok = false;
   try {
+    // eslint-disable-next-line no-eval
     eval(s);
   } catch(e) {
     _ok = true;
@@ -177,10 +178,12 @@ function shouldThrow(ctx, s) {
 }
 
 function shouldBeTrue(ctx, path, s) {
+  // eslint-disable-next-line no-eval
   var _ok = eval(s);
   ok(_ok, s);
 }
 function shouldBeFalse(ctx, path, s) {
+  // eslint-disable-next-line no-eval
   var _ok = !eval(s);
   ok(_ok, s);
 }

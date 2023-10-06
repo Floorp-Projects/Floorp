@@ -20,6 +20,7 @@
 
   function runTest() {
     try {
+      // eslint-disable-next-line no-eval
       eval("1");
       ok(false, "should throw");
     }

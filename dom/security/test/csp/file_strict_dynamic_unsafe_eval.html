@@ -7,6 +7,7 @@
 <div id="testdiv">blocked</div>
 
 <script nonce="foo">
+  // eslint-disable-next-line no-eval
   eval('document.getElementById("testdiv").innerHTML = "allowed";');
 </script>
 

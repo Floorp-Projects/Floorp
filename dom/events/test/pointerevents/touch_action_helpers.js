@@ -238,5 +238,6 @@ async function pointerevent_touch_action_table_test_touch_manual() {
 
 // This the stuff that runs the appropriate body function above
 
+// eslint-disable-next-line no-eval
 var test = eval(_ACTIVE_TEST_NAME.replace(/-/g, "_"));
 waitUntilApzStable().then(test).then(subtestDone, subtestFailed);

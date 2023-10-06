@@ -1,3 +1,4 @@
+/* eslint-disable no-eval */
 // some javascript for the CSP eval() tests
 
 function logResult(str, passed) {

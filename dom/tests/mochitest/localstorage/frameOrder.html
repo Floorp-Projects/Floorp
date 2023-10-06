@@ -6,6 +6,7 @@ function doTest()
 {
   var query = location.search.substring(1);
   query = unescape(query);
+  // eslint-disable-next-line no-eval
   var keyNames = eval(query);
 
   parent.is(localStorage.a, "10", "a = 10");

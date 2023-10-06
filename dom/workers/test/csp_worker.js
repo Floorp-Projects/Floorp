@@ -6,6 +6,7 @@ onmessage = function (event) {
   if (event.data.do == "eval") {
     var res;
     try {
+      // eslint-disable-next-line no-eval
       res = eval("40+2");
     } catch (ex) {
       res = ex + "";
