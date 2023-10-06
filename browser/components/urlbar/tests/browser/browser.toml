@@ -609,6 +609,26 @@ https_first_disabled = true
 ["browser_urlbar_annotation.js"]
 support-files = ["redirect_to.sjs"]
 
+["browser_urlbar_event_telemetry_abandonment.js"]
+support-files = [
+  "searchSuggestionEngine.xml",
+  "searchSuggestionEngine.sjs",
+]
+
+["browser_urlbar_event_telemetry_engagement.js"]
+https_first_disabled = true
+skip-if = [
+  "apple_catalina", # Bug 1625690
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "os == 'linux'", # Bug 1748986, bug 1775824
+]
+support-files = [
+  "searchSuggestionEngine.xml",
+  "searchSuggestionEngine.sjs",
+]
+
+["browser_urlbar_event_telemetry_noEvent.js"]
+
 ["browser_urlbar_selection.js"]
 skip-if = ["(os == 'mac')"] # bug 1570474
 

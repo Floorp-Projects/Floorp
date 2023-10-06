@@ -131,6 +131,10 @@ browser.urlbar.dnsResolveSingleWordsAfterSearch (number, default: 0)
   "Did you mean to go to 'host'" prompt.
   Set to 0. 0: Never resolve, 1: Use heuristics, 2. Always resolve.
 
+browser.urlbar.eventTelemetry.enabled (boolean, default: false)
+  Whether telemetry events should be recorded. This is expensive and should only
+  be enabled by experiments with a small population.
+
 browser.urlbar.extension.timeout (integer, default: 400)
   When sending events to extensions, they have this amount of time in
   milliseconds to respond before timing out. This affects the omnibox API.

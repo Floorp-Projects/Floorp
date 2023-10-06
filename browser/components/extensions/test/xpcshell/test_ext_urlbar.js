@@ -5,6 +5,7 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
@@ -30,6 +31,17 @@ AddonTestUtils.createAppInfo(
 );
 SearchTestUtils.init(this);
 SearchTestUtils.initXPCShellAddonManager(this, "system");
+
+function promiseUninstallCompleted(extensionId) {
+  return new Promise(resolve => {
+    // eslint-disable-next-line mozilla/balanced-listeners
+    ExtensionParent.apiManager.on("uninstall-complete", (type, { id }) => {
+      if (id === extensionId) {
+        executeSoon(resolve);
+      }
+    });
+  });
+}
 
 function getPayload(result) {
   let payload = {};
@@ -1449,4 +1461,46 @@ add_task(async function test_nonPrivateBrowsing() {
   Assert.equal(context.results[1].suggestedIndex, 1);
 
   await ext.unload();
+});
+
+// Tests the engagementTelemetry property.
+add_task(async function test_engagementTelemetry() {
+  let getPrefValue = () => UrlbarPrefs.get("eventTelemetry.enabled");
+
+  Assert.equal(
+    getPrefValue(),
+    false,
+    "Engagement telemetry should be disabled by default"
+  );
+
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    incognitoOverride: "spanning",
+    useAddonManager: "temporary",
+    async background() {
+      await browser.urlbar.engagementTelemetry.set({ value: true });
+      browser.test.sendMessage("ready");
+    },
+  });
+  await ext.startup();
+  await ext.awaitMessage("ready");
+
+  Assert.equal(
+    getPrefValue(),
+    true,
+    "Successfully enabled the engagement telemetry"
+  );
+
+  let completed = promiseUninstallCompleted(ext.id);
+  await ext.unload();
+  await completed;
+
+  Assert.equal(
+    getPrefValue(),
+    false,
+    "Engagement telemetry should be reset after unloading the add-on"
+  );
 });

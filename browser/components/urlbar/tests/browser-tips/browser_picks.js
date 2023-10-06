@@ -14,6 +14,10 @@ add_setup(async function () {
     window.windowUtils.disableNonTestMouseEvents(false);
   });
   Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.eventTelemetry.enabled", true]],
+  });
 });
 
 add_task(async function enter_mainButton_url() {
@@ -173,6 +177,21 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     helpUrl ? "test-help" : "test-picked",
     1
   );
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "urlbar",
+        method: "engagement",
+        object:
+          click && !(helpUrl && UrlbarPrefs.get("resultMenu"))
+            ? "click"
+            : "enter",
+        value: "typed",
+      },
+    ],
+    { category: "urlbar" }
+  );
+
   // Done.
   UrlbarProvidersManager.unregisterProvider(provider);
   if (tab) {
