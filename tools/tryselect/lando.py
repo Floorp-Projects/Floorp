@@ -156,7 +156,10 @@ class Auth0Config:
         return response.json()
 
     def validate_token(self, user_token: dict) -> Optional[dict]:
-        """Verify the given ID token is valid."""
+        """Verify the given user token is valid.
+
+        Validate the ID token, and validate the access token's expiration claim.
+        """
         # Import `auth0-python` here to avoid `ImportError` in tests, since
         # the `python-test` site won't have `auth0-python` installed.
         import jwt
@@ -178,7 +181,20 @@ class Auth0Config:
         try:
             token_verifier.verify(user_token["id_token"])
         except TokenValidationError as e:
-            print("Could not validate existing Auth0 token:", str(e))
+            print("Could not validate existing Auth0 ID token:", str(e))
+            return None
+
+        decoded_access_token = jwt.decode(
+            user_token["access_token"],
+            algorithms=self.algorithms,
+            options={"verify_signature": False},
+        )
+
+        access_token_expiration = decoded_access_token["exp"]
+
+        # Assert that the access token isn't expired or expiring within a minute.
+        if time.time() > access_token_expiration + 60:
+            print("Access token is expired.")
             return None
 
         user_token.update(
