@@ -484,6 +484,29 @@ this.AccessibilityUtils = (function () {
     return accessibilityService.getAccessibleFor(node);
   }
 
+  /**
+   * Find the nearest interactive accessible ancestor for a node.
+   */
+  function findInteractiveAccessible(node) {
+    let acc;
+    // Walk DOM ancestors until we find one with an accessible.
+    for (; node && !acc; node = node.parentNode) {
+      acc = getAccessible(node);
+    }
+    if (!acc) {
+      // No accessible ancestor.
+      return acc;
+    }
+    // Walk a11y ancestors until we find one which is interactive.
+    for (; acc; acc = acc.parent) {
+      if (INTERACTIVE_ROLES.has(acc.role)) {
+        return acc;
+      }
+    }
+    // No interactive ancestor.
+    return null;
+  }
+
   function runIfA11YChecks(task) {
     return (...args) => (gA11YChecks ? task(...args) : null);
   }
@@ -499,7 +522,11 @@ this.AccessibilityUtils = (function () {
    */
   const AccessibilityUtils = {
     assertCanBeClicked(node) {
-      const acc = getAccessible(node);
+      // Click events might fire on an inaccessible or non-interactive
+      // descendant, even if the test author targeted them at an interactive
+      // element. For example, if there's a button with an image inside it,
+      // node might be the image.
+      const acc = findInteractiveAccessible(node);
       if (!acc) {
         if (gEnv.mustHaveAccessibleRule) {
           a11yFail("Node is not accessible via accessibility API", {
@@ -542,6 +569,34 @@ this.AccessibilityUtils = (function () {
       // Reset accessibility environment flags that might've been set within the
       // test.
       this.resetEnv();
+    },
+
+    init() {
+      // A top level xul window's DocShell doesn't have a chromeEventHandler
+      // attribute. In that case, the chrome event handler is just the global
+      // window object.
+      this._handler ??=
+        window.docShell.chromeEventHandler ?? window.docShell.domWindow;
+      this._handler.addEventListener("click", this, true, true);
+    },
+
+    uninit() {
+      this._handler?.removeEventListener("click", this, true);
+      this._handler = null;
+    },
+
+    handleEvent({ composedTarget }) {
+      const bounds =
+        composedTarget.ownerGlobal?.windowUtils?.getBoundsWithoutFlushing(
+          composedTarget
+        );
+      if (bounds && (bounds.width == 0 || bounds.height == 0)) {
+        // Some tests click hidden nodes. These clearly aren't testing the UI
+        // for the node itself (and presumably there is a test somewhere else
+        // that does). Therefore, we can't (and shouldn't) do a11y checks.
+        return;
+      }
+      this.assertCanBeClicked(composedTarget);
     },
   };
 
