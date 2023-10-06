@@ -2364,7 +2364,7 @@ void PeerConnectionImpl::SetupPreferredRtpExtensions(
 }
 
 nsresult PeerConnectionImpl::CalculateFingerprint(
-    const nsACString& algorithm, std::vector<uint8_t>* fingerprint) const {
+    const std::string& algorithm, std::vector<uint8_t>* fingerprint) const {
   DtlsDigest digest(algorithm);
 
   MOZ_ASSERT(fingerprint);
@@ -4074,8 +4074,9 @@ void PeerConnectionImpl::UpdateTransport(const JsepTransceiver& aTransceiver,
   DtlsDigestList digests;
   for (const auto& fingerprint :
        transport.mDtls->GetFingerprints().mFingerprints) {
-    digests.emplace_back(ToString(fingerprint.hashFunc),
-                         fingerprint.fingerprint);
+    std::ostringstream ss;
+    ss << fingerprint.hashFunc;
+    digests.emplace_back(ss.str(), fingerprint.fingerprint);
   }
 
   mTransportHandler->ActivateTransport(

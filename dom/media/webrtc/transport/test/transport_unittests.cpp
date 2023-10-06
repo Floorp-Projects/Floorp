@@ -444,7 +444,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         streams_(),
         peer_(nullptr),
         gathering_complete_(false),
-        digest_("sha-1"_ns),
+        digest_("sha-1"),
         enabled_cipersuites_(),
         disabled_cipersuites_(),
         test_utils_(utils) {
