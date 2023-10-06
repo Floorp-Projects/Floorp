@@ -653,6 +653,7 @@ this.AccessibilityUtils = (function () {
     },
 
     init() {
+      this._shouldHandleClicks = true;
       // A top level xul window's DocShell doesn't have a chromeEventHandler
       // attribute. In that case, the chrome event handler is just the global
       // window object.
@@ -666,7 +667,21 @@ this.AccessibilityUtils = (function () {
       this._handler = null;
     },
 
+    /**
+     * Suppress (or disable suppression of) handling of captured click events.
+     * This should only be called by EventUtils, etc. when a click event will
+     * be generated but we know it is not actually a click intended to activate
+     * a control; e.g. drag/drop. Tests that wish to disable specific checks
+     * should use setEnv instead.
+     */
+    suppressClickHandling(shouldSuppress) {
+      this._shouldHandleClicks = !shouldSuppress;
+    },
+
     handleEvent({ composedTarget }) {
+      if (!this._shouldHandleClicks) {
+        return;
+      }
       const bounds =
         composedTarget.ownerGlobal?.windowUtils?.getBoundsWithoutFlushing(
           composedTarget
