@@ -468,7 +468,9 @@ void nsDragService::SetDroppedLocal() {
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
-  if (!aDataFlavor || !mDataObject || !_retval) return NS_ERROR_FAILURE;
+  if (!aDataFlavor || !mDataObject || !_retval) {
+    return NS_ERROR_FAILURE;
+  }
 
   *_retval = false;
 
@@ -488,53 +490,63 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
       uint32_t cnt = dataObjCol->GetNumDataObjects();
       for (uint32_t i = 0; i < cnt; ++i) {
         IDataObject* dataObj = dataObjCol->GetDataObjectAt(i);
-        if (S_OK == dataObj->QueryGetData(&fe)) *_retval = true;  // found it!
+        if (S_OK == dataObj->QueryGetData(&fe)) {
+          *_retval = true;  // found it!
+        }
       }
     }
-  }  // if special collection object
-  else {
-    // Ok, so we have a single object. Check to see if has the correct
-    // data type. Since this can come from an outside app, we also
-    // need to see if we need to perform text->unicode conversion if
-    // the client asked for unicode and it wasn't available.
-    format = nsClipboard::GetFormat(aDataFlavor);
+    return NS_OK;
+  }
+
+  // Ok, so we have a single object. Check to see if has the correct
+  // data type. Since this can come from an outside app, we also
+  // need to see if we need to perform text->unicode conversion if
+  // the client asked for unicode and it wasn't available.
+  format = nsClipboard::GetFormat(aDataFlavor);
+  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
+                TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+  if (mDataObject->QueryGetData(&fe) == S_OK) {
+    *_retval = true;  // found it!
+    return NS_OK;
+  }
+
+  // We haven't found the exact flavor the client asked for, but
+  // maybe we can still find it from something else that's in the
+  // data object.
+  if (strcmp(aDataFlavor, kTextMime) == 0) {
+    // If unicode wasn't there, it might exist as CF_TEXT, client asked
+    // for unicode and it wasn't present, check if we
+    // have CF_TEXT.  We'll handle the actual data substitution in
+    // the data object.
+    SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, -1,
+                  TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+    if (mDataObject->QueryGetData(&fe) == S_OK) {
+      *_retval = true;  // found it!
+    }
+    return NS_OK;
+  }
+
+  if (strcmp(aDataFlavor, kURLMime) == 0) {
+    // client asked for a url and it wasn't present, but if we
+    // have a file, then we have a URL to give them (the path, or
+    // the internal URL if an InternetShortcut).
+    format = nsClipboard::GetFormat(kFileMime);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                   TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
     if (mDataObject->QueryGetData(&fe) == S_OK) {
       *_retval = true;  // found it!
-    } else {
-      // We haven't found the exact flavor the client asked for, but
-      // maybe we can still find it from something else that's on the
-      // clipboard
-      if (strcmp(aDataFlavor, kTextMime) == 0) {
-        // If unicode wasn't there, it might exist as CF_TEXT, client asked
-        // for unicode and it wasn't present, check if we
-        // have CF_TEXT.  We'll handle the actual data substitution in
-        // the data object.
-        SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, -1,
-                      TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (mDataObject->QueryGetData(&fe) == S_OK) {
-          *_retval = true;  // found it!
-        }
-      } else if (strcmp(aDataFlavor, kURLMime) == 0) {
-        // client asked for a url and it wasn't present, but if we
-        // have a file, then we have a URL to give them (the path, or
-        // the internal URL if an InternetShortcut).
-        format = nsClipboard::GetFormat(kFileMime);
-        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
-                      TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (mDataObject->QueryGetData(&fe) == S_OK) {
-          *_retval = true;  // found it!
-        }
-      } else if (format == CF_HDROP) {
-        // if the client wants a file, maybe we find a virtual file
-        format = nsClipboard::GetClipboardFileDescriptorFormatW();
-        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-        if (mDataObject->QueryGetData(&fe) == S_OK) {
-          *_retval = true;  // found it!
-        }
-      }
-    }  // else try again
+    }
+    return NS_OK;
+  }
+
+  if (format == CF_HDROP) {
+    // if the client wants a file, maybe we find a virtual file
+    format = nsClipboard::GetClipboardFileDescriptorFormatW();
+    SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+    if (mDataObject->QueryGetData(&fe) == S_OK) {
+      *_retval = true;  // found it!
+    }
+    return NS_OK;
   }
 
   return NS_OK;
