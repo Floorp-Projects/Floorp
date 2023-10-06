@@ -208,6 +208,12 @@ inline JSDependentString::JSDependentString(JSLinearString* base, size_t start,
 MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
     JSContext* cx, JSLinearString* baseArg, size_t start, size_t length,
     js::gc::Heap heap) {
+  // Do not try to make a dependent string that could fit inline.
+  MOZ_ASSERT_IF(baseArg->hasTwoByteChars(),
+                !JSInlineString::lengthFits<char16_t>(length));
+  MOZ_ASSERT_IF(!baseArg->hasTwoByteChars(),
+                !JSInlineString::lengthFits<JS::Latin1Char>(length));
+
   /*
    * Try to avoid long chains of dependent strings. We can't avoid these
    * entirely, however, due to how ropes are flattened.
@@ -218,22 +224,6 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
   }
 
   MOZ_ASSERT(start + length <= baseArg->length());
-
-  /*
-   * Do not create a string dependent on inline chars from another string,
-   * both to avoid the awkward moving-GC hazard this introduces and because it
-   * is more efficient to immediately undepend here.
-   */
-  bool useInline = baseArg->hasTwoByteChars()
-                       ? JSInlineString::lengthFits<char16_t>(length)
-                       : JSInlineString::lengthFits<JS::Latin1Char>(length);
-  if (useInline) {
-    JS::Rooted<JSLinearString*> base(cx, baseArg);
-    return baseArg->hasLatin1Chars()
-               ? js::NewInlineString<JS::Latin1Char>(cx, base, start, length,
-                                                     heap)
-               : js::NewInlineString<char16_t>(cx, base, start, length, heap);
-  }
 
   JSDependentString* str =
       cx->newCell<JSDependentString, js::NoGC>(heap, baseArg, start, length);

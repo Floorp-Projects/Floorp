@@ -1515,18 +1515,34 @@ JSLinearString* js::NewDependentString(JSContext* cx, JSString* baseArg,
     return base;
   }
 
+  bool useInline;
   if (base->hasTwoByteChars()) {
     AutoCheckCannotGC nogc;
     const char16_t* chars = base->twoByteChars(nogc) + start;
     if (JSLinearString* staticStr = cx->staticStrings().lookup(chars, length)) {
       return staticStr;
     }
+    useInline = JSInlineString::lengthFits<char16_t>(length);
   } else {
     AutoCheckCannotGC nogc;
     const Latin1Char* chars = base->latin1Chars(nogc) + start;
     if (JSLinearString* staticStr = cx->staticStrings().lookup(chars, length)) {
       return staticStr;
     }
+    useInline = JSInlineString::lengthFits<Latin1Char>(length);
+  }
+
+  if (useInline) {
+    Rooted<JSLinearString*> rootedBase(cx, base);
+
+    // Do not create a dependent string that would fit into an inline string.
+    // First, that could create a string dependent on an inline base string's
+    // chars, which would be an awkward moving-GC hazard. Second, this makes
+    // it more likely to have a very short string keep a very long string alive.
+    if (base->hasTwoByteChars()) {
+      return NewInlineString<char16_t>(cx, rootedBase, start, length, heap);
+    }
+    return NewInlineString<Latin1Char>(cx, rootedBase, start, length, heap);
   }
 
   return JSDependentString::new_(cx, base, start, length, heap);
