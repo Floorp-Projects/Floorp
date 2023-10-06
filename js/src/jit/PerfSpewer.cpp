@@ -233,8 +233,13 @@ static bool openJitDump() {
 #  ifdef XP_LINUX
   // We need to mmap the jitdump file for perf to find it.
   long page_size = sysconf(_SC_PAGESIZE);
-  mmap_address =
-      mmap(nullptr, page_size, PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0);
+  int prot = PROT_READ | PROT_EXEC;
+  // The mmap call fails on some Android devices if PROT_EXEC is specified, and
+  // it does not appear to be required by simpleperf, so omit it on Android.
+#    ifdef ANDROID
+  prot &= ~PROT_EXEC;
+#    endif
+  mmap_address = mmap(nullptr, page_size, prot, MAP_PRIVATE, fd, 0);
   if (mmap_address == MAP_FAILED) {
     PerfMode = PerfModeType::None;
     return false;
