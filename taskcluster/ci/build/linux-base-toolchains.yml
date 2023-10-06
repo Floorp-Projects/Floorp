@@ -8,6 +8,13 @@
 ---
 job-defaults:
     worker-type: b-linux-gcp
+    run:
+        extra-config:
+            extra_mozconfig_content:
+                # Builds on automation don't normally build geckodriver,
+                # but to ensure we also successfully build geckodriver with
+                # the MSRV, force it to be built.
+                - ac_add_options --enable-geckodriver
 
 linux64-base-toolchains/opt:
     description: "Linux64 base toolchains Opt"
