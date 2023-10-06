@@ -460,15 +460,61 @@ this.AccessibilityUtils = (function () {
    * @param {nsIAccessible} accessible
    *        Accessible object for a node.
    */
-  function assertLabelled(accessible) {
-    const name = accessible.name && accessible.name.trim();
+  function assertLabelled(accessible, allowRecurse = true) {
+    const { DOMNode } = accessible;
+    let name = accessible.name;
+    if (!name) {
+      // If text has just been inserted into the tree, the a11y engine might not
+      // have picked it up yet.
+      forceRefreshDriverTick(DOMNode);
+      try {
+        name = accessible.name;
+      } catch (e) {
+        // The Accessible died because the DOM node was removed or hidden.
+        if (gEnv.labelRule) {
+          a11yWarn("Unlabeled element removed before l10n finished", {
+            DOMNode,
+          });
+        }
+        return;
+      }
+      const doc = DOMNode.ownerDocument;
+      if (
+        !name &&
+        allowRecurse &&
+        gEnv.labelRule &&
+        doc.hasPendingL10nMutations
+      ) {
+        // There are pending async l10n mutations which might result in a valid
+        // accessible name. Try this check again once l10n is finished.
+        doc.addEventListener(
+          "L10nMutationsFinished",
+          () => {
+            try {
+              accessible.name;
+            } catch (e) {
+              // The Accessible died because the DOM node was removed or hidden.
+              a11yWarn("Unlabeled element removed before l10n finished", {
+                DOMNode,
+              });
+              return;
+            }
+            assertLabelled(accessible, false);
+          },
+          { once: true }
+        );
+        return;
+      }
+    }
+    if (name) {
+      name = name.trim();
+    }
     if (gEnv.labelRule && !name) {
       a11yFail("Interactive elements must be labeled", accessible);
 
       return;
     }
 
-    const { DOMNode } = accessible;
     if (FORM_ROLES.has(accessible.role)) {
       const labels = getLabels(accessible);
       const hasNameFromVisibleLabel = labels.some(
