@@ -61,13 +61,20 @@
     return true;
   }
 
-  for (const { description, testElem, lineCounts } of TEST_DATA) {
-    info(description);
+  function run_tests() {
+    for (const { description, testElem, lineCounts } of TEST_DATA) {
+      info(description);
 
-    let target = document.getElementById(testElem);
-    let counts = InspectorUtils.getBlockLineCounts(target);
+      let target = document.getElementById(testElem);
+      let counts = InspectorUtils.getBlockLineCounts(target);
 
-    ok(check(counts, lineCounts), "got expected line counts");
+      ok(check(counts, lineCounts), "got expected line counts");
+    }
+
+    SimpleTest.finish();
   }
+
+  SimpleTest.waitForExplicitFinish();
+  window.requestAnimationFrame(run_tests);
   </script>
 </body>
