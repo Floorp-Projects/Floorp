@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/components/input-field/input-field.css     (content/components/input-field/input-field.css)
   content/browser/aboutlogins/components/login-list-lit-item.mjs        (content/components/login-list-lit-item.mjs)
   content/browser/aboutlogins/components/login-list-lit-item.css        (content/components/login-list-lit-item.css)
   content/browser/aboutlogins/components/login-alert.css                 (content/components/login-alert.css)
@@ -38,6 +39,8 @@ browser.jar:
   content/browser/aboutlogins/components/login-timeline.mjs              (content/components/login-timeline.mjs)
   content/browser/aboutlogins/icons/breached-website.svg                 (content/icons/breached-website.svg)
   content/browser/aboutlogins/icons/vulnerable-password.svg              (content/icons/vulnerable-password.svg)
+  content/browser/aboutlogins/icons/password.svg                         (content/icons/password.svg)
+  content/browser/aboutlogins/icons/password-hide.svg                    (content/icons/password-hide.svg)
   content/browser/aboutlogins/icons/intro-illustration.svg               (content/icons/intro-illustration.svg)
   content/browser/aboutlogins/aboutLogins.css                            (content/aboutLogins.css)
   content/browser/aboutlogins/aboutLogins.mjs                             (content/aboutLogins.mjs)
