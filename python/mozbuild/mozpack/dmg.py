@@ -85,17 +85,37 @@ def create_dmg_from_staged(
     volume_name: str,
     hfs_tool: Path = None,
     dmg_tool: Path = None,
+    mkfshfs_tool: Path = None,
+    attribution_sentinel: str = None,
 ):
     "Given a prepared directory stagedir, produce a DMG at output_dmg."
+
     if is_linux:
         # The dmg tool doesn't create the destination directories, and silently
         # returns success if the parent directory doesn't exist.
         ensureParentDir(output_dmg)
-
         hfs = os.path.join(tmpdir, "staged.hfs")
         subprocess.check_call([hfs_tool, hfs, "addall", stagedir])
+
+        dmg_cmd = [dmg_tool, "build", hfs, output_dmg]
+        if attribution_sentinel:
+            while len(attribution_sentinel) < 1024:
+                attribution_sentinel += "\t"
+            subprocess.check_call(
+                [
+                    hfs_tool,
+                    hfs,
+                    "setattr",
+                    f"{volume_name}.app",
+                    "com.apple.application-instance",
+                    attribution_sentinel,
+                ]
+            )
+            subprocess.check_call(["cp", hfs, str(Path(output_dmg).parent)])
+            dmg_cmd.append(attribution_sentinel)
+
         subprocess.check_call(
-            [dmg_tool, "build", hfs, output_dmg],
+            dmg_cmd,
             # dmg is seriously chatty
             stdout=subprocess.DEVNULL,
         )
@@ -140,6 +160,7 @@ def create_dmg(
     dmg_tool: Path,
     hfs_tool: Path,
     mkfshfs_tool: Path,
+    attribution_sentinel: str = None,
 ):
     """
     Create a DMG disk image at the path output_dmg from source_directory.
@@ -171,7 +192,14 @@ def create_dmg(
         set_folder_icon(stagedir, tmpdir, hfs_tool)
         chmod(stagedir)
         create_dmg_from_staged(
-            stagedir, output_dmg, tmpdir, volume_name, hfs_tool, dmg_tool
+            stagedir,
+            output_dmg,
+            tmpdir,
+            volume_name,
+            hfs_tool,
+            dmg_tool,
+            mkfshfs_tool,
+            attribution_sentinel,
         )
 
 
