@@ -3440,10 +3440,20 @@ already_AddRefed<nsIURI> TryChangeProtocol(nsIURI* aURI,
     return nullptr;
   }
 
-  nsAutoCString newScheme;
-  rv = clone->GetScheme(newScheme);
-  if (NS_FAILED(rv) || !net::IsSchemeChangePermitted(aURI, newScheme)) {
-    return nullptr;
+  if (StaticPrefs::network_url_strict_protocol_setter()) {
+    nsAutoCString newScheme;
+    rv = clone->GetScheme(newScheme);
+    if (NS_FAILED(rv) || !net::IsSchemeChangePermitted(aURI, newScheme)) {
+      nsAutoCString url;
+      Unused << clone->GetSpec(url);
+      AutoTArray<nsString, 2> params;
+      params.AppendElement(NS_ConvertUTF8toUTF16(url));
+      params.AppendElement(NS_ConvertUTF8toUTF16(newScheme));
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, "Strict Url Protocol Setter"_ns, nullptr,
+          nsContentUtils::eNECKO_PROPERTIES, "StrictUrlProtocolSetter", params);
+      return nullptr;
+    }
   }
 
   nsAutoCString href;
