@@ -103,9 +103,13 @@ skip-if = [
 ["browser_rules_colorUnit.js"]
 
 ["browser_rules_color_scheme_simulation.js"]
-skip-if = ["os == 'win' && !debug"] # Bug 1703465
+skip-if = [
+  "os == 'win' && !debug", # Bug 1703465
+  "a11y_checks", # Bug 1849028 and 1849230 for causing crashes
+]
 
 ["browser_rules_color_scheme_simulation_bfcache.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849230 for causing crashes
 
 ["browser_rules_color_scheme_simulation_meta.js"]
 

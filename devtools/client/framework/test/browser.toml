@@ -185,6 +185,7 @@ skip-if = [
 ]
 
 ["browser_toolbox_meatball.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849230 for causing crashes
 
 ["browser_toolbox_options.js"]
 
