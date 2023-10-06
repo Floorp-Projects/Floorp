@@ -196,7 +196,7 @@ nsresult JsepSessionImpl::SetBundlePolicy(JsepBundlePolicy policy) {
 }
 
 nsresult JsepSessionImpl::AddDtlsFingerprint(
-    const std::string& algorithm, const std::vector<uint8_t>& value) {
+    const nsACString& algorithm, const std::vector<uint8_t>& value) {
   mLastError.clear();
   JsepDtlsFingerprint fp;
 
