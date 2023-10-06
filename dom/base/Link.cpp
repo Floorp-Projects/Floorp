@@ -139,10 +139,19 @@ void Link::SetProtocol(const nsAString& aProtocol) {
     // Ignore failures to be compatible with NS4.
     return;
   }
-  uri = net::TryChangeProtocol(uri, aProtocol);
-  if (!uri) {
+
+  nsAString::const_iterator start, end;
+  aProtocol.BeginReading(start);
+  aProtocol.EndReading(end);
+  nsAString::const_iterator iter(start);
+  (void)FindCharInReadable(':', iter, end);
+  nsresult rv = NS_MutateURI(uri)
+                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                    .Finalize(uri);
+  if (NS_FAILED(rv)) {
     return;
   }
+
   SetHrefAttribute(uri);
 }
 
