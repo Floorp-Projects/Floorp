@@ -116,6 +116,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_aboutdebugging_devtoolstoolbox_navigate_reload_button.js"]
 
 ["browser_aboutdebugging_devtoolstoolbox_navigate_to_url.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_devtoolstoolbox_reload.js"]
 skip-if = [
@@ -216,6 +217,7 @@ skip-if = [
 ["browser_aboutdebugging_serviceworker_unregister.js"]
 
 ["browser_aboutdebugging_sidebar_connection_state.js"]
+fail-if = ["a11y_checks"] # Bug 18491479 test crashes on Bug 1849028 checks
 
 ["browser_aboutdebugging_sidebar_network_runtimes.js"]
 
@@ -242,6 +244,7 @@ skip-if = [
 ["browser_aboutdebugging_telemetry_basic.js"]
 
 ["browser_aboutdebugging_telemetry_connection_attempt.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_telemetry_inspect.js"]
 
