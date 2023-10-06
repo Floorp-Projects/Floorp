@@ -39,11 +39,11 @@ add_task(async function test_screenshot_too_large_cropped() {
 
   ScreenshotsUtils.cropScreenshotRectIfNeeded(rect);
 
-  is(rect.width, MAX_CAPTURE_DIMENSION, "The width is 32767");
+  is(rect.width, MAX_CAPTURE_DIMENSION, "The width is 32766");
   is(
     rect.height,
     Math.floor(MAX_CAPTURE_AREA / MAX_CAPTURE_DIMENSION),
-    "The height is 124925329 / 32767"
+    "The height is 124925329 / 32766"
   );
 
   rect.width = 40000;
@@ -54,7 +54,7 @@ add_task(async function test_screenshot_too_large_cropped() {
   is(
     rect.width,
     MAX_CAPTURE_DIMENSION,
-    "The width was cropped to the max capture dimension (32767)."
+    "The width was cropped to the max capture dimension (32766)."
   );
 
   rect.width = 1;
@@ -65,7 +65,7 @@ add_task(async function test_screenshot_too_large_cropped() {
   is(
     rect.height,
     MAX_CAPTURE_DIMENSION,
-    "The height was cropped to the max capture dimension (32767)."
+    "The height was cropped to the max capture dimension (32766)."
   );
 
   rect.width = 12345;

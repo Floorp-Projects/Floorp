@@ -8,7 +8,7 @@
 
 this.takeshot = (function () {
   const exports = {};
-  const MAX_CANVAS_DIMENSION = 32767;
+  const MAX_CANVAS_DIMENSION = 32766;
 
   communication.register(
     "screenshotPage",
