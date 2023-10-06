@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import multiprocessing
+
 import mozunit
 import pytest
 from tryselect.selectors.chooser.app import create_application
@@ -26,8 +28,13 @@ TASKS = [
 
 
 @pytest.fixture
-def app(tg):
-    app = create_application(tg)
+def queue():
+    return multiprocessing.Queue()
+
+
+@pytest.fixture
+def app(tg, queue):
+    app = create_application(tg, queue)
     app.config["TESTING"] = True
 
     ctx = app.app_context()
@@ -36,7 +43,7 @@ def app(tg):
     ctx.pop()
 
 
-def test_try_chooser(app):
+def test_try_chooser(app, queue: multiprocessing.Queue):
     client = app.test_client()
 
     response = client.get("/")
@@ -54,12 +61,12 @@ def test_try_chooser(app):
     response = client.post("/", data={"action": "Cancel"})
     assert response.status_code == 200
     assert b"You may now close this page" in response.data
-    assert app.tasks == []
+    assert queue.get() == []
 
     response = client.post("/", data={"action": "Push", "selected-tasks": ""})
     assert response.status_code == 200
     assert b"You may now close this page" in response.data
-    assert app.tasks == []
+    assert queue.get() == []
 
     response = client.post(
         "/",
@@ -70,7 +77,7 @@ def test_try_chooser(app):
     )
     assert response.status_code == 200
     assert b"You may now close this page" in response.data
-    assert set(app.tasks) == set(["build-windows", "test-windows-mochitest-e10s"])
+    assert set(queue.get()) == set(["build-windows", "test-windows-mochitest-e10s"])
 
 
 if __name__ == "__main__":
