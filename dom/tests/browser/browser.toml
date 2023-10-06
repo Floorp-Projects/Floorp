@@ -34,6 +34,7 @@ https_first_disabled = true
 ["browser_bug1004814.js"]
 
 ["browser_bug1008941_dismissGeolocationHanger.js"]
+fail-if = ["a11y_checks"] # Bug 1854512 clicked #nav-bar.browser-toolbar may not be accessible
 tags = "geolocation"
 
 ["browser_bug1236512.js"]
@@ -71,6 +72,7 @@ support-files = ["prevent_return_key.html"]
 ["browser_focus_steal_from_chrome.js"]
 
 ["browser_focus_steal_from_chrome_during_mousedown.js"]
+fail-if = ["a11y_checks"] # Bug 1854512 clicked browser may not be accessible
 
 ["browser_form_associated_custom_elements_validity.js"]
 support-files = ["file_empty.html"]
