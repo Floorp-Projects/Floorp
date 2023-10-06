@@ -73,6 +73,7 @@ addEventListener(
         }
       }
       setTimeout(fcn_setTimeoutWithStringCheck.bind(window), 10);
+      // eslint-disable-next-line no-implied-eval
       var res = setTimeout(str_setTimeoutWithStringRan, 10);
       verifyZeroRetVal(res, "setTimeout(String)");
     }
@@ -92,6 +93,7 @@ addEventListener(
         }
       }
       setTimeout(fcn_setIntervalWithStringCheck.bind(window), 10);
+      // eslint-disable-next-line no-implied-eval
       var res = setInterval(str_setIntervalWithStringRan, 10);
       verifyZeroRetVal(res, "setInterval(String)");
 

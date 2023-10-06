@@ -27,6 +27,7 @@ window.addEventListener("load",
     is(evt.originalTarget, window.document, "Wrong originalTarget!");
     ok(evt.isTrusted, "Event should be trusted!");
     loadEvent = evt;
+    // eslint-disable-next-line no-implied-eval
     setTimeout("st.dispatchEvent(loadEvent)", 0);
   }, true);
 

@@ -34,6 +34,7 @@ function messageListener(event) {
       postMessage("intervalCanceled");
       break;
     case "startExpression":
+      // eslint-disable-next-line no-implied-eval
       setTimeout("this.postMessage('expressionFinished');", 2000);
       break;
     default:

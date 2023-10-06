@@ -8,6 +8,7 @@
 <script>
 
 var x = 0;
+// eslint-disable-next-line no-implied-eval
 setTimeout("x++; '\x00'; x++;");
 setTimeout(function() {
   is(x, 2, "We want to see 2 here");

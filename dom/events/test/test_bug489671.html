@@ -33,6 +33,7 @@ function doTest() {
       document.body.appendChild(script);
       break;
     case 2:
+      // eslint-disable-next-line no-implied-eval
       window.setTimeout("queueNextTest(); throw 'Got click 3'", 0);
       break;
     case 3:

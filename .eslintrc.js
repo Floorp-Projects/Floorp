@@ -448,7 +448,6 @@ module.exports = {
         "no-empty": "off",
         "no-func-assign": "off",
         "no-global-assign": "off",
-        "no-implied-eval": "off",
         "no-lone-blocks": "off",
         "no-lonely-if": "off",
         "no-nested-ternary": "off",
