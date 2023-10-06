@@ -276,6 +276,8 @@ clang_checkers:
     reliability: high
   - name: readability-redundant-control-flow
     reliability: high
+  - name: readability-redundant-member-init
+    reliability: high
   - name: readability-redundant-preprocessor
     reliability: high
   - name: readability-redundant-smartptr-get
