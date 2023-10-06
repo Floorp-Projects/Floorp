@@ -3274,8 +3274,6 @@ impl ComputedValues {
                 // FIXME(bug 1273706): This should use a stylist to determine
                 // whether the name corresponds to an inherited custom property
                 // and then choose the inherited/non_inherited map accordingly.
-                // It should also fallback to registered initial values for
-                // non-inherited properties. See Servo_GetCustomPropertyValue.
                 let p = &self.custom_properties;
                 let value = p
                     .inherited

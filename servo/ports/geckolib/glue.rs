@@ -7430,7 +7430,6 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
         computed_values.custom_properties.inherited.as_ref().and_then(|m| m.get(&name))
     } else {
         computed_values.custom_properties.non_inherited.as_ref().and_then(|m| m.get(&name))
-            .or_else(|| custom_registration.and_then(|m| m.initial_value.as_ref()))
     };
 
     if let Some(v) = computed_value {
@@ -7443,11 +7442,8 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
 
 #[no_mangle]
 pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValues) -> u32 {
-    // Just expose the custom property items from custom_properties.inherited,
+    // Just expose the custom property items from custom_properties.inherited
     // and custom_properties.non_inherited.
-    // TODO(bug 1855629): We should probably expose all properties that don't
-    // have the guaranteed-invalid-value (including non-inherited properties
-    // with an initial value), not just the ones in the maps.
     let properties = computed_values.custom_properties();
     (properties.inherited.as_ref().map_or(0, |m| m.len()) +
         properties.non_inherited.as_ref().map_or(0, |m| m.len())) as u32
@@ -8617,6 +8613,8 @@ pub extern "C" fn Servo_RegisterCustomProperty(
                 url_data: url_data.clone(),
             },
         );
+
+    per_doc_data.stylist.rebuild_initial_values_for_custom_properties();
 
     SuccessfullyRegistered
 }
