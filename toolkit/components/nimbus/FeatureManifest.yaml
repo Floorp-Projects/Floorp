@@ -175,16 +175,6 @@ urlbar:
         will be able to click the "Show less frequently" command for addon
         suggestions. If undefined or zero, the user will be able to click the
         command without any limit.
-    addonsUITreatment:
-      type: string
-      enum:
-        - a
-        - b
-      description: >-
-        Define the UI type for addon suggestions.
-        In case of "a", display rating stars and review volume on the bottom of
-        the suggestion. In case of "b", display a label explaining that the
-        addon suggestion is a recommendation.
     autoFillAdaptiveHistoryEnabled:
       type: boolean
       fallbackPref: browser.urlbar.autoFill.adaptiveHistory.enabled

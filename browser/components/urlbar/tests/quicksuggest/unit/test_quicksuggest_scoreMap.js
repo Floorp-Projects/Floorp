@@ -749,7 +749,7 @@ function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
   url.searchParams.set("utm_source", "firefox-suggest");
 
   return {
-    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     isBestMatch: true,
@@ -757,24 +757,14 @@ function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
       source,
       provider: source == "remote-settings" ? "AddonSuggestions" : "amo",
       telemetryType: "amo",
-      dynamicType: "addons",
       title: suggestion.title,
       url: url.href,
       originalUrl: suggestion.url,
       displayUrl: url.href.replace(/^https:\/\//, ""),
+      shouldShowUrl: true,
       icon: suggestion.icon,
       description: suggestion.description,
-      rating: Number(
-        source == "remote-settings"
-          ? suggestion.rating
-          : suggestion.custom_details.amo.rating
-      ),
-      reviews: Number(
-        source == "remote-settings"
-          ? suggestion.number_of_ratings
-          : suggestion.custom_details.amo.number_of_ratings
-      ),
-      shouldNavigate: true,
+      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
       helpUrl: QuickSuggest.HELP_URL,
     },
   };

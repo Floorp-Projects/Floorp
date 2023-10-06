@@ -751,7 +751,7 @@
   > .urlbarView-row-body-description {
     max-width: 80ch;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow-y: hidden;
 
@@ -778,7 +778,7 @@
   padding-block: 0;
 }
 
-/* Pocket suggestions */
+/* Other Firefox Suggest rows */
 
 .urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-favicon,
 .urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
@@ -786,19 +786,14 @@
   fill-opacity: 1;
 }
 
-.urlbarView-row[type$=_pocket][icon-size="24"] > .urlbarView-row-inner > .urlbarView-favicon {
+.urlbarView-row:is([type$=_amo], [type$=_pocket])[icon-size="24"] > .urlbarView-row-inner > .urlbarView-favicon {
   padding: calc((52px - 24px) / 2);
   background-color: var(--urlbar-box-focus-bgcolor);
   border-radius: 2px;
 }
 
-.urlbarView-row[type$=_pocket][icon-size="24"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
+.urlbarView-row:is([type$=_amo], [type$=_pocket])[icon-size="24"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
   background-color: var(--urlbarView-result-button-selected-background-color);
-}
-
-.urlbarView-row[type$=_mdn] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
-.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description {
-  -webkit-line-clamp: 2;
 }
 
 /* Search one-offs */
