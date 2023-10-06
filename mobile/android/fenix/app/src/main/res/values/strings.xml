@@ -395,8 +395,16 @@
     <string name="preferences_search">Search</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Search engines</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Suggestions from search engines</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Address bar</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Address bar</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Address bar preferences</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Address bar - Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Learn more about Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Rate on Google Play</string>
     <!-- Preference linking to about page for Fenix

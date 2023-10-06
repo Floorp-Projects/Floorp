@@ -13,6 +13,8 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -20,6 +22,7 @@ import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.requirePreference
 import org.mozilla.gecko.search.SearchWidgetProvider
 
@@ -35,6 +38,9 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             isVisible = context.settings().enableFxSuggest
         }
         requirePreference<SwitchPreference>(R.string.pref_key_show_nonsponsored_suggestions).apply {
+            isVisible = context.settings().enableFxSuggest
+        }
+        requirePreference<Preference>(R.string.pref_key_learn_about_fx_suggest).apply {
             isVisible = context.settings().enableFxSuggest
         }
 
@@ -170,6 +176,15 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                         it.components.analytics.crashReporter,
                     )
                 }
+            }
+            getPreferenceKey(R.string.pref_key_learn_about_fx_suggest) -> {
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                        SupportUtils.SumoTopic.FX_SUGGEST,
+                    ),
+                    newTab = true,
+                    from = BrowserDirection.FromSearchEngineFragment,
+                )
             }
         }
 

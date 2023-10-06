@@ -58,6 +58,7 @@ object SupportUtils {
         COOKIE_BANNER("cookie-banner-reduction-firefox-android"),
         UNSIGNED_ADDONS("unsigned-addons"),
         REVIEW_QUALITY_CHECK("review_checker_mobile"),
+        FX_SUGGEST("search-suggestions-firefox"),
     }
 
     enum class MozillaPage(internal val path: String) {

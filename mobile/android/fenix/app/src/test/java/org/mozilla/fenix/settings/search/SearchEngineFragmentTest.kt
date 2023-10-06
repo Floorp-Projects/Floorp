@@ -98,6 +98,11 @@ class SearchEngineFragmentTest {
             } returns mockk(relaxed = true) {
                 every { context } returns testContext
             }
+            every {
+                fragment.findPreference<Preference>(testContext.getString(R.string.pref_key_learn_about_fx_suggest))
+            } returns mockk(relaxed = true) {
+                every { context } returns testContext
+            }
             // This preference is the sole purpose of this test
             every {
                 fragment.findPreference<SwitchPreference>(voiceSearchPreferenceKey)

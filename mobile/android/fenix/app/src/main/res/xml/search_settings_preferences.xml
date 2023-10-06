@@ -21,21 +21,30 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/preferences_search_address_bar"
+        android:title="@string/preferences_search_engines_suggestions"
         android:selectable="false"
         app:iconSpaceReserved="false"
         android:layout="@layout/preference_category_no_icon_style">
-        <SwitchPreference
+         <SwitchPreference
             app:iconSpaceReserved="false"
             android:defaultValue="true"
-            android:key="@string/pref_key_enable_autocomplete_urls"
-            android:title="@string/preferences_enable_autocomplete_urls" />
-        <SwitchPreference
-            app:iconSpaceReserved="false"
-            android:defaultValue="true"
-            android:key="@string/pref_key_show_clipboard_suggestions"
-            android:title="@string/preferences_show_clipboard_suggestions" />
-        <SwitchPreference
+            android:key="@string/pref_key_show_search_suggestions"
+            android:title="@string/preferences_show_search_suggestions" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="@string/pref_key_show_search_suggestions"
+            android:key="@string/pref_key_show_search_suggestions_in_private"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_show_search_suggestions_in_private"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preference_search_address_bar_fx_suggest"
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_no_icon_style">
+         <SwitchPreference
             app:iconSpaceReserved="false"
             android:defaultValue="true"
             android:key="@string/pref_key_search_browsing_history"
@@ -52,23 +61,6 @@
             android:title='@string/preferences_search_synced_tabs' />
         <SwitchPreference
             app:iconSpaceReserved="false"
-            android:defaultValue="true"
-            android:key="@string/pref_key_show_voice_search"
-            android:title="@string/preferences_show_voice_search" />
-        <SwitchPreference
-            app:iconSpaceReserved="false"
-            android:defaultValue="true"
-            android:key="@string/pref_key_show_search_suggestions"
-            android:title="@string/preferences_show_search_suggestions" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:dependency="@string/pref_key_show_search_suggestions"
-            android:key="@string/pref_key_show_search_suggestions_in_private"
-            android:layout="@layout/checkbox_left_preference"
-            android:title="@string/preferences_show_search_suggestions_in_private"
-            app:iconSpaceReserved="false" />
-        <SwitchPreference
-            app:iconSpaceReserved="false"
             android:key="@string/pref_key_show_nonsponsored_suggestions"
             android:title="@string/preferences_show_nonsponsored_suggestions"
             android:summary="@string/preferences_show_nonsponsored_suggestions_summary" />
@@ -77,5 +69,31 @@
             android:key="@string/pref_key_show_sponsored_suggestions"
             android:title="@string/preferences_show_sponsored_suggestions"
             android:summary="@string/preferences_show_sponsored_suggestions_summary" />
+        <Preference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_learn_about_fx_suggest"
+            android:title="@string/preference_search_learn_about_fx_suggest" />   
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preferences_settings_address_bar"
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_no_icon_style">
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_clipboard_suggestions"
+            android:title="@string/preferences_show_clipboard_suggestions" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_enable_autocomplete_urls"
+            android:title="@string/preferences_enable_autocomplete_urls" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_voice_search"
+            android:title="@string/preferences_show_voice_search" />       
     </PreferenceCategory>
 </PreferenceScreen>

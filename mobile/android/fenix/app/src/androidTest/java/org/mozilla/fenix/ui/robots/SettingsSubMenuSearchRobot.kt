@@ -96,7 +96,7 @@ class SettingsSubMenuSearchRobot {
     }
 
     fun verifyAddressBarSectionHeader() {
-        onView(withText("Address bar")).check(matches(isDisplayed()))
+        onView(withText("Address bar - Firefox Suggest")).check(matches(isDisplayed()))
     }
 
     fun verifyDefaultSearchEngineList() {
