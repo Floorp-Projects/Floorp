@@ -157,23 +157,25 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun deleteSelected() {
-        startDeletion()
-        lifecycleScope.launch(IO) {
-            getCheckboxes().mapIndexed { i, v ->
-                if (v.isChecked) {
-                    when (i) {
-                        OPEN_TABS_INDEX -> controller.deleteTabs()
-                        HISTORY_INDEX -> controller.deleteBrowsingHistory()
-                        COOKIES_INDEX -> controller.deleteCookiesAndSiteData()
-                        CACHED_INDEX -> controller.deleteCachedFiles()
-                        PERMS_INDEX -> controller.deleteSitePermissions()
-                        DOWNLOADS_INDEX -> controller.deleteDownloads()
+        runIfFragmentIsAttached {
+            startDeletion()
+            lifecycleScope.launch(IO) {
+                getCheckboxes().mapIndexed { i, v ->
+                    if (v.isChecked) {
+                        when (i) {
+                            OPEN_TABS_INDEX -> controller.deleteTabs()
+                            HISTORY_INDEX -> controller.deleteBrowsingHistory()
+                            COOKIES_INDEX -> controller.deleteCookiesAndSiteData()
+                            CACHED_INDEX -> controller.deleteCachedFiles()
+                            PERMS_INDEX -> controller.deleteSitePermissions()
+                            DOWNLOADS_INDEX -> controller.deleteDownloads()
+                        }
                     }
                 }
-            }
 
-            withContext(Main) {
-                finishDeletion()
+                withContext(Main) {
+                    finishDeletion()
+                }
             }
         }
     }
