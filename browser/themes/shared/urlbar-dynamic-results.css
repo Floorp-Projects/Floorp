@@ -403,9 +403,15 @@
 
 .urlbarView-dynamic-addons-icon {
   grid-area: icon;
-  width: 60px;
-  height: 60px;
+  width: 24px;
+  height: 24px;
+  padding: calc((60px - 24px) / 2);
+  background-color: var(--urlbar-box-focus-bgcolor);
+  border-radius: 2px;
   margin-inline-end: calc(/* .urlbarView-row-inner padding-inline */ var(--urlbarView-item-inline-padding) + /* .urlbarView-dynamic-addons-content padding */ 4px);
+  .urlbarView-row:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-dynamic-addons-content > & {
+    background-color: var(--urlbarView-result-button-selected-background-color);
+  }
 }
 
 .urlbarView-dynamic-addons-header {
