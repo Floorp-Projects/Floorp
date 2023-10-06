@@ -34,10 +34,13 @@ prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
 ["browser_glean_telemetry_abandonment_search_engine_default_id.js"]
 
 ["browser_glean_telemetry_abandonment_search_mode.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_abandonment_tips.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_engagement_edge_cases.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked customizableui-special-spring2 may not be focusable
 
 ["browser_glean_telemetry_engagement_groups.js"]
 
@@ -54,6 +57,7 @@ prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
 ["browser_glean_telemetry_engagement_search_engine_default_id.js"]
 
 ["browser_glean_telemetry_engagement_search_mode.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_engagement_selected_result.js"]
 support-files = ["../../../../search/test/browser/trendingSuggestionEngine.sjs"]
@@ -62,6 +66,7 @@ skip-if = ["verify"] # Bug 1852375 - MerinoTestUtils.initWeather() doesn't play 
 ["browser_glean_telemetry_engagement_tips.js"]
 
 ["browser_glean_telemetry_engagement_type.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_exposure.js"]
 
@@ -82,6 +87,7 @@ skip-if = ["verify"] # Bug 1852375 - MerinoTestUtils.initWeather() doesn't play 
 ["browser_glean_telemetry_impression_search_engine_default_id.js"]
 
 ["browser_glean_telemetry_impression_search_mode.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_impression_timing.js"]
 
