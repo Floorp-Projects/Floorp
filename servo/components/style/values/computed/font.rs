@@ -23,6 +23,7 @@ use crate::Atom;
 use cssparser::{serialize_identifier, CssStringWriter, Parser};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use num_traits::cast::AsPrimitive;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
 
@@ -73,15 +74,15 @@ pub struct FixedPoint<T, const FRACTION_BITS: u16> {
 
 impl<T, const FRACTION_BITS: u16> FixedPoint<T, FRACTION_BITS>
 where
-    T: num_traits::cast::AsPrimitive<f32>,
-    f32: num_traits::cast::AsPrimitive<T>,
+    T: AsPrimitive<f32>,
+    f32: AsPrimitive<T>,
+    u16: AsPrimitive<T>,
 {
     const SCALE: u16 = 1 << FRACTION_BITS;
     const INVERSE_SCALE: f32 = 1.0 / Self::SCALE as f32;
 
     /// Returns a fixed-point bit from a floating-point context.
     pub fn from_float(v: f32) -> Self {
-        use num_traits::cast::AsPrimitive;
         Self {
             value: (v * Self::SCALE as f32).round().as_(),
         }
@@ -90,6 +91,25 @@ where
     /// Returns the floating-point representation.
     pub fn to_float(&self) -> f32 {
         self.value.as_() * Self::INVERSE_SCALE
+    }
+}
+
+// We implement this and mul below only for u16 types, because u32 types might need more care about
+// overflow. But it's not hard to implement in either case.
+impl<const FRACTION_BITS: u16> std::ops::Div for FixedPoint<u16, FRACTION_BITS> {
+    type Output = Self;
+    fn div(self, rhs: Self) -> Self {
+        Self {
+            value: (((self.value as u32) << (FRACTION_BITS as u32)) / (rhs.value as u32)) as u16,
+        }
+    }
+}
+impl<const FRACTION_BITS: u16> std::ops::Mul for FixedPoint<u16, FRACTION_BITS> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self {
+        Self {
+            value: (((self.value as u32) * (rhs.value as u32)) >> (FRACTION_BITS as u32)) as u16,
+        }
     }
 }
 
