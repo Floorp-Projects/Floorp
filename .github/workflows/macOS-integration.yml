@@ -149,12 +149,12 @@ jobs:
 
         - name: Sign to .app 🖋️
           run: |
-            if [ ${{ inputs.lightning }} == 'true' ]; then
-              export APP_NAME = "Floorp Lightning.app"
-            elif [ ${{ inputs.beta }} == 'true' ]; then
-              export APP_NAME = "Floorp Daylight.app"
+            if [ ${{ inputs.lightning }} == true ]; then
+              export APP_NAME="Floorp Lightning.app"
+            elif [ ${{ inputs.beta }} == true ]; then
+              export APP_NAME="Floorp Daylight.app"
             else
-              export APP_NAME = "Floorp.app"
+              export APP_NAME="Floorp.app"
             fi
 
             chmod +x ./floorp/build/codesign/mac/codesign.bash
@@ -175,11 +175,11 @@ jobs:
         - name: Create DMG 📦
           run: |
             if [ ${{ inputs.lightning }} == 'true' ]; then
-              export APP_NAME = "Floorp Lightning"
+              export APP_NAME="Floorp Lightning"
             elif [ ${{ inputs.beta }} == 'true' ]; then
-              export APP_NAME = "Floorp Daylight"
+              export APP_NAME="Floorp Daylight"
             else
-              export APP_NAME = "Floorp"
+              export APP_NAME="Floorp"
             fi
 
             ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
@@ -195,12 +195,12 @@ jobs:
 
         - name: Sign to .dmg 🖋️
           run: |
-            if [ ${{ inputs.lightning }} == 'true' ]; then
-              export INSTALLER_NAME = "Floorp-Lightning"
-            elif [ ${{ inputs.beta }} == 'true' ]; then
-              export INSTALLER_NAME = "Floorp-Daylight"
+            if [ ${{ inputs.lightning }} == true ]; then
+              export INSTALLER_NAME="Floorp-Lightning"
+            elif [ ${{ inputs.beta }} == true ]; then
+              export INSTALLER_NAME="Floorp-Daylight"
             else
-              export INSTALLER_NAME = "Floorp"
+              export INSTALLER_NAME="Floorp"
             fi
 
             codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
@@ -216,12 +216,12 @@ jobs:
 
         - name: Create MAR artifact 📦
           run: |
-           if [ ${{ inputs.lightning }} == 'true' ]; then
-             export APP_NAME = "Floorp Lightning"
-           elif [ ${{ inputs.beta }} == 'true' ]; then
-             export APP_NAME = "Floorp Daylight"
+           if [ ${{ inputs.lightning }} == true ]; then
+             export APP_NAME="Floorp Lightning.app"
+           elif [ ${{ inputs.beta }} == true ]; then
+             export APP_NAME="Floorp Daylight.app"
            else
-             export APP_NAME = "Floorp"
+             export APP_NAME="Floorp.app"
            fi
 
            brew install tree
