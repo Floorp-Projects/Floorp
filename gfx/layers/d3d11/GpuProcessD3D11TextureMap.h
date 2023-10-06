@@ -57,6 +57,7 @@ class GpuProcessD3D11TextureMap {
   bool WaitTextureReady(const GpuProcessTextureId aTextureId);
 
   void PostUpdateTextureDataTask(const GpuProcessTextureId aTextureId,
+                                 TextureHost* aTextureHost,
                                  TextureHost* aWrappedTextureHost,
                                  TextureWrapperD3D11Allocator* aAllocator);
 
@@ -79,12 +80,14 @@ class GpuProcessD3D11TextureMap {
 
   struct UpdatingTextureHolder {
     UpdatingTextureHolder(const GpuProcessTextureId aTextureId,
+                          TextureHost* aTextureHost,
                           TextureHost* aWrappedTextureHost,
                           TextureWrapperD3D11Allocator* aAllocator);
 
     ~UpdatingTextureHolder();
 
     const GpuProcessTextureId mTextureId;
+    RefPtr<TextureHost> mTextureHost;
     CompositableTextureHostRef mWrappedTextureHost;
     RefPtr<TextureWrapperD3D11Allocator> mAllocator;
   };

@@ -292,8 +292,10 @@ TextureHostWrapperD3D11::~TextureHostWrapperD3D11() {
   auto* textureMap = GpuProcessD3D11TextureMap::Get();
   if (textureMap) {
     RefPtr<ID3D11Texture2D> texture = textureMap->GetTexture(mTextureId);
-    mAllocator->RecycleTexture(texture);
-    textureMap->Unregister(mTextureId);
+    if (texture) {
+      mAllocator->RecycleTexture(texture);
+      textureMap->Unregister(mTextureId);
+    }
   } else {
     gfxCriticalNoteOnce << "GpuProcessD3D11TextureMap does not exist";
   }
@@ -301,7 +303,7 @@ TextureHostWrapperD3D11::~TextureHostWrapperD3D11() {
 
 void TextureHostWrapperD3D11::PostTask() {
   GpuProcessD3D11TextureMap::Get()->PostUpdateTextureDataTask(
-      mTextureId, mWrappedTextureHost, mAllocator);
+      mTextureId, this, mWrappedTextureHost, mAllocator);
 }
 
 bool TextureHostWrapperD3D11::IsValid() { return true; }
@@ -369,7 +371,6 @@ void TextureHostWrapperD3D11::NotifyNotUsed() {
 
   MOZ_ASSERT(mWrappedTextureHost);
   if (mWrappedTextureHost) {
-    mWrappedTextureHost->NotifyNotUsed();
     mWrappedTextureHost = nullptr;
   }
   mTextureHostD3D11->NotifyNotUsed();
