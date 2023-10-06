@@ -366,3 +366,43 @@ async function promiseImpressionReceived() {
 registerCleanupFunction(async () => {
   await PlacesUtils.history.clear();
 });
+
+async function mockRecordWithAttachment({ id, version, filename }) {
+  // Get the bytes of the file for the hash and size for attachment metadata.
+  let data = await IOUtils.readUTF8(getTestFilePath(filename));
+  let buffer = new TextEncoder().encode(data).buffer;
+  let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(
+    Ci.nsIArrayBufferInputStream
+  );
+  stream.setData(buffer, 0, buffer.byteLength);
+
+  // Generate a hash.
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
+  hasher.init(Ci.nsICryptoHash.SHA256);
+  hasher.updateFromStream(stream, -1);
+  let hash = hasher.finish(false);
+  hash = Array.from(hash, (_, i) =>
+    ("0" + hash.charCodeAt(i).toString(16)).slice(-2)
+  ).join("");
+
+  let record = {
+    id,
+    version,
+    attachment: {
+      hash,
+      location: `main-workspace/search-categorization/${filename}`,
+      filename,
+      size: buffer.byteLength,
+      mimetype: "application/json",
+    },
+  };
+
+  let attachment = {
+    record,
+    blob: new Blob([buffer]),
+  };
+
+  return { record, attachment };
+}
