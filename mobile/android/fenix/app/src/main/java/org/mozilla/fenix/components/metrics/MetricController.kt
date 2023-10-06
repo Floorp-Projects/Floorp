@@ -236,6 +236,9 @@ internal class ReleaseMetricController(
                 AndroidAutofill.unlockCancelled.record(NoExtras())
             }
         }
+        Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_LOGIN_PASSWORD_DETECTED -> {
+            Logins.passwordDetected.record(NoExtras())
+        }
         Component.FEATURE_SYNCEDTABS to SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED -> {
             SyncedTabs.syncedTabsSuggestionClicked.record(NoExtras())
         }

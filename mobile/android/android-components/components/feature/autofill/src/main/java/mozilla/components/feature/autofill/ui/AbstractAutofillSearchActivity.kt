@@ -29,6 +29,7 @@ import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
 import mozilla.components.feature.autofill.facts.emitAutofillSearchDisplayedFact
 import mozilla.components.feature.autofill.facts.emitAutofillSearchSelectedFact
+import mozilla.components.feature.autofill.facts.emitLoginPasswordDetectedFact
 import mozilla.components.feature.autofill.response.dataset.LoginDatasetBuilder
 import mozilla.components.feature.autofill.structure.ParsedStructure
 import mozilla.components.feature.autofill.structure.parseStructure
@@ -118,6 +119,12 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
         val filteredLogins = logins.filter { login ->
             login.username.contains(text) ||
                 login.origin.contains(text)
+        }
+
+        if (filteredLogins.isNotEmpty() &&
+            filteredLogins[0].password.isNotEmpty()
+        ) {
+            emitLoginPasswordDetectedFact()
         }
 
         withContext(Dispatchers.Main) {

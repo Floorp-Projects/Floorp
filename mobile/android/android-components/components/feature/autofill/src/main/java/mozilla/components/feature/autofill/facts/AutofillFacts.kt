@@ -21,6 +21,7 @@ class AutofillFacts {
         const val AUTOFILL_CONFIRMATION = "autofill_confirmation"
         const val AUTOFILL_SEARCH = "autofill_search"
         const val AUTOFILL_LOCK = "autofill_lock"
+        const val AUTOFILL_LOGIN_PASSWORD_DETECTED = "autofill_login_password_detected"
     }
 
     /**
@@ -30,6 +31,15 @@ class AutofillFacts {
         const val HAS_MATCHING_LOGINS = "has_matching_logins"
         const val NEEDS_CONFIRMATION = "needs_confirmation"
     }
+}
+
+internal fun emitLoginPasswordDetectedFact() {
+    Fact(
+        Component.FEATURE_AUTOFILL,
+        Action.INTERACTION,
+        AutofillFacts.Items.AUTOFILL_LOGIN_PASSWORD_DETECTED,
+        metadata = null,
+    ).collect()
 }
 
 internal fun emitAutofillRequestFact(
