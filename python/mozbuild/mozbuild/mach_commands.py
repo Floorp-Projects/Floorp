@@ -2405,14 +2405,17 @@ def repackage_deb_l10n(
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
 @CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
 @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
-def repackage_dmg(command_context, input, output):
+@CommandArgument(
+    "--attribution_sentinel", type=str, required=False, help="DMGs with attribution."
+)
+def repackage_dmg(command_context, input, output, attribution_sentinel):
     if not os.path.exists(input):
         print("Input file does not exist: %s" % input)
         return 1
 
     from mozbuild.repackaging.dmg import repackage_dmg
 
-    repackage_dmg(input, output)
+    repackage_dmg(input, output, attribution_sentinel)
 
 
 @SubCommand("repackage", "pkg", description="Repackage a tar file into a .pkg for OSX")
