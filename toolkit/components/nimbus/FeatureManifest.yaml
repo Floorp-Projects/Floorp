@@ -518,6 +518,19 @@ moreFromMozilla:
       fallbackPref: browser.preferences.moreFromMozilla.template
       description: UI template used to display Mozilla products. Possible values simple, advanced. Default is simple.
 
+windowsLaunchOnLogin:
+  description: "New checkbox in about:preferences startup section to start Firefox on Windows login"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent once per browsing session when the about:preferences URL is
+    first accessed.
+  variables:
+    enabled:
+      type: boolean
+      fallbackPref: browser.startup.windowsLaunchOnLogin.enabled
+      description: Should users see the Windows launch on login checkbox.
+
 abouthomecache:
   description: "The startup about:home cache."
   owner: omc@mozilla.com

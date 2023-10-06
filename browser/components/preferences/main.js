@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -418,6 +419,12 @@ var gMainPane = {
         "command",
         gMainPane.onWindowsLaunchOnLoginChange
       );
+      NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
+        once: true,
+      });
+      if (NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled")) {
+        document.getElementById("windowsLaunchOnLoginBox").hidden = false;
+      }
     }
     gMainPane.updateBrowserStartupUI =
       gMainPane.updateBrowserStartupUI.bind(gMainPane);
