@@ -59,7 +59,7 @@ struct NurseryChunk : public ChunkBase {
       : ChunkBase(runtime, &runtime->gc.storeBuffer()) {}
 
   void poisonAndInit(JSRuntime* rt, size_t size = ChunkSize);
-  void poisonRange(size_t from, size_t size, uint8_t value,
+  void poisonRange(size_t start, size_t end, uint8_t value,
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
 
@@ -114,23 +114,26 @@ inline void js::NurseryChunk::poisonAndInit(JSRuntime* rt, size_t size) {
   new (this) NurseryChunk(rt);
 }
 
-inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
+inline void js::NurseryChunk::poisonRange(size_t start, size_t end,
                                           uint8_t value,
                                           MemCheckKind checkKind) {
-  MOZ_ASSERT(from + size <= ChunkSize);
+  MOZ_ASSERT((start % gc::CellAlignBytes) == 0);
+  MOZ_ASSERT((end % gc::CellAlignBytes) == 0);
+  MOZ_ASSERT(end > start);
+  MOZ_ASSERT(end <= ChunkSize);
 
-  auto* start = reinterpret_cast<uint8_t*>(this) + from;
+  auto* ptr = reinterpret_cast<uint8_t*>(this) + start;
+  size_t size = end - start;
 
   // We can poison the same chunk more than once, so first make sure memory
   // sanitizers will let us poison it.
-  MOZ_MAKE_MEM_UNDEFINED(start, size);
-  Poison(start, value, size, checkKind);
+  MOZ_MAKE_MEM_UNDEFINED(ptr, size);
+  Poison(ptr, value, size, checkKind);
 }
 
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
-  MOZ_ASSERT(extent <= ChunkSize);
-  poisonRange(sizeof(ChunkBase), extent - sizeof(ChunkBase),
-              JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+  poisonRange(sizeof(ChunkBase), extent, JS_SWEPT_NURSERY_PATTERN,
+              MemCheckKind::MakeNoAccess);
 }
 
 inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
@@ -494,8 +497,8 @@ void js::Nursery::enterZealMode() {
 
     // It'd be simpler to poison the whole chunk, but we can't do that
     // because the nursery might be partially used.
-    chunk(0).poisonRange(capacity_, ChunkSize - capacity_,
-                         JS_FRESH_NURSERY_PATTERN, MemCheckKind::MakeUndefined);
+    chunk(0).poisonRange(capacity_, ChunkSize, JS_FRESH_NURSERY_PATTERN,
+                         MemCheckKind::MakeUndefined);
   }
 
   capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
@@ -1951,8 +1954,8 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
     // The capacity has changed and since we were in sub-chunk mode we need to
     // update the poison values / asan information for the now-valid region of
     // this chunk.
-    size_t size = std::min(newCapacity, ChunkSize) - capacity();
-    chunk(0).poisonRange(capacity(), size, JS_FRESH_NURSERY_PATTERN,
+    size_t end = std::min(newCapacity, ChunkSize);
+    chunk(0).poisonRange(capacity(), end, JS_FRESH_NURSERY_PATTERN,
                          MemCheckKind::MakeUndefined);
   }
 
@@ -2018,8 +2021,8 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   if (isSubChunkMode()) {
     MOZ_ASSERT(currentChunk_ == 0);
-    size_t size = std::min(oldCapacity, ChunkSize) - newCapacity;
-    chunk(0).poisonRange(newCapacity, size, JS_SWEPT_NURSERY_PATTERN,
+    size_t end = std::min(oldCapacity, ChunkSize);
+    chunk(0).poisonRange(newCapacity, end, JS_SWEPT_NURSERY_PATTERN,
                          MemCheckKind::MakeNoAccess);
 
     AutoLockHelperThreadState lock;
