@@ -124,4 +124,7 @@
     <string name="translations_bottom_sheet_translate_to">Translate to</string>
     <string name="translations_bottom_sheet_negative_button">Not now</string>
     <string name="translations_bottom_sheet_positive_button">Translate</string>
+    <string name="translations_bottom_sheet_translating_in_progress">In progress</string>
+    <string name="translations_bottom_sheet_translating_in_progress_content_description">Translating in Progress</string>
+
 </resources>
