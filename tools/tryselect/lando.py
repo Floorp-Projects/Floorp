@@ -90,7 +90,12 @@ def get_stack_info(vcs: SupportedVcsRepository) -> Tuple[str, List[str]]:
     nodes = vcs.get_branch_nodes(**branch_nodes_kwargs)
     if not nodes:
         raise ValueError("Could not find any commit hashes for submission.")
-    print("Submitting stack of", len(nodes) - 1, "nodes and the try commit.")
+    elif len(nodes) == 1:
+        print("Submitting a single try config commit.")
+    elif len(nodes) == 2:
+        print("Submitting 1 node and the try commit.")
+    else:
+        print("Submitting stack of", len(nodes) - 1, "nodes and the try commit.")
 
     patches = vcs.get_commit_patches(nodes)
     base64_patches = [
@@ -402,7 +407,12 @@ def push_to_lando_try(vcs: SupportedVcsRepository, commit_message: str):
     push_start_time = time.perf_counter()
 
     with try_config_commit(vcs, commit_message):
-        base_commit, patches = get_stack_info(vcs)
+        try:
+            base_commit, patches = get_stack_info(vcs)
+        except ValueError as exc:
+            print("abort: error gathering patches for submission.")
+            print(str(exc))
+            return
 
         try:
             # Make the try request to Lando.
