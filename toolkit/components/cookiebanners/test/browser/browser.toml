@@ -24,6 +24,11 @@ support-files = [
   "slowSubresource.sjs",
 ]
 
+["browser_bannerClicking_telemetry_querySelector.js"]
+support-files = [
+  "file_banner.html",
+]
+
 ["browser_bannerClicking_visibilityOverride.js"]
 support-files = ["file_banner_invisible.html"]
 

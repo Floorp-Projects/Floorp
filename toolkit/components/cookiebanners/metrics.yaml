@@ -247,3 +247,67 @@ cookie.banners.click:
       - fail_no_rule_for_mode
       - fail_actor_destroyed
     telemetry_mirror: COOKIE_BANNERS_CLICK_RESULT
+  query_selector_run_count_per_window_top_level:
+    type: custom_distribution
+    bucket_count: 20
+    range_max: 2500
+    histogram_type: exponential
+    description: >
+      How often a query selector is run during the lifetime of a top-level
+      content window.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+    data_reviews:
+      - TODO
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 124
+  query_selector_run_count_per_window_frame:
+    type: custom_distribution
+    bucket_count: 20
+    range_max: 2500
+    histogram_type: exponential
+    description: >
+      How often a query selector is run during the lifetime of a sub-frame
+      content window.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+    data_reviews:
+      - TODO
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 124
+  query_selector_run_duration_per_window_top_level:
+    type: custom_distribution
+    bucket_count: 8
+    range_max: 30000000
+    histogram_type: exponential
+    description: >
+      Total time spent (in microseconds) on running querySelector for the
+      lifetime of a top-level content window.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+    data_reviews:
+      - TODO
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 124
+  query_selector_run_duration_per_window_frame:
+    type: custom_distribution
+    bucket_count: 8
+    range_max: 30000000
+    histogram_type: exponential
+    description: >
+      Total time spent (in microseconds) on running querySelector for the
+      lifetime of a sub-frame content window.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+    data_reviews:
+      - TODO
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 124

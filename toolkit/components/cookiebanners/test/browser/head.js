@@ -227,7 +227,7 @@ async function openIframeAndVerify({
 /**
  * A helper function to insert testing rules.
  */
-function insertTestClickRules() {
+function insertTestClickRules(insertGlobalRules = true) {
   info("Clearing existing rules");
   Services.cookieBanners.resetRules(false);
 
@@ -267,37 +267,39 @@ function insertTestClickRules() {
   );
   Services.cookieBanners.insertRule(ruleB);
 
-  info("Add global ruleC which targets a non-existing banner (presence).");
-  let ruleC = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
-    Ci.nsICookieBannerRule
-  );
-  ruleC.id = genUUID();
-  ruleC.domains = [];
-  ruleC.addClickRule(
-    "div#nonExistingBanner",
-    false,
-    Ci.nsIClickRule.RUN_ALL,
-    null,
-    null,
-    "button#optIn"
-  );
-  Services.cookieBanners.insertRule(ruleC);
+  if (insertGlobalRules) {
+    info("Add global ruleC which targets a non-existing banner (presence).");
+    let ruleC = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+      Ci.nsICookieBannerRule
+    );
+    ruleC.id = genUUID();
+    ruleC.domains = [];
+    ruleC.addClickRule(
+      "div#nonExistingBanner",
+      false,
+      Ci.nsIClickRule.RUN_ALL,
+      null,
+      null,
+      "button#optIn"
+    );
+    Services.cookieBanners.insertRule(ruleC);
 
-  info("Add global ruleD which targets a non-existing banner (presence).");
-  let ruleD = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
-    Ci.nsICookieBannerRule
-  );
-  ruleD.id = genUUID();
-  ruleD.domains = [];
-  ruleD.addClickRule(
-    "div#nonExistingBanner2",
-    false,
-    Ci.nsIClickRule.RUN_ALL,
-    null,
-    "button#optOut",
-    "button#optIn"
-  );
-  Services.cookieBanners.insertRule(ruleD);
+    info("Add global ruleD which targets a non-existing banner (presence).");
+    let ruleD = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+      Ci.nsICookieBannerRule
+    );
+    ruleD.id = genUUID();
+    ruleD.domains = [];
+    ruleD.addClickRule(
+      "div#nonExistingBanner2",
+      false,
+      Ci.nsIClickRule.RUN_ALL,
+      null,
+      "button#optOut",
+      "button#optIn"
+    );
+    Services.cookieBanners.insertRule(ruleD);
+  }
 }
 
 /**
